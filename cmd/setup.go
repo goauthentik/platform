@@ -15,8 +15,8 @@ var setupCmd = &cobra.Command{
 	Short: "Configure authentik CLI",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		base, _ := cmd.Flags().GetString("authentik-url")
-		clientId, _ := cmd.Flags().GetString("client-id")
+		base := mustFlag(cmd.Flags().GetString("authentik-url"))
+		clientId := mustFlag(cmd.Flags().GetString("client-id"))
 
 		mgr, err := cfg.Manager()
 		if err != nil {
@@ -38,7 +38,7 @@ var setupCmd = &cobra.Command{
 			log.WithError(err).Fatal("failed to start device flow")
 		}
 
-		profileName, _ := cmd.Flags().GetString("profile")
+		profileName := mustFlag(cmd.Flags().GetString("profile"))
 		mgr.Get().Profiles[profileName] = cfg.ConfigV1Profile{
 			AuthentikURL: base,
 			ClientID:     clientId,

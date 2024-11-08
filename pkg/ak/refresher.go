@@ -40,14 +40,14 @@ func (tr *TokenRefresher) AccessToken(profileName string) string {
 		go func() {
 			<-tr.timers[profileName].C
 			tr.log.WithField("profile", profileName).Debug("Refreshing token on expiry")
-			tr.RefreshToken(profileName, profile)
+			tr.AccessToken(profileName)
 		}()
 	}()
 	if err == nil {
 		tr.log.WithField("profile", profileName).Debug("token not expired")
 		return currentToken
 	}
-	tr.log.WithError(err).Debug("token needs to be refreshed")
+	tr.log.WithField("profile", profileName).WithError(err).Debug("Access token needs to be refreshed")
 	err = tr.RefreshToken(profileName, profile)
 	if err != nil {
 		tr.log.WithField("profile", profileName).WithError(err).Debug("failed to refresh token")
@@ -77,7 +77,7 @@ func (tr *TokenRefresher) RefreshToken(name string, profile cfg.ConfigV1Profile)
 	}
 	profile.AccessToken = newToken.AccessToken
 	profile.RefreshToken = newToken.RefreshToken
-	tr.log.Debug("successfully refreshed token")
+	tr.log.WithField("profile", name).Debug("successfully refreshed token")
 	tr.mgr.Get().Profiles[name] = profile
 	err = tr.mgr.Save()
 	if err != nil {

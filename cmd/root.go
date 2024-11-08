@@ -7,12 +7,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func mustFlag[T any](res T, err error) T {
+	if err != nil {
+		log.WithError(err).Panic("Missing required argument")
+	}
+	return res
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ak",
 	Short: "authentik CLI",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		verbose, _ := cmd.Flags().GetBool("verbose")
+		verbose := mustFlag(cmd.Flags().GetBool("verbose"))
 		if verbose {
 			log.SetLevel(log.DebugLevel)
 		}

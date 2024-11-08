@@ -20,7 +20,7 @@ var whoamiCmd = &cobra.Command{
 		if err != nil {
 			log.WithError(err).Panic("failed to initialise config manager")
 		}
-		profile, _ := cmd.Flags().GetString("profile")
+		profile := mustFlag(cmd.Flags().GetString("profile"))
 		prof := mgr.Get().Profiles[profile]
 		req, err := http.NewRequest("get", fmt.Sprintf("%s/application/o/userinfo/", prof.AuthentikURL), nil)
 		if err != nil {
