@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -21,18 +18,11 @@ type AWSCredentialOutput struct {
 	Expiration      time.Time
 }
 
-// awsCmd represents the aws command
-var awsCmd = &cobra.Command{
-	Use:   "aws",
+var awsSamlCmd = &cobra.Command{
+	Use:   "aws-saml",
 	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		c := sts.Client{}
+		c := sts.New(sts.Options{})
 		a, err := c.AssumeRoleWithSAML(cmd.Context(), &sts.AssumeRoleWithSAMLInput{
 			SAMLAssertion: aws.String(""),
 		})
@@ -54,5 +44,5 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	authCmd.AddCommand(awsCmd)
+	authCmd.AddCommand(awsSamlCmd)
 }

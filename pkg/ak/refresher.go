@@ -13,45 +13,59 @@ import (
 )
 
 type TokenRefresher struct {
-	mgr     *cfg.ConfigManager
-	profile cfg.ConfigV1Profile
-	log     *log.Entry
+	mgr    *cfg.ConfigManager
+	log    *log.Entry
+	timers map[string]*time.Timer
 }
 
 func NewTokenRefresher(mgr *cfg.ConfigManager, profile cfg.ConfigV1Profile) *TokenRefresher {
 	return &TokenRefresher{
-		profile: profile,
-		mgr:     mgr,
-		log:     log.WithField("logger", "token-refresher"),
+		mgr:    mgr,
+		log:    log.WithField("logger", "token-refresher"),
+		timers: map[string]*time.Timer{},
 	}
 }
 
-func (tr *TokenRefresher) AccessToken() string {
-	currentToken := tr.profile.AccessToken
+func (tr *TokenRefresher) AccessToken(profileName string) string {
+	profile := tr.mgr.Get().Profiles[profileName]
+	currentToken := profile.AccessToken
 	err := tr.checkTokenExpiry(currentToken)
+	defer func() {
+		// ensure timer
+		tr.log.WithField("profile", profileName).Debug("setting timer for token refresh")
+		if _, ok := tr.timers[profileName]; ok {
+			return
+		}
+		tr.timers[profileName] = time.NewTimer(5 * time.Minute)
+		go func() {
+			<-tr.timers[profileName].C
+			tr.log.WithField("profile", profileName).Debug("Refreshing token on expiry")
+			tr.RefreshToken(profileName, profile)
+		}()
+	}()
 	if err == nil {
-		tr.log.Debug("token not expired")
+		tr.log.WithField("profile", profileName).Debug("token not expired")
 		return currentToken
 	}
 	tr.log.WithError(err).Debug("token needs to be refreshed")
-	err = tr.RefreshToken()
+	err = tr.RefreshToken(profileName, profile)
 	if err != nil {
-		tr.log.WithError(err).Debug("failed to refresh token")
+		tr.log.WithField("profile", profileName).WithError(err).Debug("failed to refresh token")
 		return currentToken
 	}
-	return tr.profile.AccessToken
+	return profile.AccessToken
 }
 
-func (tr *TokenRefresher) RefreshToken() error {
+func (tr *TokenRefresher) RefreshToken(name string, profile cfg.ConfigV1Profile) error {
 	config := oauth2.Config{
-		ClientID: tr.profile.ClientID,
+		ClientID: profile.ClientID,
 		Endpoint: oauth2.Endpoint{
-			TokenURL: fmt.Sprintf("%s/application/o/token/", tr.profile.AuthentikURL),
+			TokenURL: fmt.Sprintf("%s/application/o/token/", profile.AuthentikURL),
 		},
 	}
 	token := &oauth2.Token{
-		AccessToken:  tr.profile.AccessToken,
-		RefreshToken: tr.profile.RefreshToken,
+		AccessToken:  profile.AccessToken,
+		RefreshToken: profile.RefreshToken,
 		Expiry:       time.Now().Add(time.Second * -5),
 		TokenType:    "Bearer",
 	}
@@ -61,9 +75,10 @@ func (tr *TokenRefresher) RefreshToken() error {
 	if err != nil {
 		return err
 	}
-	tr.profile.AccessToken = newToken.AccessToken
-	tr.profile.RefreshToken = newToken.RefreshToken
+	profile.AccessToken = newToken.AccessToken
+	profile.RefreshToken = newToken.RefreshToken
 	tr.log.Debug("successfully refreshed token")
+	tr.mgr.Get().Profiles[name] = profile
 	err = tr.mgr.Save()
 	if err != nil {
 		tr.log.WithError(err).Warning("failed to persist new token")

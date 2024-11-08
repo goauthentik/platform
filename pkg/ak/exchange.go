@@ -1,0 +1,5 @@
+package ak
+
+func ExchangeToken() {
+
+}

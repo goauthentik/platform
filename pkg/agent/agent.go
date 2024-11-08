@@ -10,9 +10,10 @@ import (
 )
 
 type Agent struct {
-	cfg *cfg.ConfigManager
-	tr  *ak.TokenRefresher
-	log *log.Entry
+	cfg            *cfg.ConfigManager
+	tr             *ak.TokenRefresher
+	log            *log.Entry
+	systrayStarted bool
 }
 
 func New() (*Agent, error) {
@@ -28,9 +29,17 @@ func New() (*Agent, error) {
 }
 
 func (a *Agent) Start() {
+	a.tokenWatch()
 	go a.startConfigWatch()
-	// block
-	<-make(chan struct{})
+	a.startSystray()
+}
+
+func (a *Agent) tokenWatch() {
+	// Ensure the access token is not expired
+	for profileName := range a.cfg.Get().Profiles {
+		a.log.WithField("profile", profileName).Debug("checking if access/refresh token needs to be refreshed")
+		a.tr.AccessToken(profileName)
+	}
 }
 
 func (a *Agent) startConfigWatch() {
@@ -50,9 +59,8 @@ func (a *Agent) startConfigWatch() {
 				a.log.WithError(err).Warning("failed to reload config")
 				continue
 			}
-			// Ensure the access token is not expired
-			a.log.Debug("checking if access/refresh token needs to be refreshed")
-			a.tr.AccessToken()
+			a.tokenWatch()
+			a.systrayConfigUpdate()
 		}
 	}
 }
