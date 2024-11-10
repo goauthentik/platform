@@ -2,7 +2,6 @@ package ak
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -22,12 +21,11 @@ func ExchangeToken(profile cfg.ConfigV1Profile, opts ExchangeOpts) (*oauth2.Toke
 	v.Set("client_id", opts.ClientID)
 	v.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
 	v.Set("client_assertion", profile.AccessToken)
-	url := fmt.Sprintf("%s/application/o/token/", profile.AuthentikURL)
-	logrus.WithField("url", url).Debug("sending request")
-	req, err := http.NewRequest("POST", url, strings.NewReader(v.Encode()))
+	req, err := http.NewRequest("POST", URLsForProfile(profile).TokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return nil, err
 	}
+	logrus.WithField("url", req.URL.String()).Debug("sending request")
 	req.Header.Set("User-Agent", "authentik-cli v0.1")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)

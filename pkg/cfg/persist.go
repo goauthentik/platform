@@ -11,25 +11,58 @@ import (
 )
 
 type ConfigManager struct {
-	path   string
-	loaded ConfigV1
-	log    *log.Entry
+	path    string
+	loaded  ConfigV1
+	log     *log.Entry
+	changed []chan ConfigChangedEvent
 }
 
-func Manager() (*ConfigManager, error) {
+type ConfigChangedEvent struct{}
+
+var manager *ConfigManager
+
+func Manager() *ConfigManager {
+	if manager == nil {
+		m, err := newManager()
+		if err != nil {
+			panic(err)
+		}
+		manager = m
+	}
+	return manager
+}
+
+func newManager() (*ConfigManager, error) {
 	file, err := xdg.ConfigFile("authentik/config.json")
 	if err != nil {
 		return nil, err
 	}
 	cfg := &ConfigManager{
-		path: file,
-		log:  log.WithField("logger", "config"),
+		path:    file,
+		log:     log.WithField("logger", "config"),
+		changed: make([]chan ConfigChangedEvent, 0),
 	}
 	cfg.log.WithField("path", file).Debug("Config file path")
 	err = cfg.Load()
 	if err != nil {
 		return nil, err
 	}
+	cfg.log.Debug("Starting config watch")
+	err = cfg.watch()
+	if err != nil {
+		return nil, err
+	}
+	// Automatically watch and reload config
+	go func() {
+		for range cfg.Watch() {
+			cfg.log.Debug("config file changed, triggering config reload")
+			err = cfg.Load()
+			if err != nil {
+				cfg.log.WithError(err).Warning("failed to reload config")
+				continue
+			}
+		}
+	}()
 	return cfg, nil
 }
 
@@ -68,13 +101,21 @@ func (cfg *ConfigManager) Save() error {
 	return nil
 }
 
-func (cfg *ConfigManager) Watch() (chan fsnotify.Event, error) {
+func (cfg *ConfigManager) Watch() chan ConfigChangedEvent {
+	ch := make(chan ConfigChangedEvent)
+	cfg.changed = append(cfg.changed, make(chan ConfigChangedEvent))
+	defer func() {
+		// Trigger config changed just after this function is called
+		ch <- ConfigChangedEvent{}
+	}()
+	return ch
+}
+
+func (cfg *ConfigManager) watch() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	ch := make(chan fsnotify.Event)
-
 	go func() {
 		for {
 			select {
@@ -84,7 +125,9 @@ func (cfg *ConfigManager) Watch() (chan fsnotify.Event, error) {
 				}
 				cfg.log.WithField("event", event).Debug("file watch event")
 				if event.Name == cfg.path && event.Has(fsnotify.Write) {
-					ch <- event
+					for _, ch := range cfg.changed {
+						ch <- ConfigChangedEvent{}
+					}
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -97,7 +140,7 @@ func (cfg *ConfigManager) Watch() (chan fsnotify.Event, error) {
 
 	err = watcher.Add(path.Dir(cfg.path))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return ch, nil
+	return nil
 }

@@ -1,9 +1,6 @@
 package agent
 
 import (
-	"time"
-
-	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/cfg"
@@ -17,14 +14,11 @@ type Agent struct {
 }
 
 func New() (*Agent, error) {
-	mgr, err := cfg.Manager()
-	if err != nil {
-		return nil, err
-	}
+	mgr := cfg.Manager()
 	return &Agent{
 		cfg: mgr,
 		log: log.WithField("logger", "agent"),
-		tr:  ak.NewTokenRefresher(mgr, mgr.Get().Profiles["default"]),
+		tr:  ak.NewTokenRefresher(mgr),
 	}, nil
 }
 
@@ -44,23 +38,8 @@ func (a *Agent) tokenWatch() {
 
 func (a *Agent) startConfigWatch() {
 	a.log.Debug("Starting config file watch")
-	ch, err := a.cfg.Watch()
-	if err != nil {
-		a.log.WithError(err).Warning("failed to watch config")
-		time.Sleep(5 * time.Second)
-		a.startConfigWatch()
-		return
-	}
-	for evt := range ch {
-		if evt.Has(fsnotify.Write) {
-			a.log.Debug("config file changed, triggering config reload")
-			err = a.cfg.Load()
-			if err != nil {
-				a.log.WithError(err).Warning("failed to reload config")
-				continue
-			}
-			a.tokenWatch()
-			a.systrayConfigUpdate()
-		}
+	for range a.cfg.Watch() {
+		a.tokenWatch()
+		a.systrayConfigUpdate()
 	}
 }

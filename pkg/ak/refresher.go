@@ -3,9 +3,9 @@ package ak
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/cfg"
@@ -16,20 +16,28 @@ type TokenRefresher struct {
 	mgr    *cfg.ConfigManager
 	log    *log.Entry
 	timers map[string]*time.Timer
+	jwks   map[string]jwt.Keyfunc
 }
 
-func NewTokenRefresher(mgr *cfg.ConfigManager, profile cfg.ConfigV1Profile) *TokenRefresher {
-	return &TokenRefresher{
+func NewTokenRefresher(mgr *cfg.ConfigManager) *TokenRefresher {
+	tr := &TokenRefresher{
 		mgr:    mgr,
 		log:    log.WithField("logger", "token-refresher"),
 		timers: map[string]*time.Timer{},
+		jwks:   map[string]jwt.Keyfunc{},
 	}
+	go func() {
+		for range mgr.Watch() {
+			tr.onConfigRefresh()
+		}
+	}()
+	return tr
 }
 
 func (tr *TokenRefresher) AccessToken(profileName string) string {
 	profile := tr.mgr.Get().Profiles[profileName]
 	currentToken := profile.AccessToken
-	err := tr.checkTokenExpiry(currentToken)
+	err := tr.checkTokenExpiry(currentToken, profileName)
 	defer func() {
 		// ensure timer
 		tr.log.WithField("profile", profileName).Debug("setting timer for token refresh")
@@ -48,7 +56,7 @@ func (tr *TokenRefresher) AccessToken(profileName string) string {
 		return currentToken
 	}
 	tr.log.WithField("profile", profileName).WithError(err).Debug("Access token needs to be refreshed")
-	err = tr.RefreshToken(profileName, profile)
+	err = tr.doRefreshToken(profileName, profile)
 	if err != nil {
 		tr.log.WithField("profile", profileName).WithError(err).Debug("failed to refresh token")
 		return currentToken
@@ -56,11 +64,11 @@ func (tr *TokenRefresher) AccessToken(profileName string) string {
 	return profile.AccessToken
 }
 
-func (tr *TokenRefresher) RefreshToken(name string, profile cfg.ConfigV1Profile) error {
+func (tr *TokenRefresher) doRefreshToken(name string, profile cfg.ConfigV1Profile) error {
 	config := oauth2.Config{
 		ClientID: profile.ClientID,
 		Endpoint: oauth2.Endpoint{
-			TokenURL: fmt.Sprintf("%s/application/o/token/", profile.AuthentikURL),
+			TokenURL: URLsForProfile(profile).TokenURL,
 		},
 	}
 	token := &oauth2.Token{
@@ -87,12 +95,20 @@ func (tr *TokenRefresher) RefreshToken(name string, profile cfg.ConfigV1Profile)
 	return nil
 }
 
-func (tr *TokenRefresher) checkTokenExpiry(token string) error {
-	t, _, err := jwt.NewParser().ParseUnverified(token, make(jwt.MapClaims))
-	if err != nil {
-		return err
+func (tr *TokenRefresher) onConfigRefresh() {
+	for name, profile := range tr.mgr.Get().Profiles {
+		k, err := keyfunc.NewDefaultCtx(context.Background(), []string{profile.AppSlug})
+		if err != nil {
+			tr.log.WithField("profile", name).WithError(err).Warning("failed to get JWKS for profile")
+			continue
+		}
+		tr.jwks[name] = k.Keyfunc
 	}
-	exp, err := t.Claims.GetExpirationTime()
+}
+
+func (tr *TokenRefresher) checkTokenExpiry(tokenString string, profile string) error {
+	token, err := jwt.Parse(tokenString, tr.jwks[profile])
+	exp, err := token.Claims.GetExpirationTime()
 	if err != nil {
 		return err
 	}

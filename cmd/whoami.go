@@ -8,6 +8,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/cfg"
 )
 
@@ -16,13 +17,10 @@ var whoamiCmd = &cobra.Command{
 	Use:   "whoami",
 	Short: "Check user account details for a given profile",
 	Run: func(cmd *cobra.Command, args []string) {
-		mgr, err := cfg.Manager()
-		if err != nil {
-			log.WithError(err).Panic("failed to initialise config manager")
-		}
+		mgr := cfg.Manager()
 		profile := mustFlag(cmd.Flags().GetString("profile"))
 		prof := mgr.Get().Profiles[profile]
-		req, err := http.NewRequest("GET", fmt.Sprintf("%s/application/o/userinfo/", prof.AuthentikURL), nil)
+		req, err := http.NewRequest("GET", ak.URLsForProfile(prof).UserInfo, nil)
 		if err != nil {
 			log.WithError(err).Panic("failed to create request")
 		}

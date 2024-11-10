@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/cli/oauth"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/cfg"
 )
 
@@ -16,18 +15,20 @@ var setupCmd = &cobra.Command{
 
 	Run: func(cmd *cobra.Command, args []string) {
 		base := mustFlag(cmd.Flags().GetString("authentik-url"))
+		appSlug := mustFlag(cmd.Flags().GetString("app"))
 		clientId := mustFlag(cmd.Flags().GetString("client-id"))
 
-		mgr, err := cfg.Manager()
-		if err != nil {
-			log.WithError(err).Panic("failed to initialise config manager")
-		}
+		mgr := cfg.Manager()
+		urls := ak.URLsForProfile(cfg.ConfigV1Profile{
+			AuthentikURL: base,
+			AppSlug:      appSlug,
+		})
 
 		flow := &oauth.Flow{
 			Host: &oauth.Host{
-				AuthorizeURL:  fmt.Sprintf("%s/application/o/authorize/", base),
-				DeviceCodeURL: fmt.Sprintf("%s/application/o/device/", base),
-				TokenURL:      fmt.Sprintf("%s/application/o/token/", base),
+				AuthorizeURL:  urls.AuthorizeURL,
+				DeviceCodeURL: urls.DeviceCodeURL,
+				TokenURL:      urls.TokenURL,
 			},
 			ClientID: clientId,
 			Scopes:   []string{"openid", "profile", "email", "offline_access"},
@@ -55,5 +56,6 @@ var setupCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(setupCmd)
 	setupCmd.Flags().StringP("authentik-url", "a", "", "URL to the authentik Instance")
+	setupCmd.Flags().StringP("app", "s", "", "Slug of the CLI application")
 	setupCmd.Flags().StringP("client-id", "i", "authentik-cli", "Client ID")
 }

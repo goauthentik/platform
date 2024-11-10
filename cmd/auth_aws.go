@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -12,6 +13,14 @@ import (
 	"goauthentik.io/cli/pkg/cfg"
 )
 
+type AWSCredentialOutput struct {
+	Version         int
+	AccessKeyId     string
+	SecretAccessKey string
+	SessionToken    string
+	Expiration      time.Time
+}
+
 var awsOidcCmd = &cobra.Command{
 	Use:   "aws-oidc",
 	Short: "A brief description of your command",
@@ -19,10 +28,7 @@ var awsOidcCmd = &cobra.Command{
 		c := sts.New(sts.Options{
 			Region: "eu-central-1",
 		})
-		mgr, err := cfg.Manager()
-		if err != nil {
-			log.WithError(err).Panic("failed to initialise config manager")
-		}
+		mgr := cfg.Manager()
 		profile := mustFlag(cmd.Flags().GetString("profile"))
 		prof := mgr.Get().Profiles[profile]
 
