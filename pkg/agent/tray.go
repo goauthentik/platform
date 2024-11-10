@@ -10,6 +10,10 @@ import (
 func (a *Agent) startSystray() {
 	a.log.Debug("starting systray")
 	systray.Run(a.systrayReady, func() {
+		if err := a.lock.Unlock(); err != nil {
+			fmt.Printf("Cannot unlock %q, reason: %v", a.lock, err)
+			panic(err) // handle properly please!
+		}
 	}, func(b bool) {
 	})
 }

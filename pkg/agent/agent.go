@@ -1,6 +1,9 @@
 package agent
 
 import (
+	"os"
+
+	"github.com/nightlyone/lockfile"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/cfg"
@@ -11,6 +14,7 @@ type Agent struct {
 	tr             *ak.TokenRefresher
 	log            *log.Entry
 	systrayStarted bool
+	lock           lockfile.Lockfile
 }
 
 func New() (*Agent, error) {
@@ -23,6 +27,12 @@ func New() (*Agent, error) {
 }
 
 func (a *Agent) Start() {
+	err := a.AcquireLock()
+	if err != nil {
+		a.log.Error("failed to acquire Lock. Authentik agent is already running.")
+		os.Exit(1)
+		return
+	}
 	a.tokenWatch()
 	go a.startConfigWatch()
 	a.startSystray()
