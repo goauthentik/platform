@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/cli/pkg/cfg"
 )
 
 func mustFlag[T any](res T, err error) T {
@@ -17,7 +19,7 @@ func mustFlag[T any](res T, err error) T {
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ak",
-	Short: "authentik CLI",
+	Short: fmt.Sprintf("authentik CLI v%s", cfg.FullVersion()),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		verbose := mustFlag(cmd.Flags().GetBool("verbose"))
 		if verbose {

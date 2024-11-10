@@ -5,6 +5,7 @@ import (
 
 	"github.com/kolide/systray"
 	"goauthentik.io/cli/pkg/agent/icon"
+	"goauthentik.io/cli/pkg/cfg"
 )
 
 func (a *Agent) startSystray() {
@@ -25,7 +26,7 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	_ = systray.AddMenuItem("authentik CLI v0.1", "")
+	_ = systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", cfg.FullVersion()), "")
 }
 
 func (a *Agent) systrayLateItems() {
