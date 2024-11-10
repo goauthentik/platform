@@ -23,6 +23,8 @@ var rootCmd = &cobra.Command{
 		if verbose {
 			log.SetLevel(log.DebugLevel)
 		}
+		// Log to stderr especially for `ak auth ...` commands
+		log.SetOutput(os.Stderr)
 	},
 }
 

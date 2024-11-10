@@ -16,7 +16,9 @@ var awsOidcCmd = &cobra.Command{
 	Use:   "aws-oidc",
 	Short: "A brief description of your command",
 	Run: func(cmd *cobra.Command, args []string) {
-		c := sts.New(sts.Options{})
+		c := sts.New(sts.Options{
+			Region: "eu-central-1",
+		})
 		mgr, err := cfg.Manager()
 		if err != nil {
 			log.WithError(err).Panic("failed to initialise config manager")
