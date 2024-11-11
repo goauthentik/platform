@@ -68,7 +68,7 @@ func (tr *TokenRefresher) Token(profileName string) Token {
 			return
 		}
 		exp, err := currentToken.AccessToken.Claims.GetExpirationTime()
-		if err != nil {
+		if exp == nil || err != nil {
 			tr.log.WithError(err).WithField("profile", profileName).Debug("failed to get expiry")
 			return
 		}

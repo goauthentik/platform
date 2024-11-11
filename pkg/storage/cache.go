@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -22,12 +23,12 @@ type Cache[T CacheData] struct {
 }
 
 func NewCache[T CacheData](uidParts ...string) *Cache[T] {
-	uid := strings.Join(uidParts, "-")
+	uid := strings.ReplaceAll(strings.Join(uidParts, "-"), "/", "_")
 	c := &Cache[T]{
 		uid: uid,
 		log: log.WithField("logger", "cache").WithField("uid", uid),
 	}
-	p, _ := xdg.ConfigFile(fmt.Sprintf("authentik/cache/%s", c.uid))
+	p, _ := xdg.ConfigFile(fmt.Sprintf("authentik/cache/%s.json", c.uid))
 	c.path = p
 	return c
 }
@@ -61,6 +62,9 @@ func (c *Cache[T]) Get() (T, error) {
 	err = json.NewDecoder(f).Decode(&cc)
 	if err != nil {
 		return cc, err
+	}
+	if cc.Expiry().Before(time.Now()) {
+		return cc, errors.New("cache expired")
 	}
 	return cc, nil
 }

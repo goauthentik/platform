@@ -2,6 +2,7 @@ package ak
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -34,6 +35,9 @@ func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*oauth2.
 	if err != nil {
 		return nil, err
 	}
+	if res.StatusCode > 200 {
+		return nil, errors.New("invalid response status code")
+	}
 	nt := &oauth2.Token{}
 	err = json.NewDecoder(res.Body).Decode(&nt)
 	if err != nil {
@@ -62,6 +66,7 @@ func (ct CachedToken) Token() *oauth2.Token {
 func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, opts ExchangeOpts) (*oauth2.Token, error) {
 	c := storage.NewCache[CachedToken]("token-cache", profileName, opts.ClientID)
 	v, err := c.Get()
+	log.WithField("v", v).WithError(err).Debug("foo")
 	if err == nil {
 		return &oauth2.Token{
 			AccessToken: v.AccessToken,
@@ -75,6 +80,7 @@ func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, op
 		AccessToken: nt.AccessToken,
 		Exp:         nt.Expiry,
 	}
+	log.WithField("v", nt).Debug("bar")
 	err = c.Set(ct)
 	if err != nil {
 		return nil, err
