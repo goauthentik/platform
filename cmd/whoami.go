@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 
@@ -23,16 +23,29 @@ var whoamiCmd = &cobra.Command{
 		req, err := http.NewRequest("GET", ak.URLsForProfile(prof).UserInfo, nil)
 		if err != nil {
 			log.WithError(err).Panic("failed to create request")
+			return
 		}
 		req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.WithError(err).Panic("failed to send request")
+			return
 		}
 		if res.StatusCode > 200 {
 			log.WithField("status", res.StatusCode).Warning("received status code")
+			return
 		}
-		b, _ := io.ReadAll(res.Body)
+		var m interface{}
+		err = json.NewDecoder(res.Body).Decode(&m)
+		if err != nil {
+			log.WithError(err).Warning("failed to parse JSON")
+			return
+		}
+		b, err := json.MarshalIndent(m, "", "\t")
+		if err != nil {
+			log.WithError(err).Warning("failed to render JSON")
+			return
+		}
 		os.Stdout.Write(b)
 	},
 }
