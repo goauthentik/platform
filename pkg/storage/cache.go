@@ -52,8 +52,8 @@ func (c *Cache[T]) Get() (T, error) {
 	f, err := os.Open(c.path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			c.log.WithError(err).Debug("no cache found")
-			return cc, nil
+			c.log.WithError(err).Debug("No cache found")
+			return cc, err
 		}
 		return cc, err
 	}

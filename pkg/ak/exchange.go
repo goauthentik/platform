@@ -2,6 +2,7 @@ package ak
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -27,7 +28,7 @@ func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*oauth2.
 		return nil, err
 	}
 	log.WithField("url", req.URL.String()).Debug("sending request")
-	req.Header.Set("User-Agent", "authentik-cli v0.1")
+	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", storage.FullVersion()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

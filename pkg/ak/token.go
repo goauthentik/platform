@@ -39,9 +39,14 @@ type Token struct {
 	RawAccessToken string
 }
 
+type AuthentikClaims struct {
+	Username string `json:"preferred_username"`
+	jwt.MapClaims
+}
+
 func (tr *TokenRefresher) getCurrentToken(profileName string) Token {
 	profile := tr.mgr.Get().Profiles[profileName]
-	token, _, err := jwt.NewParser().ParseUnverified(profile.AccessToken, make(jwt.MapClaims))
+	token, _, err := jwt.NewParser().ParseUnverified(profile.AccessToken, &AuthentikClaims{})
 	if err != nil {
 		// temp
 		panic(err)

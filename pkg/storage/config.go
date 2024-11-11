@@ -103,7 +103,7 @@ func (cfg *ConfigManager) Save() error {
 
 func (cfg *ConfigManager) Watch() chan ConfigChangedEvent {
 	ch := make(chan ConfigChangedEvent)
-	cfg.changed = append(cfg.changed, make(chan ConfigChangedEvent))
+	cfg.changed = append(cfg.changed, ch)
 	defer func() {
 		// Trigger config changed just after this function is called
 		ch <- ConfigChangedEvent{}

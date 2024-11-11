@@ -42,10 +42,13 @@ var awsOidcCmd = &cobra.Command{
 			log.WithError(err).Fatal("failed to exchange token")
 			return
 		}
+		// tr := ak.NewTokenRefresher(mgr)
+		// un := tr.Token(profile).AccessToken.Claims.(ak.AuthentikClaims)
 
+		log.Debug("Fetching AWS Credentials...")
 		a, err := c.AssumeRoleWithWebIdentity(cmd.Context(), &sts.AssumeRoleWithWebIdentityInput{
 			RoleArn:          aws.String(roleArn),
-			RoleSessionName:  aws.String("temp"),
+			RoleSessionName:  aws.String(""),
 			WebIdentityToken: aws.String(nt.AccessToken),
 		})
 		if err != nil {
