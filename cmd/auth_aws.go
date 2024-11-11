@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/cfg"
+	"goauthentik.io/cli/pkg/storage"
 )
 
 type AWSCredentialOutput struct {
@@ -25,21 +25,22 @@ var awsOidcCmd = &cobra.Command{
 	Use:   "aws-oidc",
 	Short: "A brief description of your command",
 	Run: func(cmd *cobra.Command, args []string) {
-		c := sts.New(sts.Options{
-			Region: "eu-central-1",
-		})
-		mgr := cfg.Manager()
+		mgr := storage.Manager()
 		profile := mustFlag(cmd.Flags().GetString("profile"))
-		prof := mgr.Get().Profiles[profile]
-
 		clientId := mustFlag(cmd.Flags().GetString("client-id"))
 		roleArn := mustFlag(cmd.Flags().GetString("role-arn"))
+		region := mustFlag(cmd.Flags().GetString("region"))
+		prof := mgr.Get().Profiles[profile]
 
-		nt, err := ak.ExchangeToken(prof, ak.ExchangeOpts{
+		c := sts.New(sts.Options{
+			Region: region,
+		})
+		nt, err := ak.CachedExchangeToken(profile, prof, ak.ExchangeOpts{
 			ClientID: clientId,
 		})
 		if err != nil {
 			log.WithError(err).Fatal("failed to exchange token")
+			return
 		}
 
 		a, err := c.AssumeRoleWithWebIdentity(cmd.Context(), &sts.AssumeRoleWithWebIdentityInput{
@@ -49,6 +50,7 @@ var awsOidcCmd = &cobra.Command{
 		})
 		if err != nil {
 			log.WithError(err).Panic("failed to assume WebIdentity")
+			return
 		}
 		output := AWSCredentialOutput{
 			Version:         1,
@@ -68,4 +70,5 @@ func init() {
 	authCmd.AddCommand(awsOidcCmd)
 	awsOidcCmd.Flags().StringP("client-id", "c", "", "Client ID")
 	awsOidcCmd.Flags().StringP("role-arn", "r", "", "Role ARN")
+	awsOidcCmd.Flags().StringP("region", "e", "eu-central-1", "Region")
 }

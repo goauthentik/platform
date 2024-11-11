@@ -1,4 +1,4 @@
-package cfg
+package storage
 
 import (
 	"encoding/json"
@@ -39,7 +39,7 @@ func newManager() (*ConfigManager, error) {
 	}
 	cfg := &ConfigManager{
 		path:    file,
-		log:     log.WithField("logger", "config"),
+		log:     log.WithField("logger", "storage.config"),
 		changed: make([]chan ConfigChangedEvent, 0),
 	}
 	cfg.log.WithField("path", file).Debug("Config file path")

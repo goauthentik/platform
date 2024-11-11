@@ -6,11 +6,11 @@ import (
 	"github.com/nightlyone/lockfile"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/cfg"
+	"goauthentik.io/cli/pkg/storage"
 )
 
 type Agent struct {
-	cfg            *cfg.ConfigManager
+	cfg            *storage.ConfigManager
 	tr             *ak.TokenRefresher
 	log            *log.Entry
 	systrayStarted bool
@@ -18,7 +18,7 @@ type Agent struct {
 }
 
 func New() (*Agent, error) {
-	mgr := cfg.Manager()
+	mgr := storage.Manager()
 	return &Agent{
 		cfg: mgr,
 		log: log.WithField("logger", "agent"),
@@ -42,7 +42,7 @@ func (a *Agent) tokenWatch() {
 	// Ensure the access token is not expired
 	for profileName := range a.cfg.Get().Profiles {
 		a.log.WithField("profile", profileName).Debug("checking if access/refresh token needs to be refreshed")
-		a.tr.AccessToken(profileName)
+		a.tr.Token(profileName)
 	}
 }
 

@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/cfg"
+	"goauthentik.io/cli/pkg/storage"
 )
 
 // whoamiCmd represents the whoami command
@@ -17,7 +17,7 @@ var whoamiCmd = &cobra.Command{
 	Use:   "whoami",
 	Short: "Check user account details for a given profile",
 	Run: func(cmd *cobra.Command, args []string) {
-		mgr := cfg.Manager()
+		mgr := storage.Manager()
 		profile := mustFlag(cmd.Flags().GetString("profile"))
 		prof := mgr.Get().Profiles[profile]
 		req, err := http.NewRequest("GET", ak.URLsForProfile(prof).UserInfo, nil)

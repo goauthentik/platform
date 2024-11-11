@@ -5,7 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/cfg"
+	"goauthentik.io/cli/pkg/storage"
 )
 
 // setupCmd represents the setup command
@@ -18,8 +18,8 @@ var setupCmd = &cobra.Command{
 		appSlug := mustFlag(cmd.Flags().GetString("app"))
 		clientId := mustFlag(cmd.Flags().GetString("client-id"))
 
-		mgr := cfg.Manager()
-		urls := ak.URLsForProfile(cfg.ConfigV1Profile{
+		mgr := storage.Manager()
+		urls := ak.URLsForProfile(storage.ConfigV1Profile{
 			AuthentikURL: base,
 			AppSlug:      appSlug,
 		})
@@ -40,7 +40,7 @@ var setupCmd = &cobra.Command{
 		}
 
 		profileName := mustFlag(cmd.Flags().GetString("profile"))
-		mgr.Get().Profiles[profileName] = cfg.ConfigV1Profile{
+		mgr.Get().Profiles[profileName] = storage.ConfigV1Profile{
 			AuthentikURL: base,
 			ClientID:     clientId,
 			AccessToken:  accessToken.Token,

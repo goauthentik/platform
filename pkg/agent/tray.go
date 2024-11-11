@@ -5,7 +5,7 @@ import (
 
 	"github.com/kolide/systray"
 	"goauthentik.io/cli/pkg/agent/icon"
-	"goauthentik.io/cli/pkg/cfg"
+	"goauthentik.io/cli/pkg/storage"
 )
 
 func (a *Agent) startSystray() {
@@ -26,18 +26,15 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	_ = systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", cfg.FullVersion()), "")
+	_ = systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "")
 }
 
 func (a *Agent) systrayLateItems() {
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 
 	go func() {
-		for {
-			select {
-			case <-mQuit.ClickedCh:
-				systray.Quit()
-			}
+		for range mQuit.ClickedCh {
+			systray.Quit()
 		}
 	}()
 }

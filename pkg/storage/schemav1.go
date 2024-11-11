@@ -1,4 +1,4 @@
-package cfg
+package storage
 
 type ConfigV1 struct {
 	Debug    bool                       `json:"debug"`
