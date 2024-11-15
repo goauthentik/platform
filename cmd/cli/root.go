@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func main() {
+func Execute() {
 	var err error
 	if path.Base(os.Args[0]) == "ak-vault" {
 		err = vaultCmd.Execute()

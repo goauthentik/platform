@@ -72,7 +72,7 @@ func (tr *TokenRefresher) Token(profileName string) Token {
 			tr.log.WithError(err).WithField("profile", profileName).Debug("failed to get expiry")
 			return
 		}
-		d := exp.Sub(time.Now())
+		d := time.Until(exp.Time)
 		tr.log.WithField("delta", d.String()).WithField("profile", profileName).Debug("setting timer for token refresh")
 		tr.timers[profileName] = time.NewTimer(d)
 		go func() {
