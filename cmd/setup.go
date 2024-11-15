@@ -42,6 +42,7 @@ var setupCmd = &cobra.Command{
 		profileName := mustFlag(cmd.Flags().GetString("profile"))
 		mgr.Get().Profiles[profileName] = storage.ConfigV1Profile{
 			AuthentikURL: base,
+			AppSlug:      appSlug,
 			ClientID:     clientId,
 			AccessToken:  accessToken.Token,
 			RefreshToken: accessToken.RefreshToken,

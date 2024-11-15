@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -31,7 +32,12 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	err := rootCmd.Execute()
+	var err error
+	if path.Base(os.Args[0]) == "ak-vault" {
+		err = vaultCmd.Execute()
+	} else {
+		err = rootCmd.Execute()
+	}
 	if err != nil {
 		os.Exit(1)
 	}
