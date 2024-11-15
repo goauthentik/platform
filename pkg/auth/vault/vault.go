@@ -19,12 +19,11 @@ type CredentialsOpts struct {
 }
 
 type VaultCredentialOutput struct {
-	Token      string
-	Expiration time.Time
+	*vault.ResponseAuth
 }
 
 func (vco VaultCredentialOutput) Expiry() time.Time {
-	return vco.Expiration
+	return time.Now().Add(time.Duration(vco.LeaseDuration * int(time.Second)))
 }
 
 func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialOutput {
@@ -57,15 +56,12 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 	res, err := client.Auth.JwtLogin(ctx, schema.JwtLoginRequest{
 		Jwt:  nt.AccessToken,
 		Role: opts.Role,
-	})
+	}, vault.WithMountPath("oidc"))
 	if err != nil {
 		log.WithError(err).Fatal("failed to authenticate to vault")
 		return nil
 	}
-	d := res.Data["auth"].(map[string]interface{})
-	output := VaultCredentialOutput{
-		Token: d["client_id"].(string),
-	}
+	output := VaultCredentialOutput{res.Auth}
 	err = cc.Set(output)
 	if err != nil {
 		log.WithError(err).Warning("failed to cache AWS Credentials")

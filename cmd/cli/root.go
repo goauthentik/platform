@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
+func main() {
 	var err error
 	if path.Base(os.Args[0]) == "ak-vault" {
 		err = vaultCmd.Execute()
