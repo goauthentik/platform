@@ -30,7 +30,28 @@ type ProfileTokenManager struct {
 	kf          keyfunc.Keyfunc
 }
 
-func NewProfile(profileName string) (*ProfileTokenManager, error) {
+type ProfileManagerOpt func(ptm *ProfileTokenManager) error
+
+func WithVerified() ProfileManagerOpt {
+	return func(ptm *ProfileTokenManager) error {
+		k, err := keyfunc.NewDefaultCtx(ptm.ctx, []string{
+			ak.URLsForProfile(storage.Manager().Get().Profiles[ptm.profileName]).JWKS,
+		})
+		if err != nil {
+			ptm.log.WithError(err).Warning("failed to get JWKS for profile")
+			return err
+		}
+		ptm.kf = k
+		go ptm.startRenewing()
+		return nil
+	}
+}
+
+func NewProfileVerified(profileName string) (*ProfileTokenManager, error) {
+	return NewProfile(profileName, WithVerified())
+}
+
+func NewProfile(profileName string, opts ...ProfileManagerOpt) (*ProfileTokenManager, error) {
 	ctx, stop := context.WithCancel(context.Background())
 
 	ptm := &ProfileTokenManager{
@@ -39,13 +60,12 @@ func NewProfile(profileName string) (*ProfileTokenManager, error) {
 		ctx:         ctx,
 		ctxStop:     stop,
 	}
-	k, err := keyfunc.NewDefaultCtx(ctx, []string{ak.URLsForProfile(storage.Manager().Get().Profiles[profileName]).JWKS})
-	if err != nil {
-		ptm.log.WithError(err).Warning("failed to get JWKS for profile")
-		return nil, err
+	for _, opt := range opts {
+		err := opt(ptm)
+		if err != nil {
+			return nil, err
+		}
 	}
-	ptm.kf = k
-	go ptm.startRenewing()
 	return ptm, nil
 }
 
@@ -76,6 +96,16 @@ func (ptm *ProfileTokenManager) startRenewing() {
 	for {
 		renewOnce()
 	}
+}
+
+func (ptm *ProfileTokenManager) Unverified() Token {
+	rt := storage.Manager().Get().Profiles[ptm.profileName].AccessToken
+	t, _, _ := jwt.NewParser().ParseUnverified(rt, &AuthentikClaims{})
+	ct := Token{
+		AccessToken:    t,
+		RawAccessToken: rt,
+	}
+	return ct
 }
 
 func (ptm *ProfileTokenManager) Token() Token {

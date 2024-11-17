@@ -32,7 +32,7 @@ func NewGlobal() *GlobalTokenManager {
 func (gtm *GlobalTokenManager) start() {
 	gtm.mlock.Lock()
 	for n := range storage.Manager().Get().Profiles {
-		m, err := NewProfile(n)
+		m, err := NewProfileVerified(n)
 		if err != nil {
 			gtm.log.WithError(err).WithField("profile", n).Warning("failed to create manager for profile")
 			continue
@@ -69,7 +69,7 @@ func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent) {
 	if evt.Type == storage.ConfigChangedProfileAdded {
 		d := delta(evt.PreviousConfig, storage.Manager().Get())
 		for _, dd := range d {
-			m, err := NewProfile(dd)
+			m, err := NewProfileVerified(dd)
 			if err != nil {
 				gtm.log.WithError(err).WithField("profile", dd).Warning("failed to create manager for profile")
 				continue
