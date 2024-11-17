@@ -50,25 +50,27 @@ func NewProfile(profileName string) (*ProfileTokenManager, error) {
 }
 
 func (ptm *ProfileTokenManager) startRenewing() {
-	current := ptm.Token()
-	exp, err := current.AccessToken.Claims.GetExpirationTime()
-	if err != nil {
-		ptm.log.WithError(err).Warning("failed to get current token expiry time")
-		return
-	}
-	dur := time.Until(exp.Time)
-	ptm.log.WithField("dur", dur).WithField("in", exp.Time).Debug("renewing token in")
-	ticker := time.NewTimer(dur)
-	defer ticker.Stop()
-
 	for {
-		select {
-		case <-ticker.C:
-			ptm.log.Debug("renewing token now")
-			ptm.renew()
+		current := ptm.Token()
+		exp, err := current.AccessToken.Claims.GetExpirationTime()
+		if err != nil {
+			ptm.log.WithError(err).Warning("failed to get current token expiry time")
 			return
-		case <-ptm.ctx.Done():
-			return
+		}
+		dur := time.Until(exp.Time)
+		ptm.log.WithField("dur", dur).WithField("in", exp.Time).Debug("renewing token in")
+		ticker := time.NewTimer(dur)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				ptm.log.Debug("renewing token now")
+				ptm.renew()
+				return
+			case <-ptm.ctx.Done():
+				return
+			}
 		}
 	}
 }

@@ -49,7 +49,7 @@ func (c *Cache[T]) Set(val T) error {
 
 func (c *Cache[T]) Get() (T, error) {
 	var cc T
-	c.log.Debug("Checking for cache existence")
+	c.log.Debug("Checking cache")
 	f, err := os.Open(c.path)
 	if err != nil {
 		if os.IsNotExist(err) {

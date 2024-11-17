@@ -40,5 +40,4 @@ func (ptm *ProfileTokenManager) renew() error {
 		return err
 	}
 	return nil
-
 }
