@@ -36,6 +36,12 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *AWSCredentialOut
 	mgr := storage.Manager()
 	prof := mgr.Get().Profiles[opts.Profile]
 
+	cc := storage.NewCache[AWSCredentialOutput]("auth-aws-cache", opts.Profile, opts.RoleARN)
+	if v, err := cc.Get(); err == nil {
+		log.Debug("Got AWS Credentials from cache")
+		return &v
+	}
+
 	c := sts.New(sts.Options{
 		Region: opts.Region,
 	})
@@ -45,12 +51,6 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *AWSCredentialOut
 	if err != nil {
 		log.WithError(err).Fatal("failed to exchange token")
 		return nil
-	}
-
-	cc := storage.NewCache[AWSCredentialOutput]("auth-aws-cache", opts.Profile, opts.RoleARN)
-	if v, err := cc.Get(); err == nil {
-		log.Debug("Got AWS Credentials from cache")
-		return &v
 	}
 
 	log.Debug("Fetching AWS Credentials...")
