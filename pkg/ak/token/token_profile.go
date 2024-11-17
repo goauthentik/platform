@@ -50,7 +50,7 @@ func NewProfile(profileName string) (*ProfileTokenManager, error) {
 }
 
 func (ptm *ProfileTokenManager) startRenewing() {
-	for {
+	renewOnce := func() {
 		current := ptm.Token()
 		exp, err := current.AccessToken.Claims.GetExpirationTime()
 		if err != nil {
@@ -72,6 +72,9 @@ func (ptm *ProfileTokenManager) startRenewing() {
 				return
 			}
 		}
+	}
+	for {
+		renewOnce()
 	}
 }
 
