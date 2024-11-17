@@ -11,7 +11,13 @@ bin/ak:
 	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/cfg.Version=${VERSION} -X goauthentik.io/cli/pkg/cfg.BuildHash=dev-$(shell git rev-parse HEAD))
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/cfg.BuildHash=${GIT_BUILD_HASH}" \
-		-v -a -o bin/ak .
+		-v -a -o bin/ak ./cmd/cli
+
+bin/ak-agent:
+	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/cfg.Version=${VERSION} -X goauthentik.io/cli/pkg/cfg.BuildHash=dev-$(shell git rev-parse HEAD))
+	go build \
+		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/cfg.BuildHash=${GIT_BUILD_HASH}" \
+		-v -a -o bin/ak-agent ./cmd/agent
 
 clean:
 	rm -rf ${PWD}/bin/*
