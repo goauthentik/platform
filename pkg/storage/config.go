@@ -67,6 +67,7 @@ func newManager() (*ConfigManager, error) {
 }
 
 func (cfg *ConfigManager) Load() error {
+	cfg.log.Debug("loading config")
 	f, err := os.Open(cfg.path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -89,6 +90,7 @@ func (cfg *ConfigManager) Get() ConfigV1 {
 }
 
 func (cfg *ConfigManager) Save() error {
+	cfg.log.Debug("saving config")
 	f, err := os.OpenFile(cfg.path, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil && !os.IsExist(err) && !os.IsNotExist(err) {
 		return err
