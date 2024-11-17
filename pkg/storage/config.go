@@ -17,7 +17,18 @@ type ConfigManager struct {
 	changed []chan ConfigChangedEvent
 }
 
-type ConfigChangedEvent struct{}
+type ConfigChangedType int
+
+const (
+	ConfigChangedGeneric ConfigChangedType = iota
+	ConfigChangedProfileAdded
+	ConfigChangedProfileRemoved
+)
+
+type ConfigChangedEvent struct {
+	Type           ConfigChangedType
+	PreviousConfig ConfigV1
+}
 
 var manager *ConfigManager
 
@@ -52,17 +63,6 @@ func newManager() (*ConfigManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Automatically watch and reload config
-	go func() {
-		for range cfg.Watch() {
-			cfg.log.Debug("config file changed, triggering config reload")
-			err = cfg.Load()
-			if err != nil {
-				cfg.log.WithError(err).Warning("failed to reload config")
-				continue
-			}
-		}
-	}()
 	return cfg, nil
 }
 
@@ -116,6 +116,14 @@ func (cfg *ConfigManager) watch() error {
 	if err != nil {
 		return err
 	}
+	reloadConfig := func() {
+		cfg.log.Debug("config file changed, triggering config reload")
+		err = cfg.Load()
+		if err != nil {
+			cfg.log.WithError(err).Warning("failed to reload config")
+			return
+		}
+	}
 	go func() {
 		for {
 			select {
@@ -123,11 +131,26 @@ func (cfg *ConfigManager) watch() error {
 				if !ok {
 					continue
 				}
-				cfg.log.WithField("event", event).Debug("file watch event")
-				if event.Name == cfg.path && event.Has(fsnotify.Write) {
-					for _, ch := range cfg.changed {
-						ch <- ConfigChangedEvent{}
-					}
+				if event.Name != cfg.path {
+					continue
+				}
+				if event.Has(fsnotify.Write) {
+					continue
+				}
+				cfg.log.WithField("event", event).Debug("config file update")
+				previousConfig := &cfg.loaded
+				reloadConfig()
+				evt := ConfigChangedEvent{
+					Type:           ConfigChangedGeneric,
+					PreviousConfig: *previousConfig,
+				}
+				if len(previousConfig.Profiles) < len(cfg.loaded.Profiles) {
+					evt.Type = ConfigChangedProfileAdded
+				} else if len(previousConfig.Profiles) > len(cfg.loaded.Profiles) {
+					evt.Type = ConfigChangedProfileRemoved
+				}
+				for _, ch := range cfg.changed {
+					ch <- evt
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
