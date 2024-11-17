@@ -63,7 +63,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *AWSCredentialOut
 	log.Debug("Fetching AWS Credentials...")
 	a, err := c.AssumeRoleWithWebIdentity(ctx, &sts.AssumeRoleWithWebIdentityInput{
 		RoleArn:          aws.String(opts.RoleARN),
-		RoleSessionName:  aws.String(pfm.Unverified().AccessToken.Claims.(*token.AuthentikClaims).Username),
+		RoleSessionName:  aws.String(pfm.Unverified().Claims().Username),
 		WebIdentityToken: aws.String(nt.AccessToken),
 	})
 	if err != nil {

@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"os"
 
 	"github.com/nightlyone/lockfile"
@@ -15,6 +16,8 @@ type Agent struct {
 	log            *log.Entry
 	systrayStarted bool
 	lock           lockfile.Lockfile
+	systrayCtx     context.Context
+	systrayCtxS    context.CancelFunc
 }
 
 func New() (*Agent, error) {

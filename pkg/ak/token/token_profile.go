@@ -17,6 +17,10 @@ type Token struct {
 	RawAccessToken string
 }
 
+func (t Token) Claims() *AuthentikClaims {
+	return t.AccessToken.Claims.(*AuthentikClaims)
+}
+
 type AuthentikClaims struct {
 	Username string `json:"preferred_username"`
 	jwt.RegisteredClaims
