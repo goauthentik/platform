@@ -76,7 +76,10 @@ func (ptm *ProfileTokenManager) startRenewing() {
 			select {
 			case <-ticker.C:
 				ptm.log.Debug("renewing token now")
-				ptm.renew()
+				err = ptm.renew()
+				if err != nil {
+					ptm.log.WithError(err).Warning("failed to renew token")
+				}
 				return
 			case <-ptm.ctx.Done():
 				return
@@ -108,11 +111,13 @@ func (ptm *ProfileTokenManager) Token() Token {
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			ptm.log.Debug("Token is expired and needs to be renewed")
-			ptm.renew()
+			err = ptm.renew()
+			if err != nil {
+				ptm.log.WithError(err).Warning("Failed to renew token")
+			}
 			return ptm.Token()
 		}
-		// temp
-		panic(err)
+		return ptm.Unverified()
 	}
 	ct := Token{
 		AccessToken:    t,
