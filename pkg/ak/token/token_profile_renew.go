@@ -25,6 +25,7 @@ func (ptm *ProfileTokenManager) renew() error {
 	}
 	log.WithField("url", req.URL.String()).Debug("sending request")
 
+	req.SetBasicAuth(profile.ClientID, "")
 	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", storage.FullVersion()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
