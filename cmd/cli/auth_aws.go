@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/auth/aws"
 )
 
-var awsOidcCmd = &cobra.Command{
-	Use:   "aws-oidc",
-	Short: "A brief description of your command",
+var awsCmd = &cobra.Command{
+	Use:   "aws",
+	Short: "Authenticate to AWS with the authentik profile.",
 	Run: func(cmd *cobra.Command, args []string) {
 		profile := mustFlag(cmd.Flags().GetString("profile"))
 		clientId := mustFlag(cmd.Flags().GetString("client-id"))
@@ -25,14 +26,15 @@ var awsOidcCmd = &cobra.Command{
 		})
 		err := json.NewEncoder(os.Stdout).Encode(cc)
 		if err != nil {
-			panic(err)
+			log.WithError(err).Warning("failed to write AWS credentials")
+			os.Exit(1)
 		}
 	},
 }
 
 func init() {
-	authCmd.AddCommand(awsOidcCmd)
-	awsOidcCmd.Flags().StringP("client-id", "c", "", "Client ID")
-	awsOidcCmd.Flags().StringP("role-arn", "r", "", "Role ARN")
-	awsOidcCmd.Flags().StringP("region", "e", "eu-central-1", "Region")
+	authCmd.AddCommand(awsCmd)
+	awsCmd.Flags().StringP("client-id", "c", "", "Client ID")
+	awsCmd.Flags().StringP("role-arn", "r", "", "Role ARN")
+	awsCmd.Flags().StringP("region", "e", "eu-central-1", "Region")
 }

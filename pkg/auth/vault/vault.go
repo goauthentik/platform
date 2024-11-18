@@ -12,11 +12,11 @@ import (
 )
 
 type CredentialsOpts struct {
-	Profile   string
-	ClientID  string
-	MountPath string
+	Profile  string
+	ClientID string
 	// Vault specific things
-	Role string
+	MountPath string
+	Role      string
 }
 
 type VaultCredentialOutput struct {
@@ -24,7 +24,7 @@ type VaultCredentialOutput struct {
 }
 
 func (vco VaultCredentialOutput) Expiry() time.Time {
-	return time.Now().Add(time.Duration(vco.LeaseDuration * int(time.Second)))
+	return time.Now().Add(time.Duration(vco.LeaseDuration) * time.Second)
 }
 
 func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialOutput {
