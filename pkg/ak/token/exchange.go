@@ -1,4 +1,4 @@
-package ak
+package token
 
 import (
 	"encoding/json"
@@ -9,21 +9,21 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/storage"
-	"golang.org/x/oauth2"
 )
 
 type ExchangeOpts struct {
 	ClientID string
 }
 
-func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*oauth2.Token, error) {
+func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
 	v := url.Values{}
 	v.Set("grant_type", "client_credentials")
 	v.Set("client_id", opts.ClientID)
 	v.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
 	v.Set("client_assertion", profile.AccessToken)
-	req, err := http.NewRequest("POST", URLsForProfile(profile).TokenURL, strings.NewReader(v.Encode()))
+	req, err := http.NewRequest("POST", ak.URLsForProfile(profile).TokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*oauth2.
 	if res.StatusCode > 200 {
 		return nil, errors.New("invalid response status code")
 	}
-	nt := &oauth2.Token{}
+	nt := &Token{}
 	err = json.NewDecoder(res.Body).Decode(&nt)
 	if err != nil {
 		return nil, err

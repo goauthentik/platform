@@ -1,10 +1,9 @@
-package ak
+package token
 
 import (
 	"time"
 
 	"goauthentik.io/cli/pkg/storage"
-	"golang.org/x/oauth2"
 )
 
 type CachedToken struct {
@@ -18,20 +17,20 @@ func (ct CachedToken) Expiry() time.Time {
 	return time.Now().Add(time.Second * time.Duration(ct.ExpiresIn))
 }
 
-func (ct CachedToken) Token() *oauth2.Token {
-	return &oauth2.Token{
-		AccessToken: ct.AccessToken,
-		Expiry:      ct.Exp,
-		ExpiresIn:   ct.ExpiresIn,
+func (ct CachedToken) Token() *Token {
+	return &Token{
+		RawAccessToken: ct.AccessToken,
+		Expiry:         ct.Exp,
+		ExpiresIn:      ct.ExpiresIn,
 	}
 }
 
-func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, opts ExchangeOpts) (*oauth2.Token, error) {
+func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
 	c := storage.NewCache[CachedToken]("token-cache", profileName, opts.ClientID)
 	v, err := c.Get()
 	if err == nil {
-		return &oauth2.Token{
-			AccessToken: v.AccessToken,
+		return &Token{
+			RawAccessToken: v.AccessToken,
 		}, nil
 	}
 	nt, err := ExchangeToken(profile, opts)
@@ -39,7 +38,7 @@ func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, op
 		return nil, err
 	}
 	ct := CachedToken{
-		AccessToken: nt.AccessToken,
+		AccessToken: nt.RawAccessToken,
 		Exp:         nt.Expiry,
 		ExpiresIn:   nt.ExpiresIn,
 	}

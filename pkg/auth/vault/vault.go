@@ -7,13 +7,14 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/ak"
+	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/storage"
 )
 
 type CredentialsOpts struct {
-	Profile  string
-	ClientID string
+	Profile   string
+	ClientID  string
+	MountPath string
 	// Vault specific things
 	Role string
 }
@@ -31,6 +32,12 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 	mgr := storage.Manager()
 	prof := mgr.Get().Profiles[opts.Profile]
 
+	cc := storage.NewCache[VaultCredentialOutput]("auth-vault-cache", opts.Profile, opts.Role)
+	if v, err := cc.Get(); err == nil {
+		log.Debug("Got Vault Credentials from cache")
+		return &v
+	}
+
 	client, err := vault.New(
 		vault.WithEnvironment(),
 	)
@@ -39,7 +46,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 		return nil
 	}
 
-	nt, err := ak.CachedExchangeToken(opts.Profile, prof, ak.ExchangeOpts{
+	nt, err := token.CachedExchangeToken(opts.Profile, prof, token.ExchangeOpts{
 		ClientID: opts.ClientID,
 	})
 	if err != nil {
@@ -47,16 +54,10 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 		return nil
 	}
 
-	cc := storage.NewCache[VaultCredentialOutput]("auth-vault-cache", opts.Profile, opts.Role)
-	if v, err := cc.Get(); err == nil {
-		log.Debug("Got Vault Credentials from cache")
-		return &v
-	}
-
 	res, err := client.Auth.JwtLogin(ctx, schema.JwtLoginRequest{
-		Jwt:  nt.AccessToken,
+		Jwt:  nt.RawAccessToken,
 		Role: opts.Role,
-	}, vault.WithMountPath("oidc"))
+	}, vault.WithMountPath(opts.MountPath))
 	if err != nil {
 		log.WithError(err).Fatal("failed to authenticate to vault")
 		return nil
@@ -64,7 +65,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 	output := VaultCredentialOutput{res.Auth}
 	err = cc.Set(output)
 	if err != nil {
-		log.WithError(err).Warning("failed to cache AWS Credentials")
+		log.WithError(err).Warning("failed to cache vault Credentials")
 	}
 	return &output
 }

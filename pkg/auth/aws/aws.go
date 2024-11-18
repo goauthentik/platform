@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/storage"
 )
@@ -46,7 +45,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *AWSCredentialOut
 	c := sts.New(sts.Options{
 		Region: opts.Region,
 	})
-	nt, err := ak.CachedExchangeToken(opts.Profile, prof, ak.ExchangeOpts{
+	nt, err := token.CachedExchangeToken(opts.Profile, prof, token.ExchangeOpts{
 		ClientID: opts.ClientID,
 	})
 	if err != nil {
@@ -64,7 +63,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *AWSCredentialOut
 	a, err := c.AssumeRoleWithWebIdentity(ctx, &sts.AssumeRoleWithWebIdentityInput{
 		RoleArn:          aws.String(opts.RoleARN),
 		RoleSessionName:  aws.String(pfm.Unverified().Claims().Username),
-		WebIdentityToken: aws.String(nt.AccessToken),
+		WebIdentityToken: aws.String(nt.RawAccessToken),
 	})
 	if err != nil {
 		log.WithError(err).Panic("failed to assume WebIdentity")

@@ -12,20 +12,6 @@ import (
 	"goauthentik.io/cli/pkg/storage"
 )
 
-type Token struct {
-	AccessToken    *jwt.Token
-	RawAccessToken string
-}
-
-func (t Token) Claims() *AuthentikClaims {
-	return t.AccessToken.Claims.(*AuthentikClaims)
-}
-
-type AuthentikClaims struct {
-	Username string `json:"preferred_username"`
-	jwt.RegisteredClaims
-}
-
 type ProfileTokenManager struct {
 	log         *log.Entry
 	profileName string
