@@ -18,7 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
-	goauthentik.io/api/v3 v3.2024102.3
+	goauthentik.io/api/v3 v3.2024104.1
 	k8s.io/apimachinery v0.31.3
 	k8s.io/client-go v0.31.3
 )
@@ -59,6 +59,7 @@ require (
 	github.com/tevino/abool v1.2.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
