@@ -6,7 +6,7 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.3.5
 	github.com/adrg/xdg v0.5.3
 	github.com/aws/aws-sdk-go-v2 v1.32.5
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1
 	github.com/cli/oauth v1.2.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/getsentry/sentry-go v0.29.1
@@ -25,10 +25,10 @@ require (
 
 require (
 	github.com/MicahParks/jwkset v0.5.19 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.23 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.23 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.4 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.24 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.24 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.5 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
