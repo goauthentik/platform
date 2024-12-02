@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/MicahParks/keyfunc/v3 v3.3.5
 	github.com/adrg/xdg v0.5.3
-	github.com/aws/aws-sdk-go-v2 v1.32.5
+	github.com/aws/aws-sdk-go-v2 v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1
 	github.com/cli/oauth v1.2.0
 	github.com/fsnotify/fsnotify v1.8.0
