@@ -15,6 +15,14 @@ import (
 
 type ExchangeOpts struct {
 	ClientID string
+	Scopes   []string
+}
+
+func DefaultExchangeOpts(clientID string) ExchangeOpts {
+	return ExchangeOpts{
+		ClientID: clientID,
+		Scopes:   []string{"openid", "email", "profile"},
+	}
 }
 
 func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
@@ -23,6 +31,7 @@ func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, 
 	v.Set("client_id", opts.ClientID)
 	v.Set("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
 	v.Set("client_assertion", profile.AccessToken)
+	v.Set("scope", strings.Join(opts.Scopes, " "))
 	req, err := http.NewRequest("POST", ak.URLsForProfile(profile).TokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return nil, err

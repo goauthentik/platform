@@ -45,9 +45,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *AWSCredentialOut
 	c := sts.New(sts.Options{
 		Region: opts.Region,
 	})
-	nt, err := token.CachedExchangeToken(opts.Profile, prof, token.ExchangeOpts{
-		ClientID: opts.ClientID,
-	})
+	nt, err := token.CachedExchangeToken(opts.Profile, prof, token.DefaultExchangeOpts(opts.ClientID))
 	if err != nil {
 		log.WithError(err).Fatal("failed to exchange token")
 		return nil
