@@ -5,7 +5,7 @@ PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
 VERSION = "0.1.0"
-LD_FLAGS = -X goauthentik.io/cli/pkg/cfg.Version=${VERSION}
+LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION}
 GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 MODULE := pam_authentik
 PAM_OUTPUT := ./bin/pam/
@@ -14,15 +14,15 @@ LOCAL_BUILD_ARCH := linux/amd64
 all: clean gen bin/ak bin/ak-agent bin/pam/$(MODULE).so
 
 bin/ak:
-	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/cfg.Version=${VERSION} -X goauthentik.io/cli/pkg/cfg.BuildHash=dev-$(shell git rev-parse HEAD))
+	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
 	go build \
-		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/cfg.BuildHash=${GIT_BUILD_HASH}" \
+		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -a -o bin/ak ${PWD}/cmd/cli/main
 
 bin/ak-agent:
-	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/cfg.Version=${VERSION} -X goauthentik.io/cli/pkg/cfg.BuildHash=dev-$(shell git rev-parse HEAD))
+	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
 	go build \
-		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/cfg.BuildHash=${GIT_BUILD_HASH}" \
+		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -a -o bin/ak-agent ${PWD}/cmd/agent
 
 clean:
@@ -30,9 +30,9 @@ clean:
 	rm -rf ${PWD}/*.h
 
 bin/pam/$(MODULE).so: .
-	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/cfg.Version=${VERSION} -X goauthentik.io/cli/pkg/cfg.BuildHash=dev-$(shell git rev-parse HEAD))
+	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
 	go build \
-		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/cfg.BuildHash=${GIT_BUILD_HASH}" \
+		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -buildmode=c-shared -o bin/pam/$(MODULE).so ${PWD}/cmd/pam/
 
 pam-deb: bin/pam/$(MODULE).so
