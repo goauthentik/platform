@@ -9,12 +9,12 @@ import (
 type CachedToken struct {
 	AccessToken string    `json:"at"`
 	Exp         time.Time `json:"exp"`
-	ExpiresIn   int64     `json:"expires_in,omitempty"`
+	ExpiresIn   int64     `json:"expires_in"`
 	Created     time.Time `json:"iat"`
 }
 
 func (ct CachedToken) Expiry() time.Time {
-	return time.Now().Add(time.Second * time.Duration(ct.ExpiresIn))
+	return ct.Created.Add(time.Second * time.Duration(ct.ExpiresIn))
 }
 
 func (ct CachedToken) Token() *Token {
@@ -41,6 +41,7 @@ func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, op
 		AccessToken: nt.RawAccessToken,
 		Exp:         nt.Expiry,
 		ExpiresIn:   nt.ExpiresIn,
+		Created:     time.Now(),
 	}
 	err = c.Set(ct)
 	if err != nil {
