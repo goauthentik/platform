@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cli/browser"
 	"github.com/kolide/systray"
 	"goauthentik.io/cli/pkg/agent/icon"
 	"goauthentik.io/cli/pkg/ak/token"
@@ -56,14 +57,17 @@ func (a *Agent) systrayConfigUpdate() {
 	systray.ResetMenu()
 	a.systrayEarlyItems()
 	systray.AddSeparator()
-	for n := range a.cfg.Get().Profiles {
+	for n, p := range a.cfg.Get().Profiles {
 		i := systray.AddMenuItem(fmt.Sprintf("Profile %s", n), "")
 		oi := i.AddSubMenuItem("Open authentik", "")
 		go func() {
 			for {
 				select {
 				case <-oi.ClickedCh:
-					// foo
+					err := browser.OpenURL(p.AuthentikURL)
+					if err != nil {
+						a.log.WithError(err).Warning("failed to open URL")
+					}
 				case <-a.systrayCtx.Done():
 					return
 				}
