@@ -57,6 +57,6 @@ var setupCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(setupCmd)
 	setupCmd.Flags().StringP("authentik-url", "a", "", "URL to the authentik Instance")
-	setupCmd.Flags().StringP("app", "s", "", "Slug of the CLI application")
+	setupCmd.Flags().StringP("app", "s", "authentik-cli", "Slug of the CLI application")
 	setupCmd.Flags().StringP("client-id", "i", "authentik-cli", "Client ID")
 }
