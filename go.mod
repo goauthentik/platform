@@ -8,7 +8,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.2
 	github.com/cli/browser v1.0.0
-	github.com/cli/oauth v1.2.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/getsentry/sentry-go v0.30.0
 	github.com/golang-jwt/jwt/v5 v5.2.1

@@ -58,43 +58,48 @@ func (a *Agent) systrayConfigUpdate() {
 	systray.ResetMenu()
 	a.systrayEarlyItems()
 	systray.AddSeparator()
+
 	for n, p := range a.cfg.Get().Profiles {
-		i := systray.AddMenuItem(fmt.Sprintf("Profile %s", n), "")
-		oi := i.AddSubMenuItem("Open authentik", "")
-		go func() {
-			for {
-				select {
-				case <-oi.ClickedCh:
-					err := browser.OpenURL(p.AuthentikURL)
-					if err != nil {
-						a.log.WithError(err).Warning("failed to open URL")
-					}
-				case <-a.systrayCtx.Done():
-					return
-				}
-			}
-		}()
-		pfm, err := token.NewProfile(n)
-		if err == nil {
-			ut := pfm.Unverified()
-			exp, _ := ut.AccessToken.Claims.GetExpirationTime()
-			iat, _ := ut.AccessToken.Claims.GetIssuedAt()
-			i.AddSubMenuItem(fmt.Sprintf("Username: %s", ut.Claims().Username), "").Disable()
-			i.AddSubMenuItem(fmt.Sprintf(
-				"Renewed token at %s (%s)",
-				iat.String(),
-				timediff.TimeDiff(iat.Time),
-			), "").Disable()
-			i.AddSubMenuItem(fmt.Sprintf(
-				"Renewing token at %s (%s)",
-				exp.String(),
-				timediff.TimeDiff(exp.Time),
-			), "").Disable()
-		} else {
-			i.AddSubMenuItem("Failed to get info about token", "").Disable()
-			i.AddSubMenuItem(err.Error(), "").Disable()
-		}
+		a.systrayProfileItme(n, p)
 	}
 	systray.AddSeparator()
 	a.systrayLateItems()
+}
+
+func (a *Agent) systrayProfileItme(name string, profile storage.ConfigV1Profile) {
+	i := systray.AddMenuItem(fmt.Sprintf("Profile %s", name), "")
+	oi := i.AddSubMenuItem("Open authentik", "")
+	go func() {
+		for {
+			select {
+			case <-oi.ClickedCh:
+				err := browser.OpenURL(profile.AuthentikURL)
+				if err != nil {
+					a.log.WithError(err).Warning("failed to open URL")
+				}
+			case <-a.systrayCtx.Done():
+				return
+			}
+		}
+	}()
+	pfm, err := token.NewProfile(name)
+	if err == nil {
+		ut := pfm.Unverified()
+		exp, _ := ut.AccessToken.Claims.GetExpirationTime()
+		iat, _ := ut.AccessToken.Claims.GetIssuedAt()
+		i.AddSubMenuItem(fmt.Sprintf("Username: %s", ut.Claims().Username), "").Disable()
+		i.AddSubMenuItem(fmt.Sprintf(
+			"Renewed token at %s (%s)",
+			iat.String(),
+			timediff.TimeDiff(iat.Time),
+		), "").Disable()
+		i.AddSubMenuItem(fmt.Sprintf(
+			"Renewing token at %s (%s)",
+			exp.String(),
+			timediff.TimeDiff(exp.Time),
+		), "").Disable()
+	} else {
+		i.AddSubMenuItem("Failed to get info about token", "").Disable()
+		i.AddSubMenuItem(err.Error(), "").Disable()
+	}
 }
