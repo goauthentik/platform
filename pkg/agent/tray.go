@@ -6,6 +6,7 @@ import (
 
 	"github.com/cli/browser"
 	"github.com/kolide/systray"
+	"github.com/mergestat/timediff"
 	"goauthentik.io/cli/pkg/agent/icon"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/storage"
@@ -77,8 +78,18 @@ func (a *Agent) systrayConfigUpdate() {
 		if err == nil {
 			ut := pfm.Unverified()
 			exp, _ := ut.AccessToken.Claims.GetExpirationTime()
+			iat, _ := ut.AccessToken.Claims.GetIssuedAt()
 			i.AddSubMenuItem(fmt.Sprintf("Username: %s", ut.Claims().Username), "").Disable()
-			i.AddSubMenuItem(fmt.Sprintf("Renewing token at %s", exp.String()), "").Disable()
+			i.AddSubMenuItem(fmt.Sprintf(
+				"Renewed token at %s (%s)",
+				iat.String(),
+				timediff.TimeDiff(iat.Time),
+			), "").Disable()
+			i.AddSubMenuItem(fmt.Sprintf(
+				"Renewing token at %s (%s)",
+				exp.String(),
+				timediff.TimeDiff(exp.Time),
+			), "").Disable()
 		} else {
 			i.AddSubMenuItem("Failed to get info about token", "").Disable()
 			i.AddSubMenuItem(err.Error(), "").Disable()
