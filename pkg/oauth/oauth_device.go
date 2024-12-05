@@ -45,24 +45,29 @@ func (oa *Flow) DeviceFlow() (*api.AccessToken, error) {
 		return nil, err
 	}
 
-	if oa.DisplayCode == nil {
-		fmt.Fprintf(stdout, "First, copy your one-time code: %s\n", code.UserCode)
-		fmt.Fprint(stdout, "Then press [Enter] to continue in the web browser... ")
-		_ = waitForEnter(stdin)
-	} else {
-		err := oa.DisplayCode(code.UserCode, code.VerificationURI)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	browseURL := oa.BrowseURL
-	if browseURL == nil {
-		browseURL = browser.OpenURL
-	}
+	if code.VerificationURIComplete == "" {
+		if oa.DisplayCode == nil {
+			fmt.Fprintf(stdout, "First, copy your one-time code: %s\n", code.UserCode)
+			fmt.Fprint(stdout, "Then press [Enter] to continue in the web browser... ")
+			_ = waitForEnter(stdin)
+		} else {
+			err := oa.DisplayCode(code.UserCode, code.VerificationURI)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-	if err = browseURL(code.VerificationURI); err != nil {
-		return nil, fmt.Errorf("error opening the web browser: %w", err)
+		if browseURL == nil {
+			browseURL = browser.OpenURL
+		}
+		if err = browseURL(code.VerificationURI); err != nil {
+			return nil, fmt.Errorf("error opening the web browser: %w", err)
+		}
+	} else {
+		if err = browseURL(code.VerificationURIComplete); err != nil {
+			return nil, fmt.Errorf("error opening the web browser: %w", err)
+		}
 	}
 
 	return device.Wait(context.TODO(), httpClient, host.TokenURL, device.WaitOptions{
