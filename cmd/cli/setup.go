@@ -1,10 +1,10 @@
 package cli
 
 import (
-	"github.com/cli/oauth"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/ak"
+	"goauthentik.io/cli/pkg/oauth"
 	"goauthentik.io/cli/pkg/storage"
 )
 
