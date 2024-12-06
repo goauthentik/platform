@@ -7,7 +7,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/aws/aws-sdk-go-v2 v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.2
-	github.com/cli/browser v1.0.0
+	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/getsentry/sentry-go v0.30.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -33,7 +33,6 @@ require (
 	github.com/aws/smithy-go v1.22.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
