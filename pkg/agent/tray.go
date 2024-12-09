@@ -34,6 +34,18 @@ func (a *Agent) systrayReady() {
 
 func (a *Agent) systrayEarlyItems() {
 	systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "").Disable()
+	mAddAcc := systray.AddMenuItem("Add account...", "")
+
+	go func() {
+		for {
+			select {
+			case <-mAddAcc.ClickedCh:
+				a.AccountSetup()
+			case <-a.systrayCtx.Done():
+				return
+			}
+		}
+	}()
 }
 
 func (a *Agent) systrayLateItems() {
