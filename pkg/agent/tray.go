@@ -33,15 +33,20 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	_ = systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "")
+	systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "").Disable()
 }
 
 func (a *Agent) systrayLateItems() {
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 
 	go func() {
-		for range mQuit.ClickedCh {
-			systray.Quit()
+		for {
+			select {
+			case <-mQuit.ClickedCh:
+				systray.Quit()
+			case <-a.systrayCtx.Done():
+				return
+			}
 		}
 	}()
 }
@@ -89,14 +94,14 @@ func (a *Agent) systrayProfileItme(name string, profile storage.ConfigV1Profile)
 		iat, _ := ut.AccessToken.Claims.GetIssuedAt()
 		i.AddSubMenuItem(fmt.Sprintf("Username: %s", ut.Claims().Username), "").Disable()
 		i.AddSubMenuItem(fmt.Sprintf(
-			"Renewed token at %s (%s)",
-			iat.String(),
+			"Renewed token %s (%s)",
 			timediff.TimeDiff(iat.Time),
+			iat.String(),
 		), "").Disable()
 		i.AddSubMenuItem(fmt.Sprintf(
-			"Renewing token at %s (%s)",
-			exp.String(),
+			"Renewing token %s (%s)",
 			timediff.TimeDiff(exp.Time),
+			exp.String(),
 		), "").Disable()
 	} else {
 		i.AddSubMenuItem("Failed to get info about token", "").Disable()
