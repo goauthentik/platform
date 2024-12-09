@@ -1,11 +1,8 @@
 package cli
 
 import (
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/oauth"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/ak/setup"
 )
 
 // setupCmd represents the setup command
@@ -17,40 +14,14 @@ var setupCmd = &cobra.Command{
 		base := mustFlag(cmd.Flags().GetString("authentik-url"))
 		appSlug := mustFlag(cmd.Flags().GetString("app"))
 		clientId := mustFlag(cmd.Flags().GetString("client-id"))
-
-		mgr := storage.Manager()
-		urls := ak.URLsForProfile(storage.ConfigV1Profile{
-			AuthentikURL: base,
-			AppSlug:      appSlug,
-		})
-
-		flow := &oauth.Flow{
-			Host: &oauth.Host{
-				AuthorizeURL:  urls.AuthorizeURL,
-				DeviceCodeURL: urls.DeviceCodeURL,
-				TokenURL:      urls.TokenURL,
-			},
-			ClientID: clientId,
-			Scopes:   []string{"openid", "profile", "email", "offline_access"},
-		}
-
-		accessToken, err := flow.DetectFlow()
-		if err != nil {
-			log.WithError(err).Fatal("failed to start device flow")
-		}
-
 		profileName := mustFlag(cmd.Flags().GetString("profile"))
-		mgr.Get().Profiles[profileName] = storage.ConfigV1Profile{
+
+		setup.Setup(setup.Options{
 			AuthentikURL: base,
 			AppSlug:      appSlug,
 			ClientID:     clientId,
-			AccessToken:  accessToken.Token,
-			RefreshToken: accessToken.RefreshToken,
-		}
-		err = mgr.Save()
-		if err != nil {
-			log.WithError(err).Warning("failed to save config")
-		}
+			ProfileName:  profileName,
+		})
 	},
 }
 
