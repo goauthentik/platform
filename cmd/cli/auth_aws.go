@@ -37,4 +37,6 @@ func init() {
 	awsCmd.Flags().StringP("client-id", "c", "", "Client ID")
 	awsCmd.Flags().StringP("role-arn", "r", "", "Role ARN")
 	awsCmd.Flags().StringP("region", "e", "eu-central-1", "Region")
+	awsCmd.MarkFlagRequired("client-id")
+	awsCmd.MarkFlagRequired("role-arn")
 }

@@ -2,8 +2,8 @@ package token
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -32,11 +32,15 @@ func (ptm *ProfileTokenManager) renew() error {
 	if err != nil {
 		return err
 	}
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
 	if res.StatusCode > 200 {
-		return errors.New("invalid response status code")
+		return fmt.Errorf("invalid response status code: %s", string(b))
 	}
 	nt := &Token{}
-	err = json.NewDecoder(res.Body).Decode(&nt)
+	err = json.Unmarshal(b, &nt)
 	if err != nil {
 		return err
 	}

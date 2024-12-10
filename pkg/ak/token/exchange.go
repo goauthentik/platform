@@ -2,8 +2,8 @@ package token
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -43,11 +43,15 @@ func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, 
 	if err != nil {
 		return nil, err
 	}
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 	if res.StatusCode > 200 {
-		return nil, errors.New("invalid response status code")
+		return nil, fmt.Errorf("invalid response status code: %s", string(b))
 	}
 	nt := &Token{}
-	err = json.NewDecoder(res.Body).Decode(&nt)
+	err = json.Unmarshal(b, &nt)
 	if err != nil {
 		return nil, err
 	}
