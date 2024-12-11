@@ -20,7 +20,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	goauthentik.io/api/v3 v3.2024104.2
-	k8s.io/apimachinery v0.31.3
+	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.3
 )
 
