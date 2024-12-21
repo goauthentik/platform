@@ -40,7 +40,7 @@ bin/pam/$(MODULE).so: .
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -buildmode=c-shared -o bin/pam/$(MODULE).so ${PWD}/cmd/pam/
 
-pam-deb: bin/pam/$(MODULE).so
+bin/pam/deb: bin/pam/$(MODULE).so
 	mkdir -p $(PAM_OUTPUT)
 	$(shell go env GOPATH)/bin/nfpm package -p deb -t $(PAM_OUTPUT) -f ${PWD}/cmd/pam/nfpm.yaml
 
@@ -57,7 +57,7 @@ pam-docker: clean gen
 		-v pam_authentik-go-cache:/root/go/pkg \
 		-v pam_authentik-go-build-cache:/root/.cache \
 		pam_authentik:local_build \
-		make pam-deb
+		make bin/pam/deb
 
 gen:
 	go generate ./...

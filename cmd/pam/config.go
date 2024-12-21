@@ -60,7 +60,7 @@ func configFromArgs(args []string) (*config, error) {
 	// 	Transport: GetTLSTransport(c.Insecure),
 	// }
 
-	// config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", c.Token))
+	config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", c.Token))
 	apiClient := api.NewAPIClient(config)
 	c.client = apiClient
 	return c, nil
