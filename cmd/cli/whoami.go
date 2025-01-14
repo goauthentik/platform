@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -46,7 +45,7 @@ var whoamiCmd = &cobra.Command{
 			log.WithError(err).Warning("failed to render JSON")
 			return
 		}
-		os.Stdout.Write(b)
+		fmt.Println(string(b))
 	},
 }
 

@@ -27,5 +27,5 @@ func init() {
 	authCmd.AddCommand(vaultCmd)
 	vaultCmd.Flags().StringP("client-id", "c", "", "Client ID")
 	vaultCmd.Flags().StringP("mount-path", "m", "authentik/", "Vault authentication backend mountpoint")
-	vaultCmd.MarkFlagRequired("client-id")
+	_ = vaultCmd.MarkFlagRequired("client-id")
 }

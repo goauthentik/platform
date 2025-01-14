@@ -40,5 +40,5 @@ var kubectlCmd = &cobra.Command{
 func init() {
 	authCmd.AddCommand(kubectlCmd)
 	kubectlCmd.Flags().StringP("client-id", "c", "", "Client ID")
-	kubectlCmd.MarkFlagRequired("client-id")
+	_ = kubectlCmd.MarkFlagRequired("client-id")
 }

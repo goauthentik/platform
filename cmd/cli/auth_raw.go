@@ -31,5 +31,5 @@ var rawCmd = &cobra.Command{
 func init() {
 	authCmd.AddCommand(rawCmd)
 	rawCmd.Flags().StringP("client-id", "c", "", "Client ID")
-	rawCmd.MarkFlagRequired("client-id")
+	_ = rawCmd.MarkFlagRequired("client-id")
 }
