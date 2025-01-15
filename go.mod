@@ -3,7 +3,7 @@ module goauthentik.io/cli
 go 1.23.1
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.3.8
+	github.com/MicahParks/keyfunc/v3 v3.3.10
 	github.com/adrg/xdg v0.5.3
 	github.com/aws/aws-sdk-go-v2 v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.6
@@ -25,7 +25,7 @@ require (
 )
 
 require (
-	github.com/MicahParks/jwkset v0.7.0 // indirect
+	github.com/MicahParks/jwkset v0.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.27 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.27 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.1 // indirect
