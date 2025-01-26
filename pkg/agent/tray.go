@@ -23,12 +23,17 @@ func (a *Agent) startSystray() {
 			panic(err) // handle properly please!
 		}
 	}, func(b bool) {
+		if b {
+			systray.SetIcon(icon.IconLight)
+		} else {
+			systray.SetIcon(icon.IconDark)
+		}
 	})
 }
 
 func (a *Agent) systrayReady() {
 	a.systrayStarted = true
-	systray.SetIcon(icon.Icon)
+	systray.SetTemplateIcon(icon.IconLight, icon.IconLight)
 	a.systrayConfigUpdate()
 }
 
