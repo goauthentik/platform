@@ -19,7 +19,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
-	goauthentik.io/api/v3 v3.2024123.3
+	goauthentik.io/api/v3 v3.2024123.4
 	k8s.io/apimachinery v0.32.2
 	k8s.io/client-go v0.32.2
 )
