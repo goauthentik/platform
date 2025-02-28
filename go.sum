@@ -39,8 +39,8 @@ github.com/MicahParks/keyfunc/v3 v3.3.10 h1:JtEGE8OcNeI297AMrR4gVXivV8fyAawFUMkb
 github.com/MicahParks/keyfunc/v3 v3.3.10/go.mod h1:1TEt+Q3FO7Yz2zWeYO//fMxZMOiar808NqjWQQpBPtU=
 github.com/adrg/xdg v0.5.3 h1:xRnxJXne7+oWDatRhR1JLnvuccuIeCoBu2rtuLqQB78=
 github.com/adrg/xdg v0.5.3/go.mod h1:nlTsY+NNiCBGCK2tpm09vRqfVzrc2fLmXGpBLF0zlTQ=
-github.com/aws/aws-sdk-go-v2 v1.36.2 h1:Ub6I4lq/71+tPb/atswvToaLGVMxKZvjYDVOWEExOcU=
-github.com/aws/aws-sdk-go-v2 v1.36.2/go.mod h1:LLXuLpgzEbD766Z5ECcRmi8AzSwfZItDtmABVkRLGzg=
+github.com/aws/aws-sdk-go-v2 v1.36.3 h1:mJoei2CxPutQVxaATCzDUjcZEjVRdpsiiXi2o38yqWM=
+github.com/aws/aws-sdk-go-v2 v1.36.3/go.mod h1:LLXuLpgzEbD766Z5ECcRmi8AzSwfZItDtmABVkRLGzg=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.33 h1:knLyPMw3r3JsU8MFHWctE4/e2qWbPaxDYLlohPvnY8c=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.33/go.mod h1:EBp2HQ3f+XCB+5J+IoEbGhoV7CpJbnrsd4asNXmTL0A=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.33 h1:K0+Ne08zqti8J9jwENxZ5NoUyBnaFDTu3apwQJWrwwA=
