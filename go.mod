@@ -15,7 +15,7 @@ require (
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.3
 	github.com/nightlyone/lockfile v1.0.0
-	github.com/prometheus/client_golang v1.21.0
+	github.com/prometheus/client_golang v1.21.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
