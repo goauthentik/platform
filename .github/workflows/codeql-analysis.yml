@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: "0 20 * * 2"
 
+permissions:
+  actions: read
+  checks: write
+  contents: read
+  security-events: write
+
 jobs:
   analyze:
     name: Analyze
