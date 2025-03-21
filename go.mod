@@ -10,7 +10,7 @@ require (
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/getsentry/sentry-go v0.31.1
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.3
