@@ -39,7 +39,12 @@ func (c *Cache[T]) Set(val T) error {
 	if err != nil && !os.IsExist(err) && !os.IsNotExist(err) {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			c.log.WithError(err).Warning("failed to close cache file")
+		}
+	}()
 	err = json.NewEncoder(f).Encode(val)
 	if err != nil {
 		return err
@@ -58,7 +63,12 @@ func (c *Cache[T]) Get() (T, error) {
 		}
 		return cc, err
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			c.log.WithError(err).Warning("failed to close cache file")
+		}
+	}()
 	err = json.NewDecoder(f).Decode(&cc)
 	if err != nil {
 		return cc, err

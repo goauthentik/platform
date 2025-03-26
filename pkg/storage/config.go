@@ -77,7 +77,12 @@ func (cfg *ConfigManager) Load() error {
 		}
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			cfg.log.WithError(err).Warning("failed to close config file")
+		}
+	}()
 	err = json.NewDecoder(f).Decode(&cfg.loaded)
 	if err != nil {
 		return err
@@ -95,7 +100,12 @@ func (cfg *ConfigManager) Save() error {
 	if err != nil && !os.IsExist(err) && !os.IsNotExist(err) {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			cfg.log.WithError(err).Warning("failed to close config file")
+		}
+	}()
 	err = json.NewEncoder(f).Encode(&cfg.loaded)
 	if err != nil {
 		return err

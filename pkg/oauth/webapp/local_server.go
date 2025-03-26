@@ -81,5 +81,5 @@ func (s *localServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func defaultSuccessHTML(w io.Writer) {
-	fmt.Fprintf(w, "<p>You may now close this page and return to the client app.</p>")
+	_, _ = fmt.Fprintf(w, "<p>You may now close this page and return to the client app.</p>")
 }

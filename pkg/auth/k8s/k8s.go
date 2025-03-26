@@ -21,7 +21,7 @@ type KubeCredentialOutput struct {
 }
 
 func (kco KubeCredentialOutput) Expiry() time.Time {
-	return kco.ExecCredentialStatus.ExpirationTimestamp.Time
+	return kco.ExpirationTimestamp.Time
 }
 
 func GetCredentials(ctx context.Context, opts CredentialsOpts) *KubeCredentialOutput {
