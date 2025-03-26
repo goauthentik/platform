@@ -3,6 +3,7 @@ package cli
 import (
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/auth/vault"
 )
@@ -19,7 +20,10 @@ var vaultCmd = &cobra.Command{
 		if output == nil {
 			return
 		}
-		os.Stdout.WriteString(output.ClientToken)
+		_, err := os.Stdout.WriteString(output.ClientToken)
+		if err != nil {
+			log.WithError(err).Warning("failed to write token")
+		}
 	},
 }
 
