@@ -1,0 +1,14 @@
+{
+  "name": "authentik CLI & PAM",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}

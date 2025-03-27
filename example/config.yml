@@ -1,0 +1,4 @@
+---
+authentik_url: http://10.120.20.68:9000
+debug: true
+authentication_flow: default-authentication-flow
