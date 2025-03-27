@@ -36,7 +36,7 @@ bin/pam/pam_authentik.so: .
 	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
-		-v -buildmode=c-shared -o bin/pam/pam_authentik.so ${PWD}/pkg/pam/
+		-v -buildmode=c-shared -o bin/pam/pam_authentik.so ${PWD}/cmd/pam/
 
 bin/pam/deb: bin/pam/pam_authentik.so
 	mkdir -p ${PWD}/bin/pam

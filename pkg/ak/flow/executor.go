@@ -100,6 +100,10 @@ func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Config
 	return fe, nil
 }
 
+func (fe *FlowExecutor) SetSolver(component StageComponent, solver SolverFunction) {
+	fe.solvers[component] = solver
+}
+
 func (fe *FlowExecutor) RoundTrip(req *http.Request) (*http.Response, error) {
 	res, err := fe.transport.RoundTrip(req)
 	if res != nil {

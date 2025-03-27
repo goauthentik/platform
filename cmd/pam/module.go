@@ -22,6 +22,7 @@ import (
 	"math"
 	"unsafe"
 
+	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/pam/config"
 )
 
@@ -41,6 +42,9 @@ func NewInstance(pamh *C.pam_handle_t) (*Module, error) {
 		return nil, err
 	}
 	m.config = config.Get()
+	if config.Get().Debug {
+		log.SetLevel(log.DebugLevel)
+	}
 	return m, nil
 }
 

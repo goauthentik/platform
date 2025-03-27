@@ -19,7 +19,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
-	"goauthentik.io/cli/pkg/flow"
+	"goauthentik.io/cli/pkg/ak/flow"
 )
 
 func (m Module) interactiveSolver_AuthenticatorValidate(challenge *api.ChallengeTypes, afesr api.ApiFlowsExecutorSolveRequest) (api.FlowChallengeResponseRequest, error) {
