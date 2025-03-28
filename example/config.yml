@@ -2,3 +2,4 @@
 authentik_url: http://authentik:9000
 debug: true
 authentication_flow: default-authentication-flow
+token_jwks: http://authentik:9000/application/o/authentik-pam/jwks/

@@ -3,12 +3,12 @@ package cli
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"os/user"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/auth/raw"
+	"golang.org/x/crypto/ssh"
 )
 
 var sshCmd = &cobra.Command{
@@ -24,20 +24,39 @@ var sshCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		cc := raw.GetCredentials(cmd.Context(), raw.CredentialsOpts{
+		_ = raw.GetCredentials(cmd.Context(), raw.CredentialsOpts{
 			Profile:  profile,
 			ClientID: "authentik-pam",
 		})
-		fmt.Println(cc.AccessToken)
 
-		proc := exec.Command("ssh", "-l", fmt.Sprintf("%s@ak-token", u.Name), args[0])
-		proc.Env = append(proc.Env, "")
-		proc.Stderr = os.Stderr
-		proc.Stdout = os.Stdout
-		proc.Stdin = os.Stdin
-		proc.Start()
-		proc.Wait()
-		os.Exit(proc.ProcessState.ExitCode())
+		config := &ssh.ClientConfig{
+			User: fmt.Sprintf("%s@ak-token", u.Username),
+			Auth: []ssh.AuthMethod{
+				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
+					fmt.Println(name, instruction, questions, echos)
+					return []string{}, nil
+				}),
+			},
+			// TODO
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
+		client, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", args[0]), config)
+		if err != nil {
+			log.Fatal("Failed to dial: ", err)
+		}
+		defer client.Close()
+		// Each ClientConn can support multiple interactive sessions,
+		// represented by a Session.
+		session, err := client.NewSession()
+		if err != nil {
+			log.Fatal("Failed to create session: ", err)
+		}
+		defer session.Close()
+
+		session.Stderr = os.Stderr
+		session.Stdout = os.Stdout
+		session.Stdin = os.Stdin
+		session.Shell()
 	},
 }
 

@@ -27,7 +27,8 @@ func (m Module) authToken() C.int {
 		m.Log(syslog.LOG_WARNING, "Failed to prompt for token")
 		return C.PAM_AUTH_ERR
 	}
-	token, err := token.VerifyToken(resps[0].Value, token.VerifyOpts{
+	envToken := resps[0].Value
+	token, err := token.VerifyToken(envToken, token.VerifyOpts{
 		JWKSUrl: m.config.TokenJWKS,
 	})
 	if err != nil {

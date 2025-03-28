@@ -1,4 +1,4 @@
-.PHONY: clean test gen deb
+.PHONY: clean bin/cli/ak bin/agent/ak-agent bin/pam/pam_authentik.so
 .ONESHELL:
 .SHELLFLAGS += -x -e
 PWD = $(shell pwd)
@@ -74,3 +74,9 @@ gen:
 test-install: bin/cli/ak bin/pam/pam_authentik.so
 	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -i /workspaces/bin/pam/pam_authentik_${VERSION}_arm64.deb
 	sudo dpkg -i ${PWD}/bin/cli/authentik-cli_${VERSION}_arm64.deb
+
+test-setup:
+	ak setup -v -a http://authentik:9000
+
+test-ssh:
+	ak ssh authentik-cli_devcontainer-test-machine-1
