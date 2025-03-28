@@ -21,6 +21,12 @@ bin/ak:
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -a -o ${PWD}/bin/ak \
 		${PWD}/cmd/cli/main
+	VERSION=${VERSION} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p deb \
+			-t ${PWD}/bin \
+			-f ${PWD}/cmd/cli/main/nfpm.yaml
 
 bin/ak-agent:
 	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
@@ -34,12 +40,10 @@ bin/ak-agent:
 
 bin/pam/pam_authentik.so: .
 	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
+	mkdir -p ${PWD}/bin/pam
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -buildmode=c-shared -o bin/pam/pam_authentik.so ${PWD}/cmd/pam/
-
-bin/pam/deb: bin/pam/pam_authentik.so
-	mkdir -p ${PWD}/bin/pam
 	VERSION=${VERSION} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
@@ -64,3 +68,6 @@ pam-docker: clean gen
 
 gen:
 	go generate ./...
+
+test-install:
+	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -i /workspaces/bin/pam/pam_authentik_${VERSION}_arm64.deb

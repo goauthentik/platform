@@ -11,10 +11,10 @@ import (
 
 type Config struct {
 	AuthentikURL string `yaml:"authentik_url"`
-	Token        string
 	Insecure     bool   `yaml:"insecure"`
 	FlowSlug     string `yaml:"authentication_flow"`
 	Debug        bool   `yaml:"debug"`
+	TokenJWKS    string `yaml:"token_jwks"`
 
 	client *api.APIClient
 }

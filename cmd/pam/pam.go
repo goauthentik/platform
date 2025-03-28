@@ -21,6 +21,7 @@ import "C"
 import (
 	"fmt"
 	"log/syslog"
+	"strings"
 	"unsafe"
 )
 
@@ -45,20 +46,20 @@ func pam_sm_authenticate_go(pamh *C.pam_handle_t, flags C.int, argc C.int, argv 
 
 	m.Log(syslog.LOG_DEBUG, "got user: '%v'", user)
 
-	// if strings.HasSuffix(user, "@ak-token") {
-	// 	return m.authToken()
-	// } else {
-	// Get (or prompt for) password
-	var cPassword *C.char
-	if errnum := C.pam_get_authtok(pamh, C.PAM_AUTHTOK, &cPassword, nil); errnum != C.PAM_SUCCESS {
-		m.Log(syslog.LOG_ERR, "failed to get password: %v", pamStrError(pamh, errnum))
-		return errnum
-	}
-	password := C.GoString(cPassword)
-	m.Log(syslog.LOG_DEBUG, "got password: len(%d)", len(password))
+	if strings.HasSuffix(user, "@ak-token") {
+		return m.authToken()
+	} else {
+		// Get (or prompt for) password
+		var cPassword *C.char
+		if errnum := C.pam_get_authtok(pamh, C.PAM_AUTHTOK, &cPassword, nil); errnum != C.PAM_SUCCESS {
+			m.Log(syslog.LOG_ERR, "failed to get password: %v", pamStrError(pamh, errnum))
+			return errnum
+		}
+		password := C.GoString(cPassword)
+		m.Log(syslog.LOG_DEBUG, "got password: len(%d)", len(password))
 
-	return m.authInteractive(user, password)
-	// }
+		return m.authInteractive(user, password)
+	}
 }
 
 //export pam_sm_setcred_go
