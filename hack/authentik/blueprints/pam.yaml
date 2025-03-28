@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
 version: 1
 metadata:
-  name: authentik CLI
+  name: authentik PAM
 entries:
   - model: authentik_providers_oauth2.oauth2provider
     id: provider
     identifiers:
-      name: authentik-cli
+      name: authentik-pam
     attrs:
       authorization_flow:
         !Find [
@@ -19,7 +19,7 @@ entries:
           [slug, default-provider-invalidation-flow],
         ]
       client_type: public
-      client_id: authentik-cli
+      client_id: authentik-pam
       redirect_uris: []
       property_mappings:
         - !Find [
@@ -43,10 +43,12 @@ entries:
           authentik_crypto.certificatekeypair,
           [name, authentik Self-signed Certificate],
         ]
+      jwt_federation_providers:
+        - !Find [authentik_providers_oauth2.oauth2provider, [name, "authentik-cli"]]
   - model: authentik_core.application
     identifiers:
-      slug: authentik-cli
+      slug: authentik-pam
     attrs:
-      name: authentik CLI
+      name: authentik PAM
       provider: !KeyOf provider
       icon: https://goauthentik.io/img/icon.png

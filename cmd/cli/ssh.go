@@ -12,8 +12,12 @@ import (
 )
 
 var sshCmd = &cobra.Command{
-	Use: "ssh",
+	Use:   "ssh",
+	Short: "Establish an SSH connection with `host`.",
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		profile := mustFlag(cmd.Flags().GetString("profile"))
+
 		u, err := user.Current()
 		if err != nil {
 			log.WithError(err).Warning("failed to get user")
@@ -21,8 +25,8 @@ var sshCmd = &cobra.Command{
 		}
 
 		cc := raw.GetCredentials(cmd.Context(), raw.CredentialsOpts{
-			Profile:  "default", // TODO
-			ClientID: "foo",
+			Profile:  profile,
+			ClientID: "authentik-pam",
 		})
 		fmt.Println(cc.AccessToken)
 
