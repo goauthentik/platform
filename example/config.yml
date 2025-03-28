@@ -1,4 +1,4 @@
 ---
-authentik_url: http://host.docker.internal:9000
+authentik_url: http://authentik:9000
 debug: true
 authentication_flow: default-authentication-flow
