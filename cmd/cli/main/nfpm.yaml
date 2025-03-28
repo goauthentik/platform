@@ -10,5 +10,5 @@ homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
 contents:
-  - src: bin/ak
+  - src: bin/cli/ak
     dst: /usr/bin/ak
