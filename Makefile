@@ -17,6 +17,7 @@ clean:
 
 bin/cli/ak:
 	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
+	mkdir -p ${PWD}/bin/cli
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -a -o ${PWD}/bin/cli/ak \
@@ -28,15 +29,16 @@ bin/cli/ak:
 			-t ${PWD}/bin/cli \
 			-f ${PWD}/cmd/cli/main/nfpm.yaml
 
-bin/ak-agent:
+bin/agent/ak-agent:
 	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
+	mkdir -p ${PWD}/bin/agent
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
-		-v -a -o ${PWD}/bin/ak-agent \
+		-v -a -o ${PWD}/bin/agent/ak-agent \
 		${PWD}/cmd/agent
-	cp -R "${PWD}/package/macos/authentik Agent.app" ${PWD}/bin/
-	mkdir -p "${PWD}/bin/authentik Agent.app/Contents/MacOS"
-	cp ${PWD}/bin/ak-agent "${PWD}/bin/authentik Agent.app/Contents/MacOS/"
+	cp -R "${PWD}/package/macos/authentik Agent.app" ${PWD}/bin/agent/
+	mkdir -p "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS"
+	cp ${PWD}/bin/agent/ak-agent "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS/"
 
 bin/pam/pam_authentik.so: .
 	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-$(shell git rev-parse HEAD))
