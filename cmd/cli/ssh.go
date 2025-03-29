@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -29,8 +30,22 @@ var sshCmd = &cobra.Command{
 			ClientID: "authentik-pam",
 		})
 
+		host := args[0]
+		user := u.Username
+		port := "22"
+		if strings.Contains(host, "@") {
+			_parts := strings.Split(host, "@")
+			user = _parts[0]
+			host = _parts[1]
+		}
+		if strings.Contains(host, ":") {
+			_parts := strings.Split(host, ":")
+			host = _parts[0]
+			port = _parts[1]
+		}
+
 		config := &ssh.ClientConfig{
-			User: fmt.Sprintf("%s@ak-token", u.Username),
+			User: fmt.Sprintf("%s@ak-token", user),
 			Auth: []ssh.AuthMethod{
 				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
 					fmt.Println(name, instruction, questions, echos)
@@ -40,7 +55,7 @@ var sshCmd = &cobra.Command{
 			// TODO
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		}
-		client, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", args[0]), config)
+		client, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", host, port), config)
 		if err != nil {
 			log.Fatal("Failed to dial: ", err)
 		}

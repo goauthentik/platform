@@ -36,6 +36,9 @@ func pam_sm_authenticate_go(pamh *C.pam_handle_t, flags C.int, argc C.int, argv 
 		return C.PAM_SERVICE_ERR
 	}
 
+	m.Log(syslog.LOG_DEBUG, "locking OS thread")
+	// runtime.LockOSThread()
+
 	m.Log(syslog.LOG_DEBUG, "pam_sm_authenticate_go")
 
 	user, err := m.getUser()

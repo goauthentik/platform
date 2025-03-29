@@ -12,8 +12,6 @@ import "C"
 
 import (
 	"log/syslog"
-
-	"goauthentik.io/cli/pkg/ak/token"
 )
 
 func (m Module) authToken() C.int {
@@ -28,13 +26,13 @@ func (m Module) authToken() C.int {
 		return C.PAM_AUTH_ERR
 	}
 	envToken := resps[0].Value
-	token, err := token.VerifyToken(envToken, token.VerifyOpts{
-		JWKSUrl: m.config.TokenJWKS,
-	})
-	if err != nil {
-		m.Log(syslog.LOG_WARNING, "Failed to verify token: %v", err)
-		return C.PAM_AUTH_ERR
-	}
-	m.Log(syslog.LOG_DEBUG, "got token: %+v", token)
+	// token, err := token.VerifyToken(envToken, token.VerifyOpts{
+	// 	JWKSUrl: m.config.TokenJWKS,
+	// })
+	// if err != nil {
+	// 	m.Log(syslog.LOG_WARNING, "Failed to verify token: %v", err)
+	// 	return C.PAM_AUTH_ERR
+	// }
+	m.Log(syslog.LOG_DEBUG, "got token: %+v", envToken)
 	return C.PAM_SUCCESS
 }

@@ -79,4 +79,4 @@ test-setup:
 	ak setup -v -a http://authentik:9000
 
 test-ssh:
-	ak ssh authentik-cli_devcontainer-test-machine-1
+	go run -v ./cmd/cli/main/ ssh akadmin@authentik-cli_devcontainer-test-machine-1
