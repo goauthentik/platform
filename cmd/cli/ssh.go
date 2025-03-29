@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/user"
@@ -25,7 +26,7 @@ var sshCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		_ = raw.GetCredentials(cmd.Context(), raw.CredentialsOpts{
+		cc := raw.GetCredentials(cmd.Context(), raw.CredentialsOpts{
 			Profile:  profile,
 			ClientID: "authentik-pam",
 		})
@@ -48,7 +49,10 @@ var sshCmd = &cobra.Command{
 			User: fmt.Sprintf("%s@ak-token", user),
 			Auth: []ssh.AuthMethod{
 				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
-					fmt.Println(name, instruction, questions, echos)
+					fmt.Printf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
+					if len(questions) > 0 && questions[0] == "ak-cli-token-prompt:" {
+						return []string{cc.AccessToken}, nil
+					}
 					return []string{}, nil
 				}),
 			},
@@ -72,6 +76,7 @@ var sshCmd = &cobra.Command{
 		session.Stdout = os.Stdout
 		session.Stdin = os.Stdin
 		session.Shell()
+		<-context.Background().Done()
 	},
 }
 

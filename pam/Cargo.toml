@@ -1,0 +1,16 @@
+[package]
+name = "pam"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "pam_authentik"
+crate-type = ["cdylib"]
+
+[dependencies]
+jsonwebtoken = "9.3.1"
+jwks = "0.4.0"
+pam-bindings = "0.1.1"
+reqwest = { version = "0.11.3", features = ["blocking"] }
+serde = "1.0.219"
+tokio = "1.44.1"

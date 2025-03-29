@@ -80,3 +80,8 @@ test-setup:
 
 test-ssh:
 	go run -v ./cmd/cli/main/ ssh akadmin@authentik-cli_devcontainer-test-machine-1
+
+foo:
+	cd pam && cargo build
+	docker exec authentik-cli_devcontainer-test-machine-1 cp /workspaces/pam/target/debug/libpam_authentik.so /usr/lib/security/libpam_authentik.so
+	docker exec authentik-cli_devcontainer-test-machine-1 cp /workspaces/pam/target/debug/libpam_authentik.so /usr/lib64/security/libpam_authentik.s
