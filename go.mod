@@ -1,6 +1,7 @@
 module goauthentik.io/cli
 
 go 1.23.1
+toolchain go1.24.1
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.3.10
@@ -19,7 +20,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	goauthentik.io/api/v3 v3.2025022.6
+	goauthentik.io/api/v3 v3.2025023.1
 	k8s.io/apimachinery v0.32.3
 	k8s.io/client-go v0.32.3
 )
