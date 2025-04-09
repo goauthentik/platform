@@ -1,6 +1,7 @@
 module goauthentik.io/cli
 
 go 1.23.1
+
 toolchain go1.24.1
 
 require (
@@ -16,7 +17,7 @@ require (
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.3
 	github.com/nightlyone/lockfile v1.0.0
-	github.com/prometheus/client_golang v1.21.1
+	github.com/prometheus/client_golang v1.22.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
@@ -63,7 +64,7 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
