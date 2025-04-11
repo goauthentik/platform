@@ -1,6 +1,7 @@
 module goauthentik.io/cli
 
 go 1.23.1
+
 toolchain go1.24.1
 
 require (
@@ -10,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.8.0
-	github.com/getsentry/sentry-go v0.31.1
+	github.com/getsentry/sentry-go v0.32.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/kolide/systray v1.10.4
