@@ -1,10 +1,11 @@
 module goauthentik.io/cli
 
 go 1.23.1
+
 toolchain go1.24.1
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.3.10
+	github.com/MicahParks/keyfunc/v3 v3.3.11
 	github.com/adrg/xdg v0.5.3
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17
