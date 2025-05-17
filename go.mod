@@ -23,7 +23,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	goauthentik.io/api/v3 v3.2025041.1
 	k8s.io/apimachinery v0.33.1
-	k8s.io/client-go v0.33.0
+	k8s.io/client-go v0.33.1
 )
 
 require (
