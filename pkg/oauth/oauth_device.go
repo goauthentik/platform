@@ -46,6 +46,9 @@ func (oa *Flow) DeviceFlow() (*api.AccessToken, error) {
 	}
 
 	browseURL := oa.BrowseURL
+	if browseURL == nil {
+		browseURL = browser.OpenURL
+	}
 	if code.VerificationURIComplete == "" {
 		if oa.DisplayCode == nil {
 			_, err := fmt.Fprintf(stdout, "First, copy your one-time code: %s\nThen press [Enter] to continue in the web browser... ", code.UserCode)
@@ -60,9 +63,6 @@ func (oa *Flow) DeviceFlow() (*api.AccessToken, error) {
 			}
 		}
 
-		if browseURL == nil {
-			browseURL = browser.OpenURL
-		}
 		if err = browseURL(code.VerificationURI); err != nil {
 			return nil, fmt.Errorf("error opening the web browser: %w", err)
 		}

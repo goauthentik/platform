@@ -35,6 +35,7 @@ func Setup(opts Options) {
 	accessToken, err := flow.DetectFlow()
 	if err != nil {
 		log.WithError(err).Fatal("failed to start device flow")
+		return
 	}
 
 	mgr.Get().Profiles[opts.ProfileName] = storage.ConfigV1Profile{
