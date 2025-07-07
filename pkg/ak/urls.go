@@ -2,7 +2,9 @@ package ak
 
 import (
 	"fmt"
+	"net/url"
 
+	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/storage"
 )
 
@@ -22,4 +24,15 @@ func URLsForProfile(profile storage.ConfigV1Profile) URLSet {
 		UserInfo:      fmt.Sprintf("%s/application/o/userinfo/", profile.AuthentikURL),
 		JWKS:          fmt.Sprintf("%s/application/o/%s/jwks/", profile.AuthentikURL, profile.AppSlug),
 	}
+}
+
+func APIConfig(profile storage.ConfigV1Profile) *api.Configuration {
+	u, err := url.Parse(profile.AuthentikURL)
+	c := api.NewConfiguration()
+	if err != nil {
+		return c
+	}
+	c.Host = u.Host
+	c.Scheme = u.Scheme
+	return c
 }

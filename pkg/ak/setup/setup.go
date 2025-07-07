@@ -29,7 +29,7 @@ func Setup(opts Options) {
 			TokenURL:      urls.TokenURL,
 		},
 		ClientID: opts.ClientID,
-		Scopes:   []string{"openid", "profile", "email", "offline_access"},
+		Scopes:   []string{"openid", "profile", "email", "offline_access", "goauthentik.io/api"},
 	}
 
 	accessToken, err := flow.DetectFlow()
