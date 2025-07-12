@@ -1,6 +1,11 @@
 package setup
 
 import (
+	"errors"
+	"fmt"
+	"os/exec"
+
+	"github.com/cli/browser"
 	log "github.com/sirupsen/logrus"
 
 	"goauthentik.io/cli/pkg/ak"
@@ -30,6 +35,18 @@ func Setup(opts Options) {
 		},
 		ClientID: opts.ClientID,
 		Scopes:   []string{"openid", "profile", "email", "offline_access", "goauthentik.io/api"},
+		BrowseURL: func(s string) error {
+			err := browser.OpenURL(s)
+			if err != nil && errors.Is(err, exec.ErrNotFound) {
+				fmt.Println("------------------------------------------------------------")
+				fmt.Println("")
+				fmt.Printf("      Open this URL in your browser: '%s'\n", s)
+				fmt.Println("")
+				fmt.Println("------------------------------------------------------------")
+				return nil
+			}
+			return err
+		},
 	}
 
 	accessToken, err := flow.DetectFlow()

@@ -9,10 +9,12 @@
       "extensions": [
         "golang.go",
         "ms-azuretools.vscode-docker",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "rust-lang.rust-analyzer"
       ]
     }
   },
+  "onCreateCommand": "cargo install cargo-deb",
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
     "ghcr.io/devcontainers/features/rust:1": {}

@@ -1,16 +1,35 @@
 [package]
-name = "pam"
+name = "authentik_pam"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "pam_authentik authenticates users through authentik."
 
 [lib]
 name = "pam_authentik"
 crate-type = ["cdylib"]
 
 [dependencies]
+authentik-client = "3.2025063.2"
 jsonwebtoken = "9.3.1"
 jwks = "0.4.0"
+log = "0.4.27"
 pam-bindings = "0.1.1"
 reqwest = { version = "0.11.3", features = ["blocking"] }
 serde = "1.0.219"
+simplelog = "0.12.2"
 tokio = "1.44.1"
+
+[package.metadata.deb]
+name = "pam_authentik"
+maintainer = "Authentik Security Inc."
+license-file = ["../LICENSE", "4"]
+depends = "$auto"
+section = "security"
+priority = "optional"
+assets = [
+    { source = "target/release/libpam_authentik.so", dest = "usr/lib64/security/pam_authentik.so", mode = "644"},
+    { source = "target/release/libpam_authentik.so", dest = "usr/lib/security/pam_authentik.so", mode = "644"},
+    { source = "pam_config", dest = "usr/share/pam-configs/tailscale", mode = "644"},
+]
+maintainer-scripts = "debian"

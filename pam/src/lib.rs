@@ -1,18 +1,19 @@
+extern crate jwks;
 extern crate pam;
 extern crate reqwest;
-extern crate jwks;
+extern crate simplelog;
+use simplelog::*;
+use std::env;
 
-use pam::constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_OFF};
+use jsonwebtoken::{TokenData, Validation, decode, decode_header};
+use jwks::Jwks;
+use pam::constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode};
 use pam::conv::Conv;
 use pam::module::{PamHandle, PamHooks};
-use reqwest::blocking::Client;
-use reqwest::StatusCode;
-use std::ffi::CStr;
-use std::time::Duration;
 use pam::pam_try;
-use jsonwebtoken::{decode, decode_header, TokenData, Validation};
-use jwks::Jwks;
 use serde::{Deserialize, Serialize};
+use std::ffi::CStr;
+use std::fs::File;
 use tokio::runtime::Runtime;
 
 struct PAMAuthentik;
@@ -21,89 +22,91 @@ pam::pam_hooks!(PAMAuthentik);
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
+    pub preferred_username: String,
 }
 
-
-fn auth_token(pamh: &mut PamHandle)  -> PamResultCode {
-    let conv = match pamh.get_item::<Conv>() {
-        Ok(Some(conv)) => conv,
-        Ok(None) => {
-            unreachable!("No conv available");
-        }
-        Err(err) => {
-            println!("Couldn't get pam_conv");
-            return err;
-        }
-    };
-    let token = match pam_try!(conv.send(PAM_PROMPT_ECHO_OFF, "ak-cli-token-prompt:")) {
-        Some(token) => Some(pam_try!(token.to_str(), PamResultCode::PAM_AUTH_ERR)),
-        None => {
-            return PamResultCode::PAM_AUTH_ERR;
-        },
-    };
+fn auth_token(username: String, token: String) -> PamResultCode {
     let jwks_url = "http://authentik:9000/application/o/authentik-pam/jwks/";
-    let jwks = Runtime::new().unwrap().block_on(Jwks::from_jwks_url(jwks_url)).unwrap();
-    let token = token.expect("token should be string");
+    let jwks = Runtime::new()
+        .unwrap()
+        .block_on(Jwks::from_jwks_url(jwks_url))
+        .unwrap();
     // get the kid from jwt
-    println!("Got JWT {}", token);
-    let header = decode_header(token).expect("jwt header should be decoded");
+    log::debug!(target: "pam_authentik::auth_token", "Got JWT {}", token);
+    let header = decode_header(&token).expect("jwt header should be decoded");
     let kid = header.kid.as_ref().expect("jwt header should have a kid");
-
     let jwk = jwks.keys.get(kid).expect("jwt refer to a unknown key id");
-
     let mut validation = Validation::new(jsonwebtoken::Algorithm::RS256);
     validation.set_audience(&["authentik-pam"]);
     let decoded_token: TokenData<Claims> =
-        decode::<Claims>(token, &jwk.decoding_key, &validation).expect("jwt should be valid");
-    println!("Got valid token: {:#?}", decoded_token.claims);
-    return PamResultCode::PAM_SUCCESS
+        decode::<Claims>(&token, &jwk.decoding_key, &validation).expect("jwt should be valid");
+    log::debug!(target: "pam_authentik::auth_token", "Got valid token: {:#?}", decoded_token.claims);
+    if username != decoded_token.claims.preferred_username {
+        return PamResultCode::PAM_USER_UNKNOWN;
+    }
+    return PamResultCode::PAM_SUCCESS;
+}
+
+fn init() {
+    CombinedLogger::init(vec![WriteLogger::new(
+        LevelFilter::Trace,
+        Config::default(),
+        File::options()
+            .append(true)
+            .create(true)
+            .open("/var/log/authentik/pam.log")
+            .unwrap(),
+    )])
+    .unwrap();
 }
 
 impl PamHooks for PAMAuthentik {
+    fn sm_open_session(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
+        // init();
+        log::debug!("sm_open_session");
+        PamResultCode::PAM_SUCCESS
+    }
 
-    // This function performs the task of authenticating the user.
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        let user = pam_try!(pamh.get_user(None));
-
-        if user.ends_with("@ak-token") {
-            return auth_token(pamh);
+        init();
+        log::debug!(target: "pam_authentik::sm_authenticate", "init");
+        log::debug!(target: "pam_authentik::sm_authenticate", "debug args {:?}", args);
+        log::debug!(target: "pam_authentik::sm_authenticate", "debug env {:?}", env::vars());
+        let username = pamh.get_item::<pam::items::User>().unwrap().unwrap();
+        let username = String::from_utf8(username.to_bytes().to_vec()).unwrap();
+        log::debug!(target: "pam_authentik::sm_authenticate", "user: {}", username);
+        let conv = match pamh.get_item::<Conv>() {
+            Ok(Some(conv)) => conv,
+            Ok(None) => {
+                unreachable!("No conv available");
+            }
+            Err(err) => {
+                log::debug!("Couldn't get pam_conv");
+                return err;
+            }
+        };
+        log::debug!(target: "pam_authentik::sm_authenticate", "Started conv");
+        let password = pam_try!(conv.send(PAM_PROMPT_ECHO_OFF, "authentik Password: "));
+        let password = match password {
+            Some(password) => Some(pam_try!(password.to_str(), PamResultCode::PAM_AUTH_ERR)),
+            None => {
+                unreachable!("No password");
+            }
+        };
+        if password.unwrap_or("").starts_with("\u{200b}") {
+            log::debug!(target: "pam_authentik::sm_authenticate", "Password has token marker");
+            return auth_token(username, password.unwrap().replace("\u{200b}", ""));
         }
-
-        // let password = pam_try!(conv.send(PAM_PROMPT_ECHO_OFF, "Word, yo: "));
-        // let password = match password {
-        //     Some(password) => Some(pam_try!(password.to_str(), PamResultCode::PAM_AUTH_ERR)),
-        //     None => None,
-        // };
-        // println!("Got a password {:?}", password);
-        // let status = pam_try!(
-        //     get_url(url, &user, password),
-        //     PamResultCode::PAM_AUTH_ERR
-        // );
-
-        // if !status.is_success() {
-        //     println!("HTTP Error: {}", status);
-        //     return PamResultCode::PAM_AUTH_ERR;
-        // }
-
         PamResultCode::PAM_SUCCESS
     }
 
     fn sm_setcred(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        println!("set credentials");
+        log::debug!("sm_setcred");
         PamResultCode::PAM_SUCCESS
     }
 
     fn acct_mgmt(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        println!("account management");
+        log::debug!("acct_mgmt");
         PamResultCode::PAM_SUCCESS
     }
-}
-
-fn get_url(url: &str, user: &str, password: Option<&str>) -> reqwest::Result<StatusCode> {
-    let client = Client::builder().timeout(Duration::from_secs(15)).build()?;
-    client
-        .get(url)
-        .basic_auth(user, password)
-        .send()
-        .map(|r| r.status())
 }

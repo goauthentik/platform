@@ -1,5 +1,4 @@
 .PHONY: clean bin/cli/ak bin/agent/ak-agent bin/pam/pam_authentik.so
-.ONESHELL:
 .SHELLFLAGS += -x -e
 PWD = $(shell pwd)
 UID = $(shell id -u)
@@ -81,7 +80,10 @@ test-setup:
 test-ssh:
 	go run -v ./cmd/cli/main/ ssh akadmin@authentik-cli_devcontainer-test-machine-1
 
-foo:
-	cd pam && cargo build
-	docker exec authentik-cli_devcontainer-test-machine-1 cp /workspaces/pam/target/debug/libpam_authentik.so /usr/lib/security/libpam_authentik.so
-	docker exec authentik-cli_devcontainer-test-machine-1 cp /workspaces/pam/target/debug/libpam_authentik.so /usr/lib64/security/libpam_authentik.s
+pam-build:
+	# cd pam && cargo build
+	cd pam && cargo deb
+
+pam-deploy: pam-build
+	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -r pam_authentik
+	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -i /workspaces/pam/target/debian/pam_authentik_0.1.0-1_arm64.deb

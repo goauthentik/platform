@@ -46,12 +46,12 @@ var sshCmd = &cobra.Command{
 		}
 
 		config := &ssh.ClientConfig{
-			User: fmt.Sprintf("%s@ak-token", user),
+			User: user,
 			Auth: []ssh.AuthMethod{
 				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
-					fmt.Printf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
-					if len(questions) > 0 && questions[0] == "ak-cli-token-prompt:" {
-						return []string{cc.AccessToken}, nil
+					log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
+					if len(questions) > 0 && questions[0] == "authentik Password: " {
+						return []string{fmt.Sprintf("\u200b%s", cc.AccessToken)}, nil
 					}
 					return []string{}, nil
 				}),
@@ -71,6 +71,9 @@ var sshCmd = &cobra.Command{
 			log.Fatal("Failed to create session: ", err)
 		}
 		defer session.Close()
+		session.RequestPty("xterm-256color", 80, 40, ssh.TerminalModes{
+			ssh.ECHO: 0,
+		})
 
 		session.Stderr = os.Stderr
 		session.Stdout = os.Stdout
