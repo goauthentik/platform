@@ -1,64 +1,22 @@
+mod token;
+mod logger;
+
 extern crate jwks;
 extern crate pam;
 extern crate reqwest;
 extern crate simplelog;
-use simplelog::*;
-use std::env;
 
-use jsonwebtoken::{TokenData, Validation, decode, decode_header};
-use jwks::Jwks;
+use std::env;
 use pam::constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode};
 use pam::conv::Conv;
 use pam::module::{PamHandle, PamHooks};
 use pam::pam_try;
-use serde::{Deserialize, Serialize};
 use std::ffi::CStr;
-use std::fs::File;
-use tokio::runtime::Runtime;
+use token::auth_token;
+use logger::init_log;
 
 struct PAMAuthentik;
 pam::pam_hooks!(PAMAuthentik);
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Claims {
-    pub sub: String,
-    pub preferred_username: String,
-}
-
-fn auth_token(username: String, token: String) -> PamResultCode {
-    let jwks_url = "http://authentik:9000/application/o/authentik-pam/jwks/";
-    let jwks = Runtime::new()
-        .unwrap()
-        .block_on(Jwks::from_jwks_url(jwks_url))
-        .unwrap();
-    // get the kid from jwt
-    log::debug!(target: "pam_authentik::auth_token", "Got JWT {}", token);
-    let header = decode_header(&token).expect("jwt header should be decoded");
-    let kid = header.kid.as_ref().expect("jwt header should have a kid");
-    let jwk = jwks.keys.get(kid).expect("jwt refer to a unknown key id");
-    let mut validation = Validation::new(jsonwebtoken::Algorithm::RS256);
-    validation.set_audience(&["authentik-pam"]);
-    let decoded_token: TokenData<Claims> =
-        decode::<Claims>(&token, &jwk.decoding_key, &validation).expect("jwt should be valid");
-    log::debug!(target: "pam_authentik::auth_token", "Got valid token: {:#?}", decoded_token.claims);
-    if username != decoded_token.claims.preferred_username {
-        return PamResultCode::PAM_USER_UNKNOWN;
-    }
-    return PamResultCode::PAM_SUCCESS;
-}
-
-fn init() {
-    CombinedLogger::init(vec![WriteLogger::new(
-        LevelFilter::Trace,
-        Config::default(),
-        File::options()
-            .append(true)
-            .create(true)
-            .open("/var/log/authentik/pam.log")
-            .unwrap(),
-    )])
-    .unwrap();
-}
 
 impl PamHooks for PAMAuthentik {
     fn sm_open_session(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
@@ -68,7 +26,7 @@ impl PamHooks for PAMAuthentik {
     }
 
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        init();
+        init_log();
         log::debug!(target: "pam_authentik::sm_authenticate", "init");
         log::debug!(target: "pam_authentik::sm_authenticate", "debug args {:?}", args);
         log::debug!(target: "pam_authentik::sm_authenticate", "debug env {:?}", env::vars());
