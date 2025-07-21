@@ -7,7 +7,7 @@ toolchain go1.24.2
 require (
 	github.com/MicahParks/keyfunc/v3 v3.4.0
 	github.com/adrg/xdg v0.5.3
-	github.com/aws/aws-sdk-go-v2 v1.36.5
+	github.com/aws/aws-sdk-go-v2 v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.34.0
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.9.0
