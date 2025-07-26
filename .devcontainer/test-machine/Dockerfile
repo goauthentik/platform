@@ -1,9 +1,26 @@
 FROM ubuntu:24.04
 
-RUN apt-get update && \
-    apt-get install pamtester openssh-server nano htop libpam0g-dev -y && \
+ENV DEBIAN_FRONTEND="noninteractive"
+
+RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-server nano htop libpam0g-dev' && \
+    apt-get update && \
+    apt-get install $INSTALL_PKGS -y --no-install-recommends && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     sed -i 's/KbdInteractiveAuthentication no/KbdInteractiveAuthentication yes/g' /etc/ssh/sshd_config && \
     mkdir /run/sshd && \
     adduser akadmin
 
-CMD ["/usr/sbin/sshd", "-D", "-e"]
+RUN find /etc/systemd/system \
+    /lib/systemd/system \
+    -path '*.wants/*' \
+    -not -name '*journald*' \
+    -not -name '*systemd-tmpfiles*' \
+    -not -name '*systemd-user-sessions*' \
+    -print0 | xargs -0 rm -vf
+
+VOLUME [ "/sys/fs/cgroup" ]
+
+RUN systemctl enable ssh.service rsyslog.service
+
+ENTRYPOINT [ "/lib/systemd/systemd"]
