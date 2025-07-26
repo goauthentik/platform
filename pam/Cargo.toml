@@ -12,15 +12,21 @@ crate-type = ["cdylib"]
 [dependencies]
 authentik-client = "3.2025064.1"
 ctor = "0.4.2"
+hex = "0.4.3"
 jsonwebtoken = "9.3.1"
 jwks = "0.4.0"
 log = "0.4.27"
 pam-bindings = "0.1.1"
-reqwest = { version = "0.11.3", features = ["blocking"] }
+prost = { version = "0.12" }
+prost-types = { version = "0.12" }
+reqwest = { version = "0.12.22", features = ["blocking"] }
 serde = "1.0.219"
 serde_yaml = "0.9.34"
+sha2 = "0.10.9"
 simplelog = "0.12.2"
 tokio = "1.44.1"
+tonic = { version = "0.11" }
+tower = "0.5.2"
 
 [package.metadata.deb]
 name = "pam_authentik"

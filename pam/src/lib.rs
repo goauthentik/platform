@@ -2,13 +2,14 @@ mod token;
 mod logger;
 mod interactive;
 mod config;
+mod session;
+mod generated;
 
 extern crate jwks;
 extern crate pam;
 extern crate reqwest;
 extern crate simplelog;
 
-use std::env;
 use pam::constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode};
 use pam::conv::Conv;
 use pam::module::{PamHandle, PamHooks};
@@ -19,6 +20,7 @@ use logger::init_log;
 use interactive::auth_interactive;
 use ctor::ctor;
 use config::Config;
+use session::open_session_impl;
 
 struct PAMAuthentik;
 pam::pam_hooks!(PAMAuthentik);
@@ -29,17 +31,10 @@ fn init() {
 }
 
 impl PamHooks for PAMAuthentik {
-    fn sm_open_session(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        log::debug!("sm_open_session");
-        PamResultCode::PAM_SUCCESS
-    }
-
-    fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
+    fn sm_authenticate(pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
         let config = Config::from_file("/etc/authentik/pam.yaml").expect("Failed to load config");
 
         log::debug!(target: "pam_authentik::sm_authenticate", "init");
-        log::debug!(target: "pam_authentik::sm_authenticate", "debug args {:?}", args);
-        log::debug!(target: "pam_authentik::sm_authenticate", "debug env {:?}", env::vars());
         let username = pamh.get_item::<pam::items::User>().unwrap().unwrap();
         let username = String::from_utf8(username.to_bytes().to_vec()).unwrap();
         log::debug!(target: "pam_authentik::sm_authenticate", "user: {}", username);
@@ -62,6 +57,7 @@ impl PamHooks for PAMAuthentik {
             }
         };
         log::debug!(target: "pam_authentik::sm_authenticate", "{:#?}", password);
+        // pamh.set_data("username", username));
         if password.unwrap_or("").starts_with("\u{200b}") {
             log::debug!(target: "pam_authentik::sm_authenticate", "Password has token marker");
             return auth_token(config, username, password.unwrap().replace("\u{200b}", ""));
@@ -69,6 +65,11 @@ impl PamHooks for PAMAuthentik {
             log::debug!(target: "pam_authentik::sm_authenticate", "Interactive authentication");
             return auth_interactive(username, password.unwrap(), &conv);
         }
+    }
+
+    fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
+        log::debug!("sm_open_session");
+        return open_session_impl(pamh, args, flags)
     }
 
     fn sm_setcred(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {

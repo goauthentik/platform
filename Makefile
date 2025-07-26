@@ -1,5 +1,4 @@
 .PHONY: clean bin/cli/ak bin/agent/ak-agent
-.SHELLFLAGS += -x -e
 LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION}
 GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 
@@ -36,6 +35,15 @@ bin/agent/ak-agent:
 
 gen:
 	go generate ./...
+
+gen-proto:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	protoc \
+		--go_out ${PWD} \
+		--go-grpc_out=${PWD} \
+		-I $(PROTO_DIR) \
+		$(PROTO_DIR)/**
 
 test-setup:
 	ak setup -v -a http://authentik:9000
