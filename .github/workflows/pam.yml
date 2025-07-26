@@ -21,12 +21,9 @@ jobs:
             ~/.cargo/git
             pam/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('pam/**/Cargo.lock') }}
-      - working-directory: pam/
-        run: cargo build --verbose
-      - working-directory: pam/
-        run: cargo test --verbose
-      - working-directory: pam/
-        run: cargo deb --verbose
+      - run: make pam-build
+      - run: make pam-test
+      - run: make pam-package
       - uses: actions/upload-artifact@v4
         with:
           name: authentik_pam
