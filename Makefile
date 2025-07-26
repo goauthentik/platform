@@ -44,4 +44,4 @@ test-ssh:
 	go run -v ./cmd/cli/main/ ssh akadmin@authentik-cli_devcontainer-test-machine-1
 
 pam-%:
-	$(MAKE) -C pam $1
+	$(MAKE) -C pam $*
