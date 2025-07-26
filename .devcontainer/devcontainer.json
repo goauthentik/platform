@@ -14,7 +14,6 @@
       ]
     }
   },
-  "onCreateCommand": "cargo install cargo-deb",
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
     "ghcr.io/devcontainers/features/rust:1": {}

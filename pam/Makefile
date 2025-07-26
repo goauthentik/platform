@@ -7,6 +7,7 @@ test:
 	cargo test --verbose
 
 package:
+	cargo install cargo-deb
 	cargo deb --verbose --deb-version ${VERSION}
 
 test-deploy: package
