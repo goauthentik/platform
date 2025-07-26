@@ -22,6 +22,8 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	goauthentik.io/api/v3 v3.2025064.1
+	golang.org/x/crypto v0.36.0
+	golang.org/x/term v0.30.0
 	k8s.io/apimachinery v0.33.3
 	k8s.io/client-go v0.33.3
 )
