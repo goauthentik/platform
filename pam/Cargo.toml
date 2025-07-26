@@ -10,13 +10,15 @@ name = "pam_authentik"
 crate-type = ["cdylib"]
 
 [dependencies]
-authentik-client = "3.2025063.2"
+authentik-client = "3.2025064.1"
+ctor = "0.4.2"
 jsonwebtoken = "9.3.1"
 jwks = "0.4.0"
 log = "0.4.27"
 pam-bindings = "0.1.1"
 reqwest = { version = "0.11.3", features = ["blocking"] }
 serde = "1.0.219"
+serde_yaml = "0.9.34"
 simplelog = "0.12.2"
 tokio = "1.44.1"
 
@@ -30,6 +32,7 @@ priority = "optional"
 assets = [
     { source = "target/release/libpam_authentik.so", dest = "usr/lib64/security/pam_authentik.so", mode = "644"},
     { source = "target/release/libpam_authentik.so", dest = "usr/lib/security/pam_authentik.so", mode = "644"},
-    { source = "pam_config", dest = "usr/share/pam-configs/tailscale", mode = "644"},
+    { source = "pam_config", dest = "usr/share/pam-configs/authentik", mode = "644"},
+    { source = "config.yaml", dest = "etc/authentik/pam.yaml", mode = "644"},
 ]
 maintainer-scripts = "debian"

@@ -1,0 +1,33 @@
+name: pam
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            pam/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('pam/**/Cargo.lock') }}
+      - working-directory: pam/
+        run: cargo build --verbose
+      - working-directory: pam/
+        run: cargo test --verbose
+      - working-directory: pam/
+        run: cargo deb --verbose
+      - uses: actions/upload-artifact@v4
+        with:
+          name: authentik_pam
+          path: pam/target/debian/*.deb

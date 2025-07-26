@@ -1,5 +1,7 @@
 mod token;
 mod logger;
+mod interactive;
+mod config;
 
 extern crate jwks;
 extern crate pam;
@@ -14,19 +16,27 @@ use pam::pam_try;
 use std::ffi::CStr;
 use token::auth_token;
 use logger::init_log;
+use interactive::auth_interactive;
+use ctor::ctor;
+use config::Config;
 
 struct PAMAuthentik;
 pam::pam_hooks!(PAMAuthentik);
 
+#[ctor]
+fn init() {
+    init_log();
+}
+
 impl PamHooks for PAMAuthentik {
     fn sm_open_session(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        // init();
         log::debug!("sm_open_session");
         PamResultCode::PAM_SUCCESS
     }
 
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        init_log();
+        let config = Config::from_file("/etc/authentik/pam.yaml").expect("Failed to load config");
+
         log::debug!(target: "pam_authentik::sm_authenticate", "init");
         log::debug!(target: "pam_authentik::sm_authenticate", "debug args {:?}", args);
         log::debug!(target: "pam_authentik::sm_authenticate", "debug env {:?}", env::vars());
@@ -51,11 +61,14 @@ impl PamHooks for PAMAuthentik {
                 unreachable!("No password");
             }
         };
+        log::debug!(target: "pam_authentik::sm_authenticate", "{:#?}", password);
         if password.unwrap_or("").starts_with("\u{200b}") {
             log::debug!(target: "pam_authentik::sm_authenticate", "Password has token marker");
-            return auth_token(username, password.unwrap().replace("\u{200b}", ""));
+            return auth_token(config, username, password.unwrap().replace("\u{200b}", ""));
+        } else {
+            log::debug!(target: "pam_authentik::sm_authenticate", "Interactive authentication");
+            return auth_interactive(username, password.unwrap(), &conv);
         }
-        PamResultCode::PAM_SUCCESS
     }
 
     fn sm_setcred(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
