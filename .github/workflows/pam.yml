@@ -21,6 +21,9 @@ jobs:
             ~/.cargo/git
             pam/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('pam/**/Cargo.lock') }}
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev
       - run: make pam-build
       - run: make pam-test
       - run: make pam-package
