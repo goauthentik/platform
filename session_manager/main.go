@@ -87,7 +87,7 @@ func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterS
 
 	sm.sessions[req.SessionId] = session
 
-	log.Printf("Registered session %s for user %s (PID: %d)", req.SessionId, req.Username, req.Pid)
+	log.Printf("Registered session %s for user %s (PID: %d, exp: %s)", req.SessionId, req.Username, req.Pid, time.Until(session.ExpiresAt).String())
 
 	return &pb.RegisterSessionResponse{
 		Success:   true,

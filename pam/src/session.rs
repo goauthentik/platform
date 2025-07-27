@@ -37,7 +37,7 @@ pub fn open_session_impl(
     let request = tonic::Request::new(RegisterSessionRequest {
         session_id: id,
         username: sd.username.to_owned(),
-        token_hash: hash_token(&sd.token),
+        token_hash: sd.token,
         expires_at: sd.expiry,
         pid,
         ppid,
@@ -87,11 +87,4 @@ async fn create_grpc_client() -> Result<SessionManagerClient<Channel>, Box<dyn s
         .await?;
 
     Ok(SessionManagerClient::new(channel))
-}
-
-pub fn hash_token(token: &str) -> String {
-    use sha2::{Digest, Sha256};
-    let mut hasher = Sha256::new();
-    hasher.update(token.as_bytes());
-    hex::encode(hasher.finalize())
 }

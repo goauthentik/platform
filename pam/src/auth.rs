@@ -1,6 +1,6 @@
 use rand::Rng;
 use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
-
+use sha2::{Digest, Sha256};
 use pam::{
     constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
     conv::Conv,
@@ -18,6 +18,8 @@ use crate::{
 
 pub mod interactive;
 pub mod token;
+
+pub const PW_PREFIX: &str = "\u{200b}";
 
 pub fn authenticate_impl(
     pamh: &mut PamHandle,
@@ -42,34 +44,45 @@ pub fn authenticate_impl(
     log::debug!("Started conv");
     let password = pam_try!(conv.send(PAM_PROMPT_ECHO_OFF, "authentik Password: "));
     let password = match password {
-        Some(password) => Some(pam_try!(password.to_str(), PamResultCode::PAM_AUTH_ERR)),
+        Some(password) => {
+            match password.to_str() {
+                Ok(t) => t,
+                Err(_) => {
+                    log::warn!("failed to convert password");
+                    return PamResultCode::PAM_AUTH_ERR;
+                }
+            }
+        },
         None => {
-            unreachable!("No password");
+            log::warn!("No password!");
+            return PamResultCode::PAM_AUTH_ERR;
         }
     };
 
     let id = _generate_id().to_string();
     let mut session_data = SessionData {
         username: username.to_string(),
-        token: password.unwrap().to_owned(),
+        token: password.to_owned(),
         expiry: -1,
     };
     pam_try!(pam_put_env(pamh, ENV_SESSION_ID, id.to_owned().as_str()));
 
-    if password.unwrap_or("").starts_with("\u{200b}") || password.unwrap_or("").starts_with("ey") {
+    if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
-        let raw_token = password.unwrap().replace("\u{200b}", "");
-        let token = match auth_token(config, username, raw_token) {
+        let raw_token = password.replace(PW_PREFIX, "");
+        let token = match auth_token(config, username, raw_token.to_owned()) {
             Ok(t) => t,
             Err(e) => return e,
         };
+        session_data.token = raw_token;
         session_data.expiry = token.claims.exp;
         pam_try!(_write_session_data(id, session_data));
         return PamResultCode::PAM_SUCCESS;
     } else {
         log::debug!("Interactive authentication");
+        session_data.token = hash_token(&password.to_owned());
         pam_try!(_write_session_data(id, session_data));
-        return auth_interactive(username, password.unwrap(), &conv);
+        return auth_interactive(username, &password, &conv);
     }
 }
 
@@ -117,4 +130,10 @@ pub fn _generate_id() -> String {
             CHARSET[idx] as char
         })
         .collect();
+}
+
+pub fn hash_token(token: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    hex::encode(hasher.finalize())
 }
