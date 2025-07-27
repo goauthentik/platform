@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.WithError(err).Warn("failed to init sentry")
 	}
-	err = systemlog.Setup()
+	err = systemlog.Setup("agent")
 	if err != nil {
 		log.WithError(err).Warning("failed to setup logs")
 	}

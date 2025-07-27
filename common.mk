@@ -8,3 +8,6 @@ VERSION_HASH = $(shell git rev-parse HEAD)
 
 TOP := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
+
+LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-${VERSION_HASH}
+GO_FLAGS = -ldflags "${LD_FLAGS}" -v

@@ -1,26 +1,29 @@
-mod token;
-mod logger;
-mod interactive;
 mod config;
-mod session;
 mod generated;
+mod interactive;
+mod logger;
+mod session;
+mod token;
 
 extern crate jwks;
 extern crate pam;
 extern crate reqwest;
 extern crate simplelog;
 
+use config::Config;
+use ctor::ctor;
+use interactive::auth_interactive;
+use logger::init_log;
 use pam::constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode};
 use pam::conv::Conv;
 use pam::module::{PamHandle, PamHooks};
 use pam::pam_try;
-use std::ffi::CStr;
-use token::auth_token;
-use logger::init_log;
-use interactive::auth_interactive;
-use ctor::ctor;
-use config::Config;
 use session::open_session_impl;
+use std::env;
+use std::ffi::{CStr, CString};
+use token::auth_token;
+
+use crate::session::SessionData;
 
 struct PAMAuthentik;
 pam::pam_hooks!(PAMAuthentik);
@@ -56,20 +59,30 @@ impl PamHooks for PAMAuthentik {
                 unreachable!("No password");
             }
         };
-        log::debug!(target: "pam_authentik::sm_authenticate", "{:#?}", password);
-        // pamh.set_data("username", username));
-        if password.unwrap_or("").starts_with("\u{200b}") {
+        let auth_info = "test_data".to_string();
+        match pamh.set_data("my_key", Box::new(auth_info)) {
+            Ok(_) => log::debug!("DEBUG: Data set successfully"),
+            Err(e) => log::debug!("DEBUG: Failed to set data: {:?}", e),
+        }
+
+        unsafe { env::set_var("qwerqerqewr", "yeah bruv") };
+
+        if password.unwrap_or("").starts_with("\u{200b}") ||
+            password.unwrap_or("").starts_with("ey") {
             log::debug!(target: "pam_authentik::sm_authenticate", "Password has token marker");
-            return auth_token(config, username, password.unwrap().replace("\u{200b}", ""));
+            let token = password.unwrap().replace("\u{200b}", "");
+            // pam_try!(pamh.set_data("token", Box::new(token.to_owned())));
+            return auth_token(config, username, token);
         } else {
             log::debug!(target: "pam_authentik::sm_authenticate", "Interactive authentication");
+            // pam_try!(pamh.set_data("token", Box::new(password.to_owned())));
             return auth_interactive(username, password.unwrap(), &conv);
         }
     }
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log::debug!("sm_open_session");
-        return open_session_impl(pamh, args, flags)
+        return open_session_impl(pamh, args, flags);
     }
 
     fn sm_setcred(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {

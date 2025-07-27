@@ -1,5 +1,5 @@
 .PHONY: clean bin/cli/ak bin/agent/ak-agent
-LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION}
+LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-${VERSION_HASH}
 GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 
 include common.mk
@@ -9,7 +9,6 @@ clean:
 	rm -rf ${PWD}/bin/*
 
 bin/cli/ak:
-	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-${VERSION_HASH})
 	mkdir -p ${PWD}/bin/cli
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
@@ -22,8 +21,20 @@ bin/cli/ak:
 			-t ${PWD}/bin/cli \
 			-f ${PWD}/cmd/cli/main/nfpm.yaml
 
+bin/session-manager:
+	mkdir -p ${PWD}/bin/session-manager
+	go build \
+		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
+		-v -a -o ${PWD}/bin/session-manager/aksm \
+		${PWD}/session_manager
+	VERSION=${VERSION} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p deb \
+			-t ${PWD}/bin/session-manager \
+			-f ${PWD}/session_manager/package/nfpm.yaml
+
 bin/agent/ak-agent:
-	$(eval LD_FLAGS := -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-${VERSION_HASH})
 	mkdir -p ${PWD}/bin/agent
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
@@ -46,10 +57,13 @@ gen-proto:
 		$(PROTO_DIR)/**
 
 test-setup:
-	ak setup -v -a http://authentik:9000
+	go run -v ./cmd/cli/main/ setup -v -a http://authentik:9000
 
 test-ssh:
 	go run -v ./cmd/cli/main/ ssh akadmin@authentik-cli_devcontainer-test-machine-1
 
 pam-%:
 	$(MAKE) -C pam $*
+
+sm-%:
+	$(MAKE) -C session_manager $*

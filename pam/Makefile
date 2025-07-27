@@ -14,7 +14,7 @@ package:
 
 test-deploy: package
 	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -r pam_authentik
-	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -i /workspaces/pam/target/debian/pam_authentik_${VERSION}-1_arm64.deb
+	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -i /workspaces/pam/target/debian/pam_authentik_${VERSION}_arm64.deb
 
 gen:
 	cargo install protoc-gen-prost
