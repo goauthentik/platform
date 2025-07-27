@@ -26,7 +26,7 @@ type RegisterSessionRequest struct {
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	TokenHash     string                 `protobuf:"bytes,3,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
-	ExpiresAt     uint64                 `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	Pid           uint32                 `protobuf:"varint,5,opt,name=pid,proto3" json:"pid,omitempty"`
 	Ppid          uint32                 `protobuf:"varint,6,opt,name=ppid,proto3" json:"ppid,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -84,7 +84,7 @@ func (x *RegisterSessionRequest) GetTokenHash() string {
 	return ""
 }
 
-func (x *RegisterSessionRequest) GetExpiresAt() uint64 {
+func (x *RegisterSessionRequest) GetExpiresAt() int64 {
 	if x != nil {
 		return x.ExpiresAt
 	}
@@ -385,7 +385,7 @@ const file_pam_session_proto_rawDesc = "" +
 	"\n" +
 	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\x04R\texpiresAt\x12\x10\n" +
+	"expires_at\x18\x04 \x01(\x03R\texpiresAt\x12\x10\n" +
 	"\x03pid\x18\x05 \x01(\rR\x03pid\x12\x12\n" +
 	"\x04ppid\x18\x06 \x01(\rR\x04ppid\"h\n" +
 	"\x17RegisterSessionResponse\x12\x18\n" +

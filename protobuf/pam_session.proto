@@ -13,7 +13,7 @@ message RegisterSessionRequest {
   string session_id = 1;
   string username = 2;
   string token_hash = 3;
-  uint64 expires_at = 4;
+  int64 expires_at = 4;
   uint32 pid = 5;
   uint32 ppid = 6;
 }

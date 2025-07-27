@@ -44,7 +44,7 @@ bin/agent/ak-agent:
 	mkdir -p "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS"
 	cp ${PWD}/bin/agent/ak-agent "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS/"
 
-gen:
+gen: gen-proto pam-gen
 	go generate ./...
 
 gen-proto:
@@ -61,6 +61,8 @@ test-setup:
 
 test-ssh:
 	go run -v ./cmd/cli/main/ ssh akadmin@authentik-cli_devcontainer-test-machine-1
+
+test-full: clean bin/session-manager sm-test-deploy pam-test-deploy test-ssh
 
 pam-%:
 	$(MAKE) -C pam $*

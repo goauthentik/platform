@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
+
 	"syscall"
 	"time"
 )
@@ -29,6 +30,9 @@ func (sm *SessionMonitor) checkExpiredSessions(sessions map[string]*Session) {
 	now := time.Now()
 
 	for sessionID, session := range sessions {
+		if session.ExpiresAt.Unix() == -1 {
+			continue
+		}
 		if now.After(session.ExpiresAt) {
 			log.Printf("Session %s expired for user %s, terminating PID %d",
 				sessionID, session.Username, session.PID)

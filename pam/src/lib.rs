@@ -8,7 +8,6 @@ mod session;
 extern crate jwks;
 extern crate pam;
 extern crate reqwest;
-extern crate simplelog;
 
 use crate::auth::authenticate_impl;
 use crate::logger::init_log;
@@ -17,7 +16,9 @@ use crate::session::open_session_impl;
 use ctor::ctor;
 use pam::constants::{PamFlag, PamResultCode};
 use pam::module::{PamHandle, PamHooks};
-use std::ffi::{CStr};
+use std::ffi::CStr;
+
+pub const ENV_SESSION_ID: &str = "AUTHENTIK_SESSION_ID";
 
 struct PAMAuthentik;
 pam::pam_hooks!(PAMAuthentik);

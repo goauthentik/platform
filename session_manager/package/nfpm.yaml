@@ -9,8 +9,6 @@ vendor: "Authentik Security Inc."
 homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
-depends:
-  - pam_authentik
 scripts:
   postinstall: session_manager/package/postinst.sh
 contents:

@@ -1,6 +1,7 @@
 Name: authentik Authentication
 Default: yes
 Priority: 512
+Service: sshd
 Auth-Type: Primary
 Auth:
         [success=end default=ignore]    pam_authentik.so

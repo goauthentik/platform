@@ -1,9 +1,20 @@
-use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
 use rand::Rng;
+use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
 
-use pam::{constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_OFF}, conv::Conv, module::PamHandle, pam_try};
+use pam::{
+    constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
+    conv::Conv,
+    module::PamHandle,
+    pam_try,
+};
 
-use crate::{auth::{interactive::auth_interactive, token::auth_token}, config::Config, pam_env::pam_put_env, session::SessionData};
+use crate::{
+    ENV_SESSION_ID,
+    auth::{interactive::auth_interactive, token::auth_token},
+    config::Config,
+    pam_env::pam_put_env,
+    session::SessionData,
+};
 
 pub mod interactive;
 pub mod token;
@@ -37,56 +48,60 @@ pub fn authenticate_impl(
         }
     };
 
-    let id =_generate_id().to_string();
-    let session_data = SessionData{
+    let id = _generate_id().to_string();
+    let mut session_data = SessionData {
         username: username.to_string(),
         token: password.unwrap().to_owned(),
+        expiry: -1,
     };
-    pam_try!(pam_put_env(pamh, "AUTHENTIK_SESSION_ID", id.to_owned().as_str()));
-    pam_try!(_write_session_data(id, session_data));
+    pam_try!(pam_put_env(pamh, ENV_SESSION_ID, id.to_owned().as_str()));
 
-    if password.unwrap_or("").starts_with("\u{200b}") ||
-        password.unwrap_or("").starts_with("ey") {
-        log::debug!("Password has token marker");
-        let token = password.unwrap().replace("\u{200b}", "");
-        // pam_try!(pamh.set_data("token", Box::new(token.to_owned())));
-        return auth_token(config, username, token);
+    if password.unwrap_or("").starts_with("\u{200b}") || password.unwrap_or("").starts_with("ey") {
+        log::debug!("Token authentication");
+        let raw_token = password.unwrap().replace("\u{200b}", "");
+        let token = match auth_token(config, username, raw_token) {
+            Ok(t) => t,
+            Err(e) => return e,
+        };
+        session_data.expiry = token.claims.exp;
+        pam_try!(_write_session_data(id, session_data));
+        return PamResultCode::PAM_SUCCESS;
     } else {
         log::debug!("Interactive authentication");
-        // pam_try!(pamh.set_data("token", Box::new(password.to_owned())));
+        pam_try!(_write_session_data(id, session_data));
         return auth_interactive(username, password.unwrap(), &conv);
     }
 }
 
 pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
-    let path  = format!("/tmp/aksm-{}", id);
+    let path = format!("/tmp/.aksm-{}", id);
     let file = File::open(path).expect("Could not create file!");
 
     return match serde_json::from_reader(file) {
         Ok(t) => Ok(t),
         Err(e) => {
             log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR)
+            return Err(PamResultCode::PAM_AUTH_ERR);
         }
-    }
+    };
 }
 
 pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResultCode> {
     let json_data = serde_json::to_string(&data).unwrap();
-    let path  = format!("/tmp/aksm-{}", id);
+    let path = format!("/tmp/.aksm-{}", id);
     let mut file = File::create(path).expect("Could not create file!");
 
     let mut permissions = file.metadata().unwrap().permissions();
-    permissions.set_mode(permissions.mode() | 0o700);
-    file.set_permissions(permissions);
+    permissions.set_mode(0o400);
+    file.set_permissions(permissions).unwrap();
 
     return match file.write_all(json_data.as_bytes()) {
         Ok(_) => Ok(()),
         Err(e) => {
             log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR)
+            return Err(PamResultCode::PAM_AUTH_ERR);
         }
-    }
+    };
 }
 
 pub fn _generate_id() -> String {

@@ -8,8 +8,8 @@ pub struct RegisterSessionRequest {
     pub username: ::prost::alloc::string::String,
     #[prost(string, tag="3")]
     pub token_hash: ::prost::alloc::string::String,
-    #[prost(uint64, tag="4")]
-    pub expires_at: u64,
+    #[prost(int64, tag="4")]
+    pub expires_at: i64,
     #[prost(uint32, tag="5")]
     pub pid: u32,
     #[prost(uint32, tag="6")]
