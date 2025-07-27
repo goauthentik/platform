@@ -23,11 +23,12 @@ const (
 
 type RegisterSessionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	TokenHash     string                 `protobuf:"bytes,2,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
-	ExpiresAt     uint64                 `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Pid           uint32                 `protobuf:"varint,4,opt,name=pid,proto3" json:"pid,omitempty"`
-	Ppid          uint32                 `protobuf:"varint,5,opt,name=ppid,proto3" json:"ppid,omitempty"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	TokenHash     string                 `protobuf:"bytes,3,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
+	ExpiresAt     uint64                 `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Pid           uint32                 `protobuf:"varint,5,opt,name=pid,proto3" json:"pid,omitempty"`
+	Ppid          uint32                 `protobuf:"varint,6,opt,name=ppid,proto3" json:"ppid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -60,6 +61,13 @@ func (x *RegisterSessionRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RegisterSessionRequest.ProtoReflect.Descriptor instead.
 func (*RegisterSessionRequest) Descriptor() ([]byte, []int) {
 	return file_pam_session_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *RegisterSessionRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
 }
 
 func (x *RegisterSessionRequest) GetUsername() string {
@@ -369,15 +377,17 @@ var File_pam_session_proto protoreflect.FileDescriptor
 
 const file_pam_session_proto_rawDesc = "" +
 	"\n" +
-	"\x11pam_session.proto\x12\vpam_session\"\x98\x01\n" +
-	"\x16RegisterSessionRequest\x12\x1a\n" +
-	"\busername\x18\x01 \x01(\tR\busername\x12\x1d\n" +
+	"\x11pam_session.proto\x12\vpam_session\"\xb7\x01\n" +
+	"\x16RegisterSessionRequest\x12\x1d\n" +
 	"\n" +
-	"token_hash\x18\x02 \x01(\tR\ttokenHash\x12\x1d\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\x04R\texpiresAt\x12\x10\n" +
-	"\x03pid\x18\x04 \x01(\rR\x03pid\x12\x12\n" +
-	"\x04ppid\x18\x05 \x01(\rR\x04ppid\"h\n" +
+	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12\x1d\n" +
+	"\n" +
+	"expires_at\x18\x04 \x01(\x04R\texpiresAt\x12\x10\n" +
+	"\x03pid\x18\x05 \x01(\rR\x03pid\x12\x12\n" +
+	"\x04ppid\x18\x06 \x01(\rR\x04ppid\"h\n" +
 	"\x17RegisterSessionResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\n" +

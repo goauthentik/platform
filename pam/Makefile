@@ -13,8 +13,8 @@ package:
 	cargo deb --verbose --deb-version ${VERSION}
 
 test-deploy: package
-	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -r pam_authentik
-	docker exec authentik-cli_devcontainer-test-machine-1 dpkg -i /workspaces/pam/target/debian/pam_authentik_${VERSION}_arm64.deb
+	$(TME) dpkg -i /workspaces/pam/target/debian/pam_authentik_${VERSION}_arm64.deb
+	$(TME) systemctl restart ssh
 
 gen:
 	cargo install protoc-gen-prost

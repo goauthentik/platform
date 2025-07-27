@@ -4,6 +4,7 @@
 package systemlog
 
 import (
+	"io"
 	"log/syslog"
 
 	log "github.com/sirupsen/logrus"
@@ -15,6 +16,7 @@ func Setup(appName string) error {
 	if err == nil {
 		log.Info("Switching to syslog logging...")
 		log.StandardLogger().Hooks.Add(hook)
+		log.StandardLogger().SetOutput(io.Discard)
 	}
 	return nil
 }

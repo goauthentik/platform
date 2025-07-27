@@ -10,11 +10,12 @@ service SessionManager {
 }
 
 message RegisterSessionRequest {
-  string username = 1;
-  string token_hash = 2;
-  uint64 expires_at = 3;
-  uint32 pid = 4;
-  uint32 ppid = 5;
+  string session_id = 1;
+  string username = 2;
+  string token_hash = 3;
+  uint64 expires_at = 4;
+  uint32 pid = 5;
+  uint32 ppid = 6;
 }
 
 message RegisterSessionResponse {

@@ -3,14 +3,16 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RegisterSessionRequest {
     #[prost(string, tag="1")]
-    pub username: ::prost::alloc::string::String,
+    pub session_id: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
+    pub username: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
     pub token_hash: ::prost::alloc::string::String,
-    #[prost(uint64, tag="3")]
+    #[prost(uint64, tag="4")]
     pub expires_at: u64,
-    #[prost(uint32, tag="4")]
-    pub pid: u32,
     #[prost(uint32, tag="5")]
+    pub pid: u32,
+    #[prost(uint32, tag="6")]
     pub ppid: u32,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]

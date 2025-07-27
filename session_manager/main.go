@@ -68,17 +68,15 @@ func main() {
 		os.Remove(socketPath)
 	}()
 
-	log.Println("Session manager listening on Unix socket")
+	log.Printf("Session manager listening on socket: %s\n", socketPath)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 }
 
 func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {
-	sessionID := "foo"
-
 	session := &Session{
-		ID:        sessionID,
+		ID:        req.SessionId,
 		Username:  req.Username,
 		TokenHash: req.TokenHash,
 		ExpiresAt: time.Unix(int64(req.ExpiresAt), 0),
@@ -87,13 +85,13 @@ func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterS
 		CreatedAt: time.Now(),
 	}
 
-	sm.sessions[sessionID] = session
+	sm.sessions[req.SessionId] = session
 
-	log.Printf("Registered session %s for user %s (PID: %d)", sessionID, req.Username, req.Pid)
+	log.Printf("Registered session %s for user %s (PID: %d)", req.SessionId, req.Username, req.Pid)
 
 	return &pb.RegisterSessionResponse{
 		Success:   true,
-		SessionId: sessionID,
+		SessionId: req.SessionId,
 	}, nil
 }
 

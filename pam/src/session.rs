@@ -1,14 +1,15 @@
 extern crate pam;
 
+use crate::auth::_read_session_data;
 use crate::generated::pam_session::RegisterSessionRequest;
 use crate::generated::pam_session::session_manager_client::SessionManagerClient;
+use crate::pam_env::pam_get_env;
+use pam::{constants::PamFlag, pam_try};
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
-use pam::{constants::PamFlag, pam_try};
 use serde::{Deserialize, Serialize};
-use tokio::net::UnixStream;
-use std::env;
 use std::ffi::{CStr, CString};
+use tokio::net::UnixStream;
 use tokio::runtime::Runtime;
 use tonic::transport::{Channel, Endpoint, Uri};
 use tower::service_fn;
@@ -24,69 +25,43 @@ pub fn open_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    log::debug!("{:#?}", env::var("qwerqerqewr"));
+    let id = pam_get_env(pamh, "AUTHENTIK_SESSION_ID").unwrap();
 
-    log::debug!("foo");
-        match unsafe { pamh.get_data::<String>("my_key") } {
-            Ok(data) => {
-                log::debug!("DEBUG: Retrieved data: {}", data);
-            }
-            Err(PamResultCode::PAM_NO_MODULE_DATA) => {
-                log::debug!("DEBUG: No module data found");
-            }
-            Err(e) => {
-                log::debug!("DEBUG: Other error: {:?}", e);
-            }
-        }
-    log::debug!("{:#?}", unsafe {pamh.get_data::<SessionData>("data") });
-    log::debug!("{:#?}", unsafe {pamh.get_data::<&&CString>("username") });
-    log::debug!("{:#?}", unsafe {pamh.get_data::<&CStr>("username") });
-    log::debug!("{:#?}", unsafe {pamh.get_data::<&&CStr>("username") });
-    let username = match unsafe { pamh.get_data::<&CString>("username") } {
-        Ok(t) => t.to_str(),
-        Err(e) => {
-            log::debug!{"Error: {:#?}", e};
-            return e
-        },
-    }
-    .unwrap();
-    log::debug!("bar");
-    let token = match unsafe { pamh.get_data::<&CString>("token") } {
-        Ok(t) => t.to_str(),
-        Err(e) => return e,
-    }
-    .unwrap();
-    log::debug!("username: {}, token {}", username, token);
-    // let expires_at: u64 = match unsafe { pamh.get_data::<&CStr>("expires_at") } {
-    //     Ok(t) => t.to_str().unwrap().parse::<u64>().unwrap_or(0),
-    //     Err(e) => return e,
-    // };
+    let sd = pam_try!(_read_session_data(id.to_owned()));
+    let token_hash = hash_token(&sd.token);
 
-    let token_hash = hash_token(&token);
     let pid = std::process::id();
     let ppid = std::os::unix::process::parent_id();
 
-    let rt = match Runtime::new() {
-        Ok(rt) => rt,
-        Err(_) => return PamResultCode::PAM_SESSION_ERR,
-    };
-
-    let mut client = match rt.block_on(create_grpc_client()) {
-        Ok(res) => res,
-        Err(_) => return PamResultCode::PAM_SESSION_ERR,
-    };
-
     let request = tonic::Request::new(RegisterSessionRequest {
-        username: username.to_owned(),
+        session_id: id,
+        username: sd.username.to_owned(),
         token_hash,
         expires_at: 0,
         pid,
         ppid,
     });
 
+    let rt = match Runtime::new() {
+        Ok(rt) => rt,
+        Err(e) => {
+            log::warn!("Failed to create runtime: {}", e);
+            return PamResultCode::PAM_SESSION_ERR
+        },
+    };
+    let mut client = match rt.block_on(create_grpc_client()) {
+        Ok(res) => res,
+        Err(e) => {
+            log::warn!("Failed to create grpc client: {}", e);
+            return PamResultCode::PAM_SESSION_ERR
+        },
+    };
     let response = match rt.block_on(client.register_session(request)) {
         Ok(res) => res,
-        Err(_) => return PamResultCode::PAM_SESSION_ERR,
+        Err(e) => {
+            log::warn!("failed to send GRPC request: {}", e);
+            return PamResultCode::PAM_SESSION_ERR;
+        },
     };
     let session_info = response.into_inner();
 
