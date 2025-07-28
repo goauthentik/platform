@@ -9,7 +9,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	pb "goauthentik.io/cli/pkg/pam_session/types"
+	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
@@ -30,21 +30,19 @@ type Session struct {
 	CreatedAt time.Time
 }
 
-const socketPath = "/var/run/authentik-session-manager.sock"
-
 func main() {
 	log.SetLevel(log.DebugLevel)
 	systemlog.Setup("ak_sm")
 	// Remove existing socket
-	os.Remove(socketPath)
+	os.Remove(c.Socket)
 
-	lis, err := net.Listen("unix", socketPath)
+	lis, err := net.Listen("unix", c.Socket)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	// Set socket permissions
-	os.Chmod(socketPath, 0666)
+	os.Chmod(c.Socket, 0666)
 
 	sm := &SessionManager{
 		sessions: make(map[string]*Session),
@@ -65,10 +63,10 @@ func main() {
 
 		log.Println("Shutting down...")
 		s.GracefulStop()
-		os.Remove(socketPath)
+		os.Remove(c.Socket)
 	}()
 
-	log.Printf("Session manager listening on socket: %s\n", socketPath)
+	log.Printf("Session manager listening on socket: %s\n", c.Socket)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}

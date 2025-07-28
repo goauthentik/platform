@@ -42,6 +42,5 @@ assets = [
     { source = "target/release/libpam_authentik.so", dest = "usr/lib64/security/pam_authentik.so", mode = "644"},
     { source = "target/release/libpam_authentik.so", dest = "usr/lib/security/pam_authentik.so", mode = "644"},
     { source = "pam_config", dest = "usr/share/pam-configs/authentik", mode = "644"},
-    { source = "config.yaml", dest = "etc/authentik/pam.yaml", mode = "644"},
 ]
 maintainer-scripts = "debian"

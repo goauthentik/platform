@@ -2,11 +2,18 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 
 #[derive(Debug, Deserialize, Serialize)]
+pub struct PAMConfig {
+    pub authentication_flow: String,
+    pub terminate_on_expiry: bool,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     pub authentik_url: String,
     pub app_slug: String,
     pub debug: bool,
-    pub authentication_flow: String,
+    pub socket: String,
+    pub pam: PAMConfig,
 }
 
 impl Config {

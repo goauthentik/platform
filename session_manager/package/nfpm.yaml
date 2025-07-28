@@ -17,6 +17,9 @@ contents:
   - src: session_manager/package/session_manager.service
     dst: /etc/systemd/system/authentik-session-manager.service
     type: config
+  - src: session_manager/package/config.yaml
+    dst: /etc/authentik/host.yaml
+    type: config
   # - src: ./systemd/mqtt2prometheus
   #   dst: /etc/default/mqtt2prometheus
   #   type: config

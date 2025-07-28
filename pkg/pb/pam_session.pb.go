@@ -4,7 +4,7 @@
 // 	protoc        v6.32.0--rc1
 // source: pam_session.proto
 
-package types
+package pb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -410,7 +410,7 @@ const file_pam_session_proto_rawDesc = "" +
 	"\x0eSessionManager\x12\\\n" +
 	"\x0fRegisterSession\x12#.pam_session.RegisterSessionRequest\x1a$.pam_session.RegisterSessionResponse\x12V\n" +
 	"\rValidateToken\x12!.pam_session.ValidateTokenRequest\x1a\".pam_session.ValidateTokenResponse\x12S\n" +
-	"\fCloseSession\x12 .pam_session.CloseSessionRequest\x1a!.pam_session.CloseSessionResponseB\x17Z\x15pkg/pam_session/typesb\x06proto3"
+	"\fCloseSession\x12 .pam_session.CloseSessionRequest\x1a!.pam_session.CloseSessionResponseB\bZ\x06pkg/pbb\x06proto3"
 
 var (
 	file_pam_session_proto_rawDescOnce sync.Once

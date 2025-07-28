@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package pam_session;
-option go_package = "pkg/pam_session/types";
+option go_package = "pkg/pb";
 
 service SessionManager {
   rpc RegisterSession(RegisterSessionRequest) returns (RegisterSessionResponse);

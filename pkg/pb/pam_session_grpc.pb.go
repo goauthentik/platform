@@ -4,7 +4,7 @@
 // - protoc             v6.32.0--rc1
 // source: pam_session.proto
 
-package types
+package pb
 
 import (
 	context "context"

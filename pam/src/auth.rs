@@ -27,7 +27,7 @@ pub fn authenticate_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_file("/etc/authentik/pam.yaml").expect("Failed to load config");
+    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
     let username = pamh.get_item::<User>().unwrap().unwrap();
     let username = String::from_utf8(username.to_bytes().to_vec()).unwrap();
