@@ -2,18 +2,15 @@ extern crate pam;
 
 use crate::ENV_SESSION_ID;
 use crate::auth::_read_session_data;
+use crate::generated::create_grpc_client;
 use crate::generated::pam_session::RegisterSessionRequest;
-use crate::generated::pam_session::session_manager_client::SessionManagerClient;
-use crate::pam_env::pam_get_env;
+use crate::pam_env::{pam_get_env, pam_list_env};
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
 use pam::{constants::PamFlag, pam_try};
 use serde::{Deserialize, Serialize};
 use std::ffi::{CStr, CString};
-use tokio::net::UnixStream;
 use tokio::runtime::Runtime;
-use tonic::transport::{Channel, Endpoint, Uri};
-use tower::service_fn;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SessionData {
@@ -27,6 +24,9 @@ pub fn open_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
+    pam_list_env(pamh).iter().for_each(|e| {
+        log::debug!("   env: {}", e);
+    });
     let id = pam_get_env(pamh, ENV_SESSION_ID).unwrap();
 
     let sd = pam_try!(_read_session_data(id.to_owned()));
@@ -76,15 +76,4 @@ pub fn open_session_impl(
         Box::new(CString::new(session_info.session_id).unwrap().as_c_str())
     ));
     PamResultCode::PAM_SUCCESS
-}
-
-async fn create_grpc_client() -> Result<SessionManagerClient<Channel>, Box<dyn std::error::Error>> {
-    log::info!("creating grpc client");
-    let channel = Endpoint::try_from("http://[::]:50051")?
-        .connect_with_connector(service_fn(|_: Uri| {
-            UnixStream::connect("/var/run/authentik-session-manager.sock")
-        }))
-        .await?;
-
-    Ok(SessionManagerClient::new(channel))
 }

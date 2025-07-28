@@ -13,7 +13,7 @@ use crate::auth::authenticate_impl;
 use crate::logger::init_log;
 use crate::logger::log_hook;
 use crate::session::open_session_impl;
-use ctor::ctor;
+use ctor::{ctor, dtor};
 use pam::constants::{PamFlag, PamResultCode};
 use pam::module::{PamHandle, PamHooks};
 use std::ffi::CStr;
@@ -24,8 +24,13 @@ struct PAMAuthentik;
 pam::pam_hooks!(PAMAuthentik);
 
 #[ctor]
-fn init() {
+fn ctor() {
     init_log();
+}
+
+#[dtor]
+fn dtor() {
+    log_hook("dtor");
 }
 
 impl PamHooks for PAMAuthentik {

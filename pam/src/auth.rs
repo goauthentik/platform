@@ -1,12 +1,13 @@
-use rand::Rng;
-use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
-use sha2::{Digest, Sha256};
 use pam::{
     constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
     conv::Conv,
+    items::User,
     module::PamHandle,
     pam_try,
 };
+use rand::Rng;
+use sha2::{Digest, Sha256};
+use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
 
 use crate::{
     ENV_SESSION_ID,
@@ -28,7 +29,7 @@ pub fn authenticate_impl(
 ) -> PamResultCode {
     let config = Config::from_file("/etc/authentik/pam.yaml").expect("Failed to load config");
 
-    let username = pamh.get_item::<pam::items::User>().unwrap().unwrap();
+    let username = pamh.get_item::<User>().unwrap().unwrap();
     let username = String::from_utf8(username.to_bytes().to_vec()).unwrap();
     log::debug!("user: {}", username);
     let conv = match pamh.get_item::<Conv>() {
@@ -44,13 +45,11 @@ pub fn authenticate_impl(
     log::debug!("Started conv");
     let password = pam_try!(conv.send(PAM_PROMPT_ECHO_OFF, "authentik Password: "));
     let password = match password {
-        Some(password) => {
-            match password.to_str() {
-                Ok(t) => t,
-                Err(_) => {
-                    log::warn!("failed to convert password");
-                    return PamResultCode::PAM_AUTH_ERR;
-                }
+        Some(password) => match password.to_str() {
+            Ok(t) => t,
+            Err(_) => {
+                log::warn!("failed to convert password");
+                return PamResultCode::PAM_AUTH_ERR;
             }
         },
         None => {

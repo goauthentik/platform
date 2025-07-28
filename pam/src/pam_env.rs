@@ -1,28 +1,19 @@
 use libc::{c_char, free};
 
 use pam::{constants::PamResultCode, module::PamHandle};
-use std::ffi::{c_void, CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 
 #[link(name = "pam")]
 unsafe extern "C" {
     /// Retrieve a single env var (returns a malloc’d C string owned by PAM)
-    fn pam_getenv(
-        pamh: *const PamHandle,
-        name: *const c_char,
-    ) -> *mut c_char;
+    fn pam_getenv(pamh: *const PamHandle, name: *const c_char) -> *mut c_char;
 
     /// Add or update an env var in PAM (expects "KEY=VAL" malloc’d internally)
-    fn pam_putenv(
-        pamh: *const PamHandle,
-        name_value: *const c_char,
-    ) -> PamResultCode;
+    fn pam_putenv(pamh: *const PamHandle, name_value: *const c_char) -> PamResultCode;
 
     /// Retrieve a NULL-terminated list of "KEY=VAL" strings (malloc’d)
-    fn pam_getenvlist(
-        pamh: *const PamHandle,
-    ) -> *mut *mut c_char;
+    fn pam_getenvlist(pamh: *const PamHandle) -> *mut *mut c_char;
 }
-
 
 pub fn pam_get_env(pamh: &mut PamHandle, key: &str) -> Option<String> {
     let c_key = CString::new(key).ok()?;

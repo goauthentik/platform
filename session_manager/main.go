@@ -34,7 +34,7 @@ const socketPath = "/var/run/authentik-session-manager.sock"
 
 func main() {
 	log.SetLevel(log.DebugLevel)
-	systemlog.Setup("aksm")
+	systemlog.Setup("ak_sm")
 	// Remove existing socket
 	os.Remove(socketPath)
 

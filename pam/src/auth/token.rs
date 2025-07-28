@@ -2,12 +2,12 @@ extern crate jwks;
 extern crate pam;
 extern crate reqwest;
 
+use crate::config::Config;
 use jsonwebtoken::{TokenData, Validation, decode, decode_header};
 use jwks::Jwks;
-use pam::constants::{PamResultCode};
+use pam::constants::PamResultCode;
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;
-use crate::config::Config;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -16,7 +16,11 @@ pub struct Claims {
     pub exp: i64,
 }
 
-pub fn auth_token(config: Config, username: String, token: String) -> Result<TokenData<Claims>, PamResultCode> {
+pub fn auth_token(
+    config: Config,
+    username: String,
+    token: String,
+) -> Result<TokenData<Claims>, PamResultCode> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
@@ -24,7 +28,10 @@ pub fn auth_token(config: Config, username: String, token: String) -> Result<Tok
             return Err(PamResultCode::PAM_SESSION_ERR);
         }
     };
-    let jwks = match rt.block_on(Jwks::from_jwks_url(format!("{}/application/o/{}/jwks/", config.authentik_url, config.app_slug))) {
+    let jwks = match rt.block_on(Jwks::from_jwks_url(format!(
+        "{}/application/o/{}/jwks/",
+        config.authentik_url, config.app_slug
+    ))) {
         Ok(res) => res,
         Err(e) => {
             log::warn!("failed to validate token: {}", e);
@@ -41,7 +48,11 @@ pub fn auth_token(config: Config, username: String, token: String) -> Result<Tok
         decode::<Claims>(&token, &jwk.decoding_key, &validation).expect("jwt should be valid");
     log::debug!("Got valid token: {:#?}", decoded_token.claims);
     if username != decoded_token.claims.preferred_username {
-        log::warn!("User mismatch: token={:#?}, expected={:#?}", decoded_token.claims, username);
+        log::warn!(
+            "User mismatch: token={:#?}, expected={:#?}",
+            decoded_token.claims,
+            username
+        );
         return Err(PamResultCode::PAM_USER_UNKNOWN);
     }
     return Ok(decoded_token);
