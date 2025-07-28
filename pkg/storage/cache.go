@@ -12,6 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	ErrExpired = errors.New("cache expired")
+)
+
 type CacheData interface {
 	Expiry() time.Time
 }
@@ -74,7 +78,7 @@ func (c *Cache[T]) Get() (T, error) {
 		return cc, err
 	}
 	if cc.Expiry().Before(time.Now()) {
-		return cc, errors.New("cache expired")
+		return cc, ErrExpired
 	}
 	return cc, nil
 }

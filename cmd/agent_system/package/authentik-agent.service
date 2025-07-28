@@ -1,0 +1,10 @@
+[Unit]
+Description=authentik Agent
+After=network.target
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/ak-agent
+
+[Install]
+WantedBy=multi-user.target

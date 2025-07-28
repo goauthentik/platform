@@ -19,101 +19,139 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Agent_GetToken_FullMethodName = "/agent_auth.Agent/GetToken"
+	AgentAuth_WhoAmI_FullMethodName              = "/agent_auth.AgentAuth/WhoAmI"
+	AgentAuth_CachedTokenExchange_FullMethodName = "/agent_auth.AgentAuth/CachedTokenExchange"
 )
 
-// AgentClient is the client API for Agent service.
+// AgentAuthClient is the client API for AgentAuth service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AgentClient interface {
-	GetToken(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*TokenResponse, error)
+type AgentAuthClient interface {
+	WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIResponse, error)
+	CachedTokenExchange(ctx context.Context, in *TokenExchangeRequest, opts ...grpc.CallOption) (*TokenExchangeResponse, error)
 }
 
-type agentClient struct {
+type agentAuthClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAgentClient(cc grpc.ClientConnInterface) AgentClient {
-	return &agentClient{cc}
+func NewAgentAuthClient(cc grpc.ClientConnInterface) AgentAuthClient {
+	return &agentAuthClient{cc}
 }
 
-func (c *agentClient) GetToken(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*TokenResponse, error) {
+func (c *agentAuthClient) WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(TokenResponse)
-	err := c.cc.Invoke(ctx, Agent_GetToken_FullMethodName, in, out, cOpts...)
+	out := new(WhoAmIResponse)
+	err := c.cc.Invoke(ctx, AgentAuth_WhoAmI_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AgentServer is the server API for Agent service.
-// All implementations must embed UnimplementedAgentServer
-// for forward compatibility.
-type AgentServer interface {
-	GetToken(context.Context, *TokenRequest) (*TokenResponse, error)
-	mustEmbedUnimplementedAgentServer()
+func (c *agentAuthClient) CachedTokenExchange(ctx context.Context, in *TokenExchangeRequest, opts ...grpc.CallOption) (*TokenExchangeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TokenExchangeResponse)
+	err := c.cc.Invoke(ctx, AgentAuth_CachedTokenExchange_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-// UnimplementedAgentServer must be embedded to have
+// AgentAuthServer is the server API for AgentAuth service.
+// All implementations must embed UnimplementedAgentAuthServer
+// for forward compatibility.
+type AgentAuthServer interface {
+	WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error)
+	CachedTokenExchange(context.Context, *TokenExchangeRequest) (*TokenExchangeResponse, error)
+	mustEmbedUnimplementedAgentAuthServer()
+}
+
+// UnimplementedAgentAuthServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedAgentServer struct{}
+type UnimplementedAgentAuthServer struct{}
 
-func (UnimplementedAgentServer) GetToken(context.Context, *TokenRequest) (*TokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetToken not implemented")
+func (UnimplementedAgentAuthServer) WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WhoAmI not implemented")
 }
-func (UnimplementedAgentServer) mustEmbedUnimplementedAgentServer() {}
-func (UnimplementedAgentServer) testEmbeddedByValue()               {}
+func (UnimplementedAgentAuthServer) CachedTokenExchange(context.Context, *TokenExchangeRequest) (*TokenExchangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CachedTokenExchange not implemented")
+}
+func (UnimplementedAgentAuthServer) mustEmbedUnimplementedAgentAuthServer() {}
+func (UnimplementedAgentAuthServer) testEmbeddedByValue()                   {}
 
-// UnsafeAgentServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AgentServer will
+// UnsafeAgentAuthServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AgentAuthServer will
 // result in compilation errors.
-type UnsafeAgentServer interface {
-	mustEmbedUnimplementedAgentServer()
+type UnsafeAgentAuthServer interface {
+	mustEmbedUnimplementedAgentAuthServer()
 }
 
-func RegisterAgentServer(s grpc.ServiceRegistrar, srv AgentServer) {
-	// If the following call pancis, it indicates UnimplementedAgentServer was
+func RegisterAgentAuthServer(s grpc.ServiceRegistrar, srv AgentAuthServer) {
+	// If the following call pancis, it indicates UnimplementedAgentAuthServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&Agent_ServiceDesc, srv)
+	s.RegisterService(&AgentAuth_ServiceDesc, srv)
 }
 
-func _Agent_GetToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TokenRequest)
+func _AgentAuth_WhoAmI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WhoAmIRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentServer).GetToken(ctx, in)
+		return srv.(AgentAuthServer).WhoAmI(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Agent_GetToken_FullMethodName,
+		FullMethod: AgentAuth_WhoAmI_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).GetToken(ctx, req.(*TokenRequest))
+		return srv.(AgentAuthServer).WhoAmI(ctx, req.(*WhoAmIRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Agent_ServiceDesc is the grpc.ServiceDesc for Agent service.
+func _AgentAuth_CachedTokenExchange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TokenExchangeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAuthServer).CachedTokenExchange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAuth_CachedTokenExchange_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAuthServer).CachedTokenExchange(ctx, req.(*TokenExchangeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AgentAuth_ServiceDesc is the grpc.ServiceDesc for AgentAuth service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Agent_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "agent_auth.Agent",
-	HandlerType: (*AgentServer)(nil),
+var AgentAuth_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "agent_auth.AgentAuth",
+	HandlerType: (*AgentAuthServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetToken",
-			Handler:    _Agent_GetToken_Handler,
+			MethodName: "WhoAmI",
+			Handler:    _AgentAuth_WhoAmI_Handler,
+		},
+		{
+			MethodName: "CachedTokenExchange",
+			Handler:    _AgentAuth_CachedTokenExchange_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

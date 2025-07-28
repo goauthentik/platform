@@ -13,13 +13,13 @@ bin/cli/ak:
 	go build \
 		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
 		-v -a -o ${PWD}/bin/cli/ak \
-		${PWD}/cmd/cli/main
+		${PWD}/cmd/cli
 	VERSION=${VERSION} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
 			-t ${PWD}/bin/cli \
-			-f ${PWD}/cmd/cli/main/nfpm.yaml
+			-f ${PWD}/cmd/cli/nfpm.yaml
 
 bin/session-manager:
 	mkdir -p ${PWD}/bin/session-manager

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package agent_cache;
+option go_package = "pkg/pb";
+
+import "agent.proto";
+import "google/protobuf/timestamp.proto";
+
+service AgentCache {
+  rpc CacheGet(CacheGetRequest) returns (CacheGetResponse);
+  rpc CacheSet(CacheSetRequest) returns (CacheSetResponse);
+}
+
+message CacheGetRequest {
+  agent.RequestHeader header = 1;
+  repeated string keys = 2;
+}
+
+enum CacheStatus {
+  VALID = 0;
+  NOT_FOUND = 1;
+  EXPIRED = 2;
+}
+
+message CacheGetResponse {
+  agent.ResponseHeader header = 1;
+  CacheStatus status = 2;
+  google.protobuf.Timestamp expiry = 3;
+  string value = 4;
+}
+
+message CacheSetRequest {
+  agent.RequestHeader header = 1;
+  repeated string keys = 2;
+  google.protobuf.Timestamp expiry = 3;
+  string value = 4;
+}
+
+message CacheSetResponse {
+  agent.ResponseHeader header = 1;
+}

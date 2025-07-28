@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -21,27 +22,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type TokenRequest struct {
+type WhoAmIRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	Header        *RequestHeader         `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TokenRequest) Reset() {
-	*x = TokenRequest{}
+func (x *WhoAmIRequest) Reset() {
+	*x = WhoAmIRequest{}
 	mi := &file_agent_auth_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TokenRequest) String() string {
+func (x *WhoAmIRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TokenRequest) ProtoMessage() {}
+func (*WhoAmIRequest) ProtoMessage() {}
 
-func (x *TokenRequest) ProtoReflect() protoreflect.Message {
+func (x *WhoAmIRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_agent_auth_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -53,40 +54,146 @@ func (x *TokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TokenRequest.ProtoReflect.Descriptor instead.
-func (*TokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use WhoAmIRequest.ProtoReflect.Descriptor instead.
+func (*WhoAmIRequest) Descriptor() ([]byte, []int) {
 	return file_agent_auth_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *TokenRequest) GetClientId() string {
+func (x *WhoAmIRequest) GetHeader() *RequestHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+type WhoAmIResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *ResponseHeader        `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Body          string                 `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WhoAmIResponse) Reset() {
+	*x = WhoAmIResponse{}
+	mi := &file_agent_auth_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WhoAmIResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WhoAmIResponse) ProtoMessage() {}
+
+func (x *WhoAmIResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_auth_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WhoAmIResponse.ProtoReflect.Descriptor instead.
+func (*WhoAmIResponse) Descriptor() ([]byte, []int) {
+	return file_agent_auth_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *WhoAmIResponse) GetHeader() *ResponseHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *WhoAmIResponse) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
+}
+
+type TokenExchangeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *RequestHeader         `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TokenExchangeRequest) Reset() {
+	*x = TokenExchangeRequest{}
+	mi := &file_agent_auth_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TokenExchangeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TokenExchangeRequest) ProtoMessage() {}
+
+func (x *TokenExchangeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_auth_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TokenExchangeRequest.ProtoReflect.Descriptor instead.
+func (*TokenExchangeRequest) Descriptor() ([]byte, []int) {
+	return file_agent_auth_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *TokenExchangeRequest) GetHeader() *RequestHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *TokenExchangeRequest) GetClientId() string {
 	if x != nil {
 		return x.ClientId
 	}
 	return ""
 }
 
-type TokenResponse struct {
+type TokenExchangeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	Header        *ResponseHeader        `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,2,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	ExpiresIn     uint64                 `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *TokenResponse) Reset() {
-	*x = TokenResponse{}
-	mi := &file_agent_auth_proto_msgTypes[1]
+func (x *TokenExchangeResponse) Reset() {
+	*x = TokenExchangeResponse{}
+	mi := &file_agent_auth_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *TokenResponse) String() string {
+func (x *TokenExchangeResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TokenResponse) ProtoMessage() {}
+func (*TokenExchangeResponse) ProtoMessage() {}
 
-func (x *TokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_auth_proto_msgTypes[1]
+func (x *TokenExchangeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_auth_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -97,16 +204,30 @@ func (x *TokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TokenResponse.ProtoReflect.Descriptor instead.
-func (*TokenResponse) Descriptor() ([]byte, []int) {
-	return file_agent_auth_proto_rawDescGZIP(), []int{1}
+// Deprecated: Use TokenExchangeResponse.ProtoReflect.Descriptor instead.
+func (*TokenExchangeResponse) Descriptor() ([]byte, []int) {
+	return file_agent_auth_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *TokenResponse) GetAccessToken() string {
+func (x *TokenExchangeResponse) GetHeader() *ResponseHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *TokenExchangeResponse) GetAccessToken() string {
 	if x != nil {
 		return x.AccessToken
 	}
 	return ""
+}
+
+func (x *TokenExchangeResponse) GetExpiresIn() uint64 {
+	if x != nil {
+		return x.ExpiresIn
+	}
+	return 0
 }
 
 var File_agent_auth_proto protoreflect.FileDescriptor
@@ -114,13 +235,23 @@ var File_agent_auth_proto protoreflect.FileDescriptor
 const file_agent_auth_proto_rawDesc = "" +
 	"\n" +
 	"\x10agent_auth.proto\x12\n" +
-	"agent_auth\"+\n" +
-	"\fTokenRequest\x12\x1b\n" +
-	"\tclient_id\x18\x01 \x01(\tR\bclientId\"2\n" +
-	"\rTokenResponse\x12!\n" +
-	"\faccess_token\x18\x01 \x01(\tR\vaccessToken2H\n" +
-	"\x05Agent\x12?\n" +
-	"\bGetToken\x12\x18.agent_auth.TokenRequest\x1a\x19.agent_auth.TokenResponseB\bZ\x06pkg/pbb\x06proto3"
+	"agent_auth\x1a\vagent.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n" +
+	"\rWhoAmIRequest\x12,\n" +
+	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\"S\n" +
+	"\x0eWhoAmIResponse\x12-\n" +
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12\x12\n" +
+	"\x04body\x18\x02 \x01(\tR\x04body\"a\n" +
+	"\x14TokenExchangeRequest\x12,\n" +
+	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12\x1b\n" +
+	"\tclient_id\x18\x02 \x01(\tR\bclientId\"\x88\x01\n" +
+	"\x15TokenExchangeResponse\x12-\n" +
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12!\n" +
+	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12\x1d\n" +
+	"\n" +
+	"expires_in\x18\x03 \x01(\x04R\texpiresIn2\xa8\x01\n" +
+	"\tAgentAuth\x12?\n" +
+	"\x06WhoAmI\x12\x19.agent_auth.WhoAmIRequest\x1a\x1a.agent_auth.WhoAmIResponse\x12Z\n" +
+	"\x13CachedTokenExchange\x12 .agent_auth.TokenExchangeRequest\x1a!.agent_auth.TokenExchangeResponseB\bZ\x06pkg/pbb\x06proto3"
 
 var (
 	file_agent_auth_proto_rawDescOnce sync.Once
@@ -134,19 +265,29 @@ func file_agent_auth_proto_rawDescGZIP() []byte {
 	return file_agent_auth_proto_rawDescData
 }
 
-var file_agent_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_agent_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_agent_auth_proto_goTypes = []any{
-	(*TokenRequest)(nil),  // 0: agent_auth.TokenRequest
-	(*TokenResponse)(nil), // 1: agent_auth.TokenResponse
+	(*WhoAmIRequest)(nil),         // 0: agent_auth.WhoAmIRequest
+	(*WhoAmIResponse)(nil),        // 1: agent_auth.WhoAmIResponse
+	(*TokenExchangeRequest)(nil),  // 2: agent_auth.TokenExchangeRequest
+	(*TokenExchangeResponse)(nil), // 3: agent_auth.TokenExchangeResponse
+	(*RequestHeader)(nil),         // 4: agent.RequestHeader
+	(*ResponseHeader)(nil),        // 5: agent.ResponseHeader
 }
 var file_agent_auth_proto_depIdxs = []int32{
-	0, // 0: agent_auth.Agent.GetToken:input_type -> agent_auth.TokenRequest
-	1, // 1: agent_auth.Agent.GetToken:output_type -> agent_auth.TokenResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: agent_auth.WhoAmIRequest.header:type_name -> agent.RequestHeader
+	5, // 1: agent_auth.WhoAmIResponse.header:type_name -> agent.ResponseHeader
+	4, // 2: agent_auth.TokenExchangeRequest.header:type_name -> agent.RequestHeader
+	5, // 3: agent_auth.TokenExchangeResponse.header:type_name -> agent.ResponseHeader
+	0, // 4: agent_auth.AgentAuth.WhoAmI:input_type -> agent_auth.WhoAmIRequest
+	2, // 5: agent_auth.AgentAuth.CachedTokenExchange:input_type -> agent_auth.TokenExchangeRequest
+	1, // 6: agent_auth.AgentAuth.WhoAmI:output_type -> agent_auth.WhoAmIResponse
+	3, // 7: agent_auth.AgentAuth.CachedTokenExchange:output_type -> agent_auth.TokenExchangeResponse
+	6, // [6:8] is the sub-list for method output_type
+	4, // [4:6] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_agent_auth_proto_init() }
@@ -154,13 +295,14 @@ func file_agent_auth_proto_init() {
 	if File_agent_auth_proto != nil {
 		return
 	}
+	file_agent_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_auth_proto_rawDesc), len(file_agent_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
