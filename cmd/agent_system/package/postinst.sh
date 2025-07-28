@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-systemctl enable --now authentik-session-manager
+systemctl daemon-reload
+systemctl enable --now ak-sys

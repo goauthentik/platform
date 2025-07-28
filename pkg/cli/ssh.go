@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -10,8 +11,10 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/cli/auth/raw"
 	"goauthentik.io/cli/pkg/cli/client"
 	"golang.org/x/crypto/ssh"
@@ -41,19 +44,16 @@ var sshCmd = &cobra.Command{
 			ClientID: "authentik-pam",
 		})
 
-		host := args[0]
-		user := u.Username
-		port := "22"
-		if strings.Contains(host, "@") {
-			_parts := strings.Split(host, "@")
-			user = _parts[0]
-			host = _parts[1]
+		uh, hostPort, err := net.SplitHostPort(args[0])
+		if err != nil {
+			return err
 		}
-		if strings.Contains(host, ":") {
-			_parts := strings.Split(host, ":")
-			host = _parts[0]
-			port = _parts[1]
-		}
+		user, host := func(s string) (string, string) {
+			if i := strings.IndexByte(s, '@'); i >= 0 {
+				return s[:i], s[i+1:]
+			}
+			return u.Username, s
+		}(uh)
 
 		khf, err := DefaultKnownHostsPath()
 		if err != nil {
@@ -88,11 +88,13 @@ var sshCmd = &cobra.Command{
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		}
-		client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
+		client, err := ssh.Dial("tcp", net.JoinHostPort(host, hostPort), config)
 		if err != nil {
 			log.Fatal("Failed to dial: ", err)
 		}
 		defer client.Close()
+
+		ForwardAgentSocket(client)
 
 		// Create a session for interactive shell
 		session, err := client.NewSession()
@@ -136,6 +138,47 @@ var sshCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(sshCmd)
+}
+
+func ForwardAgentSocket(client *ssh.Client) {
+	remoteSocket := fmt.Sprintf("/var/run/authentik/%s.sock", uuid.New())
+	localSocket := types.GetAgentSocketPath()
+	remoteListener, err := client.Listen("unix", remoteSocket)
+	if err != nil {
+		log.Fatalf("remote listen on %s failed: %v", remoteSocket, err)
+	}
+	defer remoteListener.Close()
+	log.Printf("remote listening %s → local %s", remoteSocket, localSocket)
+
+	for {
+		remoteConn, err := remoteListener.Accept()
+		if err != nil {
+			log.Printf("remote Accept error: %v", err)
+			continue
+		}
+		go func(rc net.Conn) {
+			defer rc.Close()
+			// Dial the local unix socket
+			lc, err := net.Dial("unix", localSocket)
+			if err != nil {
+				log.Printf("local dial %s failed: %v", localSocket, err)
+				return
+			}
+			defer lc.Close()
+
+			// Pipe both ways
+			done := make(chan struct{}, 2)
+			go func() {
+				io.Copy(rc, lc)
+				done <- struct{}{}
+			}()
+			go func() {
+				io.Copy(lc, rc)
+				done <- struct{}{}
+			}()
+			<-done
+		}(remoteConn)
+	}
 }
 
 func ReadPassword(prompt string) (string, error) {

@@ -1,0 +1,25 @@
+include ../../common.mk
+
+TARGET := cli
+BINARY_NAME := ak
+
+build:
+	mkdir -p ${TOP}/bin/${TARGET}
+	go build \
+		-ldflags "${LD_FLAGS}" \
+		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
+		${TOP}/cmd/${TARGET}
+
+package: build
+	mkdir -p ${TOP}/bin/${TARGET}/completions
+	${TOP}/hack/completions.sh ${TOP}/cmd/${TARGET} ${TOP}/bin/${TARGET}/completions ${TARGET}
+	VERSION=${VERSION} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p deb \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/cmd/${TARGET}/nfpm.yaml
+
+test-deploy: package
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}_arm64.deb
+	$(TME) systemctl restart ssh

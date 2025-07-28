@@ -1,4 +1,4 @@
-package main
+package sessionmanager
 
 import (
 	log "github.com/sirupsen/logrus"

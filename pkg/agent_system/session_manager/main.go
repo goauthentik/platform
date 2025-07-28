@@ -1,4 +1,4 @@
-package main
+package sessionmanager
 
 import (
 	"context"
@@ -30,7 +30,7 @@ type Session struct {
 	CreatedAt time.Time
 }
 
-func main() {
+func Main() {
 	log.SetLevel(log.DebugLevel)
 	systemlog.Setup("ak_sm")
 	// Remove existing socket

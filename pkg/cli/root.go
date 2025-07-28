@@ -5,9 +5,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/storage"
 )
 
@@ -49,7 +49,7 @@ func Execute() {
 }
 
 func init() {
-	defaultSocketPath := path.Join(xdg.DataHome, "authentik", "agent.sock")
+	defaultSocketPath := types.GetAgentSocketPath()
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable debug logging")
 	rootCmd.PersistentFlags().StringP("profile", "n", "default", "A name for the profile")
 	rootCmd.PersistentFlags().StringVarP(&socketPath, "socket", "s", defaultSocketPath, "Socket the agent is listening on")

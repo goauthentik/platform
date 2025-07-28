@@ -4,13 +4,12 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"path"
 	"syscall"
 
-	"github.com/adrg/xdg"
 	"github.com/kolide/systray"
 	"github.com/nightlyone/lockfile"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/storage"
@@ -38,7 +37,7 @@ func New() (*Agent, error) {
 		cfg:        mgr,
 		log:        log.WithField("logger", "agent"),
 		tr:         token.NewGlobal(),
-		socketPath: path.Join(xdg.DataHome, "authentik", "agent.sock"),
+		socketPath: types.GetAgentSocketPath(),
 	}, nil
 }
 
