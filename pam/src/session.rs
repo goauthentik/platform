@@ -12,7 +12,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::ffi::CStr;
-use std::fs::File;
+use std::fs::{File, Permissions};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use tokio::runtime::Runtime;
@@ -32,7 +32,13 @@ pub fn open_session_impl(
 ) -> PamResultCode {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
-    let sid = pam_get_env(pamh, ENV_SESSION_ID).unwrap();
+    let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
+        Some(t) => t,
+        None => {
+            log::warn!("failed to get session id");
+            return PamResultCode::PAM_SESSION_ERR;
+        }
+    };
     let mut sd = pam_try!(_read_session_data(sid.to_owned()));
 
     if !config.pam.terminate_on_expiry {
@@ -88,9 +94,15 @@ pub fn close_session_impl(
 ) -> PamResultCode {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
-    let id = pam_get_env(pamh, ENV_SESSION_ID).unwrap();
+    let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
+        Some(t) => t,
+        None => {
+            log::warn!("failed to get session id");
+            return PamResultCode::PAM_SESSION_ERR;
+        }
+    };
     let request = tonic::Request::new(CloseSessionRequest {
-        session_id: id,
+        session_id: sid,
         pid: std::process::id(),
     });
 
@@ -139,13 +151,23 @@ pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
 }
 
 pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResultCode> {
-    let json_data = serde_json::to_string(&data).unwrap();
+    let json_data = match serde_json::to_string(&data) {
+        Ok(j) => j,
+        Err(e) => {
+            log::warn!("failed to json encode: {}", e);
+            return Err(PamResultCode::PAM_SESSION_ERR);
+        }
+    };
     let path = format!("/tmp/.aksm-{}", id);
     let mut file = File::create(path).expect("Could not create file!");
 
-    let mut permissions = file.metadata().unwrap().permissions();
-    permissions.set_mode(0o400);
-    file.set_permissions(permissions).unwrap();
+    match file.set_permissions(Permissions::from_mode(0o400)) {
+        Ok(_) => {},
+        Err(e) => {
+            log::warn!("failed to get file permissions: {}", e);
+            return Err(PamResultCode::PAM_SESSION_ERR);
+        }
+    };
 
     return match file.write_all(json_data.as_bytes()) {
         Ok(_) => Ok(()),

@@ -30,9 +30,22 @@ pub fn authenticate_impl(
 ) -> PamResultCode {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
-    let username = pamh.get_item::<User>().unwrap().unwrap();
-    let username = String::from_utf8(username.to_bytes().to_vec()).unwrap();
-    log::debug!("user: {}", username);
+    let username = match pam_try!(pamh.get_item::<User>()) {
+        Some(u) => {
+            match String::from_utf8(u.to_bytes().to_vec()) {
+                Ok(uu) => uu,
+                Err(e) => {
+                    log::warn!("failed to decode user: {}", e);
+                    return PamResultCode::PAM_AUTH_ERR;
+                }
+            }
+        },
+        None => {
+            log::warn!("No user");
+            return PamResultCode::PAM_AUTH_ERR;
+        }
+    };
+    log::debug!("got username: {}", username);
     let conv = match pamh.get_item::<Conv>() {
         Ok(Some(conv)) => conv,
         Ok(None) => {
