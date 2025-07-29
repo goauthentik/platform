@@ -32,7 +32,7 @@ test-ssh:
 test-shell:
 	docker exec -it authentik-cli_devcontainer-test-machine-1 bash
 
-test-full: clean agent/test-deploy sys/test-deploy cli/test-deploy pam/test-deploy test-ssh
+test-full: clean agent/test-deploy sys/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
 pam/%:
 	$(MAKE) -C pam $*
