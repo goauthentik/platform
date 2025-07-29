@@ -49,7 +49,7 @@ pub fn authenticate_impl(
             return e;
         }
     };
-    log::debug!("got username: {}", username);
+    log::debug!("got username: '{}'", username);
     let conv = match pamh.get_item::<Conv>() {
         Ok(Some(conv)) => conv,
         Ok(None) => {
