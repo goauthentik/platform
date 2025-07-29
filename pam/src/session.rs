@@ -36,7 +36,7 @@ pub fn open_session_impl(
         Some(t) => t,
         None => {
             log::warn!("failed to get session id");
-            return PamResultCode::PAM_SESSION_ERR;
+            return PamResultCode::PAM_IGNORE;
         }
     };
     let mut sd = pam_try!(_read_session_data(sid.to_owned()));
@@ -98,7 +98,7 @@ pub fn close_session_impl(
         Some(t) => t,
         None => {
             log::warn!("failed to get session id");
-            return PamResultCode::PAM_SESSION_ERR;
+            return PamResultCode::PAM_IGNORE;
         }
     };
     let request = tonic::Request::new(CloseSessionRequest {
