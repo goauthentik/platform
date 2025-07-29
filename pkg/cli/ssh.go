@@ -65,6 +65,13 @@ var sshCmd = &cobra.Command{
 			log.WithError(err).Warning("failed to locate known_hosts")
 			return err
 		}
+		if _, err := os.Stat(khf); os.IsNotExist(err) {
+			_, err := os.OpenFile(khf, os.O_CREATE, 0600)
+			if err != nil {
+				log.WithError(err).Warning("failed to create known_hosts file")
+				return err
+			}
+		}
 		kh, err := knownhosts.NewDB(khf)
 		if err != nil {
 			log.Fatal("Failed to read known_hosts: ", err)
