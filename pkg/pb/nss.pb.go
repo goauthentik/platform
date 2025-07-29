@@ -377,19 +377,16 @@ const file_nss_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
 	"\x03gid\x18\x02 \x01(\rR\x03gid\x12\x18\n" +
 	"\amembers\x18\x03 \x03(\tR\amembers\x12\x16\n" +
-	"\x06passwd\x18\x04 \x01(\tR\x06passwd2\x84\x02\n" +
-	"\x03NSS\x12\"\n" +
-	"\bListUser\x12\n" +
+	"\x06passwd\x18\x04 \x01(\tR\x06passwd2\xa1\x01\n" +
+	"\x03NSS\x12#\n" +
+	"\tListUsers\x12\n" +
 	".nss.Empty\x1a\n" +
-	".nss.Users\x12)\n" +
-	"\vGetUserByID\x12\x0f.nss.GetRequest\x1a\t.nss.User\x12+\n" +
-	"\rGetUserByName\x12\x0f.nss.GetRequest\x1a\t.nss.User\x12%\n" +
+	".nss.Users\x12%\n" +
+	"\aGetUser\x12\x0f.nss.GetRequest\x1a\t.nss.User\x12%\n" +
 	"\n" +
 	"ListGroups\x12\n" +
-	".nss.Empty\x1a\v.nss.Groups\x12+\n" +
-	"\fGetGroupByID\x12\x0f.nss.GetRequest\x1a\n" +
-	".nss.Group\x12-\n" +
-	"\x0eGetGroupByName\x12\x0f.nss.GetRequest\x1a\n" +
+	".nss.Empty\x1a\v.nss.Groups\x12'\n" +
+	"\bGetGroup\x12\x0f.nss.GetRequest\x1a\n" +
 	".nss.GroupB\bZ\x06pkg/pbb\x06proto3"
 
 var (
@@ -416,20 +413,16 @@ var file_nss_proto_goTypes = []any{
 var file_nss_proto_depIdxs = []int32{
 	3, // 0: nss.Users.users:type_name -> nss.User
 	5, // 1: nss.Groups.groups:type_name -> nss.Group
-	0, // 2: nss.NSS.ListUser:input_type -> nss.Empty
-	1, // 3: nss.NSS.GetUserByID:input_type -> nss.GetRequest
-	1, // 4: nss.NSS.GetUserByName:input_type -> nss.GetRequest
-	0, // 5: nss.NSS.ListGroups:input_type -> nss.Empty
-	1, // 6: nss.NSS.GetGroupByID:input_type -> nss.GetRequest
-	1, // 7: nss.NSS.GetGroupByName:input_type -> nss.GetRequest
-	2, // 8: nss.NSS.ListUser:output_type -> nss.Users
-	3, // 9: nss.NSS.GetUserByID:output_type -> nss.User
-	3, // 10: nss.NSS.GetUserByName:output_type -> nss.User
-	4, // 11: nss.NSS.ListGroups:output_type -> nss.Groups
-	5, // 12: nss.NSS.GetGroupByID:output_type -> nss.Group
-	5, // 13: nss.NSS.GetGroupByName:output_type -> nss.Group
-	8, // [8:14] is the sub-list for method output_type
-	2, // [2:8] is the sub-list for method input_type
+	0, // 2: nss.NSS.ListUsers:input_type -> nss.Empty
+	1, // 3: nss.NSS.GetUser:input_type -> nss.GetRequest
+	0, // 4: nss.NSS.ListGroups:input_type -> nss.Empty
+	1, // 5: nss.NSS.GetGroup:input_type -> nss.GetRequest
+	2, // 6: nss.NSS.ListUsers:output_type -> nss.Users
+	3, // 7: nss.NSS.GetUser:output_type -> nss.User
+	4, // 8: nss.NSS.ListGroups:output_type -> nss.Groups
+	5, // 9: nss.NSS.GetGroup:output_type -> nss.Group
+	6, // [6:10] is the sub-list for method output_type
+	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name

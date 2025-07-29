@@ -4,13 +4,11 @@ package nss;
 option go_package = "pkg/pb";
 
 service NSS {
-    rpc ListUser(Empty) returns (Users);
-    rpc GetUserByID(GetRequest) returns (User);
-    rpc GetUserByName(GetRequest) returns (User);
+    rpc ListUsers(Empty) returns (Users);
+    rpc GetUser(GetRequest) returns (User);
 
     rpc ListGroups(Empty) returns (Groups);
-    rpc GetGroupByID(GetRequest) returns (Group);
-    rpc GetGroupByName(GetRequest) returns (Group);
+    rpc GetGroup(GetRequest) returns (Group);
 }
 
 message Empty {}

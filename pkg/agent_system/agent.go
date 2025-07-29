@@ -1,70 +1,85 @@
 package agentsystem
 
 import (
+	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 
-type SessionManager struct {
+type SystemAgent struct {
 	pb.UnimplementedSessionManagerServer
-	sessions map[string]*Session
-	monitor  *SessionMonitor
-	lis      net.Listener
-	srv      *grpc.Server
-	log      *log.Entry
+	pb.UnimplementedNSSServer
+
+	monitor *SessionMonitor
+	srv     *grpc.Server
+	log     *log.Entry
+	api     *api.APIClient
 }
 
-func New() *SessionManager {
-	_ = os.Remove(config.Get().Socket)
-
-	lis, err := net.Listen("unix", config.Get().Socket)
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-
-	_ = os.Chmod(config.Get().Socket, 0666)
-
+func New() *SystemAgent {
 	l := log.WithField("logger", "agent_sys.sm")
-	sm := &SessionManager{
-		sessions: make(map[string]*Session),
-		monitor:  NewSessionMonitor(),
-		lis:      lis,
+
+	u, err := url.Parse(config.Get().AuthentikURL)
+	if err != nil {
+		panic(err)
+	}
+	apiConfig := api.NewConfiguration()
+	apiConfig.Host = u.Host
+	apiConfig.Scheme = u.Scheme
+	apiConfig.Servers = api.ServerConfigurations{
+		{
+			URL: fmt.Sprintf("%sapi/v3", u.Path),
+		},
+	}
+	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Get().Token))
+
+	sm := &SystemAgent{
+		monitor: NewSessionMonitor(),
 		srv: grpc.NewServer(
 			grpc.ChainUnaryInterceptor(logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l))),
 			grpc.ChainStreamInterceptor(logging.StreamServerInterceptor(systemlog.InterceptorLogger(l))),
 		),
 		log: l,
+		api: api.NewAPIClient(apiConfig),
 	}
 	pb.RegisterSessionManagerServer(sm.srv, sm)
+	pb.RegisterNSSServer(sm.srv, sm)
 	return sm
 }
 
-func (sm *SessionManager) Start() {
-	// Start session monitor
-	go sm.monitor.Start(sm.sessions)
+func (sa *SystemAgent) Start() {
+	go sa.monitor.Start()
 
-	// Handle graceful shutdown
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		sm.log.Info("Shutting down...")
-		sm.srv.GracefulStop()
+		sa.log.Info("Shutting down...")
+		sa.srv.GracefulStop()
 		_ = os.Remove(config.Get().Socket)
 	}()
 
-	sm.log.Infof("Session manager listening on socket: %s", config.Get().Socket)
-	if err := sm.srv.Serve(sm.lis); err != nil {
-		sm.log.Fatalf("Failed to serve: %v", err)
+	_ = os.Remove(config.Get().Socket)
+	lis, err := net.Listen("unix", config.Get().Socket)
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+	_ = os.Chmod(config.Get().Socket, 0666)
+
+	sa.log.Infof("Session manager listening on socket: %s", config.Get().Socket)
+	if err := sa.srv.Serve(lis); err != nil {
+		sa.log.Fatalf("Failed to serve: %v", err)
 	}
 }

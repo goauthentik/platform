@@ -9,18 +9,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type Session struct {
-	ID          string
-	Username    string
-	TokenHash   string
-	ExpiresAt   time.Time
-	PID         uint32
-	PPID        uint32
-	CreatedAt   time.Time
-	LocalSocket string
-}
-
-func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {
+func (sa *SystemAgent) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {
 	session := &Session{
 		ID:          req.SessionId,
 		Username:    req.Username,
@@ -32,9 +21,9 @@ func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterS
 		LocalSocket: req.LocalSocket,
 	}
 
-	sm.sessions[req.SessionId] = session
+	sa.monitor.AddSession(session)
 
-	sm.log.Infof("Registered session %s for user %s (PID: %d, exp: %s)", session.ID, session.Username, req.Pid, time.Until(session.ExpiresAt).String())
+	sa.log.Infof("Registered session %s for user %s (PID: %d, exp: %s)", session.ID, session.Username, req.Pid, time.Until(session.ExpiresAt).String())
 
 	return &pb.RegisterSessionResponse{
 		Success:   true,
@@ -42,18 +31,21 @@ func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterS
 	}, nil
 }
 
-func (sm *SessionManager) SessionStatus(ctx context.Context, req *pb.SessionStatusRequest) (*pb.SessionStatusResponse, error) {
-	sess, ok := sm.sessions[req.SessionId]
+func (sa *SystemAgent) SessionStatus(ctx context.Context, req *pb.SessionStatusRequest) (*pb.SessionStatusResponse, error) {
+	sess, ok := sa.monitor.GetSession(req.SessionId)
 	if !ok {
 		return &pb.SessionStatusResponse{Success: false}, nil
 	}
 	return &pb.SessionStatusResponse{Success: true, Expiry: timestamppb.New(sess.ExpiresAt)}, nil
 }
 
-func (sm *SessionManager) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {
-	sess := sm.sessions[req.SessionId]
+func (sa *SystemAgent) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {
+	sess, ok := sa.monitor.GetSession(req.SessionId)
+	if !ok {
+		return &pb.CloseSessionResponse{Success: false}, nil
+	}
 	_ = os.Remove(sess.LocalSocket)
-	sm.log.Infof("Removing session %s for user '%s'", sess.ID, sess.Username)
-	delete(sm.sessions, req.SessionId)
+	sa.log.Infof("Removing session %s for user '%s'", sess.ID, sess.Username)
+	sa.monitor.Delete(req.SessionId)
 	return &pb.CloseSessionResponse{Success: true}, nil
 }

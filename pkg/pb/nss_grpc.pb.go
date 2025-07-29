@@ -19,24 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NSS_ListUser_FullMethodName       = "/nss.NSS/ListUser"
-	NSS_GetUserByID_FullMethodName    = "/nss.NSS/GetUserByID"
-	NSS_GetUserByName_FullMethodName  = "/nss.NSS/GetUserByName"
-	NSS_ListGroups_FullMethodName     = "/nss.NSS/ListGroups"
-	NSS_GetGroupByID_FullMethodName   = "/nss.NSS/GetGroupByID"
-	NSS_GetGroupByName_FullMethodName = "/nss.NSS/GetGroupByName"
+	NSS_ListUsers_FullMethodName  = "/nss.NSS/ListUsers"
+	NSS_GetUser_FullMethodName    = "/nss.NSS/GetUser"
+	NSS_ListGroups_FullMethodName = "/nss.NSS/ListGroups"
+	NSS_GetGroup_FullMethodName   = "/nss.NSS/GetGroup"
 )
 
 // NSSClient is the client API for NSS service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NSSClient interface {
-	ListUser(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Users, error)
-	GetUserByID(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error)
-	GetUserByName(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error)
+	ListUsers(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Users, error)
+	GetUser(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error)
 	ListGroups(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Groups, error)
-	GetGroupByID(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error)
-	GetGroupByName(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error)
+	GetGroup(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error)
 }
 
 type nSSClient struct {
@@ -47,30 +43,20 @@ func NewNSSClient(cc grpc.ClientConnInterface) NSSClient {
 	return &nSSClient{cc}
 }
 
-func (c *nSSClient) ListUser(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Users, error) {
+func (c *nSSClient) ListUsers(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Users, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Users)
-	err := c.cc.Invoke(ctx, NSS_ListUser_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, NSS_ListUsers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nSSClient) GetUserByID(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error) {
+func (c *nSSClient) GetUser(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
-	err := c.cc.Invoke(ctx, NSS_GetUserByID_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nSSClient) GetUserByName(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(User)
-	err := c.cc.Invoke(ctx, NSS_GetUserByName_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, NSS_GetUser_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,20 +73,10 @@ func (c *nSSClient) ListGroups(ctx context.Context, in *Empty, opts ...grpc.Call
 	return out, nil
 }
 
-func (c *nSSClient) GetGroupByID(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error) {
+func (c *nSSClient) GetGroup(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Group)
-	err := c.cc.Invoke(ctx, NSS_GetGroupByID_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nSSClient) GetGroupByName(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Group)
-	err := c.cc.Invoke(ctx, NSS_GetGroupByName_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, NSS_GetGroup_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +87,10 @@ func (c *nSSClient) GetGroupByName(ctx context.Context, in *GetRequest, opts ...
 // All implementations must embed UnimplementedNSSServer
 // for forward compatibility.
 type NSSServer interface {
-	ListUser(context.Context, *Empty) (*Users, error)
-	GetUserByID(context.Context, *GetRequest) (*User, error)
-	GetUserByName(context.Context, *GetRequest) (*User, error)
+	ListUsers(context.Context, *Empty) (*Users, error)
+	GetUser(context.Context, *GetRequest) (*User, error)
 	ListGroups(context.Context, *Empty) (*Groups, error)
-	GetGroupByID(context.Context, *GetRequest) (*Group, error)
-	GetGroupByName(context.Context, *GetRequest) (*Group, error)
+	GetGroup(context.Context, *GetRequest) (*Group, error)
 	mustEmbedUnimplementedNSSServer()
 }
 
@@ -127,23 +101,17 @@ type NSSServer interface {
 // pointer dereference when methods are called.
 type UnimplementedNSSServer struct{}
 
-func (UnimplementedNSSServer) ListUser(context.Context, *Empty) (*Users, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListUser not implemented")
+func (UnimplementedNSSServer) ListUsers(context.Context, *Empty) (*Users, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUsers not implemented")
 }
-func (UnimplementedNSSServer) GetUserByID(context.Context, *GetRequest) (*User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserByID not implemented")
-}
-func (UnimplementedNSSServer) GetUserByName(context.Context, *GetRequest) (*User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserByName not implemented")
+func (UnimplementedNSSServer) GetUser(context.Context, *GetRequest) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
 func (UnimplementedNSSServer) ListGroups(context.Context, *Empty) (*Groups, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGroups not implemented")
 }
-func (UnimplementedNSSServer) GetGroupByID(context.Context, *GetRequest) (*Group, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupByID not implemented")
-}
-func (UnimplementedNSSServer) GetGroupByName(context.Context, *GetRequest) (*Group, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroupByName not implemented")
+func (UnimplementedNSSServer) GetGroup(context.Context, *GetRequest) (*Group, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
 }
 func (UnimplementedNSSServer) mustEmbedUnimplementedNSSServer() {}
 func (UnimplementedNSSServer) testEmbeddedByValue()             {}
@@ -166,56 +134,38 @@ func RegisterNSSServer(s grpc.ServiceRegistrar, srv NSSServer) {
 	s.RegisterService(&NSS_ServiceDesc, srv)
 }
 
-func _NSS_ListUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NSS_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NSSServer).ListUser(ctx, in)
+		return srv.(NSSServer).ListUsers(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NSS_ListUser_FullMethodName,
+		FullMethod: NSS_ListUsers_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NSSServer).ListUser(ctx, req.(*Empty))
+		return srv.(NSSServer).ListUsers(ctx, req.(*Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NSS_GetUserByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NSS_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NSSServer).GetUserByID(ctx, in)
+		return srv.(NSSServer).GetUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NSS_GetUserByID_FullMethodName,
+		FullMethod: NSS_GetUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NSSServer).GetUserByID(ctx, req.(*GetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NSS_GetUserByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NSSServer).GetUserByName(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NSS_GetUserByName_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NSSServer).GetUserByName(ctx, req.(*GetRequest))
+		return srv.(NSSServer).GetUser(ctx, req.(*GetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -238,38 +188,20 @@ func _NSS_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NSS_GetGroupByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _NSS_GetGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NSSServer).GetGroupByID(ctx, in)
+		return srv.(NSSServer).GetGroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: NSS_GetGroupByID_FullMethodName,
+		FullMethod: NSS_GetGroup_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NSSServer).GetGroupByID(ctx, req.(*GetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _NSS_GetGroupByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NSSServer).GetGroupByName(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NSS_GetGroupByName_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NSSServer).GetGroupByName(ctx, req.(*GetRequest))
+		return srv.(NSSServer).GetGroup(ctx, req.(*GetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -282,28 +214,20 @@ var NSS_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*NSSServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListUser",
-			Handler:    _NSS_ListUser_Handler,
+			MethodName: "ListUsers",
+			Handler:    _NSS_ListUsers_Handler,
 		},
 		{
-			MethodName: "GetUserByID",
-			Handler:    _NSS_GetUserByID_Handler,
-		},
-		{
-			MethodName: "GetUserByName",
-			Handler:    _NSS_GetUserByName_Handler,
+			MethodName: "GetUser",
+			Handler:    _NSS_GetUser_Handler,
 		},
 		{
 			MethodName: "ListGroups",
 			Handler:    _NSS_ListGroups_Handler,
 		},
 		{
-			MethodName: "GetGroupByID",
-			Handler:    _NSS_GetGroupByID_Handler,
-		},
-		{
-			MethodName: "GetGroupByName",
-			Handler:    _NSS_GetGroupByName_Handler,
+			MethodName: "GetGroup",
+			Handler:    _NSS_GetGroup_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

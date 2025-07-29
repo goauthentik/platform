@@ -3,6 +3,7 @@ package agentsystem
 import (
 	"os"
 	"strings"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
@@ -10,29 +11,46 @@ import (
 	"time"
 )
 
+type Session struct {
+	ID          string
+	Username    string
+	TokenHash   string
+	ExpiresAt   time.Time
+	PID         uint32
+	PPID        uint32
+	CreatedAt   time.Time
+	LocalSocket string
+}
+
 type SessionMonitor struct {
+	sessions      map[string]*Session
+	mtx           sync.RWMutex
 	checkInterval time.Duration
 }
 
 func NewSessionMonitor() *SessionMonitor {
 	return &SessionMonitor{
+		sessions:      make(map[string]*Session),
+		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
 	}
 }
 
-func (sm *SessionMonitor) Start(sessions map[string]*Session) {
+func (sm *SessionMonitor) Start() {
 	ticker := time.NewTicker(sm.checkInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		sm.checkExpiredSessions(sessions)
+		sm.checkExpiredSessions()
 	}
 }
 
-func (sm *SessionMonitor) checkExpiredSessions(sessions map[string]*Session) {
+func (sm *SessionMonitor) checkExpiredSessions() {
 	now := time.Now()
 
-	for sessionID, session := range sessions {
+	sm.mtx.Lock()
+	defer sm.mtx.Unlock()
+	for sessionID, session := range sm.sessions {
 		if session.ExpiresAt.Unix() == -1 {
 			continue
 		}
@@ -44,10 +62,29 @@ func (sm *SessionMonitor) checkExpiredSessions(sessions map[string]*Session) {
 			if err != nil && !strings.Contains(err.Error(), "no such process") {
 				log.Infof("Failed to terminate session %s: %v", sessionID, err)
 			} else {
-				delete(sessions, sessionID)
+				sm.Delete(sessionID)
 			}
 		}
 	}
+}
+
+func (sm *SessionMonitor) AddSession(session *Session) {
+	sm.mtx.Lock()
+	defer sm.mtx.Unlock()
+	sm.sessions[session.ID] = session
+}
+
+func (sm *SessionMonitor) GetSession(id string) (*Session, bool) {
+	sm.mtx.RLock()
+	defer sm.mtx.RUnlock()
+	s, ok := sm.sessions[id]
+	return s, ok
+}
+
+func (sm *SessionMonitor) Delete(id string) {
+	sm.mtx.Lock()
+	defer sm.mtx.Unlock()
+	delete(sm.sessions, id)
 }
 
 func (sm *SessionMonitor) terminateSession(session *Session) error {

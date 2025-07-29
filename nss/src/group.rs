@@ -89,7 +89,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
             }
         };
         match client
-            .get_group_by_id(GetRequest {
+            .get_group(GetRequest {
                 name: None,
                 id: Some(gid),
             })
@@ -125,7 +125,7 @@ fn get_entry_by_name(name: String) -> Response<Group> {
             }
         };
         match client
-            .get_group_by_name(GetRequest {
+            .get_group(GetRequest {
                 name: Some(name.to_owned()),
                 id: None,
             })

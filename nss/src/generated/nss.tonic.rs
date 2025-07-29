@@ -90,7 +90,7 @@ pub mod nss_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn list_user(
+        pub async fn list_users(
             &mut self,
             request: impl tonic::IntoRequest<super::Empty>,
         ) -> std::result::Result<tonic::Response<super::Users>, tonic::Status> {
@@ -103,12 +103,12 @@ pub mod nss_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/ListUser");
+            let path = http::uri::PathAndQuery::from_static("/nss.NSS/ListUsers");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "ListUser"));
+            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "ListUsers"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn get_user_by_id(
+        pub async fn get_user(
             &mut self,
             request: impl tonic::IntoRequest<super::GetRequest>,
         ) -> std::result::Result<tonic::Response<super::User>, tonic::Status> {
@@ -121,27 +121,9 @@ pub mod nss_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetUserByID");
+            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetUser");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetUserByID"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn get_user_by_name(
-            &mut self,
-            request: impl tonic::IntoRequest<super::GetRequest>,
-        ) -> std::result::Result<tonic::Response<super::User>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetUserByName");
-            let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetUserByName"));
+            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetUser"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn list_groups(
@@ -162,7 +144,7 @@ pub mod nss_client {
             req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "ListGroups"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn get_group_by_id(
+        pub async fn get_group(
             &mut self,
             request: impl tonic::IntoRequest<super::GetRequest>,
         ) -> std::result::Result<tonic::Response<super::Group>, tonic::Status> {
@@ -175,27 +157,9 @@ pub mod nss_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetGroupByID");
+            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetGroup");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetGroupByID"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn get_group_by_name(
-            &mut self,
-            request: impl tonic::IntoRequest<super::GetRequest>,
-        ) -> std::result::Result<tonic::Response<super::Group>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetGroupByName");
-            let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetGroupByName"));
+            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetGroup"));
             self.inner.unary(req, path, codec).await
         }
     }

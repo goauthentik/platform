@@ -42,7 +42,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
                 return Response::Unavail;
             }
         };
-        match client.list_user(Empty {}).await {
+        match client.list_users(Empty {}).await {
             Ok(r) => {
                 let users: Vec<Shadow> = r
                     .into_inner()
@@ -83,7 +83,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
         };
 
         match client
-            .get_user_by_name(GetRequest {
+            .get_user(GetRequest {
                 name: Some(name.clone()),
                 id: None,
             })
