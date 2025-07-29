@@ -52,7 +52,7 @@ func (sa *SystemAgent) convertUser(u api.User) *pb.User {
 		Name:    u.Username,
 		Uid:     uint32(u.Pk) + uint32(config.Get().NSS.UIDOffset),
 		Gid:     uint32(u.Pk) + uint32(config.Get().NSS.GIDOffset),
-		Gecos:   "",
+		Gecos:   u.Name,
 		Homedir: fmt.Sprintf("/home/%s", u.Username),
 		Shell:   "/bin/bash",
 	}

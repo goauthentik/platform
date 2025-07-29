@@ -21,4 +21,6 @@ package: build
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sys-agent_${VERSION}_${ARCH}.deb
+	$(TME) cp /etc/authentik/host.yaml.dist /etc/authentik/host.yaml
+	$(TME) yq -yi '.token = "this-token-is-for-testing-dont-use"' /etc/authentik/host.yaml
 	$(TME) systemctl restart ak-sys

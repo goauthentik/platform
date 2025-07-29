@@ -2,14 +2,13 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
-RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-server nano htop libpam0g-dev' && \
+RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-server nano htop libpam0g-dev yq' && \
     apt-get update && \
     apt-get install $INSTALL_PKGS -y --no-install-recommends && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     sed -i 's/KbdInteractiveAuthentication no/KbdInteractiveAuthentication yes/g' /etc/ssh/sshd_config && \
-    mkdir /run/sshd && \
-    adduser akadmin
+    mkdir /run/sshd
 
 RUN find /etc/systemd/system \
     /lib/systemd/system \
