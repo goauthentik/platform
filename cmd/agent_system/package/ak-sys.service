@@ -6,7 +6,7 @@ After=network.target
 Restart=always
 ExecStart=/usr/bin/ak-sys
 RuntimeDirectory=authentik
-RuntimeDirectoryMode=0755
+RuntimeDirectoryMode=0777
 
 [Install]
 WantedBy=multi-user.target

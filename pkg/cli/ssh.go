@@ -44,16 +44,19 @@ var sshCmd = &cobra.Command{
 			ClientID: "authentik-pam",
 		})
 
-		uh, hostPort, err := net.SplitHostPort(args[0])
-		if err != nil {
-			return err
+		host := args[0]
+		user := u.Username
+		port := "22"
+		if strings.Contains(host, "@") {
+			_parts := strings.Split(host, "@")
+			user = _parts[0]
+			host = _parts[1]
 		}
-		user, host := func(s string) (string, string) {
-			if i := strings.IndexByte(s, '@'); i >= 0 {
-				return s[:i], s[i+1:]
-			}
-			return u.Username, s
-		}(uh)
+		if strings.Contains(host, ":") {
+			_parts := strings.Split(host, ":")
+			host = _parts[0]
+			port = _parts[1]
+		}
 
 		khf, err := DefaultKnownHostsPath()
 		if err != nil {
@@ -88,7 +91,7 @@ var sshCmd = &cobra.Command{
 			},
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		}
-		client, err := ssh.Dial("tcp", net.JoinHostPort(host, hostPort), config)
+		client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
 		if err != nil {
 			log.Fatal("Failed to dial: ", err)
 		}
