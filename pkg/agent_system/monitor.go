@@ -1,6 +1,9 @@
 package agentsystem
 
 import (
+	"os"
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 
 	"syscall"
@@ -38,7 +41,7 @@ func (sm *SessionMonitor) checkExpiredSessions(sessions map[string]*Session) {
 				sessionID, session.Username, session.PID)
 
 			err := sm.terminateSession(session)
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "no such process") {
 				log.Infof("Failed to terminate session %s: %v", sessionID, err)
 			} else {
 				delete(sessions, sessionID)
@@ -48,6 +51,8 @@ func (sm *SessionMonitor) checkExpiredSessions(sessions map[string]*Session) {
 }
 
 func (sm *SessionMonitor) terminateSession(session *Session) error {
+	_ = os.Remove(session.LocalSocket)
+
 	// Try graceful termination first
 	if err := syscall.Kill(int(session.PID), syscall.SIGTERM); err != nil {
 		return err
