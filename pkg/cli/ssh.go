@@ -199,7 +199,7 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 			done := make(chan struct{}, 2)
 			go func() {
 				_, err := io.Copy(rc, lc)
-				if err != nil {
+				if err != nil && !strings.Contains(err.Error(), "use of closed network connection") {
 					log.WithError(err).Warning("failed to copy from remote to local")
 				}
 				done <- struct{}{}
