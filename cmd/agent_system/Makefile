@@ -21,4 +21,4 @@ package: build
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sys-agent_${VERSION}_${ARCH}.deb
-	$(TME) systemctl restart ssh
+	$(TME) systemctl restart ak-sys

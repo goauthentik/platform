@@ -116,6 +116,30 @@ pub mod session_manager_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+        pub async fn session_status(
+            &mut self,
+            request: impl tonic::IntoRequest<super::SessionStatusRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::SessionStatusResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/pam_session.SessionManager/SessionStatus",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("pam_session.SessionManager", "SessionStatus"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn close_session(
             &mut self,
             request: impl tonic::IntoRequest<super::CloseSessionRequest>,

@@ -27,6 +27,20 @@ pub struct RegisterSessionResponse {
     pub error: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SessionStatusRequest {
+    #[prost(string, tag = "1")]
+    pub session_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SessionStatusResponse {
+    #[prost(bool, tag = "1")]
+    pub success: bool,
+    #[prost(string, tag = "2")]
+    pub error: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "3")]
+    pub expiry: ::core::option::Option<::prost_types::Timestamp>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CloseSessionRequest {
     #[prost(string, tag = "1")]
     pub session_id: ::prost::alloc::string::String,

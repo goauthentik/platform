@@ -2,6 +2,7 @@ package agentsystem
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"goauthentik.io/cli/pkg/pb"
@@ -32,10 +33,18 @@ func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterS
 
 	sm.sessions[req.SessionId] = session
 
-	sm.log.Infof("Registered session %s for user %s (PID: %d, exp: %s)", req.SessionId, req.Username, req.Pid, time.Until(session.ExpiresAt).String())
+	sm.log.Infof("Registered session %s for user %s (PID: %d, exp: %s)", session.ID, session.Username, req.Pid, time.Until(session.ExpiresAt).String())
 
 	return &pb.RegisterSessionResponse{
 		Success:   true,
 		SessionId: req.SessionId,
 	}, nil
+}
+
+func (sm *SessionManager) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {
+	sess := sm.sessions[req.SessionId]
+	_ = os.Remove(sess.LocalSocket)
+	sm.log.Infof("Removing session %s for user '%s'", sess.ID, sess.Username)
+	delete(sm.sessions, req.SessionId)
+	return &pb.CloseSessionResponse{Success: true}, nil
 }

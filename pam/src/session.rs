@@ -1,10 +1,10 @@
 extern crate pam;
 
-use crate::ENV_SESSION_ID;
 use crate::config::Config;
 use crate::generated::create_grpc_client;
-use crate::generated::pam_session::RegisterSessionRequest;
-use crate::pam_env::{pam_get_env, pam_list_env};
+use crate::generated::pam_session::{CloseSessionRequest, RegisterSessionRequest};
+use crate::pam_env::pam_get_env;
+use crate::{DATA_CLIENT, ENV_SESSION_ID};
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
 use pam::{constants::PamFlag, pam_try};
@@ -32,15 +32,9 @@ pub fn open_session_impl(
 ) -> PamResultCode {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
-    pam_list_env(pamh).iter().for_each(|e| {
-        log::debug!("   env: {}", e);
-    });
     let id = pam_get_env(pamh, ENV_SESSION_ID).unwrap();
 
     let mut sd = pam_try!(_read_session_data(id.to_owned()));
-
-    let pid = std::process::id();
-    let ppid = std::os::unix::process::parent_id();
 
     if !config.pam.terminate_on_expiry {
         sd.expiry = -1;
@@ -51,8 +45,8 @@ pub fn open_session_impl(
         username: sd.username.to_owned(),
         token_hash: sd.token,
         expires_at: sd.expiry,
-        pid,
-        ppid,
+        pid: std::process::id(),
+        ppid: std::os::unix::process::parent_id(),
         local_socket: sd.local_socket,
     });
 
@@ -84,7 +78,51 @@ pub fn open_session_impl(
         return PamResultCode::PAM_SESSION_ERR;
     }
 
-    pam_try!(pamh.set_data("client", Box::new(client)));
+    pam_try!(pamh.set_data(DATA_CLIENT, Box::new(client)));
+    PamResultCode::PAM_SUCCESS
+}
+
+pub fn close_session_impl(
+    pamh: &mut PamHandle,
+    _args: Vec<&CStr>,
+    _flags: PamFlag,
+) -> PamResultCode {
+    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+
+    let id = pam_get_env(pamh, ENV_SESSION_ID).unwrap();
+    let request = tonic::Request::new(CloseSessionRequest {
+        session_id: id,
+        pid: std::process::id(),
+    });
+
+    let rt = match Runtime::new() {
+        Ok(rt) => rt,
+        Err(e) => {
+            log::warn!("Failed to create runtime: {}", e);
+            return PamResultCode::PAM_SESSION_ERR;
+        }
+    };
+    let mut client = match rt.block_on(create_grpc_client(config)) {
+        Ok(res) => res,
+        Err(e) => {
+            log::warn!("Failed to create grpc client: {}", e);
+            return PamResultCode::PAM_SESSION_ERR;
+        }
+    };
+    let response = match rt.block_on(client.close_session(request)) {
+        Ok(res) => res,
+        Err(e) => {
+            log::warn!("failed to send GRPC request: {}", e);
+            return PamResultCode::PAM_SESSION_ERR;
+        }
+    };
+    let session_info = response.into_inner();
+
+    if !session_info.success {
+        log::warn!("failed to remove session");
+        return PamResultCode::PAM_SESSION_ERR;
+    }
+
     PamResultCode::PAM_SUCCESS
 }
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -101,7 +102,12 @@ var sshCmd = &cobra.Command{
 				} else if knownhosts.IsHostUnknown(err) {
 					f, ferr := os.OpenFile(khf, os.O_APPEND|os.O_WRONLY, 0600)
 					if ferr == nil {
-						defer f.Close()
+						defer func() {
+							err := f.Close()
+							if err != nil {
+								log.WithError(err).Warning("failed to close known_hosts file")
+							}
+						}()
 						ferr = knownhosts.WriteKnownHost(f, hostname, remote, key)
 					}
 					if ferr == nil {
@@ -120,7 +126,9 @@ var sshCmd = &cobra.Command{
 		}
 		defer func() {
 			err := client.Close()
-			log.WithError(err).Warning("Failed to close client")
+			if err != nil {
+				log.WithError(err).Warning("Failed to close client")
+			}
 		}()
 
 		go ForwardAgentSocket(remoteSocketPath, client)
@@ -216,7 +224,7 @@ func Shell(client *ssh.Client) error {
 	}
 	defer func() {
 		err := session.Close()
-		if err != nil {
+		if err != nil && !errors.Is(err, io.EOF) {
 			log.WithError(err).Warning("Failed to close session")
 		}
 	}()

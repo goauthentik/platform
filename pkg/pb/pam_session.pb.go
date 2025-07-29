@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -173,6 +174,110 @@ func (x *RegisterSessionResponse) GetError() string {
 	return ""
 }
 
+type SessionStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SessionStatusRequest) Reset() {
+	*x = SessionStatusRequest{}
+	mi := &file_pam_session_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionStatusRequest) ProtoMessage() {}
+
+func (x *SessionStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_pam_session_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionStatusRequest.ProtoReflect.Descriptor instead.
+func (*SessionStatusRequest) Descriptor() ([]byte, []int) {
+	return file_pam_session_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *SessionStatusRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type SessionStatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	Expiry        *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expiry,proto3" json:"expiry,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SessionStatusResponse) Reset() {
+	*x = SessionStatusResponse{}
+	mi := &file_pam_session_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SessionStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SessionStatusResponse) ProtoMessage() {}
+
+func (x *SessionStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_pam_session_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SessionStatusResponse.ProtoReflect.Descriptor instead.
+func (*SessionStatusResponse) Descriptor() ([]byte, []int) {
+	return file_pam_session_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SessionStatusResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *SessionStatusResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *SessionStatusResponse) GetExpiry() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Expiry
+	}
+	return nil
+}
+
 type CloseSessionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
@@ -183,7 +288,7 @@ type CloseSessionRequest struct {
 
 func (x *CloseSessionRequest) Reset() {
 	*x = CloseSessionRequest{}
-	mi := &file_pam_session_proto_msgTypes[2]
+	mi := &file_pam_session_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -195,7 +300,7 @@ func (x *CloseSessionRequest) String() string {
 func (*CloseSessionRequest) ProtoMessage() {}
 
 func (x *CloseSessionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pam_session_proto_msgTypes[2]
+	mi := &file_pam_session_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -208,7 +313,7 @@ func (x *CloseSessionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseSessionRequest.ProtoReflect.Descriptor instead.
 func (*CloseSessionRequest) Descriptor() ([]byte, []int) {
-	return file_pam_session_proto_rawDescGZIP(), []int{2}
+	return file_pam_session_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CloseSessionRequest) GetSessionId() string {
@@ -234,7 +339,7 @@ type CloseSessionResponse struct {
 
 func (x *CloseSessionResponse) Reset() {
 	*x = CloseSessionResponse{}
-	mi := &file_pam_session_proto_msgTypes[3]
+	mi := &file_pam_session_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -246,7 +351,7 @@ func (x *CloseSessionResponse) String() string {
 func (*CloseSessionResponse) ProtoMessage() {}
 
 func (x *CloseSessionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pam_session_proto_msgTypes[3]
+	mi := &file_pam_session_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -259,7 +364,7 @@ func (x *CloseSessionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseSessionResponse.ProtoReflect.Descriptor instead.
 func (*CloseSessionResponse) Descriptor() ([]byte, []int) {
-	return file_pam_session_proto_rawDescGZIP(), []int{3}
+	return file_pam_session_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CloseSessionResponse) GetSuccess() bool {
@@ -273,7 +378,7 @@ var File_pam_session_proto protoreflect.FileDescriptor
 
 const file_pam_session_proto_rawDesc = "" +
 	"\n" +
-	"\x11pam_session.proto\x12\vpam_session\"\xda\x01\n" +
+	"\x11pam_session.proto\x12\vpam_session\x1a\x1fgoogle/protobuf/timestamp.proto\"\xda\x01\n" +
 	"\x16RegisterSessionRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1a\n" +
@@ -289,15 +394,23 @@ const file_pam_session_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\"F\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"5\n" +
+	"\x14SessionStatusRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"{\n" +
+	"\x15SessionStatusResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\x122\n" +
+	"\x06expiry\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06expiry\"F\n" +
 	"\x13CloseSessionRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
 	"\x03pid\x18\x02 \x01(\rR\x03pid\"0\n" +
 	"\x14CloseSessionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\xc3\x01\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\x9b\x02\n" +
 	"\x0eSessionManager\x12\\\n" +
-	"\x0fRegisterSession\x12#.pam_session.RegisterSessionRequest\x1a$.pam_session.RegisterSessionResponse\x12S\n" +
+	"\x0fRegisterSession\x12#.pam_session.RegisterSessionRequest\x1a$.pam_session.RegisterSessionResponse\x12V\n" +
+	"\rSessionStatus\x12!.pam_session.SessionStatusRequest\x1a\".pam_session.SessionStatusResponse\x12S\n" +
 	"\fCloseSession\x12 .pam_session.CloseSessionRequest\x1a!.pam_session.CloseSessionResponseB\bZ\x06pkg/pbb\x06proto3"
 
 var (
@@ -312,23 +425,29 @@ func file_pam_session_proto_rawDescGZIP() []byte {
 	return file_pam_session_proto_rawDescData
 }
 
-var file_pam_session_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_pam_session_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_pam_session_proto_goTypes = []any{
 	(*RegisterSessionRequest)(nil),  // 0: pam_session.RegisterSessionRequest
 	(*RegisterSessionResponse)(nil), // 1: pam_session.RegisterSessionResponse
-	(*CloseSessionRequest)(nil),     // 2: pam_session.CloseSessionRequest
-	(*CloseSessionResponse)(nil),    // 3: pam_session.CloseSessionResponse
+	(*SessionStatusRequest)(nil),    // 2: pam_session.SessionStatusRequest
+	(*SessionStatusResponse)(nil),   // 3: pam_session.SessionStatusResponse
+	(*CloseSessionRequest)(nil),     // 4: pam_session.CloseSessionRequest
+	(*CloseSessionResponse)(nil),    // 5: pam_session.CloseSessionResponse
+	(*timestamppb.Timestamp)(nil),   // 6: google.protobuf.Timestamp
 }
 var file_pam_session_proto_depIdxs = []int32{
-	0, // 0: pam_session.SessionManager.RegisterSession:input_type -> pam_session.RegisterSessionRequest
-	2, // 1: pam_session.SessionManager.CloseSession:input_type -> pam_session.CloseSessionRequest
-	1, // 2: pam_session.SessionManager.RegisterSession:output_type -> pam_session.RegisterSessionResponse
-	3, // 3: pam_session.SessionManager.CloseSession:output_type -> pam_session.CloseSessionResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: pam_session.SessionStatusResponse.expiry:type_name -> google.protobuf.Timestamp
+	0, // 1: pam_session.SessionManager.RegisterSession:input_type -> pam_session.RegisterSessionRequest
+	2, // 2: pam_session.SessionManager.SessionStatus:input_type -> pam_session.SessionStatusRequest
+	4, // 3: pam_session.SessionManager.CloseSession:input_type -> pam_session.CloseSessionRequest
+	1, // 4: pam_session.SessionManager.RegisterSession:output_type -> pam_session.RegisterSessionResponse
+	3, // 5: pam_session.SessionManager.SessionStatus:output_type -> pam_session.SessionStatusResponse
+	5, // 6: pam_session.SessionManager.CloseSession:output_type -> pam_session.CloseSessionResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_pam_session_proto_init() }
@@ -342,7 +461,7 @@ func file_pam_session_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pam_session_proto_rawDesc), len(file_pam_session_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

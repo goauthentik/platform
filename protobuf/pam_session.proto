@@ -3,8 +3,11 @@ syntax = "proto3";
 package pam_session;
 option go_package = "pkg/pb";
 
+import "google/protobuf/timestamp.proto";
+
 service SessionManager {
   rpc RegisterSession(RegisterSessionRequest) returns (RegisterSessionResponse);
+  rpc SessionStatus(SessionStatusRequest) returns (SessionStatusResponse);
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
 }
 
@@ -22,6 +25,16 @@ message RegisterSessionResponse {
   bool success = 1;
   string session_id = 2;
   string error = 3;
+}
+
+message SessionStatusRequest {
+  string session_id = 1;
+}
+
+message SessionStatusResponse {
+  bool success = 1;
+  string error = 2;
+  google.protobuf.Timestamp expiry = 3;
 }
 
 message CloseSessionRequest {

@@ -10,17 +10,16 @@ extern crate pam;
 extern crate reqwest;
 
 use crate::auth::authenticate_impl;
-use crate::generated::pam_session::session_manager_client::SessionManagerClient;
 use crate::logger::init_log;
 use crate::logger::log_hook;
+use crate::session::close_session_impl;
 use crate::session::open_session_impl;
 use ctor::{ctor, dtor};
 use pam::constants::{PamFlag, PamResultCode};
 use pam::module::{PamHandle, PamHooks};
-use pam::pam_try;
 use std::ffi::CStr;
-use tonic::transport::Channel;
 
+pub const DATA_CLIENT: &str = "client";
 pub const ENV_SESSION_ID: &str = "AUTHENTIK_SESSION_ID";
 
 struct PAMAuthentik;
@@ -29,6 +28,7 @@ pam::pam_hooks!(PAMAuthentik);
 #[ctor]
 fn ctor() {
     init_log();
+    log_hook("ctor");
 }
 
 #[dtor]
@@ -47,15 +47,9 @@ impl PamHooks for PAMAuthentik {
         return open_session_impl(pamh, args, flags);
     }
 
-    fn sm_close_session(
-        _pamh: &mut PamHandle,
-        _args: Vec<&CStr>,
-        _flags: PamFlag,
-    ) -> PamResultCode {
+    fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log_hook("sm_close_session");
-        let client = unsafe { pam_try!(_pamh.get_data::<SessionManagerClient<Channel>>("client")) };
-        log::debug!("{:#?}", client);
-        PamResultCode::PAM_SUCCESS
+        return close_session_impl(pamh, args, flags);
     }
 
     fn sm_setcred(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
