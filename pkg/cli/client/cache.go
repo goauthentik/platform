@@ -55,7 +55,7 @@ func (c *ClientCache[T]) Set(ctx context.Context, value T) error {
 		return err
 	}
 	if !res.Header.Successful {
-		return errors.New("Unesuccessful request")
+		return errors.New("unsuccessful request")
 	}
 	return nil
 }

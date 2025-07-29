@@ -11,7 +11,7 @@ import (
 func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRequest) (*pb.TokenExchangeResponse, error) {
 	prof, ok := a.cfg.Get().Profiles[req.Header.Profile]
 	if !ok {
-		return nil, errors.New("Profile not found")
+		return nil, errors.New("profile not found")
 	}
 	nt, err := token.CachedExchangeToken(req.Header.Profile, prof, token.DefaultExchangeOpts(req.ClientId))
 	if err != nil {

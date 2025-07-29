@@ -33,17 +33,18 @@ type Session struct {
 
 func Main() {
 	log.SetLevel(log.DebugLevel)
-	systemlog.Setup("ak-sys-agent")
-	// Remove existing socket
-	os.Remove(c.Socket)
+	err := systemlog.Setup("ak-sys-agent")
+	if err != nil {
+		panic(err)
+	}
+	_ = os.Remove(c.Socket)
 
 	lis, err := net.Listen("unix", c.Socket)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	// Set socket permissions
-	os.Chmod(c.Socket, 0666)
+	_ = os.Chmod(c.Socket, 0666)
 
 	sm := &SessionManager{
 		sessions: make(map[string]*Session),
@@ -64,7 +65,7 @@ func Main() {
 
 		log.Println("Shutting down...")
 		s.GracefulStop()
-		os.Remove(c.Socket)
+		_ = os.Remove(c.Socket)
 	}()
 
 	log.Printf("Session manager listening on socket: %s\n", c.Socket)

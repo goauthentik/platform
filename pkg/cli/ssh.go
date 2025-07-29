@@ -99,18 +99,26 @@ var sshCmd = &cobra.Command{
 		}
 		client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
 		if err != nil {
-			log.Fatal("Failed to dial: ", err)
+			log.WithError(err).Fatal("Failed to dial")
 		}
-		defer client.Close()
+		defer func() {
+			err := client.Close()
+			log.WithError(err).Warning("Failed to close client")
+		}()
 
 		go ForwardAgentSocket(remoteSocketPath, client)
 
 		// Create a session for interactive shell
 		session, err := client.NewSession()
 		if err != nil {
-			log.Fatalf("Failed to create session: %v", err)
+			log.WithError(err).Fatal("Failed to create session")
 		}
-		defer session.Close()
+		defer func() {
+			err := session.Close()
+			if err != nil {
+				log.WithError(err).Warning("Failed to close session")
+			}
+		}()
 
 		// Set up terminal
 		session.Stdout = os.Stdout
@@ -121,9 +129,14 @@ var sshCmd = &cobra.Command{
 		if term.IsTerminal(int(os.Stdin.Fd())) {
 			originalState, err := term.MakeRaw(int(os.Stdin.Fd()))
 			if err != nil {
-				log.Fatalf("Failed to set raw mode: %v", err)
+				log.WithError(err).Fatal("Failed to set raw mode")
 			}
-			defer term.Restore(int(os.Stdin.Fd()), originalState)
+			defer func() {
+				err := term.Restore(int(os.Stdin.Fd()), originalState)
+				if err != nil {
+					log.WithError(err).Warn("Failed to restore terminal state")
+				}
+			}()
 
 			width, height, err := term.GetSize(int(os.Stdin.Fd()))
 			if err != nil {
@@ -165,9 +178,14 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 	localSocket := types.GetAgentSocketPath()
 	remoteListener, err := client.Listen("unix", remoteSocket)
 	if err != nil {
-		log.Fatalf("remote listen on %s failed: %v", remoteSocket, err)
+		log.WithError(err).Fatalf("remote listen on %s failed", remoteSocket)
 	}
-	defer remoteListener.Close()
+	defer func() {
+		err := remoteListener.Close()
+		if err != nil {
+			log.WithError(err).Warning("Failed to close remote listener")
+		}
+	}()
 	log.Debugf("remote listening %s → local %s", remoteSocket, localSocket)
 
 	for {
@@ -177,23 +195,38 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 			continue
 		}
 		go func(rc net.Conn) {
-			defer rc.Close()
+			defer func() {
+				err := rc.Close()
+				if err != nil {
+					log.WithError(err).Warning("failed to close remote connection")
+				}
+			}()
 			// Dial the local unix socket
 			lc, err := net.Dial("unix", localSocket)
 			if err != nil {
 				log.WithError(err).Debugf("local dial %s failed", localSocket)
 				return
 			}
-			defer lc.Close()
+			defer func() {
+				err := lc.Close()
+				if err != nil {
+					log.WithError(err).Warning("failed to close local connection")
+				}
+			}()
 
-			// Pipe both ways
 			done := make(chan struct{}, 2)
 			go func() {
-				io.Copy(rc, lc)
+				_, err := io.Copy(rc, lc)
+				if err != nil {
+					log.WithError(err).Warning("failed to copy from remote to local")
+				}
 				done <- struct{}{}
 			}()
 			go func() {
-				io.Copy(lc, rc)
+				_, err := io.Copy(lc, rc)
+				if err != nil {
+					log.WithError(err).Warning("failed to copy from local to remote")
+				}
 				done <- struct{}{}
 			}()
 			<-done
@@ -207,13 +240,21 @@ func ReadPassword(prompt string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer term.Restore(stdin, oldState)
+	defer func() {
+		err := term.Restore(stdin, oldState)
+		if err != nil {
+			log.WithError(err).Warning("failed to restore terminal")
+		}
+	}()
 
 	sigch := make(chan os.Signal, 1)
 	signal.Notify(sigch, os.Interrupt)
 	go func() {
 		for range sigch {
-			term.Restore(stdin, oldState)
+			err := term.Restore(stdin, oldState)
+			if err != nil {
+				log.WithError(err).Warning("failed to restore terminal state")
+			}
 			os.Exit(1)
 		}
 	}()

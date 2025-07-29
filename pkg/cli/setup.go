@@ -46,7 +46,7 @@ var setupCmd = &cobra.Command{
 			return err
 		}
 		if !res.Header.Successful {
-			return errors.New("Setup not successful")
+			return errors.New("setup not successful")
 		}
 		return nil
 	},
