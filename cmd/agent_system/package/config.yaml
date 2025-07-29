@@ -6,3 +6,6 @@ socket: /var/run/authentik-session-manager.sock
 pam:
   authentication_flow: default-authentication-flow
   terminate_on_expiry: true
+nss:
+  uid_offset: 1000
+  gid_offset: 1000

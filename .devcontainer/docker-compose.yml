@@ -16,8 +16,8 @@ services:
     user: root
     cgroup: host
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
       - ..:/workspaces:cached
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   postgresql:
     image: docker.io/library/postgres:16-alpine
