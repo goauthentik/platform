@@ -8,7 +8,7 @@ all: clean gen
 clean:
 	rm -rf ${PWD}/bin/*
 
-gen: gen-proto pam/gen
+gen: gen-proto pam/gen nss/gen
 	go generate ./...
 
 gen-proto:
@@ -36,6 +36,9 @@ test-full: clean agent/test-deploy sys/test-deploy cli/test-deploy pam/test-depl
 
 pam/%:
 	$(MAKE) -C pam $*
+
+nss/%:
+	$(MAKE) -C nss $*
 
 cli/%:
 	$(MAKE) -C cmd/cli $*

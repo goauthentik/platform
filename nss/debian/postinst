@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#DEBHELPER#
+set -eu
+
+mkdir -p /var/log/authentik

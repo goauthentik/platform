@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package nss;
+option go_package = "pkg/pb";
+
+service NSS {
+    rpc ListUser(Empty) returns (Users);
+    rpc GetUserByID(GetRequest) returns (User);
+    rpc GetUserByName(GetRequest) returns (User);
+
+    rpc ListGroups(Empty) returns (Groups);
+    rpc GetGroupByID(GetRequest) returns (Group);
+    rpc GetGroupByName(GetRequest) returns (Group);
+}
+
+message Empty {}
+
+message GetRequest {
+    optional uint32 id = 1;
+    optional string name = 2;
+}
+
+message Users {
+    repeated User users = 1;
+}
+
+message User {
+    string name = 1;
+    uint32 uid = 2;
+    uint32 gid = 3;
+    string gecos = 4;
+    string homedir = 5;
+    string shell = 6;
+}
+
+message Groups {
+    repeated Group groups = 1;
+}
+
+message Group {
+  string name = 1;
+  uint32 gid = 2;
+  repeated string members = 3;
+  string passwd = 4;
+}

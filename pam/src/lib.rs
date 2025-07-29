@@ -74,13 +74,13 @@ impl PamHooks for PAMAuthentik {
 macro_rules! pam_check_service {
     ($h: expr) => {
         match check_service($h) {
-            Ok(()) => {},
+            Ok(()) => {}
             Err(e) => {
                 log::debug!("ignoring request for service");
                 return e;
             }
         }
-    }
+    };
 }
 
 pub fn check_service(pamh: &mut PamHandle) -> Result<(), PamResultCode> {
