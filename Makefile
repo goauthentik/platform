@@ -1,50 +1,14 @@
-.PHONY: clean bin/cli/ak bin/agent/ak-agent
+.PHONY: clean
 LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-${VERSION_HASH}
 GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 
 include common.mk
-all: clean gen bin/ak bin/ak-agent
+all: clean gen
 
 clean:
 	rm -rf ${PWD}/bin/*
 
-bin/cli/ak:
-	mkdir -p ${PWD}/bin/cli
-	go build \
-		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
-		-v -a -o ${PWD}/bin/cli/ak \
-		${PWD}/cmd/cli/main
-	VERSION=${VERSION} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p deb \
-			-t ${PWD}/bin/cli \
-			-f ${PWD}/cmd/cli/main/nfpm.yaml
-
-bin/session-manager:
-	mkdir -p ${PWD}/bin/session-manager
-	go build \
-		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
-		-v -a -o ${PWD}/bin/session-manager/aksm \
-		${PWD}/session_manager
-	VERSION=${VERSION} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p deb \
-			-t ${PWD}/bin/session-manager \
-			-f ${PWD}/session_manager/package/nfpm.yaml
-
-bin/agent/ak-agent:
-	mkdir -p ${PWD}/bin/agent
-	go build \
-		-ldflags "${LD_FLAGS} -X goauthentik.io/cli/pkg/storage.BuildHash=${GIT_BUILD_HASH}" \
-		-v -a -o ${PWD}/bin/agent/ak-agent \
-		${PWD}/cmd/agent
-	cp -R "${PWD}/package/macos/authentik Agent.app" ${PWD}/bin/agent/
-	mkdir -p "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS"
-	cp ${PWD}/bin/agent/ak-agent "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS/"
-
-gen: gen-proto pam-gen
+gen: gen-proto pam/gen
 	go generate ./...
 
 gen-proto:
@@ -56,16 +20,28 @@ gen-proto:
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
 
+test-agent:
+	go run -v ./cmd/agent_local/
+
 test-setup:
-	go run -v ./cmd/cli/main/ setup -v -a http://authentik:9000
+	go run -v ./cmd/cli setup -v -a http://authentik:9000
 
 test-ssh:
-	go run -v ./cmd/cli/main/ ssh akadmin@authentik-cli_devcontainer-test-machine-1
+	go run -v ./cmd/cli ssh akadmin@authentik-cli_devcontainer-test-machine-1
 
-test-full: clean bin/session-manager sm-test-deploy pam-test-deploy test-ssh
+test-shell:
+	docker exec -it authentik-cli_devcontainer-test-machine-1 bash
 
-pam-%:
+test-full: clean agent/test-deploy sys/test-deploy cli/test-deploy pam/test-deploy test-ssh
+
+pam/%:
 	$(MAKE) -C pam $*
 
-sm-%:
-	$(MAKE) -C session_manager $*
+cli/%:
+	$(MAKE) -C cmd/cli $*
+
+sys/%:
+	$(MAKE) -C cmd/agent_system $*
+
+agent/%:
+	$(MAKE) -C cmd/agent_local $*

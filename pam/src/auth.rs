@@ -3,18 +3,19 @@ use pam::{
     conv::Conv,
     items::User,
     module::PamHandle,
-    pam_try,
 };
-use rand::Rng;
-use sha2::{Digest, Sha256};
-use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
+use std::ffi::CStr;
 
 use crate::{
     ENV_SESSION_ID,
-    auth::{interactive::auth_interactive, token::auth_token},
+    auth::{
+        interactive::auth_interactive,
+        token::{auth_token, decode_token},
+    },
     config::Config,
     pam_env::pam_put_env,
-    session::SessionData,
+    pam_try_log,
+    session::{_generate_id, _write_session_data, SessionData, hash_token},
 };
 
 pub mod interactive;
@@ -29,9 +30,26 @@ pub fn authenticate_impl(
 ) -> PamResultCode {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
-    let username = pamh.get_item::<User>().unwrap().unwrap();
-    let username = String::from_utf8(username.to_bytes().to_vec()).unwrap();
-    log::debug!("user: {}", username);
+    let username = match pamh.get_item::<User>() {
+        Ok(u) => match u {
+            Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
+                Ok(uu) => uu,
+                Err(e) => {
+                    log::warn!("failed to decode user: {}", e);
+                    return PamResultCode::PAM_AUTH_ERR;
+                }
+            },
+            None => {
+                log::warn!("No user");
+                return PamResultCode::PAM_AUTH_ERR;
+            }
+        },
+        Err(e) => {
+            log::warn!("failed to get user");
+            return e;
+        }
+    };
+    log::debug!("got username: '{}'", username);
     let conv = match pamh.get_item::<Conv>() {
         Ok(Some(conv)) => conv,
         Ok(None) => {
@@ -43,7 +61,10 @@ pub fn authenticate_impl(
         }
     };
     log::debug!("Started conv");
-    let password = pam_try!(conv.send(PAM_PROMPT_ECHO_OFF, "authentik Password: "));
+    let password = pam_try_log!(
+        conv.send(PAM_PROMPT_ECHO_OFF, "authentik Password: "),
+        "failed to send prompt"
+    );
     let password = match password {
         Some(password) => match password.to_str() {
             Ok(t) => t,
@@ -63,76 +84,44 @@ pub fn authenticate_impl(
         username: username.to_string(),
         token: password.to_owned(),
         expiry: -1,
+        local_socket: "".to_owned(),
     };
-    pam_try!(pam_put_env(pamh, ENV_SESSION_ID, id.to_owned().as_str()));
+    pam_try_log!(
+        pam_put_env(pamh, ENV_SESSION_ID, id.to_owned().as_str()),
+        "failed to set session_id env"
+    );
 
     if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
-        let token = match auth_token(config, username, raw_token.to_owned()) {
+        let decoded = pam_try_log!(decode_token(raw_token), "failed to decode token");
+        let token = match auth_token(config, username, decoded.token.to_owned()) {
             Ok(t) => t,
             Err(e) => return e,
         };
-        session_data.token = raw_token;
+        session_data.token = decoded.token;
         session_data.expiry = token.claims.exp;
-        pam_try!(_write_session_data(id, session_data));
+        session_data.local_socket = decoded.local_socket;
+        pam_try_log!(
+            pam_put_env(
+                pamh,
+                "AUTHENTIK_CLI_SOCKET",
+                session_data.local_socket.to_owned().as_str(),
+            ),
+            "Failed to set env"
+        );
+        pam_try_log!(
+            _write_session_data(id, session_data),
+            "failed to write session data"
+        );
         return PamResultCode::PAM_SUCCESS;
     } else {
         log::debug!("Interactive authentication");
         session_data.token = hash_token(&password.to_owned());
-        pam_try!(_write_session_data(id, session_data));
+        pam_try_log!(
+            _write_session_data(id, session_data),
+            "failed to write session data"
+        );
         return auth_interactive(username, &password, &conv);
     }
-}
-
-pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
-    let path = format!("/tmp/.aksm-{}", id);
-    let file = File::open(path).expect("Could not create file!");
-
-    return match serde_json::from_reader(file) {
-        Ok(t) => Ok(t),
-        Err(e) => {
-            log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR);
-        }
-    };
-}
-
-pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResultCode> {
-    let json_data = serde_json::to_string(&data).unwrap();
-    let path = format!("/tmp/.aksm-{}", id);
-    let mut file = File::create(path).expect("Could not create file!");
-
-    let mut permissions = file.metadata().unwrap().permissions();
-    permissions.set_mode(0o400);
-    file.set_permissions(permissions).unwrap();
-
-    return match file.write_all(json_data.as_bytes()) {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR);
-        }
-    };
-}
-
-pub fn _generate_id() -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789";
-    const PASSWORD_LEN: usize = 30;
-    let mut rng = rand::rng();
-
-    return (0..PASSWORD_LEN)
-        .map(|_| {
-            let idx = rng.random_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect();
-}
-
-pub fn hash_token(token: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(token.as_bytes());
-    hex::encode(hasher.finalize())
 }

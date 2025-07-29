@@ -8,11 +8,13 @@ pub struct RegisterSessionRequest {
     pub username: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
     pub token_hash: ::prost::alloc::string::String,
-    #[prost(int64, tag = "4")]
+    #[prost(string, tag = "4")]
+    pub local_socket: ::prost::alloc::string::String,
+    #[prost(int64, tag = "5")]
     pub expires_at: i64,
-    #[prost(uint32, tag = "5")]
-    pub pid: u32,
     #[prost(uint32, tag = "6")]
+    pub pid: u32,
+    #[prost(uint32, tag = "7")]
     pub ppid: u32,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -25,20 +27,18 @@ pub struct RegisterSessionResponse {
     pub error: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ValidateTokenRequest {
+pub struct SessionStatusRequest {
     #[prost(string, tag = "1")]
-    pub token: ::prost::alloc::string::String,
+    pub session_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ValidateTokenResponse {
+pub struct SessionStatusResponse {
     #[prost(bool, tag = "1")]
-    pub valid: bool,
+    pub success: bool,
     #[prost(string, tag = "2")]
-    pub username: ::prost::alloc::string::String,
-    #[prost(uint64, tag = "3")]
-    pub expires_at: u64,
-    #[prost(string, tag = "4")]
     pub error: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "3")]
+    pub expiry: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CloseSessionRequest {

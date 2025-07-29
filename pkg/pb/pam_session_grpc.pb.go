@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	SessionManager_RegisterSession_FullMethodName = "/pam_session.SessionManager/RegisterSession"
-	SessionManager_ValidateToken_FullMethodName   = "/pam_session.SessionManager/ValidateToken"
+	SessionManager_SessionStatus_FullMethodName   = "/pam_session.SessionManager/SessionStatus"
 	SessionManager_CloseSession_FullMethodName    = "/pam_session.SessionManager/CloseSession"
 )
 
@@ -29,7 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SessionManagerClient interface {
 	RegisterSession(ctx context.Context, in *RegisterSessionRequest, opts ...grpc.CallOption) (*RegisterSessionResponse, error)
-	ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error)
+	SessionStatus(ctx context.Context, in *SessionStatusRequest, opts ...grpc.CallOption) (*SessionStatusResponse, error)
 	CloseSession(ctx context.Context, in *CloseSessionRequest, opts ...grpc.CallOption) (*CloseSessionResponse, error)
 }
 
@@ -51,10 +51,10 @@ func (c *sessionManagerClient) RegisterSession(ctx context.Context, in *Register
 	return out, nil
 }
 
-func (c *sessionManagerClient) ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error) {
+func (c *sessionManagerClient) SessionStatus(ctx context.Context, in *SessionStatusRequest, opts ...grpc.CallOption) (*SessionStatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ValidateTokenResponse)
-	err := c.cc.Invoke(ctx, SessionManager_ValidateToken_FullMethodName, in, out, cOpts...)
+	out := new(SessionStatusResponse)
+	err := c.cc.Invoke(ctx, SessionManager_SessionStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (c *sessionManagerClient) CloseSession(ctx context.Context, in *CloseSessio
 // for forward compatibility.
 type SessionManagerServer interface {
 	RegisterSession(context.Context, *RegisterSessionRequest) (*RegisterSessionResponse, error)
-	ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error)
+	SessionStatus(context.Context, *SessionStatusRequest) (*SessionStatusResponse, error)
 	CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error)
 	mustEmbedUnimplementedSessionManagerServer()
 }
@@ -91,8 +91,8 @@ type UnimplementedSessionManagerServer struct{}
 func (UnimplementedSessionManagerServer) RegisterSession(context.Context, *RegisterSessionRequest) (*RegisterSessionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterSession not implemented")
 }
-func (UnimplementedSessionManagerServer) ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidateToken not implemented")
+func (UnimplementedSessionManagerServer) SessionStatus(context.Context, *SessionStatusRequest) (*SessionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SessionStatus not implemented")
 }
 func (UnimplementedSessionManagerServer) CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseSession not implemented")
@@ -136,20 +136,20 @@ func _SessionManager_RegisterSession_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SessionManager_ValidateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ValidateTokenRequest)
+func _SessionManager_SessionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SessionManagerServer).ValidateToken(ctx, in)
+		return srv.(SessionManagerServer).SessionStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SessionManager_ValidateToken_FullMethodName,
+		FullMethod: SessionManager_SessionStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SessionManagerServer).ValidateToken(ctx, req.(*ValidateTokenRequest))
+		return srv.(SessionManagerServer).SessionStatus(ctx, req.(*SessionStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -184,8 +184,8 @@ var SessionManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SessionManager_RegisterSession_Handler,
 		},
 		{
-			MethodName: "ValidateToken",
-			Handler:    _SessionManager_ValidateToken_Handler,
+			MethodName: "SessionStatus",
+			Handler:    _SessionManager_SessionStatus_Handler,
 		},
 		{
 			MethodName: "CloseSession",

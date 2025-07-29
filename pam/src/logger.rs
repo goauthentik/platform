@@ -1,3 +1,5 @@
+use std::ffi::CStr;
+
 use libc::{getegid, geteuid, getgid, getuid};
 use log::LevelFilter;
 use syslog::BasicLogger;
@@ -39,4 +41,38 @@ pub fn log_hook(name: &str) {
         euid,
         egid
     );
+}
+
+pub fn log_hook_with_args(name: &str, args: Vec<&CStr>) {
+    let arg_str: Vec<&str> = args
+        .iter()
+        .map(|c| c.to_str().unwrap_or("<invalid>"))
+        .collect::<_>();
+    log_hook(
+        format!("{} (args {})", name, arg_str.join(", "))
+            .to_owned()
+            .as_str(),
+    );
+}
+
+#[macro_export]
+macro_rules! pam_try_log {
+    ($r:expr, $l:expr) => {
+        match $r {
+            Ok(t) => t,
+            Err(e) => {
+                log::warn!($l);
+                return e;
+            }
+        }
+    };
+    ($r:expr, $l:expr, $e:expr) => {
+        match $r {
+            Ok(t) => t,
+            Err(_) => {
+                log::warn!($l);
+                return $e;
+            }
+        }
+    };
 }

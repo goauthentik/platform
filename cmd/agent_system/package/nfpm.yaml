@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "authentik-sys-agent"
+arch: "${ARCH}"
+platform: "linux"
+version: "${VERSION}"
+description: |
+  authentik System Agent
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+scripts:
+  postinstall: ./package/postinst.sh
+contents:
+  - src: ../../bin/agent_system/ak-sys
+    dst: /usr/bin/ak-sys
+  - src: package/ak-sys.service
+    dst: /usr/lib/systemd/system/ak-sys.service
+    type: config
+  - src: package/config.yaml
+    dst: /etc/authentik/host.yaml
+    type: config

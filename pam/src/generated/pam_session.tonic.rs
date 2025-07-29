@@ -116,11 +116,11 @@ pub mod session_manager_client {
                 );
             self.inner.unary(req, path, codec).await
         }
-        pub async fn validate_token(
+        pub async fn session_status(
             &mut self,
-            request: impl tonic::IntoRequest<super::ValidateTokenRequest>,
+            request: impl tonic::IntoRequest<super::SessionStatusRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::ValidateTokenResponse>,
+            tonic::Response<super::SessionStatusResponse>,
             tonic::Status,
         > {
             self.inner
@@ -133,11 +133,11 @@ pub mod session_manager_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/pam_session.SessionManager/ValidateToken",
+                "/pam_session.SessionManager/SessionStatus",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("pam_session.SessionManager", "ValidateToken"));
+                .insert(GrpcMethod::new("pam_session.SessionManager", "SessionStatus"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn close_session(

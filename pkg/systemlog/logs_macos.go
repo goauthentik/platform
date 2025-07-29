@@ -16,12 +16,12 @@ func Setup(appName string) error {
 	if err != nil {
 		return err
 	}
-	logs := path.Join(hd, "Library/Logs/io.goauthentik")
+	logs := path.Join(hd, "Library", "Logs", "io.goauthentik")
 	err = os.MkdirAll(logs, 0700)
 	if err != nil {
 		return err
 	}
-	f, err := os.OpenFile(path.Join(logs, fmt.Sprintf("%s.log", appName)), os.O_WRONLY|os.O_APPEND, 0700)
+	f, err := os.OpenFile(path.Join(logs, fmt.Sprintf("%s.log", appName)), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0700)
 	if err != nil {
 		return err
 	}

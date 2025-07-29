@@ -13,10 +13,11 @@ import (
 
 func Setup(appName string) error {
 	hook, err := l.NewSyslogHook("", "", syslog.LOG_INFO, appName)
-	if err == nil {
-		log.Info("Switching to syslog logging...")
-		log.StandardLogger().Hooks.Add(hook)
-		log.StandardLogger().SetOutput(io.Discard)
+	if err != nil {
+		return nil
 	}
+	log.StandardLogger().Hooks.Add(hook)
+	log.StandardLogger().SetOutput(io.Discard)
+	log.Info("Switched to syslog logging...")
 	return nil
 }

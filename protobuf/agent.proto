@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package agent;
+option go_package = "pkg/pb";
+
+message RequestHeader {
+  string profile = 1;
+}
+
+message ResponseHeader {
+  bool successful = 1;
+}

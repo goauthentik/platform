@@ -1,0 +1,12 @@
+[Unit]
+Description=authentik System Agent
+After=network.target
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/ak-sys
+RuntimeDirectory=authentik
+RuntimeDirectoryMode=0777
+
+[Install]
+WantedBy=multi-user.target

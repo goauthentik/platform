@@ -1,8 +1,0 @@
----
-authentik_url: http://authentik:9000
-app_slug: authentik-pam
-debug: true
-socket: /var/run/authentik-session-manager.sock
-pam:
-  authentication_flow: default-authentication-flow
-  terminate_on_expiry: false

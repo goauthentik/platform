@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod agent_client {
+pub mod agent_auth_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod agent_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct AgentClient<T> {
+    pub struct AgentAuthClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl AgentClient<tonic::transport::Channel> {
+    impl AgentAuthClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,7 +25,7 @@ pub mod agent_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> AgentClient<T>
+    impl<T> AgentAuthClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -43,7 +43,7 @@ pub mod agent_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> AgentClient<InterceptedService<T, F>>
+        ) -> AgentAuthClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -57,7 +57,7 @@ pub mod agent_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            AgentClient::new(InterceptedService::new(inner, interceptor))
+            AgentAuthClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,10 +90,10 @@ pub mod agent_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn get_token(
+        pub async fn who_am_i(
             &mut self,
-            request: impl tonic::IntoRequest<super::TokenRequest>,
-        ) -> std::result::Result<tonic::Response<super::TokenResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<super::WhoAmIRequest>,
+        ) -> std::result::Result<tonic::Response<super::WhoAmIResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -104,10 +104,35 @@ pub mod agent_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_auth.Agent/GetToken",
+                "/agent_auth.AgentAuth/WhoAmI",
             );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("agent_auth.Agent", "GetToken"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "WhoAmI"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn cached_token_exchange(
+            &mut self,
+            request: impl tonic::IntoRequest<super::TokenExchangeRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::TokenExchangeResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_auth.AgentAuth/CachedTokenExchange",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "CachedTokenExchange"));
             self.inner.unary(req, path, codec).await
         }
     }

@@ -3,16 +3,30 @@ syntax = "proto3";
 package agent_auth;
 option go_package = "pkg/pb";
 
-service Agent {
-  rpc GetToken(TokenRequest) returns (TokenResponse);
-//   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
-//   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
+import "agent.proto";
+import "google/protobuf/timestamp.proto";
+
+service AgentAuth {
+  rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
+  rpc CachedTokenExchange(TokenExchangeRequest) returns (TokenExchangeResponse);
 }
 
-message TokenRequest {
-  string client_id = 1;
+message WhoAmIRequest {
+  agent.RequestHeader header = 1;
 }
 
-message TokenResponse {
-    string access_token = 1;
+message WhoAmIResponse {
+  agent.ResponseHeader header = 1;
+  string body = 2;
+}
+
+message TokenExchangeRequest {
+  agent.RequestHeader header = 1;
+  string client_id = 2;
+}
+
+message TokenExchangeResponse {
+  agent.ResponseHeader header = 1;
+  string access_token = 2;
+  uint64 expires_in = 3;
 }

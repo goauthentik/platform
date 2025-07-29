@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -26,9 +27,10 @@ type RegisterSessionRequest struct {
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	TokenHash     string                 `protobuf:"bytes,3,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Pid           uint32                 `protobuf:"varint,5,opt,name=pid,proto3" json:"pid,omitempty"`
-	Ppid          uint32                 `protobuf:"varint,6,opt,name=ppid,proto3" json:"ppid,omitempty"`
+	LocalSocket   string                 `protobuf:"bytes,4,opt,name=local_socket,json=localSocket,proto3" json:"local_socket,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Pid           uint32                 `protobuf:"varint,6,opt,name=pid,proto3" json:"pid,omitempty"`
+	Ppid          uint32                 `protobuf:"varint,7,opt,name=ppid,proto3" json:"ppid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -80,6 +82,13 @@ func (x *RegisterSessionRequest) GetUsername() string {
 func (x *RegisterSessionRequest) GetTokenHash() string {
 	if x != nil {
 		return x.TokenHash
+	}
+	return ""
+}
+
+func (x *RegisterSessionRequest) GetLocalSocket() string {
+	if x != nil {
+		return x.LocalSocket
 	}
 	return ""
 }
@@ -165,27 +174,27 @@ func (x *RegisterSessionResponse) GetError() string {
 	return ""
 }
 
-type ValidateTokenRequest struct {
+type SessionStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ValidateTokenRequest) Reset() {
-	*x = ValidateTokenRequest{}
+func (x *SessionStatusRequest) Reset() {
+	*x = SessionStatusRequest{}
 	mi := &file_pam_session_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ValidateTokenRequest) String() string {
+func (x *SessionStatusRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ValidateTokenRequest) ProtoMessage() {}
+func (*SessionStatusRequest) ProtoMessage() {}
 
-func (x *ValidateTokenRequest) ProtoReflect() protoreflect.Message {
+func (x *SessionStatusRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_pam_session_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -197,42 +206,41 @@ func (x *ValidateTokenRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ValidateTokenRequest.ProtoReflect.Descriptor instead.
-func (*ValidateTokenRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SessionStatusRequest.ProtoReflect.Descriptor instead.
+func (*SessionStatusRequest) Descriptor() ([]byte, []int) {
 	return file_pam_session_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ValidateTokenRequest) GetToken() string {
+func (x *SessionStatusRequest) GetSessionId() string {
 	if x != nil {
-		return x.Token
+		return x.SessionId
 	}
 	return ""
 }
 
-type ValidateTokenResponse struct {
+type SessionStatusResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Valid         bool                   `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	ExpiresAt     uint64                 `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	Expiry        *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=expiry,proto3" json:"expiry,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ValidateTokenResponse) Reset() {
-	*x = ValidateTokenResponse{}
+func (x *SessionStatusResponse) Reset() {
+	*x = SessionStatusResponse{}
 	mi := &file_pam_session_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ValidateTokenResponse) String() string {
+func (x *SessionStatusResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ValidateTokenResponse) ProtoMessage() {}
+func (*SessionStatusResponse) ProtoMessage() {}
 
-func (x *ValidateTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *SessionStatusResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_pam_session_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -244,37 +252,30 @@ func (x *ValidateTokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ValidateTokenResponse.ProtoReflect.Descriptor instead.
-func (*ValidateTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use SessionStatusResponse.ProtoReflect.Descriptor instead.
+func (*SessionStatusResponse) Descriptor() ([]byte, []int) {
 	return file_pam_session_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ValidateTokenResponse) GetValid() bool {
+func (x *SessionStatusResponse) GetSuccess() bool {
 	if x != nil {
-		return x.Valid
+		return x.Success
 	}
 	return false
 }
 
-func (x *ValidateTokenResponse) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *ValidateTokenResponse) GetExpiresAt() uint64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
-}
-
-func (x *ValidateTokenResponse) GetError() string {
+func (x *SessionStatusResponse) GetError() string {
 	if x != nil {
 		return x.Error
 	}
 	return ""
+}
+
+func (x *SessionStatusResponse) GetExpiry() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Expiry
+	}
+	return nil
 }
 
 type CloseSessionRequest struct {
@@ -377,30 +378,30 @@ var File_pam_session_proto protoreflect.FileDescriptor
 
 const file_pam_session_proto_rawDesc = "" +
 	"\n" +
-	"\x11pam_session.proto\x12\vpam_session\"\xb7\x01\n" +
+	"\x11pam_session.proto\x12\vpam_session\x1a\x1fgoogle/protobuf/timestamp.proto\"\xda\x01\n" +
 	"\x16RegisterSessionRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
 	"\n" +
-	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12\x1d\n" +
+	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12!\n" +
+	"\flocal_socket\x18\x04 \x01(\tR\vlocalSocket\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\x03R\texpiresAt\x12\x10\n" +
-	"\x03pid\x18\x05 \x01(\rR\x03pid\x12\x12\n" +
-	"\x04ppid\x18\x06 \x01(\rR\x04ppid\"h\n" +
+	"expires_at\x18\x05 \x01(\x03R\texpiresAt\x12\x10\n" +
+	"\x03pid\x18\x06 \x01(\rR\x03pid\x12\x12\n" +
+	"\x04ppid\x18\a \x01(\rR\x04ppid\"h\n" +
 	"\x17RegisterSessionResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\",\n" +
-	"\x14ValidateTokenRequest\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"~\n" +
-	"\x15ValidateTokenResponse\x12\x14\n" +
-	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"5\n" +
+	"\x14SessionStatusRequest\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x03 \x01(\x04R\texpiresAt\x12\x14\n" +
-	"\x05error\x18\x04 \x01(\tR\x05error\"F\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"{\n" +
+	"\x15SessionStatusResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\x122\n" +
+	"\x06expiry\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06expiry\"F\n" +
 	"\x13CloseSessionRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
@@ -409,7 +410,7 @@ const file_pam_session_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess2\x9b\x02\n" +
 	"\x0eSessionManager\x12\\\n" +
 	"\x0fRegisterSession\x12#.pam_session.RegisterSessionRequest\x1a$.pam_session.RegisterSessionResponse\x12V\n" +
-	"\rValidateToken\x12!.pam_session.ValidateTokenRequest\x1a\".pam_session.ValidateTokenResponse\x12S\n" +
+	"\rSessionStatus\x12!.pam_session.SessionStatusRequest\x1a\".pam_session.SessionStatusResponse\x12S\n" +
 	"\fCloseSession\x12 .pam_session.CloseSessionRequest\x1a!.pam_session.CloseSessionResponseB\bZ\x06pkg/pbb\x06proto3"
 
 var (
@@ -428,23 +429,25 @@ var file_pam_session_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_pam_session_proto_goTypes = []any{
 	(*RegisterSessionRequest)(nil),  // 0: pam_session.RegisterSessionRequest
 	(*RegisterSessionResponse)(nil), // 1: pam_session.RegisterSessionResponse
-	(*ValidateTokenRequest)(nil),    // 2: pam_session.ValidateTokenRequest
-	(*ValidateTokenResponse)(nil),   // 3: pam_session.ValidateTokenResponse
+	(*SessionStatusRequest)(nil),    // 2: pam_session.SessionStatusRequest
+	(*SessionStatusResponse)(nil),   // 3: pam_session.SessionStatusResponse
 	(*CloseSessionRequest)(nil),     // 4: pam_session.CloseSessionRequest
 	(*CloseSessionResponse)(nil),    // 5: pam_session.CloseSessionResponse
+	(*timestamppb.Timestamp)(nil),   // 6: google.protobuf.Timestamp
 }
 var file_pam_session_proto_depIdxs = []int32{
-	0, // 0: pam_session.SessionManager.RegisterSession:input_type -> pam_session.RegisterSessionRequest
-	2, // 1: pam_session.SessionManager.ValidateToken:input_type -> pam_session.ValidateTokenRequest
-	4, // 2: pam_session.SessionManager.CloseSession:input_type -> pam_session.CloseSessionRequest
-	1, // 3: pam_session.SessionManager.RegisterSession:output_type -> pam_session.RegisterSessionResponse
-	3, // 4: pam_session.SessionManager.ValidateToken:output_type -> pam_session.ValidateTokenResponse
-	5, // 5: pam_session.SessionManager.CloseSession:output_type -> pam_session.CloseSessionResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: pam_session.SessionStatusResponse.expiry:type_name -> google.protobuf.Timestamp
+	0, // 1: pam_session.SessionManager.RegisterSession:input_type -> pam_session.RegisterSessionRequest
+	2, // 2: pam_session.SessionManager.SessionStatus:input_type -> pam_session.SessionStatusRequest
+	4, // 3: pam_session.SessionManager.CloseSession:input_type -> pam_session.CloseSessionRequest
+	1, // 4: pam_session.SessionManager.RegisterSession:output_type -> pam_session.RegisterSessionResponse
+	3, // 5: pam_session.SessionManager.SessionStatus:output_type -> pam_session.SessionStatusResponse
+	5, // 6: pam_session.SessionManager.CloseSession:output_type -> pam_session.CloseSessionResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_pam_session_proto_init() }
