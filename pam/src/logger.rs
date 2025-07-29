@@ -40,3 +40,25 @@ pub fn log_hook(name: &str) {
         egid
     );
 }
+
+#[macro_export]
+macro_rules! pam_try_log {
+    ($r:expr, $l:expr) => {
+        match $r {
+            Ok(t) => t,
+            Err(e) => {
+                log::warn!($l);
+                return e;
+            }
+        }
+    };
+    ($r:expr, $l:expr, $e:expr) => {
+        match $r {
+            Ok(t) => t,
+            Err(_) => {
+                log::warn!($l);
+                return $e;
+            }
+        }
+    };
+}

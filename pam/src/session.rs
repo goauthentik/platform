@@ -4,15 +4,15 @@ use crate::config::Config;
 use crate::generated::create_grpc_client;
 use crate::generated::pam_session::{CloseSessionRequest, RegisterSessionRequest};
 use crate::pam_env::pam_get_env;
-use crate::{DATA_CLIENT, ENV_SESSION_ID};
+use crate::{DATA_CLIENT, ENV_SESSION_ID, pam_try_log};
+use pam::constants::PamFlag;
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
-use pam::{constants::PamFlag, pam_try};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::ffi::CStr;
-use std::fs::{File, Permissions};
+use std::fs::{File, Permissions, remove_file};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
 use tokio::runtime::Runtime;
@@ -39,7 +39,14 @@ pub fn open_session_impl(
             return PamResultCode::PAM_IGNORE;
         }
     };
-    let mut sd = pam_try!(_read_session_data(sid.to_owned()));
+    let mut sd = pam_try_log!(
+        _read_session_data(sid.to_owned()),
+        "failed to get session data"
+    );
+    pam_try_log!(
+        _delete_session_data(sid.to_owned()),
+        "failed to delete session data"
+    );
 
     if !config.pam.terminate_on_expiry {
         sd.expiry = -1;
@@ -83,7 +90,10 @@ pub fn open_session_impl(
         return PamResultCode::PAM_SESSION_ERR;
     }
 
-    pam_try!(pamh.set_data(DATA_CLIENT, Box::new(client)));
+    pam_try_log!(
+        pamh.set_data(DATA_CLIENT, Box::new(client)),
+        "failed to set client data"
+    );
     PamResultCode::PAM_SUCCESS
 }
 
@@ -137,8 +147,12 @@ pub fn close_session_impl(
     PamResultCode::PAM_SUCCESS
 }
 
+pub fn _session_file(id: String) -> String {
+    return format!("/tmp/.aksm-{}", id);
+}
+
 pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
-    let path = format!("/tmp/.aksm-{}", id);
+    let path = _session_file(id);
     let file = File::open(path).expect("Could not create file!");
 
     return match serde_json::from_reader(file) {
@@ -150,6 +164,17 @@ pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
     };
 }
 
+pub fn _delete_session_data(id: String) -> Result<(), PamResultCode> {
+    let path = _session_file(id);
+    match remove_file(path) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::warn!("Failed to remove session data: {}", e);
+            return Err(PamResultCode::PAM_SESSION_ERR);
+        }
+    }
+}
+
 pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResultCode> {
     let json_data = match serde_json::to_string(&data) {
         Ok(j) => j,
@@ -158,11 +183,11 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
             return Err(PamResultCode::PAM_SESSION_ERR);
         }
     };
-    let path = format!("/tmp/.aksm-{}", id);
+    let path = _session_file(id);
     let mut file = File::create(path).expect("Could not create file!");
 
     match file.set_permissions(Permissions::from_mode(0o400)) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => {
             log::warn!("failed to get file permissions: {}", e);
             return Err(PamResultCode::PAM_SESSION_ERR);
