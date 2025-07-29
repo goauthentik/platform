@@ -23,3 +23,4 @@ package: build
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}_arm64.deb
 	$(TME) systemctl restart ssh
+	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}_arm64.deb
