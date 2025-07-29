@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "authentik-session-manager"
+arch: "arm64"
+platform: "linux"
+version: "${VERSION}"
+description: |
+  pam_authentik authenticates users through authentik.
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+scripts:
+  postinstall: session_manager/package/postinst.sh
+contents:
+  - src: bin/session-manager/aksm
+    dst: /usr/bin/aksm
+  - src: session_manager/package/session_manager.service
+    dst: /etc/systemd/system/authentik-session-manager.service
+    type: config
+  - src: session_manager/package/config.yaml
+    dst: /etc/authentik/host.yaml
+    type: config
+  # - src: ./systemd/mqtt2prometheus
+  #   dst: /etc/default/mqtt2prometheus
+  #   type: config

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package agent_auth;
+option go_package = "pkg/pb";
+
+service Agent {
+  rpc GetToken(TokenRequest) returns (TokenResponse);
+//   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+//   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
+}
+
+message TokenRequest {
+  string client_id = 1;
+}
+
+message TokenResponse {
+    string access_token = 1;
+}

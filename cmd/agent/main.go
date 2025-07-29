@@ -4,7 +4,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent"
-	"goauthentik.io/cli/pkg/agent/logs"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		log.WithError(err).Warn("failed to init sentry")
 	}
-	err = logs.Setup()
+	err = systemlog.Setup("agent")
 	if err != nil {
 		log.WithError(err).Warning("failed to setup logs")
 	}

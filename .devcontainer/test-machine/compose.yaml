@@ -1,0 +1,10 @@
+services:
+  test-machine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    privileged: true
+    user: root
+    cgroup: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw

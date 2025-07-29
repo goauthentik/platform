@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: authentik CLI - Device Code
+entries:
+  - id: flow
+    model: authentik_flows.flow
+    identifiers:
+      slug: device-code
+    attrs:
+      designation: authentication
+      name: Device code
+      title: Device code
+  - model: authentik_brands.brand
+    identifiers:
+      domain: authentik-default
+    attrs:
+      flow_device_code: !KeyOf flow

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package pam_session;
+option go_package = "pkg/pb";
+
+service SessionManager {
+  rpc RegisterSession(RegisterSessionRequest) returns (RegisterSessionResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
+}
+
+message RegisterSessionRequest {
+  string session_id = 1;
+  string username = 2;
+  string token_hash = 3;
+  int64 expires_at = 4;
+  uint32 pid = 5;
+  uint32 ppid = 6;
+}
+
+message RegisterSessionResponse {
+  bool success = 1;
+  string session_id = 2;
+  string error = 3;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  string username = 2;
+  uint64 expires_at = 3;
+  string error = 4;
+}
+
+message CloseSessionRequest {
+  string session_id = 1;
+  uint32 pid = 2;
+}
+
+message CloseSessionResponse {
+  bool success = 1;
+}

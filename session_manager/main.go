@@ -1,0 +1,115 @@
+package main
+
+import (
+	"context"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/cli/pkg/systemlog"
+	"google.golang.org/grpc"
+)
+
+type SessionManager struct {
+	pb.UnimplementedSessionManagerServer
+	sessions map[string]*Session
+	monitor  *SessionMonitor
+}
+
+type Session struct {
+	ID        string
+	Username  string
+	TokenHash string
+	ExpiresAt time.Time
+	PID       uint32
+	PPID      uint32
+	CreatedAt time.Time
+}
+
+func main() {
+	log.SetLevel(log.DebugLevel)
+	systemlog.Setup("ak_sm")
+	// Remove existing socket
+	os.Remove(c.Socket)
+
+	lis, err := net.Listen("unix", c.Socket)
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	// Set socket permissions
+	os.Chmod(c.Socket, 0666)
+
+	sm := &SessionManager{
+		sessions: make(map[string]*Session),
+		monitor:  NewSessionMonitor(),
+	}
+
+	s := grpc.NewServer()
+	pb.RegisterSessionManagerServer(s, sm)
+
+	// Start session monitor
+	go sm.monitor.Start(sm.sessions)
+
+	// Handle graceful shutdown
+	go func() {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+
+		log.Println("Shutting down...")
+		s.GracefulStop()
+		os.Remove(c.Socket)
+	}()
+
+	log.Printf("Session manager listening on socket: %s\n", c.Socket)
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+}
+
+func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {
+	session := &Session{
+		ID:        req.SessionId,
+		Username:  req.Username,
+		TokenHash: req.TokenHash,
+		ExpiresAt: time.Unix(int64(req.ExpiresAt), 0),
+		PID:       req.Pid,
+		PPID:      req.Ppid,
+		CreatedAt: time.Now(),
+	}
+
+	sm.sessions[req.SessionId] = session
+
+	log.Printf("Registered session %s for user %s (PID: %d, exp: %s)", req.SessionId, req.Username, req.Pid, time.Until(session.ExpiresAt).String())
+
+	return &pb.RegisterSessionResponse{
+		Success:   true,
+		SessionId: req.SessionId,
+	}, nil
+}
+
+func (sm *SessionManager) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
+	// Call your IDP validation logic here
+	valid, username, expiresAt, err := validateWithIDP(req.Token)
+	if err != nil {
+		return &pb.ValidateTokenResponse{
+			Valid: false,
+			Error: err.Error(),
+		}, nil
+	}
+
+	return &pb.ValidateTokenResponse{
+		Valid:     valid,
+		Username:  username,
+		ExpiresAt: uint64(expiresAt.Unix()),
+	}, nil
+}
+
+func validateWithIDP(string) (bool, string, time.Time, error) {
+	return true, "foo", time.Now(), nil
+}

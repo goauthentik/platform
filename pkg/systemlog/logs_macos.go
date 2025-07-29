@@ -1,26 +1,27 @@
 //go:build darwin
 // +build darwin
 
-package logs
+package systemlog
 
 import (
+	"fmt"
 	"os"
 	"path"
 
 	"github.com/sirupsen/logrus"
 )
 
-func Setup() error {
+func Setup(appName string) error {
 	hd, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
-	logs := path.Join(hd, "Library/Logs/io.goauthentik/Agent")
+	logs := path.Join(hd, "Library/Logs/io.goauthentik")
 	err = os.MkdirAll(logs, 0700)
 	if err != nil {
 		return err
 	}
-	f, err := os.OpenFile(path.Join(logs, "agent.log"), os.O_WRONLY|os.O_APPEND, 0700)
+	f, err := os.OpenFile(path.Join(logs, fmt.Sprintf("%s.log", appName)), os.O_WRONLY|os.O_APPEND, 0700)
 	if err != nil {
 		return err
 	}

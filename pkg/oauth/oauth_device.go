@@ -67,6 +67,9 @@ func (oa *Flow) DeviceFlow() (*api.AccessToken, error) {
 			return nil, fmt.Errorf("error opening the web browser: %w", err)
 		}
 	} else {
+		if browseURL == nil {
+			browseURL = browser.OpenURL
+		}
 		if err = browseURL(code.VerificationURIComplete); err != nil {
 			return nil, fmt.Errorf("error opening the web browser: %w", err)
 		}
