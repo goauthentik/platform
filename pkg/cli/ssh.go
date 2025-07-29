@@ -14,13 +14,13 @@ import (
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+	"github.com/skeema/knownhosts"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/cli/auth/raw"
 	"goauthentik.io/cli/pkg/cli/client"
 	"goauthentik.io/cli/pkg/pb"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/knownhosts"
 	"golang.org/x/term"
 	"google.golang.org/protobuf/proto"
 )
@@ -42,11 +42,6 @@ var sshCmd = &cobra.Command{
 			return err
 		}
 
-		cc := raw.GetCredentials(c, cmd.Context(), raw.CredentialsOpts{
-			Profile:  profile,
-			ClientID: "authentik-pam",
-		})
-
 		host := args[0]
 		user := u.Username
 		port := "22"
@@ -61,19 +56,18 @@ var sshCmd = &cobra.Command{
 			port = _parts[1]
 		}
 
+		uid := uuid.New().String()
+		remoteSocketPath := fmt.Sprintf("/var/run/authentik/agent-%s.sock", uid)
+
 		khf, err := DefaultKnownHostsPath()
 		if err != nil {
 			log.WithError(err).Warning("failed to locate known_hosts")
 			return err
 		}
-		kf, err := knownhosts.New(khf)
+		kh, err := knownhosts.NewDB(khf)
 		if err != nil {
-			log.WithError(err).Warning("failed to open known_hosts")
-			return err
+			log.Fatal("Failed to read known_hosts: ", err)
 		}
-
-		uid := uuid.New().String()
-		remoteSocketPath := fmt.Sprintf("/var/run/authentik/agent-%s.sock", uid)
 
 		config := &ssh.ClientConfig{
 			User: user,
@@ -81,6 +75,10 @@ var sshCmd = &cobra.Command{
 				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
 					log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
 					if len(questions) > 0 && questions[0] == "authentik Password: " {
+						cc := raw.GetCredentials(c, cmd.Context(), raw.CredentialsOpts{
+							Profile:  profile,
+							ClientID: "authentik-pam",
+						})
 						return []string{FormatToken(cc, remoteSocketPath)}, nil
 					}
 					ans := []string{}
@@ -95,11 +93,30 @@ var sshCmd = &cobra.Command{
 					return ans, nil
 				}),
 			},
-			HostKeyCallback: kf,
+			HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				innerCallback := kh.HostKeyCallback()
+				err := innerCallback(hostname, remote, key)
+				if knownhosts.IsHostKeyChanged(err) {
+					return fmt.Errorf("REMOTE HOST IDENTIFICATION HAS CHANGED for host %s! This may indicate a MitM attack.", hostname)
+				} else if knownhosts.IsHostUnknown(err) {
+					f, ferr := os.OpenFile(khf, os.O_APPEND|os.O_WRONLY, 0600)
+					if ferr == nil {
+						defer f.Close()
+						ferr = knownhosts.WriteKnownHost(f, hostname, remote, key)
+					}
+					if ferr == nil {
+						log.Infof("Added host %s to known_hosts\n", hostname)
+					} else {
+						log.Infof("Failed to add host %s to known_hosts: %v\n", hostname, ferr)
+					}
+					return nil // permit previously-unknown hosts (warning: may be insecure)
+				}
+				return err
+			}),
 		}
 		client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
 		if err != nil {
-			log.WithError(err).Fatal("Failed to dial")
+			return err
 		}
 		defer func() {
 			err := client.Close()
@@ -107,59 +124,16 @@ var sshCmd = &cobra.Command{
 		}()
 
 		go ForwardAgentSocket(remoteSocketPath, client)
-
-		// Create a session for interactive shell
-		session, err := client.NewSession()
-		if err != nil {
-			log.WithError(err).Fatal("Failed to create session")
-		}
-		defer func() {
-			err := session.Close()
-			if err != nil {
-				log.WithError(err).Warning("Failed to close session")
-			}
-		}()
-
-		// Set up terminal
-		session.Stdout = os.Stdout
-		session.Stderr = os.Stderr
-		session.Stdin = os.Stdin
-
-		// Request a pseudo terminal
-		if term.IsTerminal(int(os.Stdin.Fd())) {
-			originalState, err := term.MakeRaw(int(os.Stdin.Fd()))
-			if err != nil {
-				log.WithError(err).Fatal("Failed to set raw mode")
-			}
-			defer func() {
-				err := term.Restore(int(os.Stdin.Fd()), originalState)
-				if err != nil {
-					log.WithError(err).Warn("Failed to restore terminal state")
-				}
-			}()
-
-			width, height, err := term.GetSize(int(os.Stdin.Fd()))
-			if err != nil {
-				width, height = 80, 24
-			}
-
-			if err := session.RequestPty("xterm", height, width, ssh.TerminalModes{}); err != nil {
-				log.Fatalf("Failed to request pty: %v", err)
-			}
-		}
-
-		// Start shell
-		if err := session.Shell(); err != nil {
-			log.Fatalf("Failed to start shell: %v", err)
-		}
-
-		// Wait for session to end
-		return session.Wait()
+		return Shell(client)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(sshCmd)
+}
+
+func ParseSSHConfig() {
+
 }
 
 func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
@@ -232,6 +206,56 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 			<-done
 		}(remoteConn)
 	}
+}
+
+func Shell(client *ssh.Client) error {
+	// Create a session for interactive shell
+	session, err := client.NewSession()
+	if err != nil {
+		log.WithError(err).Fatal("Failed to create session")
+	}
+	defer func() {
+		err := session.Close()
+		if err != nil {
+			log.WithError(err).Warning("Failed to close session")
+		}
+	}()
+
+	// Set up terminal
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	session.Stdin = os.Stdin
+
+	// Request a pseudo terminal
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		originalState, err := term.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
+			log.WithError(err).Fatal("Failed to set raw mode")
+		}
+		defer func() {
+			err := term.Restore(int(os.Stdin.Fd()), originalState)
+			if err != nil {
+				log.WithError(err).Warn("Failed to restore terminal state")
+			}
+		}()
+
+		width, height, err := term.GetSize(int(os.Stdin.Fd()))
+		if err != nil {
+			width, height = 80, 24
+		}
+
+		if err := session.RequestPty("xterm", height, width, ssh.TerminalModes{}); err != nil {
+			log.Fatalf("Failed to request pty: %v", err)
+		}
+	}
+
+	// Start shell
+	if err := session.Shell(); err != nil {
+		log.Fatalf("Failed to start shell: %v", err)
+	}
+
+	// Wait for session to end
+	return session.Wait()
 }
 
 func ReadPassword(prompt string) (string, error) {
