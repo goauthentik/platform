@@ -1,4 +1,4 @@
-package sessionmanager
+package config
 
 import (
 	"os"
@@ -26,4 +26,8 @@ func init() {
 		panic(err)
 	}
 	c = cc
+}
+
+func Get() *Config {
+	return c
 }

@@ -1,4 +1,4 @@
-package sessionmanager
+package agentsystem
 
 import (
 	log "github.com/sirupsen/logrus"
