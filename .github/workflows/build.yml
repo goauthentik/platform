@@ -10,7 +10,7 @@ jobs:
   build:
     name: Build
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         target:
           - cli
