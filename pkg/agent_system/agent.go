@@ -1,6 +1,7 @@
 package agentsystem
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -44,6 +45,14 @@ func New() *SystemAgent {
 	}
 	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Get().Token))
 
+	ac := api.NewAPIClient(apiConfig)
+
+	m, _, err := ac.CoreApi.CoreUsersMeRetrieve(context.Background()).Execute()
+	if err != nil {
+		panic(err)
+	}
+	l.WithField("as", m.User.Username).Debug("Connected to authentik")
+
 	sm := &SystemAgent{
 		monitor: NewSessionMonitor(),
 		srv: grpc.NewServer(
@@ -51,7 +60,7 @@ func New() *SystemAgent {
 			grpc.ChainStreamInterceptor(logging.StreamServerInterceptor(systemlog.InterceptorLogger(l))),
 		),
 		log: l,
-		api: api.NewAPIClient(apiConfig),
+		api: ac,
 	}
 	pb.RegisterSessionManagerServer(sm.srv, sm)
 	pb.RegisterNSSServer(sm.srv, sm)

@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (sa *SystemAgent) ListUser(ctx context.Context, req *pb.Empty) (*pb.Users, error) {
+func (sa *SystemAgent) ListUsers(ctx context.Context, req *pb.Empty) (*pb.Users, error) {
 	users, err := ak.Paginator(sa.api.CoreApi.CoreUsersList(ctx), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   sa.log,

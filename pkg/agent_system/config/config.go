@@ -7,15 +7,15 @@ import (
 )
 
 type Config struct {
-	AuthentikURL string `json:"authentik_url"`
-	AppSlug      string `json:"app_slug"`
-	Token        string `json:"token"`
-	Debug        bool   `json:"debug"`
-	Socket       string `json:"socket"`
+	AuthentikURL string `yaml:"authentik_url"`
+	AppSlug      string `yaml:"app_slug"`
+	Token        string `yaml:"token"`
+	Debug        bool   `yaml:"debug"`
+	Socket       string `yaml:"socket"`
 	NSS          struct {
-		UIDOffset int32 `json:"uid_offset"`
-		GIDOffset int32 `json:"gid_offset"`
-	} `json:"nss"`
+		UIDOffset int32 `yaml:"uid_offset"`
+		GIDOffset int32 `yaml:"gid_offset"`
+	} `yaml:"nss"`
 }
 
 var c *Config
