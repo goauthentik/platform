@@ -97,7 +97,7 @@ var sshCmd = &cobra.Command{
 		}
 		defer client.Close()
 
-		ForwardAgentSocket(client)
+		go ForwardAgentSocket(client)
 
 		// Create a session for interactive shell
 		session, err := client.NewSession()
@@ -151,12 +151,12 @@ func ForwardAgentSocket(client *ssh.Client) {
 		log.Fatalf("remote listen on %s failed: %v", remoteSocket, err)
 	}
 	defer remoteListener.Close()
-	log.Printf("remote listening %s → local %s", remoteSocket, localSocket)
+	log.Debugf("remote listening %s → local %s", remoteSocket, localSocket)
 
 	for {
 		remoteConn, err := remoteListener.Accept()
 		if err != nil {
-			log.Printf("remote Accept error: %v", err)
+			log.WithError(err).Debug("remote Accept error")
 			continue
 		}
 		go func(rc net.Conn) {
@@ -164,7 +164,7 @@ func ForwardAgentSocket(client *ssh.Client) {
 			// Dial the local unix socket
 			lc, err := net.Dial("unix", localSocket)
 			if err != nil {
-				log.Printf("local dial %s failed: %v", localSocket, err)
+				log.WithError(err).Debugf("local dial %s failed", localSocket)
 				return
 			}
 			defer lc.Close()
