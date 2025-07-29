@@ -66,7 +66,7 @@ var sshCmd = &cobra.Command{
 			log.WithError(err).Warning("failed to locate known_hosts")
 			return err
 		}
-		_, err = knownhosts.New(khf)
+		kf, err := knownhosts.New(khf)
 		if err != nil {
 			log.WithError(err).Warning("failed to open known_hosts")
 			return err
@@ -95,7 +95,7 @@ var sshCmd = &cobra.Command{
 					return ans, nil
 				}),
 			},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			HostKeyCallback: kf,
 		}
 		client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
 		if err != nil {
