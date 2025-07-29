@@ -25,7 +25,6 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
-    // PamAuthentication::decode(raw)
 
     let msg = match PamAuthentication::decode(&*raw) {
         Ok(t) => t,
@@ -60,9 +59,27 @@ pub fn auth_token(
         }
     };
     // get the kid from jwt
-    let header = decode_header(&token).expect("jwt header should be decoded");
-    let kid = header.kid.as_ref().expect("jwt header should have a kid");
-    let jwk = jwks.keys.get(kid).expect("jwt refer to a unknown key id");
+    let header = match decode_header(&token) {
+        Ok(t) => t,
+        Err(e) => {
+            log::warn!("failed to decode JWT header: {}", e);
+            return Err(PamResultCode::PAM_AUTH_ERR);
+        }
+    };
+    let kid = match header.kid.as_ref() {
+        Some(t) => t,
+        None => {
+            log::warn!("failed to get JWT header kid");
+            return Err(PamResultCode::PAM_AUTH_ERR);
+        }
+    };
+    let jwk = match jwks.keys.get(kid) {
+        Some(t) => t,
+        None => {
+            log::warn!("JWT refers to non-existent kid");
+            return Err(PamResultCode::PAM_AUTH_ERR);
+        }
+    };
     let mut validation = Validation::new(jsonwebtoken::Algorithm::RS256);
     validation.set_audience(&["authentik-pam"]);
     let decoded_token: TokenData<Claims> =
