@@ -34,7 +34,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
         }
     };
 
-    return rt.block_on(async {
+    rt.block_on(async {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
@@ -50,15 +50,14 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
                     .into_iter()
                     .map(|user| shadow_entry(user.name))
                     .collect();
-                Response::Success(users);
+                Response::Success(users)
             }
             Err(e) => {
                 log::warn!("failed to send GRPC request: {}", e);
-                return Response::Unavail;
+                return Response::Unavail
             }
-        };
-        return Response::Unavail;
-    });
+        }
+    })
 }
 
 /// get_entry_by_name connects to the grpc server and asks for the shadow entry with the given name.
@@ -73,7 +72,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
         }
     };
 
-    return rt.block_on(async {
+    rt.block_on(async {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
@@ -95,7 +94,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
                 Response::Unavail
             }
         }
-    });
+    })
 }
 
 /// shadow_entries_to_shadows converts a vector of shadow entries to a vector of shadows.

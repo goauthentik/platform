@@ -40,7 +40,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
             return Response::Unavail;
         }
     };
-    return rt.block_on(async {
+    rt.block_on(async {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
@@ -56,15 +56,14 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
                     .into_iter()
                     .map(user_to_passwd_entry)
                     .collect();
-                Response::Success(users);
+                Response::Success(users)
             }
             Err(e) => {
                 log::warn!("failed to send GRPC request: {}", e);
-                return Response::Unavail;
+                Response::Unavail
             }
-        };
-        return Response::Unavail;
-    });
+        }
+    })
 }
 
 /// get_entry_by_uid connects to the grpc server and asks for the passwd entry with the given uid.
@@ -78,7 +77,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
             return Response::Unavail;
         }
     };
-    return rt.block_on(async {
+    rt.block_on(async {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
@@ -93,13 +92,13 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
             })
             .await
         {
-            Ok(r) => return Response::Success(user_to_passwd_entry(r.into_inner())),
+            Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
             Err(e) => {
                 log::warn!("failed to send GRPC request: {}", e);
-                return Response::Unavail;
+                Response::Unavail
             }
-        };
-    });
+        }
+    })
 }
 
 /// get_entry_by_name connects to the grpc server and asks for the passwd entry with the given name.
@@ -140,11 +139,11 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
                 Response::Unavail
             }
         }
-    });
+    })
 }
 
 fn user_to_passwd_entry(entry: User) -> Passwd {
-    Passwd {
+    let e = Passwd {
         name: entry.name,
         passwd: "x".to_owned(),
         uid: entry.uid,
@@ -152,5 +151,7 @@ fn user_to_passwd_entry(entry: User) -> Passwd {
         gecos: entry.gecos,
         dir: entry.homedir,
         shell: entry.shell,
-    }
+    };
+    log::trace!("user: '{}' {}:{}", e.name, e.uid, e.gid);
+    return e
 }

@@ -27,9 +27,10 @@ import (
 )
 
 var sshCmd = &cobra.Command{
-	Use:   "ssh",
-	Short: "Establish an SSH connection with `host`.",
-	Args:  cobra.MinimumNArgs(1),
+	Use:          "ssh",
+	Short:        "Establish an SSH connection with `host`.",
+	Args:         cobra.MinimumNArgs(1),
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		profile := mustFlag(cmd.Flags().GetString("profile"))
 		c, err := client.New(socketPath)

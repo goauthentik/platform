@@ -58,7 +58,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
                     .into_iter()
                     .map(ak_group_to_group_entry)
                     .collect();
-                return Response::Success(groups);
+                Response::Success(groups)
             }
             Err(e) => {
                 log::info!("error when listing groups: {}", e.code());
@@ -79,7 +79,6 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
             return Response::Unavail;
         }
     };
-
     rt.block_on(async {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
