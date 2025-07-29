@@ -1,5 +1,5 @@
 [Unit]
-Description=authentik Agent
+Description=authentik System Agent
 After=network.target
 
 [Service]
