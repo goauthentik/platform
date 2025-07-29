@@ -5,14 +5,20 @@ pub struct SetupRequest {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::RequestHeader>,
     #[prost(string, tag="2")]
+    pub authentik_url: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub app_slug: ::prost::alloc::string::String,
+    #[prost(string, tag="4")]
     pub client_id: ::prost::alloc::string::String,
+    #[prost(string, tag="5")]
+    pub access_token: ::prost::alloc::string::String,
+    #[prost(string, tag="6")]
+    pub refresh_token: ::prost::alloc::string::String,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct SetupResponse {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
-    #[prost(string, tag="2")]
-    pub access_setup: ::prost::alloc::string::String,
 }
 include!("agent_setup.tonic.rs");
 // @@protoc_insertion_point(module)

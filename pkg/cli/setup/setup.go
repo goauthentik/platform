@@ -20,8 +20,7 @@ type Options struct {
 	ClientID     string
 }
 
-func Setup(opts Options) {
-	mgr := storage.Manager()
+func Setup(opts Options) (*storage.ConfigV1Profile, error) {
 	urls := ak.URLsForProfile(storage.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
@@ -52,18 +51,14 @@ func Setup(opts Options) {
 	accessToken, err := flow.DetectFlow()
 	if err != nil {
 		log.WithError(err).Fatal("failed to start device flow")
-		return
+		return nil, err
 	}
 
-	mgr.Get().Profiles[opts.ProfileName] = storage.ConfigV1Profile{
+	return &storage.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 		ClientID:     opts.ClientID,
 		AccessToken:  accessToken.Token,
 		RefreshToken: accessToken.RefreshToken,
-	}
-	err = mgr.Save()
-	if err != nil {
-		log.WithError(err).Warning("failed to save config")
-	}
+	}, nil
 }

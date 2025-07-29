@@ -18,7 +18,7 @@ bin/agent/ak-agent:
 	mkdir -p "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS"
 	cp ${PWD}/bin/agent/ak-agent "${PWD}/bin/agent/authentik Agent.app/Contents/MacOS/"
 
-gen: gen-proto pam-gen
+gen: gen-proto pam/gen
 	go generate ./...
 
 gen-proto:

@@ -90,7 +90,7 @@ pub mod agent_setup_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn start_setup(
+        pub async fn setup(
             &mut self,
             request: impl tonic::IntoRequest<super::SetupRequest>,
         ) -> std::result::Result<tonic::Response<super::SetupResponse>, tonic::Status> {
@@ -104,11 +104,11 @@ pub mod agent_setup_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_setup.AgentSetup/StartSetup",
+                "/agent_setup.AgentSetup/Setup",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_setup.AgentSetup", "StartSetup"));
+                .insert(GrpcMethod::new("agent_setup.AgentSetup", "Setup"));
             self.inner.unary(req, path, codec).await
         }
     }

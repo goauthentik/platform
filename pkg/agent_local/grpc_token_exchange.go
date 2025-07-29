@@ -2,13 +2,17 @@ package agentlocal
 
 import (
 	"context"
+	"errors"
 
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
 )
 
 func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRequest) (*pb.TokenExchangeResponse, error) {
-	prof := a.cfg.Get().Profiles[req.Header.Profile]
+	prof, ok := a.cfg.Get().Profiles[req.Header.Profile]
+	if !ok {
+		return nil, errors.New("Profile not found")
+	}
 	nt, err := token.CachedExchangeToken(req.Header.Profile, prof, token.DefaultExchangeOpts(req.ClientId))
 	if err != nil {
 		a.log.WithError(err).Warn("failed to exchange token")
