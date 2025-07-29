@@ -34,11 +34,12 @@ func (sm *SessionMonitor) checkExpiredSessions(sessions map[string]*Session) {
 			continue
 		}
 		if now.After(session.ExpiresAt) {
-			log.Printf("Session %s expired for user %s, terminating PID %d",
+			log.Infof("Session %s expired for user %s, terminating PID %d",
 				sessionID, session.Username, session.PID)
 
-			if err := sm.terminateSession(session); err != nil {
-				log.Printf("Failed to terminate session %s: %v", sessionID, err)
+			err := sm.terminateSession(session)
+			if err != nil {
+				log.Infof("Failed to terminate session %s: %v", sessionID, err)
 			} else {
 				delete(sessions, sessionID)
 			}

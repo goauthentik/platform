@@ -20,6 +20,9 @@ gen-proto:
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
 
+test-agent:
+	go run -v ./cmd/agent_local/
+
 test-setup:
 	go run -v ./cmd/cli setup -v -a http://authentik:9000
 

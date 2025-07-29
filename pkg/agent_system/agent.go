@@ -58,12 +58,12 @@ func (sm *SessionManager) Start() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		sm.log.Println("Shutting down...")
+		sm.log.Info("Shutting down...")
 		sm.srv.GracefulStop()
 		_ = os.Remove(config.Get().Socket)
 	}()
 
-	sm.log.Printf("Session manager listening on socket: %s\n", config.Get().Socket)
+	sm.log.Infof("Session manager listening on socket: %s", config.Get().Socket)
 	if err := sm.srv.Serve(sm.lis); err != nil {
 		sm.log.Fatalf("Failed to serve: %v", err)
 	}
