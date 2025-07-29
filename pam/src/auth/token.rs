@@ -3,12 +3,12 @@ extern crate pam;
 extern crate reqwest;
 
 use crate::{config::Config, generated::pam::PamAuthentication};
+use ::prost::Message;
 use jsonwebtoken::{TokenData, Validation, decode, decode_header};
 use jwks::Jwks;
 use pam::constants::PamResultCode;
 use serde::{Deserialize, Serialize};
 use tokio::runtime::Runtime;
-use ::prost::Message;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -18,7 +18,7 @@ pub struct Claims {
 }
 
 pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
-    let raw = match hex::decode(token){
+    let raw = match hex::decode(token) {
         Ok(t) => t,
         Err(e) => {
             log::warn!("Failed to hex decode token: {}", e);
@@ -27,7 +27,7 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
     };
     // PamAuthentication::decode(raw)
 
-	let msg = match PamAuthentication::decode(&*raw) {
+    let msg = match PamAuthentication::decode(&*raw) {
         Ok(t) => t,
         Err(e) => {
             log::warn!("failed to decode message: {}", e);

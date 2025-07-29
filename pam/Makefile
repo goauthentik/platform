@@ -26,3 +26,4 @@ gen:
 		--tonic_opt=no_server \
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
+	cargo fmt

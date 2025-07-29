@@ -5,12 +5,17 @@ use pam::{
     module::PamHandle,
     pam_try,
 };
-use rand::Rng;
-use sha2::{Digest, Sha256};
-use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
+use std::ffi::CStr;
 
 use crate::{
-    auth::{interactive::auth_interactive, token::{auth_token, decode_token}}, config::Config, pam_env::pam_put_env, session::SessionData, ENV_SESSION_ID
+    ENV_SESSION_ID,
+    auth::{
+        interactive::auth_interactive,
+        token::{auth_token, decode_token},
+    },
+    config::Config,
+    pam_env::pam_put_env,
+    session::{_generate_id, _write_session_data, SessionData, hash_token},
 };
 
 pub mod interactive;
@@ -59,6 +64,7 @@ pub fn authenticate_impl(
         username: username.to_string(),
         token: password.to_owned(),
         expiry: -1,
+        local_socket: "".to_owned(),
     };
     pam_try!(pam_put_env(pamh, ENV_SESSION_ID, id.to_owned().as_str()));
 
@@ -72,7 +78,12 @@ pub fn authenticate_impl(
         };
         session_data.token = decoded.token;
         session_data.expiry = token.claims.exp;
-        pam_try!(pam_put_env(pamh, "AUTHENTIK_CLI_SOCKET", decoded.local_socket.to_owned().as_str()));
+        session_data.local_socket = decoded.local_socket;
+        pam_try!(pam_put_env(
+            pamh,
+            "AUTHENTIK_CLI_SOCKET",
+            session_data.local_socket.to_owned().as_str()
+        ));
         pam_try!(_write_session_data(id, session_data));
         return PamResultCode::PAM_SUCCESS;
     } else {
@@ -81,56 +92,4 @@ pub fn authenticate_impl(
         pam_try!(_write_session_data(id, session_data));
         return auth_interactive(username, &password, &conv);
     }
-}
-
-pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
-    let path = format!("/tmp/.aksm-{}", id);
-    let file = File::open(path).expect("Could not create file!");
-
-    return match serde_json::from_reader(file) {
-        Ok(t) => Ok(t),
-        Err(e) => {
-            log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR);
-        }
-    };
-}
-
-pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResultCode> {
-    let json_data = serde_json::to_string(&data).unwrap();
-    let path = format!("/tmp/.aksm-{}", id);
-    let mut file = File::create(path).expect("Could not create file!");
-
-    let mut permissions = file.metadata().unwrap().permissions();
-    permissions.set_mode(0o400);
-    file.set_permissions(permissions).unwrap();
-
-    return match file.write_all(json_data.as_bytes()) {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR);
-        }
-    };
-}
-
-pub fn _generate_id() -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789";
-    const PASSWORD_LEN: usize = 30;
-    let mut rng = rand::rng();
-
-    return (0..PASSWORD_LEN)
-        .map(|_| {
-            let idx = rng.random_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect();
-}
-
-pub fn hash_token(token: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(token.as_bytes());
-    hex::encode(hasher.finalize())
 }

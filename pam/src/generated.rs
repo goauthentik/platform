@@ -3,8 +3,8 @@ use tokio::net::UnixStream;
 use tonic::transport::{Channel, Endpoint, Uri};
 use tower::service_fn;
 
-pub mod pam_session;
 pub mod pam;
+pub mod pam_session;
 
 pub async fn create_grpc_client(
     config: Config,

@@ -21,18 +21,19 @@ type SessionManager struct {
 }
 
 type Session struct {
-	ID        string
-	Username  string
-	TokenHash string
-	ExpiresAt time.Time
-	PID       uint32
-	PPID      uint32
-	CreatedAt time.Time
+	ID          string
+	Username    string
+	TokenHash   string
+	ExpiresAt   time.Time
+	PID         uint32
+	PPID        uint32
+	CreatedAt   time.Time
+	LocalSocket string
 }
 
 func Main() {
 	log.SetLevel(log.DebugLevel)
-	systemlog.Setup("ak_sm")
+	systemlog.Setup("ak-sys-agent")
 	// Remove existing socket
 	os.Remove(c.Socket)
 
@@ -74,13 +75,14 @@ func Main() {
 
 func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {
 	session := &Session{
-		ID:        req.SessionId,
-		Username:  req.Username,
-		TokenHash: req.TokenHash,
-		ExpiresAt: time.Unix(int64(req.ExpiresAt), 0),
-		PID:       req.Pid,
-		PPID:      req.Ppid,
-		CreatedAt: time.Now(),
+		ID:          req.SessionId,
+		Username:    req.Username,
+		TokenHash:   req.TokenHash,
+		ExpiresAt:   time.Unix(int64(req.ExpiresAt), 0),
+		PID:         req.Pid,
+		PPID:        req.Ppid,
+		CreatedAt:   time.Now(),
+		LocalSocket: req.LocalSocket,
 	}
 
 	sm.sessions[req.SessionId] = session

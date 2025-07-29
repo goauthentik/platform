@@ -26,9 +26,10 @@ type RegisterSessionRequest struct {
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	TokenHash     string                 `protobuf:"bytes,3,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Pid           uint32                 `protobuf:"varint,5,opt,name=pid,proto3" json:"pid,omitempty"`
-	Ppid          uint32                 `protobuf:"varint,6,opt,name=ppid,proto3" json:"ppid,omitempty"`
+	LocalSocket   string                 `protobuf:"bytes,4,opt,name=local_socket,json=localSocket,proto3" json:"local_socket,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Pid           uint32                 `protobuf:"varint,6,opt,name=pid,proto3" json:"pid,omitempty"`
+	Ppid          uint32                 `protobuf:"varint,7,opt,name=ppid,proto3" json:"ppid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -80,6 +81,13 @@ func (x *RegisterSessionRequest) GetUsername() string {
 func (x *RegisterSessionRequest) GetTokenHash() string {
 	if x != nil {
 		return x.TokenHash
+	}
+	return ""
+}
+
+func (x *RegisterSessionRequest) GetLocalSocket() string {
+	if x != nil {
+		return x.LocalSocket
 	}
 	return ""
 }
@@ -377,17 +385,18 @@ var File_pam_session_proto protoreflect.FileDescriptor
 
 const file_pam_session_proto_rawDesc = "" +
 	"\n" +
-	"\x11pam_session.proto\x12\vpam_session\"\xb7\x01\n" +
+	"\x11pam_session.proto\x12\vpam_session\"\xda\x01\n" +
 	"\x16RegisterSessionRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
 	"\n" +
-	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12\x1d\n" +
+	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12!\n" +
+	"\flocal_socket\x18\x04 \x01(\tR\vlocalSocket\x12\x1d\n" +
 	"\n" +
-	"expires_at\x18\x04 \x01(\x03R\texpiresAt\x12\x10\n" +
-	"\x03pid\x18\x05 \x01(\rR\x03pid\x12\x12\n" +
-	"\x04ppid\x18\x06 \x01(\rR\x04ppid\"h\n" +
+	"expires_at\x18\x05 \x01(\x03R\texpiresAt\x12\x10\n" +
+	"\x03pid\x18\x06 \x01(\rR\x03pid\x12\x12\n" +
+	"\x04ppid\x18\a \x01(\rR\x04ppid\"h\n" +
 	"\x17RegisterSessionResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\n" +
