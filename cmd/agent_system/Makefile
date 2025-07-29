@@ -12,7 +12,7 @@ build:
 
 .PHONY: package
 package: build
-	VERSION=${VERSION} \
+	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
@@ -20,5 +20,5 @@ package: build
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
 
 test-deploy: package
-	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sys-agent_${VERSION}_arm64.deb
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sys-agent_${VERSION}_${ARCH}.deb
 	$(TME) systemctl restart ssh

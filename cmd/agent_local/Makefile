@@ -19,7 +19,7 @@ package-macos:
 	cp ${TOP}/bin/${TARGET}/${BINARY_NAME} "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/"
 
 package-deb:
-	VERSION=${VERSION} \
+	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
@@ -27,4 +27,4 @@ package-deb:
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
 
 test-deploy: package-deb
-	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_arm64.deb
+	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb

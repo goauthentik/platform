@@ -13,7 +13,7 @@ package:
 	cargo deb --verbose --deb-version ${VERSION}
 
 test-deploy: package
-	$(TME) dpkg -i /workspaces/pam/target/debian/pam_authentik_${VERSION}_arm64.deb
+	$(TME) dpkg -i /workspaces/pam/target/debian/pam_authentik_${VERSION}_${ARCH}.deb
 	$(TME) systemctl restart ssh
 
 gen:
