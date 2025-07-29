@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net"
@@ -17,9 +18,11 @@ import (
 	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/cli/auth/raw"
 	"goauthentik.io/cli/pkg/cli/client"
+	"goauthentik.io/cli/pkg/pb"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
 	"golang.org/x/term"
+	"google.golang.org/protobuf/proto"
 )
 
 var sshCmd = &cobra.Command{
@@ -69,13 +72,16 @@ var sshCmd = &cobra.Command{
 			return err
 		}
 
+		uid := uuid.New().String()
+		remoteSocketPath := fmt.Sprintf("/var/run/authentik/agent-%s.sock", uid)
+
 		config := &ssh.ClientConfig{
 			User: user,
 			Auth: []ssh.AuthMethod{
 				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
 					log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
 					if len(questions) > 0 && questions[0] == "authentik Password: " {
-						return []string{fmt.Sprintf("\u200b%s", cc.AccessToken)}, nil
+						return []string{FormatToken(cc, remoteSocketPath)}, nil
 					}
 					ans := []string{}
 					for _, q := range questions {
@@ -97,7 +103,7 @@ var sshCmd = &cobra.Command{
 		}
 		defer client.Close()
 
-		go ForwardAgentSocket(client)
+		go ForwardAgentSocket(remoteSocketPath, client)
 
 		// Create a session for interactive shell
 		session, err := client.NewSession()
@@ -143,8 +149,19 @@ func init() {
 	rootCmd.AddCommand(sshCmd)
 }
 
-func ForwardAgentSocket(client *ssh.Client) {
-	remoteSocket := fmt.Sprintf("/var/run/authentik/%s.sock", uuid.New())
+func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
+	msg := pb.PAMAuthentication{
+		Token:       cc.AccessToken,
+		LocalSocket: rtp,
+	}
+	rv, err := proto.Marshal(&msg)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("\u200b%s", hex.EncodeToString(rv))
+}
+
+func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 	localSocket := types.GetAgentSocketPath()
 	remoteListener, err := client.Listen("unix", remoteSocket)
 	if err != nil {

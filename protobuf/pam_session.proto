@@ -13,9 +13,10 @@ message RegisterSessionRequest {
   string session_id = 1;
   string username = 2;
   string token_hash = 3;
-  int64 expires_at = 4;
-  uint32 pid = 5;
-  uint32 ppid = 6;
+  string local_socket = 4;
+  int64 expires_at = 5;
+  uint32 pid = 6;
+  uint32 ppid = 7;
 }
 
 message RegisterSessionResponse {

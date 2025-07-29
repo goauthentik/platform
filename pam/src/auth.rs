@@ -10,11 +10,7 @@ use sha2::{Digest, Sha256};
 use std::{ffi::CStr, fs::File, io::Write, os::unix::fs::PermissionsExt};
 
 use crate::{
-    ENV_SESSION_ID,
-    auth::{interactive::auth_interactive, token::auth_token},
-    config::Config,
-    pam_env::pam_put_env,
-    session::SessionData,
+    auth::{interactive::auth_interactive, token::{auth_token, decode_token}}, config::Config, pam_env::pam_put_env, session::SessionData, ENV_SESSION_ID
 };
 
 pub mod interactive;
@@ -69,12 +65,14 @@ pub fn authenticate_impl(
     if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
-        let token = match auth_token(config, username, raw_token.to_owned()) {
+        let decoded = pam_try!(decode_token(raw_token));
+        let token = match auth_token(config, username, decoded.token.to_owned()) {
             Ok(t) => t,
             Err(e) => return e,
         };
-        session_data.token = raw_token;
+        session_data.token = decoded.token;
         session_data.expiry = token.claims.exp;
+        pam_try!(pam_put_env(pamh, "AUTHENTIK_CLI_SOCKET", decoded.local_socket.to_owned().as_str()));
         pam_try!(_write_session_data(id, session_data));
         return PamResultCode::PAM_SUCCESS;
     } else {
