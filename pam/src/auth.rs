@@ -31,13 +31,11 @@ pub fn authenticate_impl(
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
     let username = match pam_try!(pamh.get_item::<User>()) {
-        Some(u) => {
-            match String::from_utf8(u.to_bytes().to_vec()) {
-                Ok(uu) => uu,
-                Err(e) => {
-                    log::warn!("failed to decode user: {}", e);
-                    return PamResultCode::PAM_AUTH_ERR;
-                }
+        Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
+            Ok(uu) => uu,
+            Err(e) => {
+                log::warn!("failed to decode user: {}", e);
+                return PamResultCode::PAM_AUTH_ERR;
             }
         },
         None => {
@@ -92,11 +90,17 @@ pub fn authenticate_impl(
         session_data.token = decoded.token;
         session_data.expiry = token.claims.exp;
         session_data.local_socket = decoded.local_socket;
-        pam_try!(pam_put_env(
+        match pam_put_env(
             pamh,
             "AUTHENTIK_CLI_SOCKET",
-            session_data.local_socket.to_owned().as_str()
-        ));
+            session_data.local_socket.to_owned().as_str(),
+        ) {
+            Ok(t) => t,
+            Err(e) => {
+                log::warn!("Failed to set env");
+                return e;
+            }
+        };
         pam_try!(_write_session_data(id, session_data));
         return PamResultCode::PAM_SUCCESS;
     } else {
