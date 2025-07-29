@@ -105,7 +105,8 @@ var sshCmd = &cobra.Command{
 				innerCallback := kh.HostKeyCallback()
 				err := innerCallback(hostname, remote, key)
 				if knownhosts.IsHostKeyChanged(err) {
-					return fmt.Errorf("REMOTE HOST IDENTIFICATION HAS CHANGED for host %s! This may indicate a MitM attack.", hostname)
+					fmt.Printf("REMOTE HOST IDENTIFICATION HAS CHANGED for host %s! This may indicate a MitM attack.", hostname)
+					return errors.New("hostkey changed")
 				} else if knownhosts.IsHostUnknown(err) {
 					f, ferr := os.OpenFile(khf, os.O_APPEND|os.O_WRONLY, 0600)
 					if ferr == nil {
@@ -270,7 +271,8 @@ func Shell(client *ssh.Client) error {
 	}
 
 	// Wait for session to end
-	return session.Wait()
+	_ = session.Wait()
+	return nil
 }
 
 func ReadPassword(prompt string) (string, error) {
