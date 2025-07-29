@@ -94,24 +94,3 @@ func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterS
 		SessionId: req.SessionId,
 	}, nil
 }
-
-func (sm *SessionManager) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
-	// Call your IDP validation logic here
-	valid, username, expiresAt, err := validateWithIDP(req.Token)
-	if err != nil {
-		return &pb.ValidateTokenResponse{
-			Valid: false,
-			Error: err.Error(),
-		}, nil
-	}
-
-	return &pb.ValidateTokenResponse{
-		Valid:     valid,
-		Username:  username,
-		ExpiresAt: uint64(expiresAt.Unix()),
-	}, nil
-}
-
-func validateWithIDP(string) (bool, string, time.Time, error) {
-	return true, "foo", time.Now(), nil
-}

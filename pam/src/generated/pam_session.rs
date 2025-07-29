@@ -27,22 +27,6 @@ pub struct RegisterSessionResponse {
     pub error: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ValidateTokenRequest {
-    #[prost(string, tag = "1")]
-    pub token: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ValidateTokenResponse {
-    #[prost(bool, tag = "1")]
-    pub valid: bool,
-    #[prost(string, tag = "2")]
-    pub username: ::prost::alloc::string::String,
-    #[prost(uint64, tag = "3")]
-    pub expires_at: u64,
-    #[prost(string, tag = "4")]
-    pub error: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CloseSessionRequest {
     #[prost(string, tag = "1")]
     pub session_id: ::prost::alloc::string::String,

@@ -5,7 +5,6 @@ option go_package = "pkg/pb";
 
 service SessionManager {
   rpc RegisterSession(RegisterSessionRequest) returns (RegisterSessionResponse);
-  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
 }
 
@@ -23,17 +22,6 @@ message RegisterSessionResponse {
   bool success = 1;
   string session_id = 2;
   string error = 3;
-}
-
-message ValidateTokenRequest {
-  string token = 1;
-}
-
-message ValidateTokenResponse {
-  bool valid = 1;
-  string username = 2;
-  uint64 expires_at = 3;
-  string error = 4;
 }
 
 message CloseSessionRequest {
