@@ -16,6 +16,11 @@ func Setup(appName string) error {
 	if err != nil {
 		return nil
 	}
+	log.SetFormatter(&log.TextFormatter{
+		DisableTimestamp: true,
+		DisableColors:    true,
+		DisableSorting:   true,
+	})
 	log.StandardLogger().Hooks.Add(hook)
 	log.StandardLogger().SetOutput(io.Discard)
 	log.Info("Switched to syslog logging...")
