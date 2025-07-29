@@ -10,7 +10,7 @@ name = "pam_authentik"
 crate-type = ["cdylib"]
 
 [dependencies]
-authentik-client = "3.2025064.1"
+authentik-client = "3.2025064.2"
 ctor = "0.4.2"
 hex = "0.4.3"
 jsonwebtoken = "9.3.1"
