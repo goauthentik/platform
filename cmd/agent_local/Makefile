@@ -26,5 +26,5 @@ package-deb:
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
 
-test-deploy: package-deb
+test-deploy: package
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb

@@ -32,16 +32,15 @@ pub fn open_session_impl(
 ) -> PamResultCode {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
-    let id = pam_get_env(pamh, ENV_SESSION_ID).unwrap();
-
-    let mut sd = pam_try!(_read_session_data(id.to_owned()));
+    let sid = pam_get_env(pamh, ENV_SESSION_ID).unwrap();
+    let mut sd = pam_try!(_read_session_data(sid.to_owned()));
 
     if !config.pam.terminate_on_expiry {
         sd.expiry = -1;
     }
 
     let request = tonic::Request::new(RegisterSessionRequest {
-        session_id: id,
+        session_id: sid,
         username: sd.username.to_owned(),
         token_hash: sd.token,
         expires_at: sd.expiry,

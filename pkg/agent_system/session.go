@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"goauthentik.io/cli/pkg/pb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Session struct {
@@ -39,6 +40,14 @@ func (sm *SessionManager) RegisterSession(ctx context.Context, req *pb.RegisterS
 		Success:   true,
 		SessionId: req.SessionId,
 	}, nil
+}
+
+func (sm *SessionManager) SessionStatus(ctx context.Context, req *pb.SessionStatusRequest) (*pb.SessionStatusResponse, error) {
+	sess, ok := sm.sessions[req.SessionId]
+	if !ok {
+		return &pb.SessionStatusResponse{Success: false}, nil
+	}
+	return &pb.SessionStatusResponse{Success: true, Expiry: timestamppb.New(sess.ExpiresAt)}, nil
 }
 
 func (sm *SessionManager) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {
