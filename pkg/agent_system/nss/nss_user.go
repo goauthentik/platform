@@ -20,7 +20,7 @@ func (nss *Server) ListUsers(ctx context.Context, req *pb.Empty) (*pb.Users, err
 
 func (nss *Server) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.User, error) {
 	for _, u := range nss.users {
-		if req.Id != nil && uint32(nss.GetUserUidNumber(u)) == *req.Id {
+		if req.Id != nil && nss.GetUserUidNumber(u) == *req.Id {
 			return nss.convertUser(u), nil
 		} else if req.Name != nil && u.Username == *req.Name {
 			return nss.convertUser(u), nil
@@ -32,8 +32,8 @@ func (nss *Server) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.User, e
 func (nss *Server) convertUser(u api.User) *pb.User {
 	return &pb.User{
 		Name:    u.Username,
-		Uid:     uint32(nss.GetUserUidNumber(u)),
-		Gid:     uint32(nss.GetUserGidNumber(u)),
+		Uid:     nss.GetUserUidNumber(u),
+		Gid:     nss.GetUserGidNumber(u),
 		Gecos:   u.Name,
 		Homedir: fmt.Sprintf("/home/%s", u.Username),
 		Shell:   "/bin/bash",
@@ -43,6 +43,6 @@ func (nss *Server) convertUser(u api.User) *pb.User {
 func (nss *Server) convertUserToGroup(u api.User) *pb.Group {
 	return &pb.Group{
 		Name: u.Username,
-		Gid:  uint32(nss.GetUserGidNumber(u)),
+		Gid:  nss.GetUserGidNumber(u),
 	}
 }

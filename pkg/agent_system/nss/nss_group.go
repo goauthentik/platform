@@ -22,14 +22,14 @@ func (nss *Server) ListGroups(ctx context.Context, req *pb.Empty) (*pb.Groups, e
 
 func (nss *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.Group, error) {
 	for _, g := range nss.groups {
-		if req.Id != nil && uint32(nss.GetGroupGidNumber(g)) == *req.Id {
+		if req.Id != nil && nss.GetGroupGidNumber(g) == *req.Id {
 			return nss.convertGroup(g), nil
 		} else if req.Name != nil && g.Name == *req.Name {
 			return nss.convertGroup(g), nil
 		}
 	}
 	for _, u := range nss.users {
-		if req.Id != nil && uint32(nss.GetUserGidNumber(u)) == *req.Id {
+		if req.Id != nil && nss.GetUserGidNumber(u) == *req.Id {
 			return nss.convertUserToGroup(u), nil
 		} else if req.Name != nil && u.Name == *req.Name {
 			return nss.convertUserToGroup(u), nil
@@ -41,7 +41,7 @@ func (nss *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.Group,
 func (nss *Server) convertGroup(g api.Group) *pb.Group {
 	gg := &pb.Group{
 		Name:    g.Name,
-		Gid:     uint32(nss.GetGroupGidNumber(g)),
+		Gid:     nss.GetGroupGidNumber(g),
 		Members: make([]string, len(g.UsersObj)),
 	}
 	for i, m := range g.UsersObj {

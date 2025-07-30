@@ -40,35 +40,44 @@ func (nss *Server) Stop() {
 	nss.cancel()
 }
 
-func (nss *Server) GetUserUidNumber(user api.User) int {
+func (nss *Server) GetUserUidNumber(user api.User) uint32 {
 	uidNumber, ok := user.GetAttributes()["uidNumber"].(string)
-
+	def := uint32(nss.cfg.NSS.UIDOffset + user.Pk)
 	if ok {
-		id, _ := strconv.Atoi(uidNumber)
-		return id
+		id, err := strconv.ParseUint(uidNumber, 10, 32)
+		if err != nil {
+			nss.log.WithField("user", user.Username).WithError(err).Warn("failed to get uid from user attributes")
+			return def
+		}
+		return uint32(id)
 	}
-
-	return int(nss.cfg.NSS.UIDOffset + user.Pk)
+	return def
 }
 
-func (nss *Server) GetUserGidNumber(user api.User) int {
+func (nss *Server) GetUserGidNumber(user api.User) uint32 {
 	gidNumber, ok := user.GetAttributes()["gidNumber"].(string)
-
+	def := nss.GetUserUidNumber(user)
 	if ok {
-		id, _ := strconv.Atoi(gidNumber)
-		return id
+		id, err := strconv.ParseUint(gidNumber, 10, 32)
+		if err != nil {
+			nss.log.WithField("user", user.Username).WithError(err).Warn("failed to get gid from user attributes")
+			return def
+		}
+		return uint32(id)
 	}
-
-	return nss.GetUserUidNumber(user)
+	return def
 }
 
-func (nss *Server) GetGroupGidNumber(group api.Group) int {
+func (nss *Server) GetGroupGidNumber(group api.Group) uint32 {
 	gidNumber, ok := group.GetAttributes()["gidNumber"].(string)
-
+	def := uint32(nss.cfg.NSS.GIDOffset + group.NumPk)
 	if ok {
-		id, _ := strconv.Atoi(gidNumber)
-		return id
+		id, err := strconv.ParseUint(gidNumber, 10, 32)
+		if err != nil {
+			nss.log.WithField("group", group.Name).WithError(err).Warn("failed to get gid from group attributes")
+			return def
+		}
+		return uint32(id)
 	}
-
-	return int(nss.cfg.NSS.GIDOffset + group.NumPk)
+	return def
 }
