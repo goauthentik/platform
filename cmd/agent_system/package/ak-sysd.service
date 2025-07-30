@@ -1,10 +1,10 @@
 [Unit]
-Description=authentik System Agent
+Description=authentik sysd
 After=network.target
 
 [Service]
 Restart=always
-ExecStart=/usr/bin/ak-sys agent
+ExecStart=/usr/bin/ak-sysd agent
 RuntimeDirectory=authentik
 RuntimeDirectoryMode=0777
 

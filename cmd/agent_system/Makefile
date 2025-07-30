@@ -1,7 +1,7 @@
 include ../../common.mk
 
 TARGET := agent_system
-BINARY_NAME := ak-sys
+BINARY_NAME := ak-sysd
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
@@ -22,7 +22,7 @@ package: build
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
 
 test-deploy: package
-	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sys-agent_${VERSION}_${ARCH}.deb
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}_${ARCH}.deb
 	$(TME) cp /etc/authentik/host.yaml.dist /etc/authentik/host.yaml
 	$(TME) yq -yi '.token = "this-token-is-for-testing-dont-use"' /etc/authentik/host.yaml
-	$(TME) systemctl restart ak-sys
+	$(TME) systemctl restart ak-sysd

@@ -11,7 +11,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "ak-sys",
+	Use:   "ak-sysd",
 	Short: fmt.Sprintf("authentik System Agent v%s", storage.FullVersion()),
 }
 

@@ -38,7 +38,7 @@ var agentCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
-		err := systemlog.Setup("ak-sys-agent")
+		err := systemlog.Setup("ak-sysd")
 		if err != nil {
 			panic(err)
 		}

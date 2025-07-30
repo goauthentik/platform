@@ -15,7 +15,7 @@ jobs:
         target:
           - cli
           - agent
-          - sys
+          - sysd
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
