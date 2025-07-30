@@ -31,14 +31,13 @@ tonic = { version = "0.11" }
 tower = "0.5.2"
 
 [package.metadata.deb]
-name = "nss_authentik"
+name = "libnss-authentik"
 maintainer = "Authentik Security Inc."
 license-file = ["../LICENSE", "4"]
 depends = [
     "libc6",
 	"libssl3 | libssl3t64",
     "authentik-sys-agent",
-    # "libpam0g",
 ]
 section = "security"
 priority = "optional"

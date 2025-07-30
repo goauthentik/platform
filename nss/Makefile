@@ -13,7 +13,7 @@ package:
 	cargo deb --verbose --deb-version ${VERSION}
 
 test-deploy: package
-	$(TME) dpkg -i /workspaces/nss/target/debian/nss_authentik_${VERSION}_${ARCH}.deb
+	$(TME) dpkg -i /workspaces/nss/target/debian/libnss-authentik_${VERSION}_${ARCH}.deb
 
 gen:
 	cargo install protoc-gen-prost

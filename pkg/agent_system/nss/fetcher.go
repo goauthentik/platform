@@ -1,7 +1,6 @@
 package nss
 
 import (
-	"context"
 	"time"
 
 	"goauthentik.io/cli/pkg/agent_system/config"
@@ -9,14 +8,18 @@ import (
 )
 
 func (nss *Server) startFetch() {
-	t := time.NewTimer(time.Second * time.Duration(config.Get().NSS.RefreshIntervalSec))
+	d := time.Second * time.Duration(config.Get().NSS.RefreshIntervalSec)
+	nss.log.Info("Starting initial user/group fetch")
+	nss.fetch()
+	nss.log.WithField("next", d.String()).Info("Finished initial user/group fetch")
+	t := time.NewTimer(d)
 	go func() {
 		for {
 			select {
 			case <-t.C:
 				nss.log.Info("Starting user/group fetch")
 				nss.fetch()
-				nss.log.Info("Finished user/group fetch")
+				nss.log.WithField("next", d.String()).Info("Finished user/group fetch")
 			case <-nss.ctx.Done():
 				return
 			}
@@ -25,12 +28,12 @@ func (nss *Server) startFetch() {
 }
 
 func (nss *Server) fetch() {
-	users, _ := ak.Paginator(nss.api.CoreApi.CoreUsersList(context.TODO()).IncludeGroups(true), ak.PaginatorOptions{
+	users, _ := ak.Paginator(nss.api.CoreApi.CoreUsersList(nss.ctx).IncludeGroups(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   nss.log,
 	})
 	nss.users = users
-	groups, _ := ak.Paginator(nss.api.CoreApi.CoreGroupsList(context.TODO()).IncludeUsers(true), ak.PaginatorOptions{
+	groups, _ := ak.Paginator(nss.api.CoreApi.CoreGroupsList(nss.ctx).IncludeUsers(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   nss.log,
 	})

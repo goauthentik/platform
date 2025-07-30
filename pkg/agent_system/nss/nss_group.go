@@ -11,6 +11,9 @@ import (
 
 func (nss *Server) ListGroups(ctx context.Context, req *pb.Empty) (*pb.Groups, error) {
 	res := &pb.Groups{Groups: []*pb.Group{}}
+	for _, u := range nss.users {
+		res.Groups = append(res.Groups, nss.convertUserToGroup(u))
+	}
 	for _, g := range nss.groups {
 		res.Groups = append(res.Groups, nss.convertGroup(g))
 	}
@@ -36,8 +39,13 @@ func (nss *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.Group,
 }
 
 func (nss *Server) convertGroup(g api.Group) *pb.Group {
-	return &pb.Group{
-		Name: g.Name,
-		Gid:  uint32(nss.GetGroupGidNumber(g)),
+	gg := &pb.Group{
+		Name:    g.Name,
+		Gid:     uint32(nss.GetGroupGidNumber(g)),
+		Members: make([]string, len(g.UsersObj)),
 	}
+	for i, m := range g.UsersObj {
+		gg.Members[i] = m.Username
+	}
+	return gg
 }
