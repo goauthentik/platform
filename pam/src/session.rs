@@ -45,7 +45,7 @@ pub fn open_session_impl(
             return PamResultCode::PAM_IGNORE;
         }
     };
-    let mut sd = pam_try_log!(
+    let sd = pam_try_log!(
         _read_session_data(sid.to_owned()),
         "failed to get session data"
     );
