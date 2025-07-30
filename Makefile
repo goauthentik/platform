@@ -5,11 +5,12 @@ GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 include common.mk
 all: clean gen
 
-clean:
+clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
-gen: gen-proto pam/gen
+gen: gen-proto
 	go generate ./...
+	$(MAKE) -C utils_rs gen
 
 gen-proto:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
@@ -19,6 +20,11 @@ gen-proto:
 		--go-grpc_out=${PWD} \
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
+
+lint:
+	cargo fmt --all
+	cargo clippy --all
+	golangci-lint run
 
 test-agent:
 	go run -v ./cmd/agent_local/
@@ -32,10 +38,13 @@ test-ssh:
 test-shell:
 	docker exec -it authentik-cli_devcontainer-test-machine-1 bash
 
-test-full: clean agent/test-deploy sys/test-deploy cli/test-deploy pam/test-deploy test-ssh
+test-full: clean agent/test-deploy sys/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
 pam/%:
 	$(MAKE) -C pam $*
+
+nss/%:
+	$(MAKE) -C nss $*
 
 cli/%:
 	$(MAKE) -C cmd/cli $*

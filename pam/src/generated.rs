@@ -1,10 +1,9 @@
-use crate::{config::Config, generated::pam_session::session_manager_client::SessionManagerClient};
+use authentik_sys::{
+    config::Config, generated::pam_session::session_manager_client::SessionManagerClient,
+};
 use tokio::net::UnixStream;
 use tonic::transport::{Channel, Endpoint, Uri};
 use tower::service_fn;
-
-pub mod pam;
-pub mod pam_session;
 
 pub async fn create_grpc_client(
     config: Config,

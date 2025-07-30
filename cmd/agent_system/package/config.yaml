@@ -2,7 +2,11 @@
 authentik_url: http://authentik:9000
 app_slug: authentik-pam
 debug: true
-socket: /var/run/authentik-session-manager.sock
+socket: /var/run/authentik/sys.sock
 pam:
   authentication_flow: default-authentication-flow
   terminate_on_expiry: true
+nss:
+  uid_offset: 1000
+  gid_offset: 1000
+  refresh_interval_sec: 3600

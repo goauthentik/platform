@@ -14,13 +14,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func sessionClient() (pb.SessionManagerClient, error) {
+// TODO: Don't hardcode this
+const sysSocket = "/var/run/authentik/sys.sock"
+
+func sysClient() (pb.SessionManagerClient, error) {
 	l := log.WithField("logger", "cli.system_grpc")
 	conn, err := grpc.NewClient(
 		"localhost",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
-			return net.Dial("unix", "/var/run/authentik-session-manager.sock")
+			return net.Dial("unix", sysSocket)
 		}),
 		grpc.WithUnaryInterceptor(logging.UnaryClientInterceptor(systemlog.InterceptorLogger(l))),
 		grpc.WithStreamInterceptor(logging.StreamClientInterceptor(systemlog.InterceptorLogger(l))),
@@ -37,7 +40,7 @@ var sessionCmd = &cobra.Command{
 }
 
 func init() {
-	if _, err := os.Stat("/var/run/authentik-session-manager.sock"); err == nil {
+	if _, err := os.Stat(sysSocket); err == nil {
 		rootCmd.AddCommand(sessionCmd)
 	}
 }

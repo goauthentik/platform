@@ -13,7 +13,7 @@ var sessionStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status about the current session",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client, err := sessionClient()
+		client, err := sysClient()
 		if err != nil {
 			return err
 		}

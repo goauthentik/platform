@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Restart=always
-ExecStart=/usr/bin/ak-sys
+ExecStart=/usr/bin/ak-sys agent
 RuntimeDirectory=authentik
 RuntimeDirectoryMode=0777
 

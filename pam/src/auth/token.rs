@@ -2,8 +2,8 @@ extern crate jwks;
 extern crate pam;
 extern crate reqwest;
 
-use crate::{config::Config, generated::pam::PamAuthentication};
 use ::prost::Message;
+use authentik_sys::{config::Config, generated::pam::PamAuthentication};
 use jsonwebtoken::{TokenData, Validation, decode, decode_header};
 use jwks::Jwks;
 use pam::constants::PamResultCode;
@@ -21,7 +21,7 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
     let raw = match hex::decode(token) {
         Ok(t) => t,
         Err(e) => {
-            log::warn!("Failed to hex decode token: {}", e);
+            log::warn!("Failed to hex decode token: {e}");
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
@@ -29,11 +29,11 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
     let msg = match PamAuthentication::decode(&*raw) {
         Ok(t) => t,
         Err(e) => {
-            log::warn!("failed to decode message: {}", e);
+            log::warn!("failed to decode message: {e}");
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
-    return Ok(msg);
+    Ok(msg)
 }
 
 pub fn auth_token(
@@ -44,7 +44,7 @@ pub fn auth_token(
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Err(PamResultCode::PAM_SESSION_ERR);
         }
     };
@@ -54,7 +54,7 @@ pub fn auth_token(
     ))) {
         Ok(res) => res,
         Err(e) => {
-            log::warn!("failed to validate token: {}", e);
+            log::warn!("failed to validate token: {e}");
             return Err(PamResultCode::PAM_SESSION_ERR);
         }
     };
@@ -62,7 +62,7 @@ pub fn auth_token(
     let header = match decode_header(&token) {
         Ok(t) => t,
         Err(e) => {
-            log::warn!("failed to decode JWT header: {}", e);
+            log::warn!("failed to decode JWT header: {e}");
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
@@ -93,5 +93,5 @@ pub fn auth_token(
         );
         return Err(PamResultCode::PAM_USER_UNKNOWN);
     }
-    return Ok(decoded_token);
+    Ok(decoded_token)
 }

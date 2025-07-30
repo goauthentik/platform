@@ -18,5 +18,5 @@ contents:
     dst: /usr/lib/systemd/system/ak-sys.service
     type: config
   - src: package/config.yaml
-    dst: /etc/authentik/host.yaml
+    dst: /etc/authentik/host.yaml.dist
     type: config

@@ -1,10 +1,10 @@
 extern crate pam;
 
-use crate::config::Config;
 use crate::generated::create_grpc_client;
-use crate::generated::pam_session::{CloseSessionRequest, RegisterSessionRequest};
 use crate::pam_env::pam_get_env;
 use crate::{DATA_CLIENT, ENV_SESSION_ID, pam_try_log};
+use authentik_sys::config::Config;
+use authentik_sys::generated::pam_session::{CloseSessionRequest, RegisterSessionRequest};
 use pam::constants::PamFlag;
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
@@ -65,28 +65,28 @@ pub fn open_session_impl(
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return PamResultCode::PAM_SESSION_ERR;
         }
     };
     let mut client = match rt.block_on(create_grpc_client(config)) {
         Ok(res) => res,
         Err(e) => {
-            log::warn!("Failed to create grpc client: {}", e);
+            log::warn!("Failed to create grpc client: {e}");
             return PamResultCode::PAM_SESSION_ERR;
         }
     };
     let response = match rt.block_on(client.register_session(request)) {
         Ok(res) => res,
         Err(e) => {
-            log::warn!("failed to send GRPC request: {}", e);
+            log::warn!("failed to send GRPC request: {e}");
             return PamResultCode::PAM_SESSION_ERR;
         }
     };
     let session_info = response.into_inner();
 
     if !session_info.success {
-        log::warn!("failed to add session: {}", session_info.error.to_string());
+        log::warn!("failed to add session: {}", session_info.error);
         return PamResultCode::PAM_SESSION_ERR;
     }
 
@@ -119,21 +119,21 @@ pub fn close_session_impl(
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return PamResultCode::PAM_SESSION_ERR;
         }
     };
     let mut client = match rt.block_on(create_grpc_client(config)) {
         Ok(res) => res,
         Err(e) => {
-            log::warn!("Failed to create grpc client: {}", e);
+            log::warn!("Failed to create grpc client: {e}");
             return PamResultCode::PAM_SESSION_ERR;
         }
     };
     let response = match rt.block_on(client.close_session(request)) {
         Ok(res) => res,
         Err(e) => {
-            log::warn!("failed to send GRPC request: {}", e);
+            log::warn!("failed to send GRPC request: {e}");
             return PamResultCode::PAM_SESSION_ERR;
         }
     };
@@ -148,20 +148,20 @@ pub fn close_session_impl(
 }
 
 pub fn _session_file(id: String) -> String {
-    return format!("/tmp/.aksm-{}", id);
+    format!("/tmp/.aksm-{id}")
 }
 
 pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
     let path = _session_file(id);
     let file = File::open(path).expect("Could not create file!");
 
-    return match serde_json::from_reader(file) {
+    match serde_json::from_reader(file) {
         Ok(t) => Ok(t),
         Err(e) => {
-            log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR);
+            log::warn!("failed to write session data: {e}");
+            Err(PamResultCode::PAM_AUTH_ERR)
         }
-    };
+    }
 }
 
 pub fn _delete_session_data(id: String) -> Result<(), PamResultCode> {
@@ -169,8 +169,8 @@ pub fn _delete_session_data(id: String) -> Result<(), PamResultCode> {
     match remove_file(path) {
         Ok(_) => Ok(()),
         Err(e) => {
-            log::warn!("Failed to remove session data: {}", e);
-            return Err(PamResultCode::PAM_SESSION_ERR);
+            log::warn!("Failed to remove session data: {e}");
+            Err(PamResultCode::PAM_SESSION_ERR)
         }
     }
 }
@@ -179,7 +179,7 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
     let json_data = match serde_json::to_string(&data) {
         Ok(j) => j,
         Err(e) => {
-            log::warn!("failed to json encode: {}", e);
+            log::warn!("failed to json encode: {e}");
             return Err(PamResultCode::PAM_SESSION_ERR);
         }
     };
@@ -189,18 +189,18 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
     match file.set_permissions(Permissions::from_mode(0o400)) {
         Ok(_) => {}
         Err(e) => {
-            log::warn!("failed to get file permissions: {}", e);
+            log::warn!("failed to get file permissions: {e}");
             return Err(PamResultCode::PAM_SESSION_ERR);
         }
     };
 
-    return match file.write_all(json_data.as_bytes()) {
+    match file.write_all(json_data.as_bytes()) {
         Ok(_) => Ok(()),
         Err(e) => {
-            log::warn!("failed to write session data: {}", e);
-            return Err(PamResultCode::PAM_AUTH_ERR);
+            log::warn!("failed to write session data: {e}");
+            Err(PamResultCode::PAM_AUTH_ERR)
         }
-    };
+    }
 }
 
 pub fn _generate_id() -> String {
@@ -210,12 +210,12 @@ pub fn _generate_id() -> String {
     const PASSWORD_LEN: usize = 30;
     let mut rng = rand::rng();
 
-    return (0..PASSWORD_LEN)
+    (0..PASSWORD_LEN)
         .map(|_| {
             let idx = rng.random_range(0..CHARSET.len());
             CHARSET[idx] as char
         })
-        .collect();
+        .collect()
 }
 
 pub fn hash_token(token: &str) -> String {
