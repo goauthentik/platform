@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/api/v3"
@@ -26,7 +27,14 @@ var agentCmd = &cobra.Command{
 	Short:        "Run the authentik system agent",
 	SilenceUsage: true,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return agentPrecheck()
+		err := agentPrecheck()
+		if err != nil {
+			return err
+		}
+		if _, err := os.Stat(config.Get().RuntimeDir()); err != nil {
+			return errors.Wrap(err, "failed to check runtime directory")
+		}
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)

@@ -30,8 +30,5 @@ func agentPrecheck() error {
 		return errors.Wrap(err, "failed to check config file")
 	}
 	config.Load()
-	if _, err := os.Stat(config.Get().RuntimeDir()); err != nil {
-		return errors.Wrap(err, "failed to check runtime directory")
-	}
 	return nil
 }
