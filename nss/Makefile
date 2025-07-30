@@ -2,6 +2,9 @@ include ../common.mk
 
 PROTO_OUT := "${PWD}/src/generated"
 
+clean:
+	cargo clean
+
 build:
 	cargo build --verbose
 

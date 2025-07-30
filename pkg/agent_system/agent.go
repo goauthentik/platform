@@ -14,16 +14,15 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/agent_system/nss"
+	"goauthentik.io/cli/pkg/agent_system/session"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 
 type SystemAgent struct {
-	pb.UnimplementedSessionManagerServer
-
 	nss     *nss.Server
-	monitor *SessionMonitor
+	monitor *session.Monitor
 	srv     *grpc.Server
 	log     *log.Entry
 	api     *api.APIClient
@@ -55,7 +54,7 @@ func New() *SystemAgent {
 	l.WithField("as", m.User.Username).Debug("Connected to authentik")
 
 	sm := &SystemAgent{
-		monitor: NewSessionMonitor(),
+		monitor: session.NewMonitor(),
 		srv: grpc.NewServer(
 			grpc.ChainUnaryInterceptor(logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l))),
 			grpc.ChainStreamInterceptor(logging.StreamServerInterceptor(systemlog.InterceptorLogger(l))),
@@ -64,33 +63,34 @@ func New() *SystemAgent {
 		api: ac,
 		nss: nss.NewServer(ac),
 	}
-	pb.RegisterSessionManagerServer(sm.srv, sm)
+
+	pb.RegisterSessionManagerServer(sm.srv, sm.monitor)
 	pb.RegisterNSSServer(sm.srv, sm.nss)
 	return sm
 }
 
-func (sa *SystemAgent) Start() {
-	go sa.monitor.Start()
+func (sm *SystemAgent) Start() {
+	go sm.monitor.Start()
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		sa.log.Info("Shutting down...")
-		sa.srv.GracefulStop()
+		sm.log.Info("Shutting down...")
+		sm.srv.GracefulStop()
 		_ = os.Remove(config.Get().Socket)
 	}()
 
 	_ = os.Remove(config.Get().Socket)
 	lis, err := net.Listen("unix", config.Get().Socket)
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.WithError(err).Fatal("Failed to listen")
 	}
 	_ = os.Chmod(config.Get().Socket, 0666)
 
-	sa.log.Infof("Session manager listening on socket: %s", config.Get().Socket)
-	if err := sa.srv.Serve(lis); err != nil {
-		sa.log.Fatalf("Failed to serve: %v", err)
+	sm.log.WithField("path", config.Get().Socket).Info("System agent listening on socket")
+	if err := sm.srv.Serve(lis); err != nil {
+		sm.log.WithError(err).Fatal("Failed to serve")
 	}
 }

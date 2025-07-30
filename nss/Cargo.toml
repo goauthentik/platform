@@ -6,7 +6,7 @@ license = "MIT"
 description = "foo"
 
 [lib]
-name = "nss_authentik"
+name = "authentik_nss"
 crate-type = ["cdylib"]
 
 [dependencies]

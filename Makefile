@@ -5,7 +5,7 @@ GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 include common.mk
 all: clean gen
 
-clean:
+clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
 gen: gen-proto pam/gen nss/gen

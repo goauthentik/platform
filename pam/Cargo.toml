@@ -3,10 +3,10 @@ name = "authentik_pam"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-description = "pam_authentik authenticates users through authentik."
+description = "libpam-authentik authenticates users through authentik."
 
 [lib]
-name = "pam_authentik"
+name = "authentik_pam"
 crate-type = ["cdylib"]
 
 [dependencies]
@@ -32,7 +32,7 @@ tonic = { version = "0.11" }
 tower = "0.5.2"
 
 [package.metadata.deb]
-name = "pam_authentik"
+name = "libpam-authentik"
 maintainer = "Authentik Security Inc."
 license-file = ["../LICENSE", "4"]
 depends = [
@@ -44,8 +44,8 @@ depends = [
 section = "security"
 priority = "optional"
 assets = [
-    { source = "target/release/libpam_authentik.so", dest = "usr/lib64/security/pam_authentik.so", mode = "644"},
-    { source = "target/release/libpam_authentik.so", dest = "usr/lib/security/pam_authentik.so", mode = "644"},
+    { source = "target/release/libauthentik_pam.so", dest = "usr/lib64/security/pam_authentik.so", mode = "644"},
+    { source = "target/release/libauthentik_pam.so", dest = "usr/lib/security/pam_authentik.so", mode = "644"},
     { source = "debian/pam_config", dest = "usr/share/pam-configs/authentik", mode = "644"},
 ]
 maintainer-scripts = "debian"

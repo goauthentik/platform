@@ -7,7 +7,7 @@ pub fn init_log() {
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
         hostname: None,
-        process: "ak_nss".into(),
+        process: "libnss-authentik".into(),
         pid: std::process::id(),
     };
     let logger = match syslog::unix(formatter) {
