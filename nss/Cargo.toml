@@ -40,7 +40,7 @@ depends = [
 section = "security"
 priority = "optional"
 assets = [
-    { source = "target/release/libnss_authentik.so", dest = "usr/lib64/aarch64-linux-gnu/libnss_authentik.so.2", mode = "644"},
-    { source = "target/release/libnss_authentik.so", dest = "usr/lib/aarch64-linux-gnu/libnss_authentik.so.2", mode = "644"},
+    { source = "target/release/libauthentik_nss.so", dest = "usr/lib64/aarch64-linux-gnu/libnss_authentik.so.2", mode = "644"},
+    { source = "target/release/libauthentik_nss.so", dest = "usr/lib/aarch64-linux-gnu/libnss_authentik.so.2", mode = "644"},
 ]
 maintainer-scripts = "debian"
