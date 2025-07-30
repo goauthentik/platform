@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path"
 
 	"gopkg.in/yaml.v3"
 )
@@ -19,10 +20,16 @@ type Config struct {
 	} `yaml:"nss"`
 }
 
+func (c *Config) RuntimeDir() string {
+	return path.Join("/var/run", "authentik")
+}
+
 var c *Config
 
-func init() {
-	f, err := os.Open("/etc/authentik/host.yaml")
+const Path = "/etc/authentik/host.yaml"
+
+func Load() {
+	f, err := os.Open(Path)
 	if err != nil {
 		panic(err)
 	}

@@ -22,7 +22,6 @@ func mustFlag[T any](res T, err error) T {
 	return res
 }
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ak",
 	Short: fmt.Sprintf("authentik CLI v%s", storage.FullVersion()),

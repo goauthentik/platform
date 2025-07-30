@@ -11,6 +11,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/agent_system/nss"
@@ -19,6 +20,24 @@ import (
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
+
+var agentCmd = &cobra.Command{
+	Use:          "agent",
+	Short:        "Run the authentik system agent",
+	SilenceUsage: true,
+	Run: func(cmd *cobra.Command, args []string) {
+		log.SetLevel(log.DebugLevel)
+		err := systemlog.Setup("ak-sys-agent")
+		if err != nil {
+			panic(err)
+		}
+		New().Start()
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(agentCmd)
+}
 
 type SystemAgent struct {
 	nss     *nss.Server
