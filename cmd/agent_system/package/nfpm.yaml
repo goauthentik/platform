@@ -16,7 +16,9 @@ contents:
     dst: /usr/bin/ak-sys
   - src: package/ak-sys.service
     dst: /usr/lib/systemd/system/ak-sys.service
-    type: config
   - src: package/config.yaml
     dst: /etc/authentik/host.yaml.dist
+    type: config
+  - src: ../../bin/agent_system/completions/agent_system.bash
+    dst: /etc/bash_completion.d/
     type: config

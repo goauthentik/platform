@@ -25,6 +25,9 @@ var agentCmd = &cobra.Command{
 	Use:          "agent",
 	Short:        "Run the authentik system agent",
 	SilenceUsage: true,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		return agentPrecheck()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
 		err := systemlog.Setup("ak-sys-agent")

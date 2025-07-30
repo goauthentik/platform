@@ -13,9 +13,6 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "ak-sys",
 	Short: fmt.Sprintf("authentik System Agent v%s", storage.FullVersion()),
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return agentPrecheck()
-	},
 }
 
 func Execute() {
