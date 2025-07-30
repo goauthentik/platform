@@ -38,7 +38,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
@@ -47,7 +47,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };
@@ -76,7 +76,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
@@ -84,7 +84,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };
@@ -111,7 +111,7 @@ fn get_entry_by_name(name: String) -> Response<Group> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
@@ -120,7 +120,7 @@ fn get_entry_by_name(name: String) -> Response<Group> {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };

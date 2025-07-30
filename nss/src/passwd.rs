@@ -37,7 +37,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
@@ -45,7 +45,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };
@@ -60,7 +60,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
                 Response::Success(users)
             }
             Err(e) => {
-                log::warn!("failed to send GRPC request: {}", e);
+                log::warn!("failed to send GRPC request: {e}");
                 grpc_status_to_nss_response(e)
             }
         }
@@ -74,7 +74,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
@@ -82,7 +82,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };
@@ -95,7 +95,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
         {
             Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
             Err(e) => {
-                log::warn!("failed to send GRPC request: {}", e);
+                log::warn!("failed to send GRPC request: {e}");
                 grpc_status_to_nss_response(e)
             }
         }
@@ -109,15 +109,15 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
-    return rt.block_on(async {
+    rt.block_on(async {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };
@@ -140,7 +140,7 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
                 grpc_status_to_nss_response(e)
             }
         }
-    });
+    })
 }
 
 fn user_to_passwd_entry(entry: User) -> Passwd {
@@ -154,5 +154,5 @@ fn user_to_passwd_entry(entry: User) -> Passwd {
         shell: entry.shell,
     };
     log::trace!("user: '{}' {}:{}", e.name, e.uid, e.gid);
-    return e;
+    e
 }

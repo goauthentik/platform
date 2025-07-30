@@ -35,7 +35,7 @@ pub fn authenticate_impl(
             Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
                 Ok(uu) => uu,
                 Err(e) => {
-                    log::warn!("failed to decode user: {}", e);
+                    log::warn!("failed to decode user: {e}");
                     return PamResultCode::PAM_AUTH_ERR;
                 }
             },
@@ -49,7 +49,7 @@ pub fn authenticate_impl(
             return e;
         }
     };
-    log::debug!("got username: '{}'", username);
+    log::debug!("got username: '{username}'");
     let conv = match pamh.get_item::<Conv>() {
         Ok(Some(conv)) => conv,
         Ok(None) => {
@@ -114,14 +114,14 @@ pub fn authenticate_impl(
             _write_session_data(id, session_data),
             "failed to write session data"
         );
-        return PamResultCode::PAM_SUCCESS;
+        PamResultCode::PAM_SUCCESS
     } else {
         log::debug!("Interactive authentication");
-        session_data.token = hash_token(&password.to_owned());
+        session_data.token = hash_token(password);
         pam_try_log!(
             _write_session_data(id, session_data),
             "failed to write session data"
         );
-        return auth_interactive(username, &password, &conv);
+        auth_interactive(username, password, &conv)
     }
 }

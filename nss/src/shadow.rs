@@ -30,7 +30,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
@@ -39,7 +39,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };
@@ -54,7 +54,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
                 Response::Success(users)
             }
             Err(e) => {
-                log::warn!("failed to send GRPC request: {}", e);
+                log::warn!("failed to send GRPC request: {e}");
                 grpc_status_to_nss_response(e)
             }
         }
@@ -68,7 +68,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
     let rt = match Runtime::new() {
         Ok(rt) => rt,
         Err(e) => {
-            log::warn!("Failed to create runtime: {}", e);
+            log::warn!("Failed to create runtime: {e}");
             return Response::Unavail;
         }
     };
@@ -77,7 +77,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
         let mut client = match create_grpc_client(config).await {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("Failed to create grpc client: {}", e);
+                log::warn!("Failed to create grpc client: {e}");
                 return Response::Unavail;
             }
         };

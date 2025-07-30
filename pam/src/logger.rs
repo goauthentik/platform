@@ -15,7 +15,7 @@ pub fn init_log() {
     let logger = match syslog::unix(formatter) {
         Ok(logger) => logger,
         Err(e) => {
-            println!("impossible to connect to syslog: {:?}", e);
+            println!("impossible to connect to syslog: {e:?}");
             return;
         }
     };
@@ -32,14 +32,7 @@ pub fn log_hook(name: &str) {
     let euid = unsafe { geteuid() };
     let egid = unsafe { getegid() };
     log::debug!(
-        "{} init, pid: {}, ppid: {}, uid/gid: {}:{}, euid/egid: {}:{}",
-        name,
-        pid,
-        ppid,
-        uid,
-        gid,
-        euid,
-        egid
+        "{name} init, pid: {pid}, ppid: {ppid}, uid/gid: {uid}:{gid}, euid/egid: {euid}:{egid}"
     );
 }
 

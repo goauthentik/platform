@@ -42,19 +42,19 @@ impl PamHooks for PAMAuthentik {
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log_hook_with_args("sm_authenticate", args.clone());
         pam_check_service!(pamh);
-        return authenticate_impl(pamh, args, flags);
+        authenticate_impl(pamh, args, flags)
     }
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log_hook_with_args("sm_open_session", args.clone());
         pam_check_service!(pamh);
-        return open_session_impl(pamh, args, flags);
+        open_session_impl(pamh, args, flags)
     }
 
     fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log_hook_with_args("sm_close_session", args.clone());
         pam_check_service!(pamh);
-        return close_session_impl(pamh, args, flags);
+        close_session_impl(pamh, args, flags)
     }
 
     fn sm_setcred(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
@@ -89,7 +89,7 @@ pub fn check_service(pamh: &mut PamHandle) -> Result<(), PamResultCode> {
             Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
                 Ok(uu) => uu,
                 Err(e) => {
-                    log::warn!("failed to decode user: {}", e);
+                    log::warn!("failed to decode user: {e}");
                     return Err(PamResultCode::PAM_AUTH_ERR);
                 }
             },
@@ -103,9 +103,9 @@ pub fn check_service(pamh: &mut PamHandle) -> Result<(), PamResultCode> {
             return Err(e);
         }
     };
-    log::debug!("Service: '{}'", service);
+    log::debug!("Service: '{service}'");
     if ["sshd"].contains(&service.to_owned().as_str()) {
         return Ok(());
     }
-    return Err(PamResultCode::PAM_IGNORE);
+    Err(PamResultCode::PAM_IGNORE)
 }
