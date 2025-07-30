@@ -99,7 +99,7 @@ func (a *Agent) systrayProfileItme(name string, profile storage.ConfigV1Profile)
 			iat.String(),
 		), "").Disable()
 		i.AddSubMenuItem(fmt.Sprintf(
-			"Renewing token %s (%s)",
+			"Renewing token in %s (%s)",
 			timediff.TimeDiff(exp.Time),
 			exp.String(),
 		), "").Disable()

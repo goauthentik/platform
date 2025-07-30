@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/config"
+	"goauthentik.io/cli/pkg/agent_system/nss"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
@@ -20,8 +21,8 @@ import (
 
 type SystemAgent struct {
 	pb.UnimplementedSessionManagerServer
-	pb.UnimplementedNSSServer
 
+	nss     *nss.Server
 	monitor *SessionMonitor
 	srv     *grpc.Server
 	log     *log.Entry
@@ -61,9 +62,10 @@ func New() *SystemAgent {
 		),
 		log: l,
 		api: ac,
+		nss: nss.NewServer(ac),
 	}
 	pb.RegisterSessionManagerServer(sm.srv, sm)
-	pb.RegisterNSSServer(sm.srv, sm)
+	pb.RegisterNSSServer(sm.srv, sm.nss)
 	return sm
 }
 

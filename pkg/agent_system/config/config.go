@@ -13,8 +13,9 @@ type Config struct {
 	Debug        bool   `yaml:"debug"`
 	Socket       string `yaml:"socket"`
 	NSS          struct {
-		UIDOffset int32 `yaml:"uid_offset"`
-		GIDOffset int32 `yaml:"gid_offset"`
+		UIDOffset          int32 `yaml:"uid_offset"`
+		GIDOffset          int32 `yaml:"gid_offset"`
+		RefreshIntervalSec int64 `yaml:"refresh_interval_sec"`
 	} `yaml:"nss"`
 }
 

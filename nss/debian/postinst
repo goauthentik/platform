@@ -29,4 +29,8 @@ insert_nss_entry() {
     ' /etc/nsswitch.conf
 }
 
-insert_nss_entry
+action="$1"
+
+if [ configure = "$action" ]; then
+    insert_nss_entry
+fi
