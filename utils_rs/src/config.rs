@@ -18,7 +18,7 @@ pub struct Config {
 
 impl Config {
     pub fn from_default() -> Result<Self, Box<dyn Error>> {
-        return Config::from_file("/etc/authentik/host.yaml")
+        return Config::from_file("/etc/authentik/host.yaml");
     }
 
     pub fn from_file(path: &str) -> Result<Self, Box<dyn Error>> {

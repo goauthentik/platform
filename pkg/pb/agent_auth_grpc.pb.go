@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	AgentAuth_WhoAmI_FullMethodName              = "/agent_auth.AgentAuth/WhoAmI"
+	AgentAuth_GetCurrentToken_FullMethodName     = "/agent_auth.AgentAuth/GetCurrentToken"
 	AgentAuth_CachedTokenExchange_FullMethodName = "/agent_auth.AgentAuth/CachedTokenExchange"
 )
 
@@ -28,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AgentAuthClient interface {
 	WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIResponse, error)
+	GetCurrentToken(ctx context.Context, in *CurrentTokenRequest, opts ...grpc.CallOption) (*CurrentTokenResponse, error)
 	CachedTokenExchange(ctx context.Context, in *TokenExchangeRequest, opts ...grpc.CallOption) (*TokenExchangeResponse, error)
 }
 
@@ -49,6 +51,16 @@ func (c *agentAuthClient) WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ..
 	return out, nil
 }
 
+func (c *agentAuthClient) GetCurrentToken(ctx context.Context, in *CurrentTokenRequest, opts ...grpc.CallOption) (*CurrentTokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CurrentTokenResponse)
+	err := c.cc.Invoke(ctx, AgentAuth_GetCurrentToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentAuthClient) CachedTokenExchange(ctx context.Context, in *TokenExchangeRequest, opts ...grpc.CallOption) (*TokenExchangeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TokenExchangeResponse)
@@ -64,6 +76,7 @@ func (c *agentAuthClient) CachedTokenExchange(ctx context.Context, in *TokenExch
 // for forward compatibility.
 type AgentAuthServer interface {
 	WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error)
+	GetCurrentToken(context.Context, *CurrentTokenRequest) (*CurrentTokenResponse, error)
 	CachedTokenExchange(context.Context, *TokenExchangeRequest) (*TokenExchangeResponse, error)
 	mustEmbedUnimplementedAgentAuthServer()
 }
@@ -77,6 +90,9 @@ type UnimplementedAgentAuthServer struct{}
 
 func (UnimplementedAgentAuthServer) WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WhoAmI not implemented")
+}
+func (UnimplementedAgentAuthServer) GetCurrentToken(context.Context, *CurrentTokenRequest) (*CurrentTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentToken not implemented")
 }
 func (UnimplementedAgentAuthServer) CachedTokenExchange(context.Context, *TokenExchangeRequest) (*TokenExchangeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CachedTokenExchange not implemented")
@@ -120,6 +136,24 @@ func _AgentAuth_WhoAmI_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentAuth_GetCurrentToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CurrentTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAuthServer).GetCurrentToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAuth_GetCurrentToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAuthServer).GetCurrentToken(ctx, req.(*CurrentTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AgentAuth_CachedTokenExchange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TokenExchangeRequest)
 	if err := dec(in); err != nil {
@@ -148,6 +182,10 @@ var AgentAuth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WhoAmI",
 			Handler:    _AgentAuth_WhoAmI_Handler,
+		},
+		{
+			MethodName: "GetCurrentToken",
+			Handler:    _AgentAuth_GetCurrentToken_Handler,
 		},
 		{
 			MethodName: "CachedTokenExchange",

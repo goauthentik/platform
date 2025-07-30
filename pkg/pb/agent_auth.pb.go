@@ -9,7 +9,6 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -21,6 +20,55 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
+
+type CurrentTokenRequest_Type int32
+
+const (
+	CurrentTokenRequest_unspecified CurrentTokenRequest_Type = 0
+	CurrentTokenRequest_verified    CurrentTokenRequest_Type = 1
+	CurrentTokenRequest_unverified  CurrentTokenRequest_Type = 2
+)
+
+// Enum value maps for CurrentTokenRequest_Type.
+var (
+	CurrentTokenRequest_Type_name = map[int32]string{
+		0: "unspecified",
+		1: "verified",
+		2: "unverified",
+	}
+	CurrentTokenRequest_Type_value = map[string]int32{
+		"unspecified": 0,
+		"verified":    1,
+		"unverified":  2,
+	}
+)
+
+func (x CurrentTokenRequest_Type) Enum() *CurrentTokenRequest_Type {
+	p := new(CurrentTokenRequest_Type)
+	*p = x
+	return p
+}
+
+func (x CurrentTokenRequest_Type) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CurrentTokenRequest_Type) Descriptor() protoreflect.EnumDescriptor {
+	return file_agent_auth_proto_enumTypes[0].Descriptor()
+}
+
+func (CurrentTokenRequest_Type) Type() protoreflect.EnumType {
+	return &file_agent_auth_proto_enumTypes[0]
+}
+
+func (x CurrentTokenRequest_Type) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CurrentTokenRequest_Type.Descriptor instead.
+func (CurrentTokenRequest_Type) EnumDescriptor() ([]byte, []int) {
+	return file_agent_auth_proto_rawDescGZIP(), []int{2, 0}
+}
 
 type WhoAmIRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -118,6 +166,110 @@ func (x *WhoAmIResponse) GetBody() string {
 	return ""
 }
 
+type CurrentTokenRequest struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Header        *RequestHeader           `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Type          CurrentTokenRequest_Type `protobuf:"varint,2,opt,name=type,proto3,enum=agent_auth.CurrentTokenRequest_Type" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CurrentTokenRequest) Reset() {
+	*x = CurrentTokenRequest{}
+	mi := &file_agent_auth_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CurrentTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CurrentTokenRequest) ProtoMessage() {}
+
+func (x *CurrentTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_auth_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CurrentTokenRequest.ProtoReflect.Descriptor instead.
+func (*CurrentTokenRequest) Descriptor() ([]byte, []int) {
+	return file_agent_auth_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CurrentTokenRequest) GetHeader() *RequestHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *CurrentTokenRequest) GetType() CurrentTokenRequest_Type {
+	if x != nil {
+		return x.Type
+	}
+	return CurrentTokenRequest_unspecified
+}
+
+type CurrentTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *ResponseHeader        `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Token         *Token                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CurrentTokenResponse) Reset() {
+	*x = CurrentTokenResponse{}
+	mi := &file_agent_auth_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CurrentTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CurrentTokenResponse) ProtoMessage() {}
+
+func (x *CurrentTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_auth_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CurrentTokenResponse.ProtoReflect.Descriptor instead.
+func (*CurrentTokenResponse) Descriptor() ([]byte, []int) {
+	return file_agent_auth_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CurrentTokenResponse) GetHeader() *ResponseHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *CurrentTokenResponse) GetToken() *Token {
+	if x != nil {
+		return x.Token
+	}
+	return nil
+}
+
 type TokenExchangeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Header        *RequestHeader         `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
@@ -128,7 +280,7 @@ type TokenExchangeRequest struct {
 
 func (x *TokenExchangeRequest) Reset() {
 	*x = TokenExchangeRequest{}
-	mi := &file_agent_auth_proto_msgTypes[2]
+	mi := &file_agent_auth_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -140,7 +292,7 @@ func (x *TokenExchangeRequest) String() string {
 func (*TokenExchangeRequest) ProtoMessage() {}
 
 func (x *TokenExchangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_auth_proto_msgTypes[2]
+	mi := &file_agent_auth_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -153,7 +305,7 @@ func (x *TokenExchangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TokenExchangeRequest.ProtoReflect.Descriptor instead.
 func (*TokenExchangeRequest) Descriptor() ([]byte, []int) {
-	return file_agent_auth_proto_rawDescGZIP(), []int{2}
+	return file_agent_auth_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *TokenExchangeRequest) GetHeader() *RequestHeader {
@@ -181,7 +333,7 @@ type TokenExchangeResponse struct {
 
 func (x *TokenExchangeResponse) Reset() {
 	*x = TokenExchangeResponse{}
-	mi := &file_agent_auth_proto_msgTypes[3]
+	mi := &file_agent_auth_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -193,7 +345,7 @@ func (x *TokenExchangeResponse) String() string {
 func (*TokenExchangeResponse) ProtoMessage() {}
 
 func (x *TokenExchangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_auth_proto_msgTypes[3]
+	mi := &file_agent_auth_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -206,7 +358,7 @@ func (x *TokenExchangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TokenExchangeResponse.ProtoReflect.Descriptor instead.
 func (*TokenExchangeResponse) Descriptor() ([]byte, []int) {
-	return file_agent_auth_proto_rawDescGZIP(), []int{3}
+	return file_agent_auth_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *TokenExchangeResponse) GetHeader() *ResponseHeader {
@@ -235,12 +387,23 @@ var File_agent_auth_proto protoreflect.FileDescriptor
 const file_agent_auth_proto_rawDesc = "" +
 	"\n" +
 	"\x10agent_auth.proto\x12\n" +
-	"agent_auth\x1a\vagent.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n" +
+	"agent_auth\x1a\vagent.proto\"=\n" +
 	"\rWhoAmIRequest\x12,\n" +
 	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\"S\n" +
 	"\x0eWhoAmIResponse\x12-\n" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12\x12\n" +
-	"\x04body\x18\x02 \x01(\tR\x04body\"a\n" +
+	"\x04body\x18\x02 \x01(\tR\x04body\"\xb4\x01\n" +
+	"\x13CurrentTokenRequest\x12,\n" +
+	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x128\n" +
+	"\x04type\x18\x02 \x01(\x0e2$.agent_auth.CurrentTokenRequest.TypeR\x04type\"5\n" +
+	"\x04Type\x12\x0f\n" +
+	"\vunspecified\x10\x00\x12\f\n" +
+	"\bverified\x10\x01\x12\x0e\n" +
+	"\n" +
+	"unverified\x10\x02\"i\n" +
+	"\x14CurrentTokenResponse\x12-\n" +
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12\"\n" +
+	"\x05token\x18\x02 \x01(\v2\f.agent.TokenR\x05token\"a\n" +
 	"\x14TokenExchangeRequest\x12,\n" +
 	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12\x1b\n" +
 	"\tclient_id\x18\x02 \x01(\tR\bclientId\"\x88\x01\n" +
@@ -248,9 +411,10 @@ const file_agent_auth_proto_rawDesc = "" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12\x1d\n" +
 	"\n" +
-	"expires_in\x18\x03 \x01(\x04R\texpiresIn2\xa8\x01\n" +
+	"expires_in\x18\x03 \x01(\x04R\texpiresIn2\xfe\x01\n" +
 	"\tAgentAuth\x12?\n" +
-	"\x06WhoAmI\x12\x19.agent_auth.WhoAmIRequest\x1a\x1a.agent_auth.WhoAmIResponse\x12Z\n" +
+	"\x06WhoAmI\x12\x19.agent_auth.WhoAmIRequest\x1a\x1a.agent_auth.WhoAmIResponse\x12T\n" +
+	"\x0fGetCurrentToken\x12\x1f.agent_auth.CurrentTokenRequest\x1a .agent_auth.CurrentTokenResponse\x12Z\n" +
 	"\x13CachedTokenExchange\x12 .agent_auth.TokenExchangeRequest\x1a!.agent_auth.TokenExchangeResponseB\bZ\x06pkg/pbb\x06proto3"
 
 var (
@@ -265,29 +429,40 @@ func file_agent_auth_proto_rawDescGZIP() []byte {
 	return file_agent_auth_proto_rawDescData
 }
 
-var file_agent_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_agent_auth_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_agent_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_agent_auth_proto_goTypes = []any{
-	(*WhoAmIRequest)(nil),         // 0: agent_auth.WhoAmIRequest
-	(*WhoAmIResponse)(nil),        // 1: agent_auth.WhoAmIResponse
-	(*TokenExchangeRequest)(nil),  // 2: agent_auth.TokenExchangeRequest
-	(*TokenExchangeResponse)(nil), // 3: agent_auth.TokenExchangeResponse
-	(*RequestHeader)(nil),         // 4: agent.RequestHeader
-	(*ResponseHeader)(nil),        // 5: agent.ResponseHeader
+	(CurrentTokenRequest_Type)(0), // 0: agent_auth.CurrentTokenRequest.Type
+	(*WhoAmIRequest)(nil),         // 1: agent_auth.WhoAmIRequest
+	(*WhoAmIResponse)(nil),        // 2: agent_auth.WhoAmIResponse
+	(*CurrentTokenRequest)(nil),   // 3: agent_auth.CurrentTokenRequest
+	(*CurrentTokenResponse)(nil),  // 4: agent_auth.CurrentTokenResponse
+	(*TokenExchangeRequest)(nil),  // 5: agent_auth.TokenExchangeRequest
+	(*TokenExchangeResponse)(nil), // 6: agent_auth.TokenExchangeResponse
+	(*RequestHeader)(nil),         // 7: agent.RequestHeader
+	(*ResponseHeader)(nil),        // 8: agent.ResponseHeader
+	(*Token)(nil),                 // 9: agent.Token
 }
 var file_agent_auth_proto_depIdxs = []int32{
-	4, // 0: agent_auth.WhoAmIRequest.header:type_name -> agent.RequestHeader
-	5, // 1: agent_auth.WhoAmIResponse.header:type_name -> agent.ResponseHeader
-	4, // 2: agent_auth.TokenExchangeRequest.header:type_name -> agent.RequestHeader
-	5, // 3: agent_auth.TokenExchangeResponse.header:type_name -> agent.ResponseHeader
-	0, // 4: agent_auth.AgentAuth.WhoAmI:input_type -> agent_auth.WhoAmIRequest
-	2, // 5: agent_auth.AgentAuth.CachedTokenExchange:input_type -> agent_auth.TokenExchangeRequest
-	1, // 6: agent_auth.AgentAuth.WhoAmI:output_type -> agent_auth.WhoAmIResponse
-	3, // 7: agent_auth.AgentAuth.CachedTokenExchange:output_type -> agent_auth.TokenExchangeResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	7,  // 0: agent_auth.WhoAmIRequest.header:type_name -> agent.RequestHeader
+	8,  // 1: agent_auth.WhoAmIResponse.header:type_name -> agent.ResponseHeader
+	7,  // 2: agent_auth.CurrentTokenRequest.header:type_name -> agent.RequestHeader
+	0,  // 3: agent_auth.CurrentTokenRequest.type:type_name -> agent_auth.CurrentTokenRequest.Type
+	8,  // 4: agent_auth.CurrentTokenResponse.header:type_name -> agent.ResponseHeader
+	9,  // 5: agent_auth.CurrentTokenResponse.token:type_name -> agent.Token
+	7,  // 6: agent_auth.TokenExchangeRequest.header:type_name -> agent.RequestHeader
+	8,  // 7: agent_auth.TokenExchangeResponse.header:type_name -> agent.ResponseHeader
+	1,  // 8: agent_auth.AgentAuth.WhoAmI:input_type -> agent_auth.WhoAmIRequest
+	3,  // 9: agent_auth.AgentAuth.GetCurrentToken:input_type -> agent_auth.CurrentTokenRequest
+	5,  // 10: agent_auth.AgentAuth.CachedTokenExchange:input_type -> agent_auth.TokenExchangeRequest
+	2,  // 11: agent_auth.AgentAuth.WhoAmI:output_type -> agent_auth.WhoAmIResponse
+	4,  // 12: agent_auth.AgentAuth.GetCurrentToken:output_type -> agent_auth.CurrentTokenResponse
+	6,  // 13: agent_auth.AgentAuth.CachedTokenExchange:output_type -> agent_auth.TokenExchangeResponse
+	11, // [11:14] is the sub-list for method output_type
+	8,  // [8:11] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_agent_auth_proto_init() }
@@ -301,13 +476,14 @@ func file_agent_auth_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_auth_proto_rawDesc), len(file_agent_auth_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   4,
+			NumEnums:      1,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_agent_auth_proto_goTypes,
 		DependencyIndexes: file_agent_auth_proto_depIdxs,
+		EnumInfos:         file_agent_auth_proto_enumTypes,
 		MessageInfos:      file_agent_auth_proto_msgTypes,
 	}.Build()
 	File_agent_auth_proto = out.File
