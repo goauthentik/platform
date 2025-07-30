@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -17,8 +18,12 @@ var sessionStatusCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		sessId, ok := os.LookupEnv("AUTHENTIK_SESSION_ID")
+		if !ok {
+			return errors.New("current session is not an authentik session")
+		}
 		res, err := client.SessionStatus(cmd.Context(), &pb.SessionStatusRequest{
-			SessionId: os.Getenv("AUTHENTIK_SESSION_ID"),
+			SessionId: sessId,
 		})
 		if err != nil {
 			return err
