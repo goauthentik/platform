@@ -98,6 +98,7 @@ name = "authentik_pam"
 version = "0.1.0"
 dependencies = [
  "authentik-client",
+ "authentik_sys",
  "ctor",
  "hex",
  "jsonwebtoken",
@@ -111,10 +112,23 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "serde_yaml",
  "sha2",
- "syslog",
  "tokio",
+ "tonic",
+ "tower 0.5.2",
+]
+
+[[package]]
+name = "authentik_sys"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "log",
+ "prost",
+ "prost-types",
+ "serde",
+ "serde_yaml",
+ "syslog",
  "tonic",
  "tower 0.5.2",
 ]

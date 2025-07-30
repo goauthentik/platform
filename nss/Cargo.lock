@@ -66,6 +66,7 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 name = "authentik_nss"
 version = "0.1.0"
 dependencies = [
+ "authentik_sys",
  "ctor",
  "hex",
  "jsonwebtoken",
@@ -77,12 +78,24 @@ dependencies = [
  "prost-types",
  "rand 0.9.2",
  "reqwest",
- "serde",
  "serde_json",
- "serde_yaml",
  "sha2",
- "syslog",
  "tokio",
+ "tonic",
+ "tower 0.5.2",
+]
+
+[[package]]
+name = "authentik_sys"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "log",
+ "prost",
+ "prost-types",
+ "serde",
+ "serde_yaml",
+ "syslog",
  "tonic",
  "tower 0.5.2",
 ]
