@@ -24,22 +24,22 @@ const (
 type CurrentTokenRequest_Type int32
 
 const (
-	CurrentTokenRequest_unspecified CurrentTokenRequest_Type = 0
-	CurrentTokenRequest_verified    CurrentTokenRequest_Type = 1
-	CurrentTokenRequest_unverified  CurrentTokenRequest_Type = 2
+	CurrentTokenRequest_UNSPECIFIED CurrentTokenRequest_Type = 0
+	CurrentTokenRequest_VERIFIED    CurrentTokenRequest_Type = 1
+	CurrentTokenRequest_UNVERIFIED  CurrentTokenRequest_Type = 2
 )
 
 // Enum value maps for CurrentTokenRequest_Type.
 var (
 	CurrentTokenRequest_Type_name = map[int32]string{
-		0: "unspecified",
-		1: "verified",
-		2: "unverified",
+		0: "UNSPECIFIED",
+		1: "VERIFIED",
+		2: "UNVERIFIED",
 	}
 	CurrentTokenRequest_Type_value = map[string]int32{
-		"unspecified": 0,
-		"verified":    1,
-		"unverified":  2,
+		"UNSPECIFIED": 0,
+		"VERIFIED":    1,
+		"UNVERIFIED":  2,
 	}
 )
 
@@ -215,7 +215,7 @@ func (x *CurrentTokenRequest) GetType() CurrentTokenRequest_Type {
 	if x != nil {
 		return x.Type
 	}
-	return CurrentTokenRequest_unspecified
+	return CurrentTokenRequest_UNSPECIFIED
 }
 
 type CurrentTokenResponse struct {
@@ -397,10 +397,10 @@ const file_agent_auth_proto_rawDesc = "" +
 	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x128\n" +
 	"\x04type\x18\x02 \x01(\x0e2$.agent_auth.CurrentTokenRequest.TypeR\x04type\"5\n" +
 	"\x04Type\x12\x0f\n" +
-	"\vunspecified\x10\x00\x12\f\n" +
-	"\bverified\x10\x01\x12\x0e\n" +
+	"\vUNSPECIFIED\x10\x00\x12\f\n" +
+	"\bVERIFIED\x10\x01\x12\x0e\n" +
 	"\n" +
-	"unverified\x10\x02\"i\n" +
+	"UNVERIFIED\x10\x02\"i\n" +
 	"\x14CurrentTokenResponse\x12-\n" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12\"\n" +
 	"\x05token\x18\x02 \x01(\v2\f.agent.TokenR\x05token\"a\n" +

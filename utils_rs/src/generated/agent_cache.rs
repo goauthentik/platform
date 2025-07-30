@@ -37,9 +37,10 @@ pub struct CacheSetResponse {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum CacheStatus {
-    Valid = 0,
-    NotFound = 1,
-    Expired = 2,
+    Unspecified = 0,
+    Valid = 1,
+    NotFound = 2,
+    Expired = 3,
 }
 impl CacheStatus {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -48,6 +49,7 @@ impl CacheStatus {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
+            Self::Unspecified => "UNSPECIFIED",
             Self::Valid => "VALID",
             Self::NotFound => "NOT_FOUND",
             Self::Expired => "EXPIRED",
@@ -56,6 +58,7 @@ impl CacheStatus {
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
+            "UNSPECIFIED" => Some(Self::Unspecified),
             "VALID" => Some(Self::Valid),
             "NOT_FOUND" => Some(Self::NotFound),
             "EXPIRED" => Some(Self::Expired),

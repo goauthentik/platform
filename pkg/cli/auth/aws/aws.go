@@ -60,7 +60,7 @@ func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts)
 		Header: &pb.RequestHeader{
 			Profile: opts.Profile,
 		},
-		Type: pb.CurrentTokenRequest_verified,
+		Type: pb.CurrentTokenRequest_VERIFIED,
 	})
 	if err != nil {
 		log.WithError(err).Fatal("failed to get current token")

@@ -23,9 +23,9 @@ message WhoAmIResponse {
 message CurrentTokenRequest {
   agent.RequestHeader header = 1;
   enum Type {
-    unspecified = 0;
-    verified = 1;
-    unverified = 2;
+    UNSPECIFIED = 0;
+    VERIFIED = 1;
+    UNVERIFIED = 2;
   }
   Type type = 2;
 }

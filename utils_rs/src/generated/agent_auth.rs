@@ -35,17 +35,17 @@ pub mod current_token_request {
         /// (if the ProtoBuf definition does not change) and safe for programmatic use.
         pub fn as_str_name(&self) -> &'static str {
             match self {
-                Self::Unspecified => "unspecified",
-                Self::Verified => "verified",
-                Self::Unverified => "unverified",
+                Self::Unspecified => "UNSPECIFIED",
+                Self::Verified => "VERIFIED",
+                Self::Unverified => "UNVERIFIED",
             }
         }
         /// Creates an enum from field names used in the ProtoBuf definition.
         pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
             match value {
-                "unspecified" => Some(Self::Unspecified),
-                "verified" => Some(Self::Verified),
-                "unverified" => Some(Self::Unverified),
+                "UNSPECIFIED" => Some(Self::Unspecified),
+                "VERIFIED" => Some(Self::Verified),
+                "UNVERIFIED" => Some(Self::Unverified),
                 _ => None,
             }
         }

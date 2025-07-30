@@ -49,11 +49,11 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 	}
 	var token token.Token
 	switch req.Type {
-	case pb.CurrentTokenRequest_unverified:
+	case pb.CurrentTokenRequest_UNVERIFIED:
 		token = pfm.Unverified()
-	case pb.CurrentTokenRequest_verified:
+	case pb.CurrentTokenRequest_VERIFIED:
 		token = pfm.Token()
-	case pb.CurrentTokenRequest_unspecified:
+	case pb.CurrentTokenRequest_UNSPECIFIED:
 		return nil, fmt.Errorf("unsupported token type: %s", req.Type)
 	}
 	return &pb.CurrentTokenResponse{
