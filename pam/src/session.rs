@@ -30,7 +30,13 @@ pub fn open_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_default().expect("Failed to load config");
+    let config = match Config::from_default() {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("Failed to load config: {e}");
+            return PamResultCode::PAM_IGNORE;
+        }
+    };
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
@@ -47,10 +53,6 @@ pub fn open_session_impl(
         _delete_session_data(sid.to_owned()),
         "failed to delete session data"
     );
-
-    if !config.pam.terminate_on_expiry {
-        sd.expiry = -1;
-    }
 
     let request = tonic::Request::new(RegisterSessionRequest {
         session_id: sid,
@@ -102,7 +104,13 @@ pub fn close_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_default().expect("Failed to load config");
+    let config = match Config::from_default() {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("Failed to load config: {e}");
+            return PamResultCode::PAM_IGNORE;
+        }
+    };
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,

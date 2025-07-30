@@ -13,7 +13,11 @@ type Config struct {
 	Token        string `yaml:"token"`
 	Debug        bool   `yaml:"debug"`
 	Socket       string `yaml:"socket"`
-	NSS          struct {
+	PAM          struct {
+		AuthenticationFlow string `yaml:"authentication_flow"`
+		TerminateOnExpiry  bool   `yaml:"terminate_on_expiry"`
+	} `yaml:"pam" `
+	NSS struct {
 		UIDOffset          int32 `yaml:"uid_offset"`
 		GIDOffset          int32 `yaml:"gid_offset"`
 		RefreshIntervalSec int64 `yaml:"refresh_interval_sec"`

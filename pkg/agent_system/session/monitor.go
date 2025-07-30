@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -123,6 +124,10 @@ func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRe
 		PPID:        req.Ppid,
 		CreatedAt:   time.Now(),
 		LocalSocket: req.LocalSocket,
+	}
+
+	if config.Get().PAM.TerminateOnExpiry {
+		session.ExpiresAt = time.Unix(-1, 0)
 	}
 
 	m.AddSession(session)

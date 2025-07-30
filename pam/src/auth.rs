@@ -28,7 +28,13 @@ pub fn authenticate_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_default().expect("Failed to load config");
+    let config = match Config::from_default() {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("Failed to load config: {e}");
+            return PamResultCode::PAM_IGNORE;
+        }
+    };
 
     let username = match pamh.get_item::<User>() {
         Ok(u) => match u {
