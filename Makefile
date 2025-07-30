@@ -21,6 +21,11 @@ gen-proto:
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
 
+lint:
+	cargo fmt --all
+	cargo clippy --all
+	golangci-lint run
+
 test-agent:
 	go run -v ./cmd/agent_local/
 
