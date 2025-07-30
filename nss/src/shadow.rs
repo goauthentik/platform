@@ -5,6 +5,7 @@ use tokio::runtime::Runtime;
 use crate::config::Config;
 use crate::generated::create_grpc_client;
 use crate::generated::nss::{Empty, GetRequest};
+use crate::grpc_status_to_nss_response;
 use crate::logger::log_hook;
 
 pub struct AuthentikShadowHooks;
@@ -54,7 +55,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
             }
             Err(e) => {
                 log::warn!("failed to send GRPC request: {}", e);
-                return Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
     })
@@ -91,7 +92,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
             Ok(r) => Response::Success(shadow_entry(r.into_inner().name)),
             Err(e) => {
                 log::info!("error when getting user by name '{}': {}", name, e.code());
-                Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
     })

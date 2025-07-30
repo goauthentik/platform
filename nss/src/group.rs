@@ -7,6 +7,7 @@ use crate::config::Config;
 use crate::generated::create_grpc_client;
 use crate::generated::nss::Group as AKGroup;
 use crate::generated::nss::{Empty, GetRequest};
+use crate::grpc_status_to_nss_response;
 use crate::logger::log_hook;
 
 pub struct AuthentikGroupHooks;
@@ -62,7 +63,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
             }
             Err(e) => {
                 log::info!("error when listing groups: {}", e.code());
-                Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
     })
@@ -97,7 +98,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
             Ok(r) => Response::Success(ak_group_to_group_entry(r.into_inner())),
             Err(e) => {
                 log::info!("error when getting group by ID '{}': {}", gid, e.code());
-                Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
     })
@@ -137,7 +138,7 @@ fn get_entry_by_name(name: String) -> Response<Group> {
                     name,
                     e.code().description()
                 );
-                Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
     })

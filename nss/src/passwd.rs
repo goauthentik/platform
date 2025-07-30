@@ -6,6 +6,7 @@ use tokio::runtime::Runtime;
 use crate::config::Config;
 use crate::generated::create_grpc_client;
 use crate::generated::nss::{Empty, GetRequest, User};
+use crate::grpc_status_to_nss_response;
 use crate::logger::log_hook;
 
 pub struct AuthentikPasswdHooks;
@@ -60,7 +61,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
             }
             Err(e) => {
                 log::warn!("failed to send GRPC request: {}", e);
-                Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
     })
@@ -95,7 +96,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
             Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
             Err(e) => {
                 log::warn!("failed to send GRPC request: {}", e);
-                Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
     })
@@ -136,10 +137,10 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
             Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
             Err(e) => {
                 log::info!("error when getting user by name '{}': {}", name, e.code());
-                Response::Unavail
+                grpc_status_to_nss_response(e)
             }
         }
-    })
+    });
 }
 
 fn user_to_passwd_entry(entry: User) -> Passwd {
@@ -153,5 +154,5 @@ fn user_to_passwd_entry(entry: User) -> Passwd {
         shell: entry.shell,
     };
     log::trace!("user: '{}' {}:{}", e.name, e.uid, e.gid);
-    return e
+    return e;
 }
