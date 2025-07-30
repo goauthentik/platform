@@ -1,37 +1,32 @@
+use authentik_sys::config::Config;
+use authentik_sys::generated::nss::{GetRequest, Group as AKGroup};
+use authentik_sys::logger::log_hook;
 use libc::gid_t;
 use libnss::group::{Group, GroupHooks};
 use libnss::interop::Response;
 use tokio::runtime::Runtime;
 
-use crate::config::Config;
 use crate::generated::create_grpc_client;
-use crate::generated::nss::Group as AKGroup;
-use crate::generated::nss::{Empty, GetRequest};
 use crate::grpc_status_to_nss_response;
-use crate::logger::log_hook;
 
 pub struct AuthentikGroupHooks;
 impl GroupHooks for AuthentikGroupHooks {
-    /// get_all_entries returns all group entries.
     fn get_all_entries() -> Response<Vec<Group>> {
-        log_hook("group@get_all_entries");
+        log_hook("group::get_all_entries");
         get_all_entries()
     }
 
-    /// get_entry_by_gid returns the group entry for the given gid.
     fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
-        log_hook("group@get_entry_by_gid");
+        log_hook("group::get_entry_by_gid");
         get_entry_by_gid(gid)
     }
 
-    /// get_entry_by_name returns the group entry for the given name.
     fn get_entry_by_name(name: String) -> Response<Group> {
-        log_hook("group@get_entry_by_name");
+        log_hook("group::get_entry_by_name");
         get_entry_by_name(name)
     }
 }
 
-/// get_all_entries connects to the grpc server and asks for all group entries.
 fn get_all_entries() -> Response<Vec<Group>> {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
@@ -51,7 +46,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
                 return Response::Unavail;
             }
         };
-        match client.list_groups(Empty {}).await {
+        match client.list_groups(()).await {
             Ok(r) => {
                 let groups = r
                     .into_inner()
@@ -69,7 +64,6 @@ fn get_all_entries() -> Response<Vec<Group>> {
     })
 }
 
-/// get_entry_by_gid connects to the grpc server and asks for the group entry with the given gid.
 fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
@@ -104,7 +98,6 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
     })
 }
 
-/// get_entry_by_name connects to the grpc server and asks for the group entry with the given name.
 fn get_entry_by_name(name: String) -> Response<Group> {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 

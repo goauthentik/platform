@@ -8,9 +8,10 @@ import (
 	"goauthentik.io/cli/pkg/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (nss *Server) ListUsers(ctx context.Context, req *pb.Empty) (*pb.Users, error) {
+func (nss *Server) ListUsers(ctx context.Context, req *emptypb.Empty) (*pb.Users, error) {
 	res := &pb.Users{Users: []*pb.User{}}
 	for _, u := range nss.users {
 		res.Users = append(res.Users, nss.convertUser(u))

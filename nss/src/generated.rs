@@ -1,14 +1,11 @@
-use crate::{config::Config, generated::nss::nss_client::NssClient};
+use std::error::Error;
+
+use authentik_sys::{config::Config, generated::nss::nss_client::NssClient};
 use tokio::net::UnixStream;
 use tonic::transport::{Channel, Endpoint, Uri};
 use tower::service_fn;
 
-pub mod nss;
-pub mod pam;
-
-pub async fn create_grpc_client(
-    config: Config,
-) -> Result<NssClient<Channel>, Box<dyn std::error::Error>> {
+pub async fn create_grpc_client(config: Config) -> Result<NssClient<Channel>, Box<dyn Error>> {
     log::info!("creating grpc client");
     let path = config.socket.to_owned();
     let channel = Endpoint::try_from("http://[::]:50051")?

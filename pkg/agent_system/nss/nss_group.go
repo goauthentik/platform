@@ -7,9 +7,10 @@ import (
 	"goauthentik.io/cli/pkg/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (nss *Server) ListGroups(ctx context.Context, req *pb.Empty) (*pb.Groups, error) {
+func (nss *Server) ListGroups(ctx context.Context, req *emptypb.Empty) (*pb.Groups, error) {
 	res := &pb.Groups{Groups: []*pb.Group{}}
 	for _, u := range nss.users {
 		res.Groups = append(res.Groups, nss.convertUserToGroup(u))

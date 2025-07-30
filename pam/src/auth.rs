@@ -1,3 +1,4 @@
+use authentik_sys::config::Config;
 use pam::{
     constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
     conv::Conv,
@@ -12,7 +13,6 @@ use crate::{
         interactive::auth_interactive,
         token::{auth_token, decode_token},
     },
-    config::Config,
     pam_env::pam_put_env,
     pam_try_log,
     session::{_generate_id, _write_session_data, SessionData, hash_token},

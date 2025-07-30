@@ -1,36 +1,32 @@
+use authentik_sys::config::Config;
+use authentik_sys::generated::nss::{GetRequest, User};
+use authentik_sys::logger::log_hook;
 use libc::uid_t;
 use libnss::interop::Response;
 use libnss::passwd::{Passwd, PasswdHooks};
 use tokio::runtime::Runtime;
 
-use crate::config::Config;
 use crate::generated::create_grpc_client;
-use crate::generated::nss::{Empty, GetRequest, User};
 use crate::grpc_status_to_nss_response;
-use crate::logger::log_hook;
 
 pub struct AuthentikPasswdHooks;
 impl PasswdHooks for AuthentikPasswdHooks {
-    /// get_all_entries returns all passwd entries.
     fn get_all_entries() -> Response<Vec<Passwd>> {
-        log_hook("passwd@get_all_entries");
+        log_hook("passwd::get_all_entries");
         get_all_entries()
     }
 
-    /// get_entry_by_uid returns the passwd entry for the given uid.
     fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
-        log_hook("passwd@get_entry_by_uid");
+        log_hook("passwd::get_entry_by_uid");
         get_entry_by_uid(uid)
     }
 
-    /// get_entry_by_name returns the passwd entry for the given name.
     fn get_entry_by_name(name: String) -> Response<Passwd> {
-        log_hook("passwd@get_entry_by_name");
+        log_hook("passwd::get_entry_by_name");
         get_entry_by_name(name)
     }
 }
 
-/// get_all_entries connects to the grpc server and asks for all passwd entries.
 fn get_all_entries() -> Response<Vec<Passwd>> {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
@@ -49,7 +45,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
                 return Response::Unavail;
             }
         };
-        match client.list_users(Empty {}).await {
+        match client.list_users(()).await {
             Ok(r) => {
                 let users: Vec<Passwd> = r
                     .into_inner()
@@ -67,7 +63,6 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
     })
 }
 
-/// get_entry_by_uid connects to the grpc server and asks for the passwd entry with the given uid.
 fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 
@@ -102,7 +97,6 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
     })
 }
 
-/// get_entry_by_name connects to the grpc server and asks for the passwd entry with the given name.
 fn get_entry_by_name(name: String) -> Response<Passwd> {
     let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
 

@@ -1,11 +1,9 @@
-mod config;
 mod generated;
 mod group;
-mod logger;
 mod passwd;
 mod shadow;
 
-use crate::logger::{init_log, log_hook};
+use authentik_sys::logger::{init_log, log_hook};
 use ctor::{ctor, dtor};
 use group::AuthentikGroupHooks;
 use libnss::{interop::Response, libnss_group_hooks, libnss_passwd_hooks, libnss_shadow_hooks};
@@ -19,7 +17,7 @@ libnss_group_hooks!(authentik, AuthentikGroupHooks);
 
 #[ctor]
 fn ctor() {
-    init_log();
+    init_log("libnss-authentik");
     log_hook("ctor");
 }
 

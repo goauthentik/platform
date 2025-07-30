@@ -8,8 +8,9 @@ all: clean gen
 clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
-gen: gen-proto pam/gen nss/gen
+gen: gen-proto
 	go generate ./...
+	$(MAKE) -C utils_rs gen
 
 gen-proto:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest

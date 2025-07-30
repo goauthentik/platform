@@ -3,11 +3,11 @@ use log::LevelFilter;
 use syslog::BasicLogger;
 use syslog::{Facility, Formatter3164};
 
-pub fn init_log() {
+pub fn init_log(name: &str) {
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
         hostname: None,
-        process: "libnss-authentik".into(),
+        process: name.into(),
         pid: std::process::id(),
     };
     let logger = match syslog::unix(formatter) {
@@ -29,7 +29,5 @@ pub fn log_hook(name: &str) {
     let gid = unsafe { getgid() };
     let euid = unsafe { geteuid() };
     let egid = unsafe { getegid() };
-    log::debug!(
-        "{name}, pid: {pid}, ppid: {ppid}, uid/gid: {uid}:{gid}, euid/egid: {euid}:{egid}"
-    );
+    log::debug!("{name}, pid: {pid}, ppid: {ppid}, uid/gid: {uid}:{gid}, euid/egid: {euid}:{egid}");
 }

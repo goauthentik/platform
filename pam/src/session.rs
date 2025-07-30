@@ -1,10 +1,10 @@
 extern crate pam;
 
-use crate::config::Config;
 use crate::generated::create_grpc_client;
-use crate::generated::pam_session::{CloseSessionRequest, RegisterSessionRequest};
 use crate::pam_env::pam_get_env;
 use crate::{DATA_CLIENT, ENV_SESSION_ID, pam_try_log};
+use authentik_sys::config::Config;
+use authentik_sys::generated::pam_session::{CloseSessionRequest, RegisterSessionRequest};
 use pam::constants::PamFlag;
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;

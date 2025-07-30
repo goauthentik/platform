@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "nss",
+    "pam",
+    "utils_rs",
+]
+resolver = "3"
+
+[workspace.dependencies]

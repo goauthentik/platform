@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -21,42 +22,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Empty struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Empty) Reset() {
-	*x = Empty{}
-	mi := &file_nss_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Empty) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Empty) ProtoMessage() {}
-
-func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_nss_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
-func (*Empty) Descriptor() ([]byte, []int) {
-	return file_nss_proto_rawDescGZIP(), []int{0}
-}
-
 type GetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            *uint32                `protobuf:"varint,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
@@ -67,7 +32,7 @@ type GetRequest struct {
 
 func (x *GetRequest) Reset() {
 	*x = GetRequest{}
-	mi := &file_nss_proto_msgTypes[1]
+	mi := &file_nss_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -79,7 +44,7 @@ func (x *GetRequest) String() string {
 func (*GetRequest) ProtoMessage() {}
 
 func (x *GetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_nss_proto_msgTypes[1]
+	mi := &file_nss_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -92,7 +57,7 @@ func (x *GetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
 func (*GetRequest) Descriptor() ([]byte, []int) {
-	return file_nss_proto_rawDescGZIP(), []int{1}
+	return file_nss_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *GetRequest) GetId() uint32 {
@@ -118,7 +83,7 @@ type Users struct {
 
 func (x *Users) Reset() {
 	*x = Users{}
-	mi := &file_nss_proto_msgTypes[2]
+	mi := &file_nss_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -130,7 +95,7 @@ func (x *Users) String() string {
 func (*Users) ProtoMessage() {}
 
 func (x *Users) ProtoReflect() protoreflect.Message {
-	mi := &file_nss_proto_msgTypes[2]
+	mi := &file_nss_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -143,7 +108,7 @@ func (x *Users) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Users.ProtoReflect.Descriptor instead.
 func (*Users) Descriptor() ([]byte, []int) {
-	return file_nss_proto_rawDescGZIP(), []int{2}
+	return file_nss_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Users) GetUsers() []*User {
@@ -167,7 +132,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_nss_proto_msgTypes[3]
+	mi := &file_nss_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -179,7 +144,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_nss_proto_msgTypes[3]
+	mi := &file_nss_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -192,7 +157,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_nss_proto_rawDescGZIP(), []int{3}
+	return file_nss_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *User) GetName() string {
@@ -246,7 +211,7 @@ type Groups struct {
 
 func (x *Groups) Reset() {
 	*x = Groups{}
-	mi := &file_nss_proto_msgTypes[4]
+	mi := &file_nss_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -258,7 +223,7 @@ func (x *Groups) String() string {
 func (*Groups) ProtoMessage() {}
 
 func (x *Groups) ProtoReflect() protoreflect.Message {
-	mi := &file_nss_proto_msgTypes[4]
+	mi := &file_nss_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -271,7 +236,7 @@ func (x *Groups) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Groups.ProtoReflect.Descriptor instead.
 func (*Groups) Descriptor() ([]byte, []int) {
-	return file_nss_proto_rawDescGZIP(), []int{4}
+	return file_nss_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Groups) GetGroups() []*Group {
@@ -293,7 +258,7 @@ type Group struct {
 
 func (x *Group) Reset() {
 	*x = Group{}
-	mi := &file_nss_proto_msgTypes[5]
+	mi := &file_nss_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -305,7 +270,7 @@ func (x *Group) String() string {
 func (*Group) ProtoMessage() {}
 
 func (x *Group) ProtoReflect() protoreflect.Message {
-	mi := &file_nss_proto_msgTypes[5]
+	mi := &file_nss_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -318,7 +283,7 @@ func (x *Group) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Group.ProtoReflect.Descriptor instead.
 func (*Group) Descriptor() ([]byte, []int) {
-	return file_nss_proto_rawDescGZIP(), []int{5}
+	return file_nss_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Group) GetName() string {
@@ -353,8 +318,7 @@ var File_nss_proto protoreflect.FileDescriptor
 
 const file_nss_proto_rawDesc = "" +
 	"\n" +
-	"\tnss.proto\x12\x03nss\"\a\n" +
-	"\x05Empty\"J\n" +
+	"\tnss.proto\x12\x03nss\x1a\x1bgoogle/protobuf/empty.proto\"J\n" +
 	"\n" +
 	"GetRequest\x12\x13\n" +
 	"\x02id\x18\x01 \x01(\rH\x00R\x02id\x88\x01\x01\x12\x17\n" +
@@ -377,15 +341,13 @@ const file_nss_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
 	"\x03gid\x18\x02 \x01(\rR\x03gid\x12\x18\n" +
 	"\amembers\x18\x03 \x03(\tR\amembers\x12\x16\n" +
-	"\x06passwd\x18\x04 \x01(\tR\x06passwd2\xa1\x01\n" +
-	"\x03NSS\x12#\n" +
-	"\tListUsers\x12\n" +
-	".nss.Empty\x1a\n" +
+	"\x06passwd\x18\x04 \x01(\tR\x06passwd2\xb9\x01\n" +
+	"\x03NSS\x12/\n" +
+	"\tListUsers\x12\x16.google.protobuf.Empty\x1a\n" +
 	".nss.Users\x12%\n" +
-	"\aGetUser\x12\x0f.nss.GetRequest\x1a\t.nss.User\x12%\n" +
+	"\aGetUser\x12\x0f.nss.GetRequest\x1a\t.nss.User\x121\n" +
 	"\n" +
-	"ListGroups\x12\n" +
-	".nss.Empty\x1a\v.nss.Groups\x12'\n" +
+	"ListGroups\x12\x16.google.protobuf.Empty\x1a\v.nss.Groups\x12'\n" +
 	"\bGetGroup\x12\x0f.nss.GetRequest\x1a\n" +
 	".nss.GroupB\bZ\x06pkg/pbb\x06proto3"
 
@@ -401,26 +363,26 @@ func file_nss_proto_rawDescGZIP() []byte {
 	return file_nss_proto_rawDescData
 }
 
-var file_nss_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_nss_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_nss_proto_goTypes = []any{
-	(*Empty)(nil),      // 0: nss.Empty
-	(*GetRequest)(nil), // 1: nss.GetRequest
-	(*Users)(nil),      // 2: nss.Users
-	(*User)(nil),       // 3: nss.User
-	(*Groups)(nil),     // 4: nss.Groups
-	(*Group)(nil),      // 5: nss.Group
+	(*GetRequest)(nil),    // 0: nss.GetRequest
+	(*Users)(nil),         // 1: nss.Users
+	(*User)(nil),          // 2: nss.User
+	(*Groups)(nil),        // 3: nss.Groups
+	(*Group)(nil),         // 4: nss.Group
+	(*emptypb.Empty)(nil), // 5: google.protobuf.Empty
 }
 var file_nss_proto_depIdxs = []int32{
-	3, // 0: nss.Users.users:type_name -> nss.User
-	5, // 1: nss.Groups.groups:type_name -> nss.Group
-	0, // 2: nss.NSS.ListUsers:input_type -> nss.Empty
-	1, // 3: nss.NSS.GetUser:input_type -> nss.GetRequest
-	0, // 4: nss.NSS.ListGroups:input_type -> nss.Empty
-	1, // 5: nss.NSS.GetGroup:input_type -> nss.GetRequest
-	2, // 6: nss.NSS.ListUsers:output_type -> nss.Users
-	3, // 7: nss.NSS.GetUser:output_type -> nss.User
-	4, // 8: nss.NSS.ListGroups:output_type -> nss.Groups
-	5, // 9: nss.NSS.GetGroup:output_type -> nss.Group
+	2, // 0: nss.Users.users:type_name -> nss.User
+	4, // 1: nss.Groups.groups:type_name -> nss.Group
+	5, // 2: nss.NSS.ListUsers:input_type -> google.protobuf.Empty
+	0, // 3: nss.NSS.GetUser:input_type -> nss.GetRequest
+	5, // 4: nss.NSS.ListGroups:input_type -> google.protobuf.Empty
+	0, // 5: nss.NSS.GetGroup:input_type -> nss.GetRequest
+	1, // 6: nss.NSS.ListUsers:output_type -> nss.Users
+	2, // 7: nss.NSS.GetUser:output_type -> nss.User
+	3, // 8: nss.NSS.ListGroups:output_type -> nss.Groups
+	4, // 9: nss.NSS.GetGroup:output_type -> nss.Group
 	6, // [6:10] is the sub-list for method output_type
 	2, // [2:6] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -433,14 +395,14 @@ func file_nss_proto_init() {
 	if File_nss_proto != nil {
 		return
 	}
-	file_nss_proto_msgTypes[1].OneofWrappers = []any{}
+	file_nss_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_nss_proto_rawDesc), len(file_nss_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
