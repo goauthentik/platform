@@ -37,7 +37,7 @@ license-file = ["../LICENSE", "4"]
 depends = [
     "libc6",
 	"libssl3 | libssl3t64",
-    "authentik-sys-agent",
+    "authentik-sysd",
     "libpam0g",
 ]
 section = "security"
