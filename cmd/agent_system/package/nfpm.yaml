@@ -20,5 +20,4 @@ contents:
     dst: /etc/authentik/host.yaml.dist
     type: config
   - src: ../../bin/agent_system/completions/agent_system.bash
-    dst: /etc/bash_completion.d/
-    type: config
+    dst: /etc/bash_completion.d/ak-sys

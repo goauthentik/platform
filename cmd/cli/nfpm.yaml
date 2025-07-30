@@ -10,3 +10,5 @@ license: "MIT"
 contents:
   - src: ../../bin/cli/ak
     dst: /usr/bin/ak
+  - src: ../../bin/cli/completions/cli.bash
+    dst: /etc/bash_completion.d/ak-cli
