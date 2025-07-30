@@ -28,7 +28,7 @@ impl PasswdHooks for AuthentikPasswdHooks {
 }
 
 fn get_all_entries() -> Response<Vec<Passwd>> {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::from_default().expect("Failed to load config");
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,
@@ -64,7 +64,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
 }
 
 fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::from_default().expect("Failed to load config");
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,
@@ -98,7 +98,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
 }
 
 fn get_entry_by_name(name: String) -> Response<Passwd> {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::from_default().expect("Failed to load config");
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,

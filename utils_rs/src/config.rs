@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{error::Error, fs};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PAMConfig {
@@ -17,7 +17,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn from_default() -> Result<Self, Box<dyn Error>> {
+        return Config::from_file("/etc/authentik/host.yaml")
+    }
+
+    pub fn from_file(path: &str) -> Result<Self, Box<dyn Error>> {
         let content = fs::read_to_string(path)?;
         let config: Config = serde_yaml::from_str(&content)?;
         Ok(config)

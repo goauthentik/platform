@@ -30,7 +30,7 @@ pub fn open_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::from_default().expect("Failed to load config");
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
@@ -102,7 +102,7 @@ pub fn close_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::from_default().expect("Failed to load config");
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
