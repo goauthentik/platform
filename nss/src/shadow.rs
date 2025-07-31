@@ -22,7 +22,7 @@ impl ShadowHooks for AuthentikShadowHooks {
 }
 
 fn get_all_entries() -> Response<Vec<Shadow>> {
-    let config = Config::from_default().expect("Failed to load config");
+    let config = Config::default();
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,
@@ -59,7 +59,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
 }
 
 fn get_entry_by_name(name: String) -> Response<Shadow> {
-    let config = Config::from_default().expect("Failed to load config");
+    let config = Config::default();
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,

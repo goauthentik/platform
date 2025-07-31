@@ -2,9 +2,9 @@ extern crate jwks;
 extern crate pam;
 extern crate reqwest;
 
-use base64::{prelude::BASE64_STANDARD, Engine};
 use ::prost::Message;
 use authentik_sys::{config::Config, generated::pam::PamAuthentication};
+use base64::{Engine, prelude::BASE64_STANDARD};
 use jsonwebtoken::{TokenData, Validation, decode, decode_header};
 use jwks::Jwks;
 use pam::constants::PamResultCode;

@@ -30,13 +30,7 @@ pub fn open_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = match Config::from_default() {
-        Ok(c) => c,
-        Err(e) => {
-            log::warn!("Failed to load config: {e}");
-            return PamResultCode::PAM_IGNORE;
-        }
-    };
+    let config = Config::default();
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
@@ -104,13 +98,7 @@ pub fn close_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = match Config::from_default() {
-        Ok(c) => c,
-        Err(e) => {
-            log::warn!("Failed to load config: {e}");
-            return PamResultCode::PAM_IGNORE;
-        }
-    };
+    let config = Config::default();
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
