@@ -10,7 +10,6 @@ extern crate reqwest;
 use crate::auth::authenticate_impl;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
-use authentik_sys::config::Config;
 use authentik_sys::logger::init_log;
 use authentik_sys::logger::log_hook;
 use ctor::{ctor, dtor};

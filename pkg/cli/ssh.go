@@ -135,7 +135,7 @@ var sshCmd = &cobra.Command{
 		}
 		defer func() {
 			err := client.Close()
-			if err != nil {
+			if err != nil && !errors.Is(err, net.ErrClosed) {
 				log.WithError(err).Warning("Failed to close client")
 			}
 		}()
