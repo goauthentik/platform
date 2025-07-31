@@ -13,7 +13,7 @@ test:
 
 package:
 	cargo install cargo-deb
-	cargo deb --verbose --deb-version ${VERSION}
+	cargo deb --verbose --deb-version ${VERSION} --variant ${ARCH}
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/nss/target/debian/libnss-authentik_${VERSION}_${ARCH}.deb

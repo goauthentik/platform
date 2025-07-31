@@ -111,6 +111,30 @@ pub mod agent_auth_client {
                 .insert(GrpcMethod::new("agent_auth.AgentAuth", "WhoAmI"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn get_current_token(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CurrentTokenRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::CurrentTokenResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_auth.AgentAuth/GetCurrentToken",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "GetCurrentToken"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn cached_token_exchange(
             &mut self,
             request: impl tonic::IntoRequest<super::TokenExchangeRequest>,

@@ -3,10 +3,23 @@ syntax = "proto3";
 package agent;
 option go_package = "pkg/pb";
 
+import "google/protobuf/timestamp.proto";
+
 message RequestHeader {
   string profile = 1;
 }
 
 message ResponseHeader {
   bool successful = 1;
+}
+
+message Token {
+  string preferred_username = 1;
+  string iss = 2;
+  string sub = 3;
+  repeated string aud = 4;
+  google.protobuf.Timestamp exp = 5;
+  google.protobuf.Timestamp nbf = 6;
+  google.protobuf.Timestamp iat = 7;
+  string jti = 8;
 }

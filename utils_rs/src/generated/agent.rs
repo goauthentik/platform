@@ -10,4 +10,23 @@ pub struct ResponseHeader {
     #[prost(bool, tag="1")]
     pub successful: bool,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Token {
+    #[prost(string, tag="1")]
+    pub preferred_username: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub iss: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub sub: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag="4")]
+    pub aud: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, optional, tag="5")]
+    pub exp: ::core::option::Option<::prost_types::Timestamp>,
+    #[prost(message, optional, tag="6")]
+    pub nbf: ::core::option::Option<::prost_types::Timestamp>,
+    #[prost(message, optional, tag="7")]
+    pub iat: ::core::option::Option<::prost_types::Timestamp>,
+    #[prost(string, tag="8")]
+    pub jti: ::prost::alloc::string::String,
+}
 // @@protoc_insertion_point(module)

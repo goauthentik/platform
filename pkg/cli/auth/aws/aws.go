@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/cli/client"
 	"goauthentik.io/cli/pkg/pb"
 )
@@ -57,16 +56,21 @@ func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts)
 		return nil
 	}
 
-	pfm, err := token.NewProfile(opts.Profile)
+	curr, err := c.GetCurrentToken(ctx, &pb.CurrentTokenRequest{
+		Header: &pb.RequestHeader{
+			Profile: opts.Profile,
+		},
+		Type: pb.CurrentTokenRequest_VERIFIED,
+	})
 	if err != nil {
-		log.WithError(err).Fatal("failed to get token manager")
+		log.WithError(err).Fatal("failed to get current token")
 		return nil
 	}
 
 	log.Debug("Fetching AWS Credentials...")
 	a, err := stsc.AssumeRoleWithWebIdentity(ctx, &sts.AssumeRoleWithWebIdentityInput{
 		RoleArn:          aws.String(opts.RoleARN),
-		RoleSessionName:  aws.String(pfm.Unverified().Claims().Username),
+		RoleSessionName:  aws.String(curr.Token.PreferredUsername),
 		WebIdentityToken: aws.String(res.AccessToken),
 	})
 	if err != nil {

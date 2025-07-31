@@ -28,7 +28,7 @@ pub fn authenticate_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::default();
 
     let username = match pamh.get_item::<User>() {
         Ok(u) => match u {
@@ -91,7 +91,7 @@ pub fn authenticate_impl(
         "failed to set session_id env"
     );
 
-    if password.starts_with(PW_PREFIX) {
+    if password.starts_with(PW_PREFIX) || config.debug {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
         let decoded = pam_try_log!(decode_token(raw_token), "failed to decode token");

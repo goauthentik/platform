@@ -30,7 +30,7 @@ pub fn open_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::default();
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
@@ -39,7 +39,7 @@ pub fn open_session_impl(
             return PamResultCode::PAM_IGNORE;
         }
     };
-    let mut sd = pam_try_log!(
+    let sd = pam_try_log!(
         _read_session_data(sid.to_owned()),
         "failed to get session data"
     );
@@ -47,10 +47,6 @@ pub fn open_session_impl(
         _delete_session_data(sid.to_owned()),
         "failed to delete session data"
     );
-
-    if !config.pam.terminate_on_expiry {
-        sd.expiry = -1;
-    }
 
     let request = tonic::Request::new(RegisterSessionRequest {
         session_id: sid,
@@ -102,7 +98,7 @@ pub fn close_session_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::default();
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,

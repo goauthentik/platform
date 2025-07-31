@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -39,6 +40,7 @@ func NewMonitor() *Monitor {
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
+		log:           log.WithField("logger", "sysd.session"),
 	}
 }
 
@@ -123,6 +125,10 @@ func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRe
 		PPID:        req.Ppid,
 		CreatedAt:   time.Now(),
 		LocalSocket: req.LocalSocket,
+	}
+
+	if config.Get().PAM.TerminateOnExpiry {
+		session.ExpiresAt = time.Unix(-1, 0)
 	}
 
 	m.AddSession(session)

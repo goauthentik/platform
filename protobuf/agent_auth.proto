@@ -4,10 +4,10 @@ package agent_auth;
 option go_package = "pkg/pb";
 
 import "agent.proto";
-import "google/protobuf/timestamp.proto";
 
 service AgentAuth {
   rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
+  rpc GetCurrentToken(CurrentTokenRequest) returns (CurrentTokenResponse);
   rpc CachedTokenExchange(TokenExchangeRequest) returns (TokenExchangeResponse);
 }
 
@@ -18,6 +18,21 @@ message WhoAmIRequest {
 message WhoAmIResponse {
   agent.ResponseHeader header = 1;
   string body = 2;
+}
+
+message CurrentTokenRequest {
+  agent.RequestHeader header = 1;
+  enum Type {
+    UNSPECIFIED = 0;
+    VERIFIED = 1;
+    UNVERIFIED = 2;
+  }
+  Type type = 2;
+}
+
+message CurrentTokenResponse {
+  agent.ResponseHeader header = 1;
+  agent.Token token = 2;
 }
 
 message TokenExchangeRequest {

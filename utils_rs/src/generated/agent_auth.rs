@@ -13,6 +13,52 @@ pub struct WhoAmIResponse {
     pub body: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CurrentTokenRequest {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::RequestHeader>,
+    #[prost(enumeration="current_token_request::Type", tag="2")]
+    pub r#type: i32,
+}
+/// Nested message and enum types in `CurrentTokenRequest`.
+pub mod current_token_request {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[repr(i32)]
+    pub enum Type {
+        Unspecified = 0,
+        Verified = 1,
+        Unverified = 2,
+    }
+    impl Type {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "UNSPECIFIED",
+                Self::Verified => "VERIFIED",
+                Self::Unverified => "UNVERIFIED",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "UNSPECIFIED" => Some(Self::Unspecified),
+                "VERIFIED" => Some(Self::Verified),
+                "UNVERIFIED" => Some(Self::Unverified),
+                _ => None,
+            }
+        }
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CurrentTokenResponse {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::ResponseHeader>,
+    #[prost(message, optional, tag="2")]
+    pub token: ::core::option::Option<super::agent::Token>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TokenExchangeRequest {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::RequestHeader>,

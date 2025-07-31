@@ -29,6 +29,7 @@ sha2 = "0.10.9"
 tokio = "1.44.1"
 tonic = { version = "0.11" }
 tower = "0.5.2"
+base64 = "0.22.1"
 
 [package.metadata.deb]
 name = "libpam-authentik"
@@ -37,13 +38,12 @@ license-file = ["../LICENSE", "4"]
 depends = [
     "libc6",
 	"libssl3 | libssl3t64",
-    "authentik-sys-agent",
+    "authentik-sysd",
     "libpam0g",
 ]
 section = "security"
 priority = "optional"
 assets = [
-    { source = "target/release/libauthentik_pam.so", dest = "usr/lib64/security/pam_authentik.so", mode = "644"},
     { source = "target/release/libauthentik_pam.so", dest = "usr/lib/security/pam_authentik.so", mode = "644"},
     { source = "debian/pam_config", dest = "usr/share/pam-configs/authentik", mode = "644"},
 ]

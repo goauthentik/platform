@@ -28,7 +28,7 @@ impl GroupHooks for AuthentikGroupHooks {
 }
 
 fn get_all_entries() -> Response<Vec<Group>> {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::default();
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,
@@ -65,7 +65,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
 }
 
 fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::default();
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,
@@ -99,7 +99,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
 }
 
 fn get_entry_by_name(name: String) -> Response<Group> {
-    let config = Config::from_file("/etc/authentik/host.yaml").expect("Failed to load config");
+    let config = Config::default();
 
     let rt = match Runtime::new() {
         Ok(rt) => rt,

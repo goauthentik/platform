@@ -99,6 +99,7 @@ version = "0.1.0"
 dependencies = [
  "authentik-client",
  "authentik_sys",
+ "base64 0.22.1",
  "ctor",
  "hex",
  "jsonwebtoken",

@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -109,17 +110,126 @@ func (x *ResponseHeader) GetSuccessful() bool {
 	return false
 }
 
+type Token struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	PreferredUsername string                 `protobuf:"bytes,1,opt,name=preferred_username,json=preferredUsername,proto3" json:"preferred_username,omitempty"`
+	Iss               string                 `protobuf:"bytes,2,opt,name=iss,proto3" json:"iss,omitempty"`
+	Sub               string                 `protobuf:"bytes,3,opt,name=sub,proto3" json:"sub,omitempty"`
+	Aud               []string               `protobuf:"bytes,4,rep,name=aud,proto3" json:"aud,omitempty"`
+	Exp               *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=exp,proto3" json:"exp,omitempty"`
+	Nbf               *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=nbf,proto3" json:"nbf,omitempty"`
+	Iat               *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=iat,proto3" json:"iat,omitempty"`
+	Jti               string                 `protobuf:"bytes,8,opt,name=jti,proto3" json:"jti,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *Token) Reset() {
+	*x = Token{}
+	mi := &file_agent_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Token) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Token) ProtoMessage() {}
+
+func (x *Token) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Token.ProtoReflect.Descriptor instead.
+func (*Token) Descriptor() ([]byte, []int) {
+	return file_agent_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Token) GetPreferredUsername() string {
+	if x != nil {
+		return x.PreferredUsername
+	}
+	return ""
+}
+
+func (x *Token) GetIss() string {
+	if x != nil {
+		return x.Iss
+	}
+	return ""
+}
+
+func (x *Token) GetSub() string {
+	if x != nil {
+		return x.Sub
+	}
+	return ""
+}
+
+func (x *Token) GetAud() []string {
+	if x != nil {
+		return x.Aud
+	}
+	return nil
+}
+
+func (x *Token) GetExp() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Exp
+	}
+	return nil
+}
+
+func (x *Token) GetNbf() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Nbf
+	}
+	return nil
+}
+
+func (x *Token) GetIat() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Iat
+	}
+	return nil
+}
+
+func (x *Token) GetJti() string {
+	if x != nil {
+		return x.Jti
+	}
+	return ""
+}
+
 var File_agent_proto protoreflect.FileDescriptor
 
 const file_agent_proto_rawDesc = "" +
 	"\n" +
-	"\vagent.proto\x12\x05agent\")\n" +
+	"\vagent.proto\x12\x05agent\x1a\x1fgoogle/protobuf/timestamp.proto\")\n" +
 	"\rRequestHeader\x12\x18\n" +
 	"\aprofile\x18\x01 \x01(\tR\aprofile\"0\n" +
 	"\x0eResponseHeader\x12\x1e\n" +
 	"\n" +
 	"successful\x18\x01 \x01(\bR\n" +
-	"successfulB\bZ\x06pkg/pbb\x06proto3"
+	"successful\"\x88\x02\n" +
+	"\x05Token\x12-\n" +
+	"\x12preferred_username\x18\x01 \x01(\tR\x11preferredUsername\x12\x10\n" +
+	"\x03iss\x18\x02 \x01(\tR\x03iss\x12\x10\n" +
+	"\x03sub\x18\x03 \x01(\tR\x03sub\x12\x10\n" +
+	"\x03aud\x18\x04 \x03(\tR\x03aud\x12,\n" +
+	"\x03exp\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x03exp\x12,\n" +
+	"\x03nbf\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x03nbf\x12,\n" +
+	"\x03iat\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x03iat\x12\x10\n" +
+	"\x03jti\x18\b \x01(\tR\x03jtiB\bZ\x06pkg/pbb\x06proto3"
 
 var (
 	file_agent_proto_rawDescOnce sync.Once
@@ -133,17 +243,22 @@ func file_agent_proto_rawDescGZIP() []byte {
 	return file_agent_proto_rawDescData
 }
 
-var file_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_agent_proto_goTypes = []any{
-	(*RequestHeader)(nil),  // 0: agent.RequestHeader
-	(*ResponseHeader)(nil), // 1: agent.ResponseHeader
+	(*RequestHeader)(nil),         // 0: agent.RequestHeader
+	(*ResponseHeader)(nil),        // 1: agent.ResponseHeader
+	(*Token)(nil),                 // 2: agent.Token
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
 var file_agent_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: agent.Token.exp:type_name -> google.protobuf.Timestamp
+	3, // 1: agent.Token.nbf:type_name -> google.protobuf.Timestamp
+	3, // 2: agent.Token.iat:type_name -> google.protobuf.Timestamp
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_agent_proto_init() }
@@ -157,7 +272,7 @@ func file_agent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_proto_rawDesc), len(file_agent_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

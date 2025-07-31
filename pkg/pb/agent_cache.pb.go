@@ -25,22 +25,25 @@ const (
 type CacheStatus int32
 
 const (
-	CacheStatus_VALID     CacheStatus = 0
-	CacheStatus_NOT_FOUND CacheStatus = 1
-	CacheStatus_EXPIRED   CacheStatus = 2
+	CacheStatus_UNSPECIFIED CacheStatus = 0
+	CacheStatus_VALID       CacheStatus = 1
+	CacheStatus_NOT_FOUND   CacheStatus = 2
+	CacheStatus_EXPIRED     CacheStatus = 3
 )
 
 // Enum value maps for CacheStatus.
 var (
 	CacheStatus_name = map[int32]string{
-		0: "VALID",
-		1: "NOT_FOUND",
-		2: "EXPIRED",
+		0: "UNSPECIFIED",
+		1: "VALID",
+		2: "NOT_FOUND",
+		3: "EXPIRED",
 	}
 	CacheStatus_value = map[string]int32{
-		"VALID":     0,
-		"NOT_FOUND": 1,
-		"EXPIRED":   2,
+		"UNSPECIFIED": 0,
+		"VALID":       1,
+		"NOT_FOUND":   2,
+		"EXPIRED":     3,
 	}
 )
 
@@ -174,7 +177,7 @@ func (x *CacheGetResponse) GetStatus() CacheStatus {
 	if x != nil {
 		return x.Status
 	}
-	return CacheStatus_VALID
+	return CacheStatus_UNSPECIFIED
 }
 
 func (x *CacheGetResponse) GetExpiry() *timestamppb.Timestamp {
@@ -322,11 +325,12 @@ const file_agent_cache_proto_rawDesc = "" +
 	"\x06expiry\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06expiry\x12\x14\n" +
 	"\x05value\x18\x04 \x01(\tR\x05value\"A\n" +
 	"\x10CacheSetResponse\x12-\n" +
-	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header*4\n" +
-	"\vCacheStatus\x12\t\n" +
-	"\x05VALID\x10\x00\x12\r\n" +
-	"\tNOT_FOUND\x10\x01\x12\v\n" +
-	"\aEXPIRED\x10\x022\x9e\x01\n" +
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header*E\n" +
+	"\vCacheStatus\x12\x0f\n" +
+	"\vUNSPECIFIED\x10\x00\x12\t\n" +
+	"\x05VALID\x10\x01\x12\r\n" +
+	"\tNOT_FOUND\x10\x02\x12\v\n" +
+	"\aEXPIRED\x10\x032\x9e\x01\n" +
 	"\n" +
 	"AgentCache\x12G\n" +
 	"\bCacheGet\x12\x1c.agent_cache.CacheGetRequest\x1a\x1d.agent_cache.CacheGetResponse\x12G\n" +

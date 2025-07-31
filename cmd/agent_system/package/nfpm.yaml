@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
-name: "authentik-sys-agent"
+name: "authentik-sysd"
 arch: "${ARCH}"
 platform: "linux"
 version: "${VERSION}"
@@ -12,11 +12,12 @@ license: "MIT"
 scripts:
   postinstall: ./package/postinst.sh
 contents:
-  - src: ../../bin/agent_system/ak-sys
-    dst: /usr/bin/ak-sys
-  - src: package/ak-sys.service
-    dst: /usr/lib/systemd/system/ak-sys.service
-    type: config
+  - src: ../../bin/agent_system/ak-sysd
+    dst: /usr/bin/ak-sysd
+  - src: package/ak-sysd.service
+    dst: /usr/lib/systemd/system/ak-sysd.service
   - src: package/config.yaml
     dst: /etc/authentik/host.yaml.dist
     type: config
+  - src: ../../bin/agent_system/completions/agent_system.bash
+    dst: /etc/bash_completion.d/ak-sysd

@@ -20,13 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ${{ matrix.target }}/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('${{ matrix.target }}/**/Cargo.lock') }}
       - run: |
           sudo apt-get update
           sudo apt-get install -y libpam0g-dev

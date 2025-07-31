@@ -3,6 +3,7 @@ package nss
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/pb"
@@ -30,13 +31,21 @@ func (nss *Server) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.User, e
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
 
+var userNameRegexp = regexp.MustCompilePOSIX(`^[a-z][-a-z0-9_]*\$?$`)
+var userNameSubst = regexp.MustCompile(`[@/]`)
+
 func (nss *Server) convertUser(u api.User) *pb.User {
+	// https://sources.debian.org/src/adduser/3.134/adduser.conf/#L75
+	un := u.Username
+	if !userNameRegexp.MatchString(u.Username) {
+		un = userNameSubst.ReplaceAllString(un, "-")
+	}
 	return &pb.User{
-		Name:    u.Username,
+		Name:    un,
 		Uid:     nss.GetUserUidNumber(u),
 		Gid:     nss.GetUserGidNumber(u),
 		Gecos:   u.Name,
-		Homedir: fmt.Sprintf("/home/%s", u.Username),
+		Homedir: fmt.Sprintf("/home/%s", un),
 		Shell:   "/bin/bash",
 	}
 }
