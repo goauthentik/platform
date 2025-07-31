@@ -9,7 +9,7 @@ use jsonwebtoken::{TokenData, Validation, decode, decode_header};
 use jwks::Jwks;
 use pam::constants::PamResultCode;
 use serde::{Deserialize, Serialize};
-use tokio::runtime::Runtime;
+use tokio::runtime::Builder;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -42,7 +42,7 @@ pub fn auth_token(
     username: String,
     token: String,
 ) -> Result<TokenData<Claims>, PamResultCode> {
-    let rt = match Runtime::new() {
+    let rt = match Builder::new_current_thread().enable_all().build() {
         Ok(rt) => rt,
         Err(e) => {
             log::warn!("Failed to create runtime: {e}");

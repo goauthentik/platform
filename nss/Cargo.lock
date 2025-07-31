@@ -72,14 +72,9 @@ dependencies = [
  "libc",
  "libnss",
  "log",
- "prost",
- "prost-types",
  "rand 0.9.2",
  "reqwest",
  "serde_json",
- "tokio",
- "tonic",
- "tower 0.5.2",
 ]
 
 [[package]]
@@ -93,6 +88,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "syslog",
+ "tokio",
  "tonic",
  "tower 0.5.2",
 ]

@@ -1,12 +1,9 @@
-use authentik_sys::config::Config;
+use authentik_sys::generated::grpc_request;
 use authentik_sys::generated::nss::GetRequest;
+use authentik_sys::generated::nss::nss_client::NssClient;
 use authentik_sys::logger::log_hook;
 use libnss::interop::Response;
 use libnss::shadow::{Shadow, ShadowHooks};
-use tokio::runtime::Runtime;
-
-use crate::generated::create_grpc_client;
-use crate::grpc_status_to_nss_response;
 
 pub struct AuthentikShadowHooks;
 impl ShadowHooks for AuthentikShadowHooks {
@@ -22,76 +19,40 @@ impl ShadowHooks for AuthentikShadowHooks {
 }
 
 fn get_all_entries() -> Response<Vec<Shadow>> {
-    let config = Config::default();
-
-    let rt = match Runtime::new() {
-        Ok(rt) => rt,
+    match grpc_request(async |ch| {
+        return Ok(NssClient::new(ch).list_users(()).await?);
+    }) {
+        Ok(r) => {
+            let users: Vec<Shadow> = r
+                .into_inner()
+                .users
+                .into_iter()
+                .map(|user| shadow_entry(user.name))
+                .collect();
+            Response::Success(users)
+        }
         Err(e) => {
-            log::warn!("Failed to create runtime: {e}");
-            return Response::Unavail;
+            log::warn!("Failed to get users: {e}");
+            Response::Unavail
         }
-    };
-
-    rt.block_on(async {
-        let mut client = match create_grpc_client(config).await {
-            Ok(c) => c,
-            Err(e) => {
-                log::warn!("Failed to create grpc client: {e}");
-                return Response::Unavail;
-            }
-        };
-        match client.list_users(()).await {
-            Ok(r) => {
-                let users: Vec<Shadow> = r
-                    .into_inner()
-                    .users
-                    .into_iter()
-                    .map(|user| shadow_entry(user.name))
-                    .collect();
-                Response::Success(users)
-            }
-            Err(e) => {
-                log::warn!("failed to send GRPC request: {e}");
-                grpc_status_to_nss_response(e)
-            }
-        }
-    })
+    }
 }
 
 fn get_entry_by_name(name: String) -> Response<Shadow> {
-    let config = Config::default();
-
-    let rt = match Runtime::new() {
-        Ok(rt) => rt,
-        Err(e) => {
-            log::warn!("Failed to create runtime: {e}");
-            return Response::Unavail;
-        }
-    };
-
-    rt.block_on(async {
-        let mut client = match create_grpc_client(config).await {
-            Ok(c) => c,
-            Err(e) => {
-                log::warn!("Failed to create grpc client: {e}");
-                return Response::Unavail;
-            }
-        };
-
-        match client
+    match grpc_request(async |ch| {
+        return Ok(NssClient::new(ch)
             .get_user(GetRequest {
                 name: Some(name.clone()),
                 id: None,
             })
-            .await
-        {
-            Ok(r) => Response::Success(shadow_entry(r.into_inner().name)),
-            Err(e) => {
-                log::info!("error when getting user by name '{}': {}", name, e.code());
-                grpc_status_to_nss_response(e)
-            }
+            .await?);
+    }) {
+        Ok(r) => Response::Success(shadow_entry(r.into_inner().name)),
+        Err(e) => {
+            log::warn!("Failed to get user by name '{name}': {e}");
+            Response::Unavail
         }
-    })
+    }
 }
 
 fn shadow_entry(name: String) -> Shadow {

@@ -1,7 +1,7 @@
 mod auth;
-mod generated;
 mod pam_env;
 mod session;
+mod session_data;
 
 extern crate jwks;
 extern crate pam;
@@ -18,7 +18,6 @@ use pam::items::Service;
 use pam::module::{PamHandle, PamHooks};
 use std::ffi::CStr;
 
-pub const DATA_CLIENT: &str = "client";
 pub const ENV_SESSION_ID: &str = "AUTHENTIK_SESSION_ID";
 
 struct PAMAuthentik;

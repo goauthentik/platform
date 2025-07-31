@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{error::Error, fs, sync::{LazyLock}};
+use std::{error::Error, fs, sync::LazyLock};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PAMConfig {
@@ -19,13 +19,12 @@ pub struct Config {
 static GLOBAL_DATA: LazyLock<Config> = LazyLock::new(|| Config::from_default().unwrap());
 
 impl Config {
-
     pub fn default() -> Self {
-        return GLOBAL_DATA.clone();
+        GLOBAL_DATA.clone()
     }
 
     pub fn from_default() -> Result<Self, Box<dyn Error>> {
-        return Config::from_file("/etc/authentik/host.yaml");
+        Config::from_file("/etc/authentik/host.yaml")
     }
 
     pub fn from_file(path: &str) -> Result<Self, Box<dyn Error>> {

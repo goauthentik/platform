@@ -115,7 +115,6 @@ dependencies = [
  "serde_json",
  "sha2",
  "tokio",
- "tonic",
  "tower 0.5.2",
 ]
 
@@ -130,6 +129,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "syslog",
+ "tokio",
  "tonic",
  "tower 0.5.2",
 ]
