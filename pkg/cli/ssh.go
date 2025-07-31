@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -162,7 +162,7 @@ func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
 	if err != nil {
 		panic(err)
 	}
-	return fmt.Sprintf("\u200b%s", hex.EncodeToString(rv))
+	return fmt.Sprintf("\u200b%s", base64.StdEncoding.EncodeToString(rv))
 }
 
 func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {

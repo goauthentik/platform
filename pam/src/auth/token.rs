@@ -2,6 +2,7 @@ extern crate jwks;
 extern crate pam;
 extern crate reqwest;
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use ::prost::Message;
 use authentik_sys::{config::Config, generated::pam::PamAuthentication};
 use jsonwebtoken::{TokenData, Validation, decode, decode_header};
@@ -18,10 +19,10 @@ pub struct Claims {
 }
 
 pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
-    let raw = match hex::decode(token) {
+    let raw = match BASE64_STANDARD.decode(token) {
         Ok(t) => t,
         Err(e) => {
-            log::warn!("Failed to hex decode token: {e}");
+            log::warn!("Failed to base64 decode token: {e}");
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
