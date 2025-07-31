@@ -40,6 +40,7 @@ func NewMonitor() *Monitor {
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
+		log:           log.WithField("logger", "sysd.session"),
 	}
 }
 

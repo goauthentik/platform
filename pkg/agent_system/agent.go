@@ -59,7 +59,7 @@ type SystemAgent struct {
 }
 
 func New() *SystemAgent {
-	l := log.WithField("logger", "agent_sys.sm")
+	l := log.WithField("logger", "sysd")
 
 	u, err := url.Parse(config.Get().AuthentikURL)
 	if err != nil {

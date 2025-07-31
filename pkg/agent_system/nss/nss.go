@@ -28,7 +28,7 @@ type Server struct {
 func NewServer(api *api.APIClient) *Server {
 	srv := &Server{
 		api: api,
-		log: log.WithField("logger", "nss_server"),
+		log: log.WithField("logger", "sysd.nss_server"),
 		cfg: config.Get(),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
