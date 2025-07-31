@@ -3,12 +3,12 @@ package token
 import (
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/storage"
 )
 
 type CachedToken struct {
 	AccessToken string    `json:"at"`
-	Exp         time.Time `json:"exp"`
 	ExpiresIn   int64     `json:"expires_in"`
 	Created     time.Time `json:"iat"`
 }
@@ -20,7 +20,7 @@ func (ct CachedToken) Expiry() time.Time {
 func (ct CachedToken) Token() *Token {
 	return &Token{
 		RawAccessToken: ct.AccessToken,
-		Expiry:         ct.Exp,
+		Expiry:         ct.Expiry(),
 		ExpiresIn:      ct.ExpiresIn,
 	}
 }
@@ -29,20 +29,24 @@ func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, op
 	c := storage.NewCache[CachedToken]("token-cache", profileName, opts.ClientID)
 	v, err := c.Get()
 	if err == nil {
+		log.Debug("Got token from cache")
 		return &Token{
 			RawAccessToken: v.AccessToken,
 		}, nil
+	} else {
+		log.WithError(err).Debug("couldn't get token from cache")
 	}
+	log.Debug("Exchanging for new token")
 	nt, err := ExchangeToken(profile, opts)
 	if err != nil {
 		return nil, err
 	}
 	ct := CachedToken{
 		AccessToken: nt.RawAccessToken,
-		Exp:         nt.Expiry,
 		ExpiresIn:   nt.ExpiresIn,
 		Created:     time.Now(),
 	}
+	log.Debug("Setting cache")
 	err = c.Set(ct)
 	if err != nil {
 		return nil, err
