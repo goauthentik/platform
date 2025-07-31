@@ -105,10 +105,6 @@ pub fn check_service(pamh: &mut PamHandle) -> Result<(), PamResultCode> {
     if ["sshd"].contains(&service.to_owned().as_str()) {
         return Ok(());
     }
-    let config = Config::from_default().expect("failed to load config");
-    if config.debug && service == "authentik-pam-debug" {
-        return Ok(())
-    }
     Err(PamResultCode::PAM_IGNORE)
 }
 
