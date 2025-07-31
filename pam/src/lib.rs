@@ -10,6 +10,7 @@ extern crate reqwest;
 use crate::auth::authenticate_impl;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
+use authentik_sys::config::Config;
 use authentik_sys::logger::init_log;
 use authentik_sys::logger::log_hook;
 use ctor::{ctor, dtor};
@@ -103,6 +104,10 @@ pub fn check_service(pamh: &mut PamHandle) -> Result<(), PamResultCode> {
     log::debug!("Service: '{service}'");
     if ["sshd"].contains(&service.to_owned().as_str()) {
         return Ok(());
+    }
+    let config = Config::from_default().expect("failed to load config");
+    if config.debug && service == "authentik-pam-debug" {
+        return Ok(())
     }
     Err(PamResultCode::PAM_IGNORE)
 }

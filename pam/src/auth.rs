@@ -97,7 +97,7 @@ pub fn authenticate_impl(
         "failed to set session_id env"
     );
 
-    if password.starts_with(PW_PREFIX) {
+    if password.starts_with(PW_PREFIX) || config.debug {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
         let decoded = pam_try_log!(decode_token(raw_token), "failed to decode token");
