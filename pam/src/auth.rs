@@ -15,7 +15,7 @@ use crate::{
     },
     pam_env::pam_put_env,
     pam_try_log,
-    session::{_generate_id, _write_session_data, SessionData, hash_token},
+    session_data::{_generate_id, _write_session_data, SessionData, hash_token},
 };
 
 pub mod interactive;
