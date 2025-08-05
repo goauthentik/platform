@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 authentik_sys = { path = "../utils_rs" }
-authentik-client = "3.2025064.2"
+authentik-client = "3.2025064.5"
 base64 = "0.22.1"
 ctor = "0.4.2"
 hex = "0.4.3"
