@@ -12,6 +12,7 @@ updates:
     directories:
       - /pam
       - /nss
+      - /utils_rs
     schedule:
       interval: daily
       time: "04:00"
