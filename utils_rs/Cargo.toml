@@ -11,6 +11,6 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_yaml = "0.9.34"
 prost = "0.12"
 prost-types = "0.12"
-tokio = "1.44.1"
+tokio = "1.47.1"
 tonic = "0.11"
 tower = { version = "0.5.2", features = ["util" ]}
