@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
+	"github.com/avast/retry-go/v4"
 	"github.com/golang-jwt/jwt/v5"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/ak"
@@ -61,6 +62,8 @@ func NewProfile(profileName string, opts ...ProfileManagerOpt) (*ProfileTokenMan
 
 func (ptm *ProfileTokenManager) startRenewing() {
 	renewOnce := func() {
+		ctx, cancel := context.WithCancel(ptm.ctx)
+		defer cancel()
 		current := ptm.Token()
 		exp, err := current.AccessToken.Claims.GetExpirationTime()
 		if err != nil {
@@ -76,7 +79,17 @@ func (ptm *ProfileTokenManager) startRenewing() {
 			select {
 			case <-ticker.C:
 				ptm.log.Debug("renewing token now")
-				err = ptm.renew()
+				err := retry.Do(
+					ptm.renew,
+					retry.DelayType(retry.BackOffDelay),
+					retry.Context(ctx),
+					retry.OnRetry(func(attempt uint, err error) {
+						if err != nil {
+							ptm.log.WithField("attempt", attempt).WithError(err).Warning("failed to renew token")
+						}
+					}),
+					retry.MaxDelay(dur),
+				)
 				if err != nil {
 					ptm.log.WithError(err).Warning("failed to renew token")
 				}
