@@ -12,5 +12,5 @@ serde_yaml = "0.9.34"
 prost = "0.12"
 prost-types = "0.12"
 tokio = "1.47.1"
-tonic = "0.11"
+tonic = "0.14"
 tower = { version = "0.5.2", features = ["util" ]}
