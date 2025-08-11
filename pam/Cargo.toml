@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 authentik_sys = { path = "../utils_rs" }
 authentik-client = "3.2025064.9"
 base64 = "0.22.1"
-ctor = "0.4.2"
+ctor = "0.5.0"
 hex = "0.4.3"
 jsonwebtoken = "9.3.1"
 jwks = "0.4.0"
