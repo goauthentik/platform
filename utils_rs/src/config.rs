@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fs, sync::LazyLock};
 
-#[derive(Clone, Default, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PAMConfig {
     pub authentication_flow: String,
     pub terminate_on_expiry: bool,
 }
 
-#[derive(Clone, Default, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Config {
     pub authentik_url: String,
     pub app_slug: String,
@@ -21,6 +21,19 @@ static GLOBAL_DATA: LazyLock<Config> =
 
 impl Config {
     pub fn default() -> Self {
+        Config {
+            authentik_url: "".to_string(),
+            app_slug: "".to_string(),
+            debug: false,
+            socket: "/var/run/authentik/sys.sock".to_string(),
+            pam: PAMConfig {
+                authentication_flow: "".to_string(),
+                terminate_on_expiry: true,
+            }
+        }
+    }
+
+    pub fn get() -> Self {
         GLOBAL_DATA.clone()
     }
 

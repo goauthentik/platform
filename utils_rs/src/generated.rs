@@ -32,7 +32,7 @@ pub fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
             return Err(Box::from(e));
         }
     };
-    let config = Config::default();
+    let config = Config::get();
 
     rt.block_on(async {
         log::debug!("creating grpc client");

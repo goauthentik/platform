@@ -28,7 +28,7 @@ pub fn authenticate_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::default();
+    let config = Config::get();
 
     let username = match pamh.get_item::<User>() {
         Ok(u) => match u {
