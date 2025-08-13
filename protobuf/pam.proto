@@ -7,7 +7,7 @@ import "agent.proto";
 
 service PAM {
     rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
-    // rpc
+    rpc InteractiveAuth(stream InteractiveResponse) returns (stream InteractiveChallenge);
 }
 
 message TokenAuthRequest {
@@ -18,4 +18,15 @@ message TokenAuthRequest {
 message TokenAuthResponse {
     bool successful = 1;
     agent.Token token = 2;
+}
+
+message InteractiveResponse {
+    bool init = 1;
+    repeated string values = 2;
+}
+
+message InteractiveChallenge {
+    bool finished = 1;
+    string component = 2;
+    string prompt = 3;
 }

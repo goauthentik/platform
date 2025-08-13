@@ -15,6 +15,22 @@ pub struct TokenAuthResponse {
     pub token: ::core::option::Option<super::agent::Token>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct InteractiveResponse {
+    #[prost(bool, tag = "1")]
+    pub init: bool,
+    #[prost(string, repeated, tag = "2")]
+    pub values: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct InteractiveChallenge {
+    #[prost(bool, tag = "1")]
+    pub finished: bool,
+    #[prost(string, tag = "2")]
+    pub component: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub prompt: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct PamAuthentication {
     #[prost(string, tag = "1")]
     pub token: ::prost::alloc::string::String,

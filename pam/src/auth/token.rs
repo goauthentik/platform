@@ -33,8 +33,6 @@ pub fn auth_token(username: String, token: String) -> Result<Token, PamResultCod
             .token_auth(TokenAuthRequest {
                 username: username.to_owned(),
                 token: token.to_owned(),
-                // pid: std::process::id(),
-                // ppid: std::os::unix::process::parent_id(),
             })
             .await?);
     }) {

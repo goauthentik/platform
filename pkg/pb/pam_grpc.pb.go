@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PAM_TokenAuth_FullMethodName = "/pam.PAM/TokenAuth"
+	PAM_TokenAuth_FullMethodName       = "/pam.PAM/TokenAuth"
+	PAM_InteractiveAuth_FullMethodName = "/pam.PAM/InteractiveAuth"
 )
 
 // PAMClient is the client API for PAM service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PAMClient interface {
 	TokenAuth(ctx context.Context, in *TokenAuthRequest, opts ...grpc.CallOption) (*TokenAuthResponse, error)
+	InteractiveAuth(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[InteractiveResponse, InteractiveChallenge], error)
 }
 
 type pAMClient struct {
@@ -47,11 +49,25 @@ func (c *pAMClient) TokenAuth(ctx context.Context, in *TokenAuthRequest, opts ..
 	return out, nil
 }
 
+func (c *pAMClient) InteractiveAuth(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[InteractiveResponse, InteractiveChallenge], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &PAM_ServiceDesc.Streams[0], PAM_InteractiveAuth_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[InteractiveResponse, InteractiveChallenge]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type PAM_InteractiveAuthClient = grpc.BidiStreamingClient[InteractiveResponse, InteractiveChallenge]
+
 // PAMServer is the server API for PAM service.
 // All implementations must embed UnimplementedPAMServer
 // for forward compatibility.
 type PAMServer interface {
 	TokenAuth(context.Context, *TokenAuthRequest) (*TokenAuthResponse, error)
+	InteractiveAuth(grpc.BidiStreamingServer[InteractiveResponse, InteractiveChallenge]) error
 	mustEmbedUnimplementedPAMServer()
 }
 
@@ -64,6 +80,9 @@ type UnimplementedPAMServer struct{}
 
 func (UnimplementedPAMServer) TokenAuth(context.Context, *TokenAuthRequest) (*TokenAuthResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TokenAuth not implemented")
+}
+func (UnimplementedPAMServer) InteractiveAuth(grpc.BidiStreamingServer[InteractiveResponse, InteractiveChallenge]) error {
+	return status.Errorf(codes.Unimplemented, "method InteractiveAuth not implemented")
 }
 func (UnimplementedPAMServer) mustEmbedUnimplementedPAMServer() {}
 func (UnimplementedPAMServer) testEmbeddedByValue()             {}
@@ -104,6 +123,13 @@ func _PAM_TokenAuth_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PAM_InteractiveAuth_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(PAMServer).InteractiveAuth(&grpc.GenericServerStream[InteractiveResponse, InteractiveChallenge]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type PAM_InteractiveAuthServer = grpc.BidiStreamingServer[InteractiveResponse, InteractiveChallenge]
+
 // PAM_ServiceDesc is the grpc.ServiceDesc for PAM service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -116,6 +142,13 @@ var PAM_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PAM_TokenAuth_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "InteractiveAuth",
+			Handler:       _PAM_InteractiveAuth_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "pam.proto",
 }
