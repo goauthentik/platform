@@ -16,6 +16,7 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/agent_system/nss"
+	"goauthentik.io/cli/pkg/agent_system/pam"
 	"goauthentik.io/cli/pkg/agent_system/session"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
@@ -51,11 +52,12 @@ func init() {
 }
 
 type SystemAgent struct {
-	nss     *nss.Server
-	monitor *session.Monitor
-	srv     *grpc.Server
 	log     *log.Entry
+	srv     *grpc.Server
 	api     *api.APIClient
+	nss     *nss.Server
+	pam     *pam.Server
+	monitor *session.Monitor
 }
 
 func New() *SystemAgent {
@@ -83,6 +85,11 @@ func New() *SystemAgent {
 	}
 	l.WithField("as", m.User.Username).Debug("Connected to authentik")
 
+	pam, err := pam.NewServer(ac)
+	if err != nil {
+		panic(err)
+	}
+
 	sm := &SystemAgent{
 		monitor: session.NewMonitor(),
 		srv: grpc.NewServer(
@@ -92,10 +99,12 @@ func New() *SystemAgent {
 		log: l,
 		api: ac,
 		nss: nss.NewServer(ac),
+		pam: pam,
 	}
 
 	pb.RegisterSessionManagerServer(sm.srv, sm.monitor)
 	pb.RegisterNSSServer(sm.srv, sm.nss)
+	pb.RegisterPAMServer(sm.srv, sm.pam)
 	return sm
 }
 

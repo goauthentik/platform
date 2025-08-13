@@ -3,10 +3,6 @@ mod pam_env;
 mod session;
 mod session_data;
 
-extern crate jwks;
-extern crate pam;
-extern crate reqwest;
-
 use crate::auth::authenticate_impl;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;

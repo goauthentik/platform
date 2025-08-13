@@ -3,7 +3,19 @@ syntax = "proto3";
 package pam;
 option go_package = "pkg/pb";
 
-message PAMAuthentication {
-  string token = 1;
-  string local_socket = 2;
+import "agent.proto";
+
+service PAM {
+    rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
+    // rpc
+}
+
+message TokenAuthRequest {
+    string username = 1;
+    string token = 2;
+}
+
+message TokenAuthResponse {
+    bool successful = 1;
+    agent.Token token = 2;
 }

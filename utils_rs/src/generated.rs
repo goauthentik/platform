@@ -1,3 +1,4 @@
+pub mod agent;
 pub mod nss;
 pub mod pam;
 pub mod pam_session;
@@ -11,7 +12,7 @@ use tower::service_fn;
 use crate::{config::Config, generated::nss::nss_client::NssClient};
 
 pub async fn create_grpc_client(config: Config) -> Result<NssClient<Channel>, Box<dyn Error>> {
-    log::info!("creating grpc client");
+    log::debug!("creating grpc client");
     let path = config.socket.to_owned();
     let channel = Endpoint::try_from("http://[::]:50051")?
         .connect_with_connector(service_fn(move |_: Uri| {

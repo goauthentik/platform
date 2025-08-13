@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fs, sync::LazyLock};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize)]
 pub struct PAMConfig {
     pub authentication_flow: String,
     pub terminate_on_expiry: bool,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize)]
 pub struct Config {
     pub authentik_url: String,
     pub app_slug: String,
@@ -29,7 +29,7 @@ impl Config {
             pam: PAMConfig {
                 authentication_flow: "".to_string(),
                 terminate_on_expiry: true,
-            }
+            },
         }
     }
 
