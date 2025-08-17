@@ -9,9 +9,13 @@ import (
 	"path"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/term"
 )
 
 func Setup(appName string) error {
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		return nil
+	}
 	hd, err := os.UserHomeDir()
 	if err != nil {
 		return err

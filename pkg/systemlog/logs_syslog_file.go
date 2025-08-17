@@ -7,9 +7,13 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/term"
 )
 
 func SetupFile(name string) error {
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		return nil
+	}
 	f, err := os.OpenFile("/var/log/authentik/"+name, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		return err
