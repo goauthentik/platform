@@ -33,8 +33,8 @@ func NewServer(api *api.APIClient) (*Server, error) {
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(storage.ConfigV1Profile{
-		AuthentikURL: srv.cfg.AuthentikURL,
-		AppSlug:      srv.cfg.AppSlug,
+		AuthentikURL: srv.cfg.AK.AuthentikURL,
+		AppSlug:      srv.cfg.AK.AppSlug,
 	}).JWKS})
 	if err != nil {
 		return nil, err

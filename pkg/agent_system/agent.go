@@ -63,7 +63,7 @@ type SystemAgent struct {
 func New() *SystemAgent {
 	l := log.WithField("logger", "sysd")
 
-	u, err := url.Parse(config.Get().AuthentikURL)
+	u, err := url.Parse(config.Get().AK.AuthentikURL)
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +75,7 @@ func New() *SystemAgent {
 			URL: fmt.Sprintf("%sapi/v3", u.Path),
 		},
 	}
-	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Get().Token))
+	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Get().AK.Token))
 
 	ac := api.NewAPIClient(apiConfig)
 

@@ -1,10 +1,12 @@
 ---
-authentik_url: http://authentik:9000
-app_slug: authentik-pam
+ak:
+  authentik_url: http://authentik:9000
+  app_slug: authentik-pam
+  authentication_flow: default-authentication-flow
+  domain: authentik
 debug: true
 socket: /var/run/authentik/sys.sock
 pam:
-  authentication_flow: default-authentication-flow
   terminate_on_expiry: true
 nss:
   uid_offset: 1000
