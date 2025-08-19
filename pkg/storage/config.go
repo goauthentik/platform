@@ -87,7 +87,10 @@ func (cfg *ConfigManager) Load() error {
 	if err != nil {
 		return err
 	}
-	return nil
+	for name, prof := range cfg.loaded.Profiles {
+		prof.Name = name
+	}
+	return cfg.loadKeyring()
 }
 
 func (cfg *ConfigManager) Get() ConfigV1 {
@@ -110,7 +113,7 @@ func (cfg *ConfigManager) Save() error {
 	if err != nil {
 		return err
 	}
-	return nil
+	return cfg.saveKeyring()
 }
 
 func (cfg *ConfigManager) Watch() chan ConfigChangedEvent {

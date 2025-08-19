@@ -1,5 +1,7 @@
 package storage
 
+import "fmt"
+
 type ConfigV1 struct {
 	Debug    bool                       `json:"debug"`
 	Profiles map[string]ConfigV1Profile `json:"profiles"`
@@ -13,10 +15,21 @@ func ConfigV1Default() ConfigV1 {
 }
 
 type ConfigV1Profile struct {
+	Name string
+
 	AuthentikURL string `json:"authentik_url"`
 	AppSlug      string `json:"app_slug"`
 	ClientID     string `json:"client_id"`
-	// very temporary, needs to be saved in keychain
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+
+	// Not saved to JSON, loaded from keychain
+	AccessToken  string
+	RefreshToken string
+}
+
+func (cv1p ConfigV1Profile) keyringAccessTokenName() string {
+	return fmt.Sprintf("%s::access_token", cv1p.Name)
+}
+
+func (cv1p ConfigV1Profile) keyringRefreshTokenName() string {
+	return fmt.Sprintf("%s::refresh_token", cv1p.Name)
 }
