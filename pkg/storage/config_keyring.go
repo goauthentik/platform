@@ -1,11 +1,6 @@
-//go:build !darwin
-// +build !darwin
-
 package storage
 
-import (
-	"github.com/zalando/go-keyring"
-)
+import "goauthentik.io/cli/pkg/storage/keyring"
 
 const (
 	keyringService = "io.goauthentik.agent"
