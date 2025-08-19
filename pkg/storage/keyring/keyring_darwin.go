@@ -35,6 +35,7 @@ func Set(service string, user string, password string) error {
 	item.SetService(service)
 	item.SetAccount(user)
 	item.SetData([]byte(password))
+	item.SetAccessControl(keychain.AccessControlFlagsBiometryAny, keychain.AccessibleWhenUnlocked)
 	item.SetSynchronizable(keychain.SynchronizableNo)
 	item.SetAccessible(keychain.AccessibleWhenUnlocked)
 	err := keychain.AddItem(item)

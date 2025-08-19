@@ -137,3 +137,5 @@ require (
 )
 
 tool github.com/goreleaser/nfpm/v2/cmd/nfpm
+
+replace github.com/keybase/go-keychain => github.com/alexw23/go-keychain v0.0.0-20240507145345-41efe171240e
