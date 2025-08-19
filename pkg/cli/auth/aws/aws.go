@@ -36,7 +36,7 @@ func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts)
 
 	cc := client.NewCache[AWSCredentialOutput](c, &pb.RequestHeader{
 		Profile: opts.Profile,
-	}, "auth-aws-cache", opts.Profile, opts.RoleARN)
+	}, "auth-aws-cache", opts.RoleARN)
 	if v, err := cc.Get(ctx); err == nil {
 		log.Debug("Got AWS Credentials from cache")
 		return &v
