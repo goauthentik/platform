@@ -87,9 +87,6 @@ func (cfg *ConfigManager) Load() error {
 	if err != nil {
 		return err
 	}
-	for name, prof := range cfg.loaded.Profiles {
-		prof.Name = name
-	}
 	return cfg.loadKeyring()
 }
 

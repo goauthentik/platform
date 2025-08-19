@@ -25,7 +25,7 @@ func DefaultExchangeOpts(clientID string) ExchangeOpts {
 	}
 }
 
-func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
+func ExchangeToken(profile *storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
 	v := url.Values{}
 	v.Set("grant_type", "client_credentials")
 	v.Set("client_id", opts.ClientID)

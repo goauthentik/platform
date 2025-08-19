@@ -71,7 +71,7 @@ func (a *Agent) systrayConfigUpdate() {
 	a.systrayLateItems()
 }
 
-func (a *Agent) systrayProfileItme(name string, profile storage.ConfigV1Profile) {
+func (a *Agent) systrayProfileItme(name string, profile *storage.ConfigV1Profile) {
 	i := systray.AddMenuItem(fmt.Sprintf("Profile %s", name), "")
 	oi := i.AddSubMenuItem("Open authentik", "")
 	go func() {
