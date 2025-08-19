@@ -3,7 +3,11 @@
 
 package keyring
 
-import "github.com/zalando/go-keyring"
+import (
+	"errors"
+
+	"github.com/zalando/go-keyring"
+)
 
 func Get(service string, user string) (string, error) {
 	return keyring.Get(service, user)
@@ -11,4 +15,8 @@ func Get(service string, user string) (string, error) {
 
 func Set(service string, user string, password string) error {
 	return keyring.Set(service, user, password)
+}
+
+func IsNotExist(err error) bool {
+	return errors.Is(err, keyring.ErrNotFound)
 }

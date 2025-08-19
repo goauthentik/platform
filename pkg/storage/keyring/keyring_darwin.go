@@ -5,7 +5,6 @@ package keyring
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/keybase/go-keychain"
 )
@@ -22,7 +21,7 @@ func Get(service string, user string) (string, error) {
 		return "", err
 	}
 	if len(results) > 1 {
-		return "", fmt.Errorf("too many results")
+		return "", errors.New("too many results")
 	}
 	if len(results) == 1 {
 		return string(results[0].Data), nil
@@ -49,4 +48,8 @@ func Set(service string, user string, password string) error {
 		return keychain.UpdateItem(query, item)
 	}
 	return err
+}
+
+func IsNotExist(err error) bool {
+	return errors.Is(err, keychain.ErrorItemNotFound)
 }
