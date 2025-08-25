@@ -25,7 +25,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/skeema/knownhosts v1.3.1
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	goauthentik.io/api/v3 v3.2025100.2
 	golang.org/x/crypto v0.41.0
 	golang.org/x/term v0.34.0
