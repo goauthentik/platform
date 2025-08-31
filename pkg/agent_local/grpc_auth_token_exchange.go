@@ -19,10 +19,10 @@ func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRe
 	}
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("Application '%s' is attempting to get a token for '%s'", creds.ParentExe, req.ClientId), nil
+			return fmt.Sprintf("Application '%s' is attempting to get a token for '%s'", creds.ParentCmdline, req.ClientId), nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("%s:%s", req.ClientId, creds.ParentExe), nil
+			return fmt.Sprintf("%s:%s", req.ClientId, creds.UniqueProcessID()), nil
 		},
 		Timeout: func() time.Duration {
 			return time.Minute * 30

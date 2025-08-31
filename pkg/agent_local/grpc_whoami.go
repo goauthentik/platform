@@ -17,10 +17,10 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 	prof := a.cfg.Get().Profiles[req.Header.Profile]
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("Application '%s' is attempting to get your info.", creds.ParentExe), nil
+			return fmt.Sprintf("Application '%s' is attempting to get your info.", creds.ParentCmdline), nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
-			return creds.ParentExe, nil
+			return creds.UniqueProcessID(), nil
 		},
 		Timeout: func() time.Duration {
 			return 0

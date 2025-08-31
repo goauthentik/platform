@@ -2,7 +2,9 @@ package grpc_creds
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"strings"
 
 	"github.com/shirou/gopsutil/v4/process"
 	"google.golang.org/grpc/credentials"
@@ -43,6 +45,10 @@ func (c *transportCredentials) ServerHandshake(conn net.Conn) (net.Conn, credent
 		if err != nil {
 			return nil, nil, err
 		}
+		creds.ParentCmdline, err = creds.Parent.Cmdline()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return conn, AuthInfo{
@@ -66,11 +72,17 @@ func (c *transportCredentials) OverrideServerName(sn string) error {
 }
 
 type Creds struct {
-	Parent    *process.Process
-	ParentExe string
-	PID       int
-	UID       int
-	GID       int
+	Parent        *process.Process
+	ParentExe     string
+	ParentCmdline string
+	PID           int
+	UID           int
+	GID           int
+}
+
+func (c Creds) UniqueProcessID() string {
+	firstExe := strings.SplitN(c.ParentCmdline, " ", 2)
+	return fmt.Sprintf("%s:%s", c.ParentExe, firstExe[0])
 }
 
 func GetCreds(conn net.Conn) (*Creds, error) {

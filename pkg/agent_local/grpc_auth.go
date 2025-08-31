@@ -19,10 +19,10 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 	}
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("Application '%s' is attempting to access you token", creds.ParentExe), nil
+			return fmt.Sprintf("Application '%s' is attempting to access you token", creds.ParentCmdline), nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("%s:%s", creds.ParentExe, req.Type), nil
+			return fmt.Sprintf("%s:%s", creds.UniqueProcessID(), req.Type), nil
 		},
 		Timeout: func() time.Duration {
 			return time.Minute * 30
