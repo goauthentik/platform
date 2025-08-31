@@ -20,3 +20,7 @@ func Set(service string, user string, password string) error {
 func IsNotExist(err error) bool {
 	return errors.Is(err, keyring.ErrNotFound)
 }
+
+func Delete(service string, user string) error {
+	return keyring.Delete(service, user)
+}

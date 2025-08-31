@@ -54,3 +54,11 @@ func Set(service string, user string, password string) error {
 func IsNotExist(err error) bool {
 	return errors.Is(err, keychain.ErrorItemNotFound)
 }
+
+func Delete(service string, user string) error {
+	item := keychain.NewItem()
+	item.SetSecClass(keychain.SecClassGenericPassword)
+	item.SetService(service)
+	item.SetAccount(user)
+	return keychain.DeleteItem(item)
+}

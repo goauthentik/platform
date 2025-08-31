@@ -59,6 +59,10 @@ func (c *Cache[T]) Get() (T, error) {
 		return cc, err
 	}
 	if cc.Expiry().Before(time.Now()) {
+		err := keyring.Delete(keyringSvc(c.uid), c.profileName)
+		if err != nil {
+			c.log.WithError(err).Warning("failed to delete expired cache entry")
+		}
 		return cc, ErrExpired
 	}
 	return cc, nil
