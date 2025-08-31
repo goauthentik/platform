@@ -6,10 +6,12 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
+	"google.golang.org/grpc/peer"
 )
 
 func InterceptorLogger(l log.FieldLogger) logging.Logger {
-	return logging.LoggerFunc(func(_ context.Context, lvl logging.Level, msg string, fields ...any) {
+	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
 		f := make(map[string]any, len(fields)/2)
 		i := logging.Fields(fields).Iterator()
 		for i.Next() {
@@ -17,6 +19,11 @@ func InterceptorLogger(l log.FieldLogger) logging.Logger {
 			f[k] = v
 		}
 		l := l.WithFields(f)
+
+		p, ok := peer.FromContext(ctx)
+		if ok {
+			l = l.WithField("auth.pid", p.AuthInfo.(grpc_creds.AuthInfo).Creds.PID)
+		}
 
 		switch lvl {
 		case logging.LevelDebug:
