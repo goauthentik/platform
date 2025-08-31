@@ -8,6 +8,12 @@
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/agent_local/",
             "buildFlags": ["-tags=debug"]
+        },
+        {
+            "name": "Attach local agent",
+            "type": "go",
+            "request": "attach",
+            "mode": "local",
         }
     ]
 }

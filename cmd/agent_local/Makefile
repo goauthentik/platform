@@ -13,12 +13,13 @@ build:
 .PHONY: package
 package: build package-macos package-deb
 
-package-macos:
+package-macos: build
 	cp -R "${PWD}/package/macos/authentik Agent.app" ${TOP}/bin/${TARGET}/
 	mkdir -p "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS"
 	cp ${TOP}/bin/${TARGET}/${BINARY_NAME} "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/"
+# 	codesign --options runtime --deep --entitlements "package/entitlements.plist" --timestamp --sign "AEBEDA5994467C45F0AED1ACAE74DE316C8E3491" "${TOP}/bin/${TARGET}/authentik Agent.app"
 
-package-deb:
+package-deb: build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \

@@ -66,7 +66,7 @@ func (a *Agent) Stop() {
 	a.log.WithField("lock", a.lock).Info("Removing lock file")
 	_ = a.lock.Unlock()
 	if a.grpc != nil {
-		a.grpc.GracefulStop()
+		a.grpc.Stop()
 	}
 	a.log.WithField("socket", a.socketPath).Info("Removing socket file")
 	_ = os.Remove(a.socketPath)
