@@ -39,6 +39,10 @@ func (c *transportCredentials) ServerHandshake(conn net.Conn) (net.Conn, credent
 		if err != nil {
 			return nil, nil, err
 		}
+		creds.ParentExe, err = creds.Parent.Exe()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return conn, AuthInfo{
@@ -62,10 +66,11 @@ func (c *transportCredentials) OverrideServerName(sn string) error {
 }
 
 type Creds struct {
-	Parent *process.Process
-	PID    int
-	UID    int
-	GID    int
+	Parent    *process.Process
+	ParentExe string
+	PID       int
+	UID       int
+	GID       int
 }
 
 func GetCreds(conn net.Conn) (*Creds, error) {

@@ -20,7 +20,6 @@ func (a *Agent) startGRPC() {
 	a.grpc = grpc.NewServer(
 		grpc.Creds(grpc_creds.NewTransportCredentials()),
 		grpc.ChainUnaryInterceptor(
-			a.AuthorizationUnaryInterceptor,
 			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
 		),
 		grpc.ChainStreamInterceptor(

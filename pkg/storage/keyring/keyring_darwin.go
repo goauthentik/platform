@@ -37,13 +37,13 @@ func Set(service string, user string, password string) error {
 	item.SetAccount(user)
 	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
 	item.SetData([]byte(password))
-	item.SetAccessControl(
+	_ = item.SetAccessControl(
 		keychain.AccessControlFlagsBiometryAny|keychain.AccessControlFlagsOr|keychain.AccessControlFlagsWatch,
 		keychain.AccessibleWhenUnlocked,
 	)
 	item.SetSynchronizable(keychain.SynchronizableNo)
 	item.SetAccessible(keychain.AccessibleWhenUnlocked)
-	item.SetUseDataProtectionKeychain(true)
+	_ = item.SetUseDataProtectionKeychain(true)
 	err := keychain.AddItem(item)
 	if errors.Is(err, keychain.ErrorDuplicateItem) {
 		query := keychain.NewItem()
