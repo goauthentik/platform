@@ -6,15 +6,13 @@ package systemlog
 import (
 	"io"
 	"log/syslog"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 	l "github.com/sirupsen/logrus/hooks/syslog"
-	"golang.org/x/term"
 )
 
 func Setup(appName string) error {
-	if term.IsTerminal(int(os.Stdout.Fd())) {
+	if !ShouldSwitch() {
 		return nil
 	}
 	hook, err := l.NewSyslogHook("", "", syslog.LOG_INFO, appName)

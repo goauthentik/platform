@@ -6,7 +6,8 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/agent_local/"
+            "program": "${workspaceFolder}/cmd/agent_local/",
+            "buildFlags": ["-tags=debug"]
         }
     ]
 }

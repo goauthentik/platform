@@ -5,6 +5,7 @@ package keyring
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/keybase/go-keychain"
 )
@@ -34,10 +35,15 @@ func Set(service string, user string, password string) error {
 	item.SetSecClass(keychain.SecClassGenericPassword)
 	item.SetService(service)
 	item.SetAccount(user)
+	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
 	item.SetData([]byte(password))
-	item.SetAccessControl(keychain.AccessControlFlagsBiometryAny, keychain.AccessibleWhenUnlocked)
+	item.SetAccessControl(
+		keychain.AccessControlFlagsBiometryAny|keychain.AccessControlFlagsOr|keychain.AccessControlFlagsWatch,
+		keychain.AccessibleWhenUnlocked,
+	)
 	item.SetSynchronizable(keychain.SynchronizableNo)
 	item.SetAccessible(keychain.AccessibleWhenUnlocked)
+	item.SetUseDataProtectionKeychain(true)
 	err := keychain.AddItem(item)
 	if errors.Is(err, keychain.ErrorDuplicateItem) {
 		query := keychain.NewItem()
