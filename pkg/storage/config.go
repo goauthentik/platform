@@ -95,6 +95,10 @@ func (cfg *ConfigManager) Get() ConfigV1 {
 }
 
 func (cfg *ConfigManager) Save() error {
+	err := cfg.saveKeyring()
+	if err != nil {
+		return err
+	}
 	cfg.log.Debug("saving config")
 	f, err := os.OpenFile(cfg.path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil && !os.IsExist(err) && !os.IsNotExist(err) {
@@ -106,11 +110,7 @@ func (cfg *ConfigManager) Save() error {
 			cfg.log.WithError(err).Warning("failed to close config file")
 		}
 	}()
-	err = json.NewEncoder(f).Encode(&cfg.loaded)
-	if err != nil {
-		return err
-	}
-	return cfg.saveKeyring()
+	return json.NewEncoder(f).Encode(&cfg.loaded)
 }
 
 func (cfg *ConfigManager) Watch() chan ConfigChangedEvent {

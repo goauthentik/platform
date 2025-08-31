@@ -34,13 +34,13 @@ func (cfg *ConfigManager) loadKeyring() error {
 func (cfg *ConfigManager) saveKeyring() error {
 	for name, profile := range cfg.loaded.Profiles {
 		l := cfg.log.WithField("profile", name)
-		l.Debug("Setting access token from keyring")
+		l.Debug("Setting access token in keyring")
 		err := keyring.Set(keyringSvc("access_token"), name, profile.AccessToken)
 		if err != nil {
 			l.WithError(err).Warning("failed to get keyring")
 			return err
 		}
-		l.Debug("Setting refresh token from keyring")
+		l.Debug("Setting refresh token in keyring")
 		err = keyring.Set(keyringSvc("refresh_token"), name, profile.RefreshToken)
 		if err != nil {
 			l.WithError(err).Warning("failed to get keyring")
