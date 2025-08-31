@@ -29,7 +29,7 @@ func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts)
 
 	cc := client.NewCache[KubeCredentialOutput](c, &pb.RequestHeader{
 		Profile: opts.Profile,
-	}, "auth-kube-cache", opts.Profile, opts.ClientID)
+	}, "auth-kube-cache", opts.ClientID)
 	if v, err := cc.Get(ctx); err == nil {
 		log.Debug("Got kube Credentials from cache")
 		return &v

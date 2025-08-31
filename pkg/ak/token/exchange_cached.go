@@ -25,8 +25,8 @@ func (ct CachedToken) Token() *Token {
 	}
 }
 
-func CachedExchangeToken(profileName string, profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
-	c := storage.NewCache[CachedToken]("token-cache", profileName, opts.ClientID)
+func CachedExchangeToken(profileName string, profile *storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
+	c := storage.NewCache[CachedToken](profileName, "token-cache", opts.ClientID)
 	v, err := c.Get()
 	if err == nil {
 		log.Debug("Got token from cache")

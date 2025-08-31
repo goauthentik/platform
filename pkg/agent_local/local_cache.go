@@ -20,7 +20,7 @@ func (ac AgentCache) Expiry() time.Time {
 }
 
 func (a *Agent) CacheGet(ctx context.Context, req *pb.CacheGetRequest) (*pb.CacheGetResponse, error) {
-	cc := storage.NewCache[AgentCache](req.Keys...)
+	cc := storage.NewCache[AgentCache](req.Header.Profile, req.Keys...)
 	res, err := cc.Get()
 	if errors.Is(err, storage.ErrExpired) {
 		return &pb.CacheGetResponse{
@@ -44,7 +44,7 @@ func (a *Agent) CacheGet(ctx context.Context, req *pb.CacheGetRequest) (*pb.Cach
 }
 
 func (a *Agent) CacheSet(ctx context.Context, req *pb.CacheSetRequest) (*pb.CacheSetResponse, error) {
-	cc := storage.NewCache[AgentCache](req.Keys...)
+	cc := storage.NewCache[AgentCache](req.Header.Profile, req.Keys...)
 	err := cc.Set(AgentCache{
 		Body: req.Value,
 		Exp:  req.Expiry.AsTime(),

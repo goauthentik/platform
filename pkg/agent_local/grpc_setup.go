@@ -10,7 +10,7 @@ import (
 
 func (a *Agent) Setup(ctx context.Context, req *pb.SetupRequest) (*pb.SetupResponse, error) {
 	mgr := storage.Manager()
-	mgr.Get().Profiles[req.Header.Profile] = storage.ConfigV1Profile{
+	mgr.Get().Profiles[req.Header.Profile] = &storage.ConfigV1Profile{
 		AuthentikURL: req.AuthentikUrl,
 		AppSlug:      req.AppSlug,
 		ClientID:     req.ClientId,

@@ -17,6 +17,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/hashicorp/vault-client-go v0.4.3
+	github.com/keybase/go-keychain v0.0.1
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.4
 	github.com/nightlyone/lockfile v1.0.0
@@ -26,6 +27,7 @@ require (
 	github.com/skeema/knownhosts v1.3.1
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.11.1
+	github.com/zalando/go-keyring v0.2.6
 	goauthentik.io/api/v3 v3.2025100.2
 	golang.org/x/crypto v0.41.0
 	golang.org/x/term v0.34.0
@@ -37,6 +39,7 @@ require (
 )
 
 require (
+	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/AlekSi/pointer v1.2.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -60,6 +63,7 @@ require (
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
+	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
@@ -68,7 +72,7 @@ require (
 	github.com/go-git/go-git/v5 v5.14.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/godbus/dbus/v5 v5.0.4 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/rpmpack v0.7.0 // indirect
@@ -133,3 +137,5 @@ require (
 )
 
 tool github.com/goreleaser/nfpm/v2/cmd/nfpm
+
+replace github.com/keybase/go-keychain => github.com/alexw23/go-keychain v0.0.0-20240507145345-41efe171240e
