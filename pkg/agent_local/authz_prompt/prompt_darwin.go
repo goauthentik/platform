@@ -48,7 +48,7 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 		return false, err
 	}
 	lastAuthMap[uid] = authState{
-		time:    time.Now(),
+		time:    time.Now().Add(action.timeout()),
 		success: success,
 	}
 	return success, nil
