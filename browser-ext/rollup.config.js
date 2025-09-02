@@ -1,19 +1,15 @@
-import typescript from '@rollup/plugin-typescript';
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
+import typescript from "@rollup/plugin-typescript";
+import resolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
 
 export default {
   input: {
-    background: 'src/background.ts',
+    background: "src/background.ts",
     // popup: 'src/popup.ts'
   },
   output: {
-    dir: 'dist',
-    format: 'es'
+    dir: "dist",
+    format: "es",
   },
-  plugins: [
-    typescript(),
-    resolve(),
-    commonjs()
-  ]
+  plugins: [typescript(), resolve(), commonjs()],
 };

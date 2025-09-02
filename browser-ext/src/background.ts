@@ -1,7 +1,7 @@
 import { Omnibar } from "./utils/omnibar";
 
 chrome.runtime.onInstalled.addListener(() => {
-    console.log('authentik Launcher Extension Installed');
+  console.debug("authentik Launcher Extension Installed");
 });
 
-new Omnibar();
+new Omnibar().register();
