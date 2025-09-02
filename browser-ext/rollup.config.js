@@ -5,7 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 export default {
   input: {
     background: 'src/background.ts',
-    popup: 'src/popup.ts'
+    // popup: 'src/popup.ts'
   },
   output: {
     dir: 'dist',

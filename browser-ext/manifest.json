@@ -15,9 +15,6 @@
   "omnibox": {
     "keyword": "ak"
   },
-  "action": {
-    "default_popup": "src/popup.html"
-  },
   "host_permissions": [
     "https://*/"
   ],
@@ -25,11 +22,5 @@
     "16": "images/icon16.png",
     "48": "images/icon48.png",
     "128": "images/icon128.png"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["src/styles/popup.css"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }

@@ -5,24 +5,11 @@ BINARY_NAME := ak
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
-	go build \
-		-ldflags "${LD_FLAGS}" \
-		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
-		${TOP}/cmd/${TARGET}
+	npm i
+	npm run build
 
 package: build
-	ln -s ./ak ${TOP}/bin/${TARGET}/ak-vault
-	ln -s ./ak ${TOP}/bin/${TARGET}/ak-browser-support
-	mkdir -p ${TOP}/bin/${TARGET}/completions
-	${TOP}/hack/completions.sh ${TOP}/cmd/${TARGET} ${TOP}/bin/${TARGET}/completions ${TARGET}
-	VERSION=${VERSION} ARCH=${ARCH} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p deb \
-			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/nfpm.yaml
-
-test-deploy: package
-	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb
-	$(TME) systemctl restart ssh
-	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb
+	rm -f ${TOP}/browser-ext.pem
+	'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --pack-extension=${PWD}
+	mv ${TOP}/browser-ext.crx ${TOP}/bin/${TARGET}
+	mv ${TOP}/browser-ext.pem ${TOP}/bin/${TARGET}
