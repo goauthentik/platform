@@ -1,6 +1,6 @@
 {
-  "name": "authentik-chrome-ext",
-  "version": "1.0.0",
+  "name": "authentik-browser-ext",
+  "version": "0.5.0",
   "description": "Authentik Application Launcher Chrome Extension",
   "scripts": {
     "build": "rollup -c",

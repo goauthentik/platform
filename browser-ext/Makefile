@@ -4,6 +4,7 @@ TARGET := browser-ext
 BINARY_NAME := ak
 
 build:
+	npm version ${VERSION} || true
 	mkdir -p ${TOP}/bin/${TARGET}
 	npm i
 	npm run build
