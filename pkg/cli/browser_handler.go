@@ -27,6 +27,7 @@ func (m message) MessageID() string {
 type tokenResponse struct {
 	Token      string `json:"token"`
 	ResponseTo string `json:"response_to"`
+	URL        string `json:"url"`
 }
 
 func (tk *tokenResponse) SetInResponseTo(m browser_native_messaging.Message) {
@@ -60,6 +61,7 @@ var browserSupportCmd = &cobra.Command{
 			}
 			return &tokenResponse{
 				Token: curr.Raw,
+				URL:   curr.Url,
 			}, nil
 		})
 		list.Start()

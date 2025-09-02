@@ -223,6 +223,7 @@ type CurrentTokenResponse struct {
 	Header        *ResponseHeader        `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	Token         *Token                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
 	Raw           string                 `protobuf:"bytes,3,opt,name=raw,proto3" json:"raw,omitempty"`
+	Url           string                 `protobuf:"bytes,4,opt,name=url,proto3" json:"url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -274,6 +275,13 @@ func (x *CurrentTokenResponse) GetToken() *Token {
 func (x *CurrentTokenResponse) GetRaw() string {
 	if x != nil {
 		return x.Raw
+	}
+	return ""
+}
+
+func (x *CurrentTokenResponse) GetUrl() string {
+	if x != nil {
+		return x.Url
 	}
 	return ""
 }
@@ -408,11 +416,12 @@ const file_agent_auth_proto_rawDesc = "" +
 	"\vUNSPECIFIED\x10\x00\x12\f\n" +
 	"\bVERIFIED\x10\x01\x12\x0e\n" +
 	"\n" +
-	"UNVERIFIED\x10\x02\"{\n" +
+	"UNVERIFIED\x10\x02\"\x8d\x01\n" +
 	"\x14CurrentTokenResponse\x12-\n" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12\"\n" +
 	"\x05token\x18\x02 \x01(\v2\f.agent.TokenR\x05token\x12\x10\n" +
-	"\x03raw\x18\x03 \x01(\tR\x03raw\"a\n" +
+	"\x03raw\x18\x03 \x01(\tR\x03raw\x12\x10\n" +
+	"\x03url\x18\x04 \x01(\tR\x03url\"a\n" +
 	"\x14TokenExchangeRequest\x12,\n" +
 	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12\x1b\n" +
 	"\tclient_id\x18\x02 \x01(\tR\bclientId\"\x88\x01\n" +

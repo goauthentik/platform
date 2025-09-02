@@ -1,8 +1,6 @@
 import { Configuration, CoreApi } from "@goauthentik/api";
 import { type Native } from "./native";
 
-const AUTHENTIK_API_URL = "https://id.beryju.io";
-
 export interface GetToken {
   version: string;
   path: string;
@@ -13,6 +11,7 @@ export interface GetToken {
 export interface TokenResponse {
   response_to: string;
   token: string;
+  url: string;
 }
 
 function createRandomString(length: number = 16) {
@@ -27,7 +26,7 @@ function createRandomString(length: number = 16) {
   return result;
 }
 
-export async function getToken(n: Native): Promise<string> {
+export async function getToken(n: Native): Promise<{ token: string, url: string }> {
   const uid = createRandomString();
   const token = (await n.postMessage({
     version: "1",
@@ -35,7 +34,10 @@ export async function getToken(n: Native): Promise<string> {
     profile: "default",
     id: uid,
   } as GetToken)) as TokenResponse;
-  return token.token;
+  return {
+    token: token.token,
+    url: token.url,
+  };
 }
 
 export async function fetchApplications(n: Native) {
@@ -43,8 +45,8 @@ export async function fetchApplications(n: Native) {
 
   const response = await new CoreApi(
     new Configuration({
-      basePath: `${AUTHENTIK_API_URL}/api/v3`,
-      accessToken: token,
+      basePath: `${token.url}/api/v3`,
+      accessToken: token.token,
     }),
   ).coreApplicationsList({});
   return response.results;

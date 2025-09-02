@@ -9,6 +9,7 @@ import (
 	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/cli/pkg/storage"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -50,5 +51,6 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 			Jti:               token.Claims().ID,
 		},
 		Raw: token.RawAccessToken,
+		Url: storage.Manager().Get().Profiles[req.Header.Profile].AuthentikURL,
 	}, nil
 }
