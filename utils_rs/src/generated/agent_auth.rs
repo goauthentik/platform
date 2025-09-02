@@ -57,6 +57,8 @@ pub struct CurrentTokenResponse {
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
     #[prost(message, optional, tag="2")]
     pub token: ::core::option::Option<super::agent::Token>,
+    #[prost(string, tag="3")]
+    pub raw: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TokenExchangeRequest {

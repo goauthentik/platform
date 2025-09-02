@@ -29,7 +29,7 @@ impl Config {
             pam: PAMConfig {
                 authentication_flow: "".to_string(),
                 terminate_on_expiry: true,
-            }
+            },
         }
     }
 

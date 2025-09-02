@@ -9,10 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func SetupFile(name string) error {
-	if !ShouldSwitch() {
-		return nil
-	}
+func ForceSetupFile(name string) error {
 	f, err := os.OpenFile("/var/log/authentik/"+name, os.O_WRONLY|os.O_CREATE, 0755)
 	if err != nil {
 		return err
