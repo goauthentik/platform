@@ -11,10 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Setup(appName string) error {
-	if !ShouldSwitch() {
-		return nil
-	}
+func ForceSetup(appName string) error {
 	hd, err := os.UserHomeDir()
 	if err != nil {
 		return err
@@ -30,4 +27,11 @@ func Setup(appName string) error {
 	}
 	logrus.SetOutput(f)
 	return nil
+}
+
+func Setup(appName string) error {
+	if !ShouldSwitch() {
+		return nil
+	}
+	return ForceSetup(appName)
 }
