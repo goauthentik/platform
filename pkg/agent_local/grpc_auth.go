@@ -13,10 +13,7 @@ import (
 )
 
 func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest) (*pb.CurrentTokenResponse, error) {
-	pfm, err := token.NewProfile(req.Header.Profile)
-	if err != nil {
-		return nil, err
-	}
+	pfm := a.tr.ForProfile(req.Header.Profile)
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("Application '%s' is attempting to access you token", creds.ParentCmdline), nil
@@ -49,9 +46,9 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 			Sub:               token.Claims().Subject,
 			Aud:               token.Claims().Audience,
 			Exp:               timestamppb.New(token.Claims().ExpiresAt.Time),
-			Nbf:               timestamppb.New(token.Claims().NotBefore.Time),
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
+		Raw: token.RawAccessToken,
 	}, nil
 }
