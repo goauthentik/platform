@@ -1,6 +1,6 @@
-include ../../common.mk
+include ../common.mk
 
-TARGET := cli
+TARGET := browser-ext
 BINARY_NAME := ak
 
 build:

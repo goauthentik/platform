@@ -1,0 +1,24 @@
+{
+  "name": "authentik-chrome-ext",
+  "version": "1.0.0",
+  "description": "Authentik Application Launcher Chrome Extension",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "type-check": "tsc --noEmit"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/chrome": "^0.0.242",
+    "rollup": "^3.20.0",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@goauthentik/api": "^2025.6.3-1751754396",
+    "fuse.js": "^7.1.0"
+  }
+}
