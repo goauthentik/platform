@@ -28,10 +28,3 @@ func ForceSetup(appName string) error {
 	logrus.SetOutput(f)
 	return nil
 }
-
-func Setup(appName string) error {
-	if !ShouldSwitch() {
-		return nil
-	}
-	return ForceSetup(appName)
-}
