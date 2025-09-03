@@ -27,3 +27,19 @@ jobs:
         with:
           name: authentik_${{ matrix.target }}
           path: bin/
+  lint:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - browser-ext
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "${{ matrix.target }}/package.json"
+          cache: "npm"
+          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+      - run: make ${{ matrix.target }}/lint

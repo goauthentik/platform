@@ -13,3 +13,8 @@ build:
 
 package: build
 	zip ${TOP}/bin/${TARGET}/${FILE_NAME} -r manifest.json images dist
+
+lint:
+	npm i
+	npm run lint-check
+	npm run prettier-check
