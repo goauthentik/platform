@@ -1,3 +1,5 @@
+import { STORAGE_KEY_PROFILE } from "./utils/storage";
+
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 
@@ -13,7 +15,7 @@ class BrowserExtensionOptions extends LitElement {
         this.profiles = await chrome.runtime.sendMessage({
             action: "get_profiles",
         });
-        const stor = await chrome.storage.sync.get(["profile"]);
+        const stor = await chrome.storage.sync.get([STORAGE_KEY_PROFILE]);
         this.selectedProfile = stor.profile;
         this.requestUpdate();
     }
@@ -37,7 +39,7 @@ class BrowserExtensionOptions extends LitElement {
                             name="profile"
                             value="${profile.name}"
                             @select=${() => {
-                                chrome.storage.sync.set({ profile: profile.name });
+                                chrome.storage.sync.set({ [STORAGE_KEY_PROFILE]: profile.name });
                             }}
                             ?checked=${checked}
                         />

@@ -68,12 +68,12 @@ export class Native {
         });
     }
 
-    async getToken(): Promise<{ token: string; url: string }> {
+    async getToken(profile: string): Promise<{ token: string; url: string }> {
         const uid = createRandomString();
         const token = await this.postMessage({
             version: "1",
             path: "get_token",
-            profile: "default",
+            profile: profile,
             id: uid,
         });
         return {
@@ -94,8 +94,8 @@ export class Native {
         };
     }
 
-    async fetchApplications() {
-        const token = await this.getToken();
+    async fetchApplications(profile: string) {
+        const token = await this.getToken(profile);
 
         const response = await new CoreApi(
             new Configuration({

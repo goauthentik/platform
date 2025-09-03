@@ -1,4 +1,5 @@
 import { Native } from "./native";
+import { STORAGE_KEY_PROFILE } from "./storage";
 
 import { Application } from "@goauthentik/api";
 
@@ -53,7 +54,7 @@ export class Omnibar {
         chrome.omnibox.onInputEntered.addListener((text, disposition) => {
             const selected = this.fuse.search(text);
             if (selected.length > 0) {
-                const url = selected[0]?.item.launchUrl!;
+                const url = selected[0].item.launchUrl!;
                 switch (disposition) {
                     case "currentTab":
                         chrome.tabs.update({ url });
@@ -70,7 +71,9 @@ export class Omnibar {
     }
 
     async #update() {
-        const apps = await this.#native.fetchApplications();
+        const stor = await chrome.storage.sync.get([STORAGE_KEY_PROFILE]);
+        const selectedProfile = stor[STORAGE_KEY_PROFILE];
+        const apps = await this.#native.fetchApplications(selectedProfile);
         this.fuse.setCollection(apps);
     }
 }
