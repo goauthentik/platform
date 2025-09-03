@@ -55,5 +55,5 @@ sysd/%:
 agent/%:
 	$(MAKE) -C cmd/agent_local $*
 
-browser/%:
+browser-ext/%:
 	$(MAKE) -C browser-ext/ $*
