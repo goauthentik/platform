@@ -17,7 +17,7 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 	prof := a.cfg.Get().Profiles[req.Header.Profile]
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("Application '%s' is attempting to get your info.", creds.ParentCmdline), nil
+			return fmt.Sprintf("authorize access to your account info in '%s'", creds.ParentCmdline), nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return creds.UniqueProcessID(), nil

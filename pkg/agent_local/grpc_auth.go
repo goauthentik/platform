@@ -17,7 +17,7 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 	pfm := a.tr.ForProfile(req.Header.Profile)
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("Application '%s' is attempting to access you token", creds.ParentCmdline), nil
+			return fmt.Sprintf("authorize access to your account in '%s'", creds.ParentCmdline), nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("%s:%s", creds.UniqueProcessID(), req.Type), nil
