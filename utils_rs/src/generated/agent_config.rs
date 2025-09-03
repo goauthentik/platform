@@ -20,5 +20,17 @@ pub struct SetupResponse {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
 }
-include!("agent_setup.tonic.rs");
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Profile {
+    #[prost(string, tag="1")]
+    pub name: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ListProfilesResponse {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::ResponseHeader>,
+    #[prost(message, repeated, tag="2")]
+    pub profiles: ::prost::alloc::vec::Vec<Profile>,
+}
+include!("agent_config.tonic.rs");
 // @@protoc_insertion_point(module)

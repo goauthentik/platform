@@ -19,7 +19,7 @@ import (
 type Agent struct {
 	pb.UnimplementedAgentAuthServer
 	pb.UnimplementedAgentCacheServer
-	pb.UnimplementedAgentSetupServer
+	pb.UnimplementedAgentConfigServer
 
 	grpc           *grpc.Server
 	cfg            *storage.ConfigManager

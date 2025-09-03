@@ -2,10 +2,12 @@ package agentlocal
 
 import (
 	"context"
+	"maps"
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/storage"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (a *Agent) Setup(ctx context.Context, req *pb.SetupRequest) (*pb.SetupResponse, error) {
@@ -27,4 +29,18 @@ func (a *Agent) Setup(ctx context.Context, req *pb.SetupRequest) (*pb.SetupRespo
 			Successful: true,
 		},
 	}, nil
+}
+
+func (a *Agent) ListProfiles(ctx context.Context, _ *emptypb.Empty) (*pb.ListProfilesResponse, error) {
+	mgr := storage.Manager()
+	res := &pb.ListProfilesResponse{
+		Header:   &pb.ResponseHeader{Successful: true},
+		Profiles: make([]*pb.Profile, 0),
+	}
+	for profile := range maps.Keys(mgr.Get().Profiles) {
+		res.Profiles = append(res.Profiles, &pb.Profile{
+			Name: profile,
+		})
+	}
+	return res, nil
 }

@@ -15,7 +15,7 @@ import (
 type Client struct {
 	pb.AgentAuthClient
 	pb.AgentCacheClient
-	pb.AgentSetupClient
+	pb.AgentConfigClient
 }
 
 func New(socketPath string) (*Client, error) {
@@ -35,6 +35,6 @@ func New(socketPath string) (*Client, error) {
 	return &Client{
 		pb.NewAgentAuthClient(conn),
 		pb.NewAgentCacheClient(conn),
-		pb.NewAgentSetupClient(conn),
+		pb.NewAgentConfigClient(conn),
 	}, nil
 }

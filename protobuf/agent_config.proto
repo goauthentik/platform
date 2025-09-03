@@ -1,11 +1,13 @@
 syntax = "proto3";
 
-package agent_setup;
+package agent_config;
 option go_package = "pkg/pb";
 
 import "agent.proto";
+import "google/protobuf/empty.proto";
 
-service AgentSetup {
+service AgentConfig {
+  rpc ListProfiles(google.protobuf.Empty) returns (ListProfilesResponse);
   rpc Setup(SetupRequest) returns (SetupResponse);
 }
 
@@ -20,4 +22,13 @@ message SetupRequest {
 
 message SetupResponse {
   agent.ResponseHeader header = 1;
+}
+
+message Profile {
+  string name = 1;
+}
+
+message ListProfilesResponse {
+  agent.ResponseHeader header = 1;
+  repeated Profile profiles = 2;
 }
