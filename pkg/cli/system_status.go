@@ -10,7 +10,7 @@ import (
 	"goauthentik.io/cli/pkg/pb"
 )
 
-var sessionStatusCmd = &cobra.Command{
+var systemStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status about the current session",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,5 +34,7 @@ var sessionStatusCmd = &cobra.Command{
 }
 
 func init() {
-	sessionCmd.AddCommand(sessionStatusCmd)
+	if _, err := os.Stat(sysSocket); err == nil {
+		systemCmd.AddCommand(systemStatusCmd)
+	}
 }

@@ -37,9 +37,13 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	var err error
-	if path.Base(os.Args[0]) == "ak-vault" {
+	arg0 := path.Base(os.Args[0])
+	switch arg0 {
+	case "ak-vault":
 		err = vaultCmd.Execute()
-	} else {
+	case "ak-browser-support":
+		err = browserSupportCmd.Execute()
+	default:
 		err = rootCmd.Execute()
 	}
 	if err != nil {

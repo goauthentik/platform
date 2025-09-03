@@ -34,6 +34,7 @@ message CurrentTokenResponse {
   agent.ResponseHeader header = 1;
   agent.Token token = 2;
   string raw = 3;
+  string url = 4;
 }
 
 message TokenExchangeRequest {

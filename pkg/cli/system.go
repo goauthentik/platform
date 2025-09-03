@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"net"
-	"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	log "github.com/sirupsen/logrus"
@@ -34,13 +33,11 @@ func sysClient() (pb.SessionManagerClient, error) {
 	return pb.NewSessionManagerClient(conn), nil
 }
 
-var sessionCmd = &cobra.Command{
-	Use:   "session",
+var systemCmd = &cobra.Command{
+	Use:   "system",
 	Short: "Commands for interacting with authentik sessions.",
 }
 
 func init() {
-	if _, err := os.Stat(sysSocket); err == nil {
-		rootCmd.AddCommand(sessionCmd)
-	}
+	rootCmd.AddCommand(systemCmd)
 }

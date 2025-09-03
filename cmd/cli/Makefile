@@ -11,6 +11,8 @@ build:
 		${TOP}/cmd/${TARGET}
 
 package: build
+	ln -s ./ak ${TOP}/bin/${TARGET}/ak-vault
+	ln -s ./ak ${TOP}/bin/${TARGET}/ak-browser-support
 	mkdir -p ${TOP}/bin/${TARGET}/completions
 	${TOP}/hack/completions.sh ${TOP}/cmd/${TARGET} ${TOP}/bin/${TARGET}/completions ${TARGET}
 	VERSION=${VERSION} ARCH=${ARCH} \
