@@ -1,0 +1,139 @@
+import AuthenticationServices
+
+extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistrationHandler {
+
+    var supportedDeviceEncryptionAlgorithms: [ASAuthorizationProviderExtensionEncryptionAlgorithm] {
+        return [.ecdhe_A256GCM]
+    }
+
+    var supportedUserSecureEnclaveKeySigningAlgorithms:
+        [ASAuthorizationProviderExtensionSigningAlgorithm]
+    {
+        return [.ed25519]
+    }
+
+    var supportedDeviceSigningAlgorithms: [ASAuthorizationProviderExtensionSigningAlgorithm] {
+        return [.ed25519]
+    }
+
+    func beginDeviceRegistration(
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
+        options: ASAuthorizationProviderExtensionRequestOptions = [],
+        completion: @escaping (
+            ASAuthorizationProviderExtensionRegistrationResult
+        ) -> Void
+    ) {
+        Sentry.setup()
+        self.logger.debug(
+            "test \(String(describing: loginManager.extensionData), privacy: .public)")
+        self.logger.debug("Begin Device Registration")
+        self.logger.debug("Options: \(String(describing: options))")
+        self.logger.debug(
+            "loginConfiguration: \(String(describing: loginManager.loginConfiguration))")
+        let config = ConfigManager.shared.getConfig()
+        let loginConfig = ASAuthorizationProviderExtensionLoginConfiguration(
+            clientID: config.ClientID,
+            issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
+            tokenEndpointURL: URL(string: "\(config.BaseURL)/endpoint/apple/sso/token/")!,
+            jwksEndpointURL: URL(
+                string: "\(config.BaseURL)/application/o/\(config.AppSlug)/jwks/")!,
+            audience: config.ClientID
+        )
+
+        loginConfig.nonceEndpointURL = URL(
+            string: "\(config.BaseURL)/endpoint/apple/sso/nonce/")!
+        loginConfig.accountDisplayName = "authentik"
+        loginConfig.includePreviousRefreshTokenInLoginRequest = true
+
+        self.logger.debug("clientID: \(loginConfig.clientID)")
+        self.logger.debug("issuer: \(loginConfig.issuer)")
+        self.logger.debug("audience: \(loginConfig.audience)")
+
+        self.cancelFunc = {
+            completion(.failed)
+        }
+
+        API.shared.RegisterDevice(
+            loginConfig: loginConfig,
+            loginManger: loginManager,
+            token: loginManager.registrationToken ?? "",
+        ) { status in
+            completion(status)
+        }
+    }
+
+    func beginUserRegistration(
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
+        userName: String?,
+        method: ASAuthorizationProviderExtensionAuthenticationMethod,
+        options: ASAuthorizationProviderExtensionRequestOptions = [],
+        completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
+    ) {
+        Sentry.setup()
+        self.logger.debug(
+            "beginUserRegistration \(userName ?? "", privacy: .public), method \(String(describing: method), privacy: .public)"
+        )
+        self.logger.debug("options: \(String.init(describing: options), privacy: .public)")
+        let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
+            loginUserName: userName ?? "")
+        let config = ConfigManager.shared.getConfig()
+        self.cancelFunc = {
+            completion(.failed)
+        }
+        OIDC.shared.startAuthorization(
+            viewController: self,
+            loginConfig: ASAuthorizationProviderExtensionLoginConfiguration(
+                clientID: config.ClientID,
+                issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
+                tokenEndpointURL: URL(string: "\(config.BaseURL)/application/o/token/")!,
+                jwksEndpointURL: URL(
+                    string: "\(config.BaseURL)/application/o/\(config.AppSlug)/jwks/")!,
+                audience: config.ClientID,
+            ))
+        loginManager.presentRegistrationViewController { error in
+            if let err = error {
+                self.logger.error("error presentRegistrationViewController \(err)")
+                completion(.failed)
+            }
+            OIDC.shared.completion = { token in
+                self.logger.debug("got token \(String(describing: token), privacy: .public)")
+
+                API.shared.RegisterUser(
+                    loginConfig: loginConfig,
+                    loginManger: loginManager,
+                    token: token.accessToken!,
+                ) { st in
+                    completion(st)
+                }
+            }
+        }
+    }
+
+    func registrationDidComplete() {
+        self.logger.debug("registrationDidComplete")
+    }
+
+    func protocolVersion() -> ASAuthorizationProviderExtensionPlatformSSOProtocolVersion {
+        self.logger.debug("protocolVersion")
+        return .version2_0
+    }
+
+    func registrationDidCancel() {
+        self.logger.debug("registrationDidCancel")
+    }
+
+    func supportedGrantTypes() -> ASAuthorizationProviderExtensionSupportedGrantTypes {
+        self.logger.debug("supportedGrantTypes")
+        return [.password, .jwtBearer]
+    }
+
+    func keyWillRotate(
+        for keyType: ASAuthorizationProviderExtensionKeyType,
+        newKey _: SecKey,
+        loginManager _: ASAuthorizationProviderExtensionLoginManager,
+        completion: @escaping (Bool) -> Void
+    ) {
+        self.logger.debug("keyWillRotate \(String(describing: keyType))")
+        completion(false)
+    }
+}

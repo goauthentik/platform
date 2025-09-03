@@ -14,12 +14,21 @@ build:
 
 package-darwin: build
 	$(MAKE) -C ${TOP} cli/build
+	$(MAKE) -C ${TOP} ee/psso/build || true
 	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" ${TOP}/bin/${TARGET}/
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
 	cp ${TOP}/bin/${TARGET}/${BINARY_NAME} "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp ${TOP}/bin/cli/ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	ln -s ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
 	ln -s ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support" || true
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
+	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex" || true
+	@echo "Siging with entitlements"
+	codesign \
+		--deep \
+		--entitlements "${PWD}/package/macos/authentikEndpoint.entitlements" \
+		--sign AEBEDA5994467C45F0AED1ACAE74DE316C8E3491 \
+		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
 		--identifier "io.goauthentik.agent" \

@@ -8,7 +8,7 @@ all: clean gen
 clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
-gen: gen-proto utils_rs/gen
+gen: gen-proto utils_rs/gen ee/psso/gen
 	go generate ./...
 
 gen-proto:
@@ -57,3 +57,6 @@ agent/%:
 
 browser-ext/%:
 	$(MAKE) -C browser-ext/ $*
+
+ee/psso/%:
+	$(MAKE) -C ee/psso/ $*
