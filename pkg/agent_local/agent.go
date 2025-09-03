@@ -51,7 +51,6 @@ func (a *Agent) Start() {
 	}
 	go a.startConfigWatch()
 	go a.startGRPC()
-	a.installBrowser()
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
