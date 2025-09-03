@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/storage"
 )
@@ -23,7 +22,7 @@ func (ptm *ProfileTokenManager) renew() error {
 	if err != nil {
 		return err
 	}
-	log.WithField("url", req.URL.String()).Debug("sending request")
+	ptm.log.WithField("url", req.URL.String()).Debug("sending request")
 
 	req.SetBasicAuth(profile.ClientID, "")
 	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", storage.FullVersion()))

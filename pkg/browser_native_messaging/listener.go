@@ -12,6 +12,7 @@ import (
 	"unsafe"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type Message interface {
@@ -32,7 +33,7 @@ type Listener[in Message, out Response] struct {
 
 func NewListener[in Message, out Response]() *Listener[in, out] {
 	l := &Listener[in, out]{
-		log:        log.WithField("logger", "browser-support"),
+		log:        systemlog.Get().WithField("logger", "browser-support"),
 		bufferSize: 8192,
 		handler:    map[string]func(in in) (out, error){},
 	}

@@ -1,6 +1,5 @@
 import Fuse from "fuse.js";
 import { Native } from "./native";
-import { fetchApplications } from "./authentik";
 import { Application } from "@goauthentik/api";
 
 export class Omnibar {
@@ -31,7 +30,7 @@ export class Omnibar {
         });
       } else {
         chrome.omnibox.setDefaultSuggestion({
-          description: "No results found."
+          description: "No results found.",
         });
         return;
       }
@@ -63,7 +62,7 @@ export class Omnibar {
   }
 
   async #update() {
-    const apps = await fetchApplications(this.#native);
+    const apps = await this.#native.fetchApplications();
     this.fuse.setCollection(apps);
   }
 }

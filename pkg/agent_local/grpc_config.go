@@ -4,7 +4,6 @@ import (
 	"context"
 	"maps"
 
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/storage"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -21,7 +20,7 @@ func (a *Agent) Setup(ctx context.Context, req *pb.SetupRequest) (*pb.SetupRespo
 	}
 	err := mgr.Save()
 	if err != nil {
-		log.WithError(err).Warning("failed to save config")
+		a.log.WithError(err).Warning("failed to save config")
 		return nil, err
 	}
 	return &pb.SetupResponse{

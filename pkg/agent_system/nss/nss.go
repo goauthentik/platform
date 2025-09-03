@@ -8,6 +8,7 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type Server struct {
@@ -28,7 +29,7 @@ type Server struct {
 func NewServer(api *api.APIClient) *Server {
 	srv := &Server{
 		api: api,
-		log: log.WithField("logger", "sysd.nss_server"),
+		log: systemlog.Get().WithField("logger", "sysd.nss_server"),
 		cfg: config.Get(),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())

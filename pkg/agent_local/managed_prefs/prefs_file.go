@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 var paths = []string{
@@ -16,15 +16,15 @@ func Read() (*ManagedPrefs, error) {
 	for _, path := range paths {
 		c, err := os.ReadFile(path)
 		if err != nil {
-			log.WithField("path", path).WithError(err).Warning("failed to open file")
+			systemlog.Get().WithField("path", path).WithError(err).Warning("failed to open file")
 			continue
 		}
 		err = json.Unmarshal(c, &prefs)
 		if err != nil {
-			log.WithField("path", path).WithError(err).Warning("failed to parse file")
+			systemlog.Get().WithField("path", path).WithError(err).Warning("failed to parse file")
 			continue
 		}
-		log.WithField("path", path).Debug("loaded managed preferences")
+		systemlog.Get().WithField("path", path).Debug("loaded managed preferences")
 	}
 	return prefs, nil
 }

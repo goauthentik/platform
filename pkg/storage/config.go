@@ -8,6 +8,7 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type ConfigManager struct {
@@ -50,7 +51,7 @@ func newManager() (*ConfigManager, error) {
 	}
 	cfg := &ConfigManager{
 		path:    file,
-		log:     log.WithField("logger", "storage.config"),
+		log:     systemlog.Get().WithField("logger", "storage.config"),
 		changed: make([]chan ConfigChangedEvent, 0),
 	}
 	cfg.log.WithField("path", file).Debug("Config file path")

@@ -3,8 +3,8 @@ package token
 import (
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type CachedToken struct {
@@ -29,14 +29,14 @@ func CachedExchangeToken(profileName string, profile *storage.ConfigV1Profile, o
 	c := storage.NewCache[CachedToken](profileName, "token-cache", opts.ClientID)
 	v, err := c.Get()
 	if err == nil {
-		log.Debug("Got token from cache")
+		systemlog.Get().Debug("Got token from cache")
 		return &Token{
 			RawAccessToken: v.AccessToken,
 		}, nil
 	} else {
-		log.WithError(err).Debug("couldn't get token from cache")
+		systemlog.Get().WithError(err).Debug("couldn't get token from cache")
 	}
-	log.Debug("Exchanging for new token")
+	systemlog.Get().Debug("Exchanging for new token")
 	nt, err := ExchangeToken(profile, opts)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func CachedExchangeToken(profileName string, profile *storage.ConfigV1Profile, o
 		ExpiresIn:   nt.ExpiresIn,
 		Created:     time.Now(),
 	}
-	log.Debug("Setting cache")
+	systemlog.Get().Debug("Setting cache")
 	err = c.Set(ct)
 	if err != nil {
 		return nil, err

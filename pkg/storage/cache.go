@@ -8,6 +8,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/storage/keyring"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 var (
@@ -29,7 +30,7 @@ func NewCache[T CacheData](profileName string, uidParts ...string) *Cache[T] {
 	c := &Cache[T]{
 		uid:         uid,
 		profileName: profileName,
-		log:         log.WithField("logger", "cache").WithField("uid", uid),
+		log:         systemlog.Get().WithField("logger", "cache").WithField("uid", uid),
 	}
 	return c
 }

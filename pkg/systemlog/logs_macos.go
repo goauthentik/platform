@@ -8,7 +8,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func ForceSetup(appName string) error {
@@ -25,6 +25,6 @@ func ForceSetup(appName string) error {
 	if err != nil {
 		return err
 	}
-	logrus.SetOutput(f)
+	log.SetOutput(f)
 	return nil
 }

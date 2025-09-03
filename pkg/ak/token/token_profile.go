@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type ProfileTokenManager struct {
@@ -46,7 +47,7 @@ func NewProfile(profileName string, opts ...ProfileManagerOpt) (*ProfileTokenMan
 	ctx, stop := context.WithCancel(context.Background())
 
 	ptm := &ProfileTokenManager{
-		log:         log.WithField("logger", "token.manager").WithField("profile", profileName),
+		log:         systemlog.Get().WithField("logger", "token.manager").WithField("profile", profileName),
 		profileName: profileName,
 		ctx:         ctx,
 		ctxStop:     stop,

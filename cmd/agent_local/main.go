@@ -14,15 +14,15 @@ func main() {
 		TracesSampleRate: 0.3,
 	})
 	if err != nil {
-		log.WithError(err).Warn("failed to init sentry")
+		systemlog.Get().WithError(err).Warn("failed to init sentry")
 	}
 	err = systemlog.Setup("agent")
 	if err != nil {
-		log.WithError(err).Warning("failed to setup logs")
+		systemlog.Get().WithError(err).Warning("failed to setup logs")
 	}
 	a, err := agent.New()
 	if err != nil {
-		log.WithError(err).Warning("failed to start agent")
+		systemlog.Get().WithError(err).Warning("failed to start agent")
 		return
 	}
 	a.Start()

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/ansxuman/go-touchid"
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type authState struct {
@@ -28,13 +28,13 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 		return false, err
 	}
 	uid = fmt.Sprintf("%s:%s", profile, uid)
-	log.WithField("uid", uid).Debug("Checking if we need to authorize")
+	systemlog.Get().WithField("uid", uid).Debug("Checking if we need to authorize")
 	if last, ok := lastAuthMap[uid]; ok {
 		if last.time.Add(action.timeout()).After(time.Now()) {
-			log.WithField("success", last.success).WithField("uid", uid).Debug("Valid last result in cache")
+			systemlog.Get().WithField("success", last.success).WithField("uid", uid).Debug("Valid last result in cache")
 			return last.success, nil
 		}
-		log.WithField("uid", uid).Debug("Deleting expired cached result")
+		systemlog.Get().WithField("uid", uid).Debug("Deleting expired cached result")
 		delete(lastAuthMap, uid)
 	}
 
@@ -42,7 +42,7 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 	if err != nil {
 		return false, err
 	}
-	log.WithField("uid", uid).Debug("Prompting for authz")
+	systemlog.Get().WithField("uid", uid).Debug("Prompting for authz")
 	success, err := touchid.Auth(touchid.DeviceTypeBiometrics, msg)
 	if err != nil {
 		return false, err

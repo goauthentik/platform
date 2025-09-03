@@ -13,6 +13,7 @@ import (
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 
@@ -36,7 +37,7 @@ func New() (*Agent, error) {
 	mgr := storage.Manager()
 	return &Agent{
 		cfg:        mgr,
-		log:        log.WithField("logger", "agent"),
+		log:        systemlog.Get().WithField("logger", "agent"),
 		tr:         token.NewGlobal(),
 		socketPath: types.GetAgentSocketPath(),
 	}, nil

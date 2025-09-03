@@ -48,7 +48,7 @@ var browserSupportCmd = &cobra.Command{
 		log.SetLevel(log.DebugLevel)
 		list := browser_native_messaging.NewListener[message, *response]()
 		list.Handle("get_token", func(in message) (*response, error) {
-			log.Debugf("Browser host message: '%+v'\n", in)
+			systemlog.Get().Debugf("Browser host message: '%+v'\n", in)
 			curr, err := c.GetCurrentToken(cmd.Context(), &pb.CurrentTokenRequest{
 				Header: &pb.RequestHeader{
 					Profile: in.Profile,
@@ -56,7 +56,7 @@ var browserSupportCmd = &cobra.Command{
 				Type: pb.CurrentTokenRequest_VERIFIED,
 			})
 			if err != nil {
-				log.WithError(err).Fatal("failed to get current token")
+				systemlog.Get().WithError(err).Fatal("failed to get current token")
 				return nil, err
 			}
 			return &response{
@@ -69,7 +69,7 @@ var browserSupportCmd = &cobra.Command{
 		list.Handle("list_profiles", func(in message) (*response, error) {
 			res, err := c.ListProfiles(cmd.Context(), &emptypb.Empty{})
 			if err != nil {
-				log.WithError(err).Fatal("failed to list profiles")
+				systemlog.Get().WithError(err).Fatal("failed to list profiles")
 				return nil, err
 			}
 			return &response{
