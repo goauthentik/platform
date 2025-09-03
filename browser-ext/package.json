@@ -1,31 +1,32 @@
 {
-  "name": "authentik-browser-ext",
-  "version": "0.5.0",
-  "description": "Authentik Application Launcher Chrome Extension",
-  "scripts": {
-    "build": "rollup -c",
-    "watch": "rollup -c -w",
-    "type-check": "tsc --noEmit",
-    "prettier": "prettier --cache --write -u .",
-    "prettier-check": "prettier --cache --check -u .",
-    "lint": "eslint --fix .",
-    "lint-check": "eslint --max-warnings 0 ."
-  },
-  "type": "module",
-  "devDependencies": {
-    "@goauthentik/api": "^2025.6.3-1751754396",
-    "@goauthentik/eslint-config": "^1.0.5",
-    "@goauthentik/prettier-config": "^3.1.0",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-typescript": "^12.1.4",
-    "@types/chrome": "^0.1.4",
-    "fuse.js": "^7.1.0",
-    "rollup": "^3.20.0",
-    "tslib": "^2.5.0",
-    "typescript": "^5.0.0"
-  },
-  "engines": {
-    "node": ">=24"
-  }
+    "name": "authentik-browser-ext",
+    "version": "0.5.0",
+    "description": "Authentik Application Launcher Chrome Extension",
+    "scripts": {
+        "build": "rollup -c",
+        "lint": "eslint --fix .",
+        "lint-check": "eslint --max-warnings 0 .",
+        "prettier": "prettier --cache --write -u .",
+        "prettier-check": "prettier --cache --check -u .",
+        "type-check": "tsc --noEmit",
+        "watch": "rollup -c -w"
+    },
+    "type": "module",
+    "devDependencies": {
+        "@goauthentik/api": "^2025.6.3-1751754396",
+        "@goauthentik/eslint-config": "^1.0.5",
+        "@goauthentik/prettier-config": "^3.1.0",
+        "@rollup/plugin-commonjs": "^28.0.6",
+        "@rollup/plugin-node-resolve": "^16.0.1",
+        "@rollup/plugin-typescript": "^12.1.4",
+        "@types/chrome": "^0.1.4",
+        "fuse.js": "^7.1.0",
+        "rollup": "^3.20.0",
+        "tslib": "^2.5.0",
+        "typescript": "^5.0.0"
+    },
+    "engines": {
+        "node": ">=24"
+    },
+    "prettier": "@goauthentik/prettier-config"
 }

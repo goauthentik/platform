@@ -19,8 +19,8 @@ package-macos: build
 	mkdir -p "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS"
 	cp ${TOP}/bin/${TARGET}/${BINARY_NAME} "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/"
 	cp ${TOP}/bin/cli/ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/"
-	ln -s ./ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/ak-vault" || true
-	ln -s ./ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/ak-browser-support" || true
+	ln -s ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/ak-vault" || true
+	ln -s ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/ak-browser-support" || true
 # 	codesign --options runtime --deep --entitlements "package/entitlements.plist" --timestamp --sign "AEBEDA5994467C45F0AED1ACAE74DE316C8E3491" "${TOP}/bin/${TARGET}/authentik Agent.app"
 
 package-deb: build

@@ -47,6 +47,11 @@ var browserSupportCmd = &cobra.Command{
 		}
 		log.SetLevel(log.DebugLevel)
 		list := browser_native_messaging.NewListener[message, *response]()
+		list.Handle("ping", func(in message) (*response, error) {
+			return &response{
+				Data: "pong",
+			}, nil
+		})
 		list.Handle("get_token", func(in message) (*response, error) {
 			systemlog.Get().Debugf("Browser host message: '%+v'\n", in)
 			curr, err := c.GetCurrentToken(cmd.Context(), &pb.CurrentTokenRequest{
