@@ -7,7 +7,7 @@ build:
 	npm version ${VERSION} || true
 	yq -i '.version = ${VERSION}' manifest.json
 	mkdir -p ${TOP}/bin/${TARGET}
-	npm i --include dev
+	npm i
 	npm run prettier
 	npm run build
 

@@ -13,9 +13,9 @@
     },
     "type": "module",
     "devDependencies": {
-        "@goauthentik/api": "^2025.6.3-1751754396",
         "@goauthentik/eslint-config": "^1.0.5",
         "@goauthentik/prettier-config": "^3.1.0",
+        "@goauthentik/tsconfig": "^1.0.4",
         "@rollup/plugin-commonjs": "^28.0.6",
         "@rollup/plugin-node-resolve": "^16.0.1",
         "@rollup/plugin-typescript": "^12.1.4",
