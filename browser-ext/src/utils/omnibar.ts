@@ -25,14 +25,21 @@ export class Omnibar {
 
     chrome.omnibox.onInputChanged.addListener((text, suggest) => {
       const results = this.fuse.search(text);
-      chrome.omnibox.setDefaultSuggestion({
-        description: `<dim>Open <b>${results[0].item.name}</b></dim>`,
-      });
+      if (results.length > 0) {
+        chrome.omnibox.setDefaultSuggestion({
+          description: `<dim>Open <match>${results[0].item.name}</match></dim>`,
+        });
+      } else {
+        chrome.omnibox.setDefaultSuggestion({
+          description: "No results found."
+        });
+        return;
+      }
       suggest(
         results.slice(1, -1).map((suggestion) => {
           return {
             content: suggestion.item.name,
-            description: `<b>${suggestion.item.name}</b>${suggestion.item.metaDescription ? ` - ${suggestion.item.metaDescription}` : ""}`,
+            description: `Open <match>${suggestion.item.name}</match>${suggestion.item.metaDescription ? ` - ${suggestion.item.metaDescription}` : ""}`,
           };
         }),
       );
