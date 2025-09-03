@@ -1,7 +1,5 @@
 package browser_native_messaging
 
-const manifestFile = "io.goauthentik.agent.json"
-
 type HostManifest struct {
 	Name           string   `json:"name"`
 	Description    string   `json:"description"`

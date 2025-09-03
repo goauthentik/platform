@@ -3,11 +3,7 @@
   "name": "authentik Launcher",
   "version": "0.5.0",
   "description": "A quick application launcher for applications in an authentik instance.",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "nativeMessaging"
-  ],
+  "permissions": ["storage", "activeTab", "nativeMessaging"],
   "background": {
     "service_worker": "dist/background.js",
     "type": "module"
@@ -15,9 +11,7 @@
   "omnibox": {
     "keyword": "ak"
   },
-  "host_permissions": [
-    "https://*/"
-  ],
+  "host_permissions": ["https://*/"],
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",

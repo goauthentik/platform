@@ -26,7 +26,9 @@ function createRandomString(length: number = 16) {
   return result;
 }
 
-export async function getToken(n: Native): Promise<{ token: string, url: string }> {
+export async function getToken(
+  n: Native,
+): Promise<{ token: string; url: string }> {
   const uid = createRandomString();
   const token = (await n.postMessage({
     version: "1",

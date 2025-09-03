@@ -6,6 +6,7 @@ FILE_NAME := authentik.zip
 build:
 	npm version ${VERSION} || true
 	yq -i '.version = ${VERSION}' manifest.json
+	npm run prettier
 	mkdir -p ${TOP}/bin/${TARGET}
 	npm i
 	npm run build

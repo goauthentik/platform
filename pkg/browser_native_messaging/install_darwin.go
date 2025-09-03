@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+const manifestFile = "io.goauthentik.agent.json"
 const chromePathRel = "/Library/Application Support/Google/Chrome/NativeMessagingHosts"
 
 func Install() error {

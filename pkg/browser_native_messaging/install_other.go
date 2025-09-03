@@ -5,5 +5,5 @@ package browser_native_messaging
 import "errors"
 
 func Install() error {
-	return errors.New("Platform not supported yet")
+	return errors.New("platform not supported yet")
 }
