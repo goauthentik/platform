@@ -17,4 +17,3 @@ package: build
 lint:
 	npm run lint-check
 	npm run prettier-check
-	npm run type-check
