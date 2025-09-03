@@ -22,7 +22,7 @@ func Install(extensionId string) error {
 	if err != nil {
 		return err
 	}
-	mf.Path = strings.ReplaceAll(exe, "ak-agent", "ak-browser-support")
+	mf.Path = strings.ReplaceAll(exe, "/ak", "/ak-browser-support")
 	d, err := json.Marshal(mf)
 	if err != nil {
 		return err

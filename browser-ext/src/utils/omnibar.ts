@@ -20,16 +20,19 @@ export class Omnibar {
 
   register() {
     chrome.omnibox.setDefaultSuggestion({
-      description: "Enter the name of an application to launch.",
+      description: "<dim>Enter the name of an application to launch.</dim>",
     });
 
     chrome.omnibox.onInputChanged.addListener((text, suggest) => {
+      const results = this.fuse.search(text);
+      chrome.omnibox.setDefaultSuggestion({
+        description: `<dim>Open <b>${results[0].item.name}</b></dim>`,
+      });
       suggest(
-        this.fuse.search(text).map((suggestion) => {
+        results.slice(1, -1).map((suggestion) => {
           return {
             content: suggestion.item.name,
-            description:
-              suggestion.item.metaDescription || suggestion.item.name,
+            description: `<b>${suggestion.item.name}</b>${suggestion.item.metaDescription ? ` - ${suggestion.item.metaDescription}` : ""}`,
           };
         }),
       );

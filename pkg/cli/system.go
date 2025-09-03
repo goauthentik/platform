@@ -34,7 +34,7 @@ func sysClient() (pb.SessionManagerClient, error) {
 }
 
 var systemCmd = &cobra.Command{
-	Use:   "session",
+	Use:   "system",
 	Short: "Commands for interacting with authentik sessions.",
 }
 
