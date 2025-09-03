@@ -4,6 +4,7 @@ package browser_native_messaging
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -12,8 +13,11 @@ import (
 const manifestFile = "io.goauthentik.agent.json"
 const chromePathRel = "/Library/Application Support/Google/Chrome/NativeMessagingHosts"
 
-func Install() error {
+func Install(extensionId string) error {
 	mf := GetHostManifest()
+	mf.AllowedOrigins = []string{
+		fmt.Sprintf("chrome-extension://%s/", extensionId),
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		return err

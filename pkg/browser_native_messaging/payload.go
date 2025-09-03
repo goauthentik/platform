@@ -14,6 +14,6 @@ func GetHostManifest() HostManifest {
 		Description:    "authentik Agent",
 		Path:           "",
 		Type:           "stdio",
-		AllowedOrigins: []string{"chrome-extension://gpbfebpbnbdchaincmhaaiogdbiaimho/"},
+		AllowedOrigins: []string{},
 	}
 }
