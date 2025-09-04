@@ -30,7 +30,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	github.com/zalando/go-keyring v0.2.6
-	goauthentik.io/api/v3 v3.2025100.3
+	goauthentik.io/api/v3 v3.2025100.4
 	golang.org/x/crypto v0.41.0
 	golang.org/x/sys v0.35.0
 	golang.org/x/term v0.34.0
