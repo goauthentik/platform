@@ -61,7 +61,7 @@ var browserSupportCmd = &cobra.Command{
 				Type: pb.CurrentTokenRequest_VERIFIED,
 			})
 			if err != nil {
-				systemlog.Get().WithError(err).Fatal("failed to get current token")
+				systemlog.Get().WithError(err).Warning("failed to get current token")
 				return nil, err
 			}
 			return &response{
@@ -74,7 +74,7 @@ var browserSupportCmd = &cobra.Command{
 		list.Handle("list_profiles", func(in message) (*response, error) {
 			res, err := c.ListProfiles(cmd.Context(), &emptypb.Empty{})
 			if err != nil {
-				systemlog.Get().WithError(err).Fatal("failed to list profiles")
+				systemlog.Get().WithError(err).Warning("failed to list profiles")
 				return nil, err
 			}
 			return &response{
