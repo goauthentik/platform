@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 var globalMutex = false
@@ -21,7 +22,7 @@ func NewGlobal() *GlobalTokenManager {
 	}
 	globalMutex = true
 	gtm := &GlobalTokenManager{
-		log:      log.WithField("logger", "token.manager.global"),
+		log:      systemlog.Get().WithField("logger", "token.manager.global"),
 		managers: make(map[string]*ProfileTokenManager, 0),
 		mlock:    sync.RWMutex{},
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type ConfigManager struct {
@@ -50,7 +51,7 @@ func newManager() (*ConfigManager, error) {
 	}
 	cfg := &ConfigManager{
 		path:    file,
-		log:     log.WithField("logger", "storage.config"),
+		log:     systemlog.Get().WithField("logger", "storage.config"),
 		changed: make([]chan ConfigChangedEvent, 0),
 	}
 	cfg.log.WithField("path", file).Debug("Config file path")
@@ -87,7 +88,7 @@ func (cfg *ConfigManager) Load() error {
 	if err != nil {
 		return err
 	}
-	return nil
+	return cfg.loadKeyring()
 }
 
 func (cfg *ConfigManager) Get() ConfigV1 {
@@ -95,6 +96,10 @@ func (cfg *ConfigManager) Get() ConfigV1 {
 }
 
 func (cfg *ConfigManager) Save() error {
+	err := cfg.saveKeyring()
+	if err != nil {
+		return err
+	}
 	cfg.log.Debug("saving config")
 	f, err := os.OpenFile(cfg.path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil && !os.IsExist(err) && !os.IsNotExist(err) {
@@ -106,11 +111,7 @@ func (cfg *ConfigManager) Save() error {
 			cfg.log.WithError(err).Warning("failed to close config file")
 		}
 	}()
-	err = json.NewEncoder(f).Encode(&cfg.loaded)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.NewEncoder(f).Encode(&cfg.loaded)
 }
 
 func (cfg *ConfigManager) Watch() chan ConfigChangedEvent {

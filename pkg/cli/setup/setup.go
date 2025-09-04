@@ -21,7 +21,7 @@ type Options struct {
 }
 
 func Setup(opts Options) (*storage.ConfigV1Profile, error) {
-	urls := ak.URLsForProfile(storage.ConfigV1Profile{
+	urls := ak.URLsForProfile(&storage.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 	})

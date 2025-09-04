@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 var (
@@ -57,7 +58,7 @@ type FlowExecutorOptions struct {
 func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Configuration, opts FlowExecutorOptions) (*FlowExecutor, error) {
 	rsp := sentry.StartSpan(ctx, "authentik.outposts.flow_executor")
 	rsp.Description = flowSlug
-	l := log.WithField("flow", flowSlug).WithFields(opts.LogFields)
+	l := systemlog.Get().WithField("flow", flowSlug).WithFields(opts.LogFields)
 	if opts.Logger == nil {
 		opts.Logger = func(msg string, fields map[string]interface{}) {
 			l.WithFields(fields).Debug(msg)

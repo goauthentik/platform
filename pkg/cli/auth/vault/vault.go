@@ -32,7 +32,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 	mgr := storage.Manager()
 	prof := mgr.Get().Profiles[opts.Profile]
 
-	cc := storage.NewCache[VaultCredentialOutput]("auth-vault-cache", opts.Profile, opts.Role)
+	cc := storage.NewCache[VaultCredentialOutput](opts.Profile, "auth-vault-cache", opts.Role)
 	if v, err := cc.Get(); err == nil {
 		log.Debug("Got Vault Credentials from cache")
 		return &v

@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"syscall"
@@ -40,7 +41,7 @@ func NewMonitor() *Monitor {
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
-		log:           log.WithField("logger", "sysd.session"),
+		log:           systemlog.Get().WithField("logger", "sysd.session"),
 	}
 }
 

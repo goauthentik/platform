@@ -61,7 +61,7 @@ type SystemAgent struct {
 }
 
 func New() *SystemAgent {
-	l := log.WithField("logger", "sysd")
+	l := systemlog.Get().WithField("logger", "sysd")
 
 	u, err := url.Parse(config.Get().AK.AuthentikURL)
 	if err != nil {
@@ -124,7 +124,7 @@ func (sm *SystemAgent) Start() {
 	_ = os.Remove(config.Get().Socket)
 	lis, err := net.Listen("unix", config.Get().Socket)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to listen")
+		sm.log.WithError(err).Fatal("Failed to listen")
 	}
 	_ = os.Chmod(config.Get().Socket, 0666)
 

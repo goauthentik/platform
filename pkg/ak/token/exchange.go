@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/systemlog"
 )
 
 type ExchangeOpts struct {
@@ -25,7 +25,7 @@ func DefaultExchangeOpts(clientID string) ExchangeOpts {
 	}
 }
 
-func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
+func ExchangeToken(profile *storage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
 	v := url.Values{}
 	v.Set("grant_type", "client_credentials")
 	v.Set("client_id", opts.ClientID)
@@ -36,7 +36,7 @@ func ExchangeToken(profile storage.ConfigV1Profile, opts ExchangeOpts) (*Token, 
 	if err != nil {
 		return nil, err
 	}
-	log.WithField("logger", "token-exchanger").WithField("url", req.URL.String()).Debug("sending request")
+	systemlog.Get().WithField("logger", "token-exchanger").WithField("url", req.URL.String()).Debug("sending request")
 	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", storage.FullVersion()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)

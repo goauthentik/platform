@@ -11,7 +11,7 @@ import (
 	l "github.com/sirupsen/logrus/hooks/syslog"
 )
 
-func Setup(appName string) error {
+func ForceSetup(appName string) error {
 	hook, err := l.NewSyslogHook("", "", syslog.LOG_INFO, appName)
 	if err != nil {
 		return nil

@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod agent_setup_client {
+pub mod agent_config_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod agent_setup_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct AgentSetupClient<T> {
+    pub struct AgentConfigClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl AgentSetupClient<tonic::transport::Channel> {
+    impl AgentConfigClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,7 +25,7 @@ pub mod agent_setup_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> AgentSetupClient<T>
+    impl<T> AgentConfigClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -43,7 +43,7 @@ pub mod agent_setup_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> AgentSetupClient<InterceptedService<T, F>>
+        ) -> AgentConfigClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -57,7 +57,7 @@ pub mod agent_setup_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            AgentSetupClient::new(InterceptedService::new(inner, interceptor))
+            AgentConfigClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,6 +90,30 @@ pub mod agent_setup_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        pub async fn list_profiles(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::ListProfilesResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_config.AgentConfig/ListProfiles",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_config.AgentConfig", "ListProfiles"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn setup(
             &mut self,
             request: impl tonic::IntoRequest<super::SetupRequest>,
@@ -104,11 +128,11 @@ pub mod agent_setup_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_setup.AgentSetup/Setup",
+                "/agent_config.AgentConfig/Setup",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_setup.AgentSetup", "Setup"));
+                .insert(GrpcMethod::new("agent_config.AgentConfig", "Setup"));
             self.inner.unary(req, path, codec).await
         }
     }

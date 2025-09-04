@@ -3,48 +3,29 @@ package agentlocal
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
+	"time"
 
-	"goauthentik.io/cli/pkg/ak"
+	authzprompt "goauthentik.io/cli/pkg/agent_local/authz_prompt"
+	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/cli/pkg/storage"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIResponse, error) {
-	prof := a.cfg.Get().Profiles[req.Header.Profile]
-	rreq, err := http.NewRequest("GET", ak.URLsForProfile(prof).UserInfo, nil)
-	if err != nil {
-		a.log.WithError(err).Warn("failed to create request")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
-	}
-	rreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
-	res, err := http.DefaultClient.Do(rreq)
-	if err != nil {
-		a.log.WithError(err).Warn("failed to send request")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
-	}
-	if res.StatusCode > 200 {
-		a.log.WithField("status", res.StatusCode).Warning("received status code")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
-	}
-	b, err := io.ReadAll(res.Body)
-	if err != nil {
-		a.log.WithError(err).Warn("failed to read body")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
-	}
-	return &pb.WhoAmIResponse{
-		Header: &pb.ResponseHeader{
-			Successful: true,
-		},
-		Body: string(b),
-	}, nil
-}
-
 func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest) (*pb.CurrentTokenResponse, error) {
-	pfm, err := token.NewProfile(req.Header.Profile)
-	if err != nil {
+	pfm := a.tr.ForProfile(req.Header.Profile)
+	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
+		Message: func(creds *grpc_creds.Creds) (string, error) {
+			return fmt.Sprintf("authorize access to your account in '%s'", creds.ParentCmdline), nil
+		},
+		UID: func(creds *grpc_creds.Creds) (string, error) {
+			return fmt.Sprintf("%s:%s", creds.UniqueProcessID(), req.Type), nil
+		},
+		Timeout: func() time.Duration {
+			return time.Minute * 30
+		},
+	}); err != nil {
 		return nil, err
 	}
 	var token token.Token
@@ -66,9 +47,10 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 			Sub:               token.Claims().Subject,
 			Aud:               token.Claims().Audience,
 			Exp:               timestamppb.New(token.Claims().ExpiresAt.Time),
-			Nbf:               timestamppb.New(token.Claims().NotBefore.Time),
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
+		Raw: token.RawAccessToken,
+		Url: storage.Manager().Get().Profiles[req.Header.Profile].AuthentikURL,
 	}, nil
 }

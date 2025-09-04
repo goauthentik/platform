@@ -8,10 +8,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
-func Setup(appName string) error {
+func ForceSetup(appName string) error {
 	hd, err := os.UserHomeDir()
 	if err != nil {
 		return err
@@ -25,6 +25,6 @@ func Setup(appName string) error {
 	if err != nil {
 		return err
 	}
-	logrus.SetOutput(f)
+	log.SetOutput(f)
 	return nil
 }

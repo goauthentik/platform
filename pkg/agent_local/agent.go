@@ -13,13 +13,14 @@ import (
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 
 type Agent struct {
 	pb.UnimplementedAgentAuthServer
 	pb.UnimplementedAgentCacheServer
-	pb.UnimplementedAgentSetupServer
+	pb.UnimplementedAgentConfigServer
 
 	grpc           *grpc.Server
 	cfg            *storage.ConfigManager
@@ -36,7 +37,7 @@ func New() (*Agent, error) {
 	mgr := storage.Manager()
 	return &Agent{
 		cfg:        mgr,
-		log:        log.WithField("logger", "agent"),
+		log:        systemlog.Get().WithField("logger", "agent"),
 		tr:         token.NewGlobal(),
 		socketPath: types.GetAgentSocketPath(),
 	}, nil
@@ -66,7 +67,7 @@ func (a *Agent) Stop() {
 	a.log.WithField("lock", a.lock).Info("Removing lock file")
 	_ = a.lock.Unlock()
 	if a.grpc != nil {
-		a.grpc.GracefulStop()
+		a.grpc.Stop()
 	}
 	a.log.WithField("socket", a.socketPath).Info("Removing socket file")
 	_ = os.Remove(a.socketPath)
