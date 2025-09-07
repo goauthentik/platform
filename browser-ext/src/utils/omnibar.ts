@@ -1,7 +1,7 @@
 import { Native } from "./native";
 import { STORAGE_KEY_PROFILE } from "./storage";
 
-import { Application } from "@goauthentik/api";
+import { Application, Configuration, CoreApi } from "@goauthentik/api";
 
 import Fuse from "fuse.js";
 
@@ -73,7 +73,15 @@ export class Omnibar {
     async #update() {
         const stor = await chrome.storage.sync.get([STORAGE_KEY_PROFILE]);
         const selectedProfile = stor[STORAGE_KEY_PROFILE];
-        const apps = await this.#native.fetchApplications(selectedProfile);
-        this.fuse.setCollection(apps);
+        const token = await this.#native.getToken(selectedProfile);
+
+        const response = await new CoreApi(
+            new Configuration({
+                basePath: `${token.url}/api/v3`,
+                accessToken: token.token,
+            }),
+        ).coreApplicationsList({});
+        this.fuse.setCollection(response.results);
+        console.debug("authentik/bext/omnibar: Updated apps cache");
     }
 }

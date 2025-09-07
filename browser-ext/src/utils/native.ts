@@ -1,5 +1,3 @@
-import { Configuration, CoreApi } from "@goauthentik/api";
-
 export interface Message {
     version: string;
     path: string;
@@ -35,46 +33,43 @@ export class Native {
         this.#port = chrome.runtime.connectNative("io.goauthentik.agent");
         this.#port.onMessage.addListener(this.#listener.bind(this));
         this.#port.onDisconnect.addListener(() => {
-            console.debug("Disconnected, reconnecting");
+            console.debug("authentik/bext/native: Disconnected, reconnecting");
             this.#connect();
         });
-        console.debug("Connected to native");
+        console.debug("authentik/bext/native: Connected to native");
     }
 
     #listener(msg: Response) {
         const prom = this.#promises.get(msg.response_to);
-        console.debug("Got response", msg);
+        console.debug(`authentik/bext/native[${msg.response_to}]: Got response`);
         if (!prom) {
-            console.debug("No promise to resolve");
+            console.debug(`authentik/bext/native[${msg.response_to}]: No promise to resolve`);
             return;
         }
         prom.resolve(msg);
     }
 
-    postMessage(msg: Message): Promise<Response> {
+    postMessage(msg: Partial<Message>): Promise<Response> {
+        msg.id = createRandomString();
         const promise = Promise.withResolvers<Response>();
         this.#promises.set(msg.id, promise);
-        console.debug(`Sending message`, msg);
+        console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
         this.#port?.postMessage(msg);
         return promise.promise;
     }
 
     async ping(): Promise<Response> {
-        const uid = createRandomString();
         return this.postMessage({
             version: "1",
             path: "ping",
-            id: uid,
         });
     }
 
     async getToken(profile: string): Promise<{ token: string; url: string }> {
-        const uid = createRandomString();
         const token = await this.postMessage({
             version: "1",
             path: "get_token",
             profile: profile,
-            id: uid,
         });
         return {
             token: token.data.token as string,
@@ -83,26 +78,12 @@ export class Native {
     }
 
     async listProfiles(): Promise<{ profiles: { name: string }[] }> {
-        const uid = createRandomString();
         const profiles = await this.postMessage({
             version: "1",
             path: "list_profiles",
-            id: uid,
         });
         return {
             profiles: profiles.data as unknown as { name: string }[],
         };
-    }
-
-    async fetchApplications(profile: string) {
-        const token = await this.getToken(profile);
-
-        const response = await new CoreApi(
-            new Configuration({
-                basePath: `${token.url}/api/v3`,
-                accessToken: token.token,
-            }),
-        ).coreApplicationsList({});
-        return response.results;
     }
 }
