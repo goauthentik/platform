@@ -23,7 +23,7 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 			return fmt.Sprintf("%s:%s", creds.UniqueProcessID(), req.Type), nil
 		},
 		Timeout: func() time.Duration {
-			return time.Minute * 30
+			return time.Hour * 2
 		},
 	}); err != nil {
 		return nil, err
