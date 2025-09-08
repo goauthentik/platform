@@ -95,12 +95,12 @@ pub fn authenticate_impl(
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
         let decoded = pam_try_log!(decode_token(raw_token), "failed to decode token");
-        let token = match auth_token(config, username, decoded.token.to_owned()) {
+        let token = match auth_token(username, decoded.token.to_owned()) {
             Ok(t) => t,
             Err(e) => return e,
         };
         session_data.token = decoded.token;
-        session_data.expiry = token.claims.exp;
+        session_data.expiry = token.exp.unwrap().seconds;
         session_data.local_socket = decoded.local_socket;
         pam_try_log!(
             pam_put_env(

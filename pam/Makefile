@@ -18,15 +18,3 @@ package:
 test-deploy: package
 	$(TME) dpkg -i /workspaces/pam/target/debian/libpam-authentik_${VERSION}_${ARCH}.deb
 	$(TME) systemctl restart ssh
-
-gen:
-	cargo install protoc-gen-prost
-	cargo install protoc-gen-tonic
-	mkdir -p $(PROTO_OUT)
-	protoc \
-		--prost_out=$(PROTO_OUT) \
-		--tonic_out=$(PROTO_OUT) \
-		--tonic_opt=no_server \
-		-I $(PROTO_DIR) \
-		${PROTO_DIR}/*
-	cargo fmt

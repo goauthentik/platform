@@ -3,7 +3,61 @@ syntax = "proto3";
 package pam;
 option go_package = "pkg/pb";
 
-message PAMAuthentication {
-  string token = 1;
-  string local_socket = 2;
+import "agent.proto";
+
+service PAM {
+  rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
+  rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
+}
+
+message TokenAuthRequest {
+  string username = 1;
+  string token = 2;
+}
+
+message TokenAuthResponse {
+  bool successful = 1;
+  agent.Token token = 2;
+}
+
+message InteractiveAuthInitRequest {
+  string username = 1;
+}
+
+message InteractiveAuthContinueRequest {
+  string txid = 1;
+  string value = 2;
+}
+
+message InteractiveAuthRequest {
+  oneof interactive_auth {
+    InteractiveAuthInitRequest init = 1;
+    InteractiveAuthContinueRequest continue = 2;
+  }
+}
+
+message InteractiveChallenge {
+  enum InteractiveAuthResult {
+    PAM_SUCCESS = 0;
+    PAM_PERM_DENIED = 6;
+    PAM_AUTH_ERR = 7;
+  }
+
+  enum PromptMeta {
+    UNSPECIFIED = 0;
+    PAM_PROMPT_ECHO_OFF = 1;
+    PAM_PROMPT_ECHO_ON = 2;
+    PAM_ERROR_MSG = 3;
+    PAM_TEXT_INFO = 4;
+    PAM_RADIO_TYPE = 5;
+    PAM_BINARY_PROMPT = 7;
+    PASSWORD = 100;
+  }
+
+  string txid = 1;
+  bool finished = 2;
+  InteractiveAuthResult result = 3;
+  string prompt = 4;
+  PromptMeta prompt_meta = 5;
+  string debug_info = 6;
 }

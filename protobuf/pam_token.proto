@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package pam;
+option go_package = "pkg/pb";
+
+// Message to encode token for SSH authenticaiton with CLI
+message PAMAuthentication {
+  string token = 1;
+  string local_socket = 2;
+}

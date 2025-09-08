@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/pb"
@@ -32,14 +33,18 @@ func (nss *Server) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.User, e
 }
 
 var userNameRegexp = regexp.MustCompilePOSIX(`^[a-z][-a-z0-9_]*\$?$`)
-var userNameSubst = regexp.MustCompile(`[@/]`)
+var userNameSubst = regexp.MustCompile(`[@/:]`)
+
+func cleanName(name string) string {
+	if userNameRegexp.MatchString(name) {
+		return name
+	}
+	return strings.ToLower(userNameSubst.ReplaceAllString(name, "-"))
+}
 
 func (nss *Server) convertUser(u api.User) *pb.User {
 	// https://sources.debian.org/src/adduser/3.134/adduser.conf/#L75
-	un := u.Username
-	if !userNameRegexp.MatchString(u.Username) {
-		un = userNameSubst.ReplaceAllString(un, "-")
-	}
+	un := cleanName(u.Username)
 	return &pb.User{
 		Name:    un,
 		Uid:     nss.GetUserUidNumber(u),
@@ -52,7 +57,7 @@ func (nss *Server) convertUser(u api.User) *pb.User {
 
 func (nss *Server) convertUserToGroup(u api.User) *pb.Group {
 	return &pb.Group{
-		Name: u.Username,
+		Name: cleanName(u.Username),
 		Gid:  nss.GetUserGidNumber(u),
 	}
 }

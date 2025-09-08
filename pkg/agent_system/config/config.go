@@ -8,14 +8,17 @@ import (
 )
 
 type Config struct {
-	AuthentikURL string `yaml:"authentik_url"`
-	AppSlug      string `yaml:"app_slug"`
-	Token        string `yaml:"token"`
-	Debug        bool   `yaml:"debug"`
-	Socket       string `yaml:"socket"`
-	PAM          struct {
+	AK struct {
+		AuthentikURL       string `yaml:"authentik_url"`
+		AppSlug            string `yaml:"app_slug"`
+		Token              string `yaml:"token"`
 		AuthenticationFlow string `yaml:"authentication_flow"`
-		TerminateOnExpiry  bool   `yaml:"terminate_on_expiry"`
+		Doamin             string `yaml:"domain"`
+	} `yaml:"ak"`
+	Debug  bool   `yaml:"debug"`
+	Socket string `yaml:"socket"`
+	PAM    struct {
+		TerminateOnExpiry bool `yaml:"terminate_on_expiry"`
 	} `yaml:"pam" `
 	NSS struct {
 		UIDOffset          int32 `yaml:"uid_offset"`

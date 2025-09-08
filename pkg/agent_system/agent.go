@@ -16,6 +16,7 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/agent_system/nss"
+	"goauthentik.io/cli/pkg/agent_system/pam"
 	"goauthentik.io/cli/pkg/agent_system/session"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
@@ -51,17 +52,18 @@ func init() {
 }
 
 type SystemAgent struct {
-	nss     *nss.Server
-	monitor *session.Monitor
-	srv     *grpc.Server
 	log     *log.Entry
+	srv     *grpc.Server
 	api     *api.APIClient
+	nss     *nss.Server
+	pam     *pam.Server
+	monitor *session.Monitor
 }
 
 func New() *SystemAgent {
 	l := systemlog.Get().WithField("logger", "sysd")
 
-	u, err := url.Parse(config.Get().AuthentikURL)
+	u, err := url.Parse(config.Get().AK.AuthentikURL)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +75,7 @@ func New() *SystemAgent {
 			URL: fmt.Sprintf("%sapi/v3", u.Path),
 		},
 	}
-	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Get().Token))
+	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Get().AK.Token))
 
 	ac := api.NewAPIClient(apiConfig)
 
@@ -82,6 +84,11 @@ func New() *SystemAgent {
 		panic(err)
 	}
 	l.WithField("as", m.User.Username).Debug("Connected to authentik")
+
+	pam, err := pam.NewServer(ac)
+	if err != nil {
+		panic(err)
+	}
 
 	sm := &SystemAgent{
 		monitor: session.NewMonitor(),
@@ -92,10 +99,12 @@ func New() *SystemAgent {
 		log: l,
 		api: ac,
 		nss: nss.NewServer(ac),
+		pam: pam,
 	}
 
 	pb.RegisterSessionManagerServer(sm.srv, sm.monitor)
 	pb.RegisterNSSServer(sm.srv, sm.nss)
+	pb.RegisterPAMServer(sm.srv, sm.pam)
 	return sm
 }
 
