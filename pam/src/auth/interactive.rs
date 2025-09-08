@@ -1,62 +1,130 @@
 use authentik_sys::generated::{
     grpc_request,
-    pam::{InteractiveResponse, pam_client::PamClient},
+    pam::{
+        InteractiveAuthContinueRequest, InteractiveAuthInitRequest, InteractiveAuthRequest,
+        InteractiveChallenge,
+        interactive_auth_request::InteractiveAuth,
+        interactive_challenge::{InteractiveAuthResult, PromptMeta},
+        pam_client::PamClient,
+    },
 };
-use pam::{constants::PamResultCode, conv::Conv};
-use tokio::sync::mpsc;
-use tokio_stream::wrappers::ReceiverStream;
-use tonic::Request;
+use pam::{
+    constants::{
+        PAM_BINARY_PROMPT, PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,
+        PAM_TEXT_INFO, PamMessageStyle, PamResultCode,
+    },
+    conv::Conv,
+};
 
-pub fn auth_interactive(_username: String, _password: &str, _conv: &Conv<'_>) -> PamResultCode {
-    match grpc_request(async |ch| {
-        let (tx, rx) = mpsc::channel(128);
-        let request_stream = ReceiverStream::new(rx);
+use crate::pam_try_log;
 
-        // Start the bidirectional stream
-        let response = PamClient::new(ch)
-            .interactive_auth(Request::new(request_stream))
-            .await?;
-        let mut response_stream = response.into_inner();
+const MAX_ITER: i8 = 30;
 
-        // Spawn a task to send requests
-        let sender_handle = tokio::spawn(async move {
-            for i in 0..10 {
-                let request = InteractiveResponse {
-                    init: false,
-                    values: vec![],
-                };
-
-                if tx.send(request).await.is_err() {
-                    break;
-                }
-
-                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-            }
-        });
-
-        // Handle incoming responses
-        loop {
-            let challenge = match response_stream.message().await {
-                Ok(m) => match m {
-                    Some(m) => m,
-                    None => break,
-                },
-                Err(e) => {
-                    log::warn!("failed to get challenge: {e}");
-                    return Err(Box::from(e));
-                }
-            };
-            println!("Received: {:?}", challenge);
-        }
-
-        // Wait for sender to complete
-        sender_handle.await?;
-        Ok(())
-    }) {
-        Ok(_) => PamResultCode::PAM_SUCCESS,
-        Err(e) => {
-            log::warn!("failed to authenticate: {e}");
-            PamResultCode::PAM_AUTH_ERR
-        }
+pub fn result_to_pam_result(challenge: InteractiveChallenge) -> PamResultCode {
+    match InteractiveAuthResult::try_from(challenge.result) {
+        Ok(InteractiveAuthResult::PamSuccess) => PamResultCode::PAM_SUCCESS,
+        Ok(InteractiveAuthResult::PamPermDenied) => PamResultCode::PAM_PERM_DENIED,
+        Ok(InteractiveAuthResult::PamAuthErr) => PamResultCode::PAM_AUTH_ERR,
+        Err(_) => PamResultCode::PAM_SYSTEM_ERR,
     }
+}
+
+pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> PamMessageStyle {
+    match PromptMeta::try_from(challenge.prompt_meta) {
+        Ok(PromptMeta::PamBinaryPrompt) => PAM_BINARY_PROMPT,
+        Ok(PromptMeta::PamErrorMsg) => PAM_ERROR_MSG,
+        Ok(PromptMeta::PamPromptEchoOff) => PAM_PROMPT_ECHO_OFF,
+        Ok(PromptMeta::PamPromptEchoOn) => PAM_PROMPT_ECHO_ON,
+        Ok(PromptMeta::PamRadioType) => PAM_RADIO_TYPE,
+        Ok(PromptMeta::PamTextInfo) => PAM_TEXT_INFO,
+        Ok(_) => PAM_PROMPT_ECHO_OFF,
+        Err(_) => PAM_PROMPT_ECHO_OFF,
+    }
+}
+
+pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> PamResultCode {
+    // Init transaction
+    let mut challenge = match grpc_request(async |ch| {
+        return Ok(PamClient::new(ch)
+            .interactive_auth(InteractiveAuthRequest {
+                interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
+                    username: username.to_owned(),
+                })),
+            })
+            .await?);
+    }) {
+        Ok(t) => t.into_inner(),
+        Err(e) => {
+            log::warn!("failed to init interactive auth: {e}");
+            return PamResultCode::PAM_AUTH_ERR;
+        }
+    };
+    let mut iter = 0;
+    while iter <= MAX_ITER {
+        if challenge.finished {
+            return result_to_pam_result(challenge);
+        }
+        let mut req_inner = InteractiveAuthContinueRequest {
+            txid: challenge.txid.to_owned(),
+            value: "".to_owned(),
+        };
+        // Depending on the prompt, either prompt for data or use what we already know
+        match PromptMeta::try_from(challenge.prompt_meta) {
+            Ok(PromptMeta::Unspecified) => {
+                log::warn!("Unspecified prompt meta");
+                return PamResultCode::PAM_ABORT;
+            }
+            Ok(PromptMeta::Password) => {
+                log::debug!("Prompt meta password, using existing password");
+                req_inner.value = password.to_owned();
+            }
+            Ok(_) => {
+                log::debug!("Prompt meta generic, prompt user");
+                let credential = match pam_try_log!(
+                    conv.send(
+                        prompt_meta_to_pam_message_style(&challenge),
+                        &challenge.prompt
+                    ),
+                    "failed to send prompt"
+                ) {
+                    Some(c) => match c.to_str() {
+                        Ok(cc) => cc,
+                        Err(_) => {
+                            log::warn!("failed to convert PAM Conversation response to string");
+                            return PamResultCode::PAM_ABORT;
+                        }
+                    },
+                    None => {
+                        log::warn!("No PAM conversation response");
+                        return PamResultCode::PAM_ABORT;
+                    }
+                };
+                req_inner.value = credential.to_owned();
+            }
+            Err(_) => {
+                log::warn!(
+                    "Failed to convert prompt meta value to allowed values: {}",
+                    challenge.prompt_meta
+                );
+                return PamResultCode::PAM_ABORT;
+            }
+        }
+        // Send the response
+        challenge = match grpc_request(async |ch| {
+            return Ok(PamClient::new(ch)
+                .interactive_auth(InteractiveAuthRequest {
+                    interactive_auth: Some(InteractiveAuth::Continue(req_inner.to_owned())),
+                })
+                .await?);
+        }) {
+            Ok(t) => t.into_inner(),
+            Err(e) => {
+                log::warn!("failed to continue auth: {e}");
+                return PamResultCode::PAM_AUTH_ERR;
+            }
+        };
+        iter += 1;
+    }
+    log::warn!("Exceeded maximum iterations");
+    PamResultCode::PAM_ABORT
 }

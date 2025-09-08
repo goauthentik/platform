@@ -6,33 +6,33 @@ option go_package = "pkg/pb";
 import "google/protobuf/empty.proto";
 
 service NSS {
-    rpc ListUsers(google.protobuf.Empty) returns (Users);
-    rpc GetUser(GetRequest) returns (User);
+  rpc ListUsers(google.protobuf.Empty) returns (Users);
+  rpc GetUser(GetRequest) returns (User);
 
-    rpc ListGroups(google.protobuf.Empty) returns (Groups);
-    rpc GetGroup(GetRequest) returns (Group);
+  rpc ListGroups(google.protobuf.Empty) returns (Groups);
+  rpc GetGroup(GetRequest) returns (Group);
 }
 
 message GetRequest {
-    optional uint32 id = 1;
-    optional string name = 2;
+  optional uint32 id = 1;
+  optional string name = 2;
 }
 
 message Users {
-    repeated User users = 1;
+  repeated User users = 1;
 }
 
 message User {
-    string name = 1;
-    uint32 uid = 2;
-    uint32 gid = 3;
-    string gecos = 4;
-    string homedir = 5;
-    string shell = 6;
+  string name = 1;
+  uint32 uid = 2;
+  uint32 gid = 3;
+  string gecos = 4;
+  string homedir = 5;
+  string shell = 6;
 }
 
 message Groups {
-    repeated Group groups = 1;
+  repeated Group groups = 1;
 }
 
 message Group {

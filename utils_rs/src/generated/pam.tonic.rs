@@ -113,11 +113,9 @@ pub mod pam_client {
         }
         pub async fn interactive_auth(
             &mut self,
-            request: impl tonic::IntoStreamingRequest<
-                Message = super::InteractiveResponse,
-            >,
+            request: impl tonic::IntoRequest<super::InteractiveAuthRequest>,
         ) -> std::result::Result<
-            tonic::Response<tonic::codec::Streaming<super::InteractiveChallenge>>,
+            tonic::Response<super::InteractiveChallenge>,
             tonic::Status,
         > {
             self.inner
@@ -130,9 +128,9 @@ pub mod pam_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static("/pam.PAM/InteractiveAuth");
-            let mut req = request.into_streaming_request();
+            let mut req = request.into_request();
             req.extensions_mut().insert(GrpcMethod::new("pam.PAM", "InteractiveAuth"));
-            self.inner.streaming(req, path, codec).await
+            self.inner.unary(req, path, codec).await
         }
     }
 }
