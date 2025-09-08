@@ -32,7 +32,7 @@ func NewServer(api *api.APIClient) (*Server, error) {
 		cfg: config.Get(),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
-	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(storage.ConfigV1Profile{
+	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&storage.ConfigV1Profile{
 		AuthentikURL: srv.cfg.AK.AuthentikURL,
 		AppSlug:      srv.cfg.AK.AppSlug,
 	}).JWKS})
