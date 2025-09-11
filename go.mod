@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.3
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/getsentry/sentry-go v0.35.1
+	github.com/getsentry/sentry-go v0.35.2
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
