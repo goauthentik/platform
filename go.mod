@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.2
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.6.1
+	github.com/MicahParks/keyfunc/v3 v3.6.2
 	github.com/adrg/xdg v0.5.3
 	github.com/ansxuman/go-touchid v0.0.0-20241021115423-60941306d4c3
 	github.com/avast/retry-go/v4 v4.6.1
@@ -48,7 +48,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
-	github.com/MicahParks/jwkset v0.8.0 // indirect
+	github.com/MicahParks/jwkset v0.11.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.7 // indirect
