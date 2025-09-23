@@ -22,7 +22,7 @@
         "@rollup/plugin-typescript": "^12.1.4",
         "@types/chrome": "^0.1.12",
         "fuse.js": "^7.1.0",
-        "rollup": "^4.52.0",
+        "rollup": "^4.52.1",
         "tslib": "^2.8.1",
         "typescript": "^5.9.2"
     },
