@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 syslog = "7.0.0"
-libc = "0.2.175"
+libc = "0.2.176"
 log = "0.4.28"
 serde = { version = "1.0.226", features = ["derive"] }
 serde_yaml = "0.9.34"
