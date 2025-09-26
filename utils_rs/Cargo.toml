@@ -7,7 +7,7 @@ edition = "2024"
 syslog = "7.0.0"
 libc = "0.2.176"
 log = "0.4.28"
-serde = { version = "1.0.226", features = ["derive"] }
+serde = { version = "1.0.227", features = ["derive"] }
 serde_yaml = "0.9.34"
 prost = "0.12"
 prost-types = "0.12"
