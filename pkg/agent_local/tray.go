@@ -3,6 +3,7 @@ package agentlocal
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/cli/browser"
 	"github.com/kolide/systray"
@@ -39,7 +40,7 @@ func (a *Agent) systrayEarlyItems() {
 			for {
 				select {
 				case <-version.ClickedCh:
-					browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", storage.BuildHash))
+					browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(storage.BuildHash, "dev-", "")))
 				case <-a.systrayCtx.Done():
 					return
 				}
