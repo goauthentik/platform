@@ -3,6 +3,7 @@ package token
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
@@ -20,6 +21,7 @@ type ProfileTokenManager struct {
 	ctx         context.Context
 	ctxStop     context.CancelFunc
 	kf          keyfunc.Keyfunc
+	mutex       sync.Mutex
 }
 
 type ProfileManagerOpt func(ptm *ProfileTokenManager) error
@@ -51,6 +53,7 @@ func NewProfile(profileName string, opts ...ProfileManagerOpt) (*ProfileTokenMan
 		profileName: profileName,
 		ctx:         ctx,
 		ctxStop:     stop,
+		mutex:       sync.Mutex{},
 	}
 	for _, opt := range opts {
 		err := opt(ptm)

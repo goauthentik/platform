@@ -13,6 +13,10 @@ import (
 )
 
 func (ptm *ProfileTokenManager) renew() error {
+	ptm.mutex.Lock()
+	defer func() {
+		ptm.mutex.Unlock()
+	}()
 	profile := storage.Manager().Get().Profiles[ptm.profileName]
 
 	v := url.Values{}
