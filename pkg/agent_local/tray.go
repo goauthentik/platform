@@ -33,7 +33,21 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "").Disable()
+	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "")
+	if storage.BuildHash != "" {
+		go func() {
+			for {
+				select {
+				case <-version.ClickedCh:
+					browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", storage.BuildHash))
+				case <-a.systrayCtx.Done():
+					return
+				}
+			}
+		}()
+	} else {
+		version.Disable()
+	}
 }
 
 func (a *Agent) systrayLateItems() {
