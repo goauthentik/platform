@@ -3,7 +3,7 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 VERSION_HASH = $(shell git rev-parse HEAD)
 ARCH := $(shell dpkg-architecture -q DEB_BUILD_ARCH)
 

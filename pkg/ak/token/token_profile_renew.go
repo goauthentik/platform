@@ -49,7 +49,9 @@ func (ptm *ProfileTokenManager) renew() error {
 	}
 
 	profile.AccessToken = nt.RawAccessToken
-	profile.RefreshToken = nt.RawRefreshToken
+	if nt.RawRefreshToken != "" {
+		profile.RefreshToken = nt.RawRefreshToken
+	}
 	ptm.log.Debug("successfully refreshed token")
 	storage.Manager().Get().Profiles[ptm.profileName] = profile
 	err = storage.Manager().Save()
