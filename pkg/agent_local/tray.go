@@ -40,7 +40,7 @@ func (a *Agent) systrayEarlyItems() {
 			for {
 				select {
 				case <-version.ClickedCh:
-					browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(storage.BuildHash, "dev-", "")))
+					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(storage.BuildHash, "dev-", "")))
 				case <-a.systrayCtx.Done():
 					return
 				}
