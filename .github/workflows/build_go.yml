@@ -71,6 +71,8 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
     steps:
       - name: Determine component name
         id: component
