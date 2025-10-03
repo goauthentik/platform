@@ -1,0 +1,161 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_go:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - cli
+          - agent
+          - sysd
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install libraries
+        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
+      - run: make ${{ matrix.target }}/package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: authentik_${{ matrix.target }}
+          path: bin/
+  build_js:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - browser-ext
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: "${{ matrix.target }}/package.json"
+          cache: "npm"
+          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+      - run: make ${{ matrix.target }}/package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: authentik_${{ matrix.target }}
+          path: bin/
+  build_rs:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - pam
+          - nss
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev
+      - run: make ${{ matrix.target }}/build
+      - run: make ${{ matrix.target }}/package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: authentik_${{ matrix.target }}
+          path: ${{ matrix.target }}/target/debian/*.deb
+  lint_go:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install libraries
+        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          args: --timeout 5000s
+  lint_js:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - browser-ext
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: "${{ matrix.target }}/package.json"
+          cache: "npm"
+          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+      - run: make ${{ matrix.target }}/lint
+  deploy:
+    needs:
+      - build_go
+      - build_js
+      - build_rs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          path: ./bin
+      - uses: ./.github/actions/apt
+        id: apt-repo
+        with:
+          repo_name: "authentik"
+          package-path: bin/
+          gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
+      - name: Show repository info
+        run: |
+          echo "Component: ${{ steps.apt-repo.outputs.component-name }}"
+          echo "Repository size: ${{ steps.apt-repo.outputs.repository-size }}"
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: apt-repository-${{ steps.apt-repo.outputs.component-name }}
+          path: ${{ steps.apt-repo.outputs.repository-path }}
+  deploy-to-netlify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Determine component name
+        id: component
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "component=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "component=main" >> $GITHUB_OUTPUT
+          fi
+      - name: Download repository
+        uses: actions/download-artifact@v5
+        with:
+          name: apt-repository-${{ steps.component.outputs.component }}
+          path: ./deploy
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: './deploy'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "APT repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
+          alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: authentik-pkg.netlify.app
