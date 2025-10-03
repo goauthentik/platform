@@ -158,6 +158,7 @@ runs:
     - name: Add packages to repository
       shell: bash
       run: |
+        set -xeuo pipefail
         cd "$REPO_PATH"
         echo "Looking for packages in: $PACKAGE_PATH"
 
@@ -181,6 +182,7 @@ runs:
     - name: Finalize repository metadata
       shell: bash
       run: |
+        set -xeuo pipefail
         cd "$REPO_PATH"
 
         # Regenerate metadata
@@ -193,6 +195,7 @@ runs:
     - name: Create repository index page
       shell: bash
       run: |
+        set -xeuo pipefail
         cat > "$REPO_PATH/index.html" << EOF
         <!DOCTYPE html>
         <html>
@@ -245,6 +248,7 @@ runs:
     - name: Create Netlify configuration
       shell: bash
       run: |
+        set -xeuo pipefail
         # Create headers for proper content types and caching
         cat > "$REPO_PATH/_headers" << EOF
         # APT repository headers
@@ -292,6 +296,7 @@ runs:
       id: stats
       shell: bash
       run: |
+        set -xeuo pipefail
         cd "$REPO_PATH"
 
         echo "Repository structure:"
