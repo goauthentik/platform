@@ -1,0 +1,290 @@
+name: 'Build APT Repository'
+description: 'Creates an APT repository with components for PRs and main branch, ready for deployment'
+author: 'Your Name'
+
+inputs:
+  distribution:
+    description: 'Debian distribution name'
+    required: false
+    default: 'stable'
+  architectures:
+    description: 'Space-separated list of architectures'
+    required: false
+    default: 'amd64 arm64'
+  package-path:
+    description: 'Path to .deb packages'
+    required: false
+    default: './packages'
+  output-path:
+    description: 'Output path for APT repository'
+    required: false
+    default: './apt-repo'
+  gpg-private-key:
+    description: 'GPG private key for signing packages (optional)'
+    required: false
+  gpg-passphrase:
+    description: 'GPG passphrase (optional)'
+    required: false
+  repository-name:
+    description: 'Repository name for display'
+    required: false
+    default: ${{ github.repository }}
+
+outputs:
+  component-name:
+    description: 'The component name that was created'
+    value: ${{ steps.component.outputs.component }}
+  repository-path:
+    description: 'Path to the generated repository'
+    value: ${{ inputs.output-path }}
+  repository-size:
+    description: 'Size of the generated repository'
+    value: ${{ steps.stats.outputs.size }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine component name
+      id: component
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "component=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+        elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          echo "component=main" >> $GITHUB_OUTPUT
+        else
+          # For other branches, use branch name as component
+          echo "component=$(echo ${{ github.ref_name }} | sed 's/[^a-zA-Z0-9]/-/g')" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Install APT repository tools
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y reprepro gnupg2
+
+    - name: Setup GPG key
+      if: ${{ inputs.gpg-private-key != '' }}
+      shell: bash
+      run: |
+        echo "${{ inputs.gpg-private-key }}" | gpg --batch --import
+        echo "GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | sed 's/.*\/\([A-F0-9]\{16\}\).*/\1/')" >> $GITHUB_ENV
+
+    - name: Create repository structure
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.output-path }}/conf
+        mkdir -p ${{ inputs.output-path }}/dists
+        mkdir -p ${{ inputs.output-path }}/pool
+
+    - name: Create reprepro configuration
+      shell: bash
+      run: |
+        cat > ${{ inputs.output-path }}/conf/distributions << EOF
+        Origin: ${{ github.repository_owner }}
+        Label: ${{ github.repository_owner }}
+        Codename: ${{ inputs.distribution }}
+        Architectures: ${{ inputs.architectures }}
+        Components: ${{ steps.component.outputs.component }}
+        Description: APT repository for ${{ inputs.repository-name }}
+        $(if [ -n "${GPG_KEY_ID:-}" ]; then echo "SignWith: $GPG_KEY_ID"; fi)
+        EOF
+
+        # Create options file
+        cat > ${{ inputs.output-path }}/conf/options << EOF
+        verbose
+        ask-passphrase
+        basedir ${{ inputs.output-path }}
+        EOF
+
+    - name: Setup GPG agent for signing
+      if: ${{ inputs.gpg-private-key != '' && inputs.gpg-passphrase != '' }}
+      shell: bash
+      run: |
+        # Create gnupg directory with proper permissions
+        mkdir -p ${{ runner.temp }}/.gnupg
+        chmod 700 ${{ runner.temp }}/.gnupg
+        export GNUPGHOME=${{ runner.temp }}/.gnupg
+
+        # Import GPG key
+        echo "${{ inputs.gpg-private-key }}" | gpg --batch --import
+
+        # Create GPG agent configuration for non-interactive signing
+        echo "allow-preset-passphrase" > $GNUPGHOME/gpg-agent.conf
+        gpg-connect-agent reloadagent /bye
+
+        # Preset the passphrase
+        GPG_KEYGRIP=$(gpg --list-secret-keys --with-keygrip | grep -A1 "sec " | tail -1 | sed 's/.*Keygrip = //')
+        echo "${{ inputs.gpg-passphrase }}" | gpg-preset-passphrase --preset $GPG_KEYGRIP
+
+        echo "GNUPGHOME=${{ runner.temp }}/.gnupg" >> $GITHUB_ENV
+
+    - name: Add packages to repository
+      shell: bash
+      working-directory: ${{ inputs.output-path }}
+      run: |
+        # Set GNUPGHOME if not already set
+        if [ -z "${GNUPGHOME:-}" ]; then
+          export GNUPGHOME=${{ runner.temp }}/.gnupg
+        fi
+
+        # Add all .deb packages found
+        if [ -d "${{ inputs.package-path }}" ]; then
+          find "${{ inputs.package-path }}" -name "*.deb" -type f | while read deb_file; do
+            echo "Adding package: $deb_file"
+            reprepro includedeb ${{ inputs.distribution }} "$deb_file"
+          done
+        else
+          echo "Warning: Package path ${{ inputs.package-path }} not found, creating empty repository"
+          # Create empty repository structure
+          reprepro export
+        fi
+
+    - name: Generate repository metadata
+      shell: bash
+      working-directory: ${{ inputs.output-path }}
+      run: |
+        # Export the repository (generates Packages, Release files, etc.)
+        reprepro export
+
+    - name: Create repository index page
+      shell: bash
+      run: |
+        cat > ${{ inputs.output-path }}/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>APT Repository - ${{ inputs.repository-name }}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                .repo-info { background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; }
+                code { background: #e0e0e0; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+                pre { background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }
+                .component { color: #0066cc; font-weight: bold; }
+                .warning { color: #cc6600; font-style: italic; }
+            </style>
+        </head>
+        <body>
+            <h1>APT Repository</h1>
+            <div class="repo-info">
+                <h2>Repository Information</h2>
+                <p><strong>Repository:</strong> ${{ inputs.repository-name }}</p>
+                <p><strong>Component:</strong> <span class="component">${{ steps.component.outputs.component }}</span></p>
+                <p><strong>Distribution:</strong> ${{ inputs.distribution }}</p>
+                <p><strong>Architectures:</strong> ${{ inputs.architectures }}</p>
+                <p><strong>Built from:</strong> ${{ github.ref }} (${{ github.sha }})</p>
+
+                <h3>Usage</h3>
+                <p>Add this repository to your system:</p>
+                <pre><code># Add repository (replace YOUR_NETLIFY_URL with actual URL)
+        echo "deb [trusted=yes] https://YOUR_NETLIFY_URL/ ${{ inputs.distribution }} ${{ steps.component.outputs.component }}" | sudo tee /etc/apt/sources.list.d/${{ github.event.repository.name }}.list
+
+        # Update package lists
+        sudo apt update
+
+        # Install packages
+        sudo apt install your-package-name</code></pre>
+
+                <p class="warning"><em>Note: Replace YOUR_NETLIFY_URL with your actual Netlify deployment URL</em></p>
+
+                <h3>GPG Signing</h3>
+                <p>Packages are ${{ inputs.gpg-private-key != '' && 'signed with GPG' || 'not signed (using [trusted=yes])' }}</p>
+            </div>
+
+            <h2>Browse Repository</h2>
+            <ul>
+                <li><a href="dists/">dists/</a> - Distribution metadata and package lists</li>
+                <li><a href="pool/">pool/</a> - Package files (.deb)</li>
+                <li><a href="dists/${{ inputs.distribution }}/Release">Release</a> - Repository metadata</li>
+                <li><a href="dists/${{ inputs.distribution }}/${{ steps.component.outputs.component }}/binary-amd64/Packages">Packages (amd64)</a> - Package index</li>
+            </ul>
+        </body>
+        </html>
+        EOF
+
+    - name: Create Netlify configuration
+      shell: bash
+      run: |
+        # Create headers for proper content types and caching
+        cat > ${{ inputs.output-path }}/_headers << EOF
+        # APT repository headers
+        /dists/*
+          Content-Type: text/plain
+          Cache-Control: public, max-age=300
+
+        /dists/*/Release
+          Content-Type: text/plain
+          Cache-Control: no-cache, must-revalidate
+
+        /dists/*/Release.gpg
+          Content-Type: application/pgp-signature
+          Cache-Control: no-cache, must-revalidate
+
+        /dists/*/Packages*
+          Content-Type: text/plain
+          Cache-Control: no-cache, must-revalidate
+
+        /pool/*
+          Content-Type: application/octet-stream
+          Cache-Control: public, max-age=3600
+
+        *.deb
+          Content-Type: application/vnd.debian.binary-package
+          Cache-Control: public, max-age=86400
+
+        # Security headers
+        /*
+          X-Frame-Options: DENY
+          X-Content-Type-Options: nosniff
+        EOF
+
+        # Create redirects for common patterns
+        cat > ${{ inputs.output-path }}/_redirects << EOF
+        # Redirect common APT client requests
+        /Release /dists/${{ inputs.distribution }}/Release 301
+        /Packages /dists/${{ inputs.distribution }}/${{ steps.component.outputs.component }}/binary-amd64/Packages 301
+
+        # Fallback
+        /* /index.html 404
+        EOF
+
+    - name: Generate repository statistics
+      id: stats
+      shell: bash
+      run: |
+        echo "Repository structure:"
+        find ${{ inputs.output-path }} -type f | head -20
+
+        size=$(du -sh ${{ inputs.output-path }} | cut -f1)
+        echo "Repository size: $size"
+        echo "size=$size" >> $GITHUB_OUTPUT
+
+        # Count packages
+        package_count=0
+        if [ -d "${{ inputs.output-path }}/pool" ]; then
+          package_count=$(find ${{ inputs.output-path }}/pool -name "*.deb" | wc -l)
+        fi
+        echo "Packages included: $package_count"
+        echo "package-count=$package_count" >> $GITHUB_OUTPUT
+
+        # List components
+        echo "Component created: ${{ steps.component.outputs.component }}"
+
+    - name: Validate repository structure
+      shell: bash
+      run: |
+        # Check that essential files exist
+        required_files=(
+          "${{ inputs.output-path }}/dists/${{ inputs.distribution }}/Release"
+          "${{ inputs.output-path }}/index.html"
+          "${{ inputs.output-path }}/_headers"
+        )
+
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Error: Required file $file is missing"
+            exit 1
+          fi
+        done
+
+        echo "Repository structure validation passed"

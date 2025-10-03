@@ -30,19 +30,6 @@ jobs:
         with:
           name: authentik_${{ matrix.target }}
           path: bin/
-  deploy:
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    needs: build
-    uses: ./.github/workflows/_reusable-apt.yml
-    secrets: inherit
-    with:
-      repo_name: "authentik"
-      codename: "stable"
-      components: "main"
-      architectures: amd64 arm64
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -57,3 +44,55 @@ jobs:
       - uses: golangci/golangci-lint-action@v8
         with:
           args: --timeout 5000s
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          path: ./bin
+      - uses: ./.github/actions/apt
+        id: apt-repo
+        with:
+          repo_name: "authentik"
+          package-path: bin/
+          gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
+      - name: Show repository info
+        run: |
+          echo "Component: ${{ steps.apt-repo.outputs.component-name }}"
+          echo "Repository size: ${{ steps.apt-repo.outputs.repository-size }}"
+      - name: Upload repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: apt-repository-${{ steps.apt-repo.outputs.component-name }}
+          path: ${{ steps.apt-repo.outputs.repository-path }}
+  deploy-to-netlify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    steps:
+      - name: Determine component name
+        id: component
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "component=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "component=main" >> $GITHUB_OUTPUT
+          fi
+      - name: Download repository
+        uses: actions/download-artifact@v5
+        with:
+          name: apt-repository-${{ steps.component.outputs.component }}
+          path: ./deploy
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: './deploy'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "APT repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
+          alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: authentik-pkg.netlify.app
