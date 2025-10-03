@@ -54,6 +54,7 @@ jobs:
           name: authentik_${{ matrix.target }}
           path: bin/
   build_rs:
+    name: Build
     strategy:
       fail-fast: false
       matrix:

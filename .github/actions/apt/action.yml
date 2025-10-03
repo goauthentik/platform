@@ -53,6 +53,7 @@ runs:
       id: component
       shell: bash
       run: |
+        set -xeuo pipefail
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           echo "component=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
         elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
@@ -66,6 +67,7 @@ runs:
     - name: Install APT repository tools
       shell: bash
       run: |
+        set -xeuo pipefail
         sudo apt-get remove --purge man-db
         sudo apt-get update -qq
         sudo apt-get install -y reprepro gnupg2
@@ -74,6 +76,7 @@ runs:
       id: setup
       shell: bash
       run: |
+        set -xeuo pipefail
         # Convert to absolute path to avoid issues
         REPO_PATH=$(realpath "${{ inputs.output-path }}")
         PACKAGE_PATH=$(realpath "${{ inputs.package-path }}" 2>/dev/null || echo "${{ inputs.package-path }}")
@@ -87,6 +90,7 @@ runs:
         mkdir -p "$REPO_PATH/conf"
         mkdir -p "$REPO_PATH/dists"
         mkdir -p "$REPO_PATH/pool"
+        mkdir -p "$REPO_PATH/keys"
 
         echo "Created directories:"
         ls -la "$REPO_PATH"
@@ -95,6 +99,7 @@ runs:
       if: ${{ inputs.gpg-private-key != '' }}
       shell: bash
       run: |
+        set -xeuo pipefail
         # Create dedicated GPG home
         export GNUPGHOME="${{ runner.temp }}/.gnupg"
         mkdir -p "$GNUPGHOME"
@@ -113,21 +118,10 @@ runs:
         # Create a keyring file for APT
         gpg --export "$GPG_KEY_ID" | sudo tee "$REPO_PATH/keys/archive-keyring.gpg" > /dev/null
 
-        # Get key fingerprint and info
-        GPG_FINGERPRINT=$(gpg --fingerprint "$GPG_KEY_ID" | grep -E "^\s+[A-F0-9\s]{40,}" | tr -d ' ')
-        GPG_USER_ID=$(gpg --list-keys "$GPG_KEY_ID" | grep "^uid" | head -1 | sed 's/^uid\s*\[.*\]\s*//')
-
-        echo "GPG_FINGERPRINT=$GPG_FINGERPRINT" >> $GITHUB_ENV
-        echo "GPG_USER_ID=$GPG_USER_ID" >> $GITHUB_ENV
-
-        echo "✅ GPG public key exported"
-        echo "Key ID: $GPG_KEY_ID"
-        echo "Fingerprint: $GPG_FINGERPRINT"
-        echo "User ID: $GPG_USER_ID"
-
     - name: Create reprepro configuration
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "Creating reprepro configuration in $REPO_PATH/conf/"
 
         # Create distributions file
@@ -157,6 +151,7 @@ runs:
       if: ${{ inputs.gpg-private-key != '' && inputs.gpg-passphrase != '' }}
       shell: bash
       run: |
+        set -xeuo pipefail
         # Setup GPG agent for non-interactive signing
         echo "allow-preset-passphrase" > "$GNUPGHOME/gpg-agent.conf"
         gpg-connect-agent reloadagent /bye
@@ -169,6 +164,7 @@ runs:
     - name: Initialize repository
       shell: bash
       run: |
+        set -xeuo pipefail
         cd "$REPO_PATH"
         echo "Working directory: $(pwd)"
         echo "Repository structure:"
@@ -246,13 +242,6 @@ runs:
                 <p><strong>Architectures:</strong> ${{ inputs.architectures }}</p>
                 <p><strong>Built from:</strong> ${{ github.ref }} (${{ github.sha }})</p>
                 <p><strong>Signing:</strong> <span class="signed">✅ Packages are GPG signed</span></p>
-                <div class="key-info">
-                    <strong>🔑 GPG Key Information:</strong><br>
-                    <strong>Key ID:</strong> <code>${GPG_KEY_ID}</code><br>
-                    <strong>Fingerprint:</strong> <code>${GPG_FINGERPRINT}</code><br>
-                    <strong>User ID:</strong> ${GPG_USER_ID}<br>
-                    <strong>Download:</strong> <a href="keys/gpg-key.asc">ASCII armored key</a> | <a href="keys/gpg-key.gpg">Binary key</a>
-                </div>
             </div>
             <div class="setup-section">
                 <h2>🚀 Quick Setup</h2>
