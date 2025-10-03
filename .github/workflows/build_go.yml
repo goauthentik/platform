@@ -40,7 +40,6 @@ jobs:
     secrets: inherit
     with:
       repo_name: "authentik"
-      signing_key: ${{ secrets.GPG_PRIVATE }}
       codename: "stable"
       components: "main"
       architectures: amd64 arm64

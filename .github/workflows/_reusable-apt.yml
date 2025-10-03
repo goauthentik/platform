@@ -4,9 +4,6 @@ on:
       repo_name:
         required: true
         type: string
-      signing_key:
-        required: true
-        type: string
       codename:
         required: true
         type: string
@@ -31,7 +28,7 @@ jobs:
         id: create-apt-repo
         with:
           repo-name: ${{ inputs.repo_name }}
-          signing-key: ${{ secrets.SIGNING_KEY }}
+          signing-key: ${{ secrets.GPG_PRIVATE }}
           codename: ${{ inputs.codename }}
           components: ${{ inputs.components }}
           architectures: ${{ inputs.architectures }}
