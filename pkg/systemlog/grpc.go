@@ -24,7 +24,7 @@ func InterceptorLogger(l log.FieldLogger) logging.Logger {
 		l := l.WithFields(f)
 
 		p, ok := peer.FromContext(ctx)
-		if ok {
+		if ok && p.AuthInfo != nil {
 			l = l.WithField("auth.pid", p.AuthInfo.(grpc_creds.AuthInfo).Creds.PID)
 		}
 
