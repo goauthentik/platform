@@ -1,4 +1,4 @@
-name: build_go
+name: build
 
 on:
   push:
@@ -6,8 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
-  build:
+  build_go:
     name: Build
     strategy:
       fail-fast: false
@@ -30,7 +33,46 @@ jobs:
         with:
           name: authentik_${{ matrix.target }}
           path: bin/
-  lint:
+  build_js:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - browser-ext
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: "${{ matrix.target }}/package.json"
+          cache: "npm"
+          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+      - run: make ${{ matrix.target }}/package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: authentik_${{ matrix.target }}
+          path: bin/
+  build_rs:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - pam
+          - nss
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev
+      - run: make ${{ matrix.target }}/build
+      - run: make ${{ matrix.target }}/package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: authentik_${{ matrix.target }}
+          path: ${{ matrix.target }}/target/debian/*.deb
+  lint_go:
     name: Lint
     runs-on: ubuntu-latest
     steps:
@@ -44,8 +86,27 @@ jobs:
       - uses: golangci/golangci-lint-action@v8
         with:
           args: --timeout 5000s
+  lint_js:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - browser-ext
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: "${{ matrix.target }}/package.json"
+          cache: "npm"
+          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+      - run: make ${{ matrix.target }}/lint
   deploy:
-    needs: build
+    needs:
+      - build_go
+      - build_js
+      - build_rs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
