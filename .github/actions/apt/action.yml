@@ -30,6 +30,10 @@ inputs:
     description: 'Repository name for display'
     required: false
     default: ${{ github.repository }}
+  repository-url:
+    description: 'Repository URL (for APT instructions)'
+    required: false
+    default: 'https://authentik-pkg.netlify.app'
 
 outputs:
   component-name:
@@ -101,6 +105,25 @@ runs:
         GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | head -1 | sed 's/.*\/\([A-F0-9]\{16\}\).*/\1/')
         echo "GPG_KEY_ID=$GPG_KEY_ID" >> $GITHUB_ENV
         echo "GPG key imported: $GPG_KEY_ID"
+
+        # Export public key in multiple formats
+        gpg --armor --export "$GPG_KEY_ID" > "$REPO_PATH/keys/gpg-key.asc"
+        gpg --export "$GPG_KEY_ID" > "$REPO_PATH/keys/gpg-key.gpg"
+
+        # Create a keyring file for APT
+        gpg --export "$GPG_KEY_ID" | sudo tee "$REPO_PATH/keys/archive-keyring.gpg" > /dev/null
+
+        # Get key fingerprint and info
+        GPG_FINGERPRINT=$(gpg --fingerprint "$GPG_KEY_ID" | grep -E "^\s+[A-F0-9\s]{40,}" | tr -d ' ')
+        GPG_USER_ID=$(gpg --list-keys "$GPG_KEY_ID" | grep "^uid" | head -1 | sed 's/^uid\s*\[.*\]\s*//')
+
+        echo "GPG_FINGERPRINT=$GPG_FINGERPRINT" >> $GITHUB_ENV
+        echo "GPG_USER_ID=$GPG_USER_ID" >> $GITHUB_ENV
+
+        echo "✅ GPG public key exported"
+        echo "Key ID: $GPG_KEY_ID"
+        echo "Fingerprint: $GPG_FINGERPRINT"
+        echo "User ID: $GPG_USER_ID"
 
     - name: Create reprepro configuration
       shell: bash
@@ -192,6 +215,8 @@ runs:
       shell: bash
       run: |
         set -xeuo pipefail
+        # Determine if GPG is being used
+        SIGNED=${{ inputs.gpg-private-key != '' && 'true' || 'false' }}
         cat > "$REPO_PATH/index.html" << EOF
         <!DOCTYPE html>
         <html>
@@ -200,10 +225,15 @@ runs:
             <style>
                 body { font-family: Arial, sans-serif; margin: 40px; }
                 .repo-info { background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; }
+                .setup-section { background: #e8f4fd; padding: 20px; border-radius: 5px; margin: 20px 0; }
                 code { background: #e0e0e0; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
                 pre { background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }
                 .component { color: #0066cc; font-weight: bold; }
                 .warning { color: #cc6600; font-style: italic; }
+                .command { background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 5px; margin: 10px 0; }
+                .step { margin: 15px 0; }
+                .key-info { background: #f0fff4; border-left: 4px solid #48bb78; padding: 15px; margin: 10px 0; }
+                .signed { color: #48bb78; font-weight: bold; }
             </style>
         </head>
         <body>
@@ -215,21 +245,32 @@ runs:
                 <p><strong>Distribution:</strong> ${{ inputs.distribution }}</p>
                 <p><strong>Architectures:</strong> ${{ inputs.architectures }}</p>
                 <p><strong>Built from:</strong> ${{ github.ref }} (${{ github.sha }})</p>
-
-                <h3>Usage</h3>
-                <p>Add this repository to your system:</p>
-                <pre><code>echo "deb [trusted=yes] https://authentik-pkg.netlify.app ${{ inputs.distribution }} ${{ steps.component.outputs.component }}" | sudo tee /etc/apt/sources.list.d/${{ github.event.repository.name }}.list
-
-        # Update package lists
-        sudo apt update
-
-        # Install packages
-        sudo apt install your-package-name</code></pre>
-
-                <h3>GPG Signing</h3>
-                <p>Packages are ${{ inputs.gpg-private-key != '' && 'signed with GPG' || 'not signed (using [trusted=yes])' }}</p>
+                <p><strong>Signing:</strong> <span class="signed">✅ Packages are GPG signed</span></p>
+                <div class="key-info">
+                    <strong>🔑 GPG Key Information:</strong><br>
+                    <strong>Key ID:</strong> <code>${GPG_KEY_ID}</code><br>
+                    <strong>Fingerprint:</strong> <code>${GPG_FINGERPRINT}</code><br>
+                    <strong>User ID:</strong> ${GPG_USER_ID}<br>
+                    <strong>Download:</strong> <a href="keys/gpg-key.asc">ASCII armored key</a> | <a href="keys/gpg-key.gpg">Binary key</a>
+                </div>
             </div>
+            <div class="setup-section">
+                <h2>🚀 Quick Setup</h2>
+                <div class="step">
+                    <h3>Step 1: Add GPG Key</h3>
+                    <pre class="command">curl -fsSL ${{ inputs.repository-url }}/keys/gpg-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/${{ github.event.repository.name }}-keyring.gpg</pre>
+                </div>
 
+                <div class="step">
+                    <h3>Step 2: Add Repository</h3>
+                    <pre class="command">echo "deb [signed-by=/usr/share/keyrings/${{ github.event.repository.name }}-keyring.gpg] ${{ inputs.repository-url }}/ ${{ inputs.distribution }} ${{ steps.component.outputs.component }}" | sudo tee /etc/apt/sources.list.d/${{ github.event.repository.name }}.list</pre>
+                </div>
+                <div class="step">
+                    <h3>Step 3: Update and Install</h3>
+                    <pre class="command">sudo apt update
+        sudo apt install your-package-name</pre>
+                </div>
+            </div>
             <h2>Browse Repository</h2>
             <ul>
                 <li><a href="dists/">dists/</a> - Distribution metadata and package lists</li>
