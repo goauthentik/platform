@@ -163,18 +163,14 @@ runs:
         echo "Looking for packages in: $PACKAGE_PATH"
 
         if [ -d "$PACKAGE_PATH" ]; then
-          package_count=0
           while IFS= read -r -d '' deb_file; do
             echo "Adding package: $deb_file"
             if reprepro includedeb "${{ inputs.distribution }}" "$deb_file"; then
-              ((package_count++))
               echo "Successfully added: $(basename "$deb_file")"
             else
               echo "Failed to add: $(basename "$deb_file")"
             fi
           done < <(find "$PACKAGE_PATH" -name "*.deb" -type f -print0)
-
-          echo "Added $package_count packages to repository"
         else
           echo "Package path $PACKAGE_PATH not found, repository will be empty"
         fi
