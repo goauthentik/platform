@@ -30,6 +30,20 @@ jobs:
         with:
           name: authentik_${{ matrix.target }}
           path: bin/
+  deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    needs: build
+    uses: ./.github/workflows/_reusable-apt.yml
+    secrets: inherit
+    with:
+      repo_name: "authentik"
+      signing_key: ${{ secrets.GPG_PRIVATE }}
+      codename: "stable"
+      components: "main"
+      architectures: amd64 arm64
   lint:
     name: Lint
     runs-on: ubuntu-latest
