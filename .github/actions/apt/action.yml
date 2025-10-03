@@ -118,18 +118,6 @@ runs:
         # Create a keyring file for APT
         gpg --export "$GPG_KEY_ID" | sudo tee "$REPO_PATH/keys/archive-keyring.gpg" > /dev/null
 
-        # Get key fingerprint and info
-        GPG_FINGERPRINT=$(gpg --fingerprint "$GPG_KEY_ID" | grep -E "^\s+[A-F0-9\s]{40,}" | tr -d ' ')
-        GPG_USER_ID=$(gpg --list-keys "$GPG_KEY_ID" | grep "^uid" | head -1 | sed 's/^uid\s*\[.*\]\s*//')
-
-        echo "GPG_FINGERPRINT=$GPG_FINGERPRINT" >> $GITHUB_ENV
-        echo "GPG_USER_ID=$GPG_USER_ID" >> $GITHUB_ENV
-
-        echo "✅ GPG public key exported"
-        echo "Key ID: $GPG_KEY_ID"
-        echo "Fingerprint: $GPG_FINGERPRINT"
-        echo "User ID: $GPG_USER_ID"
-
     - name: Create reprepro configuration
       shell: bash
       run: |
@@ -254,13 +242,6 @@ runs:
                 <p><strong>Architectures:</strong> ${{ inputs.architectures }}</p>
                 <p><strong>Built from:</strong> ${{ github.ref }} (${{ github.sha }})</p>
                 <p><strong>Signing:</strong> <span class="signed">✅ Packages are GPG signed</span></p>
-                <div class="key-info">
-                    <strong>🔑 GPG Key Information:</strong><br>
-                    <strong>Key ID:</strong> <code>${GPG_KEY_ID}</code><br>
-                    <strong>Fingerprint:</strong> <code>${GPG_FINGERPRINT}</code><br>
-                    <strong>User ID:</strong> ${GPG_USER_ID}<br>
-                    <strong>Download:</strong> <a href="keys/gpg-key.asc">ASCII armored key</a> | <a href="keys/gpg-key.gpg">Binary key</a>
-                </div>
             </div>
             <div class="setup-section">
                 <h2>🚀 Quick Setup</h2>
