@@ -25,7 +25,6 @@ func (pam *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*pb
 			Sub:               token.Claims().Subject,
 			Aud:               token.Claims().Audience,
 			Exp:               timestamppb.New(token.Claims().ExpiresAt.Time),
-			Nbf:               timestamppb.New(token.Claims().NotBefore.Time),
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
