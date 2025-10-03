@@ -87,6 +87,7 @@ runs:
         mkdir -p "$REPO_PATH/conf"
         mkdir -p "$REPO_PATH/dists"
         mkdir -p "$REPO_PATH/pool"
+        mkdir -p "$REPO_PATH/keys"
 
         echo "Created directories:"
         ls -la "$REPO_PATH"
