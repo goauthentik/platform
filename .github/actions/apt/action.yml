@@ -53,6 +53,7 @@ runs:
       id: component
       shell: bash
       run: |
+        set -xeuo pipefail
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           echo "component=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
         elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
@@ -66,6 +67,7 @@ runs:
     - name: Install APT repository tools
       shell: bash
       run: |
+        set -xeuo pipefail
         sudo apt-get remove --purge man-db
         sudo apt-get update -qq
         sudo apt-get install -y reprepro gnupg2
@@ -74,6 +76,7 @@ runs:
       id: setup
       shell: bash
       run: |
+        set -xeuo pipefail
         # Convert to absolute path to avoid issues
         REPO_PATH=$(realpath "${{ inputs.output-path }}")
         PACKAGE_PATH=$(realpath "${{ inputs.package-path }}" 2>/dev/null || echo "${{ inputs.package-path }}")
@@ -96,6 +99,7 @@ runs:
       if: ${{ inputs.gpg-private-key != '' }}
       shell: bash
       run: |
+        set -xeuo pipefail
         # Create dedicated GPG home
         export GNUPGHOME="${{ runner.temp }}/.gnupg"
         mkdir -p "$GNUPGHOME"
@@ -129,6 +133,7 @@ runs:
     - name: Create reprepro configuration
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "Creating reprepro configuration in $REPO_PATH/conf/"
 
         # Create distributions file
@@ -158,6 +163,7 @@ runs:
       if: ${{ inputs.gpg-private-key != '' && inputs.gpg-passphrase != '' }}
       shell: bash
       run: |
+        set -xeuo pipefail
         # Setup GPG agent for non-interactive signing
         echo "allow-preset-passphrase" > "$GNUPGHOME/gpg-agent.conf"
         gpg-connect-agent reloadagent /bye
@@ -170,6 +176,7 @@ runs:
     - name: Initialize repository
       shell: bash
       run: |
+        set -xeuo pipefail
         cd "$REPO_PATH"
         echo "Working directory: $(pwd)"
         echo "Repository structure:"
