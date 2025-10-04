@@ -11,6 +11,7 @@ unsafe extern "C" {
     /// Add or update an env var in PAM (expects "KEY=VAL" malloc’d internally)
     fn pam_putenv(pamh: *const PamHandle, name_value: *const c_char) -> PamResultCode;
 
+    /// Get a list of all PAM environment variables
     fn pam_getenvlist(pamh: *const PamHandle) -> *mut *mut c_char;
 }
 
