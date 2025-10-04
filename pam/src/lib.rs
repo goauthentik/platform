@@ -1,11 +1,12 @@
 mod auth;
+mod logger;
 mod pam_env;
 mod session;
 mod session_data;
 
 use crate::auth::authenticate_impl;
 use crate::auth::authorize::authenticate_authorize_impl;
-use crate::pam_env::pam_list_env;
+use crate::logger::prelude;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
 use authentik_sys::logger::init_log;
@@ -14,7 +15,6 @@ use ctor::{ctor, dtor};
 use pam::constants::{PamFlag, PamResultCode};
 use pam::items::Service;
 use pam::module::{PamHandle, PamHooks};
-use std::env;
 use std::ffi::CStr;
 
 pub const ENV_SESSION_ID: &str = "AUTHENTIK_SESSION_ID";
@@ -33,25 +33,9 @@ fn dtor() {
     log_hook("dtor");
 }
 
-fn debug(pamh: &mut PamHandle, args: Vec<&CStr>) {
-    log::debug!(
-        "args: {}",
-        Vec::from_iter(args.iter().map(|i| i.to_string_lossy().into_owned())).join(", ")
-    );
-    log::debug!(
-        "PAM env: {}",
-        Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", ")
-    );
-    log::debug!(
-        "Proc env: {}",
-        Vec::from_iter(env::vars().map(|(k, v)| format!("{k}={v}"))).join(", ")
-    );
-}
-
 impl PamHooks for PAMAuthentik {
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        log_hook("sm_authenticate");
-        debug(pamh, args.clone());
+        prelude("sm_authenticate", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => authenticate_impl(pamh, args, flags),
@@ -62,8 +46,7 @@ impl PamHooks for PAMAuthentik {
     }
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        log_hook("sm_open_session");
-        debug(pamh, args.clone());
+        prelude("sm_open_session", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => open_session_impl(pamh, args, flags),
@@ -72,8 +55,7 @@ impl PamHooks for PAMAuthentik {
     }
 
     fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        log_hook("sm_close_session");
-        debug(pamh, args.clone());
+        prelude("sm_close_session", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => close_session_impl(pamh, args, flags),
@@ -81,9 +63,8 @@ impl PamHooks for PAMAuthentik {
         }
     }
 
-    fn sm_setcred(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        log_hook("sm_setcred");
-        debug(pamh, args.clone());
+    fn sm_setcred(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
+        prelude("sm_setcred", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => PamResultCode::PAM_SUCCESS,
@@ -91,9 +72,8 @@ impl PamHooks for PAMAuthentik {
         }
     }
 
-    fn acct_mgmt(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        log_hook("acct_mgmt");
-        debug(pamh, args.clone());
+    fn acct_mgmt(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
+        prelude("acct_mgmt", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => PamResultCode::PAM_SUCCESS,
