@@ -2,10 +2,8 @@ use authentik_sys::generated::{
     grpc_request,
     pam::{
         InteractiveAuthContinueRequest, InteractiveAuthInitRequest, InteractiveAuthRequest,
-        InteractiveChallenge,
-        interactive_auth_request::InteractiveAuth,
-        interactive_challenge::{InteractiveAuthResult, PromptMeta},
-        pam_client::PamClient,
+        InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
+        interactive_challenge::PromptMeta, pam_client::PamClient,
     },
 };
 use pam::{
@@ -20,8 +18,8 @@ use crate::pam_try_log;
 
 const MAX_ITER: i8 = 30;
 
-pub fn result_to_pam_result(challenge: InteractiveChallenge) -> PamResultCode {
-    match InteractiveAuthResult::try_from(challenge.result) {
+pub fn result_to_pam_result(result: i32) -> PamResultCode {
+    match InteractiveAuthResult::try_from(result) {
         Ok(InteractiveAuthResult::PamSuccess) => PamResultCode::PAM_SUCCESS,
         Ok(InteractiveAuthResult::PamPermDenied) => PamResultCode::PAM_PERM_DENIED,
         Ok(InteractiveAuthResult::PamAuthErr) => PamResultCode::PAM_AUTH_ERR,
@@ -62,7 +60,7 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
     let mut iter = 0;
     while iter <= MAX_ITER {
         if challenge.finished {
-            return result_to_pam_result(challenge);
+            return result_to_pam_result(challenge.result);
         }
         let mut req_inner = InteractiveAuthContinueRequest {
             txid: challenge.txid.to_owned(),

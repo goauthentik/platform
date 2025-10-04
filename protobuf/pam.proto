@@ -8,6 +8,7 @@ import "agent.proto";
 service PAM {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
+  rpc SudoAuthorize(SudoAuthorizationRequest) returns (SudoAuthorizationResponse);
 }
 
 message TokenAuthRequest {
@@ -36,12 +37,13 @@ message InteractiveAuthRequest {
   }
 }
 
+enum InteractiveAuthResult {
+  PAM_SUCCESS = 0;
+  PAM_PERM_DENIED = 6;
+  PAM_AUTH_ERR = 7;
+}
+
 message InteractiveChallenge {
-  enum InteractiveAuthResult {
-    PAM_SUCCESS = 0;
-    PAM_PERM_DENIED = 6;
-    PAM_AUTH_ERR = 7;
-  }
 
   enum PromptMeta {
     UNSPECIFIED = 0;
@@ -60,4 +62,12 @@ message InteractiveChallenge {
   string prompt = 4;
   PromptMeta prompt_meta = 5;
   string debug_info = 6;
+}
+
+message SudoAuthorizationRequest {
+  string service = 1;
+}
+
+message SudoAuthorizationResponse {
+  InteractiveAuthResult result = 1;
 }

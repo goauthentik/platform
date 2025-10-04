@@ -47,10 +47,7 @@ pub struct InteractiveChallenge {
     pub txid: ::prost::alloc::string::String,
     #[prost(bool, tag = "2")]
     pub finished: bool,
-    #[prost(
-        enumeration = "interactive_challenge::InteractiveAuthResult",
-        tag = "3"
-    )]
+    #[prost(enumeration = "InteractiveAuthResult", tag = "3")]
     pub result: i32,
     #[prost(string, tag = "4")]
     pub prompt: ::prost::alloc::string::String,
@@ -61,35 +58,6 @@ pub struct InteractiveChallenge {
 }
 /// Nested message and enum types in `InteractiveChallenge`.
 pub mod interactive_challenge {
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-    #[repr(i32)]
-    pub enum InteractiveAuthResult {
-        PamSuccess = 0,
-        PamPermDenied = 6,
-        PamAuthErr = 7,
-    }
-    impl InteractiveAuthResult {
-        /// String value of the enum field names used in the ProtoBuf definition.
-        ///
-        /// The values are not transformed in any way and thus are considered stable
-        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-        pub fn as_str_name(&self) -> &'static str {
-            match self {
-                Self::PamSuccess => "PAM_SUCCESS",
-                Self::PamPermDenied => "PAM_PERM_DENIED",
-                Self::PamAuthErr => "PAM_AUTH_ERR",
-            }
-        }
-        /// Creates an enum from field names used in the ProtoBuf definition.
-        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-            match value {
-                "PAM_SUCCESS" => Some(Self::PamSuccess),
-                "PAM_PERM_DENIED" => Some(Self::PamPermDenied),
-                "PAM_AUTH_ERR" => Some(Self::PamAuthErr),
-                _ => None,
-            }
-        }
-    }
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum PromptMeta {
@@ -132,6 +100,45 @@ pub mod interactive_challenge {
                 "PASSWORD" => Some(Self::Password),
                 _ => None,
             }
+        }
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SudoAuthorizationRequest {
+    #[prost(string, tag = "1")]
+    pub service: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct SudoAuthorizationResponse {
+    #[prost(enumeration = "InteractiveAuthResult", tag = "1")]
+    pub result: i32,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum InteractiveAuthResult {
+    PamSuccess = 0,
+    PamPermDenied = 6,
+    PamAuthErr = 7,
+}
+impl InteractiveAuthResult {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::PamSuccess => "PAM_SUCCESS",
+            Self::PamPermDenied => "PAM_PERM_DENIED",
+            Self::PamAuthErr => "PAM_AUTH_ERR",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "PAM_SUCCESS" => Some(Self::PamSuccess),
+            "PAM_PERM_DENIED" => Some(Self::PamPermDenied),
+            "PAM_AUTH_ERR" => Some(Self::PamAuthErr),
+            _ => None,
         }
     }
 }

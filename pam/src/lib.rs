@@ -3,8 +3,8 @@ mod pam_env;
 mod session;
 mod session_data;
 
-use crate::auth::authenticate_authorize_impl;
 use crate::auth::authenticate_impl;
+use crate::auth::authorize::authenticate_authorize_impl;
 use crate::pam_env::pam_list_env;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
@@ -34,9 +34,18 @@ fn dtor() {
 }
 
 fn debug(pamh: &mut PamHandle, args: Vec<&CStr>) {
-    log::debug!("args: {}", Vec::from_iter(args.iter().map(|i| i.to_string_lossy().into_owned())).join(", "));
-    log::debug!("PAM env: {}", Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", "));
-    log::debug!("Proc env: {}", Vec::from_iter(env::vars().map(|(k, v)| format!("{k}={v}"))).join(", "));
+    log::debug!(
+        "args: {}",
+        Vec::from_iter(args.iter().map(|i| i.to_string_lossy().into_owned())).join(", ")
+    );
+    log::debug!(
+        "PAM env: {}",
+        Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", ")
+    );
+    log::debug!(
+        "Proc env: {}",
+        Vec::from_iter(env::vars().map(|(k, v)| format!("{k}={v}"))).join(", ")
+    );
 }
 
 impl PamHooks for PAMAuthentik {
@@ -46,9 +55,9 @@ impl PamHooks for PAMAuthentik {
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => authenticate_impl(pamh, args, flags),
-            "sudo" => authenticate_authorize_impl(pamh, args, flags),
-            "sudo-i" => authenticate_authorize_impl(pamh, args, flags),
-            _ => PamResultCode::PAM_IGNORE
+            "sudo" => authenticate_authorize_impl(pamh, args, "sudo"),
+            "sudo-i" => authenticate_authorize_impl(pamh, args, "sudo-i"),
+            _ => PamResultCode::PAM_IGNORE,
         }
     }
 
@@ -58,7 +67,7 @@ impl PamHooks for PAMAuthentik {
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => open_session_impl(pamh, args, flags),
-            _ => PamResultCode::PAM_IGNORE
+            _ => PamResultCode::PAM_IGNORE,
         }
     }
 
@@ -68,7 +77,7 @@ impl PamHooks for PAMAuthentik {
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => close_session_impl(pamh, args, flags),
-            _ => PamResultCode::PAM_IGNORE
+            _ => PamResultCode::PAM_IGNORE,
         }
     }
 
@@ -78,7 +87,7 @@ impl PamHooks for PAMAuthentik {
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => PamResultCode::PAM_SUCCESS,
-            _ => PamResultCode::PAM_IGNORE
+            _ => PamResultCode::PAM_IGNORE,
         }
     }
 
@@ -88,32 +97,32 @@ impl PamHooks for PAMAuthentik {
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
             "sshd" => PamResultCode::PAM_SUCCESS,
-            _ => PamResultCode::PAM_IGNORE
+            _ => PamResultCode::PAM_IGNORE,
         }
     }
 }
 
 pub fn get_service(pamh: &mut PamHandle) -> Result<String, PamResultCode> {
-   match pamh.get_item::<Service>() {
+    match pamh.get_item::<Service>() {
         Ok(u) => match u {
             Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
                 Ok(uu) => {
                     let svc = uu.to_owned();
-                    return Ok(svc);
-                },
+                    Ok(svc)
+                }
                 Err(e) => {
                     log::warn!("failed to decode user: {e}");
-                    return Err(PamResultCode::PAM_AUTH_ERR);
+                    Err(PamResultCode::PAM_AUTH_ERR)
                 }
             },
             None => {
                 log::warn!("No user");
-                return Err(PamResultCode::PAM_AUTH_ERR);
+                Err(PamResultCode::PAM_AUTH_ERR)
             }
         },
         Err(e) => {
             log::warn!("failed to get user");
-            return Err(e);
+            Err(e)
         }
     }
 }
