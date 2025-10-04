@@ -14,6 +14,7 @@ use ctor::{ctor, dtor};
 use pam::constants::{PamFlag, PamResultCode};
 use pam::items::Service;
 use pam::module::{PamHandle, PamHooks};
+use std::env;
 use std::ffi::CStr;
 
 pub const ENV_SESSION_ID: &str = "AUTHENTIK_SESSION_ID";
@@ -34,7 +35,8 @@ fn dtor() {
 
 fn debug(pamh: &mut PamHandle, args: Vec<&CStr>) {
     log::debug!("args: {}", Vec::from_iter(args.iter().map(|i| i.to_string_lossy().into_owned())).join(", "));
-    log::debug!("env: {}", Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", "));
+    log::debug!("PAM env: {}", Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", "));
+    log::debug!("Proc env: {}", Vec::from_iter(env::vars().map(|(k, v)| format!("{k}={v}"))).join(", "));
 }
 
 impl PamHooks for PAMAuthentik {
