@@ -1,6 +1,6 @@
 # action.yml
 name: 'Build APT Repository'
-description: 'Creates an APT repository with components for PRs and main branch, ready for deployment'
+description: 'Creates an APT repository, ready for deployment'
 author: 'Your Name'
 
 inputs:
@@ -34,11 +34,12 @@ inputs:
     description: 'Repository URL (for APT instructions)'
     required: false
     default: 'https://authentik-pkg.netlify.app'
+  components:
+    description: "Repo component"
+    required: false
+    default: main
 
 outputs:
-  component-name:
-    description: 'The component name that was created'
-    value: ${{ steps.component.outputs.component }}
   repository-path:
     description: 'Path to the generated repository'
     value: ${{ steps.setup.outputs.absolute-path }}
@@ -49,21 +50,6 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Determine component name
-      id: component
-      shell: bash
-      run: |
-        set -xeuo pipefail
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          echo "component=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
-        elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-          echo "component=main" >> $GITHUB_OUTPUT
-        else
-          # For other branches, use branch name as component
-          echo "component=$(echo ${{ github.ref_name }} | sed 's/[^a-zA-Z0-9]/-/g')" >> $GITHUB_OUTPUT
-        fi
-        echo "Creating component: $(cat $GITHUB_OUTPUT | grep component | cut -d= -f2)"
-
     - name: Install APT repository tools
       shell: bash
       run: |
@@ -130,7 +116,7 @@ runs:
         Label: ${{ github.repository_owner }}
         Codename: ${{ inputs.distribution }}
         Architectures: ${{ inputs.architectures }}
-        Components: ${{ steps.component.outputs.component }}
+        Components: ${{ inputs.components }}
         Description: APT repository for ${{ inputs.repository-name }}
         $(if [ -n "${GPG_KEY_ID:-}" ]; then echo "SignWith: $GPG_KEY_ID"; fi)
         EOF
@@ -237,7 +223,7 @@ runs:
             <div class="repo-info">
                 <h2>Repository Information</h2>
                 <p><strong>Repository:</strong> ${{ inputs.repository-name }}</p>
-                <p><strong>Component:</strong> <span class="component">${{ steps.component.outputs.component }}</span></p>
+                <p><strong>Component:</strong> <span class="component">${{ inputs.components }}</span></p>
                 <p><strong>Distribution:</strong> ${{ inputs.distribution }}</p>
                 <p><strong>Architectures:</strong> ${{ inputs.architectures }}</p>
                 <p><strong>Built from:</strong> ${{ github.ref }} (${{ github.sha }})</p>
@@ -252,7 +238,7 @@ runs:
 
                 <div class="step">
                     <h3>Step 2: Add Repository</h3>
-                    <pre class="command">echo "deb [signed-by=/usr/share/keyrings/${{ github.event.repository.name }}-keyring.gpg] ${{ inputs.repository-url }}/ ${{ inputs.distribution }} ${{ steps.component.outputs.component }}" | sudo tee /etc/apt/sources.list.d/${{ github.event.repository.name }}.list</pre>
+                    <pre class="command">echo "deb [signed-by=/usr/share/keyrings/${{ github.event.repository.name }}-keyring.gpg] ${{ inputs.repository-url }}/ ${{ inputs.distribution }} ${{ inputs.components }}" | sudo tee /etc/apt/sources.list.d/${{ github.event.repository.name }}.list</pre>
                 </div>
                 <div class="step">
                     <h3>Step 3: Update and Install</h3>
@@ -265,7 +251,7 @@ runs:
                 <li><a href="dists/">dists/</a> - Distribution metadata and package lists</li>
                 <li><a href="pool/">pool/</a> - Package files (.deb)</li>
                 <li><a href="dists/${{ inputs.distribution }}/Release">Release</a> - Repository metadata</li>
-                <li><a href="dists/${{ inputs.distribution }}/${{ steps.component.outputs.component }}/binary-amd64/Packages">Packages (amd64)</a> - Package index</li>
+                <li><a href="dists/${{ inputs.distribution }}/${{ inputs.components }}/binary-amd64/Packages">Packages (amd64)</a> - Package index</li>
             </ul>
         </body>
         </html>
@@ -312,7 +298,7 @@ runs:
         cat > "$REPO_PATH/_redirects" << EOF
         # Redirect common APT client requests
         /Release /dists/${{ inputs.distribution }}/Release 301
-        /Packages /dists/${{ inputs.distribution }}/${{ steps.component.outputs.component }}/binary-amd64/Packages 301
+        /Packages /dists/${{ inputs.distribution }}/${{ inputs.components }}/binary-amd64/Packages 301
 
         # Fallback
         /* /index.html 404
@@ -340,7 +326,7 @@ runs:
         echo "Packages included: $package_count"
         echo "package-count=$package_count" >> $GITHUB_OUTPUT
 
-        echo "Component created: ${{ steps.component.outputs.component }}"
+        echo "Component created: ${{ inputs.components }}"
 
     - name: Validate repository structure
       shell: bash
