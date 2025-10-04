@@ -11,3 +11,37 @@
 
 > [!CAUTION]
 > The authentik CLI is in a pre-alpha state and features/behaviours might change without notice. Use at your own risk.
+
+## Development
+
+The primary supported development environment is devcontainers included with this repo.
+
+To build all the packages and install them on the dev container, run `make test-full`
+
+The local agent is required for most testing; create a new terminal and run `./bin/agent_local/ak-agent`.
+
+### Targets
+
+#### `pam/%`:
+
+PAM Module, built in rust. Requires sysd agent running.
+
+#### `nss/%`:
+
+NSS Module, built in rust. Requires sysd agent running.
+
+#### `cli/%`:
+
+CLI, can be used to interact with agent.
+
+#### `sysd/%`:
+
+System agent.
+
+#### `agent/%`:
+
+Local agent.
+
+#### `browser-ext/%`:
+
+Browser extension, requires local agent

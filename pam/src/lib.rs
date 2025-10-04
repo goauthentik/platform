@@ -3,6 +3,7 @@ mod pam_env;
 mod session;
 mod session_data;
 
+use crate::auth::authenticate_authorize_impl;
 use crate::auth::authenticate_impl;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
@@ -33,53 +34,60 @@ fn dtor() {
 impl PamHooks for PAMAuthentik {
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log_hook("sm_authenticate");
-        pam_check_service!(pamh);
-        authenticate_impl(pamh, args, flags)
+        let svc = pam_try_log!(get_service(pamh), "Failed to get service");
+        match svc.as_str() {
+            "sshd" => authenticate_impl(pamh, args, flags),
+            "sudo" => authenticate_authorize_impl(pamh, args, flags),
+            "sudo-i" => authenticate_authorize_impl(pamh, args, flags),
+            _ => PamResultCode::PAM_IGNORE
+        }
     }
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log_hook("sm_open_session");
-        pam_check_service!(pamh);
-        open_session_impl(pamh, args, flags)
+        let svc = pam_try_log!(get_service(pamh), "Failed to get service");
+        match svc.as_str() {
+            "sshd" => open_session_impl(pamh, args, flags),
+            _ => PamResultCode::PAM_IGNORE
+        }
     }
 
     fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         log_hook("sm_close_session");
-        pam_check_service!(pamh);
-        close_session_impl(pamh, args, flags)
+        let svc = pam_try_log!(get_service(pamh), "Failed to get service");
+        match svc.as_str() {
+            "sshd" => close_session_impl(pamh, args, flags),
+            _ => PamResultCode::PAM_IGNORE
+        }
     }
 
     fn sm_setcred(pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
         log_hook("sm_setcred");
-        pam_check_service!(pamh);
-        PamResultCode::PAM_SUCCESS
+        let svc = pam_try_log!(get_service(pamh), "Failed to get service");
+        match svc.as_str() {
+            "sshd" => PamResultCode::PAM_SUCCESS,
+            _ => PamResultCode::PAM_IGNORE
+        }
     }
 
     fn acct_mgmt(pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
         log_hook("acct_mgmt");
-        pam_check_service!(pamh);
-        PamResultCode::PAM_SUCCESS
+        let svc = pam_try_log!(get_service(pamh), "Failed to get service");
+        match svc.as_str() {
+            "sshd" => PamResultCode::PAM_SUCCESS,
+            _ => PamResultCode::PAM_IGNORE
+        }
     }
 }
 
-#[macro_export]
-macro_rules! pam_check_service {
-    ($h: expr) => {
-        match check_service($h) {
-            Ok(()) => {}
-            Err(e) => {
-                log::debug!("ignoring request for service");
-                return e;
-            }
-        }
-    };
-}
-
-pub fn check_service(pamh: &mut PamHandle) -> Result<(), PamResultCode> {
-    let service = match pamh.get_item::<Service>() {
+pub fn get_service(pamh: &mut PamHandle) -> Result<String, PamResultCode> {
+   match pamh.get_item::<Service>() {
         Ok(u) => match u {
             Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
-                Ok(uu) => uu,
+                Ok(uu) => {
+                    let svc = uu.to_owned();
+                    return Ok(svc);
+                },
                 Err(e) => {
                     log::warn!("failed to decode user: {e}");
                     return Err(PamResultCode::PAM_AUTH_ERR);
@@ -94,12 +102,7 @@ pub fn check_service(pamh: &mut PamHandle) -> Result<(), PamResultCode> {
             log::warn!("failed to get user");
             return Err(e);
         }
-    };
-    log::debug!("Service: '{service}'");
-    if ["sshd"].contains(&service.to_owned().as_str()) {
-        return Ok(());
     }
-    Err(PamResultCode::PAM_IGNORE)
 }
 
 #[macro_export]

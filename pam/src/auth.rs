@@ -125,3 +125,12 @@ pub fn authenticate_impl(
         auth_interactive(username, password, &conv)
     }
 }
+
+pub fn authenticate_authorize_impl(
+    pamh: &mut PamHandle,
+    args: Vec<&CStr>,
+    _flags: PamFlag,
+) -> PamResultCode {
+    log::debug!("{}", Vec::from_iter(args.iter().map(|i| i.to_string_lossy().into_owned())).join(", "));
+    PamResultCode::PAM_IGNORE
+}
