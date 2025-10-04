@@ -8,14 +8,10 @@ use pam::{
 use std::ffi::CStr;
 
 use crate::{
-    ENV_SESSION_ID,
     auth::{
         interactive::auth_interactive,
         token::{auth_token, decode_token},
-    },
-    pam_env::pam_put_env,
-    pam_try_log,
-    session_data::{_generate_id, _write_session_data, SessionData, hash_token},
+    }, pam_env::{pam_list_env, pam_put_env}, pam_try_log, session_data::{SessionData, _generate_id, _write_session_data, hash_token}, ENV_SESSION_ID
 };
 
 pub mod interactive;
@@ -131,6 +127,7 @@ pub fn authenticate_authorize_impl(
     args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    log::debug!("{}", Vec::from_iter(args.iter().map(|i| i.to_string_lossy().into_owned())).join(", "));
+    log::debug!("args: {}", Vec::from_iter(args.iter().map(|i| i.to_string_lossy().into_owned())).join(", "));
+    log::debug!("env: {}", Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", "));
     PamResultCode::PAM_IGNORE
 }
