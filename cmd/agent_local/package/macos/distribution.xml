@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <pkg-ref id="io.goauthentik.agent"/>
+    <title>authentik Agent</title>
+    <!-- <background file="background.png" alignment="bottomleft" mime-type="image/png" />
+    <background-darkAqua file="background.png" alignment="bottomleft" mime-type="image/png" /> -->
+    <options customize="never" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    <choices-outline>
+        <line choice="default">
+            <line choice="io.goauthentik.agent"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="io.goauthentik.agent" visible="false">
+        <pkg-ref id="io.goauthentik.agent"/>
+    </choice>
+    <pkg-ref id="io.goauthentik.agent" version="0.6.5" onConclusion="none">agent.pkg</pkg-ref>
+</installer-gui-script>

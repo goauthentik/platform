@@ -27,6 +27,12 @@ package-darwin: build
 		--scripts ${PWD}/package/macos/scripts \
 		--install-location /Applications \
 		"${TOP}/bin/${TARGET}/agent.pkg"
+	productbuild \
+		--distribution "${PWD}/package/macos/distribution.xml" \
+		--package-path "${TOP}/bin/${TARGET}" \
+		--resources "${PWD}/package/macos/resources" \
+		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
+	rm "${TOP}/bin/${TARGET}/agent.pkg"
 
 package-linux: build
 	VERSION=${VERSION} ARCH=${ARCH} \
