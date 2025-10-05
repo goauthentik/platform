@@ -25,10 +25,10 @@ jobs:
           - ubuntu-24.04-arm
         exclude:
           - target: sysd
-            platform: macos
+            platform: macos-15
           # CLI is included in the agent bundle
           - target: cli
-            platform: macos
+            platform: macos-15
     runs-on: ${{ matrix.platform }}-latest
     steps:
       - uses: actions/checkout@v5
@@ -86,7 +86,7 @@ jobs:
       - run: make ${{ matrix.target }}/package
       - uses: actions/upload-artifact@v4
         with:
-          name: authentik_linux_${{ matrix.target }}
+          name: authentik_linux_${{ matrix.platform }}_${{ matrix.target }}
           path: ${{ matrix.target }}/target/debian/*.deb
   lint_go:
     name: Lint
