@@ -18,9 +18,11 @@ type Config struct {
 	Debug  bool   `yaml:"debug"`
 	Socket string `yaml:"socket"`
 	PAM    struct {
+		Enabled bool `yaml:"enabled"`
 		TerminateOnExpiry bool `yaml:"terminate_on_expiry"`
 	} `yaml:"pam" `
 	NSS struct {
+		Enabled bool `yaml:"enabled"`
 		UIDOffset          int32 `yaml:"uid_offset"`
 		GIDOffset          int32 `yaml:"gid_offset"`
 		RefreshIntervalSec int64 `yaml:"refresh_interval_sec"`

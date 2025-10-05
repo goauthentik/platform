@@ -52,7 +52,7 @@ type FlowExecutor struct {
 
 type FlowExecutorOptions struct {
 	LogFields log.Fields
-	Logger    func(msg string, fields map[string]interface{})
+	Logger    func(msg string, fields map[string]any)
 }
 
 func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Configuration, opts FlowExecutorOptions) (*FlowExecutor, error) {
@@ -60,7 +60,7 @@ func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Config
 	rsp.Description = flowSlug
 	l := systemlog.Get().WithField("flow", flowSlug).WithFields(opts.LogFields)
 	if opts.Logger == nil {
-		opts.Logger = func(msg string, fields map[string]interface{}) {
+		opts.Logger = func(msg string, fields map[string]any) {
 			l.WithFields(fields).Debug(msg)
 		}
 	}
