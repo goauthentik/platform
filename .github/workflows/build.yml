@@ -35,8 +35,6 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - name: Install libraries
-        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
       - run: make ${{ matrix.target }}/package-${{ matrix.platform }}
       - uses: actions/upload-artifact@v4
         with:
