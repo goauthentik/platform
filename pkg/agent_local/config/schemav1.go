@@ -6,11 +6,6 @@ import (
 	"goauthentik.io/cli/pkg/storage"
 )
 
-const (
-	ConfigChangedAdded storage.ConfigChangedType = iota + 100
-	ConfigChangedRemoved
-)
-
 type ConfigV1 struct {
 	Debug    bool                        `json:"debug"`
 	Profiles map[string]*ConfigV1Profile `json:"profiles"`
@@ -29,9 +24,9 @@ func (c ConfigV1) Default() storage.Configer {
 func (c ConfigV1) PostUpdate(prev storage.Configer, evt fsnotify.Event) storage.ConfigChangedType {
 	previousConfig := prev.(ConfigV1)
 	if len(previousConfig.Profiles) < len(c.Profiles) {
-		return ConfigChangedAdded
+		return storage.ConfigChangedAdded
 	} else if len(previousConfig.Profiles) > len(c.Profiles) {
-		return ConfigChangedRemoved
+		return storage.ConfigChangedRemoved
 	}
 	return storage.ConfigChangedGeneric
 }

@@ -68,7 +68,7 @@ func delta(a config.ConfigV1, b config.ConfigV1) []string {
 func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent[config.ConfigV1]) {
 	gtm.mlock.Lock()
 	defer gtm.mlock.Unlock()
-	if evt.Type == config.ConfigChangedAdded {
+	if evt.Type == storage.ConfigChangedAdded {
 		d := delta(evt.PreviousConfig, config.Manager().Get())
 		for _, dd := range d {
 			m, err := NewProfileVerified(dd)
@@ -78,7 +78,7 @@ func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent[confi
 			}
 			gtm.managers[dd] = m
 		}
-	} else if evt.Type == config.ConfigChangedRemoved {
+	} else if evt.Type == storage.ConfigChangedRemoved {
 		d := delta(config.Manager().Get(), evt.PreviousConfig)
 		for _, dd := range d {
 			mgr := gtm.managers[dd]

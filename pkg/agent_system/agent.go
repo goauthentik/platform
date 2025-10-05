@@ -4,6 +4,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
@@ -13,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
+	"goauthentik.io/cli/pkg/storage"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
@@ -49,6 +51,7 @@ type SystemAgent struct {
 	log *log.Entry
 	srv *grpc.Server
 	cm  map[string]component.Component
+	mtx sync.Mutex
 }
 
 func New() *SystemAgent {
@@ -67,9 +70,12 @@ func New() *SystemAgent {
 		),
 		log: l,
 		cm:  map[string]component.Component{},
+		mtx: sync.Mutex{},
 	}
 	sm.DomainCheck()
 
+	sm.mtx.Lock()
+	defer sm.mtx.Unlock()
 	for name, constr := range sm.RegisterPlatformComponents() {
 		comp, err := constr()
 		if err != nil {
@@ -91,10 +97,26 @@ func (sm *SystemAgent) DomainCheck() {
 	}
 }
 
+func (sm *SystemAgent) watchConfig() {
+	sm.log.Debug("Starting config file watch")
+	for evt := range config.Manager().Watch() {
+		if evt.Type == storage.ConfigChangedAdded || evt.Type == storage.ConfigChangedRemoved {
+			sm.mtx.Lock()
+			for _, component := range sm.cm {
+				component.Stop()
+				component.Start()
+			}
+			sm.mtx.Unlock()
+		}
+	}
+}
+
 func (sm *SystemAgent) Start() {
+	sm.mtx.Lock()
 	for _, component := range sm.cm {
 		component.Start()
 	}
+	sm.mtx.Unlock()
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
@@ -103,6 +125,8 @@ func (sm *SystemAgent) Start() {
 
 		sm.log.Info("Shutting down...")
 
+		sm.mtx.Lock()
+		defer sm.mtx.Unlock()
 		for n, comp := range sm.cm {
 			err := comp.Stop()
 			if err != nil {

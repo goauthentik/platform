@@ -28,6 +28,8 @@ type ConfigChangedType int
 
 const (
 	ConfigChangedGeneric ConfigChangedType = iota
+	ConfigChangedAdded
+	ConfigChangedRemoved
 )
 
 type ConfigChangedEvent[T Configer] struct {
