@@ -22,9 +22,8 @@ func mustFlag[T any](res T, err error) T {
 }
 
 var domainsJoinCmd = &cobra.Command{
-	Use:          "join",
-	Args:         cobra.ExactArgs(1),
-	SilenceUsage: true,
+	Use:  "join [domain_name]",
+	Args: cobra.ExactArgs(1),
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return agentPrecheck()
 	},

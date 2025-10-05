@@ -43,6 +43,8 @@ func NewManager[T Configer](file string) (*ConfigManager[T], error) {
 		log:     systemlog.Get().WithField("logger", "storage.config"),
 		changed: make([]chan ConfigChangedEvent[T], 0),
 	}
+	var tc T
+	cfg.loaded = tc.Default().(T)
 	cfg.log.WithField("path", file).Debug("Config file path")
 	err := cfg.Load()
 	if err != nil {
