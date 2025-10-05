@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/adrg/xdg"
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/systemlog"
@@ -29,8 +28,8 @@ type ConfigChangedType int
 
 const (
 	ConfigChangedGeneric ConfigChangedType = iota
-	ConfigChangedProfileAdded
-	ConfigChangedProfileRemoved
+	ConfigChangedAdded
+	ConfigChangedRemoved
 )
 
 type ConfigChangedEvent[T Configer] struct {
@@ -38,31 +37,14 @@ type ConfigChangedEvent[T Configer] struct {
 	PreviousConfig T
 }
 
-var manager *ConfigManager[ConfigV1]
-
-func Manager() *ConfigManager[ConfigV1] {
-	if manager == nil {
-		m, err := newManager[ConfigV1]()
-		if err != nil {
-			panic(err)
-		}
-		manager = m
-	}
-	return manager
-}
-
-func newManager[T Configer]() (*ConfigManager[T], error) {
-	file, err := xdg.ConfigFile("authentik/config.json")
-	if err != nil {
-		return nil, err
-	}
+func NewManager[T Configer](file string) (*ConfigManager[T], error) {
 	cfg := &ConfigManager[T]{
 		path:    file,
 		log:     systemlog.Get().WithField("logger", "storage.config"),
 		changed: make([]chan ConfigChangedEvent[T], 0),
 	}
 	cfg.log.WithField("path", file).Debug("Config file path")
-	err = cfg.Load()
+	err := cfg.Load()
 	if err != nil {
 		return nil, err
 	}

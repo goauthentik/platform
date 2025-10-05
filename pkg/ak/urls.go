@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	"goauthentik.io/api/v3"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/agent_local/storage"
 )
 
 type URLSet struct {

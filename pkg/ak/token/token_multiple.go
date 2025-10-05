@@ -4,7 +4,8 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/agent_local/storage"
+	gstorage "goauthentik.io/cli/pkg/storage"
 	"goauthentik.io/cli/pkg/systemlog"
 )
 
@@ -64,10 +65,10 @@ func delta(a storage.ConfigV1, b storage.ConfigV1) []string {
 	return delta
 }
 
-func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent) {
+func (gtm *GlobalTokenManager) eventHandler(evt gstorage.ConfigChangedEvent[storage.ConfigV1]) {
 	gtm.mlock.Lock()
 	defer gtm.mlock.Unlock()
-	if evt.Type == storage.ConfigChangedProfileAdded {
+	if evt.Type == gstorage.ConfigChangedAdded {
 		d := delta(evt.PreviousConfig, storage.Manager().Get())
 		for _, dd := range d {
 			m, err := NewProfileVerified(dd)
@@ -77,7 +78,7 @@ func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent) {
 			}
 			gtm.managers[dd] = m
 		}
-	} else if evt.Type == storage.ConfigChangedProfileRemoved {
+	} else if evt.Type == gstorage.ConfigChangedRemoved {
 		d := delta(storage.Manager().Get(), evt.PreviousConfig)
 		for _, dd := range d {
 			mgr := gtm.managers[dd]

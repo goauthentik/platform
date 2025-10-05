@@ -4,9 +4,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
-	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v3"
@@ -72,52 +70,4 @@ func (c *Config) SaveDomain(dom DomainConfig) error {
 		return err
 	}
 	return os.WriteFile(path, b, 0o700)
-}
-
-func (c *Config) Watch() error {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
-	}
-	reloadConfig := func() {
-		c.log.Debug("config file changed, triggering config reload")
-		err = c.Load()
-		if err != nil {
-			c.log.WithError(err).Warning("failed to reload config")
-			return
-		}
-	}
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					continue
-				}
-				if event.Name != c.path || !strings.HasPrefix(event.Name, c.DomainDir) {
-					continue
-				}
-				if event.Has(fsnotify.Write) {
-					continue
-				}
-				c.log.WithField("event", event).Debug("config file update")
-				Load(c.path)
-				c.domains = nil
-				for _, ch := range c.changed {
-					ch <- evt
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					continue
-				}
-				c.log.WithError(err).Warning("error watching file")
-			}
-		}
-	}()
-
-	err = watcher.Add(path.Dir(c.path))
-	if err != nil {
-		return err
-	}
-	return nil
 }

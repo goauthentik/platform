@@ -6,11 +6,11 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/cli/pkg/agent_local/storage"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/storage"
 	"google.golang.org/grpc"
 )
 

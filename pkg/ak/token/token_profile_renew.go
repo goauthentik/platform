@@ -8,8 +8,9 @@ import (
 	"net/url"
 	"strings"
 
+	"goauthentik.io/cli/pkg/agent_local/storage"
 	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/storage"
+	gstorage "goauthentik.io/cli/pkg/storage"
 )
 
 func (ptm *ProfileTokenManager) renew() error {
@@ -29,7 +30,7 @@ func (ptm *ProfileTokenManager) renew() error {
 	ptm.log.WithField("url", req.URL.String()).Debug("sending request")
 
 	req.SetBasicAuth(profile.ClientID, "")
-	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", storage.FullVersion()))
+	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", gstorage.FullVersion()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

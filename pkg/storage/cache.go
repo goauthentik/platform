@@ -41,13 +41,13 @@ func (c *Cache[T]) Set(val T) error {
 	if err != nil {
 		return err
 	}
-	return keyring.Set(keyringSvc(c.uid), c.profileName, string(j))
+	return keyring.Set(keyring.Service(c.uid), c.profileName, string(j))
 }
 
 func (c *Cache[T]) Get() (T, error) {
 	var cc T
 	c.log.Debug("Checking cache")
-	v, err := keyring.Get(keyringSvc(c.uid), c.profileName)
+	v, err := keyring.Get(keyring.Service(c.uid), c.profileName)
 	if err != nil {
 		if keyring.IsNotExist(err) {
 			c.log.WithError(err).Debug("No cache found")
@@ -60,7 +60,7 @@ func (c *Cache[T]) Get() (T, error) {
 		return cc, err
 	}
 	if cc.Expiry().Before(time.Now()) {
-		err := keyring.Delete(keyringSvc(c.uid), c.profileName)
+		err := keyring.Delete(keyring.Service(c.uid), c.profileName)
 		if err != nil {
 			c.log.WithError(err).Warning("failed to delete expired cache entry")
 		}

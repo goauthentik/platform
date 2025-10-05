@@ -14,7 +14,6 @@ require (
 	github.com/getsentry/sentry-go v0.35.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/securecookie v1.1.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/keybase/go-keychain v0.0.1
@@ -147,5 +146,3 @@ require (
 tool github.com/goreleaser/nfpm/v2/cmd/nfpm
 
 replace github.com/keybase/go-keychain => github.com/alexw23/go-keychain v0.0.0-20240507145345-41efe171240e
-
-replace goauthentik.io/api/v3 => ../authentik/gen-go-api

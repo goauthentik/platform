@@ -44,8 +44,3 @@ func (ds *Server) Stop() error {
 }
 
 func (ds *Server) Register(grpc.ServiceRegistrar) {}
-
-func (ds *Server) checkIn() {
-	cd := api.CommonDeviceDataRequest{}
-	ds.api.EndpointsApi.EndpointsAgentsConnectorsReportCreate(ds.ctx, "").CommonDeviceDataRequest(cd).Execute()
-}

@@ -2,4 +2,4 @@ package serial
 
 import "errors"
 
-var ErrNoSerialFound = errors.New("No serial number found")
+var ErrNoSerialFound = errors.New("no serial number found")

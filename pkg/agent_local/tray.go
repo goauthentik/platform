@@ -9,8 +9,9 @@ import (
 	"github.com/kolide/systray"
 	"github.com/mergestat/timediff"
 	"goauthentik.io/cli/pkg/agent_local/icon"
+	"goauthentik.io/cli/pkg/agent_local/storage"
 	"goauthentik.io/cli/pkg/ak/token"
-	"goauthentik.io/cli/pkg/storage"
+	gstorage "goauthentik.io/cli/pkg/storage"
 )
 
 func (a *Agent) startSystray() {
@@ -34,13 +35,13 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "")
-	if storage.BuildHash != "" {
+	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", gstorage.FullVersion()), "")
+	if gstorage.BuildHash != "" {
 		go func() {
 			for {
 				select {
 				case <-version.ClickedCh:
-					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(storage.BuildHash, "dev-", "")))
+					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(gstorage.BuildHash, "dev-", "")))
 				case <-a.systrayCtx.Done():
 					return
 				}
