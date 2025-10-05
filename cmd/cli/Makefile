@@ -10,7 +10,8 @@ build:
 		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
 		${TOP}/cmd/${TARGET}
 
-package-ubuntu: build
+.PHONY: package-linux
+package-linux: build
 	ln -s ak ${TOP}/bin/${TARGET}/ak-vault
 	ln -s ak ${TOP}/bin/${TARGET}/ak-browser-support
 	mkdir -p ${TOP}/bin/${TARGET}/completions

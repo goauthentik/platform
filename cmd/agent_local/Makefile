@@ -27,7 +27,7 @@ package-macos: build
 		--scripts ${PWD}/package/macos/scripts \
 		"${TOP}/bin/${TARGET}/agent.pkg"
 
-package-ubuntu: build
+package-linux: build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
