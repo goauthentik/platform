@@ -12,9 +12,6 @@ build:
 		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
 		${TOP}/cmd/${TARGET}
 
-.PHONY: package
-package: build package-macos package-deb
-
 package-macos: build
 	$(MAKE) -C ${TOP} cli/build
 	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" ${TOP}/bin/${TARGET}/
@@ -30,7 +27,7 @@ package-macos: build
 		--scripts ${PWD}/package/macos/scripts \
 		"${TOP}/bin/${TARGET}/agent.pkg"
 
-package-deb: build
+package-ubuntu: build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \

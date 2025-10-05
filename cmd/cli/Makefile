@@ -10,7 +10,7 @@ build:
 		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
 		${TOP}/cmd/${TARGET}
 
-package: build
+package-ubuntu: build
 	ln -s ak ${TOP}/bin/${TARGET}/ak-vault
 	ln -s ak ${TOP}/bin/${TARGET}/ak-browser-support
 	mkdir -p ${TOP}/bin/${TARGET}/completions

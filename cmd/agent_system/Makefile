@@ -10,8 +10,8 @@ build:
 		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
 		${TOP}/cmd/${TARGET}
 
-.PHONY: package
-package: build
+.PHONY: package-ubuntu
+package-ubuntu: build
 	mkdir -p ${TOP}/bin/${TARGET}/completions
 	${TOP}/hack/completions.sh ${TOP}/cmd/${TARGET} ${TOP}/bin/${TARGET}/completions ${TARGET}
 	VERSION=${VERSION} ARCH=${ARCH} \
