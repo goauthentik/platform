@@ -7,6 +7,7 @@ import (
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/component"
+	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
@@ -22,9 +23,13 @@ type Server struct {
 	cancel context.CancelFunc
 }
 
-func NewServer(api *api.APIClient) (component.Component, error) {
+func NewServer() (component.Component, error) {
+	ac, err := config.Get().Domains()[0].APIClient()
+	if err != nil {
+		return nil, err
+	}
 	srv := &Server{
-		api: api,
+		api: ac,
 		log: systemlog.Get().WithField("logger", "sysd.device"),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())

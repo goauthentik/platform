@@ -1,10 +1,7 @@
 package agentsystem
 
 import (
-	"context"
-	"fmt"
 	"net"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/systemlog"
@@ -52,34 +48,11 @@ func init() {
 type SystemAgent struct {
 	log *log.Entry
 	srv *grpc.Server
-	api *api.APIClient
 	cm  map[string]component.Component
 }
 
 func New() *SystemAgent {
 	l := systemlog.Get().WithField("logger", "sysd")
-
-	u, err := url.Parse(config.Get().AK.AuthentikURL)
-	if err != nil {
-		panic(err)
-	}
-	apiConfig := api.NewConfiguration()
-	apiConfig.Host = u.Host
-	apiConfig.Scheme = u.Scheme
-	apiConfig.Servers = api.ServerConfigurations{
-		{
-			URL: fmt.Sprintf("%sapi/v3", u.Path),
-		},
-	}
-	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", config.Get().AK.Token))
-
-	ac := api.NewAPIClient(apiConfig)
-
-	m, _, err := ac.CoreApi.CoreUsersMeRetrieve(context.Background()).Execute()
-	if err != nil {
-		panic(err)
-	}
-	l.WithField("as", m.User.Username).Debug("Connected to authentik")
 
 	sm := &SystemAgent{
 		srv: grpc.NewServer(
@@ -93,12 +66,12 @@ func New() *SystemAgent {
 			),
 		),
 		log: l,
-		api: ac,
 		cm:  map[string]component.Component{},
 	}
+	sm.DomainCheck()
 
 	for name, constr := range sm.RegisterPlatformComponents() {
-		comp, err := constr(ac)
+		comp, err := constr()
 		if err != nil {
 			panic(err)
 		}
@@ -106,6 +79,16 @@ func New() *SystemAgent {
 		comp.Register(sm.srv)
 	}
 	return sm
+}
+
+func (sm *SystemAgent) DomainCheck() {
+	for _, dom := range config.Get().Domains() {
+		err := dom.Test()
+		if err != nil {
+			sm.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to get API client for domain")
+			dom.Enabled = false
+		}
+	}
 }
 
 func (sm *SystemAgent) Start() {

@@ -10,9 +10,9 @@ func keyringSvc(name string) string {
 	return fmt.Sprintf("io.goauthentik.agent.%s", name)
 }
 
-func (cfg *ConfigManager) loadKeyring() error {
-	for name, profile := range cfg.loaded.Profiles {
-		l := cfg.log.WithField("profile", name)
+func (c ConfigV1) PostLoad() error {
+	for name, profile := range c.Profiles {
+		l := c.log.WithField("profile", name)
 		l.Debug("Getting access token from keyring")
 		v, err := keyring.Get(keyringSvc("access_token"), name)
 		if err != nil {
@@ -31,9 +31,9 @@ func (cfg *ConfigManager) loadKeyring() error {
 	return nil
 }
 
-func (cfg *ConfigManager) saveKeyring() error {
-	for name, profile := range cfg.loaded.Profiles {
-		l := cfg.log.WithField("profile", name)
+func (c ConfigV1) PreSave() error {
+	for name, profile := range c.Profiles {
+		l := c.log.WithField("profile", name)
 		l.Debug("Setting access token in keyring")
 		err := keyring.Set(keyringSvc("access_token"), name, profile.AccessToken)
 		if err != nil {
@@ -48,5 +48,4 @@ func (cfg *ConfigManager) saveKeyring() error {
 		}
 	}
 	return nil
-
 }

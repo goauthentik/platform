@@ -11,11 +11,18 @@ import (
 	"goauthentik.io/cli/pkg/systemlog"
 )
 
-type ConfigManager struct {
+type Configer interface {
+	Default() Configer
+	PostLoad() error
+	PreSave() error
+	PostUpdate(prev Configer, evt fsnotify.Event) ConfigChangedType
+}
+
+type ConfigManager[T Configer] struct {
 	path    string
-	loaded  ConfigV1
+	loaded  T
 	log     *log.Entry
-	changed []chan ConfigChangedEvent
+	changed []chan ConfigChangedEvent[T]
 }
 
 type ConfigChangedType int
@@ -26,16 +33,16 @@ const (
 	ConfigChangedProfileRemoved
 )
 
-type ConfigChangedEvent struct {
+type ConfigChangedEvent[T Configer] struct {
 	Type           ConfigChangedType
-	PreviousConfig ConfigV1
+	PreviousConfig T
 }
 
-var manager *ConfigManager
+var manager *ConfigManager[ConfigV1]
 
-func Manager() *ConfigManager {
+func Manager() *ConfigManager[ConfigV1] {
 	if manager == nil {
-		m, err := newManager()
+		m, err := newManager[ConfigV1]()
 		if err != nil {
 			panic(err)
 		}
@@ -44,15 +51,15 @@ func Manager() *ConfigManager {
 	return manager
 }
 
-func newManager() (*ConfigManager, error) {
+func newManager[T Configer]() (*ConfigManager[T], error) {
 	file, err := xdg.ConfigFile("authentik/config.json")
 	if err != nil {
 		return nil, err
 	}
-	cfg := &ConfigManager{
+	cfg := &ConfigManager[T]{
 		path:    file,
 		log:     systemlog.Get().WithField("logger", "storage.config"),
-		changed: make([]chan ConfigChangedEvent, 0),
+		changed: make([]chan ConfigChangedEvent[T], 0),
 	}
 	cfg.log.WithField("path", file).Debug("Config file path")
 	err = cfg.Load()
@@ -67,13 +74,14 @@ func newManager() (*ConfigManager, error) {
 	return cfg, nil
 }
 
-func (cfg *ConfigManager) Load() error {
+func (cfg *ConfigManager[T]) Load() error {
 	cfg.log.Debug("loading config")
 	f, err := os.Open(cfg.path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			cfg.log.WithError(err).Debug("no config found, defaulting to empty")
-			cfg.loaded = ConfigV1Default()
+			var tc T
+			cfg.loaded = tc.Default().(T)
 			return nil
 		}
 		return err
@@ -88,15 +96,15 @@ func (cfg *ConfigManager) Load() error {
 	if err != nil {
 		return err
 	}
-	return cfg.loadKeyring()
+	return cfg.loaded.PostLoad()
 }
 
-func (cfg *ConfigManager) Get() ConfigV1 {
+func (cfg *ConfigManager[T]) Get() T {
 	return cfg.loaded
 }
 
-func (cfg *ConfigManager) Save() error {
-	err := cfg.saveKeyring()
+func (cfg *ConfigManager[T]) Save() error {
+	err := cfg.loaded.PreSave()
 	if err != nil {
 		return err
 	}
@@ -114,17 +122,17 @@ func (cfg *ConfigManager) Save() error {
 	return json.NewEncoder(f).Encode(&cfg.loaded)
 }
 
-func (cfg *ConfigManager) Watch() chan ConfigChangedEvent {
-	ch := make(chan ConfigChangedEvent)
+func (cfg *ConfigManager[T]) Watch() chan ConfigChangedEvent[T] {
+	ch := make(chan ConfigChangedEvent[T])
 	cfg.changed = append(cfg.changed, ch)
 	defer func() {
 		// Trigger config changed just after this function is called
-		ch <- ConfigChangedEvent{}
+		ch <- ConfigChangedEvent[T]{}
 	}()
 	return ch
 }
 
-func (cfg *ConfigManager) watch() error {
+func (cfg *ConfigManager[T]) watch() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -153,14 +161,9 @@ func (cfg *ConfigManager) watch() error {
 				cfg.log.WithField("event", event).Debug("config file update")
 				previousConfig := &cfg.loaded
 				reloadConfig()
-				evt := ConfigChangedEvent{
-					Type:           ConfigChangedGeneric,
+				evt := ConfigChangedEvent[T]{
+					Type:           cfg.loaded.PostUpdate(*previousConfig, event),
 					PreviousConfig: *previousConfig,
-				}
-				if len(previousConfig.Profiles) < len(cfg.loaded.Profiles) {
-					evt.Type = ConfigChangedProfileAdded
-				} else if len(previousConfig.Profiles) > len(cfg.loaded.Profiles) {
-					evt.Type = ConfigChangedProfileRemoved
 				}
 				for _, ch := range cfg.changed {
 					ch <- evt

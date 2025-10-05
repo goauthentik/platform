@@ -28,9 +28,13 @@ type Server struct {
 	cfg *config.Config
 }
 
-func NewServer(api *api.APIClient) (component.Component, error) {
+func NewServer() (component.Component, error) {
+	ac, err := config.Get().Domains()[0].APIClient()
+	if err != nil {
+		return nil, err
+	}
 	srv := &Server{
-		api: api,
+		api: ac,
 		log: systemlog.Get().WithField("logger", "sysd.nss_server"),
 		cfg: config.Get(),
 	}

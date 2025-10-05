@@ -27,16 +27,21 @@ type Server struct {
 	cfg *config.Config
 }
 
-func NewServer(api *api.APIClient) (component.Component, error) {
+func NewServer() (component.Component, error) {
+	dom := config.Get().Domains()[0]
+	ac, err := dom.APIClient()
+	if err != nil {
+		return nil, err
+	}
 	srv := &Server{
-		api: api,
+		api: ac,
 		log: log.WithField("logger", "sysd.pam_server"),
 		cfg: config.Get(),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&storage.ConfigV1Profile{
-		AuthentikURL: srv.cfg.AK.AuthentikURL,
-		AppSlug:      srv.cfg.AK.AppSlug,
+		AuthentikURL: dom.AuthentikURL,
+		AppSlug:      dom.AppSlug,
 	}).JWKS})
 	if err != nil {
 		return nil, err

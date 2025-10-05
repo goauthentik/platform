@@ -26,7 +26,7 @@ impl Config {
     }
 
     pub fn from_default() -> Result<Self, Box<dyn Error>> {
-        Config::from_file("/etc/authentik/host.yaml")
+        Config::from_file("/etc/authentik/config.yml")
     }
 
     pub fn from_file(path: &str) -> Result<Self, Box<dyn Error>> {
