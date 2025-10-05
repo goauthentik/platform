@@ -8,7 +8,7 @@ import (
 	"syscall"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -61,11 +61,11 @@ func New() *SystemAgent {
 		srv: grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
 				logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
-				recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(systemlog.GRPCPanicHandler)),
+				grpc_sentry.UnaryServerInterceptor(),
 			),
 			grpc.ChainStreamInterceptor(
 				logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
-				recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(systemlog.GRPCPanicHandler)),
+				grpc_sentry.StreamServerInterceptor(),
 			),
 		),
 		log: l,

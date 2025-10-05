@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
 	"goauthentik.io/cli/pkg/pb"
@@ -22,11 +22,11 @@ func (a *Agent) startGRPC() {
 		grpc.Creds(grpc_creds.NewTransportCredentials()),
 		grpc.ChainUnaryInterceptor(
 			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
-			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(systemlog.GRPCPanicHandler)),
+			grpc_sentry.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
 			logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
-			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(systemlog.GRPCPanicHandler)),
+			grpc_sentry.StreamServerInterceptor(),
 		),
 	)
 	pb.RegisterAgentAuthServer(a.grpc, a)
