@@ -25,6 +25,7 @@ package-darwin: build
 		--identifier "io.goauthentik.agent" \
 		--version "${VERSION}" \
 		--scripts ${PWD}/package/macos/scripts \
+		--install-location /Applications \
 		"${TOP}/bin/${TARGET}/agent.pkg"
 
 package-linux: build
