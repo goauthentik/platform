@@ -42,7 +42,7 @@ if [ $LAUNCH_FAILED = true ]; then
 fi
 
 mkdir -p /usr/local/bin
-ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/Resources/ak" /usr/local/bin/ak
-ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/Resources/ak-vault" /usr/local/bin/ak-vault
+ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak" /usr/local/bin/ak
+ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak-vault" /usr/local/bin/ak-vault
 
 echo "Finished running postinstall script."
