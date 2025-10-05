@@ -6,11 +6,11 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	lconfig "goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/storage"
 	"google.golang.org/grpc"
 )
 
@@ -27,16 +27,21 @@ type Server struct {
 	cfg *config.Config
 }
 
-func NewServer(api *api.APIClient) (component.Component, error) {
+func NewServer() (component.Component, error) {
+	dom := config.Manager().Get().Domains()[0]
+	ac, err := dom.APIClient()
+	if err != nil {
+		return nil, err
+	}
 	srv := &Server{
-		api: api,
+		api: ac,
 		log: log.WithField("logger", "sysd.pam_server"),
-		cfg: config.Get(),
+		cfg: config.Manager().Get(),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
-	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&storage.ConfigV1Profile{
-		AuthentikURL: srv.cfg.AK.AuthentikURL,
-		AppSlug:      srv.cfg.AK.AppSlug,
+	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
+		AuthentikURL: dom.AuthentikURL,
+		AppSlug:      dom.AppSlug,
 	}).JWKS})
 	if err != nil {
 		return nil, err

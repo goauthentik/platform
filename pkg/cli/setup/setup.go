@@ -8,9 +8,9 @@ import (
 	"github.com/cli/browser"
 	log "github.com/sirupsen/logrus"
 
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/oauth"
-	"goauthentik.io/cli/pkg/storage"
 )
 
 type Options struct {
@@ -20,8 +20,8 @@ type Options struct {
 	ClientID     string
 }
 
-func Setup(opts Options) (*storage.ConfigV1Profile, error) {
-	urls := ak.URLsForProfile(&storage.ConfigV1Profile{
+func Setup(opts Options) (*config.ConfigV1Profile, error) {
+	urls := ak.URLsForProfile(&config.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 	})
@@ -54,7 +54,7 @@ func Setup(opts Options) (*storage.ConfigV1Profile, error) {
 		return nil, err
 	}
 
-	return &storage.ConfigV1Profile{
+	return &config.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 		ClientID:     opts.ClientID,

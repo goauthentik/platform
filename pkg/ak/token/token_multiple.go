@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/storage"
 	"goauthentik.io/cli/pkg/systemlog"
 )
@@ -32,7 +33,7 @@ func NewGlobal() *GlobalTokenManager {
 
 func (gtm *GlobalTokenManager) start() {
 	gtm.mlock.Lock()
-	for n := range storage.Manager().Get().Profiles {
+	for n := range config.Manager().Get().Profiles {
 		m, err := NewProfileVerified(n)
 		if err != nil {
 			gtm.log.WithError(err).WithField("profile", n).Warning("failed to create manager for profile")
@@ -42,13 +43,13 @@ func (gtm *GlobalTokenManager) start() {
 	}
 	gtm.mlock.Unlock()
 	go func() {
-		for evt := range storage.Manager().Watch() {
+		for evt := range config.Manager().Watch() {
 			gtm.eventHandler(evt)
 		}
 	}()
 }
 
-func delta(a storage.ConfigV1, b storage.ConfigV1) []string {
+func delta(a config.ConfigV1, b config.ConfigV1) []string {
 	delta := []string{}
 	for ap := range a.Profiles {
 		found := false
@@ -64,11 +65,11 @@ func delta(a storage.ConfigV1, b storage.ConfigV1) []string {
 	return delta
 }
 
-func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent) {
+func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent[config.ConfigV1]) {
 	gtm.mlock.Lock()
 	defer gtm.mlock.Unlock()
-	if evt.Type == storage.ConfigChangedProfileAdded {
-		d := delta(evt.PreviousConfig, storage.Manager().Get())
+	if evt.Type == storage.ConfigChangedAdded {
+		d := delta(evt.PreviousConfig, config.Manager().Get())
 		for _, dd := range d {
 			m, err := NewProfileVerified(dd)
 			if err != nil {
@@ -77,8 +78,8 @@ func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent) {
 			}
 			gtm.managers[dd] = m
 		}
-	} else if evt.Type == storage.ConfigChangedProfileRemoved {
-		d := delta(storage.Manager().Get(), evt.PreviousConfig)
+	} else if evt.Type == storage.ConfigChangedRemoved {
+		d := delta(config.Manager().Get(), evt.PreviousConfig)
 		for _, dd := range d {
 			mgr := gtm.managers[dd]
 			mgr.Stop()

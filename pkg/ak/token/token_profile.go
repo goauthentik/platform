@@ -10,8 +10,8 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/golang-jwt/jwt/v5"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/storage"
 	"goauthentik.io/cli/pkg/systemlog"
 )
 
@@ -29,7 +29,7 @@ type ProfileManagerOpt func(ptm *ProfileTokenManager) error
 func WithVerified() ProfileManagerOpt {
 	return func(ptm *ProfileTokenManager) error {
 		k, err := keyfunc.NewDefaultCtx(ptm.ctx, []string{
-			ak.URLsForProfile(storage.Manager().Get().Profiles[ptm.profileName]).JWKS,
+			ak.URLsForProfile(config.Manager().Get().Profiles[ptm.profileName]).JWKS,
 		})
 		if err != nil {
 			ptm.log.WithError(err).Warning("failed to get JWKS for profile")
@@ -109,7 +109,7 @@ func (ptm *ProfileTokenManager) startRenewing() {
 }
 
 func (ptm *ProfileTokenManager) Unverified() Token {
-	rt := storage.Manager().Get().Profiles[ptm.profileName].AccessToken
+	rt := config.Manager().Get().Profiles[ptm.profileName].AccessToken
 	t, _, _ := jwt.NewParser().ParseUnverified(rt, &AuthentikClaims{})
 	ct := Token{
 		AccessToken:    t,
@@ -119,7 +119,7 @@ func (ptm *ProfileTokenManager) Unverified() Token {
 }
 
 func (ptm *ProfileTokenManager) Token() Token {
-	rt := storage.Manager().Get().Profiles[ptm.profileName].AccessToken
+	rt := config.Manager().Get().Profiles[ptm.profileName].AccessToken
 	t, err := jwt.ParseWithClaims(
 		rt,
 		&AuthentikClaims{},

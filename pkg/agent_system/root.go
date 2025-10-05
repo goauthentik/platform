@@ -10,6 +10,8 @@ import (
 	"goauthentik.io/cli/pkg/storage"
 )
 
+var configFile string
+
 var rootCmd = &cobra.Command{
 	Use:   "ak-sysd",
 	Short: fmt.Sprintf("authentik System Agent v%s", storage.FullVersion()),
@@ -22,13 +24,16 @@ func Execute() {
 	}
 }
 
+func init() {
+	rootCmd.PersistentFlags().StringVar(&configFile, "config-file", "/etc/authentik/config.yml", "Config file path")
+}
+
 func agentPrecheck() error {
 	if os.Getuid() != 0 {
 		return errors.New("authentik system agent must run as root")
 	}
-	if _, err := os.Stat(config.Path); err != nil {
+	if _, err := os.Stat(configFile); err != nil {
 		return errors.Wrap(err, "failed to check config file")
 	}
-	config.Load()
-	return nil
+	return config.Init(configFile)
 }

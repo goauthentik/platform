@@ -1,27 +1,21 @@
-package storage
+package config
 
 import (
-	"fmt"
-
 	"goauthentik.io/cli/pkg/storage/keyring"
 )
 
-func keyringSvc(name string) string {
-	return fmt.Sprintf("io.goauthentik.agent.%s", name)
-}
-
-func (cfg *ConfigManager) loadKeyring() error {
-	for name, profile := range cfg.loaded.Profiles {
-		l := cfg.log.WithField("profile", name)
+func (c ConfigV1) PostLoad() error {
+	for name, profile := range c.Profiles {
+		l := c.log.WithField("profile", name)
 		l.Debug("Getting access token from keyring")
-		v, err := keyring.Get(keyringSvc("access_token"), name)
+		v, err := keyring.Get(keyring.Service("access_token"), name)
 		if err != nil {
 			l.WithError(err).Warning("failed to get keyring")
 			return err
 		}
 		profile.AccessToken = v
 		l.Debug("Getting refresh token from keyring")
-		v, err = keyring.Get(keyringSvc("refresh_token"), name)
+		v, err = keyring.Get(keyring.Service("refresh_token"), name)
 		if err != nil {
 			l.WithError(err).Warning("failed to get keyring")
 			return err
@@ -31,22 +25,21 @@ func (cfg *ConfigManager) loadKeyring() error {
 	return nil
 }
 
-func (cfg *ConfigManager) saveKeyring() error {
-	for name, profile := range cfg.loaded.Profiles {
-		l := cfg.log.WithField("profile", name)
+func (c ConfigV1) PreSave() error {
+	for name, profile := range c.Profiles {
+		l := c.log.WithField("profile", name)
 		l.Debug("Setting access token in keyring")
-		err := keyring.Set(keyringSvc("access_token"), name, profile.AccessToken)
+		err := keyring.Set(keyring.Service("access_token"), name, profile.AccessToken)
 		if err != nil {
 			l.WithError(err).Warning("failed to get keyring")
 			return err
 		}
 		l.Debug("Setting refresh token in keyring")
-		err = keyring.Set(keyringSvc("refresh_token"), name, profile.RefreshToken)
+		err = keyring.Set(keyring.Service("refresh_token"), name, profile.RefreshToken)
 		if err != nil {
 			l.WithError(err).Warning("failed to get keyring")
 			return err
 		}
 	}
 	return nil
-
 }

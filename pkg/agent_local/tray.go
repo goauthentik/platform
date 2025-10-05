@@ -8,6 +8,7 @@ import (
 	"github.com/cli/browser"
 	"github.com/kolide/systray"
 	"github.com/mergestat/timediff"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/agent_local/icon"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/storage"
@@ -86,7 +87,7 @@ func (a *Agent) systrayConfigUpdate() {
 	a.systrayLateItems()
 }
 
-func (a *Agent) systrayProfileItme(name string, profile *storage.ConfigV1Profile) {
+func (a *Agent) systrayProfileItme(name string, profile *config.ConfigV1Profile) {
 	i := systray.AddMenuItem(fmt.Sprintf("Profile %s", name), "")
 	oi := i.AddSubMenuItem("Open authentik", "")
 	go func() {

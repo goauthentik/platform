@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/api/v3"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
@@ -41,7 +40,7 @@ type Monitor struct {
 	timer *time.Ticker
 }
 
-func NewMonitor(api *api.APIClient) (component.Component, error) {
+func NewMonitor() (component.Component, error) {
 	return &Monitor{
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
@@ -141,7 +140,7 @@ func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRe
 		LocalSocket: req.LocalSocket,
 	}
 
-	if config.Get().PAM.TerminateOnExpiry {
+	if config.Manager().Get().PAM.TerminateOnExpiry {
 		session.ExpiresAt = time.Unix(-1, 0)
 	}
 

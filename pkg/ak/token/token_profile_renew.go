@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/storage"
 )
@@ -17,7 +18,7 @@ func (ptm *ProfileTokenManager) renew() error {
 	defer func() {
 		ptm.mutex.Unlock()
 	}()
-	profile := storage.Manager().Get().Profiles[ptm.profileName]
+	profile := config.Manager().Get().Profiles[ptm.profileName]
 
 	v := url.Values{}
 	v.Set("grant_type", "refresh_token")
@@ -53,8 +54,8 @@ func (ptm *ProfileTokenManager) renew() error {
 		profile.RefreshToken = nt.RawRefreshToken
 	}
 	ptm.log.Debug("successfully refreshed token")
-	storage.Manager().Get().Profiles[ptm.profileName] = profile
-	err = storage.Manager().Save()
+	config.Manager().Get().Profiles[ptm.profileName] = profile
+	err = config.Manager().Save()
 	if err != nil {
 		ptm.log.WithError(err).Warning("failed to persist new token")
 		return err
