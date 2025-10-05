@@ -68,7 +68,10 @@ jobs:
         target:
           - pam
           - nss
-    runs-on: ubuntu-latest
+        platform:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v5
       - run: |
@@ -124,7 +127,6 @@ jobs:
       - uses: ./.github/actions/apt
         id: apt-repo
         with:
-          repo_name: "authentik"
           package-path: bin/
           gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
       - name: Show repository info

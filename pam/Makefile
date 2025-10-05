@@ -6,7 +6,7 @@ clean:
 	cargo clean
 
 build:
-	cargo build --verbose
+	cargo build --verbose --release
 
 test:
 	cargo test --verbose
