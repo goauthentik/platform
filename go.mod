@@ -16,6 +16,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/hashicorp/vault-client-go v0.4.3
+	github.com/johnbellone/grpc-middleware-sentry v0.4.0
 	github.com/keybase/go-keychain v0.0.1
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.4
