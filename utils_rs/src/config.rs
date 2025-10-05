@@ -1,22 +1,25 @@
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fs, sync::LazyLock};
 
-#[derive(Clone, Default, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Config {
     pub debug: bool,
     pub socket: String,
 }
 
 static GLOBAL_DATA: LazyLock<Config> =
-    LazyLock::new(|| Config::from_default().unwrap_or(Config::default()));
+    LazyLock::new(|| Config::from_default().unwrap_or_default() );
 
-impl Config {
-    pub fn default() -> Self {
+impl Default for Config {
+    fn default() -> Self {
         Config {
             debug: false,
             socket: "/var/run/authentik/sys.sock".to_string(),
         }
     }
+}
+
+impl Config {
 
     pub fn get() -> Self {
         GLOBAL_DATA.clone()

@@ -8,6 +8,9 @@ clean:
 build:
 	cargo build --verbose --release
 
+lint:
+	cargo clippy
+
 test:
 	cargo test --verbose
 

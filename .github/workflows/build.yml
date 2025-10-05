@@ -102,6 +102,22 @@ jobs:
       - uses: golangci/golangci-lint-action@v8
         with:
           args: --timeout 5000s
+  lint_rs:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - pam
+          - nss
+          - utils_rs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev
+      - run: make ${{ matrix.target }}/lint
   lint_js:
     name: Lint
     strategy:
