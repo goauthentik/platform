@@ -6,7 +6,10 @@ clean:
 	cargo clean
 
 build:
-	cargo build --verbose
+	cargo build --verbose --release
+
+lint:
+	cargo clippy
 
 test:
 	cargo test --verbose

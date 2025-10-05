@@ -19,19 +19,31 @@ jobs:
           - cli
           - agent
           - sysd
-    runs-on: ubuntu-latest
+        platform:
+          - macos-15
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+        exclude:
+          - target: sysd
+            platform: macos-15
+          # CLI is included in the agent bundle
+          - target: cli
+            platform: macos-15
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
-      - name: Install libraries
-        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
-      - run: make ${{ matrix.target }}/package
+      - id: platform_pure
+        run: |
+          platform=$(uname | tr '[:upper:]' '[:lower:]')
+          echo "platform=${platform}" >> "$GITHUB_OUTPUT"
+      - run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
       - uses: actions/upload-artifact@v4
         with:
-          name: authentik_${{ matrix.target }}
+          name: authentik_${{ matrix.platform }}_${{ matrix.target }}
           path: bin/
   build_js:
     name: Build
@@ -61,7 +73,10 @@ jobs:
         target:
           - pam
           - nss
-    runs-on: ubuntu-latest
+        platform:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v5
       - run: |
@@ -71,7 +86,7 @@ jobs:
       - run: make ${{ matrix.target }}/package
       - uses: actions/upload-artifact@v4
         with:
-          name: authentik_${{ matrix.target }}
+          name: authentik_linux_${{ matrix.platform }}_${{ matrix.target }}
           path: ${{ matrix.target }}/target/debian/*.deb
   lint_go:
     name: Lint
@@ -87,6 +102,22 @@ jobs:
       - uses: golangci/golangci-lint-action@v8
         with:
           args: --timeout 5000s
+  lint_rs:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - pam
+          - nss
+          - utils_rs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev
+      - run: make ${{ matrix.target }}/lint
   lint_js:
     name: Lint
     strategy:
@@ -117,7 +148,6 @@ jobs:
       - uses: ./.github/actions/apt
         id: apt-repo
         with:
-          repo_name: "authentik"
           package-path: bin/
           gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
       - name: Show repository info

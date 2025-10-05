@@ -3,6 +3,8 @@ include ../../common.mk
 TARGET := agent_local
 BINARY_NAME := ak-agent
 
+MACOS_APP_NAME := authentik Agent.app
+
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	go build \
@@ -10,20 +12,22 @@ build:
 		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
 		${TOP}/cmd/${TARGET}
 
-.PHONY: package
-package: build package-macos package-deb
-
-package-macos: build
+package-darwin: build
 	$(MAKE) -C ${TOP} cli/build
-	cp -R "${PWD}/package/macos/authentik Agent.app" ${TOP}/bin/${TARGET}/
-	mkdir -p "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS"
-	cp ${TOP}/bin/${TARGET}/${BINARY_NAME} "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/"
-	cp ${TOP}/bin/cli/ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/"
-	ln -s ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/ak-vault" || true
-	ln -s ak "${TOP}/bin/${TARGET}/authentik Agent.app/Contents/MacOS/ak-browser-support" || true
-# 	codesign --options runtime --deep --entitlements "package/entitlements.plist" --timestamp --sign "AEBEDA5994467C45F0AED1ACAE74DE316C8E3491" "${TOP}/bin/${TARGET}/authentik Agent.app"
+	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" ${TOP}/bin/${TARGET}/
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
+	cp ${TOP}/bin/${TARGET}/${BINARY_NAME} "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp ${TOP}/bin/cli/ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	ln -s ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
+	ln -s ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support" || true
+	pkgbuild \
+		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
+		--identifier "io.goauthentik.agent" \
+		--version "${VERSION}" \
+		--scripts ${PWD}/package/macos/scripts \
+		"${TOP}/bin/${TARGET}/agent.pkg"
 
-package-deb: build
+package-linux: build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \

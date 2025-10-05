@@ -13,3 +13,6 @@ gen:
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
 	cargo fmt
+
+lint:
+	cargo clippy

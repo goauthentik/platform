@@ -6,14 +6,17 @@ clean:
 	cargo clean
 
 build:
-	cargo build --verbose
+	cargo build --verbose --release
+
+lint:
+	cargo clippy
 
 test:
 	cargo test --verbose
 
 package:
 	cargo install cargo-deb
-	cargo deb --verbose --deb-version ${VERSION}
+	cargo deb --verbose --deb-version ${VERSION} --variant ${ARCH}
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/pam/target/debian/libpam-authentik_${VERSION}_${ARCH}.deb
