@@ -5,10 +5,27 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/storage"
 
 	"gopkg.in/yaml.v3"
 )
+
+var manager *storage.ConfigManager[*Config]
+
+func Init(path string) error {
+	m, err := storage.NewManager[*Config](path)
+	if err != nil {
+		return err
+	}
+	manager = m
+	return nil
+}
+
+func Manager() *storage.ConfigManager[*Config] {
+	return manager
+}
 
 type Config struct {
 	Debug  bool   `yaml:"debug"`
@@ -27,21 +44,18 @@ type Config struct {
 
 	path    string
 	log     *log.Entry
-	domains *[]DomainConfig
+	domains []DomainConfig
 }
 
-func (c *Config) RuntimeDir() string {
-	return path.Join("/var/run", "authentik")
+func (c *Config) Default() storage.Configer {
+	return &Config{}
 }
 
-func (c *Config) Domains() []DomainConfig {
-	if c.domains != nil {
-		return *c.domains
-	}
+func (c *Config) PostLoad() error {
 	m, err := filepath.Glob(filepath.Join(c.DomainDir, "**.yml"))
 	if err != nil {
 		c.log.WithError(err).Warning("failed to load domains")
-		return []DomainConfig{}
+		return err
 	}
 	dom := []DomainConfig{}
 	for _, match := range m {
@@ -59,8 +73,21 @@ func (c *Config) Domains() []DomainConfig {
 		c.log.WithField("domain", d.Domain).Info("loaded domain")
 		dom = append(dom, d)
 	}
-	c.domains = &dom
-	return *c.domains
+	c.domains = dom
+	return nil
+}
+
+func (c *Config) PreSave() error { return nil }
+func (c *Config) PostUpdate(storage.Configer, fsnotify.Event) storage.ConfigChangedType {
+	return storage.ConfigChangedGeneric
+}
+
+func (c *Config) RuntimeDir() string {
+	return path.Join("/var/run", "authentik")
+}
+
+func (c *Config) Domains() []DomainConfig {
+	return c.domains
 }
 
 func (c *Config) SaveDomain(dom DomainConfig) error {

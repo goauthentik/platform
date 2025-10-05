@@ -1,4 +1,4 @@
-package storage
+package config
 
 import (
 	"goauthentik.io/cli/pkg/storage/keyring"

@@ -140,7 +140,7 @@ func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRe
 		LocalSocket: req.LocalSocket,
 	}
 
-	if config.Get().PAM.TerminateOnExpiry {
+	if config.Manager().Get().PAM.TerminateOnExpiry {
 		session.ExpiresAt = time.Unix(-1, 0)
 	}
 

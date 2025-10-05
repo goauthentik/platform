@@ -24,7 +24,7 @@ type Server struct {
 }
 
 func NewServer() (component.Component, error) {
-	ac, err := config.Get().Domains()[0].APIClient()
+	ac, err := config.Manager().Get().Domains()[0].APIClient()
 	if err != nil {
 		return nil, err
 	}

@@ -4,13 +4,13 @@ import (
 	"context"
 	"maps"
 
-	"goauthentik.io/cli/pkg/agent_local/storage"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/pb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (a *Agent) Setup(ctx context.Context, req *pb.SetupRequest) (*pb.SetupResponse, error) {
-	a.cfg.Get().Profiles[req.Header.Profile] = &storage.ConfigV1Profile{
+	a.cfg.Get().Profiles[req.Header.Profile] = &config.ConfigV1Profile{
 		AuthentikURL: req.AuthentikUrl,
 		AppSlug:      req.AppSlug,
 		ClientID:     req.ClientId,
@@ -30,7 +30,7 @@ func (a *Agent) Setup(ctx context.Context, req *pb.SetupRequest) (*pb.SetupRespo
 }
 
 func (a *Agent) ListProfiles(ctx context.Context, _ *emptypb.Empty) (*pb.ListProfilesResponse, error) {
-	mgr := storage.Manager()
+	mgr := config.Manager()
 	res := &pb.ListProfilesResponse{
 		Header:   &pb.ResponseHeader{Successful: true},
 		Profiles: make([]*pb.Profile, 0),

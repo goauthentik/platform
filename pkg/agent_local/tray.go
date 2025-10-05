@@ -8,10 +8,10 @@ import (
 	"github.com/cli/browser"
 	"github.com/kolide/systray"
 	"github.com/mergestat/timediff"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/agent_local/icon"
-	"goauthentik.io/cli/pkg/agent_local/storage"
 	"goauthentik.io/cli/pkg/ak/token"
-	gstorage "goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/cli/pkg/storage"
 )
 
 func (a *Agent) startSystray() {
@@ -35,13 +35,13 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", gstorage.FullVersion()), "")
-	if gstorage.BuildHash != "" {
+	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "")
+	if storage.BuildHash != "" {
 		go func() {
 			for {
 				select {
 				case <-version.ClickedCh:
-					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(gstorage.BuildHash, "dev-", "")))
+					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(storage.BuildHash, "dev-", "")))
 				case <-a.systrayCtx.Done():
 					return
 				}
@@ -87,7 +87,7 @@ func (a *Agent) systrayConfigUpdate() {
 	a.systrayLateItems()
 }
 
-func (a *Agent) systrayProfileItme(name string, profile *storage.ConfigV1Profile) {
+func (a *Agent) systrayProfileItme(name string, profile *config.ConfigV1Profile) {
 	i := systray.AddMenuItem(fmt.Sprintf("Profile %s", name), "")
 	oi := i.AddSubMenuItem("Open authentik", "")
 	go func() {

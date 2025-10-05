@@ -6,7 +6,7 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
-	"goauthentik.io/cli/pkg/agent_local/storage"
+	lconfig "goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/ak"
@@ -28,7 +28,7 @@ type Server struct {
 }
 
 func NewServer() (component.Component, error) {
-	dom := config.Get().Domains()[0]
+	dom := config.Manager().Get().Domains()[0]
 	ac, err := dom.APIClient()
 	if err != nil {
 		return nil, err
@@ -36,10 +36,10 @@ func NewServer() (component.Component, error) {
 	srv := &Server{
 		api: ac,
 		log: log.WithField("logger", "sysd.pam_server"),
-		cfg: config.Get(),
+		cfg: config.Manager().Get(),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
-	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&storage.ConfigV1Profile{
+	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
 		AuthentikURL: dom.AuthentikURL,
 		AppSlug:      dom.AppSlug,
 	}).JWKS})

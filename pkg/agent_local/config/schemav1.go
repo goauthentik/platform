@@ -1,4 +1,4 @@
-package storage
+package config
 
 import (
 	"github.com/fsnotify/fsnotify"

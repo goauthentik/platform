@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	cstorage "goauthentik.io/cli/pkg/agent_local/storage"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/storage"
 	"goauthentik.io/cli/pkg/systemlog"
@@ -26,7 +26,7 @@ func DefaultExchangeOpts(clientID string) ExchangeOpts {
 	}
 }
 
-func ExchangeToken(profile *cstorage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
+func ExchangeToken(profile *config.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
 	v := url.Values{}
 	v.Set("grant_type", "client_credentials")
 	v.Set("client_id", opts.ClientID)

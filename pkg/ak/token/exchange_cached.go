@@ -3,7 +3,7 @@ package token
 import (
 	"time"
 
-	cstorage "goauthentik.io/cli/pkg/agent_local/storage"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/storage"
 	"goauthentik.io/cli/pkg/systemlog"
 )
@@ -26,7 +26,7 @@ func (ct CachedToken) Token() *Token {
 	}
 }
 
-func CachedExchangeToken(profileName string, profile *cstorage.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
+func CachedExchangeToken(profileName string, profile *config.ConfigV1Profile, opts ExchangeOpts) (*Token, error) {
 	c := storage.NewCache[CachedToken](profileName, "token-cache", opts.ClientID)
 	v, err := c.Get()
 	if err == nil {

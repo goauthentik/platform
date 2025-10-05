@@ -46,7 +46,7 @@ var domainsJoinCmd = &cobra.Command{
 		if err := d.Test(); err != nil {
 			return err
 		}
-		return config.Get().SaveDomain(d)
+		return config.Manager().Get().SaveDomain(d)
 	},
 }
 

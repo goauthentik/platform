@@ -26,7 +26,7 @@ var agentCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if _, err := os.Stat(config.Get().RuntimeDir()); err != nil {
+		if _, err := os.Stat(config.Manager().Get().RuntimeDir()); err != nil {
 			return errors.Wrap(err, "failed to check runtime directory")
 		}
 		return nil
@@ -82,7 +82,7 @@ func New() *SystemAgent {
 }
 
 func (sm *SystemAgent) DomainCheck() {
-	for _, dom := range config.Get().Domains() {
+	for _, dom := range config.Manager().Get().Domains() {
 		err := dom.Test()
 		if err != nil {
 			sm.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to get API client for domain")
@@ -110,17 +110,17 @@ func (sm *SystemAgent) Start() {
 			}
 		}
 		sm.srv.GracefulStop()
-		_ = os.Remove(config.Get().Socket)
+		_ = os.Remove(config.Manager().Get().Socket)
 	}()
 
-	_ = os.Remove(config.Get().Socket)
-	lis, err := net.Listen("unix", config.Get().Socket)
+	_ = os.Remove(config.Manager().Get().Socket)
+	lis, err := net.Listen("unix", config.Manager().Get().Socket)
 	if err != nil {
 		sm.log.WithError(err).Fatal("Failed to listen")
 	}
-	_ = os.Chmod(config.Get().Socket, 0666)
+	_ = os.Chmod(config.Manager().Get().Socket, 0666)
 
-	sm.log.WithField("path", config.Get().Socket).Info("System agent listening on socket")
+	sm.log.WithField("path", config.Manager().Get().Socket).Info("System agent listening on socket")
 	if err := sm.srv.Serve(lis); err != nil {
 		sm.log.WithError(err).Fatal("Failed to serve")
 	}

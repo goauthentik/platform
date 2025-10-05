@@ -8,7 +8,7 @@ import (
 )
 
 func (nss *Server) startFetch() {
-	d := time.Second * time.Duration(config.Get().NSS.RefreshIntervalSec)
+	d := time.Second * time.Duration(config.Manager().Get().NSS.RefreshIntervalSec)
 	nss.log.Info("Starting initial user/group fetch")
 	nss.fetch()
 	nss.log.WithField("next", d.String()).Info("Finished initial user/group fetch")

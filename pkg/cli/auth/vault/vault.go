@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	log "github.com/sirupsen/logrus"
-	cstorage "goauthentik.io/cli/pkg/agent_local/storage"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/storage"
 )
@@ -30,7 +30,7 @@ func (vco VaultCredentialOutput) Expiry() time.Time {
 
 func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialOutput {
 	log := log.WithField("logger", "auth.vault")
-	mgr := cstorage.Manager()
+	mgr := config.Manager()
 	prof := mgr.Get().Profiles[opts.Profile]
 
 	cc := storage.NewCache[VaultCredentialOutput](opts.Profile, "auth-vault-cache", opts.Role)

@@ -35,6 +35,5 @@ func agentPrecheck() error {
 	if _, err := os.Stat(configFile); err != nil {
 		return errors.Wrap(err, "failed to check config file")
 	}
-	config.Load(configFile)
-	return nil
+	return config.Init(configFile)
 }
