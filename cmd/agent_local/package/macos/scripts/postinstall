@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -xeuo pipefail
+
+LOG_DIR="/Library/Logs/io.goauthentik"
+
+mkdir -p "$LOG_DIR"
+chmod 755 "$LOG_DIR"
+exec 2>&1 > "$LOG_DIR"/pkg_postinstall.log
+
+INSTALL_DIR=$2
+echo "$(data) Running postinstall. install_dir=${INSTALL_DIR}"
+
+set +e
+old_pid=$(pgrep "ak-agent")
+
+if [ $? -eq 0 ] && [ $old_pid -gt 0 ]; then
+    echo "'ak-agent' app running with pid: ${old_pid}.";
+    sudo pkill "ak-agent" && echo "Killed existing 'ak-agent' app." || echo "Unable to kill 'ak-agent' app."
+else
+    echo "'ak-agent' app not running."
+fi
+
+sleep 1
+
+LAUNCH_FAILED=true
+for i in {1..5}; do
+    echo "Attempt $i: Opening authentik Agent app"
+
+    open "${INSTALL_DIR}/authentik Agent.app"
+    sleep 1
+
+    new_pid=$(pgrep "authentik Agent")
+    if [ $? -eq 0 ] && [ $new_pid -gt 0 ]; then
+        echo "'authentik Agent' app running with new pid: ${new_pid}."
+        LAUNCH_FAILED=false
+        break
+    fi
+done
+
+if [ $LAUNCH_FAILED = true ]; then
+    echo "Failed to launch 'authentik Agent' app"
+fi
+
+mkdir -p /usr/local/bin
+ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/Resources/ak" /usr/local/bin/ak
+ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/Resources/ak-vault" /usr/local/bin/ak-vault
+
+echo "Finished running postinstall script."

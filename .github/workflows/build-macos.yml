@@ -1,0 +1,28 @@
+name: build-linux
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build_go:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - agent
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: make ${{ matrix.target }}/package-macos
+      - uses: actions/upload-artifact@v4
+        with:
+          name: authentik_macos_${{ matrix.target }}
+          path: bin/

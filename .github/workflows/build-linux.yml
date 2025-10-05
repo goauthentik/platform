@@ -1,4 +1,4 @@
-name: build
+name: build-linux
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
       - run: make ${{ matrix.target }}/package
       - uses: actions/upload-artifact@v4
         with:
-          name: authentik_${{ matrix.target }}
+          name: authentik_linux_${{ matrix.target }}
           path: bin/
   build_js:
     name: Build
@@ -71,7 +71,7 @@ jobs:
       - run: make ${{ matrix.target }}/package
       - uses: actions/upload-artifact@v4
         with:
-          name: authentik_${{ matrix.target }}
+          name: authentik_linux_${{ matrix.target }}
           path: ${{ matrix.target }}/target/debian/*.deb
   lint_go:
     name: Lint
