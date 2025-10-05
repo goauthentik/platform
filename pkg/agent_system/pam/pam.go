@@ -6,10 +6,12 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/storage"
+	"google.golang.org/grpc"
 )
 
 type Server struct {
@@ -25,7 +27,7 @@ type Server struct {
 	cfg *config.Config
 }
 
-func NewServer(api *api.APIClient) (*Server, error) {
+func NewServer(api *api.APIClient) (component.Component, error) {
 	srv := &Server{
 		api: api,
 		log: log.WithField("logger", "sysd.pam_server"),
@@ -43,6 +45,13 @@ func NewServer(api *api.APIClient) (*Server, error) {
 	return srv, nil
 }
 
-func (pam *Server) Stop() {
+func (pam *Server) Start() {}
+
+func (pam *Server) Stop() error {
 	pam.cancel()
+	return nil
+}
+
+func (pam *Server) Register(s grpc.ServiceRegistrar) {
+	pb.RegisterPAMServer(s, pam)
 }

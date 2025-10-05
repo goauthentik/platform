@@ -6,9 +6,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
+	"google.golang.org/grpc"
 )
 
 type Server struct {
@@ -26,19 +28,27 @@ type Server struct {
 	cfg *config.Config
 }
 
-func NewServer(api *api.APIClient) *Server {
+func NewServer(api *api.APIClient) (component.Component, error) {
 	srv := &Server{
 		api: api,
 		log: systemlog.Get().WithField("logger", "sysd.nss_server"),
 		cfg: config.Get(),
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
-	srv.startFetch()
-	return srv
+	return srv, nil
 }
 
-func (nss *Server) Stop() {
+func (nss *Server) Start() {
+	nss.startFetch()
+}
+
+func (nss *Server) Stop() error {
 	nss.cancel()
+	return nil
+}
+
+func (nss *Server) Register(s grpc.ServiceRegistrar) {
+	pb.RegisterNSSServer(s, nss)
 }
 
 func (nss *Server) GetUserUidNumber(user api.User) uint32 {

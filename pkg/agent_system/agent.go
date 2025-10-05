@@ -15,11 +15,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
-	"goauthentik.io/cli/pkg/agent_system/nss"
-	"goauthentik.io/cli/pkg/agent_system/pam"
-	"goauthentik.io/cli/pkg/agent_system/session"
-	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
@@ -53,12 +50,10 @@ func init() {
 }
 
 type SystemAgent struct {
-	log     *log.Entry
-	srv     *grpc.Server
-	api     *api.APIClient
-	nss     *nss.Server
-	pam     *pam.Server
-	monitor *session.Monitor
+	log *log.Entry
+	srv *grpc.Server
+	api *api.APIClient
+	cm  map[string]component.Component
 }
 
 func New() *SystemAgent {
@@ -86,13 +81,7 @@ func New() *SystemAgent {
 	}
 	l.WithField("as", m.User.Username).Debug("Connected to authentik")
 
-	pam, err := pam.NewServer(ac)
-	if err != nil {
-		panic(err)
-	}
-
 	sm := &SystemAgent{
-		monitor: session.NewMonitor(),
 		srv: grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
 				logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
@@ -105,18 +94,24 @@ func New() *SystemAgent {
 		),
 		log: l,
 		api: ac,
-		nss: nss.NewServer(ac),
-		pam: pam,
+		cm:  map[string]component.Component{},
 	}
 
-	pb.RegisterSessionManagerServer(sm.srv, sm.monitor)
-	pb.RegisterNSSServer(sm.srv, sm.nss)
-	pb.RegisterPAMServer(sm.srv, sm.pam)
+	for name, constr := range sm.RegisterPlatformComponents() {
+		comp, err := constr(ac)
+		if err != nil {
+			panic(err)
+		}
+		sm.cm[name] = comp
+		comp.Register(sm.srv)
+	}
 	return sm
 }
 
 func (sm *SystemAgent) Start() {
-	go sm.monitor.Start()
+	for _, component := range sm.cm {
+		component.Start()
+	}
 
 	go func() {
 		sigChan := make(chan os.Signal, 1)
@@ -124,6 +119,13 @@ func (sm *SystemAgent) Start() {
 		<-sigChan
 
 		sm.log.Info("Shutting down...")
+
+		for n, comp := range sm.cm {
+			err := comp.Stop()
+			if err != nil {
+				sm.log.WithError(err).WithField("component", n).Warning("failed to stop component")
+			}
+		}
 		sm.srv.GracefulStop()
 		_ = os.Remove(config.Get().Socket)
 	}()

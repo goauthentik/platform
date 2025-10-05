@@ -7,9 +7,12 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/api/v3"
+	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/systemlog"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"syscall"
@@ -34,24 +37,34 @@ type Monitor struct {
 	mtx           sync.RWMutex
 	checkInterval time.Duration
 	log           *log.Entry
+
+	timer *time.Ticker
 }
 
-func NewMonitor() *Monitor {
+func NewMonitor(api *api.APIClient) (component.Component, error) {
 	return &Monitor{
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
 		log:           systemlog.Get().WithField("logger", "sysd.session"),
-	}
+	}, nil
 }
 
 func (m *Monitor) Start() {
-	ticker := time.NewTicker(m.checkInterval)
-	defer ticker.Stop()
+	m.timer = time.NewTicker(m.checkInterval)
 
-	for range ticker.C {
+	for range m.timer.C {
 		m.checkExpiredSessions()
 	}
+}
+
+func (m *Monitor) Register(s grpc.ServiceRegistrar) {
+	pb.RegisterSessionManagerServer(s, m)
+}
+
+func (m *Monitor) Stop() error {
+	m.timer.Stop()
+	return nil
 }
 
 func (m *Monitor) checkExpiredSessions() {
