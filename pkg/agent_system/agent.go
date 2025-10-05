@@ -84,6 +84,7 @@ func New() *SystemAgent {
 		sm.cm[name] = comp
 		comp.Register(sm.srv)
 	}
+	go sm.watchConfig()
 	return sm
 }
 
@@ -102,8 +103,12 @@ func (sm *SystemAgent) watchConfig() {
 	for evt := range config.Manager().Watch() {
 		if evt.Type == storage.ConfigChangedAdded || evt.Type == storage.ConfigChangedRemoved {
 			sm.mtx.Lock()
-			for _, component := range sm.cm {
-				component.Stop()
+			for n, component := range sm.cm {
+				err := component.Stop()
+				if err != nil {
+					sm.log.WithError(err).WithField("component", n).Warning("failed to stop componnet")
+					continue
+				}
 				component.Start()
 			}
 			sm.mtx.Unlock()

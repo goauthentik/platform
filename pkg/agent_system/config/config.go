@@ -42,7 +42,6 @@ type Config struct {
 	} `yaml:"nss"`
 	DomainDir string `yaml:"domains"`
 
-	path    string
 	log     *log.Entry
 	domains []DomainConfig
 }
