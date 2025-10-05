@@ -8,9 +8,8 @@ all: clean gen
 clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
-gen: gen-proto
+gen: gen-proto utils_rs/gen
 	go generate ./...
-	$(MAKE) -C utils_rs gen
 
 gen-proto:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
@@ -22,8 +21,6 @@ gen-proto:
 		$(PROTO_DIR)/**
 
 lint:
-	cargo fmt --all
-	cargo clippy --all
 	golangci-lint run
 
 test-agent:
@@ -45,6 +42,9 @@ pam/%:
 
 nss/%:
 	$(MAKE) -C nss $*
+
+utils_rs/%:
+	$(MAKE) -C utils_rs $*
 
 cli/%:
 	$(MAKE) -C cmd/cli $*
