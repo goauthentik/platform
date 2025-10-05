@@ -16,7 +16,7 @@ test:
 
 package:
 	cargo install cargo-deb
-	cargo deb --verbose --deb-version ${VERSION}
+	cargo deb --verbose --deb-version ${VERSION} --variant ${ARCH}
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/pam/target/debian/libpam-authentik_${VERSION}_${ARCH}.deb
