@@ -29,7 +29,7 @@ for i in {1..5}; do
     open "${INSTALL_DIR}/authentik Agent.app"
     sleep 1
 
-    new_pid=$(pgrep "authentik Agent")
+    new_pid=$(pgrep "ak-agent")
     if [ $? -eq 0 ] && [ $new_pid -gt 0 ]; then
         echo "'authentik Agent' app running with new pid: ${new_pid}."
         LAUNCH_FAILED=false
