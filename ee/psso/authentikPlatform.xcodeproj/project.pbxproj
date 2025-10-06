@@ -367,12 +367,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PSSO/PSSO.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application";
+				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = 232G855Y8N;
+				DEVELOPMENT_TEAM = "232G855Y8N";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = PSSO/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "authentik Endpoint";
@@ -384,8 +382,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.platform.psso;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "authentik Platform PSSO";
+				PROVISIONING_PROFILE_SPECIFIER = "GHA authentik Platform PSSO";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
