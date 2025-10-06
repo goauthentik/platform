@@ -16,7 +16,7 @@ build:
 	xcodebuild ${XCB_ARGS} \
 		-showBuildSettings
 	xcodebuild ${XCB_ARGS} \
-		-derivedDataPath "${PWD}/derivedData"
+		-derivedDataPath "${PWD}/DerivedData"
 	cp -R "${PWD}/DerivedData/authentikPlatform/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 
 .PHONY: format
