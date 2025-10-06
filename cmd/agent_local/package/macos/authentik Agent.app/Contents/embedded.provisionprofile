@@ -11,19 +11,13 @@
 	<true/>
 	<key>com.apple.developer.team-identifier</key>
 	<string>232G855Y8N</string>
-	<key>com.apple.security.app-sandbox</key>
-	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>232G855Y8N.io.goauthentik.platform.shared</string>
+		<string>group.232G855Y8N.io.goauthentik.platform.shared</string>
 	</array>
 	<key>com.apple.security.files.user-selected.read-only</key>
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
-	<key>keychain-access-groups</key>
-	<array>
-		<string>232G855Y8N.io.goauthentik.platform.shared</string>
-	</array>
 </dict>
 </plist>
