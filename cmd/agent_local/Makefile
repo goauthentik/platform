@@ -4,6 +4,7 @@ TARGET := agent_local
 BINARY_NAME := ak-agent
 
 MACOS_APP_NAME := authentik Agent.app
+MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
@@ -34,7 +35,7 @@ package-darwin: clean build
 		--verify \
 		--verbose \
 		--entitlements "${PWD}/package/macos/authentikEndpoint.entitlements" \
-		--sign 33B1F66E06FD7D8088F2301D240AE13F00399685 \
+		--sign ${33B1F66E06FD7D8088F2301D240AE13F00399685} \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \

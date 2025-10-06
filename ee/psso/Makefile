@@ -1,5 +1,7 @@
 include ../../common.mk
 
+TARGET := psso
+
 .PHONY: clean
 clean:
 	xcodebuild clean
@@ -7,11 +9,12 @@ clean:
 
 .PHONY: build
 build:
+	mkdir -p ${TOP}/bin/${TARGET}
 	xcodebuild \
 		-scheme PSSO \
 		-project authentikPlatform.xcodeproj \
 		-configuration Release
-	cp -R "${PWD}/DerivedData/authentikPlatform/Build/Products/Release/PSSO.appex" "${TOP}/bin/psso/PSSO.appex"
+	cp -R "${PWD}/DerivedData/authentikPlatform/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 
 .PHONY: format
 format:
