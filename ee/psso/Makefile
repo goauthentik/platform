@@ -3,6 +3,7 @@ include ../../common.mk
 .PHONY: clean
 clean:
 	xcodebuild clean
+	cd ${TOP} && rm -rf bin/${TARGET}
 
 .PHONY: build
 build:

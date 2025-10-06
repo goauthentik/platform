@@ -12,7 +12,12 @@ build:
 		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
 		${TOP}/cmd/${TARGET}
 
-package-darwin: build
+clean:
+	cd ${TOP} && rm -rf bin/${TARGET}
+	$(MAKE) -C ${TOP} cli/clean
+	$(MAKE) -C ${TOP} ee/psso/clean || true
+
+package-darwin: clean build
 	$(MAKE) -C ${TOP} cli/build
 	$(MAKE) -C ${TOP} ee/psso/build || true
 	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" ${TOP}/bin/${TARGET}/
@@ -23,11 +28,13 @@ package-darwin: build
 	ln -s ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support" || true
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex" || true
-	@echo "Siging with entitlements"
+	@echo "## Siging with entitlements"
 	codesign \
-		--deep \
+		--force \
+		--verify \
+		--verbose \
 		--entitlements "${PWD}/package/macos/authentikEndpoint.entitlements" \
-		--sign AEBEDA5994467C45F0AED1ACAE74DE316C8E3491 \
+		--sign C7C8818EE7B250C3F20A3BC2DB0C95806D74C83D \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
