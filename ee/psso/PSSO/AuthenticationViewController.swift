@@ -37,7 +37,7 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
         if let url = navigationAction.request.url,
-            url.scheme == "io.goauthentik.endpoint"
+            url.scheme == "io.goauthentik.platform"
         {
             self.logger.debug("Intercepted redirect: \(url.absoluteString)")
             if OIDC.shared.resumeAuthorizationFlow(with: url) {

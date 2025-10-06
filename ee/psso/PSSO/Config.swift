@@ -14,7 +14,7 @@ class ConfigManager {
         subsystem: Bundle.main.bundleIdentifier!, category: "ConfigManager")
 
     func getConfig() -> Config {
-        let sharedMDMConfig = UserDefaults(suiteName: "io.goauthentik.endpoint")?
+        let sharedMDMConfig = UserDefaults(suiteName: "io.goauthentik.platform")?
             .object(forKey: "com.apple.configuration.managed")
         self.logger.debug(
             "Config: Shared MDM \(String(describing: sharedMDMConfig), privacy: .public)")

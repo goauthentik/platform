@@ -6,7 +6,7 @@
 	<array>
 		<dict>
 			<key>ExtensionIdentifier</key>
-			<string>io.goauthentik.endpoint.psso</string>
+			<string>io.goauthentik.platform.psso</string>
 			<key>PayloadDisplayName</key>
 			<string>Extensible Single Sign-On</string>
 			<key>PayloadIdentifier</key>
@@ -64,7 +64,7 @@
 			<array>
 				<dict>
 					<key>ApplicationIdentifier</key>
-					<string>232G855Y8N.io.goauthentik.endpoint</string>
+					<string>232G855Y8N.io.goauthentik.platform</string>
 					<key>AssociatedDomains</key>
 					<array>
 						<string>authsrv:ak.beryju.dev</string>
@@ -74,7 +74,7 @@
 				</dict>
 				<dict>
 					<key>ApplicationIdentifier</key>
-					<string>232G855Y8N.io.goauthentik.endpoint.psso</string>
+					<string>232G855Y8N.io.goauthentik.platform.psso</string>
 					<key>AssociatedDomains</key>
 					<array>
 						<string>authsrv:ak.beryju.dev</string>

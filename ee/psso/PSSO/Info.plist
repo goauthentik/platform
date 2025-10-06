@@ -23,7 +23,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>io.goauthentik.endpoint</string>
+				<string>io.goauthentik.platform</string>
 			</array>
 		</dict>
 	</array>

@@ -30,7 +30,7 @@ class OIDC {
             clientId: loginConfig.clientID,
             clientSecret: nil,
             scopes: scopes,
-            redirectURL: URL(string: "io.goauthentik.endpoint:/oauth2redirect")!,
+            redirectURL: URL(string: "io.goauthentik.platform:/oauth2redirect")!,
             responseType: OIDResponseTypeCode,
             additionalParameters: nil
         )
