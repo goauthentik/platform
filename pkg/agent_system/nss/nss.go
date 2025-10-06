@@ -2,6 +2,7 @@ package nss
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
@@ -29,6 +30,9 @@ type Server struct {
 }
 
 func NewServer() (component.Component, error) {
+	if len(config.Manager().Get().Domains()) < 1 {
+		return nil, errors.New("no domains")
+	}
 	ac, err := config.Manager().Get().Domains()[0].APIClient()
 	if err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package pam
 
 import (
 	"context"
+	"errors"
 
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
@@ -28,6 +29,9 @@ type Server struct {
 }
 
 func NewServer() (component.Component, error) {
+	if len(config.Manager().Get().Domains()) < 1 {
+		return nil, errors.New("no domains")
+	}
 	dom := config.Manager().Get().Domains()[0]
 	ac, err := dom.APIClient()
 	if err != nil {
