@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"path"
 	"path/filepath"
@@ -8,8 +9,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/storage"
-
-	"gopkg.in/yaml.v3"
 )
 
 var manager *storage.ConfigManager[*Config]
@@ -51,7 +50,7 @@ func (c *Config) Default() storage.Configer {
 }
 
 func (c *Config) PostLoad() error {
-	m, err := filepath.Glob(filepath.Join(c.DomainDir, "**.yml"))
+	m, err := filepath.Glob(filepath.Join(c.DomainDir, "**.json"))
 	if err != nil {
 		c.log.WithError(err).Warning("failed to load domains")
 		return err
@@ -64,7 +63,7 @@ func (c *Config) PostLoad() error {
 			continue
 		}
 		d := DomainConfig{}
-		err = yaml.Unmarshal(co, &d)
+		err = json.Unmarshal(co, &d)
 		if err != nil {
 			c.log.WithError(err).Warning("failed to load domain")
 			continue
@@ -90,8 +89,8 @@ func (c *Config) Domains() []DomainConfig {
 }
 
 func (c *Config) SaveDomain(dom DomainConfig) error {
-	path := filepath.Join(c.DomainDir, dom.Domain+".yml")
-	b, err := yaml.Marshal(dom)
+	path := filepath.Join(c.DomainDir, dom.Domain+".json")
+	b, err := json.Marshal(dom)
 	if err != nil {
 		return err
 	}

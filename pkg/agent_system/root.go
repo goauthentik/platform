@@ -25,7 +25,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&configFile, "config-file", "/etc/authentik/config.yml", "Config file path")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config-file", "/etc/authentik/config.json", "Config file path")
 }
 
 func agentPrecheck() error {
