@@ -9,7 +9,7 @@ build:
 	cargo build --verbose --release
 
 lint:
-	cargo clippy
+	cargo clippy --fix --allow-dirty
 
 test:
 	cargo test --verbose

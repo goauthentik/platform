@@ -1,7 +1,7 @@
-use libc::c_char;
+use libc::{c_char, free};
 
 use pam::{constants::PamResultCode, module::PamHandle};
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 
 #[link(name = "pam")]
 unsafe extern "C" {
@@ -10,6 +10,9 @@ unsafe extern "C" {
 
     /// Add or update an env var in PAM (expects "KEY=VAL" malloc’d internally)
     fn pam_putenv(pamh: *const PamHandle, name_value: *const c_char) -> PamResultCode;
+
+    /// Get a list of all PAM environment variables
+    fn pam_getenvlist(pamh: *const PamHandle) -> *mut *mut c_char;
 }
 
 pub fn pam_get_env(pamh: &mut PamHandle, key: &str) -> Option<String> {
@@ -34,4 +37,26 @@ pub fn pam_put_env(pamh: &mut PamHandle, key: &str, val: &str) -> Result<(), Pam
     } else {
         Err(ret)
     }
+}
+
+pub fn pam_list_env(pamh: &mut PamHandle) -> Vec<String> {
+    let mut out = Vec::new();
+    unsafe {
+        let list = pam_getenvlist(pamh);
+        if list.is_null() {
+            return out;
+        }
+        let mut idx = 0;
+        loop {
+            let ptr = *list.add(idx);
+            if ptr.is_null() {
+                break;
+            }
+            out.push(CStr::from_ptr(ptr).to_string_lossy().into_owned());
+            free(ptr as *mut c_void);
+            idx += 1;
+        }
+        free(list as *mut c_void);
+    }
+    out
 }

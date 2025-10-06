@@ -7,8 +7,7 @@ pub struct Config {
     pub socket: String,
 }
 
-static GLOBAL_DATA: LazyLock<Config> =
-    LazyLock::new(|| Config::from_default().unwrap_or_default() );
+static GLOBAL_DATA: LazyLock<Config> = LazyLock::new(|| Config::from_default().unwrap_or_default());
 
 impl Default for Config {
     fn default() -> Self {
@@ -20,7 +19,6 @@ impl Default for Config {
 }
 
 impl Config {
-
     pub fn get() -> Self {
         GLOBAL_DATA.clone()
     }

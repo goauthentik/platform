@@ -18,6 +18,7 @@ use crate::{
     session_data::{_generate_id, _write_session_data, SessionData, hash_token},
 };
 
+pub mod authorize;
 pub mod interactive;
 pub mod token;
 

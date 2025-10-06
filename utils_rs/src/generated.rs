@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod agent_auth;
 pub mod nss;
 pub mod pam;
 pub mod pam_session;

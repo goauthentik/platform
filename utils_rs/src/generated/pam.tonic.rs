@@ -132,5 +132,26 @@ pub mod pam_client {
             req.extensions_mut().insert(GrpcMethod::new("pam.PAM", "InteractiveAuth"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn authorize(
+            &mut self,
+            request: impl tonic::IntoRequest<super::super::agent_auth::AuthorizeRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::PamAuthorizationResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/pam.PAM/Authorize");
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new("pam.PAM", "Authorize"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }

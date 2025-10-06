@@ -15,4 +15,4 @@ gen:
 	cargo fmt
 
 lint:
-	cargo clippy
+	cargo clippy --fix --allow-dirty

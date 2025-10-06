@@ -78,5 +78,19 @@ pub struct TokenExchangeResponse {
     #[prost(uint64, tag="3")]
     pub expires_in: u64,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AuthorizeRequest {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::RequestHeader>,
+    #[prost(string, tag="2")]
+    pub service: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub uid: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct AuthorizeResponse {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::ResponseHeader>,
+}
 include!("agent_auth.tonic.rs");
 // @@protoc_insertion_point(module)

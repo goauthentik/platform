@@ -4,10 +4,12 @@ package pam;
 option go_package = "pkg/pb";
 
 import "agent.proto";
+import "agent_auth.proto";
 
 service PAM {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
+  rpc Authorize(agent_auth.AuthorizeRequest) returns (PAMAuthorizationResponse);
 }
 
 message TokenAuthRequest {
@@ -36,12 +38,13 @@ message InteractiveAuthRequest {
   }
 }
 
+enum InteractiveAuthResult {
+  PAM_SUCCESS = 0;
+  PAM_PERM_DENIED = 6;
+  PAM_AUTH_ERR = 7;
+}
+
 message InteractiveChallenge {
-  enum InteractiveAuthResult {
-    PAM_SUCCESS = 0;
-    PAM_PERM_DENIED = 6;
-    PAM_AUTH_ERR = 7;
-  }
 
   enum PromptMeta {
     UNSPECIFIED = 0;
@@ -60,4 +63,9 @@ message InteractiveChallenge {
   string prompt = 4;
   PromptMeta prompt_meta = 5;
   string debug_info = 6;
+}
+
+message PAMAuthorizationResponse {
+  agent_auth.AuthorizeResponse response = 1;
+  InteractiveAuthResult code = 2;
 }
