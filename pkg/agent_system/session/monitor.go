@@ -10,7 +10,6 @@ import (
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -40,21 +39,23 @@ type Monitor struct {
 	timer *time.Ticker
 }
 
-func NewMonitor() (component.Component, error) {
+func NewMonitor(ctx component.Context) (component.Component, error) {
 	return &Monitor{
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
-		log:           systemlog.Get().WithField("logger", "sysd.session"),
+		log:           ctx.Log,
 	}, nil
 }
 
 func (m *Monitor) Start() {
 	m.timer = time.NewTicker(m.checkInterval)
 
-	for range m.timer.C {
-		m.checkExpiredSessions()
-	}
+	go func() {
+		for range m.timer.C {
+			m.checkExpiredSessions()
+		}
+	}()
 }
 
 func (m *Monitor) Register(s grpc.ServiceRegistrar) {

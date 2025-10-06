@@ -1,6 +1,7 @@
 package agentsystem
 
 import (
+	"context"
 	"net"
 	"os"
 	"os/signal"
@@ -43,11 +44,19 @@ func init() {
 	rootCmd.AddCommand(agentCmd)
 }
 
+type ComponentInstance struct {
+	comp   component.Component
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
 type SystemAgent struct {
-	log *log.Entry
-	srv *grpc.Server
-	cm  map[string]component.Component
-	mtx sync.Mutex
+	log    *log.Entry
+	srv    *grpc.Server
+	cm     map[string]ComponentInstance
+	mtx    sync.Mutex
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func New() *SystemAgent {
@@ -65,23 +74,38 @@ func New() *SystemAgent {
 			),
 		),
 		log: l,
-		cm:  map[string]component.Component{},
+		cm:  map[string]ComponentInstance{},
 		mtx: sync.Mutex{},
 	}
+	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	sm.DomainCheck()
+	sm.registerComponents()
 
+	go sm.watchConfig()
+	return sm
+}
+
+func (sm *SystemAgent) registerComponents() {
 	sm.mtx.Lock()
+	defer sm.mtx.Unlock()
 	for name, constr := range sm.RegisterPlatformComponents() {
-		comp, err := constr()
+		l := sm.log.WithField("component", name)
+		l.Info("Registering component")
+		ctx, cancel := context.WithCancel(sm.ctx)
+		comp, err := constr(component.Context{
+			Log:     l,
+			Context: ctx,
+		})
 		if err != nil {
 			panic(err)
 		}
-		sm.cm[name] = comp
+		sm.cm[name] = ComponentInstance{
+			comp:   comp,
+			ctx:    ctx,
+			cancel: cancel,
+		}
 		comp.Register(sm.srv)
 	}
-	sm.mtx.Unlock()
-	go sm.watchConfig()
-	return sm
 }
 
 func (sm *SystemAgent) DomainCheck() {
@@ -90,7 +114,9 @@ func (sm *SystemAgent) DomainCheck() {
 		if err != nil {
 			sm.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to get API client for domain")
 			dom.Enabled = false
+			continue
 		}
+		sm.log.WithField("domain", dom.Domain).Info("Tested domain connectivity")
 	}
 }
 
@@ -101,13 +127,13 @@ func (sm *SystemAgent) watchConfig() {
 		if evt.Type == storage.ConfigChangedAdded || evt.Type == storage.ConfigChangedRemoved {
 			sm.mtx.Lock()
 			for n, component := range sm.cm {
-				err := component.Stop()
+				err := component.comp.Stop()
 				if err != nil {
 					sm.log.WithError(err).WithField("component", n).Warning("failed to stop componnet")
 					sm.mtx.Unlock()
 					continue
 				}
-				component.Start()
+				component.comp.Start()
 			}
 			sm.mtx.Unlock()
 		}
@@ -116,8 +142,9 @@ func (sm *SystemAgent) watchConfig() {
 
 func (sm *SystemAgent) Start() {
 	sm.mtx.Lock()
-	for _, component := range sm.cm {
-		component.Start()
+	for n, component := range sm.cm {
+		sm.log.WithField("component", n).Info("Starting component")
+		component.comp.Start()
 	}
 	sm.mtx.Unlock()
 
@@ -126,18 +153,7 @@ func (sm *SystemAgent) Start() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
-		sm.log.Info("Shutting down...")
-
-		sm.mtx.Lock()
-		defer sm.mtx.Unlock()
-		for n, comp := range sm.cm {
-			err := comp.Stop()
-			if err != nil {
-				sm.log.WithError(err).WithField("component", n).Warning("failed to stop component")
-			}
-		}
-		sm.srv.GracefulStop()
-		_ = os.Remove(config.Manager().Get().Socket)
+		sm.Stop()
 	}()
 
 	_ = os.Remove(config.Manager().Get().Socket)
@@ -151,4 +167,19 @@ func (sm *SystemAgent) Start() {
 	if err := sm.srv.Serve(lis); err != nil {
 		sm.log.WithError(err).Fatal("Failed to serve")
 	}
+}
+
+func (sm *SystemAgent) Stop() {
+	sm.log.Info("Shutting down...")
+
+	sm.mtx.Lock()
+	defer sm.mtx.Unlock()
+	for n, comp := range sm.cm {
+		err := comp.comp.Stop()
+		if err != nil {
+			sm.log.WithError(err).WithField("component", n).Warning("failed to stop component")
+		}
+	}
+	sm.srv.GracefulStop()
+	_ = os.Remove(config.Manager().Get().Socket)
 }

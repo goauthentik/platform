@@ -10,7 +10,6 @@ import (
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 
@@ -23,13 +22,12 @@ type Server struct {
 	users  []api.User
 	groups []api.Group
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx context.Context
 
 	cfg *config.Config
 }
 
-func NewServer() (component.Component, error) {
+func NewServer(ctx component.Context) (component.Component, error) {
 	if len(config.Manager().Get().Domains()) < 1 {
 		return nil, errors.New("no domains")
 	}
@@ -39,10 +37,10 @@ func NewServer() (component.Component, error) {
 	}
 	srv := &Server{
 		api: ac,
-		log: systemlog.Get().WithField("logger", "sysd.nss_server"),
+		log: ctx.Log,
 		cfg: config.Manager().Get(),
+		ctx: ctx.Context,
 	}
-	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	return srv, nil
 }
 
@@ -51,7 +49,6 @@ func (nss *Server) Start() {
 }
 
 func (nss *Server) Stop() error {
-	nss.cancel()
 	return nil
 }
 
