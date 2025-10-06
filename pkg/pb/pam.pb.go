@@ -500,27 +500,28 @@ func (x *InteractiveChallenge) GetDebugInfo() string {
 	return ""
 }
 
-type SudoAuthorizationRequest struct {
+type PAMAuthorizationResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Service       string                 `protobuf:"bytes,1,opt,name=service,proto3" json:"service,omitempty"`
+	Response      *AuthorizeResponse     `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Code          InteractiveAuthResult  `protobuf:"varint,2,opt,name=code,proto3,enum=pam.InteractiveAuthResult" json:"code,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SudoAuthorizationRequest) Reset() {
-	*x = SudoAuthorizationRequest{}
+func (x *PAMAuthorizationResponse) Reset() {
+	*x = PAMAuthorizationResponse{}
 	mi := &file_pam_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SudoAuthorizationRequest) String() string {
+func (x *PAMAuthorizationResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SudoAuthorizationRequest) ProtoMessage() {}
+func (*PAMAuthorizationResponse) ProtoMessage() {}
 
-func (x *SudoAuthorizationRequest) ProtoReflect() protoreflect.Message {
+func (x *PAMAuthorizationResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_pam_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -532,58 +533,21 @@ func (x *SudoAuthorizationRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SudoAuthorizationRequest.ProtoReflect.Descriptor instead.
-func (*SudoAuthorizationRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use PAMAuthorizationResponse.ProtoReflect.Descriptor instead.
+func (*PAMAuthorizationResponse) Descriptor() ([]byte, []int) {
 	return file_pam_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *SudoAuthorizationRequest) GetService() string {
+func (x *PAMAuthorizationResponse) GetResponse() *AuthorizeResponse {
 	if x != nil {
-		return x.Service
+		return x.Response
 	}
-	return ""
+	return nil
 }
 
-type SudoAuthorizationResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Result        InteractiveAuthResult  `protobuf:"varint,1,opt,name=result,proto3,enum=pam.InteractiveAuthResult" json:"result,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SudoAuthorizationResponse) Reset() {
-	*x = SudoAuthorizationResponse{}
-	mi := &file_pam_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SudoAuthorizationResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SudoAuthorizationResponse) ProtoMessage() {}
-
-func (x *SudoAuthorizationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pam_proto_msgTypes[7]
+func (x *PAMAuthorizationResponse) GetCode() InteractiveAuthResult {
 	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SudoAuthorizationResponse.ProtoReflect.Descriptor instead.
-func (*SudoAuthorizationResponse) Descriptor() ([]byte, []int) {
-	return file_pam_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *SudoAuthorizationResponse) GetResult() InteractiveAuthResult {
-	if x != nil {
-		return x.Result
+		return x.Code
 	}
 	return InteractiveAuthResult_PAM_SUCCESS
 }
@@ -592,7 +556,7 @@ var File_pam_proto protoreflect.FileDescriptor
 
 const file_pam_proto_rawDesc = "" +
 	"\n" +
-	"\tpam.proto\x12\x03pam\x1a\vagent.proto\"D\n" +
+	"\tpam.proto\x12\x03pam\x1a\vagent.proto\x1a\x10agent_auth.proto\"D\n" +
 	"\x10TokenAuthRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\tR\x05token\"W\n" +
@@ -628,19 +592,18 @@ const file_pam_proto_rawDesc = "" +
 	"\rPAM_TEXT_INFO\x10\x04\x12\x12\n" +
 	"\x0ePAM_RADIO_TYPE\x10\x05\x12\x15\n" +
 	"\x11PAM_BINARY_PROMPT\x10\a\x12\f\n" +
-	"\bPASSWORD\x10d\"4\n" +
-	"\x18SudoAuthorizationRequest\x12\x18\n" +
-	"\aservice\x18\x01 \x01(\tR\aservice\"O\n" +
-	"\x19SudoAuthorizationResponse\x122\n" +
-	"\x06result\x18\x01 \x01(\x0e2\x1a.pam.InteractiveAuthResultR\x06result*O\n" +
+	"\bPASSWORD\x10d\"\x85\x01\n" +
+	"\x18PAMAuthorizationResponse\x129\n" +
+	"\bresponse\x18\x01 \x01(\v2\x1d.agent_auth.AuthorizeResponseR\bresponse\x12.\n" +
+	"\x04code\x18\x02 \x01(\x0e2\x1a.pam.InteractiveAuthResultR\x04code*O\n" +
 	"\x15InteractiveAuthResult\x12\x0f\n" +
 	"\vPAM_SUCCESS\x10\x00\x12\x13\n" +
 	"\x0fPAM_PERM_DENIED\x10\x06\x12\x10\n" +
-	"\fPAM_AUTH_ERR\x10\a2\xdc\x01\n" +
+	"\fPAM_AUTH_ERR\x10\a2\xd6\x01\n" +
 	"\x03PAM\x12:\n" +
 	"\tTokenAuth\x12\x15.pam.TokenAuthRequest\x1a\x16.pam.TokenAuthResponse\x12I\n" +
-	"\x0fInteractiveAuth\x12\x1b.pam.InteractiveAuthRequest\x1a\x19.pam.InteractiveChallenge\x12N\n" +
-	"\rSudoAuthorize\x12\x1d.pam.SudoAuthorizationRequest\x1a\x1e.pam.SudoAuthorizationResponseB\bZ\x06pkg/pbb\x06proto3"
+	"\x0fInteractiveAuth\x12\x1b.pam.InteractiveAuthRequest\x1a\x19.pam.InteractiveChallenge\x12H\n" +
+	"\tAuthorize\x12\x1c.agent_auth.AuthorizeRequest\x1a\x1d.pam.PAMAuthorizationResponseB\bZ\x06pkg/pbb\x06proto3"
 
 var (
 	file_pam_proto_rawDescOnce sync.Once
@@ -655,7 +618,7 @@ func file_pam_proto_rawDescGZIP() []byte {
 }
 
 var file_pam_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_pam_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_pam_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_pam_proto_goTypes = []any{
 	(InteractiveAuthResult)(0),             // 0: pam.InteractiveAuthResult
 	(InteractiveChallenge_PromptMeta)(0),   // 1: pam.InteractiveChallenge.PromptMeta
@@ -665,28 +628,30 @@ var file_pam_proto_goTypes = []any{
 	(*InteractiveAuthContinueRequest)(nil), // 5: pam.InteractiveAuthContinueRequest
 	(*InteractiveAuthRequest)(nil),         // 6: pam.InteractiveAuthRequest
 	(*InteractiveChallenge)(nil),           // 7: pam.InteractiveChallenge
-	(*SudoAuthorizationRequest)(nil),       // 8: pam.SudoAuthorizationRequest
-	(*SudoAuthorizationResponse)(nil),      // 9: pam.SudoAuthorizationResponse
-	(*Token)(nil),                          // 10: agent.Token
+	(*PAMAuthorizationResponse)(nil),       // 8: pam.PAMAuthorizationResponse
+	(*Token)(nil),                          // 9: agent.Token
+	(*AuthorizeResponse)(nil),              // 10: agent_auth.AuthorizeResponse
+	(*AuthorizeRequest)(nil),               // 11: agent_auth.AuthorizeRequest
 }
 var file_pam_proto_depIdxs = []int32{
-	10, // 0: pam.TokenAuthResponse.token:type_name -> agent.Token
+	9,  // 0: pam.TokenAuthResponse.token:type_name -> agent.Token
 	4,  // 1: pam.InteractiveAuthRequest.init:type_name -> pam.InteractiveAuthInitRequest
 	5,  // 2: pam.InteractiveAuthRequest.continue:type_name -> pam.InteractiveAuthContinueRequest
 	0,  // 3: pam.InteractiveChallenge.result:type_name -> pam.InteractiveAuthResult
 	1,  // 4: pam.InteractiveChallenge.prompt_meta:type_name -> pam.InteractiveChallenge.PromptMeta
-	0,  // 5: pam.SudoAuthorizationResponse.result:type_name -> pam.InteractiveAuthResult
-	2,  // 6: pam.PAM.TokenAuth:input_type -> pam.TokenAuthRequest
-	6,  // 7: pam.PAM.InteractiveAuth:input_type -> pam.InteractiveAuthRequest
-	8,  // 8: pam.PAM.SudoAuthorize:input_type -> pam.SudoAuthorizationRequest
-	3,  // 9: pam.PAM.TokenAuth:output_type -> pam.TokenAuthResponse
-	7,  // 10: pam.PAM.InteractiveAuth:output_type -> pam.InteractiveChallenge
-	9,  // 11: pam.PAM.SudoAuthorize:output_type -> pam.SudoAuthorizationResponse
-	9,  // [9:12] is the sub-list for method output_type
-	6,  // [6:9] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	10, // 5: pam.PAMAuthorizationResponse.response:type_name -> agent_auth.AuthorizeResponse
+	0,  // 6: pam.PAMAuthorizationResponse.code:type_name -> pam.InteractiveAuthResult
+	2,  // 7: pam.PAM.TokenAuth:input_type -> pam.TokenAuthRequest
+	6,  // 8: pam.PAM.InteractiveAuth:input_type -> pam.InteractiveAuthRequest
+	11, // 9: pam.PAM.Authorize:input_type -> agent_auth.AuthorizeRequest
+	3,  // 10: pam.PAM.TokenAuth:output_type -> pam.TokenAuthResponse
+	7,  // 11: pam.PAM.InteractiveAuth:output_type -> pam.InteractiveChallenge
+	8,  // 12: pam.PAM.Authorize:output_type -> pam.PAMAuthorizationResponse
+	10, // [10:13] is the sub-list for method output_type
+	7,  // [7:10] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_pam_proto_init() }
@@ -695,6 +660,7 @@ func file_pam_proto_init() {
 		return
 	}
 	file_agent_proto_init()
+	file_agent_auth_proto_init()
 	file_pam_proto_msgTypes[4].OneofWrappers = []any{
 		(*InteractiveAuthRequest_Init)(nil),
 		(*InteractiveAuthRequest_Continue)(nil),
@@ -705,7 +671,7 @@ func file_pam_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pam_proto_rawDesc), len(file_pam_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   8,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

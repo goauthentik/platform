@@ -4,11 +4,12 @@ package pam;
 option go_package = "pkg/pb";
 
 import "agent.proto";
+import "agent_auth.proto";
 
 service PAM {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
-  rpc SudoAuthorize(SudoAuthorizationRequest) returns (SudoAuthorizationResponse);
+  rpc Authorize(agent_auth.AuthorizeRequest) returns (PAMAuthorizationResponse);
 }
 
 message TokenAuthRequest {
@@ -64,10 +65,7 @@ message InteractiveChallenge {
   string debug_info = 6;
 }
 
-message SudoAuthorizationRequest {
-  string service = 1;
-}
-
-message SudoAuthorizationResponse {
-  InteractiveAuthResult result = 1;
+message PAMAuthorizationResponse {
+  agent_auth.AuthorizeResponse response = 1;
+  InteractiveAuthResult code = 2;
 }

@@ -53,3 +53,24 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 		Url: a.cfg.Get().Profiles[req.Header.Profile].AuthentikURL,
 	}, nil
 }
+
+func (a *Agent) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.AuthorizeResponse, error) {
+	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
+		Message: func(creds *grpc_creds.Creds) (string, error) {
+			return fmt.Sprintf("authorize access to '%s'", req.Service), nil
+		},
+		UID: func(creds *grpc_creds.Creds) (string, error) {
+			return req.Uid, nil
+		},
+		Timeout: func() time.Duration {
+			return 3600 * time.Second
+		},
+	}); err != nil {
+		return nil, err
+	}
+	return &pb.AuthorizeResponse{
+		Header: &pb.ResponseHeader{
+			Successful: true,
+		},
+	}, nil
+}

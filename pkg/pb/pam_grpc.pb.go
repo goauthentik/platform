@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	PAM_TokenAuth_FullMethodName       = "/pam.PAM/TokenAuth"
 	PAM_InteractiveAuth_FullMethodName = "/pam.PAM/InteractiveAuth"
-	PAM_SudoAuthorize_FullMethodName   = "/pam.PAM/SudoAuthorize"
+	PAM_Authorize_FullMethodName       = "/pam.PAM/Authorize"
 )
 
 // PAMClient is the client API for PAM service.
@@ -30,7 +30,7 @@ const (
 type PAMClient interface {
 	TokenAuth(ctx context.Context, in *TokenAuthRequest, opts ...grpc.CallOption) (*TokenAuthResponse, error)
 	InteractiveAuth(ctx context.Context, in *InteractiveAuthRequest, opts ...grpc.CallOption) (*InteractiveChallenge, error)
-	SudoAuthorize(ctx context.Context, in *SudoAuthorizationRequest, opts ...grpc.CallOption) (*SudoAuthorizationResponse, error)
+	Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*PAMAuthorizationResponse, error)
 }
 
 type pAMClient struct {
@@ -61,10 +61,10 @@ func (c *pAMClient) InteractiveAuth(ctx context.Context, in *InteractiveAuthRequ
 	return out, nil
 }
 
-func (c *pAMClient) SudoAuthorize(ctx context.Context, in *SudoAuthorizationRequest, opts ...grpc.CallOption) (*SudoAuthorizationResponse, error) {
+func (c *pAMClient) Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*PAMAuthorizationResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SudoAuthorizationResponse)
-	err := c.cc.Invoke(ctx, PAM_SudoAuthorize_FullMethodName, in, out, cOpts...)
+	out := new(PAMAuthorizationResponse)
+	err := c.cc.Invoke(ctx, PAM_Authorize_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *pAMClient) SudoAuthorize(ctx context.Context, in *SudoAuthorizationRequ
 type PAMServer interface {
 	TokenAuth(context.Context, *TokenAuthRequest) (*TokenAuthResponse, error)
 	InteractiveAuth(context.Context, *InteractiveAuthRequest) (*InteractiveChallenge, error)
-	SudoAuthorize(context.Context, *SudoAuthorizationRequest) (*SudoAuthorizationResponse, error)
+	Authorize(context.Context, *AuthorizeRequest) (*PAMAuthorizationResponse, error)
 	mustEmbedUnimplementedPAMServer()
 }
 
@@ -94,8 +94,8 @@ func (UnimplementedPAMServer) TokenAuth(context.Context, *TokenAuthRequest) (*To
 func (UnimplementedPAMServer) InteractiveAuth(context.Context, *InteractiveAuthRequest) (*InteractiveChallenge, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InteractiveAuth not implemented")
 }
-func (UnimplementedPAMServer) SudoAuthorize(context.Context, *SudoAuthorizationRequest) (*SudoAuthorizationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SudoAuthorize not implemented")
+func (UnimplementedPAMServer) Authorize(context.Context, *AuthorizeRequest) (*PAMAuthorizationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
 }
 func (UnimplementedPAMServer) mustEmbedUnimplementedPAMServer() {}
 func (UnimplementedPAMServer) testEmbeddedByValue()             {}
@@ -154,20 +154,20 @@ func _PAM_InteractiveAuth_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PAM_SudoAuthorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SudoAuthorizationRequest)
+func _PAM_Authorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorizeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PAMServer).SudoAuthorize(ctx, in)
+		return srv.(PAMServer).Authorize(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PAM_SudoAuthorize_FullMethodName,
+		FullMethod: PAM_Authorize_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PAMServer).SudoAuthorize(ctx, req.(*SudoAuthorizationRequest))
+		return srv.(PAMServer).Authorize(ctx, req.(*AuthorizeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,8 +188,8 @@ var PAM_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PAM_InteractiveAuth_Handler,
 		},
 		{
-			MethodName: "SudoAuthorize",
-			Handler:    _PAM_SudoAuthorize_Handler,
+			MethodName: "Authorize",
+			Handler:    _PAM_Authorize_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -71,7 +71,7 @@ func (c *Config) PostLoad() error {
 			c.log.WithError(err).Warning("failed to load domain")
 			continue
 		}
-		c.log.WithField("domain", d.Domain).Info("loaded domain")
+		c.log.WithField("domain", d.Domain).Debug("loaded domain")
 		dom = append(dom, d)
 	}
 	c.domains = dom

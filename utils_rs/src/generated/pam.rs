@@ -103,15 +103,12 @@ pub mod interactive_challenge {
         }
     }
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SudoAuthorizationRequest {
-    #[prost(string, tag = "1")]
-    pub service: ::prost::alloc::string::String,
-}
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct SudoAuthorizationResponse {
-    #[prost(enumeration = "InteractiveAuthResult", tag = "1")]
-    pub result: i32,
+pub struct PamAuthorizationResponse {
+    #[prost(message, optional, tag = "1")]
+    pub response: ::core::option::Option<super::agent_auth::AuthorizeResponse>,
+    #[prost(enumeration = "InteractiveAuthResult", tag = "2")]
+    pub code: i32,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

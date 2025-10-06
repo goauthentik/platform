@@ -132,11 +132,11 @@ pub mod pam_client {
             req.extensions_mut().insert(GrpcMethod::new("pam.PAM", "InteractiveAuth"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn sudo_authorize(
+        pub async fn authorize(
             &mut self,
-            request: impl tonic::IntoRequest<super::SudoAuthorizationRequest>,
+            request: impl tonic::IntoRequest<super::super::agent_auth::AuthorizeRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::SudoAuthorizationResponse>,
+            tonic::Response<super::PamAuthorizationResponse>,
             tonic::Status,
         > {
             self.inner
@@ -148,9 +148,9 @@ pub mod pam_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/pam.PAM/SudoAuthorize");
+            let path = http::uri::PathAndQuery::from_static("/pam.PAM/Authorize");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("pam.PAM", "SudoAuthorize"));
+            req.extensions_mut().insert(GrpcMethod::new("pam.PAM", "Authorize"));
             self.inner.unary(req, path, codec).await
         }
     }

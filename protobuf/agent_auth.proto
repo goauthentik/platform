@@ -9,6 +9,7 @@ service AgentAuth {
   rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
   rpc GetCurrentToken(CurrentTokenRequest) returns (CurrentTokenResponse);
   rpc CachedTokenExchange(TokenExchangeRequest) returns (TokenExchangeResponse);
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
 }
 
 message WhoAmIRequest {
@@ -46,4 +47,14 @@ message TokenExchangeResponse {
   agent.ResponseHeader header = 1;
   string access_token = 2;
   uint64 expires_in = 3;
+}
+
+message AuthorizeRequest {
+  agent.RequestHeader header = 1;
+  string service = 2;
+  string uid = 3;
+}
+
+message AuthorizeResponse {
+  agent.ResponseHeader header = 1;
 }
