@@ -7,8 +7,10 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	lconfig "goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
+	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/pb"
 	"google.golang.org/grpc"
 )
@@ -40,6 +42,14 @@ func NewServer(ctx component.Context) (component.Component, error) {
 		cfg: config.Manager().Get(),
 		ctx: ctx.Context,
 	}
+	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
+		AuthentikURL: dom.AuthentikURL,
+		AppSlug:      dom.AppSlug,
+	}).JWKS})
+	if err != nil {
+		return nil, err
+	}
+	srv.kf = k
 	return srv, nil
 }
 
