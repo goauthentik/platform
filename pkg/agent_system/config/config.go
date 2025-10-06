@@ -46,7 +46,9 @@ type Config struct {
 }
 
 func (c *Config) Default() storage.Configer {
-	return &Config{}
+	return &Config{
+		log: log.WithField("logger", "storage.config"),
+	}
 }
 
 func (c *Config) PostLoad() error {
