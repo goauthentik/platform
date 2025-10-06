@@ -27,19 +27,19 @@ func Manager() *storage.ConfigManager[*Config] {
 }
 
 type Config struct {
-	Debug  bool   `yaml:"debug"`
-	Socket string `yaml:"socket"`
+	Debug  bool   `json:"debug"`
+	Socket string `json:"socket"`
 	PAM    struct {
-		Enabled           bool `yaml:"enabled"`
-		TerminateOnExpiry bool `yaml:"terminate_on_expiry"`
-	} `yaml:"pam" `
+		Enabled           bool `json:"enabled"`
+		TerminateOnExpiry bool `json:"terminate_on_expiry"`
+	} `json:"pam" `
 	NSS struct {
-		Enabled            bool  `yaml:"enabled"`
-		UIDOffset          int32 `yaml:"uid_offset"`
-		GIDOffset          int32 `yaml:"gid_offset"`
-		RefreshIntervalSec int64 `yaml:"refresh_interval_sec"`
-	} `yaml:"nss"`
-	DomainDir string `yaml:"domains"`
+		Enabled            bool  `json:"enabled"`
+		UIDOffset          int32 `json:"uid_offset"`
+		GIDOffset          int32 `json:"gid_offset"`
+		RefreshIntervalSec int64 `json:"refresh_interval_sec"`
+	} `json:"nss"`
+	DomainDir string `json:"domains"`
 
 	log     *log.Entry
 	domains []DomainConfig
@@ -52,7 +52,8 @@ func (c *Config) Default() storage.Configer {
 }
 
 func (c *Config) PostLoad() error {
-	m, err := filepath.Glob(filepath.Join(c.DomainDir, "**.json"))
+	c.log.Debug("Loading domains...")
+	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
 	if err != nil {
 		c.log.WithError(err).Warning("failed to load domains")
 		return err

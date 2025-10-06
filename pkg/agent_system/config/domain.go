@@ -9,12 +9,12 @@ import (
 )
 
 type DomainConfig struct {
-	Enabled            bool   `yaml:"enabled"`
-	AuthentikURL       string `yaml:"authentik_url"`
-	AppSlug            string `yaml:"app_slug"`
-	Token              string `yaml:"token"`
-	AuthenticationFlow string `yaml:"authentication_flow"`
-	Domain             string `yaml:"domain"`
+	Enabled            bool   `json:"enabled"`
+	AuthentikURL       string `json:"authentik_url"`
+	AppSlug            string `json:"app_slug"`
+	Token              string `json:"token"`
+	AuthenticationFlow string `json:"authentication_flow"`
+	Domain             string `json:"domain"`
 
 	c *api.APIClient
 }

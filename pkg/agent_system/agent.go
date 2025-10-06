@@ -35,10 +35,6 @@ var agentCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
-		err := systemlog.Setup("ak-sysd")
-		if err != nil {
-			panic(err)
-		}
 		New().Start()
 	},
 }
@@ -75,7 +71,6 @@ func New() *SystemAgent {
 	sm.DomainCheck()
 
 	sm.mtx.Lock()
-	defer sm.mtx.Unlock()
 	for name, constr := range sm.RegisterPlatformComponents() {
 		comp, err := constr()
 		if err != nil {
@@ -84,6 +79,7 @@ func New() *SystemAgent {
 		sm.cm[name] = comp
 		comp.Register(sm.srv)
 	}
+	sm.mtx.Unlock()
 	go sm.watchConfig()
 	return sm
 }
@@ -101,12 +97,14 @@ func (sm *SystemAgent) DomainCheck() {
 func (sm *SystemAgent) watchConfig() {
 	sm.log.Debug("Starting config file watch")
 	for evt := range config.Manager().Watch() {
+		sm.log.WithField("evt", evt).Debug("Handling config event")
 		if evt.Type == storage.ConfigChangedAdded || evt.Type == storage.ConfigChangedRemoved {
 			sm.mtx.Lock()
 			for n, component := range sm.cm {
 				err := component.Stop()
 				if err != nil {
 					sm.log.WithError(err).WithField("component", n).Warning("failed to stop componnet")
+					sm.mtx.Unlock()
 					continue
 				}
 				component.Start()
