@@ -2,15 +2,16 @@ package pam
 
 import (
 	"context"
+	"errors"
 
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	lconfig "goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/ak"
 	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/storage"
 	"google.golang.org/grpc"
 )
 
@@ -21,22 +22,29 @@ type Server struct {
 	log *log.Entry
 	kf  keyfunc.Keyfunc
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx context.Context
 
 	cfg *config.Config
 }
 
-func NewServer(api *api.APIClient) (component.Component, error) {
-	srv := &Server{
-		api: api,
-		log: log.WithField("logger", "sysd.pam_server"),
-		cfg: config.Get(),
+func NewServer(ctx component.Context) (component.Component, error) {
+	if len(config.Manager().Get().Domains()) < 1 {
+		return nil, errors.New("no domains")
 	}
-	srv.ctx, srv.cancel = context.WithCancel(context.Background())
-	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&storage.ConfigV1Profile{
-		AuthentikURL: srv.cfg.AK.AuthentikURL,
-		AppSlug:      srv.cfg.AK.AppSlug,
+	dom := config.Manager().Get().Domains()[0]
+	ac, err := dom.APIClient()
+	if err != nil {
+		return nil, err
+	}
+	srv := &Server{
+		api: ac,
+		log: ctx.Log,
+		cfg: config.Manager().Get(),
+		ctx: ctx.Context,
+	}
+	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
+		AuthentikURL: dom.AuthentikURL,
+		AppSlug:      dom.AppSlug,
 	}).JWKS})
 	if err != nil {
 		return nil, err
@@ -48,7 +56,6 @@ func NewServer(api *api.APIClient) (component.Component, error) {
 func (pam *Server) Start() {}
 
 func (pam *Server) Stop() error {
-	pam.cancel()
 	return nil
 }
 

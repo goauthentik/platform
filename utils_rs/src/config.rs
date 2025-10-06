@@ -26,12 +26,12 @@ impl Config {
     }
 
     pub fn from_default() -> Result<Self, Box<dyn Error>> {
-        Config::from_file("/etc/authentik/host.yaml")
+        Config::from_file("/etc/authentik/config.json")
     }
 
     pub fn from_file(path: &str) -> Result<Self, Box<dyn Error>> {
         let content = fs::read_to_string(path)?;
-        let config: Config = serde_yaml::from_str(&content)?;
+        let config: Config = serde_json::from_str(&content)?;
         Ok(config)
     }
 }

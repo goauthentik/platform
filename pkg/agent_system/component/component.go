@@ -1,11 +1,18 @@
 package component
 
 import (
-	"goauthentik.io/api/v3"
+	"context"
+
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
-type Constructor func(*api.APIClient) (Component, error)
+type Context struct {
+	Context context.Context
+	Log     *log.Entry
+}
+
+type Constructor func(Context) (Component, error)
 
 type Component interface {
 	Start()

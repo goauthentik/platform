@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/status"
 )
 
 func InterceptorLogger(l log.FieldLogger) logging.Logger {
@@ -41,13 +38,4 @@ func InterceptorLogger(l log.FieldLogger) logging.Logger {
 			panic(fmt.Sprintf("unknown level %v", lvl))
 		}
 	})
-}
-
-func GRPCPanicHandler(p any) error {
-	if e, ok := p.(error); ok {
-		sentry.CaptureException(e)
-	} else {
-		sentry.CaptureMessage(fmt.Sprintf("%+v", p))
-	}
-	return status.Errorf(codes.Internal, "%s", p)
 }

@@ -25,7 +25,7 @@ func (nss *Server) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.User, e
 	for _, u := range nss.users {
 		if req.Id != nil && nss.GetUserUidNumber(u) == *req.Id {
 			return nss.convertUser(u), nil
-		} else if req.Name != nil && u.Username == *req.Name {
+		} else if req.Name != nil && u.Username == cleanName(*req.Name) {
 			return nss.convertUser(u), nil
 		}
 	}

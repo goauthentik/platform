@@ -84,6 +84,7 @@ var sshCmd = &cobra.Command{
 				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
 					log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
 					if len(questions) > 0 && questions[0] == "authentik Password: " {
+						fmt.Printf("Getting token to access '%s'...\n", host)
 						cc := raw.GetCredentials(c, cmd.Context(), raw.CredentialsOpts{
 							Profile:  profile,
 							ClientID: "authentik-pam",

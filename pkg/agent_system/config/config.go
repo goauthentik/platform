@@ -1,53 +1,101 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"path"
+	"path/filepath"
 
-	"gopkg.in/yaml.v3"
+	"github.com/fsnotify/fsnotify"
+	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/storage"
 )
 
+var manager *storage.ConfigManager[*Config]
+
+func Init(path string) error {
+	m, err := storage.NewManager[*Config](path)
+	if err != nil {
+		return err
+	}
+	manager = m
+	return nil
+}
+
+func Manager() *storage.ConfigManager[*Config] {
+	return manager
+}
+
 type Config struct {
-	AK struct {
-		AuthentikURL       string `yaml:"authentik_url"`
-		AppSlug            string `yaml:"app_slug"`
-		Token              string `yaml:"token"`
-		AuthenticationFlow string `yaml:"authentication_flow"`
-		Doamin             string `yaml:"domain"`
-	} `yaml:"ak"`
-	Debug  bool   `yaml:"debug"`
-	Socket string `yaml:"socket"`
+	Debug  bool   `json:"debug"`
+	Socket string `json:"socket"`
 	PAM    struct {
-		TerminateOnExpiry bool `yaml:"terminate_on_expiry"`
-	} `yaml:"pam" `
+		Enabled           bool `json:"enabled"`
+		TerminateOnExpiry bool `json:"terminate_on_expiry"`
+	} `json:"pam" `
 	NSS struct {
-		UIDOffset          int32 `yaml:"uid_offset"`
-		GIDOffset          int32 `yaml:"gid_offset"`
-		RefreshIntervalSec int64 `yaml:"refresh_interval_sec"`
-	} `yaml:"nss"`
+		Enabled            bool  `json:"enabled"`
+		UIDOffset          int32 `json:"uid_offset"`
+		GIDOffset          int32 `json:"gid_offset"`
+		RefreshIntervalSec int64 `json:"refresh_interval_sec"`
+	} `json:"nss"`
+	DomainDir string `json:"domains"`
+
+	log     *log.Entry
+	domains []DomainConfig
+}
+
+func (c *Config) Default() storage.Configer {
+	return &Config{
+		log: log.WithField("logger", "storage.config"),
+	}
+}
+
+func (c *Config) PostLoad() error {
+	c.log.Debug("Loading domains...")
+	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
+	if err != nil {
+		c.log.WithError(err).Warning("failed to load domains")
+		return err
+	}
+	dom := []DomainConfig{}
+	for _, match := range m {
+		co, err := os.ReadFile(match)
+		if err != nil {
+			c.log.WithError(err).Warning("failed to load domain")
+			continue
+		}
+		d := DomainConfig{}
+		err = json.Unmarshal(co, &d)
+		if err != nil {
+			c.log.WithError(err).Warning("failed to load domain")
+			continue
+		}
+		c.log.WithField("domain", d.Domain).Info("loaded domain")
+		dom = append(dom, d)
+	}
+	c.domains = dom
+	return nil
+}
+
+func (c *Config) PreSave() error { return nil }
+func (c *Config) PostUpdate(storage.Configer, fsnotify.Event) storage.ConfigChangedType {
+	return storage.ConfigChangedGeneric
 }
 
 func (c *Config) RuntimeDir() string {
 	return path.Join("/var/run", "authentik")
 }
 
-var c *Config
-
-const Path = "/etc/authentik/host.yaml"
-
-func Load() {
-	f, err := os.Open(Path)
-	if err != nil {
-		panic(err)
-	}
-	cc := &Config{}
-	err = yaml.NewDecoder(f).Decode(&cc)
-	if err != nil {
-		panic(err)
-	}
-	c = cc
+func (c *Config) Domains() []DomainConfig {
+	return c.domains
 }
 
-func Get() *Config {
-	return c
+func (c *Config) SaveDomain(dom DomainConfig) error {
+	path := filepath.Join(c.DomainDir, dom.Domain+".json")
+	b, err := json.Marshal(dom)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, b, 0o700)
 }

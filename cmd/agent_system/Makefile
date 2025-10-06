@@ -23,6 +23,5 @@ package-linux: build
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}_${ARCH}.deb
-	$(TME) cp /etc/authentik/host.yaml.dist /etc/authentik/host.yaml
-	$(TME) yq -yi '.token = "this-token-is-for-testing-dont-use"' /etc/authentik/host.yaml
+	$(TME) bash -c 'echo -n "this-token-is-for-testing-dont-use" | ak-sysd domains join default -a http://authentik:9000'
 	$(TME) systemctl restart ak-sysd

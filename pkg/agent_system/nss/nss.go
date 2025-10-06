@@ -2,6 +2,7 @@ package nss
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
@@ -9,7 +10,6 @@ import (
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 
@@ -22,19 +22,25 @@ type Server struct {
 	users  []api.User
 	groups []api.Group
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx context.Context
 
 	cfg *config.Config
 }
 
-func NewServer(api *api.APIClient) (component.Component, error) {
-	srv := &Server{
-		api: api,
-		log: systemlog.Get().WithField("logger", "sysd.nss_server"),
-		cfg: config.Get(),
+func NewServer(ctx component.Context) (component.Component, error) {
+	if len(config.Manager().Get().Domains()) < 1 {
+		return nil, errors.New("no domains")
 	}
-	srv.ctx, srv.cancel = context.WithCancel(context.Background())
+	ac, err := config.Manager().Get().Domains()[0].APIClient()
+	if err != nil {
+		return nil, err
+	}
+	srv := &Server{
+		api: ac,
+		log: ctx.Log,
+		cfg: config.Manager().Get(),
+		ctx: ctx.Context,
+	}
 	return srv, nil
 }
 
@@ -43,7 +49,6 @@ func (nss *Server) Start() {
 }
 
 func (nss *Server) Stop() error {
-	nss.cancel()
 	return nil
 }
 

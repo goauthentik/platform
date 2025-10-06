@@ -9,6 +9,7 @@ import (
 	"github.com/kolide/systray"
 	"github.com/nightlyone/lockfile"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
@@ -23,7 +24,7 @@ type Agent struct {
 	pb.UnimplementedAgentConfigServer
 
 	grpc           *grpc.Server
-	cfg            *storage.ConfigManager
+	cfg            *storage.ConfigManager[config.ConfigV1]
 	tr             *token.GlobalTokenManager
 	log            *log.Entry
 	systrayStarted bool
@@ -34,7 +35,7 @@ type Agent struct {
 }
 
 func New() (*Agent, error) {
-	mgr := storage.Manager()
+	mgr := config.Manager()
 	return &Agent{
 		cfg:        mgr,
 		log:        systemlog.Get().WithField("logger", "agent"),

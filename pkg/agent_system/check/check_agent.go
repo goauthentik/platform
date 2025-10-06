@@ -15,7 +15,7 @@ func checkAgentConnectivity(ctx context.Context) CheckResult {
 		"localhost",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
-			return net.Dial("unix", config.Get().Socket)
+			return net.Dial("unix", config.Manager().Get().Socket)
 		}),
 	)
 	if err != nil {
