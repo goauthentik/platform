@@ -34,6 +34,7 @@ const (
 
 type ConfigChangedEvent[T Configer] struct {
 	Type           ConfigChangedType
+	Path           string
 	PreviousConfig T
 }
 
@@ -136,9 +137,6 @@ func (cfg *ConfigManager[T]) watch() error {
 				if !ok {
 					continue
 				}
-				if event.Name != cfg.path {
-					continue
-				}
 				if event.Has(fsnotify.Write) {
 					continue
 				}
@@ -147,6 +145,7 @@ func (cfg *ConfigManager[T]) watch() error {
 				reloadConfig()
 				evt := ConfigChangedEvent[T]{
 					Type:           cfg.loaded.PostUpdate(*previousConfig, event),
+					Path:           event.Name,
 					PreviousConfig: *previousConfig,
 				}
 				for _, ch := range cfg.changed {

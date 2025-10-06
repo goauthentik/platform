@@ -10,7 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/agent_system/config"
-	"goauthentik.io/cli/pkg/cli/setup"
 	"golang.org/x/term"
 )
 
@@ -72,5 +71,5 @@ func readPassword(prompt string) (string, error) {
 func init() {
 	domainsCmd.AddCommand(domainsJoinCmd)
 	domainsJoinCmd.Flags().StringP("authentik-url", "a", "", "URL to the authentik Instance")
-	domainsJoinCmd.Flags().StringP("app", "d", setup.DefaultAppSlug, "Slug of the CLI application")
+	domainsJoinCmd.Flags().StringP("app", "d", "authentik-pam", "Slug of the CLI application")
 }
