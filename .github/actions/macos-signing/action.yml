@@ -39,3 +39,6 @@ runs:
         issuer-id: ${{ inputs.ac-issuer }}
         api-key-id: ${{ inputs.ac-kid }}
         api-private-key: ${{ inputs.ac-key }}
+    - shell: bash
+      run: |
+        security find-identity -vv
