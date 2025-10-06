@@ -40,6 +40,8 @@ jobs:
         run: |
           platform=$(uname | tr '[:upper:]' '[:lower:]')
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/macos-signing
+        if: ${{ steps.platform_pure.outputs.platform == 'darwin' }}
       - run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
       - uses: actions/upload-artifact@v4
         with:

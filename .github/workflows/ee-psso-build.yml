@@ -11,5 +11,6 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/macos-signing
       - run: |
           make ee/psso/build
