@@ -13,6 +13,11 @@ build:
 	xcodebuild \
 		-scheme PSSO \
 		-project authentikPlatform.xcodeproj \
+		-configuration Release \
+		-showBuildSettings
+	xcodebuild \
+		-scheme PSSO \
+		-project authentikPlatform.xcodeproj \
 		-configuration Release
 	cp -R "${PWD}/DerivedData/authentikPlatform/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 

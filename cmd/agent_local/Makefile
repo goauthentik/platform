@@ -35,7 +35,7 @@ package-darwin: clean build
 		--verify \
 		--verbose \
 		--entitlements "${PWD}/package/macos/authentikEndpoint.entitlements" \
-		--sign ${33B1F66E06FD7D8088F2301D240AE13F00399685} \
+		--sign ${MACOS_SIGN_CERT} \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
