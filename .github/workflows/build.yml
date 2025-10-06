@@ -47,6 +47,9 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
           p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
+          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
+          ac-kid: ${{ secrets.APPLE_AC_KID }}
+          ac-key: ${{ secrets.APPLE_AC_KEY }}
 
       - run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
       - uses: actions/upload-artifact@v4

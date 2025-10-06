@@ -2,14 +2,20 @@ name: "macOS Signing setup"
 description: "Setup macOS Signing"
 
 inputs:
-  # bundle-id:
-  #   required: true
-  #   description: "Bundle ID of the project"
   p12-file-base64:
-    description: ""
+    description: "Codesign cert (in base64)"
     required: true
   p12-password:
-    description: ""
+    description: "Codesign cert password"
+    required: true
+  ac-issuer:
+    description: "AppStore Connect issuer"
+    required: true
+  ac-kid:
+    description: "AppStore Connect Key ID"
+    required: true
+  ac-key:
+    description: "AppStore Connect Key"
     required: true
 
 runs:
@@ -19,10 +25,17 @@ runs:
       with:
         p12-file-base64: ${{ inputs.p12-file-base64 }}
         p12-password: ${{ inputs.p12-password }}
-    # - uses: apple-actions/download-provisioning-profiles@v4
-    #   with:
-    #     bundle-id: '${{ inputs.bundle-id }}'
-    #     profile-type: 'MAC_APP_DEVELOPMENT'
-    #     issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-    #     api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-    #     api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+    - uses: apple-actions/download-provisioning-profiles@v4
+      with:
+        bundle-id: 'io.goauthentik.platform.agent'
+        profile-type: 'MAC_APP_DIRECT'
+        issuer-id: ${{ inputs.ac-issuer }}
+        api-key-id: ${{ inputs.ac-kid }}
+        api-private-key: ${{ inputs.ac-key }}
+    - uses: apple-actions/download-provisioning-profiles@v4
+      with:
+        bundle-id: 'io.goauthentik.platform.psso'
+        profile-type: 'MAC_APP_DIRECT'
+        issuer-id: ${{ inputs.ac-issuer }}
+        api-key-id: ${{ inputs.ac-kid }}
+        api-private-key: ${{ inputs.ac-key }}

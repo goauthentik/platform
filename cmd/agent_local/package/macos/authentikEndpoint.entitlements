@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>com.apple.application-identifier</key>
-	<string>232G855Y8N.io.goauthentik.platform</string>
+	<string>232G855Y8N.io.goauthentik.platform.agent</string>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 	</array>
