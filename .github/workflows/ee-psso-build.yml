@@ -12,5 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/macos-signing
+        with:
+          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
+          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
       - run: |
           make ee/psso/build
