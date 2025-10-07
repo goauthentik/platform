@@ -1,5 +1,5 @@
 {
-  "debug": true,
+  "debug": false,
   "socket": "/var/run/authentik/sys.sock",
   "domains": "/etc/authentik/domains",
   "pam": {

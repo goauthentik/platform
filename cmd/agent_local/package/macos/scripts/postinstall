@@ -2,6 +2,8 @@
 set -xeuo pipefail
 
 LOG_DIR="/Library/Logs/io.goauthentik"
+DAEMON_PLIST_PATH="/Library/LaunchDaemons/io.goauthentik.platform.sysd.plist"
+DAEMON_DIR="/opt/authentik"
 
 mkdir -p "$LOG_DIR"
 chmod 755 "$LOG_DIR"
@@ -9,6 +11,22 @@ exec 2>&1 > "$LOG_DIR"/pkg_postinstall.log
 
 INSTALL_DIR=$2
 echo "$(data) Running postinstall. install_dir=${INSTALL_DIR}"
+
+## Daemon install
+
+mkdir -p "$DAEMON_DIR"
+chmod 700 "$DAEMON_DIR"
+cp -n ./sysd-config.json "$DAEMON_DIR/config.json"
+
+sudo launchctl unload -w $DAEMON_PLIST_PATH
+
+sleep 1
+cp -f "./daemon.plist" $DAEMON_PLIST_PATH
+/usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 ${INSTALL_DIR}/authentik\ Agent.app/Contents/Resources/ak-sysd" $DAEMON_PLIST_PATH
+
+sudo launchctl load -w $DAEMON_PLIST_PATH
+
+echo "Finished loading authentik sysd daemon."
 
 set +e
 old_pid=$(pgrep "ak-agent")

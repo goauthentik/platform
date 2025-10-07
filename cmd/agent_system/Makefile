@@ -3,6 +3,11 @@ include ../../common.mk
 TARGET := agent_system
 BINARY_NAME := ak-sysd
 
+.PHONY: clean
+clean:
+	cd ${TOP} && rm -rf bin/${TARGET}
+
+.PHONY: build
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	go build \
