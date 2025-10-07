@@ -64,17 +64,7 @@
 			<array>
 				<dict>
 					<key>ApplicationIdentifier</key>
-					<string>232G855Y8N.io.goauthentik.platform</string>
-					<key>AssociatedDomains</key>
-					<array>
-						<string>authsrv:ak.beryju.dev</string>
-					</array>
-					<key>EnableDirectDownloads</key>
-					<false/>
-				</dict>
-				<dict>
-					<key>ApplicationIdentifier</key>
-					<string>232G855Y8N.io.goauthentik.platform.psso</string>
+					<string>232G855Y8N.io.goauthentik.platform.agent</string>
 					<key>AssociatedDomains</key>
 					<array>
 						<string>authsrv:ak.beryju.dev</string>
