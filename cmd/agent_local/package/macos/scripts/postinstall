@@ -59,8 +59,29 @@ if [ $LAUNCH_FAILED = true ]; then
     echo "Failed to launch 'authentik Agent' app"
 fi
 
+echo "Linking CLI applications"
 mkdir -p /usr/local/bin
 ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak" /usr/local/bin/ak
 ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak-vault" /usr/local/bin/ak-vault
+
+echo "Installing browser native messaging host"
+
+chromeSystemWidePath="/Library/Google/Chrome/NativeMessagingHosts"
+edgeSystemWidePath="/Library/Microsoft/Edge/NativeMessagingHosts"
+
+# Ensure the system-wide directory exists, otherwise create it
+if [ ! -d "$chromeSystemWidePath" ]; then
+  echo "$chromeSystemWidePath doesn't exist, creating directory"
+  mkdir -p "$chromeSystemWidePath"
+fi
+
+if [ ! -d "$edgeSystemWidePath" ]; then
+  echo "$edgeSystemWidePath doesn't exist, creating directory"
+  mkdir -p "$edgeSystemWidePath"
+fi
+
+# Copy the manifest file to the system-wide directory
+cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$chromeSystemWidePath/io.goauthentik.platform.json"
+cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$edgeSystemWidePath/io.goauthentik.platform.json"
 
 echo "Finished running postinstall script."

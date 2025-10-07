@@ -30,7 +30,7 @@ export class Native {
     }
 
     #connect() {
-        this.#port = chrome.runtime.connectNative("io.goauthentik.agent");
+        this.#port = chrome.runtime.connectNative("io.goauthentik.platform");
         this.#port.onMessage.addListener(this.#listener.bind(this));
         this.#port.onDisconnect.addListener(() => {
             console.debug("authentik/bext/native: Disconnected, reconnecting");
