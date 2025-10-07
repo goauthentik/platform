@@ -14,9 +14,9 @@ echo "$(data) Running postinstall. install_dir=${INSTALL_DIR}"
 
 ## Daemon install
 
-mkdir -p "$DAEMON_DIR"
-chmod 700 "$DAEMON_DIR"
-cp -n ./sysd-config.json "$DAEMON_DIR/config.json"
+mkdir -p "$DAEMON_DIR/config"
+chmod -R 700 "$DAEMON_DIR"
+cp -n ./sysd-config.json "$DAEMON_DIR/config/config.json"
 
 sudo launchctl unload -w $DAEMON_PLIST_PATH
 
