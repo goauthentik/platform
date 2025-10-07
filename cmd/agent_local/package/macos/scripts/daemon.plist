@@ -6,7 +6,8 @@
 	<string>io.goauthentik.platform.sysd</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Applications/authentik Agent.app/Contents/Resources/ak-sysd</string>
+		<string>/Applications/authentik Agent.app/Contents/MacOS/ak-sysd</string>
+        <string>agent</string>
         <string>--config-file</string>
         <string>/opt/authentik/config.json</string>
 	</array>
