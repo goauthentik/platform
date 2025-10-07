@@ -17,12 +17,20 @@ permissions:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        language: ["go", "rust", "javascript", "swift"]
+        language-platform:
+          - language: "go"
+            platform: ubuntu-24.04
+          - language: "rust"
+            platform: ubuntu-24.04
+          - language: "javascript"
+            platform: ubuntu-24.04
+          - language: "swift"
+            platform: macos-15
+    runs-on: ${{ matrix.language-platform.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -33,7 +41,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
+          languages: ${{ matrix.language-platform.language }}
       - name: Install libraries
         run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
       - name: Autobuild
