@@ -23,6 +23,8 @@ package-darwin: clean build
 	$(MAKE) -C ${TOP} cli/build
 	$(MAKE) -C ${TOP} ee/psso/build || true
 	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
+	/usr/libexec/Plistbuddy -c "Set CFBundleVersion ${VERSION}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist"
+	/usr/libexec/Plistbuddy -c "Set CFBundleShortVersionString ${VERSION}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
 	cp "${MACOS_PROVISIONING_PROFILE}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
