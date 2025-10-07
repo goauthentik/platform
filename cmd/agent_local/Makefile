@@ -5,7 +5,7 @@ BINARY_NAME := ak-agent
 
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
-MACOS_PROVISIONING_PROFILE := $(shell grep -Rl io.goauthentik.platform.agent "~/Library/MobileDevice/Provisioning Profiles")
+MACOS_PROVISIONING_PROFILE := $(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
