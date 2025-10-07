@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["go", "rust", "javascript"]
+        language: ["go", "rust", "javascript", "swift"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
