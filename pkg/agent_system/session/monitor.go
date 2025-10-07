@@ -48,7 +48,7 @@ func NewMonitor(ctx component.Context) (component.Component, error) {
 	}, nil
 }
 
-func (m *Monitor) Start() {
+func (m *Monitor) Start() error {
 	m.timer = time.NewTicker(m.checkInterval)
 
 	go func() {
@@ -56,15 +56,16 @@ func (m *Monitor) Start() {
 			m.checkExpiredSessions()
 		}
 	}()
-}
-
-func (m *Monitor) Register(s grpc.ServiceRegistrar) {
-	pb.RegisterSessionManagerServer(s, m)
+	return nil
 }
 
 func (m *Monitor) Stop() error {
 	m.timer.Stop()
 	return nil
+}
+
+func (m *Monitor) Register(s grpc.ServiceRegistrar) {
+	pb.RegisterSessionManagerServer(s, m)
 }
 
 func (m *Monitor) checkExpiredSessions() {

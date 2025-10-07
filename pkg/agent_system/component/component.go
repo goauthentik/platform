@@ -15,7 +15,7 @@ type Context struct {
 type Constructor func(Context) (Component, error)
 
 type Component interface {
-	Start()
+	Start() error
 	Stop() error
 	Register(s grpc.ServiceRegistrar)
 }

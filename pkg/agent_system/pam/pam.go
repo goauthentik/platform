@@ -28,32 +28,34 @@ type Server struct {
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
-	if len(config.Manager().Get().Domains()) < 1 {
-		return nil, errors.New("no domains")
-	}
-	dom := config.Manager().Get().Domains()[0]
-	ac, err := dom.APIClient()
-	if err != nil {
-		return nil, err
-	}
 	srv := &Server{
-		api: ac,
 		log: ctx.Log,
 		cfg: config.Manager().Get(),
 		ctx: ctx.Context,
 	}
-	k, err := keyfunc.NewDefaultCtx(srv.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
+	return srv, nil
+}
+
+func (pam *Server) Start() error {
+	if len(config.Manager().Get().Domains()) < 1 {
+		return errors.New("no domains")
+	}
+	dom := config.Manager().Get().Domains()[0]
+	ac, err := dom.APIClient()
+	if err != nil {
+		return err
+	}
+	pam.api = ac
+	k, err := keyfunc.NewDefaultCtx(pam.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
 		AuthentikURL: dom.AuthentikURL,
 		AppSlug:      dom.AppSlug,
 	}).JWKS})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	srv.kf = k
-	return srv, nil
+	pam.kf = k
+	return nil
 }
-
-func (pam *Server) Start() {}
 
 func (pam *Server) Stop() error {
 	return nil

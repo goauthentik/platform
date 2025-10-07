@@ -130,10 +130,13 @@ func (sm *SystemAgent) watchConfig() {
 				err := component.comp.Stop()
 				if err != nil {
 					sm.log.WithError(err).WithField("component", n).Warning("failed to stop componnet")
-					sm.mtx.Unlock()
 					continue
 				}
-				component.comp.Start()
+				err = component.comp.Start()
+				if err != nil {
+					sm.log.WithError(err).WithField("component", n).Info("Failed to start component")
+					continue
+				}
 			}
 			sm.mtx.Unlock()
 		}
@@ -144,7 +147,11 @@ func (sm *SystemAgent) Start() {
 	sm.mtx.Lock()
 	for n, component := range sm.cm {
 		sm.log.WithField("component", n).Info("Starting component")
-		component.comp.Start()
+		err := component.comp.Start()
+		if err != nil {
+			sm.log.WithError(err).WithField("component", n).Info("Failed to start component")
+			continue
+		}
 	}
 	sm.mtx.Unlock()
 

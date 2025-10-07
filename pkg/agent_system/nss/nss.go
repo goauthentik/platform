@@ -28,15 +28,7 @@ type Server struct {
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
-	if len(config.Manager().Get().Domains()) < 1 {
-		return nil, errors.New("no domains")
-	}
-	ac, err := config.Manager().Get().Domains()[0].APIClient()
-	if err != nil {
-		return nil, err
-	}
 	srv := &Server{
-		api: ac,
 		log: ctx.Log,
 		cfg: config.Manager().Get(),
 		ctx: ctx.Context,
@@ -44,8 +36,17 @@ func NewServer(ctx component.Context) (component.Component, error) {
 	return srv, nil
 }
 
-func (nss *Server) Start() {
+func (nss *Server) Start() error {
+	if len(config.Manager().Get().Domains()) < 1 {
+		return errors.New("no domains")
+	}
+	ac, err := config.Manager().Get().Domains()[0].APIClient()
+	if err != nil {
+		return err
+	}
+	nss.api = ac
 	nss.startFetch()
+	return nil
 }
 
 func (nss *Server) Stop() error {
