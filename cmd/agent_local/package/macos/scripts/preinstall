@@ -8,7 +8,7 @@ chmod 755 "$LOG_DIR"
 exec 2>&1 > "$LOG_DIR"/pkg_preinstall.log
 
 INSTALL_DIR=$2
-echo "$(data) Running preinstall. install_dir=${INSTALL_DIR}"
+echo "$(date) Running preinstall. install_dir=${INSTALL_DIR}"
 
 OLD_APP_LOCATION="/Applications/authentik Agent.app"
 

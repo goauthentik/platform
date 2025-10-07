@@ -9,7 +9,7 @@
         <key>CFBundleIconFile</key>
         <string>icon.icns</string>
         <key>CFBundleIdentifier</key>
-        <string>io.goauthentik.agent</string>
+        <string>io.goauthentik.platform.agent</string>
         <key>NSHighResolutionCapable</key>
         <true/>
         <key>LSUIElement</key>

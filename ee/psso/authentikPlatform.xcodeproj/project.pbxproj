@@ -1,0 +1,454 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		609FE38724893242009FD079 /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 609FE38624893242009FD079 /* AuthenticationServices.framework */; };
+		609FE38A24893242009FD079 /* AuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 609FE38924893242009FD079 /* AuthenticationViewController.swift */; };
+		609FE38D24893242009FD079 /* AuthenticationViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 609FE38B24893242009FD079 /* AuthenticationViewController.xib */; };
+		B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */; };
+		B404B2742E0DD88800A12D29 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = B404B2732E0DD88500A12D29 /* API.swift */; };
+		B44148B62E10A6EB00347A5F /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44148B52E10A6EA00347A5F /* Config.swift */; };
+		B49BA5572E0F445700184992 /* AppAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5562E0F445700184992 /* AppAuth */; };
+		B49BA5592E0F445700184992 /* AppAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5582E0F445700184992 /* AppAuthCore */; };
+		B49BA55B2E0F447A00184992 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA55A2E0F447A00184992 /* Sentry */; };
+		B49BA55F2E0F466300184992 /* OIDC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA55E2E0F466100184992 /* OIDC.swift */; };
+		B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5602E0F73AD00184992 /* Sentry.swift */; };
+		B49BA5632E100E4500184992 /* PlatformSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5622E100E4400184992 /* PlatformSSO.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		609FE38424893242009FD079 /* PSSO.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PSSO.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		609FE38624893242009FD079 /* AuthenticationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AuthenticationServices.framework; path = System/Library/Frameworks/AuthenticationServices.framework; sourceTree = SDKROOT; };
+		609FE38924893242009FD079 /* AuthenticationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationViewController.swift; sourceTree = "<group>"; };
+		609FE38C24893242009FD079 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/AuthenticationViewController.xib; sourceTree = "<group>"; };
+		609FE38E24893242009FD079 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		609FE38F24893242009FD079 /* PSSO.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PSSO.entitlements; sourceTree = "<group>"; };
+		B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterpriseSSO.swift; sourceTree = "<group>"; };
+		B404B2732E0DD88500A12D29 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+		B40E12182E92FA5E007B4CEF /* agent_auth.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent_auth.grpc.swift; sourceTree = "<group>"; };
+		B40E12192E92FA5E007B4CEF /* agent_cache.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent_cache.grpc.swift; sourceTree = "<group>"; };
+		B40E121A2E92FA5E007B4CEF /* agent_config.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent_config.grpc.swift; sourceTree = "<group>"; };
+		B40E121B2E92FA5E007B4CEF /* agent.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent.grpc.swift; sourceTree = "<group>"; };
+		B40E121C2E92FA5E007B4CEF /* nss.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nss.grpc.swift; sourceTree = "<group>"; };
+		B40E121D2E92FA5E007B4CEF /* pam_session.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pam_session.grpc.swift; sourceTree = "<group>"; };
+		B40E121E2E92FA5E007B4CEF /* pam_token.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pam_token.grpc.swift; sourceTree = "<group>"; };
+		B40E121F2E92FA5E007B4CEF /* pam.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pam.grpc.swift; sourceTree = "<group>"; };
+		B44148B52E10A6EA00347A5F /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		B49BA55E2E0F466100184992 /* OIDC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OIDC.swift; sourceTree = "<group>"; };
+		B49BA5602E0F73AD00184992 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
+		B49BA5622E100E4400184992 /* PlatformSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformSSO.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		609FE38124893242009FD079 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B49BA5572E0F445700184992 /* AppAuth in Frameworks */,
+				609FE38724893242009FD079 /* AuthenticationServices.framework in Frameworks */,
+				B49BA5592E0F445700184992 /* AppAuthCore in Frameworks */,
+				B49BA55B2E0F447A00184992 /* Sentry in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		609FE344248929E6009FD079 = {
+			isa = PBXGroup;
+			children = (
+				B40E12172E92FA41007B4CEF /* pb_generated */,
+				609FE38824893242009FD079 /* PSSO */,
+				609FE38524893242009FD079 /* Frameworks */,
+				609FE34E248929E6009FD079 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		609FE34E248929E6009FD079 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				609FE38424893242009FD079 /* PSSO.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		609FE38524893242009FD079 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				609FE38624893242009FD079 /* AuthenticationServices.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		609FE38824893242009FD079 /* PSSO */ = {
+			isa = PBXGroup;
+			children = (
+				B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */,
+				B49BA5622E100E4400184992 /* PlatformSSO.swift */,
+				B44148B52E10A6EA00347A5F /* Config.swift */,
+				B49BA5602E0F73AD00184992 /* Sentry.swift */,
+				B49BA55E2E0F466100184992 /* OIDC.swift */,
+				B404B2732E0DD88500A12D29 /* API.swift */,
+				609FE38924893242009FD079 /* AuthenticationViewController.swift */,
+				609FE38B24893242009FD079 /* AuthenticationViewController.xib */,
+				609FE38E24893242009FD079 /* Info.plist */,
+				609FE38F24893242009FD079 /* PSSO.entitlements */,
+			);
+			path = PSSO;
+			sourceTree = "<group>";
+		};
+		B40E12172E92FA41007B4CEF /* pb_generated */ = {
+			isa = PBXGroup;
+			children = (
+				B40E12182E92FA5E007B4CEF /* agent_auth.grpc.swift */,
+				B40E12192E92FA5E007B4CEF /* agent_cache.grpc.swift */,
+				B40E121A2E92FA5E007B4CEF /* agent_config.grpc.swift */,
+				B40E121B2E92FA5E007B4CEF /* agent.grpc.swift */,
+				B40E121C2E92FA5E007B4CEF /* nss.grpc.swift */,
+				B40E121D2E92FA5E007B4CEF /* pam_session.grpc.swift */,
+				B40E121E2E92FA5E007B4CEF /* pam_token.grpc.swift */,
+				B40E121F2E92FA5E007B4CEF /* pam.grpc.swift */,
+			);
+			path = pb_generated;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		609FE38324893242009FD079 /* PSSO */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 609FE39324893243009FD079 /* Build configuration list for PBXNativeTarget "PSSO" */;
+			buildPhases = (
+				609FE38024893242009FD079 /* Sources */,
+				609FE38124893242009FD079 /* Frameworks */,
+				609FE38224893242009FD079 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PSSO;
+			productName = PSSO;
+			productReference = 609FE38424893242009FD079 /* PSSO.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		609FE345248929E6009FD079 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				ORGANIZATIONNAME = "Authentik Security Inc.";
+				TargetAttributes = {
+					609FE38324893242009FD079 = {
+						CreatedOnToolsVersion = 11.3.1;
+					};
+				};
+			};
+			buildConfigurationList = 609FE348248929E6009FD079 /* Build configuration list for PBXProject "authentikPlatform" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 609FE344248929E6009FD079;
+			packageReferences = (
+				B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
+				B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */,
+			);
+			productRefGroup = 609FE34E248929E6009FD079 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				609FE38324893242009FD079 /* PSSO */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		609FE38224893242009FD079 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				609FE38D24893242009FD079 /* AuthenticationViewController.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		609FE38024893242009FD079 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */,
+				B49BA55F2E0F466300184992 /* OIDC.swift in Sources */,
+				B44148B62E10A6EB00347A5F /* Config.swift in Sources */,
+				B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */,
+				B404B2742E0DD88800A12D29 /* API.swift in Sources */,
+				609FE38A24893242009FD079 /* AuthenticationViewController.swift in Sources */,
+				B49BA5632E100E4500184992 /* PlatformSSO.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		609FE38B24893242009FD079 /* AuthenticationViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				609FE38C24893242009FD079 /* Base */,
+			);
+			name = AuthenticationViewController.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		609FE374248929EB009FD079 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 4;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		609FE375248929EB009FD079 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 4;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		609FE39424893243009FD079 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PSSO/PSSO.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 232G855Y8N;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PSSO/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "authentik Endpoint";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.platform.psso;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		609FE39524893243009FD079 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PSSO/PSSO.entitlements;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = "232G855Y8N";
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = PSSO/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "authentik Endpoint";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.platform.psso;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "GHA authentik Platform PSSO";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		609FE348248929E6009FD079 /* Build configuration list for PBXProject "authentikPlatform" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				609FE374248929EB009FD079 /* Debug */,
+				609FE375248929EB009FD079 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		609FE39324893243009FD079 /* Build configuration list for PBXNativeTarget "PSSO" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				609FE39424893243009FD079 /* Debug */,
+				609FE39524893243009FD079 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.53.1;
+			};
+		};
+		B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/openid/AppAuth-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B49BA5562E0F445700184992 /* AppAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
+			productName = AppAuth;
+		};
+		B49BA5582E0F445700184992 /* AppAuthCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
+			productName = AppAuthCore;
+		};
+		B49BA55A2E0F447A00184992 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 609FE345248929E6009FD079 /* Project object */;
+}

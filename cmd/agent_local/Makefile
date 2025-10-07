@@ -4,6 +4,8 @@ TARGET := agent_local
 BINARY_NAME := ak-agent
 
 MACOS_APP_NAME := authentik Agent.app
+MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
+MACOS_PROVISIONING_PROFILE := $(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
@@ -12,14 +14,31 @@ build:
 		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
 		${TOP}/cmd/${TARGET}
 
-package-darwin: build
+clean:
+	cd ${TOP} && rm -rf bin/${TARGET}
+	$(MAKE) -C ${TOP} cli/clean
+	$(MAKE) -C ${TOP} ee/psso/clean || true
+
+package-darwin: clean build
 	$(MAKE) -C ${TOP} cli/build
-	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" ${TOP}/bin/${TARGET}/
+	$(MAKE) -C ${TOP} ee/psso/build || true
+	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
-	cp ${TOP}/bin/${TARGET}/${BINARY_NAME} "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	cp ${TOP}/bin/cli/ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	ln -s ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
-	ln -s ak "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support" || true
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
+	cp "${MACOS_PROVISIONING_PROFILE}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
+	cp "${TOP}/bin/${TARGET}/${BINARY_NAME}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
+	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support" || true
+	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex" || true
+	@echo "## Siging with entitlements"
+	codesign \
+		--force \
+		--verify \
+		--verbose \
+		--entitlements "${PWD}/package/macos/authentikEndpoint.entitlements" \
+		--sign ${MACOS_SIGN_CERT} \
+		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
 		--identifier "io.goauthentik.agent" \

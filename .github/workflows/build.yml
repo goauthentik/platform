@@ -40,6 +40,17 @@ jobs:
         run: |
           platform=$(uname | tr '[:upper:]' '[:lower:]')
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
+
+      # macOS Specific
+      - uses: ./.github/actions/macos-signing
+        if: ${{ steps.platform_pure.outputs.platform == 'darwin' }}
+        with:
+          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
+          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
+          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
+          ac-kid: ${{ secrets.APPLE_AC_KID }}
+          ac-key: ${{ secrets.APPLE_AC_KEY }}
+
       - run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
       - uses: actions/upload-artifact@v4
         with:

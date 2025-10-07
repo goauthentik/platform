@@ -1,0 +1,22 @@
+name: build-ee-psso
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/macos-signing
+        with:
+          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
+          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
+          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
+          ac-kid: ${{ secrets.APPLE_AC_KID }}
+          ac-key: ${{ secrets.APPLE_AC_KEY }}
+      - run: |
+          make ee/psso/build
