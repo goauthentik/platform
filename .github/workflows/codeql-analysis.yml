@@ -39,13 +39,13 @@ jobs:
           go-version-file: go.mod
           cache: true
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language-platform.language }}
       - name: Install libraries
         if: ${{ matrix.language-platform.language == 'ubuntu-24.04' }}
         run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
