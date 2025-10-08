@@ -3,7 +3,7 @@ module goauthentik.io/cli
 go 1.25
 
 require (
-	github.com/MicahParks/keyfunc/v3 v3.6.2
+	github.com/MicahParks/keyfunc/v3 v3.7.0
 	github.com/adrg/xdg v0.5.3
 	github.com/ansxuman/go-touchid v0.0.0-20241021115423-60941306d4c3
 	github.com/avast/retry-go/v4 v4.6.1
