@@ -31,7 +31,7 @@ require (
 	github.com/zalando/go-keyring v0.2.6
 	goauthentik.io/api/v3 v3.2025100.20
 	golang.org/x/crypto v0.42.0
-	golang.org/x/sys v0.36.0
+	golang.org/x/sys v0.37.0
 	golang.org/x/term v0.35.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
