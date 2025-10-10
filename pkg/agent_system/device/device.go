@@ -18,7 +18,6 @@ import (
 type Server struct {
 	pb.UnimplementedAgentPlatformServer
 
-	api *api.APIClient
 	log *log.Entry
 
 	ctx context.Context
@@ -36,12 +35,41 @@ func (ds *Server) Start() error {
 	if len(config.Manager().Get().Domains()) < 1 {
 		return errors.New("no domains")
 	}
-	ac, err := config.Manager().Get().Domains()[0].APIClient()
-	if err != nil {
-		return err
-	}
-	ds.api = ac
+	go func() {
+		for {
+			select {
+			case <-ds.ctx.Done():
+				return
+			default:
+				for _, d := range config.Manager().Get().Domains() {
+					ds.checkIn(d)
+				}
+			}
+		}
+	}()
 	return nil
+}
+
+func (ds *Server) checkIn(d config.DomainConfig) {
+	l := ds.log.WithField("domain", d.Domain)
+	ac, err := d.APIClient()
+	if err != nil {
+		l.WithError(err).Warning("failed to get API client for domain")
+		return
+	}
+	s, err := serial.Read()
+	if err != nil {
+		l.WithError(err).Warning("failed to get machine serial")
+		return
+	}
+	_, _, err = ac.EndpointsApi.EndpointsAgentsConnectorsReportCreate(ds.ctx).CommonDeviceDataRequest(api.CommonDeviceDataRequest{
+		Hardware: *api.NewNullableCommonDeviceDataRequestHardware(&api.CommonDeviceDataRequestHardware{
+			Serial: s,
+		}),
+	}).Execute()
+	if err != nil {
+		l.WithError(err).Warning("failed to report")
+	}
 }
 
 func (ds *Server) Stop() error {

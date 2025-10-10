@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"golang.org/x/term"
 )
@@ -37,8 +38,14 @@ var domainsJoinCmd = &cobra.Command{
 		d.Domain = args[0]
 		d.AuthentikURL = base
 		d.AppSlug = appSlug
-		d.Token = token
 		d.AuthenticationFlow = "default-authentication-flow"
+		res, _, err := ac.EndpointsApi.EndpointsAgentsConnectorsEnrollCreate(cmd.Context()).EnrollRequest(api.EnrollRequest{
+			EnrollmentToken: token,
+		}).Execute()
+		if err != nil {
+			return err
+		}
+		d.Token = res.Token
 		if err := d.Test(); err != nil {
 			return err
 		}
