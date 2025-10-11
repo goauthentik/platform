@@ -7,23 +7,24 @@ MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
 MACOS_PROVISIONING_PROFILE := $(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)
 
+clean:
+	cd "${TOP}" && rm -rf "bin/${TARGET}"
+	"$(MAKE)" -C ${TOP} cli/clean
+	"$(MAKE)" -C ${TOP} sysd/clean
+	"$(MAKE)" -C ${TOP} ee/psso/clean || true
+
 build:
-	mkdir -p ${TOP}/bin/${TARGET}
+	echo "${TOP}/bin/${TARGET}"
+	mkdir -p "${TOP}/bin/${TARGET}"
 	go build \
 		-ldflags "${LD_FLAGS}" \
-		-v -a -o ${TOP}/bin/${TARGET}/${BINARY_NAME} \
-		${TOP}/cmd/${TARGET}
-
-clean:
-	cd ${TOP} && rm -rf bin/${TARGET}
-	$(MAKE) -C ${TOP} cli/clean
-	$(MAKE) -C ${TOP} sysd/clean
-	$(MAKE) -C ${TOP} ee/psso/clean || true
+		-v -a -o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
+		"${TOP}/cmd/${TARGET}"
 
 package-darwin: clean build
-	$(MAKE) -C ${TOP} cli/build
-	$(MAKE) -C ${TOP} sysd/build
-	$(MAKE) -C ${TOP} ee/psso/build || true
+	"$(MAKE)" -C ${TOP} cli/build
+	"$(MAKE)" -C ${TOP} sysd/build
+	"$(MAKE)" -C ${TOP} ee/psso/build || true
 	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	/usr/libexec/Plistbuddy -c "Set CFBundleVersion ${VERSION}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist"
 	/usr/libexec/Plistbuddy -c "Set CFBundleShortVersionString ${VERSION}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist"

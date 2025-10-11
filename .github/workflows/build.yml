@@ -23,6 +23,7 @@ jobs:
           - macos-15
           - ubuntu-24.04
           - ubuntu-24.04-arm
+          - windows-2025
         exclude:
           - target: sysd
             platform: macos-15
