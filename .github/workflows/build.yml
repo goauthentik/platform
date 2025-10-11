@@ -40,7 +40,7 @@ jobs:
       - id: platform_pure
         shell: bash
         run: |
-          platform=$(uname | tr '[:upper:]' '[:lower:]')
+          platform=$(uname -o | tr '[:upper:]' '[:lower:]')
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
       # macOS Specific

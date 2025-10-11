@@ -3,6 +3,7 @@ package agentsystem
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -29,8 +30,10 @@ func init() {
 }
 
 func agentPrecheck() error {
-	if os.Getuid() != 0 {
-		return errors.New("authentik system agent must run as root")
+	if runtime.GOOS != "windows" {
+		if os.Getuid() != 0 {
+			return errors.New("authentik system agent must run as root")
+		}
 	}
 	if _, err := os.Stat(configFile); err != nil {
 		return errors.Wrap(err, "failed to check config file")

@@ -29,7 +29,7 @@ var agentCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		if _, err := os.Stat(config.Manager().Get().RuntimeDir()); err != nil {
+		if _, err := os.Stat(config.Manager().Get().RuntimeDir); err != nil {
 			return errors.Wrap(err, "failed to check runtime directory")
 		}
 		err = systemlog.Setup("sysd")

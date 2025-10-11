@@ -60,13 +60,16 @@ package-darwin: clean build
 	cd "${TOP}/bin/${TARGET}" && rm "agent.pkg"
 	cd "${TOP}/bin/${TARGET}" && rm -rf "${MACOS_APP_NAME}"
 
-package-linux: build
+package-linux: clean build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
+
+package-msys: clean build
+	echo "no"
 
 test-deploy: package
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb
