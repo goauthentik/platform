@@ -13,8 +13,8 @@ build:
 		-v -a -o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: package-linux
-package-linux: build
+.PHONY: package-gnu/linux
+package-gnu/linux: build
 	ln -s ak "${TOP}/bin/${TARGET}/ak-vault"
 	ln -s ak "${TOP}/bin/${TARGET}/ak-browser-support"
 	mkdir -p "${TOP}/bin/${TARGET}/completions"

@@ -21,6 +21,7 @@ build:
 		-v -a -o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
+.PHONY: package-darwin
 package-darwin: clean build
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
@@ -60,7 +61,8 @@ package-darwin: clean build
 	cd "${TOP}/bin/${TARGET}" && rm "agent.pkg"
 	cd "${TOP}/bin/${TARGET}" && rm -rf "${MACOS_APP_NAME}"
 
-package-linux: clean build
+.PHONY: package-gnu/linux
+package-gnu/linux: clean build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
@@ -68,6 +70,7 @@ package-linux: clean build
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
 
+.PHONY: package-msys
 package-msys: clean build
 	echo "no"
 

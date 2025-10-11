@@ -15,8 +15,8 @@ build:
 		-v -a -o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: package-linux
-package-linux: build
+.PHONY: package-gnu/linux
+package-gnu/linux: build
 	mkdir -p "${TOP}/bin/${TARGET}/completions"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/cmd/${TARGET}" \
