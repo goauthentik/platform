@@ -20,7 +20,7 @@ package-linux: build
 	mkdir -p "${TOP}/bin/${TARGET}/completions"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/cmd/${TARGET}" \
-		"${TOP}/bin/${TARGET}/completions"
+		"${TOP}/bin/${TARGET}/completions" \
 		"${TARGET}"
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
