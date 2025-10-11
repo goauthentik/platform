@@ -5,13 +5,12 @@ import (
 	"slices"
 	"time"
 
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 )
 
 func (nss *Server) startFetch() {
-	d := time.Second * time.Duration(config.Manager().Get().NSS.RefreshIntervalSec)
+	d := time.Second * 30
 	nss.log.Info("Starting initial user/group fetch")
 	nss.fetch()
 	nss.log.WithField("next", d.String()).Info("Finished initial user/group fetch")

@@ -62,7 +62,7 @@ func (ds *Server) checkIn(d config.DomainConfig) {
 		l.WithError(err).Warning("failed to get machine serial")
 		return
 	}
-	_, _, err = ac.EndpointsApi.EndpointsAgentsConnectorsReportCreate(ds.ctx).CommonDeviceDataRequest(api.CommonDeviceDataRequest{
+	_, err = ac.EndpointsApi.EndpointsAgentsConnectorsReportCreate(ds.ctx).CommonDeviceDataRequest(api.CommonDeviceDataRequest{
 		Hardware: *api.NewNullableCommonDeviceDataRequestHardware(&api.CommonDeviceDataRequestHardware{
 			Serial: s,
 		}),

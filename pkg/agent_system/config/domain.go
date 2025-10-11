@@ -12,15 +12,14 @@ import (
 )
 
 type DomainConfig struct {
-	Enabled            bool   `json:"enabled"`
-	AuthentikURL       string `json:"authentik_url"`
-	AppSlug            string `json:"app_slug"`
-	Token              string `json:"token"`
-	AuthenticationFlow string `json:"authentication_flow"`
-	Domain             string `json:"domain"`
+	Enabled      bool   `json:"enabled"`
+	AuthentikURL string `json:"authentik_url"`
+	Token        string `json:"token"`
+	Domain       string `json:"domain"`
 
-	c *api.APIClient
-	r *Config
+	c            *api.APIClient
+	r            *Config
+	ServerConfig *api.AgentConfig
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
@@ -51,10 +50,11 @@ func (dc DomainConfig) Test() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = ac.CoreApi.CoreUsersMeRetrieve(context.Background()).Execute()
+	c, _, err := ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 	if err != nil {
 		return err
 	}
+	dc.ServerConfig = c
 	return nil
 }
 

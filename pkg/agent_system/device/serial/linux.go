@@ -4,23 +4,13 @@
 package serial
 
 import (
-	"os/exec"
-	"regexp"
+	"github.com/fenglyu/go-dmidecode"
 )
 
 func Read() (string, error) {
-	out, err := exec.Command("dmidecode", "-t", "system").Output()
+	dmit, err := dmidecode.NewDMITable()
 	if err != nil {
-		return "", ErrNoSerialFound
+		return "", err
 	}
-	return match(out)
-}
-
-func match(out []byte) (string, error) {
-	re := regexp.MustCompile(`"Serial Number: (.*)`)
-	if m := re.FindSubmatch(out); m != nil {
-		return string(m[1]), nil
-	}
-
-	return "", ErrNoSerialFound
+	return dmit.Query("system-serial-number"), nil
 }

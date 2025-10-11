@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/device/serial"
 	"golang.org/x/term"
 )
 
@@ -29,7 +31,6 @@ var domainsJoinCmd = &cobra.Command{
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		base := mustFlag(cmd.Flags().GetString("authentik-url"))
-		appSlug := mustFlag(cmd.Flags().GetString("app"))
 		token, err := readPassword("Enter authentik enrollment token: ")
 		if err != nil {
 			return err
@@ -41,6 +42,23 @@ var domainsJoinCmd = &cobra.Command{
 		d.AuthenticationFlow = "default-authentication-flow"
 		res, _, err := ac.EndpointsApi.EndpointsAgentsConnectorsEnrollCreate(cmd.Context()).EnrollRequest(api.EnrollRequest{
 			EnrollmentToken: token,
+		ac, err := d.APIClient()
+		if err != nil {
+			return err
+		}
+
+		s, err := serial.Read()
+		if err != nil {
+			return err
+		}
+		hn, err := os.Hostname()
+		if err != nil {
+			return err
+		}
+
+		res, _, err := ac.EndpointsApi.EndpointsAgentsConnectorsEnrollCreate(cmd.Context()).Authorization(fmt.Sprintf("Bearer %s", token)).EnrollRequest(api.EnrollRequest{
+			DeviceName:   hn,
+			DeviceSerial: s,
 		}).Execute()
 		if err != nil {
 			return err
@@ -76,5 +94,4 @@ func readPassword(prompt string) (string, error) {
 func init() {
 	domainsCmd.AddCommand(domainsJoinCmd)
 	domainsJoinCmd.Flags().StringP("authentik-url", "a", "", "URL to the authentik Instance")
-	domainsJoinCmd.Flags().StringP("app", "d", "authentik-pam", "Slug of the Platform application")
 }

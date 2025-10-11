@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.9
 	github.com/cli/browser v1.3.0
+	github.com/fenglyu/go-dmidecode v0.0.0-20220417074508-03f52eb45fe9
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getsentry/sentry-go v0.36.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -69,6 +70,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/digitalocean/go-smbios v0.0.0-20180907143718-390a4f403a8e // indirect
 	github.com/ebitengine/purego v0.9.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
@@ -156,3 +158,5 @@ tool (
 )
 
 replace github.com/keybase/go-keychain => github.com/alexw23/go-keychain v0.0.0-20240507145345-41efe171240e
+
+replace goauthentik.io/api/v3 => ../authentik/gen-go-api

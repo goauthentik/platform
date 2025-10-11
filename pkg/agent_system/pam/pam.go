@@ -46,16 +46,16 @@ func (pam *Server) Start() error {
 	if len(config.Manager().Get().Domains()) < 1 {
 		return errors.New("no domains")
 	}
-	dom := config.Manager().Get().Domains()[0]
-	ac, err := dom.APIClient()
+	pam.dom = config.Manager().Get().Domains()[0]
+	ac, err := pam.dom.APIClient()
 	if err != nil {
 		return err
 	}
 	pam.dom = dom
 	pam.api = ac
 	k, err := keyfunc.NewDefaultCtx(pam.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
-		AuthentikURL: dom.AuthentikURL,
-		AppSlug:      dom.AppSlug,
+		AuthentikURL: pam.dom.AuthentikURL,
+		// AppSlug:      pam.dom.ServerConfig.AppSlug,
 	}).JWKS})
 	if err != nil {
 		return err
