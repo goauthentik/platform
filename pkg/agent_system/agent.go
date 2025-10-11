@@ -2,7 +2,6 @@ package agentsystem
 
 import (
 	"context"
-	"net"
 	"os"
 	"os/signal"
 	"sync"
@@ -15,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
+	platformsocket "goauthentik.io/cli/pkg/platform_socket"
 	"goauthentik.io/cli/pkg/storage"
 	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
@@ -169,11 +169,10 @@ func (sm *SystemAgent) Start() {
 	}()
 
 	_ = os.Remove(config.Manager().Get().Socket)
-	lis, err := net.Listen("unix", config.Manager().Get().Socket)
+	lis, err := platformsocket.Listen(config.Manager().Get().Socket, platformsocket.SocketOwner)
 	if err != nil {
 		sm.log.WithError(err).Fatal("Failed to listen")
 	}
-	_ = os.Chmod(config.Manager().Get().Socket, 0666)
 
 	sm.log.WithField("path", config.Manager().Get().Socket).Info("System agent listening on socket")
 	if err := sm.srv.Serve(lis); err != nil {
