@@ -11,7 +11,7 @@ import (
 	l "github.com/sirupsen/logrus/hooks/syslog"
 )
 
-func ForceSetup(appName string) error {
+func platformSetup(appName string) error {
 	hook, err := l.NewSyslogHook("", "", syslog.LOG_INFO, appName)
 	if err != nil {
 		return nil
@@ -24,5 +24,9 @@ func ForceSetup(appName string) error {
 	log.StandardLogger().Hooks.Add(hook)
 	log.StandardLogger().SetOutput(io.Discard)
 	log.Info("Switched to syslog logging...")
+	return nil
+}
+
+func platformCleanup() error {
 	return nil
 }

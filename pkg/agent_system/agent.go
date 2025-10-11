@@ -32,6 +32,11 @@ var agentCmd = &cobra.Command{
 		if _, err := os.Stat(config.Manager().Get().RuntimeDir()); err != nil {
 			return errors.Wrap(err, "failed to check runtime directory")
 		}
+		err = systemlog.Setup("sysd")
+		if err != nil {
+			systemlog.Get().WithError(err).Warning("failed to setup logs")
+		}
+		defer systemlog.Cleanup()
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {

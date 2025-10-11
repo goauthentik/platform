@@ -26,6 +26,7 @@ func main() {
 	if err != nil {
 		systemlog.Get().WithError(err).Warning("failed to setup logs")
 	}
+	defer systemlog.Cleanup()
 	a, err := agent.New()
 	if err != nil {
 		systemlog.Get().WithError(err).Warning("failed to start agent")

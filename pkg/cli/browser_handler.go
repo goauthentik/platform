@@ -37,10 +37,11 @@ func (tk *response) SetInResponseTo(m browser_native_messaging.Message) {
 var browserSupportCmd = &cobra.Command{
 	Use: "browser-support",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := systemlog.ForceSetup("browser-support")
+		err := systemlog.Setup("browser-support")
 		if err != nil {
 			return err
 		}
+		defer systemlog.Cleanup()
 		c, err := client.New(socketPath)
 		if err != nil {
 			return err

@@ -10,7 +10,17 @@ func Setup(appName string) error {
 	if !ShouldSwitch() {
 		return nil
 	}
-	return ForceSetup(appName)
+	return platformSetup(appName)
+}
+
+func Cleanup() {
+	if !ShouldSwitch() {
+		return
+	}
+	err := platformCleanup()
+	if err != nil {
+		Get().WithError(err).Warning("failed to cleanup logging")
+	}
 }
 
 func Get() *log.Entry {
