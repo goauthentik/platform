@@ -3,7 +3,8 @@
 <?define Manufacturer = "Authentik Security Inc" ?>
 <?define Version = "$(env.VERSION)" ?>
 <?define UpgradeCode = "3200363b-996e-4fd7-ae14-e3a425132b63" ?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Id="authentik.Agent"
            Name="$(Name)"
            Manufacturer="$(Manufacturer)"
@@ -32,6 +33,9 @@
               Source="$(env.ROOT)/cmd/agent_system/package/windows/config.json" />
         <!-- <RemoveFile Id="ALLFILES" Name="*.*" On="both" /> -->
 
+        <util:EventSource Log="Application" Name="authentik Sysd"
+           EventMessageFile="[System64Folder]\EventCreate.exe"/>
+
         <ServiceInstall Id="ServiceInstaller"
                         Type="ownProcess"
                         Name="ak_sysd"
@@ -39,7 +43,7 @@
                         Description="authentik System Agent."
                         Start="auto"
                         ErrorControl="normal"
-                        Arguments="agent --config-file config.json" />
+                        Arguments="agent" />
 
         <ServiceControl Id="StartService"
                         Start="install"
