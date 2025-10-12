@@ -1,0 +1,7 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Id="authentik.Agent" Name="authentik Agent"
+           Manufacturer="Authentik Security Inc." Version="0.11.0">
+    <File Source="$(env.ROOT)/bin/agent_local\ak-agent.exe" />
+    <File Source="$(env.ROOT)/bin/agent_system\ak-sysd.exe" />
+  </Package>
+</Wix>

@@ -1,8 +1,8 @@
 {
   "debug": false,
   "socket": "\\\\.\\pipe\\authentik-sysd",
-  "domains": "C:\\Users\\jens\\source\\repos\\platform\\t\\domains",
-  "runtime": "C:\\Users\\jens\\source\\repos\\platform\\t\\runtime",
+  "domains": "C:\\Users\\jens\\source\\repos\\platform\\debug\\domains",
+  "runtime": "C:\\Users\\jens\\source\\repos\\platform\\debug\\runtime",
   "pam": {
     "enabled": true,
     "terminate_on_expiry": true

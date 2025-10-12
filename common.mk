@@ -6,9 +6,9 @@ GID = $(shell id -g)
 VERSION = "0.11.0"
 VERSION_HASH = $(shell git rev-parse HEAD)
 ARCH := $(shell dpkg-architecture -q DEB_BUILD_ARCH)
+PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 
-_abs = $(abspath $(lastword $(MAKEFILE_LIST)))
-TOP = $(dir ${_abs})
+TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
 
 LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-${VERSION_HASH}

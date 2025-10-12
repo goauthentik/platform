@@ -1,7 +1,11 @@
 include ../../common.mk
 
 TARGET := agent_local
+ifeq ($(OS),Windows_NT)
+BINARY_NAME := ak-agent.exe
+else
 BINARY_NAME := ak-agent
+endif
 
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
@@ -71,8 +75,11 @@ package-gnu/linux: clean build
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
 
 .PHONY: package-msys
-package-msys: clean build
-	echo "no"
+package-msys: # clean build
+	"$(MAKE)" -C ${TOP} sysd/build
+	ROOT=${TOP} dotnet build \
+		-o "${TOP}/bin/${TARGET}/" \
+		"$(shell pwd)/package/windows/"
 
 test-deploy: package
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb

@@ -1,7 +1,11 @@
 include ../../common.mk
 
 TARGET := agent_system
+ifeq ($(OS),Windows_NT)
+BINARY_NAME := ak-sysd.exe
+else
 BINARY_NAME := ak-sysd
+endif
 
 .PHONY: clean
 clean:

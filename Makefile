@@ -53,14 +53,7 @@ sysd/%:
 	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*
 
 agent/%:
-	echo $(MAKEFILE_LIST)
-	echo $(lastword $(MAKEFILE_LIST))
-	echo $(lastword $(MAKEFILE_LIST))
-	echo $(abspath $(lastword $(MAKEFILE_LIST)))
-	echo "$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
-	echo --------
-	echo ${TOP}
-# 	"$(MAKE)" -C "${TOP}/cmd/agent_local" $*
+	"$(MAKE)" -C "${TOP}/cmd/agent_local" $*
 
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*
