@@ -17,12 +17,16 @@
         <Directory Id="INSTALLFOLDER" Name="$(Name)" />
       </Directory>
     </StandardDirectory>
+    <Icon Id="authentik_icon" SourceFile="./icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
 
     <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="sysd">
+      <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29">
         <File Id="ak_sysd"
               Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
               KeyPath="true" />
+        <File Id="ak_sysd_config"
+              Source="$(env.ROOT)/cmd/agent_system/package/windows/config.json" />
         <!-- <RemoveFile Id="ALLFILES" Name="*.*" On="both" /> -->
 
         <ServiceInstall Id="ServiceInstaller"
@@ -32,7 +36,7 @@
                         Description="authentik System Agent."
                         Start="auto"
                         ErrorControl="normal"
-                        Arguments="agent" />
+                        Arguments="agent --config-file config.json" />
 
         <ServiceControl Id="StartService"
                         Start="install"
