@@ -75,7 +75,7 @@ package-gnu/linux: clean build
 			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
 
 .PHONY: package-msys
-package-msys: # clean build
+package-msys: clean build
 	"$(MAKE)" -C ${TOP} sysd/build
 	ROOT=${TOP} dotnet build \
 		-o "${TOP}/bin/${TARGET}/" \
