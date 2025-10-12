@@ -13,8 +13,8 @@ import (
 	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 	"goauthentik.io/cli/pkg/storage"
-	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 

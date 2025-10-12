@@ -1,7 +1,7 @@
 //go:build !darwin && !windows
 // +build !darwin,!windows
 
-package systemlog
+package log
 
 import (
 	"io"

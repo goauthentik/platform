@@ -1,6 +1,6 @@
 //go:build darwin
 
-package authzprompt
+package authz
 
 import (
 	"github.com/ansxuman/go-touchid"

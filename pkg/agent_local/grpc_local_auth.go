@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	authzprompt "goauthentik.io/cli/pkg/agent_local/authz_prompt"
-	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
+	"goauthentik.io/cli/pkg/platform/authz"
+	"goauthentik.io/cli/pkg/platform/grpc_creds"
 	"google.golang.org/grpc/peer"
 )
 
@@ -14,13 +14,13 @@ var (
 	errAccessDenied = errors.New("Access denied")
 )
 
-func (a *Agent) authorizeRequest(ctx context.Context, profile string, action authzprompt.AuthorizeAction) (err error) {
+func (a *Agent) authorizeRequest(ctx context.Context, profile string, action authz.AuthorizeAction) (err error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
 		return errFailedAuth
 	}
 	creds := p.AuthInfo.(grpc_creds.AuthInfo).Creds
-	auth, err := authzprompt.Prompt(action, profile, creds)
+	auth, err := authz.Prompt(action, profile, creds)
 	if err != nil {
 		return err
 	}

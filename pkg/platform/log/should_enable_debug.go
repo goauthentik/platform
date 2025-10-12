@@ -1,7 +1,7 @@
 //go:build debug
 // +build debug
 
-package systemlog
+package log
 
 func init() {
 	isDebugger = true

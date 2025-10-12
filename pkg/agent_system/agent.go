@@ -12,9 +12,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
-	platformsocket "goauthentik.io/cli/pkg/platform_socket"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
+	"goauthentik.io/cli/pkg/platform/socket"
 	"goauthentik.io/cli/pkg/storage"
-	"goauthentik.io/cli/pkg/systemlog"
 	"google.golang.org/grpc"
 )
 
@@ -138,7 +138,7 @@ func (sm *SystemAgent) Start() {
 	}()
 
 	_ = os.Remove(config.Manager().Get().Socket)
-	lis, err := platformsocket.Listen(config.Manager().Get().Socket, platformsocket.SocketOwner)
+	lis, err := socket.Listen(config.Manager().Get().Socket, socket.SocketOwner)
 	if err != nil {
 		sm.log.WithError(err).Fatal("Failed to listen")
 	}

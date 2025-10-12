@@ -1,9 +1,9 @@
-package authzprompt
+package authz
 
 import (
 	"time"
 
-	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
+	"goauthentik.io/cli/pkg/platform/grpc_creds"
 )
 
 type authorizeAction interface {

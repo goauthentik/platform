@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	authzprompt "goauthentik.io/cli/pkg/agent_local/authz_prompt"
-	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/cli/pkg/platform/authz"
+	"goauthentik.io/cli/pkg/platform/grpc_creds"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest) (*pb.CurrentTokenResponse, error) {
 	pfm := a.tr.ForProfile(req.Header.Profile)
-	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
+	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("authorize access to your account in '%s'", creds.ParentCmdline), nil
 		},
@@ -55,7 +55,7 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 }
 
 func (a *Agent) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.AuthorizeResponse, error) {
-	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
+	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("authorize access to '%s'", req.Service), nil
 		},

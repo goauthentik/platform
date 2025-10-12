@@ -12,7 +12,7 @@ import (
 	"unsafe"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/systemlog"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 )
 
 type Message interface {

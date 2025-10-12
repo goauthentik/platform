@@ -1,7 +1,7 @@
 //go:build windows
 // +build windows
 
-package systemlog
+package log
 
 import (
 	"encoding/json"

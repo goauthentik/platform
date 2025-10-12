@@ -7,8 +7,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 	"goauthentik.io/cli/pkg/storage/keyring"
-	"goauthentik.io/cli/pkg/systemlog"
 )
 
 var (

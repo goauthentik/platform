@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_local/config"
 	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/systemlog"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 )
 
 type ProfileTokenManager struct {

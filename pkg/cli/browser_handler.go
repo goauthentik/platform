@@ -6,7 +6,7 @@ import (
 	"goauthentik.io/cli/pkg/browser_native_messaging"
 	"goauthentik.io/cli/pkg/cli/client"
 	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/systemlog"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

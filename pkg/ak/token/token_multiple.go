@@ -5,8 +5,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_local/config"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 	"goauthentik.io/cli/pkg/storage"
-	"goauthentik.io/cli/pkg/systemlog"
 )
 
 var globalMutex = false

@@ -1,4 +1,4 @@
-package systemlog
+package log
 
 import (
 	"os"

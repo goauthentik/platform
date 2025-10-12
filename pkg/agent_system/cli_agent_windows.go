@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/agent_system/config"
 	windowssvc "goauthentik.io/cli/pkg/agent_system/windows_svc"
-	"goauthentik.io/cli/pkg/systemlog"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
 )

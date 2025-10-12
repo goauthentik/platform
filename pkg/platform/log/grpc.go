@@ -1,4 +1,4 @@
-package systemlog
+package log
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
+	"goauthentik.io/cli/pkg/platform/grpc_creds"
 	"google.golang.org/grpc/peer"
 )
 

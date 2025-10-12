@@ -1,6 +1,6 @@
 //go:build windows
 
-package authzprompt
+package authz
 
 import (
 	"fmt"

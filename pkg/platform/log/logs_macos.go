@@ -1,7 +1,7 @@
 //go:build darwin
 // +build darwin
 
-package systemlog
+package log
 
 import (
 	"fmt"

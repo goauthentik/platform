@@ -1,12 +1,12 @@
-package authzprompt
+package authz
 
 import (
 	"fmt"
 	"sync"
 	"time"
 
-	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
-	"goauthentik.io/cli/pkg/systemlog"
+	"goauthentik.io/cli/pkg/platform/grpc_creds"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 )
 
 type authState struct {

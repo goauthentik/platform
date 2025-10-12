@@ -1,7 +1,7 @@
 //go:build linux
 // +build linux
 
-package systemlog
+package log
 
 import (
 	"os"

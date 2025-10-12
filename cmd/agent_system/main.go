@@ -6,8 +6,8 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	agentsystem "goauthentik.io/cli/pkg/agent_system"
+	"goauthentik.io/cli/pkg/platform/log"
 	"goauthentik.io/cli/pkg/storage"
-	"goauthentik.io/cli/pkg/systemlog"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		Release:          fmt.Sprintf("ak-platform-agent-system@%s", storage.FullVersion()),
 	})
 	if err != nil {
-		systemlog.Get().WithError(err).Warn("failed to init sentry")
+		log.Get().WithError(err).Warn("failed to init sentry")
 	}
 	defer sentry.Flush(2 * time.Second)
 	agentsystem.Execute()

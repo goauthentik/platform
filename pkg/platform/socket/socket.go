@@ -1,4 +1,4 @@
-package platformsocket
+package socket
 
 import "net"
 

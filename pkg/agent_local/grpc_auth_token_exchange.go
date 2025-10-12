@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	authzprompt "goauthentik.io/cli/pkg/agent_local/authz_prompt"
-	"goauthentik.io/cli/pkg/agent_local/grpc_creds"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/cli/pkg/platform/authz"
+	"goauthentik.io/cli/pkg/platform/grpc_creds"
 )
 
 func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRequest) (*pb.TokenExchangeResponse, error) {
@@ -17,7 +17,7 @@ func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRe
 	if !ok {
 		return nil, errors.New("profile not found")
 	}
-	if err := a.authorizeRequest(ctx, req.Header.Profile, authzprompt.AuthorizeAction{
+	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("authorize access to your account '%s' in '%s'", req.ClientId, creds.ParentCmdline), nil
 		},

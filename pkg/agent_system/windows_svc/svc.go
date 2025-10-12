@@ -4,7 +4,7 @@
 package windowssvc
 
 import (
-	"goauthentik.io/cli/pkg/systemlog"
+	systemlog "goauthentik.io/cli/pkg/platform/log"
 	"golang.org/x/sys/windows/svc"
 )
 
