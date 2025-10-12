@@ -27,7 +27,7 @@ package-gnu/linux: build
 			package \
 			-p deb \
 			-t "${TOP}/bin/${TARGET}" \
-			-f "${TOP}/cmd/${TARGET}/nfpm.yaml"
+			-f "${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml"
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb

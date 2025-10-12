@@ -10,10 +10,10 @@ homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
 scripts:
-  postinstall: ./package/postinst.sh
+  postinstall: ./package/linux/postinst.sh
 contents:
-  - src: ../../../bin/agent_local/ak-agent
+  - src: ../../bin/agent_local/ak-agent
     dst: /usr/bin/ak-agent
-  - src: package/ak-agent.service
+  - src: ./package/linux/linux/ak-agent.service
     dst: /etc/systemd/user/ak-agent.service
     type: config
