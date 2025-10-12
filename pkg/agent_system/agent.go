@@ -137,13 +137,13 @@ func (sm *SystemAgent) Start() {
 		sm.Stop()
 	}()
 
-	_ = os.Remove(config.Manager().Get().Socket)
 	lis, err := socket.Listen(config.Manager().Get().Socket, socket.SocketOwner)
 	if err != nil {
 		sm.log.WithError(err).Fatal("Failed to listen")
+		return
 	}
 
-	sm.log.WithField("path", config.Manager().Get().Socket).Info("System agent listening on socket")
+	sm.log.WithField("path", lis.Path()).Info("System agent listening on socket")
 	if err := sm.srv.Serve(lis); err != nil {
 		sm.log.WithError(err).Fatal("Failed to serve")
 	}

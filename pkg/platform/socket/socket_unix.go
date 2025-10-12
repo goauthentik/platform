@@ -6,22 +6,34 @@ package socket
 import (
 	"net"
 	"os"
+	"path"
 )
 
-func listen(path string, perm SocketPermMode) (net.Listener, error) {
-	lis, err := net.Listen("unix", path)
-	if err != nil {
-		return nil, err
-	}
-	uperm := 0600
-	if perm == SocketOwner {
+func listen(spath string, perm SocketPermMode) (InfoListener, error) {
+	uperm := 0700
+	switch perm {
+	case SocketOwner:
 		uperm = 0600
+	case SocketEveryone:
+		uperm = 0666
 	}
-	err = os.Chmod(path, os.FileMode(uperm))
+	err := os.MkdirAll(path.Dir(spath), os.FileMode(uperm))
 	if err != nil {
 		return nil, err
 	}
-	return lis, nil
+	err = os.Remove(spath)
+	if err != nil {
+		return nil, err
+	}
+	lis, err := net.Listen("unix", spath)
+	if err != nil {
+		return nil, err
+	}
+	err = os.Chmod(spath, os.FileMode(uperm))
+	if err != nil {
+		return nil, err
+	}
+	return infoSocket{lis, spath}, nil
 }
 
 func connect(path string) (net.Conn, error) {

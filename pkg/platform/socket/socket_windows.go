@@ -15,7 +15,7 @@ func pipeName(p string) string {
 	return fmt.Sprintf(`\\.\pipe\%s`, path.Base(p))
 }
 
-func listen(name string, perm SocketPermMode) (net.Listener, error) {
+func listen(name string, perm SocketPermMode) (InfoListener, error) {
 	// SDDL Breakdown:
 	// - D: - DACL (Discretionary Access Control List)
 	// - (A;;FA;;;BA) - Allow Full Access to Built-in Administrators
@@ -24,15 +24,17 @@ func listen(name string, perm SocketPermMode) (net.Listener, error) {
 	// - (A;;FRFW;;;WD) - Allow File Read + File Write to World
 	// - (A;;FA;;;OW) - Allow owner
 	sd := "D:(A;;FA;;;BA)(A;;FA;;;SY)"
-	if perm == SocketEveryone {
+	switch perm {
+	case SocketEveryone:
 		sd = "D:(A;;FA;;;WD)"
-	} else if perm == SocketOwner {
+	case SocketOwner:
 		sd = "D:(A;;FA;;;OW)"
 	}
-	l, err := winio.ListenPipe(pipeName(name), &winio.PipeConfig{
+	n := pipeName(name)
+	l, err := winio.ListenPipe(n, &winio.PipeConfig{
 		SecurityDescriptor: sd,
 	})
-	return l, err
+	return infoSocket{l, n}, err
 }
 
 func connect(path string) (net.Conn, error) {

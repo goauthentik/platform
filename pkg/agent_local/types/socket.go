@@ -12,6 +12,5 @@ func GetAgentSocketPath() string {
 		return sp
 	}
 	p := path.Join(xdg.DataHome, "authentik", "agent.sock")
-	_ = os.MkdirAll(path.Dir(p), 0700)
 	return p
 }
