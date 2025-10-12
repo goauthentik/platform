@@ -25,11 +25,16 @@ jobs:
           - ubuntu-24.04-arm
           - windows-2025
         exclude:
+          # CLI and sysd are included in the agent bundle
           - target: sysd
             platform: macos-15
-          # CLI is included in the agent bundle
           - target: cli
             platform: macos-15
+          # CLI and sysd are included in the agent bundle
+          - target: sysd
+            platform: windows-2025
+          - target: cli
+            platform: windows-2025
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v5
