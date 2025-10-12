@@ -14,7 +14,10 @@
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFilesFolder">
       <Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
-        <Directory Id="INSTALLFOLDER" Name="$(Name)" />
+        <Directory Id="INSTALLFOLDER" Name="$(Name)">
+          <Directory Id="sysd_domains" Name="domains" />
+          <Directory Id="sysd_runtime" Name="runtime" />
+        </Directory>
       </Directory>
     </StandardDirectory>
     <Icon Id="authentik_icon" SourceFile="./icon.ico" />

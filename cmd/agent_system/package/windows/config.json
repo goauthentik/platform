@@ -1,16 +1,12 @@
 {
   "debug": false,
   "socket": "\\\\.\\pipe\\authentik-sysd",
-  "domains": "C:\\Users\\jens\\source\\repos\\platform\\debug\\domains",
-  "runtime": "C:\\Users\\jens\\source\\repos\\platform\\debug\\runtime",
+  "domains": "C:\\Program Files (x86)\\Authentik Security Inc\\authentik Agent\\domains",
+  "runtime": "C:\\Program Files (x86)\\Authentik Security Inc\\authentik Agent\\runtime",
   "pam": {
-    "enabled": true,
-    "terminate_on_expiry": true
+    "enabled": false
   },
   "nss": {
-    "enabled": true,
-    "uid_offset": 1000,
-    "gid_offset": 1000,
-    "refresh_interval_sec": 3600
+    "enabled": false
   }
 }
