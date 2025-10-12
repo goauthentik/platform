@@ -34,10 +34,10 @@ var agentCmd = &cobra.Command{
 		if err != nil {
 			systemlog.Get().WithError(err).Warning("failed to setup logs")
 		}
-		defer systemlog.Cleanup()
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		defer systemlog.Cleanup()
 		log.SetLevel(log.DebugLevel)
 		w := &windowssvc.ServiceWrapper{
 			Callback: func() {
