@@ -1,0 +1,9 @@
+<Configuration>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>..\..</HostFolder>
+      <SandboxFolder>C:\authentik-platform</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+</Configuration>

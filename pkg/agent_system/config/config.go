@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
@@ -27,9 +26,10 @@ func Manager() *storage.ConfigManager[*Config] {
 }
 
 type Config struct {
-	Debug  bool   `json:"debug"`
-	Socket string `json:"socket"`
-	PAM    struct {
+	Debug      bool   `json:"debug"`
+	Socket     string `json:"socket"`
+	RuntimeDir string `json:"runtime"`
+	PAM        struct {
 		Enabled           bool `json:"enabled"`
 		TerminateOnExpiry bool `json:"terminate_on_expiry"`
 	} `json:"pam" `
@@ -81,10 +81,6 @@ func (c *Config) PostLoad() error {
 func (c *Config) PreSave() error { return nil }
 func (c *Config) PostUpdate(storage.Configer, fsnotify.Event) storage.ConfigChangedType {
 	return storage.ConfigChangedGeneric
-}
-
-func (c *Config) RuntimeDir() string {
-	return path.Join("/var/run", "authentik")
 }
 
 func (c *Config) Domains() []DomainConfig {

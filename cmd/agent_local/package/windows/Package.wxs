@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?define Name = "authentik Agent" ?>
+<?define Manufacturer = "Authentik Security Inc" ?>
+<?define Version = "$(env.VERSION)" ?>
+<?define UpgradeCode = "3200363b-996e-4fd7-ae14-e3a425132b63" ?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Id="authentik.Agent"
+           Name="$(Name)"
+           Manufacturer="$(Manufacturer)"
+           Version="$(Version)"
+           UpgradeCode="$(var.UpgradeCode)"
+           Compressed="true">
+    <MediaTemplate EmbedCab="yes" />
+    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
+        <Directory Id="INSTALLFOLDER" Name="$(Name)">
+          <Directory Id="sysd_domains" Name="domains" />
+          <Directory Id="sysd_runtime" Name="runtime" />
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+    <Icon Id="authentik_icon" SourceFile="./icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64">
+        <CreateFolder Directory="sysd_domains" />
+        <CreateFolder Directory="sysd_runtime" />
+        <File Id="ak_sysd"
+              Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
+              KeyPath="true" />
+        <File Id="ak_sysd_config"
+              Source="$(env.ROOT)/cmd/agent_system/package/windows/config.json" />
+        <!-- <RemoveFile Id="ALLFILES" Name="*.*" On="both" /> -->
+
+        <util:EventSource Log="Application"
+                          Name="authentik Sysd"
+                          EventMessageFile="[System64Folder]\EventCreate.exe"/>
+
+        <ServiceInstall Id="ServiceInstaller"
+                        Type="ownProcess"
+                        Name="ak_sysd"
+                        DisplayName="$(Name)"
+                        Description="authentik System Agent."
+                        Start="auto"
+                        ErrorControl="normal"
+                        Arguments="agent" />
+
+        <ServiceControl Id="StartService"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Name="ak_sysd"
+                        Wait="true" />
+      </Component>
+      <Component Id="Agent" Bitness="always64">
+        <File Id="ak_agent"
+              Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="Main" Title="authentik Agent Setup" Level="1">
+      <ComponentRef Id="sysd" />
+      <ComponentRef Id="Agent" />
+    </Feature>
+  </Package>
+</Wix>

@@ -11,7 +11,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func ForceSetup(appName string) error {
+var lf *os.File
+
+func platformSetup(appName string) error {
 	hd, err := os.UserHomeDir()
 	if err != nil {
 		return err
@@ -25,6 +27,14 @@ func ForceSetup(appName string) error {
 	if err != nil {
 		return err
 	}
-	log.SetOutput(f)
+	lf = f
+	log.SetOutput(lf)
+	return nil
+}
+
+func platformCleanup() error {
+	if lf != nil {
+		return lf.Close()
+	}
 	return nil
 }

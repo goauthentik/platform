@@ -7,6 +7,6 @@ import (
 	"net"
 )
 
-func getCreds(conn *net.UnixConn) (*Creds, error) {
+func getCreds(conn net.Conn) (*Creds, error) {
 	return nil, errors.New("not implemented")
 }

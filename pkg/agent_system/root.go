@@ -3,6 +3,7 @@ package agentsystem
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -11,6 +12,7 @@ import (
 )
 
 var configFile string
+var defaultConfigFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "ak-sysd",
@@ -25,12 +27,14 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&configFile, "config-file", "/etc/authentik/config.json", "Config file path")
+	rootCmd.PersistentFlags().StringVar(&configFile, "config-file", defaultConfigFile, "Config file path")
 }
 
 func agentPrecheck() error {
-	if os.Getuid() != 0 {
-		return errors.New("authentik system agent must run as root")
+	if runtime.GOOS != "windows" {
+		if os.Getuid() != 0 {
+			return errors.New("authentik system agent must run as root")
+		}
 	}
 	if _, err := os.Stat(configFile); err != nil {
 		return errors.Wrap(err, "failed to check config file")

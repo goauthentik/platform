@@ -21,6 +21,7 @@ import (
 	"goauthentik.io/cli/pkg/cli/auth/raw"
 	"goauthentik.io/cli/pkg/cli/client"
 	"goauthentik.io/cli/pkg/pb"
+	platformsocket "goauthentik.io/cli/pkg/platform_socket"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/term"
 	"google.golang.org/protobuf/proto"
@@ -194,7 +195,7 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 				}
 			}()
 			// Dial the local unix socket
-			lc, err := net.Dial("unix", localSocket)
+			lc, err := platformsocket.Connect(localSocket)
 			if err != nil {
 				log.WithError(err).Debugf("local dial %s failed", localSocket)
 				return

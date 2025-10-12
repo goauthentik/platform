@@ -4,6 +4,7 @@ go 1.25
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.7.0
+	github.com/Microsoft/go-winio v0.6.2
 	github.com/adrg/xdg v0.5.3
 	github.com/ansxuman/go-touchid v0.0.0-20241021115423-60941306d4c3
 	github.com/avast/retry-go/v4 v4.6.1
@@ -47,7 +48,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/MicahParks/jwkset v0.11.0 // indirect
-	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.9 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.9 // indirect

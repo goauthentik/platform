@@ -23,12 +23,18 @@ jobs:
           - macos-15
           - ubuntu-24.04
           - ubuntu-24.04-arm
+          - windows-2025
         exclude:
+          # CLI and sysd are included in the agent bundle
           - target: sysd
             platform: macos-15
-          # CLI is included in the agent bundle
           - target: cli
             platform: macos-15
+          # CLI and sysd are included in the agent bundle
+          - target: sysd
+            platform: windows-2025
+          - target: cli
+            platform: windows-2025
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v5
@@ -37,8 +43,9 @@ jobs:
           go-version-file: go.mod
           cache: true
       - id: platform_pure
+        shell: bash
         run: |
-          platform=$(uname | tr '[:upper:]' '[:lower:]')
+          platform=$(uname -o | tr '[:upper:]' '[:lower:]')
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
 
       # macOS Specific
@@ -51,7 +58,8 @@ jobs:
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
 
-      - run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
+      - shell: bash
+        run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
       - uses: actions/upload-artifact@v4
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}

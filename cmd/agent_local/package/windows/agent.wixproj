@@ -1,0 +1,8 @@
+<Project Sdk="WixToolset.Sdk/6.0.0">
+    <ItemGroup>
+        <PackageReference Include="WixToolset.Util.wixext" Version="6.0.0" />
+    </ItemGroup>
+    <PropertyGroup>
+        <InstallerPlatform>x64</InstallerPlatform>
+    </PropertyGroup>
+</Project>

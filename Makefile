@@ -38,25 +38,25 @@ test-shell:
 test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
 pam/%:
-	$(MAKE) -C pam $*
+	"$(MAKE)" -C "${TOP}/pam" $*
 
 nss/%:
-	$(MAKE) -C nss $*
+	"$(MAKE)" -C "${TOP}/nss" $*
 
 utils_rs/%:
-	$(MAKE) -C utils_rs $*
+	"$(MAKE)" -C "${TOP}/utils_rs" $*
 
 cli/%:
-	$(MAKE) -C cmd/cli $*
+	"$(MAKE)" -C "${TOP}/cmd/cli" $*
 
 sysd/%:
-	$(MAKE) -C cmd/agent_system $*
+	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*
 
 agent/%:
-	$(MAKE) -C cmd/agent_local $*
+	"$(MAKE)" -C "${TOP}/cmd/agent_local" $*
 
 browser-ext/%:
-	$(MAKE) -C browser-ext/ $*
+	"$(MAKE)" -C "${TOP}/browser-ext/" $*
 
 ee/psso/%:
-	$(MAKE) -C ee/psso/ $*
+	"$(MAKE)" -C "${TOP}/ee/psso/" $*

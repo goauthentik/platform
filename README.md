@@ -20,6 +20,21 @@ To build all the packages and install them on the dev container, run `make test-
 
 The local agent is required for most testing; create a new terminal and run `./bin/agent_local/ak-agent`.
 
+### macOS Dependencies
+
+```shell
+brew install gmake go rustup
+```
+
+### Windows Dependencies
+
+```powershell
+winget install -e --id GnuWin32.Make
+winget install -e --id=WiXToolset.WiXToolset
+. 'C:\Program Files\Git\bin\bash.exe'
+source "hack/windows/setup.sh"
+```
+
 ### Targets
 
 #### `pam/%`:
