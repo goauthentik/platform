@@ -1,9 +1,7 @@
-//go:build !darwin
+//go:build !darwin && !windows
 
 package authzprompt
 
-import "goauthentik.io/cli/pkg/agent_local/grpc_creds"
-
-func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bool, error) {
+func prompt(msg string) (bool, error) {
 	return true, nil
 }
