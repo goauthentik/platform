@@ -13,7 +13,7 @@
            Compressed="true">
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
-    <StandardDirectory Id="ProgramFilesFolder">
+    <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
         <Directory Id="INSTALLFOLDER" Name="$(Name)">
           <Directory Id="sysd_domains" Name="domains" />
@@ -25,7 +25,7 @@
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
 
     <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29">
+      <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64">
         <File Id="ak_sysd"
               Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
               KeyPath="true" />
@@ -52,7 +52,7 @@
                         Name="ak_sysd"
                         Wait="true" />
       </Component>
-      <Component Id="Agent">
+      <Component Id="Agent" Bitness="always64">
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
         <!-- <RemoveFile Id="ALLFILES" Name="*.*" On="both" /> -->
