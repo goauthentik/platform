@@ -1,8 +1,8 @@
 {
   "debug": false,
   "socket": "\\\\.\\pipe\\authentik-sysd",
-  "domains": "C:\\Program Files (x86)\\Authentik Security Inc\\authentik Agent\\domains",
-  "runtime": "C:\\Program Files (x86)\\Authentik Security Inc\\authentik Agent\\runtime",
+  "domains": "C:\\Program Files\\Authentik Security Inc\\authentik Agent\\domains",
+  "runtime": "C:\\Program Files\\Authentik Security Inc\\authentik Agent\\runtime",
   "pam": {
     "enabled": false
   },

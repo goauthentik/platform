@@ -26,6 +26,8 @@
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64">
+        <CreateFolder Directory="sysd_domains" />
+        <CreateFolder Directory="sysd_runtime" />
         <File Id="ak_sysd"
               Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
               KeyPath="true" />
@@ -33,8 +35,9 @@
               Source="$(env.ROOT)/cmd/agent_system/package/windows/config.json" />
         <!-- <RemoveFile Id="ALLFILES" Name="*.*" On="both" /> -->
 
-        <util:EventSource Log="Application" Name="authentik Sysd"
-           EventMessageFile="[System64Folder]\EventCreate.exe"/>
+        <util:EventSource Log="Application"
+                          Name="authentik Sysd"
+                          EventMessageFile="[System64Folder]\EventCreate.exe"/>
 
         <ServiceInstall Id="ServiceInstaller"
                         Type="ownProcess"
@@ -55,7 +58,6 @@
       <Component Id="Agent" Bitness="always64">
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
-        <!-- <RemoveFile Id="ALLFILES" Name="*.*" On="both" /> -->
       </Component>
     </DirectoryRef>
 

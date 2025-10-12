@@ -13,7 +13,10 @@ import (
 	windowssvc "goauthentik.io/cli/pkg/agent_system/windows_svc"
 	"goauthentik.io/cli/pkg/systemlog"
 	"golang.org/x/sys/windows/svc"
+	"golang.org/x/sys/windows/svc/debug"
 )
+
+var isDebug = false
 
 var agentCmd = &cobra.Command{
 	Use:          "agent",
@@ -36,14 +39,27 @@ var agentCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.DebugLevel)
-		err := svc.Run("ak_sysd", &windowssvc.ServiceWrapper{})
-		if err != nil {
-			log.Fatalln("Error running service in Service Control mode.")
+		w := &windowssvc.ServiceWrapper{
+			Callback: func() {
+				New().Start()
+			},
+		}
+		if isDebug {
+			err := debug.Run("ak_sysd", w)
+			if err != nil {
+				log.Fatalln("Error running service in Service Control mode.")
+			}
+		} else {
+			err := svc.Run("ak_sysd", w)
+			if err != nil {
+				log.Fatalln("Error running service in Service Control mode.")
+			}
 		}
 	},
 }
 
 func init() {
-	defaultConfigFile = "C:\\Program Files (x86)\\Authentik Security Inc\\authentik Agent\\config.json"
+	defaultConfigFile = "C:\\Program Files\\Authentik Security Inc\\authentik Agent\\config.json"
+	agentCmd.Flags().BoolVarP(&isDebug, "debug", "d", false, "Run in debug mode.")
 	rootCmd.AddCommand(agentCmd)
 }
