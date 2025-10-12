@@ -14,6 +14,6 @@ scripts:
 contents:
   - src: ../../bin/agent_local/ak-agent
     dst: /usr/bin/ak-agent
-  - src: ./package/linux/linux/ak-agent.service
+  - src: ./package/linux/ak-agent.service
     dst: /etc/systemd/user/ak-agent.service
     type: config
