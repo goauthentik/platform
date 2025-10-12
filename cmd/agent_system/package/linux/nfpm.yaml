@@ -12,14 +12,14 @@ license: "MIT"
 scripts:
   postinstall: ./package/postinst.sh
 contents:
-  - src: ../../bin/agent_system/ak-sysd
+  - src: ../../../bin/agent_system/ak-sysd
     dst: /usr/bin/ak-sysd
   - src: package/ak-sysd.service
     dst: /usr/lib/systemd/system/ak-sysd.service
   - src: package/config.json
     dst: /etc/authentik/config.json
     type: config
-  - src: ../../bin/agent_system/completions/agent_system.bash
+  - src: ../../../bin/agent_system/completions/agent_system.bash
     dst: /etc/bash_completion.d/ak-sysd
   - dst: /etc/authentik/domains
     type: dir
