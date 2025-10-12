@@ -72,7 +72,7 @@ package-gnu/linux: clean build
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/package/nfpm.yaml
+			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
 
 .PHONY: package-msys
 package-msys: clean build
