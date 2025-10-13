@@ -59,11 +59,16 @@
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
       </Component>
+      <Component Id="CLI" Bitness="always64">
+        <File Id="cli"
+              Source="$(env.ROOT)/bin/cli/ak.exe" />
+      </Component>
     </DirectoryRef>
 
     <Feature Id="Main" Title="authentik Agent Setup" Level="1">
       <ComponentRef Id="sysd" />
       <ComponentRef Id="Agent" />
+      <ComponentRef Id="CLI" />
     </Feature>
   </Package>
 </Wix>

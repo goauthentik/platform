@@ -76,6 +76,7 @@ package-gnu/linux: clean build
 
 .PHONY: package-msys
 package-msys: clean build
+	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
 	ROOT=${TOP} VERSION=${VERSION} dotnet build \
 		-o "${TOP}/bin/${TARGET}/" \

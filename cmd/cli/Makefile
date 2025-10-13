@@ -1,7 +1,11 @@
 include ../../common.mk
 
 TARGET := cli
+ifeq ($(OS),Windows_NT)
+BINARY_NAME := ak.exe
+else
 BINARY_NAME := ak
+endif
 
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
