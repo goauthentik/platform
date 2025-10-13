@@ -179,7 +179,7 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 			log.WithError(err).Warning("Failed to close remote listener")
 		}
 	}()
-	log.Debugf("remote listening %s → local %s", remoteSocket, localSocket)
+	log.Debugf("remote listening %s → local %s", remoteSocket, localSocket.ForCurrent())
 
 	for {
 		remoteConn, err := remoteListener.Accept()
@@ -197,7 +197,7 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
 			// Dial the local unix socket
 			lc, err := socket.Connect(localSocket)
 			if err != nil {
-				log.WithError(err).Debugf("local dial %s failed", localSocket)
+				log.WithError(err).Debugf("local dial %s failed", localSocket.ForCurrent())
 				return
 			}
 			defer func() {

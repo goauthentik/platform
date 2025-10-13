@@ -5,12 +5,17 @@ import (
 	"path"
 
 	"github.com/adrg/xdg"
+	"goauthentik.io/cli/pkg/platform/pstr"
 )
 
-func GetAgentSocketPath() string {
+func GetAgentSocketPath() pstr.PlatformString {
 	if sp, ok := os.LookupEnv("AUTHENTIK_CLI_SOCKET"); ok {
-		return sp
+		return pstr.PlatformString{
+			Fallback: sp,
+		}
 	}
-	p := path.Join(xdg.DataHome, "authentik", "agent.sock")
-	return p
+	return pstr.PlatformString{
+		Linux:   pstr.S(path.Join(xdg.DataHome, "authentik", "agent.sock")),
+		Windows: pstr.S("authentik-socket"),
+	}
 }

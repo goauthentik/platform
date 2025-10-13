@@ -55,5 +55,5 @@ func init() {
 	defaultSocketPath := types.GetAgentSocketPath()
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable debug logging")
 	rootCmd.PersistentFlags().StringP("profile", "n", "default", "A name for the profile")
-	rootCmd.PersistentFlags().StringVarP(&socketPath, "socket", "s", defaultSocketPath, "Socket the agent is listening on")
+	rootCmd.PersistentFlags().StringVarP(&socketPath, "socket", "s", defaultSocketPath.ForCurrent(), "Socket the agent is listening on")
 }

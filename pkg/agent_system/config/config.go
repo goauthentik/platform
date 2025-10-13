@@ -27,7 +27,6 @@ func Manager() *storage.ConfigManager[*Config] {
 
 type Config struct {
 	Debug      bool   `json:"debug"`
-	Socket     string `json:"socket"`
 	RuntimeDir string `json:"runtime"`
 	PAM        struct {
 		Enabled           bool `json:"enabled"`

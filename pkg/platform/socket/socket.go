@@ -1,6 +1,10 @@
 package socket
 
-import "net"
+import (
+	"net"
+
+	"goauthentik.io/cli/pkg/platform/pstr"
+)
 
 type SocketPermMode int
 
@@ -10,24 +14,24 @@ const (
 	SocketAdmin
 )
 
-func Listen(name string, perm SocketPermMode) (InfoListener, error) {
+func Listen(name pstr.PlatformString, perm SocketPermMode) (InfoListener, error) {
 	return listen(name, perm)
 }
 
-func Connect(name string) (net.Conn, error) {
+func Connect(name pstr.PlatformString) (net.Conn, error) {
 	return connect(name)
 }
 
 type InfoListener interface {
 	net.Listener
-	Path() string
+	Path() pstr.PlatformString
 }
 
 type infoSocket struct {
 	net.Listener
-	path string
+	path pstr.PlatformString
 }
 
-func (is infoSocket) Path() string {
+func (is infoSocket) Path() pstr.PlatformString {
 	return is.path
 }

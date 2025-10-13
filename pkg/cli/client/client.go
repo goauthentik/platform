@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/pb"
 	systemlog "goauthentik.io/cli/pkg/platform/log"
+	"goauthentik.io/cli/pkg/platform/pstr"
 	"goauthentik.io/cli/pkg/platform/socket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -26,7 +27,9 @@ func New(socketPath string) (*Client, error) {
 		"localhost",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
-			return socket.Connect(socketPath)
+			return socket.Connect(pstr.PlatformString{
+				Fallback: socketPath,
+			})
 		}),
 		grpc.WithChainUnaryInterceptor(
 			logging.UnaryClientInterceptor(systemlog.InterceptorLogger(l)),

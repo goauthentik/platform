@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"goauthentik.io/cli/pkg/agent_system/config"
+	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/platform/socket"
 	"google.golang.org/grpc"
@@ -16,7 +16,7 @@ func checkAgentConnectivity(ctx context.Context) CheckResult {
 		"localhost",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
-			return socket.Connect(config.Manager().Get().Socket)
+			return socket.Connect(types.GetAgentSocketPath())
 		}),
 	)
 	if err != nil {

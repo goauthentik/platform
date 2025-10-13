@@ -10,10 +10,10 @@ import (
 	"github.com/nightlyone/lockfile"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/ak/token"
 	"goauthentik.io/cli/pkg/pb"
 	systemlog "goauthentik.io/cli/pkg/platform/log"
+	"goauthentik.io/cli/pkg/platform/socket"
 	"goauthentik.io/cli/pkg/storage"
 	"google.golang.org/grpc"
 )
@@ -31,16 +31,15 @@ type Agent struct {
 	lock           lockfile.Lockfile
 	systrayCtx     context.Context
 	systrayCtxS    context.CancelFunc
-	socketPath     string
+	lis            socket.InfoListener
 }
 
 func New() (*Agent, error) {
 	mgr := config.Manager()
 	return &Agent{
-		cfg:        mgr,
-		log:        systemlog.Get().WithField("logger", "agent"),
-		tr:         token.NewGlobal(),
-		socketPath: types.GetAgentSocketPath(),
+		cfg: mgr,
+		log: systemlog.Get().WithField("logger", "agent"),
+		tr:  token.NewGlobal(),
 	}, nil
 }
 
@@ -70,8 +69,12 @@ func (a *Agent) Stop() {
 	if a.grpc != nil {
 		a.grpc.Stop()
 	}
-	a.log.WithField("socket", a.socketPath).Info("Removing socket file")
-	_ = os.Remove(a.socketPath)
+	if a.lis != nil {
+		err := a.lis.Close()
+		if err != nil {
+			a.log.WithError(err).Warning("failed to close socket")
+		}
+	}
 }
 
 func (a *Agent) startConfigWatch() {

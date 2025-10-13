@@ -1,6 +1,5 @@
 {
   "debug": false,
-  "socket": "/opt/authentik/sys.sock",
   "domains": "/opt/authentik/domains",
   "pam": {
     "enabled": false

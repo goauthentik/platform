@@ -10,7 +10,7 @@ import (
 
 func (pam *Server) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.PAMAuthorizationResponse, error) {
 	agentSocket := types.GetAgentSocketPath()
-	c, err := client.New(agentSocket)
+	c, err := client.New(agentSocket.Fallback)
 	if err != nil {
 		return nil, err
 	}

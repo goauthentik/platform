@@ -4,6 +4,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/cli/pkg/agent_local/types"
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/platform/grpc_creds"
 	systemlog "goauthentik.io/cli/pkg/platform/log"
@@ -13,10 +14,11 @@ import (
 
 func (a *Agent) startGRPC() {
 	l := a.log.WithField("logger", "agent.grpc")
-	lis, err := socket.Listen(a.socketPath, socket.SocketOwner)
+	lis, err := socket.Listen(types.GetAgentSocketPath(), socket.SocketOwner)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
+	a.lis = lis
 	a.grpc = grpc.NewServer(
 		grpc.Creds(grpc_creds.NewTransportCredentials()),
 		grpc.ChainUnaryInterceptor(

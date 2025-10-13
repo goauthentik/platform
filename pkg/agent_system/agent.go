@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/cli/pkg/agent_system/component"
 	"goauthentik.io/cli/pkg/agent_system/config"
+	"goauthentik.io/cli/pkg/agent_system/types"
 	systemlog "goauthentik.io/cli/pkg/platform/log"
 	"goauthentik.io/cli/pkg/platform/socket"
 	"goauthentik.io/cli/pkg/storage"
@@ -31,6 +32,7 @@ type SystemAgent struct {
 	mtx    sync.Mutex
 	ctx    context.Context
 	cancel context.CancelFunc
+	lis    socket.InfoListener
 }
 
 func New() *SystemAgent {
@@ -137,11 +139,12 @@ func (sm *SystemAgent) Start() {
 		sm.Stop()
 	}()
 
-	lis, err := socket.Listen(config.Manager().Get().Socket, socket.SocketOwner)
+	lis, err := socket.Listen(types.GetSysdSocketPath(), socket.SocketOwner)
 	if err != nil {
 		sm.log.WithError(err).Fatal("Failed to listen")
 		return
 	}
+	sm.lis = lis
 
 	sm.log.WithField("path", lis.Path()).Info("System agent listening on socket")
 	if err := sm.srv.Serve(lis); err != nil {
@@ -161,5 +164,10 @@ func (sm *SystemAgent) Stop() {
 		}
 	}
 	sm.srv.GracefulStop()
-	_ = os.Remove(config.Manager().Get().Socket)
+	if sm.lis != nil {
+		err := sm.lis.Close()
+		if err != nil {
+			sm.log.WithError(err).Warning("failed to stop listening")
+		}
+	}
 }

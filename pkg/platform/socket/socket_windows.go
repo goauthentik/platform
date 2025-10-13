@@ -9,13 +9,15 @@ import (
 	"path"
 
 	"github.com/Microsoft/go-winio"
+	"goauthentik.io/cli/pkg/platform/pstr"
 )
 
 func pipeName(p string) string {
 	return fmt.Sprintf(`\\.\pipe\%s`, path.Base(p))
 }
 
-func listen(name string, perm SocketPermMode) (InfoListener, error) {
+func listen(name pstr.PlatformString, perm SocketPermMode) (InfoListener, error) {
+	p := name.ForWindows()
 	// SDDL Breakdown:
 	// - D: - DACL (Discretionary Access Control List)
 	// - (A;;FA;;;BA) - Allow Full Access to Built-in Administrators
@@ -30,13 +32,13 @@ func listen(name string, perm SocketPermMode) (InfoListener, error) {
 	case SocketOwner:
 		sd = "D:(A;;FA;;;OW)"
 	}
-	n := pipeName(name)
+	n := pipeName(p)
 	l, err := winio.ListenPipe(n, &winio.PipeConfig{
 		SecurityDescriptor: sd,
 	})
-	return infoSocket{l, n}, err
+	return infoSocket{l, name}, err
 }
 
-func connect(path string) (net.Conn, error) {
-	return winio.DialPipe(pipeName(path), nil)
+func connect(path pstr.PlatformString) (net.Conn, error) {
+	return winio.DialPipe(pipeName(path.ForWindows()), nil)
 }

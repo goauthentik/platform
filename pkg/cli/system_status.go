@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"goauthentik.io/cli/pkg/agent_system/types"
 	"goauthentik.io/cli/pkg/pb"
 )
 
@@ -34,7 +35,7 @@ var systemStatusCmd = &cobra.Command{
 }
 
 func init() {
-	if _, err := os.Stat(sysSocket); err == nil {
+	if _, err := os.Stat(types.GetSysdSocketPath().ForCurrent()); err == nil {
 		systemCmd.AddCommand(systemStatusCmd)
 	}
 }
