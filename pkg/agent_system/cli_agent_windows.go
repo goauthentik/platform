@@ -10,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/cli/pkg/agent_system/config"
-	windowssvc "goauthentik.io/cli/pkg/agent_system/windows_svc"
 	systemlog "goauthentik.io/cli/pkg/platform/log"
+	windowssvc "goauthentik.io/cli/pkg/platform/windows_svc"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
 )
