@@ -146,7 +146,7 @@ func (sm *SystemAgent) Start() {
 	}
 	sm.lis = lis
 
-	sm.log.WithField("path", lis.Path()).Info("System agent listening on socket")
+	sm.log.WithField("path", lis.Path().ForCurrent()).Info("System agent listening on socket")
 	if err := sm.srv.Serve(lis); err != nil {
 		sm.log.WithError(err).Fatal("Failed to serve")
 	}
