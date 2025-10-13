@@ -2,6 +2,8 @@
 
 package authz
 
-func prompt(msg string) (bool, error) {
+import "goauthentik.io/cli/pkg/platform/pstr"
+
+func prompt(msg pstr.PlatformString) (bool, error) {
 	return true, nil
 }
