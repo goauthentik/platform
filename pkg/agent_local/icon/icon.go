@@ -7,3 +7,6 @@ var IconLight []byte
 
 //go:embed icon_dark.png
 var IconDark []byte
+
+//go:embed icon.ico
+var Ico []byte

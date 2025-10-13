@@ -3,6 +3,7 @@ package agentlocal
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/cli/browser"
@@ -30,7 +31,11 @@ func (a *Agent) startSystray() {
 
 func (a *Agent) systrayReady() {
 	a.systrayStarted = true
-	systray.SetTemplateIcon(icon.IconLight, icon.IconLight)
+	if runtime.GOOS == "windows" {
+		systray.SetTemplateIcon(nil, icon.Ico)
+	} else {
+		systray.SetTemplateIcon(icon.IconLight, icon.IconLight)
+	}
 	a.systrayConfigUpdate()
 }
 
