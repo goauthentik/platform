@@ -18,7 +18,7 @@
         "@goauthentik/prettier-config": "^3.1.0",
         "@goauthentik/tsconfig": "^1.0.4",
         "@rollup/plugin-commonjs": "^28.0.6",
-        "@rollup/plugin-node-resolve": "^16.0.2",
+        "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-typescript": "^12.1.4",
         "@types/chrome": "^0.1.22",
         "fuse.js": "^7.1.0",
