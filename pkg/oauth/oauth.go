@@ -4,11 +4,9 @@ package oauth
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"goauthentik.io/cli/pkg/oauth/api"
 	"goauthentik.io/cli/pkg/oauth/device"
@@ -23,39 +21,6 @@ type Host struct {
 	DeviceCodeURL string
 	AuthorizeURL  string
 	TokenURL      string
-}
-
-// NewGitHubHost constructs a Host from the given URL to a GitHub instance.
-func NewGitHubHost(hostURL string) (*Host, error) {
-	base, err := url.Parse(strings.TrimSpace(hostURL))
-	if err != nil {
-		return nil, err
-	}
-
-	createURL := func(path string) string {
-		u := *base // Copy base URL
-		u.Path = path
-		return u.String()
-	}
-
-	return &Host{
-		DeviceCodeURL: createURL("/login/device/code"),
-		AuthorizeURL:  createURL("/login/oauth/authorize"),
-		TokenURL:      createURL("/login/oauth/access_token"),
-	}, nil
-}
-
-// GitHubHost constructs a Host from the given URL to a GitHub instance.
-//
-// Deprecated: `GitHubHost` can panic with a malformed `hostURL`. Use `NewGitHubHost` instead for graceful error handling.
-func GitHubHost(hostURL string) *Host {
-	u, _ := url.Parse(hostURL)
-
-	return &Host{
-		DeviceCodeURL: fmt.Sprintf("%s://%s/login/device/code", u.Scheme, u.Host),
-		AuthorizeURL:  fmt.Sprintf("%s://%s/login/oauth/authorize", u.Scheme, u.Host),
-		TokenURL:      fmt.Sprintf("%s://%s/login/oauth/access_token", u.Scheme, u.Host),
-	}
 }
 
 // Flow facilitates a single OAuth authorization flow.

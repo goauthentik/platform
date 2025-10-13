@@ -30,7 +30,7 @@ func (c *transportCredentials) ClientHandshake(ctx context.Context, authority st
 }
 
 func (c *transportCredentials) ServerHandshake(conn net.Conn) (net.Conn, credentials.AuthInfo, error) {
-	var creds *Creds
+	creds := &Creds{}
 	var err error
 	if unixConn, ok := conn.(*net.UnixConn); ok {
 		creds, err = getCreds(unixConn)

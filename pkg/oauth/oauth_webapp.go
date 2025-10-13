@@ -15,14 +15,6 @@ import (
 func (oa *Flow) WebAppFlow() (*api.AccessToken, error) {
 	host := oa.Host
 
-	if host == nil {
-		parsedHost, err := NewGitHubHost("https://" + oa.Hostname)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing the hostname '%s': %w", oa.Hostname, err)
-		}
-		host = parsedHost
-	}
-
 	flow, err := webapp.InitFlow()
 	if err != nil {
 		return nil, err
