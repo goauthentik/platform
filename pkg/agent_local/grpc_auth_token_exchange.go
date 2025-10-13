@@ -10,6 +10,7 @@ import (
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/platform/authz"
 	"goauthentik.io/cli/pkg/platform/grpc_creds"
+	"goauthentik.io/cli/pkg/platform/pstr"
 )
 
 func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRequest) (*pb.TokenExchangeResponse, error) {
@@ -18,8 +19,11 @@ func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRe
 		return nil, errors.New("profile not found")
 	}
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
-		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("authorize access to your account '%s' in '%s'", req.ClientId, creds.ParentCmdline), nil
+		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
+			return pstr.PlatformString{
+				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account '%s' in '%s'", req.ClientId, creds.ParentCmdline)),
+				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account in '%s'", req.ClientId, creds.ParentCmdline)),
+			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("%s:%s", req.ClientId, creds.UniqueProcessID()), nil

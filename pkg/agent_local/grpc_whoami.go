@@ -11,13 +11,17 @@ import (
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/platform/authz"
 	"goauthentik.io/cli/pkg/platform/grpc_creds"
+	"goauthentik.io/cli/pkg/platform/pstr"
 )
 
 func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIResponse, error) {
 	prof := a.cfg.Get().Profiles[req.Header.Profile]
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
-		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("authorize access to your account info in '%s'", creds.ParentCmdline), nil
+		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
+			return pstr.PlatformString{
+				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account info in '%s'", creds.ParentCmdline)),
+				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account info", creds.ParentCmdline)),
+			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return creds.UniqueProcessID(), nil

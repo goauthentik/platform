@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"syscall"
 	"unsafe"
+
+	"goauthentik.io/cli/pkg/platform/pstr"
 )
 
 var (
@@ -65,6 +67,6 @@ func promptForCredentials(message, caption string) (bool, error) {
 	return true, nil
 }
 
-func prompt(msg string) (bool, error) {
-	return promptForCredentials("", msg)
+func prompt(msg pstr.PlatformString) (bool, error) {
+	return promptForCredentials("", msg.ForWindows())
 }

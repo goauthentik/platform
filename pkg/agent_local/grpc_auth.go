@@ -9,14 +9,18 @@ import (
 	"goauthentik.io/cli/pkg/pb"
 	"goauthentik.io/cli/pkg/platform/authz"
 	"goauthentik.io/cli/pkg/platform/grpc_creds"
+	"goauthentik.io/cli/pkg/platform/pstr"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest) (*pb.CurrentTokenResponse, error) {
 	pfm := a.tr.ForProfile(req.Header.Profile)
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
-		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("authorize access to your account in '%s'", creds.ParentCmdline), nil
+		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
+			return pstr.PlatformString{
+				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account in '%s'", creds.ParentCmdline)),
+				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account.", creds.ParentCmdline)),
+			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("%s:%s", creds.UniqueProcessID(), req.Type), nil
@@ -56,8 +60,11 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 
 func (a *Agent) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.AuthorizeResponse, error) {
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
-		Message: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("authorize access to '%s'", req.Service), nil
+		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
+			return pstr.PlatformString{
+				Darwin:  pstr.S(fmt.Sprintf("authorize access to '%s'", req.Service)),
+				Windows: pstr.S(fmt.Sprintf("'%s' is requesting access.", creds.ParentCmdline)),
+			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return req.Uid, nil
