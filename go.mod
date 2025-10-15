@@ -7,7 +7,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/adrg/xdg v0.5.3
 	github.com/ansxuman/go-touchid v0.0.0-20241021115423-60941306d4c3
-	github.com/avast/retry-go/v4 v4.6.1
+	github.com/avast/retry-go/v4 v4.7.0
 	github.com/aws/aws-sdk-go-v2 v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.6
 	github.com/cli/browser v1.3.0
