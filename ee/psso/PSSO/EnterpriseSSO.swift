@@ -4,12 +4,12 @@ import Generated
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
     private func shouldSkip(request: ASAuthorizationProviderExtensionAuthorizationRequest) -> Bool {
-        if !(request.loginManager?.isDeviceRegistered ?? false)
-            || !(request.loginManager?.isUserRegistered ?? false)
-        {
-            self.logger.info("SSOE: Skipping due to unregistered user or device")
-            return false
-        }
+//        if !(request.loginManager?.isDeviceRegistered ?? false)
+//            || !(request.loginManager?.isUserRegistered ?? false)
+//        {
+//            self.logger.info("SSOE: Skipping due to unregistered user or device")
+//            return false
+//        }
         let callerBundle = request.callerBundleIdentifier
         if let exclusions = request.extensionData["ExcludedApps"] as? [String],
             exclusions.contains(callerBundle)
@@ -38,7 +38,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
         return true
     }
 
-    static let ssoeURL = "/endpoint/agent/apple_ssoext"
+    static let ssoeURL = "/endpoint/agent/apple_ssoext/"
 
     public func beginAuthorization(
         with request: ASAuthorizationProviderExtensionAuthorizationRequest
@@ -48,11 +48,11 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             return
         }
         // TODO: Subpath
+        self.logger.debug("SSOE: URL \(request.url.absoluteString, privacy: .public)")
         if request.url.path() != AuthenticationViewController.ssoeURL {
             request.doNotHandle()
             return
         }
-        self.logger.debug("SSOE: URL \(request.url.absoluteString, privacy: .public)")
         Task {
             let header = try await Generated.GRPCsysd.shared.platformSignedEndpointHeader()
             let url = request.url.appending(queryItems: [URLQueryItem(name: "ak-ssoe", value: header)])
