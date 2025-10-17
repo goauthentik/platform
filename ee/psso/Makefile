@@ -18,15 +18,12 @@ build:
 	xcodebuild ${XCB_ARGS} \
 		-derivedDataPath "${PWD}/DerivedData"
 	cp -R "${PWD}/DerivedData/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
-	docker run \
-		--rm \
-		-v ${PWD}:/work \
-		getsentry/sentry-cli debug-files upload \
-			--auth-token ${SENTRY_AUTH_TOKEN} \
-			--include-sources \
-			--org authentik-security-inc \
-			--project platform \
-			${work}/DerivedData/authentikPlatform/Build/Products/Release
+	npx getsentry/sentry-cli debug-files upload \
+		--auth-token ${SENTRY_AUTH_TOKEN} \
+		--include-sources \
+		--org authentik-security-inc \
+		--project platform \
+		${PWD}/DerivedData/authentikPlatform/Build/Products/Release
 
 .PHONY: format
 format:
