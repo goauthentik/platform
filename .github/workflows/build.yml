@@ -60,6 +60,8 @@ jobs:
 
       - shell: bash
         run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       - uses: actions/upload-artifact@v4
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
