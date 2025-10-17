@@ -24,10 +24,7 @@ func listen(spath pstr.PlatformString, perm SocketPermMode) (InfoListener, error
 	if err != nil {
 		return nil, err
 	}
-	err = os.Remove(p)
-	if err != nil {
-		return nil, err
-	}
+	_ = os.Remove(p)
 	lis, err := net.Listen("unix", p)
 	if err != nil {
 		return nil, err

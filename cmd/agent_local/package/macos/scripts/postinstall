@@ -10,7 +10,7 @@ chmod 755 "$LOG_DIR"
 exec 2>&1 > "$LOG_DIR"/pkg_postinstall.log
 
 INSTALL_DIR=$2
-echo "$(data) Running postinstall. install_dir=${INSTALL_DIR}"
+echo "$(date) Running postinstall. install_dir=${INSTALL_DIR}"
 
 ## Daemon install
 
