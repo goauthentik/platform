@@ -13,6 +13,8 @@ clean:
 .PHONY: build
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
+	/usr/libexec/Plistbuddy -c "Set CFBundleVersion ${VERSION}" ${PWD}/PSSO/Info.plist
+	/usr/libexec/Plistbuddy -c "Set CFBundleShortVersionString ${VERSION}" ${PWD}/PSSO/Info.plist
 	xcodebuild ${XCB_ARGS} \
 		-showBuildSettings
 	xcodebuild ${XCB_ARGS} \
@@ -38,8 +40,6 @@ format:
 
 .PHONY: gen
 gen:
-	/usr/libexec/Plistbuddy -c "Set CFBundleVersion ${VERSION}" ${PWD}/PSSO/Info.plist
-	/usr/libexec/Plistbuddy -c "Set CFBundleShortVersionString ${VERSION}" ${PWD}/PSSO/Info.plist
 	protoc \
 		--grpc-swift-2_out=${PWD}/Generated \
 		--grpc-swift-2_opt=Server=False \
