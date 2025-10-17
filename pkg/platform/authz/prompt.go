@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"goauthentik.io/cli/pkg/platform/grpc_creds"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/grpc_creds"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
 )
 
 type authState struct {

@@ -2,7 +2,7 @@ package agentsystem
 
 import (
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/agent_system/check"
+	"goauthentik.io/platform/pkg/agent_system/check"
 )
 
 var checkCmd = &cobra.Command{

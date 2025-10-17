@@ -15,7 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
 )
 
 var (

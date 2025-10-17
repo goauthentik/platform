@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"goauthentik.io/cli/pkg/platform/authz"
-	"goauthentik.io/cli/pkg/platform/grpc_creds"
+	"goauthentik.io/platform/pkg/platform/authz"
+	"goauthentik.io/platform/pkg/platform/grpc_creds"
 	"google.golang.org/grpc/peer"
 )
 

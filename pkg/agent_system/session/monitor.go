@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/agent_system/component"
-	"goauthentik.io/cli/pkg/agent_system/config"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 

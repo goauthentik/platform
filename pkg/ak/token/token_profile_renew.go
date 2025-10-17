@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strings"
 
-	"goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 func (ptm *ProfileTokenManager) renew() error {

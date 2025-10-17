@@ -3,9 +3,9 @@ package token
 import (
 	"time"
 
-	"goauthentik.io/cli/pkg/agent_local/config"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 type CachedToken struct {

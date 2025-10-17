@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/golang-jwt/jwt/v5"
-	"goauthentik.io/cli/pkg/ak/token"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/ak/token"
+	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

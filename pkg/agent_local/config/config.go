@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/adrg/xdg"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 var manager *storage.ConfigManager[ConfigV1]

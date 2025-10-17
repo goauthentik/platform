@@ -9,7 +9,7 @@ import (
 	"path"
 
 	"github.com/Microsoft/go-winio"
-	"goauthentik.io/cli/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
 func pipeName(p string) string {

@@ -7,8 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/agent_system/config"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 var configFile string

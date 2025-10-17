@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/cli/auth/aws"
-	"goauthentik.io/cli/pkg/cli/client"
+	"goauthentik.io/platform/pkg/cli/auth/aws"
+	"goauthentik.io/platform/pkg/cli/client"
 )
 
 var awsCmd = &cobra.Command{

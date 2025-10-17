@@ -3,8 +3,8 @@
 package agentsystem
 
 import (
-	"goauthentik.io/cli/pkg/agent_system/component"
-	"goauthentik.io/cli/pkg/agent_system/device"
+	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/device"
 )
 
 func (sm *SystemAgent) RegisterPlatformComponents() map[string]component.Constructor {

@@ -8,9 +8,9 @@ import (
 	"github.com/cli/browser"
 	log "github.com/sirupsen/logrus"
 
-	"goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/oauth"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/oauth"
 )
 
 type Options struct {

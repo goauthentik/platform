@@ -3,8 +3,8 @@ package authz
 import (
 	"time"
 
-	"goauthentik.io/cli/pkg/platform/grpc_creds"
-	"goauthentik.io/cli/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/platform/grpc_creds"
+	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
 type authorizeAction interface {

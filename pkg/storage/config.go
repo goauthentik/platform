@@ -7,7 +7,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
 )
 
 type Configer interface {

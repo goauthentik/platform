@@ -8,10 +8,10 @@ import (
 	"net/url"
 	"strings"
 
-	"goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/ak"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/ak"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 type ExchangeOpts struct {

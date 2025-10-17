@@ -4,8 +4,8 @@ import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/cli/client"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/cli/client"
+	"goauthentik.io/platform/pkg/pb"
 )
 
 type CredentialsOpts struct {

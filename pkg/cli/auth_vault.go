@@ -5,7 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/cli/auth/vault"
+	"goauthentik.io/platform/pkg/cli/auth/vault"
 )
 
 var vaultCmd = &cobra.Command{

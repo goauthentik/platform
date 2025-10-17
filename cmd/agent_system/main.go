@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	agentsystem "goauthentik.io/cli/pkg/agent_system"
-	"goauthentik.io/cli/pkg/platform/log"
-	"goauthentik.io/cli/pkg/storage"
+	agentsystem "goauthentik.io/platform/pkg/agent_system"
+	"goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 func main() {

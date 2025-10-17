@@ -1,5 +1,5 @@
 .PHONY: clean
-LD_FLAGS = -X goauthentik.io/cli/pkg/storage.Version=${VERSION} -X goauthentik.io/cli/pkg/storage.BuildHash=dev-${VERSION_HASH}
+LD_FLAGS = -X goauthentik.io/platform/pkg/storage.Version=${VERSION} -X goauthentik.io/platform/pkg/storage.BuildHash=dev-${VERSION_HASH}
 GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 
 include common.mk

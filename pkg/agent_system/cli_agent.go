@@ -9,8 +9,8 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/agent_system/config"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
+	"goauthentik.io/platform/pkg/agent_system/config"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
 )
 
 var agentCmd = &cobra.Command{

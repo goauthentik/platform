@@ -1,4 +1,4 @@
-module goauthentik.io/cli
+module goauthentik.io/platform
 
 go 1.25
 

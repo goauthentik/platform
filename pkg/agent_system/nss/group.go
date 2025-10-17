@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"goauthentik.io/api/v3"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"

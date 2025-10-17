@@ -7,8 +7,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/agent_local/types"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_local/types"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 var (

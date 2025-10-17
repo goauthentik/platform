@@ -9,10 +9,10 @@ import (
 	"github.com/cli/browser"
 	"github.com/kolide/systray"
 	"github.com/mergestat/timediff"
-	"goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/agent_local/icon"
-	"goauthentik.io/cli/pkg/ak/token"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/agent_local/icon"
+	"goauthentik.io/platform/pkg/ak/token"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 func (a *Agent) startSystray() {

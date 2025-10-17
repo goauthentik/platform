@@ -1,6 +1,6 @@
 package types
 
-import "goauthentik.io/cli/pkg/platform/pstr"
+import "goauthentik.io/platform/pkg/platform/pstr"
 
 func GetSysdSocketPath() pstr.PlatformString {
 	return pstr.PlatformString{

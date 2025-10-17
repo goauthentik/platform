@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/cli/browser"
-	"goauthentik.io/cli/pkg/oauth/api"
-	"goauthentik.io/cli/pkg/oauth/device"
+	"goauthentik.io/platform/pkg/oauth/api"
+	"goauthentik.io/platform/pkg/oauth/device"
 )
 
 // DeviceFlow captures the full OAuth Device flow, including prompting the user to copy a one-time

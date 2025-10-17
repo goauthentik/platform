@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/cli/client"
-	"goauthentik.io/cli/pkg/cli/setup"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/cli/client"
+	"goauthentik.io/platform/pkg/cli/setup"
+	"goauthentik.io/platform/pkg/pb"
 )
 
 // setupCmd represents the setup command

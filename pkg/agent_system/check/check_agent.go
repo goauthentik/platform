@@ -4,9 +4,9 @@ import (
 	"context"
 	"net"
 
-	"goauthentik.io/cli/pkg/agent_local/types"
-	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/agent_local/types"
+	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/platform/socket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

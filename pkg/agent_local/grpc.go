@@ -4,11 +4,11 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/agent_local/types"
-	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/platform/grpc_creds"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
-	"goauthentik.io/cli/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/agent_local/types"
+	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/platform/grpc_creds"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/socket"
 	"google.golang.org/grpc"
 )
 

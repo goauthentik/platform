@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/agent_system/types"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/agent_system/types"
+	"goauthentik.io/platform/pkg/pb"
 )
 
 var systemStatusCmd = &cobra.Command{

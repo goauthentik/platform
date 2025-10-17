@@ -4,8 +4,8 @@ import (
 	"context"
 	"maps"
 
-	"goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

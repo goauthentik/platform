@@ -6,7 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/cli/client"
+	"goauthentik.io/platform/pkg/cli/client"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

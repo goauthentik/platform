@@ -5,7 +5,7 @@ import (
 	"path"
 
 	"github.com/adrg/xdg"
-	"goauthentik.io/cli/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
 func GetAgentSocketPath() pstr.PlatformString {

@@ -3,9 +3,9 @@ package pam
 import (
 	"context"
 
-	"goauthentik.io/cli/pkg/agent_local/types"
-	"goauthentik.io/cli/pkg/cli/client"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/agent_local/types"
+	"goauthentik.io/platform/pkg/cli/client"
+	"goauthentik.io/platform/pkg/pb"
 )
 
 func (pam *Server) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.PAMAuthorizationResponse, error) {

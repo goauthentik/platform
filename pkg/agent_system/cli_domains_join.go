@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"golang.org/x/term"
 )
 

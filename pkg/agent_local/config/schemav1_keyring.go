@@ -1,7 +1,7 @@
 package config
 
 import (
-	"goauthentik.io/cli/pkg/storage/keyring"
+	"goauthentik.io/platform/pkg/storage/keyring"
 )
 
 func (c ConfigV1) PostLoad() error {

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"goauthentik.io/cli/pkg/pb"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/storage"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

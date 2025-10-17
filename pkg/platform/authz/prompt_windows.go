@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"goauthentik.io/cli/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
 var (

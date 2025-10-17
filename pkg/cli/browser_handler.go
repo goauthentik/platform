@@ -3,10 +3,10 @@ package cli
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/browser_native_messaging"
-	"goauthentik.io/cli/pkg/cli/client"
-	"goauthentik.io/cli/pkg/pb"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
+	"goauthentik.io/platform/pkg/browser_native_messaging"
+	"goauthentik.io/platform/pkg/cli/client"
+	"goauthentik.io/platform/pkg/pb"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

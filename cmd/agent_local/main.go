@@ -6,9 +6,9 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
-	agent "goauthentik.io/cli/pkg/agent_local"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
-	"goauthentik.io/cli/pkg/storage"
+	agent "goauthentik.io/platform/pkg/agent_local"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 func main() {

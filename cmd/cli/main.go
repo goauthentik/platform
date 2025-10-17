@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/getsentry/sentry-go"
-	"goauthentik.io/cli/pkg/cli"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/cli"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 func main() {

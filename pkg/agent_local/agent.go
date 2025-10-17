@@ -9,12 +9,12 @@ import (
 	"github.com/kolide/systray"
 	"github.com/nightlyone/lockfile"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/ak/token"
-	"goauthentik.io/cli/pkg/pb"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
-	"goauthentik.io/cli/pkg/platform/socket"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/ak/token"
+	"goauthentik.io/platform/pkg/pb"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/storage"
 	"google.golang.org/grpc"
 )
 

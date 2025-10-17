@@ -13,7 +13,7 @@ import (
 	"net/url"
 	"strings"
 
-	"goauthentik.io/cli/pkg/oauth/api"
+	"goauthentik.io/platform/pkg/oauth/api"
 )
 
 type httpClient interface {

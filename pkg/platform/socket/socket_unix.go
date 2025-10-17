@@ -8,7 +8,7 @@ import (
 	"os"
 	"path"
 
-	"goauthentik.io/cli/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
 func listen(spath pstr.PlatformString, perm SocketPermMode) (InfoListener, error) {

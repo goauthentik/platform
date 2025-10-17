@@ -5,8 +5,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/cli/client"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/cli/client"
+	"goauthentik.io/platform/pkg/pb"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientauthenticationv1 "k8s.io/client-go/pkg/apis/clientauthentication/v1"
 )

@@ -6,8 +6,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/cli/pkg/cli/client"
-	"goauthentik.io/cli/pkg/pb"
+	"goauthentik.io/platform/pkg/cli/client"
+	"goauthentik.io/platform/pkg/pb"
 )
 
 // whoamiCmd represents the whoami command

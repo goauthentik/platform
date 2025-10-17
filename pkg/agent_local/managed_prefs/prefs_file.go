@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	systemlog "goauthentik.io/cli/pkg/platform/log"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
 )
 
 var paths = []string{

@@ -4,7 +4,7 @@ package authz
 
 import (
 	"github.com/ansxuman/go-touchid"
-	"goauthentik.io/cli/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
 func prompt(msg pstr.PlatformString) (bool, error) {

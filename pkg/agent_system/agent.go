@@ -10,12 +10,12 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/agent_system/component"
-	"goauthentik.io/cli/pkg/agent_system/config"
-	"goauthentik.io/cli/pkg/agent_system/types"
-	systemlog "goauthentik.io/cli/pkg/platform/log"
-	"goauthentik.io/cli/pkg/platform/socket"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/types"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/storage"
 	"google.golang.org/grpc"
 )
 

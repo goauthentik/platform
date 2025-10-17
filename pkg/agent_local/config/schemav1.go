@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/cli/pkg/storage"
+	"goauthentik.io/platform/pkg/storage"
 )
 
 type ConfigV1 struct {

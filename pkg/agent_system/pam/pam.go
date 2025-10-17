@@ -7,11 +7,11 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
-	lconfig "goauthentik.io/cli/pkg/agent_local/config"
-	"goauthentik.io/cli/pkg/agent_system/component"
-	"goauthentik.io/cli/pkg/agent_system/config"
-	"goauthentik.io/cli/pkg/ak"
-	"goauthentik.io/cli/pkg/pb"
+	lconfig "goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
 )
 
