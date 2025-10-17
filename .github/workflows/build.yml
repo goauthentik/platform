@@ -42,6 +42,7 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - uses: docker/setup-docker-action@v4
       - id: platform_pure
         shell: bash
         run: |
