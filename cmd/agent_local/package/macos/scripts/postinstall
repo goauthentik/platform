@@ -15,6 +15,7 @@ echo "$(date) Running postinstall. install_dir=${INSTALL_DIR}"
 ## Daemon install
 
 mkdir -p "$DAEMON_DIR/config"
+mkdir -p "$DAEMON_DIR/runtime"
 chmod -R 700 "$DAEMON_DIR"
 cp -n ./sysd-config.json "$DAEMON_DIR/config/config.json"
 
@@ -22,7 +23,7 @@ sudo launchctl unload -w $DAEMON_PLIST_PATH
 
 sleep 1
 cp -f "./daemon.plist" $DAEMON_PLIST_PATH
-/usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 ${INSTALL_DIR}/authentik\ Agent.app/Contents/Resources/ak-sysd" $DAEMON_PLIST_PATH
+/usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 ${INSTALL_DIR}/authentik\ Agent.app/Contents/MacOS/ak-sysd" $DAEMON_PLIST_PATH
 
 sudo launchctl load -w $DAEMON_PLIST_PATH
 

@@ -28,6 +28,7 @@ func Manager() *storage.ConfigManager[*Config] {
 type Config struct {
 	Debug      bool   `json:"debug"`
 	RuntimeDir string `json:"runtime"`
+	DomainDir  string `json:"domains"`
 	PAM        struct {
 		Enabled           bool `json:"enabled"`
 		TerminateOnExpiry bool `json:"terminate_on_expiry"`
@@ -38,7 +39,6 @@ type Config struct {
 		GIDOffset          int32 `json:"gid_offset"`
 		RefreshIntervalSec int64 `json:"refresh_interval_sec"`
 	} `json:"nss"`
-	DomainDir string `json:"domains"`
 
 	log     *log.Entry
 	domains []DomainConfig
