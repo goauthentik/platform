@@ -3,6 +3,7 @@ import Generated
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
+
     private func shouldSkip(request: ASAuthorizationProviderExtensionAuthorizationRequest) -> Bool {
 //        if !(request.loginManager?.isDeviceRegistered ?? false)
 //            || !(request.loginManager?.isUserRegistered ?? false)

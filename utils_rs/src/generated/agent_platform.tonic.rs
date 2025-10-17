@@ -10,7 +10,6 @@ pub mod agent_platform_client {
     )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
-    ///
     #[derive(Debug, Clone)]
     pub struct AgentPlatformClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -91,11 +90,13 @@ pub mod agent_platform_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        ///
         pub async fn signed_endpoint_header(
             &mut self,
             request: impl tonic::IntoRequest<()>,
-        ) -> std::result::Result<tonic::Response<super::SetupResponse>, tonic::Status> {
+        ) -> std::result::Result<
+            tonic::Response<super::PlatformEndpointResponse>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await

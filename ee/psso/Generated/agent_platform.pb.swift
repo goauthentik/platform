@@ -20,7 +20,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-struct PlatformEndpointHeader: Sendable {
+struct PlatformEndpointResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -47,8 +47,8 @@ struct PlatformEndpointHeader: Sendable {
 
 fileprivate let _protobuf_package = "agent_platform"
 
-extension PlatformEndpointHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".PlatformEndpointHeader"
+extension PlatformEndpointResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PlatformEndpointResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}message\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -78,7 +78,7 @@ extension PlatformEndpointHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: PlatformEndpointHeader, rhs: PlatformEndpointHeader) -> Bool {
+  static func ==(lhs: PlatformEndpointResponse, rhs: PlatformEndpointResponse) -> Bool {
     if lhs._header != rhs._header {return false}
     if lhs.message != rhs.message {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

@@ -8,10 +8,10 @@ import "agent.proto";
 import "google/protobuf/empty.proto";
 
 service AgentPlatform {
-  rpc SignedEndpointHeader(google.protobuf.Empty) returns (PlatformEndpointHeader);
+  rpc SignedEndpointHeader(google.protobuf.Empty) returns (PlatformEndpointResponse);
 }
 
-message PlatformEndpointHeader {
+message PlatformEndpointResponse {
   agent.ResponseHeader header = 1;
   string message = 2;
 }
