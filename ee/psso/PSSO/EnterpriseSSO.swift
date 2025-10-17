@@ -43,6 +43,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
     public func beginAuthorization(
         with request: ASAuthorizationProviderExtensionAuthorizationRequest
     ) {
+        Sentry.setup()
         self.logger.debug("SSOE:beginAuthorization URL \(request.url.absoluteString)")
         if !self.shouldSkip(request: request) {
             request.doNotHandle()
