@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package agent_platform;
+option go_package = "pkg/pb";
+option swift_prefix = "";
+
+import "agent.proto";
+import "google/protobuf/empty.proto";
+
+service AgentPlatform {
+  rpc SignedEndpointHeader(google.protobuf.Empty) returns (PlatformEndpointHeader);
+}
+
+message PlatformEndpointHeader {
+  agent.ResponseHeader header = 1;
+  string message = 2;
+}

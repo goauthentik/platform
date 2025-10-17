@@ -60,22 +60,24 @@ class API {
 
     func RegisterDevice(
         loginConfig: ASAuthorizationProviderExtensionLoginConfiguration,
-        loginManger: ASAuthorizationProviderExtensionLoginManager,
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
         token: String,
         completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
     ) {
         do {
             let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
-                from: loginManger.key(for: .currentDeviceSigning)!)!
+                from: loginManager.key(for: .currentDeviceSigning)!)!
             let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
-                from: loginManger.key(for: .currentDeviceEncryption)!)!
+                from: loginManager.key(for: .currentDeviceEncryption)!)!
             let deviceSerial = DeviceSerial()
             guard deviceSerial != nil else {
                 self.logger.warning("Failed to get device serial")
                 completion(.failed)
                 return
             }
-            let config = ConfigManager.shared.getConfig()
+            let config = ConfigManager.shared.getConfig(
+                loginManager: loginManager
+            )
             let request = DeviceRegistrationRequest(
                 DeviceIdentifier: deviceSerial!,
                 ClientID: config.ClientID,
@@ -111,7 +113,7 @@ class API {
                     }
                 }
                 do {
-                    try loginManger.saveLoginConfiguration(loginConfig)
+                    try loginManager.saveLoginConfiguration(loginConfig)
                     completion(.success)
                     return
                 } catch {
@@ -140,7 +142,7 @@ class API {
                 completion(.failed)
                 return
             }
-            let config = ConfigManager.shared.getConfig()
+            let config = ConfigManager.shared.getConfig(loginManager: loginManger)
             let request = UserRegistrationRequest(
                 DeviceIdentifier: deviceSerial!,
                 UserSecureEnclaveKey: UserSecureEnclaveKey,

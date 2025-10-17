@@ -21,13 +21,23 @@ build:
 
 .PHONY: format
 format:
-	swift format format -i --configuration ${TOP}/.github/swift-format.json --recursive ${PWD}
+	swift format format \
+		-i \
+		--configuration "${TOP}/.github/swift-format.json" \
+		--recursive \
+		${PWD}/Generated \
+		${PWD}/PSSO
 
 .PHONY: gen
 gen:
 	/usr/libexec/Plistbuddy -c "Set CFBundleVersion ${VERSION}" ${PWD}/PSSO/Info.plist
 	/usr/libexec/Plistbuddy -c "Set CFBundleShortVersionString ${VERSION}" ${PWD}/PSSO/Info.plist
 	protoc \
-		--grpc-swift-2_out=${PWD}/pb_generated \
+		--grpc-swift-2_out=${PWD}/Generated \
+		--grpc-swift-2_opt=Server=False \
+		--grpc-swift-2_opt=UseAccessLevelOnImports=True \
+		--swift_out=${PWD}/Generated \
+		--swift_opt=ImplementationOnlyImports=true \
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
+	sed -i 's/@_implementationOnly import/internal import/g' ${PWD}/Generated/*

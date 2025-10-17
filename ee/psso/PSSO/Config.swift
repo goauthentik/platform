@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Foundation
 import OSLog
 
@@ -13,17 +14,12 @@ class ConfigManager {
     var logger: Logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!, category: "ConfigManager")
 
-    func getConfig() -> Config {
-        let sharedMDMConfig = UserDefaults(suiteName: "io.goauthentik.platform")?
-            .object(forKey: "com.apple.configuration.managed")
-        self.logger.debug(
-            "Config: Shared MDM \(String(describing: sharedMDMConfig), privacy: .public)")
-        let mdmConfig = UserDefaults.standard.object(forKey: "com.apple.configuration.managed")
-        self.logger.debug("Config: MDM \(String(describing: mdmConfig), privacy: .public)")
+    func getConfig(loginManager: ASAuthorizationProviderExtensionLoginManager) -> Config {
+        let extData = loginManager.extensionData
         return Config(
-            BaseURL: "https://ak.beryju.dev",
-            ClientID: "apple-platform-sso",
-            AppSlug: "apple-platform-sso"
+            BaseURL: extData["authentik.base"] as! String,
+            ClientID: "",
+            AppSlug: "",
         )
     }
 

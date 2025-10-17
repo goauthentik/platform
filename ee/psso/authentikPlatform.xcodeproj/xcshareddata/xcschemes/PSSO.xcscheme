@@ -21,6 +21,20 @@
                ReferencedContainer = "container:authentikPlatform.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "B42B45012EA24AEA0046D847"
+               BuildableName = "Generated.framework"
+               BlueprintName = "Generated"
+               ReferencedContainer = "container:authentikPlatform.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

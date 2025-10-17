@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -12,6 +12,8 @@
 		609FE38D24893242009FD079 /* AuthenticationViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 609FE38B24893242009FD079 /* AuthenticationViewController.xib */; };
 		B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */; };
 		B404B2742E0DD88800A12D29 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = B404B2732E0DD88500A12D29 /* API.swift */; };
+		B42B450A2EA24B120046D847 /* Generated.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; };
+		B42B450B2EA24B120046D847 /* Generated.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B44148B62E10A6EB00347A5F /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44148B52E10A6EA00347A5F /* Config.swift */; };
 		B49BA5572E0F445700184992 /* AppAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5562E0F445700184992 /* AppAuth */; };
 		B49BA5592E0F445700184992 /* AppAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5582E0F445700184992 /* AppAuthCore */; };
@@ -19,7 +21,35 @@
 		B49BA55F2E0F466300184992 /* OIDC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA55E2E0F466100184992 /* OIDC.swift */; };
 		B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5602E0F73AD00184992 /* Sentry.swift */; };
 		B49BA5632E100E4500184992 /* PlatformSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5622E100E4400184992 /* PlatformSSO.swift */; };
+		B4D2A6402EA25C96000B8E49 /* GRPCCore in Frameworks */ = {isa = PBXBuildFile; productRef = B4D2A63F2EA25C96000B8E49 /* GRPCCore */; };
+		B4D2A6432EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 in Frameworks */ = {isa = PBXBuildFile; productRef = B4D2A6422EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 */; };
+		B4D2A6462EA25CC1000B8E49 /* GRPCProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = B4D2A6452EA25CC1000B8E49 /* GRPCProtobuf */; };
+		B4D2A66F2EA260B8000B8E49 /* Atomics in Frameworks */ = {isa = PBXBuildFile; productRef = B4D2A66E2EA260B8000B8E49 /* Atomics */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B42B450C2EA24B120046D847 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 609FE345248929E6009FD079 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B42B45012EA24AEA0046D847;
+			remoteInfo = GRPC;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B42B450E2EA24B120046D847 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				B42B450B2EA24B120046D847 /* Generated.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		609FE38424893242009FD079 /* PSSO.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PSSO.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,19 +60,16 @@
 		609FE38F24893242009FD079 /* PSSO.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PSSO.entitlements; sourceTree = "<group>"; };
 		B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterpriseSSO.swift; sourceTree = "<group>"; };
 		B404B2732E0DD88500A12D29 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
-		B40E12182E92FA5E007B4CEF /* agent_auth.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent_auth.grpc.swift; sourceTree = "<group>"; };
-		B40E12192E92FA5E007B4CEF /* agent_cache.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent_cache.grpc.swift; sourceTree = "<group>"; };
-		B40E121A2E92FA5E007B4CEF /* agent_config.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent_config.grpc.swift; sourceTree = "<group>"; };
-		B40E121B2E92FA5E007B4CEF /* agent.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = agent.grpc.swift; sourceTree = "<group>"; };
-		B40E121C2E92FA5E007B4CEF /* nss.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = nss.grpc.swift; sourceTree = "<group>"; };
-		B40E121D2E92FA5E007B4CEF /* pam_session.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pam_session.grpc.swift; sourceTree = "<group>"; };
-		B40E121E2E92FA5E007B4CEF /* pam_token.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pam_token.grpc.swift; sourceTree = "<group>"; };
-		B40E121F2E92FA5E007B4CEF /* pam.grpc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pam.grpc.swift; sourceTree = "<group>"; };
+		B42B45022EA24AEA0046D847 /* Generated.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Generated.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B44148B52E10A6EA00347A5F /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		B49BA55E2E0F466100184992 /* OIDC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OIDC.swift; sourceTree = "<group>"; };
 		B49BA5602E0F73AD00184992 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B49BA5622E100E4400184992 /* PlatformSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformSSO.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B42B45032EA24AEA0046D847 /* Generated */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Generated; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		609FE38124893242009FD079 /* Frameworks */ = {
@@ -53,6 +80,18 @@
 				609FE38724893242009FD079 /* AuthenticationServices.framework in Frameworks */,
 				B49BA5592E0F445700184992 /* AppAuthCore in Frameworks */,
 				B49BA55B2E0F447A00184992 /* Sentry in Frameworks */,
+				B42B450A2EA24B120046D847 /* Generated.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B42B44FF2EA24AEA0046D847 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4D2A6462EA25CC1000B8E49 /* GRPCProtobuf in Frameworks */,
+				B4D2A6432EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 in Frameworks */,
+				B4D2A6402EA25C96000B8E49 /* GRPCCore in Frameworks */,
+				B4D2A66F2EA260B8000B8E49 /* Atomics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,8 +101,8 @@
 		609FE344248929E6009FD079 = {
 			isa = PBXGroup;
 			children = (
-				B40E12172E92FA41007B4CEF /* pb_generated */,
 				609FE38824893242009FD079 /* PSSO */,
+				B42B45032EA24AEA0046D847 /* Generated */,
 				609FE38524893242009FD079 /* Frameworks */,
 				609FE34E248929E6009FD079 /* Products */,
 			);
@@ -73,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				609FE38424893242009FD079 /* PSSO.appex */,
+				B42B45022EA24AEA0046D847 /* Generated.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,22 +142,17 @@
 			path = PSSO;
 			sourceTree = "<group>";
 		};
-		B40E12172E92FA41007B4CEF /* pb_generated */ = {
-			isa = PBXGroup;
-			children = (
-				B40E12182E92FA5E007B4CEF /* agent_auth.grpc.swift */,
-				B40E12192E92FA5E007B4CEF /* agent_cache.grpc.swift */,
-				B40E121A2E92FA5E007B4CEF /* agent_config.grpc.swift */,
-				B40E121B2E92FA5E007B4CEF /* agent.grpc.swift */,
-				B40E121C2E92FA5E007B4CEF /* nss.grpc.swift */,
-				B40E121D2E92FA5E007B4CEF /* pam_session.grpc.swift */,
-				B40E121E2E92FA5E007B4CEF /* pam_token.grpc.swift */,
-				B40E121F2E92FA5E007B4CEF /* pam.grpc.swift */,
-			);
-			path = pb_generated;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		B42B44FD2EA24AEA0046D847 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		609FE38324893242009FD079 /* PSSO */ = {
@@ -127,15 +162,44 @@
 				609FE38024893242009FD079 /* Sources */,
 				609FE38124893242009FD079 /* Frameworks */,
 				609FE38224893242009FD079 /* Resources */,
+				B42B450E2EA24B120046D847 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B42B450D2EA24B120046D847 /* PBXTargetDependency */,
 			);
 			name = PSSO;
 			productName = PSSO;
 			productReference = 609FE38424893242009FD079 /* PSSO.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		B42B45012EA24AEA0046D847 /* Generated */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B42B45062EA24AEA0046D847 /* Build configuration list for PBXNativeTarget "Generated" */;
+			buildPhases = (
+				B42B44FD2EA24AEA0046D847 /* Headers */,
+				B42B44FE2EA24AEA0046D847 /* Sources */,
+				B42B44FF2EA24AEA0046D847 /* Frameworks */,
+				B42B45002EA24AEA0046D847 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B42B45032EA24AEA0046D847 /* Generated */,
+			);
+			name = Generated;
+			packageProductDependencies = (
+				B4D2A63F2EA25C96000B8E49 /* GRPCCore */,
+				B4D2A6422EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 */,
+				B4D2A6452EA25CC1000B8E49 /* GRPCProtobuf */,
+				B4D2A66E2EA260B8000B8E49 /* Atomics */,
+			);
+			productName = GRPC;
+			productReference = B42B45022EA24AEA0046D847 /* Generated.framework */;
+			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
@@ -151,6 +215,9 @@
 					609FE38324893242009FD079 = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
+					B42B45012EA24AEA0046D847 = {
+						CreatedOnToolsVersion = 16.4;
+					};
 				};
 			};
 			buildConfigurationList = 609FE348248929E6009FD079 /* Build configuration list for PBXProject "authentikPlatform" */;
@@ -165,12 +232,17 @@
 			packageReferences = (
 				B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */,
+				B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */,
+				B4D2A6412EA25CAF000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-nio-transport" */,
+				B4D2A6442EA25CC1000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */,
+				B4D2A66D2EA260B8000B8E49 /* XCRemoteSwiftPackageReference "swift-atomics" */,
 			);
 			productRefGroup = 609FE34E248929E6009FD079 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				609FE38324893242009FD079 /* PSSO */,
+				B42B45012EA24AEA0046D847 /* Generated */,
 			);
 		};
 /* End PBXProject section */
@@ -181,6 +253,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				609FE38D24893242009FD079 /* AuthenticationViewController.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B42B45002EA24AEA0046D847 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,7 +280,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B42B44FE2EA24AEA0046D847 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B42B450D2EA24B120046D847 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B42B45012EA24AEA0046D847 /* Generated */;
+			targetProxy = B42B450C2EA24B120046D847 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		609FE38B24893242009FD079 /* AuthenticationViewController.xib */ = {
@@ -370,7 +464,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = "232G855Y8N";
+				DEVELOPMENT_TEAM = 232G855Y8N;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = PSSO/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "authentik Endpoint";
@@ -387,6 +481,111 @@
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B42B45072EA24AEA0046D847 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 232G855Y8N;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Authentik Security Inc. All rights reserved.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.GRPC;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,4,7";
+				TVOS_DEPLOYMENT_TARGET = 18;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = 11;
+				XROS_DEPLOYMENT_TARGET = 2.5;
+			};
+			name = Debug;
+		};
+		B42B45082EA24AEA0046D847 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2025 Authentik Security Inc. All rights reserved.";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.platform.generated;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx watchos watchsimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_MODULE = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,4,7";
+				TVOS_DEPLOYMENT_TARGET = 18;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = 11;
+				XROS_DEPLOYMENT_TARGET = 2.5;
 			};
 			name = Release;
 		};
@@ -411,6 +610,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		B42B45062EA24AEA0046D847 /* Build configuration list for PBXNativeTarget "Generated" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B42B45072EA24AEA0046D847 /* Debug */,
+				B42B45082EA24AEA0046D847 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -430,6 +638,38 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/grpc/grpc-swift-2";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.0;
+			};
+		};
+		B4D2A6412EA25CAF000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-nio-transport" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/grpc/grpc-swift-nio-transport.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		B4D2A6442EA25CC1000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/grpc/grpc-swift-protobuf";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		B4D2A66D2EA260B8000B8E49 /* XCRemoteSwiftPackageReference "swift-atomics" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-atomics.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -447,6 +687,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
+		};
+		B4D2A63F2EA25C96000B8E49 /* GRPCCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */;
+			productName = GRPCCore;
+		};
+		B4D2A6422EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4D2A6412EA25CAF000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-nio-transport" */;
+			productName = GRPCNIOTransportHTTP2;
+		};
+		B4D2A6452EA25CC1000B8E49 /* GRPCProtobuf */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4D2A6442EA25CC1000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */;
+			productName = GRPCProtobuf;
+		};
+		B4D2A66E2EA260B8000B8E49 /* Atomics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4D2A66D2EA260B8000B8E49 /* XCRemoteSwiftPackageReference "swift-atomics" */;
+			productName = Atomics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
