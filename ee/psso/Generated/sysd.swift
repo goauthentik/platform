@@ -23,7 +23,7 @@ public class GRPCsysd {
         self.logger.debug("Connecting to GRPC Sysd")
         return try await withGRPCClient(
             transport: .http2NIOPosix(
-                target: .unixDomainSocket(path: "/opt/authentik/sys.sock"),
+                target: .unixDomainSocket(path: "/var/run/authentik-sysd.sock"),
                 transportSecurity: .plaintext
             )
         ) { client in

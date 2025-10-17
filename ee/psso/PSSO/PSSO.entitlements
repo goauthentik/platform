@@ -6,7 +6,7 @@
 	<string>232G855Y8N.io.goauthentik.platform.psso</string>
 	<key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
 	<array>
-		<string>/opt/authentik/sys.sock</string>
+		<string>/var/run/authentik-sysd.sock</string>
 	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array/>

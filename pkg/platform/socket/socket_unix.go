@@ -12,7 +12,7 @@ import (
 )
 
 func listen(spath pstr.PlatformString, perm SocketPermMode) (InfoListener, error) {
-	p := spath.ForLinux()
+	p := spath.ForCurrent()
 	uperm := 0700
 	switch perm {
 	case SocketOwner:
@@ -37,5 +37,5 @@ func listen(spath pstr.PlatformString, perm SocketPermMode) (InfoListener, error
 }
 
 func connect(path pstr.PlatformString) (net.Conn, error) {
-	return net.Dial("unix", path.ForLinux())
+	return net.Dial("unix", path.ForCurrent())
 }
