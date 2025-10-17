@@ -43,12 +43,12 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
     public func beginAuthorization(
         with request: ASAuthorizationProviderExtensionAuthorizationRequest
     ) {
+        self.logger.debug("SSOE:beginAuthorization URL \(request.url.absoluteString)")
         if !self.shouldSkip(request: request) {
             request.doNotHandle()
             return
         }
         // TODO: Subpath
-        self.logger.debug("SSOE: URL \(request.url.absoluteString, privacy: .public)")
         if request.url.path() != AuthenticationViewController.ssoeURL {
             request.doNotHandle()
             return

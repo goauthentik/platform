@@ -36,7 +36,7 @@ class OIDC {
             additionalParameters: nil
         )
         let authz = self.request!.authorizationRequestURL()
-        viewController.logger.debug("authz url \(authz, privacy: .public)")
+        viewController.logger.debug("authz url \(authz)")
         viewController.authorizationRequest = authz
     }
 

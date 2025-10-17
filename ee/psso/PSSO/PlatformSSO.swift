@@ -67,9 +67,9 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
     ) {
         Sentry.setup()
         self.logger.debug(
-            "beginUserRegistration \(userName ?? "", privacy: .public), method \(String(describing: method), privacy: .public)"
+            "beginUserRegistration \(userName ?? ""), method \(String(describing: method))"
         )
-        self.logger.debug("options: \(String.init(describing: options), privacy: .public)")
+        self.logger.debug("options: \(String.init(describing: options))")
         let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
             loginUserName: userName ?? "")
         let config = ConfigManager.shared.getConfig(loginManager: loginManager)
@@ -96,7 +96,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
                 completion(.failed)
             }
             OIDC.shared.completion = { token in
-                self.logger.debug("got token \(String(describing: token), privacy: .public)")
+                self.logger.debug("got token \(String(describing: token))")
 
                 API.shared.RegisterUser(
                     loginConfig: loginConfig,

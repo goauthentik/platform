@@ -87,7 +87,7 @@ class API {
                 SignKeyID: SignKeyID,
             )
             self.logger.debug(
-                "registration request: \(String(describing: request), privacy: .public)")
+                "registration request: \(String(describing: request))")
 
             try self.SendRequest(
                 data: request,
@@ -149,7 +149,7 @@ class API {
                 EnclaveKeyID: EnclaveKeyID,
             )
             self.logger.debug(
-                "registration request: \(String(describing: request), privacy: .public)")
+                "registration request: \(String(describing: request))")
 
             try self.SendRequest(
                 data: request,
@@ -168,7 +168,7 @@ class API {
                     if httpResponse.statusCode >= 400 {
                         self.logger
                             .warning(
-                                "failed request: \(String(decoding: data!, as: UTF8.self), privacy: .public)"
+                                "failed request: \(String(decoding: data!, as: UTF8.self))"
                             )
                         completion(.failed)
                         return
