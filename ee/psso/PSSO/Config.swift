@@ -17,7 +17,7 @@ class ConfigManager {
     func getConfig(loginManager: ASAuthorizationProviderExtensionLoginManager) -> Config {
         let extData = loginManager.extensionData
         return Config(
-            BaseURL: extData["authentik.base"] as! String,
+            BaseURL: extData["authentik.base"] as? String ?? "",
             ClientID: "",
             AppSlug: "",
         )
