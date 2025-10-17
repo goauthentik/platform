@@ -9,6 +9,7 @@ use crate::auth::authorize::authenticate_authorize_impl;
 use crate::logger::prelude;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
+use authentik_sys::logger::exit_log;
 use authentik_sys::logger::init_log;
 use authentik_sys::logger::log_hook;
 use ctor::{ctor, dtor};
@@ -30,6 +31,7 @@ fn ctor() {
 
 #[dtor]
 fn dtor() {
+    exit_log();
     log_hook("dtor");
 }
 

@@ -2,7 +2,7 @@ mod group;
 mod passwd;
 mod shadow;
 
-use authentik_sys::logger::{init_log, log_hook};
+use authentik_sys::logger::{exit_log, init_log, log_hook};
 use ctor::{ctor, dtor};
 use group::AuthentikGroupHooks;
 use libnss::{libnss_group_hooks, libnss_passwd_hooks, libnss_shadow_hooks};
@@ -21,5 +21,6 @@ fn ctor() {
 
 #[dtor]
 fn dtor() {
+    exit_log();
     log_hook("dtor");
 }
