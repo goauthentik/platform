@@ -1,13 +1,13 @@
-.PHONY: clean
-LD_FLAGS = -X goauthentik.io/platform/pkg/storage.Version=${VERSION} -X goauthentik.io/platform/pkg/storage.BuildHash=dev-${VERSION_HASH}
-GO_FLAGS = -ldflags "${LD_FLAGS}" -v
-
 include common.mk
+
+.PHONY: all
 all: clean gen
 
+.PHONY: clean
 clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
+.PHONY: gen
 gen: gen-proto utils_rs/gen ee/psso/gen
 	go generate ./...
 
