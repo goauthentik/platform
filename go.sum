@@ -226,6 +226,8 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/mergestat/timediff v0.0.4 h1:NZ3sqG/6K9flhTubdltmRx3RBfIiYv6LsGP+4FlXMM8=
 github.com/mergestat/timediff v0.0.4/go.mod h1:yvMUaRu2oetc+9IbPLYBJviz6sA7xz8OXMDfhBl7YSI=
+github.com/micromdm/plist v0.2.1 h1:4SoSMOVAyzv1ThT8IKLgXLJEKezLkcVDN6wivqTTFdo=
+github.com/micromdm/plist v0.2.1/go.mod h1:flkfm0od6GzyXBqI28h5sgEyi3iPO28W2t1Zm9LpwWs=
 github.com/mitchellh/copystructure v1.2.0 h1:vpKXTN4ewci03Vljg/q9QvCGUDttBOGBIa15WveJJGw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=

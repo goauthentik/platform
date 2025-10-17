@@ -21,6 +21,7 @@ require (
 	github.com/keybase/go-keychain v0.0.1
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.4
+	github.com/micromdm/plist v0.2.1
 	github.com/nightlyone/lockfile v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
