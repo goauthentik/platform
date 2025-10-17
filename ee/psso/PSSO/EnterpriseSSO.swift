@@ -25,7 +25,10 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
         let config = ConfigManager.shared.getConfig(
             loginManager: request.loginManager!
         )
-        let base = URL(string: config.BaseURL)!
+        guard let base = URL(string: config.BaseURL) else {
+            self.logger.info("SSOE: Unable to parse base URL")
+            return true
+        }
         if request.url.scheme != base.scheme
             || request.url
                 .host()
@@ -55,15 +58,21 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             return
         }
         Task {
-            let header = try await Generated.GRPCsysd.shared.platformSignedEndpointHeader()
-            let url = request.url.appending(queryItems: [URLQueryItem(name: "ak-ssoe", value: header)])
-            let headers: [String: String] = [
-                "Location": url.absoluteString
-            ]
-            if let response = HTTPURLResponse.init(
-                url: request.url, statusCode: 302, httpVersion: nil, headerFields: headers)
-            {
-                request.complete(httpResponse: response, httpBody: nil)
+            do {
+                let header = try await Generated.GRPCsysd.shared.platformSignedEndpointHeader()
+                let url = request.url.appending(queryItems: [URLQueryItem(name: "ak-ssoe", value: header)])
+                let headers: [String: String] = [
+                    "Location": url.absoluteString
+                ]
+                if let response = HTTPURLResponse.init(
+                    url: request.url, statusCode: 302, httpVersion: nil, headerFields: headers)
+                {
+                    request.complete(httpResponse: response, httpBody: nil)
+                }
+            } catch {
+                self.logger.error("failed to register: \(error)")
+                request.doNotHandle()
+                return
             }
         }
     }
