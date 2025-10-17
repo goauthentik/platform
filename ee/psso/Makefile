@@ -23,7 +23,7 @@ build:
 		--include-sources \
 		--org authentik-security-inc \
 		--project platform \
-		${PWD}/DerivedData/authentikPlatform/Build/Products/Release
+		${PWD}/DerivedData/Build/Products/Release
 
 .PHONY: format
 format:
