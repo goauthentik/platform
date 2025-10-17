@@ -9,18 +9,18 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
 //            || !(request.loginManager?.isUserRegistered ?? false)
 //        {
 //            self.logger.info("SSOE: Skipping due to unregistered user or device")
-//            return false
+//            return true
 //        }
         let callerBundle = request.callerBundleIdentifier
         if let exclusions = request.extensionData["ExcludedApps"] as? [String],
             exclusions.contains(callerBundle)
         {
             self.logger.info("SSOE: Skipping for excluded bundle \(callerBundle)")
-            return false
+            return true
         }
         if request.loginManager == nil {
             self.logger.info("SSOE: No login manager, skipping")
-            return false
+            return true
         }
         let config = ConfigManager.shared.getConfig(
             loginManager: request.loginManager!
@@ -34,9 +34,9 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             || !request.url.path().starts(with: base.path())
         {
             self.logger.info("SSOE: Skipping due to mismatching base URL")
-            return false
+            return true
         }
-        return true
+        return false
     }
 
     static let ssoeURL = "/endpoint/agent/apple_ssoext/"
@@ -44,9 +44,8 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
     public func beginAuthorization(
         with request: ASAuthorizationProviderExtensionAuthorizationRequest
     ) {
-        Sentry.setup()
         self.logger.debug("SSOE:beginAuthorization URL \(request.url.absoluteString)")
-        if !self.shouldSkip(request: request) {
+        if self.shouldSkip(request: request) {
             request.doNotHandle()
             return
         }

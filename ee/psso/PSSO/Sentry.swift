@@ -12,4 +12,8 @@ class Sentry {
             options.releaseName = "ak-platform-ee-psso@\(appVersion ?? "dev")"
         }
     }
+
+    static func flush() {
+        SentrySDK.flush(timeout: 3)
+    }
 }

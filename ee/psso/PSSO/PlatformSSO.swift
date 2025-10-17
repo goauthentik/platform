@@ -23,7 +23,6 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             ASAuthorizationProviderExtensionRegistrationResult
         ) -> Void
     ) {
-        Sentry.setup()
         self.logger.debug("Begin Device Registration")
         let config = ConfigManager.shared.getConfig(loginManager: loginManager)
         self.logger.debug("Options: \(String(describing: config))")
@@ -65,7 +64,6 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         options: ASAuthorizationProviderExtensionRequestOptions = [],
         completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
     ) {
-        Sentry.setup()
         self.logger.debug(
             "beginUserRegistration \(userName ?? ""), method \(String(describing: method))"
         )

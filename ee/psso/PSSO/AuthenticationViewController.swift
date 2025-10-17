@@ -30,10 +30,12 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
 
     private func load() {
         self.logger.debug("Load")
+        Sentry.setup()
     }
 
     private func unload() {
         self.logger.debug("Unload")
+        Sentry.flush()
     }
 
     override func viewDidAppear() {

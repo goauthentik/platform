@@ -128,13 +128,13 @@
 		609FE38824893242009FD079 /* PSSO */ = {
 			isa = PBXGroup;
 			children = (
+				609FE38924893242009FD079 /* AuthenticationViewController.swift */,
 				B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */,
 				B49BA5622E100E4400184992 /* PlatformSSO.swift */,
 				B44148B52E10A6EA00347A5F /* Config.swift */,
 				B49BA5602E0F73AD00184992 /* Sentry.swift */,
 				B49BA55E2E0F466100184992 /* OIDC.swift */,
 				B404B2732E0DD88500A12D29 /* API.swift */,
-				609FE38924893242009FD079 /* AuthenticationViewController.swift */,
 				609FE38B24893242009FD079 /* AuthenticationViewController.xib */,
 				609FE38E24893242009FD079 /* Info.plist */,
 				609FE38F24893242009FD079 /* PSSO.entitlements */,
