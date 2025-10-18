@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
 
 var globalMutex = false
@@ -65,10 +65,10 @@ func delta(a config.ConfigV1, b config.ConfigV1) []string {
 	return delta
 }
 
-func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent[config.ConfigV1]) {
+func (gtm *GlobalTokenManager) eventHandler(evt cfgmgr.ConfigChangedEvent[config.ConfigV1]) {
 	gtm.mlock.Lock()
 	defer gtm.mlock.Unlock()
-	if evt.Type == storage.ConfigChangedAdded {
+	if evt.Type == cfgmgr.ConfigChangedAdded {
 		d := delta(evt.PreviousConfig, config.Manager().Get())
 		for _, dd := range d {
 			m, err := NewProfileVerified(dd)
@@ -78,7 +78,7 @@ func (gtm *GlobalTokenManager) eventHandler(evt storage.ConfigChangedEvent[confi
 			}
 			gtm.managers[dd] = m
 		}
-	} else if evt.Type == storage.ConfigChangedRemoved {
+	} else if evt.Type == cfgmgr.ConfigChangedRemoved {
 		d := delta(config.Manager().Get(), evt.PreviousConfig)
 		for _, dd := range d {
 			mgr := gtm.managers[dd]

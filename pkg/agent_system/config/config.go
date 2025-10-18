@@ -7,13 +7,13 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
 
-var manager *storage.ConfigManager[*Config]
+var manager *cfgmgr.Manager[*Config]
 
 func Init(path string) error {
-	m, err := storage.NewManager[*Config](path)
+	m, err := cfgmgr.NewManager[*Config](path)
 	if err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func Init(path string) error {
 	return nil
 }
 
-func Manager() *storage.ConfigManager[*Config] {
+func Manager() *cfgmgr.Manager[*Config] {
 	return manager
 }
 
@@ -44,7 +44,7 @@ type Config struct {
 	domains []DomainConfig
 }
 
-func (c *Config) Default() storage.Configer {
+func (c *Config) Default() cfgmgr.Configer {
 	return &Config{
 		log: log.WithField("logger", "storage.config"),
 	}
@@ -78,8 +78,8 @@ func (c *Config) PostLoad() error {
 }
 
 func (c *Config) PreSave() error { return nil }
-func (c *Config) PostUpdate(storage.Configer, fsnotify.Event) storage.ConfigChangedType {
-	return storage.ConfigChangedGeneric
+func (c *Config) PostUpdate(cfgmgr.Configer, fsnotify.Event) cfgmgr.ConfigChangedType {
+	return cfgmgr.ConfigChangedGeneric
 }
 
 func (c *Config) Domains() []DomainConfig {

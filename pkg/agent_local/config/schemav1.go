@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
 
 type ConfigV1 struct {
@@ -13,7 +13,7 @@ type ConfigV1 struct {
 	log *log.Entry
 }
 
-func (c ConfigV1) Default() storage.Configer {
+func (c ConfigV1) Default() cfgmgr.Configer {
 	return ConfigV1{
 		Debug:    false,
 		Profiles: map[string]*ConfigV1Profile{},
@@ -21,14 +21,14 @@ func (c ConfigV1) Default() storage.Configer {
 	}
 }
 
-func (c ConfigV1) PostUpdate(prev storage.Configer, evt fsnotify.Event) storage.ConfigChangedType {
+func (c ConfigV1) PostUpdate(prev cfgmgr.Configer, evt fsnotify.Event) cfgmgr.ConfigChangedType {
 	previousConfig := prev.(ConfigV1)
 	if len(previousConfig.Profiles) < len(c.Profiles) {
-		return storage.ConfigChangedAdded
+		return cfgmgr.ConfigChangedAdded
 	} else if len(previousConfig.Profiles) > len(c.Profiles) {
-		return storage.ConfigChangedRemoved
+		return cfgmgr.ConfigChangedRemoved
 	}
-	return storage.ConfigChangedGeneric
+	return cfgmgr.ConfigChangedGeneric
 }
 
 type ConfigV1Profile struct {

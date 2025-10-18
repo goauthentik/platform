@@ -14,7 +14,7 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/socket"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc"
 )
 
@@ -24,7 +24,7 @@ type Agent struct {
 	pb.UnimplementedAgentConfigServer
 
 	grpc           *grpc.Server
-	cfg            *storage.ConfigManager[config.ConfigV1]
+	cfg            *cfgmgr.Manager[config.ConfigV1]
 	tr             *token.GlobalTokenManager
 	log            *log.Entry
 	systrayStarted bool
