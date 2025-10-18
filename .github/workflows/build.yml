@@ -181,6 +181,11 @@ jobs:
         with:
           name: apt-repository
           path: ${{ steps.apt-repo.outputs.repository-path }}
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-packages
+          path: ./bin
   deploy-to-netlify:
     needs: deploy
     runs-on: ubuntu-latest
@@ -201,6 +206,11 @@ jobs:
         with:
           name: apt-repository
           path: ./deploy
+      - name: Download packages
+        uses: actions/download-artifact@v5
+        with:
+          name: all-packages
+          path: ./packages
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v3.0
         with:

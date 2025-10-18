@@ -298,9 +298,6 @@ runs:
         # Redirect common APT client requests
         /Release /dists/${{ inputs.distribution }}/Release 301
         /Packages /dists/${{ inputs.distribution }}/${{ inputs.components }}/binary-amd64/Packages 301
-
-        # Fallback
-        /* /index.html 404
         EOF
 
     - name: Generate repository statistics
