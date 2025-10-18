@@ -12,6 +12,10 @@ extension URL {
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
 
+    static let ssoExtURLPath = "/endpoint/agent/apple_ssoext/"
+    static let queryChallenge = "challenge"
+    static let queryResponse = "response"
+
     private func shouldSkip(request: ASAuthorizationProviderExtensionAuthorizationRequest) -> Bool {
 //        if !(request.loginManager?.isDeviceRegistered ?? false)
 //            || !(request.loginManager?.isUserRegistered ?? false)
@@ -47,10 +51,12 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             self.logger.info("SSOE: Skipping due to mismatching base URL")
             return true
         }
+        if request.url.valueOf(AuthenticationViewController.queryResponse) == nil {
+            self.logger.info("SSOE: Skipping due to existing response")
+            return true
+        }
         return false
     }
-
-    static let ssoeURL = "/endpoint/agent/apple_ssoext/"
 
     public func beginAuthorization(
         with request: ASAuthorizationProviderExtensionAuthorizationRequest
@@ -61,11 +67,11 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             return
         }
         // TODO: Subpath
-        if request.url.path() != AuthenticationViewController.ssoeURL {
+        if request.url.path() != AuthenticationViewController.ssoExtURLPath {
             request.doNotHandle()
             return
         }
-        guard let challenge = request.url.valueOf("challenge") else {
+        guard let challenge = request.url.valueOf(AuthenticationViewController.queryChallenge) else {
             self.logger.debug("SSOE: no challenge")
             request.doNotHandle()
             return
@@ -75,7 +81,9 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
                 let header = try await Generated.GRPCsysd.shared.platformSignedEndpointHeader(
                     challenge: challenge
                 )
-                let url = request.url.appending(queryItems: [URLQueryItem(name: "ak-ssoe", value: header)])
+                let url = request.url.appending(
+                    queryItems: [URLQueryItem(name: AuthenticationViewController.queryResponse, value: header)]
+                )
                 let headers: [String: String] = [
                     "Location": url.absoluteString
                 ]

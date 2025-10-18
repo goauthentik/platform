@@ -62,7 +62,7 @@ func (ds *Server) SignedEndpointHeader(ctx context.Context, req *pb.PlatformEndp
 		"sub": ser,
 		"atc": req.Challenge,
 	})
-	s, err := t.SignedString(config.Manager().Get().Domains()[0].Token)
+	s, err := t.SignedString([]byte(config.Manager().Get().Domains()[0].Token))
 	if err != nil {
 		return nil, err
 	}
