@@ -45,7 +45,6 @@ func Set(service string, user string, password string) error {
 		return errors.Wrap(err, "failed to SetAccessControl")
 	}
 	item.SetSynchronizable(keychain.SynchronizableNo)
-	item.SetAccessible(keychain.AccessibleWhenUnlocked)
 	err = item.SetUseDataProtectionKeychain(true)
 	if err != nil {
 		return errors.Wrap(err, "failed to SetUseDataProtectionKeychain")
