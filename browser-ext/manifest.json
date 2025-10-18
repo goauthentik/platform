@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "authentik Extension",
-    "version": "0.12.5",
+    "version": "0.12.6",
     "description": "authentik Browser extension to launch applications.",
     "permissions": ["storage", "activeTab", "nativeMessaging"],
     "background": {
