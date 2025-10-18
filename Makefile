@@ -35,6 +35,12 @@ test-shell:
 
 test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
+bump:
+	sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
+	"$(MAKE)" browser-ext/bump
+	"$(MAKE)" agent/bump
+	"$(MAKE)" ee/psso/bump || true
+
 pam/%:
 	"$(MAKE)" -C "${TOP}/pam" $*
 

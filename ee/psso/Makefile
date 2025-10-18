@@ -10,11 +10,14 @@ clean:
 	xcodebuild clean
 	cd ${TOP} && rm -rf bin/${TARGET}
 
+.PHONY: bump
+bump:
+	/usr/libexec/Plistbuddy -c "Set CFBundleVersion ${VERSION}" ${PWD}/PSSO/Info.plist
+	/usr/libexec/Plistbuddy -c "Set CFBundleShortVersionString ${VERSION}" ${PWD}/PSSO/Info.plist
+
 .PHONY: build
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
-	/usr/libexec/Plistbuddy -c "Set CFBundleVersion ${VERSION}" ${PWD}/PSSO/Info.plist
-	/usr/libexec/Plistbuddy -c "Set CFBundleShortVersionString ${VERSION}" ${PWD}/PSSO/Info.plist
 	xcodebuild ${XCB_ARGS} \
 		-showBuildSettings
 	xcodebuild ${XCB_ARGS} \

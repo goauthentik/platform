@@ -3,9 +3,12 @@ include ../common.mk
 TARGET := browser-ext
 FILE_NAME := authentik.zip
 
-build:
+.PHONY: bump
+bump:
 	npm version ${VERSION} || true
 	yq -i '.version = ${VERSION}' manifest.json
+
+build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	npm i
 	npm run prettier
