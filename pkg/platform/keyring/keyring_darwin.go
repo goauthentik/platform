@@ -27,7 +27,7 @@ func Get(service string, user string) (string, error) {
 	if len(results) == 1 {
 		return string(results[0].Data), nil
 	}
-	return "", nil
+	return "", keychain.ErrorItemNotFound
 }
 
 func Set(service string, user string, password string) error {

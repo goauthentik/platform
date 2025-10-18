@@ -6,10 +6,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var _appName string
+
 func Setup(appName string) error {
 	if !ShouldSwitch() {
 		return nil
 	}
+	_appName = appName
 	return platformSetup(appName)
 }
 
@@ -24,5 +27,5 @@ func Cleanup() {
 }
 
 func Get() *log.Entry {
-	return log.StandardLogger().WithField("pid", os.Getpid())
+	return log.StandardLogger().WithField("pid", os.Getpid()).WithField("target", _appName)
 }
