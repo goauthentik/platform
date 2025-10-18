@@ -218,6 +218,13 @@ runs:
         </head>
         <body>
             <h1>authentik Platform Packages</h1>
+            <div class="setup-section">
+                <h2>Desktop packages</h2>
+                <ul>
+                    <li><a href="packages/authentik_macos-15_agent/agent_local/authentik agent installer.pkg">macOS</a></li>
+                    <li><a href="packages/authentik_windows-2025_agent/agent_local/agent.msi">Windows</a></li>
+                </ul>
+            </div>
             <div class="repo-info">
                 <h2>Repository Information</h2>
                 <p><strong>Repository:</strong> ${{ inputs.repository-name }}</p>
