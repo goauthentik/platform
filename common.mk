@@ -15,7 +15,7 @@ PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
 
-LD_FLAGS = -X goauthentik.io/platform/pkg/storage.Version=${VERSION} -X goauthentik.io/platform/pkg/storage.BuildHash=dev-${VERSION_HASH}
+LD_FLAGS = -X goauthentik.io/platform/pkg/meta.Version=${VERSION} -X goauthentik.io/platform/pkg/meta.BuildHash=dev-${VERSION_HASH}
 GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 
 TME := docker exec authentik-cli_devcontainer-test-machine-1

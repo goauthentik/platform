@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_system/config"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/meta"
 )
 
 var configFile string
@@ -16,7 +16,7 @@ var defaultConfigFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "ak-sysd",
-	Short: fmt.Sprintf("authentik System Agent v%s", storage.FullVersion()),
+	Short: fmt.Sprintf("authentik System Agent v%s", meta.FullVersion()),
 }
 
 func Execute() {

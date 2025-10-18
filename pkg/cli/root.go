@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_local/types"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/meta"
 )
 
 var (
@@ -24,7 +24,7 @@ func mustFlag[T any](res T, err error) T {
 
 var rootCmd = &cobra.Command{
 	Use:   "ak",
-	Short: fmt.Sprintf("authentik CLI v%s", storage.FullVersion()),
+	Short: fmt.Sprintf("authentik CLI v%s", meta.FullVersion()),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		verbose := mustFlag(cmd.Flags().GetBool("verbose"))
 		if verbose {
