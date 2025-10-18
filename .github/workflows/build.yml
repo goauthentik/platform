@@ -210,7 +210,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: all-packages
-          path: ./packages
+          path: ./deploy/packages
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v3.0
         with:
