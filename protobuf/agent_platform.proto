@@ -8,7 +8,12 @@ import "agent.proto";
 import "google/protobuf/empty.proto";
 
 service AgentPlatform {
-  rpc SignedEndpointHeader(google.protobuf.Empty) returns (PlatformEndpointResponse);
+  rpc SignedEndpointHeader(PlatformEndpointRequest) returns (PlatformEndpointResponse);
+}
+
+message PlatformEndpointRequest {
+  agent.RequestHeader header = 1;
+  string challenge = 2;
 }
 
 message PlatformEndpointResponse {

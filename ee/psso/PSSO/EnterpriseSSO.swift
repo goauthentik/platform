@@ -1,6 +1,14 @@
 import AuthenticationServices
 import Generated
 
+extension URL {
+    func valueOf(_ queryParameterName: String) -> String? {
+        guard let url = URLComponents(string: self.absoluteString) else { return nil }
+        return url.queryItems?.first(where: { $0.name == queryParameterName })?.value
+    }
+}
+
+
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
 
@@ -57,9 +65,16 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             request.doNotHandle()
             return
         }
+        guard let challenge = request.url.valueOf("challenge") else {
+            self.logger.debug("SSOE: no challenge")
+            request.doNotHandle()
+            return
+        }
         Task {
             do {
-                let header = try await Generated.GRPCsysd.shared.platformSignedEndpointHeader()
+                let header = try await Generated.GRPCsysd.shared.platformSignedEndpointHeader(
+                    challenge: challenge
+                )
                 let url = request.url.appending(queryItems: [URLQueryItem(name: "ak-ssoe", value: header)])
                 let headers: [String: String] = [
                     "Location": url.absoluteString

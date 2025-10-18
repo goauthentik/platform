@@ -92,7 +92,7 @@ pub mod agent_platform_client {
         }
         pub async fn signed_endpoint_header(
             &mut self,
-            request: impl tonic::IntoRequest<()>,
+            request: impl tonic::IntoRequest<super::PlatformEndpointRequest>,
         ) -> std::result::Result<
             tonic::Response<super::PlatformEndpointResponse>,
             tonic::Status,

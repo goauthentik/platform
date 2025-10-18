@@ -17,9 +17,9 @@ public class GRPCsysd {
     public static let shared: GRPCsysd = GRPCsysd()
 
     var logger: Logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!, category: "GRPCsysd")
+        subsystem: Bundle.main.bundleIdentifier!, category: "GRPC.sysd")
 
-    public func platformSignedEndpointHeader() async throws -> String {
+    public func platformSignedEndpointHeader(challenge: String) async throws -> String {
         self.logger.debug("Connecting to GRPC Sysd")
         return try await withGRPCClient(
             transport: .http2NIOPosix(
@@ -29,7 +29,12 @@ public class GRPCsysd {
         ) { client in
             let agentPlatform = AgentPlatform.Client(wrapping: client)
             let reply = try await agentPlatform.signedEndpointHeader(
-                request: ClientRequest(message: SwiftProtobuf.Google_Protobuf_Empty()),
+                request: ClientRequest(message: PlatformEndpointRequest.with{
+                    $0.header = RequestHeader.with {
+                        $0.profile = "default"
+                    }
+                    $0.challenge = challenge
+                })
             )
             return reply.message
         }

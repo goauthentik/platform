@@ -10,7 +10,6 @@
 
 internal import GRPCCore
 internal import GRPCProtobuf
-internal import SwiftProtobuf
 
 // MARK: - agent_platform.AgentPlatform
 
@@ -24,7 +23,7 @@ internal enum AgentPlatform {
         /// Namespace for "SignedEndpointHeader" metadata.
         internal enum SignedEndpointHeader {
             /// Request type for "SignedEndpointHeader".
-            internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
+            internal typealias Input = PlatformEndpointRequest
             /// Response type for "SignedEndpointHeader".
             internal typealias Output = PlatformEndpointResponse
             /// Descriptor for "SignedEndpointHeader".
@@ -58,8 +57,8 @@ extension AgentPlatform {
         /// Call the "SignedEndpointHeader" method.
         ///
         /// - Parameters:
-        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
-        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - request: A request containing a single `PlatformEndpointRequest` message.
+        ///   - serializer: A serializer for `PlatformEndpointRequest` messages.
         ///   - deserializer: A deserializer for `PlatformEndpointResponse` messages.
         ///   - options: Options to apply to this RPC.
         ///   - handleResponse: A closure which handles the response, the result of which is
@@ -67,8 +66,8 @@ extension AgentPlatform {
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
         func signedEndpointHeader<Result>(
-            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
-            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            request: GRPCCore.ClientRequest<PlatformEndpointRequest>,
+            serializer: some GRPCCore.MessageSerializer<PlatformEndpointRequest>,
             deserializer: some GRPCCore.MessageDeserializer<PlatformEndpointResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PlatformEndpointResponse>) async throws -> Result
@@ -94,8 +93,8 @@ extension AgentPlatform {
         /// Call the "SignedEndpointHeader" method.
         ///
         /// - Parameters:
-        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
-        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - request: A request containing a single `PlatformEndpointRequest` message.
+        ///   - serializer: A serializer for `PlatformEndpointRequest` messages.
         ///   - deserializer: A deserializer for `PlatformEndpointResponse` messages.
         ///   - options: Options to apply to this RPC.
         ///   - handleResponse: A closure which handles the response, the result of which is
@@ -103,8 +102,8 @@ extension AgentPlatform {
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
         internal func signedEndpointHeader<Result>(
-            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
-            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            request: GRPCCore.ClientRequest<PlatformEndpointRequest>,
+            serializer: some GRPCCore.MessageSerializer<PlatformEndpointRequest>,
             deserializer: some GRPCCore.MessageDeserializer<PlatformEndpointResponse>,
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PlatformEndpointResponse>) async throws -> Result = { response in
@@ -129,14 +128,14 @@ extension AgentPlatform.ClientProtocol {
     /// Call the "SignedEndpointHeader" method.
     ///
     /// - Parameters:
-    ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+    ///   - request: A request containing a single `PlatformEndpointRequest` message.
     ///   - options: Options to apply to this RPC.
     ///   - handleResponse: A closure which handles the response, the result of which is
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
     internal func signedEndpointHeader<Result>(
-        request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+        request: GRPCCore.ClientRequest<PlatformEndpointRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PlatformEndpointResponse>) async throws -> Result = { response in
             try response.message
@@ -144,7 +143,7 @@ extension AgentPlatform.ClientProtocol {
     ) async throws -> Result where Result: Sendable {
         try await self.signedEndpointHeader(
             request: request,
-            serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
+            serializer: GRPCProtobuf.ProtobufSerializer<PlatformEndpointRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<PlatformEndpointResponse>(),
             options: options,
             onResponse: handleResponse
@@ -166,14 +165,14 @@ extension AgentPlatform.ClientProtocol {
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
     internal func signedEndpointHeader<Result>(
-        _ message: SwiftProtobuf.Google_Protobuf_Empty,
+        _ message: PlatformEndpointRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PlatformEndpointResponse>) async throws -> Result = { response in
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        let request = GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>(
+        let request = GRPCCore.ClientRequest<PlatformEndpointRequest>(
             message: message,
             metadata: metadata
         )

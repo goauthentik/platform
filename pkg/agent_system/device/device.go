@@ -13,7 +13,6 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/device/serial"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Server struct {
@@ -53,7 +52,7 @@ func (ds *Server) Register(s grpc.ServiceRegistrar) {
 	pb.RegisterAgentPlatformServer(s, ds)
 }
 
-func (ds *Server) SignedEndpointHeader(ctx context.Context, _ *emptypb.Empty) (*pb.PlatformEndpointResponse, error) {
+func (ds *Server) SignedEndpointHeader(ctx context.Context, req *pb.PlatformEndpointRequest) (*pb.PlatformEndpointResponse, error) {
 	ser, err := serial.Read()
 	if err != nil {
 		return nil, err
@@ -61,6 +60,7 @@ func (ds *Server) SignedEndpointHeader(ctx context.Context, _ *emptypb.Empty) (*
 	t := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"iss": "goauthentik.io/platform/endpoint",
 		"sub": ser,
+		"atc": req.Challenge,
 	})
 	s, err := t.SignedString(config.Manager().Get().Domains()[0].Token)
 	if err != nil {

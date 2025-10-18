@@ -9,7 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	_ "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,6 +22,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type PlatformEndpointRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *RequestHeader         `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Challenge     string                 `protobuf:"bytes,2,opt,name=challenge,proto3" json:"challenge,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlatformEndpointRequest) Reset() {
+	*x = PlatformEndpointRequest{}
+	mi := &file_agent_platform_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlatformEndpointRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlatformEndpointRequest) ProtoMessage() {}
+
+func (x *PlatformEndpointRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_platform_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlatformEndpointRequest.ProtoReflect.Descriptor instead.
+func (*PlatformEndpointRequest) Descriptor() ([]byte, []int) {
+	return file_agent_platform_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *PlatformEndpointRequest) GetHeader() *RequestHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *PlatformEndpointRequest) GetChallenge() string {
+	if x != nil {
+		return x.Challenge
+	}
+	return ""
+}
+
 type PlatformEndpointResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Header        *ResponseHeader        `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
@@ -32,7 +84,7 @@ type PlatformEndpointResponse struct {
 
 func (x *PlatformEndpointResponse) Reset() {
 	*x = PlatformEndpointResponse{}
-	mi := &file_agent_platform_proto_msgTypes[0]
+	mi := &file_agent_platform_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +96,7 @@ func (x *PlatformEndpointResponse) String() string {
 func (*PlatformEndpointResponse) ProtoMessage() {}
 
 func (x *PlatformEndpointResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_platform_proto_msgTypes[0]
+	mi := &file_agent_platform_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +109,7 @@ func (x *PlatformEndpointResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlatformEndpointResponse.ProtoReflect.Descriptor instead.
 func (*PlatformEndpointResponse) Descriptor() ([]byte, []int) {
-	return file_agent_platform_proto_rawDescGZIP(), []int{0}
+	return file_agent_platform_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *PlatformEndpointResponse) GetHeader() *ResponseHeader {
@@ -78,12 +130,15 @@ var File_agent_platform_proto protoreflect.FileDescriptor
 
 const file_agent_platform_proto_rawDesc = "" +
 	"\n" +
-	"\x14agent_platform.proto\x12\x0eagent_platform\x1a\vagent.proto\x1a\x1bgoogle/protobuf/empty.proto\"c\n" +
+	"\x14agent_platform.proto\x12\x0eagent_platform\x1a\vagent.proto\x1a\x1bgoogle/protobuf/empty.proto\"e\n" +
+	"\x17PlatformEndpointRequest\x12,\n" +
+	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12\x1c\n" +
+	"\tchallenge\x18\x02 \x01(\tR\tchallenge\"c\n" +
 	"\x18PlatformEndpointResponse\x12-\n" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage2i\n" +
-	"\rAgentPlatform\x12X\n" +
-	"\x14SignedEndpointHeader\x12\x16.google.protobuf.Empty\x1a(.agent_platform.PlatformEndpointResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\amessage\x18\x02 \x01(\tR\amessage2z\n" +
+	"\rAgentPlatform\x12i\n" +
+	"\x14SignedEndpointHeader\x12'.agent_platform.PlatformEndpointRequest\x1a(.agent_platform.PlatformEndpointResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_agent_platform_proto_rawDescOnce sync.Once
@@ -97,21 +152,23 @@ func file_agent_platform_proto_rawDescGZIP() []byte {
 	return file_agent_platform_proto_rawDescData
 }
 
-var file_agent_platform_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_agent_platform_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_agent_platform_proto_goTypes = []any{
-	(*PlatformEndpointResponse)(nil), // 0: agent_platform.PlatformEndpointResponse
-	(*ResponseHeader)(nil),           // 1: agent.ResponseHeader
-	(*emptypb.Empty)(nil),            // 2: google.protobuf.Empty
+	(*PlatformEndpointRequest)(nil),  // 0: agent_platform.PlatformEndpointRequest
+	(*PlatformEndpointResponse)(nil), // 1: agent_platform.PlatformEndpointResponse
+	(*RequestHeader)(nil),            // 2: agent.RequestHeader
+	(*ResponseHeader)(nil),           // 3: agent.ResponseHeader
 }
 var file_agent_platform_proto_depIdxs = []int32{
-	1, // 0: agent_platform.PlatformEndpointResponse.header:type_name -> agent.ResponseHeader
-	2, // 1: agent_platform.AgentPlatform.SignedEndpointHeader:input_type -> google.protobuf.Empty
-	0, // 2: agent_platform.AgentPlatform.SignedEndpointHeader:output_type -> agent_platform.PlatformEndpointResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 0: agent_platform.PlatformEndpointRequest.header:type_name -> agent.RequestHeader
+	3, // 1: agent_platform.PlatformEndpointResponse.header:type_name -> agent.ResponseHeader
+	0, // 2: agent_platform.AgentPlatform.SignedEndpointHeader:input_type -> agent_platform.PlatformEndpointRequest
+	1, // 3: agent_platform.AgentPlatform.SignedEndpointHeader:output_type -> agent_platform.PlatformEndpointResponse
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_agent_platform_proto_init() }
@@ -126,7 +183,7 @@ func file_agent_platform_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_platform_proto_rawDesc), len(file_agent_platform_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
