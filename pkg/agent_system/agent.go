@@ -139,7 +139,7 @@ func (sm *SystemAgent) Start() {
 		sm.Stop()
 	}()
 
-	lis, err := socket.Listen(types.GetSysdSocketPath(), socket.SocketOwner)
+	lis, err := socket.Listen(types.GetSysdSocketPath(), socket.SocketEveryone)
 	if err != nil {
 		sm.log.WithError(err).Fatal("Failed to listen")
 		return

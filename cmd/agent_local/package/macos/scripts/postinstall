@@ -17,7 +17,8 @@ echo "$(date) Running postinstall. install_dir=${INSTALL_DIR}"
 mkdir -p "$DAEMON_DIR/config"
 mkdir -p "$DAEMON_DIR/runtime"
 chmod -R 700 "$DAEMON_DIR"
-cp -n ./sysd-config.json "$DAEMON_DIR/config/config.json"
+
+cp -n ./sysd-config.json "$DAEMON_DIR/config/config.json" || true
 
 sudo launchctl unload -w $DAEMON_PLIST_PATH
 
