@@ -94,8 +94,8 @@ export class Native {
             path: "platform_sign_endpoint_header",
             profile: profile,
             data: {
-                challenge:challenge
-            }
+                challenge: challenge,
+            },
         });
         return response.data.response as string;
     }
