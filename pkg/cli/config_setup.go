@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/spf13/cobra"
-	"goauthentik.io/platform/pkg/cli/client"
+	"goauthentik.io/platform/pkg/agent_local/client"
 	"goauthentik.io/platform/pkg/cli/setup"
 	"goauthentik.io/platform/pkg/pb"
 )

@@ -3,8 +3,8 @@ package pam
 import (
 	"context"
 
+	"goauthentik.io/platform/pkg/agent_local/client"
 	"goauthentik.io/platform/pkg/agent_local/types"
-	"goauthentik.io/platform/pkg/cli/client"
 	"goauthentik.io/platform/pkg/pb"
 )
 
