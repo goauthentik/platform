@@ -37,23 +37,9 @@ func Set(service string, user string, password string) error {
 	item.SetAccount(user)
 	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
 	item.SetData([]byte(password))
-	err := item.SetAccessControl(
-		keychain.AccessControlFlagsBiometryAny|
-			keychain.AccessControlFlagsOr|
-			keychain.AccessControlFlagsWatch|
-			keychain.AccessControlFlagsOr|
-			keychain.AccessControlFlagsUserPresence,
-		keychain.AccessibleWhenUnlocked,
-	)
-	if err != nil {
-		return errors.Wrap(err, "failed to SetAccessControl")
-	}
 	item.SetSynchronizable(keychain.SynchronizableNo)
-	err = item.SetUseDataProtectionKeychain(true)
-	if err != nil {
-		return errors.Wrap(err, "failed to SetUseDataProtectionKeychain")
-	}
-	err = keychain.AddItem(item)
+	item.SetAccessible(keychain.AccessibleWhenUnlocked)
+	err := keychain.AddItem(item)
 	if errors.Is(err, keychain.ErrorDuplicateItem) {
 		query := keychain.NewItem()
 		query.SetSecClass(keychain.SecClassGenericPassword)
