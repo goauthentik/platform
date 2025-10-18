@@ -33,14 +33,12 @@ var domainsJoinCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		d := config.DomainConfig{
-			Enabled:            true,
-			AuthentikURL:       base,
-			AppSlug:            appSlug,
-			Token:              string(token),
-			AuthenticationFlow: "default-authentication-flow",
-			Domain:             args[0],
-		}
+		d := config.Manager().Get().NewDomain()
+		d.Domain = args[0]
+		d.AuthentikURL = base
+		d.AppSlug = appSlug
+		d.Token = token
+		d.AuthenticationFlow = "default-authentication-flow"
 		if err := d.Test(); err != nil {
 			return err
 		}

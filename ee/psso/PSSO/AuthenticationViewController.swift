@@ -14,6 +14,30 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     var authorizationRequest: URL?
     var cancelFunc: () -> Void = {}
 
+    override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        self.load()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder:coder)
+        self.load()
+    }
+
+    deinit {
+        self.unload()
+    }
+
+    private func load() {
+        self.logger.debug("Load")
+        Sentry.setup()
+    }
+
+    private func unload() {
+        self.logger.debug("Unload")
+        Sentry.flush()
+    }
+
     override func viewDidAppear() {
         self.webView.navigationDelegate = self
         self.webView.isInspectable = true

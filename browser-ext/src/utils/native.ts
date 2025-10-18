@@ -3,6 +3,7 @@ export interface Message {
     path: string;
     profile?: string;
     id: string;
+    data: { [key: string]: unknown };
 }
 
 export interface Response {
@@ -83,7 +84,19 @@ export class Native {
             path: "list_profiles",
         });
         return {
-            profiles: profiles.data as unknown as { name: string }[],
+            profiles: profiles.data.profiles as unknown as { name: string }[],
         };
+    }
+
+    async platformSignEndpointHeader(profile: string, challenge: string): Promise<string> {
+        const response = await this.postMessage({
+            version: "1",
+            path: "platform_sign_endpoint_header",
+            profile: profile,
+            data: {
+                challenge: challenge,
+            },
+        });
+        return response.data.response as string;
     }
 }

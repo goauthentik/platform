@@ -12,7 +12,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/agent_local/icon"
 	"goauthentik.io/platform/pkg/ak/token"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/meta"
 )
 
 func (a *Agent) startSystray() {
@@ -40,13 +40,13 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", storage.FullVersion()), "")
-	if storage.BuildHash != "" {
+	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", meta.FullVersion()), "")
+	if meta.BuildHash != "" {
 		go func() {
 			for {
 				select {
 				case <-version.ClickedCh:
-					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(storage.BuildHash, "dev-", "")))
+					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(meta.BuildHash, "dev-", "")))
 				case <-a.systrayCtx.Done():
 					return
 				}

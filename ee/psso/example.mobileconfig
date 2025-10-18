@@ -58,6 +58,11 @@
 			<array>
 				<string>https://ak.beryju.dev</string>
 			</array>
+			<key>ExtensionData</key>
+			<dict>
+				<key>authentik.base</key>
+				<string>https://ak.beryju.dev</string>
+			</dict>
 		</dict>
 		<dict>
 			<key>Configuration</key>

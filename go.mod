@@ -21,6 +21,7 @@ require (
 	github.com/keybase/go-keychain v0.0.1
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.4
+	github.com/micromdm/plist v0.2.1
 	github.com/nightlyone/lockfile v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
@@ -135,6 +136,7 @@ require (
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b // indirect
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.5.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -145,6 +147,10 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 )
 
-tool github.com/goreleaser/nfpm/v2/cmd/nfpm
+tool (
+	github.com/goreleaser/nfpm/v2/cmd/nfpm
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc
+	google.golang.org/protobuf/cmd/protoc-gen-go
+)
 
 replace github.com/keybase/go-keychain => github.com/alexw23/go-keychain v0.0.0-20240507145345-41efe171240e

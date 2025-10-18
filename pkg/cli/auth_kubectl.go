@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"goauthentik.io/platform/pkg/agent_local/client"
 	"goauthentik.io/platform/pkg/cli/auth/k8s"
-	"goauthentik.io/platform/pkg/cli/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientauthenticationv1 "k8s.io/client-go/pkg/apis/clientauthentication/v1"
 )

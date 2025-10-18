@@ -6,7 +6,9 @@ import (
 	"os"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/platform/pkg/agent_system/client"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 )
@@ -15,10 +17,16 @@ var systemStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status about the current session",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client, err := sysClient()
+		client, err := client.New()
 		if err != nil {
 			return err
 		}
+		defer func() {
+			err := client.Close()
+			if err != nil {
+				log.WithError(err).Warning("Failed to cleanup client")
+			}
+		}()
 		sessId, ok := os.LookupEnv("AUTHENTIK_SESSION_ID")
 		if !ok {
 			return errors.New("current session is not an authentik session")

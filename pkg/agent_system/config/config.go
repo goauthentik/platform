@@ -7,13 +7,13 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
 
-var manager *storage.ConfigManager[*Config]
+var manager *cfgmgr.Manager[*Config]
 
 func Init(path string) error {
-	m, err := storage.NewManager[*Config](path)
+	m, err := cfgmgr.NewManager[*Config](path)
 	if err != nil {
 		return err
 	}
@@ -21,13 +21,14 @@ func Init(path string) error {
 	return nil
 }
 
-func Manager() *storage.ConfigManager[*Config] {
+func Manager() *cfgmgr.Manager[*Config] {
 	return manager
 }
 
 type Config struct {
 	Debug      bool   `json:"debug"`
 	RuntimeDir string `json:"runtime"`
+	DomainDir  string `json:"domains"`
 	PAM        struct {
 		Enabled           bool `json:"enabled"`
 		TerminateOnExpiry bool `json:"terminate_on_expiry"`
@@ -38,48 +39,24 @@ type Config struct {
 		GIDOffset          int32 `json:"gid_offset"`
 		RefreshIntervalSec int64 `json:"refresh_interval_sec"`
 	} `json:"nss"`
-	DomainDir string `json:"domains"`
 
 	log     *log.Entry
 	domains []DomainConfig
 }
 
-func (c *Config) Default() storage.Configer {
+func (c *Config) Default() cfgmgr.Configer {
 	return &Config{
 		log: log.WithField("logger", "storage.config"),
 	}
 }
 
 func (c *Config) PostLoad() error {
-	c.log.Debug("Loading domains...")
-	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
-	if err != nil {
-		c.log.WithError(err).Warning("failed to load domains")
-		return err
-	}
-	dom := []DomainConfig{}
-	for _, match := range m {
-		co, err := os.ReadFile(match)
-		if err != nil {
-			c.log.WithError(err).Warning("failed to load domain")
-			continue
-		}
-		d := DomainConfig{}
-		err = json.Unmarshal(co, &d)
-		if err != nil {
-			c.log.WithError(err).Warning("failed to load domain")
-			continue
-		}
-		c.log.WithField("domain", d.Domain).Debug("loaded domain")
-		dom = append(dom, d)
-	}
-	c.domains = dom
-	return nil
+	return c.loadDomains()
 }
 
 func (c *Config) PreSave() error { return nil }
-func (c *Config) PostUpdate(storage.Configer, fsnotify.Event) storage.ConfigChangedType {
-	return storage.ConfigChangedGeneric
+func (c *Config) PostUpdate(cfgmgr.Configer, fsnotify.Event) cfgmgr.ConfigChangedType {
+	return cfgmgr.ConfigChangedGeneric
 }
 
 func (c *Config) Domains() []DomainConfig {

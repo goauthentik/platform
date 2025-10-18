@@ -10,8 +10,9 @@ class OIDC {
     func startAuthorization(
         viewController: AuthenticationViewController,
         loginConfig: ASAuthorizationProviderExtensionLoginConfiguration,
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
     ) {
-        let gconfig = ConfigManager.shared.getConfig()
+        let gconfig = ConfigManager.shared.getConfig(loginManager: loginManager)
         let config = OIDServiceConfiguration(
             authorizationEndpoint: URL(string: "\(gconfig.BaseURL)/application/o/authorize/")!,
             tokenEndpoint: URL(string: "\(gconfig.BaseURL)/application/o/token/")!)
@@ -35,7 +36,7 @@ class OIDC {
             additionalParameters: nil
         )
         let authz = self.request!.authorizationRequestURL()
-        viewController.logger.debug("authz url \(authz, privacy: .public)")
+        viewController.logger.debug("authz url \(authz)")
         viewController.authorizationRequest = authz
     }
 

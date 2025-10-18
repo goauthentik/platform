@@ -1,19 +1,17 @@
-.PHONY: clean
-LD_FLAGS = -X goauthentik.io/platform/pkg/storage.Version=${VERSION} -X goauthentik.io/platform/pkg/storage.BuildHash=dev-${VERSION_HASH}
-GO_FLAGS = -ldflags "${LD_FLAGS}" -v
-
 include common.mk
+
+.PHONY: all
 all: clean gen
 
+.PHONY: clean
 clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
+.PHONY: gen
 gen: gen-proto utils_rs/gen ee/psso/gen
 	go generate ./...
 
 gen-proto:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	protoc \
 		--go_out ${PWD} \
 		--go-grpc_out=${PWD} \
@@ -36,6 +34,12 @@ test-shell:
 	docker exec -it authentik-cli_devcontainer-test-machine-1 bash
 
 test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
+
+bump:
+	sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
+	"$(MAKE)" browser-ext/bump
+	"$(MAKE)" agent/bump
+	"$(MAKE)" ee/psso/bump || true
 
 pam/%:
 	"$(MAKE)" -C "${TOP}/pam" $*

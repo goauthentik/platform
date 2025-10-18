@@ -10,8 +10,8 @@ import (
 
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/meta"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
-	"goauthentik.io/platform/pkg/storage"
 )
 
 type ExchangeOpts struct {
@@ -38,7 +38,7 @@ func ExchangeToken(profile *config.ConfigV1Profile, opts ExchangeOpts) (*Token, 
 		return nil, err
 	}
 	systemlog.Get().WithField("logger", "token-exchanger").WithField("url", req.URL.String()).Debug("sending request")
-	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", storage.FullVersion()))
+	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", meta.FullVersion()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

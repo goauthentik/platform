@@ -15,7 +15,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/types"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/socket"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc"
 )
 
@@ -100,7 +100,7 @@ func (sm *SystemAgent) watchConfig() {
 	sm.log.Debug("Starting config file watch")
 	for evt := range config.Manager().Watch() {
 		sm.log.WithField("evt", evt).Debug("Handling config event")
-		if evt.Type == storage.ConfigChangedAdded || evt.Type == storage.ConfigChangedRemoved {
+		if evt.Type == cfgmgr.ConfigChangedAdded || evt.Type == cfgmgr.ConfigChangedRemoved {
 			sm.mtx.Lock()
 			for n, component := range sm.cm {
 				err := component.comp.Stop()
@@ -139,7 +139,7 @@ func (sm *SystemAgent) Start() {
 		sm.Stop()
 	}()
 
-	lis, err := socket.Listen(types.GetSysdSocketPath(), socket.SocketOwner)
+	lis, err := socket.Listen(types.GetSysdSocketPath(), socket.SocketEveryone)
 	if err != nil {
 		sm.log.WithError(err).Fatal("Failed to listen")
 		return

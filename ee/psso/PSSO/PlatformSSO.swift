@@ -23,14 +23,9 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             ASAuthorizationProviderExtensionRegistrationResult
         ) -> Void
     ) {
-        Sentry.setup()
-        self.logger.debug(
-            "test \(String(describing: loginManager.extensionData), privacy: .public)")
         self.logger.debug("Begin Device Registration")
-        self.logger.debug("Options: \(String(describing: options))")
-        self.logger.debug(
-            "loginConfiguration: \(String(describing: loginManager.loginConfiguration))")
-        let config = ConfigManager.shared.getConfig()
+        let config = ConfigManager.shared.getConfig(loginManager: loginManager)
+        self.logger.debug("Options: \(String(describing: config))")
         let loginConfig = ASAuthorizationProviderExtensionLoginConfiguration(
             clientID: config.ClientID,
             issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
@@ -55,7 +50,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
 
         API.shared.RegisterDevice(
             loginConfig: loginConfig,
-            loginManger: loginManager,
+            loginManager: loginManager,
             token: loginManager.registrationToken ?? "",
         ) { status in
             completion(status)
@@ -69,14 +64,13 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         options: ASAuthorizationProviderExtensionRequestOptions = [],
         completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
     ) {
-        Sentry.setup()
         self.logger.debug(
-            "beginUserRegistration \(userName ?? "", privacy: .public), method \(String(describing: method), privacy: .public)"
+            "beginUserRegistration \(userName ?? ""), method \(String(describing: method))"
         )
-        self.logger.debug("options: \(String.init(describing: options), privacy: .public)")
+        self.logger.debug("options: \(String.init(describing: options))")
         let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
             loginUserName: userName ?? "")
-        let config = ConfigManager.shared.getConfig()
+        let config = ConfigManager.shared.getConfig(loginManager: loginManager)
         self.cancelFunc = {
             completion(.failed)
         }
@@ -85,18 +79,22 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             loginConfig: ASAuthorizationProviderExtensionLoginConfiguration(
                 clientID: config.ClientID,
                 issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
-                tokenEndpointURL: URL(string: "\(config.BaseURL)/application/o/token/")!,
+                tokenEndpointURL: URL(
+                    string: "\(config.BaseURL)/application/o/token/"
+                )!,
                 jwksEndpointURL: URL(
                     string: "\(config.BaseURL)/application/o/\(config.AppSlug)/jwks/")!,
                 audience: config.ClientID,
-            ))
+            ),
+            loginManager: loginManager
+        )
         loginManager.presentRegistrationViewController { error in
             if let err = error {
                 self.logger.error("error presentRegistrationViewController \(err)")
                 completion(.failed)
             }
             OIDC.shared.completion = { token in
-                self.logger.debug("got token \(String(describing: token), privacy: .public)")
+                self.logger.debug("got token \(String(describing: token))")
 
                 API.shared.RegisterUser(
                     loginConfig: loginConfig,
