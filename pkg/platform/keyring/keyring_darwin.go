@@ -38,7 +38,11 @@ func Set(service string, user string, password string) error {
 	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
 	item.SetData([]byte(password))
 	err := item.SetAccessControl(
-		keychain.AccessControlFlagsBiometryAny|keychain.AccessControlFlagsOr|keychain.AccessControlFlagsWatch,
+		keychain.AccessControlFlagsBiometryAny|
+			keychain.AccessControlFlagsOr|
+			keychain.AccessControlFlagsWatch|
+			keychain.AccessControlFlagsOr|
+			keychain.AccessControlFlagsUserPresence,
 		keychain.AccessibleWhenUnlocked,
 	)
 	if err != nil {

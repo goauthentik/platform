@@ -27,14 +27,6 @@ func (kco KubeCredentialOutput) Expiry() time.Time {
 func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts) *KubeCredentialOutput {
 	log := log.WithField("logger", "auth.kube")
 
-	cc := client.NewCache[KubeCredentialOutput](c, &pb.RequestHeader{
-		Profile: opts.Profile,
-	}, "auth-kube-cache", opts.ClientID)
-	if v, err := cc.Get(ctx); err == nil {
-		log.Debug("Got kube Credentials from cache")
-		return &v
-	}
-
 	res, err := c.CachedTokenExchange(ctx, &pb.TokenExchangeRequest{
 		Header: &pb.RequestHeader{
 			Profile: opts.Profile,
@@ -46,7 +38,7 @@ func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts)
 		return nil
 	}
 
-	output := KubeCredentialOutput{
+	return &KubeCredentialOutput{
 		&clientauthenticationv1.ExecCredentialStatus{
 			Token: res.AccessToken,
 			ExpirationTimestamp: &v1.Time{
@@ -54,9 +46,4 @@ func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts)
 			},
 		},
 	}
-	err = cc.Set(ctx, output)
-	if err != nil {
-		log.WithError(err).Warning("failed to cache kube Credentials")
-	}
-	return &output
 }
