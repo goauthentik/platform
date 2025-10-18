@@ -2,8 +2,11 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
+	"path/filepath"
 
 	"goauthentik.io/api/v3"
 )
@@ -17,6 +20,7 @@ type DomainConfig struct {
 	Domain             string `json:"domain"`
 
 	c *api.APIClient
+	r *Config
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
@@ -52,4 +56,51 @@ func (dc DomainConfig) Test() error {
 		return err
 	}
 	return nil
+}
+
+func (dc DomainConfig) Delete() error {
+	dp := filepath.Join(dc.r.DomainDir, dc.Domain+".json")
+	err := os.Remove(dp)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func (c *Config) NewDomain() DomainConfig {
+	return DomainConfig{
+		Enabled: true,
+		r:       c,
+	}
+}
+
+func (c *Config) loadDomains() error {
+	c.log.Debug("Loading domains...")
+	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
+	if err != nil {
+		c.log.WithError(err).Warning("failed to load domains")
+		return err
+	}
+	dom := []DomainConfig{}
+	for _, match := range m {
+		co, err := os.ReadFile(match)
+		if err != nil {
+			c.log.WithError(err).Warning("failed to load domain")
+			continue
+		}
+		d := c.NewDomain()
+		err = json.Unmarshal(co, &d)
+		if err != nil {
+			c.log.WithError(err).Warning("failed to load domain")
+			continue
+		}
+		c.log.WithField("domain", d.Domain).Debug("loaded domain")
+		dom = append(dom, d)
+	}
+	c.domains = dom
+	c.log.Debug("Checking for managed domains...")
+	return c.loadDomainsManaged()
 }

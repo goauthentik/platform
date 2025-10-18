@@ -51,30 +51,7 @@ func (c *Config) Default() cfgmgr.Configer {
 }
 
 func (c *Config) PostLoad() error {
-	c.log.Debug("Loading domains...")
-	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
-	if err != nil {
-		c.log.WithError(err).Warning("failed to load domains")
-		return err
-	}
-	dom := []DomainConfig{}
-	for _, match := range m {
-		co, err := os.ReadFile(match)
-		if err != nil {
-			c.log.WithError(err).Warning("failed to load domain")
-			continue
-		}
-		d := DomainConfig{}
-		err = json.Unmarshal(co, &d)
-		if err != nil {
-			c.log.WithError(err).Warning("failed to load domain")
-			continue
-		}
-		c.log.WithField("domain", d.Domain).Debug("loaded domain")
-		dom = append(dom, d)
-	}
-	c.domains = dom
-	return nil
+	return c.loadDomains()
 }
 
 func (c *Config) PreSave() error { return nil }
