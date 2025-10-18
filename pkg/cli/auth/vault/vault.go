@@ -7,9 +7,8 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_local/config"
-	"goauthentik.io/platform/pkg/ak/token"
-	"goauthentik.io/platform/pkg/storage"
+	"goauthentik.io/platform/pkg/agent_local/client"
+	"goauthentik.io/platform/pkg/pb"
 )
 
 type CredentialsOpts struct {
@@ -28,13 +27,13 @@ func (vco VaultCredentialOutput) Expiry() time.Time {
 	return time.Now().Add(time.Duration(vco.LeaseDuration) * time.Second)
 }
 
-func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialOutput {
+func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts) *VaultCredentialOutput {
 	log := log.WithField("logger", "auth.vault")
-	mgr := config.Manager()
-	prof := mgr.Get().Profiles[opts.Profile]
 
-	cc := storage.NewCache[VaultCredentialOutput](opts.Profile, "auth-vault-cache", opts.Role)
-	if v, err := cc.Get(); err == nil {
+	cc := client.NewCache[VaultCredentialOutput](c, &pb.RequestHeader{
+		Profile: opts.Profile,
+	}, "auth-vault-cache", opts.Role)
+	if v, err := cc.Get(ctx); err == nil {
 		log.Debug("Got Vault Credentials from cache")
 		return &v
 	}
@@ -47,14 +46,19 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 		return nil
 	}
 
-	nt, err := token.CachedExchangeToken(opts.Profile, prof, token.DefaultExchangeOpts(opts.ClientID))
+	nt, err := c.CachedTokenExchange(ctx, &pb.TokenExchangeRequest{
+		Header: &pb.RequestHeader{
+			Profile: opts.Profile,
+		},
+		ClientId: opts.ClientID,
+	})
 	if err != nil {
 		log.WithError(err).Fatal("failed to exchange token")
 		return nil
 	}
 
 	res, err := client.Auth.JwtLogin(ctx, schema.JwtLoginRequest{
-		Jwt:  nt.RawAccessToken,
+		Jwt:  nt.AccessToken,
 		Role: opts.Role,
 	}, vault.WithMountPath(opts.MountPath))
 	if err != nil {
@@ -62,7 +66,7 @@ func GetCredentials(ctx context.Context, opts CredentialsOpts) *VaultCredentialO
 		return nil
 	}
 	output := VaultCredentialOutput{res.Auth}
-	err = cc.Set(output)
+	err = cc.Set(ctx, output)
 	if err != nil {
 		log.WithError(err).Warning("failed to cache vault Credentials")
 	}

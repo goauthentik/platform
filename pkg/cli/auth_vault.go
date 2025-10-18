@@ -3,27 +3,27 @@ package cli
 import (
 	"os"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/platform/pkg/agent_local/client"
 	"goauthentik.io/platform/pkg/cli/auth/vault"
 )
 
 var vaultCmd = &cobra.Command{
 	Use:   "vault",
 	Short: "Generate a JWT for authenticating to HashiCorp Vault.",
-	Run: func(cmd *cobra.Command, args []string) {
-		output := vault.GetCredentials(cmd.Context(), vault.CredentialsOpts{
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.New(socketPath)
+		if err != nil {
+			return err
+		}
+
+		output := vault.GetCredentials(c, cmd.Context(), vault.CredentialsOpts{
 			ClientID:  mustFlag(cmd.Flags().GetString("client-id")),
 			Profile:   mustFlag(cmd.Flags().GetString("profile")),
 			MountPath: mustFlag(cmd.Flags().GetString("mount-path")),
 		})
-		if output == nil {
-			return
-		}
-		_, err := os.Stdout.WriteString(output.ClientToken)
-		if err != nil {
-			log.WithError(err).Warning("failed to write token")
-		}
+		_, err = os.Stdout.WriteString(output.ClientToken)
+		return err
 	},
 }
 
