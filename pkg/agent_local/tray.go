@@ -109,23 +109,30 @@ func (a *Agent) systrayProfileItme(name string, profile *config.ConfigV1Profile)
 		}
 	}()
 	pfm, err := token.NewProfile(name)
-	if err == nil {
-		ut := pfm.Unverified()
-		exp, _ := ut.AccessToken.Claims.GetExpirationTime()
-		iat, _ := ut.AccessToken.Claims.GetIssuedAt()
-		i.AddSubMenuItem(fmt.Sprintf("Username: %s", ut.Claims().Username), "").Disable()
-		i.AddSubMenuItem(fmt.Sprintf(
-			"Renewed token %s (%s)",
-			timediff.TimeDiff(iat.Time),
-			iat.String(),
-		), "").Disable()
-		i.AddSubMenuItem(fmt.Sprintf(
-			"Renewing token in %s (%s)",
-			timediff.TimeDiff(exp.Time),
-			exp.String(),
-		), "").Disable()
-	} else {
+	setErr := func(err error) {
 		i.AddSubMenuItem("Failed to get info about token", "").Disable()
 		i.AddSubMenuItem(err.Error(), "").Disable()
 	}
+	if err != nil {
+		setErr(err)
+		return
+	}
+	ut, err := pfm.Unverified()
+	if err != nil || ut.AccessToken == nil {
+		setErr(err)
+		return
+	}
+	exp, _ := ut.AccessToken.Claims.GetExpirationTime()
+	iat, _ := ut.AccessToken.Claims.GetIssuedAt()
+	i.AddSubMenuItem(fmt.Sprintf("Username: %s", ut.Claims().Username), "").Disable()
+	i.AddSubMenuItem(fmt.Sprintf(
+		"Renewed token %s (%s)",
+		timediff.TimeDiff(iat.Time),
+		iat.String(),
+	), "").Disable()
+	i.AddSubMenuItem(fmt.Sprintf(
+		"Renewing token in %s (%s)",
+		timediff.TimeDiff(exp.Time),
+		exp.String(),
+	), "").Disable()
 }

@@ -9,10 +9,10 @@ import (
 var _appName string
 
 func Setup(appName string) error {
+	_appName = appName
 	if !ShouldSwitch() {
 		return nil
 	}
-	_appName = appName
 	return platformSetup(appName)
 }
 

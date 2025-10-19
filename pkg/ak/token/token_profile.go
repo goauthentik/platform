@@ -68,7 +68,11 @@ func (ptm *ProfileTokenManager) startRenewing() {
 	renewOnce := func() {
 		ctx, cancel := context.WithCancel(ptm.ctx)
 		defer cancel()
-		current := ptm.Token()
+		current, err := ptm.Token()
+		if err != nil {
+			ptm.log.WithError(err).Warning("failed to get token")
+			return
+		}
 		exp, err := current.AccessToken.Claims.GetExpirationTime()
 		if err != nil {
 			ptm.log.WithError(err).Warning("failed to get current token expiry time")
@@ -108,17 +112,19 @@ func (ptm *ProfileTokenManager) startRenewing() {
 	}
 }
 
-func (ptm *ProfileTokenManager) Unverified() Token {
+func (ptm *ProfileTokenManager) Unverified() (Token, error) {
 	rt := config.Manager().Get().Profiles[ptm.profileName].AccessToken
-	t, _, _ := jwt.NewParser().ParseUnverified(rt, &AuthentikClaims{})
-	ct := Token{
+	t, _, err := jwt.NewParser().ParseUnverified(rt, &AuthentikClaims{})
+	if err != nil {
+		return Token{}, err
+	}
+	return Token{
 		AccessToken:    t,
 		RawAccessToken: rt,
-	}
-	return ct
+	}, nil
 }
 
-func (ptm *ProfileTokenManager) Token() Token {
+func (ptm *ProfileTokenManager) Token() (Token, error) {
 	rt := config.Manager().Get().Profiles[ptm.profileName].AccessToken
 	t, err := jwt.ParseWithClaims(
 		rt,
@@ -136,11 +142,10 @@ func (ptm *ProfileTokenManager) Token() Token {
 		}
 		return ptm.Unverified()
 	}
-	ct := Token{
+	return Token{
 		AccessToken:    t,
 		RawAccessToken: rt,
-	}
-	return ct
+	}, nil
 }
 
 func (ptm *ProfileTokenManager) Stop() {

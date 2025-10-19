@@ -32,13 +32,17 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 		return nil, err
 	}
 	var token token.Token
+	var err error
 	switch req.Type {
 	case pb.CurrentTokenRequest_UNVERIFIED:
-		token = pfm.Unverified()
+		token, err = pfm.Unverified()
 	case pb.CurrentTokenRequest_VERIFIED:
-		token = pfm.Token()
+		token, err = pfm.Token()
 	case pb.CurrentTokenRequest_UNSPECIFIED:
 		return nil, fmt.Errorf("unsupported token type: %s", req.Type)
+	}
+	if err != nil {
+		return nil, err
 	}
 	return &pb.CurrentTokenResponse{
 		Header: &pb.ResponseHeader{
