@@ -4,13 +4,17 @@
 <?define Version = "$(env.VERSION)" ?>
 <?define UpgradeCode = "3200363b-996e-4fd7-ae14-e3a425132b63" ?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Id="authentik.Agent"
            Name="$(Name)"
            Manufacturer="$(Manufacturer)"
            Version="$(Version)"
            UpgradeCode="$(var.UpgradeCode)"
            Compressed="true">
+    <ui:WixUI Id="WixUI_InstallDir"
+              InstallDirectory="INSTALLFOLDER" />
+    <UIRef Id="WixUI_ErrorProgressText" />
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFiles64Folder">
@@ -21,7 +25,7 @@
         </Directory>
       </Directory>
     </StandardDirectory>
-    <Icon Id="authentik_icon" SourceFile="./icon.ico" />
+    <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
 
     <DirectoryRef Id="INSTALLFOLDER">
@@ -55,20 +59,29 @@
                         Name="ak_sysd"
                         Wait="true" />
       </Component>
-      <Component Id="Agent" Bitness="always64">
+      <Component Id="agent" Bitness="always64">
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
       </Component>
-      <Component Id="CLI" Bitness="always64">
-        <File Id="cli"
+      <Component Id="cli" Bitness="always64">
+        <File Id="ak_cli"
               Source="$(env.ROOT)/bin/cli/ak.exe" />
+      </Component>
+      <Component Id="browser_host" Bitness="always64">
+        <File Id="browser_host_json"
+              Source="$(env.PWD)/package/windows/browser-host.json" KeyPath="yes" />
+        <RegistryKey Root="HKLM"
+                    Key="SOFTWARE\Google\Chrome\NativeMessagingHosts\io.goauthentik.platform">
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]browser-host.json"/>
+        </RegistryKey>
       </Component>
     </DirectoryRef>
 
     <Feature Id="Main" Title="authentik Agent Setup" Level="1">
       <ComponentRef Id="sysd" />
-      <ComponentRef Id="Agent" />
-      <ComponentRef Id="CLI" />
+      <ComponentRef Id="agent" />
+      <ComponentRef Id="cli" />
+      <ComponentRef Id="browser_host" />
     </Feature>
   </Package>
 </Wix>
