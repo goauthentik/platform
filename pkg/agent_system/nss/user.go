@@ -14,22 +14,20 @@ import (
 )
 
 func (nss *Server) ListUsers(ctx context.Context, req *emptypb.Empty) (*pb.Users, error) {
-	res := &pb.Users{Users: []*pb.User{}}
-	for _, u := range nss.users {
-		res.Users = append(res.Users, nss.convertUser(u))
-	}
+	res := &pb.Users{Users: make([]*pb.User, len(nss.users))}
+	copy(res.Users, nss.users)
 	return res, nil
 }
 
 func (nss *Server) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.User, error) {
 	for _, u := range nss.users {
-		if req.Id != nil && nss.GetUserUidNumber(u) == *req.Id {
-			return nss.convertUser(u), nil
-		} else if req.Name != nil && u.Username == cleanName(*req.Name) {
-			return nss.convertUser(u), nil
+		if req.Id != nil && u.Uid == *req.Id {
+			return u, nil
+		} else if req.Name != nil && u.Name == cleanName(*req.Name) {
+			return u, nil
 		}
 	}
-	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
+	return nil, status.Error(codes.NotFound, "User not found")
 }
 
 var userNameRegexp = regexp.MustCompilePOSIX(`^[a-z][-a-z0-9_]*\$?$`)

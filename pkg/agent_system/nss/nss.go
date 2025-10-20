@@ -19,8 +19,8 @@ type Server struct {
 	api *api.APIClient
 	log *log.Entry
 
-	users  []api.User
-	groups []api.Group
+	users  []*pb.User
+	groups []*pb.Group
 
 	ctx context.Context
 

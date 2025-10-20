@@ -11,32 +11,20 @@ import (
 )
 
 func (nss *Server) ListGroups(ctx context.Context, req *emptypb.Empty) (*pb.Groups, error) {
-	res := &pb.Groups{Groups: []*pb.Group{}}
-	for _, u := range nss.users {
-		res.Groups = append(res.Groups, nss.convertUserToGroup(u))
-	}
-	for _, g := range nss.groups {
-		res.Groups = append(res.Groups, nss.convertGroup(g))
-	}
+	res := &pb.Groups{Groups: make([]*pb.Group, len(nss.groups))}
+	copy(res.Groups, nss.groups)
 	return res, nil
 }
 
 func (nss *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.Group, error) {
 	for _, g := range nss.groups {
-		if req.Id != nil && nss.GetGroupGidNumber(g) == *req.Id {
-			return nss.convertGroup(g), nil
+		if req.Id != nil && g.Gid == *req.Id {
+			return g, nil
 		} else if req.Name != nil && g.Name == *req.Name {
-			return nss.convertGroup(g), nil
+			return g, nil
 		}
 	}
-	for _, u := range nss.users {
-		if req.Id != nil && nss.GetUserGidNumber(u) == *req.Id {
-			return nss.convertUserToGroup(u), nil
-		} else if req.Name != nil && u.Name == *req.Name {
-			return nss.convertUserToGroup(u), nil
-		}
-	}
-	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
+	return nil, status.Error(codes.NotFound, "Group not found")
 }
 
 func (nss *Server) convertGroup(g api.Group) *pb.Group {

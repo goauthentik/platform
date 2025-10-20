@@ -26,22 +26,26 @@ func Manager() *cfgmgr.Manager[*Config] {
 }
 
 type Config struct {
-	Debug      bool   `json:"debug"`
-	RuntimeDir string `json:"runtime"`
-	DomainDir  string `json:"domains"`
-	PAM        struct {
-		Enabled           bool `json:"enabled"`
-		TerminateOnExpiry bool `json:"terminate_on_expiry"`
-	} `json:"pam" `
-	NSS struct {
-		Enabled            bool  `json:"enabled"`
-		UIDOffset          int32 `json:"uid_offset"`
-		GIDOffset          int32 `json:"gid_offset"`
-		RefreshIntervalSec int64 `json:"refresh_interval_sec"`
-	} `json:"nss"`
+	Debug      bool      `json:"debug"`
+	RuntimeDir string    `json:"runtime"`
+	DomainDir  string    `json:"domains"`
+	NSS        NSSConfig `json:"nss"`
+	PAM        PAMConfig `json:"pam"`
 
 	log     *log.Entry
 	domains []DomainConfig
+}
+
+type PAMConfig struct {
+	Enabled           bool `json:"enabled"`
+	TerminateOnExpiry bool `json:"terminate_on_expiry"`
+}
+
+type NSSConfig struct {
+	Enabled            bool  `json:"enabled"`
+	UIDOffset          int32 `json:"uid_offset"`
+	GIDOffset          int32 `json:"gid_offset"`
+	RefreshIntervalSec int64 `json:"refresh_interval_sec"`
 }
 
 func (c *Config) Default() cfgmgr.Configer {
