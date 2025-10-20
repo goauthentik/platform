@@ -4,8 +4,8 @@
 
 ---
 
-[![Code Coverage](https://img.shields.io/codecov/c/gh/goauthentik/cli?style=for-the-badge)](https://codecov.io/gh/goauthentik/cli)
-[![CI Build status](https://img.shields.io/github/actions/workflow/status/goauthentik/cli/test.yml?branch=main&style=for-the-badge)](https://github.com/goauthentik/cli/actions)
+[![Code Coverage](https://img.shields.io/codecov/c/gh/goauthentik/platform?style=for-the-badge)](https://codecov.io/gh/goauthentik/platform)
+[![CI Build status](https://img.shields.io/github/actions/workflow/status/goauthentik/platform/test.yml?branch=main&style=for-the-badge)](https://github.com/goauthentik/platform/actions)
 
 # authentik CLI
 

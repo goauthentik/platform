@@ -38,7 +38,7 @@ func Set(service string, user string, password string) error {
 	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
 	item.SetData([]byte(password))
 	item.SetSynchronizable(keychain.SynchronizableNo)
-	item.SetAccessible(keychain.AccessibleWhenUnlocked)
+	item.SetAccessible(keychain.AccessibleAfterFirstUnlockThisDeviceOnly)
 	err := keychain.AddItem(item)
 	if errors.Is(err, keychain.ErrorDuplicateItem) {
 		query := keychain.NewItem()

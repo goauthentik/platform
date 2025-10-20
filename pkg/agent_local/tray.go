@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"runtime"
-	"strings"
 
 	"github.com/cli/browser"
 	"github.com/kolide/systray"
@@ -46,7 +45,7 @@ func (a *Agent) systrayEarlyItems() {
 			for {
 				select {
 				case <-version.ClickedCh:
-					_ = browser.OpenURL(fmt.Sprintf("https://github.com/goauthentik/cli/commit/%s", strings.ReplaceAll(meta.BuildHash, "dev-", "")))
+					_ = browser.OpenURL(meta.BuildURL())
 				case <-a.systrayCtx.Done():
 					return
 				}
