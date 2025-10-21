@@ -20,19 +20,27 @@ func init() {
 	})
 }
 
+func baseItem(service string, user string) keychain.Item {
+	item := keychain.NewItem()
+	_ = item.SetAuthenticationContext(ctx)
+	item.SetSecClass(keychain.SecClassGenericPassword)
+	item.SetAccessGroup(accessGroup)
+	item.SetService(service)
+	item.SetAccount(user)
+	item.SetSynchronizable(keychain.SynchronizableNo)
+	return item
+}
+
+func queryItem(service, user string) keychain.Item {
+	item := baseItem(service, user)
+
+	item.SetMatchLimit(keychain.MatchLimitOne)
+	item.SetReturnData(true)
+	return item
+}
+
 func Get(service string, user string) (string, error) {
-	query := keychain.NewItem()
-	err := query.SetAuthenticationContext(ctx)
-	if err != nil {
-		return "", err
-	}
-	query.SetSecClass(keychain.SecClassGenericPassword)
-	query.SetAccessGroup(accessGroup)
-	query.SetService(service)
-	query.SetAccount(user)
-	query.SetMatchLimit(keychain.MatchLimitOne)
-	query.SetReturnData(true)
-	results, err := keychain.QueryItem(query)
+	results, err := keychain.QueryItem(queryItem(service, user))
 	if err != nil {
 		return "", err
 	}
@@ -46,39 +54,12 @@ func Get(service string, user string) (string, error) {
 }
 
 func Set(service string, user string, password string) error {
-	item := keychain.NewItem()
-	err := item.SetAuthenticationContext(ctx)
-	if err != nil {
-		return err
-	}
-	item.SetSecClass(keychain.SecClassGenericPassword)
-	item.SetAccessGroup(accessGroup)
-	item.SetService(service)
-	item.SetAccount(user)
+	item := baseItem(service, user)
 	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
 	item.SetData([]byte(password))
-	item.SetSynchronizable(keychain.SynchronizableNo)
-	err = item.SetAccessControl(
-		keychain.AccessControlFlagsUserPresence,
-		keychain.AccessibleAfterFirstUnlockThisDeviceOnly,
-	)
-	if err != nil {
-		return err
-	}
-	err = keychain.AddItem(item)
+	err := keychain.AddItem(item)
 	if errors.Is(err, keychain.ErrorDuplicateItem) {
-		query := keychain.NewItem()
-		err := item.SetAuthenticationContext(ctx)
-		if err != nil {
-			return err
-		}
-		query.SetSecClass(keychain.SecClassGenericPassword)
-		query.SetAccessGroup(accessGroup)
-		query.SetService(service)
-		query.SetAccount(user)
-		query.SetMatchLimit(keychain.MatchLimitOne)
-		query.SetReturnData(true)
-		return keychain.UpdateItem(query, item)
+		return keychain.UpdateItem(queryItem(service, user), item)
 	}
 	return err
 }
@@ -88,9 +69,6 @@ func IsNotExist(err error) bool {
 }
 
 func Delete(service string, user string) error {
-	item := keychain.NewItem()
-	item.SetSecClass(keychain.SecClassGenericPassword)
-	item.SetService(service)
-	item.SetAccount(user)
+	item := baseItem(service, user)
 	return keychain.DeleteItem(item)
 }
