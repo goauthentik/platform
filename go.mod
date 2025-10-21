@@ -6,6 +6,7 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.7.0
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/adrg/xdg v0.5.3
+	github.com/aletheia7/ul v1.5.0
 	github.com/ansxuman/go-touchid v0.0.0-20241021115423-60941306d4c3
 	github.com/avast/retry-go/v4 v4.7.0
 	github.com/aws/aws-sdk-go-v2 v1.39.3

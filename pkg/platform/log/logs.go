@@ -13,6 +13,11 @@ func Setup(appName string) error {
 	if !ShouldSwitch() {
 		return nil
 	}
+	return MustSetup(appName)
+}
+
+func MustSetup(appName string) error {
+	_appName = appName
 	return platformSetup(appName)
 }
 
