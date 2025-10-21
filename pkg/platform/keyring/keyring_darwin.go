@@ -10,9 +10,24 @@ import (
 	"github.com/pkg/errors"
 )
 
+var ctx *keychain.AuthenticationContext
+
+const accessGroup = "group.232G855Y8N.io.goauthentik.platform.shared"
+
+func init() {
+	ctx = keychain.CreateAuthenticationContext(keychain.AuthenticationContextOptions{
+		AllowableReuseDuration: 86400,
+	})
+}
+
 func Get(service string, user string) (string, error) {
 	query := keychain.NewItem()
+	err := query.SetAuthenticationContext(ctx)
+	if err != nil {
+		return "", err
+	}
 	query.SetSecClass(keychain.SecClassGenericPassword)
+	query.SetAccessGroup(accessGroup)
 	query.SetService(service)
 	query.SetAccount(user)
 	query.SetMatchLimit(keychain.MatchLimitOne)
@@ -32,17 +47,33 @@ func Get(service string, user string) (string, error) {
 
 func Set(service string, user string, password string) error {
 	item := keychain.NewItem()
+	err := item.SetAuthenticationContext(ctx)
+	if err != nil {
+		return err
+	}
 	item.SetSecClass(keychain.SecClassGenericPassword)
+	item.SetAccessGroup(accessGroup)
 	item.SetService(service)
 	item.SetAccount(user)
 	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
 	item.SetData([]byte(password))
 	item.SetSynchronizable(keychain.SynchronizableNo)
-	item.SetAccessible(keychain.AccessibleAfterFirstUnlockThisDeviceOnly)
-	err := keychain.AddItem(item)
+	err = item.SetAccessControl(
+		keychain.AccessControlFlagsUserPresence,
+		keychain.AccessibleAfterFirstUnlockThisDeviceOnly,
+	)
+	if err != nil {
+		return err
+	}
+	err = keychain.AddItem(item)
 	if errors.Is(err, keychain.ErrorDuplicateItem) {
 		query := keychain.NewItem()
+		err := item.SetAuthenticationContext(ctx)
+		if err != nil {
+			return err
+		}
 		query.SetSecClass(keychain.SecClassGenericPassword)
+		query.SetAccessGroup(accessGroup)
 		query.SetService(service)
 		query.SetAccount(user)
 		query.SetMatchLimit(keychain.MatchLimitOne)
