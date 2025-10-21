@@ -17,6 +17,8 @@ type Manager[T Configer] struct {
 	loaded  T
 	log     *log.Entry
 	changed []chan ConfigChangedEvent[T]
+
+	FilterWatchEvent func(fsnotify.Event) bool
 }
 
 type ConfigChangedType int

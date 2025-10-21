@@ -39,6 +39,9 @@ func (cfg *Manager[T]) watch() error {
 				if event.Has(fsnotify.Write) {
 					continue
 				}
+				if cfg.FilterWatchEvent != nil && !cfg.FilterWatchEvent(event) {
+					continue
+				}
 				cfg.log.WithField("event", event).Debug("config file update")
 				previousConfig := &cfg.loaded
 				reloadConfig()
