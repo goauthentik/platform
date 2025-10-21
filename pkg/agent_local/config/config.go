@@ -1,7 +1,7 @@
 package config
 
 import (
-	"slices"
+	"strings"
 
 	"github.com/adrg/xdg"
 	"github.com/fsnotify/fsnotify"
@@ -26,12 +26,14 @@ func Manager() *cfgmgr.Manager[ConfigV1] {
 		if err != nil {
 			panic(err)
 		}
-		ignoredPaths := []string{
-			lock,
-			types.GetAgentSocketPath().ForCurrent(),
-		}
 		m.FilterWatchEvent = func(evt fsnotify.Event) bool {
-			return !slices.Contains(ignoredPaths, evt.Name)
+			if evt.Name == lock {
+				return false
+			}
+			if strings.HasPrefix(evt.Name, types.GetAgentSocketPath().ForCurrent()) {
+				return false
+			}
+			return true
 		}
 		manager = m
 	}
