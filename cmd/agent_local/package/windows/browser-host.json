@@ -1,9 +1,9 @@
 {
     "name": "io.goauthentik.platform",
     "description": "authentik Platform",
-    "path": "/Applications/authentik Agent.app/Contents/MacOS/ak-browser-support",
+    "path": "ak-browser-host.exe",
     "type": "stdio",
     "allowed_origins": [
-        "chrome-extension://mmghekjmcmmahgfaalllcldfeehmheac/"
+        "chrome-extension://dklfpnaeklldfpmhkbfjbmbnmkfafdma/"
     ]
 }

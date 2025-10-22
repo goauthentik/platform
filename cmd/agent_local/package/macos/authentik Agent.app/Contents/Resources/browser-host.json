@@ -4,6 +4,6 @@
     "path": "/Applications/authentik Agent.app/Contents/MacOS/ak-browser-support",
     "type": "stdio",
     "allowed_origins": [
-        "chrome-extension://mmghekjmcmmahgfaalllcldfeehmheac/"
+        "chrome-extension://dklfpnaeklldfpmhkbfjbmbnmkfafdma/"
     ]
 }
