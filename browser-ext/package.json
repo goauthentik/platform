@@ -20,6 +20,7 @@
         "@rollup/plugin-commonjs": "^28.0.8",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-typescript": "^12.1.4",
+        "@sentry/browser": "^10.21.0",
         "@types/chrome": "^0.1.24",
         "fuse.js": "^7.1.0",
         "lit": "^3.3.1",

@@ -6,7 +6,8 @@ FILE_NAME := authentik.zip
 .PHONY: bump
 bump:
 	npm version ${VERSION} || true
-	yq -i '.version = ${VERSION}' manifest.json
+	yq -i '.version = ${VERSION}' ${PWD}/manifest.json
+	sed -i 's/VERSION = ".*"/VERSION = ${VERSION}/g' ${PWD}/src/version.ts
 	npm run prettier
 
 .PHONY: build
@@ -17,6 +18,7 @@ build:
 
 .PHONY: package
 package: build
+	rm -f ${TOP}/bin/${TARGET}/${FILE_NAME}
 	zip ${TOP}/bin/${TARGET}/${FILE_NAME} -r manifest.json images dist
 
 .PHONY: lint

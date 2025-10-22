@@ -1,7 +1,10 @@
+import { sentry } from "./utils/sentry";
 import { STORAGE_KEY_PROFILE } from "./utils/storage";
 
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
+
+sentry();
 
 @customElement("ak-bext-options")
 export class BrowserExtensionOptions extends LitElement {

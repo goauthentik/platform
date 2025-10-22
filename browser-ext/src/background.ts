@@ -1,5 +1,8 @@
 import { Native } from "./utils/native";
 import { Omnibar } from "./utils/omnibar";
+import { sentry } from "./utils/sentry";
+
+sentry();
 
 chrome.runtime.onInstalled.addListener(() => {
     console.debug("authentik Extension Installed");
