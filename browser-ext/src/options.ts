@@ -4,7 +4,7 @@ import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 
 @customElement("ak-bext-options")
-class BrowserExtensionOptions extends LitElement {
+export class BrowserExtensionOptions extends LitElement {
     @state()
     profiles: { name: string }[] = [];
 

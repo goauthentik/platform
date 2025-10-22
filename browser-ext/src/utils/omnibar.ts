@@ -1,5 +1,5 @@
 import { Native } from "./native";
-import { STORAGE_KEY_PROFILE } from "./storage";
+import { DEFAULT_PROFILE, STORAGE_KEY_PROFILE } from "./storage";
 
 import { Application, Configuration, CoreApi } from "@goauthentik/api";
 
@@ -72,7 +72,10 @@ export class Omnibar {
 
     async #update() {
         const stor = await chrome.storage.sync.get([STORAGE_KEY_PROFILE]);
-        const selectedProfile = stor[STORAGE_KEY_PROFILE];
+        let selectedProfile = stor[STORAGE_KEY_PROFILE];
+        if (!selectedProfile) {
+            selectedProfile = DEFAULT_PROFILE;
+        }
         const token = await this.#native.getToken(selectedProfile);
 
         const response = await new CoreApi(
