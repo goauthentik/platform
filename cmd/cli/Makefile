@@ -33,7 +33,7 @@ package-gnu/linux: build
 			-t "${TOP}/bin/${TARGET}" \
 			-f "${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml"
 
-test-deploy: package
+test-deploy: package-gnu/linux
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb
 	$(TME) systemctl restart ssh
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb

@@ -19,7 +19,6 @@ func platformSetup(appName string) error {
 	log.SetFormatter(&log.TextFormatter{
 		DisableTimestamp: true,
 		DisableColors:    true,
-		DisableSorting:   true,
 	})
 	log.StandardLogger().Hooks.Add(hook)
 	log.StandardLogger().SetOutput(io.Discard)

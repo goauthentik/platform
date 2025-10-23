@@ -48,6 +48,7 @@ type FlowExecutor struct {
 
 	sp   *sentry.Span
 	opts FlowExecutorOptions
+	nc   *api.ChallengeTypes
 }
 
 type FlowExecutorOptions struct {
@@ -121,7 +122,7 @@ func (fe *FlowExecutor) ApiClient() *api.APIClient {
 	return fe.api
 }
 
-type challengeCommon interface {
+type ChallengeCommon interface {
 	GetComponent() string
 	GetResponseErrors() map[string][]api.ErrorDetail
 }
@@ -155,16 +156,43 @@ func (fe *FlowExecutor) WarmUp() error {
 	return err
 }
 
+func (fe *FlowExecutor) Start() error {
+	initial, err := fe.GetInitialChallenge()
+	if err != nil {
+		return err
+	}
+	fe.nc = initial
+	return nil
+}
+
 func (fe *FlowExecutor) Execute() (bool, error) {
-	initial, err := fe.getInitialChallenge()
+	err := fe.Start()
 	if err != nil {
 		return false, err
 	}
 	defer fe.sp.Finish()
-	return fe.solveFlowChallenge(initial, 1)
+	return fe.solver(1)
 }
 
-func (fe *FlowExecutor) getInitialChallenge() (*api.ChallengeTypes, error) {
+func (fe *FlowExecutor) Challenge() *api.ChallengeTypes {
+	return fe.nc
+}
+
+func (fe *FlowExecutor) solver(depth int) (bool, error) {
+	if depth >= 10 {
+		return false, errors.New("exceeded stage recursion depth")
+	}
+	done, err := fe.SolveFlowChallenge(nil)
+	if err != nil {
+		return false, err
+	}
+	if done {
+		return true, nil
+	}
+	return fe.solver(depth + 1)
+}
+
+func (fe *FlowExecutor) GetInitialChallenge() (*api.ChallengeTypes, error) {
 	// Get challenge
 	gcsp := sentry.StartSpan(fe.Context, "authentik.outposts.flow_executor.get_challenge")
 	req := fe.api.FlowsApi.FlowsExecutorGet(gcsp.Context(), fe.flowSlug).Query(fe.Params.Encode())
@@ -176,7 +204,7 @@ func (fe *FlowExecutor) getInitialChallenge() (*api.ChallengeTypes, error) {
 	if i == nil {
 		return nil, errors.New("response instance was null")
 	}
-	ch := i.(challengeCommon)
+	ch := i.(ChallengeCommon)
 	fe.opts.Logger("Got challenge", map[string]interface{}{
 		"component": ch.GetComponent(),
 	})
@@ -189,51 +217,55 @@ func (fe *FlowExecutor) getInitialChallenge() (*api.ChallengeTypes, error) {
 	return challenge, nil
 }
 
-func (fe *FlowExecutor) solveFlowChallenge(challenge *api.ChallengeTypes, depth int) (bool, error) {
+func (fe *FlowExecutor) SolveFlowChallenge(a *api.FlowChallengeResponseRequest) (bool, error) {
 	// Resole challenge
 	scsp := sentry.StartSpan(fe.Context, "authentik.outposts.flow_executor.solve_challenge")
 	responseReq := fe.api.FlowsApi.FlowsExecutorSolve(scsp.Context(), fe.flowSlug).Query(fe.Params.Encode())
-	i := challenge.GetActualInstance()
-	if i == nil {
-		return false, errors.New("response request instance was null")
-	}
-	ch := i.(challengeCommon)
 
-	// Check for any validation errors that we might've gotten
-	if len(ch.GetResponseErrors()) > 0 {
-		for key, errs := range ch.GetResponseErrors() {
-			for _, err := range errs {
-				return false, fmt.Errorf("flow error %s: %s", key, err.String)
+	if a != nil {
+		responseReq = responseReq.FlowChallengeResponseRequest(*a)
+	} else {
+		i := fe.nc.GetActualInstance()
+		if i == nil {
+			return false, errors.New("response request instance was null")
+		}
+		ch := i.(ChallengeCommon)
+
+		// Check for any validation errors that we might've gotten
+		if len(ch.GetResponseErrors()) > 0 {
+			for key, errs := range ch.GetResponseErrors() {
+				for _, err := range errs {
+					return false, fmt.Errorf("flow error %s: %s", key, err.String)
+				}
 			}
 		}
-	}
-
-	switch ch.GetComponent() {
-	case string(StageAccessDenied):
-		return false, nil
-	case string(StageRedirect):
-		return true, nil
-	default:
-		solver, ok := fe.solvers[StageComponent(ch.GetComponent())]
-		if !ok {
-			return false, fmt.Errorf("unsupported challenge type %s", ch.GetComponent())
+		switch ch.GetComponent() {
+		case string(StageAccessDenied):
+			return false, nil
+		case string(StageRedirect):
+			return true, nil
+		default:
+			solver, ok := fe.solvers[StageComponent(ch.GetComponent())]
+			if !ok {
+				return false, fmt.Errorf("unsupported challenge type %s", ch.GetComponent())
+			}
+			rr, err := solver(fe.nc, responseReq)
+			if err != nil {
+				return false, err
+			}
+			responseReq = responseReq.FlowChallengeResponseRequest(rr)
 		}
-		rr, err := solver(challenge, responseReq)
-		if err != nil {
-			return false, err
-		}
-		responseReq = responseReq.FlowChallengeResponseRequest(rr)
 	}
 
 	response, _, err := responseReq.Execute()
 	if err != nil {
 		return false, fmt.Errorf("failed to submit challenge %w", err)
 	}
-	i = response.GetActualInstance()
+	i := response.GetActualInstance()
 	if i == nil {
 		return false, errors.New("response instance was null")
 	}
-	ch = i.(challengeCommon)
+	ch := i.(ChallengeCommon)
 	fe.opts.Logger("Got response", map[string]interface{}{
 		"component": ch.GetComponent(),
 	})
@@ -243,9 +275,6 @@ func (fe *FlowExecutor) solveFlowChallenge(challenge *api.ChallengeTypes, depth 
 		"stage": ch.GetComponent(),
 		"flow":  fe.flowSlug,
 	}).Observe(float64(scsp.EndTime.Sub(scsp.StartTime)) / float64(time.Second))
-
-	if depth >= 10 {
-		return false, errors.New("exceeded stage recursion depth")
-	}
-	return fe.solveFlowChallenge(response, depth+1)
+	fe.nc = response
+	return false, nil
 }

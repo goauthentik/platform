@@ -14,7 +14,7 @@ use pam::{
     conv::Conv,
 };
 
-use crate::pam_try_log;
+use crate::{auth::PW_PROMPT, pam_try_log};
 
 const MAX_ITER: i8 = 30;
 
@@ -40,13 +40,14 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
     }
 }
 
-pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> PamResultCode {
+pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> PamResultCode {
     // Init transaction
     let mut challenge = match grpc_request(async |ch| {
         return Ok(PamClient::new(ch)
             .interactive_auth(InteractiveAuthRequest {
                 interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
                     username: username.to_owned(),
+                    password: password.to_owned(),
                 })),
             })
             .await?);
@@ -57,9 +58,25 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
             return PamResultCode::PAM_AUTH_ERR;
         }
     };
+    // We always prompt for password to distinguish between token/interactive
+    // so at this point we've always statically prompted for password.
+    // In case this initial prompt from the server fails, re-attempt the password challenge
+    let mut prev_challenge = InteractiveChallenge {
+        txid: challenge.txid.to_owned(),
+        finished: false,
+        result: 0,
+        prompt: PW_PROMPT.to_owned(),
+        prompt_meta: PAM_PROMPT_ECHO_OFF,
+        debug_info: "".to_owned(),
+    };
     let mut iter = 0;
     while iter <= MAX_ITER {
+        log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
+            pam_try_log!(
+                conv.send(prompt_meta_to_pam_message_style(&challenge), &challenge.prompt),
+                "failed to send prompt"
+            );
             return result_to_pam_result(challenge.result);
         }
         let mut req_inner = InteractiveAuthContinueRequest {
@@ -72,17 +89,11 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
                 log::warn!("Unspecified prompt meta");
                 return PamResultCode::PAM_ABORT;
             }
-            Ok(PromptMeta::Password) => {
-                log::debug!("Prompt meta password, using existing password");
-                req_inner.value = password.to_owned();
-            }
             Ok(_) => {
                 log::debug!("Prompt meta generic, prompt user");
+                let style = prompt_meta_to_pam_message_style(&challenge);
                 let credential = match pam_try_log!(
-                    conv.send(
-                        prompt_meta_to_pam_message_style(&challenge),
-                        &challenge.prompt
-                    ),
+                    conv.send(style, &challenge.prompt),
                     "failed to send prompt"
                 ) {
                     Some(c) => match c.to_str() {
@@ -93,6 +104,11 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
                         }
                     },
                     None => {
+                        if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
+                            challenge = prev_challenge.clone();
+                            log::debug!("Restarting loop due to message");
+                            continue;
+                        }
                         log::warn!("No PAM conversation response");
                         return PamResultCode::PAM_ABORT;
                     }
@@ -107,6 +123,7 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
                 return PamResultCode::PAM_ABORT;
             }
         }
+        prev_challenge = challenge;
         // Send the response
         challenge = match grpc_request(async |ch| {
             return Ok(PamClient::new(ch)

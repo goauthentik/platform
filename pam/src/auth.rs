@@ -1,6 +1,5 @@
-use authentik_sys::config::Config;
 use pam::{
-    constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
+    constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_OFF},
     conv::Conv,
     items::User,
     module::PamHandle,
@@ -23,14 +22,13 @@ pub mod interactive;
 pub mod token;
 
 pub const PW_PREFIX: &str = "\u{200b}";
+pub const PW_PROMPT: &str = "authentik Password: ";
 
 pub fn authenticate_impl(
     pamh: &mut PamHandle,
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> PamResultCode {
-    let config = Config::get();
-
     let username = match pamh.get_item::<User>() {
         Ok(u) => match u {
             Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
@@ -62,11 +60,10 @@ pub fn authenticate_impl(
         }
     };
     log::debug!("Started conv");
-    let password = pam_try_log!(
-        conv.send(PAM_PROMPT_ECHO_OFF, "authentik Password: "),
+    let password = match pam_try_log!(
+        conv.send(PAM_PROMPT_ECHO_OFF, PW_PROMPT),
         "failed to send prompt"
-    );
-    let password = match password {
+    ) {
         Some(password) => match password.to_str() {
             Ok(t) => t,
             Err(_) => {
@@ -80,6 +77,8 @@ pub fn authenticate_impl(
         }
     };
 
+    log::debug!("username: '{}'", username.to_owned().as_str());
+
     let id = _generate_id().to_string();
     let mut session_data = SessionData {
         username: username.to_string(),
@@ -92,7 +91,7 @@ pub fn authenticate_impl(
         "failed to set session_id env"
     );
 
-    if password.starts_with(PW_PREFIX) || config.debug {
+    if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
         let decoded = pam_try_log!(decode_token(raw_token), "failed to decode token");
@@ -118,11 +117,11 @@ pub fn authenticate_impl(
         PamResultCode::PAM_SUCCESS
     } else {
         log::debug!("Interactive authentication");
-        session_data.token = hash_token(password);
+        session_data.token = hash_token(password.to_owned());
         pam_try_log!(
             _write_session_data(id, session_data),
             "failed to write session data"
         );
-        auth_interactive(username, password, &conv)
+        auth_interactive(username, password.to_owned(), &conv)
     }
 }

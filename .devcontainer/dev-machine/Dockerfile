@@ -9,6 +9,5 @@ RUN apt-get update && \
     echo 'eval $(echo -n "$" | gnome-keyring-daemon --unlock | sed -e "s/^/export /")' >> /home/vscode/.bashrc
 
 COPY ./entry.sh /opt/entry.sh
-COPY ./domain.json /etc/authentik/domains/dev.json
 
 ENTRYPOINT [ "/opt/entry.sh" ]
