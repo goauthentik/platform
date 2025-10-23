@@ -69,12 +69,6 @@ func (a *Agent) Stop() {
 	if a.grpc != nil {
 		a.grpc.Stop()
 	}
-	if a.lis != nil {
-		err := a.lis.Close()
-		if err != nil {
-			a.log.WithError(err).Warning("failed to close socket")
-		}
-	}
 }
 
 func (a *Agent) startConfigWatch() {
