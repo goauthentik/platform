@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "authentik Platform SSO Extension",
-    "version": "0.12.8",
+    "version": "0.13.0",
     "description": "authentik Browser extension for seamless SSO and to launch applications.",
     "permissions": ["storage", "activeTab", "nativeMessaging"],
     "background": {
