@@ -64,7 +64,7 @@ pub fn authenticate_impl(
         "failed to send prompt"
     ) {
         Some(password) => match password.to_str() {
-            Ok(t) => t.to_owned(),
+            Ok(t) => t,
             Err(_) => {
                 log::warn!("failed to convert password");
                 return PamResultCode::PAM_AUTH_ERR;
@@ -116,7 +116,7 @@ pub fn authenticate_impl(
         PamResultCode::PAM_SUCCESS
     } else {
         log::debug!("Interactive authentication");
-        session_data.token = hash_token(password.clone());
+        session_data.token = hash_token(password.to_owned());
         pam_try_log!(
             _write_session_data(id, session_data),
             "failed to write session data"
