@@ -78,11 +78,9 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
             }
             Ok(_) => {
                 log::debug!("Prompt meta generic, prompt user");
+                let style = prompt_meta_to_pam_message_style(&challenge);
                 let credential = match pam_try_log!(
-                    conv.send(
-                        prompt_meta_to_pam_message_style(&challenge),
-                        &challenge.prompt
-                    ),
+                    conv.send(style, &challenge.prompt),
                     "failed to send prompt"
                 ) {
                     Some(c) => match c.to_str() {
@@ -93,6 +91,10 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
                         }
                     },
                     None => {
+                        if style == PAM_ERROR_MSG {
+                            log::debug!("Restarting loop due to message");
+                            continue
+                        }
                         log::warn!("No PAM conversation response");
                         return PamResultCode::PAM_ABORT;
                     }
