@@ -22,6 +22,7 @@ pub mod interactive;
 pub mod token;
 
 pub const PW_PREFIX: &str = "\u{200b}";
+pub const PW_PROMPT: &str = "authentik Password: ";
 
 pub fn authenticate_impl(
     pamh: &mut PamHandle,
@@ -60,7 +61,7 @@ pub fn authenticate_impl(
     };
     log::debug!("Started conv");
     let password = match pam_try_log!(
-        conv.send(PAM_PROMPT_ECHO_OFF, "authentik Password: "),
+        conv.send(PAM_PROMPT_ECHO_OFF, PW_PROMPT),
         "failed to send prompt"
     ) {
         Some(password) => match password.to_str() {

@@ -98,7 +98,11 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 	switch ch.GetComponent() {
 	case string(flow.StageRedirect):
 		txn.result = pb.InteractiveAuthResult_PAM_SUCCESS.Enum()
-		return c, nil
+		return &pb.InteractiveChallenge{
+			Txid:     txn.ID,
+			Finished: true,
+			Result:   pb.InteractiveAuthResult_PAM_SUCCESS,
+		}, nil
 	case string(flow.StageIdentification):
 		cc := nc.IdentificationChallenge
 		if !cc.PasswordFields {
@@ -115,7 +119,6 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 			return pam.getNextChallenge(txn)
 		}
 	case string(flow.StagePassword):
-		// No password field, only identification -> directly answer
 		c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
 			Value: txn.password,
 		})
@@ -144,7 +147,11 @@ func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.Inter
 	switch ch.GetComponent() {
 	case string(flow.StageRedirect):
 		txn.result = pb.InteractiveAuthResult_PAM_SUCCESS.Enum()
-		return nil, nil
+		return &pb.InteractiveChallenge{
+			Txid:     txn.ID,
+			Finished: true,
+			Result:   pb.InteractiveAuthResult_PAM_SUCCESS,
+		}, nil
 	case string(flow.StageIdentification):
 		freq.IdentificationChallengeResponseRequest = &api.IdentificationChallengeResponseRequest{
 			UidField: req.Value,
@@ -153,12 +160,20 @@ func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.Inter
 		freq.PasswordChallengeResponseRequest = &api.PasswordChallengeResponseRequest{
 			Password: req.Value,
 		}
+	case string(flow.StageAccessDenied):
+		txn.result = pb.InteractiveAuthResult_PAM_PERM_DENIED.Enum()
+		return &pb.InteractiveChallenge{
+			Txid:     txn.ID,
+			Finished: true,
+			Result:   pb.InteractiveAuthResult_PAM_PERM_DENIED,
+		}, nil
 	default:
 		pam.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
 	_, err := txn.fex.SolveFlowChallenge(freq)
 	if err != nil {
 		return &pb.InteractiveChallenge{
+			Txid:       txn.ID,
 			Prompt:     err.Error(),
 			PromptMeta: pb.InteractiveChallenge_PAM_ERROR_MSG,
 		}, err

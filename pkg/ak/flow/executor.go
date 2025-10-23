@@ -221,24 +221,24 @@ func (fe *FlowExecutor) SolveFlowChallenge(a *api.FlowChallengeResponseRequest) 
 	// Resole challenge
 	scsp := sentry.StartSpan(fe.Context, "authentik.outposts.flow_executor.solve_challenge")
 	responseReq := fe.api.FlowsApi.FlowsExecutorSolve(scsp.Context(), fe.flowSlug).Query(fe.Params.Encode())
-	i := fe.nc.GetActualInstance()
-	if i == nil {
-		return false, errors.New("response request instance was null")
-	}
-	ch := i.(ChallengeCommon)
-
-	// Check for any validation errors that we might've gotten
-	if len(ch.GetResponseErrors()) > 0 {
-		for key, errs := range ch.GetResponseErrors() {
-			for _, err := range errs {
-				return false, fmt.Errorf("flow error %s: %s", key, err.String)
-			}
-		}
-	}
 
 	if a != nil {
 		responseReq = responseReq.FlowChallengeResponseRequest(*a)
 	} else {
+		i := fe.nc.GetActualInstance()
+		if i == nil {
+			return false, errors.New("response request instance was null")
+		}
+		ch := i.(ChallengeCommon)
+
+		// Check for any validation errors that we might've gotten
+		if len(ch.GetResponseErrors()) > 0 {
+			for key, errs := range ch.GetResponseErrors() {
+				for _, err := range errs {
+					return false, fmt.Errorf("flow error %s: %s", key, err.String)
+				}
+			}
+		}
 		switch ch.GetComponent() {
 		case string(StageAccessDenied):
 			return false, nil
@@ -261,11 +261,11 @@ func (fe *FlowExecutor) SolveFlowChallenge(a *api.FlowChallengeResponseRequest) 
 	if err != nil {
 		return false, fmt.Errorf("failed to submit challenge %w", err)
 	}
-	i = response.GetActualInstance()
+	i := response.GetActualInstance()
 	if i == nil {
 		return false, errors.New("response instance was null")
 	}
-	ch = i.(ChallengeCommon)
+	ch := i.(ChallengeCommon)
 	fe.opts.Logger("Got response", map[string]interface{}{
 		"component": ch.GetComponent(),
 	})

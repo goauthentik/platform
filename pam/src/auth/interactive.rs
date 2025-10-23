@@ -14,7 +14,7 @@ use pam::{
     conv::Conv,
 };
 
-use crate::pam_try_log;
+use crate::{auth::PW_PROMPT, pam_try_log};
 
 const MAX_ITER: i8 = 30;
 
@@ -58,9 +58,20 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
             return PamResultCode::PAM_AUTH_ERR;
         }
     };
-    let mut prev_challenge = challenge.clone();
+    // We always prompt for password to distinguish between token/interactive
+    // so at this point we've always statically prompted for password.
+    // In case this initial prompt from the server fails, re-attempt the password challenge
+    let mut prev_challenge = InteractiveChallenge {
+        txid: challenge.txid.to_owned(),
+        finished: false,
+        result: 0,
+        prompt: PW_PROMPT.to_owned(),
+        prompt_meta: PAM_PROMPT_ECHO_OFF,
+        debug_info: "".to_owned(),
+    };
     let mut iter = 0;
     while iter <= MAX_ITER {
+        log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
             return result_to_pam_result(challenge.result);
         }
@@ -92,7 +103,7 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
                         if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
                             challenge = prev_challenge.clone();
                             log::debug!("Restarting loop due to message");
-                            return PamResultCode::PAM_PERM_DENIED;
+                            continue;
                         }
                         log::warn!("No PAM conversation response");
                         return PamResultCode::PAM_ABORT;
