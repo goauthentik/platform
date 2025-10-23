@@ -27,10 +27,10 @@ func Manager() *cfgmgr.Manager[ConfigV1] {
 			panic(err)
 		}
 		m.FilterWatchEvent = func(evt fsnotify.Event) bool {
-			if evt.Name == lock {
+			if evt.Name == types.GetAgentSocketPath().ForCurrent() {
 				return false
 			}
-			if strings.HasPrefix(evt.Name, types.GetAgentSocketPath().ForCurrent()) {
+			if strings.HasPrefix(evt.Name, lock) {
 				return false
 			}
 			return true
