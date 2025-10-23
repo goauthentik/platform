@@ -164,10 +164,4 @@ func (sm *SystemAgent) Stop() {
 		}
 	}
 	sm.srv.GracefulStop()
-	if sm.lis != nil {
-		err := sm.lis.Close()
-		if err != nil {
-			sm.log.WithError(err).Warning("failed to stop listening")
-		}
-	}
 }
