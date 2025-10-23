@@ -2,6 +2,7 @@ package agentsystem
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -65,7 +66,7 @@ func (sm *SystemAgent) registerComponents() {
 	sm.mtx.Lock()
 	defer sm.mtx.Unlock()
 	for name, constr := range sm.RegisterPlatformComponents() {
-		l := sm.log.WithField("component", name)
+		l := sm.log.WithField("logger", fmt.Sprintf("component.%s", name))
 		l.Info("Registering component")
 		ctx, cancel := context.WithCancel(sm.ctx)
 		comp, err := constr(component.Context{

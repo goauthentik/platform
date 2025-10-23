@@ -3,6 +3,7 @@ package pam
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
@@ -24,14 +25,19 @@ type Server struct {
 
 	ctx context.Context
 
-	cfg *config.Config
+	cfg  *config.Config
+	txns map[string]*InteractiveAuthTransaction
+	m    sync.RWMutex
+	dom  config.DomainConfig
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log: ctx.Log,
-		cfg: config.Manager().Get(),
-		ctx: ctx.Context,
+		log:  ctx.Log,
+		cfg:  config.Manager().Get(),
+		ctx:  ctx.Context,
+		txns: map[string]*InteractiveAuthTransaction{},
+		m:    sync.RWMutex{},
 	}
 	return srv, nil
 }
@@ -45,6 +51,7 @@ func (pam *Server) Start() error {
 	if err != nil {
 		return err
 	}
+	pam.dom = dom
 	pam.api = ac
 	k, err := keyfunc.NewDefaultCtx(pam.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
 		AuthentikURL: dom.AuthentikURL,
