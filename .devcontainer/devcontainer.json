@@ -1,5 +1,5 @@
 {
-  "name": "authentik CLI, PAM & NSS",
+  "name": "authentik Platform",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",

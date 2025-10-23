@@ -55,7 +55,7 @@ func Get(service string, user string) (string, error) {
 
 func Set(service string, user string, password string) error {
 	item := baseItem(service, user)
-	item.SetLabel(fmt.Sprintf("authentik CLI: %s", service))
+	item.SetLabel(fmt.Sprintf("authentik Platform SSO: %s", service))
 	item.SetData([]byte(password))
 	err := keychain.AddItem(item)
 	if errors.Is(err, keychain.ErrorDuplicateItem) {

@@ -36,20 +36,8 @@ services:
       POSTGRES_DB: ${PG_DB:-authentik}
     env_file:
       - .env
-  redis:
-    image: docker.io/library/redis:alpine
-    command: --save 60 1 --loglevel warning
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      start_period: 20s
-      interval: 30s
-      retries: 5
-      timeout: 3s
-    volumes:
-      - redis:/data
   authentik:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.6.4}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.0-rc3}
     restart: unless-stopped
     command: server
     environment:
@@ -66,7 +54,7 @@ services:
       - postgresql
       - redis
   authentik-worker:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.6.4}
+    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.0-rc3}
     restart: unless-stopped
     command: worker
     environment:

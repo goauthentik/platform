@@ -7,10 +7,10 @@
 [![Code Coverage](https://img.shields.io/codecov/c/gh/goauthentik/platform?style=for-the-badge)](https://codecov.io/gh/goauthentik/platform)
 [![CI Build status](https://img.shields.io/github/actions/workflow/status/goauthentik/platform/test.yml?branch=main&style=for-the-badge)](https://github.com/goauthentik/platform/actions)
 
-# authentik CLI
+# authentik Platform
 
 > [!CAUTION]
-> The authentik CLI is in a pre-alpha state and features/behaviours might change without notice. Use at your own risk.
+> The authentik Platform is in a pre-alpha state and features/behaviours might change without notice. Use at your own risk.
 
 ## Development
 

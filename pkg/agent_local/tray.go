@@ -39,7 +39,7 @@ func (a *Agent) systrayReady() {
 }
 
 func (a *Agent) systrayEarlyItems() {
-	version := systray.AddMenuItem(fmt.Sprintf("authentik CLI v%s", meta.FullVersion()), "")
+	version := systray.AddMenuItem(fmt.Sprintf("authentik Platform SSO v%s", meta.FullVersion()), "")
 	if meta.BuildHash != "" {
 		go func() {
 			for {
