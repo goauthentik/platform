@@ -40,13 +40,14 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
     }
 }
 
-pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> PamResultCode {
+pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> PamResultCode {
     // Init transaction
     let mut challenge = match grpc_request(async |ch| {
         return Ok(PamClient::new(ch)
             .interactive_auth(InteractiveAuthRequest {
                 interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
                     username: username.to_owned(),
+                    password: password.to_owned(),
                 })),
             })
             .await?);
@@ -57,6 +58,7 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
             return PamResultCode::PAM_AUTH_ERR;
         }
     };
+    let mut prev_challenge = challenge.clone();
     let mut iter = 0;
     while iter <= MAX_ITER {
         if challenge.finished {
@@ -71,10 +73,6 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
             Ok(PromptMeta::Unspecified) => {
                 log::warn!("Unspecified prompt meta");
                 return PamResultCode::PAM_ABORT;
-            }
-            Ok(PromptMeta::Password) => {
-                log::debug!("Prompt meta password, using existing password");
-                req_inner.value = password.to_owned();
             }
             Ok(_) => {
                 log::debug!("Prompt meta generic, prompt user");
@@ -91,9 +89,10 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
                         }
                     },
                     None => {
-                        if style == PAM_ERROR_MSG {
+                        if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
+                            challenge = prev_challenge.clone();
                             log::debug!("Restarting loop due to message");
-                            continue
+                            return PamResultCode::PAM_PERM_DENIED;
                         }
                         log::warn!("No PAM conversation response");
                         return PamResultCode::PAM_ABORT;
@@ -109,6 +108,7 @@ pub fn auth_interactive(username: String, password: &str, conv: &Conv<'_>) -> Pa
                 return PamResultCode::PAM_ABORT;
             }
         }
+        prev_challenge = challenge;
         // Send the response
         challenge = match grpc_request(async |ch| {
             return Ok(PamClient::new(ch)

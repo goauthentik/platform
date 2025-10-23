@@ -88,7 +88,7 @@ pub fn _generate_id() -> String {
         .collect()
 }
 
-pub fn hash_token(token: &str) -> String {
+pub fn hash_token(token: String) -> String {
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
     hex::encode(hasher.finalize())

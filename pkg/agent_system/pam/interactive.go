@@ -17,10 +17,12 @@ type InteractiveAuthTransaction struct {
 	ID       string
 	fex      *flow.FlowExecutor
 	username string
+	password string
 	result   *pb.InteractiveAuthResult
 }
 
 func (pam *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
+	pam.log.Debugf("init %+v\n", req)
 	if i := req.GetInit(); i != nil {
 		return pam.interactiveAuthInit(ctx, i)
 	} else if i := req.GetContinue(); i != nil {
@@ -34,6 +36,7 @@ func (pam *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAut
 	txn := &InteractiveAuthTransaction{
 		ID:       id,
 		username: req.Username,
+		password: req.Password,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(pam.ctx)
 	fex, err := flow.NewFlowExecutor(txn.ctx, pam.dom.AuthenticationFlow, pam.api.GetConfig(), flow.FlowExecutorOptions{
@@ -56,6 +59,7 @@ func (pam *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAut
 }
 
 func (pam *Server) interactiveAuthContinue(_ context.Context, req *pb.InteractiveAuthContinueRequest) (*pb.InteractiveChallenge, error) {
+	pam.log.Debugf("cont %+v\n", req)
 	pam.m.RLock()
 	txn, ok := pam.txns[req.Txid]
 	pam.m.RUnlock()
@@ -78,6 +82,54 @@ func (pam *Server) interactiveAuthContinue(_ context.Context, req *pb.Interactiv
 		return nil, err
 	}
 	return pam.getNextChallenge(txn)
+}
+
+func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.InteractiveChallenge, error) {
+	c := &pb.InteractiveChallenge{
+		Txid: txn.ID,
+	}
+	nc := txn.fex.Challenge()
+	i := nc.GetActualInstance()
+	if i == nil {
+		return nil, errors.New("response request instance was null")
+	}
+	ch := i.(flow.ChallengeCommon)
+
+	switch ch.GetComponent() {
+	case string(flow.StageRedirect):
+		txn.result = pb.InteractiveAuthResult_PAM_SUCCESS.Enum()
+		return c, nil
+	case string(flow.StageIdentification):
+		cc := nc.IdentificationChallenge
+		if !cc.PasswordFields {
+			// No password field, only identification -> directly answer
+			c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
+				Value: txn.username,
+			})
+			if c != nil {
+				return c, nil
+			}
+			if err != nil {
+				return nil, err
+			}
+			return pam.getNextChallenge(txn)
+		}
+	case string(flow.StagePassword):
+		// No password field, only identification -> directly answer
+		c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
+			Value: txn.password,
+		})
+		if c != nil {
+			return c, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		return pam.getNextChallenge(txn)
+	default:
+		pam.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
+	}
+	return c, nil
 }
 
 func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.InteractiveAuthContinueRequest) (*pb.InteractiveChallenge, error) {
@@ -112,43 +164,4 @@ func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.Inter
 		}, err
 	}
 	return nil, nil
-}
-
-func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.InteractiveChallenge, error) {
-	c := &pb.InteractiveChallenge{
-		Txid: txn.ID,
-	}
-	nc := txn.fex.Challenge()
-	i := nc.GetActualInstance()
-	if i == nil {
-		return nil, errors.New("response request instance was null")
-	}
-	ch := i.(flow.ChallengeCommon)
-
-	switch ch.GetComponent() {
-	case string(flow.StageRedirect):
-		txn.result = pb.InteractiveAuthResult_PAM_SUCCESS.Enum()
-		return c, nil
-	case string(flow.StageIdentification):
-		cc := nc.IdentificationChallenge
-		if !cc.PasswordFields {
-			// No password field, only identification -> directly answer
-			c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
-				Value: txn.username,
-			})
-			if c != nil {
-				return c, nil
-			}
-			if err != nil {
-				return nil, err
-			}
-			return pam.getNextChallenge(txn)
-		}
-	case string(flow.StagePassword):
-		c.Prompt = "Enter authentik password: "
-		c.PromptMeta = pb.InteractiveChallenge_PASSWORD
-	default:
-		pam.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
-	}
-	return c, nil
 }
