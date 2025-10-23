@@ -5,6 +5,7 @@ package agentsystem
 
 import (
 	"os"
+	"runtime"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -27,7 +28,7 @@ var agentCmd = &cobra.Command{
 		}
 		err = systemlog.Setup("sysd")
 		if err != nil {
-			systemlog.Get().WithError(err).Warning("failed to setup logs")
+			return err
 		}
 		return nil
 	},
@@ -40,5 +41,8 @@ var agentCmd = &cobra.Command{
 
 func init() {
 	defaultConfigFile = "/etc/authentik/config.json"
+	if runtime.GOOS == "darwin" {
+		defaultConfigFile = "/opt/authentik/config/config.json"
+	}
 	rootCmd.AddCommand(agentCmd)
 }

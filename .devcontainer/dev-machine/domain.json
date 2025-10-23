@@ -1,0 +1,8 @@
+{
+    "enabled": true,
+    "authentik_url": "http://authentik:9000",
+    "app_slug": "authentik-pam",
+    "token": "this-token-is-for-testing-dont-use",
+    "authentication_flow": "default-authentication-flow",
+    "domain": "dev"
+}

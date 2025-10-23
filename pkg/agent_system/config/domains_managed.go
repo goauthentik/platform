@@ -1,9 +1,9 @@
 package config
 
 import (
-	"errors"
 	"strings"
 
+	"github.com/pkg/errors"
 	managedconfig "goauthentik.io/platform/pkg/platform/managed_config"
 	"goauthentik.io/platform/pkg/platform/pstr"
 )
@@ -24,7 +24,7 @@ func (c *Config) loadDomainsManaged() error {
 		if errors.Is(err, managedconfig.ErrNotFound) || errors.Is(err, managedconfig.ErrNotSupported) {
 			return nil
 		}
-		return err
+		return errors.Wrap(err, "failed to load managed config")
 	}
 	// Check if we already have a managed domain
 	for _, d := range c.domains {
@@ -52,7 +52,7 @@ func (c *Config) loadDomainsManaged() error {
 		Domain:             managedDomainName,
 	}
 	if err := d.Test(); err != nil {
-		return err
+		return errors.Wrap(err, "failed to test domain")
 	}
 	return c.SaveDomain(d)
 }

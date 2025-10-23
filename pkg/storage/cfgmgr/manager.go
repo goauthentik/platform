@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/pkg/errors"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 )
 
@@ -18,12 +19,12 @@ func NewManager[T Configer](file string) (*Manager[T], error) {
 	cfg.log.WithField("path", file).Debug("Config file path")
 	err := cfg.Load()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to load config")
 	}
 	cfg.log.Debug("Starting config watch")
 	err = cfg.watch()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to watch config")
 	}
 	return cfg, nil
 }

@@ -55,7 +55,11 @@ func (c *Config) Default() cfgmgr.Configer {
 }
 
 func (c *Config) PostLoad() error {
-	return c.loadDomains()
+	err := c.loadDomains()
+	if err != nil {
+		c.log.WithError(err).Warning("failed to load domains")
+	}
+	return nil
 }
 
 func (c *Config) PreSave() error { return nil }
