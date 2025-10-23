@@ -13,6 +13,7 @@ bump:
 .PHONY: build
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
+	rm -rf ${PWD}/dist/*
 	npm i
 	npm run build
 
