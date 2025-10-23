@@ -33,7 +33,6 @@ package-gnu/linux: build
 			-t "${TOP}/bin/${TARGET}" \
 			-f "${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml"
 
-test-deploy: package
+test-deploy: package-gnu/linux
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}_${ARCH}.deb
-	$(TME) bash -c 'echo -n "this-token-is-for-testing-dont-use" | ak-sysd domains join default -a http://authentik:9000'
 	$(TME) systemctl restart ak-sysd

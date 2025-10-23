@@ -28,10 +28,10 @@ test-setup:
 	go run -v ./cmd/cli setup -v -a http://authentik:9000
 
 test-ssh:
-	go run -v ./cmd/cli ssh akadmin@authentik-cli_devcontainer-test-machine-1
+	go run -v ./cmd/cli ssh akadmin@authentik-platform_devcontainer-test-machine-1
 
 test-shell:
-	docker exec -it authentik-cli_devcontainer-test-machine-1 bash
+	docker exec -it authentik-platform_devcontainer-test-machine-1 bash
 
 test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
