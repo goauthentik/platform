@@ -27,6 +27,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var insecure = false
+
 var sshCmd = &cobra.Command{
 	Use:          "ssh",
 	Short:        "Establish an SSH connection with `host`.",
@@ -131,6 +133,9 @@ var sshCmd = &cobra.Command{
 				return err
 			}),
 		}
+		if insecure {
+			config.HostKeyCallback = ssh.InsecureIgnoreHostKey()
+		}
 		client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
 		if err != nil {
 			return err
@@ -148,11 +153,8 @@ var sshCmd = &cobra.Command{
 }
 
 func init() {
+	sshCmd.Flags().BoolVarP(&insecure, "insecure", "i", false, "Insecure host-key checking, use with caution!")
 	rootCmd.AddCommand(sshCmd)
-}
-
-func ParseSSHConfig() {
-
 }
 
 func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {

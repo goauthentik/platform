@@ -73,6 +73,10 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
     while iter <= MAX_ITER {
         log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
+            pam_try_log!(
+                conv.send(prompt_meta_to_pam_message_style(&challenge), &challenge.prompt),
+                "failed to send prompt"
+            );
             return result_to_pam_result(challenge.result);
         }
         let mut req_inner = InteractiveAuthContinueRequest {

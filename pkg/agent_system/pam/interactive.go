@@ -23,12 +23,15 @@ type InteractiveAuthTransaction struct {
 
 func (pam *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
 	pam.log.Debugf("init %+v\n", req)
+	var ch *pb.InteractiveChallenge
+	var err error
 	if i := req.GetInit(); i != nil {
-		return pam.interactiveAuthInit(ctx, i)
+		ch, err = pam.interactiveAuthInit(ctx, i)
 	} else if i := req.GetContinue(); i != nil {
-		return pam.interactiveAuthContinue(ctx, i)
+		ch, err = pam.interactiveAuthContinue(ctx, i)
 	}
-	return nil, nil
+	pam.log.Debugf("res %+v\n", ch)
+	return ch, err
 }
 
 func (pam *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAuthInitRequest) (*pb.InteractiveChallenge, error) {
@@ -103,6 +106,15 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 			Finished: true,
 			Result:   pb.InteractiveAuthResult_PAM_SUCCESS,
 		}, nil
+	case string(flow.StageAccessDenied):
+		txn.result = pb.InteractiveAuthResult_PAM_PERM_DENIED.Enum()
+		return &pb.InteractiveChallenge{
+			Txid:       txn.ID,
+			Finished:   true,
+			Result:     pb.InteractiveAuthResult_PAM_PERM_DENIED,
+			Prompt:     *nc.AccessDeniedChallenge.ErrorMessage,
+			PromptMeta: pb.InteractiveChallenge_PAM_ERROR_MSG,
+		}, nil
 	case string(flow.StageIdentification):
 		cc := nc.IdentificationChallenge
 		if !cc.PasswordFields {
@@ -119,16 +131,24 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 			return pam.getNextChallenge(txn)
 		}
 	case string(flow.StagePassword):
-		c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
-			Value: txn.password,
-		})
-		if c != nil {
-			return c, nil
+		if txn.password != "" {
+			c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
+				Value: txn.password,
+			})
+			txn.password = ""
+			if c != nil {
+				return c, nil
+			}
+			if err != nil {
+				return nil, err
+			}
+			return pam.getNextChallenge(txn)
 		}
-		if err != nil {
-			return nil, err
-		}
-		return pam.getNextChallenge(txn)
+		return &pb.InteractiveChallenge{
+			Txid:       txn.ID,
+			Prompt:     "authentik Password: ",
+			PromptMeta: pb.InteractiveChallenge_PAM_PROMPT_ECHO_OFF,
+		}, nil
 	default:
 		pam.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
@@ -145,13 +165,6 @@ func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.Inter
 
 	freq := &api.FlowChallengeResponseRequest{}
 	switch ch.GetComponent() {
-	case string(flow.StageRedirect):
-		txn.result = pb.InteractiveAuthResult_PAM_SUCCESS.Enum()
-		return &pb.InteractiveChallenge{
-			Txid:     txn.ID,
-			Finished: true,
-			Result:   pb.InteractiveAuthResult_PAM_SUCCESS,
-		}, nil
 	case string(flow.StageIdentification):
 		freq.IdentificationChallengeResponseRequest = &api.IdentificationChallengeResponseRequest{
 			UidField: req.Value,
@@ -160,13 +173,6 @@ func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.Inter
 		freq.PasswordChallengeResponseRequest = &api.PasswordChallengeResponseRequest{
 			Password: req.Value,
 		}
-	case string(flow.StageAccessDenied):
-		txn.result = pb.InteractiveAuthResult_PAM_PERM_DENIED.Enum()
-		return &pb.InteractiveChallenge{
-			Txid:     txn.ID,
-			Finished: true,
-			Result:   pb.InteractiveAuthResult_PAM_PERM_DENIED,
-		}, nil
 	default:
 		pam.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
