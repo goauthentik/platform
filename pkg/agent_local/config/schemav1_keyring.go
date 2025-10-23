@@ -31,13 +31,13 @@ func (c ConfigV1) PreSave() error {
 		l.Debug("Setting access token in keyring")
 		err := keyring.Set(keyring.Service("access_token"), name, profile.AccessToken)
 		if err != nil {
-			l.WithError(err).Warning("failed to get keyring")
+			l.WithError(err).Warning("failed to set keyring")
 			return err
 		}
 		l.Debug("Setting refresh token in keyring")
 		err = keyring.Set(keyring.Service("refresh_token"), name, profile.RefreshToken)
 		if err != nil {
-			l.WithError(err).Warning("failed to get keyring")
+			l.WithError(err).Warning("failed to set keyring")
 			return err
 		}
 	}

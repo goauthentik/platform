@@ -35,11 +35,15 @@ func New(socketPath string) (*Client, error) {
 		}),
 		grpc.WithChainUnaryInterceptor(
 			logging.UnaryClientInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.UnaryClientInterceptor(),
+			grpc_sentry.UnaryClientInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			})),
 		),
 		grpc.WithChainStreamInterceptor(
 			logging.StreamClientInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.StreamClientInterceptor(),
+			grpc_sentry.StreamClientInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			})),
 		),
 	)
 	if err != nil {

@@ -23,11 +23,15 @@ func (a *Agent) startGRPC() {
 		grpc.Creds(grpc_creds.NewTransportCredentials()),
 		grpc.ChainUnaryInterceptor(
 			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.UnaryServerInterceptor(),
+			grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			})),
 		),
 		grpc.ChainStreamInterceptor(
 			logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.StreamServerInterceptor(),
+			grpc_sentry.StreamServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			})),
 		),
 	)
 	pb.RegisterAgentAuthServer(a.grpc, a)
