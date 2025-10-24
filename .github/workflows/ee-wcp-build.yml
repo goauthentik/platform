@@ -1,0 +1,32 @@
+name: build-ee-wcp
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/cache@v4
+        with:
+          path: ee/wcp/build/_deps
+          key: ${{ runner.os }}-deps
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+      - working-directory: ee/wcp/
+        run: |
+          winget install StrawberryPerl.StrawberryPerl --accept-package-agreements --accept-source-agreements --disable-interactivity --no-upgrade
+          if (Test-Path -Path "build") {Remove-Item -Path "build" -Recurse -Force}
+          if (! (Test-Path -Path "build")) {mkdir build}
+      - run: |
+          make ee/wcp/build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            ee/wcp/build/build/Release

@@ -1,5 +1,8 @@
 {
   "protoc": {
     "options": ["-I=protos/"]
+  },
+  "files.associations": {
+    "xstring": "cpp"
   }
 }
