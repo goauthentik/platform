@@ -19,7 +19,7 @@
         "@goauthentik/tsconfig": "^1.0.4",
         "@rollup/plugin-commonjs": "^28.0.8",
         "@rollup/plugin-node-resolve": "^16.0.3",
-        "@rollup/plugin-typescript": "^12.2.0",
+        "@rollup/plugin-typescript": "^12.3.0",
         "@sentry/browser": "^10.21.0",
         "@types/chrome": "^0.1.24",
         "fuse.js": "^7.1.0",
