@@ -9,7 +9,7 @@ require (
 	github.com/aletheia7/ul v1.5.0
 	github.com/ansxuman/go-touchid v0.0.0-20241021115423-60941306d4c3
 	github.com/avast/retry-go/v4 v4.7.0
-	github.com/aws/aws-sdk-go-v2 v1.39.3
+	github.com/aws/aws-sdk-go-v2 v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.8
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.9.0
