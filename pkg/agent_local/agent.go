@@ -1,15 +1,14 @@
 package agentlocal
 
 import (
-	"context"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/kolide/systray"
 	"github.com/nightlyone/lockfile"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/agent_local/tray"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
@@ -23,23 +22,22 @@ type Agent struct {
 	pb.UnimplementedAgentCacheServer
 	pb.UnimplementedAgentConfigServer
 
-	grpc           *grpc.Server
-	cfg            *cfgmgr.Manager[config.ConfigV1]
-	tr             *token.GlobalTokenManager
-	log            *log.Entry
-	systrayStarted bool
-	lock           lockfile.Lockfile
-	systrayCtx     context.Context
-	systrayCtxS    context.CancelFunc
-	lis            socket.InfoListener
+	grpc *grpc.Server
+	cfg  *cfgmgr.Manager[config.ConfigV1]
+	tr   *token.GlobalTokenManager
+	log  *log.Entry
+	tray *tray.Tray
+	lock lockfile.Lockfile
+	lis  socket.InfoListener
 }
 
 func New() (*Agent, error) {
 	mgr := config.Manager()
 	return &Agent{
-		cfg: mgr,
-		log: systemlog.Get().WithField("logger", "agent"),
-		tr:  token.NewGlobal(),
+		cfg:  mgr,
+		log:  systemlog.Get().WithField("logger", "agent"),
+		tr:   token.NewGlobal(),
+		tray: tray.New(mgr),
 	}, nil
 }
 
@@ -50,17 +48,20 @@ func (a *Agent) Start() {
 		os.Exit(1)
 		return
 	}
-	go a.startConfigWatch()
 	go a.startGRPC()
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
+	go a.signalHandler()
+	go a.tray.Start()
+	defer a.Stop()
+	<-a.tray.Exit
+}
 
-		log.Info("Shutting down...")
-		systray.Quit()
-	}()
-	a.startSystray()
+func (a *Agent) signalHandler() {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
+
+	log.Info("Shutting down...")
+	a.tray.Quit()
 }
 
 func (a *Agent) Stop() {
@@ -68,12 +69,5 @@ func (a *Agent) Stop() {
 	_ = a.lock.Unlock()
 	if a.grpc != nil {
 		a.grpc.Stop()
-	}
-}
-
-func (a *Agent) startConfigWatch() {
-	a.log.Debug("Starting config file watch")
-	for range a.cfg.Watch() {
-		a.systrayConfigUpdate()
 	}
 }
