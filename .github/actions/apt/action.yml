@@ -193,75 +193,19 @@ runs:
 
     - name: Create repository index page
       shell: bash
+      env:
+        REF: ${{ github.ref }}
+        SHA: ${{ github.sha }}
+        ARCHITECTURES: ${{ inputs.architectures }}
+        COMPONENTS: ${{ inputs.components }}
+        DISTRIBUTION: ${{ inputs.distribution }}
+        REPOSITORY_NAME: ${{ inputs.repository-name }}
+        REPOSITORY_URL: ${{ inputs.repository-url }}
       run: |
         set -xeuo pipefail
         # Determine if GPG is being used
         SIGNED=${{ inputs.gpg-private-key != '' && 'true' || 'false' }}
-        cat > "$REPO_PATH/index.html" << EOF
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>authentik Platform Packages</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; }
-                .repo-info { background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; }
-                .setup-section { background: #e8f4fd; padding: 20px; border-radius: 5px; margin: 20px 0; }
-                code { background: #e0e0e0; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
-                pre { background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }
-                .component { color: #0066cc; font-weight: bold; }
-                .warning { color: #cc6600; font-style: italic; }
-                .command { background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 5px; margin: 10px 0; }
-                .step { margin: 15px 0; }
-                .key-info { background: #f0fff4; border-left: 4px solid #48bb78; padding: 15px; margin: 10px 0; }
-                .signed { color: #48bb78; font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <h1>authentik Platform Packages</h1>
-            <div class="setup-section">
-                <h2>Desktop packages</h2>
-                <ul>
-                    <li><a href="packages/authentik_macos-15_agent/agent_local/authentik agent installer.pkg">macOS</a></li>
-                    <li><a href="packages/authentik_windows-2025_agent/agent_local/agent.msi">Windows</a></li>
-                </ul>
-            </div>
-            <div class="repo-info">
-                <h2>Repository Information</h2>
-                <p><strong>Repository:</strong> ${{ inputs.repository-name }}</p>
-                <p><strong>Component:</strong> <span class="component">${{ inputs.components }}</span></p>
-                <p><strong>Distribution:</strong> ${{ inputs.distribution }}</p>
-                <p><strong>Architectures:</strong> ${{ inputs.architectures }}</p>
-                <p><strong>Built from:</strong> ${{ github.ref }} (${{ github.sha }})</p>
-                <p><strong>Signing:</strong> <span class="signed">✅ Packages are GPG signed</span></p>
-            </div>
-            <div class="setup-section">
-                <h2>🚀 Quick Setup</h2>
-                <div class="step">
-                    <h3>Step 1: Add GPG Key</h3>
-                    <pre class="command">curl -fsSL ${{ inputs.repository-url }}/keys/gpg-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg</pre>
-                </div>
-
-                <div class="step">
-                    <h3>Step 2: Add Repository</h3>
-                    <pre class="command">echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] ${{ inputs.repository-url }}/ ${{ inputs.distribution }} ${{ inputs.components }}" | sudo tee /etc/apt/sources.list.d/authentik.list</pre>
-                </div>
-                <div class="step">
-                    <h3>Step 3: Update and Install</h3>
-                    <pre class="command">sudo apt update
-        sudo apt install your-package-name</pre>
-                </div>
-            </div>
-            <h2>Browse Repository</h2>
-            <ul>
-                <li><a href="dists/">dists/</a> - Distribution metadata and package lists</li>
-                <li><a href="pool/">pool/</a> - Package files (.deb)</li>
-                <li><a href="dists/${{ inputs.distribution }}/Release">Release</a> - Repository metadata</li>
-                <li><a href="dists/${{ inputs.distribution }}/${{ inputs.components }}/binary-amd64/Packages">Packages (amd64)</a> - Package index</li>
-                <li><a href="dists/${{ inputs.distribution }}/${{ inputs.components }}/binary-arm64/Packages">Packages (arm64)</a> - Package index</li>
-            </ul>
-        </body>
-        </html>
-        EOF
+        envsubst < "${{ github.action_path }}/index.html" > "$REPO_PATH/index.html"
 
     - name: Create Netlify configuration
       shell: bash
