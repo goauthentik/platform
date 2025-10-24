@@ -31,7 +31,7 @@ inputs:
   repository-url:
     description: 'Repository URL (for APT instructions)'
     required: false
-    default: 'https://authentik-pkg.netlify.app'
+    default: 'https://pkg.goauthentik.io/'
   components:
     description: "Repo component"
     required: false
