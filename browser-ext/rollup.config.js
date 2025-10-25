@@ -7,6 +7,7 @@ export default {
         background: "src/background/background.ts",
         options: "src/options/options.ts",
         popup: "src/popup/popup.ts",
+        content: "src/content/content.ts",
     },
     output: {
         dir: "dist",

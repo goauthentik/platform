@@ -24,5 +24,12 @@
         "16": "images/icon16.png",
         "48": "images/icon48.png",
         "128": "images/icon128.png"
-    }
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["dist/content.js"]
+        }
+    ],
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl9UiRfGG+/mQOmPXpqL27d8y7TgHzZyep9xb7JvyYEImDmyVqZqt5co6LBQQJp+aE7BCNTq9vcqOOvQLCXZwpMlduGLxkMKeEaokuj9kBX5bxlOUN60wXuGwMTK1dkm5kQtmIeBczfc9d+AGuWrdijdR6/poXhENKDlmkHtByCMKLpQqGYjaHHTsWYER/bmCFdaKsLK0naQksl1M+UpOUjaiXSS3N4+YapqMK3XeTRKCu5jOTdTCAajlT38LY1wloGS98A6zXnQ4hHyrQ8tCzF6xCWzZHrDz8uLF49XtrRzFMLam5wUgGeJssjrwojwTrr1Vm1GCXvS2iMeyi84p7QIDAQAB"
 }

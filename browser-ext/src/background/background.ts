@@ -26,6 +26,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                 sendResponse(apps);
             });
             break;
+        case "platform_sign_endpoint_header":
+            native.platformSignEndpointHeader(msg.profile, msg.challenge).then((r) => {
+                sendResponse(r);
+            });
+            break;
     }
     return true;
 });
