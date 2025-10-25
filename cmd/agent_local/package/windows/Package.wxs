@@ -77,6 +77,10 @@
           <RegistryValue Type="string" Value="[INSTALLFOLDER]browser-host.json"/>
         </RegistryKey>
         <RegistryKey Root="HKLM"
+                    Key="SOFTWARE\Microsoft\Edge\NativeMessagingHosts\io.goauthentik.platform">
+          <RegistryValue Type="string" Value="[INSTALLFOLDER]browser-host.json"/>
+        </RegistryKey>
+        <RegistryKey Root="HKLM"
                     Key="Software\Mozilla\NativeMessagingHosts\io.goauthentik.platform">
           <RegistryValue Type="string" Value="[INSTALLFOLDER]browser-host.json"/>
         </RegistryKey>
