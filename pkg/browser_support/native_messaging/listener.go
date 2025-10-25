@@ -1,4 +1,4 @@
-package browser_native_messaging
+package native_messaging
 
 import (
 	"bufio"
@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
 	"unsafe"
 
 	log "github.com/sirupsen/logrus"
@@ -68,15 +66,6 @@ func (l *Listener[in, out]) read() {
 	lengthBytes := make([]byte, 4)
 	lengthNum := int(0)
 
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
-
-		log.Info("Shutting down...")
-		os.Exit(0)
-	}()
-
 	// we're going to indefinitely read the first 4 bytes in buffer, which gives us the message length.
 	// if stdIn is closed we'll exit the loop and shut down host
 	for b, err := s.Read(lengthBytes); b > 0 && err == nil; b, err = s.Read(lengthBytes) {
@@ -101,7 +90,7 @@ func (l *Listener[in, out]) read() {
 		l.parseMessage(content)
 	}
 
-	log.Tracef("Stdin closed.")
+	l.log.Tracef("Stdin closed.")
 }
 
 // readMessageLength reads and returns the message length value in native byte order.
