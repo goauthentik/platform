@@ -19,9 +19,9 @@ contents:
   - src: ./package/linux/ak-agent.service
     dst: /etc/systemd/user/ak-agent.service
     type: config
-  - src: ./cmd/agent_local/package/linux/browser-host.json
+  - src: ./package/linux/browser-host.json
     dst: /etc/opt/chrome/native-messaging-hosts/io.goauthentik.platform.json
-  - src: ./cmd/agent_local/package/linux/browser-host.json
+  - src: ./package/linux/browser-host.json
     dst: /etc/opt/edge/native-messaging-hosts/io.goauthentik.platform.json
-  - src: ./cmd/agent_local/package/linux/browser-host.json
+  - src: ./package/linux/browser-host.json
     dst: //usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json
