@@ -1,4 +1,5 @@
 {
+    "$schema": "https://json.schemastore.org/chrome-manifest",
     "manifest_version": 3,
     "name": "authentik Platform SSO Extension",
     "version": "0.14.0",
@@ -12,8 +13,11 @@
         "keyword": "ak"
     },
     "options_ui": {
-        "page": "src/options.html",
+        "page": "html/options.html",
         "open_in_tab": false
+    },
+    "action": {
+        "default_popup": "html/popup.html"
     },
     "host_permissions": ["https://*/"],
     "icons": {

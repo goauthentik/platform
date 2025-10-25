@@ -1,3 +1,5 @@
+import { Application, Configuration, CoreApi } from "@goauthentik/api";
+
 export interface Message {
     version: string;
     path: string;
@@ -98,5 +100,23 @@ export class Native {
             },
         });
         return response.data.response as string;
+    }
+
+    async getApplications(profile: string): Promise<Application[]> {
+        const token = await this.getToken(profile);
+
+        const response = await new CoreApi(
+            new Configuration({
+                basePath: `${token.url}/api/v3`,
+                accessToken: token.token,
+            }),
+        ).coreApplicationsList({});
+        const apps = response.results.map((app) => {
+            if (app.launchUrl && app.launchUrl.startsWith("/")) {
+                return { ...app, launchUrl: `${token.url}${app.launchUrl}` };
+            }
+            return app;
+        });
+        return apps;
     }
 }

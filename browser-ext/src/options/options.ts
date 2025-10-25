@@ -1,10 +1,10 @@
-import { sentry } from "./utils/sentry";
-import { STORAGE_KEY_PROFILE } from "./utils/storage";
+import { sentry } from "../utils/sentry";
+import { getProfile, STORAGE_KEY_PROFILE } from "./storage";
 
 import { html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 
-sentry();
+sentry("options");
 
 @customElement("ak-bext-options")
 export class BrowserExtensionOptions extends LitElement {
@@ -18,8 +18,7 @@ export class BrowserExtensionOptions extends LitElement {
         this.profiles = await chrome.runtime.sendMessage({
             action: "get_profiles",
         });
-        const stor = await chrome.storage.sync.get([STORAGE_KEY_PROFILE]);
-        this.selectedProfile = stor.profile;
+        this.selectedProfile = await getProfile();
         this.requestUpdate();
     }
 
