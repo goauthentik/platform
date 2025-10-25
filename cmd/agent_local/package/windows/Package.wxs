@@ -67,7 +67,7 @@
         <File Id="ak_cli"
               Source="$(env.ROOT)/bin/cli/ak.exe" />
       </Component>
-      <Component Id="browser_support" Bitness="always64">
+      <Component Id="browser_support" Guid="e027d360-a9e1-4bd6-b168-1f56d1fcaf8f" Bitness="always64">
         <File Id="ak_browser_support"
               Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe" KeyPath="true" />
         <File Id="browser_support_json"
