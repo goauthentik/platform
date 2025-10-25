@@ -67,8 +67,10 @@
         <File Id="ak_cli"
               Source="$(env.ROOT)/bin/cli/ak.exe" />
       </Component>
-      <Component Id="browser_host" Bitness="always64">
-        <File Id="browser_host_json"
+      <Component Id="browser_support" Bitness="always64">
+        <File Id="ak_browser_support"
+              Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe" />
+        <File Id="browser_support_json"
               Source="$(env.PWD)/package/windows/browser-host.json" KeyPath="yes" />
         <RegistryKey Root="HKLM"
                     Key="SOFTWARE\Google\Chrome\NativeMessagingHosts\io.goauthentik.platform">
@@ -85,7 +87,7 @@
       <ComponentRef Id="sysd" />
       <ComponentRef Id="agent" />
       <ComponentRef Id="cli" />
-      <ComponentRef Id="browser_host" />
+      <ComponentRef Id="browser_support" />
     </Feature>
   </Package>
 </Wix>

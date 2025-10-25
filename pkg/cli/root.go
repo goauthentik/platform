@@ -41,8 +41,6 @@ func Execute() {
 	switch arg0 {
 	case "ak-vault":
 		err = vaultCmd.Execute()
-	case "ak-browser-support":
-		err = browserSupportCmd.Execute()
 	default:
 		err = rootCmd.Execute()
 	}

@@ -1,7 +1,7 @@
 {
     "name": "io.goauthentik.platform",
     "description": "authentik Platform",
-    "path": "ak-browser-host.exe",
+    "path": "ak-browser-support.exe",
     "type": "stdio",
     "allowed_origins": [
         "chrome-extension://dklfpnaeklldfpmhkbfjbmbnmkfafdma/"

@@ -52,6 +52,9 @@ nss/%:
 utils_rs/%:
 	"$(MAKE)" -C "${TOP}/utils_rs" $*
 
+browser_support/%:
+	"$(MAKE)" -C "${TOP}/cmd/browser_support" $*
+
 cli/%:
 	"$(MAKE)" -C "${TOP}/cmd/cli" $*
 

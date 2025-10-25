@@ -15,6 +15,7 @@ clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 	"$(MAKE)" -C ${TOP} cli/clean
 	"$(MAKE)" -C ${TOP} sysd/clean
+	"$(MAKE)" -C ${TOP} browser_support/clean
 	"$(MAKE)" -C ${TOP} ee/psso/clean || true
 
 build:
@@ -34,6 +35,7 @@ bump:
 package-darwin: clean build
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
+	"$(MAKE)" -C ${TOP} browser_support/build
 	"$(MAKE)" -C ${TOP} ee/psso/build || true
 	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
@@ -42,8 +44,8 @@ package-darwin: clean build
 	cp "${TOP}/bin/${TARGET}/${BINARY_NAME}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
 	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
-	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support" || true
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex" || true
 	@echo "## Siging with entitlements"
 	codesign \
@@ -70,6 +72,7 @@ package-darwin: clean build
 
 .PHONY: package-gnu/linux
 package-gnu/linux: clean build
+	"$(MAKE)" -C ${TOP} browser_support/build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
@@ -81,6 +84,7 @@ package-gnu/linux: clean build
 package-msys: clean build
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
+	"$(MAKE)" -C ${TOP} browser_support/build
 	ROOT=${TOP} VERSION=${VERSION} dotnet build \
 		-o "${TOP}/bin/${TARGET}/" \
 		"$(shell pwd)/package/windows/"

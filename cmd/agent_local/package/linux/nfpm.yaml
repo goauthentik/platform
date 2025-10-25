@@ -14,6 +14,8 @@ scripts:
 contents:
   - src: ../../bin/agent_local/ak-agent
     dst: /usr/bin/ak-agent
+  - src: ../../bin/browser_support/ak-browser-support
+    dst: /usr/bin/ak-browser-support
   - src: ./package/linux/ak-agent.service
     dst: /etc/systemd/user/ak-agent.service
     type: config
