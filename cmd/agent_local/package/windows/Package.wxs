@@ -30,8 +30,8 @@
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64">
-        <CreateFolder Directory="sysd_domains" />
-        <CreateFolder Directory="sysd_runtime" />
+        <CreateFolder Directory="sysd_domains" Subdirectory="domains" />
+        <CreateFolder Directory="sysd_runtime" Subdirectory="runtime" />
         <File Id="ak_sysd"
               Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
               KeyPath="true" />
@@ -69,9 +69,9 @@
       </Component>
       <Component Id="browser_support" Bitness="always64">
         <File Id="ak_browser_support"
-              Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe" />
+              Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe" KeyPath="true" />
         <File Id="browser_support_json"
-              Source="$(env.PWD)/package/windows/browser-host.json" KeyPath="yes" />
+              Source="$(env.PWD)/package/windows/browser-host.json" />
         <RegistryKey Root="HKLM"
                     Key="SOFTWARE\Google\Chrome\NativeMessagingHosts\io.goauthentik.platform">
           <RegistryValue Type="string" Value="[INSTALLFOLDER]browser-host.json"/>
