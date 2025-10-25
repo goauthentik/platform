@@ -88,7 +88,7 @@ func (ds *Server) SignedEndpointHeader(ctx context.Context, req *pb.PlatformEndp
 	t := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"iss": "goauthentik.io/platform/endpoint",
 		"sub": ser,
-		"atc": req.Challenge,
+		"aud": req.Challenge,
 	})
 	s, err := t.SignedString([]byte(config.Manager().Get().Domains()[0].Token))
 	if err != nil {
