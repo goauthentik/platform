@@ -19,6 +19,8 @@ jobs:
           - cli
           - agent
           - sysd
+          # Browser support is always included in the agent bundle
+          # - browser_support
         platform:
           - macos-15
           - ubuntu-24.04
