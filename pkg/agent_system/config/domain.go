@@ -9,15 +9,18 @@ import (
 	"path/filepath"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/keyring"
 )
 
 type DomainConfig struct {
 	Enabled            bool   `json:"enabled"`
 	AuthentikURL       string `json:"authentik_url"`
 	AppSlug            string `json:"app_slug"`
-	Token              string `json:"token"`
 	AuthenticationFlow string `json:"authentication_flow"`
 	Domain             string `json:"domain"`
+
+	// Saved to keyring
+	Token string `json:"-"`
 
 	c *api.APIClient
 	r *Config
@@ -97,6 +100,12 @@ func (c *Config) loadDomains() error {
 			c.log.WithError(err).Warning("failed to load domain")
 			continue
 		}
+		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain)
+		if err != nil {
+			c.log.WithError(err).Warning("failed to load domain token")
+			continue
+		}
+		d.Token = token
 		c.log.WithField("domain", d.Domain).Debug("loaded domain")
 		dom = append(dom, d)
 	}

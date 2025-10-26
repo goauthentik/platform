@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/platform/pkg/platform/keyring"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
 
@@ -77,5 +79,13 @@ func (c *Config) SaveDomain(dom DomainConfig) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, b, 0o700)
+	err = keyring.Set(keyring.Service("domain_token"), dom.Domain, dom.Token)
+	if err != nil {
+		return errors.Wrap(err, "failed to save domain token to keyring")
+	}
+	err = os.WriteFile(path, b, 0o700)
+	if err != nil {
+		return errors.Wrap(err, "failed to save domain config")
+	}
+	return nil
 }
