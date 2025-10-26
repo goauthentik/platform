@@ -23,7 +23,7 @@ func Get[T any](identifier pstr.PlatformString) (*T, error) {
 
 	var tt T
 	t := reflect.TypeOf(tt)
-	ref := reflect.ValueOf(tt)
+	ref := reflect.ValueOf(&tt)
 	fields := reflect.VisibleFields(t)
 	for _, field := range fields {
 		s, _, err := k.GetStringValue(field.Tag.Get("registry"))
@@ -33,7 +33,7 @@ func Get[T any](identifier pstr.PlatformString) (*T, error) {
 			}
 			return nil, err
 		}
-		prop := ref.FieldByName(field.Name)
+		prop := reflect.Indirect(ref).FieldByName(field.Name)
 		prop.Set(reflect.ValueOf(s))
 	}
 	return &tt, nil
