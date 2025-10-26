@@ -10,6 +10,15 @@ clean:
 bump:
 
 
+.PHONY: gen
+gen:
+	protoc \
+		--grpc_out="${PWD}/_gen" \
+		--cpp_out="${PWD}/_gen" \
+		--plugin=protoc-gen-grpc=$(shell which grpc_cpp_plugin) \
+		-I $(PROTO_DIR) \
+		$(PROTO_DIR)/**
+
 .PHONY: build
 build:
 	mkdir -p "${PWD}/build"

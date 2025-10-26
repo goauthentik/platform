@@ -12,14 +12,14 @@ clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
 .PHONY: gen
-gen: gen-proto utils_rs/gen ee/psso/gen
+gen: gen-proto utils_rs/gen ee/psso/gen ee/wcp/gen
 	go generate ./...
 
 gen-proto:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	protoc \
-		--go_out ${PWD} \
+		--go_out=${PWD} \
 		--go-grpc_out=${PWD} \
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
@@ -89,3 +89,6 @@ browser-ext/%:
 
 ee/psso/%:
 	"$(MAKE)" -C "${TOP}/ee/psso/" $*
+
+ee/wcp/%:
+	"$(MAKE)" -C "${TOP}/ee/wcp/" $*
