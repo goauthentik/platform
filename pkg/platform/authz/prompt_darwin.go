@@ -3,10 +3,16 @@
 package authz
 
 import (
-	"github.com/ansxuman/go-touchid"
+	"errors"
+
 	"goauthentik.io/platform/pkg/platform/pstr"
+	"goauthentik.io/platform/vnd/go-touchid"
 )
 
 func prompt(msg pstr.PlatformString) (bool, error) {
-	return touchid.Auth(touchid.DeviceTypeBiometrics, msg.ForDarwin())
+	result, err := touchid.Auth(touchid.DeviceTypeAny, msg.ForDarwin())
+	if err != nil && errors.Is(err, touchid.ErrCannotEvaluate) {
+		return false, nil
+	}
+	return result, err
 }
