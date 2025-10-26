@@ -10,7 +10,7 @@ import (
 
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
-	"goauthentik.io/platform/pkg/oauth"
+	"goauthentik.io/platform/vnd/oauth"
 )
 
 type Options struct {

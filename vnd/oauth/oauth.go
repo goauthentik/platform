@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"goauthentik.io/platform/pkg/oauth/api"
-	"goauthentik.io/platform/pkg/oauth/device"
+	"goauthentik.io/platform/vnd/oauth/api"
+	"goauthentik.io/platform/vnd/oauth/device"
 )
 
 type httpClient interface {

@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"goauthentik.io/platform/pkg/oauth/api"
+	"goauthentik.io/platform/vnd/oauth/api"
 )
 
 var (

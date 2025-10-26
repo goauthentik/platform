@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/cli/browser"
-	"goauthentik.io/platform/pkg/oauth/api"
-	"goauthentik.io/platform/pkg/oauth/webapp"
+	"goauthentik.io/platform/vnd/oauth/api"
+	"goauthentik.io/platform/vnd/oauth/webapp"
 )
 
 // WebAppFlow starts a local HTTP server, opens the web browser to initiate the OAuth Web application
