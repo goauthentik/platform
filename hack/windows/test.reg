@@ -1,0 +1,5 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\authentik Security Inc.\Platform\ManagedConfig]
+"RegistrationToken"="value"
+"URL"="value"
