@@ -50,9 +50,11 @@ func (a *Agent) Start() {
 	}
 	go a.startGRPC()
 	go a.signalHandler()
-	go a.tray.Start()
-	defer a.Stop()
-	<-a.tray.Exit
+	go func() {
+		<-a.tray.Exit
+		a.Stop()
+	}()
+	a.tray.Start()
 }
 
 func (a *Agent) signalHandler() {
