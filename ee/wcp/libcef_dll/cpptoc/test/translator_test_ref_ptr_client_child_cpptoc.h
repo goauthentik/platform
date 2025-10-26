@@ -30,7 +30,7 @@ class CefTranslatorTestRefPtrClientChildCppToC
     : public CefCppToCRefCounted<CefTranslatorTestRefPtrClientChildCppToC,
                                  CefTranslatorTestRefPtrClientChild,
                                  cef_translator_test_ref_ptr_client_child_t> {
- public:
+public:
   CefTranslatorTestRefPtrClientChildCppToC();
   virtual ~CefTranslatorTestRefPtrClientChildCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefTranslatorTestRefPtrClientChildCppToC_Wrap =
 constexpr auto CefTranslatorTestRefPtrClientChildCppToC_Unwrap =
     CefTranslatorTestRefPtrClientChildCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_REF_PTR_CLIENT_CHILD_CPPTOC_H_

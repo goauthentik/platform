@@ -30,14 +30,14 @@ class CefSharedMemoryRegionCToCpp
     : public CefCToCppRefCounted<CefSharedMemoryRegionCToCpp,
                                  CefSharedMemoryRegion,
                                  cef_shared_memory_region_t> {
- public:
+public:
   CefSharedMemoryRegionCToCpp();
   virtual ~CefSharedMemoryRegionCToCpp();
 
   // CefSharedMemoryRegion methods.
   bool IsValid() override;
   size_t Size() override;
-  void* Memory() override;
+  void *Memory() override;
 };
 
 constexpr auto CefSharedMemoryRegionCToCpp_Wrap =
@@ -45,4 +45,4 @@ constexpr auto CefSharedMemoryRegionCToCpp_Wrap =
 constexpr auto CefSharedMemoryRegionCToCpp_Unwrap =
     CefSharedMemoryRegionCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_SHARED_MEMORY_REGION_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_SHARED_MEMORY_REGION_CTOCPP_H_

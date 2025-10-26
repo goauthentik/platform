@@ -46,7 +46,7 @@
 ///
 /*--cef(source=client)--*/
 class CefAudioHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_channel_layout_t ChannelLayout;
 
   ///
@@ -57,7 +57,7 @@ class CefAudioHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool GetAudioParameters(CefRefPtr<CefBrowser> browser,
-                                  CefAudioParameters& params) {
+                                  CefAudioParameters &params) {
     return true;
   }
 
@@ -70,7 +70,7 @@ class CefAudioHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnAudioStreamStarted(CefRefPtr<CefBrowser> browser,
-                                    const CefAudioParameters& params,
+                                    const CefAudioParameters &params,
                                     int channels) = 0;
 
   ///
@@ -85,8 +85,7 @@ class CefAudioHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnAudioStreamPacket(CefRefPtr<CefBrowser> browser,
-                                   const float** data,
-                                   int frames,
+                                   const float **data, int frames,
                                    int64_t pts) = 0;
 
   ///
@@ -105,7 +104,7 @@ class CefAudioHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnAudioStreamError(CefRefPtr<CefBrowser> browser,
-                                  const CefString& message) = 0;
+                                  const CefString &message) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_AUDIO_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_AUDIO_HANDLER_H_

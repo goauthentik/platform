@@ -30,7 +30,7 @@ class CefResourceReadCallbackCToCpp
     : public CefCToCppRefCounted<CefResourceReadCallbackCToCpp,
                                  CefResourceReadCallback,
                                  cef_resource_read_callback_t> {
- public:
+public:
   CefResourceReadCallbackCToCpp();
   virtual ~CefResourceReadCallbackCToCpp();
 
@@ -43,4 +43,4 @@ constexpr auto CefResourceReadCallbackCToCpp_Wrap =
 constexpr auto CefResourceReadCallbackCToCpp_Unwrap =
     CefResourceReadCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_READ_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_READ_CALLBACK_CTOCPP_H_

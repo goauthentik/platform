@@ -27,15 +27,14 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefSchemeRegistrarCToCpp
-    : public CefCToCppScoped<CefSchemeRegistrarCToCpp,
-                             CefSchemeRegistrar,
+    : public CefCToCppScoped<CefSchemeRegistrarCToCpp, CefSchemeRegistrar,
                              cef_scheme_registrar_t> {
- public:
+public:
   CefSchemeRegistrarCToCpp();
   virtual ~CefSchemeRegistrarCToCpp();
 
   // CefSchemeRegistrar methods.
-  bool AddCustomScheme(const CefString& scheme_name, int options) override;
+  bool AddCustomScheme(const CefString &scheme_name, int options) override;
 };
 
 constexpr auto CefSchemeRegistrarCToCpp_Wrap = CefSchemeRegistrarCToCpp::Wrap;
@@ -44,4 +43,4 @@ constexpr auto CefSchemeRegistrarCToCpp_UnwrapOwn =
 constexpr auto CefSchemeRegistrarCToCpp_UnwrapRaw =
     CefSchemeRegistrarCToCpp::UnwrapRaw;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_SCHEME_REGISTRAR_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_SCHEME_REGISTRAR_CTOCPP_H_

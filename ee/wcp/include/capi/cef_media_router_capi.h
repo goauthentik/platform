@@ -76,24 +76,22 @@ typedef struct _cef_media_router_t {
   /// Add an observer for MediaRouter events. The observer will remain
   /// registered until the returned Registration object is destroyed.
   ///
-  struct _cef_registration_t*(CEF_CALLBACK* add_observer)(
-      struct _cef_media_router_t* self,
-      struct _cef_media_observer_t* observer);
+  struct _cef_registration_t *(CEF_CALLBACK *add_observer)(
+      struct _cef_media_router_t *self, struct _cef_media_observer_t *observer);
 
   ///
   /// Returns a MediaSource object for the specified media source URN. Supported
   /// URN schemes include "cast:" and "dial:", and will be already known by the
   /// client application (e.g. "cast:<appId>?clientId=<clientId>").
   ///
-  struct _cef_media_source_t*(CEF_CALLBACK* get_source)(
-      struct _cef_media_router_t* self,
-      const cef_string_t* urn);
+  struct _cef_media_source_t *(CEF_CALLBACK *get_source)(
+      struct _cef_media_router_t *self, const cef_string_t *urn);
 
   ///
   /// Trigger an asynchronous call to cef_media_observer_t::OnSinks on all
   /// registered observers.
   ///
-  void(CEF_CALLBACK* notify_current_sinks)(struct _cef_media_router_t* self);
+  void(CEF_CALLBACK *notify_current_sinks)(struct _cef_media_router_t *self);
 
   ///
   /// Create a new route between |source| and |sink|. Source and sink must be
@@ -103,17 +101,16 @@ typedef struct _cef_media_router_t {
   /// asynchronous call to cef_media_observer_t::OnRoutes on all registered
   /// observers.
   ///
-  void(CEF_CALLBACK* create_route)(
-      struct _cef_media_router_t* self,
-      struct _cef_media_source_t* source,
-      struct _cef_media_sink_t* sink,
-      struct _cef_media_route_create_callback_t* callback);
+  void(CEF_CALLBACK *create_route)(
+      struct _cef_media_router_t *self, struct _cef_media_source_t *source,
+      struct _cef_media_sink_t *sink,
+      struct _cef_media_route_create_callback_t *callback);
 
   ///
   /// Trigger an asynchronous call to cef_media_observer_t::OnRoutes on all
   /// registered observers.
   ///
-  void(CEF_CALLBACK* notify_current_routes)(struct _cef_media_router_t* self);
+  void(CEF_CALLBACK *notify_current_routes)(struct _cef_media_router_t *self);
 } cef_media_router_t;
 
 ///
@@ -123,8 +120,8 @@ typedef struct _cef_media_router_t {
 /// calling cef_request_context_t::cef_request_context_get_global_context()-
 /// >get_media_router().
 ///
-CEF_EXPORT cef_media_router_t* cef_media_router_get_global(
-    struct _cef_completion_callback_t* callback);
+CEF_EXPORT cef_media_router_t *
+cef_media_router_get_global(struct _cef_completion_callback_t *callback);
 
 ///
 /// Implemented by the client to observe MediaRouter events and registered via
@@ -143,35 +140,32 @@ typedef struct _cef_media_observer_t {
   /// The list of available media sinks has changed or
   /// cef_media_router_t::NotifyCurrentSinks was called.
   ///
-  void(CEF_CALLBACK* on_sinks)(struct _cef_media_observer_t* self,
+  void(CEF_CALLBACK *on_sinks)(struct _cef_media_observer_t *self,
                                size_t sinksCount,
-                               struct _cef_media_sink_t* const* sinks);
+                               struct _cef_media_sink_t *const *sinks);
 
   ///
   /// The list of available media routes has changed or
   /// cef_media_router_t::NotifyCurrentRoutes was called.
   ///
-  void(CEF_CALLBACK* on_routes)(struct _cef_media_observer_t* self,
+  void(CEF_CALLBACK *on_routes)(struct _cef_media_observer_t *self,
                                 size_t routesCount,
-                                struct _cef_media_route_t* const* routes);
+                                struct _cef_media_route_t *const *routes);
 
   ///
   /// The connection state of |route| has changed.
   ///
-  void(CEF_CALLBACK* on_route_state_changed)(
-      struct _cef_media_observer_t* self,
-      struct _cef_media_route_t* route,
+  void(CEF_CALLBACK *on_route_state_changed)(
+      struct _cef_media_observer_t *self, struct _cef_media_route_t *route,
       cef_media_route_connection_state_t state);
 
   ///
   /// A message was received over |route|. |message| is only valid for the scope
   /// of this callback and should be copied if necessary.
   ///
-  void(CEF_CALLBACK* on_route_message_received)(
-      struct _cef_media_observer_t* self,
-      struct _cef_media_route_t* route,
-      const void* message,
-      size_t message_size);
+  void(CEF_CALLBACK *on_route_message_received)(
+      struct _cef_media_observer_t *self, struct _cef_media_route_t *route,
+      const void *message, size_t message_size);
 } cef_media_observer_t;
 
 ///
@@ -193,32 +187,32 @@ typedef struct _cef_media_route_t {
   /// Returns the ID for this route.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_id)(struct _cef_media_route_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_id)(struct _cef_media_route_t *self);
 
   ///
   /// Returns the source associated with this route.
   ///
-  struct _cef_media_source_t*(CEF_CALLBACK* get_source)(
-      struct _cef_media_route_t* self);
+  struct _cef_media_source_t *(CEF_CALLBACK *get_source)(
+      struct _cef_media_route_t *self);
 
   ///
   /// Returns the sink associated with this route.
   ///
-  struct _cef_media_sink_t*(CEF_CALLBACK* get_sink)(
-      struct _cef_media_route_t* self);
+  struct _cef_media_sink_t *(CEF_CALLBACK *get_sink)(
+      struct _cef_media_route_t *self);
 
   ///
   /// Send a message over this route. |message| will be copied if necessary.
   ///
-  void(CEF_CALLBACK* send_route_message)(struct _cef_media_route_t* self,
-                                         const void* message,
+  void(CEF_CALLBACK *send_route_message)(struct _cef_media_route_t *self,
+                                         const void *message,
                                          size_t message_size);
 
   ///
   /// Terminate this route. Will result in an asynchronous call to
   /// cef_media_observer_t::OnRoutes on all registered observers.
   ///
-  void(CEF_CALLBACK* terminate)(struct _cef_media_route_t* self);
+  void(CEF_CALLBACK *terminate)(struct _cef_media_route_t *self);
 } cef_media_route_t;
 
 ///
@@ -239,11 +233,10 @@ typedef struct _cef_media_route_create_callback_t {
   /// be a description of the error if the route creation failed. |route| is the
   /// resulting route, or NULL if the route creation failed.
   ///
-  void(CEF_CALLBACK* on_media_route_create_finished)(
-      struct _cef_media_route_create_callback_t* self,
-      cef_media_route_create_result_t result,
-      const cef_string_t* error,
-      struct _cef_media_route_t* route);
+  void(CEF_CALLBACK *on_media_route_create_finished)(
+      struct _cef_media_route_create_callback_t *self,
+      cef_media_route_create_result_t result, const cef_string_t *error,
+      struct _cef_media_route_t *route);
 } cef_media_route_create_callback_t;
 
 ///
@@ -263,42 +256,42 @@ typedef struct _cef_media_sink_t {
   /// Returns the ID for this sink.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_id)(struct _cef_media_sink_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_id)(struct _cef_media_sink_t *self);
 
   ///
   /// Returns the name of this sink.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_name)(struct _cef_media_sink_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_name)(struct _cef_media_sink_t *self);
 
   ///
   /// Returns the icon type for this sink.
   ///
-  cef_media_sink_icon_type_t(CEF_CALLBACK* get_icon_type)(
-      struct _cef_media_sink_t* self);
+  cef_media_sink_icon_type_t(CEF_CALLBACK *get_icon_type)(
+      struct _cef_media_sink_t *self);
 
   ///
   /// Asynchronously retrieves device info.
   ///
-  void(CEF_CALLBACK* get_device_info)(
-      struct _cef_media_sink_t* self,
-      struct _cef_media_sink_device_info_callback_t* callback);
+  void(CEF_CALLBACK *get_device_info)(
+      struct _cef_media_sink_t *self,
+      struct _cef_media_sink_device_info_callback_t *callback);
 
   ///
   /// Returns true (1) if this sink accepts content via Cast.
   ///
-  int(CEF_CALLBACK* is_cast_sink)(struct _cef_media_sink_t* self);
+  int(CEF_CALLBACK *is_cast_sink)(struct _cef_media_sink_t *self);
 
   ///
   /// Returns true (1) if this sink accepts content via DIAL.
   ///
-  int(CEF_CALLBACK* is_dial_sink)(struct _cef_media_sink_t* self);
+  int(CEF_CALLBACK *is_dial_sink)(struct _cef_media_sink_t *self);
 
   ///
   /// Returns true (1) if this sink is compatible with |source|.
   ///
-  int(CEF_CALLBACK* is_compatible_with)(struct _cef_media_sink_t* self,
-                                        struct _cef_media_source_t* source);
+  int(CEF_CALLBACK *is_compatible_with)(struct _cef_media_sink_t *self,
+                                        struct _cef_media_source_t *source);
 } cef_media_sink_t;
 
 ///
@@ -317,9 +310,9 @@ typedef struct _cef_media_sink_device_info_callback_t {
   /// Method that will be executed asyncronously once device information has
   /// been retrieved.
   ///
-  void(CEF_CALLBACK* on_media_sink_device_info)(
-      struct _cef_media_sink_device_info_callback_t* self,
-      const struct _cef_media_sink_device_info_t* device_info);
+  void(CEF_CALLBACK *on_media_sink_device_info)(
+      struct _cef_media_sink_device_info_callback_t *self,
+      const struct _cef_media_sink_device_info_t *device_info);
 } cef_media_sink_device_info_callback_t;
 
 ///
@@ -340,21 +333,21 @@ typedef struct _cef_media_source_t {
   /// Returns the ID (media source URN or URL) for this source.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_id)(struct _cef_media_source_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_id)(struct _cef_media_source_t *self);
 
   ///
   /// Returns true (1) if this source outputs its content via Cast.
   ///
-  int(CEF_CALLBACK* is_cast_source)(struct _cef_media_source_t* self);
+  int(CEF_CALLBACK *is_cast_source)(struct _cef_media_source_t *self);
 
   ///
   /// Returns true (1) if this source outputs its content via DIAL.
   ///
-  int(CEF_CALLBACK* is_dial_source)(struct _cef_media_source_t* self);
+  int(CEF_CALLBACK *is_dial_source)(struct _cef_media_source_t *self);
 } cef_media_source_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_MEDIA_ROUTER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_MEDIA_ROUTER_CAPI_H_

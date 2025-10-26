@@ -7,707 +7,1080 @@
 #include "nss.pb.h"
 
 #include <functional>
+#include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
 #include <grpcpp/generic/async_generic_service.h>
+#include <grpcpp/impl/proto_utils.h>
+#include <grpcpp/impl/rpc_method.h>
+#include <grpcpp/impl/server_callback_handlers.h>
+#include <grpcpp/impl/service_type.h>
+#include <grpcpp/ports_def.inc>
+#include <grpcpp/server_context.h>
 #include <grpcpp/support/async_stream.h>
 #include <grpcpp/support/async_unary_call.h>
 #include <grpcpp/support/client_callback.h>
-#include <grpcpp/client_context.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/support/message_allocator.h>
 #include <grpcpp/support/method_handler.h>
-#include <grpcpp/impl/proto_utils.h>
-#include <grpcpp/impl/rpc_method.h>
 #include <grpcpp/support/server_callback.h>
-#include <grpcpp/impl/server_callback_handlers.h>
-#include <grpcpp/server_context.h>
-#include <grpcpp/impl/service_type.h>
 #include <grpcpp/support/status.h>
 #include <grpcpp/support/stub_options.h>
 #include <grpcpp/support/sync_stream.h>
-#include <grpcpp/ports_def.inc>
 
 namespace nss {
 
 class NSS final {
- public:
-  static constexpr char const* service_full_name() {
-    return "nss.NSS";
-  }
+public:
+  static constexpr char const *service_full_name() { return "nss.NSS"; }
   class StubInterface {
-   public:
+  public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status ListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::nss::Users* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Users>> AsyncListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Users>>(AsyncListUsersRaw(context, request, cq));
+    virtual ::grpc::Status ListUsers(::grpc::ClientContext *context,
+                                     const ::google::protobuf::Empty &request,
+                                     ::nss::Users *response) = 0;
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::Users>>
+    AsyncListUsers(::grpc::ClientContext *context,
+                   const ::google::protobuf::Empty &request,
+                   ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::Users>>(
+          AsyncListUsersRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Users>> PrepareAsyncListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Users>>(PrepareAsyncListUsersRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::Users>>
+    PrepareAsyncListUsers(::grpc::ClientContext *context,
+                          const ::google::protobuf::Empty &request,
+                          ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::Users>>(
+          PrepareAsyncListUsersRaw(context, request, cq));
     }
-    virtual ::grpc::Status GetUser(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::nss::User* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::User>> AsyncGetUser(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::User>>(AsyncGetUserRaw(context, request, cq));
+    virtual ::grpc::Status GetUser(::grpc::ClientContext *context,
+                                   const ::nss::GetRequest &request,
+                                   ::nss::User *response) = 0;
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::User>>
+    AsyncGetUser(::grpc::ClientContext *context,
+                 const ::nss::GetRequest &request,
+                 ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::User>>(
+          AsyncGetUserRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::User>> PrepareAsyncGetUser(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::User>>(PrepareAsyncGetUserRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::User>>
+    PrepareAsyncGetUser(::grpc::ClientContext *context,
+                        const ::nss::GetRequest &request,
+                        ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::User>>(
+          PrepareAsyncGetUserRaw(context, request, cq));
     }
-    virtual ::grpc::Status ListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::nss::Groups* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Groups>> AsyncListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Groups>>(AsyncListGroupsRaw(context, request, cq));
+    virtual ::grpc::Status ListGroups(::grpc::ClientContext *context,
+                                      const ::google::protobuf::Empty &request,
+                                      ::nss::Groups *response) = 0;
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::Groups>>
+    AsyncListGroups(::grpc::ClientContext *context,
+                    const ::google::protobuf::Empty &request,
+                    ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::Groups>>(
+          AsyncListGroupsRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Groups>> PrepareAsyncListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Groups>>(PrepareAsyncListGroupsRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::Groups>>
+    PrepareAsyncListGroups(::grpc::ClientContext *context,
+                           const ::google::protobuf::Empty &request,
+                           ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::Groups>>(
+          PrepareAsyncListGroupsRaw(context, request, cq));
     }
-    virtual ::grpc::Status GetGroup(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::nss::Group* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Group>> AsyncGetGroup(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Group>>(AsyncGetGroupRaw(context, request, cq));
+    virtual ::grpc::Status GetGroup(::grpc::ClientContext *context,
+                                    const ::nss::GetRequest &request,
+                                    ::nss::Group *response) = 0;
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::Group>>
+    AsyncGetGroup(::grpc::ClientContext *context,
+                  const ::nss::GetRequest &request,
+                  ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::Group>>(
+          AsyncGetGroupRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Group>> PrepareAsyncGetGroup(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::nss::Group>>(PrepareAsyncGetGroupRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<::nss::Group>>
+    PrepareAsyncGetGroup(::grpc::ClientContext *context,
+                         const ::nss::GetRequest &request,
+                         ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<
+          ::grpc::ClientAsyncResponseReaderInterface<::nss::Group>>(
+          PrepareAsyncGetGroupRaw(context, request, cq));
     }
     class async_interface {
-     public:
+    public:
       virtual ~async_interface() {}
-      virtual void ListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Users* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void ListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Users* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void GetUser(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::User* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void GetUser(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::User* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void ListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Groups* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void ListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Groups* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void GetGroup(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::Group* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void GetGroup(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::Group* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void ListUsers(::grpc::ClientContext *context,
+                             const ::google::protobuf::Empty *request,
+                             ::nss::Users *response,
+                             std::function<void(::grpc::Status)>) = 0;
+      virtual void ListUsers(::grpc::ClientContext *context,
+                             const ::google::protobuf::Empty *request,
+                             ::nss::Users *response,
+                             ::grpc::ClientUnaryReactor *reactor) = 0;
+      virtual void GetUser(::grpc::ClientContext *context,
+                           const ::nss::GetRequest *request,
+                           ::nss::User *response,
+                           std::function<void(::grpc::Status)>) = 0;
+      virtual void GetUser(::grpc::ClientContext *context,
+                           const ::nss::GetRequest *request,
+                           ::nss::User *response,
+                           ::grpc::ClientUnaryReactor *reactor) = 0;
+      virtual void ListGroups(::grpc::ClientContext *context,
+                              const ::google::protobuf::Empty *request,
+                              ::nss::Groups *response,
+                              std::function<void(::grpc::Status)>) = 0;
+      virtual void ListGroups(::grpc::ClientContext *context,
+                              const ::google::protobuf::Empty *request,
+                              ::nss::Groups *response,
+                              ::grpc::ClientUnaryReactor *reactor) = 0;
+      virtual void GetGroup(::grpc::ClientContext *context,
+                            const ::nss::GetRequest *request,
+                            ::nss::Group *response,
+                            std::function<void(::grpc::Status)>) = 0;
+      virtual void GetGroup(::grpc::ClientContext *context,
+                            const ::nss::GetRequest *request,
+                            ::nss::Group *response,
+                            ::grpc::ClientUnaryReactor *reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
-    virtual class async_interface* async() { return nullptr; }
-    class async_interface* experimental_async() { return async(); }
-   private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::Users>* AsyncListUsersRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::Users>* PrepareAsyncListUsersRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::User>* AsyncGetUserRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::User>* PrepareAsyncGetUserRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::Groups>* AsyncListGroupsRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::Groups>* PrepareAsyncListGroupsRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::Group>* AsyncGetGroupRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::nss::Group>* PrepareAsyncGetGroupRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual class async_interface *async() { return nullptr; }
+    class async_interface *experimental_async() { return async(); }
+
+  private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::Users> *
+    AsyncListUsersRaw(::grpc::ClientContext *context,
+                      const ::google::protobuf::Empty &request,
+                      ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::Users> *
+    PrepareAsyncListUsersRaw(::grpc::ClientContext *context,
+                             const ::google::protobuf::Empty &request,
+                             ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::User> *
+    AsyncGetUserRaw(::grpc::ClientContext *context,
+                    const ::nss::GetRequest &request,
+                    ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::User> *
+    PrepareAsyncGetUserRaw(::grpc::ClientContext *context,
+                           const ::nss::GetRequest &request,
+                           ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::Groups> *
+    AsyncListGroupsRaw(::grpc::ClientContext *context,
+                       const ::google::protobuf::Empty &request,
+                       ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::Groups> *
+    PrepareAsyncListGroupsRaw(::grpc::ClientContext *context,
+                              const ::google::protobuf::Empty &request,
+                              ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::Group> *
+    AsyncGetGroupRaw(::grpc::ClientContext *context,
+                     const ::nss::GetRequest &request,
+                     ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<::nss::Group> *
+    PrepareAsyncGetGroupRaw(::grpc::ClientContext *context,
+                            const ::nss::GetRequest &request,
+                            ::grpc::CompletionQueue *cq) = 0;
   };
   class Stub final : public StubInterface {
-   public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
-    ::grpc::Status ListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::nss::Users* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Users>> AsyncListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Users>>(AsyncListUsersRaw(context, request, cq));
+  public:
+    Stub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
+         const ::grpc::StubOptions &options = ::grpc::StubOptions());
+    ::grpc::Status ListUsers(::grpc::ClientContext *context,
+                             const ::google::protobuf::Empty &request,
+                             ::nss::Users *response) override;
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Users>>
+    AsyncListUsers(::grpc::ClientContext *context,
+                   const ::google::protobuf::Empty &request,
+                   ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Users>>(
+          AsyncListUsersRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Users>> PrepareAsyncListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Users>>(PrepareAsyncListUsersRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Users>>
+    PrepareAsyncListUsers(::grpc::ClientContext *context,
+                          const ::google::protobuf::Empty &request,
+                          ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Users>>(
+          PrepareAsyncListUsersRaw(context, request, cq));
     }
-    ::grpc::Status GetUser(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::nss::User* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::User>> AsyncGetUser(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::User>>(AsyncGetUserRaw(context, request, cq));
+    ::grpc::Status GetUser(::grpc::ClientContext *context,
+                           const ::nss::GetRequest &request,
+                           ::nss::User *response) override;
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::User>>
+    AsyncGetUser(::grpc::ClientContext *context,
+                 const ::nss::GetRequest &request,
+                 ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::User>>(
+          AsyncGetUserRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::User>> PrepareAsyncGetUser(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::User>>(PrepareAsyncGetUserRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::User>>
+    PrepareAsyncGetUser(::grpc::ClientContext *context,
+                        const ::nss::GetRequest &request,
+                        ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::User>>(
+          PrepareAsyncGetUserRaw(context, request, cq));
     }
-    ::grpc::Status ListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::nss::Groups* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Groups>> AsyncListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Groups>>(AsyncListGroupsRaw(context, request, cq));
+    ::grpc::Status ListGroups(::grpc::ClientContext *context,
+                              const ::google::protobuf::Empty &request,
+                              ::nss::Groups *response) override;
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Groups>>
+    AsyncListGroups(::grpc::ClientContext *context,
+                    const ::google::protobuf::Empty &request,
+                    ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Groups>>(
+          AsyncListGroupsRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Groups>> PrepareAsyncListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Groups>>(PrepareAsyncListGroupsRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Groups>>
+    PrepareAsyncListGroups(::grpc::ClientContext *context,
+                           const ::google::protobuf::Empty &request,
+                           ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Groups>>(
+          PrepareAsyncListGroupsRaw(context, request, cq));
     }
-    ::grpc::Status GetGroup(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::nss::Group* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Group>> AsyncGetGroup(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Group>>(AsyncGetGroupRaw(context, request, cq));
+    ::grpc::Status GetGroup(::grpc::ClientContext *context,
+                            const ::nss::GetRequest &request,
+                            ::nss::Group *response) override;
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Group>>
+    AsyncGetGroup(::grpc::ClientContext *context,
+                  const ::nss::GetRequest &request,
+                  ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Group>>(
+          AsyncGetGroupRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Group>> PrepareAsyncGetGroup(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::nss::Group>>(PrepareAsyncGetGroupRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Group>>
+    PrepareAsyncGetGroup(::grpc::ClientContext *context,
+                         const ::nss::GetRequest &request,
+                         ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<::nss::Group>>(
+          PrepareAsyncGetGroupRaw(context, request, cq));
     }
-    class async final :
-      public StubInterface::async_interface {
-     public:
-      void ListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Users* response, std::function<void(::grpc::Status)>) override;
-      void ListUsers(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Users* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void GetUser(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::User* response, std::function<void(::grpc::Status)>) override;
-      void GetUser(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::User* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void ListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Groups* response, std::function<void(::grpc::Status)>) override;
-      void ListGroups(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::nss::Groups* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void GetGroup(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::Group* response, std::function<void(::grpc::Status)>) override;
-      void GetGroup(::grpc::ClientContext* context, const ::nss::GetRequest* request, ::nss::Group* response, ::grpc::ClientUnaryReactor* reactor) override;
-     private:
-      friend class Stub;
-      explicit async(Stub* stub): stub_(stub) { }
-      Stub* stub() { return stub_; }
-      Stub* stub_;
-    };
-    class async* async() override { return &async_stub_; }
+    class async final : public StubInterface::async_interface {
+    public:
+      void ListUsers(::grpc::ClientContext *context,
+                     const ::google::protobuf::Empty *request,
+                     ::nss::Users *response,
+                     std::function<void(::grpc::Status)>) override;
+      void ListUsers(::grpc::ClientContext *context,
+                     const ::google::protobuf::Empty *request,
+                     ::nss::Users *response,
+                     ::grpc::ClientUnaryReactor *reactor) override;
+      void GetUser(::grpc::ClientContext *context,
+                   const ::nss::GetRequest *request, ::nss::User *response,
+                   std::function<void(::grpc::Status)>) override;
+      void GetUser(::grpc::ClientContext *context,
+                   const ::nss::GetRequest *request, ::nss::User *response,
+                   ::grpc::ClientUnaryReactor *reactor) override;
+      void ListGroups(::grpc::ClientContext *context,
+                      const ::google::protobuf::Empty *request,
+                      ::nss::Groups *response,
+                      std::function<void(::grpc::Status)>) override;
+      void ListGroups(::grpc::ClientContext *context,
+                      const ::google::protobuf::Empty *request,
+                      ::nss::Groups *response,
+                      ::grpc::ClientUnaryReactor *reactor) override;
+      void GetGroup(::grpc::ClientContext *context,
+                    const ::nss::GetRequest *request, ::nss::Group *response,
+                    std::function<void(::grpc::Status)>) override;
+      void GetGroup(::grpc::ClientContext *context,
+                    const ::nss::GetRequest *request, ::nss::Group *response,
+                    ::grpc::ClientUnaryReactor *reactor) override;
 
-   private:
-    std::shared_ptr< ::grpc::ChannelInterface> channel_;
+    private:
+      friend class Stub;
+      explicit async(Stub *stub) : stub_(stub) {}
+      Stub *stub() { return stub_; }
+      Stub *stub_;
+    };
+    class async *async() override { return &async_stub_; }
+
+  private:
+    std::shared_ptr<::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader< ::nss::Users>* AsyncListUsersRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::nss::Users>* PrepareAsyncListUsersRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::nss::User>* AsyncGetUserRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::nss::User>* PrepareAsyncGetUserRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::nss::Groups>* AsyncListGroupsRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::nss::Groups>* PrepareAsyncListGroupsRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::nss::Group>* AsyncGetGroupRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::nss::Group>* PrepareAsyncGetGroupRaw(::grpc::ClientContext* context, const ::nss::GetRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::Users> *
+    AsyncListUsersRaw(::grpc::ClientContext *context,
+                      const ::google::protobuf::Empty &request,
+                      ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::Users> *
+    PrepareAsyncListUsersRaw(::grpc::ClientContext *context,
+                             const ::google::protobuf::Empty &request,
+                             ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::User> *
+    AsyncGetUserRaw(::grpc::ClientContext *context,
+                    const ::nss::GetRequest &request,
+                    ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::User> *
+    PrepareAsyncGetUserRaw(::grpc::ClientContext *context,
+                           const ::nss::GetRequest &request,
+                           ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::Groups> *
+    AsyncListGroupsRaw(::grpc::ClientContext *context,
+                       const ::google::protobuf::Empty &request,
+                       ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::Groups> *
+    PrepareAsyncListGroupsRaw(::grpc::ClientContext *context,
+                              const ::google::protobuf::Empty &request,
+                              ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::Group> *
+    AsyncGetGroupRaw(::grpc::ClientContext *context,
+                     const ::nss::GetRequest &request,
+                     ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<::nss::Group> *
+    PrepareAsyncGetGroupRaw(::grpc::ClientContext *context,
+                            const ::nss::GetRequest &request,
+                            ::grpc::CompletionQueue *cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_ListUsers_;
     const ::grpc::internal::RpcMethod rpcmethod_GetUser_;
     const ::grpc::internal::RpcMethod rpcmethod_ListGroups_;
     const ::grpc::internal::RpcMethod rpcmethod_GetGroup_;
   };
-  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+  static std::unique_ptr<Stub>
+  NewStub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
+          const ::grpc::StubOptions &options = ::grpc::StubOptions());
 
   class Service : public ::grpc::Service {
-   public:
+  public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status ListUsers(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::nss::Users* response);
-    virtual ::grpc::Status GetUser(::grpc::ServerContext* context, const ::nss::GetRequest* request, ::nss::User* response);
-    virtual ::grpc::Status ListGroups(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::nss::Groups* response);
-    virtual ::grpc::Status GetGroup(::grpc::ServerContext* context, const ::nss::GetRequest* request, ::nss::Group* response);
+    virtual ::grpc::Status ListUsers(::grpc::ServerContext *context,
+                                     const ::google::protobuf::Empty *request,
+                                     ::nss::Users *response);
+    virtual ::grpc::Status GetUser(::grpc::ServerContext *context,
+                                   const ::nss::GetRequest *request,
+                                   ::nss::User *response);
+    virtual ::grpc::Status ListGroups(::grpc::ServerContext *context,
+                                      const ::google::protobuf::Empty *request,
+                                      ::nss::Groups *response);
+    virtual ::grpc::Status GetGroup(::grpc::ServerContext *context,
+                                    const ::nss::GetRequest *request,
+                                    ::nss::Group *response);
   };
   template <class BaseClass>
   class WithAsyncMethod_ListUsers : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_ListUsers() {
-      ::grpc::Service::MarkMethodAsync(0);
-    }
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithAsyncMethod_ListUsers() { ::grpc::Service::MarkMethodAsync(0); }
     ~WithAsyncMethod_ListUsers() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListUsers(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Users* /*response*/) override {
+    ::grpc::Status ListUsers(::grpc::ServerContext * /*context*/,
+                             const ::google::protobuf::Empty * /*request*/,
+                             ::nss::Users * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestListUsers(::grpc::ServerContext* context, ::google::protobuf::Empty* request, ::grpc::ServerAsyncResponseWriter< ::nss::Users>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestListUsers(
+        ::grpc::ServerContext *context, ::google::protobuf::Empty *request,
+        ::grpc::ServerAsyncResponseWriter<::nss::Users> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass>
-  class WithAsyncMethod_GetUser : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_GetUser() {
-      ::grpc::Service::MarkMethodAsync(1);
-    }
+  template <class BaseClass> class WithAsyncMethod_GetUser : public BaseClass {
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithAsyncMethod_GetUser() { ::grpc::Service::MarkMethodAsync(1); }
     ~WithAsyncMethod_GetUser() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetUser(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::User* /*response*/) override {
+    ::grpc::Status GetUser(::grpc::ServerContext * /*context*/,
+                           const ::nss::GetRequest * /*request*/,
+                           ::nss::User * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetUser(::grpc::ServerContext* context, ::nss::GetRequest* request, ::grpc::ServerAsyncResponseWriter< ::nss::User>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    void
+    RequestGetUser(::grpc::ServerContext *context, ::nss::GetRequest *request,
+                   ::grpc::ServerAsyncResponseWriter<::nss::User> *response,
+                   ::grpc::CompletionQueue *new_call_cq,
+                   ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithAsyncMethod_ListGroups : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_ListGroups() {
-      ::grpc::Service::MarkMethodAsync(2);
-    }
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithAsyncMethod_ListGroups() { ::grpc::Service::MarkMethodAsync(2); }
     ~WithAsyncMethod_ListGroups() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListGroups(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Groups* /*response*/) override {
+    ::grpc::Status ListGroups(::grpc::ServerContext * /*context*/,
+                              const ::google::protobuf::Empty * /*request*/,
+                              ::nss::Groups * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestListGroups(::grpc::ServerContext* context, ::google::protobuf::Empty* request, ::grpc::ServerAsyncResponseWriter< ::nss::Groups>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestListGroups(
+        ::grpc::ServerContext *context, ::google::protobuf::Empty *request,
+        ::grpc::ServerAsyncResponseWriter<::nss::Groups> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass>
-  class WithAsyncMethod_GetGroup : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_GetGroup() {
-      ::grpc::Service::MarkMethodAsync(3);
-    }
+  template <class BaseClass> class WithAsyncMethod_GetGroup : public BaseClass {
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithAsyncMethod_GetGroup() { ::grpc::Service::MarkMethodAsync(3); }
     ~WithAsyncMethod_GetGroup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetGroup(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::Group* /*response*/) override {
+    ::grpc::Status GetGroup(::grpc::ServerContext * /*context*/,
+                            const ::nss::GetRequest * /*request*/,
+                            ::nss::Group * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetGroup(::grpc::ServerContext* context, ::nss::GetRequest* request, ::grpc::ServerAsyncResponseWriter< ::nss::Group>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    void
+    RequestGetGroup(::grpc::ServerContext *context, ::nss::GetRequest *request,
+                    ::grpc::ServerAsyncResponseWriter<::nss::Group> *response,
+                    ::grpc::CompletionQueue *new_call_cq,
+                    ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_ListUsers<WithAsyncMethod_GetUser<WithAsyncMethod_ListGroups<WithAsyncMethod_GetGroup<Service > > > > AsyncService;
+  typedef WithAsyncMethod_ListUsers<WithAsyncMethod_GetUser<
+      WithAsyncMethod_ListGroups<WithAsyncMethod_GetGroup<Service>>>>
+      AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_ListUsers : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithCallbackMethod_ListUsers() {
-      ::grpc::Service::MarkMethodCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::nss::Users>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::nss::Users* response) { return this->ListUsers(context, request, response); }));}
+      ::grpc::Service::MarkMethodCallback(
+          0,
+          new ::grpc::internal::CallbackUnaryHandler<::google::protobuf::Empty,
+                                                     ::nss::Users>(
+              [this](::grpc::CallbackServerContext *context,
+                     const ::google::protobuf::Empty *request,
+                     ::nss::Users *response) {
+                return this->ListUsers(context, request, response);
+              }));
+    }
     void SetMessageAllocatorFor_ListUsers(
-        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::nss::Users>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::nss::Users>*>(handler)
-              ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator<::google::protobuf::Empty, ::nss::Users>
+            *allocator) {
+      ::grpc::internal::MethodHandler *const handler =
+          ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler<
+          ::google::protobuf::Empty, ::nss::Users> *>(handler)
+          ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_ListUsers() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListUsers(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Users* /*response*/) override {
+    ::grpc::Status ListUsers(::grpc::ServerContext * /*context*/,
+                             const ::google::protobuf::Empty * /*request*/,
+                             ::nss::Users * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* ListUsers(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Users* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    ListUsers(::grpc::CallbackServerContext * /*context*/,
+              const ::google::protobuf::Empty * /*request*/,
+              ::nss::Users * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithCallbackMethod_GetUser : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithCallbackMethod_GetUser() {
-      ::grpc::Service::MarkMethodCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::nss::GetRequest, ::nss::User>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::nss::GetRequest* request, ::nss::User* response) { return this->GetUser(context, request, response); }));}
+      ::grpc::Service::MarkMethodCallback(
+          1,
+          new ::grpc::internal::CallbackUnaryHandler<::nss::GetRequest,
+                                                     ::nss::User>(
+              [this](::grpc::CallbackServerContext *context,
+                     const ::nss::GetRequest *request, ::nss::User *response) {
+                return this->GetUser(context, request, response);
+              }));
+    }
     void SetMessageAllocatorFor_GetUser(
-        ::grpc::MessageAllocator< ::nss::GetRequest, ::nss::User>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::nss::GetRequest, ::nss::User>*>(handler)
-              ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator<::nss::GetRequest, ::nss::User> *allocator) {
+      ::grpc::internal::MethodHandler *const handler =
+          ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler<::nss::GetRequest,
+                                                         ::nss::User> *>(
+          handler)
+          ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_GetUser() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetUser(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::User* /*response*/) override {
+    ::grpc::Status GetUser(::grpc::ServerContext * /*context*/,
+                           const ::nss::GetRequest * /*request*/,
+                           ::nss::User * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* GetUser(
-      ::grpc::CallbackServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::User* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    GetUser(::grpc::CallbackServerContext * /*context*/,
+            const ::nss::GetRequest * /*request*/, ::nss::User * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithCallbackMethod_ListGroups : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithCallbackMethod_ListGroups() {
-      ::grpc::Service::MarkMethodCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::nss::Groups>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::nss::Groups* response) { return this->ListGroups(context, request, response); }));}
+      ::grpc::Service::MarkMethodCallback(
+          2,
+          new ::grpc::internal::CallbackUnaryHandler<::google::protobuf::Empty,
+                                                     ::nss::Groups>(
+              [this](::grpc::CallbackServerContext *context,
+                     const ::google::protobuf::Empty *request,
+                     ::nss::Groups *response) {
+                return this->ListGroups(context, request, response);
+              }));
+    }
     void SetMessageAllocatorFor_ListGroups(
-        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::nss::Groups>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::nss::Groups>*>(handler)
-              ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator<::google::protobuf::Empty, ::nss::Groups>
+            *allocator) {
+      ::grpc::internal::MethodHandler *const handler =
+          ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler<
+          ::google::protobuf::Empty, ::nss::Groups> *>(handler)
+          ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_ListGroups() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListGroups(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Groups* /*response*/) override {
+    ::grpc::Status ListGroups(::grpc::ServerContext * /*context*/,
+                              const ::google::protobuf::Empty * /*request*/,
+                              ::nss::Groups * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* ListGroups(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Groups* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    ListGroups(::grpc::CallbackServerContext * /*context*/,
+               const ::google::protobuf::Empty * /*request*/,
+               ::nss::Groups * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithCallbackMethod_GetGroup : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithCallbackMethod_GetGroup() {
-      ::grpc::Service::MarkMethodCallback(3,
-          new ::grpc::internal::CallbackUnaryHandler< ::nss::GetRequest, ::nss::Group>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::nss::GetRequest* request, ::nss::Group* response) { return this->GetGroup(context, request, response); }));}
+      ::grpc::Service::MarkMethodCallback(
+          3,
+          new ::grpc::internal::CallbackUnaryHandler<::nss::GetRequest,
+                                                     ::nss::Group>(
+              [this](::grpc::CallbackServerContext *context,
+                     const ::nss::GetRequest *request, ::nss::Group *response) {
+                return this->GetGroup(context, request, response);
+              }));
+    }
     void SetMessageAllocatorFor_GetGroup(
-        ::grpc::MessageAllocator< ::nss::GetRequest, ::nss::Group>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::nss::GetRequest, ::nss::Group>*>(handler)
-              ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator<::nss::GetRequest, ::nss::Group> *allocator) {
+      ::grpc::internal::MethodHandler *const handler =
+          ::grpc::Service::GetHandler(3);
+      static_cast<::grpc::internal::CallbackUnaryHandler<::nss::GetRequest,
+                                                         ::nss::Group> *>(
+          handler)
+          ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_GetGroup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetGroup(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::Group* /*response*/) override {
+    ::grpc::Status GetGroup(::grpc::ServerContext * /*context*/,
+                            const ::nss::GetRequest * /*request*/,
+                            ::nss::Group * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* GetGroup(
-      ::grpc::CallbackServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::Group* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    GetGroup(::grpc::CallbackServerContext * /*context*/,
+             const ::nss::GetRequest * /*request*/,
+             ::nss::Group * /*response*/) {
+      return nullptr;
+    }
   };
-  typedef WithCallbackMethod_ListUsers<WithCallbackMethod_GetUser<WithCallbackMethod_ListGroups<WithCallbackMethod_GetGroup<Service > > > > CallbackService;
+  typedef WithCallbackMethod_ListUsers<WithCallbackMethod_GetUser<
+      WithCallbackMethod_ListGroups<WithCallbackMethod_GetGroup<Service>>>>
+      CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_ListUsers : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_ListUsers() {
-      ::grpc::Service::MarkMethodGeneric(0);
-    }
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithGenericMethod_ListUsers() { ::grpc::Service::MarkMethodGeneric(0); }
     ~WithGenericMethod_ListUsers() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListUsers(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Users* /*response*/) override {
+    ::grpc::Status ListUsers(::grpc::ServerContext * /*context*/,
+                             const ::google::protobuf::Empty * /*request*/,
+                             ::nss::Users * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithGenericMethod_GetUser : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_GetUser() {
-      ::grpc::Service::MarkMethodGeneric(1);
-    }
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithGenericMethod_GetUser() { ::grpc::Service::MarkMethodGeneric(1); }
     ~WithGenericMethod_GetUser() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetUser(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::User* /*response*/) override {
+    ::grpc::Status GetUser(::grpc::ServerContext * /*context*/,
+                           const ::nss::GetRequest * /*request*/,
+                           ::nss::User * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithGenericMethod_ListGroups : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_ListGroups() {
-      ::grpc::Service::MarkMethodGeneric(2);
-    }
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithGenericMethod_ListGroups() { ::grpc::Service::MarkMethodGeneric(2); }
     ~WithGenericMethod_ListGroups() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListGroups(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Groups* /*response*/) override {
+    ::grpc::Status ListGroups(::grpc::ServerContext * /*context*/,
+                              const ::google::protobuf::Empty * /*request*/,
+                              ::nss::Groups * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithGenericMethod_GetGroup : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_GetGroup() {
-      ::grpc::Service::MarkMethodGeneric(3);
-    }
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithGenericMethod_GetGroup() { ::grpc::Service::MarkMethodGeneric(3); }
     ~WithGenericMethod_GetGroup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetGroup(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::Group* /*response*/) override {
+    ::grpc::Status GetGroup(::grpc::ServerContext * /*context*/,
+                            const ::nss::GetRequest * /*request*/,
+                            ::nss::Group * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
-  template <class BaseClass>
-  class WithRawMethod_ListUsers : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_ListUsers() {
-      ::grpc::Service::MarkMethodRaw(0);
-    }
+  template <class BaseClass> class WithRawMethod_ListUsers : public BaseClass {
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithRawMethod_ListUsers() { ::grpc::Service::MarkMethodRaw(0); }
     ~WithRawMethod_ListUsers() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListUsers(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Users* /*response*/) override {
+    ::grpc::Status ListUsers(::grpc::ServerContext * /*context*/,
+                             const ::google::protobuf::Empty * /*request*/,
+                             ::nss::Users * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestListUsers(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestListUsers(
+        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
+        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass>
-  class WithRawMethod_GetUser : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_GetUser() {
-      ::grpc::Service::MarkMethodRaw(1);
-    }
+  template <class BaseClass> class WithRawMethod_GetUser : public BaseClass {
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithRawMethod_GetUser() { ::grpc::Service::MarkMethodRaw(1); }
     ~WithRawMethod_GetUser() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetUser(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::User* /*response*/) override {
+    ::grpc::Status GetUser(::grpc::ServerContext * /*context*/,
+                           const ::nss::GetRequest * /*request*/,
+                           ::nss::User * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetUser(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestGetUser(
+        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
+        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass>
-  class WithRawMethod_ListGroups : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_ListGroups() {
-      ::grpc::Service::MarkMethodRaw(2);
-    }
+  template <class BaseClass> class WithRawMethod_ListGroups : public BaseClass {
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithRawMethod_ListGroups() { ::grpc::Service::MarkMethodRaw(2); }
     ~WithRawMethod_ListGroups() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListGroups(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Groups* /*response*/) override {
+    ::grpc::Status ListGroups(::grpc::ServerContext * /*context*/,
+                              const ::google::protobuf::Empty * /*request*/,
+                              ::nss::Groups * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestListGroups(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestListGroups(
+        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
+        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass>
-  class WithRawMethod_GetGroup : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_GetGroup() {
-      ::grpc::Service::MarkMethodRaw(3);
-    }
+  template <class BaseClass> class WithRawMethod_GetGroup : public BaseClass {
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithRawMethod_GetGroup() { ::grpc::Service::MarkMethodRaw(3); }
     ~WithRawMethod_GetGroup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetGroup(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::Group* /*response*/) override {
+    ::grpc::Status GetGroup(::grpc::ServerContext * /*context*/,
+                            const ::nss::GetRequest * /*request*/,
+                            ::nss::Group * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetGroup(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestGetGroup(
+        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
+        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_ListUsers : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithRawCallbackMethod_ListUsers() {
-      ::grpc::Service::MarkMethodRawCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->ListUsers(context, request, response); }));
+      ::grpc::Service::MarkMethodRawCallback(
+          0, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
+                                                        ::grpc::ByteBuffer>(
+                 [this](::grpc::CallbackServerContext *context,
+                        const ::grpc::ByteBuffer *request,
+                        ::grpc::ByteBuffer *response) {
+                   return this->ListUsers(context, request, response);
+                 }));
     }
     ~WithRawCallbackMethod_ListUsers() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListUsers(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Users* /*response*/) override {
+    ::grpc::Status ListUsers(::grpc::ServerContext * /*context*/,
+                             const ::google::protobuf::Empty * /*request*/,
+                             ::nss::Users * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* ListUsers(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    ListUsers(::grpc::CallbackServerContext * /*context*/,
+              const ::grpc::ByteBuffer * /*request*/,
+              ::grpc::ByteBuffer * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_GetUser : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithRawCallbackMethod_GetUser() {
-      ::grpc::Service::MarkMethodRawCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetUser(context, request, response); }));
+      ::grpc::Service::MarkMethodRawCallback(
+          1, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
+                                                        ::grpc::ByteBuffer>(
+                 [this](::grpc::CallbackServerContext *context,
+                        const ::grpc::ByteBuffer *request,
+                        ::grpc::ByteBuffer *response) {
+                   return this->GetUser(context, request, response);
+                 }));
     }
     ~WithRawCallbackMethod_GetUser() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetUser(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::User* /*response*/) override {
+    ::grpc::Status GetUser(::grpc::ServerContext * /*context*/,
+                           const ::nss::GetRequest * /*request*/,
+                           ::nss::User * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* GetUser(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    GetUser(::grpc::CallbackServerContext * /*context*/,
+            const ::grpc::ByteBuffer * /*request*/,
+            ::grpc::ByteBuffer * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_ListGroups : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithRawCallbackMethod_ListGroups() {
-      ::grpc::Service::MarkMethodRawCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->ListGroups(context, request, response); }));
+      ::grpc::Service::MarkMethodRawCallback(
+          2, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
+                                                        ::grpc::ByteBuffer>(
+                 [this](::grpc::CallbackServerContext *context,
+                        const ::grpc::ByteBuffer *request,
+                        ::grpc::ByteBuffer *response) {
+                   return this->ListGroups(context, request, response);
+                 }));
     }
     ~WithRawCallbackMethod_ListGroups() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ListGroups(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Groups* /*response*/) override {
+    ::grpc::Status ListGroups(::grpc::ServerContext * /*context*/,
+                              const ::google::protobuf::Empty * /*request*/,
+                              ::nss::Groups * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* ListGroups(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    ListGroups(::grpc::CallbackServerContext * /*context*/,
+               const ::grpc::ByteBuffer * /*request*/,
+               ::grpc::ByteBuffer * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_GetGroup : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithRawCallbackMethod_GetGroup() {
-      ::grpc::Service::MarkMethodRawCallback(3,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetGroup(context, request, response); }));
+      ::grpc::Service::MarkMethodRawCallback(
+          3, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
+                                                        ::grpc::ByteBuffer>(
+                 [this](::grpc::CallbackServerContext *context,
+                        const ::grpc::ByteBuffer *request,
+                        ::grpc::ByteBuffer *response) {
+                   return this->GetGroup(context, request, response);
+                 }));
     }
     ~WithRawCallbackMethod_GetGroup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetGroup(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::Group* /*response*/) override {
+    ::grpc::Status GetGroup(::grpc::ServerContext * /*context*/,
+                            const ::nss::GetRequest * /*request*/,
+                            ::nss::Group * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* GetGroup(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    GetGroup(::grpc::CallbackServerContext * /*context*/,
+             const ::grpc::ByteBuffer * /*request*/,
+             ::grpc::ByteBuffer * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_ListUsers : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithStreamedUnaryMethod_ListUsers() {
-      ::grpc::Service::MarkMethodStreamed(0,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::google::protobuf::Empty, ::nss::Users>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::google::protobuf::Empty, ::nss::Users>* streamer) {
-                       return this->StreamedListUsers(context,
-                         streamer);
-                  }));
+      ::grpc::Service::MarkMethodStreamed(
+          0,
+          new ::grpc::internal::StreamedUnaryHandler<::google::protobuf::Empty,
+                                                     ::nss::Users>(
+              [this](::grpc::ServerContext *context,
+                     ::grpc::ServerUnaryStreamer<::google::protobuf::Empty,
+                                                 ::nss::Users> *streamer) {
+                return this->StreamedListUsers(context, streamer);
+              }));
     }
     ~WithStreamedUnaryMethod_ListUsers() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status ListUsers(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Users* /*response*/) override {
+    ::grpc::Status ListUsers(::grpc::ServerContext * /*context*/,
+                             const ::google::protobuf::Empty * /*request*/,
+                             ::nss::Users * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedListUsers(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::google::protobuf::Empty,::nss::Users>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedListUsers(
+        ::grpc::ServerContext *context,
+        ::grpc::ServerUnaryStreamer<::google::protobuf::Empty, ::nss::Users>
+            *server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_GetUser : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithStreamedUnaryMethod_GetUser() {
-      ::grpc::Service::MarkMethodStreamed(1,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::nss::GetRequest, ::nss::User>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::nss::GetRequest, ::nss::User>* streamer) {
-                       return this->StreamedGetUser(context,
-                         streamer);
-                  }));
+      ::grpc::Service::MarkMethodStreamed(
+          1,
+          new ::grpc::internal::StreamedUnaryHandler<::nss::GetRequest,
+                                                     ::nss::User>(
+              [this](::grpc::ServerContext *context,
+                     ::grpc::ServerUnaryStreamer<::nss::GetRequest, ::nss::User>
+                         *streamer) {
+                return this->StreamedGetUser(context, streamer);
+              }));
     }
     ~WithStreamedUnaryMethod_GetUser() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status GetUser(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::User* /*response*/) override {
+    ::grpc::Status GetUser(::grpc::ServerContext * /*context*/,
+                           const ::nss::GetRequest * /*request*/,
+                           ::nss::User * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedGetUser(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::nss::GetRequest,::nss::User>* server_unary_streamer) = 0;
+    virtual ::grpc::Status
+    StreamedGetUser(::grpc::ServerContext *context,
+                    ::grpc::ServerUnaryStreamer<::nss::GetRequest, ::nss::User>
+                        *server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_ListGroups : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithStreamedUnaryMethod_ListGroups() {
-      ::grpc::Service::MarkMethodStreamed(2,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::google::protobuf::Empty, ::nss::Groups>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::google::protobuf::Empty, ::nss::Groups>* streamer) {
-                       return this->StreamedListGroups(context,
-                         streamer);
-                  }));
+      ::grpc::Service::MarkMethodStreamed(
+          2,
+          new ::grpc::internal::StreamedUnaryHandler<::google::protobuf::Empty,
+                                                     ::nss::Groups>(
+              [this](::grpc::ServerContext *context,
+                     ::grpc::ServerUnaryStreamer<::google::protobuf::Empty,
+                                                 ::nss::Groups> *streamer) {
+                return this->StreamedListGroups(context, streamer);
+              }));
     }
     ~WithStreamedUnaryMethod_ListGroups() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status ListGroups(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::nss::Groups* /*response*/) override {
+    ::grpc::Status ListGroups(::grpc::ServerContext * /*context*/,
+                              const ::google::protobuf::Empty * /*request*/,
+                              ::nss::Groups * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedListGroups(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::google::protobuf::Empty,::nss::Groups>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedListGroups(
+        ::grpc::ServerContext *context,
+        ::grpc::ServerUnaryStreamer<::google::protobuf::Empty, ::nss::Groups>
+            *server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_GetGroup : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithStreamedUnaryMethod_GetGroup() {
-      ::grpc::Service::MarkMethodStreamed(3,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::nss::GetRequest, ::nss::Group>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::nss::GetRequest, ::nss::Group>* streamer) {
-                       return this->StreamedGetGroup(context,
-                         streamer);
-                  }));
+      ::grpc::Service::MarkMethodStreamed(
+          3, new ::grpc::internal::StreamedUnaryHandler<::nss::GetRequest,
+                                                        ::nss::Group>(
+                 [this](::grpc::ServerContext *context,
+                        ::grpc::ServerUnaryStreamer<::nss::GetRequest,
+                                                    ::nss::Group> *streamer) {
+                   return this->StreamedGetGroup(context, streamer);
+                 }));
     }
     ~WithStreamedUnaryMethod_GetGroup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status GetGroup(::grpc::ServerContext* /*context*/, const ::nss::GetRequest* /*request*/, ::nss::Group* /*response*/) override {
+    ::grpc::Status GetGroup(::grpc::ServerContext * /*context*/,
+                            const ::nss::GetRequest * /*request*/,
+                            ::nss::Group * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedGetGroup(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::nss::GetRequest,::nss::Group>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedGetGroup(
+        ::grpc::ServerContext *context,
+        ::grpc::ServerUnaryStreamer<::nss::GetRequest, ::nss::Group>
+            *server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_ListUsers<WithStreamedUnaryMethod_GetUser<WithStreamedUnaryMethod_ListGroups<WithStreamedUnaryMethod_GetGroup<Service > > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_ListUsers<
+      WithStreamedUnaryMethod_GetUser<WithStreamedUnaryMethod_ListGroups<
+          WithStreamedUnaryMethod_GetGroup<Service>>>>
+      StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_ListUsers<WithStreamedUnaryMethod_GetUser<WithStreamedUnaryMethod_ListGroups<WithStreamedUnaryMethod_GetGroup<Service > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_ListUsers<
+      WithStreamedUnaryMethod_GetUser<WithStreamedUnaryMethod_ListGroups<
+          WithStreamedUnaryMethod_GetGroup<Service>>>>
+      StreamedService;
 };
 
-}  // namespace nss
-
+} // namespace nss
 
 #include <grpcpp/ports_undef.inc>
-#endif  // GRPC_nss_2eproto__INCLUDED
+#endif // GRPC_nss_2eproto__INCLUDED

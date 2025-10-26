@@ -56,24 +56,24 @@ typedef struct _cef_base_ref_counted_t {
   /// Called to increment the reference count for the object. Should be called
   /// for every new copy of a pointer to a given object.
   ///
-  void(CEF_CALLBACK* add_ref)(struct _cef_base_ref_counted_t* self);
+  void(CEF_CALLBACK *add_ref)(struct _cef_base_ref_counted_t *self);
 
   ///
   /// Called to decrement the reference count for the object. If the reference
   /// count falls to 0 the object should self-delete. Returns true (1) if the
   /// resulting reference count is 0.
   ///
-  int(CEF_CALLBACK* release)(struct _cef_base_ref_counted_t* self);
+  int(CEF_CALLBACK *release)(struct _cef_base_ref_counted_t *self);
 
   ///
   /// Returns true (1) if the current reference count is 1.
   ///
-  int(CEF_CALLBACK* has_one_ref)(struct _cef_base_ref_counted_t* self);
+  int(CEF_CALLBACK *has_one_ref)(struct _cef_base_ref_counted_t *self);
 
   ///
   /// Returns true (1) if the current reference count is at least 1.
   ///
-  int(CEF_CALLBACK* has_at_least_one_ref)(struct _cef_base_ref_counted_t* self);
+  int(CEF_CALLBACK *has_at_least_one_ref)(struct _cef_base_ref_counted_t *self);
 } cef_base_ref_counted_t;
 
 ///
@@ -88,7 +88,7 @@ typedef struct _cef_base_scoped_t {
   ///
   /// Called to delete this object. May be NULL if the object is not owned.
   ///
-  void(CEF_CALLBACK* del)(struct _cef_base_scoped_t* self);
+  void(CEF_CALLBACK *del)(struct _cef_base_scoped_t *self);
 
 } cef_base_scoped_t;
 
@@ -96,4 +96,4 @@ typedef struct _cef_base_scoped_t {
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_BASE_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_BASE_CAPI_H_

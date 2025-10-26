@@ -30,7 +30,7 @@ class CefBrowserProcessHandlerCppToC
     : public CefCppToCRefCounted<CefBrowserProcessHandlerCppToC,
                                  CefBrowserProcessHandler,
                                  cef_browser_process_handler_t> {
- public:
+public:
   CefBrowserProcessHandlerCppToC();
   virtual ~CefBrowserProcessHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefBrowserProcessHandlerCppToC_Wrap =
 constexpr auto CefBrowserProcessHandlerCppToC_Unwrap =
     CefBrowserProcessHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_BROWSER_PROCESS_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_BROWSER_PROCESS_HANDLER_CPPTOC_H_

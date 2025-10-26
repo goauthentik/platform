@@ -47,7 +47,7 @@
 ///
 /*--cef(source=client)--*/
 class CefResourceBundleHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_scale_factor_t ScaleFactor;
 
   ///
@@ -59,7 +59,7 @@ class CefResourceBundleHandler : public virtual CefBaseRefCounted {
   /// |string_id| values.
   ///
   /*--cef()--*/
-  virtual bool GetLocalizedString(int string_id, CefString& string) = 0;
+  virtual bool GetLocalizedString(int string_id, CefString &string) = 0;
 
   ///
   /// Called to retrieve data for the specified scale independent |resource_id|.
@@ -71,9 +71,8 @@ class CefResourceBundleHandler : public virtual CefBaseRefCounted {
   /// version-specific numerical |resource_id| values.
   ///
   /*--cef()--*/
-  virtual bool GetDataResource(int resource_id,
-                               void*& data,
-                               size_t& data_size) = 0;
+  virtual bool GetDataResource(int resource_id, void *&data,
+                               size_t &data_size) = 0;
 
   ///
   /// Called to retrieve data for the specified |resource_id| nearest the scale
@@ -87,9 +86,8 @@ class CefResourceBundleHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool GetDataResourceForScale(int resource_id,
-                                       ScaleFactor scale_factor,
-                                       void*& data,
-                                       size_t& data_size) = 0;
+                                       ScaleFactor scale_factor, void *&data,
+                                       size_t &data_size) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_RESOURCE_BUNDLE_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_RESOURCE_BUNDLE_HANDLER_H_

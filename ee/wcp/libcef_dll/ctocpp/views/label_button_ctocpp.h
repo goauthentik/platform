@@ -28,34 +28,34 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefLabelButtonCToCpp : public CefCToCppRefCounted<CefLabelButtonCToCpp,
-                                                        CefLabelButton,
-                                                        cef_label_button_t> {
- public:
+class CefLabelButtonCToCpp
+    : public CefCToCppRefCounted<CefLabelButtonCToCpp, CefLabelButton,
+                                 cef_label_button_t> {
+public:
   CefLabelButtonCToCpp();
   virtual ~CefLabelButtonCToCpp();
 
   // CefLabelButton methods.
   CefRefPtr<CefMenuButton> AsMenuButton() override;
-  void SetText(const CefString& text) override;
+  void SetText(const CefString &text) override;
   CefString GetText() override;
   void SetImage(cef_button_state_t button_state,
                 CefRefPtr<CefImage> image) override;
   CefRefPtr<CefImage> GetImage(cef_button_state_t button_state) override;
   void SetTextColor(cef_button_state_t for_state, cef_color_t color) override;
   void SetEnabledTextColors(cef_color_t color) override;
-  void SetFontList(const CefString& font_list) override;
+  void SetFontList(const CefString &font_list) override;
   void SetHorizontalAlignment(cef_horizontal_alignment_t alignment) override;
-  void SetMinimumSize(const CefSize& size) override;
-  void SetMaximumSize(const CefSize& size) override;
+  void SetMinimumSize(const CefSize &size) override;
+  void SetMaximumSize(const CefSize &size) override;
 
   // CefButton methods.
   CefRefPtr<CefLabelButton> AsLabelButton() override;
   void SetState(cef_button_state_t state) override;
   cef_button_state_t GetState() override;
   void SetInkDropEnabled(bool enabled) override;
-  void SetTooltipText(const CefString& tooltip_text) override;
-  void SetAccessibleName(const CefString& name) override;
+  void SetTooltipText(const CefString &tooltip_text) override;
+  void SetAccessibleName(const CefString &name) override;
 
   // CefView methods.
   CefRefPtr<CefBrowserView> AsBrowserView() override;
@@ -76,14 +76,14 @@ class CefLabelButtonCToCpp : public CefCToCppRefCounted<CefLabelButtonCToCpp,
   void SetGroupID(int group_id) override;
   CefRefPtr<CefView> GetParentView() override;
   CefRefPtr<CefView> GetViewForID(int id) override;
-  void SetBounds(const CefRect& bounds) override;
+  void SetBounds(const CefRect &bounds) override;
   CefRect GetBounds() override;
   CefRect GetBoundsInScreen() override;
-  void SetSize(const CefSize& size) override;
+  void SetSize(const CefSize &size) override;
   CefSize GetSize() override;
-  void SetPosition(const CefPoint& position) override;
+  void SetPosition(const CefPoint &position) override;
   CefPoint GetPosition() override;
-  void SetInsets(const CefInsets& insets) override;
+  void SetInsets(const CefInsets &insets) override;
   CefInsets GetInsets() override;
   CefSize GetPreferredSize() override;
   void SizeToPreferredSize() override;
@@ -104,15 +104,15 @@ class CefLabelButtonCToCpp : public CefCToCppRefCounted<CefLabelButtonCToCpp,
   void SetBackgroundColor(cef_color_t color) override;
   cef_color_t GetBackgroundColor() override;
   cef_color_t GetThemeColor(int color_id) override;
-  bool ConvertPointToScreen(CefPoint& point) override;
-  bool ConvertPointFromScreen(CefPoint& point) override;
-  bool ConvertPointToWindow(CefPoint& point) override;
-  bool ConvertPointFromWindow(CefPoint& point) override;
-  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
-  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
+  bool ConvertPointToScreen(CefPoint &point) override;
+  bool ConvertPointFromScreen(CefPoint &point) override;
+  bool ConvertPointToWindow(CefPoint &point) override;
+  bool ConvertPointFromWindow(CefPoint &point) override;
+  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint &point) override;
+  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint &point) override;
 };
 
 constexpr auto CefLabelButtonCToCpp_Wrap = CefLabelButtonCToCpp::Wrap;
 constexpr auto CefLabelButtonCToCpp_Unwrap = CefLabelButtonCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_LABEL_BUTTON_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_LABEL_BUTTON_CTOCPP_H_

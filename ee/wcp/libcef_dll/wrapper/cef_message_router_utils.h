@@ -24,7 +24,7 @@ namespace cef_message_router_utils {
 /// binary value - EmptyResponseBuilder.
 ///
 class BrowserResponseBuilder : public CefBaseRefCounted {
- public:
+public:
   ///
   /// Creates a new CefProcessMessage from the data provided to the builder.
   /// Returns nullptr for invalid instances. Invalidates this builder instance.
@@ -50,45 +50,39 @@ struct RendererMessage {
 
 #ifndef CEF_V8_ENABLE_SANDBOX
 class BinaryValueABRCallback final : public CefV8ArrayBufferReleaseCallback {
- public:
+public:
   explicit BinaryValueABRCallback(CefRefPtr<CefBinaryBuffer> value)
       : value_(std::move(value)) {}
-  BinaryValueABRCallback(const BinaryValueABRCallback&) = delete;
-  BinaryValueABRCallback& operator=(const BinaryValueABRCallback&) = delete;
+  BinaryValueABRCallback(const BinaryValueABRCallback &) = delete;
+  BinaryValueABRCallback &operator=(const BinaryValueABRCallback &) = delete;
 
-  void ReleaseBuffer(void* buffer) override {}
+  void ReleaseBuffer(void *buffer) override {}
 
- private:
+private:
   const CefRefPtr<CefBinaryBuffer> value_;
 
   IMPLEMENT_REFCOUNTING(BinaryValueABRCallback);
 };
 #endif
 
-CefRefPtr<BrowserResponseBuilder> CreateBrowserResponseBuilder(
-    size_t threshold,
-    const std::string& name,
-    const CefString& response);
+CefRefPtr<BrowserResponseBuilder>
+CreateBrowserResponseBuilder(size_t threshold, const std::string &name,
+                             const CefString &response);
 
-CefRefPtr<BrowserResponseBuilder> CreateBrowserResponseBuilder(
-    size_t threshold,
-    const std::string& name,
-    const void* data,
-    size_t size);
+CefRefPtr<BrowserResponseBuilder>
+CreateBrowserResponseBuilder(size_t threshold, const std::string &name,
+                             const void *data, size_t size);
 
-CefRefPtr<CefProcessMessage> BuildRendererMsg(
-    size_t threshold,
-    const std::string& name,
-    int context_id,
-    int request_id,
-    const CefRefPtr<CefV8Value>& request,
-    bool persistent);
+CefRefPtr<CefProcessMessage>
+BuildRendererMsg(size_t threshold, const std::string &name, int context_id,
+                 int request_id, const CefRefPtr<CefV8Value> &request,
+                 bool persistent);
 
-BrowserMessage ParseBrowserMessage(const CefRefPtr<CefProcessMessage>& message);
+BrowserMessage ParseBrowserMessage(const CefRefPtr<CefProcessMessage> &message);
 
-RendererMessage ParseRendererMessage(
-    const CefRefPtr<CefProcessMessage>& message);
+RendererMessage
+ParseRendererMessage(const CefRefPtr<CefProcessMessage> &message);
 
-}  // namespace cef_message_router_utils
+} // namespace cef_message_router_utils
 
-#endif  // CEF_LIBCEF_DLL_WRAPPER_CEF_MESSAGE_ROUTER_UTILS_H_
+#endif // CEF_LIBCEF_DLL_WRAPPER_CEF_MESSAGE_ROUTER_UTILS_H_

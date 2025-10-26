@@ -46,7 +46,7 @@
 ///
 /*--cef(source=client)--*/
 class CefResponseFilter : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_response_filter_status_t FilterStatus;
 
   ///
@@ -88,12 +88,10 @@ class CefResponseFilter : public virtual CefBaseRefCounted {
   /// Do not keep a reference to the buffers passed to this method.
   ///
   /*--cef(optional_param=data_in,default_retval=RESPONSE_FILTER_ERROR)--*/
-  virtual FilterStatus Filter(void* data_in,
-                              size_t data_in_size,
-                              size_t& data_in_read,
-                              void* data_out,
+  virtual FilterStatus Filter(void *data_in, size_t data_in_size,
+                              size_t &data_in_read, void *data_out,
                               size_t data_out_size,
-                              size_t& data_out_written) = 0;
+                              size_t &data_out_written) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_RESPONSE_FILTER_H_
+#endif // CEF_INCLUDE_CEF_RESPONSE_FILTER_H_

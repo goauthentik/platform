@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTestServerCToCpp : public CefCToCppRefCounted<CefTestServerCToCpp,
-                                                       CefTestServer,
-                                                       cef_test_server_t> {
- public:
+class CefTestServerCToCpp
+    : public CefCToCppRefCounted<CefTestServerCToCpp, CefTestServer,
+                                 cef_test_server_t> {
+public:
   CefTestServerCToCpp();
   virtual ~CefTestServerCToCpp();
 
@@ -41,4 +41,4 @@ class CefTestServerCToCpp : public CefCToCppRefCounted<CefTestServerCToCpp,
 constexpr auto CefTestServerCToCpp_Wrap = CefTestServerCToCpp::Wrap;
 constexpr auto CefTestServerCToCpp_Unwrap = CefTestServerCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_CTOCPP_H_

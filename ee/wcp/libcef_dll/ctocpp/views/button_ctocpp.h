@@ -30,7 +30,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefButtonCToCpp
     : public CefCToCppRefCounted<CefButtonCToCpp, CefButton, cef_button_t> {
- public:
+public:
   CefButtonCToCpp();
   virtual ~CefButtonCToCpp();
 
@@ -39,8 +39,8 @@ class CefButtonCToCpp
   void SetState(cef_button_state_t state) override;
   cef_button_state_t GetState() override;
   void SetInkDropEnabled(bool enabled) override;
-  void SetTooltipText(const CefString& tooltip_text) override;
-  void SetAccessibleName(const CefString& name) override;
+  void SetTooltipText(const CefString &tooltip_text) override;
+  void SetAccessibleName(const CefString &name) override;
 
   // CefView methods.
   CefRefPtr<CefBrowserView> AsBrowserView() override;
@@ -61,14 +61,14 @@ class CefButtonCToCpp
   void SetGroupID(int group_id) override;
   CefRefPtr<CefView> GetParentView() override;
   CefRefPtr<CefView> GetViewForID(int id) override;
-  void SetBounds(const CefRect& bounds) override;
+  void SetBounds(const CefRect &bounds) override;
   CefRect GetBounds() override;
   CefRect GetBoundsInScreen() override;
-  void SetSize(const CefSize& size) override;
+  void SetSize(const CefSize &size) override;
   CefSize GetSize() override;
-  void SetPosition(const CefPoint& position) override;
+  void SetPosition(const CefPoint &position) override;
   CefPoint GetPosition() override;
-  void SetInsets(const CefInsets& insets) override;
+  void SetInsets(const CefInsets &insets) override;
   CefInsets GetInsets() override;
   CefSize GetPreferredSize() override;
   void SizeToPreferredSize() override;
@@ -89,15 +89,15 @@ class CefButtonCToCpp
   void SetBackgroundColor(cef_color_t color) override;
   cef_color_t GetBackgroundColor() override;
   cef_color_t GetThemeColor(int color_id) override;
-  bool ConvertPointToScreen(CefPoint& point) override;
-  bool ConvertPointFromScreen(CefPoint& point) override;
-  bool ConvertPointToWindow(CefPoint& point) override;
-  bool ConvertPointFromWindow(CefPoint& point) override;
-  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
-  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
+  bool ConvertPointToScreen(CefPoint &point) override;
+  bool ConvertPointFromScreen(CefPoint &point) override;
+  bool ConvertPointToWindow(CefPoint &point) override;
+  bool ConvertPointFromWindow(CefPoint &point) override;
+  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint &point) override;
+  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint &point) override;
 };
 
 constexpr auto CefButtonCToCpp_Wrap = CefButtonCToCpp::Wrap;
 constexpr auto CefButtonCToCpp_Unwrap = CefButtonCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BUTTON_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BUTTON_CTOCPP_H_

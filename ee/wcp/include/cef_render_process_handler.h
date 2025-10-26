@@ -54,7 +54,7 @@
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefRenderProcessHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_navigation_type_t NavigationType;
 
   ///
@@ -147,4 +147,4 @@ class CefRenderProcessHandler : public virtual CefBaseRefCounted {
   }
 };
 
-#endif  // CEF_INCLUDE_CEF_RENDER_PROCESS_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_RENDER_PROCESS_HANDLER_H_

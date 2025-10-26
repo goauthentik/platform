@@ -29,10 +29,9 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefButtonDelegateCppToC
-    : public CefCppToCRefCounted<CefButtonDelegateCppToC,
-                                 CefButtonDelegate,
+    : public CefCppToCRefCounted<CefButtonDelegateCppToC, CefButtonDelegate,
                                  cef_button_delegate_t> {
- public:
+public:
   CefButtonDelegateCppToC();
   virtual ~CefButtonDelegateCppToC();
 };
@@ -40,4 +39,4 @@ class CefButtonDelegateCppToC
 constexpr auto CefButtonDelegateCppToC_Wrap = CefButtonDelegateCppToC::Wrap;
 constexpr auto CefButtonDelegateCppToC_Unwrap = CefButtonDelegateCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BUTTON_DELEGATE_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BUTTON_DELEGATE_CPPTOC_H_

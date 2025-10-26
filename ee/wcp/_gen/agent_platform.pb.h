@@ -17,19 +17,19 @@
 #error "Protobuf C++ headers/runtime. See"
 #error "https://protobuf.dev/support/cross-version-runtime-guarantee/#cpp"
 #endif
-#include "google/protobuf/io/coded_stream.h"
+#include "agent.pb.h"
 #include "google/protobuf/arena.h"
 #include "google/protobuf/arenastring.h"
+#include "google/protobuf/extension_set.h" // IWYU pragma: export
+#include "google/protobuf/generated_message_reflection.h"
 #include "google/protobuf/generated_message_tctable_decl.h"
 #include "google/protobuf/generated_message_util.h"
-#include "google/protobuf/metadata_lite.h"
-#include "google/protobuf/generated_message_reflection.h"
+#include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/message_lite.h"
-#include "google/protobuf/repeated_field.h"  // IWYU pragma: export
-#include "google/protobuf/extension_set.h"  // IWYU pragma: export
+#include "google/protobuf/metadata_lite.h"
+#include "google/protobuf/repeated_field.h" // IWYU pragma: export
 #include "google/protobuf/unknown_field_set.h"
-#include "agent.pb.h"
 // @@protoc_insertion_point(includes)
 
 // Must be included last.
@@ -40,67 +40,79 @@
 namespace google {
 namespace protobuf {
 namespace internal {
-template <typename T>
-::absl::string_view GetAnyMessageName();
-}  // namespace internal
-}  // namespace protobuf
-}  // namespace google
+template <typename T>::absl::string_view GetAnyMessageName();
+} // namespace internal
+} // namespace protobuf
+} // namespace google
 
 // Internal implementation detail -- do not use these members.
 struct TableStruct_agent_5fplatform_2eproto {
   static const ::uint32_t offsets[];
 };
 extern "C" {
-extern const ::google::protobuf::internal::DescriptorTable descriptor_table_agent_5fplatform_2eproto;
-}  // extern "C"
+extern const ::google::protobuf::internal::DescriptorTable
+    descriptor_table_agent_5fplatform_2eproto;
+} // extern "C"
 namespace agent_platform {
 class PlatformEndpointRequest;
 struct PlatformEndpointRequestDefaultTypeInternal;
-extern PlatformEndpointRequestDefaultTypeInternal _PlatformEndpointRequest_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull PlatformEndpointRequest_class_data_;
+extern PlatformEndpointRequestDefaultTypeInternal
+    _PlatformEndpointRequest_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull
+    PlatformEndpointRequest_class_data_;
 class PlatformEndpointResponse;
 struct PlatformEndpointResponseDefaultTypeInternal;
-extern PlatformEndpointResponseDefaultTypeInternal _PlatformEndpointResponse_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull PlatformEndpointResponse_class_data_;
-}  // namespace agent_platform
+extern PlatformEndpointResponseDefaultTypeInternal
+    _PlatformEndpointResponse_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull
+    PlatformEndpointResponse_class_data_;
+} // namespace agent_platform
 namespace google {
-namespace protobuf {
-}  // namespace protobuf
-}  // namespace google
+namespace protobuf {} // namespace protobuf
+} // namespace google
 
 namespace agent_platform {
 
 // ===================================================================
 
-
 // -------------------------------------------------------------------
 
 class PlatformEndpointResponse final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:agent_platform.PlatformEndpointResponse) */ {
- public:
+/* @@protoc_insertion_point(class_definition:agent_platform.PlatformEndpointResponse)
+ */
+{
+public:
   inline PlatformEndpointResponse() : PlatformEndpointResponse(nullptr) {}
   ~PlatformEndpointResponse() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(PlatformEndpointResponse* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(PlatformEndpointResponse *PROTOBUF_NONNULL msg,
+                       ::std::destroying_delete_t) {
     SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(PlatformEndpointResponse));
+    ::google::protobuf::internal::SizedDelete(msg,
+                                              sizeof(PlatformEndpointResponse));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR PlatformEndpointResponse(::google::protobuf::internal::ConstantInitialized);
+  explicit PROTOBUF_CONSTEXPR PlatformEndpointResponse(
+      ::google::protobuf::internal::ConstantInitialized);
 
-  inline PlatformEndpointResponse(const PlatformEndpointResponse& from) : PlatformEndpointResponse(nullptr, from) {}
-  inline PlatformEndpointResponse(PlatformEndpointResponse&& from) noexcept
+  inline PlatformEndpointResponse(const PlatformEndpointResponse &from)
+      : PlatformEndpointResponse(nullptr, from) {}
+  inline PlatformEndpointResponse(PlatformEndpointResponse &&from) noexcept
       : PlatformEndpointResponse(nullptr, ::std::move(from)) {}
-  inline PlatformEndpointResponse& operator=(const PlatformEndpointResponse& from) {
+  inline PlatformEndpointResponse &
+  operator=(const PlatformEndpointResponse &from) {
     CopyFrom(from);
     return *this;
   }
-  inline PlatformEndpointResponse& operator=(PlatformEndpointResponse&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+  inline PlatformEndpointResponse &
+  operator=(PlatformEndpointResponse &&from) noexcept {
+    if (this == &from)
+      return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(
+            GetArena(), from.GetArena())) {
       InternalSwap(&from);
     } else {
       CopyFrom(from);
@@ -108,108 +120,129 @@ class PlatformEndpointResponse final : public ::google::protobuf::Message
     return *this;
   }
 
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  inline const ::google::protobuf::UnknownFieldSet &
+  unknown_fields() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .unknown_fields<::google::protobuf::UnknownFieldSet>(
+            ::google::protobuf::UnknownFieldSet::default_instance);
   }
-  inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  inline ::google::protobuf::UnknownFieldSet *PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL descriptor() {
     return GetDescriptor();
   }
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL GetDescriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL
+  GetDescriptor() {
     return default_instance().GetMetadata().descriptor;
   }
-  static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+  static const ::google::protobuf::Reflection *PROTOBUF_NONNULL
+  GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const PlatformEndpointResponse& default_instance() {
-    return *reinterpret_cast<const PlatformEndpointResponse*>(
+  static const PlatformEndpointResponse &default_instance() {
+    return *reinterpret_cast<const PlatformEndpointResponse *>(
         &_PlatformEndpointResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 1;
-  friend void swap(PlatformEndpointResponse& a, PlatformEndpointResponse& b) { a.Swap(&b); }
-  inline void Swap(PlatformEndpointResponse* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+  friend void swap(PlatformEndpointResponse &a, PlatformEndpointResponse &b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PlatformEndpointResponse *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(),
+                                                         other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(PlatformEndpointResponse* PROTOBUF_NONNULL other) {
-    if (other == this) return;
+  void UnsafeArenaSwap(PlatformEndpointResponse *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
   }
 
   // implements Message ----------------------------------------------
 
-  PlatformEndpointResponse* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<PlatformEndpointResponse>(arena);
+  PlatformEndpointResponse *PROTOBUF_NONNULL
+  New(::google::protobuf::Arena *PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<
+        PlatformEndpointResponse>(arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const PlatformEndpointResponse& from);
+  void CopyFrom(const PlatformEndpointResponse &from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const PlatformEndpointResponse& from) { PlatformEndpointResponse::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
+  void MergeFrom(const PlatformEndpointResponse &from) {
+    PlatformEndpointResponse::MergeImpl(*this, from);
   }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
 
-  public:
+private:
+  static void MergeImpl(::google::protobuf::MessageLite &to_msg,
+                        const ::google::protobuf::MessageLite &from_msg);
+
+public:
+  bool IsInitialized() const { return true; }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite &msg);
+  static ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite &msg,
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL stream);
+
+public:
   ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const {
     return _InternalSerialize(*this, target, stream);
   }
-  #else   // PROTOBUF_CUSTOM_VTABLE
+#else  // PROTOBUF_CUSTOM_VTABLE
   ::size_t ByteSizeLong() const final;
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const final;
+#endif // PROTOBUF_CUSTOM_VTABLE
   int GetCachedSize() const { return _impl_._cached_size_.Get(); }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(PlatformEndpointResponse* PROTOBUF_NONNULL other);
- private:
+private:
+  void SharedCtor(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite &self);
+  void InternalSwap(PlatformEndpointResponse *PROTOBUF_NONNULL other);
+
+private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "agent_platform.PlatformEndpointResponse"; }
+  static ::absl::string_view FullMessageName() {
+    return "agent_platform.PlatformEndpointResponse";
+  }
 
-  explicit PlatformEndpointResponse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  PlatformEndpointResponse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const PlatformEndpointResponse& from);
-  PlatformEndpointResponse(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, PlatformEndpointResponse&& from) noexcept
+  explicit PlatformEndpointResponse(
+      ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  PlatformEndpointResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                           const PlatformEndpointResponse &from);
+  PlatformEndpointResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                           PlatformEndpointResponse &&from) noexcept
       : PlatformEndpointResponse(arena) {
     *this = ::std::move(from);
   }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  const ::google::protobuf::internal::ClassData *PROTOBUF_NONNULL
+  GetClassData() const PROTOBUF_FINAL;
+  static void *PROTOBUF_NONNULL
+  PlacementNew_(const void *PROTOBUF_NONNULL, void *PROTOBUF_NONNULL mem,
+                ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
   static constexpr auto InternalNewImpl_();
 
- public:
+public:
   static constexpr auto InternalGenerateClassData_();
 
   ::google::protobuf::Metadata GetMetadata() const;
@@ -221,98 +254,110 @@ class PlatformEndpointResponse final : public ::google::protobuf::Message
     kHeaderFieldNumber = 1,
   };
   // string message = 2;
-  void clear_message() ;
-  const ::std::string& message() const;
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_message(Arg_&& arg, Args_... args);
-  ::std::string* PROTOBUF_NONNULL mutable_message();
-  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_message();
-  void set_allocated_message(::std::string* PROTOBUF_NULLABLE value);
+  void clear_message();
+  const ::std::string &message() const;
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void set_message(Arg_ &&arg, Args_... args);
+  ::std::string *PROTOBUF_NONNULL mutable_message();
+  [[nodiscard]] ::std::string *PROTOBUF_NULLABLE release_message();
+  void set_allocated_message(::std::string *PROTOBUF_NULLABLE value);
 
-  private:
-  const ::std::string& _internal_message() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_message(const ::std::string& value);
-  ::std::string* PROTOBUF_NONNULL _internal_mutable_message();
+private:
+  const ::std::string &_internal_message() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_message(const ::std::string &value);
+  ::std::string *PROTOBUF_NONNULL _internal_mutable_message();
 
-  public:
+public:
   // .agent.ResponseHeader header = 1;
   bool has_header() const;
-  void clear_header() ;
-  const ::agent::ResponseHeader& header() const;
-  [[nodiscard]] ::agent::ResponseHeader* PROTOBUF_NULLABLE release_header();
-  ::agent::ResponseHeader* PROTOBUF_NONNULL mutable_header();
-  void set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value);
-  ::agent::ResponseHeader* PROTOBUF_NULLABLE unsafe_arena_release_header();
+  void clear_header();
+  const ::agent::ResponseHeader &header() const;
+  [[nodiscard]] ::agent::ResponseHeader *PROTOBUF_NULLABLE release_header();
+  ::agent::ResponseHeader *PROTOBUF_NONNULL mutable_header();
+  void set_allocated_header(::agent::ResponseHeader *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_header(
+      ::agent::ResponseHeader *PROTOBUF_NULLABLE value);
+  ::agent::ResponseHeader *PROTOBUF_NULLABLE unsafe_arena_release_header();
 
-  private:
-  const ::agent::ResponseHeader& _internal_header() const;
-  ::agent::ResponseHeader* PROTOBUF_NONNULL _internal_mutable_header();
+private:
+  const ::agent::ResponseHeader &_internal_header() const;
+  ::agent::ResponseHeader *PROTOBUF_NONNULL _internal_mutable_header();
 
-  public:
+public:
   // @@protoc_insertion_point(class_scope:agent_platform.PlatformEndpointResponse)
- private:
+private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<1, 2,
-                                   1, 55,
-                                   2>
+  static const ::google::protobuf::internal::TcParseTable<1, 2, 1, 55, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
   using InternalArenaConstructable_ = void;
   using DestructorSkippable_ = void;
   struct Impl_ {
-    inline explicit constexpr Impl_(::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const PlatformEndpointResponse& from_msg);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena, const Impl_ &from,
+        const PlatformEndpointResponse &from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::google::protobuf::internal::ArenaStringPtr message_;
-    ::agent::ResponseHeader* PROTOBUF_NULLABLE header_;
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE header_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
-  union { Impl_ _impl_; };
+  union {
+    Impl_ _impl_;
+  };
   friend struct ::TableStruct_agent_5fplatform_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull PlatformEndpointResponse_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    PlatformEndpointResponse_class_data_;
 // -------------------------------------------------------------------
 
 class PlatformEndpointRequest final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:agent_platform.PlatformEndpointRequest) */ {
- public:
+/* @@protoc_insertion_point(class_definition:agent_platform.PlatformEndpointRequest)
+ */
+{
+public:
   inline PlatformEndpointRequest() : PlatformEndpointRequest(nullptr) {}
   ~PlatformEndpointRequest() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(PlatformEndpointRequest* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(PlatformEndpointRequest *PROTOBUF_NONNULL msg,
+                       ::std::destroying_delete_t) {
     SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(PlatformEndpointRequest));
+    ::google::protobuf::internal::SizedDelete(msg,
+                                              sizeof(PlatformEndpointRequest));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR PlatformEndpointRequest(::google::protobuf::internal::ConstantInitialized);
+  explicit PROTOBUF_CONSTEXPR PlatformEndpointRequest(
+      ::google::protobuf::internal::ConstantInitialized);
 
-  inline PlatformEndpointRequest(const PlatformEndpointRequest& from) : PlatformEndpointRequest(nullptr, from) {}
-  inline PlatformEndpointRequest(PlatformEndpointRequest&& from) noexcept
+  inline PlatformEndpointRequest(const PlatformEndpointRequest &from)
+      : PlatformEndpointRequest(nullptr, from) {}
+  inline PlatformEndpointRequest(PlatformEndpointRequest &&from) noexcept
       : PlatformEndpointRequest(nullptr, ::std::move(from)) {}
-  inline PlatformEndpointRequest& operator=(const PlatformEndpointRequest& from) {
+  inline PlatformEndpointRequest &
+  operator=(const PlatformEndpointRequest &from) {
     CopyFrom(from);
     return *this;
   }
-  inline PlatformEndpointRequest& operator=(PlatformEndpointRequest&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+  inline PlatformEndpointRequest &
+  operator=(PlatformEndpointRequest &&from) noexcept {
+    if (this == &from)
+      return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(
+            GetArena(), from.GetArena())) {
       InternalSwap(&from);
     } else {
       CopyFrom(from);
@@ -320,108 +365,129 @@ class PlatformEndpointRequest final : public ::google::protobuf::Message
     return *this;
   }
 
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  inline const ::google::protobuf::UnknownFieldSet &
+  unknown_fields() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .unknown_fields<::google::protobuf::UnknownFieldSet>(
+            ::google::protobuf::UnknownFieldSet::default_instance);
   }
-  inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  inline ::google::protobuf::UnknownFieldSet *PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL descriptor() {
     return GetDescriptor();
   }
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL GetDescriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL
+  GetDescriptor() {
     return default_instance().GetMetadata().descriptor;
   }
-  static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+  static const ::google::protobuf::Reflection *PROTOBUF_NONNULL
+  GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const PlatformEndpointRequest& default_instance() {
-    return *reinterpret_cast<const PlatformEndpointRequest*>(
+  static const PlatformEndpointRequest &default_instance() {
+    return *reinterpret_cast<const PlatformEndpointRequest *>(
         &_PlatformEndpointRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 0;
-  friend void swap(PlatformEndpointRequest& a, PlatformEndpointRequest& b) { a.Swap(&b); }
-  inline void Swap(PlatformEndpointRequest* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+  friend void swap(PlatformEndpointRequest &a, PlatformEndpointRequest &b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PlatformEndpointRequest *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(),
+                                                         other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(PlatformEndpointRequest* PROTOBUF_NONNULL other) {
-    if (other == this) return;
+  void UnsafeArenaSwap(PlatformEndpointRequest *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
   }
 
   // implements Message ----------------------------------------------
 
-  PlatformEndpointRequest* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<PlatformEndpointRequest>(arena);
+  PlatformEndpointRequest *PROTOBUF_NONNULL
+  New(::google::protobuf::Arena *PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<
+        PlatformEndpointRequest>(arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const PlatformEndpointRequest& from);
+  void CopyFrom(const PlatformEndpointRequest &from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const PlatformEndpointRequest& from) { PlatformEndpointRequest::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
+  void MergeFrom(const PlatformEndpointRequest &from) {
+    PlatformEndpointRequest::MergeImpl(*this, from);
   }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
 
-  public:
+private:
+  static void MergeImpl(::google::protobuf::MessageLite &to_msg,
+                        const ::google::protobuf::MessageLite &from_msg);
+
+public:
+  bool IsInitialized() const { return true; }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite &msg);
+  static ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite &msg,
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL stream);
+
+public:
   ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const {
     return _InternalSerialize(*this, target, stream);
   }
-  #else   // PROTOBUF_CUSTOM_VTABLE
+#else  // PROTOBUF_CUSTOM_VTABLE
   ::size_t ByteSizeLong() const final;
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const final;
+#endif // PROTOBUF_CUSTOM_VTABLE
   int GetCachedSize() const { return _impl_._cached_size_.Get(); }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(PlatformEndpointRequest* PROTOBUF_NONNULL other);
- private:
+private:
+  void SharedCtor(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite &self);
+  void InternalSwap(PlatformEndpointRequest *PROTOBUF_NONNULL other);
+
+private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "agent_platform.PlatformEndpointRequest"; }
+  static ::absl::string_view FullMessageName() {
+    return "agent_platform.PlatformEndpointRequest";
+  }
 
-  explicit PlatformEndpointRequest(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  PlatformEndpointRequest(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const PlatformEndpointRequest& from);
-  PlatformEndpointRequest(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, PlatformEndpointRequest&& from) noexcept
+  explicit PlatformEndpointRequest(
+      ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  PlatformEndpointRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                          const PlatformEndpointRequest &from);
+  PlatformEndpointRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                          PlatformEndpointRequest &&from) noexcept
       : PlatformEndpointRequest(arena) {
     *this = ::std::move(from);
   }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  const ::google::protobuf::internal::ClassData *PROTOBUF_NONNULL
+  GetClassData() const PROTOBUF_FINAL;
+  static void *PROTOBUF_NONNULL
+  PlacementNew_(const void *PROTOBUF_NONNULL, void *PROTOBUF_NONNULL mem,
+                ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
   static constexpr auto InternalNewImpl_();
 
- public:
+public:
   static constexpr auto InternalGenerateClassData_();
 
   ::google::protobuf::Metadata GetMetadata() const;
@@ -433,83 +499,82 @@ class PlatformEndpointRequest final : public ::google::protobuf::Message
     kHeaderFieldNumber = 1,
   };
   // string challenge = 2;
-  void clear_challenge() ;
-  const ::std::string& challenge() const;
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_challenge(Arg_&& arg, Args_... args);
-  ::std::string* PROTOBUF_NONNULL mutable_challenge();
-  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_challenge();
-  void set_allocated_challenge(::std::string* PROTOBUF_NULLABLE value);
+  void clear_challenge();
+  const ::std::string &challenge() const;
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void set_challenge(Arg_ &&arg, Args_... args);
+  ::std::string *PROTOBUF_NONNULL mutable_challenge();
+  [[nodiscard]] ::std::string *PROTOBUF_NULLABLE release_challenge();
+  void set_allocated_challenge(::std::string *PROTOBUF_NULLABLE value);
 
-  private:
-  const ::std::string& _internal_challenge() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_challenge(const ::std::string& value);
-  ::std::string* PROTOBUF_NONNULL _internal_mutable_challenge();
+private:
+  const ::std::string &_internal_challenge() const;
+  PROTOBUF_ALWAYS_INLINE void
+  _internal_set_challenge(const ::std::string &value);
+  ::std::string *PROTOBUF_NONNULL _internal_mutable_challenge();
 
-  public:
+public:
   // .agent.RequestHeader header = 1;
   bool has_header() const;
-  void clear_header() ;
-  const ::agent::RequestHeader& header() const;
-  [[nodiscard]] ::agent::RequestHeader* PROTOBUF_NULLABLE release_header();
-  ::agent::RequestHeader* PROTOBUF_NONNULL mutable_header();
-  void set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value);
-  ::agent::RequestHeader* PROTOBUF_NULLABLE unsafe_arena_release_header();
+  void clear_header();
+  const ::agent::RequestHeader &header() const;
+  [[nodiscard]] ::agent::RequestHeader *PROTOBUF_NULLABLE release_header();
+  ::agent::RequestHeader *PROTOBUF_NONNULL mutable_header();
+  void set_allocated_header(::agent::RequestHeader *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_header(
+      ::agent::RequestHeader *PROTOBUF_NULLABLE value);
+  ::agent::RequestHeader *PROTOBUF_NULLABLE unsafe_arena_release_header();
 
-  private:
-  const ::agent::RequestHeader& _internal_header() const;
-  ::agent::RequestHeader* PROTOBUF_NONNULL _internal_mutable_header();
+private:
+  const ::agent::RequestHeader &_internal_header() const;
+  ::agent::RequestHeader *PROTOBUF_NONNULL _internal_mutable_header();
 
-  public:
+public:
   // @@protoc_insertion_point(class_scope:agent_platform.PlatformEndpointRequest)
- private:
+private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<1, 2,
-                                   1, 56,
-                                   2>
+  static const ::google::protobuf::internal::TcParseTable<1, 2, 1, 56, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
   using InternalArenaConstructable_ = void;
   using DestructorSkippable_ = void;
   struct Impl_ {
-    inline explicit constexpr Impl_(::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const PlatformEndpointRequest& from_msg);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena, const Impl_ &from,
+        const PlatformEndpointRequest &from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::google::protobuf::internal::ArenaStringPtr challenge_;
-    ::agent::RequestHeader* PROTOBUF_NULLABLE header_;
+    ::agent::RequestHeader *PROTOBUF_NULLABLE header_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
-  union { Impl_ _impl_; };
+  union {
+    Impl_ _impl_;
+  };
   friend struct ::TableStruct_agent_5fplatform_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull PlatformEndpointRequest_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    PlatformEndpointRequest_class_data_;
 
 // ===================================================================
 
-
-
-
 // ===================================================================
-
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#endif  // __GNUC__
+#endif // __GNUC__
 // -------------------------------------------------------------------
 
 // PlatformEndpointRequest
@@ -520,22 +585,26 @@ inline bool PlatformEndpointRequest::has_header() const {
   PROTOBUF_ASSUME(!value || _impl_.header_ != nullptr);
   return value;
 }
-inline const ::agent::RequestHeader& PlatformEndpointRequest::_internal_header() const {
+inline const ::agent::RequestHeader &
+PlatformEndpointRequest::_internal_header() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::agent::RequestHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::agent::RequestHeader&>(::agent::_RequestHeader_default_instance_);
+  const ::agent::RequestHeader *p = _impl_.header_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::agent::RequestHeader &>(
+                            ::agent::_RequestHeader_default_instance_);
 }
-inline const ::agent::RequestHeader& PlatformEndpointRequest::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::agent::RequestHeader &
+PlatformEndpointRequest::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_platform.PlatformEndpointRequest.header)
   return _internal_header();
 }
 inline void PlatformEndpointRequest::unsafe_arena_set_allocated_header(
-    ::agent::RequestHeader* PROTOBUF_NULLABLE value) {
+    ::agent::RequestHeader *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
-  _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
@@ -543,14 +612,15 @@ inline void PlatformEndpointRequest::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_platform.PlatformEndpointRequest.header)
 }
-inline ::agent::RequestHeader* PROTOBUF_NULLABLE PlatformEndpointRequest::release_header() {
+inline ::agent::RequestHeader *PROTOBUF_NULLABLE
+PlatformEndpointRequest::release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::RequestHeader* released = _impl_.header_;
+  ::agent::RequestHeader *released = _impl_.header_;
   _impl_.header_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -562,48 +632,55 @@ inline ::agent::RequestHeader* PROTOBUF_NULLABLE PlatformEndpointRequest::releas
   }
   return released;
 }
-inline ::agent::RequestHeader* PROTOBUF_NULLABLE PlatformEndpointRequest::unsafe_arena_release_header() {
+inline ::agent::RequestHeader *PROTOBUF_NULLABLE
+PlatformEndpointRequest::unsafe_arena_release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_platform.PlatformEndpointRequest.header)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::RequestHeader* temp = _impl_.header_;
+  ::agent::RequestHeader *temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::agent::RequestHeader* PROTOBUF_NONNULL PlatformEndpointRequest::_internal_mutable_header() {
+inline ::agent::RequestHeader *PROTOBUF_NONNULL
+PlatformEndpointRequest::_internal_mutable_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.header_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::agent::RequestHeader>(GetArena());
-    _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(p);
+    auto *p =
+        ::google::protobuf::Message::DefaultConstruct<::agent::RequestHeader>(
+            GetArena());
+    _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(p);
   }
   return _impl_.header_;
 }
-inline ::agent::RequestHeader* PROTOBUF_NONNULL PlatformEndpointRequest::mutable_header()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::agent::RequestHeader *PROTOBUF_NONNULL
+PlatformEndpointRequest::mutable_header() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::RequestHeader* _msg = _internal_mutable_header();
+  ::agent::RequestHeader *_msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:agent_platform.PlatformEndpointRequest.header)
   return _msg;
 }
-inline void PlatformEndpointRequest::set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void PlatformEndpointRequest::set_allocated_header(
+    ::agent::RequestHeader *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
 
-  _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_platform.PlatformEndpointRequest.header)
 }
 
@@ -611,54 +688,59 @@ inline void PlatformEndpointRequest::set_allocated_header(::agent::RequestHeader
 inline void PlatformEndpointRequest::clear_challenge() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.challenge_.ClearToEmpty();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000001U);
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
 }
-inline const ::std::string& PlatformEndpointRequest::challenge() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::std::string &
+PlatformEndpointRequest::challenge() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_platform.PlatformEndpointRequest.challenge)
   return _internal_challenge();
 }
 template <typename Arg_, typename... Args_>
-PROTOBUF_ALWAYS_INLINE void PlatformEndpointRequest::set_challenge(Arg_&& arg, Args_... args) {
+PROTOBUF_ALWAYS_INLINE void
+PlatformEndpointRequest::set_challenge(Arg_ &&arg, Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  _impl_.challenge_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  _impl_.challenge_.Set(static_cast<Arg_ &&>(arg), args..., GetArena());
   // @@protoc_insertion_point(field_set:agent_platform.PlatformEndpointRequest.challenge)
 }
-inline ::std::string* PROTOBUF_NONNULL PlatformEndpointRequest::mutable_challenge()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::std::string *PROTOBUF_NONNULL
+PlatformEndpointRequest::mutable_challenge() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::std::string* _s = _internal_mutable_challenge();
+  ::std::string *_s = _internal_mutable_challenge();
   // @@protoc_insertion_point(field_mutable:agent_platform.PlatformEndpointRequest.challenge)
   return _s;
 }
-inline const ::std::string& PlatformEndpointRequest::_internal_challenge() const {
+inline const ::std::string &
+PlatformEndpointRequest::_internal_challenge() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.challenge_.Get();
 }
-inline void PlatformEndpointRequest::_internal_set_challenge(const ::std::string& value) {
+inline void
+PlatformEndpointRequest::_internal_set_challenge(const ::std::string &value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.challenge_.Set(value, GetArena());
 }
-inline ::std::string* PROTOBUF_NONNULL PlatformEndpointRequest::_internal_mutable_challenge() {
+inline ::std::string *PROTOBUF_NONNULL
+PlatformEndpointRequest::_internal_mutable_challenge() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.challenge_.Mutable( GetArena());
+  return _impl_.challenge_.Mutable(GetArena());
 }
-inline ::std::string* PROTOBUF_NULLABLE PlatformEndpointRequest::release_challenge() {
+inline ::std::string *PROTOBUF_NULLABLE
+PlatformEndpointRequest::release_challenge() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_platform.PlatformEndpointRequest.challenge)
   if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
     return nullptr;
   }
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  auto* released = _impl_.challenge_.Release();
+  auto *released = _impl_.challenge_.Release();
   if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
     _impl_.challenge_.Set("", GetArena());
   }
   return released;
 }
-inline void PlatformEndpointRequest::set_allocated_challenge(::std::string* PROTOBUF_NULLABLE value) {
+inline void PlatformEndpointRequest::set_allocated_challenge(
+    ::std::string *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
@@ -666,7 +748,8 @@ inline void PlatformEndpointRequest::set_allocated_challenge(::std::string* PROT
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
   _impl_.challenge_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.challenge_.IsDefault()) {
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() &&
+      _impl_.challenge_.IsDefault()) {
     _impl_.challenge_.Set("", GetArena());
   }
   // @@protoc_insertion_point(field_set_allocated:agent_platform.PlatformEndpointRequest.challenge)
@@ -682,22 +765,26 @@ inline bool PlatformEndpointResponse::has_header() const {
   PROTOBUF_ASSUME(!value || _impl_.header_ != nullptr);
   return value;
 }
-inline const ::agent::ResponseHeader& PlatformEndpointResponse::_internal_header() const {
+inline const ::agent::ResponseHeader &
+PlatformEndpointResponse::_internal_header() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::agent::ResponseHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::agent::ResponseHeader&>(::agent::_ResponseHeader_default_instance_);
+  const ::agent::ResponseHeader *p = _impl_.header_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::agent::ResponseHeader &>(
+                            ::agent::_ResponseHeader_default_instance_);
 }
-inline const ::agent::ResponseHeader& PlatformEndpointResponse::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::agent::ResponseHeader &
+PlatformEndpointResponse::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_platform.PlatformEndpointResponse.header)
   return _internal_header();
 }
 inline void PlatformEndpointResponse::unsafe_arena_set_allocated_header(
-    ::agent::ResponseHeader* PROTOBUF_NULLABLE value) {
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
-  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
@@ -705,14 +792,15 @@ inline void PlatformEndpointResponse::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_platform.PlatformEndpointResponse.header)
 }
-inline ::agent::ResponseHeader* PROTOBUF_NULLABLE PlatformEndpointResponse::release_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NULLABLE
+PlatformEndpointResponse::release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::ResponseHeader* released = _impl_.header_;
+  ::agent::ResponseHeader *released = _impl_.header_;
   _impl_.header_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -724,48 +812,55 @@ inline ::agent::ResponseHeader* PROTOBUF_NULLABLE PlatformEndpointResponse::rele
   }
   return released;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NULLABLE PlatformEndpointResponse::unsafe_arena_release_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NULLABLE
+PlatformEndpointResponse::unsafe_arena_release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_platform.PlatformEndpointResponse.header)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::ResponseHeader* temp = _impl_.header_;
+  ::agent::ResponseHeader *temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NONNULL PlatformEndpointResponse::_internal_mutable_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NONNULL
+PlatformEndpointResponse::_internal_mutable_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.header_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::agent::ResponseHeader>(GetArena());
-    _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(p);
+    auto *p =
+        ::google::protobuf::Message::DefaultConstruct<::agent::ResponseHeader>(
+            GetArena());
+    _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(p);
   }
   return _impl_.header_;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NONNULL PlatformEndpointResponse::mutable_header()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::agent::ResponseHeader *PROTOBUF_NONNULL
+PlatformEndpointResponse::mutable_header() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::ResponseHeader* _msg = _internal_mutable_header();
+  ::agent::ResponseHeader *_msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:agent_platform.PlatformEndpointResponse.header)
   return _msg;
 }
-inline void PlatformEndpointResponse::set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void PlatformEndpointResponse::set_allocated_header(
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
 
-  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_platform.PlatformEndpointResponse.header)
 }
 
@@ -773,54 +868,59 @@ inline void PlatformEndpointResponse::set_allocated_header(::agent::ResponseHead
 inline void PlatformEndpointResponse::clear_message() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.message_.ClearToEmpty();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000001U);
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
 }
-inline const ::std::string& PlatformEndpointResponse::message() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::std::string &
+PlatformEndpointResponse::message() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_platform.PlatformEndpointResponse.message)
   return _internal_message();
 }
 template <typename Arg_, typename... Args_>
-PROTOBUF_ALWAYS_INLINE void PlatformEndpointResponse::set_message(Arg_&& arg, Args_... args) {
+PROTOBUF_ALWAYS_INLINE void
+PlatformEndpointResponse::set_message(Arg_ &&arg, Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  _impl_.message_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  _impl_.message_.Set(static_cast<Arg_ &&>(arg), args..., GetArena());
   // @@protoc_insertion_point(field_set:agent_platform.PlatformEndpointResponse.message)
 }
-inline ::std::string* PROTOBUF_NONNULL PlatformEndpointResponse::mutable_message()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::std::string *PROTOBUF_NONNULL
+PlatformEndpointResponse::mutable_message() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::std::string* _s = _internal_mutable_message();
+  ::std::string *_s = _internal_mutable_message();
   // @@protoc_insertion_point(field_mutable:agent_platform.PlatformEndpointResponse.message)
   return _s;
 }
-inline const ::std::string& PlatformEndpointResponse::_internal_message() const {
+inline const ::std::string &
+PlatformEndpointResponse::_internal_message() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.message_.Get();
 }
-inline void PlatformEndpointResponse::_internal_set_message(const ::std::string& value) {
+inline void
+PlatformEndpointResponse::_internal_set_message(const ::std::string &value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.message_.Set(value, GetArena());
 }
-inline ::std::string* PROTOBUF_NONNULL PlatformEndpointResponse::_internal_mutable_message() {
+inline ::std::string *PROTOBUF_NONNULL
+PlatformEndpointResponse::_internal_mutable_message() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.message_.Mutable( GetArena());
+  return _impl_.message_.Mutable(GetArena());
 }
-inline ::std::string* PROTOBUF_NULLABLE PlatformEndpointResponse::release_message() {
+inline ::std::string *PROTOBUF_NULLABLE
+PlatformEndpointResponse::release_message() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_platform.PlatformEndpointResponse.message)
   if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
     return nullptr;
   }
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  auto* released = _impl_.message_.Release();
+  auto *released = _impl_.message_.Release();
   if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
     _impl_.message_.Set("", GetArena());
   }
   return released;
 }
-inline void PlatformEndpointResponse::set_allocated_message(::std::string* PROTOBUF_NULLABLE value) {
+inline void PlatformEndpointResponse::set_allocated_message(
+    ::std::string *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
@@ -828,7 +928,8 @@ inline void PlatformEndpointResponse::set_allocated_message(::std::string* PROTO
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
   _impl_.message_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.message_.IsDefault()) {
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() &&
+      _impl_.message_.IsDefault()) {
     _impl_.message_.Set("", GetArena());
   }
   // @@protoc_insertion_point(field_set_allocated:agent_platform.PlatformEndpointResponse.message)
@@ -836,14 +937,13 @@ inline void PlatformEndpointResponse::set_allocated_message(::std::string* PROTO
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
-#endif  // __GNUC__
+#endif // __GNUC__
 
 // @@protoc_insertion_point(namespace_scope)
-}  // namespace agent_platform
-
+} // namespace agent_platform
 
 // @@protoc_insertion_point(global_scope)
 
 #include "google/protobuf/port_undef.inc"
 
-#endif  // agent_5fplatform_2eproto_2epb_2eh
+#endif // agent_5fplatform_2eproto_2epb_2eh

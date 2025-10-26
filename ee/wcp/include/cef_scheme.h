@@ -63,8 +63,7 @@ class CefSchemeHandlerFactory;
 ///
 /*--cef(optional_param=domain_name,optional_param=factory)--*/
 bool CefRegisterSchemeHandlerFactory(
-    const CefString& scheme_name,
-    const CefString& domain_name,
+    const CefString &scheme_name, const CefString &domain_name,
     CefRefPtr<CefSchemeHandlerFactory> factory);
 
 ///
@@ -81,7 +80,7 @@ bool CefClearSchemeHandlerFactories();
 ///
 /*--cef(source=library)--*/
 class CefSchemeRegistrar : public CefBaseScoped {
- public:
+public:
   ///
   /// Register a custom scheme. This method should not be called for the
   /// built-in HTTP, HTTPS, FILE, FTP, ABOUT and DATA schemes.
@@ -93,7 +92,7 @@ class CefSchemeRegistrar : public CefBaseScoped {
   /// if an error occurs this method will return false.
   ///
   /*--cef()--*/
-  virtual bool AddCustomScheme(const CefString& scheme_name, int options) = 0;
+  virtual bool AddCustomScheme(const CefString &scheme_name, int options) = 0;
 };
 
 ///
@@ -102,7 +101,7 @@ class CefSchemeRegistrar : public CefBaseScoped {
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefSchemeHandlerFactory : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Return a new resource handler instance to handle the request or an empty
   /// reference to allow default handling of the request. |browser| and |frame|
@@ -112,11 +111,9 @@ class CefSchemeHandlerFactory : public virtual CefBaseRefCounted {
   /// object passed to this method cannot be modified.
   ///
   /*--cef(optional_param=browser,optional_param=frame)--*/
-  virtual CefRefPtr<CefResourceHandler> Create(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      const CefString& scheme_name,
-      CefRefPtr<CefRequest> request) = 0;
+  virtual CefRefPtr<CefResourceHandler>
+  Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+         const CefString &scheme_name, CefRefPtr<CefRequest> request) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_SCHEME_H_
+#endif // CEF_INCLUDE_CEF_SCHEME_H_

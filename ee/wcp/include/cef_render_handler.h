@@ -51,7 +51,7 @@
 ///
 /*--cef(source=client)--*/
 class CefRenderHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_drag_operations_mask_t DragOperation;
   typedef cef_drag_operations_mask_t DragOperationsMask;
   typedef cef_paint_element_type_t PaintElementType;
@@ -73,7 +73,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// the rectangle from GetViewRect will be used.
   ///
   /*--cef()--*/
-  virtual bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+  virtual bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect) {
     return false;
   }
 
@@ -82,7 +82,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// method must always provide a non-empty rectangle.
   ///
   /*--cef()--*/
-  virtual void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) = 0;
+  virtual void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect) = 0;
 
   ///
   /// Called to retrieve the translation from view DIP coordinates to screen
@@ -91,11 +91,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// if the requested coordinates were provided.
   ///
   /*--cef()--*/
-  virtual bool GetScreenPoint(CefRefPtr<CefBrowser> browser,
-                              int viewX,
-                              int viewY,
-                              int& screenX,
-                              int& screenY) {
+  virtual bool GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX,
+                              int viewY, int &screenX, int &screenY) {
     return false;
   }
 
@@ -110,7 +107,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool GetScreenInfo(CefRefPtr<CefBrowser> browser,
-                             CefScreenInfo& screen_info) {
+                             CefScreenInfo &screen_info) {
     return false;
   }
 
@@ -126,7 +123,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// contains the new location and size in view coordinates.
   ///
   /*--cef()--*/
-  virtual void OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect& rect) {
+  virtual void OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect &rect) {
   }
 
   ///
@@ -141,12 +138,9 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// CefWindowInfo::shared_texture_enabled is set to false.
   ///
   /*--cef()--*/
-  virtual void OnPaint(CefRefPtr<CefBrowser> browser,
-                       PaintElementType type,
-                       const RectList& dirtyRects,
-                       const void* buffer,
-                       int width,
-                       int height) = 0;
+  virtual void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
+                       const RectList &dirtyRects, const void *buffer,
+                       int width, int height) = 0;
 
   ///
   /// Called when an element has been rendered to the shared texture handle.
@@ -169,8 +163,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
                                   PaintElementType type,
-                                  const RectList& dirtyRects,
-                                  const CefAcceleratedPaintInfo& info) {}
+                                  const RectList &dirtyRects,
+                                  const CefAcceleratedPaintInfo &info) {}
 
   ///
   /// Called to retrieve the size of the touch handle for the specified
@@ -179,7 +173,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void GetTouchHandleSize(CefRefPtr<CefBrowser> browser,
                                   cef_horizontal_alignment_t orientation,
-                                  CefSize& size) {}
+                                  CefSize &size) {}
 
   ///
   /// Called when touch handle state is updated. The client is responsible for
@@ -187,7 +181,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnTouchHandleStateChanged(CefRefPtr<CefBrowser> browser,
-                                         const CefTouchHandleState& state) {}
+                                         const CefTouchHandleState &state) {}
 
   ///
   /// Called when the user starts dragging content in the web view. Contextual
@@ -207,9 +201,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool StartDragging(CefRefPtr<CefBrowser> browser,
                              CefRefPtr<CefDragData> drag_data,
-                             DragOperationsMask allowed_ops,
-                             int x,
-                             int y) {
+                             DragOperationsMask allowed_ops, int x, int y) {
     return false;
   }
 
@@ -226,8 +218,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// Called when the scroll offset has changed.
   ///
   /*--cef()--*/
-  virtual void OnScrollOffsetChanged(CefRefPtr<CefBrowser> browser,
-                                     double x,
+  virtual void OnScrollOffsetChanged(CefRefPtr<CefBrowser> browser, double x,
                                      double y) {}
 
   ///
@@ -237,8 +228,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnImeCompositionRangeChanged(CefRefPtr<CefBrowser> browser,
-                                            const CefRange& selected_range,
-                                            const RectList& character_bounds) {}
+                                            const CefRange &selected_range,
+                                            const RectList &character_bounds) {}
 
   ///
   /// Called when text selection has changed for the specified |browser|.
@@ -247,8 +238,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=selected_text,optional_param=selected_range)--*/
   virtual void OnTextSelectionChanged(CefRefPtr<CefBrowser> browser,
-                                      const CefString& selected_text,
-                                      const CefRange& selected_range) {}
+                                      const CefString &selected_text,
+                                      const CefRange &selected_range) {}
 
   ///
   /// Called when an on-screen keyboard should be shown or hidden for the
@@ -261,4 +252,4 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                           TextInputMode input_mode) {}
 };
 
-#endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_RENDER_HANDLER_H_

@@ -68,8 +68,8 @@ typedef struct _cef_browser_view_t {
   /// Returns the cef_browser_t hosted by this BrowserView. Will return NULL if
   /// the browser has not yet been created or has already been destroyed.
   ///
-  struct _cef_browser_t*(CEF_CALLBACK* get_browser)(
-      struct _cef_browser_view_t* self);
+  struct _cef_browser_t *(CEF_CALLBACK *get_browser)(
+      struct _cef_browser_view_t *self);
 
   ///
   /// Returns the Chrome toolbar associated with this BrowserView. Only
@@ -79,8 +79,8 @@ typedef struct _cef_browser_view_t {
   /// BrowserView is added to a cef_window_t and
   /// cef_view_delegate_t::on_window_changed() has been called.
   ///
-  struct _cef_view_t*(CEF_CALLBACK* get_chrome_toolbar)(
-      struct _cef_browser_view_t* self);
+  struct _cef_view_t *(CEF_CALLBACK *get_chrome_toolbar)(
+      struct _cef_browser_view_t *self);
 
   ///
   /// Sets whether normal priority accelerators are first forwarded to the web
@@ -97,15 +97,15 @@ typedef struct _cef_browser_view_t {
   /// handler that calls `event.preventDefault()`) or by cef_keyboard_handler_t.
   /// The default value is false (0).
   ///
-  void(CEF_CALLBACK* set_prefer_accelerators)(struct _cef_browser_view_t* self,
+  void(CEF_CALLBACK *set_prefer_accelerators)(struct _cef_browser_view_t *self,
                                               int prefer_accelerators);
 
   ///
   /// Returns the runtime style for this BrowserView (ALLOY or CHROME). See
   /// cef_runtime_style_t documentation for details.
   ///
-  cef_runtime_style_t(CEF_CALLBACK* get_runtime_style)(
-      struct _cef_browser_view_t* self);
+  cef_runtime_style_t(CEF_CALLBACK *get_runtime_style)(
+      struct _cef_browser_view_t *self);
 } cef_browser_view_t;
 
 ///
@@ -115,22 +115,21 @@ typedef struct _cef_browser_view_t {
 /// the created browser that will be passed to
 /// cef_render_process_handler_t::on_browser_created() in the render process.
 ///
-CEF_EXPORT cef_browser_view_t* cef_browser_view_create(
-    struct _cef_client_t* client,
-    const cef_string_t* url,
-    const struct _cef_browser_settings_t* settings,
-    struct _cef_dictionary_value_t* extra_info,
-    struct _cef_request_context_t* request_context,
-    struct _cef_browser_view_delegate_t* delegate);
+CEF_EXPORT cef_browser_view_t *
+cef_browser_view_create(struct _cef_client_t *client, const cef_string_t *url,
+                        const struct _cef_browser_settings_t *settings,
+                        struct _cef_dictionary_value_t *extra_info,
+                        struct _cef_request_context_t *request_context,
+                        struct _cef_browser_view_delegate_t *delegate);
 
 ///
 /// Returns the BrowserView associated with |browser|.
 ///
-CEF_EXPORT cef_browser_view_t* cef_browser_view_get_for_browser(
-    struct _cef_browser_t* browser);
+CEF_EXPORT cef_browser_view_t *
+cef_browser_view_get_for_browser(struct _cef_browser_t *browser);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_BROWSER_VIEW_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_BROWSER_VIEW_CAPI_H_

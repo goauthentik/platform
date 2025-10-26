@@ -30,7 +30,7 @@ class CefContextMenuHandlerCppToC
     : public CefCppToCRefCounted<CefContextMenuHandlerCppToC,
                                  CefContextMenuHandler,
                                  cef_context_menu_handler_t> {
- public:
+public:
   CefContextMenuHandlerCppToC();
   virtual ~CefContextMenuHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefContextMenuHandlerCppToC_Wrap =
 constexpr auto CefContextMenuHandlerCppToC_Unwrap =
     CefContextMenuHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_CONTEXT_MENU_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_CONTEXT_MENU_HANDLER_CPPTOC_H_

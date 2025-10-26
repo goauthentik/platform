@@ -47,7 +47,7 @@ enum OwnershipPolicy {
   RETAIN
 };
 
-}  // namespace scoped_policy
-}  // namespace base
+} // namespace scoped_policy
+} // namespace base
 
-#endif  // CEF_INCLUDE_BASE_INTERNAL_CEF_SCOPED_POLICY_H_
+#endif // CEF_INCLUDE_BASE_INTERNAL_CEF_SCOPED_POLICY_H_

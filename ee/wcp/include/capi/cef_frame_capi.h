@@ -77,68 +77,68 @@ typedef struct _cef_frame_t {
   ///
   /// True if this object is currently attached to a valid frame.
   ///
-  int(CEF_CALLBACK* is_valid)(struct _cef_frame_t* self);
+  int(CEF_CALLBACK *is_valid)(struct _cef_frame_t *self);
 
   ///
   /// Execute undo in this frame.
   ///
-  void(CEF_CALLBACK* undo)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *undo)(struct _cef_frame_t *self);
 
   ///
   /// Execute redo in this frame.
   ///
-  void(CEF_CALLBACK* redo)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *redo)(struct _cef_frame_t *self);
 
   ///
   /// Execute cut in this frame.
   ///
-  void(CEF_CALLBACK* cut)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *cut)(struct _cef_frame_t *self);
 
   ///
   /// Execute copy in this frame.
   ///
-  void(CEF_CALLBACK* copy)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *copy)(struct _cef_frame_t *self);
 
   ///
   /// Execute paste in this frame.
   ///
-  void(CEF_CALLBACK* paste)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *paste)(struct _cef_frame_t *self);
 
   ///
   /// Execute paste and match style in this frame.
   ///
-  void(CEF_CALLBACK* paste_and_match_style)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *paste_and_match_style)(struct _cef_frame_t *self);
 
   ///
   /// Execute delete in this frame.
   ///
-  void(CEF_CALLBACK* del)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *del)(struct _cef_frame_t *self);
 
   ///
   /// Execute select all in this frame.
   ///
-  void(CEF_CALLBACK* select_all)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *select_all)(struct _cef_frame_t *self);
 
   ///
   /// Save this frame's HTML source to a temporary file and open it in the
   /// default text viewing application. This function can only be called from
   /// the browser process.
   ///
-  void(CEF_CALLBACK* view_source)(struct _cef_frame_t* self);
+  void(CEF_CALLBACK *view_source)(struct _cef_frame_t *self);
 
   ///
   /// Retrieve this frame's HTML source as a string sent to the specified
   /// visitor.
   ///
-  void(CEF_CALLBACK* get_source)(struct _cef_frame_t* self,
-                                 struct _cef_string_visitor_t* visitor);
+  void(CEF_CALLBACK *get_source)(struct _cef_frame_t *self,
+                                 struct _cef_string_visitor_t *visitor);
 
   ///
   /// Retrieve this frame's display text as a string sent to the specified
   /// visitor.
   ///
-  void(CEF_CALLBACK* get_text)(struct _cef_frame_t* self,
-                               struct _cef_string_visitor_t* visitor);
+  void(CEF_CALLBACK *get_text)(struct _cef_frame_t *self,
+                               struct _cef_string_visitor_t *visitor);
 
   ///
   /// Load the request represented by the |request| object.
@@ -147,14 +147,14 @@ typedef struct _cef_frame_t {
   /// INVALID_INITIATOR_ORIGIN (213) unless you first navigate to the request
   /// origin using some other mechanism (LoadURL, link click, etc).
   ///
-  void(CEF_CALLBACK* load_request)(struct _cef_frame_t* self,
-                                   struct _cef_request_t* request);
+  void(CEF_CALLBACK *load_request)(struct _cef_frame_t *self,
+                                   struct _cef_request_t *request);
 
   ///
   /// Load the specified |url|.
   ///
-  void(CEF_CALLBACK* load_url)(struct _cef_frame_t* self,
-                               const cef_string_t* url);
+  void(CEF_CALLBACK *load_url)(struct _cef_frame_t *self,
+                               const cef_string_t *url);
 
   ///
   /// Execute a string of JavaScript code in this frame. The |script_url|
@@ -163,20 +163,20 @@ typedef struct _cef_frame_t {
   /// error.  The |start_line| parameter is the base line number to use for
   /// error reporting.
   ///
-  void(CEF_CALLBACK* execute_java_script)(struct _cef_frame_t* self,
-                                          const cef_string_t* code,
-                                          const cef_string_t* script_url,
+  void(CEF_CALLBACK *execute_java_script)(struct _cef_frame_t *self,
+                                          const cef_string_t *code,
+                                          const cef_string_t *script_url,
                                           int start_line);
 
   ///
   /// Returns true (1) if this is the main (top-level) frame.
   ///
-  int(CEF_CALLBACK* is_main)(struct _cef_frame_t* self);
+  int(CEF_CALLBACK *is_main)(struct _cef_frame_t *self);
 
   ///
   /// Returns true (1) if this is the focused frame.
   ///
-  int(CEF_CALLBACK* is_focused)(struct _cef_frame_t* self);
+  int(CEF_CALLBACK *is_focused)(struct _cef_frame_t *self);
 
   ///
   /// Returns the name for this frame. If the frame has an assigned name (for
@@ -186,46 +186,46 @@ typedef struct _cef_frame_t {
   /// value.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_name)(struct _cef_frame_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_name)(struct _cef_frame_t *self);
 
   ///
   /// Returns the globally unique identifier for this frame or NULL if the
   /// underlying frame does not yet exist.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_identifier)(
-      struct _cef_frame_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_identifier)(
+      struct _cef_frame_t *self);
 
   ///
   /// Returns the parent of this frame or NULL if this is the main (top-level)
   /// frame.
   ///
-  struct _cef_frame_t*(CEF_CALLBACK* get_parent)(struct _cef_frame_t* self);
+  struct _cef_frame_t *(CEF_CALLBACK *get_parent)(struct _cef_frame_t *self);
 
   ///
   /// Returns the URL currently loaded in this frame.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_url)(struct _cef_frame_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_url)(struct _cef_frame_t *self);
 
   ///
   /// Returns the browser that this frame belongs to.
   ///
-  struct _cef_browser_t*(CEF_CALLBACK* get_browser)(struct _cef_frame_t* self);
+  struct _cef_browser_t *(CEF_CALLBACK *get_browser)(struct _cef_frame_t *self);
 
   ///
   /// Get the V8 context associated with the frame. This function can only be
   /// called from the render process.
   ///
-  struct _cef_v8_context_t*(CEF_CALLBACK* get_v8_context)(
-      struct _cef_frame_t* self);
+  struct _cef_v8_context_t *(CEF_CALLBACK *get_v8_context)(
+      struct _cef_frame_t *self);
 
   ///
   /// Visit the DOM document. This function can only be called from the render
   /// process.
   ///
-  void(CEF_CALLBACK* visit_dom)(struct _cef_frame_t* self,
-                                struct _cef_domvisitor_t* visitor);
+  void(CEF_CALLBACK *visit_dom)(struct _cef_frame_t *self,
+                                struct _cef_domvisitor_t *visitor);
 
   ///
   /// Create a new URL request that will be treated as originating from this
@@ -242,10 +242,9 @@ typedef struct _cef_frame_t {
   /// The |request| object will be marked as read-only after calling this
   /// function.
   ///
-  struct _cef_urlrequest_t*(CEF_CALLBACK* create_urlrequest)(
-      struct _cef_frame_t* self,
-      struct _cef_request_t* request,
-      struct _cef_urlrequest_client_t* client);
+  struct _cef_urlrequest_t *(CEF_CALLBACK *create_urlrequest)(
+      struct _cef_frame_t *self, struct _cef_request_t *request,
+      struct _cef_urlrequest_client_t *client);
 
   ///
   /// Send a message to the specified |target_process|. Ownership of the message
@@ -255,14 +254,13 @@ typedef struct _cef_frame_t {
   /// Send an ACK message back from the target process if confirmation is
   /// required.
   ///
-  void(CEF_CALLBACK* send_process_message)(
-      struct _cef_frame_t* self,
-      cef_process_id_t target_process,
-      struct _cef_process_message_t* message);
+  void(CEF_CALLBACK *send_process_message)(
+      struct _cef_frame_t *self, cef_process_id_t target_process,
+      struct _cef_process_message_t *message);
 } cef_frame_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_FRAME_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_FRAME_CAPI_H_

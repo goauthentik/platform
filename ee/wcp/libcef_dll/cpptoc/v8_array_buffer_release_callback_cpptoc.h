@@ -30,7 +30,7 @@ class CefV8ArrayBufferReleaseCallbackCppToC
     : public CefCppToCRefCounted<CefV8ArrayBufferReleaseCallbackCppToC,
                                  CefV8ArrayBufferReleaseCallback,
                                  cef_v8_array_buffer_release_callback_t> {
- public:
+public:
   CefV8ArrayBufferReleaseCallbackCppToC();
   virtual ~CefV8ArrayBufferReleaseCallbackCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefV8ArrayBufferReleaseCallbackCppToC_Wrap =
 constexpr auto CefV8ArrayBufferReleaseCallbackCppToC_Unwrap =
     CefV8ArrayBufferReleaseCallbackCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_V8_ARRAY_BUFFER_RELEASE_CALLBACK_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_V8_ARRAY_BUFFER_RELEASE_CALLBACK_CPPTOC_H_

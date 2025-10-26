@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefV8StackTraceCToCpp : public CefCToCppRefCounted<CefV8StackTraceCToCpp,
-                                                         CefV8StackTrace,
-                                                         cef_v8_stack_trace_t> {
- public:
+class CefV8StackTraceCToCpp
+    : public CefCToCppRefCounted<CefV8StackTraceCToCpp, CefV8StackTrace,
+                                 cef_v8_stack_trace_t> {
+public:
   CefV8StackTraceCToCpp();
   virtual ~CefV8StackTraceCToCpp();
 
@@ -42,4 +42,4 @@ class CefV8StackTraceCToCpp : public CefCToCppRefCounted<CefV8StackTraceCToCpp,
 constexpr auto CefV8StackTraceCToCpp_Wrap = CefV8StackTraceCToCpp::Wrap;
 constexpr auto CefV8StackTraceCToCpp_Unwrap = CefV8StackTraceCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_V8_STACK_TRACE_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_V8_STACK_TRACE_CTOCPP_H_

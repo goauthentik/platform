@@ -55,16 +55,16 @@ class CefSchemeHandlerFactory;
 ///
 /*--cef(source=client)--*/
 class CefResolveCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called on the UI thread after the ResolveHost request has completed.
   /// |result| will be the result code. |resolved_ips| will be the list of
   /// resolved IP addresses or empty if the resolution failed.
   ///
   /*--cef(optional_param=resolved_ips)--*/
-  virtual void OnResolveCompleted(
-      cef_errorcode_t result,
-      const std::vector<CefString>& resolved_ips) = 0;
+  virtual void
+  OnResolveCompleted(cef_errorcode_t result,
+                     const std::vector<CefString> &resolved_ips) = 0;
 };
 
 #if CEF_API_ADDED(13401)
@@ -75,15 +75,15 @@ class CefResolveCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client,added=13401)--*/
 class CefSettingObserver : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called when a content or website setting has changed. The new value can be
   /// retrieved using CefRequestContext::GetContentSetting or
   /// CefRequestContext::GetWebsiteSetting.
   ///
   /*--cef(optional_param=requesting_url,optional_param=top_level_url)--*/
-  virtual void OnSettingChanged(const CefString& requesting_url,
-                                const CefString& top_level_url,
+  virtual void OnSettingChanged(const CefString &requesting_url,
+                                const CefString &top_level_url,
                                 cef_content_setting_types_t content_type) = 0;
 };
 #endif
@@ -106,7 +106,7 @@ class CefSettingObserver : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefRequestContext : public CefPreferenceManager {
- public:
+public:
   ///
   /// Returns the global context object.
   ///
@@ -118,18 +118,18 @@ class CefRequestContext : public CefPreferenceManager {
   /// |handler|.
   ///
   /*--cef(optional_param=handler)--*/
-  static CefRefPtr<CefRequestContext> CreateContext(
-      const CefRequestContextSettings& settings,
-      CefRefPtr<CefRequestContextHandler> handler);
+  static CefRefPtr<CefRequestContext>
+  CreateContext(const CefRequestContextSettings &settings,
+                CefRefPtr<CefRequestContextHandler> handler);
 
   ///
   /// Creates a new context object that shares storage with |other| and uses an
   /// optional |handler|.
   ///
   /*--cef(capi_name=cef_create_context_shared,optional_param=handler)--*/
-  static CefRefPtr<CefRequestContext> CreateContext(
-      CefRefPtr<CefRequestContext> other,
-      CefRefPtr<CefRequestContextHandler> handler);
+  static CefRefPtr<CefRequestContext>
+  CreateContext(CefRefPtr<CefRequestContext> other,
+                CefRefPtr<CefRequestContextHandler> handler);
 
   ///
   /// Returns true if this object is pointing to the same context as |that|
@@ -171,8 +171,8 @@ class CefRequestContext : public CefPreferenceManager {
   /// storage has been initialized.
   ///
   /*--cef(optional_param=callback)--*/
-  virtual CefRefPtr<CefCookieManager> GetCookieManager(
-      CefRefPtr<CefCompletionCallback> callback) = 0;
+  virtual CefRefPtr<CefCookieManager>
+  GetCookieManager(CefRefPtr<CefCompletionCallback> callback) = 0;
 
   ///
   /// Register a scheme handler factory for the specified |scheme_name| and
@@ -188,10 +188,10 @@ class CefRequestContext : public CefPreferenceManager {
   /// called on any thread in the browser process.
   ///
   /*--cef(optional_param=domain_name,optional_param=factory)--*/
-  virtual bool RegisterSchemeHandlerFactory(
-      const CefString& scheme_name,
-      const CefString& domain_name,
-      CefRefPtr<CefSchemeHandlerFactory> factory) = 0;
+  virtual bool
+  RegisterSchemeHandlerFactory(const CefString &scheme_name,
+                               const CefString &domain_name,
+                               CefRefPtr<CefSchemeHandlerFactory> factory) = 0;
 
   ///
   /// Clear all registered scheme handler factories. Returns false on error.
@@ -209,8 +209,8 @@ class CefRequestContext : public CefPreferenceManager {
   /// completion.
   ///
   /*--cef(optional_param=callback)--*/
-  virtual void ClearCertificateExceptions(
-      CefRefPtr<CefCompletionCallback> callback) = 0;
+  virtual void
+  ClearCertificateExceptions(CefRefPtr<CefCompletionCallback> callback) = 0;
 
   ///
   /// Clears all HTTP authentication credentials that were added as part of
@@ -218,8 +218,8 @@ class CefRequestContext : public CefPreferenceManager {
   /// on the UI thread after completion.
   ///
   /*--cef(optional_param=callback)--*/
-  virtual void ClearHttpAuthCredentials(
-      CefRefPtr<CefCompletionCallback> callback) = 0;
+  virtual void
+  ClearHttpAuthCredentials(CefRefPtr<CefCompletionCallback> callback) = 0;
 
   ///
   /// Clears all active and idle connections that Chromium currently has.
@@ -228,15 +228,15 @@ class CefRequestContext : public CefPreferenceManager {
   /// executed on the UI thread after completion.
   ///
   /*--cef(optional_param=callback)--*/
-  virtual void CloseAllConnections(
-      CefRefPtr<CefCompletionCallback> callback) = 0;
+  virtual void
+  CloseAllConnections(CefRefPtr<CefCompletionCallback> callback) = 0;
 
   ///
   /// Attempts to resolve |origin| to a list of associated IP addresses.
   /// |callback| will be executed on the UI thread after completion.
   ///
   /*--cef()--*/
-  virtual void ResolveHost(const CefString& origin,
+  virtual void ResolveHost(const CefString &origin,
                            CefRefPtr<CefResolveCallback> callback) = 0;
 
   ///
@@ -245,8 +245,8 @@ class CefRequestContext : public CefPreferenceManager {
   /// after the manager's context has been initialized.
   ///
   /*--cef(optional_param=callback)--*/
-  virtual CefRefPtr<CefMediaRouter> GetMediaRouter(
-      CefRefPtr<CefCompletionCallback> callback) = 0;
+  virtual CefRefPtr<CefMediaRouter>
+  GetMediaRouter(CefRefPtr<CefCompletionCallback> callback) = 0;
 
   ///
   /// Returns the current value for |content_type| that applies for the
@@ -255,10 +255,10 @@ class CefRequestContext : public CefPreferenceManager {
   /// process UI thread.
   ///
   /*--cef(optional_param=requesting_url,optional_param=top_level_url)--*/
-  virtual CefRefPtr<CefValue> GetWebsiteSetting(
-      const CefString& requesting_url,
-      const CefString& top_level_url,
-      cef_content_setting_types_t content_type) = 0;
+  virtual CefRefPtr<CefValue>
+  GetWebsiteSetting(const CefString &requesting_url,
+                    const CefString &top_level_url,
+                    cef_content_setting_types_t content_type) = 0;
 
   ///
   /// Sets the current value for |content_type| for the specified URLs in the
@@ -276,8 +276,8 @@ class CefRequestContext : public CefPreferenceManager {
   ///
   /*--cef(optional_param=requesting_url,optional_param=top_level_url,
           optional_param=value)--*/
-  virtual void SetWebsiteSetting(const CefString& requesting_url,
-                                 const CefString& top_level_url,
+  virtual void SetWebsiteSetting(const CefString &requesting_url,
+                                 const CefString &top_level_url,
                                  cef_content_setting_types_t content_type,
                                  CefRefPtr<CefValue> value) = 0;
 
@@ -289,10 +289,10 @@ class CefRequestContext : public CefPreferenceManager {
   ///
   /*--cef(optional_param=requesting_url,optional_param=top_level_url,
           default_retval=CEF_CONTENT_SETTING_VALUE_DEFAULT)--*/
-  virtual cef_content_setting_values_t GetContentSetting(
-      const CefString& requesting_url,
-      const CefString& top_level_url,
-      cef_content_setting_types_t content_type) = 0;
+  virtual cef_content_setting_values_t
+  GetContentSetting(const CefString &requesting_url,
+                    const CefString &top_level_url,
+                    cef_content_setting_types_t content_type) = 0;
 
   ///
   /// Sets the current value for |content_type| for the specified URLs in the
@@ -309,8 +309,8 @@ class CefRequestContext : public CefPreferenceManager {
   /// https://source.chromium.org/search?q=ContentSettingsType::POPUPS
   ///
   /*--cef(optional_param=requesting_url,optional_param=top_level_url)--*/
-  virtual void SetContentSetting(const CefString& requesting_url,
-                                 const CefString& top_level_url,
+  virtual void SetContentSetting(const CefString &requesting_url,
+                                 const CefString &top_level_url,
                                  cef_content_setting_types_t content_type,
                                  cef_content_setting_values_t value) = 0;
 
@@ -321,8 +321,8 @@ class CefRequestContext : public CefPreferenceManager {
   /// This method must be called on the browser process UI thread.
   ///
   /*--cef(added=13401)--*/
-  virtual CefRefPtr<CefRegistration> AddSettingObserver(
-      CefRefPtr<CefSettingObserver> observer) = 0;
+  virtual CefRefPtr<CefRegistration>
+  AddSettingObserver(CefRefPtr<CefSettingObserver> observer) = 0;
 #endif
 
   ///
@@ -358,4 +358,4 @@ class CefRequestContext : public CefPreferenceManager {
   virtual cef_color_variant_t GetChromeColorSchemeVariant() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_REQUEST_CONTEXT_H_
+#endif // CEF_INCLUDE_CEF_REQUEST_CONTEXT_H_

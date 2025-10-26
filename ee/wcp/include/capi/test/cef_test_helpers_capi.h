@@ -59,8 +59,7 @@ extern "C" {
 /// onbeforeunload handlers that will otherwise be blocked.
 ///
 CEF_EXPORT void cef_execute_java_script_with_user_gesture_for_tests(
-    struct _cef_frame_t* frame,
-    const cef_string_t* javascript);
+    struct _cef_frame_t *frame, const cef_string_t *javascript);
 
 ///
 /// Set the DIR_SRC_TEST_DATA_ROOT directory used to load test data. Must be
@@ -68,18 +67,18 @@ CEF_EXPORT void cef_execute_java_script_with_user_gesture_for_tests(
 /// "chromium/src" directory when running from a local CEF/Chromium build. |dir|
 /// must be an absolute path.
 ///
-CEF_EXPORT void cef_set_data_directory_for_tests(const cef_string_t* dir);
+CEF_EXPORT void cef_set_data_directory_for_tests(const cef_string_t *dir);
 
 ///
 /// Returns true (1) if |feature_name| is enabled by default, command line or
 /// field trial. This supports a short list of curated values that are queried
 /// by unit tests.
 ///
-CEF_EXPORT int cef_is_feature_enabled_for_tests(
-    const cef_string_t* feature_name);
+CEF_EXPORT int
+cef_is_feature_enabled_for_tests(const cef_string_t *feature_name);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_TEST_CEF_TEST_HELPERS_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_TEST_CEF_TEST_HELPERS_CAPI_H_

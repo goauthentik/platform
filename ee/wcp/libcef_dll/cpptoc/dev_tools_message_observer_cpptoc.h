@@ -32,7 +32,7 @@ class CefDevToolsMessageObserverCppToC
     : public CefCppToCRefCounted<CefDevToolsMessageObserverCppToC,
                                  CefDevToolsMessageObserver,
                                  cef_dev_tools_message_observer_t> {
- public:
+public:
   CefDevToolsMessageObserverCppToC();
   virtual ~CefDevToolsMessageObserverCppToC();
 };
@@ -42,4 +42,4 @@ constexpr auto CefDevToolsMessageObserverCppToC_Wrap =
 constexpr auto CefDevToolsMessageObserverCppToC_Unwrap =
     CefDevToolsMessageObserverCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_DEV_TOOLS_MESSAGE_OBSERVER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_DEV_TOOLS_MESSAGE_OBSERVER_CPPTOC_H_

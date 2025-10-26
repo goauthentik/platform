@@ -52,7 +52,7 @@
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefBrowserProcessHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Provides an opportunity to register custom preferences prior to
   /// global and request context initialization.
@@ -75,9 +75,9 @@ class CefBrowserProcessHandler : public virtual CefBaseRefCounted {
   /// on the browser process UI thread.
   ///
   /*--cef()--*/
-  virtual void OnRegisterCustomPreferences(
-      cef_preferences_type_t type,
-      CefRawPtr<CefPreferenceRegistrar> registrar) {}
+  virtual void
+  OnRegisterCustomPreferences(cef_preferences_type_t type,
+                              CefRawPtr<CefPreferenceRegistrar> registrar) {}
 
   ///
   /// Called on the browser process UI thread immediately after the CEF context
@@ -94,8 +94,8 @@ class CefBrowserProcessHandler : public virtual CefBaseRefCounted {
   /// |command_line| outside of this method.
   ///
   /*--cef()--*/
-  virtual void OnBeforeChildProcessLaunch(
-      CefRefPtr<CefCommandLine> command_line) {}
+  virtual void
+  OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) {}
 
   ///
   /// Implement this method to provide app-specific behavior when an already
@@ -116,9 +116,9 @@ class CefBrowserProcessHandler : public virtual CefBaseRefCounted {
   /// This method will be called on the browser process UI thread.
   ///
   /*--cef(optional_param=current_directory)--*/
-  virtual bool OnAlreadyRunningAppRelaunch(
-      CefRefPtr<CefCommandLine> command_line,
-      const CefString& current_directory) {
+  virtual bool
+  OnAlreadyRunningAppRelaunch(CefRefPtr<CefCommandLine> command_line,
+                              const CefString &current_directory) {
     return false;
   }
 
@@ -163,4 +163,4 @@ class CefBrowserProcessHandler : public virtual CefBaseRefCounted {
   }
 };
 
-#endif  // CEF_INCLUDE_CEF_BROWSER_PROCESS_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_BROWSER_PROCESS_HANDLER_H_

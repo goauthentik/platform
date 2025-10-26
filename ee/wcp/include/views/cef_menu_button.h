@@ -51,7 +51,7 @@
 ///
 /*--cef(source=library)--*/
 class CefMenuButton : public CefLabelButton {
- public:
+public:
   ///
   /// Create a new MenuButton. A |delegate| must be provided to call ShowMenu()
   /// when the button is clicked. |text| will be shown on the MenuButton and
@@ -62,9 +62,9 @@ class CefMenuButton : public CefLabelButton {
   /// less padding and no default minimum size.
   ///
   /*--cef(optional_param=text)--*/
-  static CefRefPtr<CefMenuButton> CreateMenuButton(
-      CefRefPtr<CefMenuButtonDelegate> delegate,
-      const CefString& text);
+  static CefRefPtr<CefMenuButton>
+  CreateMenuButton(CefRefPtr<CefMenuButtonDelegate> delegate,
+                   const CefString &text);
 
   ///
   /// Show a menu with contents |menu_model|. |screen_point| specifies the menu
@@ -74,7 +74,7 @@ class CefMenuButton : public CefLabelButton {
   ///
   /*--cef()--*/
   virtual void ShowMenu(CefRefPtr<CefMenuModel> menu_model,
-                        const CefPoint& screen_point,
+                        const CefPoint &screen_point,
                         cef_menu_anchor_position_t anchor_position) = 0;
 
   ///
@@ -85,4 +85,4 @@ class CefMenuButton : public CefLabelButton {
   virtual void TriggerMenu() = 0;
 };
 
-#endif  // CEF_INCLUDE_VIEWS_CEF_MENU_BUTTON_H_
+#endif // CEF_INCLUDE_VIEWS_CEF_MENU_BUTTON_H_

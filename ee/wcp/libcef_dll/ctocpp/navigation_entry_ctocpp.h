@@ -27,10 +27,9 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefNavigationEntryCToCpp
-    : public CefCToCppRefCounted<CefNavigationEntryCToCpp,
-                                 CefNavigationEntry,
+    : public CefCToCppRefCounted<CefNavigationEntryCToCpp, CefNavigationEntry,
                                  cef_navigation_entry_t> {
- public:
+public:
   CefNavigationEntryCToCpp();
   virtual ~CefNavigationEntryCToCpp();
 
@@ -51,4 +50,4 @@ constexpr auto CefNavigationEntryCToCpp_Wrap = CefNavigationEntryCToCpp::Wrap;
 constexpr auto CefNavigationEntryCToCpp_Unwrap =
     CefNavigationEntryCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_NAVIGATION_ENTRY_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_NAVIGATION_ENTRY_CTOCPP_H_

@@ -72,9 +72,9 @@ typedef struct _cef_request_context_handler_t {
   /// Called on the browser process UI thread immediately after the request
   /// context has been initialized.
   ///
-  void(CEF_CALLBACK* on_request_context_initialized)(
-      struct _cef_request_context_handler_t* self,
-      struct _cef_request_context_t* request_context);
+  void(CEF_CALLBACK *on_request_context_initialized)(
+      struct _cef_request_context_handler_t *self,
+      struct _cef_request_context_t *request_context);
 
   ///
   /// Called on the browser process IO thread before a resource request is
@@ -95,20 +95,16 @@ typedef struct _cef_request_context_handler_t {
   /// cef_request_handler_t::GetResourceRequestHandler for the same request
   /// (identified by cef_request_t::GetIdentifier).
   ///
-  struct _cef_resource_request_handler_t*(
-      CEF_CALLBACK* get_resource_request_handler)(
-      struct _cef_request_context_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      struct _cef_request_t* request,
-      int is_navigation,
-      int is_download,
-      const cef_string_t* request_initiator,
-      int* disable_default_handling);
+  struct _cef_resource_request_handler_t *(
+      CEF_CALLBACK *get_resource_request_handler)(
+      struct _cef_request_context_handler_t *self,
+      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
+      struct _cef_request_t *request, int is_navigation, int is_download,
+      const cef_string_t *request_initiator, int *disable_default_handling);
 } cef_request_context_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_HANDLER_CAPI_H_

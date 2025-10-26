@@ -28,10 +28,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefDragDataCToCpp : public CefCToCppRefCounted<CefDragDataCToCpp,
-                                                     CefDragData,
-                                                     cef_drag_data_t> {
- public:
+class CefDragDataCToCpp
+    : public CefCToCppRefCounted<CefDragDataCToCpp, CefDragData,
+                                 cef_drag_data_t> {
+public:
   CefDragDataCToCpp();
   virtual ~CefDragDataCToCpp();
 
@@ -49,16 +49,16 @@ class CefDragDataCToCpp : public CefCToCppRefCounted<CefDragDataCToCpp,
   CefString GetFragmentBaseURL() override;
   CefString GetFileName() override;
   size_t GetFileContents(CefRefPtr<CefStreamWriter> writer) override;
-  bool GetFileNames(std::vector<CefString>& names) override;
-  bool GetFilePaths(std::vector<CefString>& paths) override;
-  void SetLinkURL(const CefString& url) override;
-  void SetLinkTitle(const CefString& title) override;
-  void SetLinkMetadata(const CefString& data) override;
-  void SetFragmentText(const CefString& text) override;
-  void SetFragmentHtml(const CefString& html) override;
-  void SetFragmentBaseURL(const CefString& base_url) override;
+  bool GetFileNames(std::vector<CefString> &names) override;
+  bool GetFilePaths(std::vector<CefString> &paths) override;
+  void SetLinkURL(const CefString &url) override;
+  void SetLinkTitle(const CefString &title) override;
+  void SetLinkMetadata(const CefString &data) override;
+  void SetFragmentText(const CefString &text) override;
+  void SetFragmentHtml(const CefString &html) override;
+  void SetFragmentBaseURL(const CefString &base_url) override;
   void ResetFileContents() override;
-  void AddFile(const CefString& path, const CefString& display_name) override;
+  void AddFile(const CefString &path, const CefString &display_name) override;
   void ClearFilenames() override;
   CefRefPtr<CefImage> GetImage() override;
   CefPoint GetImageHotspot() override;
@@ -68,4 +68,4 @@ class CefDragDataCToCpp : public CefCToCppRefCounted<CefDragDataCToCpp,
 constexpr auto CefDragDataCToCpp_Wrap = CefDragDataCToCpp::Wrap;
 constexpr auto CefDragDataCToCpp_Unwrap = CefDragDataCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_DRAG_DATA_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_DRAG_DATA_CTOCPP_H_

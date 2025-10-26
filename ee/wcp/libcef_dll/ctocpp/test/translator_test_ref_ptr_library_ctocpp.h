@@ -30,7 +30,7 @@ class CefTranslatorTestRefPtrLibraryCToCpp
     : public CefCToCppRefCounted<CefTranslatorTestRefPtrLibraryCToCpp,
                                  CefTranslatorTestRefPtrLibrary,
                                  cef_translator_test_ref_ptr_library_t> {
- public:
+public:
   CefTranslatorTestRefPtrLibraryCToCpp();
   virtual ~CefTranslatorTestRefPtrLibraryCToCpp();
 
@@ -44,4 +44,4 @@ constexpr auto CefTranslatorTestRefPtrLibraryCToCpp_Wrap =
 constexpr auto CefTranslatorTestRefPtrLibraryCToCpp_Unwrap =
     CefTranslatorTestRefPtrLibraryCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_REF_PTR_LIBRARY_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_REF_PTR_LIBRARY_CTOCPP_H_

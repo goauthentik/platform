@@ -46,28 +46,27 @@
 /// in-memory array of bytes.
 ///
 class CefByteReadHandler : public CefReadHandler {
- public:
+public:
   ///
   /// Create a new object for reading an array of bytes. An optional |source|
   /// reference can be kept to keep the underlying data source from being
   /// released while the reader exists.
   ///
-  CefByteReadHandler(const unsigned char* bytes,
-                     size_t size,
+  CefByteReadHandler(const unsigned char *bytes, size_t size,
                      CefRefPtr<CefBaseRefCounted> source);
 
-  CefByteReadHandler(const CefByteReadHandler&) = delete;
-  CefByteReadHandler& operator=(const CefByteReadHandler&) = delete;
+  CefByteReadHandler(const CefByteReadHandler &) = delete;
+  CefByteReadHandler &operator=(const CefByteReadHandler &) = delete;
 
   // CefReadHandler methods.
-  size_t Read(void* ptr, size_t size, size_t n) override;
+  size_t Read(void *ptr, size_t size, size_t n) override;
   int Seek(int64_t offset, int whence) override;
   int64_t Tell() override;
   int Eof() override;
   bool MayBlock() override { return false; }
 
- private:
-  const unsigned char* bytes_;
+private:
+  const unsigned char *bytes_;
   int64_t size_;
   int64_t offset_ = 0;
   CefRefPtr<CefBaseRefCounted> source_;
@@ -77,4 +76,4 @@ class CefByteReadHandler : public CefReadHandler {
   IMPLEMENT_REFCOUNTING(CefByteReadHandler);
 };
 
-#endif  // CEF_INCLUDE_WRAPPER_CEF_BYTE_READ_HANDLER_H_
+#endif // CEF_INCLUDE_WRAPPER_CEF_BYTE_READ_HANDLER_H_

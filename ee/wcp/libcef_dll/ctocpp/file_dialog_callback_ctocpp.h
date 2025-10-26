@@ -32,12 +32,12 @@ class CefFileDialogCallbackCToCpp
     : public CefCToCppRefCounted<CefFileDialogCallbackCToCpp,
                                  CefFileDialogCallback,
                                  cef_file_dialog_callback_t> {
- public:
+public:
   CefFileDialogCallbackCToCpp();
   virtual ~CefFileDialogCallbackCToCpp();
 
   // CefFileDialogCallback methods.
-  void Continue(const std::vector<CefString>& file_paths) override;
+  void Continue(const std::vector<CefString> &file_paths) override;
   void Cancel() override;
 };
 
@@ -46,4 +46,4 @@ constexpr auto CefFileDialogCallbackCToCpp_Wrap =
 constexpr auto CefFileDialogCallbackCToCpp_Unwrap =
     CefFileDialogCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_FILE_DIALOG_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_FILE_DIALOG_CALLBACK_CTOCPP_H_

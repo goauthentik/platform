@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefBrowserViewCToCpp : public CefCToCppRefCounted<CefBrowserViewCToCpp,
-                                                        CefBrowserView,
-                                                        cef_browser_view_t> {
- public:
+class CefBrowserViewCToCpp
+    : public CefCToCppRefCounted<CefBrowserViewCToCpp, CefBrowserView,
+                                 cef_browser_view_t> {
+public:
   CefBrowserViewCToCpp();
   virtual ~CefBrowserViewCToCpp();
 
@@ -58,14 +58,14 @@ class CefBrowserViewCToCpp : public CefCToCppRefCounted<CefBrowserViewCToCpp,
   void SetGroupID(int group_id) override;
   CefRefPtr<CefView> GetParentView() override;
   CefRefPtr<CefView> GetViewForID(int id) override;
-  void SetBounds(const CefRect& bounds) override;
+  void SetBounds(const CefRect &bounds) override;
   CefRect GetBounds() override;
   CefRect GetBoundsInScreen() override;
-  void SetSize(const CefSize& size) override;
+  void SetSize(const CefSize &size) override;
   CefSize GetSize() override;
-  void SetPosition(const CefPoint& position) override;
+  void SetPosition(const CefPoint &position) override;
   CefPoint GetPosition() override;
-  void SetInsets(const CefInsets& insets) override;
+  void SetInsets(const CefInsets &insets) override;
   CefInsets GetInsets() override;
   CefSize GetPreferredSize() override;
   void SizeToPreferredSize() override;
@@ -86,15 +86,15 @@ class CefBrowserViewCToCpp : public CefCToCppRefCounted<CefBrowserViewCToCpp,
   void SetBackgroundColor(cef_color_t color) override;
   cef_color_t GetBackgroundColor() override;
   cef_color_t GetThemeColor(int color_id) override;
-  bool ConvertPointToScreen(CefPoint& point) override;
-  bool ConvertPointFromScreen(CefPoint& point) override;
-  bool ConvertPointToWindow(CefPoint& point) override;
-  bool ConvertPointFromWindow(CefPoint& point) override;
-  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
-  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
+  bool ConvertPointToScreen(CefPoint &point) override;
+  bool ConvertPointFromScreen(CefPoint &point) override;
+  bool ConvertPointToWindow(CefPoint &point) override;
+  bool ConvertPointFromWindow(CefPoint &point) override;
+  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint &point) override;
+  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint &point) override;
 };
 
 constexpr auto CefBrowserViewCToCpp_Wrap = CefBrowserViewCToCpp::Wrap;
 constexpr auto CefBrowserViewCToCpp_Unwrap = CefBrowserViewCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_CTOCPP_H_

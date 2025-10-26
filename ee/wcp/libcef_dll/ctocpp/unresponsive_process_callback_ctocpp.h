@@ -30,7 +30,7 @@ class CefUnresponsiveProcessCallbackCToCpp
     : public CefCToCppRefCounted<CefUnresponsiveProcessCallbackCToCpp,
                                  CefUnresponsiveProcessCallback,
                                  cef_unresponsive_process_callback_t> {
- public:
+public:
   CefUnresponsiveProcessCallbackCToCpp();
   virtual ~CefUnresponsiveProcessCallbackCToCpp();
 
@@ -44,4 +44,4 @@ constexpr auto CefUnresponsiveProcessCallbackCToCpp_Wrap =
 constexpr auto CefUnresponsiveProcessCallbackCToCpp_Unwrap =
     CefUnresponsiveProcessCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_UNRESPONSIVE_PROCESS_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_UNRESPONSIVE_PROCESS_CALLBACK_CTOCPP_H_

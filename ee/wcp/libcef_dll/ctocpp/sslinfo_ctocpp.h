@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefSSLInfoCToCpp
     : public CefCToCppRefCounted<CefSSLInfoCToCpp, CefSSLInfo, cef_sslinfo_t> {
- public:
+public:
   CefSSLInfoCToCpp();
   virtual ~CefSSLInfoCToCpp();
 
@@ -40,4 +40,4 @@ class CefSSLInfoCToCpp
 constexpr auto CefSSLInfoCToCpp_Wrap = CefSSLInfoCToCpp::Wrap;
 constexpr auto CefSSLInfoCToCpp_Unwrap = CefSSLInfoCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_SSLINFO_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_SSLINFO_CTOCPP_H_

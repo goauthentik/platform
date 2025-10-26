@@ -44,23 +44,22 @@
 /// Class representing CefExecuteProcess arguments.
 ///
 class CefMainArgs : public cef_main_args_t {
- public:
+public:
   CefMainArgs() : cef_main_args_t{} {}
-  CefMainArgs(const cef_main_args_t& r) : cef_main_args_t(r) {}
+  CefMainArgs(const cef_main_args_t &r) : cef_main_args_t(r) {}
   explicit CefMainArgs(HINSTANCE hInstance) : cef_main_args_t{hInstance} {}
 };
 
 struct CefWindowInfoTraits {
   typedef cef_window_info_t struct_type;
 
-  static inline void init(struct_type* s) { s->size = sizeof(struct_type); }
+  static inline void init(struct_type *s) { s->size = sizeof(struct_type); }
 
-  static inline void clear(struct_type* s) {
+  static inline void clear(struct_type *s) {
     cef_string_clear(&s->window_name);
   }
 
-  static inline void set(const struct_type* src,
-                         struct_type* target,
+  static inline void set(const struct_type *src, struct_type *target,
                          bool copy) {
     target->ex_style = src->ex_style;
     cef_string_set(src->window_name.str, src->window_name.length,
@@ -81,7 +80,7 @@ struct CefWindowInfoTraits {
 /// Class representing window information.
 ///
 class CefWindowInfo : public CefStructBase<CefWindowInfoTraits> {
- public:
+public:
   using base_type = CefStructBase<CefWindowInfoTraits>;
   using base_type::CefStructBase;
   using base_type::operator=;
@@ -89,7 +88,7 @@ class CefWindowInfo : public CefStructBase<CefWindowInfoTraits> {
   ///
   /// Create the browser as a child window.
   ///
-  void SetAsChild(CefWindowHandle parent, const CefRect& windowBounds) {
+  void SetAsChild(CefWindowHandle parent, const CefRect &windowBounds) {
     style =
         WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_TABSTOP | WS_VISIBLE;
     parent_window = parent;
@@ -99,7 +98,7 @@ class CefWindowInfo : public CefStructBase<CefWindowInfoTraits> {
   ///
   /// Create the browser as a popup window.
   ///
-  void SetAsPopup(CefWindowHandle parent, const CefString& windowName) {
+  void SetAsPopup(CefWindowHandle parent, const CefString &windowName) {
     style =
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
     parent_window = parent;
@@ -159,11 +158,10 @@ class CefWindowInfo : public CefStructBase<CefWindowInfoTraits> {
 /// immediately without proceeding with execution.
 ///
 int CefRunWinMainWithPreferredStackSize(wWinMainPtr wWinMain,
-                                        HINSTANCE hInstance,
-                                        LPWSTR lpCmdLine,
+                                        HINSTANCE hInstance, LPWSTR lpCmdLine,
                                         int nCmdShow);
-int CefRunMainWithPreferredStackSize(mainPtr main, int argc, char* argv[]);
-#endif  // defined(ARCH_CPU_32_BITS)
+int CefRunMainWithPreferredStackSize(mainPtr main, int argc, char *argv[]);
+#endif // defined(ARCH_CPU_32_BITS)
 
 ///
 /// Set to true before calling Windows APIs like TrackPopupMenu that enter a
@@ -171,4 +169,4 @@ int CefRunMainWithPreferredStackSize(mainPtr main, int argc, char* argv[]);
 ///
 void CefSetOSModalLoop(bool osModalLoop);
 
-#endif  // CEF_INCLUDE_INTERNAL_CEF_WIN_H_
+#endif // CEF_INCLUDE_INTERNAL_CEF_WIN_H_

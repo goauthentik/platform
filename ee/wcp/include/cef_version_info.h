@@ -59,4 +59,4 @@ CEF_EXPORT int cef_version_info(int entry);
 }
 #endif
 
-#endif  // CEF_INCLUDE_CEF_VERSION_INFO_H_
+#endif // CEF_INCLUDE_CEF_VERSION_INFO_H_

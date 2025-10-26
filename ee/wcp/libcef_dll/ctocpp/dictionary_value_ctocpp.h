@@ -27,10 +27,9 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefDictionaryValueCToCpp
-    : public CefCToCppRefCounted<CefDictionaryValueCToCpp,
-                                 CefDictionaryValue,
+    : public CefCToCppRefCounted<CefDictionaryValueCToCpp, CefDictionaryValue,
                                  cef_dictionary_value_t> {
- public:
+public:
   CefDictionaryValueCToCpp();
   virtual ~CefDictionaryValueCToCpp();
 
@@ -43,33 +42,33 @@ class CefDictionaryValueCToCpp
   CefRefPtr<CefDictionaryValue> Copy(bool exclude_empty_children) override;
   size_t GetSize() override;
   bool Clear() override;
-  bool HasKey(const CefString& key) override;
-  bool GetKeys(KeyList& keys) override;
-  bool Remove(const CefString& key) override;
-  CefValueType GetType(const CefString& key) override;
-  CefRefPtr<CefValue> GetValue(const CefString& key) override;
-  bool GetBool(const CefString& key) override;
-  int GetInt(const CefString& key) override;
-  double GetDouble(const CefString& key) override;
-  CefString GetString(const CefString& key) override;
-  CefRefPtr<CefBinaryValue> GetBinary(const CefString& key) override;
-  CefRefPtr<CefDictionaryValue> GetDictionary(const CefString& key) override;
-  CefRefPtr<CefListValue> GetList(const CefString& key) override;
-  bool SetValue(const CefString& key, CefRefPtr<CefValue> value) override;
-  bool SetNull(const CefString& key) override;
-  bool SetBool(const CefString& key, bool value) override;
-  bool SetInt(const CefString& key, int value) override;
-  bool SetDouble(const CefString& key, double value) override;
-  bool SetString(const CefString& key, const CefString& value) override;
-  bool SetBinary(const CefString& key,
+  bool HasKey(const CefString &key) override;
+  bool GetKeys(KeyList &keys) override;
+  bool Remove(const CefString &key) override;
+  CefValueType GetType(const CefString &key) override;
+  CefRefPtr<CefValue> GetValue(const CefString &key) override;
+  bool GetBool(const CefString &key) override;
+  int GetInt(const CefString &key) override;
+  double GetDouble(const CefString &key) override;
+  CefString GetString(const CefString &key) override;
+  CefRefPtr<CefBinaryValue> GetBinary(const CefString &key) override;
+  CefRefPtr<CefDictionaryValue> GetDictionary(const CefString &key) override;
+  CefRefPtr<CefListValue> GetList(const CefString &key) override;
+  bool SetValue(const CefString &key, CefRefPtr<CefValue> value) override;
+  bool SetNull(const CefString &key) override;
+  bool SetBool(const CefString &key, bool value) override;
+  bool SetInt(const CefString &key, int value) override;
+  bool SetDouble(const CefString &key, double value) override;
+  bool SetString(const CefString &key, const CefString &value) override;
+  bool SetBinary(const CefString &key,
                  CefRefPtr<CefBinaryValue> value) override;
-  bool SetDictionary(const CefString& key,
+  bool SetDictionary(const CefString &key,
                      CefRefPtr<CefDictionaryValue> value) override;
-  bool SetList(const CefString& key, CefRefPtr<CefListValue> value) override;
+  bool SetList(const CefString &key, CefRefPtr<CefListValue> value) override;
 };
 
 constexpr auto CefDictionaryValueCToCpp_Wrap = CefDictionaryValueCToCpp::Wrap;
 constexpr auto CefDictionaryValueCToCpp_Unwrap =
     CefDictionaryValueCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_DICTIONARY_VALUE_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_DICTIONARY_VALUE_CTOCPP_H_

@@ -83,15 +83,14 @@ typedef struct _cef_menu_button_delegate_t {
   /// window keep a reference to |button_pressed_lock| until the popup is hidden
   /// to maintain the pressed button state.
   ///
-  void(CEF_CALLBACK* on_menu_button_pressed)(
-      struct _cef_menu_button_delegate_t* self,
-      struct _cef_menu_button_t* menu_button,
-      const cef_point_t* screen_point,
-      struct _cef_menu_button_pressed_lock_t* button_pressed_lock);
+  void(CEF_CALLBACK *on_menu_button_pressed)(
+      struct _cef_menu_button_delegate_t *self,
+      struct _cef_menu_button_t *menu_button, const cef_point_t *screen_point,
+      struct _cef_menu_button_pressed_lock_t *button_pressed_lock);
 } cef_menu_button_delegate_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_DELEGATE_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_DELEGATE_CAPI_H_

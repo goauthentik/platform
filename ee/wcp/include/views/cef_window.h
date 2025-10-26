@@ -57,13 +57,13 @@ class CefView;
 ///
 /*--cef(source=library)--*/
 class CefWindow : public CefPanel {
- public:
+public:
   ///
   /// Create a new Window.
   ///
   /*--cef(optional_param=delegate)--*/
-  static CefRefPtr<CefWindow> CreateTopLevelWindow(
-      CefRefPtr<CefWindowDelegate> delegate);
+  static CefRefPtr<CefWindow>
+  CreateTopLevelWindow(CefRefPtr<CefWindowDelegate> delegate);
 
   ///
   /// Show the Window.
@@ -82,8 +82,8 @@ class CefWindow : public CefPanel {
   /// dialog where all controls in the parent Window are disabled.
   ///
   /*--cef()--*/
-  virtual void ShowAsBrowserModalDialog(
-      CefRefPtr<CefBrowserView> browser_view) = 0;
+  virtual void
+  ShowAsBrowserModalDialog(CefRefPtr<CefBrowserView> browser_view) = 0;
 
   ///
   /// Hide the Window.
@@ -95,7 +95,7 @@ class CefWindow : public CefPanel {
   /// Sizes the Window to |size| and centers it in the current display.
   ///
   /*--cef()--*/
-  virtual void CenterWindow(const CefSize& size) = 0;
+  virtual void CenterWindow(const CefSize &size) = 0;
 
   ///
   /// Close the Window.
@@ -204,7 +204,7 @@ class CefWindow : public CefPanel {
   /// Set the Window title.
   ///
   /*--cef(optional_param=title)--*/
-  virtual void SetTitle(const CefString& title) = 0;
+  virtual void SetTitle(const CefString &title) = 0;
 
   ///
   /// Get the Window title.
@@ -271,10 +271,9 @@ class CefWindow : public CefPanel {
   /// overlay displays as the top-most child of the Window.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefOverlayController> AddOverlayView(
-      CefRefPtr<CefView> view,
-      cef_docking_mode_t docking_mode,
-      bool can_activate) = 0;
+  virtual CefRefPtr<CefOverlayController>
+  AddOverlayView(CefRefPtr<CefView> view, cef_docking_mode_t docking_mode,
+                 bool can_activate) = 0;
 
   ///
   /// Show a menu with contents |menu_model|. |screen_point| specifies the menu
@@ -283,7 +282,7 @@ class CefWindow : public CefPanel {
   ///
   /*--cef()--*/
   virtual void ShowMenu(CefRefPtr<CefMenuModel> menu_model,
-                        const CefPoint& screen_point,
+                        const CefPoint &screen_point,
                         cef_menu_anchor_position_t anchor_position) = 0;
 
   ///
@@ -313,8 +312,8 @@ class CefWindow : public CefPanel {
   /// coordinates.
   ///
   /*--cef(optional_param=regions)--*/
-  virtual void SetDraggableRegions(
-      const std::vector<CefDraggableRegion>& regions) = 0;
+  virtual void
+  SetDraggableRegions(const std::vector<CefDraggableRegion> &regions) = 0;
 
   ///
   /// Retrieve the platform window handle for this Window.
@@ -350,8 +349,7 @@ class CefWindow : public CefPanel {
   /// mouse. This method is exposed primarily for testing purposes.
   ///
   /*--cef()--*/
-  virtual void SendMouseEvents(cef_mouse_button_type_t button,
-                               bool mouse_down,
+  virtual void SendMouseEvents(cef_mouse_button_type_t button, bool mouse_down,
                                bool mouse_up) = 0;
 
   ///
@@ -369,11 +367,8 @@ class CefWindow : public CefPanel {
   /// CefBrowserView::SetPreferAccelerators configuration.
   ///
   /*--cef()--*/
-  virtual void SetAccelerator(int command_id,
-                              int key_code,
-                              bool shift_pressed,
-                              bool ctrl_pressed,
-                              bool alt_pressed,
+  virtual void SetAccelerator(int command_id, int key_code, bool shift_pressed,
+                              bool ctrl_pressed, bool alt_pressed,
                               bool high_priority) = 0;
 
   ///
@@ -433,4 +428,4 @@ class CefWindow : public CefPanel {
   virtual cef_runtime_style_t GetRuntimeStyle() = 0;
 };
 
-#endif  // CEF_INCLUDE_VIEWS_CEF_WINDOW_H_
+#endif // CEF_INCLUDE_VIEWS_CEF_WINDOW_H_

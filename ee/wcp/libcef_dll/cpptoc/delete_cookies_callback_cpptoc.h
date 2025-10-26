@@ -30,7 +30,7 @@ class CefDeleteCookiesCallbackCppToC
     : public CefCppToCRefCounted<CefDeleteCookiesCallbackCppToC,
                                  CefDeleteCookiesCallback,
                                  cef_delete_cookies_callback_t> {
- public:
+public:
   CefDeleteCookiesCallbackCppToC();
   virtual ~CefDeleteCookiesCallbackCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefDeleteCookiesCallbackCppToC_Wrap =
 constexpr auto CefDeleteCookiesCallbackCppToC_Unwrap =
     CefDeleteCookiesCallbackCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_DELETE_COOKIES_CALLBACK_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_DELETE_COOKIES_CALLBACK_CPPTOC_H_

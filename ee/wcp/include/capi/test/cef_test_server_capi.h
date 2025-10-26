@@ -81,15 +81,15 @@ typedef struct _cef_test_server_t {
   /// must be called on the same thread as CreateAndStart. It will block until
   /// the dedicated server thread has shut down.
   ///
-  void(CEF_CALLBACK* stop)(struct _cef_test_server_t* self);
+  void(CEF_CALLBACK *stop)(struct _cef_test_server_t *self);
 
   ///
   /// Returns the server origin including the port number (e.g.
   /// "[http|https]://127.0.0.1:<port>".
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_origin)(
-      struct _cef_test_server_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_origin)(
+      struct _cef_test_server_t *self);
 } cef_test_server_t;
 
 ///
@@ -108,11 +108,10 @@ typedef struct _cef_test_server_t {
 /// On success, this function will block until the dedicated server thread has
 /// started. The server will continue running until Stop is called.
 ///
-CEF_EXPORT cef_test_server_t* cef_test_server_create_and_start(
-    uint16_t port,
-    int https_server,
-    cef_test_cert_type_t https_cert_type,
-    struct _cef_test_server_handler_t* handler);
+CEF_EXPORT cef_test_server_t *
+cef_test_server_create_and_start(uint16_t port, int https_server,
+                                 cef_test_cert_type_t https_cert_type,
+                                 struct _cef_test_server_handler_t *handler);
 
 ///
 /// Implement this structure to handle test server requests. A new thread will
@@ -134,11 +133,10 @@ typedef struct _cef_test_server_handler_t {
   /// asynchronously. Otherwise, return false (0) if the request is unhandled.
   /// When returning false (0) do not call any |connection| functions.
   ///
-  int(CEF_CALLBACK* on_test_server_request)(
-      struct _cef_test_server_handler_t* self,
-      struct _cef_test_server_t* server,
-      struct _cef_request_t* request,
-      struct _cef_test_server_connection_t* connection);
+  int(CEF_CALLBACK *on_test_server_request)(
+      struct _cef_test_server_handler_t *self,
+      struct _cef_test_server_t *server, struct _cef_request_t *request,
+      struct _cef_test_server_connection_t *connection);
 } cef_test_server_handler_t;
 
 ///
@@ -160,27 +158,25 @@ typedef struct _cef_test_server_connection_t {
   /// the size of |data| in bytes. The contents of |data| will be copied. The
   /// connection will be closed automatically after the response is sent.
   ///
-  void(CEF_CALLBACK* send_http200_response)(
-      struct _cef_test_server_connection_t* self,
-      const cef_string_t* content_type,
-      const void* data,
-      size_t data_size);
+  void(CEF_CALLBACK *send_http200_response)(
+      struct _cef_test_server_connection_t *self,
+      const cef_string_t *content_type, const void *data, size_t data_size);
 
   ///
   /// Send an HTTP 404 "Not Found" response. The connection will be closed
   /// automatically after the response is sent.
   ///
-  void(CEF_CALLBACK* send_http404_response)(
-      struct _cef_test_server_connection_t* self);
+  void(CEF_CALLBACK *send_http404_response)(
+      struct _cef_test_server_connection_t *self);
 
   ///
   /// Send an HTTP 500 "Internal Server Error" response. |error_message| is the
   /// associated error message. The connection will be closed automatically
   /// after the response is sent.
   ///
-  void(CEF_CALLBACK* send_http500_response)(
-      struct _cef_test_server_connection_t* self,
-      const cef_string_t* error_message);
+  void(CEF_CALLBACK *send_http500_response)(
+      struct _cef_test_server_connection_t *self,
+      const cef_string_t *error_message);
 
   ///
   /// Send a custom HTTP response. |response_code| is the HTTP response code
@@ -190,12 +186,9 @@ typedef struct _cef_test_server_connection_t {
   /// |extra_headers| is an optional map of additional header key/value pairs.
   /// The connection will be closed automatically after the response is sent.
   ///
-  void(CEF_CALLBACK* send_http_response)(
-      struct _cef_test_server_connection_t* self,
-      int response_code,
-      const cef_string_t* content_type,
-      const void* data,
-      size_t data_size,
+  void(CEF_CALLBACK *send_http_response)(
+      struct _cef_test_server_connection_t *self, int response_code,
+      const cef_string_t *content_type, const void *data, size_t data_size,
       cef_string_multimap_t extra_headers);
 } cef_test_server_connection_t;
 
@@ -203,4 +196,4 @@ typedef struct _cef_test_server_connection_t {
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_TEST_CEF_TEST_SERVER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_TEST_CEF_TEST_SERVER_CAPI_H_

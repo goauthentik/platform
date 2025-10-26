@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTaskRunnerCToCpp : public CefCToCppRefCounted<CefTaskRunnerCToCpp,
-                                                       CefTaskRunner,
-                                                       cef_task_runner_t> {
- public:
+class CefTaskRunnerCToCpp
+    : public CefCToCppRefCounted<CefTaskRunnerCToCpp, CefTaskRunner,
+                                 cef_task_runner_t> {
+public:
   CefTaskRunnerCToCpp();
   virtual ~CefTaskRunnerCToCpp();
 
@@ -44,4 +44,4 @@ class CefTaskRunnerCToCpp : public CefCToCppRefCounted<CefTaskRunnerCToCpp,
 constexpr auto CefTaskRunnerCToCpp_Wrap = CefTaskRunnerCToCpp::Wrap;
 constexpr auto CefTaskRunnerCToCpp_Unwrap = CefTaskRunnerCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_TASK_RUNNER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_TASK_RUNNER_CTOCPP_H_

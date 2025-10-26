@@ -51,7 +51,7 @@ class CefBrowserView;
 ///
 /*--cef(source=client)--*/
 class CefBrowserViewDelegate : public CefViewDelegate {
- public:
+public:
   typedef cef_chrome_toolbar_type_t ChromeToolbarType;
 
   ///
@@ -82,11 +82,11 @@ class CefBrowserViewDelegate : public CefViewDelegate {
   /// for the new popup BrowserView.
   ///
   /*--cef(optional_param=client)--*/
-  virtual CefRefPtr<CefBrowserViewDelegate> GetDelegateForPopupBrowserView(
-      CefRefPtr<CefBrowserView> browser_view,
-      const CefBrowserSettings& settings,
-      CefRefPtr<CefClient> client,
-      bool is_devtools) {
+  virtual CefRefPtr<CefBrowserViewDelegate>
+  GetDelegateForPopupBrowserView(CefRefPtr<CefBrowserView> browser_view,
+                                 const CefBrowserSettings &settings,
+                                 CefRefPtr<CefClient> client,
+                                 bool is_devtools) {
     return this;
   }
 
@@ -100,10 +100,10 @@ class CefBrowserViewDelegate : public CefViewDelegate {
   /// will be created for the popup.
   ///
   /*--cef()--*/
-  virtual bool OnPopupBrowserViewCreated(
-      CefRefPtr<CefBrowserView> browser_view,
-      CefRefPtr<CefBrowserView> popup_browser_view,
-      bool is_devtools) {
+  virtual bool
+  OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view,
+                            CefRefPtr<CefBrowserView> popup_browser_view,
+                            bool is_devtools) {
     return false;
   }
 
@@ -113,8 +113,8 @@ class CefBrowserViewDelegate : public CefViewDelegate {
   /// documentation.
   ///
   /*--cef(default_retval=CEF_CTT_NONE)--*/
-  virtual ChromeToolbarType GetChromeToolbarType(
-      CefRefPtr<CefBrowserView> browser_view) {
+  virtual ChromeToolbarType
+  GetChromeToolbarType(CefRefPtr<CefBrowserView> browser_view) {
     return CEF_CTT_NONE;
   }
 
@@ -151,4 +151,4 @@ class CefBrowserViewDelegate : public CefViewDelegate {
   }
 };
 
-#endif  // CEF_INCLUDE_VIEWS_CEF_BROWSER_VIEW_DELEGATE_H_
+#endif // CEF_INCLUDE_VIEWS_CEF_BROWSER_VIEW_DELEGATE_H_

@@ -32,7 +32,7 @@ class CefMenuModelDelegateCppToC
     : public CefCppToCRefCounted<CefMenuModelDelegateCppToC,
                                  CefMenuModelDelegate,
                                  cef_menu_model_delegate_t> {
- public:
+public:
   CefMenuModelDelegateCppToC();
   virtual ~CefMenuModelDelegateCppToC();
 };
@@ -42,4 +42,4 @@ constexpr auto CefMenuModelDelegateCppToC_Wrap =
 constexpr auto CefMenuModelDelegateCppToC_Unwrap =
     CefMenuModelDelegateCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_MENU_MODEL_DELEGATE_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_MENU_MODEL_DELEGATE_CPPTOC_H_

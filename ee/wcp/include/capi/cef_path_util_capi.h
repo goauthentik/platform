@@ -54,10 +54,10 @@ extern "C" {
 /// Retrieve the path associated with the specified |key|. Returns true (1) on
 /// success. Can be called on any thread in the browser process.
 ///
-CEF_EXPORT int cef_get_path(cef_path_key_t key, cef_string_t* path);
+CEF_EXPORT int cef_get_path(cef_path_key_t key, cef_string_t *path);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_PATH_UTIL_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_PATH_UTIL_CAPI_H_

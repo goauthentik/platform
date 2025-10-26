@@ -30,7 +30,7 @@ class CefTranslatorTestScopedLibraryChildChildCToCpp
     : public CefCToCppScoped<CefTranslatorTestScopedLibraryChildChildCToCpp,
                              CefTranslatorTestScopedLibraryChildChild,
                              cef_translator_test_scoped_library_child_child_t> {
- public:
+public:
   CefTranslatorTestScopedLibraryChildChildCToCpp();
   virtual ~CefTranslatorTestScopedLibraryChildChildCToCpp();
 
@@ -54,4 +54,4 @@ constexpr auto CefTranslatorTestScopedLibraryChildChildCToCpp_UnwrapOwn =
 constexpr auto CefTranslatorTestScopedLibraryChildChildCToCpp_UnwrapRaw =
     CefTranslatorTestScopedLibraryChildChildCToCpp::UnwrapRaw;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_LIBRARY_CHILD_CHILD_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_SCOPED_LIBRARY_CHILD_CHILD_CTOCPP_H_

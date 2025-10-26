@@ -47,7 +47,7 @@ namespace cef_internal {
 // used for the Lock class.  Most users should not use LockImpl directly, but
 // should instead use Lock.
 class LockImpl {
- public:
+public:
 #if defined(OS_WIN)
   typedef CRITICAL_SECTION NativeHandle;
 #elif defined(OS_POSIX)
@@ -56,8 +56,8 @@ class LockImpl {
 
   LockImpl();
 
-  LockImpl(const LockImpl&) = delete;
-  LockImpl& operator=(const LockImpl&) = delete;
+  LockImpl(const LockImpl &) = delete;
+  LockImpl &operator=(const LockImpl &) = delete;
 
   ~LockImpl();
 
@@ -75,13 +75,13 @@ class LockImpl {
   // Return the native underlying lock.
   // TODO(awalker): refactor lock and condition variables so that this is
   // unnecessary.
-  NativeHandle* native_handle() { return &native_handle_; }
+  NativeHandle *native_handle() { return &native_handle_; }
 
- private:
+private:
   NativeHandle native_handle_;
 };
 
-}  // namespace cef_internal
-}  // namespace base
+} // namespace cef_internal
+} // namespace base
 
-#endif  // CEF_INCLUDE_BASE_INTERNAL_CEF_LOCK_IMPL_H_
+#endif // CEF_INCLUDE_BASE_INTERNAL_CEF_LOCK_IMPL_H_

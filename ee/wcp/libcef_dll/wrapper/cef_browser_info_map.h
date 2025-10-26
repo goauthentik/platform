@@ -12,45 +12,41 @@
 
 // Default traits for CefBrowserInfoMap. Override to provide different object
 // destruction behavior.
-template <typename ObjectType>
-struct DefaultCefBrowserInfoMapTraits {
+template <typename ObjectType> struct DefaultCefBrowserInfoMapTraits {
   static void Destruct(ObjectType info) { delete info; }
 };
 
 // Maps an arbitrary IdType to an arbitrary ObjectType on a per-browser basis.
-template <typename IdType,
-          typename ObjectType,
+template <typename IdType, typename ObjectType,
           typename Traits = DefaultCefBrowserInfoMapTraits<ObjectType>>
 class CefBrowserInfoMap {
- public:
+public:
   // Implement this interface to visit and optionally delete objects in the map.
   class Visitor {
-   public:
+  public:
     using InfoIdType = IdType;
     using InfoObjectType = ObjectType;
 
     // Called once for each info object. Set |remove| to true to remove the
     // object from the map. It is safe to destruct removed objects in this
     // callback. Return true to continue iterating or false to stop iterating.
-    virtual bool OnNextInfo(int browser_id,
-                            InfoIdType info_id,
-                            InfoObjectType info,
-                            bool* remove) = 0;
+    virtual bool OnNextInfo(int browser_id, InfoIdType info_id,
+                            InfoObjectType info, bool *remove) = 0;
 
-   protected:
+  protected:
     virtual ~Visitor() {}
   };
 
   CefBrowserInfoMap() = default;
 
-  CefBrowserInfoMap(const CefBrowserInfoMap&) = delete;
-  CefBrowserInfoMap& operator=(const CefBrowserInfoMap&) = delete;
+  CefBrowserInfoMap(const CefBrowserInfoMap &) = delete;
+  CefBrowserInfoMap &operator=(const CefBrowserInfoMap &) = delete;
 
   ~CefBrowserInfoMap() { clear(); }
 
   // Add an object associated with the specified ID values.
   void Add(int browser_id, IdType info_id, ObjectType info) {
-    InfoMap* info_map = nullptr;
+    InfoMap *info_map = nullptr;
     typename BrowserInfoMap::const_iterator it_browser =
         browser_info_map_.find(browser_id);
     if (it_browser == browser_info_map_.end()) {
@@ -69,7 +65,7 @@ class CefBrowserInfoMap {
   // Find the object with the specified ID values. |visitor| can optionally be
   // used to evaluate or remove the object at the same time. If the object is
   // removed using the Visitor the caller is responsible for destroying it.
-  ObjectType Find(int browser_id, IdType info_id, Visitor* vistor) {
+  ObjectType Find(int browser_id, IdType info_id, Visitor *vistor) {
     if (browser_info_map_.empty()) {
       return ObjectType();
     }
@@ -80,7 +76,7 @@ class CefBrowserInfoMap {
       return ObjectType();
     }
 
-    InfoMap* info_map = it_browser->second;
+    InfoMap *info_map = it_browser->second;
     typename InfoMap::iterator it_info = info_map->find(info_id);
     if (it_info == info_map->end()) {
       return ObjectType();
@@ -107,7 +103,7 @@ class CefBrowserInfoMap {
 
   // Find all objects. If any objects are removed using the Visitor the caller
   // is responsible for destroying them.
-  void FindAll(Visitor* visitor) {
+  void FindAll(Visitor *visitor) {
     DCHECK(visitor);
 
     if (browser_info_map_.empty()) {
@@ -118,7 +114,7 @@ class CefBrowserInfoMap {
 
     typename BrowserInfoMap::iterator it_browser = browser_info_map_.begin();
     while (it_browser != browser_info_map_.end()) {
-      InfoMap* info_map = it_browser->second;
+      InfoMap *info_map = it_browser->second;
 
       typename InfoMap::iterator it_info = info_map->begin();
       while (it_info != info_map->end()) {
@@ -153,7 +149,7 @@ class CefBrowserInfoMap {
 
   // Find all objects associated with the specified browser. If any objects are
   // removed using the Visitor the caller is responsible for destroying them.
-  void FindAll(int browser_id, Visitor* visitor) {
+  void FindAll(int browser_id, Visitor *visitor) {
     DCHECK(visitor);
 
     if (browser_info_map_.empty()) {
@@ -166,7 +162,7 @@ class CefBrowserInfoMap {
       return;
     }
 
-    InfoMap* info_map = it_browser->second;
+    InfoMap *info_map = it_browser->second;
     bool remove, keepgoing;
 
     typename InfoMap::iterator it_info = info_map->begin();
@@ -236,7 +232,7 @@ class CefBrowserInfoMap {
     typename BrowserInfoMap::const_iterator it_browser =
         browser_info_map_.begin();
     for (; it_browser != browser_info_map_.end(); ++it_browser) {
-      InfoMap* info_map = it_browser->second;
+      InfoMap *info_map = it_browser->second;
       typename InfoMap::const_iterator it_info = info_map->begin();
       for (; it_info != info_map->end(); ++it_info) {
         Traits::Destruct(it_info->second);
@@ -259,7 +255,7 @@ class CefBrowserInfoMap {
       return;
     }
 
-    InfoMap* info_map = it_browser->second;
+    InfoMap *info_map = it_browser->second;
     typename InfoMap::const_iterator it_info = info_map->begin();
     for (; it_info != info_map->end(); ++it_info) {
       Traits::Destruct(it_info->second);
@@ -269,13 +265,13 @@ class CefBrowserInfoMap {
     delete info_map;
   }
 
- private:
+private:
   // Map IdType to ObjectType instance.
   using InfoMap = std::map<IdType, ObjectType>;
   // Map browser ID to InfoMap instance.
-  using BrowserInfoMap = std::map<int, InfoMap*>;
+  using BrowserInfoMap = std::map<int, InfoMap *>;
 
   BrowserInfoMap browser_info_map_;
 };
 
-#endif  // CEF_LIBCEF_DLL_WRAPPER_CEF_BROWSER_INFO_MAP_H_
+#endif // CEF_LIBCEF_DLL_WRAPPER_CEF_BROWSER_INFO_MAP_H_

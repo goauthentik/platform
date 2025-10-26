@@ -54,7 +54,7 @@
 ///
 /*--cef(source=library)--*/
 class CefThread : public CefBaseRefCounted {
- public:
+public:
   ///
   /// Create and start a new thread. This method does not block waiting for the
   /// thread to run initialization. |display_name| is the name that will be used
@@ -68,18 +68,16 @@ class CefThread : public CefBaseRefCounted {
   /// |message_loop_type| must be set to ML_TYPE_UI.
   ///
   /*--cef(optional_param=display_name)--*/
-  static CefRefPtr<CefThread> CreateThread(
-      const CefString& display_name,
-      cef_thread_priority_t priority,
-      cef_message_loop_type_t message_loop_type,
-      bool stoppable,
-      cef_com_init_mode_t com_init_mode);
+  static CefRefPtr<CefThread>
+  CreateThread(const CefString &display_name, cef_thread_priority_t priority,
+               cef_message_loop_type_t message_loop_type, bool stoppable,
+               cef_com_init_mode_t com_init_mode);
 
   ///
   /// Create and start a new thread with default/recommended values.
   /// |display_name| is the name that will be used to identify the thread.
   ///
-  static CefRefPtr<CefThread> CreateThread(const CefString& display_name) {
+  static CefRefPtr<CefThread> CreateThread(const CefString &display_name) {
     return CreateThread(display_name, TP_NORMAL, ML_TYPE_DEFAULT, true,
                         COM_INIT_MODE_NONE);
   }
@@ -114,4 +112,4 @@ class CefThread : public CefBaseRefCounted {
   virtual bool IsRunning() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_THREAD_H_
+#endif // CEF_INCLUDE_CEF_THREAD_H_

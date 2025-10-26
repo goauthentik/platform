@@ -26,10 +26,10 @@
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefFocusHandlerCppToC : public CefCppToCRefCounted<CefFocusHandlerCppToC,
-                                                         CefFocusHandler,
-                                                         cef_focus_handler_t> {
- public:
+class CefFocusHandlerCppToC
+    : public CefCppToCRefCounted<CefFocusHandlerCppToC, CefFocusHandler,
+                                 cef_focus_handler_t> {
+public:
   CefFocusHandlerCppToC();
   virtual ~CefFocusHandlerCppToC();
 };
@@ -37,4 +37,4 @@ class CefFocusHandlerCppToC : public CefCppToCRefCounted<CefFocusHandlerCppToC,
 constexpr auto CefFocusHandlerCppToC_Wrap = CefFocusHandlerCppToC::Wrap;
 constexpr auto CefFocusHandlerCppToC_Unwrap = CefFocusHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_FOCUS_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_FOCUS_HANDLER_CPPTOC_H_

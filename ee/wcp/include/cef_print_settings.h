@@ -47,7 +47,7 @@
 ///
 /*--cef(source=library)--*/
 class CefPrintSettings : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_color_model_t ColorModel;
   typedef cef_duplex_mode_t DuplexMode;
   typedef std::vector<CefRange> PageRangeList;
@@ -90,16 +90,16 @@ class CefPrintSettings : public virtual CefBaseRefCounted {
   /// to false on those platforms to avoid double flipping.
   ///
   /*--cef()--*/
-  virtual void SetPrinterPrintableArea(
-      const CefSize& physical_size_device_units,
-      const CefRect& printable_area_device_units,
-      bool landscape_needs_flip) = 0;
+  virtual void
+  SetPrinterPrintableArea(const CefSize &physical_size_device_units,
+                          const CefRect &printable_area_device_units,
+                          bool landscape_needs_flip) = 0;
 
   ///
   /// Set the device name.
   ///
   /*--cef(optional_param=name)--*/
-  virtual void SetDeviceName(const CefString& name) = 0;
+  virtual void SetDeviceName(const CefString &name) = 0;
 
   ///
   /// Get the device name.
@@ -123,7 +123,7 @@ class CefPrintSettings : public virtual CefBaseRefCounted {
   /// Set the page ranges.
   ///
   /*--cef()--*/
-  virtual void SetPageRanges(const PageRangeList& ranges) = 0;
+  virtual void SetPageRanges(const PageRangeList &ranges) = 0;
 
   ///
   /// Returns the number of page ranges that currently exist.
@@ -135,7 +135,7 @@ class CefPrintSettings : public virtual CefBaseRefCounted {
   /// Retrieve the page ranges.
   ///
   /*--cef(count_func=ranges:GetPageRangesCount)--*/
-  virtual void GetPageRanges(PageRangeList& ranges) = 0;
+  virtual void GetPageRanges(PageRangeList &ranges) = 0;
 
   ///
   /// Set whether only the selection will be printed.
@@ -198,4 +198,4 @@ class CefPrintSettings : public virtual CefBaseRefCounted {
   virtual DuplexMode GetDuplexMode() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_PRINT_SETTINGS_H_
+#endif // CEF_INCLUDE_CEF_PRINT_SETTINGS_H_

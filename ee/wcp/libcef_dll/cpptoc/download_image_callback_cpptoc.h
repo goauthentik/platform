@@ -32,7 +32,7 @@ class CefDownloadImageCallbackCppToC
     : public CefCppToCRefCounted<CefDownloadImageCallbackCppToC,
                                  CefDownloadImageCallback,
                                  cef_download_image_callback_t> {
- public:
+public:
   CefDownloadImageCallbackCppToC();
   virtual ~CefDownloadImageCallbackCppToC();
 };
@@ -42,4 +42,4 @@ constexpr auto CefDownloadImageCallbackCppToC_Wrap =
 constexpr auto CefDownloadImageCallbackCppToC_Unwrap =
     CefDownloadImageCallbackCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_IMAGE_CALLBACK_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_IMAGE_CALLBACK_CPPTOC_H_

@@ -70,51 +70,50 @@ typedef struct _cef_label_button_t {
   /// Returns this LabelButton as a MenuButton or NULL if this is not a
   /// MenuButton.
   ///
-  struct _cef_menu_button_t*(CEF_CALLBACK* as_menu_button)(
-      struct _cef_label_button_t* self);
+  struct _cef_menu_button_t *(CEF_CALLBACK *as_menu_button)(
+      struct _cef_label_button_t *self);
 
   ///
   /// Sets the text shown on the LabelButton. By default |text| will also be
   /// used as the accessible name.
   ///
-  void(CEF_CALLBACK* set_text)(struct _cef_label_button_t* self,
-                               const cef_string_t* text);
+  void(CEF_CALLBACK *set_text)(struct _cef_label_button_t *self,
+                               const cef_string_t *text);
 
   ///
   /// Returns the text shown on the LabelButton.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_text)(
-      struct _cef_label_button_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_text)(
+      struct _cef_label_button_t *self);
 
   ///
   /// Sets the image shown for |button_state|. When this Button is drawn if no
   /// image exists for the current state then the image for
   /// CEF_BUTTON_STATE_NORMAL, if any, will be shown.
   ///
-  void(CEF_CALLBACK* set_image)(struct _cef_label_button_t* self,
+  void(CEF_CALLBACK *set_image)(struct _cef_label_button_t *self,
                                 cef_button_state_t button_state,
-                                struct _cef_image_t* image);
+                                struct _cef_image_t *image);
 
   ///
   /// Returns the image shown for |button_state|. If no image exists for that
   /// state then the image for CEF_BUTTON_STATE_NORMAL will be returned.
   ///
-  struct _cef_image_t*(CEF_CALLBACK* get_image)(
-      struct _cef_label_button_t* self,
-      cef_button_state_t button_state);
+  struct _cef_image_t *(CEF_CALLBACK *get_image)(
+      struct _cef_label_button_t *self, cef_button_state_t button_state);
 
   ///
   /// Sets the text color shown for the specified button |for_state| to |color|.
   ///
-  void(CEF_CALLBACK* set_text_color)(struct _cef_label_button_t* self,
+  void(CEF_CALLBACK *set_text_color)(struct _cef_label_button_t *self,
                                      cef_button_state_t for_state,
                                      cef_color_t color);
 
   ///
   /// Sets the text colors shown for the non-disabled states to |color|.
   ///
-  void(CEF_CALLBACK* set_enabled_text_colors)(struct _cef_label_button_t* self,
+  void(CEF_CALLBACK *set_enabled_text_colors)(struct _cef_label_button_t *self,
                                               cef_color_t color);
 
   ///
@@ -129,28 +128,27 @@ typedef struct _cef_label_button_t {
   /// - "Arial, Helvetica, Bold Italic 14px"
   /// - "Arial, 14px"
   ///
-  void(CEF_CALLBACK* set_font_list)(struct _cef_label_button_t* self,
-                                    const cef_string_t* font_list);
+  void(CEF_CALLBACK *set_font_list)(struct _cef_label_button_t *self,
+                                    const cef_string_t *font_list);
 
   ///
   /// Sets the horizontal alignment; reversed in RTL. Default is
   /// CEF_HORIZONTAL_ALIGNMENT_CENTER.
   ///
-  void(CEF_CALLBACK* set_horizontal_alignment)(
-      struct _cef_label_button_t* self,
-      cef_horizontal_alignment_t alignment);
+  void(CEF_CALLBACK *set_horizontal_alignment)(
+      struct _cef_label_button_t *self, cef_horizontal_alignment_t alignment);
 
   ///
   /// Reset the minimum size of this LabelButton to |size|.
   ///
-  void(CEF_CALLBACK* set_minimum_size)(struct _cef_label_button_t* self,
-                                       const cef_size_t* size);
+  void(CEF_CALLBACK *set_minimum_size)(struct _cef_label_button_t *self,
+                                       const cef_size_t *size);
 
   ///
   /// Reset the maximum size of this LabelButton to |size|.
   ///
-  void(CEF_CALLBACK* set_maximum_size)(struct _cef_label_button_t* self,
-                                       const cef_size_t* size);
+  void(CEF_CALLBACK *set_maximum_size)(struct _cef_label_button_t *self,
+                                       const cef_size_t *size);
 } cef_label_button_t;
 
 ///
@@ -158,12 +156,12 @@ typedef struct _cef_label_button_t {
 /// click. |text| will be shown on the LabelButton and used as the default
 /// accessible name.
 ///
-CEF_EXPORT cef_label_button_t* cef_label_button_create(
-    struct _cef_button_delegate_t* delegate,
-    const cef_string_t* text);
+CEF_EXPORT cef_label_button_t *
+cef_label_button_create(struct _cef_button_delegate_t *delegate,
+                        const cef_string_t *text);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_LABEL_BUTTON_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_LABEL_BUTTON_CAPI_H_

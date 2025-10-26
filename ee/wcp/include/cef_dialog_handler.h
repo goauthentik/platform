@@ -46,14 +46,14 @@
 ///
 /*--cef(source=library)--*/
 class CefFileDialogCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Continue the file selection. |file_paths| should be a single value or a
   /// list of values depending on the dialog mode. An empty |file_paths| value
   /// is treated the same as calling Cancel().
   ///
   /*--cef(capi_name=cont,optional_param=file_paths)--*/
-  virtual void Continue(const std::vector<CefString>& file_paths) = 0;
+  virtual void Continue(const std::vector<CefString> &file_paths) = 0;
 
   ///
   /// Cancel the file selection.
@@ -68,7 +68,7 @@ class CefFileDialogCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefDialogHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_file_dialog_mode_t FileDialogMode;
 
   ///
@@ -94,16 +94,15 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
   /*--cef(optional_param=title,optional_param=default_file_path,
           optional_param=accept_filters,optional_param=accept_extensions,
           optional_param=accept_descriptions)--*/
-  virtual bool OnFileDialog(CefRefPtr<CefBrowser> browser,
-                            FileDialogMode mode,
-                            const CefString& title,
-                            const CefString& default_file_path,
-                            const std::vector<CefString>& accept_filters,
-                            const std::vector<CefString>& accept_extensions,
-                            const std::vector<CefString>& accept_descriptions,
+  virtual bool OnFileDialog(CefRefPtr<CefBrowser> browser, FileDialogMode mode,
+                            const CefString &title,
+                            const CefString &default_file_path,
+                            const std::vector<CefString> &accept_filters,
+                            const std::vector<CefString> &accept_extensions,
+                            const std::vector<CefString> &accept_descriptions,
                             CefRefPtr<CefFileDialogCallback> callback) {
     return false;
   }
 };
 
-#endif  // CEF_INCLUDE_CEF_DIALOG_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_DIALOG_HANDLER_H_

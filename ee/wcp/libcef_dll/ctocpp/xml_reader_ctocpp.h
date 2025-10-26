@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefXmlReaderCToCpp : public CefCToCppRefCounted<CefXmlReaderCToCpp,
-                                                      CefXmlReader,
-                                                      cef_xml_reader_t> {
- public:
+class CefXmlReaderCToCpp
+    : public CefCToCppRefCounted<CefXmlReaderCToCpp, CefXmlReader,
+                                 cef_xml_reader_t> {
+public:
   CefXmlReaderCToCpp();
   virtual ~CefXmlReaderCToCpp();
 
@@ -52,16 +52,16 @@ class CefXmlReaderCToCpp : public CefCToCppRefCounted<CefXmlReaderCToCpp,
   bool HasAttributes() override;
   size_t GetAttributeCount() override;
   CefString GetAttribute(int index) override;
-  CefString GetAttribute(const CefString& qualifiedName) override;
-  CefString GetAttribute(const CefString& localName,
-                         const CefString& namespaceURI) override;
+  CefString GetAttribute(const CefString &qualifiedName) override;
+  CefString GetAttribute(const CefString &localName,
+                         const CefString &namespaceURI) override;
   CefString GetInnerXml() override;
   CefString GetOuterXml() override;
   int GetLineNumber() override;
   bool MoveToAttribute(int index) override;
-  bool MoveToAttribute(const CefString& qualifiedName) override;
-  bool MoveToAttribute(const CefString& localName,
-                       const CefString& namespaceURI) override;
+  bool MoveToAttribute(const CefString &qualifiedName) override;
+  bool MoveToAttribute(const CefString &localName,
+                       const CefString &namespaceURI) override;
   bool MoveToFirstAttribute() override;
   bool MoveToNextAttribute() override;
   bool MoveToCarryingElement() override;
@@ -70,4 +70,4 @@ class CefXmlReaderCToCpp : public CefCToCppRefCounted<CefXmlReaderCToCpp,
 constexpr auto CefXmlReaderCToCpp_Wrap = CefXmlReaderCToCpp::Wrap;
 constexpr auto CefXmlReaderCToCpp_Unwrap = CefXmlReaderCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_XML_READER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_XML_READER_CTOCPP_H_

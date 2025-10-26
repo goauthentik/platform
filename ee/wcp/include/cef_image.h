@@ -51,7 +51,7 @@
 ///
 /*--cef(source=library)--*/
 class CefImage : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Create a new CefImage. It will initially be empty. Use the Add*() methods
   /// to add representations at different scale factors.
@@ -80,12 +80,9 @@ class CefImage : public virtual CefBaseRefCounted {
   /// size. |color_type| and |alpha_type| values specify the pixel format.
   ///
   /*--cef()--*/
-  virtual bool AddBitmap(float scale_factor,
-                         int pixel_width,
-                         int pixel_height,
+  virtual bool AddBitmap(float scale_factor, int pixel_width, int pixel_height,
                          cef_color_type_t color_type,
-                         cef_alpha_type_t alpha_type,
-                         const void* pixel_data,
+                         cef_alpha_type_t alpha_type, const void *pixel_data,
                          size_t pixel_data_size) = 0;
 
   ///
@@ -94,8 +91,7 @@ class CefImage : public virtual CefBaseRefCounted {
   /// be maintained.
   ///
   /*--cef()--*/
-  virtual bool AddPNG(float scale_factor,
-                      const void* png_data,
+  virtual bool AddPNG(float scale_factor, const void *png_data,
                       size_t png_data_size) = 0;
 
   ///
@@ -104,8 +100,7 @@ class CefImage : public virtual CefBaseRefCounted {
   /// transparency so the alpha byte will be set to 0xFF for all pixels.
   ///
   /*--cef()--*/
-  virtual bool AddJPEG(float scale_factor,
-                       const void* jpeg_data,
+  virtual bool AddJPEG(float scale_factor, const void *jpeg_data,
                        size_t jpeg_data_size) = 0;
 
   ///
@@ -140,9 +135,8 @@ class CefImage : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool GetRepresentationInfo(float scale_factor,
-                                     float& actual_scale_factor,
-                                     int& pixel_width,
-                                     int& pixel_height) = 0;
+                                     float &actual_scale_factor,
+                                     int &pixel_width, int &pixel_height) = 0;
 
   ///
   /// Returns the bitmap representation that most closely matches
@@ -156,8 +150,8 @@ class CefImage : public virtual CefBaseRefCounted {
   virtual CefRefPtr<CefBinaryValue> GetAsBitmap(float scale_factor,
                                                 cef_color_type_t color_type,
                                                 cef_alpha_type_t alpha_type,
-                                                int& pixel_width,
-                                                int& pixel_height) = 0;
+                                                int &pixel_width,
+                                                int &pixel_height) = 0;
 
   ///
   /// Returns the PNG representation that most closely matches |scale_factor|.
@@ -170,8 +164,8 @@ class CefImage : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual CefRefPtr<CefBinaryValue> GetAsPNG(float scale_factor,
                                              bool with_transparency,
-                                             int& pixel_width,
-                                             int& pixel_height) = 0;
+                                             int &pixel_width,
+                                             int &pixel_height) = 0;
 
   ///
   /// Returns the JPEG representation that most closely matches |scale_factor|.
@@ -183,10 +177,9 @@ class CefImage : public virtual CefBaseRefCounted {
   /// failure.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefBinaryValue> GetAsJPEG(float scale_factor,
-                                              int quality,
-                                              int& pixel_width,
-                                              int& pixel_height) = 0;
+  virtual CefRefPtr<CefBinaryValue> GetAsJPEG(float scale_factor, int quality,
+                                              int &pixel_width,
+                                              int &pixel_height) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_IMAGE_H_
+#endif // CEF_INCLUDE_CEF_IMAGE_H_

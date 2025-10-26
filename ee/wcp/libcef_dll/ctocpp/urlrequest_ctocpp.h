@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefURLRequestCToCpp : public CefCToCppRefCounted<CefURLRequestCToCpp,
-                                                       CefURLRequest,
-                                                       cef_urlrequest_t> {
- public:
+class CefURLRequestCToCpp
+    : public CefCToCppRefCounted<CefURLRequestCToCpp, CefURLRequest,
+                                 cef_urlrequest_t> {
+public:
   CefURLRequestCToCpp();
   virtual ~CefURLRequestCToCpp();
 
@@ -46,4 +46,4 @@ class CefURLRequestCToCpp : public CefCToCppRefCounted<CefURLRequestCToCpp,
 constexpr auto CefURLRequestCToCpp_Wrap = CefURLRequestCToCpp::Wrap;
 constexpr auto CefURLRequestCToCpp_Unwrap = CefURLRequestCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_URLREQUEST_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_URLREQUEST_CTOCPP_H_

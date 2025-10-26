@@ -30,7 +30,7 @@ class CefPermissionHandlerCppToC
     : public CefCppToCRefCounted<CefPermissionHandlerCppToC,
                                  CefPermissionHandler,
                                  cef_permission_handler_t> {
- public:
+public:
   CefPermissionHandlerCppToC();
   virtual ~CefPermissionHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefPermissionHandlerCppToC_Wrap =
 constexpr auto CefPermissionHandlerCppToC_Unwrap =
     CefPermissionHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_PERMISSION_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_PERMISSION_HANDLER_CPPTOC_H_

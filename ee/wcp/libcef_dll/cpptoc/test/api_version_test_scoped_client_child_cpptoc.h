@@ -32,7 +32,7 @@ class CefApiVersionTestScopedClientChildCppToC
     : public CefCppToCScoped<CefApiVersionTestScopedClientChildCppToC,
                              CefApiVersionTestScopedClientChild,
                              cef_api_version_test_scoped_client_child_t> {
- public:
+public:
   CefApiVersionTestScopedClientChildCppToC();
   virtual ~CefApiVersionTestScopedClientChildCppToC();
 };
@@ -48,7 +48,7 @@ constexpr auto CefApiVersionTestScopedClientChildCppToC_UnwrapRaw =
 constexpr auto CefApiVersionTestScopedClientChildCppToC_GetWrapper =
     CefApiVersionTestScopedClientChildCppToC::GetWrapper;
 
-inline cef_api_version_test_scoped_client_child_t*
+inline cef_api_version_test_scoped_client_child_t *
 CefApiVersionTestScopedClientChildCppToC_WrapRawAndRelease(
     CefRawPtr<CefApiVersionTestScopedClientChild> c) {
   auto [ownerPtr, structPtr] =
@@ -57,6 +57,6 @@ CefApiVersionTestScopedClientChildCppToC_WrapRawAndRelease(
   return structPtr;
 }
 
-#endif  // CEF_API_REMOVED(13302)
+#endif // CEF_API_REMOVED(13302)
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_SCOPED_CLIENT_CHILD_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_SCOPED_CLIENT_CHILD_CPPTOC_H_

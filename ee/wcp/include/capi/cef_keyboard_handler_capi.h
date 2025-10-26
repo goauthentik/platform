@@ -71,11 +71,11 @@ typedef struct _cef_keyboard_handler_t {
   /// keyboard shortcut set |is_keyboard_shortcut| to true (1) and return false
   /// (0).
   ///
-  int(CEF_CALLBACK* on_pre_key_event)(struct _cef_keyboard_handler_t* self,
-                                      struct _cef_browser_t* browser,
-                                      const cef_key_event_t* event,
+  int(CEF_CALLBACK *on_pre_key_event)(struct _cef_keyboard_handler_t *self,
+                                      struct _cef_browser_t *browser,
+                                      const cef_key_event_t *event,
                                       cef_event_handle_t os_event,
-                                      int* is_keyboard_shortcut);
+                                      int *is_keyboard_shortcut);
 
   ///
   /// Called after the renderer and JavaScript in the page has had a chance to
@@ -83,9 +83,9 @@ typedef struct _cef_keyboard_handler_t {
   /// |os_event| is the operating system event message, if any. Return true (1)
   /// if the keyboard event was handled or false (0) otherwise.
   ///
-  int(CEF_CALLBACK* on_key_event)(struct _cef_keyboard_handler_t* self,
-                                  struct _cef_browser_t* browser,
-                                  const cef_key_event_t* event,
+  int(CEF_CALLBACK *on_key_event)(struct _cef_keyboard_handler_t *self,
+                                  struct _cef_browser_t *browser,
+                                  const cef_key_event_t *event,
                                   cef_event_handle_t os_event);
 } cef_keyboard_handler_t;
 
@@ -93,4 +93,4 @@ typedef struct _cef_keyboard_handler_t {
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_KEYBOARD_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_KEYBOARD_HANDLER_CAPI_H_

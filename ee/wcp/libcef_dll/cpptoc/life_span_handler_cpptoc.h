@@ -29,10 +29,9 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefLifeSpanHandlerCppToC
-    : public CefCppToCRefCounted<CefLifeSpanHandlerCppToC,
-                                 CefLifeSpanHandler,
+    : public CefCppToCRefCounted<CefLifeSpanHandlerCppToC, CefLifeSpanHandler,
                                  cef_life_span_handler_t> {
- public:
+public:
   CefLifeSpanHandlerCppToC();
   virtual ~CefLifeSpanHandlerCppToC();
 };
@@ -41,4 +40,4 @@ constexpr auto CefLifeSpanHandlerCppToC_Wrap = CefLifeSpanHandlerCppToC::Wrap;
 constexpr auto CefLifeSpanHandlerCppToC_Unwrap =
     CefLifeSpanHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_LIFE_SPAN_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_LIFE_SPAN_HANDLER_CPPTOC_H_

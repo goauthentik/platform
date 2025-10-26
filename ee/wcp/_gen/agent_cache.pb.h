@@ -17,21 +17,21 @@
 #error "Protobuf C++ headers/runtime. See"
 #error "https://protobuf.dev/support/cross-version-runtime-guarantee/#cpp"
 #endif
-#include "google/protobuf/io/coded_stream.h"
+#include "agent.pb.h"
 #include "google/protobuf/arena.h"
 #include "google/protobuf/arenastring.h"
+#include "google/protobuf/extension_set.h" // IWYU pragma: export
+#include "google/protobuf/generated_enum_reflection.h"
+#include "google/protobuf/generated_message_reflection.h"
 #include "google/protobuf/generated_message_tctable_decl.h"
 #include "google/protobuf/generated_message_util.h"
-#include "google/protobuf/metadata_lite.h"
-#include "google/protobuf/generated_message_reflection.h"
+#include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/message_lite.h"
-#include "google/protobuf/repeated_field.h"  // IWYU pragma: export
-#include "google/protobuf/extension_set.h"  // IWYU pragma: export
-#include "google/protobuf/generated_enum_reflection.h"
-#include "google/protobuf/unknown_field_set.h"
-#include "agent.pb.h"
+#include "google/protobuf/metadata_lite.h"
+#include "google/protobuf/repeated_field.h" // IWYU pragma: export
 #include "google/protobuf/timestamp.pb.h"
+#include "google/protobuf/unknown_field_set.h"
 // @@protoc_insertion_point(includes)
 
 // Must be included last.
@@ -42,46 +42,50 @@
 namespace google {
 namespace protobuf {
 namespace internal {
-template <typename T>
-::absl::string_view GetAnyMessageName();
-}  // namespace internal
-}  // namespace protobuf
-}  // namespace google
+template <typename T>::absl::string_view GetAnyMessageName();
+} // namespace internal
+} // namespace protobuf
+} // namespace google
 
 // Internal implementation detail -- do not use these members.
 struct TableStruct_agent_5fcache_2eproto {
   static const ::uint32_t offsets[];
 };
 extern "C" {
-extern const ::google::protobuf::internal::DescriptorTable descriptor_table_agent_5fcache_2eproto;
-}  // extern "C"
+extern const ::google::protobuf::internal::DescriptorTable
+    descriptor_table_agent_5fcache_2eproto;
+} // extern "C"
 namespace agent_cache {
 enum CacheStatus : int;
 extern const uint32_t CacheStatus_internal_data_[];
 class CacheGetRequest;
 struct CacheGetRequestDefaultTypeInternal;
 extern CacheGetRequestDefaultTypeInternal _CacheGetRequest_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull CacheGetRequest_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheGetRequest_class_data_;
 class CacheGetResponse;
 struct CacheGetResponseDefaultTypeInternal;
 extern CacheGetResponseDefaultTypeInternal _CacheGetResponse_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull CacheGetResponse_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheGetResponse_class_data_;
 class CacheSetRequest;
 struct CacheSetRequestDefaultTypeInternal;
 extern CacheSetRequestDefaultTypeInternal _CacheSetRequest_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull CacheSetRequest_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheSetRequest_class_data_;
 class CacheSetResponse;
 struct CacheSetResponseDefaultTypeInternal;
 extern CacheSetResponseDefaultTypeInternal _CacheSetResponse_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull CacheSetResponse_class_data_;
-}  // namespace agent_cache
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheSetResponse_class_data_;
+} // namespace agent_cache
 namespace google {
 namespace protobuf {
 template <>
 internal::EnumTraitsT<::agent_cache::CacheStatus_internal_data_>
     internal::EnumTraitsImpl::value<::agent_cache::CacheStatus>;
-}  // namespace protobuf
-}  // namespace google
+} // namespace protobuf
+} // namespace google
 
 namespace agent_cache {
 enum CacheStatus : int {
@@ -96,64 +100,64 @@ enum CacheStatus : int {
 };
 
 extern const uint32_t CacheStatus_internal_data_[];
-inline constexpr CacheStatus CacheStatus_MIN =
-    static_cast<CacheStatus>(0);
-inline constexpr CacheStatus CacheStatus_MAX =
-    static_cast<CacheStatus>(3);
-inline bool CacheStatus_IsValid(int value) {
-  return 0 <= value && value <= 3;
-}
+inline constexpr CacheStatus CacheStatus_MIN = static_cast<CacheStatus>(0);
+inline constexpr CacheStatus CacheStatus_MAX = static_cast<CacheStatus>(3);
+inline bool CacheStatus_IsValid(int value) { return 0 <= value && value <= 3; }
 inline constexpr int CacheStatus_ARRAYSIZE = 3 + 1;
-const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL CacheStatus_descriptor();
-template <typename T>
-const ::std::string& CacheStatus_Name(T value) {
+const ::google::protobuf::EnumDescriptor *PROTOBUF_NONNULL
+CacheStatus_descriptor();
+template <typename T> const ::std::string &CacheStatus_Name(T value) {
   static_assert(::std::is_same<T, CacheStatus>::value ||
                     ::std::is_integral<T>::value,
                 "Incorrect type passed to CacheStatus_Name().");
   return CacheStatus_Name(static_cast<CacheStatus>(value));
 }
-template <>
-inline const ::std::string& CacheStatus_Name(CacheStatus value) {
-  return ::google::protobuf::internal::NameOfDenseEnum<CacheStatus_descriptor, 0, 3>(
+template <> inline const ::std::string &CacheStatus_Name(CacheStatus value) {
+  return ::google::protobuf::internal::NameOfDenseEnum<CacheStatus_descriptor,
+                                                       0, 3>(
       static_cast<int>(value));
 }
-inline bool CacheStatus_Parse(
-    ::absl::string_view name, CacheStatus* PROTOBUF_NONNULL value) {
-  return ::google::protobuf::internal::ParseNamedEnum<CacheStatus>(CacheStatus_descriptor(), name,
-                                           value);
+inline bool CacheStatus_Parse(::absl::string_view name,
+                              CacheStatus *PROTOBUF_NONNULL value) {
+  return ::google::protobuf::internal::ParseNamedEnum<CacheStatus>(
+      CacheStatus_descriptor(), name, value);
 }
 
 // ===================================================================
-
 
 // -------------------------------------------------------------------
 
 class CacheSetResponse final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:agent_cache.CacheSetResponse) */ {
- public:
+public:
   inline CacheSetResponse() : CacheSetResponse(nullptr) {}
   ~CacheSetResponse() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(CacheSetResponse* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(CacheSetResponse *PROTOBUF_NONNULL msg,
+                       ::std::destroying_delete_t) {
     SharedDtor(*msg);
     ::google::protobuf::internal::SizedDelete(msg, sizeof(CacheSetResponse));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR CacheSetResponse(::google::protobuf::internal::ConstantInitialized);
+  explicit PROTOBUF_CONSTEXPR
+      CacheSetResponse(::google::protobuf::internal::ConstantInitialized);
 
-  inline CacheSetResponse(const CacheSetResponse& from) : CacheSetResponse(nullptr, from) {}
-  inline CacheSetResponse(CacheSetResponse&& from) noexcept
+  inline CacheSetResponse(const CacheSetResponse &from)
+      : CacheSetResponse(nullptr, from) {}
+  inline CacheSetResponse(CacheSetResponse &&from) noexcept
       : CacheSetResponse(nullptr, ::std::move(from)) {}
-  inline CacheSetResponse& operator=(const CacheSetResponse& from) {
+  inline CacheSetResponse &operator=(const CacheSetResponse &from) {
     CopyFrom(from);
     return *this;
   }
-  inline CacheSetResponse& operator=(CacheSetResponse&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+  inline CacheSetResponse &operator=(CacheSetResponse &&from) noexcept {
+    if (this == &from)
+      return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(
+            GetArena(), from.GetArena())) {
       InternalSwap(&from);
     } else {
       CopyFrom(from);
@@ -161,108 +165,126 @@ class CacheSetResponse final : public ::google::protobuf::Message
     return *this;
   }
 
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  inline const ::google::protobuf::UnknownFieldSet &
+  unknown_fields() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .unknown_fields<::google::protobuf::UnknownFieldSet>(
+            ::google::protobuf::UnknownFieldSet::default_instance);
   }
-  inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  inline ::google::protobuf::UnknownFieldSet *PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL descriptor() {
     return GetDescriptor();
   }
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL GetDescriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL
+  GetDescriptor() {
     return default_instance().GetMetadata().descriptor;
   }
-  static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+  static const ::google::protobuf::Reflection *PROTOBUF_NONNULL
+  GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const CacheSetResponse& default_instance() {
-    return *reinterpret_cast<const CacheSetResponse*>(
+  static const CacheSetResponse &default_instance() {
+    return *reinterpret_cast<const CacheSetResponse *>(
         &_CacheSetResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 3;
-  friend void swap(CacheSetResponse& a, CacheSetResponse& b) { a.Swap(&b); }
-  inline void Swap(CacheSetResponse* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+  friend void swap(CacheSetResponse &a, CacheSetResponse &b) { a.Swap(&b); }
+  inline void Swap(CacheSetResponse *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(),
+                                                         other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(CacheSetResponse* PROTOBUF_NONNULL other) {
-    if (other == this) return;
+  void UnsafeArenaSwap(CacheSetResponse *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
   }
 
   // implements Message ----------------------------------------------
 
-  CacheSetResponse* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<CacheSetResponse>(arena);
+  CacheSetResponse *PROTOBUF_NONNULL
+  New(::google::protobuf::Arena *PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<CacheSetResponse>(
+        arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const CacheSetResponse& from);
+  void CopyFrom(const CacheSetResponse &from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const CacheSetResponse& from) { CacheSetResponse::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
+  void MergeFrom(const CacheSetResponse &from) {
+    CacheSetResponse::MergeImpl(*this, from);
   }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
 
-  public:
+private:
+  static void MergeImpl(::google::protobuf::MessageLite &to_msg,
+                        const ::google::protobuf::MessageLite &from_msg);
+
+public:
+  bool IsInitialized() const { return true; }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite &msg);
+  static ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite &msg,
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL stream);
+
+public:
   ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const {
     return _InternalSerialize(*this, target, stream);
   }
-  #else   // PROTOBUF_CUSTOM_VTABLE
+#else  // PROTOBUF_CUSTOM_VTABLE
   ::size_t ByteSizeLong() const final;
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const final;
+#endif // PROTOBUF_CUSTOM_VTABLE
   int GetCachedSize() const { return _impl_._cached_size_.Get(); }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(CacheSetResponse* PROTOBUF_NONNULL other);
- private:
+private:
+  void SharedCtor(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite &self);
+  void InternalSwap(CacheSetResponse *PROTOBUF_NONNULL other);
+
+private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "agent_cache.CacheSetResponse"; }
+  static ::absl::string_view FullMessageName() {
+    return "agent_cache.CacheSetResponse";
+  }
 
-  explicit CacheSetResponse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CacheSetResponse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CacheSetResponse& from);
-  CacheSetResponse(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CacheSetResponse&& from) noexcept
+  explicit CacheSetResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  CacheSetResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                   const CacheSetResponse &from);
+  CacheSetResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                   CacheSetResponse &&from) noexcept
       : CacheSetResponse(arena) {
     *this = ::std::move(from);
   }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  const ::google::protobuf::internal::ClassData *PROTOBUF_NONNULL
+  GetClassData() const PROTOBUF_FINAL;
+  static void *PROTOBUF_NONNULL
+  PlacementNew_(const void *PROTOBUF_NONNULL, void *PROTOBUF_NONNULL mem,
+                ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
   static constexpr auto InternalNewImpl_();
 
- public:
+public:
   static constexpr auto InternalGenerateClassData_();
 
   ::google::protobuf::Metadata GetMetadata() const;
@@ -274,81 +296,88 @@ class CacheSetResponse final : public ::google::protobuf::Message
   };
   // .agent.ResponseHeader header = 1;
   bool has_header() const;
-  void clear_header() ;
-  const ::agent::ResponseHeader& header() const;
-  [[nodiscard]] ::agent::ResponseHeader* PROTOBUF_NULLABLE release_header();
-  ::agent::ResponseHeader* PROTOBUF_NONNULL mutable_header();
-  void set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value);
-  ::agent::ResponseHeader* PROTOBUF_NULLABLE unsafe_arena_release_header();
+  void clear_header();
+  const ::agent::ResponseHeader &header() const;
+  [[nodiscard]] ::agent::ResponseHeader *PROTOBUF_NULLABLE release_header();
+  ::agent::ResponseHeader *PROTOBUF_NONNULL mutable_header();
+  void set_allocated_header(::agent::ResponseHeader *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_header(
+      ::agent::ResponseHeader *PROTOBUF_NULLABLE value);
+  ::agent::ResponseHeader *PROTOBUF_NULLABLE unsafe_arena_release_header();
 
-  private:
-  const ::agent::ResponseHeader& _internal_header() const;
-  ::agent::ResponseHeader* PROTOBUF_NONNULL _internal_mutable_header();
+private:
+  const ::agent::ResponseHeader &_internal_header() const;
+  ::agent::ResponseHeader *PROTOBUF_NONNULL _internal_mutable_header();
 
-  public:
+public:
   // @@protoc_insertion_point(class_scope:agent_cache.CacheSetResponse)
- private:
+private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<0, 1,
-                                   1, 0,
-                                   2>
+  static const ::google::protobuf::internal::TcParseTable<0, 1, 1, 0, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
   using InternalArenaConstructable_ = void;
   using DestructorSkippable_ = void;
   struct Impl_ {
-    inline explicit constexpr Impl_(::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const CacheSetResponse& from_msg);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena, const Impl_ &from,
+        const CacheSetResponse &from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
-    ::agent::ResponseHeader* PROTOBUF_NULLABLE header_;
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE header_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
-  union { Impl_ _impl_; };
+  union {
+    Impl_ _impl_;
+  };
   friend struct ::TableStruct_agent_5fcache_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull CacheSetResponse_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheSetResponse_class_data_;
 // -------------------------------------------------------------------
 
 class CacheSetRequest final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:agent_cache.CacheSetRequest) */ {
- public:
+public:
   inline CacheSetRequest() : CacheSetRequest(nullptr) {}
   ~CacheSetRequest() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(CacheSetRequest* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(CacheSetRequest *PROTOBUF_NONNULL msg,
+                       ::std::destroying_delete_t) {
     SharedDtor(*msg);
     ::google::protobuf::internal::SizedDelete(msg, sizeof(CacheSetRequest));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR CacheSetRequest(::google::protobuf::internal::ConstantInitialized);
+  explicit PROTOBUF_CONSTEXPR
+      CacheSetRequest(::google::protobuf::internal::ConstantInitialized);
 
-  inline CacheSetRequest(const CacheSetRequest& from) : CacheSetRequest(nullptr, from) {}
-  inline CacheSetRequest(CacheSetRequest&& from) noexcept
+  inline CacheSetRequest(const CacheSetRequest &from)
+      : CacheSetRequest(nullptr, from) {}
+  inline CacheSetRequest(CacheSetRequest &&from) noexcept
       : CacheSetRequest(nullptr, ::std::move(from)) {}
-  inline CacheSetRequest& operator=(const CacheSetRequest& from) {
+  inline CacheSetRequest &operator=(const CacheSetRequest &from) {
     CopyFrom(from);
     return *this;
   }
-  inline CacheSetRequest& operator=(CacheSetRequest&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+  inline CacheSetRequest &operator=(CacheSetRequest &&from) noexcept {
+    if (this == &from)
+      return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(
+            GetArena(), from.GetArena())) {
       InternalSwap(&from);
     } else {
       CopyFrom(from);
@@ -356,108 +385,126 @@ class CacheSetRequest final : public ::google::protobuf::Message
     return *this;
   }
 
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  inline const ::google::protobuf::UnknownFieldSet &
+  unknown_fields() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .unknown_fields<::google::protobuf::UnknownFieldSet>(
+            ::google::protobuf::UnknownFieldSet::default_instance);
   }
-  inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  inline ::google::protobuf::UnknownFieldSet *PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL descriptor() {
     return GetDescriptor();
   }
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL GetDescriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL
+  GetDescriptor() {
     return default_instance().GetMetadata().descriptor;
   }
-  static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+  static const ::google::protobuf::Reflection *PROTOBUF_NONNULL
+  GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const CacheSetRequest& default_instance() {
-    return *reinterpret_cast<const CacheSetRequest*>(
+  static const CacheSetRequest &default_instance() {
+    return *reinterpret_cast<const CacheSetRequest *>(
         &_CacheSetRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 2;
-  friend void swap(CacheSetRequest& a, CacheSetRequest& b) { a.Swap(&b); }
-  inline void Swap(CacheSetRequest* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+  friend void swap(CacheSetRequest &a, CacheSetRequest &b) { a.Swap(&b); }
+  inline void Swap(CacheSetRequest *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(),
+                                                         other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(CacheSetRequest* PROTOBUF_NONNULL other) {
-    if (other == this) return;
+  void UnsafeArenaSwap(CacheSetRequest *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
   }
 
   // implements Message ----------------------------------------------
 
-  CacheSetRequest* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<CacheSetRequest>(arena);
+  CacheSetRequest *PROTOBUF_NONNULL
+  New(::google::protobuf::Arena *PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<CacheSetRequest>(
+        arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const CacheSetRequest& from);
+  void CopyFrom(const CacheSetRequest &from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const CacheSetRequest& from) { CacheSetRequest::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
+  void MergeFrom(const CacheSetRequest &from) {
+    CacheSetRequest::MergeImpl(*this, from);
   }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
 
-  public:
+private:
+  static void MergeImpl(::google::protobuf::MessageLite &to_msg,
+                        const ::google::protobuf::MessageLite &from_msg);
+
+public:
+  bool IsInitialized() const { return true; }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite &msg);
+  static ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite &msg,
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL stream);
+
+public:
   ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const {
     return _InternalSerialize(*this, target, stream);
   }
-  #else   // PROTOBUF_CUSTOM_VTABLE
+#else  // PROTOBUF_CUSTOM_VTABLE
   ::size_t ByteSizeLong() const final;
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const final;
+#endif // PROTOBUF_CUSTOM_VTABLE
   int GetCachedSize() const { return _impl_._cached_size_.Get(); }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(CacheSetRequest* PROTOBUF_NONNULL other);
- private:
+private:
+  void SharedCtor(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite &self);
+  void InternalSwap(CacheSetRequest *PROTOBUF_NONNULL other);
+
+private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "agent_cache.CacheSetRequest"; }
+  static ::absl::string_view FullMessageName() {
+    return "agent_cache.CacheSetRequest";
+  }
 
-  explicit CacheSetRequest(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CacheSetRequest(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CacheSetRequest& from);
-  CacheSetRequest(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CacheSetRequest&& from) noexcept
+  explicit CacheSetRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  CacheSetRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                  const CacheSetRequest &from);
+  CacheSetRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                  CacheSetRequest &&from) noexcept
       : CacheSetRequest(arena) {
     *this = ::std::move(from);
   }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  const ::google::protobuf::internal::ClassData *PROTOBUF_NONNULL
+  GetClassData() const PROTOBUF_FINAL;
+  static void *PROTOBUF_NONNULL
+  PlacementNew_(const void *PROTOBUF_NONNULL, void *PROTOBUF_NONNULL mem,
+                ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
   static constexpr auto InternalNewImpl_();
 
- public:
+public:
   static constexpr auto InternalGenerateClassData_();
 
   ::google::protobuf::Metadata GetMetadata() const;
@@ -472,136 +519,151 @@ class CacheSetRequest final : public ::google::protobuf::Message
   };
   // repeated string keys = 2;
   int keys_size() const;
-  private:
+
+private:
   int _internal_keys_size() const;
 
-  public:
-  void clear_keys() ;
-  const ::std::string& keys(int index) const;
-  ::std::string* PROTOBUF_NONNULL mutable_keys(int index);
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_keys(int index, Arg_&& value, Args_... args);
-  ::std::string* PROTOBUF_NONNULL add_keys();
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void add_keys(Arg_&& value, Args_... args);
-  const ::google::protobuf::RepeatedPtrField<::std::string>& keys() const;
-  ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL mutable_keys();
+public:
+  void clear_keys();
+  const ::std::string &keys(int index) const;
+  ::std::string *PROTOBUF_NONNULL mutable_keys(int index);
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void set_keys(int index, Arg_ &&value, Args_... args);
+  ::std::string *PROTOBUF_NONNULL add_keys();
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void add_keys(Arg_ &&value, Args_... args);
+  const ::google::protobuf::RepeatedPtrField<::std::string> &keys() const;
+  ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
+  mutable_keys();
 
-  private:
-  const ::google::protobuf::RepeatedPtrField<::std::string>& _internal_keys() const;
-  ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL _internal_mutable_keys();
+private:
+  const ::google::protobuf::RepeatedPtrField<::std::string> &
+  _internal_keys() const;
+  ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
+  _internal_mutable_keys();
 
-  public:
+public:
   // string value = 4;
-  void clear_value() ;
-  const ::std::string& value() const;
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_value(Arg_&& arg, Args_... args);
-  ::std::string* PROTOBUF_NONNULL mutable_value();
-  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_value();
-  void set_allocated_value(::std::string* PROTOBUF_NULLABLE value);
+  void clear_value();
+  const ::std::string &value() const;
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void set_value(Arg_ &&arg, Args_... args);
+  ::std::string *PROTOBUF_NONNULL mutable_value();
+  [[nodiscard]] ::std::string *PROTOBUF_NULLABLE release_value();
+  void set_allocated_value(::std::string *PROTOBUF_NULLABLE value);
 
-  private:
-  const ::std::string& _internal_value() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_value(const ::std::string& value);
-  ::std::string* PROTOBUF_NONNULL _internal_mutable_value();
+private:
+  const ::std::string &_internal_value() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_value(const ::std::string &value);
+  ::std::string *PROTOBUF_NONNULL _internal_mutable_value();
 
-  public:
+public:
   // .agent.RequestHeader header = 1;
   bool has_header() const;
-  void clear_header() ;
-  const ::agent::RequestHeader& header() const;
-  [[nodiscard]] ::agent::RequestHeader* PROTOBUF_NULLABLE release_header();
-  ::agent::RequestHeader* PROTOBUF_NONNULL mutable_header();
-  void set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value);
-  ::agent::RequestHeader* PROTOBUF_NULLABLE unsafe_arena_release_header();
+  void clear_header();
+  const ::agent::RequestHeader &header() const;
+  [[nodiscard]] ::agent::RequestHeader *PROTOBUF_NULLABLE release_header();
+  ::agent::RequestHeader *PROTOBUF_NONNULL mutable_header();
+  void set_allocated_header(::agent::RequestHeader *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_header(
+      ::agent::RequestHeader *PROTOBUF_NULLABLE value);
+  ::agent::RequestHeader *PROTOBUF_NULLABLE unsafe_arena_release_header();
 
-  private:
-  const ::agent::RequestHeader& _internal_header() const;
-  ::agent::RequestHeader* PROTOBUF_NONNULL _internal_mutable_header();
+private:
+  const ::agent::RequestHeader &_internal_header() const;
+  ::agent::RequestHeader *PROTOBUF_NONNULL _internal_mutable_header();
 
-  public:
+public:
   // .google.protobuf.Timestamp expiry = 3;
   bool has_expiry() const;
-  void clear_expiry() ;
-  const ::google::protobuf::Timestamp& expiry() const;
-  [[nodiscard]] ::google::protobuf::Timestamp* PROTOBUF_NULLABLE release_expiry();
-  ::google::protobuf::Timestamp* PROTOBUF_NONNULL mutable_expiry();
-  void set_allocated_expiry(::google::protobuf::Timestamp* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_expiry(::google::protobuf::Timestamp* PROTOBUF_NULLABLE value);
-  ::google::protobuf::Timestamp* PROTOBUF_NULLABLE unsafe_arena_release_expiry();
+  void clear_expiry();
+  const ::google::protobuf::Timestamp &expiry() const;
+  [[nodiscard]] ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+  release_expiry();
+  ::google::protobuf::Timestamp *PROTOBUF_NONNULL mutable_expiry();
+  void
+  set_allocated_expiry(::google::protobuf::Timestamp *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_expiry(
+      ::google::protobuf::Timestamp *PROTOBUF_NULLABLE value);
+  ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+  unsafe_arena_release_expiry();
 
-  private:
-  const ::google::protobuf::Timestamp& _internal_expiry() const;
-  ::google::protobuf::Timestamp* PROTOBUF_NONNULL _internal_mutable_expiry();
+private:
+  const ::google::protobuf::Timestamp &_internal_expiry() const;
+  ::google::protobuf::Timestamp *PROTOBUF_NONNULL _internal_mutable_expiry();
 
-  public:
+public:
   // @@protoc_insertion_point(class_scope:agent_cache.CacheSetRequest)
- private:
+private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<2, 4,
-                                   2, 45,
-                                   2>
+  static const ::google::protobuf::internal::TcParseTable<2, 4, 2, 45, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
   using InternalArenaConstructable_ = void;
   using DestructorSkippable_ = void;
   struct Impl_ {
-    inline explicit constexpr Impl_(::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const CacheSetRequest& from_msg);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena, const Impl_ &from,
+        const CacheSetRequest &from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::google::protobuf::RepeatedPtrField<::std::string> keys_;
     ::google::protobuf::internal::ArenaStringPtr value_;
-    ::agent::RequestHeader* PROTOBUF_NULLABLE header_;
-    ::google::protobuf::Timestamp* PROTOBUF_NULLABLE expiry_;
+    ::agent::RequestHeader *PROTOBUF_NULLABLE header_;
+    ::google::protobuf::Timestamp *PROTOBUF_NULLABLE expiry_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
-  union { Impl_ _impl_; };
+  union {
+    Impl_ _impl_;
+  };
   friend struct ::TableStruct_agent_5fcache_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull CacheSetRequest_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheSetRequest_class_data_;
 // -------------------------------------------------------------------
 
 class CacheGetResponse final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:agent_cache.CacheGetResponse) */ {
- public:
+public:
   inline CacheGetResponse() : CacheGetResponse(nullptr) {}
   ~CacheGetResponse() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(CacheGetResponse* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(CacheGetResponse *PROTOBUF_NONNULL msg,
+                       ::std::destroying_delete_t) {
     SharedDtor(*msg);
     ::google::protobuf::internal::SizedDelete(msg, sizeof(CacheGetResponse));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR CacheGetResponse(::google::protobuf::internal::ConstantInitialized);
+  explicit PROTOBUF_CONSTEXPR
+      CacheGetResponse(::google::protobuf::internal::ConstantInitialized);
 
-  inline CacheGetResponse(const CacheGetResponse& from) : CacheGetResponse(nullptr, from) {}
-  inline CacheGetResponse(CacheGetResponse&& from) noexcept
+  inline CacheGetResponse(const CacheGetResponse &from)
+      : CacheGetResponse(nullptr, from) {}
+  inline CacheGetResponse(CacheGetResponse &&from) noexcept
       : CacheGetResponse(nullptr, ::std::move(from)) {}
-  inline CacheGetResponse& operator=(const CacheGetResponse& from) {
+  inline CacheGetResponse &operator=(const CacheGetResponse &from) {
     CopyFrom(from);
     return *this;
   }
-  inline CacheGetResponse& operator=(CacheGetResponse&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+  inline CacheGetResponse &operator=(CacheGetResponse &&from) noexcept {
+    if (this == &from)
+      return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(
+            GetArena(), from.GetArena())) {
       InternalSwap(&from);
     } else {
       CopyFrom(from);
@@ -609,108 +671,126 @@ class CacheGetResponse final : public ::google::protobuf::Message
     return *this;
   }
 
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  inline const ::google::protobuf::UnknownFieldSet &
+  unknown_fields() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .unknown_fields<::google::protobuf::UnknownFieldSet>(
+            ::google::protobuf::UnknownFieldSet::default_instance);
   }
-  inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  inline ::google::protobuf::UnknownFieldSet *PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL descriptor() {
     return GetDescriptor();
   }
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL GetDescriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL
+  GetDescriptor() {
     return default_instance().GetMetadata().descriptor;
   }
-  static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+  static const ::google::protobuf::Reflection *PROTOBUF_NONNULL
+  GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const CacheGetResponse& default_instance() {
-    return *reinterpret_cast<const CacheGetResponse*>(
+  static const CacheGetResponse &default_instance() {
+    return *reinterpret_cast<const CacheGetResponse *>(
         &_CacheGetResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 1;
-  friend void swap(CacheGetResponse& a, CacheGetResponse& b) { a.Swap(&b); }
-  inline void Swap(CacheGetResponse* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+  friend void swap(CacheGetResponse &a, CacheGetResponse &b) { a.Swap(&b); }
+  inline void Swap(CacheGetResponse *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(),
+                                                         other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(CacheGetResponse* PROTOBUF_NONNULL other) {
-    if (other == this) return;
+  void UnsafeArenaSwap(CacheGetResponse *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
   }
 
   // implements Message ----------------------------------------------
 
-  CacheGetResponse* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<CacheGetResponse>(arena);
+  CacheGetResponse *PROTOBUF_NONNULL
+  New(::google::protobuf::Arena *PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<CacheGetResponse>(
+        arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const CacheGetResponse& from);
+  void CopyFrom(const CacheGetResponse &from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const CacheGetResponse& from) { CacheGetResponse::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
+  void MergeFrom(const CacheGetResponse &from) {
+    CacheGetResponse::MergeImpl(*this, from);
   }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
 
-  public:
+private:
+  static void MergeImpl(::google::protobuf::MessageLite &to_msg,
+                        const ::google::protobuf::MessageLite &from_msg);
+
+public:
+  bool IsInitialized() const { return true; }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite &msg);
+  static ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite &msg,
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL stream);
+
+public:
   ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const {
     return _InternalSerialize(*this, target, stream);
   }
-  #else   // PROTOBUF_CUSTOM_VTABLE
+#else  // PROTOBUF_CUSTOM_VTABLE
   ::size_t ByteSizeLong() const final;
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const final;
+#endif // PROTOBUF_CUSTOM_VTABLE
   int GetCachedSize() const { return _impl_._cached_size_.Get(); }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(CacheGetResponse* PROTOBUF_NONNULL other);
- private:
+private:
+  void SharedCtor(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite &self);
+  void InternalSwap(CacheGetResponse *PROTOBUF_NONNULL other);
+
+private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "agent_cache.CacheGetResponse"; }
+  static ::absl::string_view FullMessageName() {
+    return "agent_cache.CacheGetResponse";
+  }
 
-  explicit CacheGetResponse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CacheGetResponse(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CacheGetResponse& from);
-  CacheGetResponse(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CacheGetResponse&& from) noexcept
+  explicit CacheGetResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  CacheGetResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                   const CacheGetResponse &from);
+  CacheGetResponse(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                   CacheGetResponse &&from) noexcept
       : CacheGetResponse(arena) {
     *this = ::std::move(from);
   }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  const ::google::protobuf::internal::ClassData *PROTOBUF_NONNULL
+  GetClassData() const PROTOBUF_FINAL;
+  static void *PROTOBUF_NONNULL
+  PlacementNew_(const void *PROTOBUF_NONNULL, void *PROTOBUF_NONNULL mem,
+                ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
   static constexpr auto InternalNewImpl_();
 
- public:
+public:
   static constexpr auto InternalGenerateClassData_();
 
   ::google::protobuf::Metadata GetMetadata() const;
@@ -724,125 +804,136 @@ class CacheGetResponse final : public ::google::protobuf::Message
     kStatusFieldNumber = 2,
   };
   // string value = 4;
-  void clear_value() ;
-  const ::std::string& value() const;
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_value(Arg_&& arg, Args_... args);
-  ::std::string* PROTOBUF_NONNULL mutable_value();
-  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_value();
-  void set_allocated_value(::std::string* PROTOBUF_NULLABLE value);
+  void clear_value();
+  const ::std::string &value() const;
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void set_value(Arg_ &&arg, Args_... args);
+  ::std::string *PROTOBUF_NONNULL mutable_value();
+  [[nodiscard]] ::std::string *PROTOBUF_NULLABLE release_value();
+  void set_allocated_value(::std::string *PROTOBUF_NULLABLE value);
 
-  private:
-  const ::std::string& _internal_value() const;
-  PROTOBUF_ALWAYS_INLINE void _internal_set_value(const ::std::string& value);
-  ::std::string* PROTOBUF_NONNULL _internal_mutable_value();
+private:
+  const ::std::string &_internal_value() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_value(const ::std::string &value);
+  ::std::string *PROTOBUF_NONNULL _internal_mutable_value();
 
-  public:
+public:
   // .agent.ResponseHeader header = 1;
   bool has_header() const;
-  void clear_header() ;
-  const ::agent::ResponseHeader& header() const;
-  [[nodiscard]] ::agent::ResponseHeader* PROTOBUF_NULLABLE release_header();
-  ::agent::ResponseHeader* PROTOBUF_NONNULL mutable_header();
-  void set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value);
-  ::agent::ResponseHeader* PROTOBUF_NULLABLE unsafe_arena_release_header();
+  void clear_header();
+  const ::agent::ResponseHeader &header() const;
+  [[nodiscard]] ::agent::ResponseHeader *PROTOBUF_NULLABLE release_header();
+  ::agent::ResponseHeader *PROTOBUF_NONNULL mutable_header();
+  void set_allocated_header(::agent::ResponseHeader *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_header(
+      ::agent::ResponseHeader *PROTOBUF_NULLABLE value);
+  ::agent::ResponseHeader *PROTOBUF_NULLABLE unsafe_arena_release_header();
 
-  private:
-  const ::agent::ResponseHeader& _internal_header() const;
-  ::agent::ResponseHeader* PROTOBUF_NONNULL _internal_mutable_header();
+private:
+  const ::agent::ResponseHeader &_internal_header() const;
+  ::agent::ResponseHeader *PROTOBUF_NONNULL _internal_mutable_header();
 
-  public:
+public:
   // .google.protobuf.Timestamp expiry = 3;
   bool has_expiry() const;
-  void clear_expiry() ;
-  const ::google::protobuf::Timestamp& expiry() const;
-  [[nodiscard]] ::google::protobuf::Timestamp* PROTOBUF_NULLABLE release_expiry();
-  ::google::protobuf::Timestamp* PROTOBUF_NONNULL mutable_expiry();
-  void set_allocated_expiry(::google::protobuf::Timestamp* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_expiry(::google::protobuf::Timestamp* PROTOBUF_NULLABLE value);
-  ::google::protobuf::Timestamp* PROTOBUF_NULLABLE unsafe_arena_release_expiry();
+  void clear_expiry();
+  const ::google::protobuf::Timestamp &expiry() const;
+  [[nodiscard]] ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+  release_expiry();
+  ::google::protobuf::Timestamp *PROTOBUF_NONNULL mutable_expiry();
+  void
+  set_allocated_expiry(::google::protobuf::Timestamp *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_expiry(
+      ::google::protobuf::Timestamp *PROTOBUF_NULLABLE value);
+  ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+  unsafe_arena_release_expiry();
 
-  private:
-  const ::google::protobuf::Timestamp& _internal_expiry() const;
-  ::google::protobuf::Timestamp* PROTOBUF_NONNULL _internal_mutable_expiry();
+private:
+  const ::google::protobuf::Timestamp &_internal_expiry() const;
+  ::google::protobuf::Timestamp *PROTOBUF_NONNULL _internal_mutable_expiry();
 
-  public:
+public:
   // .agent_cache.CacheStatus status = 2;
-  void clear_status() ;
+  void clear_status();
   ::agent_cache::CacheStatus status() const;
   void set_status(::agent_cache::CacheStatus value);
 
-  private:
+private:
   ::agent_cache::CacheStatus _internal_status() const;
   void _internal_set_status(::agent_cache::CacheStatus value);
 
-  public:
+public:
   // @@protoc_insertion_point(class_scope:agent_cache.CacheGetResponse)
- private:
+private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<2, 4,
-                                   2, 42,
-                                   2>
+  static const ::google::protobuf::internal::TcParseTable<2, 4, 2, 42, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
   using InternalArenaConstructable_ = void;
   using DestructorSkippable_ = void;
   struct Impl_ {
-    inline explicit constexpr Impl_(::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const CacheGetResponse& from_msg);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena, const Impl_ &from,
+        const CacheGetResponse &from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::google::protobuf::internal::ArenaStringPtr value_;
-    ::agent::ResponseHeader* PROTOBUF_NULLABLE header_;
-    ::google::protobuf::Timestamp* PROTOBUF_NULLABLE expiry_;
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE header_;
+    ::google::protobuf::Timestamp *PROTOBUF_NULLABLE expiry_;
     int status_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
-  union { Impl_ _impl_; };
+  union {
+    Impl_ _impl_;
+  };
   friend struct ::TableStruct_agent_5fcache_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull CacheGetResponse_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheGetResponse_class_data_;
 // -------------------------------------------------------------------
 
 class CacheGetRequest final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:agent_cache.CacheGetRequest) */ {
- public:
+public:
   inline CacheGetRequest() : CacheGetRequest(nullptr) {}
   ~CacheGetRequest() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(CacheGetRequest* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(CacheGetRequest *PROTOBUF_NONNULL msg,
+                       ::std::destroying_delete_t) {
     SharedDtor(*msg);
     ::google::protobuf::internal::SizedDelete(msg, sizeof(CacheGetRequest));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR CacheGetRequest(::google::protobuf::internal::ConstantInitialized);
+  explicit PROTOBUF_CONSTEXPR
+      CacheGetRequest(::google::protobuf::internal::ConstantInitialized);
 
-  inline CacheGetRequest(const CacheGetRequest& from) : CacheGetRequest(nullptr, from) {}
-  inline CacheGetRequest(CacheGetRequest&& from) noexcept
+  inline CacheGetRequest(const CacheGetRequest &from)
+      : CacheGetRequest(nullptr, from) {}
+  inline CacheGetRequest(CacheGetRequest &&from) noexcept
       : CacheGetRequest(nullptr, ::std::move(from)) {}
-  inline CacheGetRequest& operator=(const CacheGetRequest& from) {
+  inline CacheGetRequest &operator=(const CacheGetRequest &from) {
     CopyFrom(from);
     return *this;
   }
-  inline CacheGetRequest& operator=(CacheGetRequest&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+  inline CacheGetRequest &operator=(CacheGetRequest &&from) noexcept {
+    if (this == &from)
+      return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(
+            GetArena(), from.GetArena())) {
       InternalSwap(&from);
     } else {
       CopyFrom(from);
@@ -850,108 +941,126 @@ class CacheGetRequest final : public ::google::protobuf::Message
     return *this;
   }
 
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  inline const ::google::protobuf::UnknownFieldSet &
+  unknown_fields() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .unknown_fields<::google::protobuf::UnknownFieldSet>(
+            ::google::protobuf::UnknownFieldSet::default_instance);
   }
-  inline ::google::protobuf::UnknownFieldSet* PROTOBUF_NONNULL mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  inline ::google::protobuf::UnknownFieldSet *PROTOBUF_NONNULL
+  mutable_unknown_fields() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_
+        .mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
   }
 
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL descriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL descriptor() {
     return GetDescriptor();
   }
-  static const ::google::protobuf::Descriptor* PROTOBUF_NONNULL GetDescriptor() {
+  static const ::google::protobuf::Descriptor *PROTOBUF_NONNULL
+  GetDescriptor() {
     return default_instance().GetMetadata().descriptor;
   }
-  static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
+  static const ::google::protobuf::Reflection *PROTOBUF_NONNULL
+  GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const CacheGetRequest& default_instance() {
-    return *reinterpret_cast<const CacheGetRequest*>(
+  static const CacheGetRequest &default_instance() {
+    return *reinterpret_cast<const CacheGetRequest *>(
         &_CacheGetRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 0;
-  friend void swap(CacheGetRequest& a, CacheGetRequest& b) { a.Swap(&b); }
-  inline void Swap(CacheGetRequest* PROTOBUF_NONNULL other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+  friend void swap(CacheGetRequest &a, CacheGetRequest &b) { a.Swap(&b); }
+  inline void Swap(CacheGetRequest *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(),
+                                                         other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(CacheGetRequest* PROTOBUF_NONNULL other) {
-    if (other == this) return;
+  void UnsafeArenaSwap(CacheGetRequest *PROTOBUF_NONNULL other) {
+    if (other == this)
+      return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
   }
 
   // implements Message ----------------------------------------------
 
-  CacheGetRequest* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<CacheGetRequest>(arena);
+  CacheGetRequest *PROTOBUF_NONNULL
+  New(::google::protobuf::Arena *PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<CacheGetRequest>(
+        arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const CacheGetRequest& from);
+  void CopyFrom(const CacheGetRequest &from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const CacheGetRequest& from) { CacheGetRequest::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(::google::protobuf::MessageLite& to_msg,
-                        const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
+  void MergeFrom(const CacheGetRequest &from) {
+    CacheGetRequest::MergeImpl(*this, from);
   }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      const ::google::protobuf::MessageLite& msg, ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream);
 
-  public:
+private:
+  static void MergeImpl(::google::protobuf::MessageLite &to_msg,
+                        const ::google::protobuf::MessageLite &from_msg);
+
+public:
+  bool IsInitialized() const { return true; }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite &msg);
+  static ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      const ::google::protobuf::MessageLite &msg,
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL stream);
+
+public:
   ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const {
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const {
     return _InternalSerialize(*this, target, stream);
   }
-  #else   // PROTOBUF_CUSTOM_VTABLE
+#else  // PROTOBUF_CUSTOM_VTABLE
   ::size_t ByteSizeLong() const final;
-  ::uint8_t* PROTOBUF_NONNULL _InternalSerialize(
-      ::uint8_t* PROTOBUF_NONNULL target,
-      ::google::protobuf::io::EpsCopyOutputStream* PROTOBUF_NONNULL stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
+  ::uint8_t *PROTOBUF_NONNULL _InternalSerialize(
+      ::uint8_t *PROTOBUF_NONNULL target,
+      ::google::protobuf::io::EpsCopyOutputStream *PROTOBUF_NONNULL
+          stream) const final;
+#endif // PROTOBUF_CUSTOM_VTABLE
   int GetCachedSize() const { return _impl_._cached_size_.Get(); }
 
-  private:
-  void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(CacheGetRequest* PROTOBUF_NONNULL other);
- private:
+private:
+  void SharedCtor(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  static void SharedDtor(MessageLite &self);
+  void InternalSwap(CacheGetRequest *PROTOBUF_NONNULL other);
+
+private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "agent_cache.CacheGetRequest"; }
+  static ::absl::string_view FullMessageName() {
+    return "agent_cache.CacheGetRequest";
+  }
 
-  explicit CacheGetRequest(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  CacheGetRequest(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const CacheGetRequest& from);
-  CacheGetRequest(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, CacheGetRequest&& from) noexcept
+  explicit CacheGetRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
+  CacheGetRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                  const CacheGetRequest &from);
+  CacheGetRequest(::google::protobuf::Arena *PROTOBUF_NULLABLE arena,
+                  CacheGetRequest &&from) noexcept
       : CacheGetRequest(arena) {
     *this = ::std::move(from);
   }
-  const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
-  static void* PROTOBUF_NONNULL PlacementNew_(
-      const void* PROTOBUF_NONNULL, void* PROTOBUF_NONNULL mem,
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  const ::google::protobuf::internal::ClassData *PROTOBUF_NONNULL
+  GetClassData() const PROTOBUF_FINAL;
+  static void *PROTOBUF_NONNULL
+  PlacementNew_(const void *PROTOBUF_NONNULL, void *PROTOBUF_NONNULL mem,
+                ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
   static constexpr auto InternalNewImpl_();
 
- public:
+public:
   static constexpr auto InternalGenerateClassData_();
 
   ::google::protobuf::Metadata GetMetadata() const;
@@ -964,89 +1073,91 @@ class CacheGetRequest final : public ::google::protobuf::Message
   };
   // repeated string keys = 2;
   int keys_size() const;
-  private:
+
+private:
   int _internal_keys_size() const;
 
-  public:
-  void clear_keys() ;
-  const ::std::string& keys(int index) const;
-  ::std::string* PROTOBUF_NONNULL mutable_keys(int index);
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void set_keys(int index, Arg_&& value, Args_... args);
-  ::std::string* PROTOBUF_NONNULL add_keys();
-  template <typename Arg_ = const ::std::string&, typename... Args_>
-  void add_keys(Arg_&& value, Args_... args);
-  const ::google::protobuf::RepeatedPtrField<::std::string>& keys() const;
-  ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL mutable_keys();
+public:
+  void clear_keys();
+  const ::std::string &keys(int index) const;
+  ::std::string *PROTOBUF_NONNULL mutable_keys(int index);
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void set_keys(int index, Arg_ &&value, Args_... args);
+  ::std::string *PROTOBUF_NONNULL add_keys();
+  template <typename Arg_ = const ::std::string &, typename... Args_>
+  void add_keys(Arg_ &&value, Args_... args);
+  const ::google::protobuf::RepeatedPtrField<::std::string> &keys() const;
+  ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
+  mutable_keys();
 
-  private:
-  const ::google::protobuf::RepeatedPtrField<::std::string>& _internal_keys() const;
-  ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL _internal_mutable_keys();
+private:
+  const ::google::protobuf::RepeatedPtrField<::std::string> &
+  _internal_keys() const;
+  ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
+  _internal_mutable_keys();
 
-  public:
+public:
   // .agent.RequestHeader header = 1;
   bool has_header() const;
-  void clear_header() ;
-  const ::agent::RequestHeader& header() const;
-  [[nodiscard]] ::agent::RequestHeader* PROTOBUF_NULLABLE release_header();
-  ::agent::RequestHeader* PROTOBUF_NONNULL mutable_header();
-  void set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value);
-  void unsafe_arena_set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value);
-  ::agent::RequestHeader* PROTOBUF_NULLABLE unsafe_arena_release_header();
+  void clear_header();
+  const ::agent::RequestHeader &header() const;
+  [[nodiscard]] ::agent::RequestHeader *PROTOBUF_NULLABLE release_header();
+  ::agent::RequestHeader *PROTOBUF_NONNULL mutable_header();
+  void set_allocated_header(::agent::RequestHeader *PROTOBUF_NULLABLE value);
+  void unsafe_arena_set_allocated_header(
+      ::agent::RequestHeader *PROTOBUF_NULLABLE value);
+  ::agent::RequestHeader *PROTOBUF_NULLABLE unsafe_arena_release_header();
 
-  private:
-  const ::agent::RequestHeader& _internal_header() const;
-  ::agent::RequestHeader* PROTOBUF_NONNULL _internal_mutable_header();
+private:
+  const ::agent::RequestHeader &_internal_header() const;
+  ::agent::RequestHeader *PROTOBUF_NONNULL _internal_mutable_header();
 
-  public:
+public:
   // @@protoc_insertion_point(class_scope:agent_cache.CacheGetRequest)
- private:
+private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<1, 2,
-                                   1, 40,
-                                   2>
+  static const ::google::protobuf::internal::TcParseTable<1, 2, 1, 40, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
   using InternalArenaConstructable_ = void;
   using DestructorSkippable_ = void;
   struct Impl_ {
-    inline explicit constexpr Impl_(::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena);
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
-        ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const CacheGetRequest& from_msg);
+        ::google::protobuf::Arena *PROTOBUF_NULLABLE arena, const Impl_ &from,
+        const CacheGetRequest &from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::google::protobuf::RepeatedPtrField<::std::string> keys_;
-    ::agent::RequestHeader* PROTOBUF_NULLABLE header_;
+    ::agent::RequestHeader *PROTOBUF_NULLABLE header_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
-  union { Impl_ _impl_; };
+  union {
+    Impl_ _impl_;
+  };
   friend struct ::TableStruct_agent_5fcache_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull CacheGetRequest_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull
+    CacheGetRequest_class_data_;
 
 // ===================================================================
 
-
-
-
 // ===================================================================
-
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
-#endif  // __GNUC__
+#endif // __GNUC__
 // -------------------------------------------------------------------
 
 // CacheGetRequest
@@ -1057,22 +1168,25 @@ inline bool CacheGetRequest::has_header() const {
   PROTOBUF_ASSUME(!value || _impl_.header_ != nullptr);
   return value;
 }
-inline const ::agent::RequestHeader& CacheGetRequest::_internal_header() const {
+inline const ::agent::RequestHeader &CacheGetRequest::_internal_header() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::agent::RequestHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::agent::RequestHeader&>(::agent::_RequestHeader_default_instance_);
+  const ::agent::RequestHeader *p = _impl_.header_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::agent::RequestHeader &>(
+                            ::agent::_RequestHeader_default_instance_);
 }
-inline const ::agent::RequestHeader& CacheGetRequest::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::agent::RequestHeader &
+CacheGetRequest::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheGetRequest.header)
   return _internal_header();
 }
 inline void CacheGetRequest::unsafe_arena_set_allocated_header(
-    ::agent::RequestHeader* PROTOBUF_NULLABLE value) {
+    ::agent::RequestHeader *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
-  _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
@@ -1080,14 +1194,15 @@ inline void CacheGetRequest::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_cache.CacheGetRequest.header)
 }
-inline ::agent::RequestHeader* PROTOBUF_NULLABLE CacheGetRequest::release_header() {
+inline ::agent::RequestHeader *PROTOBUF_NULLABLE
+CacheGetRequest::release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::RequestHeader* released = _impl_.header_;
+  ::agent::RequestHeader *released = _impl_.header_;
   _impl_.header_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -1099,48 +1214,55 @@ inline ::agent::RequestHeader* PROTOBUF_NULLABLE CacheGetRequest::release_header
   }
   return released;
 }
-inline ::agent::RequestHeader* PROTOBUF_NULLABLE CacheGetRequest::unsafe_arena_release_header() {
+inline ::agent::RequestHeader *PROTOBUF_NULLABLE
+CacheGetRequest::unsafe_arena_release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheGetRequest.header)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::RequestHeader* temp = _impl_.header_;
+  ::agent::RequestHeader *temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::agent::RequestHeader* PROTOBUF_NONNULL CacheGetRequest::_internal_mutable_header() {
+inline ::agent::RequestHeader *PROTOBUF_NONNULL
+CacheGetRequest::_internal_mutable_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.header_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::agent::RequestHeader>(GetArena());
-    _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(p);
+    auto *p =
+        ::google::protobuf::Message::DefaultConstruct<::agent::RequestHeader>(
+            GetArena());
+    _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(p);
   }
   return _impl_.header_;
 }
-inline ::agent::RequestHeader* PROTOBUF_NONNULL CacheGetRequest::mutable_header()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::agent::RequestHeader *PROTOBUF_NONNULL
+CacheGetRequest::mutable_header() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::RequestHeader* _msg = _internal_mutable_header();
+  ::agent::RequestHeader *_msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheGetRequest.header)
   return _msg;
 }
-inline void CacheGetRequest::set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void CacheGetRequest::set_allocated_header(
+    ::agent::RequestHeader *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
 
-  _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheGetRequest.header)
 }
 
@@ -1148,69 +1270,65 @@ inline void CacheGetRequest::set_allocated_header(::agent::RequestHeader* PROTOB
 inline int CacheGetRequest::_internal_keys_size() const {
   return _internal_keys().size();
 }
-inline int CacheGetRequest::keys_size() const {
-  return _internal_keys_size();
-}
+inline int CacheGetRequest::keys_size() const { return _internal_keys_size(); }
 inline void CacheGetRequest::clear_keys() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.keys_.Clear();
-  ClearHasBitForRepeated(_impl_._has_bits_[0],
-                  0x00000001U);
+  ClearHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
 }
-inline ::std::string* PROTOBUF_NONNULL CacheGetRequest::add_keys()
+inline ::std::string *PROTOBUF_NONNULL CacheGetRequest::add_keys()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::std::string* _s =
-      _internal_mutable_keys()->InternalAddWithArena(
-          ::google::protobuf::MessageLite::internal_visibility(), GetArena());
+  ::std::string *_s = _internal_mutable_keys()->InternalAddWithArena(
+      ::google::protobuf::MessageLite::internal_visibility(), GetArena());
   SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
   // @@protoc_insertion_point(field_add_mutable:agent_cache.CacheGetRequest.keys)
   return _s;
 }
-inline const ::std::string& CacheGetRequest::keys(int index) const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::std::string &
+CacheGetRequest::keys(int index) const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheGetRequest.keys)
   return _internal_keys().Get(index);
 }
-inline ::std::string* PROTOBUF_NONNULL CacheGetRequest::mutable_keys(int index)
+inline ::std::string *PROTOBUF_NONNULL CacheGetRequest::mutable_keys(int index)
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheGetRequest.keys)
   return _internal_mutable_keys()->Mutable(index);
 }
 template <typename Arg_, typename... Args_>
-inline void CacheGetRequest::set_keys(int index, Arg_&& value, Args_... args) {
-  ::google::protobuf::internal::AssignToString(*_internal_mutable_keys()->Mutable(index), ::std::forward<Arg_>(value),
-                        args... );
+inline void CacheGetRequest::set_keys(int index, Arg_ &&value, Args_... args) {
+  ::google::protobuf::internal::AssignToString(
+      *_internal_mutable_keys()->Mutable(index), ::std::forward<Arg_>(value),
+      args...);
   // @@protoc_insertion_point(field_set:agent_cache.CacheGetRequest.keys)
 }
 template <typename Arg_, typename... Args_>
-inline void CacheGetRequest::add_keys(Arg_&& value, Args_... args) {
+inline void CacheGetRequest::add_keys(Arg_ &&value, Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::google::protobuf::internal::AddToRepeatedPtrField(
       ::google::protobuf::MessageLite::internal_visibility(), GetArena(),
-      *_internal_mutable_keys(), ::std::forward<Arg_>(value),
-      args... );
+      *_internal_mutable_keys(), ::std::forward<Arg_>(value), args...);
   SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
   // @@protoc_insertion_point(field_add:agent_cache.CacheGetRequest.keys)
 }
-inline const ::google::protobuf::RepeatedPtrField<::std::string>& CacheGetRequest::keys()
-    const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::google::protobuf::RepeatedPtrField<::std::string> &
+CacheGetRequest::keys() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_list:agent_cache.CacheGetRequest.keys)
   return _internal_keys();
 }
-inline ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL
+inline ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
 CacheGetRequest::mutable_keys() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
   // @@protoc_insertion_point(field_mutable_list:agent_cache.CacheGetRequest.keys)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   return _internal_mutable_keys();
 }
-inline const ::google::protobuf::RepeatedPtrField<::std::string>&
+inline const ::google::protobuf::RepeatedPtrField<::std::string> &
 CacheGetRequest::_internal_keys() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.keys_;
 }
-inline ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL
+inline ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
 CacheGetRequest::_internal_mutable_keys() {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return &_impl_.keys_;
@@ -1226,22 +1344,26 @@ inline bool CacheGetResponse::has_header() const {
   PROTOBUF_ASSUME(!value || _impl_.header_ != nullptr);
   return value;
 }
-inline const ::agent::ResponseHeader& CacheGetResponse::_internal_header() const {
+inline const ::agent::ResponseHeader &
+CacheGetResponse::_internal_header() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::agent::ResponseHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::agent::ResponseHeader&>(::agent::_ResponseHeader_default_instance_);
+  const ::agent::ResponseHeader *p = _impl_.header_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::agent::ResponseHeader &>(
+                            ::agent::_ResponseHeader_default_instance_);
 }
-inline const ::agent::ResponseHeader& CacheGetResponse::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::agent::ResponseHeader &
+CacheGetResponse::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheGetResponse.header)
   return _internal_header();
 }
 inline void CacheGetResponse::unsafe_arena_set_allocated_header(
-    ::agent::ResponseHeader* PROTOBUF_NULLABLE value) {
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
-  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
@@ -1249,14 +1371,15 @@ inline void CacheGetResponse::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_cache.CacheGetResponse.header)
 }
-inline ::agent::ResponseHeader* PROTOBUF_NULLABLE CacheGetResponse::release_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NULLABLE
+CacheGetResponse::release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::ResponseHeader* released = _impl_.header_;
+  ::agent::ResponseHeader *released = _impl_.header_;
   _impl_.header_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -1268,48 +1391,55 @@ inline ::agent::ResponseHeader* PROTOBUF_NULLABLE CacheGetResponse::release_head
   }
   return released;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NULLABLE CacheGetResponse::unsafe_arena_release_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NULLABLE
+CacheGetResponse::unsafe_arena_release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheGetResponse.header)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::ResponseHeader* temp = _impl_.header_;
+  ::agent::ResponseHeader *temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NONNULL CacheGetResponse::_internal_mutable_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NONNULL
+CacheGetResponse::_internal_mutable_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.header_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::agent::ResponseHeader>(GetArena());
-    _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(p);
+    auto *p =
+        ::google::protobuf::Message::DefaultConstruct<::agent::ResponseHeader>(
+            GetArena());
+    _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(p);
   }
   return _impl_.header_;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NONNULL CacheGetResponse::mutable_header()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::agent::ResponseHeader *PROTOBUF_NONNULL
+CacheGetResponse::mutable_header() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::agent::ResponseHeader* _msg = _internal_mutable_header();
+  ::agent::ResponseHeader *_msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheGetResponse.header)
   return _msg;
 }
-inline void CacheGetResponse::set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void CacheGetResponse::set_allocated_header(
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
 
-  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheGetResponse.header)
 }
 
@@ -1317,8 +1447,7 @@ inline void CacheGetResponse::set_allocated_header(::agent::ResponseHeader* PROT
 inline void CacheGetResponse::clear_status() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.status_ = 0;
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000008U);
+  ClearHasBit(_impl_._has_bits_[0], 0x00000008U);
 }
 inline ::agent_cache::CacheStatus CacheGetResponse::status() const {
   // @@protoc_insertion_point(field_get:agent_cache.CacheGetResponse.status)
@@ -1333,7 +1462,8 @@ inline ::agent_cache::CacheStatus CacheGetResponse::_internal_status() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return static_cast<::agent_cache::CacheStatus>(_impl_.status_);
 }
-inline void CacheGetResponse::_internal_set_status(::agent_cache::CacheStatus value) {
+inline void
+CacheGetResponse::_internal_set_status(::agent_cache::CacheStatus value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.status_ = value;
 }
@@ -1344,22 +1474,26 @@ inline bool CacheGetResponse::has_expiry() const {
   PROTOBUF_ASSUME(!value || _impl_.expiry_ != nullptr);
   return value;
 }
-inline const ::google::protobuf::Timestamp& CacheGetResponse::_internal_expiry() const {
+inline const ::google::protobuf::Timestamp &
+CacheGetResponse::_internal_expiry() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::google::protobuf::Timestamp* p = _impl_.expiry_;
-  return p != nullptr ? *p : reinterpret_cast<const ::google::protobuf::Timestamp&>(::google::protobuf::_Timestamp_default_instance_);
+  const ::google::protobuf::Timestamp *p = _impl_.expiry_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::google::protobuf::Timestamp &>(
+                            ::google::protobuf::_Timestamp_default_instance_);
 }
-inline const ::google::protobuf::Timestamp& CacheGetResponse::expiry() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::google::protobuf::Timestamp &
+CacheGetResponse::expiry() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheGetResponse.expiry)
   return _internal_expiry();
 }
 inline void CacheGetResponse::unsafe_arena_set_allocated_expiry(
-    ::google::protobuf::Timestamp* PROTOBUF_NULLABLE value) {
+    ::google::protobuf::Timestamp *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.expiry_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.expiry_);
   }
-  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp*>(value);
+  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000004U);
   } else {
@@ -1367,14 +1501,15 @@ inline void CacheGetResponse::unsafe_arena_set_allocated_expiry(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_cache.CacheGetResponse.expiry)
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NULLABLE CacheGetResponse::release_expiry() {
+inline ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+CacheGetResponse::release_expiry() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
-  ::google::protobuf::Timestamp* released = _impl_.expiry_;
+  ::google::protobuf::Timestamp *released = _impl_.expiry_;
   _impl_.expiry_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -1386,48 +1521,54 @@ inline ::google::protobuf::Timestamp* PROTOBUF_NULLABLE CacheGetResponse::releas
   }
   return released;
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NULLABLE CacheGetResponse::unsafe_arena_release_expiry() {
+inline ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+CacheGetResponse::unsafe_arena_release_expiry() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheGetResponse.expiry)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
-  ::google::protobuf::Timestamp* temp = _impl_.expiry_;
+  ::google::protobuf::Timestamp *temp = _impl_.expiry_;
   _impl_.expiry_ = nullptr;
   return temp;
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NONNULL CacheGetResponse::_internal_mutable_expiry() {
+inline ::google::protobuf::Timestamp *PROTOBUF_NONNULL
+CacheGetResponse::_internal_mutable_expiry() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.expiry_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::google::protobuf::Timestamp>(GetArena());
-    _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp*>(p);
+    auto *p = ::google::protobuf::Message::DefaultConstruct<
+        ::google::protobuf::Timestamp>(GetArena());
+    _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp *>(p);
   }
   return _impl_.expiry_;
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NONNULL CacheGetResponse::mutable_expiry()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::google::protobuf::Timestamp *PROTOBUF_NONNULL
+CacheGetResponse::mutable_expiry() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000004U);
-  ::google::protobuf::Timestamp* _msg = _internal_mutable_expiry();
+  ::google::protobuf::Timestamp *_msg = _internal_mutable_expiry();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheGetResponse.expiry)
   return _msg;
 }
-inline void CacheGetResponse::set_allocated_expiry(::google::protobuf::Timestamp* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void CacheGetResponse::set_allocated_expiry(
+    ::google::protobuf::Timestamp *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.expiry_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.expiry_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000004U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
   }
 
-  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp*>(value);
+  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheGetResponse.expiry)
 }
 
@@ -1435,54 +1576,56 @@ inline void CacheGetResponse::set_allocated_expiry(::google::protobuf::Timestamp
 inline void CacheGetResponse::clear_value() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.value_.ClearToEmpty();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000001U);
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
 }
-inline const ::std::string& CacheGetResponse::value() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::std::string &
+CacheGetResponse::value() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheGetResponse.value)
   return _internal_value();
 }
 template <typename Arg_, typename... Args_>
-PROTOBUF_ALWAYS_INLINE void CacheGetResponse::set_value(Arg_&& arg, Args_... args) {
+PROTOBUF_ALWAYS_INLINE void CacheGetResponse::set_value(Arg_ &&arg,
+                                                        Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  _impl_.value_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  _impl_.value_.Set(static_cast<Arg_ &&>(arg), args..., GetArena());
   // @@protoc_insertion_point(field_set:agent_cache.CacheGetResponse.value)
 }
-inline ::std::string* PROTOBUF_NONNULL CacheGetResponse::mutable_value()
+inline ::std::string *PROTOBUF_NONNULL CacheGetResponse::mutable_value()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::std::string* _s = _internal_mutable_value();
+  ::std::string *_s = _internal_mutable_value();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheGetResponse.value)
   return _s;
 }
-inline const ::std::string& CacheGetResponse::_internal_value() const {
+inline const ::std::string &CacheGetResponse::_internal_value() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.value_.Get();
 }
-inline void CacheGetResponse::_internal_set_value(const ::std::string& value) {
+inline void CacheGetResponse::_internal_set_value(const ::std::string &value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.value_.Set(value, GetArena());
 }
-inline ::std::string* PROTOBUF_NONNULL CacheGetResponse::_internal_mutable_value() {
+inline ::std::string *PROTOBUF_NONNULL
+CacheGetResponse::_internal_mutable_value() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.value_.Mutable( GetArena());
+  return _impl_.value_.Mutable(GetArena());
 }
-inline ::std::string* PROTOBUF_NULLABLE CacheGetResponse::release_value() {
+inline ::std::string *PROTOBUF_NULLABLE CacheGetResponse::release_value() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheGetResponse.value)
   if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
     return nullptr;
   }
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  auto* released = _impl_.value_.Release();
+  auto *released = _impl_.value_.Release();
   if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
     _impl_.value_.Set("", GetArena());
   }
   return released;
 }
-inline void CacheGetResponse::set_allocated_value(::std::string* PROTOBUF_NULLABLE value) {
+inline void
+CacheGetResponse::set_allocated_value(::std::string *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
@@ -1490,7 +1633,8 @@ inline void CacheGetResponse::set_allocated_value(::std::string* PROTOBUF_NULLAB
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
   _impl_.value_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.value_.IsDefault()) {
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() &&
+      _impl_.value_.IsDefault()) {
     _impl_.value_.Set("", GetArena());
   }
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheGetResponse.value)
@@ -1506,22 +1650,25 @@ inline bool CacheSetRequest::has_header() const {
   PROTOBUF_ASSUME(!value || _impl_.header_ != nullptr);
   return value;
 }
-inline const ::agent::RequestHeader& CacheSetRequest::_internal_header() const {
+inline const ::agent::RequestHeader &CacheSetRequest::_internal_header() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::agent::RequestHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::agent::RequestHeader&>(::agent::_RequestHeader_default_instance_);
+  const ::agent::RequestHeader *p = _impl_.header_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::agent::RequestHeader &>(
+                            ::agent::_RequestHeader_default_instance_);
 }
-inline const ::agent::RequestHeader& CacheSetRequest::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::agent::RequestHeader &
+CacheSetRequest::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheSetRequest.header)
   return _internal_header();
 }
 inline void CacheSetRequest::unsafe_arena_set_allocated_header(
-    ::agent::RequestHeader* PROTOBUF_NULLABLE value) {
+    ::agent::RequestHeader *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
-  _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000004U);
   } else {
@@ -1529,14 +1676,15 @@ inline void CacheSetRequest::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_cache.CacheSetRequest.header)
 }
-inline ::agent::RequestHeader* PROTOBUF_NULLABLE CacheSetRequest::release_header() {
+inline ::agent::RequestHeader *PROTOBUF_NULLABLE
+CacheSetRequest::release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
-  ::agent::RequestHeader* released = _impl_.header_;
+  ::agent::RequestHeader *released = _impl_.header_;
   _impl_.header_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -1548,48 +1696,55 @@ inline ::agent::RequestHeader* PROTOBUF_NULLABLE CacheSetRequest::release_header
   }
   return released;
 }
-inline ::agent::RequestHeader* PROTOBUF_NULLABLE CacheSetRequest::unsafe_arena_release_header() {
+inline ::agent::RequestHeader *PROTOBUF_NULLABLE
+CacheSetRequest::unsafe_arena_release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheSetRequest.header)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
-  ::agent::RequestHeader* temp = _impl_.header_;
+  ::agent::RequestHeader *temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::agent::RequestHeader* PROTOBUF_NONNULL CacheSetRequest::_internal_mutable_header() {
+inline ::agent::RequestHeader *PROTOBUF_NONNULL
+CacheSetRequest::_internal_mutable_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.header_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::agent::RequestHeader>(GetArena());
-    _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(p);
+    auto *p =
+        ::google::protobuf::Message::DefaultConstruct<::agent::RequestHeader>(
+            GetArena());
+    _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(p);
   }
   return _impl_.header_;
 }
-inline ::agent::RequestHeader* PROTOBUF_NONNULL CacheSetRequest::mutable_header()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::agent::RequestHeader *PROTOBUF_NONNULL
+CacheSetRequest::mutable_header() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000004U);
-  ::agent::RequestHeader* _msg = _internal_mutable_header();
+  ::agent::RequestHeader *_msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheSetRequest.header)
   return _msg;
 }
-inline void CacheSetRequest::set_allocated_header(::agent::RequestHeader* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void CacheSetRequest::set_allocated_header(
+    ::agent::RequestHeader *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000004U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000004U);
   }
 
-  _impl_.header_ = reinterpret_cast<::agent::RequestHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::RequestHeader *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheSetRequest.header)
 }
 
@@ -1597,69 +1752,65 @@ inline void CacheSetRequest::set_allocated_header(::agent::RequestHeader* PROTOB
 inline int CacheSetRequest::_internal_keys_size() const {
   return _internal_keys().size();
 }
-inline int CacheSetRequest::keys_size() const {
-  return _internal_keys_size();
-}
+inline int CacheSetRequest::keys_size() const { return _internal_keys_size(); }
 inline void CacheSetRequest::clear_keys() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.keys_.Clear();
-  ClearHasBitForRepeated(_impl_._has_bits_[0],
-                  0x00000001U);
+  ClearHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
 }
-inline ::std::string* PROTOBUF_NONNULL CacheSetRequest::add_keys()
+inline ::std::string *PROTOBUF_NONNULL CacheSetRequest::add_keys()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::std::string* _s =
-      _internal_mutable_keys()->InternalAddWithArena(
-          ::google::protobuf::MessageLite::internal_visibility(), GetArena());
+  ::std::string *_s = _internal_mutable_keys()->InternalAddWithArena(
+      ::google::protobuf::MessageLite::internal_visibility(), GetArena());
   SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
   // @@protoc_insertion_point(field_add_mutable:agent_cache.CacheSetRequest.keys)
   return _s;
 }
-inline const ::std::string& CacheSetRequest::keys(int index) const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::std::string &
+CacheSetRequest::keys(int index) const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheSetRequest.keys)
   return _internal_keys().Get(index);
 }
-inline ::std::string* PROTOBUF_NONNULL CacheSetRequest::mutable_keys(int index)
+inline ::std::string *PROTOBUF_NONNULL CacheSetRequest::mutable_keys(int index)
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheSetRequest.keys)
   return _internal_mutable_keys()->Mutable(index);
 }
 template <typename Arg_, typename... Args_>
-inline void CacheSetRequest::set_keys(int index, Arg_&& value, Args_... args) {
-  ::google::protobuf::internal::AssignToString(*_internal_mutable_keys()->Mutable(index), ::std::forward<Arg_>(value),
-                        args... );
+inline void CacheSetRequest::set_keys(int index, Arg_ &&value, Args_... args) {
+  ::google::protobuf::internal::AssignToString(
+      *_internal_mutable_keys()->Mutable(index), ::std::forward<Arg_>(value),
+      args...);
   // @@protoc_insertion_point(field_set:agent_cache.CacheSetRequest.keys)
 }
 template <typename Arg_, typename... Args_>
-inline void CacheSetRequest::add_keys(Arg_&& value, Args_... args) {
+inline void CacheSetRequest::add_keys(Arg_ &&value, Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::google::protobuf::internal::AddToRepeatedPtrField(
       ::google::protobuf::MessageLite::internal_visibility(), GetArena(),
-      *_internal_mutable_keys(), ::std::forward<Arg_>(value),
-      args... );
+      *_internal_mutable_keys(), ::std::forward<Arg_>(value), args...);
   SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
   // @@protoc_insertion_point(field_add:agent_cache.CacheSetRequest.keys)
 }
-inline const ::google::protobuf::RepeatedPtrField<::std::string>& CacheSetRequest::keys()
-    const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::google::protobuf::RepeatedPtrField<::std::string> &
+CacheSetRequest::keys() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_list:agent_cache.CacheSetRequest.keys)
   return _internal_keys();
 }
-inline ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL
+inline ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
 CacheSetRequest::mutable_keys() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
   // @@protoc_insertion_point(field_mutable_list:agent_cache.CacheSetRequest.keys)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   return _internal_mutable_keys();
 }
-inline const ::google::protobuf::RepeatedPtrField<::std::string>&
+inline const ::google::protobuf::RepeatedPtrField<::std::string> &
 CacheSetRequest::_internal_keys() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.keys_;
 }
-inline ::google::protobuf::RepeatedPtrField<::std::string>* PROTOBUF_NONNULL
+inline ::google::protobuf::RepeatedPtrField<::std::string> *PROTOBUF_NONNULL
 CacheSetRequest::_internal_mutable_keys() {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return &_impl_.keys_;
@@ -1671,22 +1822,26 @@ inline bool CacheSetRequest::has_expiry() const {
   PROTOBUF_ASSUME(!value || _impl_.expiry_ != nullptr);
   return value;
 }
-inline const ::google::protobuf::Timestamp& CacheSetRequest::_internal_expiry() const {
+inline const ::google::protobuf::Timestamp &
+CacheSetRequest::_internal_expiry() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::google::protobuf::Timestamp* p = _impl_.expiry_;
-  return p != nullptr ? *p : reinterpret_cast<const ::google::protobuf::Timestamp&>(::google::protobuf::_Timestamp_default_instance_);
+  const ::google::protobuf::Timestamp *p = _impl_.expiry_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::google::protobuf::Timestamp &>(
+                            ::google::protobuf::_Timestamp_default_instance_);
 }
-inline const ::google::protobuf::Timestamp& CacheSetRequest::expiry() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::google::protobuf::Timestamp &
+CacheSetRequest::expiry() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheSetRequest.expiry)
   return _internal_expiry();
 }
 inline void CacheSetRequest::unsafe_arena_set_allocated_expiry(
-    ::google::protobuf::Timestamp* PROTOBUF_NULLABLE value) {
+    ::google::protobuf::Timestamp *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.expiry_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.expiry_);
   }
-  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp*>(value);
+  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000008U);
   } else {
@@ -1694,14 +1849,15 @@ inline void CacheSetRequest::unsafe_arena_set_allocated_expiry(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_cache.CacheSetRequest.expiry)
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NULLABLE CacheSetRequest::release_expiry() {
+inline ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+CacheSetRequest::release_expiry() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000008U);
-  ::google::protobuf::Timestamp* released = _impl_.expiry_;
+  ::google::protobuf::Timestamp *released = _impl_.expiry_;
   _impl_.expiry_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -1713,48 +1869,54 @@ inline ::google::protobuf::Timestamp* PROTOBUF_NULLABLE CacheSetRequest::release
   }
   return released;
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NULLABLE CacheSetRequest::unsafe_arena_release_expiry() {
+inline ::google::protobuf::Timestamp *PROTOBUF_NULLABLE
+CacheSetRequest::unsafe_arena_release_expiry() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheSetRequest.expiry)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000008U);
-  ::google::protobuf::Timestamp* temp = _impl_.expiry_;
+  ::google::protobuf::Timestamp *temp = _impl_.expiry_;
   _impl_.expiry_ = nullptr;
   return temp;
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NONNULL CacheSetRequest::_internal_mutable_expiry() {
+inline ::google::protobuf::Timestamp *PROTOBUF_NONNULL
+CacheSetRequest::_internal_mutable_expiry() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.expiry_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::google::protobuf::Timestamp>(GetArena());
-    _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp*>(p);
+    auto *p = ::google::protobuf::Message::DefaultConstruct<
+        ::google::protobuf::Timestamp>(GetArena());
+    _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp *>(p);
   }
   return _impl_.expiry_;
 }
-inline ::google::protobuf::Timestamp* PROTOBUF_NONNULL CacheSetRequest::mutable_expiry()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::google::protobuf::Timestamp *PROTOBUF_NONNULL
+CacheSetRequest::mutable_expiry() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000008U);
-  ::google::protobuf::Timestamp* _msg = _internal_mutable_expiry();
+  ::google::protobuf::Timestamp *_msg = _internal_mutable_expiry();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheSetRequest.expiry)
   return _msg;
 }
-inline void CacheSetRequest::set_allocated_expiry(::google::protobuf::Timestamp* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void CacheSetRequest::set_allocated_expiry(
+    ::google::protobuf::Timestamp *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.expiry_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.expiry_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000008U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000008U);
   }
 
-  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp*>(value);
+  _impl_.expiry_ = reinterpret_cast<::google::protobuf::Timestamp *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheSetRequest.expiry)
 }
 
@@ -1762,54 +1924,56 @@ inline void CacheSetRequest::set_allocated_expiry(::google::protobuf::Timestamp*
 inline void CacheSetRequest::clear_value() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.value_.ClearToEmpty();
-  ClearHasBit(_impl_._has_bits_[0],
-                  0x00000002U);
+  ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
 }
-inline const ::std::string& CacheSetRequest::value() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::std::string &
+CacheSetRequest::value() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheSetRequest.value)
   return _internal_value();
 }
 template <typename Arg_, typename... Args_>
-PROTOBUF_ALWAYS_INLINE void CacheSetRequest::set_value(Arg_&& arg, Args_... args) {
+PROTOBUF_ALWAYS_INLINE void CacheSetRequest::set_value(Arg_ &&arg,
+                                                       Args_... args) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  _impl_.value_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  _impl_.value_.Set(static_cast<Arg_ &&>(arg), args..., GetArena());
   // @@protoc_insertion_point(field_set:agent_cache.CacheSetRequest.value)
 }
-inline ::std::string* PROTOBUF_NONNULL CacheSetRequest::mutable_value()
+inline ::std::string *PROTOBUF_NONNULL CacheSetRequest::mutable_value()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  ::std::string* _s = _internal_mutable_value();
+  ::std::string *_s = _internal_mutable_value();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheSetRequest.value)
   return _s;
 }
-inline const ::std::string& CacheSetRequest::_internal_value() const {
+inline const ::std::string &CacheSetRequest::_internal_value() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.value_.Get();
 }
-inline void CacheSetRequest::_internal_set_value(const ::std::string& value) {
+inline void CacheSetRequest::_internal_set_value(const ::std::string &value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.value_.Set(value, GetArena());
 }
-inline ::std::string* PROTOBUF_NONNULL CacheSetRequest::_internal_mutable_value() {
+inline ::std::string *PROTOBUF_NONNULL
+CacheSetRequest::_internal_mutable_value() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.value_.Mutable( GetArena());
+  return _impl_.value_.Mutable(GetArena());
 }
-inline ::std::string* PROTOBUF_NULLABLE CacheSetRequest::release_value() {
+inline ::std::string *PROTOBUF_NULLABLE CacheSetRequest::release_value() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheSetRequest.value)
   if (!CheckHasBit(_impl_._has_bits_[0], 0x00000002U)) {
     return nullptr;
   }
   ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
-  auto* released = _impl_.value_.Release();
+  auto *released = _impl_.value_.Release();
   if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
     _impl_.value_.Set("", GetArena());
   }
   return released;
 }
-inline void CacheSetRequest::set_allocated_value(::std::string* PROTOBUF_NULLABLE value) {
+inline void
+CacheSetRequest::set_allocated_value(::std::string *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000002U);
@@ -1817,7 +1981,8 @@ inline void CacheSetRequest::set_allocated_value(::std::string* PROTOBUF_NULLABL
     ClearHasBit(_impl_._has_bits_[0], 0x00000002U);
   }
   _impl_.value_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.value_.IsDefault()) {
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() &&
+      _impl_.value_.IsDefault()) {
     _impl_.value_.Set("", GetArena());
   }
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheSetRequest.value)
@@ -1833,22 +1998,26 @@ inline bool CacheSetResponse::has_header() const {
   PROTOBUF_ASSUME(!value || _impl_.header_ != nullptr);
   return value;
 }
-inline const ::agent::ResponseHeader& CacheSetResponse::_internal_header() const {
+inline const ::agent::ResponseHeader &
+CacheSetResponse::_internal_header() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::agent::ResponseHeader* p = _impl_.header_;
-  return p != nullptr ? *p : reinterpret_cast<const ::agent::ResponseHeader&>(::agent::_ResponseHeader_default_instance_);
+  const ::agent::ResponseHeader *p = _impl_.header_;
+  return p != nullptr ? *p
+                      : reinterpret_cast<const ::agent::ResponseHeader &>(
+                            ::agent::_ResponseHeader_default_instance_);
 }
-inline const ::agent::ResponseHeader& CacheSetResponse::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline const ::agent::ResponseHeader &
+CacheSetResponse::header() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:agent_cache.CacheSetResponse.header)
   return _internal_header();
 }
 inline void CacheSetResponse::unsafe_arena_set_allocated_header(
-    ::agent::ResponseHeader* PROTOBUF_NULLABLE value) {
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
-  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(value);
   if (value != nullptr) {
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
   } else {
@@ -1856,14 +2025,15 @@ inline void CacheSetResponse::unsafe_arena_set_allocated_header(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:agent_cache.CacheSetResponse.header)
 }
-inline ::agent::ResponseHeader* PROTOBUF_NULLABLE CacheSetResponse::release_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NULLABLE
+CacheSetResponse::release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::agent::ResponseHeader* released = _impl_.header_;
+  ::agent::ResponseHeader *released = _impl_.header_;
   _impl_.header_ = nullptr;
   if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    auto *old = reinterpret_cast<::google::protobuf::MessageLite *>(released);
     released = ::google::protobuf::internal::DuplicateIfNonNull(released);
     if (GetArena() == nullptr) {
       delete old;
@@ -1875,58 +2045,64 @@ inline ::agent::ResponseHeader* PROTOBUF_NULLABLE CacheSetResponse::release_head
   }
   return released;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NULLABLE CacheSetResponse::unsafe_arena_release_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NULLABLE
+CacheSetResponse::unsafe_arena_release_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   // @@protoc_insertion_point(field_release:agent_cache.CacheSetResponse.header)
 
   ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::agent::ResponseHeader* temp = _impl_.header_;
+  ::agent::ResponseHeader *temp = _impl_.header_;
   _impl_.header_ = nullptr;
   return temp;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NONNULL CacheSetResponse::_internal_mutable_header() {
+inline ::agent::ResponseHeader *PROTOBUF_NONNULL
+CacheSetResponse::_internal_mutable_header() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (_impl_.header_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::agent::ResponseHeader>(GetArena());
-    _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(p);
+    auto *p =
+        ::google::protobuf::Message::DefaultConstruct<::agent::ResponseHeader>(
+            GetArena());
+    _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(p);
   }
   return _impl_.header_;
 }
-inline ::agent::ResponseHeader* PROTOBUF_NONNULL CacheSetResponse::mutable_header()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::agent::ResponseHeader *PROTOBUF_NONNULL
+CacheSetResponse::mutable_header() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   SetHasBit(_impl_._has_bits_[0], 0x00000001U);
-  ::agent::ResponseHeader* _msg = _internal_mutable_header();
+  ::agent::ResponseHeader *_msg = _internal_mutable_header();
   // @@protoc_insertion_point(field_mutable:agent_cache.CacheSetResponse.header)
   return _msg;
 }
-inline void CacheSetResponse::set_allocated_header(::agent::ResponseHeader* PROTOBUF_NULLABLE value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
+inline void CacheSetResponse::set_allocated_header(
+    ::agent::ResponseHeader *PROTOBUF_NULLABLE value) {
+  ::google::protobuf::Arena *message_arena = GetArena();
   ::google::protobuf::internal::TSanWrite(&_impl_);
   if (message_arena == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.header_);
+    delete reinterpret_cast<::google::protobuf::MessageLite *>(_impl_.header_);
   }
 
   if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::Message*>(value)->GetArena();
+    ::google::protobuf::Arena *submessage_arena =
+        reinterpret_cast<::google::protobuf::Message *>(value)->GetArena();
     if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+      value = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, value, submessage_arena);
     }
     SetHasBit(_impl_._has_bits_[0], 0x00000001U);
   } else {
     ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
   }
 
-  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader*>(value);
+  _impl_.header_ = reinterpret_cast<::agent::ResponseHeader *>(value);
   // @@protoc_insertion_point(field_set_allocated:agent_cache.CacheSetResponse.header)
 }
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
-#endif  // __GNUC__
+#endif // __GNUC__
 
 // @@protoc_insertion_point(namespace_scope)
-}  // namespace agent_cache
-
+} // namespace agent_cache
 
 namespace google {
 namespace protobuf {
@@ -1934,15 +2110,16 @@ namespace protobuf {
 template <>
 struct is_proto_enum<::agent_cache::CacheStatus> : std::true_type {};
 template <>
-inline const EnumDescriptor* PROTOBUF_NONNULL GetEnumDescriptor<::agent_cache::CacheStatus>() {
+inline const EnumDescriptor *PROTOBUF_NONNULL
+GetEnumDescriptor<::agent_cache::CacheStatus>() {
   return ::agent_cache::CacheStatus_descriptor();
 }
 
-}  // namespace protobuf
-}  // namespace google
+} // namespace protobuf
+} // namespace google
 
 // @@protoc_insertion_point(global_scope)
 
 #include "google/protobuf/port_undef.inc"
 
-#endif  // agent_5fcache_2eproto_2epb_2eh
+#endif // agent_5fcache_2eproto_2epb_2eh

@@ -46,7 +46,7 @@
 ///
 /*--cef(source=library)--*/
 class CefNavigationEntry : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_transition_type_t TransitionType;
 
   ///
@@ -118,4 +118,4 @@ class CefNavigationEntry : public virtual CefBaseRefCounted {
   virtual CefRefPtr<CefSSLStatus> GetSSLStatus() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_NAVIGATION_ENTRY_H_
+#endif // CEF_INCLUDE_CEF_NAVIGATION_ENTRY_H_

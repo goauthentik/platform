@@ -56,7 +56,7 @@
 ///
 /*--cef(source=library)--*/
 class CefSelectClientCertificateCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Chooses the specified certificate for client certificate authentication.
   /// NULL value means that no client certificate should be used.
@@ -71,7 +71,7 @@ class CefSelectClientCertificateCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefRequestHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_termination_status_t TerminationStatus;
   typedef cef_window_open_disposition_t WindowOpenDisposition;
   typedef std::vector<CefRefPtr<CefX509Certificate>> X509CertificateList;
@@ -91,8 +91,7 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
                               CefRefPtr<CefFrame> frame,
-                              CefRefPtr<CefRequest> request,
-                              bool user_gesture,
+                              CefRefPtr<CefRequest> request, bool user_gesture,
                               bool is_redirect) {
     return false;
   }
@@ -116,7 +115,7 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool OnOpenURLFromTab(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
-                                const CefString& target_url,
+                                const CefString &target_url,
                                 WindowOpenDisposition target_disposition,
                                 bool user_gesture) {
     return false;
@@ -139,13 +138,9 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=request_initiator)--*/
   virtual CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      bool is_navigation,
-      bool is_download,
-      const CefString& request_initiator,
-      bool& disable_default_handling) {
+      CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request, bool is_navigation, bool is_download,
+      const CefString &request_initiator, bool &disable_default_handling) {
     return nullptr;
   }
 
@@ -163,12 +158,10 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=realm,optional_param=scheme)--*/
   virtual bool GetAuthCredentials(CefRefPtr<CefBrowser> browser,
-                                  const CefString& origin_url,
-                                  bool isProxy,
-                                  const CefString& host,
-                                  int port,
-                                  const CefString& realm,
-                                  const CefString& scheme,
+                                  const CefString &origin_url, bool isProxy,
+                                  const CefString &host, int port,
+                                  const CefString &realm,
+                                  const CefString &scheme,
                                   CefRefPtr<CefAuthCallback> callback) {
     return false;
   }
@@ -184,7 +177,7 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool OnCertificateError(CefRefPtr<CefBrowser> browser,
                                   cef_errorcode_t cert_error,
-                                  const CefString& request_url,
+                                  const CefString &request_url,
                                   CefRefPtr<CefSSLInfo> ssl_info,
                                   CefRefPtr<CefCallback> callback) {
     return false;
@@ -208,11 +201,8 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool OnSelectClientCertificate(
-      CefRefPtr<CefBrowser> browser,
-      bool isProxy,
-      const CefString& host,
-      int port,
-      const X509CertificateList& certificates,
+      CefRefPtr<CefBrowser> browser, bool isProxy, const CefString &host,
+      int port, const X509CertificateList &certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) {
     return false;
   }
@@ -270,7 +260,7 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   virtual void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
                                          TerminationStatus status,
                                          int error_code,
-                                         const CefString& error_string) {}
+                                         const CefString &error_string) {}
 
   ///
   /// Called on the browser process UI thread when the window.document object of
@@ -280,4 +270,4 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   virtual void OnDocumentAvailableInMainFrame(CefRefPtr<CefBrowser> browser) {}
 };
 
-#endif  // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_

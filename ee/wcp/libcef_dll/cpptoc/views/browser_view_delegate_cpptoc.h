@@ -34,7 +34,7 @@ class CefBrowserViewDelegateCppToC
     : public CefCppToCRefCounted<CefBrowserViewDelegateCppToC,
                                  CefBrowserViewDelegate,
                                  cef_browser_view_delegate_t> {
- public:
+public:
   CefBrowserViewDelegateCppToC();
   virtual ~CefBrowserViewDelegateCppToC();
 };
@@ -44,4 +44,4 @@ constexpr auto CefBrowserViewDelegateCppToC_Wrap =
 constexpr auto CefBrowserViewDelegateCppToC_Unwrap =
     CefBrowserViewDelegateCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BROWSER_VIEW_DELEGATE_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_VIEWS_BROWSER_VIEW_DELEGATE_CPPTOC_H_

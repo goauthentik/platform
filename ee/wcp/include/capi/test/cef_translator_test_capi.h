@@ -77,181 +77,176 @@ typedef struct _cef_translator_test_t {
   ///
   /// Return a void value.
   ///
-  void(CEF_CALLBACK* get_void)(struct _cef_translator_test_t* self);
+  void(CEF_CALLBACK *get_void)(struct _cef_translator_test_t *self);
 
   ///
   /// Return a bool value.
   ///
-  int(CEF_CALLBACK* get_bool)(struct _cef_translator_test_t* self);
+  int(CEF_CALLBACK *get_bool)(struct _cef_translator_test_t *self);
 
   ///
   /// Return an int value.
   ///
-  int(CEF_CALLBACK* get_int)(struct _cef_translator_test_t* self);
+  int(CEF_CALLBACK *get_int)(struct _cef_translator_test_t *self);
 
   ///
   /// Return a double value.
   ///
-  double(CEF_CALLBACK* get_double)(struct _cef_translator_test_t* self);
+  double(CEF_CALLBACK *get_double)(struct _cef_translator_test_t *self);
 
   ///
   /// Return a long value.
   ///
-  long(CEF_CALLBACK* get_long)(struct _cef_translator_test_t* self);
+  long(CEF_CALLBACK *get_long)(struct _cef_translator_test_t *self);
 
   ///
   /// Return a size_t value.
   ///
-  size_t(CEF_CALLBACK* get_sizet)(struct _cef_translator_test_t* self);
+  size_t(CEF_CALLBACK *get_sizet)(struct _cef_translator_test_t *self);
 
   ///
   /// Set a void value.
   ///
-  int(CEF_CALLBACK* set_void)(struct _cef_translator_test_t* self);
+  int(CEF_CALLBACK *set_void)(struct _cef_translator_test_t *self);
 
   ///
   /// Set a bool value.
   ///
-  int(CEF_CALLBACK* set_bool)(struct _cef_translator_test_t* self, int val);
+  int(CEF_CALLBACK *set_bool)(struct _cef_translator_test_t *self, int val);
 
   ///
   /// Set an int value.
   ///
-  int(CEF_CALLBACK* set_int)(struct _cef_translator_test_t* self, int val);
+  int(CEF_CALLBACK *set_int)(struct _cef_translator_test_t *self, int val);
 
   ///
   /// Set a double value.
   ///
-  int(CEF_CALLBACK* set_double)(struct _cef_translator_test_t* self,
+  int(CEF_CALLBACK *set_double)(struct _cef_translator_test_t *self,
                                 double val);
 
   ///
   /// Set a long value.
   ///
-  int(CEF_CALLBACK* set_long)(struct _cef_translator_test_t* self, long val);
+  int(CEF_CALLBACK *set_long)(struct _cef_translator_test_t *self, long val);
 
   ///
   /// Set a size_t value.
   ///
-  int(CEF_CALLBACK* set_sizet)(struct _cef_translator_test_t* self, size_t val);
+  int(CEF_CALLBACK *set_sizet)(struct _cef_translator_test_t *self, size_t val);
 
   ///
   /// Set a int list value.
   ///
-  int(CEF_CALLBACK* set_int_list)(struct _cef_translator_test_t* self,
-                                  size_t valCount,
-                                  int const* val);
+  int(CEF_CALLBACK *set_int_list)(struct _cef_translator_test_t *self,
+                                  size_t valCount, int const *val);
 
   ///
   /// Return an int list value by out-param.
   ///
-  int(CEF_CALLBACK* get_int_list_by_ref)(struct _cef_translator_test_t* self,
-                                         size_t* valCount,
-                                         int* val);
+  int(CEF_CALLBACK *get_int_list_by_ref)(struct _cef_translator_test_t *self,
+                                         size_t *valCount, int *val);
 
   ///
   /// Return the number of points that will be output above.
   ///
-  size_t(CEF_CALLBACK* get_int_list_size)(struct _cef_translator_test_t* self);
+  size_t(CEF_CALLBACK *get_int_list_size)(struct _cef_translator_test_t *self);
 
   ///
   /// Return a string value.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_string)(
-      struct _cef_translator_test_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_string)(
+      struct _cef_translator_test_t *self);
 
   ///
   /// Set a string value.
   ///
-  int(CEF_CALLBACK* set_string)(struct _cef_translator_test_t* self,
-                                const cef_string_t* val);
+  int(CEF_CALLBACK *set_string)(struct _cef_translator_test_t *self,
+                                const cef_string_t *val);
 
   ///
   /// Return a string value by out-param.
   ///
-  void(CEF_CALLBACK* get_string_by_ref)(struct _cef_translator_test_t* self,
-                                        cef_string_t* val);
+  void(CEF_CALLBACK *get_string_by_ref)(struct _cef_translator_test_t *self,
+                                        cef_string_t *val);
 
   ///
   /// Set a string list value.
   ///
-  int(CEF_CALLBACK* set_string_list)(struct _cef_translator_test_t* self,
+  int(CEF_CALLBACK *set_string_list)(struct _cef_translator_test_t *self,
                                      cef_string_list_t val);
 
   ///
   /// Return a string list value by out-param.
   ///
-  int(CEF_CALLBACK* get_string_list_by_ref)(struct _cef_translator_test_t* self,
+  int(CEF_CALLBACK *get_string_list_by_ref)(struct _cef_translator_test_t *self,
                                             cef_string_list_t val);
 
   ///
   /// Set a string map value.
   ///
-  int(CEF_CALLBACK* set_string_map)(struct _cef_translator_test_t* self,
+  int(CEF_CALLBACK *set_string_map)(struct _cef_translator_test_t *self,
                                     cef_string_map_t val);
 
   ///
   /// Return a string map value by out-param.
   ///
-  int(CEF_CALLBACK* get_string_map_by_ref)(struct _cef_translator_test_t* self,
+  int(CEF_CALLBACK *get_string_map_by_ref)(struct _cef_translator_test_t *self,
                                            cef_string_map_t val);
 
   ///
   /// Set a string multimap value.
   ///
-  int(CEF_CALLBACK* set_string_multimap)(struct _cef_translator_test_t* self,
+  int(CEF_CALLBACK *set_string_multimap)(struct _cef_translator_test_t *self,
                                          cef_string_multimap_t val);
 
   ///
   /// Return a string multimap value by out-param.
   ///
-  int(CEF_CALLBACK* get_string_multimap_by_ref)(
-      struct _cef_translator_test_t* self,
-      cef_string_multimap_t val);
+  int(CEF_CALLBACK *get_string_multimap_by_ref)(
+      struct _cef_translator_test_t *self, cef_string_multimap_t val);
 
   ///
   /// Return a point value.
   ///
-  cef_point_t(CEF_CALLBACK* get_point)(struct _cef_translator_test_t* self);
+  cef_point_t(CEF_CALLBACK *get_point)(struct _cef_translator_test_t *self);
 
   ///
   /// Set a point value.
   ///
-  int(CEF_CALLBACK* set_point)(struct _cef_translator_test_t* self,
-                               const cef_point_t* val);
+  int(CEF_CALLBACK *set_point)(struct _cef_translator_test_t *self,
+                               const cef_point_t *val);
 
   ///
   /// Return a point value by out-param.
   ///
-  void(CEF_CALLBACK* get_point_by_ref)(struct _cef_translator_test_t* self,
-                                       cef_point_t* val);
+  void(CEF_CALLBACK *get_point_by_ref)(struct _cef_translator_test_t *self,
+                                       cef_point_t *val);
 
   ///
   /// Set a point list vlaue.
   ///
-  int(CEF_CALLBACK* set_point_list)(struct _cef_translator_test_t* self,
-                                    size_t valCount,
-                                    cef_point_t const* val);
+  int(CEF_CALLBACK *set_point_list)(struct _cef_translator_test_t *self,
+                                    size_t valCount, cef_point_t const *val);
 
   ///
   /// Return a point list value by out-param.
   ///
-  int(CEF_CALLBACK* get_point_list_by_ref)(struct _cef_translator_test_t* self,
-                                           size_t* valCount,
-                                           cef_point_t* val);
+  int(CEF_CALLBACK *get_point_list_by_ref)(struct _cef_translator_test_t *self,
+                                           size_t *valCount, cef_point_t *val);
 
   ///
   /// Return the number of points that will be output above.
   ///
-  size_t(CEF_CALLBACK* get_point_list_size)(
-      struct _cef_translator_test_t* self);
+  size_t(CEF_CALLBACK *get_point_list_size)(
+      struct _cef_translator_test_t *self);
 
   ///
   /// Return an new library-side object.
   ///
-  struct _cef_translator_test_ref_ptr_library_t*(
-      CEF_CALLBACK* get_ref_ptr_library)(struct _cef_translator_test_t* self,
+  struct _cef_translator_test_ref_ptr_library_t *(
+      CEF_CALLBACK *get_ref_ptr_library)(struct _cef_translator_test_t *self,
                                          int val);
 
   ///
@@ -259,130 +254,122 @@ typedef struct _cef_translator_test_t {
   /// cef_translator_test_ref_ptr_library_t::get_value(). This tests input and
   /// execution of a library-side object type.
   ///
-  int(CEF_CALLBACK* set_ref_ptr_library)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_library_t* val);
+  int(CEF_CALLBACK *set_ref_ptr_library)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_library_t *val);
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
-  struct _cef_translator_test_ref_ptr_library_t*(
-      CEF_CALLBACK* set_ref_ptr_library_and_return)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_library_t* val);
+  struct _cef_translator_test_ref_ptr_library_t *(
+      CEF_CALLBACK *set_ref_ptr_library_and_return)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_library_t *val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_translator_test_ref_ptr_library_t::get_value(). This tests input of a
   /// library- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK* set_child_ref_ptr_library)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_library_child_t* val);
+  int(CEF_CALLBACK *set_child_ref_ptr_library)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_library_child_t *val);
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a library-side child object type and return as the parent type.
   ///
-  struct _cef_translator_test_ref_ptr_library_t*(
-      CEF_CALLBACK* set_child_ref_ptr_library_and_return_parent)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_library_child_t* val);
+  struct _cef_translator_test_ref_ptr_library_t *(
+      CEF_CALLBACK *set_child_ref_ptr_library_and_return_parent)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_library_child_t *val);
 
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK* set_ref_ptr_library_list)(
-      struct _cef_translator_test_t* self,
-      size_t valCount,
-      struct _cef_translator_test_ref_ptr_library_t* const* val,
-      int val1,
+  int(CEF_CALLBACK *set_ref_ptr_library_list)(
+      struct _cef_translator_test_t *self, size_t valCount,
+      struct _cef_translator_test_ref_ptr_library_t *const *val, int val1,
       int val2);
 
   ///
   /// Return an object list value by out-param.
   ///
-  int(CEF_CALLBACK* get_ref_ptr_library_list_by_ref)(
-      struct _cef_translator_test_t* self,
-      size_t* valCount,
-      struct _cef_translator_test_ref_ptr_library_t** val,
-      int val1,
-      int val2);
+  int(CEF_CALLBACK *get_ref_ptr_library_list_by_ref)(
+      struct _cef_translator_test_t *self, size_t *valCount,
+      struct _cef_translator_test_ref_ptr_library_t **val, int val1, int val2);
 
   ///
   /// Return the number of object that will be output above.
   ///
-  size_t(CEF_CALLBACK* get_ref_ptr_library_list_size)(
-      struct _cef_translator_test_t* self);
+  size_t(CEF_CALLBACK *get_ref_ptr_library_list_size)(
+      struct _cef_translator_test_t *self);
 
   ///
   /// Set an object. Returns the value from
   /// cef_translator_test_ref_ptr_client_t::get_value(). This tests input and
   /// execution of a client-side object type.
   ///
-  int(CEF_CALLBACK* set_ref_ptr_client)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_client_t* val);
+  int(CEF_CALLBACK *set_ref_ptr_client)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_client_t *val);
 
   ///
   /// Set an object. Returns the handler passed in. This tests input and output
   /// of a client-side object type.
   ///
-  struct _cef_translator_test_ref_ptr_client_t*(
-      CEF_CALLBACK* set_ref_ptr_client_and_return)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_client_t* val);
+  struct _cef_translator_test_ref_ptr_client_t *(
+      CEF_CALLBACK *set_ref_ptr_client_and_return)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_client_t *val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_translator_test_ref_ptr_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK* set_child_ref_ptr_client)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_client_child_t* val);
+  int(CEF_CALLBACK *set_child_ref_ptr_client)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_client_child_t *val);
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a client-side child object type and return as the parent type.
   ///
-  struct _cef_translator_test_ref_ptr_client_t*(
-      CEF_CALLBACK* set_child_ref_ptr_client_and_return_parent)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_ref_ptr_client_child_t* val);
+  struct _cef_translator_test_ref_ptr_client_t *(
+      CEF_CALLBACK *set_child_ref_ptr_client_and_return_parent)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_ref_ptr_client_child_t *val);
 
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK* set_ref_ptr_client_list)(
-      struct _cef_translator_test_t* self,
-      size_t valCount,
-      struct _cef_translator_test_ref_ptr_client_t* const* val,
-      int val1,
+  int(CEF_CALLBACK *set_ref_ptr_client_list)(
+      struct _cef_translator_test_t *self, size_t valCount,
+      struct _cef_translator_test_ref_ptr_client_t *const *val, int val1,
       int val2);
 
   ///
   /// Return an object list value by out-param.
   ///
-  int(CEF_CALLBACK* get_ref_ptr_client_list_by_ref)(
-      struct _cef_translator_test_t* self,
-      size_t* valCount,
-      struct _cef_translator_test_ref_ptr_client_t** val,
-      struct _cef_translator_test_ref_ptr_client_t* val1,
-      struct _cef_translator_test_ref_ptr_client_t* val2);
+  int(CEF_CALLBACK *get_ref_ptr_client_list_by_ref)(
+      struct _cef_translator_test_t *self, size_t *valCount,
+      struct _cef_translator_test_ref_ptr_client_t **val,
+      struct _cef_translator_test_ref_ptr_client_t *val1,
+      struct _cef_translator_test_ref_ptr_client_t *val2);
 
   ///
   /// Return the number of object that will be output above.
   ///
-  size_t(CEF_CALLBACK* get_ref_ptr_client_list_size)(
-      struct _cef_translator_test_t* self);
+  size_t(CEF_CALLBACK *get_ref_ptr_client_list_size)(
+      struct _cef_translator_test_t *self);
 
   ///
   /// Return an new library-side object.
   ///
-  struct _cef_translator_test_scoped_library_t*(
-      CEF_CALLBACK* get_own_ptr_library)(struct _cef_translator_test_t* self,
+  struct _cef_translator_test_scoped_library_t *(
+      CEF_CALLBACK *get_own_ptr_library)(struct _cef_translator_test_t *self,
                                          int val);
 
   ///
@@ -390,99 +377,97 @@ typedef struct _cef_translator_test_t {
   /// cef_translator_test_scoped_library_t::get_value(). This tests input and
   /// execution of a library-side object type.
   ///
-  int(CEF_CALLBACK* set_own_ptr_library)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_library_t* val);
+  int(CEF_CALLBACK *set_own_ptr_library)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_library_t *val);
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
-  struct _cef_translator_test_scoped_library_t*(
-      CEF_CALLBACK* set_own_ptr_library_and_return)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_library_t* val);
+  struct _cef_translator_test_scoped_library_t *(
+      CEF_CALLBACK *set_own_ptr_library_and_return)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_library_t *val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_translator_test_scoped_library_t::get_value(). This tests input of a
   /// library- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK* set_child_own_ptr_library)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_library_child_t* val);
+  int(CEF_CALLBACK *set_child_own_ptr_library)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_library_child_t *val);
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a library-side child object type and return as the parent type.
   ///
-  struct _cef_translator_test_scoped_library_t*(
-      CEF_CALLBACK* set_child_own_ptr_library_and_return_parent)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_library_child_t* val);
+  struct _cef_translator_test_scoped_library_t *(
+      CEF_CALLBACK *set_child_own_ptr_library_and_return_parent)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_library_child_t *val);
 
   ///
   /// Set an object. Returns the value from
   /// cef_translator_test_scoped_client_t::get_value(). This tests input and
   /// execution of a client-side object type.
   ///
-  int(CEF_CALLBACK* set_own_ptr_client)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_client_t* val);
+  int(CEF_CALLBACK *set_own_ptr_client)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_client_t *val);
 
   ///
   /// Set an object. Returns the handler passed in. This tests input and output
   /// of a client-side object type.
   ///
-  struct _cef_translator_test_scoped_client_t*(
-      CEF_CALLBACK* set_own_ptr_client_and_return)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_client_t* val);
+  struct _cef_translator_test_scoped_client_t *(
+      CEF_CALLBACK *set_own_ptr_client_and_return)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_client_t *val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_translator_test_scoped_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK* set_child_own_ptr_client)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_client_child_t* val);
+  int(CEF_CALLBACK *set_child_own_ptr_client)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_client_child_t *val);
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a client-side child object type and return as the parent type.
   ///
-  struct _cef_translator_test_scoped_client_t*(
-      CEF_CALLBACK* set_child_own_ptr_client_and_return_parent)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_client_child_t* val);
+  struct _cef_translator_test_scoped_client_t *(
+      CEF_CALLBACK *set_child_own_ptr_client_and_return_parent)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_client_child_t *val);
 
   ///
   /// Set an object. Returns the value from
   /// cef_translator_test_scoped_library_t::get_value(). This tests input and
   /// execution of a library-side object type.
   ///
-  int(CEF_CALLBACK* set_raw_ptr_library)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_library_t* val);
+  int(CEF_CALLBACK *set_raw_ptr_library)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_library_t *val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_translator_test_scoped_library_t::get_value(). This tests input of a
   /// library- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK* set_child_raw_ptr_library)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_library_child_t* val);
+  int(CEF_CALLBACK *set_child_raw_ptr_library)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_library_child_t *val);
 
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK* set_raw_ptr_library_list)(
-      struct _cef_translator_test_t* self,
-      size_t valCount,
-      struct _cef_translator_test_scoped_library_t* const* val,
-      int val1,
+  int(CEF_CALLBACK *set_raw_ptr_library_list)(
+      struct _cef_translator_test_t *self, size_t valCount,
+      struct _cef_translator_test_scoped_library_t *const *val, int val1,
       int val2);
 
   ///
@@ -490,34 +475,32 @@ typedef struct _cef_translator_test_t {
   /// cef_translator_test_scoped_client_t::get_value(). This tests input and
   /// execution of a client-side object type.
   ///
-  int(CEF_CALLBACK* set_raw_ptr_client)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_client_t* val);
+  int(CEF_CALLBACK *set_raw_ptr_client)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_client_t *val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_translator_test_scoped_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK* set_child_raw_ptr_client)(
-      struct _cef_translator_test_t* self,
-      struct _cef_translator_test_scoped_client_child_t* val);
+  int(CEF_CALLBACK *set_child_raw_ptr_client)(
+      struct _cef_translator_test_t *self,
+      struct _cef_translator_test_scoped_client_child_t *val);
 
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK* set_raw_ptr_client_list)(
-      struct _cef_translator_test_t* self,
-      size_t valCount,
-      struct _cef_translator_test_scoped_client_t* const* val,
-      int val1,
+  int(CEF_CALLBACK *set_raw_ptr_client_list)(
+      struct _cef_translator_test_t *self, size_t valCount,
+      struct _cef_translator_test_scoped_client_t *const *val, int val1,
       int val2);
 } cef_translator_test_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_translator_test_t* cef_translator_test_create(void);
+CEF_EXPORT cef_translator_test_t *cef_translator_test_create(void);
 
 ///
 /// Library-side test object for RefPtr.
@@ -533,21 +516,20 @@ typedef struct _cef_translator_test_ref_ptr_library_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_value)(
-      struct _cef_translator_test_ref_ptr_library_t* self);
+  int(CEF_CALLBACK *get_value)(
+      struct _cef_translator_test_ref_ptr_library_t *self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK* set_value)(
-      struct _cef_translator_test_ref_ptr_library_t* self,
-      int value);
+  void(CEF_CALLBACK *set_value)(
+      struct _cef_translator_test_ref_ptr_library_t *self, int value);
 } cef_translator_test_ref_ptr_library_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_translator_test_ref_ptr_library_t*
+CEF_EXPORT cef_translator_test_ref_ptr_library_t *
 cef_translator_test_ref_ptr_library_create(int value);
 
 ///
@@ -564,21 +546,20 @@ typedef struct _cef_translator_test_ref_ptr_library_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_other_value)(
-      struct _cef_translator_test_ref_ptr_library_child_t* self);
+  int(CEF_CALLBACK *get_other_value)(
+      struct _cef_translator_test_ref_ptr_library_child_t *self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK* set_other_value)(
-      struct _cef_translator_test_ref_ptr_library_child_t* self,
-      int value);
+  void(CEF_CALLBACK *set_other_value)(
+      struct _cef_translator_test_ref_ptr_library_child_t *self, int value);
 } cef_translator_test_ref_ptr_library_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_translator_test_ref_ptr_library_child_t*
+CEF_EXPORT cef_translator_test_ref_ptr_library_child_t *
 cef_translator_test_ref_ptr_library_child_create(int value, int other_value);
 
 ///
@@ -595,21 +576,21 @@ typedef struct _cef_translator_test_ref_ptr_library_child_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_other_other_value)(
-      struct _cef_translator_test_ref_ptr_library_child_child_t* self);
+  int(CEF_CALLBACK *get_other_other_value)(
+      struct _cef_translator_test_ref_ptr_library_child_child_t *self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK* set_other_other_value)(
-      struct _cef_translator_test_ref_ptr_library_child_child_t* self,
+  void(CEF_CALLBACK *set_other_other_value)(
+      struct _cef_translator_test_ref_ptr_library_child_child_t *self,
       int value);
 } cef_translator_test_ref_ptr_library_child_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_translator_test_ref_ptr_library_child_child_t*
+CEF_EXPORT cef_translator_test_ref_ptr_library_child_child_t *
 cef_translator_test_ref_ptr_library_child_child_create(int value,
                                                        int other_value,
                                                        int other_other_value);
@@ -628,8 +609,8 @@ typedef struct _cef_translator_test_ref_ptr_client_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_value)(
-      struct _cef_translator_test_ref_ptr_client_t* self);
+  int(CEF_CALLBACK *get_value)(
+      struct _cef_translator_test_ref_ptr_client_t *self);
 } cef_translator_test_ref_ptr_client_t;
 
 ///
@@ -646,8 +627,8 @@ typedef struct _cef_translator_test_ref_ptr_client_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_other_value)(
-      struct _cef_translator_test_ref_ptr_client_child_t* self);
+  int(CEF_CALLBACK *get_other_value)(
+      struct _cef_translator_test_ref_ptr_client_child_t *self);
 } cef_translator_test_ref_ptr_client_child_t;
 
 ///
@@ -664,21 +645,20 @@ typedef struct _cef_translator_test_scoped_library_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_value)(
-      struct _cef_translator_test_scoped_library_t* self);
+  int(CEF_CALLBACK *get_value)(
+      struct _cef_translator_test_scoped_library_t *self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK* set_value)(
-      struct _cef_translator_test_scoped_library_t* self,
-      int value);
+  void(CEF_CALLBACK *set_value)(
+      struct _cef_translator_test_scoped_library_t *self, int value);
 } cef_translator_test_scoped_library_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_translator_test_scoped_library_t*
+CEF_EXPORT cef_translator_test_scoped_library_t *
 cef_translator_test_scoped_library_create(int value);
 
 ///
@@ -695,21 +675,20 @@ typedef struct _cef_translator_test_scoped_library_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_other_value)(
-      struct _cef_translator_test_scoped_library_child_t* self);
+  int(CEF_CALLBACK *get_other_value)(
+      struct _cef_translator_test_scoped_library_child_t *self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK* set_other_value)(
-      struct _cef_translator_test_scoped_library_child_t* self,
-      int value);
+  void(CEF_CALLBACK *set_other_value)(
+      struct _cef_translator_test_scoped_library_child_t *self, int value);
 } cef_translator_test_scoped_library_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_translator_test_scoped_library_child_t*
+CEF_EXPORT cef_translator_test_scoped_library_child_t *
 cef_translator_test_scoped_library_child_create(int value, int other_value);
 
 ///
@@ -726,21 +705,21 @@ typedef struct _cef_translator_test_scoped_library_child_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_other_other_value)(
-      struct _cef_translator_test_scoped_library_child_child_t* self);
+  int(CEF_CALLBACK *get_other_other_value)(
+      struct _cef_translator_test_scoped_library_child_child_t *self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK* set_other_other_value)(
-      struct _cef_translator_test_scoped_library_child_child_t* self,
+  void(CEF_CALLBACK *set_other_other_value)(
+      struct _cef_translator_test_scoped_library_child_child_t *self,
       int value);
 } cef_translator_test_scoped_library_child_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_translator_test_scoped_library_child_child_t*
+CEF_EXPORT cef_translator_test_scoped_library_child_child_t *
 cef_translator_test_scoped_library_child_child_create(int value,
                                                       int other_value,
                                                       int other_other_value);
@@ -759,8 +738,8 @@ typedef struct _cef_translator_test_scoped_client_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_value)(
-      struct _cef_translator_test_scoped_client_t* self);
+  int(CEF_CALLBACK *get_value)(
+      struct _cef_translator_test_scoped_client_t *self);
 } cef_translator_test_scoped_client_t;
 
 ///
@@ -777,12 +756,12 @@ typedef struct _cef_translator_test_scoped_client_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK* get_other_value)(
-      struct _cef_translator_test_scoped_client_child_t* self);
+  int(CEF_CALLBACK *get_other_value)(
+      struct _cef_translator_test_scoped_client_child_t *self);
 } cef_translator_test_scoped_client_child_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_TEST_CEF_TRANSLATOR_TEST_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_TEST_CEF_TRANSLATOR_TEST_CAPI_H_

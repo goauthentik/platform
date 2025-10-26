@@ -30,7 +30,7 @@ class CefEndTracingCallbackCppToC
     : public CefCppToCRefCounted<CefEndTracingCallbackCppToC,
                                  CefEndTracingCallback,
                                  cef_end_tracing_callback_t> {
- public:
+public:
   CefEndTracingCallbackCppToC();
   virtual ~CefEndTracingCallbackCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefEndTracingCallbackCppToC_Wrap =
 constexpr auto CefEndTracingCallbackCppToC_Unwrap =
     CefEndTracingCallbackCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_END_TRACING_CALLBACK_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_END_TRACING_CALLBACK_CPPTOC_H_

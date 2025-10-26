@@ -113,7 +113,7 @@
 ///
 /*--cef(source=client)--*/
 class CefFrameHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called when a new frame is created. This will be the first notification
   /// that references |frame|. Any commands that require transport to the
@@ -148,8 +148,7 @@ class CefFrameHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnFrameAttached(CefRefPtr<CefBrowser> browser,
-                               CefRefPtr<CefFrame> frame,
-                               bool reattached) {}
+                               CefRefPtr<CefFrame> frame, bool reattached) {}
 
   ///
   /// Called when a frame loses its connection to the renderer process. This may
@@ -188,4 +187,4 @@ class CefFrameHandler : public virtual CefBaseRefCounted {
                                   CefRefPtr<CefFrame> new_frame) {}
 };
 
-#endif  // CEF_INCLUDE_CEF_FRAME_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_FRAME_HANDLER_H_

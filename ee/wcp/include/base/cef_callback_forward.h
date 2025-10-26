@@ -35,18 +35,16 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/functional/callback_forward.h"
-#else  // !USING_CHROMIUM_INCLUDES
+#else // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
 
 namespace base {
 
-template <typename Signature>
-class OnceCallback;
+template <typename Signature> class OnceCallback;
 
-template <typename Signature>
-class RepeatingCallback;
+template <typename Signature> class RepeatingCallback;
 
 ///
 /// Syntactic sugar to make OnceClosure<void()> and RepeatingClosure<void()>
@@ -56,8 +54,8 @@ class RepeatingCallback;
 using OnceClosure = OnceCallback<void()>;
 using RepeatingClosure = RepeatingCallback<void()>;
 
-}  // namespace base
+} // namespace base
 
-#endif  // !!USING_CHROMIUM_INCLUDES
+#endif // !!USING_CHROMIUM_INCLUDES
 
-#endif  // INCLUDE_BASE_CEF_CALLBACK_FORWARD_H_
+#endif // INCLUDE_BASE_CEF_CALLBACK_FORWARD_H_

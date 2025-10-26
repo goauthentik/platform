@@ -64,7 +64,7 @@
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefClient : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Return the handler for audio rendering events.
   ///
@@ -199,4 +199,4 @@ class CefClient : public virtual CefBaseRefCounted {
   }
 };
 
-#endif  // CEF_INCLUDE_CEF_CLIENT_H_
+#endif // CEF_INCLUDE_CEF_CLIENT_H_

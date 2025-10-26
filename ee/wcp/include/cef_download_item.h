@@ -45,7 +45,7 @@
 ///
 /*--cef(source=library)--*/
 class CefDownloadItem : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns true if this object is valid. Do not call any other methods if
   /// this function returns false.
@@ -163,4 +163,4 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   virtual CefString GetMimeType() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_DOWNLOAD_ITEM_H_
+#endif // CEF_INCLUDE_CEF_DOWNLOAD_ITEM_H_

@@ -30,7 +30,7 @@ class CefAccessibilityHandlerCppToC
     : public CefCppToCRefCounted<CefAccessibilityHandlerCppToC,
                                  CefAccessibilityHandler,
                                  cef_accessibility_handler_t> {
- public:
+public:
   CefAccessibilityHandlerCppToC();
   virtual ~CefAccessibilityHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefAccessibilityHandlerCppToC_Wrap =
 constexpr auto CefAccessibilityHandlerCppToC_Unwrap =
     CefAccessibilityHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_ACCESSIBILITY_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_ACCESSIBILITY_HANDLER_CPPTOC_H_

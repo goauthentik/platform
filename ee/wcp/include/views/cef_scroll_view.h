@@ -47,13 +47,13 @@
 ///
 /*--cef(source=library)--*/
 class CefScrollView : public CefView {
- public:
+public:
   ///
   /// Create a new ScrollView.
   ///
   /*--cef(optional_param=delegate)--*/
-  static CefRefPtr<CefScrollView> CreateScrollView(
-      CefRefPtr<CefViewDelegate> delegate);
+  static CefRefPtr<CefScrollView>
+  CreateScrollView(CefRefPtr<CefViewDelegate> delegate);
 
   ///
   /// Set the content View. The content View must have a specified size (e.g.
@@ -99,4 +99,4 @@ class CefScrollView : public CefView {
   virtual int GetVerticalScrollbarWidth() = 0;
 };
 
-#endif  // CEF_INCLUDE_VIEWS_CEF_SCROLL_VIEW_H_
+#endif // CEF_INCLUDE_VIEWS_CEF_SCROLL_VIEW_H_

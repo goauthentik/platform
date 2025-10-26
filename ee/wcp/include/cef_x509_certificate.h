@@ -48,7 +48,7 @@
 ///
 /*--cef(source=library)--*/
 class CefX509CertPrincipal : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns a name that can be used to represent the issuer. It tries in this
   /// order: Common Name (CN), Organization Name (O) and Organizational Unit
@@ -85,13 +85,13 @@ class CefX509CertPrincipal : public virtual CefBaseRefCounted {
   /// Retrieve the list of organization names.
   ///
   /*--cef()--*/
-  virtual void GetOrganizationNames(std::vector<CefString>& names) = 0;
+  virtual void GetOrganizationNames(std::vector<CefString> &names) = 0;
 
   ///
   /// Retrieve the list of organization unit names.
   ///
   /*--cef()--*/
-  virtual void GetOrganizationUnitNames(std::vector<CefString>& names) = 0;
+  virtual void GetOrganizationUnitNames(std::vector<CefString> &names) = 0;
 };
 
 ///
@@ -99,7 +99,7 @@ class CefX509CertPrincipal : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefX509Certificate : public virtual CefBaseRefCounted {
- public:
+public:
   typedef std::vector<CefRefPtr<CefBinaryValue>> IssuerChainBinaryList;
 
   ///
@@ -162,7 +162,7 @@ class CefX509Certificate : public virtual CefBaseRefCounted {
   /// present in the array but is an empty string.
   ///
   /*--cef(count_func=chain:GetIssuerChainSize)--*/
-  virtual void GetDEREncodedIssuerChain(IssuerChainBinaryList& chain) = 0;
+  virtual void GetDEREncodedIssuerChain(IssuerChainBinaryList &chain) = 0;
 
   ///
   /// Returns the PEM encoded data for the certificate issuer chain.
@@ -170,7 +170,7 @@ class CefX509Certificate : public virtual CefBaseRefCounted {
   /// present in the array but is an empty string.
   ///
   /*--cef(count_func=chain:GetIssuerChainSize)--*/
-  virtual void GetPEMEncodedIssuerChain(IssuerChainBinaryList& chain) = 0;
+  virtual void GetPEMEncodedIssuerChain(IssuerChainBinaryList &chain) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_X509_CERTIFICATE_H_
+#endif // CEF_INCLUDE_CEF_X509_CERTIFICATE_H_

@@ -81,7 +81,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/cancelable_callback.h"
-#else  // !USING_CHROMIUM_INCLUDES
+#else // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -98,12 +98,11 @@
 namespace base {
 namespace internal {
 
-template <typename CallbackType>
-class CancelableCallbackImpl {
- public:
+template <typename CallbackType> class CancelableCallbackImpl {
+public:
   CancelableCallbackImpl() = default;
-  CancelableCallbackImpl(const CancelableCallbackImpl&) = delete;
-  CancelableCallbackImpl& operator=(const CancelableCallbackImpl&) = delete;
+  CancelableCallbackImpl(const CancelableCallbackImpl &) = delete;
+  CancelableCallbackImpl &operator=(const CancelableCallbackImpl &) = delete;
 
   // |callback| must not be null.
   explicit CancelableCallbackImpl(CallbackType callback)
@@ -141,28 +140,26 @@ class CancelableCallbackImpl {
     return forwarder;
   }
 
- private:
+private:
   template <typename... Args>
-  void MakeForwarder(RepeatingCallback<void(Args...)>* out) const {
+  void MakeForwarder(RepeatingCallback<void(Args...)> *out) const {
     using ForwarderType = void (CancelableCallbackImpl::*)(Args...);
     ForwarderType forwarder = &CancelableCallbackImpl::ForwardRepeating;
     *out = BindRepeating(forwarder, weak_ptr_factory_.GetWeakPtr());
   }
 
   template <typename... Args>
-  void MakeForwarder(OnceCallback<void(Args...)>* out) const {
+  void MakeForwarder(OnceCallback<void(Args...)> *out) const {
     using ForwarderType = void (CancelableCallbackImpl::*)(Args...);
     ForwarderType forwarder = &CancelableCallbackImpl::ForwardOnce;
     *out = BindOnce(forwarder, weak_ptr_factory_.GetWeakPtr());
   }
 
-  template <typename... Args>
-  void ForwardRepeating(Args... args) {
+  template <typename... Args> void ForwardRepeating(Args... args) {
     callback_.Run(std::forward<Args>(args)...);
   }
 
-  template <typename... Args>
-  void ForwardOnce(Args... args) {
+  template <typename... Args> void ForwardOnce(Args... args) {
     weak_ptr_factory_.InvalidateWeakPtrs();
     std::move(callback_).Run(std::forward<Args>(args)...);
   }
@@ -172,7 +169,7 @@ class CancelableCallbackImpl {
   mutable base::WeakPtrFactory<CancelableCallbackImpl> weak_ptr_factory_{this};
 };
 
-}  // namespace internal
+} // namespace internal
 
 ///
 /// Consider using base::WeakPtr directly instead of base::CancelableCallback
@@ -188,8 +185,8 @@ using CancelableRepeatingCallback =
     internal::CancelableCallbackImpl<RepeatingCallback<Signature>>;
 using CancelableRepeatingClosure = CancelableRepeatingCallback<void()>;
 
-}  // namespace base
+} // namespace base
 
-#endif  // !USING_CHROMIUM_INCLUDES
+#endif // !USING_CHROMIUM_INCLUDES
 
-#endif  // CEF_INCLUDE_BASE_CEF_CANCELABLE_CALLBACK_H_
+#endif // CEF_INCLUDE_BASE_CEF_CANCELABLE_CALLBACK_H_

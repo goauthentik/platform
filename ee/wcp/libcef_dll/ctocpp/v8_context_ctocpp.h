@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefV8ContextCToCpp : public CefCToCppRefCounted<CefV8ContextCToCpp,
-                                                      CefV8Context,
-                                                      cef_v8_context_t> {
- public:
+class CefV8ContextCToCpp
+    : public CefCToCppRefCounted<CefV8ContextCToCpp, CefV8Context,
+                                 cef_v8_context_t> {
+public:
   CefV8ContextCToCpp();
   virtual ~CefV8ContextCToCpp();
 
@@ -42,14 +42,12 @@ class CefV8ContextCToCpp : public CefCToCppRefCounted<CefV8ContextCToCpp,
   bool Enter() override;
   bool Exit() override;
   bool IsSame(CefRefPtr<CefV8Context> that) override;
-  bool Eval(const CefString& code,
-            const CefString& script_url,
-            int start_line,
-            CefRefPtr<CefV8Value>& retval,
-            CefRefPtr<CefV8Exception>& exception) override;
+  bool Eval(const CefString &code, const CefString &script_url, int start_line,
+            CefRefPtr<CefV8Value> &retval,
+            CefRefPtr<CefV8Exception> &exception) override;
 };
 
 constexpr auto CefV8ContextCToCpp_Wrap = CefV8ContextCToCpp::Wrap;
 constexpr auto CefV8ContextCToCpp_Unwrap = CefV8ContextCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_V8_CONTEXT_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_V8_CONTEXT_CTOCPP_H_

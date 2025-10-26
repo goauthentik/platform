@@ -78,8 +78,8 @@ typedef struct _cef_scheme_registrar_t {
   /// per unique |scheme_name| value. If |scheme_name| is already registered or
   /// if an error occurs this function will return false (0).
   ///
-  int(CEF_CALLBACK* add_custom_scheme)(struct _cef_scheme_registrar_t* self,
-                                       const cef_string_t* scheme_name,
+  int(CEF_CALLBACK *add_custom_scheme)(struct _cef_scheme_registrar_t *self,
+                                       const cef_string_t *scheme_name,
                                        int options);
 } cef_scheme_registrar_t;
 
@@ -104,12 +104,10 @@ typedef struct _cef_scheme_handler_factory_t {
   /// (for example, if the request came from cef_urlrequest_t). The |request|
   /// object passed to this function cannot be modified.
   ///
-  struct _cef_resource_handler_t*(CEF_CALLBACK* create)(
-      struct _cef_scheme_handler_factory_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      const cef_string_t* scheme_name,
-      struct _cef_request_t* request);
+  struct _cef_resource_handler_t *(CEF_CALLBACK *create)(
+      struct _cef_scheme_handler_factory_t *self,
+      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
+      const cef_string_t *scheme_name, struct _cef_request_t *request);
 } cef_scheme_handler_factory_t;
 
 ///
@@ -127,10 +125,10 @@ typedef struct _cef_scheme_handler_factory_t {
 /// t_context_t::cef_request_context_get_global_context()-
 /// >register_scheme_handler_factory().
 ///
-CEF_EXPORT int cef_register_scheme_handler_factory(
-    const cef_string_t* scheme_name,
-    const cef_string_t* domain_name,
-    cef_scheme_handler_factory_t* factory);
+CEF_EXPORT int
+cef_register_scheme_handler_factory(const cef_string_t *scheme_name,
+                                    const cef_string_t *domain_name,
+                                    cef_scheme_handler_factory_t *factory);
 
 ///
 /// Clear all scheme handler factories registered with the global request
@@ -145,4 +143,4 @@ CEF_EXPORT int cef_clear_scheme_handler_factories(void);
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_SCHEME_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_SCHEME_CAPI_H_

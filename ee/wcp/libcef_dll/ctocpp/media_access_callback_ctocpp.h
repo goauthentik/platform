@@ -30,7 +30,7 @@ class CefMediaAccessCallbackCToCpp
     : public CefCToCppRefCounted<CefMediaAccessCallbackCToCpp,
                                  CefMediaAccessCallback,
                                  cef_media_access_callback_t> {
- public:
+public:
   CefMediaAccessCallbackCToCpp();
   virtual ~CefMediaAccessCallbackCToCpp();
 
@@ -44,4 +44,4 @@ constexpr auto CefMediaAccessCallbackCToCpp_Wrap =
 constexpr auto CefMediaAccessCallbackCToCpp_Unwrap =
     CefMediaAccessCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ACCESS_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ACCESS_CALLBACK_CTOCPP_H_

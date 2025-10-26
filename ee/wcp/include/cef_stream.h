@@ -45,12 +45,12 @@
 ///
 /*--cef(source=client)--*/
 class CefReadHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Read raw binary data.
   ///
   /*--cef()--*/
-  virtual size_t Read(void* ptr, size_t size, size_t n) = 0;
+  virtual size_t Read(void *ptr, size_t size, size_t n) = 0;
 
   ///
   /// Seek to the specified offset position. |whence| may be any one of
@@ -87,31 +87,31 @@ class CefReadHandler : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefStreamReader : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Create a new CefStreamReader object from a file.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefStreamReader> CreateForFile(const CefString& fileName);
+  static CefRefPtr<CefStreamReader> CreateForFile(const CefString &fileName);
 
   ///
   /// Create a new CefStreamReader object from data.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefStreamReader> CreateForData(void* data, size_t size);
+  static CefRefPtr<CefStreamReader> CreateForData(void *data, size_t size);
 
   ///
   /// Create a new CefStreamReader object from a custom handler.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefStreamReader> CreateForHandler(
-      CefRefPtr<CefReadHandler> handler);
+  static CefRefPtr<CefStreamReader>
+  CreateForHandler(CefRefPtr<CefReadHandler> handler);
 
   ///
   /// Read raw binary data.
   ///
   /*--cef()--*/
-  virtual size_t Read(void* ptr, size_t size, size_t n) = 0;
+  virtual size_t Read(void *ptr, size_t size, size_t n) = 0;
 
   ///
   /// Seek to the specified offset position. |whence| may be any one of
@@ -148,12 +148,12 @@ class CefStreamReader : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefWriteHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Write raw binary data.
   ///
   /*--cef()--*/
-  virtual size_t Write(const void* ptr, size_t size, size_t n) = 0;
+  virtual size_t Write(const void *ptr, size_t size, size_t n) = 0;
 
   ///
   /// Seek to the specified offset position. |whence| may be any one of
@@ -190,24 +190,24 @@ class CefWriteHandler : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefStreamWriter : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Create a new CefStreamWriter object for a file.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefStreamWriter> CreateForFile(const CefString& fileName);
+  static CefRefPtr<CefStreamWriter> CreateForFile(const CefString &fileName);
   ///
   /// Create a new CefStreamWriter object for a custom handler.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefStreamWriter> CreateForHandler(
-      CefRefPtr<CefWriteHandler> handler);
+  static CefRefPtr<CefStreamWriter>
+  CreateForHandler(CefRefPtr<CefWriteHandler> handler);
 
   ///
   /// Write raw binary data.
   ///
   /*--cef()--*/
-  virtual size_t Write(const void* ptr, size_t size, size_t n) = 0;
+  virtual size_t Write(const void *ptr, size_t size, size_t n) = 0;
 
   ///
   /// Seek to the specified offset position. |whence| may be any one of
@@ -238,4 +238,4 @@ class CefStreamWriter : public virtual CefBaseRefCounted {
   virtual bool MayBlock() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_STREAM_H_
+#endif // CEF_INCLUDE_CEF_STREAM_H_

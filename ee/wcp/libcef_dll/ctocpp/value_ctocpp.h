@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefValueCToCpp
     : public CefCToCppRefCounted<CefValueCToCpp, CefValue, cef_value_t> {
- public:
+public:
   CefValueCToCpp();
   virtual ~CefValueCToCpp();
 
@@ -51,7 +51,7 @@ class CefValueCToCpp
   bool SetBool(bool value) override;
   bool SetInt(int value) override;
   bool SetDouble(double value) override;
-  bool SetString(const CefString& value) override;
+  bool SetString(const CefString &value) override;
   bool SetBinary(CefRefPtr<CefBinaryValue> value) override;
   bool SetDictionary(CefRefPtr<CefDictionaryValue> value) override;
   bool SetList(CefRefPtr<CefListValue> value) override;
@@ -60,4 +60,4 @@ class CefValueCToCpp
 constexpr auto CefValueCToCpp_Wrap = CefValueCToCpp::Wrap;
 constexpr auto CefValueCToCpp_Unwrap = CefValueCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_VALUE_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_VALUE_CTOCPP_H_

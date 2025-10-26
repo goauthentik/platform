@@ -30,7 +30,7 @@ class CefMediaRouteCreateCallbackCppToC
     : public CefCppToCRefCounted<CefMediaRouteCreateCallbackCppToC,
                                  CefMediaRouteCreateCallback,
                                  cef_media_route_create_callback_t> {
- public:
+public:
   CefMediaRouteCreateCallbackCppToC();
   virtual ~CefMediaRouteCreateCallbackCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefMediaRouteCreateCallbackCppToC_Wrap =
 constexpr auto CefMediaRouteCreateCallbackCppToC_Unwrap =
     CefMediaRouteCreateCallbackCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_ROUTE_CREATE_CALLBACK_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_MEDIA_ROUTE_CREATE_CALLBACK_CPPTOC_H_

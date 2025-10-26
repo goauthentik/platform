@@ -7,98 +7,176 @@
 #include "agent_platform.pb.h"
 
 #include <functional>
+#include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
 #include <grpcpp/generic/async_generic_service.h>
+#include <grpcpp/impl/proto_utils.h>
+#include <grpcpp/impl/rpc_method.h>
+#include <grpcpp/impl/server_callback_handlers.h>
+#include <grpcpp/impl/service_type.h>
+#include <grpcpp/ports_def.inc>
+#include <grpcpp/server_context.h>
 #include <grpcpp/support/async_stream.h>
 #include <grpcpp/support/async_unary_call.h>
 #include <grpcpp/support/client_callback.h>
-#include <grpcpp/client_context.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/support/message_allocator.h>
 #include <grpcpp/support/method_handler.h>
-#include <grpcpp/impl/proto_utils.h>
-#include <grpcpp/impl/rpc_method.h>
 #include <grpcpp/support/server_callback.h>
-#include <grpcpp/impl/server_callback_handlers.h>
-#include <grpcpp/server_context.h>
-#include <grpcpp/impl/service_type.h>
 #include <grpcpp/support/status.h>
 #include <grpcpp/support/stub_options.h>
 #include <grpcpp/support/sync_stream.h>
-#include <grpcpp/ports_def.inc>
 
 namespace agent_platform {
 
 class AgentPlatform final {
- public:
-  static constexpr char const* service_full_name() {
+public:
+  static constexpr char const *service_full_name() {
     return "agent_platform.AgentPlatform";
   }
   class StubInterface {
-   public:
+  public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status SignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::agent_platform::PlatformEndpointResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_platform::PlatformEndpointResponse>> AsyncSignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_platform::PlatformEndpointResponse>>(AsyncSignedEndpointHeaderRaw(context, request, cq));
+    virtual ::grpc::Status SignedEndpointHeader(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::agent_platform::PlatformEndpointResponse *response) = 0;
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
+        ::agent_platform::PlatformEndpointResponse>>
+    AsyncSignedEndpointHeader(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
+          ::agent_platform::PlatformEndpointResponse>>(
+          AsyncSignedEndpointHeaderRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_platform::PlatformEndpointResponse>> PrepareAsyncSignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_platform::PlatformEndpointResponse>>(PrepareAsyncSignedEndpointHeaderRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
+        ::agent_platform::PlatformEndpointResponse>>
+    PrepareAsyncSignedEndpointHeader(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
+          ::agent_platform::PlatformEndpointResponse>>(
+          PrepareAsyncSignedEndpointHeaderRaw(context, request, cq));
     }
     class async_interface {
-     public:
+    public:
       virtual ~async_interface() {}
-      virtual void SignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest* request, ::agent_platform::PlatformEndpointResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest* request, ::agent_platform::PlatformEndpointResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void SignedEndpointHeader(
+          ::grpc::ClientContext *context,
+          const ::agent_platform::PlatformEndpointRequest *request,
+          ::agent_platform::PlatformEndpointResponse *response,
+          std::function<void(::grpc::Status)>) = 0;
+      virtual void SignedEndpointHeader(
+          ::grpc::ClientContext *context,
+          const ::agent_platform::PlatformEndpointRequest *request,
+          ::agent_platform::PlatformEndpointResponse *response,
+          ::grpc::ClientUnaryReactor *reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
-    virtual class async_interface* async() { return nullptr; }
-    class async_interface* experimental_async() { return async(); }
-   private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_platform::PlatformEndpointResponse>* AsyncSignedEndpointHeaderRaw(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_platform::PlatformEndpointResponse>* PrepareAsyncSignedEndpointHeaderRaw(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual class async_interface *async() { return nullptr; }
+    class async_interface *experimental_async() { return async(); }
+
+  private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface<
+        ::agent_platform::PlatformEndpointResponse> *
+    AsyncSignedEndpointHeaderRaw(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface<
+        ::agent_platform::PlatformEndpointResponse> *
+    PrepareAsyncSignedEndpointHeaderRaw(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) = 0;
   };
   class Stub final : public StubInterface {
-   public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
-    ::grpc::Status SignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::agent_platform::PlatformEndpointResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_platform::PlatformEndpointResponse>> AsyncSignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_platform::PlatformEndpointResponse>>(AsyncSignedEndpointHeaderRaw(context, request, cq));
+  public:
+    Stub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
+         const ::grpc::StubOptions &options = ::grpc::StubOptions());
+    ::grpc::Status SignedEndpointHeader(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::agent_platform::PlatformEndpointResponse *response) override;
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<
+        ::agent_platform::PlatformEndpointResponse>>
+    AsyncSignedEndpointHeader(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
+          ::agent_platform::PlatformEndpointResponse>>(
+          AsyncSignedEndpointHeaderRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_platform::PlatformEndpointResponse>> PrepareAsyncSignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_platform::PlatformEndpointResponse>>(PrepareAsyncSignedEndpointHeaderRaw(context, request, cq));
+    std::unique_ptr<::grpc::ClientAsyncResponseReader<
+        ::agent_platform::PlatformEndpointResponse>>
+    PrepareAsyncSignedEndpointHeader(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) {
+      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
+          ::agent_platform::PlatformEndpointResponse>>(
+          PrepareAsyncSignedEndpointHeaderRaw(context, request, cq));
     }
-    class async final :
-      public StubInterface::async_interface {
-     public:
-      void SignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest* request, ::agent_platform::PlatformEndpointResponse* response, std::function<void(::grpc::Status)>) override;
-      void SignedEndpointHeader(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest* request, ::agent_platform::PlatformEndpointResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
-     private:
-      friend class Stub;
-      explicit async(Stub* stub): stub_(stub) { }
-      Stub* stub() { return stub_; }
-      Stub* stub_;
-    };
-    class async* async() override { return &async_stub_; }
+    class async final : public StubInterface::async_interface {
+    public:
+      void SignedEndpointHeader(
+          ::grpc::ClientContext *context,
+          const ::agent_platform::PlatformEndpointRequest *request,
+          ::agent_platform::PlatformEndpointResponse *response,
+          std::function<void(::grpc::Status)>) override;
+      void SignedEndpointHeader(
+          ::grpc::ClientContext *context,
+          const ::agent_platform::PlatformEndpointRequest *request,
+          ::agent_platform::PlatformEndpointResponse *response,
+          ::grpc::ClientUnaryReactor *reactor) override;
 
-   private:
-    std::shared_ptr< ::grpc::ChannelInterface> channel_;
+    private:
+      friend class Stub;
+      explicit async(Stub *stub) : stub_(stub) {}
+      Stub *stub() { return stub_; }
+      Stub *stub_;
+    };
+    class async *async() override { return &async_stub_; }
+
+  private:
+    std::shared_ptr<::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader< ::agent_platform::PlatformEndpointResponse>* AsyncSignedEndpointHeaderRaw(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::agent_platform::PlatformEndpointResponse>* PrepareAsyncSignedEndpointHeaderRaw(::grpc::ClientContext* context, const ::agent_platform::PlatformEndpointRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader<
+        ::agent_platform::PlatformEndpointResponse> *
+    AsyncSignedEndpointHeaderRaw(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader<
+        ::agent_platform::PlatformEndpointResponse> *
+    PrepareAsyncSignedEndpointHeaderRaw(
+        ::grpc::ClientContext *context,
+        const ::agent_platform::PlatformEndpointRequest &request,
+        ::grpc::CompletionQueue *cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_SignedEndpointHeader_;
   };
-  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+  static std::unique_ptr<Stub>
+  NewStub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
+          const ::grpc::StubOptions &options = ::grpc::StubOptions());
 
   class Service : public ::grpc::Service {
-   public:
+  public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status SignedEndpointHeader(::grpc::ServerContext* context, const ::agent_platform::PlatformEndpointRequest* request, ::agent_platform::PlatformEndpointResponse* response);
+    virtual ::grpc::Status SignedEndpointHeader(
+        ::grpc::ServerContext *context,
+        const ::agent_platform::PlatformEndpointRequest *request,
+        ::agent_platform::PlatformEndpointResponse *response);
   };
   template <class BaseClass>
   class WithAsyncMethod_SignedEndpointHeader : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithAsyncMethod_SignedEndpointHeader() {
       ::grpc::Service::MarkMethodAsync(0);
     }
@@ -106,49 +184,80 @@ class AgentPlatform final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SignedEndpointHeader(::grpc::ServerContext* /*context*/, const ::agent_platform::PlatformEndpointRequest* /*request*/, ::agent_platform::PlatformEndpointResponse* /*response*/) override {
+    ::grpc::Status SignedEndpointHeader(
+        ::grpc::ServerContext * /*context*/,
+        const ::agent_platform::PlatformEndpointRequest * /*request*/,
+        ::agent_platform::PlatformEndpointResponse * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestSignedEndpointHeader(::grpc::ServerContext* context, ::agent_platform::PlatformEndpointRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_platform::PlatformEndpointResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestSignedEndpointHeader(
+        ::grpc::ServerContext *context,
+        ::agent_platform::PlatformEndpointRequest *request,
+        ::grpc::ServerAsyncResponseWriter<
+            ::agent_platform::PlatformEndpointResponse> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_SignedEndpointHeader<Service > AsyncService;
+  typedef WithAsyncMethod_SignedEndpointHeader<Service> AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_SignedEndpointHeader : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithCallbackMethod_SignedEndpointHeader() {
-      ::grpc::Service::MarkMethodCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::agent_platform::PlatformEndpointRequest, ::agent_platform::PlatformEndpointResponse>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::agent_platform::PlatformEndpointRequest* request, ::agent_platform::PlatformEndpointResponse* response) { return this->SignedEndpointHeader(context, request, response); }));}
+      ::grpc::Service::MarkMethodCallback(
+          0,
+          new ::grpc::internal::CallbackUnaryHandler<
+              ::agent_platform::PlatformEndpointRequest,
+              ::agent_platform::PlatformEndpointResponse>(
+              [this](::grpc::CallbackServerContext *context,
+                     const ::agent_platform::PlatformEndpointRequest *request,
+                     ::agent_platform::PlatformEndpointResponse *response) {
+                return this->SignedEndpointHeader(context, request, response);
+              }));
+    }
     void SetMessageAllocatorFor_SignedEndpointHeader(
-        ::grpc::MessageAllocator< ::agent_platform::PlatformEndpointRequest, ::agent_platform::PlatformEndpointResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_platform::PlatformEndpointRequest, ::agent_platform::PlatformEndpointResponse>*>(handler)
-              ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator<::agent_platform::PlatformEndpointRequest,
+                                 ::agent_platform::PlatformEndpointResponse>
+            *allocator) {
+      ::grpc::internal::MethodHandler *const handler =
+          ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler<
+          ::agent_platform::PlatformEndpointRequest,
+          ::agent_platform::PlatformEndpointResponse> *>(handler)
+          ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_SignedEndpointHeader() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SignedEndpointHeader(::grpc::ServerContext* /*context*/, const ::agent_platform::PlatformEndpointRequest* /*request*/, ::agent_platform::PlatformEndpointResponse* /*response*/) override {
+    ::grpc::Status SignedEndpointHeader(
+        ::grpc::ServerContext * /*context*/,
+        const ::agent_platform::PlatformEndpointRequest * /*request*/,
+        ::agent_platform::PlatformEndpointResponse * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* SignedEndpointHeader(
-      ::grpc::CallbackServerContext* /*context*/, const ::agent_platform::PlatformEndpointRequest* /*request*/, ::agent_platform::PlatformEndpointResponse* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *SignedEndpointHeader(
+        ::grpc::CallbackServerContext * /*context*/,
+        const ::agent_platform::PlatformEndpointRequest * /*request*/,
+        ::agent_platform::PlatformEndpointResponse * /*response*/) {
+      return nullptr;
+    }
   };
-  typedef WithCallbackMethod_SignedEndpointHeader<Service > CallbackService;
+  typedef WithCallbackMethod_SignedEndpointHeader<Service> CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_SignedEndpointHeader : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithGenericMethod_SignedEndpointHeader() {
       ::grpc::Service::MarkMethodGeneric(0);
     }
@@ -156,87 +265,121 @@ class AgentPlatform final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SignedEndpointHeader(::grpc::ServerContext* /*context*/, const ::agent_platform::PlatformEndpointRequest* /*request*/, ::agent_platform::PlatformEndpointResponse* /*response*/) override {
+    ::grpc::Status SignedEndpointHeader(
+        ::grpc::ServerContext * /*context*/,
+        const ::agent_platform::PlatformEndpointRequest * /*request*/,
+        ::agent_platform::PlatformEndpointResponse * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithRawMethod_SignedEndpointHeader : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_SignedEndpointHeader() {
-      ::grpc::Service::MarkMethodRaw(0);
-    }
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
+    WithRawMethod_SignedEndpointHeader() { ::grpc::Service::MarkMethodRaw(0); }
     ~WithRawMethod_SignedEndpointHeader() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SignedEndpointHeader(::grpc::ServerContext* /*context*/, const ::agent_platform::PlatformEndpointRequest* /*request*/, ::agent_platform::PlatformEndpointResponse* /*response*/) override {
+    ::grpc::Status SignedEndpointHeader(
+        ::grpc::ServerContext * /*context*/,
+        const ::agent_platform::PlatformEndpointRequest * /*request*/,
+        ::agent_platform::PlatformEndpointResponse * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestSignedEndpointHeader(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    void RequestSignedEndpointHeader(
+        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
+        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
+        ::grpc::CompletionQueue *new_call_cq,
+        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
+                                         new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_SignedEndpointHeader : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithRawCallbackMethod_SignedEndpointHeader() {
-      ::grpc::Service::MarkMethodRawCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SignedEndpointHeader(context, request, response); }));
+      ::grpc::Service::MarkMethodRawCallback(
+          0, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
+                                                        ::grpc::ByteBuffer>(
+                 [this](::grpc::CallbackServerContext *context,
+                        const ::grpc::ByteBuffer *request,
+                        ::grpc::ByteBuffer *response) {
+                   return this->SignedEndpointHeader(context, request,
+                                                     response);
+                 }));
     }
     ~WithRawCallbackMethod_SignedEndpointHeader() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SignedEndpointHeader(::grpc::ServerContext* /*context*/, const ::agent_platform::PlatformEndpointRequest* /*request*/, ::agent_platform::PlatformEndpointResponse* /*response*/) override {
+    ::grpc::Status SignedEndpointHeader(
+        ::grpc::ServerContext * /*context*/,
+        const ::agent_platform::PlatformEndpointRequest * /*request*/,
+        ::agent_platform::PlatformEndpointResponse * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* SignedEndpointHeader(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor *
+    SignedEndpointHeader(::grpc::CallbackServerContext * /*context*/,
+                         const ::grpc::ByteBuffer * /*request*/,
+                         ::grpc::ByteBuffer * /*response*/) {
+      return nullptr;
+    }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_SignedEndpointHeader : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
+  private:
+    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
+
+  public:
     WithStreamedUnaryMethod_SignedEndpointHeader() {
-      ::grpc::Service::MarkMethodStreamed(0,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::agent_platform::PlatformEndpointRequest, ::agent_platform::PlatformEndpointResponse>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::agent_platform::PlatformEndpointRequest, ::agent_platform::PlatformEndpointResponse>* streamer) {
-                       return this->StreamedSignedEndpointHeader(context,
-                         streamer);
-                  }));
+      ::grpc::Service::MarkMethodStreamed(
+          0,
+          new ::grpc::internal::StreamedUnaryHandler<
+              ::agent_platform::PlatformEndpointRequest,
+              ::agent_platform::PlatformEndpointResponse>(
+              [this](
+                  ::grpc::ServerContext *context,
+                  ::grpc::ServerUnaryStreamer<
+                      ::agent_platform::PlatformEndpointRequest,
+                      ::agent_platform::PlatformEndpointResponse> *streamer) {
+                return this->StreamedSignedEndpointHeader(context, streamer);
+              }));
     }
     ~WithStreamedUnaryMethod_SignedEndpointHeader() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SignedEndpointHeader(::grpc::ServerContext* /*context*/, const ::agent_platform::PlatformEndpointRequest* /*request*/, ::agent_platform::PlatformEndpointResponse* /*response*/) override {
+    ::grpc::Status SignedEndpointHeader(
+        ::grpc::ServerContext * /*context*/,
+        const ::agent_platform::PlatformEndpointRequest * /*request*/,
+        ::agent_platform::PlatformEndpointResponse * /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedSignedEndpointHeader(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_platform::PlatformEndpointRequest,::agent_platform::PlatformEndpointResponse>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedSignedEndpointHeader(
+        ::grpc::ServerContext *context,
+        ::grpc::ServerUnaryStreamer<::agent_platform::PlatformEndpointRequest,
+                                    ::agent_platform::PlatformEndpointResponse>
+            *server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_SignedEndpointHeader<Service > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_SignedEndpointHeader<Service>
+      StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_SignedEndpointHeader<Service > StreamedService;
+  typedef WithStreamedUnaryMethod_SignedEndpointHeader<Service> StreamedService;
 };
 
-}  // namespace agent_platform
-
+} // namespace agent_platform
 
 #include <grpcpp/ports_undef.inc>
-#endif  // GRPC_agent_5fplatform_2eproto__INCLUDED
+#endif // GRPC_agent_5fplatform_2eproto__INCLUDED

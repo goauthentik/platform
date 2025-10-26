@@ -19,6 +19,10 @@ gen:
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
 
+.PHONY: format
+format:
+	find . -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i
+
 .PHONY: build
 build:
 	mkdir -p "${PWD}/build"

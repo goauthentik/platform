@@ -44,7 +44,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/auto_reset.h"
-#else  // !USING_CHROMIUM_INCLUDES
+#else // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -53,20 +53,19 @@
 
 namespace base {
 
-template <typename T>
-class AutoReset {
- public:
+template <typename T> class AutoReset {
+public:
   template <typename U>
-  AutoReset(T* scoped_variable, U&& new_value)
+  AutoReset(T *scoped_variable, U &&new_value)
       : scoped_variable_(scoped_variable),
         original_value_(
             std::exchange(*scoped_variable_, std::forward<U>(new_value))) {}
 
-  AutoReset(AutoReset&& other)
+  AutoReset(AutoReset &&other)
       : scoped_variable_(std::exchange(other.scoped_variable_, nullptr)),
         original_value_(std::move(other.original_value_)) {}
 
-  AutoReset& operator=(AutoReset&& rhs) {
+  AutoReset &operator=(AutoReset &&rhs) {
     scoped_variable_ = std::exchange(rhs.scoped_variable_, nullptr);
     original_value_ = std::move(rhs.original_value_);
     return *this;
@@ -78,13 +77,13 @@ class AutoReset {
     }
   }
 
- private:
-  T* scoped_variable_;
+private:
+  T *scoped_variable_;
   T original_value_;
 };
 
-}  // namespace base
+} // namespace base
 
-#endif  // !USING_CHROMIUM_INCLUDES
+#endif // !USING_CHROMIUM_INCLUDES
 
-#endif  // CEF_INCLUDE_BASE_CEF_AUTO_RESET_H_
+#endif // CEF_INCLUDE_BASE_CEF_AUTO_RESET_H_

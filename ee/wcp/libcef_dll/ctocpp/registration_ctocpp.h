@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefRegistrationCToCpp : public CefCToCppRefCounted<CefRegistrationCToCpp,
-                                                         CefRegistration,
-                                                         cef_registration_t> {
- public:
+class CefRegistrationCToCpp
+    : public CefCToCppRefCounted<CefRegistrationCToCpp, CefRegistration,
+                                 cef_registration_t> {
+public:
   CefRegistrationCToCpp();
   virtual ~CefRegistrationCToCpp();
 
@@ -39,4 +39,4 @@ class CefRegistrationCToCpp : public CefCToCppRefCounted<CefRegistrationCToCpp,
 constexpr auto CefRegistrationCToCpp_Wrap = CefRegistrationCToCpp::Wrap;
 constexpr auto CefRegistrationCToCpp_Unwrap = CefRegistrationCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_REGISTRATION_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_REGISTRATION_CTOCPP_H_

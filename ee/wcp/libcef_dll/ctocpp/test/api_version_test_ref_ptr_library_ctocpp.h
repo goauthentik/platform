@@ -30,7 +30,7 @@ class CefApiVersionTestRefPtrLibraryCToCpp
     : public CefCToCppRefCounted<CefApiVersionTestRefPtrLibraryCToCpp,
                                  CefApiVersionTestRefPtrLibrary,
                                  cef_api_version_test_ref_ptr_library_t> {
- public:
+public:
   CefApiVersionTestRefPtrLibraryCToCpp();
   virtual ~CefApiVersionTestRefPtrLibraryCToCpp();
 
@@ -68,4 +68,4 @@ constexpr auto CefApiVersionTestRefPtrLibraryCToCpp_Wrap =
 constexpr auto CefApiVersionTestRefPtrLibraryCToCpp_Unwrap =
     CefApiVersionTestRefPtrLibraryCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_REF_PTR_LIBRARY_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_REF_PTR_LIBRARY_CTOCPP_H_

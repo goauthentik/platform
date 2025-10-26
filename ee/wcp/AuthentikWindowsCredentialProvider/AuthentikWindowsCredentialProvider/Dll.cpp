@@ -1,6 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
-#include "pch.h"
 #include "Dll.h"
+#include "pch.h"
 
 #include <string>
 
@@ -14,98 +14,74 @@ TCHAR g_path[MAX_PATH];
 
 std::string g_strPath = "";
 
-
-void SetPaths()
-{
-    GetModuleFileName(g_hinst, g_path, MAX_PATH);
-    SIZE_T i = 0;
-    while (i < MAX_PATH)
-    {
-        if (g_path[i] == NULL)
-        {
-            break;
-        }
-        g_strPath.append(1, g_path[i]);
-        ++i;
+void SetPaths() {
+  GetModuleFileName(g_hinst, g_path, MAX_PATH);
+  SIZE_T i = 0;
+  while (i < MAX_PATH) {
+    if (g_path[i] == NULL) {
+      break;
     }
-    while (i >= 0)
-    {
-        if (g_path[i] == '\\')
-        {
-            g_path[i] = NULL;
-            break;
-        }
-        g_path[i] = NULL;
-        --i;
+    g_strPath.append(1, g_path[i]);
+    ++i;
+  }
+  while (i >= 0) {
+    if (g_path[i] == '\\') {
+      g_path[i] = NULL;
+      break;
     }
-    g_strPath = g_strPath.substr(0, g_strPath.find_last_of("\\"));
+    g_path[i] = NULL;
+    --i;
+  }
+  g_strPath = g_strPath.substr(0, g_strPath.find_last_of("\\"));
 }
 
-STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
-                        __in DWORD dwReason,
-                        __in LPVOID lpReserved
-                     )
-{
-    g_hinst = hinstDll;
-    switch (dwReason)
-    {
-    case DLL_PROCESS_ATTACH:
-    {
-        SetPaths();
-        Debug("BISMILLAAHIRRAHMAANIRRAHEEM");
-        DisableThreadLibraryCalls(hinstDll);
-        std::string strID = "DLL ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
-        Debug(strID.c_str());
-    }
-        break;
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-        break;
-    case DLL_PROCESS_DETACH:
+STDAPI_(BOOL)
+DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
+  g_hinst = hinstDll;
+  switch (dwReason) {
+  case DLL_PROCESS_ATTACH: {
+    SetPaths();
+    Debug("BISMILLAAHIRRAHMAANIRRAHEEM");
+    DisableThreadLibraryCalls(hinstDll);
+    std::string strID =
+        "DLL ProcessID: " + std::to_string(GetCurrentProcessId()) +
+        ", ThreadID: " + std::to_string(GetCurrentThreadId());
+    Debug(strID.c_str());
+  } break;
+  case DLL_THREAD_ATTACH:
+  case DLL_THREAD_DETACH:
+    break;
+  case DLL_PROCESS_DETACH:
     // {
-    //     std::string strID = "Detach DLL ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    //     Debug(strID.c_str());
+    //     std::string strID = "Detach DLL ProcessID: " +
+    //     std::to_string(GetCurrentProcessId()) + ", ThreadID: " +
+    //     std::to_string(GetCurrentThreadId()); Debug(strID.c_str());
     // }
-        break;
+    break;
+  }
+  return TRUE;
+}
+
+STDAPI DllGetClassObject(__in REFCLSID rclsid, __in REFIID riid,
+                         __deref_out void **ppv) {
+  *ppv = NULL;
+  HRESULT hr;
+  if (rclsid == CLSID_CredentialProvider) {
+    ClassFactory *pcf = new ClassFactory();
+    if (pcf) {
+      hr = pcf->QueryInterface(riid, ppv);
+      pcf->Release();
+    } else {
+      hr = E_OUTOFMEMORY;
     }
-    return TRUE;
+  } else {
+    hr = CLASS_E_CLASSNOTAVAILABLE;
+  }
+  return hr;
 }
 
-STDAPI DllGetClassObject(__in REFCLSID rclsid, __in REFIID riid, __deref_out void** ppv)
-{
-    *ppv = NULL;
-    HRESULT hr;
-    if (rclsid == CLSID_CredentialProvider)
-    {
-        ClassFactory* pcf = new ClassFactory();
-        if (pcf)
-        {
-            hr = pcf->QueryInterface(riid, ppv);
-            pcf->Release();
-        }
-        else
-        {
-            hr = E_OUTOFMEMORY;
-        }
-    }
-    else
-    {
-        hr = CLASS_E_CLASSNOTAVAILABLE;
-    }
-    return hr;
-}
+void DllAddRef() { InterlockedIncrement(&g_cRef); }
 
-void DllAddRef()
-{
-    InterlockedIncrement(&g_cRef);
-}
+void DllRelease() { InterlockedDecrement(&g_cRef); }
 
-void DllRelease()
-{
-    InterlockedDecrement(&g_cRef);
-}
-
-STDAPI DllCanUnloadNow()
-{
-    return (g_cRef > 0) ? S_FALSE : S_OK;
-}
+STDAPI DllCanUnloadNow() { return (g_cRef > 0) ? S_FALSE : S_OK; }

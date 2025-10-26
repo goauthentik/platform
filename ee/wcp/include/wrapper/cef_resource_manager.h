@@ -58,7 +58,7 @@
 class CefResourceManager
     : public base::RefCountedThreadSafe<CefResourceManager,
                                         CefDeleteOnIOThread> {
- public:
+public:
   ///
   /// Provides an opportunity to modify |url| before it is passed to a provider.
   /// For example, the implementation could rewrite |url| to include a default
@@ -66,7 +66,7 @@ class CefResourceManager
   /// fragment components.
   ///
   using UrlFilter =
-      base::RepeatingCallback<std::string(const std::string& /*url*/)>;
+      base::RepeatingCallback<std::string(const std::string & /*url*/)>;
 
   ///
   /// Used to resolve mime types for URLs, usually based on the file extension.
@@ -74,9 +74,9 @@ class CefResourceManager
   /// components.
   ///
   using MimeTypeResolver =
-      base::RepeatingCallback<std::string(const std::string& /*url*/)>;
+      base::RepeatingCallback<std::string(const std::string & /*url*/)>;
 
- private:
+private:
   // Values that stay with a request as it moves between providers.
   struct RequestParams {
     std::string url_;
@@ -90,7 +90,7 @@ class CefResourceManager
   // Values that are associated with the pending request only.
   struct RequestState;
 
- public:
+public:
   ///
   /// Object representing a request. Each request object is used for a single
   /// call to Provider::OnRequest and will become detached (meaning the
@@ -100,9 +100,9 @@ class CefResourceManager
   /// process thread.
   ///
   class Request : public base::RefCountedThreadSafe<Request> {
-   public:
-    Request(const Request&) = delete;
-    Request& operator=(const Request&) = delete;
+  public:
+    Request(const Request &) = delete;
+    Request &operator=(const Request &) = delete;
 
     ///
     /// Returns the URL associated with this request. The returned value will be
@@ -129,14 +129,14 @@ class CefResourceManager
     ///
     /// Returns the current URL filter.
     ///
-    const CefResourceManager::UrlFilter& url_filter() const {
+    const CefResourceManager::UrlFilter &url_filter() const {
       return params_.url_filter_;
     }
 
     ///
     /// Returns the current mime type resolver.
     ///
-    const CefResourceManager::MimeTypeResolver& mime_type_resolver() const {
+    const CefResourceManager::MimeTypeResolver &mime_type_resolver() const {
       return params_.mime_type_resolver_;
     }
 
@@ -156,7 +156,7 @@ class CefResourceManager
     ///
     void Stop();
 
-   private:
+  private:
     // Only allow deletion via scoped_refptr.
     friend class base::RefCountedThreadSafe<Request>;
 
@@ -189,7 +189,7 @@ class CefResourceManager
   /// destroyed on, the browser process IO thread.
   ///
   class Provider {
-   public:
+  public:
     ///
     /// Called to handle a request. If the provider knows immediately that it
     /// will not handle the request return false. Otherwise, return true and
@@ -211,8 +211,8 @@ class CefResourceManager
 
   CefResourceManager();
 
-  CefResourceManager(const CefResourceManager&) = delete;
-  CefResourceManager& operator=(const CefResourceManager&) = delete;
+  CefResourceManager(const CefResourceManager &) = delete;
+  CefResourceManager &operator=(const CefResourceManager &) = delete;
 
   ///
   /// Add a provider that maps requests for |url| to |content|. |url| should be
@@ -220,11 +220,9 @@ class CefResourceManager
   /// |mime_type| is empty the MimeTypeResolver will be used. See comments on
   /// AddProvider for usage of the |order| and |identifier| parameters.
   ///
-  void AddContentProvider(const std::string& url,
-                          const std::string& content,
-                          const std::string& mime_type,
-                          int order,
-                          const std::string& identifier);
+  void AddContentProvider(const std::string &url, const std::string &content,
+                          const std::string &mime_type, int order,
+                          const std::string &identifier);
 
   ///
   /// Add a provider that maps requests that start with |url_path| to files
@@ -233,10 +231,9 @@ class CefResourceManager
   /// requested. See comments on AddProvider for usage of the |order| and
   /// |identifier| parameters.
   ///
-  void AddDirectoryProvider(const std::string& url_path,
-                            const std::string& directory_path,
-                            int order,
-                            const std::string& identifier);
+  void AddDirectoryProvider(const std::string &url_path,
+                            const std::string &directory_path, int order,
+                            const std::string &identifier);
 
   ///
   /// Add a provider that maps requests that start with |url_path| to files
@@ -245,11 +242,10 @@ class CefResourceManager
   /// when a matching URL is requested for the first time. See comments on
   /// AddProvider for usage of the |order| and |identifier| parameters.
   ///
-  void AddArchiveProvider(const std::string& url_path,
-                          const std::string& archive_path,
-                          const std::string& password,
-                          int order,
-                          const std::string& identifier);
+  void AddArchiveProvider(const std::string &url_path,
+                          const std::string &archive_path,
+                          const std::string &password, int order,
+                          const std::string &identifier);
 
   ///
   /// Add a provider. This object takes ownership of |provider|. Providers will
@@ -258,9 +254,8 @@ class CefResourceManager
   /// they were added. The |identifier| value, which does not need to be unique,
   /// can be used to remove the provider at a later time.
   ///
-  void AddProvider(Provider* provider,
-                   int order,
-                   const std::string& identifier);
+  void AddProvider(Provider *provider, int order,
+                   const std::string &identifier);
 
   ///
   /// Remove all providers with the specified |identifier| value. If any removed
@@ -268,7 +263,7 @@ class CefResourceManager
   /// be called. The removed providers may be deleted immediately or at a later
   /// time.
   ///
-  void RemoveProviders(const std::string& identifier);
+  void RemoveProviders(const std::string &identifier);
 
   ///
   /// Remove all providers. If any removed providers have pending requests the
@@ -281,13 +276,13 @@ class CefResourceManager
   /// Set the url filter. If not set the default no-op filter will be used.
   /// Changes to this value will not affect currently pending requests.
   ///
-  void SetUrlFilter(const UrlFilter& filter);
+  void SetUrlFilter(const UrlFilter &filter);
 
   ///
   /// Set the mime type resolver. If not set the default resolver will be used.
   /// Changes to this value will not affect currently pending requests.
   ///
-  void SetMimeTypeResolver(const MimeTypeResolver& resolver);
+  void SetMimeTypeResolver(const MimeTypeResolver &resolver);
 
   /// The below methods should be called from other CEF handlers. They must be
   /// called exactly as documented for the manager to function correctly.
@@ -305,12 +300,11 @@ class CefResourceManager
   /// Called from CefRequestHandler::GetResourceHandler on the browser process
   /// IO thread.
   ///
-  CefRefPtr<CefResourceHandler> GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request);
+  CefRefPtr<CefResourceHandler>
+  GetResourceHandler(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                     CefRefPtr<CefRequest> request);
 
- private:
+private:
   // Only allow deletion via scoped_refptr.
   friend struct CefDeleteOnThread<TID_IO>;
   friend class base::RefCountedThreadSafe<CefResourceManager,
@@ -320,7 +314,7 @@ class CefResourceManager
 
   // Provider and associated information.
   struct ProviderEntry;
-  using ProviderEntryList = std::list<ProviderEntry*>;
+  using ProviderEntryList = std::list<ProviderEntry *>;
 
   // Values associated with the pending request only. Ownership will be passed
   // between requests and the resource manager as request handling proceeds.
@@ -350,10 +344,10 @@ class CefResourceManager
   void ContinueRequest(std::unique_ptr<RequestState> state,
                        CefRefPtr<CefResourceHandler> handler);
   void StopRequest(std::unique_ptr<RequestState> state);
-  bool IncrementProvider(RequestState* state);
-  void DetachRequestFromProvider(RequestState* state);
-  void GetNextValidProvider(ProviderEntryList::iterator& iterator);
-  void DeleteProvider(ProviderEntryList::iterator& iterator, bool stop);
+  bool IncrementProvider(RequestState *state);
+  void DetachRequestFromProvider(RequestState *state);
+  void GetNextValidProvider(ProviderEntryList::iterator &iterator);
+  void DeleteProvider(ProviderEntryList::iterator &iterator, bool stop);
 
   // The below members are only accessed on the browser process IO thread.
 
@@ -371,4 +365,4 @@ class CefResourceManager
   std::unique_ptr<base::WeakPtrFactory<CefResourceManager>> weak_ptr_factory_;
 };
 
-#endif  // CEF_INCLUDE_WRAPPER_CEF_RESOURCE_MANAGER_H_
+#endif // CEF_INCLUDE_WRAPPER_CEF_RESOURCE_MANAGER_H_

@@ -26,15 +26,15 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefStreamWriterCToCpp : public CefCToCppRefCounted<CefStreamWriterCToCpp,
-                                                         CefStreamWriter,
-                                                         cef_stream_writer_t> {
- public:
+class CefStreamWriterCToCpp
+    : public CefCToCppRefCounted<CefStreamWriterCToCpp, CefStreamWriter,
+                                 cef_stream_writer_t> {
+public:
   CefStreamWriterCToCpp();
   virtual ~CefStreamWriterCToCpp();
 
   // CefStreamWriter methods.
-  size_t Write(const void* ptr, size_t size, size_t n) override;
+  size_t Write(const void *ptr, size_t size, size_t n) override;
   int Seek(int64_t offset, int whence) override;
   int64_t Tell() override;
   int Flush() override;
@@ -44,4 +44,4 @@ class CefStreamWriterCToCpp : public CefCToCppRefCounted<CefStreamWriterCToCpp,
 constexpr auto CefStreamWriterCToCpp_Wrap = CefStreamWriterCToCpp::Wrap;
 constexpr auto CefStreamWriterCToCpp_Unwrap = CefStreamWriterCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_STREAM_WRITER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_STREAM_WRITER_CTOCPP_H_

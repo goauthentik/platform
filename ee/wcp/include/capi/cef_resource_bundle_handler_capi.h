@@ -71,10 +71,9 @@ typedef struct _cef_resource_bundle_handler_t {
   /// IDS names from cef_pack_strings.h to version-specific numerical
   /// |string_id| values.
   ///
-  int(CEF_CALLBACK* get_localized_string)(
-      struct _cef_resource_bundle_handler_t* self,
-      int string_id,
-      cef_string_t* string);
+  int(CEF_CALLBACK *get_localized_string)(
+      struct _cef_resource_bundle_handler_t *self, int string_id,
+      cef_string_t *string);
 
   ///
   /// Called to retrieve data for the specified scale independent |resource_id|.
@@ -85,11 +84,9 @@ typedef struct _cef_resource_bundle_handler_t {
   /// function for version-safe mapping of resource IDR names from
   /// cef_pack_resources.h to version-specific numerical |resource_id| values.
   ///
-  int(CEF_CALLBACK* get_data_resource)(
-      struct _cef_resource_bundle_handler_t* self,
-      int resource_id,
-      void** data,
-      size_t* data_size);
+  int(CEF_CALLBACK *get_data_resource)(
+      struct _cef_resource_bundle_handler_t *self, int resource_id, void **data,
+      size_t *data_size);
 
   ///
   /// Called to retrieve data for the specified |resource_id| nearest the scale
@@ -101,16 +98,13 @@ typedef struct _cef_resource_bundle_handler_t {
   /// resource IDR names from cef_pack_resources.h to version-specific numerical
   /// |resource_id| values.
   ///
-  int(CEF_CALLBACK* get_data_resource_for_scale)(
-      struct _cef_resource_bundle_handler_t* self,
-      int resource_id,
-      cef_scale_factor_t scale_factor,
-      void** data,
-      size_t* data_size);
+  int(CEF_CALLBACK *get_data_resource_for_scale)(
+      struct _cef_resource_bundle_handler_t *self, int resource_id,
+      cef_scale_factor_t scale_factor, void **data, size_t *data_size);
 } cef_resource_bundle_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_RESOURCE_BUNDLE_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_RESOURCE_BUNDLE_HANDLER_CAPI_H_

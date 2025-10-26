@@ -47,7 +47,7 @@
 ///
 /*--cef(source=library)--*/
 class CefPrintDialogCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Continue printing with the specified |settings|.
   ///
@@ -66,7 +66,7 @@ class CefPrintDialogCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefPrintJobCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Indicate completion of the print job.
   ///
@@ -81,7 +81,7 @@ class CefPrintJobCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefPrintHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called when printing has started for the specified |browser|. This method
   /// will be called before the other OnPrint*() methods and irrespective of how
@@ -107,8 +107,7 @@ class CefPrintHandler : public virtual CefBaseRefCounted {
   /// printing immediately.
   ///
   /*--cef()--*/
-  virtual bool OnPrintDialog(CefRefPtr<CefBrowser> browser,
-                             bool has_selection,
+  virtual bool OnPrintDialog(CefRefPtr<CefBrowser> browser, bool has_selection,
                              CefRefPtr<CefPrintDialogCallback> callback) = 0;
 
   ///
@@ -118,8 +117,8 @@ class CefPrintHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool OnPrintJob(CefRefPtr<CefBrowser> browser,
-                          const CefString& document_name,
-                          const CefString& pdf_file_path,
+                          const CefString &document_name,
+                          const CefString &pdf_file_path,
                           CefRefPtr<CefPrintJobCallback> callback) = 0;
 
   ///
@@ -139,4 +138,4 @@ class CefPrintHandler : public virtual CefBaseRefCounted {
   }
 };
 
-#endif  // CEF_INCLUDE_CEF_PRINT_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_PRINT_HANDLER_H_

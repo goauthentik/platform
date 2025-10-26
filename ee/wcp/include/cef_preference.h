@@ -49,7 +49,7 @@
 ///
 /*--cef(source=library)--*/
 class CefPreferenceRegistrar : public CefBaseScoped {
- public:
+public:
   ///
   /// Register a preference with the specified |name| and |default_value|. To
   /// avoid conflicts with built-in preferences the |name| value should contain
@@ -62,7 +62,7 @@ class CefPreferenceRegistrar : public CefBaseScoped {
   /// CefBrowserProcessHandler::OnRegisterCustomPreferences callback.
   ///
   /*--cef()--*/
-  virtual bool AddPreference(const CefString& name,
+  virtual bool AddPreference(const CefString &name,
                              CefRefPtr<CefValue> default_value) = 0;
 };
 
@@ -74,13 +74,13 @@ class CefPreferenceRegistrar : public CefBaseScoped {
 ///
 /*--cef(source=client,added=13401)--*/
 class CefPreferenceObserver : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called when a preference has changed. The new value can be retrieved using
   /// CefPreferenceManager::GetPreference.
   ///
   /*--cef()--*/
-  virtual void OnPreferenceChanged(const CefString& name) = 0;
+  virtual void OnPreferenceChanged(const CefString &name) = 0;
 };
 #endif
 
@@ -91,7 +91,7 @@ class CefPreferenceObserver : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefPreferenceManager : public virtual CefBaseRefCounted {
- public:
+public:
 #if CEF_API_ADDED(13401)
   ///
   /// Returns the current Chrome Variations configuration (combination of field
@@ -105,7 +105,7 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// called on the browser process UI thread.
   ///
   /*--cef(added=13401)--*/
-  static void GetChromeVariationsAsSwitches(std::vector<CefString>& switches);
+  static void GetChromeVariationsAsSwitches(std::vector<CefString> &switches);
 
   ///
   /// Returns the current Chrome Variations configuration (combination of field
@@ -119,7 +119,7 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// called on the browser process UI thread.
   ///
   /*--cef(added=13401)--*/
-  static void GetChromeVariationsAsStrings(std::vector<CefString>& strings);
+  static void GetChromeVariationsAsStrings(std::vector<CefString> &strings);
 #endif
 
   ///
@@ -133,7 +133,7 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// must be called on the browser process UI thread.
   ///
   /*--cef()--*/
-  virtual bool HasPreference(const CefString& name) = 0;
+  virtual bool HasPreference(const CefString &name) = 0;
 
   ///
   /// Returns the value for the preference with the specified |name|. Returns
@@ -143,7 +143,7 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// be called on the browser process UI thread.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefValue> GetPreference(const CefString& name) = 0;
+  virtual CefRefPtr<CefValue> GetPreference(const CefString &name) = 0;
 
   ///
   /// Returns all preferences as a dictionary. If |include_defaults| is true
@@ -154,8 +154,8 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// thread.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefDictionaryValue> GetAllPreferences(
-      bool include_defaults) = 0;
+  virtual CefRefPtr<CefDictionaryValue>
+  GetAllPreferences(bool include_defaults) = 0;
 
   ///
   /// Returns true if the preference with the specified |name| can be modified
@@ -164,7 +164,7 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// process UI thread.
   ///
   /*--cef()--*/
-  virtual bool CanSetPreference(const CefString& name) = 0;
+  virtual bool CanSetPreference(const CefString &name) = 0;
 
   ///
   /// Set the |value| associated with preference |name|. Returns true if the
@@ -175,9 +175,8 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// process UI thread.
   ///
   /*--cef(optional_param=value)--*/
-  virtual bool SetPreference(const CefString& name,
-                             CefRefPtr<CefValue> value,
-                             CefString& error) = 0;
+  virtual bool SetPreference(const CefString &name, CefRefPtr<CefValue> value,
+                             CefString &error) = 0;
 
 #if CEF_API_ADDED(13401)
   ///
@@ -189,10 +188,10 @@ class CefPreferenceManager : public virtual CefBaseRefCounted {
   /// method must be called on the browser process UI thread.
   ///
   /*--cef(optional_param=name,added=13401)--*/
-  virtual CefRefPtr<CefRegistration> AddPreferenceObserver(
-      const CefString& name,
-      CefRefPtr<CefPreferenceObserver> observer) = 0;
+  virtual CefRefPtr<CefRegistration>
+  AddPreferenceObserver(const CefString &name,
+                        CefRefPtr<CefPreferenceObserver> observer) = 0;
 #endif
 };
 
-#endif  // CEF_INCLUDE_CEF_PREFERENCE_H_
+#endif // CEF_INCLUDE_CEF_PREFERENCE_H_

@@ -47,13 +47,13 @@
 ///
 /*--cef(source=library)--*/
 class CefJSDialogCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Continue the JS dialog request. Set |success| to true if the OK button was
   /// pressed. The |user_input| value should be specified for prompt dialogs.
   ///
   /*--cef(capi_name=cont,optional_param=user_input)--*/
-  virtual void Continue(bool success, const CefString& user_input) = 0;
+  virtual void Continue(bool success, const CefString &user_input) = 0;
 };
 
 ///
@@ -62,7 +62,7 @@ class CefJSDialogCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefJSDialogHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_jsdialog_type_t JSDialogType;
 
   ///
@@ -84,12 +84,11 @@ class CefJSDialogHandler : public virtual CefBaseRefCounted {
   /*--cef(optional_param=origin_url,optional_param=accept_lang,
           optional_param=message_text,optional_param=default_prompt_text)--*/
   virtual bool OnJSDialog(CefRefPtr<CefBrowser> browser,
-                          const CefString& origin_url,
-                          JSDialogType dialog_type,
-                          const CefString& message_text,
-                          const CefString& default_prompt_text,
+                          const CefString &origin_url, JSDialogType dialog_type,
+                          const CefString &message_text,
+                          const CefString &default_prompt_text,
                           CefRefPtr<CefJSDialogCallback> callback,
-                          bool& suppress_message) {
+                          bool &suppress_message) {
     return false;
   }
 
@@ -103,7 +102,7 @@ class CefJSDialogHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=message_text)--*/
   virtual bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
-                                    const CefString& message_text,
+                                    const CefString &message_text,
                                     bool is_reload,
                                     CefRefPtr<CefJSDialogCallback> callback) {
     return false;
@@ -124,4 +123,4 @@ class CefJSDialogHandler : public virtual CefBaseRefCounted {
   virtual void OnDialogClosed(CefRefPtr<CefBrowser> browser) {}
 };
 
-#endif  // CEF_INCLUDE_CEF_JSDIALOG_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_JSDIALOG_HANDLER_H_

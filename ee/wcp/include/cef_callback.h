@@ -45,7 +45,7 @@
 ///
 /*--cef(source=library)--*/
 class CefCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Continue processing.
   ///
@@ -64,7 +64,7 @@ class CefCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefCompletionCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Method that will be called once the task is complete.
   ///
@@ -72,4 +72,4 @@ class CefCompletionCallback : public virtual CefBaseRefCounted {
   virtual void OnComplete() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_CALLBACK_H_
+#endif // CEF_INCLUDE_CEF_CALLBACK_H_

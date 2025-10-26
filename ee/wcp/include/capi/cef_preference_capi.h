@@ -74,9 +74,9 @@ typedef struct _cef_preference_registrar_t {
   /// This function must be called from within the scope of the
   /// cef_browser_process_handler_t::OnRegisterCustomPreferences callback.
   ///
-  int(CEF_CALLBACK* add_preference)(struct _cef_preference_registrar_t* self,
-                                    const cef_string_t* name,
-                                    struct _cef_value_t* default_value);
+  int(CEF_CALLBACK *add_preference)(struct _cef_preference_registrar_t *self,
+                                    const cef_string_t *name,
+                                    struct _cef_value_t *default_value);
 } cef_preference_registrar_t;
 
 #if CEF_API_ADDED(13401)
@@ -98,12 +98,11 @@ typedef struct _cef_preference_observer_t {
   /// Called when a preference has changed. The new value can be retrieved using
   /// cef_preference_manager_t::GetPreference.
   ///
-  void(CEF_CALLBACK* on_preference_changed)(
-      struct _cef_preference_observer_t* self,
-      const cef_string_t* name);
+  void(CEF_CALLBACK *on_preference_changed)(
+      struct _cef_preference_observer_t *self, const cef_string_t *name);
 } cef_preference_observer_t;
 
-#endif  // CEF_API_ADDED(13401)
+#endif // CEF_API_ADDED(13401)
 
 ///
 /// Manage access to preferences. Many built-in preferences are registered by
@@ -122,8 +121,8 @@ typedef struct _cef_preference_manager_t {
   /// Returns true (1) if a preference with the specified |name| exists. This
   /// function must be called on the browser process UI thread.
   ///
-  int(CEF_CALLBACK* has_preference)(struct _cef_preference_manager_t* self,
-                                    const cef_string_t* name);
+  int(CEF_CALLBACK *has_preference)(struct _cef_preference_manager_t *self,
+                                    const cef_string_t *name);
 
   ///
   /// Returns the value for the preference with the specified |name|. Returns
@@ -132,9 +131,8 @@ typedef struct _cef_preference_manager_t {
   /// object will not modify the underlying preference value. This function must
   /// be called on the browser process UI thread.
   ///
-  struct _cef_value_t*(CEF_CALLBACK* get_preference)(
-      struct _cef_preference_manager_t* self,
-      const cef_string_t* name);
+  struct _cef_value_t *(CEF_CALLBACK *get_preference)(
+      struct _cef_preference_manager_t *self, const cef_string_t *name);
 
   ///
   /// Returns all preferences as a dictionary. If |include_defaults| is true (1)
@@ -144,9 +142,8 @@ typedef struct _cef_preference_manager_t {
   /// preference values. This function must be called on the browser process UI
   /// thread.
   ///
-  struct _cef_dictionary_value_t*(CEF_CALLBACK* get_all_preferences)(
-      struct _cef_preference_manager_t* self,
-      int include_defaults);
+  struct _cef_dictionary_value_t *(CEF_CALLBACK *get_all_preferences)(
+      struct _cef_preference_manager_t *self, int include_defaults);
 
   ///
   /// Returns true (1) if the preference with the specified |name| can be
@@ -154,8 +151,8 @@ typedef struct _cef_preference_manager_t {
   /// command-line usually cannot be modified. This function must be called on
   /// the browser process UI thread.
   ///
-  int(CEF_CALLBACK* can_set_preference)(struct _cef_preference_manager_t* self,
-                                        const cef_string_t* name);
+  int(CEF_CALLBACK *can_set_preference)(struct _cef_preference_manager_t *self,
+                                        const cef_string_t *name);
 
   ///
   /// Set the |value| associated with preference |name|. Returns true (1) if the
@@ -165,10 +162,10 @@ typedef struct _cef_preference_manager_t {
   /// description of the problem. This function must be called on the browser
   /// process UI thread.
   ///
-  int(CEF_CALLBACK* set_preference)(struct _cef_preference_manager_t* self,
-                                    const cef_string_t* name,
-                                    struct _cef_value_t* value,
-                                    cef_string_t* error);
+  int(CEF_CALLBACK *set_preference)(struct _cef_preference_manager_t *self,
+                                    const cef_string_t *name,
+                                    struct _cef_value_t *value,
+                                    cef_string_t *error);
 
 #if CEF_API_ADDED(13401)
   ///
@@ -179,10 +176,9 @@ typedef struct _cef_preference_manager_t {
   /// registered until the returned Registration object is destroyed. This
   /// function must be called on the browser process UI thread.
   ///
-  struct _cef_registration_t*(CEF_CALLBACK* add_preference_observer)(
-      struct _cef_preference_manager_t* self,
-      const cef_string_t* name,
-      struct _cef_preference_observer_t* observer);
+  struct _cef_registration_t *(CEF_CALLBACK *add_preference_observer)(
+      struct _cef_preference_manager_t *self, const cef_string_t *name,
+      struct _cef_preference_observer_t *observer);
 #endif
 } cef_preference_manager_t;
 
@@ -218,10 +214,10 @@ CEF_EXPORT void cef_preference_manager_get_chrome_variations_as_strings(
 ///
 /// Returns the global preference manager object.
 ///
-CEF_EXPORT cef_preference_manager_t* cef_preference_manager_get_global(void);
+CEF_EXPORT cef_preference_manager_t *cef_preference_manager_get_global(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_PREFERENCE_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_PREFERENCE_CAPI_H_

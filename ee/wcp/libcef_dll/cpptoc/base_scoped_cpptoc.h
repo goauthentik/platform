@@ -15,10 +15,10 @@
 #endif
 
 // Wrap a C++ class with a C structure.
-class CefBaseScopedCppToC : public CefCppToCScoped<CefBaseScopedCppToC,
-                                                   CefBaseScoped,
-                                                   cef_base_scoped_t> {
- public:
+class CefBaseScopedCppToC
+    : public CefCppToCScoped<CefBaseScopedCppToC, CefBaseScoped,
+                             cef_base_scoped_t> {
+public:
   CefBaseScopedCppToC();
 };
 
@@ -28,11 +28,11 @@ constexpr auto CefBaseScopedCppToC_UnwrapOwn = CefBaseScopedCppToC::UnwrapOwn;
 constexpr auto CefBaseScopedCppToC_UnwrapRaw = CefBaseScopedCppToC::UnwrapRaw;
 constexpr auto CefBaseScopedCppToC_GetWrapper = CefBaseScopedCppToC::GetWrapper;
 
-inline cef_base_scoped_t* CefBaseScopedCppToC_WrapRawAndRelease(
-    CefRawPtr<CefBaseScoped> c) {
+inline cef_base_scoped_t *
+CefBaseScopedCppToC_WrapRawAndRelease(CefRawPtr<CefBaseScoped> c) {
   auto [ownerPtr, structPtr] = CefBaseScopedCppToC_WrapRaw(c);
   ownerPtr.release();
   return structPtr;
 }
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_BASE_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_BASE_CPPTOC_H_

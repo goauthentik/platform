@@ -78,4 +78,4 @@ typedef enum {
 }
 #endif
 
-#endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_RUNTIME_H_
+#endif // CEF_INCLUDE_INTERNAL_CEF_TYPES_RUNTIME_H_

@@ -47,11 +47,11 @@
 
 #define CEF_REQUIRE_UI_THREAD() DCHECK(CefCurrentlyOn(TID_UI));
 #define CEF_REQUIRE_IO_THREAD() DCHECK(CefCurrentlyOn(TID_IO));
-#define CEF_REQUIRE_FILE_BACKGROUND_THREAD() \
+#define CEF_REQUIRE_FILE_BACKGROUND_THREAD()                                   \
   DCHECK(CefCurrentlyOn(TID_FILE_BACKGROUND));
-#define CEF_REQUIRE_FILE_USER_VISIBLE_THREAD() \
+#define CEF_REQUIRE_FILE_USER_VISIBLE_THREAD()                                 \
   DCHECK(CefCurrentlyOn(TID_FILE_USER_VISIBLE));
-#define CEF_REQUIRE_FILE_USER_BLOCKING_THREAD() \
+#define CEF_REQUIRE_FILE_USER_BLOCKING_THREAD()                                \
   DCHECK(CefCurrentlyOn(TID_FILE_USER_BLOCKING));
 #define CEF_REQUIRE_RENDERER_THREAD() DCHECK(CefCurrentlyOn(TID_RENDERER));
 
@@ -78,10 +78,8 @@
 ///   foo = NULL;  /// Deletion of |foo| will occur on the UI thread.
 /// </pre>
 ///
-template <CefThreadId thread>
-struct CefDeleteOnThread {
-  template <typename T>
-  static void Destruct(const T* x) {
+template <CefThreadId thread> struct CefDeleteOnThread {
+  template <typename T> static void Destruct(const T *x) {
     if (CefCurrentlyOn(thread)) {
       delete x;
     } else {
@@ -103,63 +101,59 @@ struct CefDeleteOnFileUserBlockingThread
 struct CefDeleteOnRendererThread : public CefDeleteOnThread<TID_RENDERER> {};
 
 // Same as IMPLEMENT_REFCOUNTING() but using the specified Destructor.
-#define IMPLEMENT_REFCOUNTING_EX(ClassName, Destructor) \
- public:                                                \
-  void AddRef() const override {                        \
-    ref_count_.AddRef();                                \
-  }                                                     \
-  bool Release() const override {                       \
-    if (ref_count_.Release()) {                         \
-      Destructor::Destruct(this);                       \
-      return true;                                      \
-    }                                                   \
-    return false;                                       \
-  }                                                     \
-  bool HasOneRef() const override {                     \
-    return ref_count_.HasOneRef();                      \
-  }                                                     \
-  bool HasAtLeastOneRef() const override {              \
-    return ref_count_.HasAtLeastOneRef();               \
-  }                                                     \
-                                                        \
- private:                                               \
+#define IMPLEMENT_REFCOUNTING_EX(ClassName, Destructor)                        \
+public:                                                                        \
+  void AddRef() const override { ref_count_.AddRef(); }                        \
+  bool Release() const override {                                              \
+    if (ref_count_.Release()) {                                                \
+      Destructor::Destruct(this);                                              \
+      return true;                                                             \
+    }                                                                          \
+    return false;                                                              \
+  }                                                                            \
+  bool HasOneRef() const override { return ref_count_.HasOneRef(); }           \
+  bool HasAtLeastOneRef() const override {                                     \
+    return ref_count_.HasAtLeastOneRef();                                      \
+  }                                                                            \
+                                                                               \
+private:                                                                       \
   CefRefCount ref_count_
 
-#define IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(ClassName) \
+#define IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(ClassName)                         \
   IMPLEMENT_REFCOUNTING_EX(ClassName, CefDeleteOnUIThread)
 
-#define IMPLEMENT_REFCOUNTING_DELETE_ON_IOT(ClassName) \
+#define IMPLEMENT_REFCOUNTING_DELETE_ON_IOT(ClassName)                         \
   IMPLEMENT_REFCOUNTING_EX(ClassName, CefDeleteOnIOThread)
 
 ///
 /// Helper class to manage a scoped copy of |argv|.
 ///
 class CefScopedArgArray {
- public:
-  CefScopedArgArray(int argc, char* argv[]) {
+public:
+  CefScopedArgArray(int argc, char *argv[]) {
     // argv should have (argc + 1) elements, the last one always being NULL.
-    array_ = new char*[argc + 1];
+    array_ = new char *[argc + 1];
     values_.resize(argc);
     for (int i = 0; i < argc; ++i) {
       values_[i] = argv[i];
-      array_[i] = const_cast<char*>(values_[i].c_str());
+      array_[i] = const_cast<char *>(values_[i].c_str());
     }
     array_[argc] = nullptr;
   }
 
-  CefScopedArgArray(const CefScopedArgArray&) = delete;
-  CefScopedArgArray& operator=(const CefScopedArgArray&) = delete;
+  CefScopedArgArray(const CefScopedArgArray &) = delete;
+  CefScopedArgArray &operator=(const CefScopedArgArray &) = delete;
 
   ~CefScopedArgArray() { delete[] array_; }
 
-  char** array() const { return array_; }
+  char **array() const { return array_; }
 
- private:
-  char** array_;
+private:
+  char **array_;
 
   // Keep values in a vector separate from |array_| because various users may
   // modify |array_| and we still want to clean up memory properly.
   std::vector<std::string> values_;
 };
 
-#endif  // CEF_INCLUDE_WRAPPER_CEF_HELPERS_H_
+#endif // CEF_INCLUDE_WRAPPER_CEF_HELPERS_H_

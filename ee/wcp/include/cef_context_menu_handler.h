@@ -50,7 +50,7 @@ class CefContextMenuParams;
 ///
 /*--cef(source=library)--*/
 class CefRunContextMenuCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Complete context menu display by selecting the specified |command_id| and
   /// |event_flags|.
@@ -70,7 +70,7 @@ class CefRunContextMenuCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefRunQuickMenuCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Complete quick menu display by selecting the specified |command_id| and
   /// |event_flags|.
@@ -91,7 +91,7 @@ class CefRunQuickMenuCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefContextMenuHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_event_flags_t EventFlags;
   typedef cef_quick_menu_edit_state_flags_t QuickMenuEditStateFlags;
 
@@ -138,8 +138,7 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   virtual bool OnContextMenuCommand(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     CefRefPtr<CefContextMenuParams> params,
-                                    int command_id,
-                                    EventFlags event_flags) {
+                                    int command_id, EventFlags event_flags) {
     return false;
   }
 
@@ -161,9 +160,8 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool RunQuickMenu(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame,
-                            const CefPoint& location,
-                            const CefSize& size,
+                            CefRefPtr<CefFrame> frame, const CefPoint &location,
+                            const CefSize &size,
                             QuickMenuEditStateFlags edit_state_flags,
                             CefRefPtr<CefRunQuickMenuCallback> callback) {
     return false;
@@ -177,8 +175,7 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser,
-                                  CefRefPtr<CefFrame> frame,
-                                  int command_id,
+                                  CefRefPtr<CefFrame> frame, int command_id,
                                   EventFlags event_flags) {
     return false;
   }
@@ -198,7 +195,7 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefContextMenuParams : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_context_menu_type_flags_t TypeFlags;
   typedef cef_context_menu_media_type_t MediaType;
   typedef cef_context_menu_media_state_flags_t MediaStateFlags;
@@ -313,8 +310,8 @@ class CefContextMenuParams : public virtual CefBaseRefCounted {
   /// from the spell check service for the misspelled word if there is one.
   ///
   /*--cef()--*/
-  virtual bool GetDictionarySuggestions(
-      std::vector<CefString>& suggestions) = 0;
+  virtual bool
+  GetDictionarySuggestions(std::vector<CefString> &suggestions) = 0;
 
   ///
   /// Returns true if the context menu was invoked on an editable node.
@@ -344,4 +341,4 @@ class CefContextMenuParams : public virtual CefBaseRefCounted {
   virtual bool IsCustomMenu() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_CONTEXT_MENU_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_CONTEXT_MENU_HANDLER_H_

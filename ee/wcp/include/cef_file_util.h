@@ -48,7 +48,7 @@
 /// browser process UI or IO threads is not allowed.
 ///
 /*--cef()--*/
-bool CefCreateDirectory(const CefString& full_path);
+bool CefCreateDirectory(const CefString &full_path);
 
 ///
 /// Get the temporary directory provided by the system.
@@ -59,7 +59,7 @@ bool CefCreateDirectory(const CefString& full_path);
 /// they're open (which could lead to security issues).
 ///
 /*--cef()--*/
-bool CefGetTempDirectory(CefString& temp_dir);
+bool CefGetTempDirectory(CefString &temp_dir);
 
 ///
 /// Creates a new directory. On Windows if |prefix| is provided the new
@@ -69,8 +69,8 @@ bool CefGetTempDirectory(CefString& temp_dir);
 /// browser process UI or IO threads is not allowed.
 ///
 /*--cef(optional_param=prefix)--*/
-bool CefCreateNewTempDirectory(const CefString& prefix,
-                               CefString& new_temp_path);
+bool CefCreateNewTempDirectory(const CefString &prefix,
+                               CefString &new_temp_path);
 
 ///
 /// Creates a directory within another directory. Extra characters will be
@@ -81,16 +81,16 @@ bool CefCreateNewTempDirectory(const CefString& prefix,
 /// UI or IO threads is not allowed.
 ///
 /*--cef(optional_param=prefix)--*/
-bool CefCreateTempDirectoryInDirectory(const CefString& base_dir,
-                                       const CefString& prefix,
-                                       CefString& new_dir);
+bool CefCreateTempDirectoryInDirectory(const CefString &base_dir,
+                                       const CefString &prefix,
+                                       CefString &new_dir);
 
 ///
 /// Returns true if the given path exists and is a directory. Calling this
 /// function on the browser process UI or IO threads is not allowed.
 ///
 /*--cef()--*/
-bool CefDirectoryExists(const CefString& path);
+bool CefDirectoryExists(const CefString &path);
 
 ///
 /// Deletes the given path whether it's a file or a directory. If |path| is a
@@ -102,7 +102,7 @@ bool CefDirectoryExists(const CefString& path);
 /// the browser process UI or IO threads is not allowed.
 ///
 /*--cef()--*/
-bool CefDeleteFile(const CefString& path, bool recursive);
+bool CefDeleteFile(const CefString &path, bool recursive);
 
 ///
 /// Writes the contents of |src_dir| into a zip archive at |dest_file|. If
@@ -111,8 +111,7 @@ bool CefDeleteFile(const CefString& path, bool recursive);
 /// IO threads is not allowed.
 ///
 /*--cef()--*/
-bool CefZipDirectory(const CefString& src_dir,
-                     const CefString& dest_file,
+bool CefZipDirectory(const CefString &src_dir, const CefString &dest_file,
                      bool include_hidden_files);
 
 ///
@@ -125,6 +124,6 @@ bool CefZipDirectory(const CefString& src_dir,
 /// background.
 ///
 /*--cef()--*/
-void CefLoadCRLSetsFile(const CefString& path);
+void CefLoadCRLSetsFile(const CefString &path);
 
-#endif  // CEF_INCLUDE_CEF_FILE_UTIL_H_
+#endif // CEF_INCLUDE_CEF_FILE_UTIL_H_

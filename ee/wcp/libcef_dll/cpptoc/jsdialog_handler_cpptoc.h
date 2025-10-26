@@ -27,10 +27,9 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefJSDialogHandlerCppToC
-    : public CefCppToCRefCounted<CefJSDialogHandlerCppToC,
-                                 CefJSDialogHandler,
+    : public CefCppToCRefCounted<CefJSDialogHandlerCppToC, CefJSDialogHandler,
                                  cef_jsdialog_handler_t> {
- public:
+public:
   CefJSDialogHandlerCppToC();
   virtual ~CefJSDialogHandlerCppToC();
 };
@@ -39,4 +38,4 @@ constexpr auto CefJSDialogHandlerCppToC_Wrap = CefJSDialogHandlerCppToC::Wrap;
 constexpr auto CefJSDialogHandlerCppToC_Unwrap =
     CefJSDialogHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_JSDIALOG_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_JSDIALOG_HANDLER_CPPTOC_H_

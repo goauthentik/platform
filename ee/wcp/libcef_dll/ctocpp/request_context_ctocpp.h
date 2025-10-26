@@ -31,10 +31,9 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefRequestContextCToCpp
-    : public CefCToCppRefCounted<CefRequestContextCToCpp,
-                                 CefRequestContext,
+    : public CefCToCppRefCounted<CefRequestContextCToCpp, CefRequestContext,
                                  cef_request_context_t> {
- public:
+public:
   CefRequestContextCToCpp();
   virtual ~CefRequestContextCToCpp();
 
@@ -44,41 +43,40 @@ class CefRequestContextCToCpp
   bool IsGlobal() override;
   CefRefPtr<CefRequestContextHandler> GetHandler() override;
   CefString GetCachePath() override;
-  CefRefPtr<CefCookieManager> GetCookieManager(
-      CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefCookieManager>
+  GetCookieManager(CefRefPtr<CefCompletionCallback> callback) override;
   bool RegisterSchemeHandlerFactory(
-      const CefString& scheme_name,
-      const CefString& domain_name,
+      const CefString &scheme_name, const CefString &domain_name,
       CefRefPtr<CefSchemeHandlerFactory> factory) override;
   bool ClearSchemeHandlerFactories() override;
   void ClearCertificateExceptions(
       CefRefPtr<CefCompletionCallback> callback) override;
-  void ClearHttpAuthCredentials(
-      CefRefPtr<CefCompletionCallback> callback) override;
+  void
+  ClearHttpAuthCredentials(CefRefPtr<CefCompletionCallback> callback) override;
   void CloseAllConnections(CefRefPtr<CefCompletionCallback> callback) override;
-  void ResolveHost(const CefString& origin,
+  void ResolveHost(const CefString &origin,
                    CefRefPtr<CefResolveCallback> callback) override;
-  CefRefPtr<CefMediaRouter> GetMediaRouter(
-      CefRefPtr<CefCompletionCallback> callback) override;
-  CefRefPtr<CefValue> GetWebsiteSetting(
-      const CefString& requesting_url,
-      const CefString& top_level_url,
-      cef_content_setting_types_t content_type) override;
-  void SetWebsiteSetting(const CefString& requesting_url,
-                         const CefString& top_level_url,
+  CefRefPtr<CefMediaRouter>
+  GetMediaRouter(CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefValue>
+  GetWebsiteSetting(const CefString &requesting_url,
+                    const CefString &top_level_url,
+                    cef_content_setting_types_t content_type) override;
+  void SetWebsiteSetting(const CefString &requesting_url,
+                         const CefString &top_level_url,
                          cef_content_setting_types_t content_type,
                          CefRefPtr<CefValue> value) override;
-  cef_content_setting_values_t GetContentSetting(
-      const CefString& requesting_url,
-      const CefString& top_level_url,
-      cef_content_setting_types_t content_type) override;
-  void SetContentSetting(const CefString& requesting_url,
-                         const CefString& top_level_url,
+  cef_content_setting_values_t
+  GetContentSetting(const CefString &requesting_url,
+                    const CefString &top_level_url,
+                    cef_content_setting_types_t content_type) override;
+  void SetContentSetting(const CefString &requesting_url,
+                         const CefString &top_level_url,
                          cef_content_setting_types_t content_type,
                          cef_content_setting_values_t value) override;
 #if CEF_API_ADDED(13401)
-  CefRefPtr<CefRegistration> AddSettingObserver(
-      CefRefPtr<CefSettingObserver> observer) override;
+  CefRefPtr<CefRegistration>
+  AddSettingObserver(CefRefPtr<CefSettingObserver> observer) override;
 #endif
   void SetChromeColorScheme(cef_color_variant_t variant,
                             cef_color_t user_color) override;
@@ -87,22 +85,21 @@ class CefRequestContextCToCpp
   cef_color_variant_t GetChromeColorSchemeVariant() override;
 
   // CefPreferenceManager methods.
-  bool HasPreference(const CefString& name) override;
-  CefRefPtr<CefValue> GetPreference(const CefString& name) override;
-  CefRefPtr<CefDictionaryValue> GetAllPreferences(
-      bool include_defaults) override;
-  bool CanSetPreference(const CefString& name) override;
-  bool SetPreference(const CefString& name,
-                     CefRefPtr<CefValue> value,
-                     CefString& error) override;
+  bool HasPreference(const CefString &name) override;
+  CefRefPtr<CefValue> GetPreference(const CefString &name) override;
+  CefRefPtr<CefDictionaryValue>
+  GetAllPreferences(bool include_defaults) override;
+  bool CanSetPreference(const CefString &name) override;
+  bool SetPreference(const CefString &name, CefRefPtr<CefValue> value,
+                     CefString &error) override;
 #if CEF_API_ADDED(13401)
-  CefRefPtr<CefRegistration> AddPreferenceObserver(
-      const CefString& name,
-      CefRefPtr<CefPreferenceObserver> observer) override;
+  CefRefPtr<CefRegistration>
+  AddPreferenceObserver(const CefString &name,
+                        CefRefPtr<CefPreferenceObserver> observer) override;
 #endif
 };
 
 constexpr auto CefRequestContextCToCpp_Wrap = CefRequestContextCToCpp::Wrap;
 constexpr auto CefRequestContextCToCpp_Unwrap = CefRequestContextCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_CTOCPP_H_

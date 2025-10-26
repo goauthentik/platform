@@ -26,17 +26,17 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMediaRouterCToCpp : public CefCToCppRefCounted<CefMediaRouterCToCpp,
-                                                        CefMediaRouter,
-                                                        cef_media_router_t> {
- public:
+class CefMediaRouterCToCpp
+    : public CefCToCppRefCounted<CefMediaRouterCToCpp, CefMediaRouter,
+                                 cef_media_router_t> {
+public:
   CefMediaRouterCToCpp();
   virtual ~CefMediaRouterCToCpp();
 
   // CefMediaRouter methods.
-  CefRefPtr<CefRegistration> AddObserver(
-      CefRefPtr<CefMediaObserver> observer) override;
-  CefRefPtr<CefMediaSource> GetSource(const CefString& urn) override;
+  CefRefPtr<CefRegistration>
+  AddObserver(CefRefPtr<CefMediaObserver> observer) override;
+  CefRefPtr<CefMediaSource> GetSource(const CefString &urn) override;
   void NotifyCurrentSinks() override;
   void CreateRoute(CefRefPtr<CefMediaSource> source,
                    CefRefPtr<CefMediaSink> sink,
@@ -47,4 +47,4 @@ class CefMediaRouterCToCpp : public CefCToCppRefCounted<CefMediaRouterCToCpp,
 constexpr auto CefMediaRouterCToCpp_Wrap = CefMediaRouterCToCpp::Wrap;
 constexpr auto CefMediaRouterCToCpp_Unwrap = CefMediaRouterCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTER_CTOCPP_H_

@@ -204,4 +204,4 @@ enum CefWrapperType {
   WT_LAST
 };
 
-#endif  // CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
+#endif // CEF_LIBCEF_DLL_WRAPPER_TYPES_H_

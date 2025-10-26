@@ -27,19 +27,18 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefJSDialogCallbackCToCpp
-    : public CefCToCppRefCounted<CefJSDialogCallbackCToCpp,
-                                 CefJSDialogCallback,
+    : public CefCToCppRefCounted<CefJSDialogCallbackCToCpp, CefJSDialogCallback,
                                  cef_jsdialog_callback_t> {
- public:
+public:
   CefJSDialogCallbackCToCpp();
   virtual ~CefJSDialogCallbackCToCpp();
 
   // CefJSDialogCallback methods.
-  void Continue(bool success, const CefString& user_input) override;
+  void Continue(bool success, const CefString &user_input) override;
 };
 
 constexpr auto CefJSDialogCallbackCToCpp_Wrap = CefJSDialogCallbackCToCpp::Wrap;
 constexpr auto CefJSDialogCallbackCToCpp_Unwrap =
     CefJSDialogCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_JSDIALOG_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_JSDIALOG_CALLBACK_CTOCPP_H_

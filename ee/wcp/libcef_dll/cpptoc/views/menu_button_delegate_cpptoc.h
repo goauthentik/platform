@@ -32,7 +32,7 @@ class CefMenuButtonDelegateCppToC
     : public CefCppToCRefCounted<CefMenuButtonDelegateCppToC,
                                  CefMenuButtonDelegate,
                                  cef_menu_button_delegate_t> {
- public:
+public:
   CefMenuButtonDelegateCppToC();
   virtual ~CefMenuButtonDelegateCppToC();
 };
@@ -42,4 +42,4 @@ constexpr auto CefMenuButtonDelegateCppToC_Wrap =
 constexpr auto CefMenuButtonDelegateCppToC_Unwrap =
     CefMenuButtonDelegateCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_MENU_BUTTON_DELEGATE_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_VIEWS_MENU_BUTTON_DELEGATE_CPPTOC_H_

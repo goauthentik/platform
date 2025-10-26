@@ -47,7 +47,7 @@
 ///
 /*--cef(source=client)--*/
 class CefAccessibilityHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called after renderer process sends accessibility tree changes to the
   /// browser process.
@@ -63,4 +63,4 @@ class CefAccessibilityHandler : public virtual CefBaseRefCounted {
   virtual void OnAccessibilityLocationChange(CefRefPtr<CefValue> value) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_ACCESSIBILITY_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_ACCESSIBILITY_HANDLER_H_

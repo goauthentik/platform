@@ -47,4 +47,4 @@
 /*--cef(source=client)--*/
 class CefPanelDelegate : public CefViewDelegate {};
 
-#endif  // CEF_INCLUDE_VIEWS_CEF_PANEL_DELEGATE_H_
+#endif // CEF_INCLUDE_VIEWS_CEF_PANEL_DELEGATE_H_

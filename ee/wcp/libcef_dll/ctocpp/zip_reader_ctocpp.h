@@ -26,24 +26,24 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefZipReaderCToCpp : public CefCToCppRefCounted<CefZipReaderCToCpp,
-                                                      CefZipReader,
-                                                      cef_zip_reader_t> {
- public:
+class CefZipReaderCToCpp
+    : public CefCToCppRefCounted<CefZipReaderCToCpp, CefZipReader,
+                                 cef_zip_reader_t> {
+public:
   CefZipReaderCToCpp();
   virtual ~CefZipReaderCToCpp();
 
   // CefZipReader methods.
   bool MoveToFirstFile() override;
   bool MoveToNextFile() override;
-  bool MoveToFile(const CefString& fileName, bool caseSensitive) override;
+  bool MoveToFile(const CefString &fileName, bool caseSensitive) override;
   bool Close() override;
   CefString GetFileName() override;
   int64_t GetFileSize() override;
   CefBaseTime GetFileLastModified() override;
-  bool OpenFile(const CefString& password) override;
+  bool OpenFile(const CefString &password) override;
   bool CloseFile() override;
-  int ReadFile(void* buffer, size_t bufferSize) override;
+  int ReadFile(void *buffer, size_t bufferSize) override;
   int64_t Tell() override;
   bool Eof() override;
 };
@@ -51,4 +51,4 @@ class CefZipReaderCToCpp : public CefCToCppRefCounted<CefZipReaderCToCpp,
 constexpr auto CefZipReaderCToCpp_Wrap = CefZipReaderCToCpp::Wrap;
 constexpr auto CefZipReaderCToCpp_Unwrap = CefZipReaderCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_ZIP_READER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_ZIP_READER_CTOCPP_H_

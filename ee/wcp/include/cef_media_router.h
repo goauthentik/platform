@@ -58,7 +58,7 @@ class CefMediaSource;
 ///
 /*--cef(source=library)--*/
 class CefMediaRouter : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns the MediaRouter object associated with the global request context.
   /// If |callback| is non-NULL it will be executed asnychronously on the UI
@@ -66,16 +66,16 @@ class CefMediaRouter : public virtual CefBaseRefCounted {
   /// calling CefRequestContext::GetGlobalContext()->GetMediaRouter().
   ///
   /*--cef(optional_param=callback)--*/
-  static CefRefPtr<CefMediaRouter> GetGlobalMediaRouter(
-      CefRefPtr<CefCompletionCallback> callback);
+  static CefRefPtr<CefMediaRouter>
+  GetGlobalMediaRouter(CefRefPtr<CefCompletionCallback> callback);
 
   ///
   /// Add an observer for MediaRouter events. The observer will remain
   /// registered until the returned Registration object is destroyed.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefRegistration> AddObserver(
-      CefRefPtr<CefMediaObserver> observer) = 0;
+  virtual CefRefPtr<CefRegistration>
+  AddObserver(CefRefPtr<CefMediaObserver> observer) = 0;
 
   ///
   /// Returns a MediaSource object for the specified media source URN. Supported
@@ -83,7 +83,7 @@ class CefMediaRouter : public virtual CefBaseRefCounted {
   /// client application (e.g. "cast:<appId>?clientId=<clientId>").
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefMediaSource> GetSource(const CefString& urn) = 0;
+  virtual CefRefPtr<CefMediaSource> GetSource(const CefString &urn) = 0;
 
   ///
   /// Trigger an asynchronous call to CefMediaObserver::OnSinks on all
@@ -120,7 +120,7 @@ class CefMediaRouter : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefMediaObserver : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_media_route_connection_state_t ConnectionState;
 
   ///
@@ -128,15 +128,15 @@ class CefMediaObserver : public virtual CefBaseRefCounted {
   /// CefMediaRouter::NotifyCurrentSinks was called.
   ///
   /*--cef()--*/
-  virtual void OnSinks(const std::vector<CefRefPtr<CefMediaSink>>& sinks) = 0;
+  virtual void OnSinks(const std::vector<CefRefPtr<CefMediaSink>> &sinks) = 0;
 
   ///
   /// The list of available media routes has changed or
   /// CefMediaRouter::NotifyCurrentRoutes was called.
   ///
   /*--cef()--*/
-  virtual void OnRoutes(
-      const std::vector<CefRefPtr<CefMediaRoute>>& routes) = 0;
+  virtual void
+  OnRoutes(const std::vector<CefRefPtr<CefMediaRoute>> &routes) = 0;
 
   ///
   /// The connection state of |route| has changed.
@@ -151,7 +151,7 @@ class CefMediaObserver : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnRouteMessageReceived(CefRefPtr<CefMediaRoute> route,
-                                      const void* message,
+                                      const void *message,
                                       size_t message_size) = 0;
 };
 
@@ -164,7 +164,7 @@ class CefMediaObserver : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefMediaRoute : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns the ID for this route.
   ///
@@ -187,7 +187,7 @@ class CefMediaRoute : public virtual CefBaseRefCounted {
   /// Send a message over this route. |message| will be copied if necessary.
   ///
   /*--cef()--*/
-  virtual void SendRouteMessage(const void* message, size_t message_size) = 0;
+  virtual void SendRouteMessage(const void *message, size_t message_size) = 0;
 
   ///
   /// Terminate this route. Will result in an asynchronous call to
@@ -203,7 +203,7 @@ class CefMediaRoute : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefMediaRouteCreateCallback : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_media_route_create_result_t RouteCreateResult;
 
   ///
@@ -214,7 +214,7 @@ class CefMediaRouteCreateCallback : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=error,optional_param=route)--*/
   virtual void OnMediaRouteCreateFinished(RouteCreateResult result,
-                                          const CefString& error,
+                                          const CefString &error,
                                           CefRefPtr<CefMediaRoute> route) = 0;
 };
 
@@ -225,7 +225,7 @@ class CefMediaRouteCreateCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefMediaSink : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_media_sink_icon_type_t IconType;
 
   ///
@@ -250,8 +250,8 @@ class CefMediaSink : public virtual CefBaseRefCounted {
   /// Asynchronously retrieves device info.
   ///
   /*--cef()--*/
-  virtual void GetDeviceInfo(
-      CefRefPtr<CefMediaSinkDeviceInfoCallback> callback) = 0;
+  virtual void
+  GetDeviceInfo(CefRefPtr<CefMediaSinkDeviceInfoCallback> callback) = 0;
 
   ///
   /// Returns true if this sink accepts content via Cast.
@@ -278,14 +278,14 @@ class CefMediaSink : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client)--*/
 class CefMediaSinkDeviceInfoCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Method that will be executed asyncronously once device information has
   /// been retrieved.
   ///
   /*--cef()--*/
-  virtual void OnMediaSinkDeviceInfo(
-      const CefMediaSinkDeviceInfo& device_info) = 0;
+  virtual void
+  OnMediaSinkDeviceInfo(const CefMediaSinkDeviceInfo &device_info) = 0;
 };
 
 ///
@@ -295,7 +295,7 @@ class CefMediaSinkDeviceInfoCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefMediaSource : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns the ID (media source URN or URL) for this source.
   ///
@@ -315,4 +315,4 @@ class CefMediaSource : public virtual CefBaseRefCounted {
   virtual bool IsDialSource() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_MEDIA_ROUTER_H_
+#endif // CEF_INCLUDE_CEF_MEDIA_ROUTER_H_

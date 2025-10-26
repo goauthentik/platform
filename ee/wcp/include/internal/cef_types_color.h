@@ -56,4 +56,4 @@ typedef enum {
 }
 #endif
 
-#endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_COLOR_H_
+#endif // CEF_INCLUDE_INTERNAL_CEF_TYPES_COLOR_H_

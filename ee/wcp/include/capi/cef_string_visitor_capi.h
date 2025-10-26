@@ -64,12 +64,12 @@ typedef struct _cef_string_visitor_t {
   ///
   /// Method that will be executed.
   ///
-  void(CEF_CALLBACK* visit)(struct _cef_string_visitor_t* self,
-                            const cef_string_t* string);
+  void(CEF_CALLBACK *visit)(struct _cef_string_visitor_t *self,
+                            const cef_string_t *string);
 } cef_string_visitor_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_STRING_VISITOR_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_STRING_VISITOR_CAPI_H_

@@ -49,12 +49,12 @@ typedef cef_process_id_t CefProcessId;
 ///
 /*--cef(source=library)--*/
 class CefProcessMessage : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Create a new CefProcessMessage object with the specified name.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefProcessMessage> Create(const CefString& name);
+  static CefRefPtr<CefProcessMessage> Create(const CefString &name);
 
   ///
   /// Returns true if this object is valid. Do not call any other methods if
@@ -98,4 +98,4 @@ class CefProcessMessage : public virtual CefBaseRefCounted {
   virtual CefRefPtr<CefSharedMemoryRegion> GetSharedMemoryRegion() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_MESSAGE_H_
+#endif // CEF_INCLUDE_CEF_MESSAGE_H_

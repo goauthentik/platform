@@ -26,10 +26,10 @@
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefFindHandlerCppToC : public CefCppToCRefCounted<CefFindHandlerCppToC,
-                                                        CefFindHandler,
-                                                        cef_find_handler_t> {
- public:
+class CefFindHandlerCppToC
+    : public CefCppToCRefCounted<CefFindHandlerCppToC, CefFindHandler,
+                                 cef_find_handler_t> {
+public:
   CefFindHandlerCppToC();
   virtual ~CefFindHandlerCppToC();
 };
@@ -37,4 +37,4 @@ class CefFindHandlerCppToC : public CefCppToCRefCounted<CefFindHandlerCppToC,
 constexpr auto CefFindHandlerCppToC_Wrap = CefFindHandlerCppToC::Wrap;
 constexpr auto CefFindHandlerCppToC_Unwrap = CefFindHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_FIND_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_FIND_HANDLER_CPPTOC_H_

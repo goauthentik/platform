@@ -30,7 +30,7 @@ class CefRunContextMenuCallbackCToCpp
     : public CefCToCppRefCounted<CefRunContextMenuCallbackCToCpp,
                                  CefRunContextMenuCallback,
                                  cef_run_context_menu_callback_t> {
- public:
+public:
   CefRunContextMenuCallbackCToCpp();
   virtual ~CefRunContextMenuCallbackCToCpp();
 
@@ -44,4 +44,4 @@ constexpr auto CefRunContextMenuCallbackCToCpp_Wrap =
 constexpr auto CefRunContextMenuCallbackCToCpp_Unwrap =
     CefRunContextMenuCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_RUN_CONTEXT_MENU_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_RUN_CONTEXT_MENU_CALLBACK_CTOCPP_H_

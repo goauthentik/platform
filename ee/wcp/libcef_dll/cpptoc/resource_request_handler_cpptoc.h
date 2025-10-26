@@ -30,7 +30,7 @@ class CefResourceRequestHandlerCppToC
     : public CefCppToCRefCounted<CefResourceRequestHandlerCppToC,
                                  CefResourceRequestHandler,
                                  cef_resource_request_handler_t> {
- public:
+public:
   CefResourceRequestHandlerCppToC();
   virtual ~CefResourceRequestHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefResourceRequestHandlerCppToC_Wrap =
 constexpr auto CefResourceRequestHandlerCppToC_Unwrap =
     CefResourceRequestHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_REQUEST_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_REQUEST_HANDLER_CPPTOC_H_

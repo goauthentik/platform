@@ -72,7 +72,7 @@ typedef struct _cef_resource_skip_callback_t {
   /// bytes have been skipped or the request will proceed. If |bytes_skipped| <=
   /// 0 the request will fail with ERR_REQUEST_RANGE_NOT_SATISFIABLE.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_resource_skip_callback_t* self,
+  void(CEF_CALLBACK *cont)(struct _cef_resource_skip_callback_t *self,
                            int64_t bytes_skipped);
 } cef_resource_skip_callback_t;
 
@@ -94,7 +94,7 @@ typedef struct _cef_resource_read_callback_t {
   /// or the expected content length). If |bytes_read| < 0 then the request will
   /// fail and the |bytes_read| value will be treated as the error code.
   ///
-  void(CEF_CALLBACK* cont)(struct _cef_resource_read_callback_t* self,
+  void(CEF_CALLBACK *cont)(struct _cef_resource_read_callback_t *self,
                            int bytes_read);
 } cef_resource_read_callback_t;
 
@@ -121,10 +121,9 @@ typedef struct _cef_resource_handler_t {
   /// backwards compatibility set |handle_request| to false (0) and return false
   /// (0) and the ProcessRequest function will be called.
   ///
-  int(CEF_CALLBACK* open)(struct _cef_resource_handler_t* self,
-                          struct _cef_request_t* request,
-                          int* handle_request,
-                          struct _cef_callback_t* callback);
+  int(CEF_CALLBACK *open)(struct _cef_resource_handler_t *self,
+                          struct _cef_request_t *request, int *handle_request,
+                          struct _cef_callback_t *callback);
 
   ///
   /// Begin processing the request. To handle the request return true (1) and
@@ -135,9 +134,9 @@ typedef struct _cef_resource_handler_t {
   ///
   /// WARNING: This function is deprecated. Use Open instead.
   ///
-  int(CEF_CALLBACK* process_request)(struct _cef_resource_handler_t* self,
-                                     struct _cef_request_t* request,
-                                     struct _cef_callback_t* callback);
+  int(CEF_CALLBACK *process_request)(struct _cef_resource_handler_t *self,
+                                     struct _cef_request_t *request,
+                                     struct _cef_callback_t *callback);
 
   ///
   /// Retrieve response header information. If the response length is not known
@@ -154,10 +153,10 @@ typedef struct _cef_resource_handler_t {
   /// Location header value. If an error occured while setting up the request
   /// you can call set_error() on |response| to indicate the error condition.
   ///
-  void(CEF_CALLBACK* get_response_headers)(struct _cef_resource_handler_t* self,
-                                           struct _cef_response_t* response,
-                                           int64_t* response_length,
-                                           cef_string_t* redirectUrl);
+  void(CEF_CALLBACK *get_response_headers)(struct _cef_resource_handler_t *self,
+                                           struct _cef_response_t *response,
+                                           int64_t *response_length,
+                                           cef_string_t *redirectUrl);
 
   ///
   /// Skip response data when requested by a Range header. Skip over and discard
@@ -168,10 +167,9 @@ typedef struct _cef_resource_handler_t {
   /// |bytes_skipped| to < 0 (e.g. -2 for ERR_FAILED) and return false (0). This
   /// function will be called in sequence but not from a dedicated thread.
   ///
-  int(CEF_CALLBACK* skip)(struct _cef_resource_handler_t* self,
-                          int64_t bytes_to_skip,
-                          int64_t* bytes_skipped,
-                          struct _cef_resource_skip_callback_t* callback);
+  int(CEF_CALLBACK *skip)(struct _cef_resource_handler_t *self,
+                          int64_t bytes_to_skip, int64_t *bytes_skipped,
+                          struct _cef_resource_skip_callback_t *callback);
 
   ///
   /// Read response data. If data is available immediately copy up to
@@ -186,11 +184,9 @@ typedef struct _cef_resource_handler_t {
   /// backwards compatibility set |bytes_read| to -1 and return false (0) and
   /// the ReadResponse function will be called.
   ///
-  int(CEF_CALLBACK* read)(struct _cef_resource_handler_t* self,
-                          void* data_out,
-                          int bytes_to_read,
-                          int* bytes_read,
-                          struct _cef_resource_read_callback_t* callback);
+  int(CEF_CALLBACK *read)(struct _cef_resource_handler_t *self, void *data_out,
+                          int bytes_to_read, int *bytes_read,
+                          struct _cef_resource_read_callback_t *callback);
 
   ///
   /// Read response data. If data is available immediately copy up to
@@ -201,20 +197,19 @@ typedef struct _cef_resource_handler_t {
   ///
   /// WARNING: This function is deprecated. Use Skip and Read instead.
   ///
-  int(CEF_CALLBACK* read_response)(struct _cef_resource_handler_t* self,
-                                   void* data_out,
-                                   int bytes_to_read,
-                                   int* bytes_read,
-                                   struct _cef_callback_t* callback);
+  int(CEF_CALLBACK *read_response)(struct _cef_resource_handler_t *self,
+                                   void *data_out, int bytes_to_read,
+                                   int *bytes_read,
+                                   struct _cef_callback_t *callback);
 
   ///
   /// Request processing has been canceled.
   ///
-  void(CEF_CALLBACK* cancel)(struct _cef_resource_handler_t* self);
+  void(CEF_CALLBACK *cancel)(struct _cef_resource_handler_t *self);
 } cef_resource_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_RESOURCE_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_RESOURCE_HANDLER_CAPI_H_

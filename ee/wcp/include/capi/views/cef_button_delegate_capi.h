@@ -68,19 +68,18 @@ typedef struct _cef_button_delegate_t {
   ///
   /// Called when |button| is pressed.
   ///
-  void(CEF_CALLBACK* on_button_pressed)(struct _cef_button_delegate_t* self,
-                                        struct _cef_button_t* button);
+  void(CEF_CALLBACK *on_button_pressed)(struct _cef_button_delegate_t *self,
+                                        struct _cef_button_t *button);
 
   ///
   /// Called when the state of |button| changes.
   ///
-  void(CEF_CALLBACK* on_button_state_changed)(
-      struct _cef_button_delegate_t* self,
-      struct _cef_button_t* button);
+  void(CEF_CALLBACK *on_button_state_changed)(
+      struct _cef_button_delegate_t *self, struct _cef_button_t *button);
 } cef_button_delegate_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_BUTTON_DELEGATE_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_BUTTON_DELEGATE_CAPI_H_

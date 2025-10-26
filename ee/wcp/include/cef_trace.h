@@ -50,14 +50,14 @@
 ///
 /*--cef(source=client)--*/
 class CefEndTracingCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called after all processes have sent their trace data. |tracing_file| is
   /// the path at which tracing data was written. The client is responsible for
   /// deleting |tracing_file|.
   ///
   /*--cef()--*/
-  virtual void OnEndTracingComplete(const CefString& tracing_file) = 0;
+  virtual void OnEndTracingComplete(const CefString &tracing_file) = 0;
 };
 
 ///
@@ -80,7 +80,7 @@ class CefEndTracingCallback : public virtual CefBaseRefCounted {
 /// This function must be called on the browser process UI thread.
 ///
 /*--cef(optional_param=categories,optional_param=callback)--*/
-bool CefBeginTracing(const CefString& categories,
+bool CefBeginTracing(const CefString &categories,
                      CefRefPtr<CefCompletionCallback> callback);
 
 ///
@@ -97,7 +97,7 @@ bool CefBeginTracing(const CefString& categories,
 /// This function must be called on the browser process UI thread.
 ///
 /*--cef(optional_param=tracing_file,optional_param=callback)--*/
-bool CefEndTracing(const CefString& tracing_file,
+bool CefEndTracing(const CefString &tracing_file,
                    CefRefPtr<CefEndTracingCallback> callback);
 
 ///
@@ -108,4 +108,4 @@ bool CefEndTracing(const CefString& tracing_file,
 /*--cef()--*/
 int64_t CefNowFromSystemTraceTime();
 
-#endif  // CEF_INCLUDE_CEF_TRACE_H_
+#endif // CEF_INCLUDE_CEF_TRACE_H_

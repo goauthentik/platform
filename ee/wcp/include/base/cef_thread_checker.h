@@ -35,7 +35,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/threading/thread_checker.h"
-#else  // !USING_CHROMIUM_INCLUDES
+#else // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -66,13 +66,13 @@ namespace cef_internal {
 /// right version for your build configuration.
 ///
 class ThreadCheckerDoNothing {
- public:
+public:
   bool CalledOnValidThread() const { return true; }
 
   void DetachFromThread() {}
 };
 
-}  // namespace cef_internal
+} // namespace cef_internal
 
 ///
 /// ThreadChecker is a helper class used to help verify that some methods of a
@@ -114,12 +114,12 @@ class ThreadCheckerDoNothing {
 class ThreadChecker : public cef_internal::ThreadCheckerImpl {};
 #else
 class ThreadChecker : public cef_internal::ThreadCheckerDoNothing {};
-#endif  // ENABLE_THREAD_CHECKER
+#endif // ENABLE_THREAD_CHECKER
 
 #undef ENABLE_THREAD_CHECKER
 
-}  // namespace base
+} // namespace base
 
-#endif  // !USING_CHROMIUM_INCLUDES
+#endif // !USING_CHROMIUM_INCLUDES
 
-#endif  // CEF_INCLUDE_BASE_THREAD_CHECKER_H_
+#endif // CEF_INCLUDE_BASE_THREAD_CHECKER_H_

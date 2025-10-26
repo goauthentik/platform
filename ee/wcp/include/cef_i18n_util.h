@@ -46,4 +46,4 @@
 /*--cef()--*/
 bool CefIsRTL();
 
-#endif  // CEF_INCLUDE_CEF_I18N_UTIL_H_
+#endif // CEF_INCLUDE_CEF_I18N_UTIL_H_

@@ -48,7 +48,7 @@ class CefButton;
 ///
 /*--cef(source=client)--*/
 class CefButtonDelegate : public CefViewDelegate {
- public:
+public:
   ///
   /// Called when |button| is pressed.
   ///
@@ -62,4 +62,4 @@ class CefButtonDelegate : public CefViewDelegate {
   virtual void OnButtonStateChanged(CefRefPtr<CefButton> button) {}
 };
 
-#endif  // CEF_INCLUDE_VIEWS_CEF_BUTTON_DELEGATE_H_
+#endif // CEF_INCLUDE_VIEWS_CEF_BUTTON_DELEGATE_H_

@@ -111,8 +111,8 @@ class CefV8Value;
 /// </pre>
 ///
 /*--cef(optional_param=handler)--*/
-bool CefRegisterExtension(const CefString& extension_name,
-                          const CefString& javascript_code,
+bool CefRegisterExtension(const CefString &extension_name,
+                          const CefString &javascript_code,
                           CefRefPtr<CefV8Handler> handler);
 
 ///
@@ -124,7 +124,7 @@ bool CefRegisterExtension(const CefString& extension_name,
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefV8Context : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns the current (top) context object in the V8 context stack.
   ///
@@ -213,11 +213,9 @@ class CefV8Context : public virtual CefBaseRefCounted {
   /// the exception, if any, and the function will return false.
   ///
   /*--cef(optional_param=script_url)--*/
-  virtual bool Eval(const CefString& code,
-                    const CefString& script_url,
-                    int start_line,
-                    CefRefPtr<CefV8Value>& retval,
-                    CefRefPtr<CefV8Exception>& exception) = 0;
+  virtual bool Eval(const CefString &code, const CefString &script_url,
+                    int start_line, CefRefPtr<CefV8Value> &retval,
+                    CefRefPtr<CefV8Exception> &exception) = 0;
 };
 
 typedef std::vector<CefRefPtr<CefV8Value>> CefV8ValueList;
@@ -229,7 +227,7 @@ typedef std::vector<CefRefPtr<CefV8Value>> CefV8ValueList;
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefV8Handler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Handle execution of the function identified by |name|. |object| is the
   /// receiver ('this' object) of the function. |arguments| is the list of
@@ -238,11 +236,9 @@ class CefV8Handler : public virtual CefBaseRefCounted {
   /// exception that will be thrown. Return true if execution was handled.
   ///
   /*--cef()--*/
-  virtual bool Execute(const CefString& name,
-                       CefRefPtr<CefV8Value> object,
-                       const CefV8ValueList& arguments,
-                       CefRefPtr<CefV8Value>& retval,
-                       CefString& exception) = 0;
+  virtual bool Execute(const CefString &name, CefRefPtr<CefV8Value> object,
+                       const CefV8ValueList &arguments,
+                       CefRefPtr<CefV8Value> &retval, CefString &exception) = 0;
 };
 
 ///
@@ -252,7 +248,7 @@ class CefV8Handler : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefV8Accessor : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Handle retrieval the accessor value identified by |name|. |object| is the
   /// receiver ('this' object) of the accessor. If retrieval succeeds set
@@ -261,10 +257,8 @@ class CefV8Accessor : public virtual CefBaseRefCounted {
   /// handled.
   ///
   /*--cef()--*/
-  virtual bool Get(const CefString& name,
-                   const CefRefPtr<CefV8Value> object,
-                   CefRefPtr<CefV8Value>& retval,
-                   CefString& exception) = 0;
+  virtual bool Get(const CefString &name, const CefRefPtr<CefV8Value> object,
+                   CefRefPtr<CefV8Value> &retval, CefString &exception) = 0;
 
   ///
   /// Handle assignment of the accessor value identified by |name|. |object| is
@@ -274,10 +268,8 @@ class CefV8Accessor : public virtual CefBaseRefCounted {
   /// handled.
   ///
   /*--cef()--*/
-  virtual bool Set(const CefString& name,
-                   const CefRefPtr<CefV8Value> object,
-                   const CefRefPtr<CefV8Value> value,
-                   CefString& exception) = 0;
+  virtual bool Set(const CefString &name, const CefRefPtr<CefV8Value> object,
+                   const CefRefPtr<CefV8Value> value, CefString &exception) = 0;
 };
 
 ///
@@ -290,7 +282,7 @@ class CefV8Accessor : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefV8Interceptor : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Handle retrieval of the interceptor value identified by |name|. |object|
   /// is the receiver ('this' object) of the interceptor. If retrieval succeeds,
@@ -301,10 +293,8 @@ class CefV8Interceptor : public virtual CefBaseRefCounted {
   /// Return true if interceptor retrieval was handled, false otherwise.
   ///
   /*--cef(capi_name=get_byname)--*/
-  virtual bool Get(const CefString& name,
-                   const CefRefPtr<CefV8Value> object,
-                   CefRefPtr<CefV8Value>& retval,
-                   CefString& exception) = 0;
+  virtual bool Get(const CefString &name, const CefRefPtr<CefV8Value> object,
+                   CefRefPtr<CefV8Value> &retval, CefString &exception) = 0;
 
   ///
   /// Handle retrieval of the interceptor value identified by |index|. |object|
@@ -315,10 +305,8 @@ class CefV8Interceptor : public virtual CefBaseRefCounted {
   /// Return true if interceptor retrieval was handled, false otherwise.
   ///
   /*--cef(capi_name=get_byindex,index_param=index)--*/
-  virtual bool Get(int index,
-                   const CefRefPtr<CefV8Value> object,
-                   CefRefPtr<CefV8Value>& retval,
-                   CefString& exception) = 0;
+  virtual bool Get(int index, const CefRefPtr<CefV8Value> object,
+                   CefRefPtr<CefV8Value> &retval, CefString &exception) = 0;
 
   ///
   /// Handle assignment of the interceptor value identified by |name|. |object|
@@ -329,10 +317,8 @@ class CefV8Interceptor : public virtual CefBaseRefCounted {
   /// Return true if interceptor assignment was handled, false otherwise.
   ///
   /*--cef(capi_name=set_byname)--*/
-  virtual bool Set(const CefString& name,
-                   const CefRefPtr<CefV8Value> object,
-                   const CefRefPtr<CefV8Value> value,
-                   CefString& exception) = 0;
+  virtual bool Set(const CefString &name, const CefRefPtr<CefV8Value> object,
+                   const CefRefPtr<CefV8Value> value, CefString &exception) = 0;
 
   ///
   /// Handle assignment of the interceptor value identified by |index|. |object|
@@ -342,10 +328,8 @@ class CefV8Interceptor : public virtual CefBaseRefCounted {
   /// Return true if interceptor assignment was handled, false otherwise.
   ///
   /*--cef(capi_name=set_byindex,index_param=index)--*/
-  virtual bool Set(int index,
-                   const CefRefPtr<CefV8Value> object,
-                   const CefRefPtr<CefV8Value> value,
-                   CefString& exception) = 0;
+  virtual bool Set(int index, const CefRefPtr<CefV8Value> object,
+                   const CefRefPtr<CefV8Value> value, CefString &exception) = 0;
 };
 
 ///
@@ -354,7 +338,7 @@ class CefV8Interceptor : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefV8Exception : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns the exception message.
   ///
@@ -415,14 +399,14 @@ class CefV8Exception : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefV8ArrayBufferReleaseCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called to release |buffer| when the ArrayBuffer JS object is garbage
   /// collected. |buffer| is the value that was passed to CreateArrayBuffer
   /// along with this object.
   ///
   /*--cef()--*/
-  virtual void ReleaseBuffer(void* buffer) = 0;
+  virtual void ReleaseBuffer(void *buffer) = 0;
 };
 
 ///
@@ -434,7 +418,7 @@ class CefV8ArrayBufferReleaseCallback : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefV8Value : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_v8_propertyattribute_t PropertyAttribute;
 
   ///
@@ -486,7 +470,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// Create a new CefV8Value object of type string.
   ///
   /*--cef(optional_param=value)--*/
-  static CefRefPtr<CefV8Value> CreateString(const CefString& value);
+  static CefRefPtr<CefV8Value> CreateString(const CefString &value);
 
   ///
   /// Create a new CefV8Value object of type object with optional accessor
@@ -496,9 +480,9 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// CefV8Context reference.
   ///
   /*--cef(optional_param=accessor, optional_param=interceptor)--*/
-  static CefRefPtr<CefV8Value> CreateObject(
-      CefRefPtr<CefV8Accessor> accessor,
-      CefRefPtr<CefV8Interceptor> interceptor);
+  static CefRefPtr<CefV8Value>
+  CreateObject(CefRefPtr<CefV8Accessor> accessor,
+               CefRefPtr<CefV8Interceptor> interceptor);
 
   ///
   /// Create a new CefV8Value object of type array with the specified |length|.
@@ -524,8 +508,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=buffer)--*/
   static CefRefPtr<CefV8Value> CreateArrayBuffer(
-      void* buffer,
-      size_t length,
+      void *buffer, size_t length,
       CefRefPtr<CefV8ArrayBufferReleaseCallback> release_callback);
 
   ///
@@ -537,7 +520,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// reference.
   ///
   /*--cef(optional_param=buffer)--*/
-  static CefRefPtr<CefV8Value> CreateArrayBufferWithCopy(void* buffer,
+  static CefRefPtr<CefV8Value> CreateArrayBufferWithCopy(void *buffer,
                                                          size_t length);
 
   ///
@@ -547,7 +530,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// Exit() on a stored CefV8Context reference.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefV8Value> CreateFunction(const CefString& name,
+  static CefRefPtr<CefV8Value> CreateFunction(const CefString &name,
                                               CefRefPtr<CefV8Handler> handler);
 
   ///
@@ -739,7 +722,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// Returns true if the object has a value with the specified identifier.
   ///
   /*--cef(capi_name=has_value_bykey,optional_param=key)--*/
-  virtual bool HasValue(const CefString& key) = 0;
+  virtual bool HasValue(const CefString &key) = 0;
 
   ///
   /// Returns true if the object has a value with the specified identifier.
@@ -754,7 +737,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// will return true even though deletion failed.
   ///
   /*--cef(capi_name=delete_value_bykey,optional_param=key)--*/
-  virtual bool DeleteValue(const CefString& key) = 0;
+  virtual bool DeleteValue(const CefString &key) = 0;
 
   ///
   /// Deletes the value with the specified identifier and returns true on
@@ -770,7 +753,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// if this method is called incorrectly or an exception is thrown.
   ///
   /*--cef(capi_name=get_value_bykey,optional_param=key)--*/
-  virtual CefRefPtr<CefV8Value> GetValue(const CefString& key) = 0;
+  virtual CefRefPtr<CefV8Value> GetValue(const CefString &key) = 0;
 
   ///
   /// Returns the value with the specified identifier on success. Returns NULL
@@ -786,8 +769,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// even though assignment failed.
   ///
   /*--cef(capi_name=set_value_bykey,optional_param=key)--*/
-  virtual bool SetValue(const CefString& key,
-                        CefRefPtr<CefV8Value> value,
+  virtual bool SetValue(const CefString &key, CefRefPtr<CefV8Value> value,
                         PropertyAttribute attribute) = 0;
 
   ///
@@ -807,14 +789,14 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// will return true even though assignment failed.
   ///
   /*--cef(capi_name=set_value_byaccessor,optional_param=key)--*/
-  virtual bool SetValue(const CefString& key, PropertyAttribute attribute) = 0;
+  virtual bool SetValue(const CefString &key, PropertyAttribute attribute) = 0;
 
   ///
   /// Read the keys for the object's values into the specified vector. Integer-
   /// based keys will also be returned as strings.
   ///
   /*--cef()--*/
-  virtual bool GetKeys(std::vector<CefString>& keys) = 0;
+  virtual bool GetKeys(std::vector<CefString> &keys) = 0;
 
   ///
   /// Sets the user data for this object and returns true on success. Returns
@@ -890,7 +872,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// CefV8Value is alive.
   ///
   /*--cef()--*/
-  virtual void* GetArrayBufferData() = 0;
+  virtual void *GetArrayBufferData() = 0;
 
   // FUNCTION METHODS - These methods are only available on functions.
 
@@ -917,9 +899,9 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// this method is called incorrectly or an exception is thrown.
   ///
   /*--cef(optional_param=object)--*/
-  virtual CefRefPtr<CefV8Value> ExecuteFunction(
-      CefRefPtr<CefV8Value> object,
-      const CefV8ValueList& arguments) = 0;
+  virtual CefRefPtr<CefV8Value>
+  ExecuteFunction(CefRefPtr<CefV8Value> object,
+                  const CefV8ValueList &arguments) = 0;
 
   ///
   /// Execute the function using the specified V8 context. |object| is the
@@ -930,10 +912,10 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// exception is thrown.
   ///
   /*--cef(optional_param=object)--*/
-  virtual CefRefPtr<CefV8Value> ExecuteFunctionWithContext(
-      CefRefPtr<CefV8Context> context,
-      CefRefPtr<CefV8Value> object,
-      const CefV8ValueList& arguments) = 0;
+  virtual CefRefPtr<CefV8Value>
+  ExecuteFunctionWithContext(CefRefPtr<CefV8Context> context,
+                             CefRefPtr<CefV8Value> object,
+                             const CefV8ValueList &arguments) = 0;
 
   // PROMISE METHODS - These methods are only available on Promises.
 
@@ -956,7 +938,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
   /// method is called incorrectly or an exception is thrown.
   ///
   /*--cef()--*/
-  virtual bool RejectPromise(const CefString& errorMsg) = 0;
+  virtual bool RejectPromise(const CefString &errorMsg) = 0;
 };
 
 ///
@@ -968,7 +950,7 @@ class CefV8Value : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library)--*/
 class CefV8StackTrace : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns the stack trace for the currently active context. |frame_limit| is
   /// the maximum number of frames that will be captured.
@@ -1006,7 +988,7 @@ class CefV8StackTrace : public virtual CefBaseRefCounted {
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefV8StackFrame : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Returns true if the underlying handle is valid and it can be accessed on
   /// the current thread. Do not call any other methods if this method returns
@@ -1061,4 +1043,4 @@ class CefV8StackFrame : public virtual CefBaseRefCounted {
   virtual bool IsConstructor() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_V8_H_
+#endif // CEF_INCLUDE_CEF_V8_H_

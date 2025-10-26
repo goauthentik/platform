@@ -66,4 +66,4 @@ typedef struct _cef_registration_t {
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_REGISTRATION_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_REGISTRATION_CAPI_H_

@@ -30,7 +30,7 @@ class CefTranslatorTestScopedClientChildCppToC
     : public CefCppToCScoped<CefTranslatorTestScopedClientChildCppToC,
                              CefTranslatorTestScopedClientChild,
                              cef_translator_test_scoped_client_child_t> {
- public:
+public:
   CefTranslatorTestScopedClientChildCppToC();
   virtual ~CefTranslatorTestScopedClientChildCppToC();
 };
@@ -46,7 +46,7 @@ constexpr auto CefTranslatorTestScopedClientChildCppToC_UnwrapRaw =
 constexpr auto CefTranslatorTestScopedClientChildCppToC_GetWrapper =
     CefTranslatorTestScopedClientChildCppToC::GetWrapper;
 
-inline cef_translator_test_scoped_client_child_t*
+inline cef_translator_test_scoped_client_child_t *
 CefTranslatorTestScopedClientChildCppToC_WrapRawAndRelease(
     CefRawPtr<CefTranslatorTestScopedClientChild> c) {
   auto [ownerPtr, structPtr] =
@@ -55,4 +55,4 @@ CefTranslatorTestScopedClientChildCppToC_WrapRawAndRelease(
   return structPtr;
 }
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CHILD_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_TEST_TRANSLATOR_TEST_SCOPED_CLIENT_CHILD_CPPTOC_H_

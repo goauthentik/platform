@@ -28,15 +28,15 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefDisplayCToCpp
     : public CefCToCppRefCounted<CefDisplayCToCpp, CefDisplay, cef_display_t> {
- public:
+public:
   CefDisplayCToCpp();
   virtual ~CefDisplayCToCpp();
 
   // CefDisplay methods.
   int64_t GetID() override;
   float GetDeviceScaleFactor() override;
-  void ConvertPointToPixels(CefPoint& point) override;
-  void ConvertPointFromPixels(CefPoint& point) override;
+  void ConvertPointToPixels(CefPoint &point) override;
+  void ConvertPointFromPixels(CefPoint &point) override;
   CefRect GetBounds() override;
   CefRect GetWorkArea() override;
   int GetRotation() override;
@@ -45,4 +45,4 @@ class CefDisplayCToCpp
 constexpr auto CefDisplayCToCpp_Wrap = CefDisplayCToCpp::Wrap;
 constexpr auto CefDisplayCToCpp_Unwrap = CefDisplayCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_DISPLAY_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_DISPLAY_CTOCPP_H_

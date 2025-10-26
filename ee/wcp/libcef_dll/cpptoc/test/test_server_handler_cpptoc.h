@@ -30,7 +30,7 @@ class CefTestServerHandlerCppToC
     : public CefCppToCRefCounted<CefTestServerHandlerCppToC,
                                  CefTestServerHandler,
                                  cef_test_server_handler_t> {
- public:
+public:
   CefTestServerHandlerCppToC();
   virtual ~CefTestServerHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefTestServerHandlerCppToC_Wrap =
 constexpr auto CefTestServerHandlerCppToC_Unwrap =
     CefTestServerHandlerCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_TEST_SERVER_HANDLER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_TEST_TEST_SERVER_HANDLER_CPPTOC_H_

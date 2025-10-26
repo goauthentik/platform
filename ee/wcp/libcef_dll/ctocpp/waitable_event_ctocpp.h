@@ -27,10 +27,9 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefWaitableEventCToCpp
-    : public CefCToCppRefCounted<CefWaitableEventCToCpp,
-                                 CefWaitableEvent,
+    : public CefCToCppRefCounted<CefWaitableEventCToCpp, CefWaitableEvent,
                                  cef_waitable_event_t> {
- public:
+public:
   CefWaitableEventCToCpp();
   virtual ~CefWaitableEventCToCpp();
 
@@ -45,4 +44,4 @@ class CefWaitableEventCToCpp
 constexpr auto CefWaitableEventCToCpp_Wrap = CefWaitableEventCToCpp::Wrap;
 constexpr auto CefWaitableEventCToCpp_Unwrap = CefWaitableEventCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_WAITABLE_EVENT_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_WAITABLE_EVENT_CTOCPP_H_

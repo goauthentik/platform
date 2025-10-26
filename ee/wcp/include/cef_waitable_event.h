@@ -53,7 +53,7 @@
 ///
 /*--cef(source=library)--*/
 class CefWaitableEvent : public CefBaseRefCounted {
- public:
+public:
   ///
   /// Create a new waitable event. If |automatic_reset| is true then the event
   /// state is automatically reset to un-signaled after a single waiting thread
@@ -62,9 +62,8 @@ class CefWaitableEvent : public CefBaseRefCounted {
   /// in the signaled state.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefWaitableEvent> CreateWaitableEvent(
-      bool automatic_reset,
-      bool initially_signaled);
+  static CefRefPtr<CefWaitableEvent>
+  CreateWaitableEvent(bool automatic_reset, bool initially_signaled);
 
   ///
   /// Put the event in the un-signaled state.
@@ -106,4 +105,4 @@ class CefWaitableEvent : public CefBaseRefCounted {
   virtual bool TimedWait(int64_t max_ms) = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_WAITABLE_EVENT_H_
+#endif // CEF_INCLUDE_CEF_WAITABLE_EVENT_H_

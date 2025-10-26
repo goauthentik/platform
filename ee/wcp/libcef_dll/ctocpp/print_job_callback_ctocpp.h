@@ -27,10 +27,9 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPrintJobCallbackCToCpp
-    : public CefCToCppRefCounted<CefPrintJobCallbackCToCpp,
-                                 CefPrintJobCallback,
+    : public CefCToCppRefCounted<CefPrintJobCallbackCToCpp, CefPrintJobCallback,
                                  cef_print_job_callback_t> {
- public:
+public:
   CefPrintJobCallbackCToCpp();
   virtual ~CefPrintJobCallbackCToCpp();
 
@@ -42,4 +41,4 @@ constexpr auto CefPrintJobCallbackCToCpp_Wrap = CefPrintJobCallbackCToCpp::Wrap;
 constexpr auto CefPrintJobCallbackCToCpp_Unwrap =
     CefPrintJobCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_PRINT_JOB_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_PRINT_JOB_CALLBACK_CTOCPP_H_

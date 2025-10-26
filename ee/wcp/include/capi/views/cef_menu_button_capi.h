@@ -73,16 +73,16 @@ typedef struct _cef_menu_button_t {
   /// will be anchored relative to |screen_point|. This function should be
   /// called from cef_menu_button_delegate_t::on_menu_button_pressed().
   ///
-  void(CEF_CALLBACK* show_menu)(struct _cef_menu_button_t* self,
-                                struct _cef_menu_model_t* menu_model,
-                                const cef_point_t* screen_point,
+  void(CEF_CALLBACK *show_menu)(struct _cef_menu_button_t *self,
+                                struct _cef_menu_model_t *menu_model,
+                                const cef_point_t *screen_point,
                                 cef_menu_anchor_position_t anchor_position);
 
   ///
   /// Show the menu for this button. Results in a call to
   /// cef_menu_button_delegate_t::on_menu_button_pressed().
   ///
-  void(CEF_CALLBACK* trigger_menu)(struct _cef_menu_button_t* self);
+  void(CEF_CALLBACK *trigger_menu)(struct _cef_menu_button_t *self);
 } cef_menu_button_t;
 
 ///
@@ -94,12 +94,12 @@ typedef struct _cef_menu_button_t {
 /// will only have a visible frame on hover/press, left alignment, less padding
 /// and no default minimum size.
 ///
-CEF_EXPORT cef_menu_button_t* cef_menu_button_create(
-    struct _cef_menu_button_delegate_t* delegate,
-    const cef_string_t* text);
+CEF_EXPORT cef_menu_button_t *
+cef_menu_button_create(struct _cef_menu_button_delegate_t *delegate,
+                       const cef_string_t *text);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_MENU_BUTTON_CAPI_H_

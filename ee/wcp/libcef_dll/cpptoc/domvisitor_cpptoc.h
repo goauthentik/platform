@@ -26,10 +26,10 @@
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefDOMVisitorCppToC : public CefCppToCRefCounted<CefDOMVisitorCppToC,
-                                                       CefDOMVisitor,
-                                                       cef_domvisitor_t> {
- public:
+class CefDOMVisitorCppToC
+    : public CefCppToCRefCounted<CefDOMVisitorCppToC, CefDOMVisitor,
+                                 cef_domvisitor_t> {
+public:
   CefDOMVisitorCppToC();
   virtual ~CefDOMVisitorCppToC();
 };
@@ -37,4 +37,4 @@ class CefDOMVisitorCppToC : public CefCppToCRefCounted<CefDOMVisitorCppToC,
 constexpr auto CefDOMVisitorCppToC_Wrap = CefDOMVisitorCppToC::Wrap;
 constexpr auto CefDOMVisitorCppToC_Unwrap = CefDOMVisitorCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_DOMVISITOR_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_DOMVISITOR_CPPTOC_H_

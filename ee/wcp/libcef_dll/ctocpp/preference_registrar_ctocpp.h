@@ -30,12 +30,12 @@ class CefPreferenceRegistrarCToCpp
     : public CefCToCppScoped<CefPreferenceRegistrarCToCpp,
                              CefPreferenceRegistrar,
                              cef_preference_registrar_t> {
- public:
+public:
   CefPreferenceRegistrarCToCpp();
   virtual ~CefPreferenceRegistrarCToCpp();
 
   // CefPreferenceRegistrar methods.
-  bool AddPreference(const CefString& name,
+  bool AddPreference(const CefString &name,
                      CefRefPtr<CefValue> default_value) override;
 };
 
@@ -46,4 +46,4 @@ constexpr auto CefPreferenceRegistrarCToCpp_UnwrapOwn =
 constexpr auto CefPreferenceRegistrarCToCpp_UnwrapRaw =
     CefPreferenceRegistrarCToCpp::UnwrapRaw;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_REGISTRAR_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_REGISTRAR_CTOCPP_H_

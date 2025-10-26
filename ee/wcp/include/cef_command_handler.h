@@ -47,7 +47,7 @@
 ///
 /*--cef(source=client)--*/
 class CefCommandHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called to execute a Chrome command triggered via menu selection or
   /// keyboard shortcut. Use the cef_id_for_command_id_name()
@@ -59,8 +59,7 @@ class CefCommandHandler : public virtual CefBaseRefCounted {
   /// CefContextMenuHandler::OnContextMenuCommand. Only used with Chrome style.
   ///
   /*--cef()--*/
-  virtual bool OnChromeCommand(CefRefPtr<CefBrowser> browser,
-                               int command_id,
+  virtual bool OnChromeCommand(CefRefPtr<CefBrowser> browser, int command_id,
                                cef_window_open_disposition_t disposition) {
     return false;
   }
@@ -97,8 +96,8 @@ class CefCommandHandler : public virtual CefBaseRefCounted {
   /// Only used with Chrome style.
   ///
   /*--cef(optional_param=browser)--*/
-  virtual bool IsChromePageActionIconVisible(
-      cef_chrome_page_action_icon_type_t icon_type) {
+  virtual bool
+  IsChromePageActionIconVisible(cef_chrome_page_action_icon_type_t icon_type) {
     return true;
   }
 
@@ -108,10 +107,10 @@ class CefCommandHandler : public virtual CefBaseRefCounted {
   /// default. Only used with Chrome style.
   ///
   /*--cef(optional_param=browser)--*/
-  virtual bool IsChromeToolbarButtonVisible(
-      cef_chrome_toolbar_button_type_t button_type) {
+  virtual bool
+  IsChromeToolbarButtonVisible(cef_chrome_toolbar_button_type_t button_type) {
     return true;
   }
 };
 
-#endif  // CEF_INCLUDE_CEF_COMMAND_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_COMMAND_HANDLER_H_

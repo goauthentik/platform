@@ -27,10 +27,9 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefStringVisitorCppToC
-    : public CefCppToCRefCounted<CefStringVisitorCppToC,
-                                 CefStringVisitor,
+    : public CefCppToCRefCounted<CefStringVisitorCppToC, CefStringVisitor,
                                  cef_string_visitor_t> {
- public:
+public:
   CefStringVisitorCppToC();
   virtual ~CefStringVisitorCppToC();
 };
@@ -38,4 +37,4 @@ class CefStringVisitorCppToC
 constexpr auto CefStringVisitorCppToC_Wrap = CefStringVisitorCppToC::Wrap;
 constexpr auto CefStringVisitorCppToC_Unwrap = CefStringVisitorCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_STRING_VISITOR_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_STRING_VISITOR_CPPTOC_H_

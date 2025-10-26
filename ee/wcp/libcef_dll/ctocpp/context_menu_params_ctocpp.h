@@ -32,7 +32,7 @@ class CefContextMenuParamsCToCpp
     : public CefCToCppRefCounted<CefContextMenuParamsCToCpp,
                                  CefContextMenuParams,
                                  cef_context_menu_params_t> {
- public:
+public:
   CefContextMenuParamsCToCpp();
   virtual ~CefContextMenuParamsCToCpp();
 
@@ -52,7 +52,7 @@ class CefContextMenuParamsCToCpp
   MediaStateFlags GetMediaStateFlags() override;
   CefString GetSelectionText() override;
   CefString GetMisspelledWord() override;
-  bool GetDictionarySuggestions(std::vector<CefString>& suggestions) override;
+  bool GetDictionarySuggestions(std::vector<CefString> &suggestions) override;
   bool IsEditable() override;
   bool IsSpellCheckEnabled() override;
   EditStateFlags GetEditStateFlags() override;
@@ -64,4 +64,4 @@ constexpr auto CefContextMenuParamsCToCpp_Wrap =
 constexpr auto CefContextMenuParamsCToCpp_Unwrap =
     CefContextMenuParamsCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_PARAMS_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_PARAMS_CTOCPP_H_

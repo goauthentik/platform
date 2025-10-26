@@ -30,21 +30,18 @@ class CefTestServerConnectionCToCpp
     : public CefCToCppRefCounted<CefTestServerConnectionCToCpp,
                                  CefTestServerConnection,
                                  cef_test_server_connection_t> {
- public:
+public:
   CefTestServerConnectionCToCpp();
   virtual ~CefTestServerConnectionCToCpp();
 
   // CefTestServerConnection methods.
-  void SendHttp200Response(const CefString& content_type,
-                           const void* data,
+  void SendHttp200Response(const CefString &content_type, const void *data,
                            size_t data_size) override;
   void SendHttp404Response() override;
-  void SendHttp500Response(const CefString& error_message) override;
-  void SendHttpResponse(int response_code,
-                        const CefString& content_type,
-                        const void* data,
-                        size_t data_size,
-                        const HeaderMap& extra_headers) override;
+  void SendHttp500Response(const CefString &error_message) override;
+  void SendHttpResponse(int response_code, const CefString &content_type,
+                        const void *data, size_t data_size,
+                        const HeaderMap &extra_headers) override;
 };
 
 constexpr auto CefTestServerConnectionCToCpp_Wrap =
@@ -52,4 +49,4 @@ constexpr auto CefTestServerConnectionCToCpp_Wrap =
 constexpr auto CefTestServerConnectionCToCpp_Unwrap =
     CefTestServerConnectionCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_CONNECTION_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_TEST_SERVER_CONNECTION_CTOCPP_H_

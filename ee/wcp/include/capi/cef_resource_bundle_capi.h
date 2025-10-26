@@ -73,9 +73,8 @@ typedef struct _cef_resource_bundle_t {
   /// cef_pack_strings.h to version-specific numerical |string_id| values.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_localized_string)(
-      struct _cef_resource_bundle_t* self,
-      int string_id);
+  cef_string_userfree_t(CEF_CALLBACK *get_localized_string)(
+      struct _cef_resource_bundle_t *self, int string_id);
 
   ///
   /// Returns a cef_binary_value_t containing the decompressed contents of the
@@ -84,9 +83,8 @@ typedef struct _cef_resource_bundle_t {
   /// resource IDR names from cef_pack_resources.h to version-specific numerical
   /// |resource_id| values.
   ///
-  struct _cef_binary_value_t*(CEF_CALLBACK* get_data_resource)(
-      struct _cef_resource_bundle_t* self,
-      int resource_id);
+  struct _cef_binary_value_t *(CEF_CALLBACK *get_data_resource)(
+      struct _cef_resource_bundle_t *self, int resource_id);
 
   ///
   /// Returns a cef_binary_value_t containing the decompressed contents of the
@@ -97,19 +95,18 @@ typedef struct _cef_resource_bundle_t {
   /// resource IDR names from cef_pack_resources.h to version-specific numerical
   /// |resource_id| values.
   ///
-  struct _cef_binary_value_t*(CEF_CALLBACK* get_data_resource_for_scale)(
-      struct _cef_resource_bundle_t* self,
-      int resource_id,
+  struct _cef_binary_value_t *(CEF_CALLBACK *get_data_resource_for_scale)(
+      struct _cef_resource_bundle_t *self, int resource_id,
       cef_scale_factor_t scale_factor);
 } cef_resource_bundle_t;
 
 ///
 /// Returns the global resource bundle instance.
 ///
-CEF_EXPORT cef_resource_bundle_t* cef_resource_bundle_get_global(void);
+CEF_EXPORT cef_resource_bundle_t *cef_resource_bundle_get_global(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_RESOURCE_BUNDLE_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_RESOURCE_BUNDLE_CAPI_H_

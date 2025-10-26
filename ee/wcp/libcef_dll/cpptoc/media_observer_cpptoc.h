@@ -27,10 +27,9 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefMediaObserverCppToC
-    : public CefCppToCRefCounted<CefMediaObserverCppToC,
-                                 CefMediaObserver,
+    : public CefCppToCRefCounted<CefMediaObserverCppToC, CefMediaObserver,
                                  cef_media_observer_t> {
- public:
+public:
   CefMediaObserverCppToC();
   virtual ~CefMediaObserverCppToC();
 };
@@ -38,4 +37,4 @@ class CefMediaObserverCppToC
 constexpr auto CefMediaObserverCppToC_Wrap = CefMediaObserverCppToC::Wrap;
 constexpr auto CefMediaObserverCppToC_Unwrap = CefMediaObserverCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_OBSERVER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_MEDIA_OBSERVER_CPPTOC_H_

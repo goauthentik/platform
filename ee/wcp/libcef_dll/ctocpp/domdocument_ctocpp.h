@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefDOMDocumentCToCpp : public CefCToCppRefCounted<CefDOMDocumentCToCpp,
-                                                        CefDOMDocument,
-                                                        cef_domdocument_t> {
- public:
+class CefDOMDocumentCToCpp
+    : public CefCToCppRefCounted<CefDOMDocumentCToCpp, CefDOMDocument,
+                                 cef_domdocument_t> {
+public:
   CefDOMDocumentCToCpp();
   virtual ~CefDOMDocumentCToCpp();
 
@@ -39,7 +39,7 @@ class CefDOMDocumentCToCpp : public CefCToCppRefCounted<CefDOMDocumentCToCpp,
   CefRefPtr<CefDOMNode> GetBody() override;
   CefRefPtr<CefDOMNode> GetHead() override;
   CefString GetTitle() override;
-  CefRefPtr<CefDOMNode> GetElementById(const CefString& id) override;
+  CefRefPtr<CefDOMNode> GetElementById(const CefString &id) override;
   CefRefPtr<CefDOMNode> GetFocusedNode() override;
   bool HasSelection() override;
   int GetSelectionStartOffset() override;
@@ -47,10 +47,10 @@ class CefDOMDocumentCToCpp : public CefCToCppRefCounted<CefDOMDocumentCToCpp,
   CefString GetSelectionAsMarkup() override;
   CefString GetSelectionAsText() override;
   CefString GetBaseURL() override;
-  CefString GetCompleteURL(const CefString& partialURL) override;
+  CefString GetCompleteURL(const CefString &partialURL) override;
 };
 
 constexpr auto CefDOMDocumentCToCpp_Wrap = CefDOMDocumentCToCpp::Wrap;
 constexpr auto CefDOMDocumentCToCpp_Unwrap = CefDOMDocumentCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_DOMDOCUMENT_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_DOMDOCUMENT_CTOCPP_H_

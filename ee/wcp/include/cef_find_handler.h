@@ -47,7 +47,7 @@
 ///
 /*--cef(source=client)--*/
 class CefFindHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called to report find results returned by CefBrowserHost::Find().
   /// |identifer| is a unique incremental identifier for the currently active
@@ -57,12 +57,9 @@ class CefFindHandler : public virtual CefBaseRefCounted {
   /// results, and |finalUpdate| is true if this is the last find notification.
   ///
   /*--cef()--*/
-  virtual void OnFindResult(CefRefPtr<CefBrowser> browser,
-                            int identifier,
-                            int count,
-                            const CefRect& selectionRect,
-                            int activeMatchOrdinal,
-                            bool finalUpdate) {}
+  virtual void OnFindResult(CefRefPtr<CefBrowser> browser, int identifier,
+                            int count, const CefRect &selectionRect,
+                            int activeMatchOrdinal, bool finalUpdate) {}
 };
 
-#endif  // CEF_INCLUDE_CEF_FIND_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_FIND_HANDLER_H_

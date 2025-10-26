@@ -46,11 +46,9 @@ extern "C" {
 #endif
 
 #if defined(ARCH_CPU_32_BITS)
-typedef int(APIENTRY* wWinMainPtr)(HINSTANCE hInstance,
-                                   HINSTANCE hPrevInstance,
-                                   LPWSTR lpCmdLine,
-                                   int nCmdShow);
-typedef int (*mainPtr)(int argc, char* argv[]);
+typedef int(APIENTRY *wWinMainPtr)(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                                   LPWSTR lpCmdLine, int nCmdShow);
+typedef int (*mainPtr)(int argc, char *argv[]);
 
 ///
 /// Run the main thread on 32-bit Windows using a fiber with the preferred 4MiB
@@ -83,10 +81,9 @@ CEF_EXPORT int cef_run_winmain_with_preferred_stack_size(wWinMainPtr wWinMain,
                                                          HINSTANCE hInstance,
                                                          LPWSTR lpCmdLine,
                                                          int nCmdShow);
-CEF_EXPORT int cef_run_main_with_preferred_stack_size(mainPtr main,
-                                                      int argc,
-                                                      char* argv[]);
-#endif  // defined(ARCH_CPU_32_BITS)
+CEF_EXPORT int cef_run_main_with_preferred_stack_size(mainPtr main, int argc,
+                                                      char *argv[]);
+#endif // defined(ARCH_CPU_32_BITS)
 
 ///
 /// Set to true (1) before calling Windows APIs like TrackPopupMenu that enter a
@@ -98,5 +95,5 @@ CEF_EXPORT void cef_set_osmodal_loop(int osModalLoop);
 }
 #endif
 
-#endif  // defined(OS_WIN)
-#endif  // CEF_INCLUDE_INTERNAL_CEF_APP_WIN_H_
+#endif // defined(OS_WIN)
+#endif // CEF_INCLUDE_INTERNAL_CEF_APP_WIN_H_

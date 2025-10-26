@@ -74,11 +74,9 @@ typedef struct _cef_command_handler_t {
   /// cef_context_menu_handler_t::OnContextMenuCommand. Only used with Chrome
   /// style.
   ///
-  int(CEF_CALLBACK* on_chrome_command)(
-      struct _cef_command_handler_t* self,
-      struct _cef_browser_t* browser,
-      int command_id,
-      cef_window_open_disposition_t disposition);
+  int(CEF_CALLBACK *on_chrome_command)(
+      struct _cef_command_handler_t *self, struct _cef_browser_t *browser,
+      int command_id, cef_window_open_disposition_t disposition);
 
   ///
   /// Called to check if a Chrome app menu item should be visible. Use the
@@ -87,9 +85,8 @@ typedef struct _cef_command_handler_t {
   /// |command_id| values. Only called for menu items that would be visible by
   /// default. Only used with Chrome style.
   ///
-  int(CEF_CALLBACK* is_chrome_app_menu_item_visible)(
-      struct _cef_command_handler_t* self,
-      struct _cef_browser_t* browser,
+  int(CEF_CALLBACK *is_chrome_app_menu_item_visible)(
+      struct _cef_command_handler_t *self, struct _cef_browser_t *browser,
       int command_id);
 
   ///
@@ -99,9 +96,8 @@ typedef struct _cef_command_handler_t {
   /// |command_id| values. Only called for menu items that would be enabled by
   /// default. Only used with Chrome style.
   ///
-  int(CEF_CALLBACK* is_chrome_app_menu_item_enabled)(
-      struct _cef_command_handler_t* self,
-      struct _cef_browser_t* browser,
+  int(CEF_CALLBACK *is_chrome_app_menu_item_enabled)(
+      struct _cef_command_handler_t *self, struct _cef_browser_t *browser,
       int command_id);
 
   ///
@@ -109,8 +105,8 @@ typedef struct _cef_command_handler_t {
   /// should be visible. Only called for icons that would be visible by default.
   /// Only used with Chrome style.
   ///
-  int(CEF_CALLBACK* is_chrome_page_action_icon_visible)(
-      struct _cef_command_handler_t* self,
+  int(CEF_CALLBACK *is_chrome_page_action_icon_visible)(
+      struct _cef_command_handler_t *self,
       cef_chrome_page_action_icon_type_t icon_type);
 
   ///
@@ -118,8 +114,8 @@ typedef struct _cef_command_handler_t {
   /// be visible. Only called for buttons that would be visible by default. Only
   /// used with Chrome style.
   ///
-  int(CEF_CALLBACK* is_chrome_toolbar_button_visible)(
-      struct _cef_command_handler_t* self,
+  int(CEF_CALLBACK *is_chrome_toolbar_button_visible)(
+      struct _cef_command_handler_t *self,
       cef_chrome_toolbar_button_type_t button_type);
 } cef_command_handler_t;
 
@@ -127,4 +123,4 @@ typedef struct _cef_command_handler_t {
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_COMMAND_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_COMMAND_HANDLER_CAPI_H_

@@ -72,17 +72,15 @@ typedef struct _cef_find_handler_t {
   /// results, and |finalUpdate| is true (1) if this is the last find
   /// notification.
   ///
-  void(CEF_CALLBACK* on_find_result)(struct _cef_find_handler_t* self,
-                                     struct _cef_browser_t* browser,
-                                     int identifier,
-                                     int count,
-                                     const cef_rect_t* selectionRect,
-                                     int activeMatchOrdinal,
-                                     int finalUpdate);
+  void(CEF_CALLBACK *on_find_result)(struct _cef_find_handler_t *self,
+                                     struct _cef_browser_t *browser,
+                                     int identifier, int count,
+                                     const cef_rect_t *selectionRect,
+                                     int activeMatchOrdinal, int finalUpdate);
 } cef_find_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_FIND_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_FIND_HANDLER_CAPI_H_

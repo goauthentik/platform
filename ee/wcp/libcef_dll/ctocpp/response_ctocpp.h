@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefResponseCToCpp : public CefCToCppRefCounted<CefResponseCToCpp,
-                                                     CefResponse,
-                                                     cef_response_t> {
- public:
+class CefResponseCToCpp
+    : public CefCToCppRefCounted<CefResponseCToCpp, CefResponse,
+                                 cef_response_t> {
+public:
   CefResponseCToCpp();
   virtual ~CefResponseCToCpp();
 
@@ -40,22 +40,21 @@ class CefResponseCToCpp : public CefCToCppRefCounted<CefResponseCToCpp,
   int GetStatus() override;
   void SetStatus(int status) override;
   CefString GetStatusText() override;
-  void SetStatusText(const CefString& statusText) override;
+  void SetStatusText(const CefString &statusText) override;
   CefString GetMimeType() override;
-  void SetMimeType(const CefString& mimeType) override;
+  void SetMimeType(const CefString &mimeType) override;
   CefString GetCharset() override;
-  void SetCharset(const CefString& charset) override;
-  CefString GetHeaderByName(const CefString& name) override;
-  void SetHeaderByName(const CefString& name,
-                       const CefString& value,
+  void SetCharset(const CefString &charset) override;
+  CefString GetHeaderByName(const CefString &name) override;
+  void SetHeaderByName(const CefString &name, const CefString &value,
                        bool overwrite) override;
-  void GetHeaderMap(HeaderMap& headerMap) override;
-  void SetHeaderMap(const HeaderMap& headerMap) override;
+  void GetHeaderMap(HeaderMap &headerMap) override;
+  void SetHeaderMap(const HeaderMap &headerMap) override;
   CefString GetURL() override;
-  void SetURL(const CefString& url) override;
+  void SetURL(const CefString &url) override;
 };
 
 constexpr auto CefResponseCToCpp_Wrap = CefResponseCToCpp::Wrap;
 constexpr auto CefResponseCToCpp_Unwrap = CefResponseCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_RESPONSE_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_RESPONSE_CTOCPP_H_

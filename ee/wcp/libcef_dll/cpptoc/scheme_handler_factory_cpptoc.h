@@ -30,7 +30,7 @@ class CefSchemeHandlerFactoryCppToC
     : public CefCppToCRefCounted<CefSchemeHandlerFactoryCppToC,
                                  CefSchemeHandlerFactory,
                                  cef_scheme_handler_factory_t> {
- public:
+public:
   CefSchemeHandlerFactoryCppToC();
   virtual ~CefSchemeHandlerFactoryCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefSchemeHandlerFactoryCppToC_Wrap =
 constexpr auto CefSchemeHandlerFactoryCppToC_Unwrap =
     CefSchemeHandlerFactoryCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_SCHEME_HANDLER_FACTORY_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_SCHEME_HANDLER_FACTORY_CPPTOC_H_

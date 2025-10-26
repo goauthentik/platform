@@ -47,6 +47,6 @@ typedef cef_path_key_t PathKey;
 /// success. Can be called on any thread in the browser process.
 ///
 /*--cef()--*/
-bool CefGetPath(PathKey key, CefString& path);
+bool CefGetPath(PathKey key, CefString &path);
 
-#endif  // CEF_INCLUDE_CEF_PATH_UTIL_H_
+#endif // CEF_INCLUDE_CEF_PATH_UTIL_H_

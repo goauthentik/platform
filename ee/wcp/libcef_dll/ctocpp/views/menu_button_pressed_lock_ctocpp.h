@@ -32,7 +32,7 @@ class CefMenuButtonPressedLockCToCpp
     : public CefCToCppRefCounted<CefMenuButtonPressedLockCToCpp,
                                  CefMenuButtonPressedLock,
                                  cef_menu_button_pressed_lock_t> {
- public:
+public:
   CefMenuButtonPressedLockCToCpp();
   virtual ~CefMenuButtonPressedLockCToCpp();
 
@@ -44,4 +44,4 @@ constexpr auto CefMenuButtonPressedLockCToCpp_Wrap =
 constexpr auto CefMenuButtonPressedLockCToCpp_Unwrap =
     CefMenuButtonPressedLockCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_MENU_BUTTON_PRESSED_LOCK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_MENU_BUTTON_PRESSED_LOCK_CTOCPP_H_

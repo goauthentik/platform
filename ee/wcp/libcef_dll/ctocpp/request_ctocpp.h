@@ -28,36 +28,34 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefRequestCToCpp
     : public CefCToCppRefCounted<CefRequestCToCpp, CefRequest, cef_request_t> {
- public:
+public:
   CefRequestCToCpp();
   virtual ~CefRequestCToCpp();
 
   // CefRequest methods.
   bool IsReadOnly() override;
   CefString GetURL() override;
-  void SetURL(const CefString& url) override;
+  void SetURL(const CefString &url) override;
   CefString GetMethod() override;
-  void SetMethod(const CefString& method) override;
-  void SetReferrer(const CefString& referrer_url,
+  void SetMethod(const CefString &method) override;
+  void SetReferrer(const CefString &referrer_url,
                    ReferrerPolicy policy) override;
   CefString GetReferrerURL() override;
   ReferrerPolicy GetReferrerPolicy() override;
   CefRefPtr<CefPostData> GetPostData() override;
   void SetPostData(CefRefPtr<CefPostData> postData) override;
-  void GetHeaderMap(HeaderMap& headerMap) override;
-  void SetHeaderMap(const HeaderMap& headerMap) override;
-  CefString GetHeaderByName(const CefString& name) override;
-  void SetHeaderByName(const CefString& name,
-                       const CefString& value,
+  void GetHeaderMap(HeaderMap &headerMap) override;
+  void SetHeaderMap(const HeaderMap &headerMap) override;
+  CefString GetHeaderByName(const CefString &name) override;
+  void SetHeaderByName(const CefString &name, const CefString &value,
                        bool overwrite) override;
-  void Set(const CefString& url,
-           const CefString& method,
+  void Set(const CefString &url, const CefString &method,
            CefRefPtr<CefPostData> postData,
-           const HeaderMap& headerMap) override;
+           const HeaderMap &headerMap) override;
   int GetFlags() override;
   void SetFlags(int flags) override;
   CefString GetFirstPartyForCookies() override;
-  void SetFirstPartyForCookies(const CefString& url) override;
+  void SetFirstPartyForCookies(const CefString &url) override;
   ResourceType GetResourceType() override;
   TransitionType GetTransitionType() override;
   uint64_t GetIdentifier() override;
@@ -66,4 +64,4 @@ class CefRequestCToCpp
 constexpr auto CefRequestCToCpp_Wrap = CefRequestCToCpp::Wrap;
 constexpr auto CefRequestCToCpp_Unwrap = CefRequestCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_

@@ -53,7 +53,7 @@ class CefWindow;
 ///
 /*--cef(source=library)--*/
 class CefPanel : public CefView {
- public:
+public:
   ///
   /// Create a new Panel.
   ///
@@ -76,8 +76,8 @@ class CefPanel : public CefView {
   /// Set this Panel's Layout to BoxLayout and return the BoxLayout object.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefBoxLayout> SetToBoxLayout(
-      const CefBoxLayoutSettings& settings) = 0;
+  virtual CefRefPtr<CefBoxLayout>
+  SetToBoxLayout(const CefBoxLayoutSettings &settings) = 0;
 
   ///
   /// Get the Layout.
@@ -138,4 +138,4 @@ class CefPanel : public CefView {
   virtual CefRefPtr<CefView> GetChildViewAt(int index) = 0;
 };
 
-#endif  // CEF_INCLUDE_VIEWS_CEF_PANEL_H_
+#endif // CEF_INCLUDE_VIEWS_CEF_PANEL_H_

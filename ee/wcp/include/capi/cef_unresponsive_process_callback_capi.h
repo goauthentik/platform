@@ -64,17 +64,17 @@ typedef struct _cef_unresponsive_process_callback_t {
   ///
   /// Reset the timeout for the unresponsive process.
   ///
-  void(CEF_CALLBACK* wait)(struct _cef_unresponsive_process_callback_t* self);
+  void(CEF_CALLBACK *wait)(struct _cef_unresponsive_process_callback_t *self);
 
   ///
   /// Terminate the unresponsive process.
   ///
-  void(CEF_CALLBACK* terminate)(
-      struct _cef_unresponsive_process_callback_t* self);
+  void(CEF_CALLBACK *terminate)(
+      struct _cef_unresponsive_process_callback_t *self);
 } cef_unresponsive_process_callback_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_UNRESPONSIVE_PROCESS_CALLBACK_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_UNRESPONSIVE_PROCESS_CALLBACK_CAPI_H_

@@ -67,21 +67,19 @@ typedef struct _cef_accessibility_handler_t {
   /// Called after renderer process sends accessibility tree changes to the
   /// browser process.
   ///
-  void(CEF_CALLBACK* on_accessibility_tree_change)(
-      struct _cef_accessibility_handler_t* self,
-      struct _cef_value_t* value);
+  void(CEF_CALLBACK *on_accessibility_tree_change)(
+      struct _cef_accessibility_handler_t *self, struct _cef_value_t *value);
 
   ///
   /// Called after renderer process sends accessibility location changes to the
   /// browser process.
   ///
-  void(CEF_CALLBACK* on_accessibility_location_change)(
-      struct _cef_accessibility_handler_t* self,
-      struct _cef_value_t* value);
+  void(CEF_CALLBACK *on_accessibility_location_change)(
+      struct _cef_accessibility_handler_t *self, struct _cef_value_t *value);
 } cef_accessibility_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_ACCESSIBILITY_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_ACCESSIBILITY_HANDLER_CAPI_H_

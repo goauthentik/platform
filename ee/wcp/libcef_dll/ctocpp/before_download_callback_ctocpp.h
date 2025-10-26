@@ -30,12 +30,12 @@ class CefBeforeDownloadCallbackCToCpp
     : public CefCToCppRefCounted<CefBeforeDownloadCallbackCToCpp,
                                  CefBeforeDownloadCallback,
                                  cef_before_download_callback_t> {
- public:
+public:
   CefBeforeDownloadCallbackCToCpp();
   virtual ~CefBeforeDownloadCallbackCToCpp();
 
   // CefBeforeDownloadCallback methods.
-  void Continue(const CefString& download_path, bool show_dialog) override;
+  void Continue(const CefString &download_path, bool show_dialog) override;
 };
 
 constexpr auto CefBeforeDownloadCallbackCToCpp_Wrap =
@@ -43,4 +43,4 @@ constexpr auto CefBeforeDownloadCallbackCToCpp_Wrap =
 constexpr auto CefBeforeDownloadCallbackCToCpp_Unwrap =
     CefBeforeDownloadCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_BEFORE_DOWNLOAD_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_BEFORE_DOWNLOAD_CALLBACK_CTOCPP_H_

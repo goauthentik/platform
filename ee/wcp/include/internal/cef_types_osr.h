@@ -118,4 +118,4 @@ typedef struct _cef_accelerated_paint_info_common_t {
 }
 #endif
 
-#endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_OSR_H_
+#endif // CEF_INCLUDE_INTERNAL_CEF_TYPES_OSR_H_

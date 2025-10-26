@@ -30,7 +30,7 @@ class CefMediaSinkDeviceInfoCallbackCppToC
     : public CefCppToCRefCounted<CefMediaSinkDeviceInfoCallbackCppToC,
                                  CefMediaSinkDeviceInfoCallback,
                                  cef_media_sink_device_info_callback_t> {
- public:
+public:
   CefMediaSinkDeviceInfoCallbackCppToC();
   virtual ~CefMediaSinkDeviceInfoCallbackCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefMediaSinkDeviceInfoCallbackCppToC_Wrap =
 constexpr auto CefMediaSinkDeviceInfoCallbackCppToC_Unwrap =
     CefMediaSinkDeviceInfoCallbackCppToC::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_MEDIA_SINK_DEVICE_INFO_CALLBACK_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_MEDIA_SINK_DEVICE_INFO_CALLBACK_CPPTOC_H_

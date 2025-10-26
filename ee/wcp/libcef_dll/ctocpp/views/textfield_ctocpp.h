@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
-                                                      CefTextfield,
-                                                      cef_textfield_t> {
- public:
+class CefTextfieldCToCpp
+    : public CefCToCppRefCounted<CefTextfieldCToCpp, CefTextfield,
+                                 cef_textfield_t> {
+public:
   CefTextfieldCToCpp();
   virtual ~CefTextfieldCToCpp();
 
@@ -39,15 +39,15 @@ class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
   void SetReadOnly(bool read_only) override;
   bool IsReadOnly() override;
   CefString GetText() override;
-  void SetText(const CefString& text) override;
-  void AppendText(const CefString& text) override;
-  void InsertOrReplaceText(const CefString& text) override;
+  void SetText(const CefString &text) override;
+  void AppendText(const CefString &text) override;
+  void InsertOrReplaceText(const CefString &text) override;
   bool HasSelection() override;
   CefString GetSelectedText() override;
   void SelectAll(bool reversed) override;
   void ClearSelection() override;
   CefRange GetSelectedRange() override;
-  void SelectRange(const CefRange& range) override;
+  void SelectRange(const CefRange &range) override;
   size_t GetCursorPosition() override;
   void SetTextColor(cef_color_t color) override;
   cef_color_t GetTextColor() override;
@@ -55,18 +55,17 @@ class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
   cef_color_t GetSelectionTextColor() override;
   void SetSelectionBackgroundColor(cef_color_t color) override;
   cef_color_t GetSelectionBackgroundColor() override;
-  void SetFontList(const CefString& font_list) override;
-  void ApplyTextColor(cef_color_t color, const CefRange& range) override;
-  void ApplyTextStyle(cef_text_style_t style,
-                      bool add,
-                      const CefRange& range) override;
+  void SetFontList(const CefString &font_list) override;
+  void ApplyTextColor(cef_color_t color, const CefRange &range) override;
+  void ApplyTextStyle(cef_text_style_t style, bool add,
+                      const CefRange &range) override;
   bool IsCommandEnabled(cef_text_field_commands_t command_id) override;
   void ExecuteCommand(cef_text_field_commands_t command_id) override;
   void ClearEditHistory() override;
-  void SetPlaceholderText(const CefString& text) override;
+  void SetPlaceholderText(const CefString &text) override;
   CefString GetPlaceholderText() override;
   void SetPlaceholderTextColor(cef_color_t color) override;
-  void SetAccessibleName(const CefString& name) override;
+  void SetAccessibleName(const CefString &name) override;
 
   // CefView methods.
   CefRefPtr<CefBrowserView> AsBrowserView() override;
@@ -87,14 +86,14 @@ class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
   void SetGroupID(int group_id) override;
   CefRefPtr<CefView> GetParentView() override;
   CefRefPtr<CefView> GetViewForID(int id) override;
-  void SetBounds(const CefRect& bounds) override;
+  void SetBounds(const CefRect &bounds) override;
   CefRect GetBounds() override;
   CefRect GetBoundsInScreen() override;
-  void SetSize(const CefSize& size) override;
+  void SetSize(const CefSize &size) override;
   CefSize GetSize() override;
-  void SetPosition(const CefPoint& position) override;
+  void SetPosition(const CefPoint &position) override;
   CefPoint GetPosition() override;
-  void SetInsets(const CefInsets& insets) override;
+  void SetInsets(const CefInsets &insets) override;
   CefInsets GetInsets() override;
   CefSize GetPreferredSize() override;
   void SizeToPreferredSize() override;
@@ -115,15 +114,15 @@ class CefTextfieldCToCpp : public CefCToCppRefCounted<CefTextfieldCToCpp,
   void SetBackgroundColor(cef_color_t color) override;
   cef_color_t GetBackgroundColor() override;
   cef_color_t GetThemeColor(int color_id) override;
-  bool ConvertPointToScreen(CefPoint& point) override;
-  bool ConvertPointFromScreen(CefPoint& point) override;
-  bool ConvertPointToWindow(CefPoint& point) override;
-  bool ConvertPointFromWindow(CefPoint& point) override;
-  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) override;
-  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint& point) override;
+  bool ConvertPointToScreen(CefPoint &point) override;
+  bool ConvertPointFromScreen(CefPoint &point) override;
+  bool ConvertPointToWindow(CefPoint &point) override;
+  bool ConvertPointFromWindow(CefPoint &point) override;
+  bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint &point) override;
+  bool ConvertPointFromView(CefRefPtr<CefView> view, CefPoint &point) override;
 };
 
 constexpr auto CefTextfieldCToCpp_Wrap = CefTextfieldCToCpp::Wrap;
 constexpr auto CefTextfieldCToCpp_Unwrap = CefTextfieldCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_TEXTFIELD_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_TEXTFIELD_CTOCPP_H_

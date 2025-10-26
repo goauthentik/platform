@@ -70,20 +70,20 @@ typedef struct _cef_textfield_delegate_t {
   /// information about the keyboard event. Return true (1) if the keyboard
   /// event was handled or false (0) otherwise for default handling.
   ///
-  int(CEF_CALLBACK* on_key_event)(struct _cef_textfield_delegate_t* self,
-                                  struct _cef_textfield_t* textfield,
-                                  const cef_key_event_t* event);
+  int(CEF_CALLBACK *on_key_event)(struct _cef_textfield_delegate_t *self,
+                                  struct _cef_textfield_t *textfield,
+                                  const cef_key_event_t *event);
 
   ///
   /// Called after performing a user action that may change |textfield|.
   ///
-  void(CEF_CALLBACK* on_after_user_action)(
-      struct _cef_textfield_delegate_t* self,
-      struct _cef_textfield_t* textfield);
+  void(CEF_CALLBACK *on_after_user_action)(
+      struct _cef_textfield_delegate_t *self,
+      struct _cef_textfield_t *textfield);
 } cef_textfield_delegate_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_TEXTFIELD_DELEGATE_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_TEXTFIELD_DELEGATE_CAPI_H_

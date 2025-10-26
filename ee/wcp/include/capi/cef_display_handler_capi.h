@@ -67,23 +67,23 @@ typedef struct _cef_display_handler_t {
   ///
   /// Called when a frame's address has changed.
   ///
-  void(CEF_CALLBACK* on_address_change)(struct _cef_display_handler_t* self,
-                                        struct _cef_browser_t* browser,
-                                        struct _cef_frame_t* frame,
-                                        const cef_string_t* url);
+  void(CEF_CALLBACK *on_address_change)(struct _cef_display_handler_t *self,
+                                        struct _cef_browser_t *browser,
+                                        struct _cef_frame_t *frame,
+                                        const cef_string_t *url);
 
   ///
   /// Called when the page title changes.
   ///
-  void(CEF_CALLBACK* on_title_change)(struct _cef_display_handler_t* self,
-                                      struct _cef_browser_t* browser,
-                                      const cef_string_t* title);
+  void(CEF_CALLBACK *on_title_change)(struct _cef_display_handler_t *self,
+                                      struct _cef_browser_t *browser,
+                                      const cef_string_t *title);
 
   ///
   /// Called when the page icon changes.
   ///
-  void(CEF_CALLBACK* on_favicon_urlchange)(struct _cef_display_handler_t* self,
-                                           struct _cef_browser_t* browser,
+  void(CEF_CALLBACK *on_favicon_urlchange)(struct _cef_display_handler_t *self,
+                                           struct _cef_browser_t *browser,
                                            cef_string_list_t icon_urls);
 
   ///
@@ -97,9 +97,8 @@ typedef struct _cef_display_handler_t {
   /// The cef_window_delegate_t::OnWindowFullscreenTransition function will be
   /// called during the fullscreen transition for notification purposes.
   ///
-  void(CEF_CALLBACK* on_fullscreen_mode_change)(
-      struct _cef_display_handler_t* self,
-      struct _cef_browser_t* browser,
+  void(CEF_CALLBACK *on_fullscreen_mode_change)(
+      struct _cef_display_handler_t *self, struct _cef_browser_t *browser,
       int fullscreen);
 
   ///
@@ -110,28 +109,27 @@ typedef struct _cef_display_handler_t {
   /// tooltip. When window rendering is disabled the application is responsible
   /// for drawing tooltips and the return value is ignored.
   ///
-  int(CEF_CALLBACK* on_tooltip)(struct _cef_display_handler_t* self,
-                                struct _cef_browser_t* browser,
-                                cef_string_t* text);
+  int(CEF_CALLBACK *on_tooltip)(struct _cef_display_handler_t *self,
+                                struct _cef_browser_t *browser,
+                                cef_string_t *text);
 
   ///
   /// Called when the browser receives a status message. |value| contains the
   /// text that will be displayed in the status message.
   ///
-  void(CEF_CALLBACK* on_status_message)(struct _cef_display_handler_t* self,
-                                        struct _cef_browser_t* browser,
-                                        const cef_string_t* value);
+  void(CEF_CALLBACK *on_status_message)(struct _cef_display_handler_t *self,
+                                        struct _cef_browser_t *browser,
+                                        const cef_string_t *value);
 
   ///
   /// Called to display a console message. Return true (1) to stop the message
   /// from being output to the console.
   ///
-  int(CEF_CALLBACK* on_console_message)(struct _cef_display_handler_t* self,
-                                        struct _cef_browser_t* browser,
+  int(CEF_CALLBACK *on_console_message)(struct _cef_display_handler_t *self,
+                                        struct _cef_browser_t *browser,
                                         cef_log_severity_t level,
-                                        const cef_string_t* message,
-                                        const cef_string_t* source,
-                                        int line);
+                                        const cef_string_t *message,
+                                        const cef_string_t *source, int line);
 
   ///
   /// Called when auto-resize is enabled via
@@ -139,17 +137,16 @@ typedef struct _cef_display_handler_t {
   /// resized. |new_size| will be the desired size in view coordinates. Return
   /// true (1) if the resize was handled or false (0) for default handling.
   ///
-  int(CEF_CALLBACK* on_auto_resize)(struct _cef_display_handler_t* self,
-                                    struct _cef_browser_t* browser,
-                                    const cef_size_t* new_size);
+  int(CEF_CALLBACK *on_auto_resize)(struct _cef_display_handler_t *self,
+                                    struct _cef_browser_t *browser,
+                                    const cef_size_t *new_size);
 
   ///
   /// Called when the overall page loading progress has changed. |progress|
   /// ranges from 0.0 to 1.0.
   ///
-  void(CEF_CALLBACK* on_loading_progress_change)(
-      struct _cef_display_handler_t* self,
-      struct _cef_browser_t* browser,
+  void(CEF_CALLBACK *on_loading_progress_change)(
+      struct _cef_display_handler_t *self, struct _cef_browser_t *browser,
       double progress);
 
   ///
@@ -158,26 +155,22 @@ typedef struct _cef_display_handler_t {
   /// Return true (1) if the cursor change was handled or false (0) for default
   /// handling.
   ///
-  int(CEF_CALLBACK* on_cursor_change)(
-      struct _cef_display_handler_t* self,
-      struct _cef_browser_t* browser,
-      cef_cursor_handle_t cursor,
-      cef_cursor_type_t type,
-      const cef_cursor_info_t* custom_cursor_info);
+  int(CEF_CALLBACK *on_cursor_change)(
+      struct _cef_display_handler_t *self, struct _cef_browser_t *browser,
+      cef_cursor_handle_t cursor, cef_cursor_type_t type,
+      const cef_cursor_info_t *custom_cursor_info);
 
   ///
   /// Called when the browser's access to an audio and/or video source has
   /// changed.
   ///
-  void(CEF_CALLBACK* on_media_access_change)(
-      struct _cef_display_handler_t* self,
-      struct _cef_browser_t* browser,
-      int has_video_access,
-      int has_audio_access);
+  void(CEF_CALLBACK *on_media_access_change)(
+      struct _cef_display_handler_t *self, struct _cef_browser_t *browser,
+      int has_video_access, int has_audio_access);
 } cef_display_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_

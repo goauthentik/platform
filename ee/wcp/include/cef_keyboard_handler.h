@@ -47,7 +47,7 @@
 ///
 /*--cef(source=client)--*/
 class CefKeyboardHandler : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Called before a keyboard event is sent to the renderer. |event| contains
   /// information about the keyboard event. |os_event| is the operating system
@@ -57,9 +57,8 @@ class CefKeyboardHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser,
-                             const CefKeyEvent& event,
-                             CefEventHandle os_event,
-                             bool* is_keyboard_shortcut) {
+                             const CefKeyEvent &event, CefEventHandle os_event,
+                             bool *is_keyboard_shortcut) {
     return false;
   }
 
@@ -71,10 +70,9 @@ class CefKeyboardHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool OnKeyEvent(CefRefPtr<CefBrowser> browser,
-                          const CefKeyEvent& event,
-                          CefEventHandle os_event) {
+                          const CefKeyEvent &event, CefEventHandle os_event) {
     return false;
   }
 };
 
-#endif  // CEF_INCLUDE_CEF_KEYBOARD_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_KEYBOARD_HANDLER_H_

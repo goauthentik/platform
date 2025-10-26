@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefBinaryValueCToCpp : public CefCToCppRefCounted<CefBinaryValueCToCpp,
-                                                        CefBinaryValue,
-                                                        cef_binary_value_t> {
- public:
+class CefBinaryValueCToCpp
+    : public CefCToCppRefCounted<CefBinaryValueCToCpp, CefBinaryValue,
+                                 cef_binary_value_t> {
+public:
   CefBinaryValueCToCpp();
   virtual ~CefBinaryValueCToCpp();
 
@@ -39,12 +39,12 @@ class CefBinaryValueCToCpp : public CefCToCppRefCounted<CefBinaryValueCToCpp,
   bool IsSame(CefRefPtr<CefBinaryValue> that) override;
   bool IsEqual(CefRefPtr<CefBinaryValue> that) override;
   CefRefPtr<CefBinaryValue> Copy() override;
-  const void* GetRawData() override;
+  const void *GetRawData() override;
   size_t GetSize() override;
-  size_t GetData(void* buffer, size_t buffer_size, size_t data_offset) override;
+  size_t GetData(void *buffer, size_t buffer_size, size_t data_offset) override;
 };
 
 constexpr auto CefBinaryValueCToCpp_Wrap = CefBinaryValueCToCpp::Wrap;
 constexpr auto CefBinaryValueCToCpp_Unwrap = CefBinaryValueCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_BINARY_VALUE_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_BINARY_VALUE_CTOCPP_H_

@@ -30,7 +30,7 @@ class CefPermissionPromptCallbackCToCpp
     : public CefCToCppRefCounted<CefPermissionPromptCallbackCToCpp,
                                  CefPermissionPromptCallback,
                                  cef_permission_prompt_callback_t> {
- public:
+public:
   CefPermissionPromptCallbackCToCpp();
   virtual ~CefPermissionPromptCallbackCToCpp();
 
@@ -43,4 +43,4 @@ constexpr auto CefPermissionPromptCallbackCToCpp_Wrap =
 constexpr auto CefPermissionPromptCallbackCToCpp_Unwrap =
     CefPermissionPromptCallbackCToCpp::Unwrap;
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_PERMISSION_PROMPT_CALLBACK_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_PERMISSION_PROMPT_CALLBACK_CTOCPP_H_

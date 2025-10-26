@@ -45,7 +45,7 @@
 ///
 /*--cef(source=library)--*/
 class CefUnresponsiveProcessCallback : public virtual CefBaseRefCounted {
- public:
+public:
   ///
   /// Reset the timeout for the unresponsive process.
   ///
@@ -59,4 +59,4 @@ class CefUnresponsiveProcessCallback : public virtual CefBaseRefCounted {
   virtual void Terminate() = 0;
 };
 
-#endif  // CEF_INCLUDE_CEF_UNRESPONSIVE_PROCESS_CALLBACK_H_
+#endif // CEF_INCLUDE_CEF_UNRESPONSIVE_PROCESS_CALLBACK_H_

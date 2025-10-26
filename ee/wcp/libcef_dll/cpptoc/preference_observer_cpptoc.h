@@ -32,7 +32,7 @@ class CefPreferenceObserverCppToC
     : public CefCppToCRefCounted<CefPreferenceObserverCppToC,
                                  CefPreferenceObserver,
                                  cef_preference_observer_t> {
- public:
+public:
   CefPreferenceObserverCppToC();
   virtual ~CefPreferenceObserverCppToC();
 };
@@ -42,6 +42,6 @@ constexpr auto CefPreferenceObserverCppToC_Wrap =
 constexpr auto CefPreferenceObserverCppToC_Unwrap =
     CefPreferenceObserverCppToC::Unwrap;
 
-#endif  // CEF_API_ADDED(13401)
+#endif // CEF_API_ADDED(13401)
 
-#endif  // CEF_LIBCEF_DLL_CPPTOC_PREFERENCE_OBSERVER_CPPTOC_H_
+#endif // CEF_LIBCEF_DLL_CPPTOC_PREFERENCE_OBSERVER_CPPTOC_H_

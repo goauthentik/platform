@@ -43,7 +43,7 @@
 #define CEF_INCLUDE_TEST_CEF_TEST_HELPERS_H_
 #pragma once
 
-#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) && \
+#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) &&          \
     !defined(UNIT_TEST)
 #error This file can be included for unit tests only
 #endif
@@ -56,7 +56,7 @@
 ///
 /*--cef(optional_param=javascript)--*/
 void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
-                                                 const CefString& javascript);
+                                                 const CefString &javascript);
 
 ///
 /// Set the DIR_SRC_TEST_DATA_ROOT directory used to load test data. Must be
@@ -65,7 +65,7 @@ void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
 /// must be an absolute path.
 ///
 /*--cef()--*/
-void CefSetDataDirectoryForTests(const CefString& dir);
+void CefSetDataDirectoryForTests(const CefString &dir);
 
 ///
 /// Returns true if |feature_name| is enabled by default, command line or field
@@ -73,6 +73,6 @@ void CefSetDataDirectoryForTests(const CefString& dir);
 /// tests.
 ///
 /*--cef()--*/
-bool CefIsFeatureEnabledForTests(const CefString& feature_name);
+bool CefIsFeatureEnabledForTests(const CefString &feature_name);
 
-#endif  // CEF_INCLUDE_TEST_CEF_TEST_HELPERS_H_
+#endif // CEF_INCLUDE_TEST_CEF_TEST_HELPERS_H_
