@@ -1,0 +1,43 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test_go:
+    name: Test
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - macos-15
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - windows-2025
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v6
+      - run: |
+          make test
+      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        with:
+          paths: ${{ github.workspace }}/junit.xml
+          show: "fail"
+      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
+        with:
+          use_oidc: true
+          flags: go-${{ matrix.platform }}
+          files: ${{ github.workspace }}/coverage.txt
+      - uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
+        with:
+          use_oidc: true
+          flags: go-${{ matrix.platform }}
+          files: ${{ github.workspace }}/junit.xml

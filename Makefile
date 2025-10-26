@@ -1,5 +1,9 @@
 include common.mk
 
+TEST_COUNT = 1
+TEST_FLAGS =
+TEST_OUTPUT = ${PWD}/.test-output
+
 .PHONY: all
 all: clean gen
 
@@ -22,6 +26,21 @@ gen-proto:
 
 lint: nss/lint pam/lint utils_rs/lint
 	golangci-lint run
+
+test:
+	go test \
+		-p 1 \
+		-v \
+		-coverprofile=${PWD}/coverage.txt \
+		-covermode=atomic \
+		-count=${TEST_COUNT} \
+		-json \
+		${TEST_FLAGS} \
+		$(shell go list ./... | grep -v goauthentik.io/platform/vnd) \
+			2>&1 | tee ${TEST_OUTPUT}
+	go tool cover \
+		-html ${PWD}/coverage.txt \
+		-o ${PWD}/coverage.html
 
 test-agent:
 	go run -v ./cmd/agent_local/
