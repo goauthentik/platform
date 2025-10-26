@@ -106,7 +106,9 @@ func (t *Tray) systrayConfigUpdate() {
 	}
 	t.log.Debug("Updating systray items")
 
-	t.cancel()
+	if t.cancel != nil {
+		t.cancel()
+	}
 	ctx, canc := context.WithCancel(context.Background())
 	t.ctx = ctx
 	t.cancel = canc
