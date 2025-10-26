@@ -50,17 +50,19 @@ CEF_EXPORT int cef_get_min_log_level(void);
 /// Gets the current vlog level for the given file (usually taken from
 /// __FILE__). Note that |N| is the size *with* the null terminator.
 ///
-CEF_EXPORT int cef_get_vlog_level(const char *file_start, size_t N);
+CEF_EXPORT int cef_get_vlog_level(const char* file_start, size_t N);
 
 ///
 /// Add a log message. See the LogSeverity defines for supported |severity|
 /// values.
 ///
-CEF_EXPORT void cef_log(const char *file, int line, int severity,
-                        const char *message);
+CEF_EXPORT void cef_log(const char* file,
+                        int line,
+                        int severity,
+                        const char* message);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_LOGGING_INTERNAL_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_LOGGING_INTERNAL_H_

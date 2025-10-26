@@ -56,17 +56,17 @@ class CefStreamReader;
 ///    content map.
 ///
 class CefZipArchive : public base::RefCountedThreadSafe<CefZipArchive> {
-public:
+ public:
   ///
   /// Class representing a file in the archive. Accessing the file data from
   /// multiple threads is safe provided a reference to the File object is kept.
   ///
   class File : public CefBaseRefCounted {
-  public:
+   public:
     ///
     /// Returns the read-only data contained in the file.
     ///
-    virtual const unsigned char *GetData() const = 0;
+    virtual const unsigned char* GetData() const = 0;
 
     ///
     /// Returns the size of the data in the file.
@@ -86,8 +86,8 @@ public:
   ///
   CefZipArchive();
 
-  CefZipArchive(const CefZipArchive &) = delete;
-  CefZipArchive &operator=(const CefZipArchive &) = delete;
+  CefZipArchive(const CefZipArchive&) = delete;
+  CefZipArchive& operator=(const CefZipArchive&) = delete;
 
   ///
   /// Load the contents of the specified zip archive stream into this object.
@@ -96,7 +96,8 @@ public:
   /// exist in the specified archive will be replaced with the new files.
   /// Returns the number of files successfully loaded.
   ///
-  size_t Load(CefRefPtr<CefStreamReader> stream, const CefString &password,
+  size_t Load(CefRefPtr<CefStreamReader> stream,
+              const CefString& password,
               bool overwriteExisting);
 
   ///
@@ -112,24 +113,24 @@ public:
   ///
   /// Returns true if the specified file exists and has contents.
   ///
-  bool HasFile(const CefString &fileName) const;
+  bool HasFile(const CefString& fileName) const;
 
   ///
   /// Returns the specified file.
   ///
-  CefRefPtr<File> GetFile(const CefString &fileName) const;
+  CefRefPtr<File> GetFile(const CefString& fileName) const;
 
   ///
   /// Removes the specified file.
   ///
-  bool RemoveFile(const CefString &fileName);
+  bool RemoveFile(const CefString& fileName);
 
   ///
   /// Returns the map of all files.
   ///
-  size_t GetFiles(FileMap &map) const;
+  size_t GetFiles(FileMap& map) const;
 
-private:
+ private:
   // Protect against accidental deletion of this object.
   friend class base::RefCountedThreadSafe<CefZipArchive>;
   ~CefZipArchive();
@@ -139,4 +140,4 @@ private:
   mutable base::Lock lock_;
 };
 
-#endif // CEF_INCLUDE_WRAPPER_CEF_ZIP_ARCHIVE_H_
+#endif  // CEF_INCLUDE_WRAPPER_CEF_ZIP_ARCHIVE_H_

@@ -33,9 +33,10 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefSettingObserverCppToC
-    : public CefCppToCRefCounted<CefSettingObserverCppToC, CefSettingObserver,
+    : public CefCppToCRefCounted<CefSettingObserverCppToC,
+                                 CefSettingObserver,
                                  cef_setting_observer_t> {
-public:
+ public:
   CefSettingObserverCppToC();
   virtual ~CefSettingObserverCppToC();
 };
@@ -44,6 +45,6 @@ constexpr auto CefSettingObserverCppToC_Wrap = CefSettingObserverCppToC::Wrap;
 constexpr auto CefSettingObserverCppToC_Unwrap =
     CefSettingObserverCppToC::Unwrap;
 
-#endif // CEF_API_ADDED(13401)
+#endif  // CEF_API_ADDED(13401)
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_SETTING_OBSERVER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_SETTING_OBSERVER_CPPTOC_H_

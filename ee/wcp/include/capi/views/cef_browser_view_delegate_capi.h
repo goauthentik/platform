@@ -73,9 +73,10 @@ typedef struct _cef_browser_view_delegate_t {
   /// is called for |browser| and before on_popup_browser_view_created() is
   /// called for |browser|'s parent delegate if |browser| is a popup.
   ///
-  void(CEF_CALLBACK *on_browser_created)(
-      struct _cef_browser_view_delegate_t *self,
-      struct _cef_browser_view_t *browser_view, struct _cef_browser_t *browser);
+  void(CEF_CALLBACK* on_browser_created)(
+      struct _cef_browser_view_delegate_t* self,
+      struct _cef_browser_view_t* browser_view,
+      struct _cef_browser_t* browser);
 
   ///
   /// Called when |browser| associated with |browser_view| is destroyed. Release
@@ -83,9 +84,10 @@ typedef struct _cef_browser_view_delegate_t {
   /// |browser| after this callback returns. This function will be called before
   /// cef_life_span_handler_t::on_before_close() is called for |browser|.
   ///
-  void(CEF_CALLBACK *on_browser_destroyed)(
-      struct _cef_browser_view_delegate_t *self,
-      struct _cef_browser_view_t *browser_view, struct _cef_browser_t *browser);
+  void(CEF_CALLBACK* on_browser_destroyed)(
+      struct _cef_browser_view_delegate_t* self,
+      struct _cef_browser_view_t* browser_view,
+      struct _cef_browser_t* browser);
 
   ///
   /// Called before a new popup BrowserView is created. The popup originated
@@ -94,12 +96,13 @@ typedef struct _cef_browser_view_delegate_t {
   /// if the popup will be a DevTools browser. Return the delegate that will be
   /// used for the new popup BrowserView.
   ///
-  struct _cef_browser_view_delegate_t *(
-      CEF_CALLBACK *get_delegate_for_popup_browser_view)(
-      struct _cef_browser_view_delegate_t *self,
-      struct _cef_browser_view_t *browser_view,
-      const struct _cef_browser_settings_t *settings,
-      struct _cef_client_t *client, int is_devtools);
+  struct _cef_browser_view_delegate_t*(
+      CEF_CALLBACK* get_delegate_for_popup_browser_view)(
+      struct _cef_browser_view_delegate_t* self,
+      struct _cef_browser_view_t* browser_view,
+      const struct _cef_browser_settings_t* settings,
+      struct _cef_client_t* client,
+      int is_devtools);
 
   ///
   /// Called after |popup_browser_view| is created. This function will be called
@@ -110,28 +113,29 @@ typedef struct _cef_browser_view_delegate_t {
   /// yourself and return true (1). Otherwise return false (0) and a default
   /// cef_window_t will be created for the popup.
   ///
-  int(CEF_CALLBACK *on_popup_browser_view_created)(
-      struct _cef_browser_view_delegate_t *self,
-      struct _cef_browser_view_t *browser_view,
-      struct _cef_browser_view_t *popup_browser_view, int is_devtools);
+  int(CEF_CALLBACK* on_popup_browser_view_created)(
+      struct _cef_browser_view_delegate_t* self,
+      struct _cef_browser_view_t* browser_view,
+      struct _cef_browser_view_t* popup_browser_view,
+      int is_devtools);
 
   ///
   /// Returns the Chrome toolbar type that will be available via
   /// cef_browser_view_t::get_chrome_toolbar(). See that function for related
   /// documentation.
   ///
-  cef_chrome_toolbar_type_t(CEF_CALLBACK *get_chrome_toolbar_type)(
-      struct _cef_browser_view_delegate_t *self,
-      struct _cef_browser_view_t *browser_view);
+  cef_chrome_toolbar_type_t(CEF_CALLBACK* get_chrome_toolbar_type)(
+      struct _cef_browser_view_delegate_t* self,
+      struct _cef_browser_view_t* browser_view);
 
   ///
   /// Return true (1) to create frameless windows for Document picture-in-
   /// picture popups. Content in frameless windows should specify draggable
   /// regions using "-webkit-app-region: drag" CSS.
   ///
-  int(CEF_CALLBACK *use_frameless_window_for_picture_in_picture)(
-      struct _cef_browser_view_delegate_t *self,
-      struct _cef_browser_view_t *browser_view);
+  int(CEF_CALLBACK* use_frameless_window_for_picture_in_picture)(
+      struct _cef_browser_view_delegate_t* self,
+      struct _cef_browser_view_t* browser_view);
 
   ///
   /// Called when |browser_view| receives a gesture command. Return true (1) to
@@ -139,21 +143,21 @@ typedef struct _cef_browser_view_delegate_t {
   /// gesture to the browser for default handling. With Chrome style these
   /// commands can also be handled via cef_command_handler_t::OnChromeCommand.
   ///
-  int(CEF_CALLBACK *on_gesture_command)(
-      struct _cef_browser_view_delegate_t *self,
-      struct _cef_browser_view_t *browser_view,
+  int(CEF_CALLBACK* on_gesture_command)(
+      struct _cef_browser_view_delegate_t* self,
+      struct _cef_browser_view_t* browser_view,
       cef_gesture_command_t gesture_command);
 
   ///
   /// Optionally change the runtime style for this BrowserView. See
   /// cef_runtime_style_t documentation for details.
   ///
-  cef_runtime_style_t(CEF_CALLBACK *get_browser_runtime_style)(
-      struct _cef_browser_view_delegate_t *self);
+  cef_runtime_style_t(CEF_CALLBACK* get_browser_runtime_style)(
+      struct _cef_browser_view_delegate_t* self);
 } cef_browser_view_delegate_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_BROWSER_VIEW_DELEGATE_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_BROWSER_VIEW_DELEGATE_CAPI_H_

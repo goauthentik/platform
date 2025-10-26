@@ -27,19 +27,23 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCookieManagerCToCpp
-    : public CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager,
+    : public CefCToCppRefCounted<CefCookieManagerCToCpp,
+                                 CefCookieManager,
                                  cef_cookie_manager_t> {
-public:
+ public:
   CefCookieManagerCToCpp();
   virtual ~CefCookieManagerCToCpp();
 
   // CefCookieManager methods.
   bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor) override;
-  bool VisitUrlCookies(const CefString &url, bool includeHttpOnly,
+  bool VisitUrlCookies(const CefString& url,
+                       bool includeHttpOnly,
                        CefRefPtr<CefCookieVisitor> visitor) override;
-  bool SetCookie(const CefString &url, const CefCookie &cookie,
+  bool SetCookie(const CefString& url,
+                 const CefCookie& cookie,
                  CefRefPtr<CefSetCookieCallback> callback) override;
-  bool DeleteCookies(const CefString &url, const CefString &cookie_name,
+  bool DeleteCookies(const CefString& url,
+                     const CefString& cookie_name,
                      CefRefPtr<CefDeleteCookiesCallback> callback) override;
   bool FlushStore(CefRefPtr<CefCompletionCallback> callback) override;
 };
@@ -47,4 +51,4 @@ public:
 constexpr auto CefCookieManagerCToCpp_Wrap = CefCookieManagerCToCpp::Wrap;
 constexpr auto CefCookieManagerCToCpp_Unwrap = CefCookieManagerCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_

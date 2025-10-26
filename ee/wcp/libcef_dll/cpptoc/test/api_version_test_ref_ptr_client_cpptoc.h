@@ -30,7 +30,7 @@ class CefApiVersionTestRefPtrClientCppToC
     : public CefCppToCRefCounted<CefApiVersionTestRefPtrClientCppToC,
                                  CefApiVersionTestRefPtrClient,
                                  cef_api_version_test_ref_ptr_client_t> {
-public:
+ public:
   CefApiVersionTestRefPtrClientCppToC();
   virtual ~CefApiVersionTestRefPtrClientCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefApiVersionTestRefPtrClientCppToC_Wrap =
 constexpr auto CefApiVersionTestRefPtrClientCppToC_Unwrap =
     CefApiVersionTestRefPtrClientCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_REF_PTR_CLIENT_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_REF_PTR_CLIENT_CPPTOC_H_

@@ -68,4 +68,4 @@ typedef struct _cef_fill_layout_t {
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_FILL_LAYOUT_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_FILL_LAYOUT_CAPI_H_

@@ -30,7 +30,7 @@ class CefDownloadItemCallbackCToCpp
     : public CefCToCppRefCounted<CefDownloadItemCallbackCToCpp,
                                  CefDownloadItemCallback,
                                  cef_download_item_callback_t> {
-public:
+ public:
   CefDownloadItemCallbackCToCpp();
   virtual ~CefDownloadItemCallbackCToCpp();
 
@@ -45,4 +45,4 @@ constexpr auto CefDownloadItemCallbackCToCpp_Wrap =
 constexpr auto CefDownloadItemCallbackCToCpp_Unwrap =
     CefDownloadItemCallbackCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CALLBACK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CALLBACK_CTOCPP_H_

@@ -55,7 +55,7 @@ typedef CefStringUTF8 CefString;
 #elif defined(CEF_STRING_TYPE_WIDE)
 typedef CefStringWide CefString;
 #endif
-#endif // __cplusplus
+#endif  // __cplusplus
 
 #if defined(CEF_STRING_TYPE_UTF8)
 typedef char cef_char_t;
@@ -109,4 +109,4 @@ typedef cef_string_userfree_wide_t cef_string_userfree_t;
 #error Please choose a string type.
 #endif
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_STRING_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_STRING_H_

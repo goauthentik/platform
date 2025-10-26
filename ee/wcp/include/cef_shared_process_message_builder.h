@@ -47,13 +47,13 @@
 ///
 /*--cef(source=library)--*/
 class CefSharedProcessMessageBuilder : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Creates a new CefSharedProcessMessageBuilder with the specified |name| and
   /// shared memory region of specified |byte_size|.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefSharedProcessMessageBuilder> Create(const CefString &name,
+  static CefRefPtr<CefSharedProcessMessageBuilder> Create(const CefString& name,
                                                           size_t byte_size);
   ///
   /// Returns true if the builder is valid.
@@ -74,7 +74,7 @@ public:
   /// object.
   ///
   /*--cef()--*/
-  virtual void *Memory() = 0;
+  virtual void* Memory() = 0;
 
   ///
   /// Creates a new CefProcessMessage from the data provided to the builder.
@@ -84,4 +84,4 @@ public:
   virtual CefRefPtr<CefProcessMessage> Build() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_SHARED_PROCESS_MESSAGE_BUILDER_H_
+#endif  // CEF_INCLUDE_CEF_SHARED_PROCESS_MESSAGE_BUILDER_H_

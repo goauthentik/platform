@@ -27,9 +27,10 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPrintSettingsCToCpp
-    : public CefCToCppRefCounted<CefPrintSettingsCToCpp, CefPrintSettings,
+    : public CefCToCppRefCounted<CefPrintSettingsCToCpp,
+                                 CefPrintSettings,
                                  cef_print_settings_t> {
-public:
+ public:
   CefPrintSettingsCToCpp();
   virtual ~CefPrintSettingsCToCpp();
 
@@ -38,16 +39,16 @@ public:
   bool IsReadOnly() override;
   void SetOrientation(bool landscape) override;
   bool IsLandscape() override;
-  void SetPrinterPrintableArea(const CefSize &physical_size_device_units,
-                               const CefRect &printable_area_device_units,
+  void SetPrinterPrintableArea(const CefSize& physical_size_device_units,
+                               const CefRect& printable_area_device_units,
                                bool landscape_needs_flip) override;
-  void SetDeviceName(const CefString &name) override;
+  void SetDeviceName(const CefString& name) override;
   CefString GetDeviceName() override;
   void SetDPI(int dpi) override;
   int GetDPI() override;
-  void SetPageRanges(const PageRangeList &ranges) override;
+  void SetPageRanges(const PageRangeList& ranges) override;
   size_t GetPageRangesCount() override;
-  void GetPageRanges(PageRangeList &ranges) override;
+  void GetPageRanges(PageRangeList& ranges) override;
   void SetSelectionOnly(bool selection_only) override;
   bool IsSelectionOnly() override;
   void SetCollate(bool collate) override;
@@ -63,4 +64,4 @@ public:
 constexpr auto CefPrintSettingsCToCpp_Wrap = CefPrintSettingsCToCpp::Wrap;
 constexpr auto CefPrintSettingsCToCpp_Unwrap = CefPrintSettingsCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_PRINT_SETTINGS_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_PRINT_SETTINGS_CTOCPP_H_

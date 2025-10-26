@@ -43,7 +43,7 @@
 #define CEF_INCLUDE_TEST_CEF_TRANSLATOR_TEST_H_
 #pragma once
 
-#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) &&          \
+#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) && \
     !defined(UNIT_TEST)
 #error This file can be included for unit tests only
 #endif
@@ -85,7 +85,7 @@ class CefTranslatorTestScopedLibraryChild;
 ///
 /*--cef(source=library)--*/
 class CefTranslatorTest : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -175,13 +175,13 @@ public:
   /// Set a int list value.
   ///
   /*--cef()--*/
-  virtual bool SetIntList(const std::vector<int> &val) = 0;
+  virtual bool SetIntList(const std::vector<int>& val) = 0;
 
   ///
   /// Return an int list value by out-param.
   ///
   /*--cef(count_func=val:GetIntListSize)--*/
-  virtual bool GetIntListByRef(IntList &val) = 0;
+  virtual bool GetIntListByRef(IntList& val) = 0;
 
   ///
   /// Return the number of points that will be output above.
@@ -201,13 +201,13 @@ public:
   /// Set a string value.
   ///
   /*--cef()--*/
-  virtual bool SetString(const CefString &val) = 0;
+  virtual bool SetString(const CefString& val) = 0;
 
   ///
   /// Return a string value by out-param.
   ///
   /*--cef()--*/
-  virtual void GetStringByRef(CefString &val) = 0;
+  virtual void GetStringByRef(CefString& val) = 0;
 
   // STRING LIST VALUES
 
@@ -218,13 +218,13 @@ public:
   /// Set a string list value.
   ///
   /*--cef()--*/
-  virtual bool SetStringList(const std::vector<CefString> &val) = 0;
+  virtual bool SetStringList(const std::vector<CefString>& val) = 0;
 
   ///
   /// Return a string list value by out-param.
   ///
   /*--cef()--*/
-  virtual bool GetStringListByRef(StringList &val) = 0;
+  virtual bool GetStringListByRef(StringList& val) = 0;
 
   // STRING MAP VALUES
 
@@ -235,13 +235,13 @@ public:
   /// Set a string map value.
   ///
   /*--cef()--*/
-  virtual bool SetStringMap(const StringMap &val) = 0;
+  virtual bool SetStringMap(const StringMap& val) = 0;
 
   ///
   /// Return a string map value by out-param.
   ///
   /*--cef()--*/
-  virtual bool GetStringMapByRef(std::map<CefString, CefString> &val) = 0;
+  virtual bool GetStringMapByRef(std::map<CefString, CefString>& val) = 0;
 
   // STRING MULTIMAP VALUES
 
@@ -252,14 +252,14 @@ public:
   /// Set a string multimap value.
   ///
   /*--cef()--*/
-  virtual bool
-  SetStringMultimap(const std::multimap<CefString, CefString> &val) = 0;
+  virtual bool SetStringMultimap(
+      const std::multimap<CefString, CefString>& val) = 0;
 
   ///
   /// Return a string multimap value by out-param.
   ///
   /*--cef()--*/
-  virtual bool GetStringMultimapByRef(StringMultimap &val) = 0;
+  virtual bool GetStringMultimapByRef(StringMultimap& val) = 0;
 
   // STRUCT VALUES
 
@@ -273,13 +273,13 @@ public:
   /// Set a point value.
   ///
   /*--cef()--*/
-  virtual bool SetPoint(const CefPoint &val) = 0;
+  virtual bool SetPoint(const CefPoint& val) = 0;
 
   ///
   /// Return a point value by out-param.
   ///
   /*--cef()--*/
-  virtual void GetPointByRef(CefPoint &val) = 0;
+  virtual void GetPointByRef(CefPoint& val) = 0;
 
   // STRUCT LIST VALUES
 
@@ -290,13 +290,13 @@ public:
   /// Set a point list vlaue.
   ///
   /*--cef()--*/
-  virtual bool SetPointList(const std::vector<CefPoint> &val) = 0;
+  virtual bool SetPointList(const std::vector<CefPoint>& val) = 0;
 
   ///
   /// Return a point list value by out-param.
   ///
   /*--cef(count_func=val:GetPointListSize)--*/
-  virtual bool GetPointListByRef(PointList &val) = 0;
+  virtual bool GetPointListByRef(PointList& val) = 0;
 
   ///
   /// Return the number of points that will be output above.
@@ -310,8 +310,8 @@ public:
   /// Return an new library-side object.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefTranslatorTestRefPtrLibrary>
-  GetRefPtrLibrary(int val) = 0;
+  virtual CefRefPtr<CefTranslatorTestRefPtrLibrary> GetRefPtrLibrary(
+      int val) = 0;
 
   ///
   /// Set an object. Returns the value from
@@ -319,16 +319,16 @@ public:
   /// This tests input and execution of a library-side object type.
   ///
   /*--cef()--*/
-  virtual int
-  SetRefPtrLibrary(CefRefPtr<CefTranslatorTestRefPtrLibrary> val) = 0;
+  virtual int SetRefPtrLibrary(
+      CefRefPtr<CefTranslatorTestRefPtrLibrary> val) = 0;
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefTranslatorTestRefPtrLibrary>
-  SetRefPtrLibraryAndReturn(CefRefPtr<CefTranslatorTestRefPtrLibrary> val) = 0;
+  virtual CefRefPtr<CefTranslatorTestRefPtrLibrary> SetRefPtrLibraryAndReturn(
+      CefRefPtr<CefTranslatorTestRefPtrLibrary> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -336,8 +336,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildRefPtrLibrary(CefRefPtr<CefTranslatorTestRefPtrLibraryChild> val) = 0;
+  virtual int SetChildRefPtrLibrary(
+      CefRefPtr<CefTranslatorTestRefPtrLibraryChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -359,14 +359,16 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRefPtrLibraryList(
-      const std::vector<CefRefPtr<CefTranslatorTestRefPtrLibrary>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRefPtr<CefTranslatorTestRefPtrLibrary>>& val,
+      int val1,
+      int val2) = 0;
 
   ///
   /// Return an object list value by out-param.
   ///
   /*--cef(count_func=val:GetRefPtrLibraryListSize)--*/
-  virtual bool GetRefPtrLibraryListByRef(RefPtrLibraryList &val, int val1,
+  virtual bool GetRefPtrLibraryListByRef(RefPtrLibraryList& val,
+                                         int val1,
                                          int val2) = 0;
 
   ///
@@ -390,8 +392,8 @@ public:
   /// of a client-side object type.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefTranslatorTestRefPtrClient>
-  SetRefPtrClientAndReturn(CefRefPtr<CefTranslatorTestRefPtrClient> val) = 0;
+  virtual CefRefPtr<CefTranslatorTestRefPtrClient> SetRefPtrClientAndReturn(
+      CefRefPtr<CefTranslatorTestRefPtrClient> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -399,8 +401,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildRefPtrClient(CefRefPtr<CefTranslatorTestRefPtrClientChild> val) = 0;
+  virtual int SetChildRefPtrClient(
+      CefRefPtr<CefTranslatorTestRefPtrClientChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -422,17 +424,18 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRefPtrClientList(
-      const std::vector<CefRefPtr<CefTranslatorTestRefPtrClient>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRefPtr<CefTranslatorTestRefPtrClient>>& val,
+      int val1,
+      int val2) = 0;
 
   ///
   /// Return an object list value by out-param.
   ///
   /*--cef(count_func=val:GetRefPtrLibraryListSize)--*/
-  virtual bool
-  GetRefPtrClientListByRef(RefPtrClientList &val,
-                           CefRefPtr<CefTranslatorTestRefPtrClient> val1,
-                           CefRefPtr<CefTranslatorTestRefPtrClient> val2) = 0;
+  virtual bool GetRefPtrClientListByRef(
+      RefPtrClientList& val,
+      CefRefPtr<CefTranslatorTestRefPtrClient> val1,
+      CefRefPtr<CefTranslatorTestRefPtrClient> val2) = 0;
 
   ///
   /// Return the number of object that will be output above.
@@ -446,8 +449,8 @@ public:
   /// Return an new library-side object.
   ///
   /*--cef()--*/
-  virtual CefOwnPtr<CefTranslatorTestScopedLibrary>
-  GetOwnPtrLibrary(int val) = 0;
+  virtual CefOwnPtr<CefTranslatorTestScopedLibrary> GetOwnPtrLibrary(
+      int val) = 0;
 
   ///
   /// Set an object. Returns the value from
@@ -455,16 +458,16 @@ public:
   /// This tests input and execution of a library-side object type.
   ///
   /*--cef()--*/
-  virtual int
-  SetOwnPtrLibrary(CefOwnPtr<CefTranslatorTestScopedLibrary> val) = 0;
+  virtual int SetOwnPtrLibrary(
+      CefOwnPtr<CefTranslatorTestScopedLibrary> val) = 0;
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
   /*--cef()--*/
-  virtual CefOwnPtr<CefTranslatorTestScopedLibrary>
-  SetOwnPtrLibraryAndReturn(CefOwnPtr<CefTranslatorTestScopedLibrary> val) = 0;
+  virtual CefOwnPtr<CefTranslatorTestScopedLibrary> SetOwnPtrLibraryAndReturn(
+      CefOwnPtr<CefTranslatorTestScopedLibrary> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -472,8 +475,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildOwnPtrLibrary(CefOwnPtr<CefTranslatorTestScopedLibraryChild> val) = 0;
+  virtual int SetChildOwnPtrLibrary(
+      CefOwnPtr<CefTranslatorTestScopedLibraryChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -499,8 +502,8 @@ public:
   /// of a client-side object type.
   ///
   /*--cef()--*/
-  virtual CefOwnPtr<CefTranslatorTestScopedClient>
-  SetOwnPtrClientAndReturn(CefOwnPtr<CefTranslatorTestScopedClient> val) = 0;
+  virtual CefOwnPtr<CefTranslatorTestScopedClient> SetOwnPtrClientAndReturn(
+      CefOwnPtr<CefTranslatorTestScopedClient> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -508,8 +511,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildOwnPtrClient(CefOwnPtr<CefTranslatorTestScopedClientChild> val) = 0;
+  virtual int SetChildOwnPtrClient(
+      CefOwnPtr<CefTranslatorTestScopedClientChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -528,8 +531,8 @@ public:
   /// This tests input and execution of a library-side object type.
   ///
   /*--cef()--*/
-  virtual int
-  SetRawPtrLibrary(CefRawPtr<CefTranslatorTestScopedLibrary> val) = 0;
+  virtual int SetRawPtrLibrary(
+      CefRawPtr<CefTranslatorTestScopedLibrary> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -537,8 +540,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildRawPtrLibrary(CefRawPtr<CefTranslatorTestScopedLibraryChild> val) = 0;
+  virtual int SetChildRawPtrLibrary(
+      CefRawPtr<CefTranslatorTestScopedLibraryChild> val) = 0;
 
   // LIBRARY-SIDE RAWPTR LIST VALUES
 
@@ -551,8 +554,9 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRawPtrLibraryList(
-      const std::vector<CefRawPtr<CefTranslatorTestScopedLibrary>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRawPtr<CefTranslatorTestScopedLibrary>>& val,
+      int val1,
+      int val2) = 0;
 
   // CLIENT-SIDE RAWPTR VALUES
 
@@ -570,8 +574,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildRawPtrClient(CefRawPtr<CefTranslatorTestScopedClientChild> val) = 0;
+  virtual int SetChildRawPtrClient(
+      CefRawPtr<CefTranslatorTestScopedClientChild> val) = 0;
 
   // CLIENT-SIDE RAWPTR LIST VALUES
 
@@ -584,8 +588,9 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRawPtrClientList(
-      const std::vector<CefRawPtr<CefTranslatorTestScopedClient>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRawPtr<CefTranslatorTestScopedClient>>& val,
+      int val1,
+      int val2) = 0;
 };
 
 ///
@@ -593,7 +598,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefTranslatorTestRefPtrLibrary : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -619,7 +624,7 @@ public:
 /*--cef(source=library)--*/
 class CefTranslatorTestRefPtrLibraryChild
     : public CefTranslatorTestRefPtrLibrary {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -646,7 +651,7 @@ public:
 /*--cef(source=library)--*/
 class CefTranslatorTestRefPtrLibraryChildChild
     : public CefTranslatorTestRefPtrLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -672,7 +677,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefTranslatorTestRefPtrClient : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Return a value.
   ///
@@ -686,7 +691,7 @@ public:
 /*--cef(source=client)--*/
 class CefTranslatorTestRefPtrClientChild
     : public CefTranslatorTestRefPtrClient {
-public:
+ public:
   ///
   /// Return a value.
   ///
@@ -699,7 +704,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefTranslatorTestScopedLibrary : public CefBaseScoped {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -725,7 +730,7 @@ public:
 /*--cef(source=library)--*/
 class CefTranslatorTestScopedLibraryChild
     : public CefTranslatorTestScopedLibrary {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -752,7 +757,7 @@ public:
 /*--cef(source=library)--*/
 class CefTranslatorTestScopedLibraryChildChild
     : public CefTranslatorTestScopedLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -778,7 +783,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefTranslatorTestScopedClient : public virtual CefBaseScoped {
-public:
+ public:
   ///
   /// Return a value.
   ///
@@ -792,7 +797,7 @@ public:
 /*--cef(source=client)--*/
 class CefTranslatorTestScopedClientChild
     : public CefTranslatorTestScopedClient {
-public:
+ public:
   ///
   /// Return a value.
   ///
@@ -800,4 +805,4 @@ public:
   virtual int GetOtherValue() = 0;
 };
 
-#endif // CEF_INCLUDE_TEST_CEF_TRANSLATOR_TEST_H_
+#endif  // CEF_INCLUDE_TEST_CEF_TRANSLATOR_TEST_H_

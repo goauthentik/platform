@@ -11,11 +11,12 @@ struct sHookData;
 
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler {
-public:
+ public:
   SimpleApp();
-  SimpleApp(sHookData *pData, HWND hWnd) : m_pData(pData), m_hWnd(hWnd) {}
+  SimpleApp(sHookData* pData, HWND hWnd)
+    : m_pData(pData), m_hWnd(hWnd) {}
 
-  sHookData *m_pData = nullptr;
+  sHookData* m_pData = nullptr;
   HWND m_hWnd = NULL;
 
   // CefApp methods:
@@ -27,9 +28,9 @@ public:
   void OnContextInitialized() override;
   CefRefPtr<CefClient> GetDefaultClient() override;
 
-private:
+ private:
   // Include the default reference counting implementation.
   IMPLEMENT_REFCOUNTING(SimpleApp);
 };
 
-#endif // CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
+#endif  // CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_

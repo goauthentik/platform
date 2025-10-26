@@ -47,7 +47,7 @@
 ///
 /*--cef(source=library)--*/
 class CefBeforeDownloadCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Call to continue the download. Set |download_path| to the full file path
   /// for the download including the file name or leave blank to use the
@@ -55,7 +55,7 @@ public:
   /// if you do wish to show the default "Save As" dialog.
   ///
   /*--cef(capi_name=cont,optional_param=download_path)--*/
-  virtual void Continue(const CefString &download_path, bool show_dialog) = 0;
+  virtual void Continue(const CefString& download_path, bool show_dialog) = 0;
 };
 
 ///
@@ -63,7 +63,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefDownloadItemCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Call to cancel the download.
   ///
@@ -89,7 +89,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefDownloadHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Called before a download begins in response to a user-initiated action
   /// (e.g. alt + link click or link click that returns a `Content-Disposition:
@@ -98,8 +98,9 @@ public:
   /// proceed with the download or false to cancel the download.
   ///
   /*--cef()--*/
-  virtual bool CanDownload(CefRefPtr<CefBrowser> browser, const CefString &url,
-                           const CefString &request_method) {
+  virtual bool CanDownload(CefRefPtr<CefBrowser> browser,
+                           const CefString& url,
+                           const CefString& request_method) {
     return true;
   }
 
@@ -114,7 +115,7 @@ public:
   /*--cef()--*/
   virtual bool OnBeforeDownload(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefDownloadItem> download_item,
-                                const CefString &suggested_name,
+                                const CefString& suggested_name,
                                 CefRefPtr<CefBeforeDownloadCallback> callback) {
     return false;
   }
@@ -132,4 +133,4 @@ public:
                                  CefRefPtr<CefDownloadItemCallback> callback) {}
 };
 
-#endif // CEF_INCLUDE_CEF_DOWNLOAD_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_DOWNLOAD_HANDLER_H_

@@ -40,7 +40,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/functional/callback_helpers.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -58,7 +58,8 @@ namespace base {
 
 namespace internal {
 
-template <typename T> struct IsBaseCallbackImpl : std::false_type {};
+template <typename T>
+struct IsBaseCallbackImpl : std::false_type {};
 
 template <typename R, typename... Args>
 struct IsBaseCallbackImpl<OnceCallback<R(Args...)>> : std::true_type {};
@@ -66,12 +67,13 @@ struct IsBaseCallbackImpl<OnceCallback<R(Args...)>> : std::true_type {};
 template <typename R, typename... Args>
 struct IsBaseCallbackImpl<RepeatingCallback<R(Args...)>> : std::true_type {};
 
-template <typename T> struct IsOnceCallbackImpl : std::false_type {};
+template <typename T>
+struct IsOnceCallbackImpl : std::false_type {};
 
 template <typename R, typename... Args>
 struct IsOnceCallbackImpl<OnceCallback<R(Args...)>> : std::true_type {};
 
-} // namespace internal
+}  // namespace internal
 
 ///
 /// IsBaseCallback<T>::value is true when T is any of the Closure or Callback
@@ -105,15 +107,16 @@ using EnableIfIsBaseCallback =
 
 namespace internal {
 
-template <typename... Args> class OnceCallbackHolder final {
-public:
+template <typename... Args>
+class OnceCallbackHolder final {
+ public:
   OnceCallbackHolder(OnceCallback<void(Args...)> callback,
                      bool ignore_extra_runs)
       : callback_(std::move(callback)), ignore_extra_runs_(ignore_extra_runs) {
     DCHECK(callback_);
   }
-  OnceCallbackHolder(const OnceCallbackHolder &) = delete;
-  OnceCallbackHolder &operator=(const OnceCallbackHolder &) = delete;
+  OnceCallbackHolder(const OnceCallbackHolder&) = delete;
+  OnceCallbackHolder& operator=(const OnceCallbackHolder&) = delete;
 
   void Run(Args... args) {
     if (has_run_.exchange(true)) {
@@ -126,13 +129,13 @@ public:
     std::move(callback_).Run(std::forward<Args>(args)...);
   }
 
-private:
+ private:
   volatile std::atomic_bool has_run_{false};
   base::OnceCallback<void(Args...)> callback_;
   const bool ignore_extra_runs_;
 };
 
-} // namespace internal
+}  // namespace internal
 
 ///
 /// Wraps the given OnceCallback into a RepeatingCallback that relays its
@@ -145,8 +148,8 @@ private:
 ///
 // TODO(tzik): Remove it. https://crbug.com/730593
 template <typename... Args>
-RepeatingCallback<void(Args...)>
-AdaptCallbackForRepeating(OnceCallback<void(Args...)> callback) {
+RepeatingCallback<void(Args...)> AdaptCallbackForRepeating(
+    OnceCallback<void(Args...)> callback) {
   using Helper = internal::OnceCallbackHolder<Args...>;
   return base::BindRepeating(
       &Helper::Run, std::make_unique<Helper>(std::move(callback),
@@ -175,15 +178,15 @@ SplitOnceCallback(OnceCallback<void(Args...)> callback) {
 /// "CallbackScoper" this is the class you want.
 ///
 class ScopedClosureRunner {
-public:
+ public:
   ScopedClosureRunner();
   explicit ScopedClosureRunner(OnceClosure closure);
-  ScopedClosureRunner(ScopedClosureRunner &&other);
+  ScopedClosureRunner(ScopedClosureRunner&& other);
   // Runs the current closure if it's set, then replaces it with the closure
   // from |other|. This is akin to how unique_ptr frees the contained pointer in
   // its move assignment operator. If you need to explicitly avoid running any
   // current closure, use ReplaceClosure().
-  ScopedClosureRunner &operator=(ScopedClosureRunner &&other);
+  ScopedClosureRunner& operator=(ScopedClosureRunner&& other);
   ~ScopedClosureRunner();
 
   explicit operator bool() const { return !!closure_; }
@@ -197,7 +200,7 @@ public:
   // Releases the Closure without calling.
   [[nodiscard]] OnceClosure Release();
 
-private:
+ private:
   OnceClosure closure_;
 };
 
@@ -205,7 +208,7 @@ private:
 /// Creates a null callback.
 ///
 class NullCallback {
-public:
+ public:
   template <typename R, typename... Args>
   operator RepeatingCallback<R(Args...)>() const {
     return RepeatingCallback<R(Args...)>();
@@ -220,12 +223,13 @@ public:
 /// Creates a callback that does nothing when called.
 ///
 class DoNothing {
-public:
+ public:
   template <typename... Args>
   operator RepeatingCallback<void(Args...)>() const {
     return Repeatedly<Args...>();
   }
-  template <typename... Args> operator OnceCallback<void(Args...)>() const {
+  template <typename... Args>
+  operator OnceCallback<void(Args...)>() const {
     return Once<Args...>();
   }
   // Explicit way of specifying a specific callback type when the compiler can't
@@ -234,7 +238,8 @@ public:
   static RepeatingCallback<void(Args...)> Repeatedly() {
     return BindRepeating([](Args... args) {});
   }
-  template <typename... Args> static OnceCallback<void(Args...)> Once() {
+  template <typename... Args>
+  static OnceCallback<void(Args...)> Once() {
     return BindOnce([](Args... args) {});
   }
 };
@@ -244,10 +249,13 @@ public:
 /// use this when necessary. In most cases MessageLoop::DeleteSoon() is a better
 /// fit.
 ///
-template <typename T> void DeletePointer(T *obj) { delete obj; }
+template <typename T>
+void DeletePointer(T* obj) {
+  delete obj;
+}
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_CALLBACK_HELPERS_H_
+#endif  // CEF_INCLUDE_BASE_CEF_CALLBACK_HELPERS_H_

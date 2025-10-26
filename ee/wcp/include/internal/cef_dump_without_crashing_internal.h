@@ -49,8 +49,8 @@ extern "C" {
 /// base/debug/dump_without_crashing.h.
 ///
 CEF_EXPORT int cef_dump_without_crashing(long long mseconds_between_dumps,
-                                         const char *function_name,
-                                         const char *file_name,
+                                         const char* function_name,
+                                         const char* file_name,
                                          int line_number);
 ///
 /// cef_dump_without_crashing_unthrottled allows for capturing crash dumps
@@ -63,6 +63,6 @@ CEF_EXPORT int cef_dump_without_crashing_unthrottled();
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_DUMP_WITHOUT_CRASHING_INTERNAL_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_DUMP_WITHOUT_CRASHING_INTERNAL_H_

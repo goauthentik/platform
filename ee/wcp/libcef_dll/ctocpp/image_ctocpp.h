@@ -28,40 +28,50 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefImageCToCpp
     : public CefCToCppRefCounted<CefImageCToCpp, CefImage, cef_image_t> {
-public:
+ public:
   CefImageCToCpp();
   virtual ~CefImageCToCpp();
 
   // CefImage methods.
   bool IsEmpty() override;
   bool IsSame(CefRefPtr<CefImage> that) override;
-  bool AddBitmap(float scale_factor, int pixel_width, int pixel_height,
-                 cef_color_type_t color_type, cef_alpha_type_t alpha_type,
-                 const void *pixel_data, size_t pixel_data_size) override;
-  bool AddPNG(float scale_factor, const void *png_data,
+  bool AddBitmap(float scale_factor,
+                 int pixel_width,
+                 int pixel_height,
+                 cef_color_type_t color_type,
+                 cef_alpha_type_t alpha_type,
+                 const void* pixel_data,
+                 size_t pixel_data_size) override;
+  bool AddPNG(float scale_factor,
+              const void* png_data,
               size_t png_data_size) override;
-  bool AddJPEG(float scale_factor, const void *jpeg_data,
+  bool AddJPEG(float scale_factor,
+               const void* jpeg_data,
                size_t jpeg_data_size) override;
   size_t GetWidth() override;
   size_t GetHeight() override;
   bool HasRepresentation(float scale_factor) override;
   bool RemoveRepresentation(float scale_factor) override;
-  bool GetRepresentationInfo(float scale_factor, float &actual_scale_factor,
-                             int &pixel_width, int &pixel_height) override;
+  bool GetRepresentationInfo(float scale_factor,
+                             float& actual_scale_factor,
+                             int& pixel_width,
+                             int& pixel_height) override;
   CefRefPtr<CefBinaryValue> GetAsBitmap(float scale_factor,
                                         cef_color_type_t color_type,
                                         cef_alpha_type_t alpha_type,
-                                        int &pixel_width,
-                                        int &pixel_height) override;
-  CefRefPtr<CefBinaryValue> GetAsPNG(float scale_factor, bool with_transparency,
-                                     int &pixel_width,
-                                     int &pixel_height) override;
-  CefRefPtr<CefBinaryValue> GetAsJPEG(float scale_factor, int quality,
-                                      int &pixel_width,
-                                      int &pixel_height) override;
+                                        int& pixel_width,
+                                        int& pixel_height) override;
+  CefRefPtr<CefBinaryValue> GetAsPNG(float scale_factor,
+                                     bool with_transparency,
+                                     int& pixel_width,
+                                     int& pixel_height) override;
+  CefRefPtr<CefBinaryValue> GetAsJPEG(float scale_factor,
+                                      int quality,
+                                      int& pixel_width,
+                                      int& pixel_height) override;
 };
 
 constexpr auto CefImageCToCpp_Wrap = CefImageCToCpp::Wrap;
 constexpr auto CefImageCToCpp_Unwrap = CefImageCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_IMAGE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_IMAGE_CTOCPP_H_

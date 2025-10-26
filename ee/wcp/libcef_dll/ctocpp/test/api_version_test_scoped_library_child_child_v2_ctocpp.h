@@ -33,7 +33,7 @@ class CefApiVersionTestScopedLibraryChildChildV2CToCpp
           CefApiVersionTestScopedLibraryChildChildV2CToCpp,
           CefApiVersionTestScopedLibraryChildChildV2,
           cef_api_version_test_scoped_library_child_child_v2_t> {
-public:
+ public:
   CefApiVersionTestScopedLibraryChildChildV2CToCpp();
   virtual ~CefApiVersionTestScopedLibraryChildChildV2CToCpp();
 
@@ -81,6 +81,6 @@ constexpr auto CefApiVersionTestScopedLibraryChildChildV2CToCpp_UnwrapOwn =
 constexpr auto CefApiVersionTestScopedLibraryChildChildV2CToCpp_UnwrapRaw =
     CefApiVersionTestScopedLibraryChildChildV2CToCpp::UnwrapRaw;
 
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_SCOPED_LIBRARY_CHILD_CHILD_V2_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_SCOPED_LIBRARY_CHILD_CHILD_V2_CTOCPP_H_

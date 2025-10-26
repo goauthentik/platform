@@ -41,7 +41,7 @@ extern "C" {
 ///
 /// CEF string maps are a set of key/value string pairs.
 ///
-typedef struct _cef_string_map_t *cef_string_map_t;
+typedef struct _cef_string_map_t* cef_string_map_t;
 
 ///
 /// Allocate a new string map.
@@ -57,28 +57,30 @@ CEF_EXPORT size_t cef_string_map_size(cef_string_map_t map);
 /// Return the value assigned to the specified key.
 ///
 CEF_EXPORT int cef_string_map_find(cef_string_map_t map,
-                                   const cef_string_t *key,
-                                   cef_string_t *value);
+                                   const cef_string_t* key,
+                                   cef_string_t* value);
 
 ///
 /// Return the key at the specified zero-based string map index.
 ///
-CEF_EXPORT int cef_string_map_key(cef_string_map_t map, size_t index,
-                                  cef_string_t *key);
+CEF_EXPORT int cef_string_map_key(cef_string_map_t map,
+                                  size_t index,
+                                  cef_string_t* key);
 
 ///
 /// Return the value at the specified zero-based string map index.
 ///
-CEF_EXPORT int cef_string_map_value(cef_string_map_t map, size_t index,
-                                    cef_string_t *value);
+CEF_EXPORT int cef_string_map_value(cef_string_map_t map,
+                                    size_t index,
+                                    cef_string_t* value);
 
 ///
 /// Append a new key/value pair at the end of the string map. If the key exists,
 /// overwrite the existing value with a new value w/o changing the pair order.
 ///
 CEF_EXPORT int cef_string_map_append(cef_string_map_t map,
-                                     const cef_string_t *key,
-                                     const cef_string_t *value);
+                                     const cef_string_t* key,
+                                     const cef_string_t* value);
 
 ///
 /// Clear the string map.
@@ -94,4 +96,4 @@ CEF_EXPORT void cef_string_map_free(cef_string_map_t map);
 }
 #endif
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_STRING_MAP_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_STRING_MAP_H_

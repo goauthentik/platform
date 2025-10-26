@@ -30,7 +30,7 @@ class CefResourceSkipCallbackCToCpp
     : public CefCToCppRefCounted<CefResourceSkipCallbackCToCpp,
                                  CefResourceSkipCallback,
                                  cef_resource_skip_callback_t> {
-public:
+ public:
   CefResourceSkipCallbackCToCpp();
   virtual ~CefResourceSkipCallbackCToCpp();
 
@@ -43,4 +43,4 @@ constexpr auto CefResourceSkipCallbackCToCpp_Wrap =
 constexpr auto CefResourceSkipCallbackCToCpp_Unwrap =
     CefResourceSkipCallbackCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_SKIP_CALLBACK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_SKIP_CALLBACK_CTOCPP_H_

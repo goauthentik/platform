@@ -43,7 +43,7 @@
 // When building CEF include the Chromium header directly.
 #include "base/atomic_ref_count.h"
 
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -53,7 +53,7 @@
 namespace base {
 
 class AtomicRefCount {
-public:
+ public:
   constexpr AtomicRefCount() : ref_count_(0) {}
   explicit constexpr AtomicRefCount(int initial_value)
       : ref_count_(initial_value) {}
@@ -112,12 +112,12 @@ public:
     return ref_count_.load(std::memory_order_relaxed);
   }
 
-private:
+ private:
   std::atomic_int ref_count_;
 };
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_ATOMIC_REF_COUNT_H_
+#endif  // CEF_INCLUDE_BASE_CEF_ATOMIC_REF_COUNT_H_

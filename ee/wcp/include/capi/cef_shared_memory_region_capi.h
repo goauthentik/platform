@@ -64,22 +64,22 @@ typedef struct _cef_shared_memory_region_t {
   ///
   /// Returns true (1) if the mapping is valid.
   ///
-  int(CEF_CALLBACK *is_valid)(struct _cef_shared_memory_region_t *self);
+  int(CEF_CALLBACK* is_valid)(struct _cef_shared_memory_region_t* self);
 
   ///
   /// Returns the size of the mapping in bytes. Returns 0 for invalid instances.
   ///
-  size_t(CEF_CALLBACK *size)(struct _cef_shared_memory_region_t *self);
+  size_t(CEF_CALLBACK* size)(struct _cef_shared_memory_region_t* self);
 
   ///
   /// Returns the pointer to the memory. Returns nullptr for invalid instances.
   /// The returned pointer is only valid for the life span of this object.
   ///
-  void *(CEF_CALLBACK *memory)(struct _cef_shared_memory_region_t *self);
+  void*(CEF_CALLBACK* memory)(struct _cef_shared_memory_region_t* self);
 } cef_shared_memory_region_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_SHARED_MEMORY_REGION_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_SHARED_MEMORY_REGION_CAPI_H_

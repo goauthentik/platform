@@ -43,7 +43,7 @@
 #define CEF_INCLUDE_TEST_CEF_API_VERSION_TEST_H_
 #pragma once
 
-#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) &&          \
+#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) && \
     !defined(UNIT_TEST)
 #error This file can be included for unit tests only
 #endif
@@ -84,7 +84,7 @@ class CefApiVersionTestScopedLibraryChild;
 ///
 /*--cef(source=library)--*/
 class CefApiVersionTest : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -97,8 +97,8 @@ public:
   /// Return an new library-side object.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefApiVersionTestRefPtrLibrary>
-  GetRefPtrLibrary(int val) = 0;
+  virtual CefRefPtr<CefApiVersionTestRefPtrLibrary> GetRefPtrLibrary(
+      int val) = 0;
 
   ///
   /// Set an object. Returns the value from
@@ -106,16 +106,16 @@ public:
   /// This tests input and execution of a library-side object type.
   ///
   /*--cef()--*/
-  virtual int
-  SetRefPtrLibrary(CefRefPtr<CefApiVersionTestRefPtrLibrary> val) = 0;
+  virtual int SetRefPtrLibrary(
+      CefRefPtr<CefApiVersionTestRefPtrLibrary> val) = 0;
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefApiVersionTestRefPtrLibrary>
-  SetRefPtrLibraryAndReturn(CefRefPtr<CefApiVersionTestRefPtrLibrary> val) = 0;
+  virtual CefRefPtr<CefApiVersionTestRefPtrLibrary> SetRefPtrLibraryAndReturn(
+      CefRefPtr<CefApiVersionTestRefPtrLibrary> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -123,8 +123,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildRefPtrLibrary(CefRefPtr<CefApiVersionTestRefPtrLibraryChild> val) = 0;
+  virtual int SetChildRefPtrLibrary(
+      CefRefPtr<CefApiVersionTestRefPtrLibraryChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -146,14 +146,16 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRefPtrLibraryList(
-      const std::vector<CefRefPtr<CefApiVersionTestRefPtrLibrary>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRefPtr<CefApiVersionTestRefPtrLibrary>>& val,
+      int val1,
+      int val2) = 0;
 
   ///
   /// Return an object list value by out-param.
   ///
   /*--cef(count_func=val:GetRefPtrLibraryListSize)--*/
-  virtual bool GetRefPtrLibraryListByRef(RefPtrLibraryList &val, int val1,
+  virtual bool GetRefPtrLibraryListByRef(RefPtrLibraryList& val,
+                                         int val1,
                                          int val2) = 0;
 
   ///
@@ -177,8 +179,8 @@ public:
   /// of a client-side object type.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefApiVersionTestRefPtrClient>
-  SetRefPtrClientAndReturn(CefRefPtr<CefApiVersionTestRefPtrClient> val) = 0;
+  virtual CefRefPtr<CefApiVersionTestRefPtrClient> SetRefPtrClientAndReturn(
+      CefRefPtr<CefApiVersionTestRefPtrClient> val) = 0;
 
 #if CEF_API_REMOVED(13302)
   ///
@@ -187,8 +189,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef(removed=13302)--*/
-  virtual int
-  SetChildRefPtrClient(CefRefPtr<CefApiVersionTestRefPtrClientChild> val) = 0;
+  virtual int SetChildRefPtrClient(
+      CefRefPtr<CefApiVersionTestRefPtrClientChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -198,7 +200,7 @@ public:
   virtual CefRefPtr<CefApiVersionTestRefPtrClient>
   SetChildRefPtrClientAndReturnParent(
       CefRefPtr<CefApiVersionTestRefPtrClientChild> val) = 0;
-#endif // CEF_API_REMOVED(13302)
+#endif  // CEF_API_REMOVED(13302)
 
 #if CEF_API_ADDED(13302)
   ///
@@ -207,8 +209,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef(added=13302,capi_name=set_child_ref_ptr_client_v2)--*/
-  virtual int
-  SetChildRefPtrClient(CefRefPtr<CefApiVersionTestRefPtrClientChildV2> val) = 0;
+  virtual int SetChildRefPtrClient(
+      CefRefPtr<CefApiVersionTestRefPtrClientChildV2> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -219,7 +221,7 @@ public:
   virtual CefRefPtr<CefApiVersionTestRefPtrClient>
   SetChildRefPtrClientAndReturnParent(
       CefRefPtr<CefApiVersionTestRefPtrClientChildV2> val) = 0;
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
   // CLIENT-SIDE REFPTR LIST VALUES
 
@@ -232,17 +234,18 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRefPtrClientList(
-      const std::vector<CefRefPtr<CefApiVersionTestRefPtrClient>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRefPtr<CefApiVersionTestRefPtrClient>>& val,
+      int val1,
+      int val2) = 0;
 
   ///
   /// Return an object list value by out-param.
   ///
   /*--cef(count_func=val:GetRefPtrLibraryListSize)--*/
-  virtual bool
-  GetRefPtrClientListByRef(RefPtrClientList &val,
-                           CefRefPtr<CefApiVersionTestRefPtrClient> val1,
-                           CefRefPtr<CefApiVersionTestRefPtrClient> val2) = 0;
+  virtual bool GetRefPtrClientListByRef(
+      RefPtrClientList& val,
+      CefRefPtr<CefApiVersionTestRefPtrClient> val1,
+      CefRefPtr<CefApiVersionTestRefPtrClient> val2) = 0;
 
   ///
   /// Return the number of object that will be output above.
@@ -256,8 +259,8 @@ public:
   /// Return an new library-side object.
   ///
   /*--cef()--*/
-  virtual CefOwnPtr<CefApiVersionTestScopedLibrary>
-  GetOwnPtrLibrary(int val) = 0;
+  virtual CefOwnPtr<CefApiVersionTestScopedLibrary> GetOwnPtrLibrary(
+      int val) = 0;
 
   ///
   /// Set an object. Returns the value from
@@ -265,16 +268,16 @@ public:
   /// This tests input and execution of a library-side object type.
   ///
   /*--cef()--*/
-  virtual int
-  SetOwnPtrLibrary(CefOwnPtr<CefApiVersionTestScopedLibrary> val) = 0;
+  virtual int SetOwnPtrLibrary(
+      CefOwnPtr<CefApiVersionTestScopedLibrary> val) = 0;
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
   /*--cef()--*/
-  virtual CefOwnPtr<CefApiVersionTestScopedLibrary>
-  SetOwnPtrLibraryAndReturn(CefOwnPtr<CefApiVersionTestScopedLibrary> val) = 0;
+  virtual CefOwnPtr<CefApiVersionTestScopedLibrary> SetOwnPtrLibraryAndReturn(
+      CefOwnPtr<CefApiVersionTestScopedLibrary> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -282,8 +285,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildOwnPtrLibrary(CefOwnPtr<CefApiVersionTestScopedLibraryChild> val) = 0;
+  virtual int SetChildOwnPtrLibrary(
+      CefOwnPtr<CefApiVersionTestScopedLibraryChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -309,8 +312,8 @@ public:
   /// of a client-side object type.
   ///
   /*--cef()--*/
-  virtual CefOwnPtr<CefApiVersionTestScopedClient>
-  SetOwnPtrClientAndReturn(CefOwnPtr<CefApiVersionTestScopedClient> val) = 0;
+  virtual CefOwnPtr<CefApiVersionTestScopedClient> SetOwnPtrClientAndReturn(
+      CefOwnPtr<CefApiVersionTestScopedClient> val) = 0;
 
 #if CEF_API_REMOVED(13302)
   ///
@@ -319,8 +322,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef(removed=13302)--*/
-  virtual int
-  SetChildOwnPtrClient(CefOwnPtr<CefApiVersionTestScopedClientChild> val) = 0;
+  virtual int SetChildOwnPtrClient(
+      CefOwnPtr<CefApiVersionTestScopedClientChild> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -330,7 +333,7 @@ public:
   virtual CefOwnPtr<CefApiVersionTestScopedClient>
   SetChildOwnPtrClientAndReturnParent(
       CefOwnPtr<CefApiVersionTestScopedClientChild> val) = 0;
-#endif // CEF_API_REMOVED(13302)
+#endif  // CEF_API_REMOVED(13302)
 
 #if CEF_API_ADDED(13302)
   ///
@@ -339,8 +342,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef(added=13302,capi_name=set_child_own_ptr_client_v2)--*/
-  virtual int
-  SetChildOwnPtrClient(CefOwnPtr<CefApiVersionTestScopedClientChildV2> val) = 0;
+  virtual int SetChildOwnPtrClient(
+      CefOwnPtr<CefApiVersionTestScopedClientChildV2> val) = 0;
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
@@ -351,7 +354,7 @@ public:
   virtual CefOwnPtr<CefApiVersionTestScopedClient>
   SetChildOwnPtrClientAndReturnParent(
       CefOwnPtr<CefApiVersionTestScopedClientChildV2> val) = 0;
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
   // LIBRARY-SIDE RAWPTR VALUES
 
@@ -361,8 +364,8 @@ public:
   /// This tests input and execution of a library-side object type.
   ///
   /*--cef()--*/
-  virtual int
-  SetRawPtrLibrary(CefRawPtr<CefApiVersionTestScopedLibrary> val) = 0;
+  virtual int SetRawPtrLibrary(
+      CefRawPtr<CefApiVersionTestScopedLibrary> val) = 0;
 
   ///
   /// Set a child object. Returns the value from
@@ -370,8 +373,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef()--*/
-  virtual int
-  SetChildRawPtrLibrary(CefRawPtr<CefApiVersionTestScopedLibraryChild> val) = 0;
+  virtual int SetChildRawPtrLibrary(
+      CefRawPtr<CefApiVersionTestScopedLibraryChild> val) = 0;
 
   // LIBRARY-SIDE RAWPTR LIST VALUES
 
@@ -384,8 +387,9 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRawPtrLibraryList(
-      const std::vector<CefRawPtr<CefApiVersionTestScopedLibrary>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRawPtr<CefApiVersionTestScopedLibrary>>& val,
+      int val1,
+      int val2) = 0;
 
   // CLIENT-SIDE RAWPTR VALUES
 
@@ -404,8 +408,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef(removed=13302)--*/
-  virtual int
-  SetChildRawPtrClient(CefRawPtr<CefApiVersionTestScopedClientChild> val) = 0;
+  virtual int SetChildRawPtrClient(
+      CefRawPtr<CefApiVersionTestScopedClientChild> val) = 0;
 #endif
 
 #if CEF_API_ADDED(13302)
@@ -415,8 +419,8 @@ public:
   /// side child object type and execution as the parent type.
   ///
   /*--cef(added=13302,capi_name=set_child_raw_ptr_client_v2)--*/
-  virtual int
-  SetChildRawPtrClient(CefRawPtr<CefApiVersionTestScopedClientChildV2> val) = 0;
+  virtual int SetChildRawPtrClient(
+      CefRawPtr<CefApiVersionTestScopedClientChildV2> val) = 0;
 #endif
 
   // CLIENT-SIDE RAWPTR LIST VALUES
@@ -430,8 +434,9 @@ public:
   ///
   /*--cef()--*/
   virtual bool SetRawPtrClientList(
-      const std::vector<CefRawPtr<CefApiVersionTestScopedClient>> &val,
-      int val1, int val2) = 0;
+      const std::vector<CefRawPtr<CefApiVersionTestScopedClient>>& val,
+      int val1,
+      int val2) = 0;
 };
 
 // REFPTR TYPES
@@ -441,7 +446,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefApiVersionTestRefPtrLibrary : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -547,7 +552,7 @@ public:
 /*--cef(source=library)--*/
 class CefApiVersionTestRefPtrLibraryChild
     : public CefApiVersionTestRefPtrLibrary {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -586,7 +591,7 @@ public:
 /*--cef(source=library,removed=13301)--*/
 class CefApiVersionTestRefPtrLibraryChildChild
     : public CefApiVersionTestRefPtrLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -605,7 +610,7 @@ public:
   /*--cef()--*/
   virtual void SetOtherOtherValue(int value) = 0;
 };
-#endif // CEF_API_REMOVED(13301)
+#endif  // CEF_API_REMOVED(13301)
 
 #if CEF_API_RANGE(13301, 13302)
 ///
@@ -616,7 +621,7 @@ public:
 /*--cef(source=library,added=13301,removed=13302)--*/
 class CefApiVersionTestRefPtrLibraryChildChildV1
     : public CefApiVersionTestRefPtrLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -642,7 +647,7 @@ public:
   /*--cef()--*/
   virtual void SetOtherOtherValue(int value) = 0;
 };
-#endif // CEF_API_RANGE(13301, 13302)
+#endif  // CEF_API_RANGE(13301, 13302)
 
 #if CEF_API_ADDED(13302)
 ///
@@ -652,7 +657,7 @@ public:
 /*--cef(source=library,added=13302)--*/
 class CefApiVersionTestRefPtrLibraryChildChildV2
     : public CefApiVersionTestRefPtrLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -682,14 +687,14 @@ public:
   /*--cef()--*/
   virtual void SetOtherOtherValue(int value) = 0;
 };
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
 ///
 /// Client-side test object for RefPtr.
 ///
 /*--cef(source=client)--*/
 class CefApiVersionTestRefPtrClient : public virtual CefBaseRefCounted {
-public:
+ public:
   // NOTE: API that has remained unchanged from the original version.
   // This will be ordered first in the C API struct.
 
@@ -752,7 +757,7 @@ public:
 /*--cef(source=client,removed=13302)--*/
 class CefApiVersionTestRefPtrClientChild
     : public CefApiVersionTestRefPtrClient {
-public:
+ public:
   // NOTE: Order of added/removed definitions doesn't matter, provided the order
   // doesn't change in the future.
 
@@ -772,7 +777,7 @@ public:
   virtual int GetOtherValue() = 0;
 #endif
 };
-#endif // CEF_API_REMOVED(13302)
+#endif  // CEF_API_REMOVED(13302)
 
 #if CEF_API_ADDED(13302)
 ///
@@ -782,7 +787,7 @@ public:
 /*--cef(source=client,added=13302)--*/
 class CefApiVersionTestRefPtrClientChildV2
     : public CefApiVersionTestRefPtrClient {
-public:
+ public:
   ///
   /// Return a value.
   ///
@@ -797,7 +802,7 @@ public:
   virtual int GetAnotherValue() = 0;
 #endif
 };
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
 // OWNPTR/RAWPTR TYPES
 
@@ -806,7 +811,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefApiVersionTestScopedLibrary : public CefBaseScoped {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -912,7 +917,7 @@ public:
 /*--cef(source=library)--*/
 class CefApiVersionTestScopedLibraryChild
     : public CefApiVersionTestScopedLibrary {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -951,7 +956,7 @@ public:
 /*--cef(source=library,removed=13301)--*/
 class CefApiVersionTestScopedLibraryChildChild
     : public CefApiVersionTestScopedLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -970,7 +975,7 @@ public:
   /*--cef()--*/
   virtual void SetOtherOtherValue(int value) = 0;
 };
-#endif // CEF_API_REMOVED(13301)
+#endif  // CEF_API_REMOVED(13301)
 
 #if CEF_API_RANGE(13301, 13302)
 ///
@@ -981,7 +986,7 @@ public:
 /*--cef(source=library,added=13301,removed=13302)--*/
 class CefApiVersionTestScopedLibraryChildChildV1
     : public CefApiVersionTestScopedLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -1007,7 +1012,7 @@ public:
   /*--cef()--*/
   virtual void SetOtherOtherValue(int value) = 0;
 };
-#endif // CEF_API_RANGE(13301, 13302)
+#endif  // CEF_API_RANGE(13301, 13302)
 
 #if CEF_API_ADDED(13302)
 ///
@@ -1017,7 +1022,7 @@ public:
 /*--cef(source=library,added=13302)--*/
 class CefApiVersionTestScopedLibraryChildChildV2
     : public CefApiVersionTestScopedLibraryChild {
-public:
+ public:
   ///
   /// Create the test object.
   ///
@@ -1047,14 +1052,14 @@ public:
   /*--cef()--*/
   virtual void SetOtherOtherValue(int value) = 0;
 };
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
 ///
 /// Client-side test object for OwnPtr/RawPtr.
 ///
 /*--cef(source=client)--*/
 class CefApiVersionTestScopedClient : public virtual CefBaseScoped {
-public:
+ public:
   // NOTE: API that has remained unchanged from the original version.
   // This will be ordered first in the C API struct.
 
@@ -1117,7 +1122,7 @@ public:
 /*--cef(source=client,removed=13302)--*/
 class CefApiVersionTestScopedClientChild
     : public CefApiVersionTestScopedClient {
-public:
+ public:
   // NOTE: Order of added/removed definitions doesn't matter, provided the order
   // doesn't change in the future.
 
@@ -1137,7 +1142,7 @@ public:
   virtual int GetOtherValue() = 0;
 #endif
 };
-#endif // CEF_API_REMOVED(13302)
+#endif  // CEF_API_REMOVED(13302)
 
 #if CEF_API_ADDED(13302)
 ///
@@ -1147,7 +1152,7 @@ public:
 /*--cef(source=client,added=13302)--*/
 class CefApiVersionTestScopedClientChildV2
     : public CefApiVersionTestScopedClient {
-public:
+ public:
   ///
   /// Return a value.
   ///
@@ -1162,6 +1167,6 @@ public:
   virtual int GetAnotherValue() = 0;
 #endif
 };
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
-#endif // CEF_INCLUDE_TEST_CEF_API_VERSION_TEST_H_
+#endif  // CEF_INCLUDE_TEST_CEF_API_VERSION_TEST_H_

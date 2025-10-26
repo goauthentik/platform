@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefDOMNodeCToCpp
     : public CefCToCppRefCounted<CefDOMNodeCToCpp, CefDOMNode, cef_domnode_t> {
-public:
+ public:
   CefDOMNodeCToCpp();
   virtual ~CefDOMNodeCToCpp();
 
@@ -42,7 +42,7 @@ public:
   bool IsSame(CefRefPtr<CefDOMNode> that) override;
   CefString GetName() override;
   CefString GetValue() override;
-  bool SetValue(const CefString &value) override;
+  bool SetValue(const CefString& value) override;
   CefString GetAsMarkup() override;
   CefRefPtr<CefDOMDocument> GetDocument() override;
   CefRefPtr<CefDOMNode> GetParent() override;
@@ -53,11 +53,11 @@ public:
   CefRefPtr<CefDOMNode> GetLastChild() override;
   CefString GetElementTagName() override;
   bool HasElementAttributes() override;
-  bool HasElementAttribute(const CefString &attrName) override;
-  CefString GetElementAttribute(const CefString &attrName) override;
-  void GetElementAttributes(AttributeMap &attrMap) override;
-  bool SetElementAttribute(const CefString &attrName,
-                           const CefString &value) override;
+  bool HasElementAttribute(const CefString& attrName) override;
+  CefString GetElementAttribute(const CefString& attrName) override;
+  void GetElementAttributes(AttributeMap& attrMap) override;
+  bool SetElementAttribute(const CefString& attrName,
+                           const CefString& value) override;
   CefString GetElementInnerText() override;
   CefRect GetElementBounds() override;
 };
@@ -65,4 +65,4 @@ public:
 constexpr auto CefDOMNodeCToCpp_Wrap = CefDOMNodeCToCpp::Wrap;
 constexpr auto CefDOMNodeCToCpp_Unwrap = CefDOMNodeCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_DOMNODE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_DOMNODE_CTOCPP_H_

@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefTaskCppToC
     : public CefCppToCRefCounted<CefTaskCppToC, CefTask, cef_task_t> {
-public:
+ public:
   CefTaskCppToC();
   virtual ~CefTaskCppToC();
 };
@@ -36,4 +36,4 @@ public:
 constexpr auto CefTaskCppToC_Wrap = CefTaskCppToC::Wrap;
 constexpr auto CefTaskCppToC_Unwrap = CefTaskCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_TASK_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_TASK_CPPTOC_H_

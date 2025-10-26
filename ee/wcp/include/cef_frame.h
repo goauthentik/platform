@@ -58,7 +58,7 @@ class CefV8Context;
 ///
 /*--cef(source=library)--*/
 class CefFrame : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// True if this object is currently attached to a valid frame.
   ///
@@ -149,7 +149,7 @@ public:
   /// Load the specified |url|.
   ///
   /*--cef()--*/
-  virtual void LoadURL(const CefString &url) = 0;
+  virtual void LoadURL(const CefString& url) = 0;
 
   ///
   /// Execute a string of JavaScript code in this frame. The |script_url|
@@ -159,8 +159,8 @@ public:
   /// error reporting.
   ///
   /*--cef(optional_param=script_url)--*/
-  virtual void ExecuteJavaScript(const CefString &code,
-                                 const CefString &script_url,
+  virtual void ExecuteJavaScript(const CefString& code,
+                                 const CefString& script_url,
                                  int start_line) = 0;
 
   ///
@@ -241,9 +241,9 @@ public:
   /// method.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefURLRequest>
-  CreateURLRequest(CefRefPtr<CefRequest> request,
-                   CefRefPtr<CefURLRequestClient> client) = 0;
+  virtual CefRefPtr<CefURLRequest> CreateURLRequest(
+      CefRefPtr<CefRequest> request,
+      CefRefPtr<CefURLRequestClient> client) = 0;
 
   ///
   /// Send a message to the specified |target_process|. Ownership of the message
@@ -258,4 +258,4 @@ public:
                                   CefRefPtr<CefProcessMessage> message) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_FRAME_H_
+#endif  // CEF_INCLUDE_CEF_FRAME_H_

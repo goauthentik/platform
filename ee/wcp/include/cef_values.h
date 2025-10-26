@@ -55,7 +55,7 @@ typedef cef_value_type_t CefValueType;
 ///
 /*--cef(source=library)--*/
 class CefValue : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Creates a new object.
   ///
@@ -203,7 +203,7 @@ public:
   /// set successfully.
   ///
   /*--cef(optional_param=value)--*/
-  virtual bool SetString(const CefString &value) = 0;
+  virtual bool SetString(const CefString& value) = 0;
 
   ///
   /// Sets the underlying value as type binary. Returns true if the value was
@@ -235,13 +235,13 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefBinaryValue : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Creates a new object that is not owned by any other object. The specified
   /// |data| will be copied.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefBinaryValue> Create(const void *data, size_t data_size);
+  static CefRefPtr<CefBinaryValue> Create(const void* data, size_t data_size);
 
   ///
   /// Returns true if this object is valid. This object may become invalid if
@@ -284,7 +284,7 @@ public:
   /// The returned pointer is valid as long as the CefBinaryValue is alive.
   ///
   /*--cef()--*/
-  virtual const void *GetRawData() = 0;
+  virtual const void* GetRawData() = 0;
 
   ///
   /// Returns the data size.
@@ -297,7 +297,8 @@ public:
   /// the specified byte |data_offset|. Returns the number of bytes read.
   ///
   /*--cef()--*/
-  virtual size_t GetData(void *buffer, size_t buffer_size,
+  virtual size_t GetData(void* buffer,
+                         size_t buffer_size,
                          size_t data_offset) = 0;
 };
 
@@ -307,7 +308,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefDictionaryValue : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef std::vector<CefString> KeyList;
 
   ///
@@ -376,26 +377,26 @@ public:
   /// Returns true if the current dictionary has a value for the given key.
   ///
   /*--cef()--*/
-  virtual bool HasKey(const CefString &key) = 0;
+  virtual bool HasKey(const CefString& key) = 0;
 
   ///
   /// Reads all keys for this dictionary into the specified vector.
   ///
   /*--cef()--*/
-  virtual bool GetKeys(KeyList &keys) = 0;
+  virtual bool GetKeys(KeyList& keys) = 0;
 
   ///
   /// Removes the value at the specified key. Returns true is the value was
   /// removed successfully.
   ///
   /*--cef()--*/
-  virtual bool Remove(const CefString &key) = 0;
+  virtual bool Remove(const CefString& key) = 0;
 
   ///
   /// Returns the value type for the specified key.
   ///
   /*--cef(default_retval=VTYPE_INVALID)--*/
-  virtual CefValueType GetType(const CefString &key) = 0;
+  virtual CefValueType GetType(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key. For simple types the returned
@@ -405,38 +406,38 @@ public:
   /// will modify this object.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefValue> GetValue(const CefString &key) = 0;
+  virtual CefRefPtr<CefValue> GetValue(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key as type bool.
   ///
   /*--cef()--*/
-  virtual bool GetBool(const CefString &key) = 0;
+  virtual bool GetBool(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key as type int.
   ///
   /*--cef()--*/
-  virtual int GetInt(const CefString &key) = 0;
+  virtual int GetInt(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key as type double.
   ///
   /*--cef()--*/
-  virtual double GetDouble(const CefString &key) = 0;
+  virtual double GetDouble(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key as type string.
   ///
   /*--cef()--*/
-  virtual CefString GetString(const CefString &key) = 0;
+  virtual CefString GetString(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key as type binary. The returned
   /// value will reference existing data.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefBinaryValue> GetBinary(const CefString &key) = 0;
+  virtual CefRefPtr<CefBinaryValue> GetBinary(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key as type dictionary. The returned
@@ -444,7 +445,7 @@ public:
   /// modify this object.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefDictionaryValue> GetDictionary(const CefString &key) = 0;
+  virtual CefRefPtr<CefDictionaryValue> GetDictionary(const CefString& key) = 0;
 
   ///
   /// Returns the value at the specified key as type list. The returned value
@@ -452,7 +453,7 @@ public:
   /// this object.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefListValue> GetList(const CefString &key) = 0;
+  virtual CefRefPtr<CefListValue> GetList(const CefString& key) = 0;
 
   ///
   /// Sets the value at the specified key. Returns true if the value was set
@@ -463,42 +464,42 @@ public:
   /// modify this object.
   ///
   /*--cef()--*/
-  virtual bool SetValue(const CefString &key, CefRefPtr<CefValue> value) = 0;
+  virtual bool SetValue(const CefString& key, CefRefPtr<CefValue> value) = 0;
 
   ///
   /// Sets the value at the specified key as type null. Returns true if the
   /// value was set successfully.
   ///
   /*--cef()--*/
-  virtual bool SetNull(const CefString &key) = 0;
+  virtual bool SetNull(const CefString& key) = 0;
 
   ///
   /// Sets the value at the specified key as type bool. Returns true if the
   /// value was set successfully.
   ///
   /*--cef()--*/
-  virtual bool SetBool(const CefString &key, bool value) = 0;
+  virtual bool SetBool(const CefString& key, bool value) = 0;
 
   ///
   /// Sets the value at the specified key as type int. Returns true if the
   /// value was set successfully.
   ///
   /*--cef()--*/
-  virtual bool SetInt(const CefString &key, int value) = 0;
+  virtual bool SetInt(const CefString& key, int value) = 0;
 
   ///
   /// Sets the value at the specified key as type double. Returns true if the
   /// value was set successfully.
   ///
   /*--cef()--*/
-  virtual bool SetDouble(const CefString &key, double value) = 0;
+  virtual bool SetDouble(const CefString& key, double value) = 0;
 
   ///
   /// Sets the value at the specified key as type string. Returns true if the
   /// value was set successfully.
   ///
   /*--cef(optional_param=value)--*/
-  virtual bool SetString(const CefString &key, const CefString &value) = 0;
+  virtual bool SetString(const CefString& key, const CefString& value) = 0;
 
   ///
   /// Sets the value at the specified key as type binary. Returns true if the
@@ -508,7 +509,7 @@ public:
   /// |value| reference will be invalidated.
   ///
   /*--cef()--*/
-  virtual bool SetBinary(const CefString &key,
+  virtual bool SetBinary(const CefString& key,
                          CefRefPtr<CefBinaryValue> value) = 0;
 
   ///
@@ -519,7 +520,7 @@ public:
   /// |value| reference will be invalidated.
   ///
   /*--cef()--*/
-  virtual bool SetDictionary(const CefString &key,
+  virtual bool SetDictionary(const CefString& key,
                              CefRefPtr<CefDictionaryValue> value) = 0;
 
   ///
@@ -530,7 +531,7 @@ public:
   /// |value| reference will be invalidated.
   ///
   /*--cef()--*/
-  virtual bool SetList(const CefString &key, CefRefPtr<CefListValue> value) = 0;
+  virtual bool SetList(const CefString& key, CefRefPtr<CefListValue> value) = 0;
 };
 
 ///
@@ -538,7 +539,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefListValue : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Creates a new object that is not owned by any other object.
   ///
@@ -720,7 +721,7 @@ public:
   /// value was set successfully.
   ///
   /*--cef(optional_param=value)--*/
-  virtual bool SetString(size_t index, const CefString &value) = 0;
+  virtual bool SetString(size_t index, const CefString& value) = 0;
 
   ///
   /// Sets the value at the specified index as type binary. Returns true if the
@@ -754,4 +755,4 @@ public:
   virtual bool SetList(size_t index, CefRefPtr<CefListValue> value) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_VALUES_H_
+#endif  // CEF_INCLUDE_CEF_VALUES_H_

@@ -49,7 +49,7 @@ class CefTextfield;
 ///
 /*--cef(source=client)--*/
 class CefTextfieldDelegate : public CefViewDelegate {
-public:
+ public:
   ///
   /// Called when |textfield| receives a keyboard event. |event| contains
   /// information about the keyboard event. Return true if the keyboard event
@@ -57,7 +57,7 @@ public:
   ///
   /*--cef()--*/
   virtual bool OnKeyEvent(CefRefPtr<CefTextfield> textfield,
-                          const CefKeyEvent &event) {
+                          const CefKeyEvent& event) {
     return false;
   }
 
@@ -68,4 +68,4 @@ public:
   virtual void OnAfterUserAction(CefRefPtr<CefTextfield> textfield) {}
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_TEXTFIELD_DELEGATE_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_TEXTFIELD_DELEGATE_H_

@@ -71,9 +71,9 @@ typedef struct _cef_drag_handler_t {
   /// operation. Return false (0) for default drag handling behavior or true (1)
   /// to cancel the drag event.
   ///
-  int(CEF_CALLBACK *on_drag_enter)(struct _cef_drag_handler_t *self,
-                                   struct _cef_browser_t *browser,
-                                   struct _cef_drag_data_t *dragData,
+  int(CEF_CALLBACK* on_drag_enter)(struct _cef_drag_handler_t* self,
+                                   struct _cef_browser_t* browser,
+                                   struct _cef_drag_data_t* dragData,
                                    cef_drag_operations_mask_t mask);
 
   ///
@@ -83,14 +83,16 @@ typedef struct _cef_drag_handler_t {
   /// never be called. If the last draggable region is removed from a document
   /// this function will be called with an NULL vector.
   ///
-  void(CEF_CALLBACK *on_draggable_regions_changed)(
-      struct _cef_drag_handler_t *self, struct _cef_browser_t *browser,
-      struct _cef_frame_t *frame, size_t regionsCount,
-      cef_draggable_region_t const *regions);
+  void(CEF_CALLBACK* on_draggable_regions_changed)(
+      struct _cef_drag_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      size_t regionsCount,
+      cef_draggable_region_t const* regions);
 } cef_drag_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_DRAG_HANDLER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_DRAG_HANDLER_CAPI_H_

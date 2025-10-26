@@ -36,7 +36,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/memory/ref_counted.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -56,11 +56,11 @@ namespace base {
 namespace cef_subtle {
 
 class RefCountedBase {
-public:
+ public:
   bool HasOneRef() const { return ref_count_ == 1; }
   bool HasAtLeastOneRef() const { return ref_count_ >= 1; }
 
-protected:
+ protected:
   explicit RefCountedBase(StartRefCountFromZeroTag) {
 #if DCHECK_IS_ON()
     thread_checker_.DetachFromThread();
@@ -74,8 +74,8 @@ protected:
 #endif
   }
 
-  RefCountedBase(const RefCountedBase &) = delete;
-  RefCountedBase &operator=(const RefCountedBase &) = delete;
+  RefCountedBase(const RefCountedBase&) = delete;
+  RefCountedBase& operator=(const RefCountedBase&) = delete;
 
   ~RefCountedBase() {
 #if DCHECK_IS_ON()
@@ -140,8 +140,9 @@ protected:
 #endif
   }
 
-private:
-  template <typename U> friend scoped_refptr<U> base::AdoptRef(U *);
+ private:
+  template <typename U>
+  friend scoped_refptr<U> base::AdoptRef(U*);
 
   void Adopted() const {
 #if DCHECK_IS_ON()
@@ -174,11 +175,11 @@ private:
 };
 
 class RefCountedThreadSafeBase {
-public:
+ public:
   bool HasOneRef() const;
   bool HasAtLeastOneRef() const;
 
-protected:
+ protected:
   explicit constexpr RefCountedThreadSafeBase(StartRefCountFromZeroTag) {}
   explicit constexpr RefCountedThreadSafeBase(StartRefCountFromOneTag)
       : ref_count_(1) {
@@ -187,9 +188,8 @@ protected:
 #endif
   }
 
-  RefCountedThreadSafeBase(const RefCountedThreadSafeBase &) = delete;
-  RefCountedThreadSafeBase &
-  operator=(const RefCountedThreadSafeBase &) = delete;
+  RefCountedThreadSafeBase(const RefCountedThreadSafeBase&) = delete;
+  RefCountedThreadSafeBase& operator=(const RefCountedThreadSafeBase&) = delete;
 
 #if DCHECK_IS_ON()
   ~RefCountedThreadSafeBase();
@@ -212,8 +212,9 @@ protected:
   void AddRefWithCheck() const;
 #endif
 
-private:
-  template <typename U> friend scoped_refptr<U> base::AdoptRef(U *);
+ private:
+  template <typename U>
+  friend scoped_refptr<U> base::AdoptRef(U*);
 
   void Adopted() const {
 #if DCHECK_IS_ON()
@@ -276,7 +277,7 @@ private:
 // TODO(tzik): Cleanup existing use cases and remove
 // ScopedAllowCrossThreadRefCountAccess.
 class ScopedAllowCrossThreadRefCountAccess final {
-public:
+ public:
 #if DCHECK_IS_ON()
   ScopedAllowCrossThreadRefCountAccess();
   ~ScopedAllowCrossThreadRefCountAccess();
@@ -286,7 +287,7 @@ public:
 #endif
 };
 
-} // namespace cef_subtle
+}  // namespace cef_subtle
 
 using ScopedAllowCrossThreadRefCountAccess =
     cef_subtle::ScopedAllowCrossThreadRefCountAccess;
@@ -311,18 +312,20 @@ using ScopedAllowCrossThreadRefCountAccess =
 ///    And start-from-one ref count is a step to merge WTF::RefCounted into
 ///    base::RefCounted.
 ///
-#define REQUIRE_ADOPTION_FOR_REFCOUNTED_TYPE()                                 \
-  static constexpr ::base::cef_subtle::StartRefCountFromOneTag                 \
+#define REQUIRE_ADOPTION_FOR_REFCOUNTED_TYPE()                 \
+  static constexpr ::base::cef_subtle::StartRefCountFromOneTag \
       kRefCountPreference = ::base::cef_subtle::kStartRefCountFromOneTag
 
-template <class T, typename Traits> class RefCounted;
+template <class T, typename Traits>
+class RefCounted;
 
 ///
 /// Default traits for RefCounted<T>.  Deletes the object when its ref count
 /// reaches 0. Overload to delete it on a different thread etc.
 ///
-template <typename T> struct DefaultRefCountedTraits {
-  static void Destruct(const T *x) {
+template <typename T>
+struct DefaultRefCountedTraits {
+  static void Destruct(const T* x) {
     RefCounted<T, DefaultRefCountedTraits>::DeleteInternal(x);
   }
 };
@@ -357,14 +360,14 @@ template <typename T> struct DefaultRefCountedTraits {
 ///
 template <class T, typename Traits = DefaultRefCountedTraits<T>>
 class RefCounted : public cef_subtle::RefCountedBase {
-public:
+ public:
   static constexpr cef_subtle::StartRefCountFromZeroTag kRefCountPreference =
       cef_subtle::kStartRefCountFromZeroTag;
 
   RefCounted() : cef_subtle::RefCountedBase(T::kRefCountPreference) {}
 
-  RefCounted(const RefCounted &) = delete;
-  RefCounted &operator=(const RefCounted &) = delete;
+  RefCounted(const RefCounted&) = delete;
+  RefCounted& operator=(const RefCounted&) = delete;
 
   void AddRef() const { cef_subtle::RefCountedBase::AddRef(); }
 
@@ -375,27 +378,32 @@ public:
       // lifetime guarantees of the refcounting system.
       ANALYZER_SKIP_THIS_PATH();
 
-      Traits::Destruct(static_cast<const T *>(this));
+      Traits::Destruct(static_cast<const T*>(this));
     }
   }
 
-protected:
+ protected:
   ~RefCounted() = default;
 
-private:
+ private:
   friend struct DefaultRefCountedTraits<T>;
-  template <typename U> static void DeleteInternal(const U *x) { delete x; }
+  template <typename U>
+  static void DeleteInternal(const U* x) {
+    delete x;
+  }
 };
 
 // Forward declaration.
-template <class T, typename Traits> class RefCountedThreadSafe;
+template <class T, typename Traits>
+class RefCountedThreadSafe;
 
 ///
 /// Default traits for RefCountedThreadSafe<T>. Deletes the object when its ref
 /// count reaches 0. Overload to delete it on a different thread etc.
 ///
-template <typename T> struct DefaultRefCountedThreadSafeTraits {
-  static void Destruct(const T *x) {
+template <typename T>
+struct DefaultRefCountedThreadSafeTraits {
+  static void Destruct(const T* x) {
     // Delete through RefCountedThreadSafe to make child classes only need to be
     // friend with RefCountedThreadSafe instead of this struct, which is an
     // implementation detail.
@@ -426,31 +434,34 @@ template <typename T> struct DefaultRefCountedThreadSafeTraits {
 ///
 template <class T, typename Traits = DefaultRefCountedThreadSafeTraits<T>>
 class RefCountedThreadSafe : public cef_subtle::RefCountedThreadSafeBase {
-public:
+ public:
   static constexpr cef_subtle::StartRefCountFromZeroTag kRefCountPreference =
       cef_subtle::kStartRefCountFromZeroTag;
 
   explicit RefCountedThreadSafe()
       : cef_subtle::RefCountedThreadSafeBase(T::kRefCountPreference) {}
 
-  RefCountedThreadSafe(const RefCountedThreadSafe &) = delete;
-  RefCountedThreadSafe &operator=(const RefCountedThreadSafe &) = delete;
+  RefCountedThreadSafe(const RefCountedThreadSafe&) = delete;
+  RefCountedThreadSafe& operator=(const RefCountedThreadSafe&) = delete;
 
   void AddRef() const { AddRefImpl(T::kRefCountPreference); }
 
   void Release() const {
     if (cef_subtle::RefCountedThreadSafeBase::Release()) {
       ANALYZER_SKIP_THIS_PATH();
-      Traits::Destruct(static_cast<const T *>(this));
+      Traits::Destruct(static_cast<const T*>(this));
     }
   }
 
-protected:
+ protected:
   ~RefCountedThreadSafe() = default;
 
-private:
+ private:
   friend struct DefaultRefCountedThreadSafeTraits<T>;
-  template <typename U> static void DeleteInternal(const U *x) { delete x; }
+  template <typename U>
+  static void DeleteInternal(const U* x) {
+    delete x;
+  }
 
   void AddRefImpl(cef_subtle::StartRefCountFromZeroTag) const {
     cef_subtle::RefCountedThreadSafeBase::AddRef();
@@ -468,33 +479,33 @@ private:
 template <typename T>
 class RefCountedData
     : public base::RefCountedThreadSafe<base::RefCountedData<T>> {
-public:
+ public:
   RefCountedData() : data() {}
-  RefCountedData(const T &in_value) : data(in_value) {}
-  RefCountedData(T &&in_value) : data(std::move(in_value)) {}
+  RefCountedData(const T& in_value) : data(in_value) {}
+  RefCountedData(T&& in_value) : data(std::move(in_value)) {}
   template <typename... Args>
-  explicit RefCountedData(std::in_place_t, Args &&...args)
+  explicit RefCountedData(std::in_place_t, Args&&... args)
       : data(std::forward<Args>(args)...) {}
 
   T data;
 
-private:
+ private:
   friend class base::RefCountedThreadSafe<base::RefCountedData<T>>;
   ~RefCountedData() = default;
 };
 
 template <typename T>
-bool operator==(const RefCountedData<T> &lhs, const RefCountedData<T> &rhs) {
+bool operator==(const RefCountedData<T>& lhs, const RefCountedData<T>& rhs) {
   return lhs.data == rhs.data;
 }
 
 template <typename T>
-bool operator!=(const RefCountedData<T> &lhs, const RefCountedData<T> &rhs) {
+bool operator!=(const RefCountedData<T>& lhs, const RefCountedData<T>& rhs) {
   return !(lhs == rhs);
 }
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_REF_COUNTED_H_
+#endif  // CEF_INCLUDE_BASE_CEF_REF_COUNTED_H_

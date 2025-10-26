@@ -32,7 +32,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefLayoutCToCpp
     : public CefCToCppRefCounted<CefLayoutCToCpp, CefLayout, cef_layout_t> {
-public:
+ public:
   CefLayoutCToCpp();
   virtual ~CefLayoutCToCpp();
 
@@ -45,4 +45,4 @@ public:
 constexpr auto CefLayoutCToCpp_Wrap = CefLayoutCToCpp::Wrap;
 constexpr auto CefLayoutCToCpp_Unwrap = CefLayoutCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_LAYOUT_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_LAYOUT_CTOCPP_H_

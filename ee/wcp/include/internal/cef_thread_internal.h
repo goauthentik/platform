@@ -75,6 +75,6 @@ cef_get_current_platform_thread_handle(void);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_THREAD_INTERNAL_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_THREAD_INTERNAL_H_

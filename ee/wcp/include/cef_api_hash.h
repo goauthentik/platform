@@ -70,8 +70,8 @@
 #endif
 
 #if !defined(GENERATING_CEF_API_HASH)
-#if CEF_API_VERSION < CEF_API_VERSION_MIN ||                                   \
-    (CEF_API_VERSION > CEF_API_VERSION_LAST && CEF_API_VERSION != CEF_NEXT &&  \
+#if CEF_API_VERSION < CEF_API_VERSION_MIN ||                                  \
+    (CEF_API_VERSION > CEF_API_VERSION_LAST && CEF_API_VERSION != CEF_NEXT && \
      CEF_API_VERSION != CEF_EXPERIMENTAL)
 #error Building with unsupported CEF_API_VERSION value
 #endif
@@ -92,14 +92,14 @@
 #define _CEF_AV_LT(v) 1
 #define _CEF_AV_GE(v) 1
 
-#else // !defined(BUILDING_CEF_SHARED)
+#else  // !defined(BUILDING_CEF_SHARED)
 
 #define _CEF_AV_CMP(v, op) (CEF_API_VERSION op v)
 
 #define _CEF_AV_LT(v) _CEF_AV_CMP(v, <)
 #define _CEF_AV_GE(v) _CEF_AV_CMP(v, >=)
 
-#endif // !defined(BUILDING_CEF_SHARED)
+#endif  // !defined(BUILDING_CEF_SHARED)
 
 ///
 /// API was added in the specified version.
@@ -131,7 +131,7 @@ extern "C" {
 /// 1 - CEF_API_HASH_UNIVERSAL (deprecated, same as CEF_API_HASH_PLATFORM)
 /// 2 - CEF_COMMIT_HASH (from cef_version.h)
 ///
-CEF_EXPORT const char *cef_api_hash(int version, int entry);
+CEF_EXPORT const char* cef_api_hash(int version, int entry);
 
 ///
 /// Returns the CEF API version that was configured by the first call to
@@ -143,4 +143,4 @@ CEF_EXPORT int cef_api_version();
 }
 #endif
 
-#endif // CEF_INCLUDE_CEF_API_HASH_H_
+#endif  // CEF_INCLUDE_CEF_API_HASH_H_

@@ -50,7 +50,7 @@
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefResourceBundle : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_scale_factor_t ScaleFactor;
 
   ///
@@ -88,8 +88,9 @@ public:
   /// |resource_id| values.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefBinaryValue>
-  GetDataResourceForScale(int resource_id, ScaleFactor scale_factor) = 0;
+  virtual CefRefPtr<CefBinaryValue> GetDataResourceForScale(
+      int resource_id,
+      ScaleFactor scale_factor) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_RESOURCE_BUNDLE_H_
+#endif  // CEF_INCLUDE_CEF_RESOURCE_BUNDLE_H_

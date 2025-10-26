@@ -33,7 +33,7 @@ class CefApiVersionTestRefPtrClientChildV2CppToC
           CefApiVersionTestRefPtrClientChildV2CppToC,
           CefApiVersionTestRefPtrClientChildV2,
           cef_api_version_test_ref_ptr_client_child_v2_t> {
-public:
+ public:
   CefApiVersionTestRefPtrClientChildV2CppToC();
   virtual ~CefApiVersionTestRefPtrClientChildV2CppToC();
 };
@@ -43,6 +43,6 @@ constexpr auto CefApiVersionTestRefPtrClientChildV2CppToC_Wrap =
 constexpr auto CefApiVersionTestRefPtrClientChildV2CppToC_Unwrap =
     CefApiVersionTestRefPtrClientChildV2CppToC::Unwrap;
 
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_REF_PTR_CLIENT_CHILD_V2_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_REF_PTR_CLIENT_CHILD_V2_CPPTOC_H_

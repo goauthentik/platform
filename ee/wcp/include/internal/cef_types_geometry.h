@@ -75,4 +75,4 @@ typedef struct _cef_insets_t {
 }
 #endif
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_TYPES_GEOMETRY_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_GEOMETRY_H_

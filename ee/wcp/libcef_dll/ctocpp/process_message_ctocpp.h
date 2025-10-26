@@ -27,9 +27,10 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefProcessMessageCToCpp
-    : public CefCToCppRefCounted<CefProcessMessageCToCpp, CefProcessMessage,
+    : public CefCToCppRefCounted<CefProcessMessageCToCpp,
+                                 CefProcessMessage,
                                  cef_process_message_t> {
-public:
+ public:
   CefProcessMessageCToCpp();
   virtual ~CefProcessMessageCToCpp();
 
@@ -45,4 +46,4 @@ public:
 constexpr auto CefProcessMessageCToCpp_Wrap = CefProcessMessageCToCpp::Wrap;
 constexpr auto CefProcessMessageCToCpp_Unwrap = CefProcessMessageCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_PROCESS_MESSAGE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_PROCESS_MESSAGE_CTOCPP_H_

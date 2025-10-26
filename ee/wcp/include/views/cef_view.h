@@ -55,7 +55,7 @@ class CefWindow;
 ///
 /*--cef(source=library)--*/
 class CefView : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns this View as a BrowserView or NULL if this is not a BrowserView.
   ///
@@ -179,7 +179,7 @@ public:
   /// coordinates, or DIP screen coordinates if there is no parent.
   ///
   /*--cef()--*/
-  virtual void SetBounds(const CefRect &bounds) = 0;
+  virtual void SetBounds(const CefRect& bounds) = 0;
 
   ///
   /// Returns the bounds (size and position) of this View in parent coordinates,
@@ -200,7 +200,7 @@ public:
   /// parent coordinates, or DIP screen coordinates if there is no parent.
   ///
   /*--cef()--*/
-  virtual void SetSize(const CefSize &size) = 0;
+  virtual void SetSize(const CefSize& size) = 0;
 
   ///
   /// Returns the size of this View in parent coordinates, or DIP screen
@@ -214,7 +214,7 @@ public:
   /// parent coordinates, or DIP screen coordinates if there is no parent.
   ///
   /*--cef()--*/
-  virtual void SetPosition(const CefPoint &position) = 0;
+  virtual void SetPosition(const CefPoint& position) = 0;
 
   ///
   /// Returns the position of this View. Position is in parent coordinates, or
@@ -228,7 +228,7 @@ public:
   /// screen coordinates if there is no parent.
   ///
   /*--cef()--*/
-  virtual void SetInsets(const CefInsets &insets) = 0;
+  virtual void SetInsets(const CefInsets& insets) = 0;
 
   ///
   /// Returns the insets for this View in parent coordinates, or DIP screen
@@ -400,7 +400,7 @@ public:
   /// conversion to display-specific pixel coordinates is desired.
   ///
   /*--cef()--*/
-  virtual bool ConvertPointToScreen(CefPoint &point) = 0;
+  virtual bool ConvertPointToScreen(CefPoint& point) = 0;
 
   ///
   /// Convert |point| to this View's coordinate system from DIP screen
@@ -410,7 +410,7 @@ public:
   /// conversion from display-specific pixel coordinates is necessary.
   ///
   /*--cef()--*/
-  virtual bool ConvertPointFromScreen(CefPoint &point) = 0;
+  virtual bool ConvertPointFromScreen(CefPoint& point) = 0;
 
   ///
   /// Convert |point| from this View's coordinate system to that of the Window.
@@ -418,7 +418,7 @@ public:
   /// if the conversion is successful or false otherwise.
   ///
   /*--cef()--*/
-  virtual bool ConvertPointToWindow(CefPoint &point) = 0;
+  virtual bool ConvertPointToWindow(CefPoint& point) = 0;
 
   ///
   /// Convert |point| to this View's coordinate system from that of the Window.
@@ -426,7 +426,7 @@ public:
   /// if the conversion is successful or false otherwise.
   ///
   /*--cef()--*/
-  virtual bool ConvertPointFromWindow(CefPoint &point) = 0;
+  virtual bool ConvertPointFromWindow(CefPoint& point) = 0;
 
   ///
   /// Convert |point| from this View's coordinate system to that of |view|.
@@ -435,7 +435,7 @@ public:
   /// otherwise.
   ///
   /*--cef()--*/
-  virtual bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint &point) = 0;
+  virtual bool ConvertPointToView(CefRefPtr<CefView> view, CefPoint& point) = 0;
 
   ///
   /// Convert |point| to this View's coordinate system from that |view|. |view|
@@ -445,7 +445,7 @@ public:
   ///
   /*--cef()--*/
   virtual bool ConvertPointFromView(CefRefPtr<CefView> view,
-                                    CefPoint &point) = 0;
+                                    CefPoint& point) = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_VIEW_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_VIEW_H_

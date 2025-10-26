@@ -70,20 +70,21 @@ typedef struct _cef_view_delegate_t {
   /// Return the preferred size for |view|. The Layout will use this information
   /// to determine the display size.
   ///
-  cef_size_t(CEF_CALLBACK *get_preferred_size)(
-      struct _cef_view_delegate_t *self, struct _cef_view_t *view);
+  cef_size_t(CEF_CALLBACK* get_preferred_size)(
+      struct _cef_view_delegate_t* self,
+      struct _cef_view_t* view);
 
   ///
   /// Return the minimum size for |view|.
   ///
-  cef_size_t(CEF_CALLBACK *get_minimum_size)(struct _cef_view_delegate_t *self,
-                                             struct _cef_view_t *view);
+  cef_size_t(CEF_CALLBACK* get_minimum_size)(struct _cef_view_delegate_t* self,
+                                             struct _cef_view_t* view);
 
   ///
   /// Return the maximum size for |view|.
   ///
-  cef_size_t(CEF_CALLBACK *get_maximum_size)(struct _cef_view_delegate_t *self,
-                                             struct _cef_view_t *view);
+  cef_size_t(CEF_CALLBACK* get_maximum_size)(struct _cef_view_delegate_t* self,
+                                             struct _cef_view_t* view);
 
   ///
   /// Return the height necessary to display |view| with the provided |width|.
@@ -91,8 +92,9 @@ typedef struct _cef_view_delegate_t {
   /// default. Override if |view|'s preferred height depends upon the width (for
   /// example, with Labels).
   ///
-  int(CEF_CALLBACK *get_height_for_width)(struct _cef_view_delegate_t *self,
-                                          struct _cef_view_t *view, int width);
+  int(CEF_CALLBACK* get_height_for_width)(struct _cef_view_delegate_t* self,
+                                          struct _cef_view_t* view,
+                                          int width);
 
   ///
   /// Called when the parent of |view| has changed. If |view| is being added to
@@ -101,10 +103,10 @@ typedef struct _cef_view_delegate_t {
   /// remove notification will be sent before the add notification. Do not
   /// modify the view hierarchy in this callback.
   ///
-  void(CEF_CALLBACK *on_parent_view_changed)(struct _cef_view_delegate_t *self,
-                                             struct _cef_view_t *view,
+  void(CEF_CALLBACK* on_parent_view_changed)(struct _cef_view_delegate_t* self,
+                                             struct _cef_view_t* view,
                                              int added,
-                                             struct _cef_view_t *parent);
+                                             struct _cef_view_t* parent);
 
   ///
   /// Called when a child of |view| has changed. If |child| is being added to
@@ -114,34 +116,36 @@ typedef struct _cef_view_delegate_t {
   /// notification is sent to the new parent. Do not modify the view hierarchy
   /// in this callback.
   ///
-  void(CEF_CALLBACK *on_child_view_changed)(struct _cef_view_delegate_t *self,
-                                            struct _cef_view_t *view, int added,
-                                            struct _cef_view_t *child);
+  void(CEF_CALLBACK* on_child_view_changed)(struct _cef_view_delegate_t* self,
+                                            struct _cef_view_t* view,
+                                            int added,
+                                            struct _cef_view_t* child);
 
   ///
   /// Called when |view| is added or removed from the cef_window_t.
   ///
-  void(CEF_CALLBACK *on_window_changed)(struct _cef_view_delegate_t *self,
-                                        struct _cef_view_t *view, int added);
+  void(CEF_CALLBACK* on_window_changed)(struct _cef_view_delegate_t* self,
+                                        struct _cef_view_t* view,
+                                        int added);
 
   ///
   /// Called when the layout of |view| has changed.
   ///
-  void(CEF_CALLBACK *on_layout_changed)(struct _cef_view_delegate_t *self,
-                                        struct _cef_view_t *view,
-                                        const cef_rect_t *new_bounds);
+  void(CEF_CALLBACK* on_layout_changed)(struct _cef_view_delegate_t* self,
+                                        struct _cef_view_t* view,
+                                        const cef_rect_t* new_bounds);
 
   ///
   /// Called when |view| gains focus.
   ///
-  void(CEF_CALLBACK *on_focus)(struct _cef_view_delegate_t *self,
-                               struct _cef_view_t *view);
+  void(CEF_CALLBACK* on_focus)(struct _cef_view_delegate_t* self,
+                               struct _cef_view_t* view);
 
   ///
   /// Called when |view| loses focus.
   ///
-  void(CEF_CALLBACK *on_blur)(struct _cef_view_delegate_t *self,
-                              struct _cef_view_t *view);
+  void(CEF_CALLBACK* on_blur)(struct _cef_view_delegate_t* self,
+                              struct _cef_view_t* view);
 
   ///
   /// Called when the theme for |view| has changed, after the new theme colors
@@ -162,12 +166,12 @@ typedef struct _cef_view_delegate_t {
   /// specific function. See cef_window_t::SetThemeColor documentation for how
   /// to customize additional Window theme colors.
   ///
-  void(CEF_CALLBACK *on_theme_changed)(struct _cef_view_delegate_t *self,
-                                       struct _cef_view_t *view);
+  void(CEF_CALLBACK* on_theme_changed)(struct _cef_view_delegate_t* self,
+                                       struct _cef_view_t* view);
 } cef_view_delegate_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_VIEW_DELEGATE_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_VIEW_DELEGATE_CAPI_H_

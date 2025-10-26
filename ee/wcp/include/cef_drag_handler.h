@@ -49,7 +49,7 @@
 ///
 /*--cef(source=client)--*/
 class CefDragHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_drag_operations_mask_t DragOperationsMask;
 
   ///
@@ -73,10 +73,10 @@ public:
   /// this method will be called with an empty vector.
   ///
   /*--cef()--*/
-  virtual void
-  OnDraggableRegionsChanged(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame,
-                            const std::vector<CefDraggableRegion> &regions) {}
+  virtual void OnDraggableRegionsChanged(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      const std::vector<CefDraggableRegion>& regions) {}
 };
 
-#endif // CEF_INCLUDE_CEF_DRAG_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_DRAG_HANDLER_H_

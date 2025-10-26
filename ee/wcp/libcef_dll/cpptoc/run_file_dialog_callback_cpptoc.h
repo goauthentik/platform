@@ -32,7 +32,7 @@ class CefRunFileDialogCallbackCppToC
     : public CefCppToCRefCounted<CefRunFileDialogCallbackCppToC,
                                  CefRunFileDialogCallback,
                                  cef_run_file_dialog_callback_t> {
-public:
+ public:
   CefRunFileDialogCallbackCppToC();
   virtual ~CefRunFileDialogCallbackCppToC();
 };
@@ -42,4 +42,4 @@ constexpr auto CefRunFileDialogCallbackCppToC_Wrap =
 constexpr auto CefRunFileDialogCallbackCppToC_Unwrap =
     CefRunFileDialogCallbackCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_RUN_FILE_DIALOG_CALLBACK_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_RUN_FILE_DIALOG_CALLBACK_CPPTOC_H_

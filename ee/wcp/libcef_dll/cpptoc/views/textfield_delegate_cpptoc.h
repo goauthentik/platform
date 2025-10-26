@@ -32,7 +32,7 @@ class CefTextfieldDelegateCppToC
     : public CefCppToCRefCounted<CefTextfieldDelegateCppToC,
                                  CefTextfieldDelegate,
                                  cef_textfield_delegate_t> {
-public:
+ public:
   CefTextfieldDelegateCppToC();
   virtual ~CefTextfieldDelegateCppToC();
 };
@@ -42,4 +42,4 @@ constexpr auto CefTextfieldDelegateCppToC_Wrap =
 constexpr auto CefTextfieldDelegateCppToC_Unwrap =
     CefTextfieldDelegateCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_VIEWS_TEXTFIELD_DELEGATE_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_TEXTFIELD_DELEGATE_CPPTOC_H_

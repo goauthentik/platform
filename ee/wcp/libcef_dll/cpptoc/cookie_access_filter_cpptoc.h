@@ -30,7 +30,7 @@ class CefCookieAccessFilterCppToC
     : public CefCppToCRefCounted<CefCookieAccessFilterCppToC,
                                  CefCookieAccessFilter,
                                  cef_cookie_access_filter_t> {
-public:
+ public:
   CefCookieAccessFilterCppToC();
   virtual ~CefCookieAccessFilterCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefCookieAccessFilterCppToC_Wrap =
 constexpr auto CefCookieAccessFilterCppToC_Unwrap =
     CefCookieAccessFilterCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_COOKIE_ACCESS_FILTER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_COOKIE_ACCESS_FILTER_CPPTOC_H_

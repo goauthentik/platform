@@ -27,9 +27,10 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCommandHandlerCppToC
-    : public CefCppToCRefCounted<CefCommandHandlerCppToC, CefCommandHandler,
+    : public CefCppToCRefCounted<CefCommandHandlerCppToC,
+                                 CefCommandHandler,
                                  cef_command_handler_t> {
-public:
+ public:
   CefCommandHandlerCppToC();
   virtual ~CefCommandHandlerCppToC();
 };
@@ -37,4 +38,4 @@ public:
 constexpr auto CefCommandHandlerCppToC_Wrap = CefCommandHandlerCppToC::Wrap;
 constexpr auto CefCommandHandlerCppToC_Unwrap = CefCommandHandlerCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_COMMAND_HANDLER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_COMMAND_HANDLER_CPPTOC_H_

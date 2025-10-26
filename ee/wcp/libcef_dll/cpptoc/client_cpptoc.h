@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefClientCppToC
     : public CefCppToCRefCounted<CefClientCppToC, CefClient, cef_client_t> {
-public:
+ public:
   CefClientCppToC();
   virtual ~CefClientCppToC();
 };
@@ -36,4 +36,4 @@ public:
 constexpr auto CefClientCppToC_Wrap = CefClientCppToC::Wrap;
 constexpr auto CefClientCppToC_Unwrap = CefClientCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_CLIENT_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_CLIENT_CPPTOC_H_

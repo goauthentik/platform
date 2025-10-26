@@ -35,7 +35,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/compiler_specific.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -65,11 +65,11 @@
 // __has_feature and __has_attribute don't exist for MSVC.
 #if !defined(__has_feature)
 #define __has_feature(x) 0
-#endif // !defined(__has_feature)
+#endif  // !defined(__has_feature)
 
 #if !defined(__has_attribute)
 #define __has_attribute(x) 0
-#endif // !defined(__has_attribute)
+#endif  // !defined(__has_attribute)
 
 // Annotate a function indicating it should not be inlined.
 // Use like:
@@ -152,7 +152,7 @@
 // (This is undocumented but matches what the system C headers do.)
 // For member functions, the implicit this parameter counts as index 1.
 #if defined(COMPILER_GCC) || defined(__clang__)
-#define PRINTF_FORMAT(format_param, dots_param)                                \
+#define PRINTF_FORMAT(format_param, dots_param) \
   __attribute__((format(printf, format_param, dots_param)))
 #else
 #define PRINTF_FORMAT(format_param, dots_param)
@@ -188,12 +188,12 @@
 // If any bits are uninitialized, crash with an MSan report.
 // Use this to sanitize data which MSan won't be able to track, e.g. before
 // passing data to another process via shared memory.
-#define MSAN_CHECK_MEM_IS_INITIALIZED(p, size)                                 \
+#define MSAN_CHECK_MEM_IS_INITIALIZED(p, size) \
   __msan_check_mem_is_initialized(p, size)
-#else // MEMORY_SANITIZER
+#else  // MEMORY_SANITIZER
 #define MSAN_UNPOISON(p, size)
 #define MSAN_CHECK_MEM_IS_INITIALIZED(p, size)
-#endif // MEMORY_SANITIZER
+#endif  // MEMORY_SANITIZER
 
 // DISABLE_CFI_PERF -- Disable Control Flow Integrity for perf reasons.
 #if !defined(DISABLE_CFI_PERF)
@@ -221,10 +221,10 @@
 #if !defined(CDECL)
 #if defined(OS_WIN)
 #define CDECL __cdecl
-#else // defined(OS_WIN)
+#else  // defined(OS_WIN)
 #define CDECL
-#endif // defined(OS_WIN)
-#endif // !defined(CDECL)
+#endif  // defined(OS_WIN)
+#endif  // !defined(CDECL)
 
 // Macro for hinting that an expression is likely to be false.
 #if !defined(UNLIKELY)
@@ -232,16 +232,16 @@
 #define UNLIKELY(x) __builtin_expect(!!(x), 0)
 #else
 #define UNLIKELY(x) (x)
-#endif // defined(COMPILER_GCC)
-#endif // !defined(UNLIKELY)
+#endif  // defined(COMPILER_GCC)
+#endif  // !defined(UNLIKELY)
 
 #if !defined(LIKELY)
 #if defined(COMPILER_GCC) || defined(__clang__)
 #define LIKELY(x) __builtin_expect(!!(x), 1)
 #else
 #define LIKELY(x) (x)
-#endif // defined(COMPILER_GCC)
-#endif // !defined(LIKELY)
+#endif  // defined(COMPILER_GCC)
+#endif  // !defined(LIKELY)
 
 // Compiler feature-detection.
 // clang.llvm.org/docs/LanguageExtensions.html#has-feature-and-has-extension
@@ -262,15 +262,15 @@
 
 #if !defined(CPU_ARM_NEON)
 #if defined(__arm__)
-#if !defined(__ARMEB__) && !defined(__ARM_EABI__) && !defined(__EABI__) &&     \
+#if !defined(__ARMEB__) && !defined(__ARM_EABI__) && !defined(__EABI__) && \
     !defined(__VFP_FP__) && !defined(_WIN32_WCE) && !defined(ANDROID)
 #error Chromium does not support middle endian architecture
 #endif
 #if defined(__ARM_NEON__)
 #define CPU_ARM_NEON 1
 #endif
-#endif // defined(__arm__)
-#endif // !defined(CPU_ARM_NEON)
+#endif  // defined(__arm__)
+#endif  // !defined(CPU_ARM_NEON)
 
 #if !defined(HAVE_MIPS_MSA_INTRINSICS)
 #if defined(__mips_msa) && defined(__mips_isa_rev) && (__mips_isa_rev >= 5)
@@ -336,13 +336,13 @@ inline constexpr bool AnalyzerAssumeTrue(bool arg) {
 #define ANALYZER_SKIP_THIS_PATH() static_cast<void>(::AnalyzerNoReturn())
 #define ANALYZER_ALLOW_UNUSED(var) static_cast<void>(var);
 
-#else // !defined(__clang_analyzer__)
+#else  // !defined(__clang_analyzer__)
 
 #define ANALYZER_ASSUME_TRUE(arg) (arg)
 #define ANALYZER_SKIP_THIS_PATH()
 #define ANALYZER_ALLOW_UNUSED(var) static_cast<void>(var);
 
-#endif // defined(__clang_analyzer__)
+#endif  // defined(__clang_analyzer__)
 
 // Use nomerge attribute to disable optimization of merging multiple same calls.
 #if defined(__clang__) && __has_attribute(nomerge)
@@ -378,5 +378,5 @@ inline constexpr bool AnalyzerAssumeTrue(bool arg) {
 #define TRIVIAL_ABI
 #endif
 
-#endif // !USING_CHROMIUM_INCLUDES
-#endif // CEF_INCLUDE_BASE_CEF_COMPILER_SPECIFIC_H_
+#endif  // !USING_CHROMIUM_INCLUDES
+#endif  // CEF_INCLUDE_BASE_CEF_COMPILER_SPECIFIC_H_

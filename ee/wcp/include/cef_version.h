@@ -51,4 +51,4 @@
 #define DO_MAKE_STRING(p) #p
 #define MAKE_STRING(p) DO_MAKE_STRING(p)
 
-#endif // CEF_INCLUDE_CEF_VERSION_H_
+#endif  // CEF_INCLUDE_CEF_VERSION_H_

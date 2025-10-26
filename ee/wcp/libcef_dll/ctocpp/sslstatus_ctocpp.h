@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefSSLStatusCToCpp
-    : public CefCToCppRefCounted<CefSSLStatusCToCpp, CefSSLStatus,
-                                 cef_sslstatus_t> {
-public:
+class CefSSLStatusCToCpp : public CefCToCppRefCounted<CefSSLStatusCToCpp,
+                                                      CefSSLStatus,
+                                                      cef_sslstatus_t> {
+ public:
   CefSSLStatusCToCpp();
   virtual ~CefSSLStatusCToCpp();
 
@@ -44,4 +44,4 @@ public:
 constexpr auto CefSSLStatusCToCpp_Wrap = CefSSLStatusCToCpp::Wrap;
 constexpr auto CefSSLStatusCToCpp_Unwrap = CefSSLStatusCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_SSLSTATUS_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_SSLSTATUS_CTOCPP_H_

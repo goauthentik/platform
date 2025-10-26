@@ -26,10 +26,10 @@
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
-class CefAudioHandlerCppToC
-    : public CefCppToCRefCounted<CefAudioHandlerCppToC, CefAudioHandler,
-                                 cef_audio_handler_t> {
-public:
+class CefAudioHandlerCppToC : public CefCppToCRefCounted<CefAudioHandlerCppToC,
+                                                         CefAudioHandler,
+                                                         cef_audio_handler_t> {
+ public:
   CefAudioHandlerCppToC();
   virtual ~CefAudioHandlerCppToC();
 };
@@ -37,4 +37,4 @@ public:
 constexpr auto CefAudioHandlerCppToC_Wrap = CefAudioHandlerCppToC::Wrap;
 constexpr auto CefAudioHandlerCppToC_Unwrap = CefAudioHandlerCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_AUDIO_HANDLER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_AUDIO_HANDLER_CPPTOC_H_

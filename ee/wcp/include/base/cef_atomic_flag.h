@@ -36,7 +36,7 @@
 // When building CEF include the Chromium header directly.
 #include "base/synchronization/atomic_flag.h"
 
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -55,11 +55,11 @@ namespace base {
 /// This class IS NOT intended for synchronization between threads.
 ///
 class AtomicFlag {
-public:
+ public:
   AtomicFlag();
 
-  AtomicFlag(const AtomicFlag &) = delete;
-  AtomicFlag &operator=(const AtomicFlag &) = delete;
+  AtomicFlag(const AtomicFlag&) = delete;
+  AtomicFlag& operator=(const AtomicFlag&) = delete;
 
   ~AtomicFlag();
 
@@ -85,13 +85,13 @@ public:
   ///
   void UnsafeResetForTesting();
 
-private:
+ private:
   std::atomic<uint_fast8_t> flag_{0};
   base::ThreadChecker set_thread_checker_;
 };
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_ATOMIC_FLAG_H_
+#endif  // CEF_INCLUDE_BASE_CEF_ATOMIC_FLAG_H_

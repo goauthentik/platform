@@ -61,8 +61,8 @@ constexpr long long kOneDayInMilliseconds = 86400000;
 ///
 bool CefDumpWithoutCrashing(
     long long mseconds_between_dumps = kOneDayInMilliseconds,
-    const char *function_name = __builtin_FUNCTION(),
-    const char *file_name = __builtin_FILE(),
+    const char* function_name = __builtin_FUNCTION(),
+    const char* file_name = __builtin_FILE(),
     int line_number = __builtin_LINE());
 
 ///
@@ -73,4 +73,4 @@ bool CefDumpWithoutCrashing(
 ///
 bool CefDumpWithoutCrashingUnthrottled();
 
-#endif // CEF_INCLUDE_BASE_CEF_DUMP_WITHOUT_CRASHING_H_
+#endif  // CEF_INCLUDE_BASE_CEF_DUMP_WITHOUT_CRASHING_H_

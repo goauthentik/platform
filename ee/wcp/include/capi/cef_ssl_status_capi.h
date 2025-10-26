@@ -66,36 +66,36 @@ typedef struct _cef_sslstatus_t {
   ///
   /// Returns true (1) if the status is related to a secure SSL/TLS connection.
   ///
-  int(CEF_CALLBACK *is_secure_connection)(struct _cef_sslstatus_t *self);
+  int(CEF_CALLBACK* is_secure_connection)(struct _cef_sslstatus_t* self);
 
   ///
   /// Returns a bitmask containing any and all problems verifying the server
   /// certificate.
   ///
-  cef_cert_status_t(CEF_CALLBACK *get_cert_status)(
-      struct _cef_sslstatus_t *self);
+  cef_cert_status_t(CEF_CALLBACK* get_cert_status)(
+      struct _cef_sslstatus_t* self);
 
   ///
   /// Returns the SSL version used for the SSL connection.
   ///
-  cef_ssl_version_t(CEF_CALLBACK *get_sslversion)(
-      struct _cef_sslstatus_t *self);
+  cef_ssl_version_t(CEF_CALLBACK* get_sslversion)(
+      struct _cef_sslstatus_t* self);
 
   ///
   /// Returns a bitmask containing the page security content status.
   ///
-  cef_ssl_content_status_t(CEF_CALLBACK *get_content_status)(
-      struct _cef_sslstatus_t *self);
+  cef_ssl_content_status_t(CEF_CALLBACK* get_content_status)(
+      struct _cef_sslstatus_t* self);
 
   ///
   /// Returns the X.509 certificate.
   ///
-  struct _cef_x509_certificate_t *(CEF_CALLBACK *get_x509_certificate)(
-      struct _cef_sslstatus_t *self);
+  struct _cef_x509_certificate_t*(CEF_CALLBACK* get_x509_certificate)(
+      struct _cef_sslstatus_t* self);
 } cef_sslstatus_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_SSL_STATUS_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_SSL_STATUS_CAPI_H_

@@ -35,7 +35,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/synchronization/lock.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -53,12 +53,12 @@ namespace cef_internal {
 /// AssertAcquired() method.
 ///
 class Lock {
-public:
-#if !DCHECK_IS_ON() // Optimized wrapper implementation
+ public:
+#if !DCHECK_IS_ON()  // Optimized wrapper implementation
   Lock() : lock_() {}
 
-  Lock(const Lock &) = delete;
-  Lock &operator=(const Lock &) = delete;
+  Lock(const Lock&) = delete;
+  Lock& operator=(const Lock&) = delete;
 
   ~Lock() {}
   void Acquire() { lock_.Lock(); }
@@ -99,9 +99,9 @@ public:
   }
 
   void AssertAcquired() const;
-#endif // !DCHECK_IS_ON()
+#endif  // !DCHECK_IS_ON()
 
-private:
+ private:
 #if DCHECK_IS_ON()
   // Members and routines taking care of locks assertions.
   // Note that this checks for recursive locks and allows them
@@ -114,7 +114,7 @@ private:
   // All private data is implicitly protected by lock_.
   // Be VERY careful to only access members under that lock.
   base::PlatformThreadRef owning_thread_ref_;
-#endif // DCHECK_IS_ON()
+#endif  // DCHECK_IS_ON()
 
   // Platform specific underlying lock implementation.
   LockImpl lock_;
@@ -124,25 +124,25 @@ private:
 /// A helper class that acquires the given Lock while the AutoLock is in scope.
 ///
 class AutoLock {
-public:
+ public:
   struct AlreadyAcquired {};
 
-  explicit AutoLock(Lock &lock) : lock_(lock) { lock_.Acquire(); }
+  explicit AutoLock(Lock& lock) : lock_(lock) { lock_.Acquire(); }
 
-  AutoLock(Lock &lock, const AlreadyAcquired &) : lock_(lock) {
+  AutoLock(Lock& lock, const AlreadyAcquired&) : lock_(lock) {
     lock_.AssertAcquired();
   }
 
-  AutoLock(const AutoLock &) = delete;
-  AutoLock &operator=(const AutoLock &) = delete;
+  AutoLock(const AutoLock&) = delete;
+  AutoLock& operator=(const AutoLock&) = delete;
 
   ~AutoLock() {
     lock_.AssertAcquired();
     lock_.Release();
   }
 
-private:
-  Lock &lock_;
+ private:
+  Lock& lock_;
 };
 
 ///
@@ -150,23 +150,23 @@ private:
 /// constructor, and re-Acquire() it in the destructor.
 ///
 class AutoUnlock {
-public:
-  explicit AutoUnlock(Lock &lock) : lock_(lock) {
+ public:
+  explicit AutoUnlock(Lock& lock) : lock_(lock) {
     // We require our caller to have the lock.
     lock_.AssertAcquired();
     lock_.Release();
   }
 
-  AutoUnlock(const AutoUnlock &) = delete;
-  AutoUnlock &operator=(const AutoUnlock &) = delete;
+  AutoUnlock(const AutoUnlock&) = delete;
+  AutoUnlock& operator=(const AutoUnlock&) = delete;
 
   ~AutoUnlock() { lock_.Acquire(); }
 
-private:
-  Lock &lock_;
+ private:
+  Lock& lock_;
 };
 
-} // namespace cef_internal
+}  // namespace cef_internal
 
 // Implement classes in the cef_internal namespace and then expose them to the
 // base namespace. This avoids conflicts with the base.lib implementation when
@@ -175,8 +175,8 @@ using cef_internal::AutoLock;
 using cef_internal::AutoUnlock;
 using cef_internal::Lock;
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_LOCK_H_
+#endif  // CEF_INCLUDE_BASE_CEF_LOCK_H_

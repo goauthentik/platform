@@ -30,7 +30,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefV8ValueCToCpp
     : public CefCToCppRefCounted<CefV8ValueCToCpp, CefV8Value, cef_v8_value_t> {
-public:
+ public:
   CefV8ValueCToCpp();
   virtual ~CefV8ValueCToCpp();
 
@@ -62,41 +62,42 @@ public:
   bool ClearException() override;
   bool WillRethrowExceptions() override;
   bool SetRethrowExceptions(bool rethrow) override;
-  bool HasValue(const CefString &key) override;
+  bool HasValue(const CefString& key) override;
   bool HasValue(int index) override;
-  bool DeleteValue(const CefString &key) override;
+  bool DeleteValue(const CefString& key) override;
   bool DeleteValue(int index) override;
-  CefRefPtr<CefV8Value> GetValue(const CefString &key) override;
+  CefRefPtr<CefV8Value> GetValue(const CefString& key) override;
   CefRefPtr<CefV8Value> GetValue(int index) override;
-  bool SetValue(const CefString &key, CefRefPtr<CefV8Value> value,
+  bool SetValue(const CefString& key,
+                CefRefPtr<CefV8Value> value,
                 PropertyAttribute attribute) override;
   bool SetValue(int index, CefRefPtr<CefV8Value> value) override;
-  bool SetValue(const CefString &key, PropertyAttribute attribute) override;
-  bool GetKeys(std::vector<CefString> &keys) override;
+  bool SetValue(const CefString& key, PropertyAttribute attribute) override;
+  bool GetKeys(std::vector<CefString>& keys) override;
   bool SetUserData(CefRefPtr<CefBaseRefCounted> user_data) override;
   CefRefPtr<CefBaseRefCounted> GetUserData() override;
   int GetExternallyAllocatedMemory() override;
   int AdjustExternallyAllocatedMemory(int change_in_bytes) override;
   int GetArrayLength() override;
-  CefRefPtr<CefV8ArrayBufferReleaseCallback>
-  GetArrayBufferReleaseCallback() override;
+  CefRefPtr<CefV8ArrayBufferReleaseCallback> GetArrayBufferReleaseCallback()
+      override;
   bool NeuterArrayBuffer() override;
   size_t GetArrayBufferByteLength() override;
-  void *GetArrayBufferData() override;
+  void* GetArrayBufferData() override;
   CefString GetFunctionName() override;
   CefRefPtr<CefV8Handler> GetFunctionHandler() override;
-  CefRefPtr<CefV8Value>
-  ExecuteFunction(CefRefPtr<CefV8Value> object,
-                  const CefV8ValueList &arguments) override;
-  CefRefPtr<CefV8Value>
-  ExecuteFunctionWithContext(CefRefPtr<CefV8Context> context,
-                             CefRefPtr<CefV8Value> object,
-                             const CefV8ValueList &arguments) override;
+  CefRefPtr<CefV8Value> ExecuteFunction(
+      CefRefPtr<CefV8Value> object,
+      const CefV8ValueList& arguments) override;
+  CefRefPtr<CefV8Value> ExecuteFunctionWithContext(
+      CefRefPtr<CefV8Context> context,
+      CefRefPtr<CefV8Value> object,
+      const CefV8ValueList& arguments) override;
   bool ResolvePromise(CefRefPtr<CefV8Value> arg) override;
-  bool RejectPromise(const CefString &errorMsg) override;
+  bool RejectPromise(const CefString& errorMsg) override;
 };
 
 constexpr auto CefV8ValueCToCpp_Wrap = CefV8ValueCToCpp::Wrap;
 constexpr auto CefV8ValueCToCpp_Unwrap = CefV8ValueCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_V8_VALUE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_V8_VALUE_CTOCPP_H_

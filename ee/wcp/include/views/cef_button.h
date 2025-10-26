@@ -49,7 +49,7 @@ class CefLabelButton;
 ///
 /*--cef(source=library)--*/
 class CefButton : public CefView {
-public:
+ public:
   ///
   /// Returns this Button as a LabelButton or NULL if this is not a LabelButton.
   ///
@@ -79,14 +79,14 @@ public:
   /// mouse cursor over the Button.
   ///
   /*--cef()--*/
-  virtual void SetTooltipText(const CefString &tooltip_text) = 0;
+  virtual void SetTooltipText(const CefString& tooltip_text) = 0;
 
   ///
   /// Sets the accessible name that will be exposed to assistive technology
   /// (AT).
   ///
   /*--cef()--*/
-  virtual void SetAccessibleName(const CefString &name) = 0;
+  virtual void SetAccessibleName(const CefString& name) = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_BUTTON_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_BUTTON_H_

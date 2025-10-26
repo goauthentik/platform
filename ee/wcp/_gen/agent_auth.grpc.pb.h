@@ -7,479 +7,210 @@
 #include "agent_auth.pb.h"
 
 #include <functional>
-#include <grpcpp/client_context.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/generic/async_generic_service.h>
-#include <grpcpp/impl/proto_utils.h>
-#include <grpcpp/impl/rpc_method.h>
-#include <grpcpp/impl/server_callback_handlers.h>
-#include <grpcpp/impl/service_type.h>
-#include <grpcpp/ports_def.inc>
-#include <grpcpp/server_context.h>
 #include <grpcpp/support/async_stream.h>
 #include <grpcpp/support/async_unary_call.h>
 #include <grpcpp/support/client_callback.h>
+#include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
 #include <grpcpp/support/message_allocator.h>
 #include <grpcpp/support/method_handler.h>
+#include <grpcpp/impl/proto_utils.h>
+#include <grpcpp/impl/rpc_method.h>
 #include <grpcpp/support/server_callback.h>
+#include <grpcpp/impl/server_callback_handlers.h>
+#include <grpcpp/server_context.h>
+#include <grpcpp/impl/service_type.h>
 #include <grpcpp/support/status.h>
 #include <grpcpp/support/stub_options.h>
 #include <grpcpp/support/sync_stream.h>
+#include <grpcpp/ports_def.inc>
 
 namespace agent_auth {
 
 class AgentAuth final {
-public:
-  static constexpr char const *service_full_name() {
+ public:
+  static constexpr char const* service_full_name() {
     return "agent_auth.AgentAuth";
   }
   class StubInterface {
-  public:
+   public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status WhoAmI(::grpc::ClientContext *context,
-                                  const ::agent_auth::WhoAmIRequest &request,
-                                  ::agent_auth::WhoAmIResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::WhoAmIResponse>>
-    AsyncWhoAmI(::grpc::ClientContext *context,
-                const ::agent_auth::WhoAmIRequest &request,
-                ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::WhoAmIResponse>>(AsyncWhoAmIRaw(context, request, cq));
+    virtual ::grpc::Status WhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::agent_auth::WhoAmIResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::WhoAmIResponse>> AsyncWhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::WhoAmIResponse>>(AsyncWhoAmIRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::WhoAmIResponse>>
-    PrepareAsyncWhoAmI(::grpc::ClientContext *context,
-                       const ::agent_auth::WhoAmIRequest &request,
-                       ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::WhoAmIResponse>>(
-          PrepareAsyncWhoAmIRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::WhoAmIResponse>> PrepareAsyncWhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::WhoAmIResponse>>(PrepareAsyncWhoAmIRaw(context, request, cq));
     }
-    virtual ::grpc::Status
-    GetCurrentToken(::grpc::ClientContext *context,
-                    const ::agent_auth::CurrentTokenRequest &request,
-                    ::agent_auth::CurrentTokenResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::CurrentTokenResponse>>
-    AsyncGetCurrentToken(::grpc::ClientContext *context,
-                         const ::agent_auth::CurrentTokenRequest &request,
-                         ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::CurrentTokenResponse>>(
-          AsyncGetCurrentTokenRaw(context, request, cq));
+    virtual ::grpc::Status GetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::agent_auth::CurrentTokenResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::CurrentTokenResponse>> AsyncGetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::CurrentTokenResponse>>(AsyncGetCurrentTokenRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::CurrentTokenResponse>>
-    PrepareAsyncGetCurrentToken(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::CurrentTokenRequest &request,
-        ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::CurrentTokenResponse>>(
-          PrepareAsyncGetCurrentTokenRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::CurrentTokenResponse>> PrepareAsyncGetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::CurrentTokenResponse>>(PrepareAsyncGetCurrentTokenRaw(context, request, cq));
     }
-    virtual ::grpc::Status
-    CachedTokenExchange(::grpc::ClientContext *context,
-                        const ::agent_auth::TokenExchangeRequest &request,
-                        ::agent_auth::TokenExchangeResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::TokenExchangeResponse>>
-    AsyncCachedTokenExchange(::grpc::ClientContext *context,
-                             const ::agent_auth::TokenExchangeRequest &request,
-                             ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::TokenExchangeResponse>>(
-          AsyncCachedTokenExchangeRaw(context, request, cq));
+    virtual ::grpc::Status CachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::agent_auth::TokenExchangeResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::TokenExchangeResponse>> AsyncCachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::TokenExchangeResponse>>(AsyncCachedTokenExchangeRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::TokenExchangeResponse>>
-    PrepareAsyncCachedTokenExchange(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::TokenExchangeRequest &request,
-        ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::TokenExchangeResponse>>(
-          PrepareAsyncCachedTokenExchangeRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::TokenExchangeResponse>> PrepareAsyncCachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::TokenExchangeResponse>>(PrepareAsyncCachedTokenExchangeRaw(context, request, cq));
     }
-    virtual ::grpc::Status
-    Authorize(::grpc::ClientContext *context,
-              const ::agent_auth::AuthorizeRequest &request,
-              ::agent_auth::AuthorizeResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::AuthorizeResponse>>
-    AsyncAuthorize(::grpc::ClientContext *context,
-                   const ::agent_auth::AuthorizeRequest &request,
-                   ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::AuthorizeResponse>>(
-          AsyncAuthorizeRaw(context, request, cq));
+    virtual ::grpc::Status Authorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::agent_auth::AuthorizeResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::AuthorizeResponse>> AsyncAuthorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::AuthorizeResponse>>(AsyncAuthorizeRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::AuthorizeResponse>>
-    PrepareAsyncAuthorize(::grpc::ClientContext *context,
-                          const ::agent_auth::AuthorizeRequest &request,
-                          ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_auth::AuthorizeResponse>>(
-          PrepareAsyncAuthorizeRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::AuthorizeResponse>> PrepareAsyncAuthorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::AuthorizeResponse>>(PrepareAsyncAuthorizeRaw(context, request, cq));
     }
     class async_interface {
-    public:
+     public:
       virtual ~async_interface() {}
-      virtual void WhoAmI(::grpc::ClientContext *context,
-                          const ::agent_auth::WhoAmIRequest *request,
-                          ::agent_auth::WhoAmIResponse *response,
-                          std::function<void(::grpc::Status)>) = 0;
-      virtual void WhoAmI(::grpc::ClientContext *context,
-                          const ::agent_auth::WhoAmIRequest *request,
-                          ::agent_auth::WhoAmIResponse *response,
-                          ::grpc::ClientUnaryReactor *reactor) = 0;
-      virtual void
-      GetCurrentToken(::grpc::ClientContext *context,
-                      const ::agent_auth::CurrentTokenRequest *request,
-                      ::agent_auth::CurrentTokenResponse *response,
-                      std::function<void(::grpc::Status)>) = 0;
-      virtual void
-      GetCurrentToken(::grpc::ClientContext *context,
-                      const ::agent_auth::CurrentTokenRequest *request,
-                      ::agent_auth::CurrentTokenResponse *response,
-                      ::grpc::ClientUnaryReactor *reactor) = 0;
-      virtual void
-      CachedTokenExchange(::grpc::ClientContext *context,
-                          const ::agent_auth::TokenExchangeRequest *request,
-                          ::agent_auth::TokenExchangeResponse *response,
-                          std::function<void(::grpc::Status)>) = 0;
-      virtual void
-      CachedTokenExchange(::grpc::ClientContext *context,
-                          const ::agent_auth::TokenExchangeRequest *request,
-                          ::agent_auth::TokenExchangeResponse *response,
-                          ::grpc::ClientUnaryReactor *reactor) = 0;
-      virtual void Authorize(::grpc::ClientContext *context,
-                             const ::agent_auth::AuthorizeRequest *request,
-                             ::agent_auth::AuthorizeResponse *response,
-                             std::function<void(::grpc::Status)>) = 0;
-      virtual void Authorize(::grpc::ClientContext *context,
-                             const ::agent_auth::AuthorizeRequest *request,
-                             ::agent_auth::AuthorizeResponse *response,
-                             ::grpc::ClientUnaryReactor *reactor) = 0;
+      virtual void WhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest* request, ::agent_auth::WhoAmIResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void WhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest* request, ::agent_auth::WhoAmIResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void GetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest* request, ::agent_auth::CurrentTokenResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest* request, ::agent_auth::CurrentTokenResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void CachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest* request, ::agent_auth::TokenExchangeResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void CachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest* request, ::agent_auth::TokenExchangeResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void Authorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest* request, ::agent_auth::AuthorizeResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Authorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest* request, ::agent_auth::AuthorizeResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
-    virtual class async_interface *async() { return nullptr; }
-    class async_interface *experimental_async() { return async(); }
-
-  private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::WhoAmIResponse> *
-    AsyncWhoAmIRaw(::grpc::ClientContext *context,
-                   const ::agent_auth::WhoAmIRequest &request,
-                   ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::WhoAmIResponse> *
-    PrepareAsyncWhoAmIRaw(::grpc::ClientContext *context,
-                          const ::agent_auth::WhoAmIRequest &request,
-                          ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::CurrentTokenResponse> *
-    AsyncGetCurrentTokenRaw(::grpc::ClientContext *context,
-                            const ::agent_auth::CurrentTokenRequest &request,
-                            ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::CurrentTokenResponse> *
-    PrepareAsyncGetCurrentTokenRaw(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::CurrentTokenRequest &request,
-        ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::TokenExchangeResponse> *
-    AsyncCachedTokenExchangeRaw(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::TokenExchangeRequest &request,
-        ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::TokenExchangeResponse> *
-    PrepareAsyncCachedTokenExchangeRaw(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::TokenExchangeRequest &request,
-        ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::AuthorizeResponse> *
-    AsyncAuthorizeRaw(::grpc::ClientContext *context,
-                      const ::agent_auth::AuthorizeRequest &request,
-                      ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_auth::AuthorizeResponse> *
-    PrepareAsyncAuthorizeRaw(::grpc::ClientContext *context,
-                             const ::agent_auth::AuthorizeRequest &request,
-                             ::grpc::CompletionQueue *cq) = 0;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::WhoAmIResponse>* AsyncWhoAmIRaw(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::WhoAmIResponse>* PrepareAsyncWhoAmIRaw(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::CurrentTokenResponse>* AsyncGetCurrentTokenRaw(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::CurrentTokenResponse>* PrepareAsyncGetCurrentTokenRaw(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::TokenExchangeResponse>* AsyncCachedTokenExchangeRaw(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::TokenExchangeResponse>* PrepareAsyncCachedTokenExchangeRaw(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::AuthorizeResponse>* AsyncAuthorizeRaw(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_auth::AuthorizeResponse>* PrepareAsyncAuthorizeRaw(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
-  public:
-    Stub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
-         const ::grpc::StubOptions &options = ::grpc::StubOptions());
-    ::grpc::Status WhoAmI(::grpc::ClientContext *context,
-                          const ::agent_auth::WhoAmIRequest &request,
-                          ::agent_auth::WhoAmIResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::WhoAmIResponse>>
-    AsyncWhoAmI(::grpc::ClientContext *context,
-                const ::agent_auth::WhoAmIRequest &request,
-                ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_auth::WhoAmIResponse>>(
-          AsyncWhoAmIRaw(context, request, cq));
+   public:
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+    ::grpc::Status WhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::agent_auth::WhoAmIResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::WhoAmIResponse>> AsyncWhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::WhoAmIResponse>>(AsyncWhoAmIRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::WhoAmIResponse>>
-    PrepareAsyncWhoAmI(::grpc::ClientContext *context,
-                       const ::agent_auth::WhoAmIRequest &request,
-                       ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_auth::WhoAmIResponse>>(
-          PrepareAsyncWhoAmIRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::WhoAmIResponse>> PrepareAsyncWhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::WhoAmIResponse>>(PrepareAsyncWhoAmIRaw(context, request, cq));
     }
-    ::grpc::Status
-    GetCurrentToken(::grpc::ClientContext *context,
-                    const ::agent_auth::CurrentTokenRequest &request,
-                    ::agent_auth::CurrentTokenResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::CurrentTokenResponse>>
-    AsyncGetCurrentToken(::grpc::ClientContext *context,
-                         const ::agent_auth::CurrentTokenRequest &request,
-                         ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
-          ::agent_auth::CurrentTokenResponse>>(
-          AsyncGetCurrentTokenRaw(context, request, cq));
+    ::grpc::Status GetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::agent_auth::CurrentTokenResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::CurrentTokenResponse>> AsyncGetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::CurrentTokenResponse>>(AsyncGetCurrentTokenRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::CurrentTokenResponse>>
-    PrepareAsyncGetCurrentToken(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::CurrentTokenRequest &request,
-        ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
-          ::agent_auth::CurrentTokenResponse>>(
-          PrepareAsyncGetCurrentTokenRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::CurrentTokenResponse>> PrepareAsyncGetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::CurrentTokenResponse>>(PrepareAsyncGetCurrentTokenRaw(context, request, cq));
     }
-    ::grpc::Status
-    CachedTokenExchange(::grpc::ClientContext *context,
-                        const ::agent_auth::TokenExchangeRequest &request,
-                        ::agent_auth::TokenExchangeResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::TokenExchangeResponse>>
-    AsyncCachedTokenExchange(::grpc::ClientContext *context,
-                             const ::agent_auth::TokenExchangeRequest &request,
-                             ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
-          ::agent_auth::TokenExchangeResponse>>(
-          AsyncCachedTokenExchangeRaw(context, request, cq));
+    ::grpc::Status CachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::agent_auth::TokenExchangeResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::TokenExchangeResponse>> AsyncCachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::TokenExchangeResponse>>(AsyncCachedTokenExchangeRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::TokenExchangeResponse>>
-    PrepareAsyncCachedTokenExchange(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::TokenExchangeRequest &request,
-        ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
-          ::agent_auth::TokenExchangeResponse>>(
-          PrepareAsyncCachedTokenExchangeRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::TokenExchangeResponse>> PrepareAsyncCachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::TokenExchangeResponse>>(PrepareAsyncCachedTokenExchangeRaw(context, request, cq));
     }
-    ::grpc::Status
-    Authorize(::grpc::ClientContext *context,
-              const ::agent_auth::AuthorizeRequest &request,
-              ::agent_auth::AuthorizeResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::AuthorizeResponse>>
-    AsyncAuthorize(::grpc::ClientContext *context,
-                   const ::agent_auth::AuthorizeRequest &request,
-                   ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_auth::AuthorizeResponse>>(
-          AsyncAuthorizeRaw(context, request, cq));
+    ::grpc::Status Authorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::agent_auth::AuthorizeResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::AuthorizeResponse>> AsyncAuthorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::AuthorizeResponse>>(AsyncAuthorizeRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_auth::AuthorizeResponse>>
-    PrepareAsyncAuthorize(::grpc::ClientContext *context,
-                          const ::agent_auth::AuthorizeRequest &request,
-                          ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_auth::AuthorizeResponse>>(
-          PrepareAsyncAuthorizeRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::AuthorizeResponse>> PrepareAsyncAuthorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_auth::AuthorizeResponse>>(PrepareAsyncAuthorizeRaw(context, request, cq));
     }
-    class async final : public StubInterface::async_interface {
-    public:
-      void WhoAmI(::grpc::ClientContext *context,
-                  const ::agent_auth::WhoAmIRequest *request,
-                  ::agent_auth::WhoAmIResponse *response,
-                  std::function<void(::grpc::Status)>) override;
-      void WhoAmI(::grpc::ClientContext *context,
-                  const ::agent_auth::WhoAmIRequest *request,
-                  ::agent_auth::WhoAmIResponse *response,
-                  ::grpc::ClientUnaryReactor *reactor) override;
-      void GetCurrentToken(::grpc::ClientContext *context,
-                           const ::agent_auth::CurrentTokenRequest *request,
-                           ::agent_auth::CurrentTokenResponse *response,
-                           std::function<void(::grpc::Status)>) override;
-      void GetCurrentToken(::grpc::ClientContext *context,
-                           const ::agent_auth::CurrentTokenRequest *request,
-                           ::agent_auth::CurrentTokenResponse *response,
-                           ::grpc::ClientUnaryReactor *reactor) override;
-      void
-      CachedTokenExchange(::grpc::ClientContext *context,
-                          const ::agent_auth::TokenExchangeRequest *request,
-                          ::agent_auth::TokenExchangeResponse *response,
-                          std::function<void(::grpc::Status)>) override;
-      void
-      CachedTokenExchange(::grpc::ClientContext *context,
-                          const ::agent_auth::TokenExchangeRequest *request,
-                          ::agent_auth::TokenExchangeResponse *response,
-                          ::grpc::ClientUnaryReactor *reactor) override;
-      void Authorize(::grpc::ClientContext *context,
-                     const ::agent_auth::AuthorizeRequest *request,
-                     ::agent_auth::AuthorizeResponse *response,
-                     std::function<void(::grpc::Status)>) override;
-      void Authorize(::grpc::ClientContext *context,
-                     const ::agent_auth::AuthorizeRequest *request,
-                     ::agent_auth::AuthorizeResponse *response,
-                     ::grpc::ClientUnaryReactor *reactor) override;
-
-    private:
+    class async final :
+      public StubInterface::async_interface {
+     public:
+      void WhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest* request, ::agent_auth::WhoAmIResponse* response, std::function<void(::grpc::Status)>) override;
+      void WhoAmI(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest* request, ::agent_auth::WhoAmIResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void GetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest* request, ::agent_auth::CurrentTokenResponse* response, std::function<void(::grpc::Status)>) override;
+      void GetCurrentToken(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest* request, ::agent_auth::CurrentTokenResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void CachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest* request, ::agent_auth::TokenExchangeResponse* response, std::function<void(::grpc::Status)>) override;
+      void CachedTokenExchange(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest* request, ::agent_auth::TokenExchangeResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void Authorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest* request, ::agent_auth::AuthorizeResponse* response, std::function<void(::grpc::Status)>) override;
+      void Authorize(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest* request, ::agent_auth::AuthorizeResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+     private:
       friend class Stub;
-      explicit async(Stub *stub) : stub_(stub) {}
-      Stub *stub() { return stub_; }
-      Stub *stub_;
+      explicit async(Stub* stub): stub_(stub) { }
+      Stub* stub() { return stub_; }
+      Stub* stub_;
     };
-    class async *async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
-  private:
-    std::shared_ptr<::grpc::ChannelInterface> channel_;
+   private:
+    std::shared_ptr< ::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader<::agent_auth::WhoAmIResponse> *
-    AsyncWhoAmIRaw(::grpc::ClientContext *context,
-                   const ::agent_auth::WhoAmIRequest &request,
-                   ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_auth::WhoAmIResponse> *
-    PrepareAsyncWhoAmIRaw(::grpc::ClientContext *context,
-                          const ::agent_auth::WhoAmIRequest &request,
-                          ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_auth::CurrentTokenResponse> *
-    AsyncGetCurrentTokenRaw(::grpc::ClientContext *context,
-                            const ::agent_auth::CurrentTokenRequest &request,
-                            ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_auth::CurrentTokenResponse> *
-    PrepareAsyncGetCurrentTokenRaw(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::CurrentTokenRequest &request,
-        ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_auth::TokenExchangeResponse> *
-    AsyncCachedTokenExchangeRaw(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::TokenExchangeRequest &request,
-        ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_auth::TokenExchangeResponse> *
-    PrepareAsyncCachedTokenExchangeRaw(
-        ::grpc::ClientContext *context,
-        const ::agent_auth::TokenExchangeRequest &request,
-        ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_auth::AuthorizeResponse> *
-    AsyncAuthorizeRaw(::grpc::ClientContext *context,
-                      const ::agent_auth::AuthorizeRequest &request,
-                      ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_auth::AuthorizeResponse> *
-    PrepareAsyncAuthorizeRaw(::grpc::ClientContext *context,
-                             const ::agent_auth::AuthorizeRequest &request,
-                             ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::WhoAmIResponse>* AsyncWhoAmIRaw(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::WhoAmIResponse>* PrepareAsyncWhoAmIRaw(::grpc::ClientContext* context, const ::agent_auth::WhoAmIRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::CurrentTokenResponse>* AsyncGetCurrentTokenRaw(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::CurrentTokenResponse>* PrepareAsyncGetCurrentTokenRaw(::grpc::ClientContext* context, const ::agent_auth::CurrentTokenRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::TokenExchangeResponse>* AsyncCachedTokenExchangeRaw(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::TokenExchangeResponse>* PrepareAsyncCachedTokenExchangeRaw(::grpc::ClientContext* context, const ::agent_auth::TokenExchangeRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::AuthorizeResponse>* AsyncAuthorizeRaw(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_auth::AuthorizeResponse>* PrepareAsyncAuthorizeRaw(::grpc::ClientContext* context, const ::agent_auth::AuthorizeRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_WhoAmI_;
     const ::grpc::internal::RpcMethod rpcmethod_GetCurrentToken_;
     const ::grpc::internal::RpcMethod rpcmethod_CachedTokenExchange_;
     const ::grpc::internal::RpcMethod rpcmethod_Authorize_;
   };
-  static std::unique_ptr<Stub>
-  NewStub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
-          const ::grpc::StubOptions &options = ::grpc::StubOptions());
+  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
   class Service : public ::grpc::Service {
-  public:
+   public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status WhoAmI(::grpc::ServerContext *context,
-                                  const ::agent_auth::WhoAmIRequest *request,
-                                  ::agent_auth::WhoAmIResponse *response);
-    virtual ::grpc::Status
-    GetCurrentToken(::grpc::ServerContext *context,
-                    const ::agent_auth::CurrentTokenRequest *request,
-                    ::agent_auth::CurrentTokenResponse *response);
-    virtual ::grpc::Status
-    CachedTokenExchange(::grpc::ServerContext *context,
-                        const ::agent_auth::TokenExchangeRequest *request,
-                        ::agent_auth::TokenExchangeResponse *response);
-    virtual ::grpc::Status
-    Authorize(::grpc::ServerContext *context,
-              const ::agent_auth::AuthorizeRequest *request,
-              ::agent_auth::AuthorizeResponse *response);
+    virtual ::grpc::Status WhoAmI(::grpc::ServerContext* context, const ::agent_auth::WhoAmIRequest* request, ::agent_auth::WhoAmIResponse* response);
+    virtual ::grpc::Status GetCurrentToken(::grpc::ServerContext* context, const ::agent_auth::CurrentTokenRequest* request, ::agent_auth::CurrentTokenResponse* response);
+    virtual ::grpc::Status CachedTokenExchange(::grpc::ServerContext* context, const ::agent_auth::TokenExchangeRequest* request, ::agent_auth::TokenExchangeResponse* response);
+    virtual ::grpc::Status Authorize(::grpc::ServerContext* context, const ::agent_auth::AuthorizeRequest* request, ::agent_auth::AuthorizeResponse* response);
   };
-  template <class BaseClass> class WithAsyncMethod_WhoAmI : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithAsyncMethod_WhoAmI() { ::grpc::Service::MarkMethodAsync(0); }
+  template <class BaseClass>
+  class WithAsyncMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodAsync(0);
+    }
     ~WithAsyncMethod_WhoAmI() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    WhoAmI(::grpc::ServerContext * /*context*/,
-           const ::agent_auth::WhoAmIRequest * /*request*/,
-           ::agent_auth::WhoAmIResponse * /*response*/) override {
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::agent_auth::WhoAmIRequest* /*request*/, ::agent_auth::WhoAmIResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestWhoAmI(
-        ::grpc::ServerContext *context, ::agent_auth::WhoAmIRequest *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_auth::WhoAmIResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestWhoAmI(::grpc::ServerContext* context, ::agent_auth::WhoAmIRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_auth::WhoAmIResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithAsyncMethod_GetCurrentToken : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithAsyncMethod_GetCurrentToken() { ::grpc::Service::MarkMethodAsync(1); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_GetCurrentToken() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
     ~WithAsyncMethod_GetCurrentToken() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetCurrentToken(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::CurrentTokenRequest * /*request*/,
-        ::agent_auth::CurrentTokenResponse * /*response*/) override {
+    ::grpc::Status GetCurrentToken(::grpc::ServerContext* /*context*/, const ::agent_auth::CurrentTokenRequest* /*request*/, ::agent_auth::CurrentTokenResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetCurrentToken(
-        ::grpc::ServerContext *context,
-        ::agent_auth::CurrentTokenRequest *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_auth::CurrentTokenResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestGetCurrentToken(::grpc::ServerContext* context, ::agent_auth::CurrentTokenRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_auth::CurrentTokenResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithAsyncMethod_CachedTokenExchange : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithAsyncMethod_CachedTokenExchange() {
       ::grpc::Service::MarkMethodAsync(2);
     }
@@ -487,264 +218,167 @@ public:
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CachedTokenExchange(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::TokenExchangeRequest * /*request*/,
-        ::agent_auth::TokenExchangeResponse * /*response*/) override {
+    ::grpc::Status CachedTokenExchange(::grpc::ServerContext* /*context*/, const ::agent_auth::TokenExchangeRequest* /*request*/, ::agent_auth::TokenExchangeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestCachedTokenExchange(
-        ::grpc::ServerContext *context,
-        ::agent_auth::TokenExchangeRequest *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_auth::TokenExchangeResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestCachedTokenExchange(::grpc::ServerContext* context, ::agent_auth::TokenExchangeRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_auth::TokenExchangeResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithAsyncMethod_Authorize : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithAsyncMethod_Authorize() { ::grpc::Service::MarkMethodAsync(3); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Authorize() {
+      ::grpc::Service::MarkMethodAsync(3);
+    }
     ~WithAsyncMethod_Authorize() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Authorize(::grpc::ServerContext * /*context*/,
-              const ::agent_auth::AuthorizeRequest * /*request*/,
-              ::agent_auth::AuthorizeResponse * /*response*/) override {
+    ::grpc::Status Authorize(::grpc::ServerContext* /*context*/, const ::agent_auth::AuthorizeRequest* /*request*/, ::agent_auth::AuthorizeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestAuthorize(
-        ::grpc::ServerContext *context, ::agent_auth::AuthorizeRequest *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_auth::AuthorizeResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(3, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestAuthorize(::grpc::ServerContext* context, ::agent_auth::AuthorizeRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_auth::AuthorizeResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_WhoAmI<WithAsyncMethod_GetCurrentToken<
-      WithAsyncMethod_CachedTokenExchange<WithAsyncMethod_Authorize<Service>>>>
-      AsyncService;
+  typedef WithAsyncMethod_WhoAmI<WithAsyncMethod_GetCurrentToken<WithAsyncMethod_CachedTokenExchange<WithAsyncMethod_Authorize<Service > > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_WhoAmI : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_WhoAmI() {
-      ::grpc::Service::MarkMethodCallback(
-          0, new ::grpc::internal::CallbackUnaryHandler<
-                 ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::agent_auth::WhoAmIRequest *request,
-                        ::agent_auth::WhoAmIResponse *response) {
-                   return this->WhoAmI(context, request, response);
-                 }));
-    }
+      ::grpc::Service::MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agent_auth::WhoAmIRequest* request, ::agent_auth::WhoAmIResponse* response) { return this->WhoAmI(context, request, response); }));}
     void SetMessageAllocatorFor_WhoAmI(
-        ::grpc::MessageAllocator<::agent_auth::WhoAmIRequest,
-                                 ::agent_auth::WhoAmIResponse> *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse> *>(handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_WhoAmI() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    WhoAmI(::grpc::ServerContext * /*context*/,
-           const ::agent_auth::WhoAmIRequest * /*request*/,
-           ::agent_auth::WhoAmIResponse * /*response*/) override {
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::agent_auth::WhoAmIRequest* /*request*/, ::agent_auth::WhoAmIResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    WhoAmI(::grpc::CallbackServerContext * /*context*/,
-           const ::agent_auth::WhoAmIRequest * /*request*/,
-           ::agent_auth::WhoAmIResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* WhoAmI(
+      ::grpc::CallbackServerContext* /*context*/, const ::agent_auth::WhoAmIRequest* /*request*/, ::agent_auth::WhoAmIResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithCallbackMethod_GetCurrentToken : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_GetCurrentToken() {
-      ::grpc::Service::MarkMethodCallback(
-          1, new ::grpc::internal::CallbackUnaryHandler<
-                 ::agent_auth::CurrentTokenRequest,
-                 ::agent_auth::CurrentTokenResponse>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::agent_auth::CurrentTokenRequest *request,
-                        ::agent_auth::CurrentTokenResponse *response) {
-                   return this->GetCurrentToken(context, request, response);
-                 }));
-    }
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::agent_auth::CurrentTokenRequest, ::agent_auth::CurrentTokenResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agent_auth::CurrentTokenRequest* request, ::agent_auth::CurrentTokenResponse* response) { return this->GetCurrentToken(context, request, response); }));}
     void SetMessageAllocatorFor_GetCurrentToken(
-        ::grpc::MessageAllocator<::agent_auth::CurrentTokenRequest,
-                                 ::agent_auth::CurrentTokenResponse>
-            *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(1);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::agent_auth::CurrentTokenRequest, ::agent_auth::CurrentTokenResponse>
-                      *>(handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::agent_auth::CurrentTokenRequest, ::agent_auth::CurrentTokenResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_auth::CurrentTokenRequest, ::agent_auth::CurrentTokenResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_GetCurrentToken() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetCurrentToken(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::CurrentTokenRequest * /*request*/,
-        ::agent_auth::CurrentTokenResponse * /*response*/) override {
+    ::grpc::Status GetCurrentToken(::grpc::ServerContext* /*context*/, const ::agent_auth::CurrentTokenRequest* /*request*/, ::agent_auth::CurrentTokenResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    GetCurrentToken(::grpc::CallbackServerContext * /*context*/,
-                    const ::agent_auth::CurrentTokenRequest * /*request*/,
-                    ::agent_auth::CurrentTokenResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* GetCurrentToken(
+      ::grpc::CallbackServerContext* /*context*/, const ::agent_auth::CurrentTokenRequest* /*request*/, ::agent_auth::CurrentTokenResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithCallbackMethod_CachedTokenExchange : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_CachedTokenExchange() {
-      ::grpc::Service::MarkMethodCallback(
-          2, new ::grpc::internal::CallbackUnaryHandler<
-                 ::agent_auth::TokenExchangeRequest,
-                 ::agent_auth::TokenExchangeResponse>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::agent_auth::TokenExchangeRequest *request,
-                        ::agent_auth::TokenExchangeResponse *response) {
-                   return this->CachedTokenExchange(context, request, response);
-                 }));
-    }
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::agent_auth::TokenExchangeRequest, ::agent_auth::TokenExchangeResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agent_auth::TokenExchangeRequest* request, ::agent_auth::TokenExchangeResponse* response) { return this->CachedTokenExchange(context, request, response); }));}
     void SetMessageAllocatorFor_CachedTokenExchange(
-        ::grpc::MessageAllocator<::agent_auth::TokenExchangeRequest,
-                                 ::agent_auth::TokenExchangeResponse>
-            *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(2);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::agent_auth::TokenExchangeRequest,
-          ::agent_auth::TokenExchangeResponse> *>(handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::agent_auth::TokenExchangeRequest, ::agent_auth::TokenExchangeResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_auth::TokenExchangeRequest, ::agent_auth::TokenExchangeResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_CachedTokenExchange() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CachedTokenExchange(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::TokenExchangeRequest * /*request*/,
-        ::agent_auth::TokenExchangeResponse * /*response*/) override {
+    ::grpc::Status CachedTokenExchange(::grpc::ServerContext* /*context*/, const ::agent_auth::TokenExchangeRequest* /*request*/, ::agent_auth::TokenExchangeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    CachedTokenExchange(::grpc::CallbackServerContext * /*context*/,
-                        const ::agent_auth::TokenExchangeRequest * /*request*/,
-                        ::agent_auth::TokenExchangeResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* CachedTokenExchange(
+      ::grpc::CallbackServerContext* /*context*/, const ::agent_auth::TokenExchangeRequest* /*request*/, ::agent_auth::TokenExchangeResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithCallbackMethod_Authorize : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_Authorize() {
-      ::grpc::Service::MarkMethodCallback(
-          3,
-          new ::grpc::internal::CallbackUnaryHandler<
-              ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse>(
-              [this](::grpc::CallbackServerContext *context,
-                     const ::agent_auth::AuthorizeRequest *request,
-                     ::agent_auth::AuthorizeResponse *response) {
-                return this->Authorize(context, request, response);
-              }));
-    }
+      ::grpc::Service::MarkMethodCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agent_auth::AuthorizeRequest* request, ::agent_auth::AuthorizeResponse* response) { return this->Authorize(context, request, response); }));}
     void SetMessageAllocatorFor_Authorize(
-        ::grpc::MessageAllocator<::agent_auth::AuthorizeRequest,
-                                 ::agent_auth::AuthorizeResponse> *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(3);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse> *>(
-          handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_Authorize() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Authorize(::grpc::ServerContext * /*context*/,
-              const ::agent_auth::AuthorizeRequest * /*request*/,
-              ::agent_auth::AuthorizeResponse * /*response*/) override {
+    ::grpc::Status Authorize(::grpc::ServerContext* /*context*/, const ::agent_auth::AuthorizeRequest* /*request*/, ::agent_auth::AuthorizeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    Authorize(::grpc::CallbackServerContext * /*context*/,
-              const ::agent_auth::AuthorizeRequest * /*request*/,
-              ::agent_auth::AuthorizeResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* Authorize(
+      ::grpc::CallbackServerContext* /*context*/, const ::agent_auth::AuthorizeRequest* /*request*/, ::agent_auth::AuthorizeResponse* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_WhoAmI<
-      WithCallbackMethod_GetCurrentToken<WithCallbackMethod_CachedTokenExchange<
-          WithCallbackMethod_Authorize<Service>>>>
-      CallbackService;
+  typedef WithCallbackMethod_WhoAmI<WithCallbackMethod_GetCurrentToken<WithCallbackMethod_CachedTokenExchange<WithCallbackMethod_Authorize<Service > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
-  template <class BaseClass> class WithGenericMethod_WhoAmI : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithGenericMethod_WhoAmI() { ::grpc::Service::MarkMethodGeneric(0); }
+  template <class BaseClass>
+  class WithGenericMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodGeneric(0);
+    }
     ~WithGenericMethod_WhoAmI() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    WhoAmI(::grpc::ServerContext * /*context*/,
-           const ::agent_auth::WhoAmIRequest * /*request*/,
-           ::agent_auth::WhoAmIResponse * /*response*/) override {
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::agent_auth::WhoAmIRequest* /*request*/, ::agent_auth::WhoAmIResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithGenericMethod_GetCurrentToken : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithGenericMethod_GetCurrentToken() {
       ::grpc::Service::MarkMethodGeneric(1);
     }
@@ -752,20 +386,16 @@ public:
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetCurrentToken(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::CurrentTokenRequest * /*request*/,
-        ::agent_auth::CurrentTokenResponse * /*response*/) override {
+    ::grpc::Status GetCurrentToken(::grpc::ServerContext* /*context*/, const ::agent_auth::CurrentTokenRequest* /*request*/, ::agent_auth::CurrentTokenResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithGenericMethod_CachedTokenExchange : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithGenericMethod_CachedTokenExchange() {
       ::grpc::Service::MarkMethodGeneric(2);
     }
@@ -773,434 +403,311 @@ public:
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CachedTokenExchange(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::TokenExchangeRequest * /*request*/,
-        ::agent_auth::TokenExchangeResponse * /*response*/) override {
+    ::grpc::Status CachedTokenExchange(::grpc::ServerContext* /*context*/, const ::agent_auth::TokenExchangeRequest* /*request*/, ::agent_auth::TokenExchangeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithGenericMethod_Authorize : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithGenericMethod_Authorize() { ::grpc::Service::MarkMethodGeneric(3); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Authorize() {
+      ::grpc::Service::MarkMethodGeneric(3);
+    }
     ~WithGenericMethod_Authorize() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Authorize(::grpc::ServerContext * /*context*/,
-              const ::agent_auth::AuthorizeRequest * /*request*/,
-              ::agent_auth::AuthorizeResponse * /*response*/) override {
+    ::grpc::Status Authorize(::grpc::ServerContext* /*context*/, const ::agent_auth::AuthorizeRequest* /*request*/, ::agent_auth::AuthorizeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
-  template <class BaseClass> class WithRawMethod_WhoAmI : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_WhoAmI() { ::grpc::Service::MarkMethodRaw(0); }
+  template <class BaseClass>
+  class WithRawMethod_WhoAmI : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_WhoAmI() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
     ~WithRawMethod_WhoAmI() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    WhoAmI(::grpc::ServerContext * /*context*/,
-           const ::agent_auth::WhoAmIRequest * /*request*/,
-           ::agent_auth::WhoAmIResponse * /*response*/) override {
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::agent_auth::WhoAmIRequest* /*request*/, ::agent_auth::WhoAmIResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestWhoAmI(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestWhoAmI(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithRawMethod_GetCurrentToken : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_GetCurrentToken() { ::grpc::Service::MarkMethodRaw(1); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_GetCurrentToken() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
     ~WithRawMethod_GetCurrentToken() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetCurrentToken(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::CurrentTokenRequest * /*request*/,
-        ::agent_auth::CurrentTokenResponse * /*response*/) override {
+    ::grpc::Status GetCurrentToken(::grpc::ServerContext* /*context*/, const ::agent_auth::CurrentTokenRequest* /*request*/, ::agent_auth::CurrentTokenResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetCurrentToken(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestGetCurrentToken(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithRawMethod_CachedTokenExchange : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_CachedTokenExchange() { ::grpc::Service::MarkMethodRaw(2); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_CachedTokenExchange() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
     ~WithRawMethod_CachedTokenExchange() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CachedTokenExchange(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::TokenExchangeRequest * /*request*/,
-        ::agent_auth::TokenExchangeResponse * /*response*/) override {
+    ::grpc::Status CachedTokenExchange(::grpc::ServerContext* /*context*/, const ::agent_auth::TokenExchangeRequest* /*request*/, ::agent_auth::TokenExchangeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestCachedTokenExchange(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestCachedTokenExchange(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass> class WithRawMethod_Authorize : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_Authorize() { ::grpc::Service::MarkMethodRaw(3); }
+  template <class BaseClass>
+  class WithRawMethod_Authorize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Authorize() {
+      ::grpc::Service::MarkMethodRaw(3);
+    }
     ~WithRawMethod_Authorize() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Authorize(::grpc::ServerContext * /*context*/,
-              const ::agent_auth::AuthorizeRequest * /*request*/,
-              ::agent_auth::AuthorizeResponse * /*response*/) override {
+    ::grpc::Status Authorize(::grpc::ServerContext* /*context*/, const ::agent_auth::AuthorizeRequest* /*request*/, ::agent_auth::AuthorizeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestAuthorize(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(3, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestAuthorize(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_WhoAmI : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_WhoAmI() {
-      ::grpc::Service::MarkMethodRawCallback(
-          0, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->WhoAmI(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->WhoAmI(context, request, response); }));
     }
     ~WithRawCallbackMethod_WhoAmI() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    WhoAmI(::grpc::ServerContext * /*context*/,
-           const ::agent_auth::WhoAmIRequest * /*request*/,
-           ::agent_auth::WhoAmIResponse * /*response*/) override {
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::agent_auth::WhoAmIRequest* /*request*/, ::agent_auth::WhoAmIResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    WhoAmI(::grpc::CallbackServerContext * /*context*/,
-           const ::grpc::ByteBuffer * /*request*/,
-           ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* WhoAmI(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_GetCurrentToken : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_GetCurrentToken() {
-      ::grpc::Service::MarkMethodRawCallback(
-          1, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->GetCurrentToken(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetCurrentToken(context, request, response); }));
     }
     ~WithRawCallbackMethod_GetCurrentToken() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetCurrentToken(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::CurrentTokenRequest * /*request*/,
-        ::agent_auth::CurrentTokenResponse * /*response*/) override {
+    ::grpc::Status GetCurrentToken(::grpc::ServerContext* /*context*/, const ::agent_auth::CurrentTokenRequest* /*request*/, ::agent_auth::CurrentTokenResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    GetCurrentToken(::grpc::CallbackServerContext * /*context*/,
-                    const ::grpc::ByteBuffer * /*request*/,
-                    ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* GetCurrentToken(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_CachedTokenExchange : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_CachedTokenExchange() {
-      ::grpc::Service::MarkMethodRawCallback(
-          2, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->CachedTokenExchange(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CachedTokenExchange(context, request, response); }));
     }
     ~WithRawCallbackMethod_CachedTokenExchange() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CachedTokenExchange(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::TokenExchangeRequest * /*request*/,
-        ::agent_auth::TokenExchangeResponse * /*response*/) override {
+    ::grpc::Status CachedTokenExchange(::grpc::ServerContext* /*context*/, const ::agent_auth::TokenExchangeRequest* /*request*/, ::agent_auth::TokenExchangeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    CachedTokenExchange(::grpc::CallbackServerContext * /*context*/,
-                        const ::grpc::ByteBuffer * /*request*/,
-                        ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* CachedTokenExchange(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_Authorize : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_Authorize() {
-      ::grpc::Service::MarkMethodRawCallback(
-          3, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->Authorize(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Authorize(context, request, response); }));
     }
     ~WithRawCallbackMethod_Authorize() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Authorize(::grpc::ServerContext * /*context*/,
-              const ::agent_auth::AuthorizeRequest * /*request*/,
-              ::agent_auth::AuthorizeResponse * /*response*/) override {
+    ::grpc::Status Authorize(::grpc::ServerContext* /*context*/, const ::agent_auth::AuthorizeRequest* /*request*/, ::agent_auth::AuthorizeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    Authorize(::grpc::CallbackServerContext * /*context*/,
-              const ::grpc::ByteBuffer * /*request*/,
-              ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* Authorize(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_WhoAmI : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_WhoAmI() {
-      ::grpc::Service::MarkMethodStreamed(
-          0,
-          new ::grpc::internal::StreamedUnaryHandler<
-              ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse>(
-              [this](::grpc::ServerContext *context,
-                     ::grpc::ServerUnaryStreamer<::agent_auth::WhoAmIRequest,
-                                                 ::agent_auth::WhoAmIResponse>
-                         *streamer) {
-                return this->StreamedWhoAmI(context, streamer);
-              }));
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agent_auth::WhoAmIRequest, ::agent_auth::WhoAmIResponse>* streamer) {
+                       return this->StreamedWhoAmI(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_WhoAmI() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status
-    WhoAmI(::grpc::ServerContext * /*context*/,
-           const ::agent_auth::WhoAmIRequest * /*request*/,
-           ::agent_auth::WhoAmIResponse * /*response*/) override {
+    ::grpc::Status WhoAmI(::grpc::ServerContext* /*context*/, const ::agent_auth::WhoAmIRequest* /*request*/, ::agent_auth::WhoAmIResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status
-    StreamedWhoAmI(::grpc::ServerContext *context,
-                   ::grpc::ServerUnaryStreamer<::agent_auth::WhoAmIRequest,
-                                               ::agent_auth::WhoAmIResponse>
-                       *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedWhoAmI(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_auth::WhoAmIRequest,::agent_auth::WhoAmIResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_GetCurrentToken : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_GetCurrentToken() {
-      ::grpc::Service::MarkMethodStreamed(
-          1, new ::grpc::internal::StreamedUnaryHandler<
-                 ::agent_auth::CurrentTokenRequest,
-                 ::agent_auth::CurrentTokenResponse>(
-                 [this](::grpc::ServerContext *context,
-                        ::grpc::ServerUnaryStreamer<
-                            ::agent_auth::CurrentTokenRequest,
-                            ::agent_auth::CurrentTokenResponse> *streamer) {
-                   return this->StreamedGetCurrentToken(context, streamer);
-                 }));
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agent_auth::CurrentTokenRequest, ::agent_auth::CurrentTokenResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agent_auth::CurrentTokenRequest, ::agent_auth::CurrentTokenResponse>* streamer) {
+                       return this->StreamedGetCurrentToken(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_GetCurrentToken() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status GetCurrentToken(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::CurrentTokenRequest * /*request*/,
-        ::agent_auth::CurrentTokenResponse * /*response*/) override {
+    ::grpc::Status GetCurrentToken(::grpc::ServerContext* /*context*/, const ::agent_auth::CurrentTokenRequest* /*request*/, ::agent_auth::CurrentTokenResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedGetCurrentToken(
-        ::grpc::ServerContext *context,
-        ::grpc::ServerUnaryStreamer<::agent_auth::CurrentTokenRequest,
-                                    ::agent_auth::CurrentTokenResponse>
-            *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedGetCurrentToken(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_auth::CurrentTokenRequest,::agent_auth::CurrentTokenResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_CachedTokenExchange : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_CachedTokenExchange() {
-      ::grpc::Service::MarkMethodStreamed(
-          2, new ::grpc::internal::StreamedUnaryHandler<
-                 ::agent_auth::TokenExchangeRequest,
-                 ::agent_auth::TokenExchangeResponse>(
-                 [this](::grpc::ServerContext *context,
-                        ::grpc::ServerUnaryStreamer<
-                            ::agent_auth::TokenExchangeRequest,
-                            ::agent_auth::TokenExchangeResponse> *streamer) {
-                   return this->StreamedCachedTokenExchange(context, streamer);
-                 }));
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agent_auth::TokenExchangeRequest, ::agent_auth::TokenExchangeResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agent_auth::TokenExchangeRequest, ::agent_auth::TokenExchangeResponse>* streamer) {
+                       return this->StreamedCachedTokenExchange(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_CachedTokenExchange() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status CachedTokenExchange(
-        ::grpc::ServerContext * /*context*/,
-        const ::agent_auth::TokenExchangeRequest * /*request*/,
-        ::agent_auth::TokenExchangeResponse * /*response*/) override {
+    ::grpc::Status CachedTokenExchange(::grpc::ServerContext* /*context*/, const ::agent_auth::TokenExchangeRequest* /*request*/, ::agent_auth::TokenExchangeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedCachedTokenExchange(
-        ::grpc::ServerContext *context,
-        ::grpc::ServerUnaryStreamer<::agent_auth::TokenExchangeRequest,
-                                    ::agent_auth::TokenExchangeResponse>
-            *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedCachedTokenExchange(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_auth::TokenExchangeRequest,::agent_auth::TokenExchangeResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_Authorize : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_Authorize() {
-      ::grpc::Service::MarkMethodStreamed(
-          3,
-          new ::grpc::internal::StreamedUnaryHandler<
-              ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse>(
-              [this](
-                  ::grpc::ServerContext *context,
-                  ::grpc::ServerUnaryStreamer<::agent_auth::AuthorizeRequest,
-                                              ::agent_auth::AuthorizeResponse>
-                      *streamer) {
-                return this->StreamedAuthorize(context, streamer);
-              }));
+      ::grpc::Service::MarkMethodStreamed(3,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agent_auth::AuthorizeRequest, ::agent_auth::AuthorizeResponse>* streamer) {
+                       return this->StreamedAuthorize(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_Authorize() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status
-    Authorize(::grpc::ServerContext * /*context*/,
-              const ::agent_auth::AuthorizeRequest * /*request*/,
-              ::agent_auth::AuthorizeResponse * /*response*/) override {
+    ::grpc::Status Authorize(::grpc::ServerContext* /*context*/, const ::agent_auth::AuthorizeRequest* /*request*/, ::agent_auth::AuthorizeResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedAuthorize(
-        ::grpc::ServerContext *context,
-        ::grpc::ServerUnaryStreamer<::agent_auth::AuthorizeRequest,
-                                    ::agent_auth::AuthorizeResponse>
-            *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedAuthorize(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_auth::AuthorizeRequest,::agent_auth::AuthorizeResponse>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_WhoAmI<
-      WithStreamedUnaryMethod_GetCurrentToken<
-          WithStreamedUnaryMethod_CachedTokenExchange<
-              WithStreamedUnaryMethod_Authorize<Service>>>>
-      StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_WhoAmI<WithStreamedUnaryMethod_GetCurrentToken<WithStreamedUnaryMethod_CachedTokenExchange<WithStreamedUnaryMethod_Authorize<Service > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_WhoAmI<
-      WithStreamedUnaryMethod_GetCurrentToken<
-          WithStreamedUnaryMethod_CachedTokenExchange<
-              WithStreamedUnaryMethod_Authorize<Service>>>>
-      StreamedService;
+  typedef WithStreamedUnaryMethod_WhoAmI<WithStreamedUnaryMethod_GetCurrentToken<WithStreamedUnaryMethod_CachedTokenExchange<WithStreamedUnaryMethod_Authorize<Service > > > > StreamedService;
 };
 
-} // namespace agent_auth
+}  // namespace agent_auth
+
 
 #include <grpcpp/ports_undef.inc>
-#endif // GRPC_agent_5fauth_2eproto__INCLUDED
+#endif  // GRPC_agent_5fauth_2eproto__INCLUDED

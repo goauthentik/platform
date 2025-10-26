@@ -230,20 +230,20 @@ struct CefMessageRouterConfig {
 /// integrity.
 ///
 class CefBinaryBuffer : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns the read-only pointer to the memory. Returns nullptr if
   /// |GetSize()| returns zero. The returned pointer is only valid for the life
   /// span of this object.
   ///
-  virtual const void *GetData() const = 0;
+  virtual const void* GetData() const = 0;
 
   ///
   /// Returns the writable pointer to the memory. Returns nullptr if
   /// |GetSize()| returns zero. The returned pointer is only valid for the life
   /// span of this object.
   ///
-  virtual void *GetData() = 0;
+  virtual void* GetData() = 0;
 
   ///
   /// Returns the size of the data.
@@ -257,7 +257,7 @@ public:
 ///
 class CefMessageRouterBrowserSide
     : public base::RefCountedThreadSafe<CefMessageRouterBrowserSide> {
-public:
+ public:
   ///
   /// Callback associated with a single pending asynchronous query. Execute the
   /// Success or Failure method to send an asynchronous response to the
@@ -267,25 +267,25 @@ public:
   /// browser process thread.
   ///
   class Callback : public CefBaseRefCounted {
-  public:
+   public:
     ///
     /// Notify the associated JavaScript onSuccess callback that the query has
     /// completed successfully with the specified string |response|.
     ///
-    virtual void Success(const CefString &response) = 0;
+    virtual void Success(const CefString& response) = 0;
 
     ///
     /// Notify the associated JavaScript onSuccess callback that the query has
     /// completed successfully with binary data. A |data| pointer to the binary
     /// data can be nullptr only if the |size| is 0.
     ///
-    virtual void Success(const void *data, size_t size) = 0;
+    virtual void Success(const void* data, size_t size) = 0;
 
     ///
     /// Notify the associated JavaScript onFailure callback that the query has
     /// failed with the specified |error_code| and |error_message|.
     ///
-    virtual void Failure(int error_code, const CefString &error_message) = 0;
+    virtual void Failure(int error_code, const CefString& error_message) = 0;
   };
 
   ///
@@ -293,7 +293,7 @@ public:
   /// on the browser process UI thread.
   ///
   class Handler {
-  public:
+   public:
     using Callback = CefMessageRouterBrowserSide::Callback;
 
     ///
@@ -307,8 +307,10 @@ public:
     /// to complete the query.
     ///
     virtual bool OnQuery(CefRefPtr<CefBrowser> browser,
-                         CefRefPtr<CefFrame> frame, int64_t query_id,
-                         const CefString &request, bool persistent,
+                         CefRefPtr<CefFrame> frame,
+                         int64_t query_id,
+                         const CefString& request,
+                         bool persistent,
                          CefRefPtr<Callback> callback) {
       return false;
     }
@@ -324,9 +326,11 @@ public:
     /// to complete the query.
     ///
     virtual bool OnQuery(CefRefPtr<CefBrowser> browser,
-                         CefRefPtr<CefFrame> frame, int64_t query_id,
+                         CefRefPtr<CefFrame> frame,
+                         int64_t query_id,
                          CefRefPtr<const CefBinaryBuffer> request,
-                         bool persistent, CefRefPtr<Callback> callback) {
+                         bool persistent,
+                         CefRefPtr<Callback> callback) {
       return false;
     }
 
@@ -340,7 +344,8 @@ public:
     /// executed.
     ///
     virtual void OnQueryCanceled(CefRefPtr<CefBrowser> browser,
-                                 CefRefPtr<CefFrame> frame, int64_t query_id) {}
+                                 CefRefPtr<CefFrame> frame,
+                                 int64_t query_id) {}
 
     virtual ~Handler() = default;
   };
@@ -348,8 +353,8 @@ public:
   ///
   /// Create a new router with the specified configuration.
   ///
-  static CefRefPtr<CefMessageRouterBrowserSide>
-  Create(const CefMessageRouterConfig &config);
+  static CefRefPtr<CefMessageRouterBrowserSide> Create(
+      const CefMessageRouterConfig& config);
 
   ///
   /// Add a new query handler. If |first| is true it will be added as the first
@@ -358,7 +363,7 @@ public:
   /// added. Must be called on the browser process UI thread. The Handler object
   /// must either outlive the router or be removed before deletion.
   ///
-  virtual bool AddHandler(Handler *handler, bool first) = 0;
+  virtual bool AddHandler(Handler* handler, bool first) = 0;
 
   ///
   /// Remove an existing query handler. Any pending queries associated with the
@@ -368,7 +373,7 @@ public:
   /// if the handler is not found. Must be called on the browser process UI
   /// thread.
   ///
-  virtual bool RemoveHandler(Handler *handler) = 0;
+  virtual bool RemoveHandler(Handler* handler) = 0;
 
   ///
   /// Cancel all pending queries associated with either |browser| or |handler|.
@@ -378,7 +383,7 @@ public:
   /// code of -1.
   ///
   virtual void CancelPending(CefRefPtr<CefBrowser> browser,
-                             Handler *handler) = 0;
+                             Handler* handler) = 0;
 
   ///
   /// Returns the number of queries currently pending for the specified
@@ -386,7 +391,7 @@ public:
   /// called on the browser process UI thread.
   ///
   virtual int GetPendingCount(CefRefPtr<CefBrowser> browser,
-                              Handler *handler) = 0;
+                              Handler* handler) = 0;
 
   /// The below methods should be called from other CEF handlers. They must be
   /// called exactly as documented for the router to function correctly.
@@ -422,10 +427,12 @@ public:
   /// is handled by this router or false otherwise.
   ///
   virtual bool OnProcessMessageReceived(
-      CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-      CefProcessId source_process, CefRefPtr<CefProcessMessage> message) = 0;
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefProcessId source_process,
+      CefRefPtr<CefProcessMessage> message) = 0;
 
-protected:
+ protected:
   // Protect against accidental deletion of this object.
   friend class base::RefCountedThreadSafe<CefMessageRouterBrowserSide>;
   virtual ~CefMessageRouterBrowserSide() = default;
@@ -437,12 +444,12 @@ protected:
 ///
 class CefMessageRouterRendererSide
     : public base::RefCountedThreadSafe<CefMessageRouterRendererSide> {
-public:
+ public:
   ///
   /// Create a new router with the specified configuration.
   ///
-  static CefRefPtr<CefMessageRouterRendererSide>
-  Create(const CefMessageRouterConfig &config);
+  static CefRefPtr<CefMessageRouterRendererSide> Create(
+      const CefMessageRouterConfig& config);
 
   ///
   /// Returns the number of queries currently pending for the specified
@@ -476,13 +483,15 @@ public:
   /// if the message is handled by this router or false otherwise.
   ///
   virtual bool OnProcessMessageReceived(
-      CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-      CefProcessId source_process, CefRefPtr<CefProcessMessage> message) = 0;
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefProcessId source_process,
+      CefRefPtr<CefProcessMessage> message) = 0;
 
-protected:
+ protected:
   // Protect against accidental deletion of this object.
   friend class base::RefCountedThreadSafe<CefMessageRouterRendererSide>;
   virtual ~CefMessageRouterRendererSide() = default;
 };
 
-#endif // CEF_INCLUDE_WRAPPER_CEF_MESSAGE_ROUTER_H_
+#endif  // CEF_INCLUDE_WRAPPER_CEF_MESSAGE_ROUTER_H_

@@ -73,15 +73,15 @@ typedef struct _cef_server_t {
   ///
   /// Returns the task runner for the dedicated server thread.
   ///
-  struct _cef_task_runner_t *(CEF_CALLBACK *get_task_runner)(
-      struct _cef_server_t *self);
+  struct _cef_task_runner_t*(CEF_CALLBACK* get_task_runner)(
+      struct _cef_server_t* self);
 
   ///
   /// Stop the server and shut down the dedicated server thread. See
   /// cef_server_handler_t::OnServerCreated documentation for a description of
   /// server lifespan.
   ///
-  void(CEF_CALLBACK *shutdown)(struct _cef_server_t *self);
+  void(CEF_CALLBACK* shutdown)(struct _cef_server_t* self);
 
   ///
   /// Returns true (1) if the server is currently running and accepting incoming
@@ -89,25 +89,25 @@ typedef struct _cef_server_t {
   /// description of server lifespan. This function must be called on the
   /// dedicated server thread.
   ///
-  int(CEF_CALLBACK *is_running)(struct _cef_server_t *self);
+  int(CEF_CALLBACK* is_running)(struct _cef_server_t* self);
 
   ///
   /// Returns the server address including the port number.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *get_address)(struct _cef_server_t *self);
+  cef_string_userfree_t(CEF_CALLBACK* get_address)(struct _cef_server_t* self);
 
   ///
   /// Returns true (1) if the server currently has a connection. This function
   /// must be called on the dedicated server thread.
   ///
-  int(CEF_CALLBACK *has_connection)(struct _cef_server_t *self);
+  int(CEF_CALLBACK* has_connection)(struct _cef_server_t* self);
 
   ///
   /// Returns true (1) if |connection_id| represents a valid connection. This
   /// function must be called on the dedicated server thread.
   ///
-  int(CEF_CALLBACK *is_valid_connection)(struct _cef_server_t *self,
+  int(CEF_CALLBACK* is_valid_connection)(struct _cef_server_t* self,
                                          int connection_id);
 
   ///
@@ -117,17 +117,18 @@ typedef struct _cef_server_t {
   /// of |data| in bytes. The contents of |data| will be copied. The connection
   /// will be closed automatically after the response is sent.
   ///
-  void(CEF_CALLBACK *send_http200_response)(struct _cef_server_t *self,
+  void(CEF_CALLBACK* send_http200_response)(struct _cef_server_t* self,
                                             int connection_id,
-                                            const cef_string_t *content_type,
-                                            const void *data, size_t data_size);
+                                            const cef_string_t* content_type,
+                                            const void* data,
+                                            size_t data_size);
 
   ///
   /// Send an HTTP 404 "Not Found" response to the connection identified by
   /// |connection_id|. The connection will be closed automatically after the
   /// response is sent.
   ///
-  void(CEF_CALLBACK *send_http404_response)(struct _cef_server_t *self,
+  void(CEF_CALLBACK* send_http404_response)(struct _cef_server_t* self,
                                             int connection_id);
 
   ///
@@ -136,9 +137,9 @@ typedef struct _cef_server_t {
   /// message. The connection will be closed automatically after the response is
   /// sent.
   ///
-  void(CEF_CALLBACK *send_http500_response)(struct _cef_server_t *self,
+  void(CEF_CALLBACK* send_http500_response)(struct _cef_server_t* self,
                                             int connection_id,
-                                            const cef_string_t *error_message);
+                                            const cef_string_t* error_message);
 
   ///
   /// Send a custom HTTP response to the connection identified by
@@ -154,9 +155,10 @@ typedef struct _cef_server_t {
   /// SendRawData function to send the content, if applicable, and call
   /// CloseConnection after all content has been sent.
   ///
-  void(CEF_CALLBACK *send_http_response)(struct _cef_server_t *self,
-                                         int connection_id, int response_code,
-                                         const cef_string_t *content_type,
+  void(CEF_CALLBACK* send_http_response)(struct _cef_server_t* self,
+                                         int connection_id,
+                                         int response_code,
+                                         const cef_string_t* content_type,
                                          int64_t content_length,
                                          cef_string_multimap_t extra_headers);
 
@@ -168,15 +170,16 @@ typedef struct _cef_server_t {
   /// the "Content-Length" header, if specified. See SendHttpResponse
   /// documentation for intended usage.
   ///
-  void(CEF_CALLBACK *send_raw_data)(struct _cef_server_t *self,
-                                    int connection_id, const void *data,
+  void(CEF_CALLBACK* send_raw_data)(struct _cef_server_t* self,
+                                    int connection_id,
+                                    const void* data,
                                     size_t data_size);
 
   ///
   /// Close the connection identified by |connection_id|. See SendHttpResponse
   /// documentation for intended usage.
   ///
-  void(CEF_CALLBACK *close_connection)(struct _cef_server_t *self,
+  void(CEF_CALLBACK* close_connection)(struct _cef_server_t* self,
                                        int connection_id);
 
   ///
@@ -185,9 +188,9 @@ typedef struct _cef_server_t {
   /// bytes. The contents of |data| will be copied. See
   /// cef_server_handler_t::OnWebSocketRequest documentation for intended usage.
   ///
-  void(CEF_CALLBACK *send_web_socket_message)(struct _cef_server_t *self,
+  void(CEF_CALLBACK* send_web_socket_message)(struct _cef_server_t* self,
                                               int connection_id,
-                                              const void *data,
+                                              const void* data,
                                               size_t data_size);
 } cef_server_t;
 
@@ -205,9 +208,10 @@ typedef struct _cef_server_t {
 /// cef_server_handler_t::OnServerCreated documentation for a description of
 /// server lifespan.
 ///
-CEF_EXPORT void cef_server_create(const cef_string_t *address, uint16_t port,
+CEF_EXPORT void cef_server_create(const cef_string_t* address,
+                                  uint16_t port,
                                   int backlog,
-                                  struct _cef_server_handler_t *handler);
+                                  struct _cef_server_handler_t* handler);
 
 ///
 /// Implement this structure to handle HTTP server requests. A new thread will
@@ -232,8 +236,8 @@ typedef struct _cef_server_handler_t {
   /// OnServerDestroyed will be called. If the server failed to start then
   /// OnServerDestroyed will be called immediately after this function returns.
   ///
-  void(CEF_CALLBACK *on_server_created)(struct _cef_server_handler_t *self,
-                                        struct _cef_server_t *server);
+  void(CEF_CALLBACK* on_server_created)(struct _cef_server_handler_t* self,
+                                        struct _cef_server_t* server);
 
   ///
   /// Called when |server| is destroyed. The server thread will be stopped after
@@ -241,16 +245,16 @@ typedef struct _cef_server_handler_t {
   /// |server| when this function is called. See OnServerCreated documentation
   /// for a description of server lifespan.
   ///
-  void(CEF_CALLBACK *on_server_destroyed)(struct _cef_server_handler_t *self,
-                                          struct _cef_server_t *server);
+  void(CEF_CALLBACK* on_server_destroyed)(struct _cef_server_handler_t* self,
+                                          struct _cef_server_t* server);
 
   ///
   /// Called when a client connects to |server|. |connection_id| uniquely
   /// identifies the connection. Each call to this function will have a matching
   /// call to OnClientDisconnected.
   ///
-  void(CEF_CALLBACK *on_client_connected)(struct _cef_server_handler_t *self,
-                                          struct _cef_server_t *server,
+  void(CEF_CALLBACK* on_client_connected)(struct _cef_server_handler_t* self,
+                                          struct _cef_server_t* server,
                                           int connection_id);
 
   ///
@@ -262,8 +266,8 @@ typedef struct _cef_server_handler_t {
   /// will disconnect automatically after a cef_server_t::SendHttpXXXResponse
   /// function is called.
   ///
-  void(CEF_CALLBACK *on_client_disconnected)(struct _cef_server_handler_t *self,
-                                             struct _cef_server_t *server,
+  void(CEF_CALLBACK* on_client_disconnected)(struct _cef_server_handler_t* self,
+                                             struct _cef_server_t* server,
                                              int connection_id);
 
   ///
@@ -274,11 +278,11 @@ typedef struct _cef_server_handler_t {
   /// cef_server_t functions either synchronously or asynchronusly to send a
   /// response.
   ///
-  void(CEF_CALLBACK *on_http_request)(struct _cef_server_handler_t *self,
-                                      struct _cef_server_t *server,
+  void(CEF_CALLBACK* on_http_request)(struct _cef_server_handler_t* self,
+                                      struct _cef_server_t* server,
                                       int connection_id,
-                                      const cef_string_t *client_address,
-                                      struct _cef_request_t *request);
+                                      const cef_string_t* client_address,
+                                      struct _cef_request_t* request);
 
   ///
   /// Called when |server| receives a WebSocket request. |connection_id|
@@ -294,20 +298,21 @@ typedef struct _cef_server_handler_t {
   /// cef_server_t::SendWebSocketMessage function after receiving the
   /// OnWebSocketConnected callback to respond with WebSocket messages.
   ///
-  void(CEF_CALLBACK *on_web_socket_request)(struct _cef_server_handler_t *self,
-                                            struct _cef_server_t *server,
+  void(CEF_CALLBACK* on_web_socket_request)(struct _cef_server_handler_t* self,
+                                            struct _cef_server_t* server,
                                             int connection_id,
-                                            const cef_string_t *client_address,
-                                            struct _cef_request_t *request,
-                                            struct _cef_callback_t *callback);
+                                            const cef_string_t* client_address,
+                                            struct _cef_request_t* request,
+                                            struct _cef_callback_t* callback);
 
   ///
   /// Called after the client has accepted the WebSocket connection for |server|
   /// and |connection_id| via the OnWebSocketRequest callback. See
   /// OnWebSocketRequest documentation for intended usage.
   ///
-  void(CEF_CALLBACK *on_web_socket_connected)(
-      struct _cef_server_handler_t *self, struct _cef_server_t *server,
+  void(CEF_CALLBACK* on_web_socket_connected)(
+      struct _cef_server_handler_t* self,
+      struct _cef_server_t* server,
       int connection_id);
 
   ///
@@ -317,9 +322,10 @@ typedef struct _cef_server_handler_t {
   /// |data| outside of this function. See OnWebSocketRequest documentation for
   /// intended usage.
   ///
-  void(CEF_CALLBACK *on_web_socket_message)(struct _cef_server_handler_t *self,
-                                            struct _cef_server_t *server,
-                                            int connection_id, const void *data,
+  void(CEF_CALLBACK* on_web_socket_message)(struct _cef_server_handler_t* self,
+                                            struct _cef_server_t* server,
+                                            int connection_id,
+                                            const void* data,
                                             size_t data_size);
 } cef_server_handler_t;
 
@@ -327,4 +333,4 @@ typedef struct _cef_server_handler_t {
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_SERVER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_SERVER_CAPI_H_

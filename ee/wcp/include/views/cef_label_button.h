@@ -50,16 +50,16 @@ class CefMenuButton;
 ///
 /*--cef(source=library)--*/
 class CefLabelButton : public CefButton {
-public:
+ public:
   ///
   /// Create a new LabelButton. A |delegate| must be provided to handle the
   /// button click. |text| will be shown on the LabelButton and used as the
   /// default accessible name.
   ///
   /*--cef(optional_param=text)--*/
-  static CefRefPtr<CefLabelButton>
-  CreateLabelButton(CefRefPtr<CefButtonDelegate> delegate,
-                    const CefString &text);
+  static CefRefPtr<CefLabelButton> CreateLabelButton(
+      CefRefPtr<CefButtonDelegate> delegate,
+      const CefString& text);
 
   ///
   /// Returns this LabelButton as a MenuButton or NULL if this is not a
@@ -73,7 +73,7 @@ public:
   /// used as the accessible name.
   ///
   /*--cef()--*/
-  virtual void SetText(const CefString &text) = 0;
+  virtual void SetText(const CefString& text) = 0;
 
   ///
   /// Returns the text shown on the LabelButton.
@@ -123,7 +123,7 @@ public:
   /// - "Arial, 14px"
   ///
   /*--cef()--*/
-  virtual void SetFontList(const CefString &font_list) = 0;
+  virtual void SetFontList(const CefString& font_list) = 0;
 
   ///
   /// Sets the horizontal alignment; reversed in RTL. Default is
@@ -136,13 +136,13 @@ public:
   /// Reset the minimum size of this LabelButton to |size|.
   ///
   /*--cef()--*/
-  virtual void SetMinimumSize(const CefSize &size) = 0;
+  virtual void SetMinimumSize(const CefSize& size) = 0;
 
   ///
   /// Reset the maximum size of this LabelButton to |size|.
   ///
   /*--cef()--*/
-  virtual void SetMaximumSize(const CefSize &size) = 0;
+  virtual void SetMaximumSize(const CefSize& size) = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_LABEL_BUTTON_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_LABEL_BUTTON_H_

@@ -7,628 +7,393 @@
 #include "agent_cache.pb.h"
 
 #include <functional>
-#include <grpcpp/client_context.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/generic/async_generic_service.h>
-#include <grpcpp/impl/proto_utils.h>
-#include <grpcpp/impl/rpc_method.h>
-#include <grpcpp/impl/server_callback_handlers.h>
-#include <grpcpp/impl/service_type.h>
-#include <grpcpp/ports_def.inc>
-#include <grpcpp/server_context.h>
 #include <grpcpp/support/async_stream.h>
 #include <grpcpp/support/async_unary_call.h>
 #include <grpcpp/support/client_callback.h>
+#include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
 #include <grpcpp/support/message_allocator.h>
 #include <grpcpp/support/method_handler.h>
+#include <grpcpp/impl/proto_utils.h>
+#include <grpcpp/impl/rpc_method.h>
 #include <grpcpp/support/server_callback.h>
+#include <grpcpp/impl/server_callback_handlers.h>
+#include <grpcpp/server_context.h>
+#include <grpcpp/impl/service_type.h>
 #include <grpcpp/support/status.h>
 #include <grpcpp/support/stub_options.h>
 #include <grpcpp/support/sync_stream.h>
+#include <grpcpp/ports_def.inc>
 
 namespace agent_cache {
 
 class AgentCache final {
-public:
-  static constexpr char const *service_full_name() {
+ public:
+  static constexpr char const* service_full_name() {
     return "agent_cache.AgentCache";
   }
   class StubInterface {
-  public:
+   public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status
-    CacheGet(::grpc::ClientContext *context,
-             const ::agent_cache::CacheGetRequest &request,
-             ::agent_cache::CacheGetResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheGetResponse>>
-    AsyncCacheGet(::grpc::ClientContext *context,
-                  const ::agent_cache::CacheGetRequest &request,
-                  ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_cache::CacheGetResponse>>(
-          AsyncCacheGetRaw(context, request, cq));
+    virtual ::grpc::Status CacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::agent_cache::CacheGetResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheGetResponse>> AsyncCacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheGetResponse>>(AsyncCacheGetRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheGetResponse>>
-    PrepareAsyncCacheGet(::grpc::ClientContext *context,
-                         const ::agent_cache::CacheGetRequest &request,
-                         ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_cache::CacheGetResponse>>(
-          PrepareAsyncCacheGetRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheGetResponse>> PrepareAsyncCacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheGetResponse>>(PrepareAsyncCacheGetRaw(context, request, cq));
     }
-    virtual ::grpc::Status
-    CacheSet(::grpc::ClientContext *context,
-             const ::agent_cache::CacheSetRequest &request,
-             ::agent_cache::CacheSetResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheSetResponse>>
-    AsyncCacheSet(::grpc::ClientContext *context,
-                  const ::agent_cache::CacheSetRequest &request,
-                  ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_cache::CacheSetResponse>>(
-          AsyncCacheSetRaw(context, request, cq));
+    virtual ::grpc::Status CacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::agent_cache::CacheSetResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheSetResponse>> AsyncCacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheSetResponse>>(AsyncCacheSetRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheSetResponse>>
-    PrepareAsyncCacheSet(::grpc::ClientContext *context,
-                         const ::agent_cache::CacheSetRequest &request,
-                         ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_cache::CacheSetResponse>>(
-          PrepareAsyncCacheSetRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheSetResponse>> PrepareAsyncCacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheSetResponse>>(PrepareAsyncCacheSetRaw(context, request, cq));
     }
     class async_interface {
-    public:
+     public:
       virtual ~async_interface() {}
-      virtual void CacheGet(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheGetRequest *request,
-                            ::agent_cache::CacheGetResponse *response,
-                            std::function<void(::grpc::Status)>) = 0;
-      virtual void CacheGet(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheGetRequest *request,
-                            ::agent_cache::CacheGetResponse *response,
-                            ::grpc::ClientUnaryReactor *reactor) = 0;
-      virtual void CacheSet(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheSetRequest *request,
-                            ::agent_cache::CacheSetResponse *response,
-                            std::function<void(::grpc::Status)>) = 0;
-      virtual void CacheSet(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheSetRequest *request,
-                            ::agent_cache::CacheSetResponse *response,
-                            ::grpc::ClientUnaryReactor *reactor) = 0;
+      virtual void CacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest* request, ::agent_cache::CacheGetResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void CacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest* request, ::agent_cache::CacheGetResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void CacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest* request, ::agent_cache::CacheSetResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void CacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest* request, ::agent_cache::CacheSetResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
-    virtual class async_interface *async() { return nullptr; }
-    class async_interface *experimental_async() { return async(); }
-
-  private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheGetResponse> *
-    AsyncCacheGetRaw(::grpc::ClientContext *context,
-                     const ::agent_cache::CacheGetRequest &request,
-                     ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheGetResponse> *
-    PrepareAsyncCacheGetRaw(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheGetRequest &request,
-                            ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheSetResponse> *
-    AsyncCacheSetRaw(::grpc::ClientContext *context,
-                     const ::agent_cache::CacheSetRequest &request,
-                     ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_cache::CacheSetResponse> *
-    PrepareAsyncCacheSetRaw(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheSetRequest &request,
-                            ::grpc::CompletionQueue *cq) = 0;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheGetResponse>* AsyncCacheGetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheGetResponse>* PrepareAsyncCacheGetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheSetResponse>* AsyncCacheSetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_cache::CacheSetResponse>* PrepareAsyncCacheSetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
-  public:
-    Stub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
-         const ::grpc::StubOptions &options = ::grpc::StubOptions());
-    ::grpc::Status CacheGet(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheGetRequest &request,
-                            ::agent_cache::CacheGetResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_cache::CacheGetResponse>>
-    AsyncCacheGet(::grpc::ClientContext *context,
-                  const ::agent_cache::CacheGetRequest &request,
-                  ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_cache::CacheGetResponse>>(
-          AsyncCacheGetRaw(context, request, cq));
+   public:
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+    ::grpc::Status CacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::agent_cache::CacheGetResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheGetResponse>> AsyncCacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheGetResponse>>(AsyncCacheGetRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_cache::CacheGetResponse>>
-    PrepareAsyncCacheGet(::grpc::ClientContext *context,
-                         const ::agent_cache::CacheGetRequest &request,
-                         ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_cache::CacheGetResponse>>(
-          PrepareAsyncCacheGetRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheGetResponse>> PrepareAsyncCacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheGetResponse>>(PrepareAsyncCacheGetRaw(context, request, cq));
     }
-    ::grpc::Status CacheSet(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheSetRequest &request,
-                            ::agent_cache::CacheSetResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_cache::CacheSetResponse>>
-    AsyncCacheSet(::grpc::ClientContext *context,
-                  const ::agent_cache::CacheSetRequest &request,
-                  ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_cache::CacheSetResponse>>(
-          AsyncCacheSetRaw(context, request, cq));
+    ::grpc::Status CacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::agent_cache::CacheSetResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheSetResponse>> AsyncCacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheSetResponse>>(AsyncCacheSetRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_cache::CacheSetResponse>>
-    PrepareAsyncCacheSet(::grpc::ClientContext *context,
-                         const ::agent_cache::CacheSetRequest &request,
-                         ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_cache::CacheSetResponse>>(
-          PrepareAsyncCacheSetRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheSetResponse>> PrepareAsyncCacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheSetResponse>>(PrepareAsyncCacheSetRaw(context, request, cq));
     }
-    class async final : public StubInterface::async_interface {
-    public:
-      void CacheGet(::grpc::ClientContext *context,
-                    const ::agent_cache::CacheGetRequest *request,
-                    ::agent_cache::CacheGetResponse *response,
-                    std::function<void(::grpc::Status)>) override;
-      void CacheGet(::grpc::ClientContext *context,
-                    const ::agent_cache::CacheGetRequest *request,
-                    ::agent_cache::CacheGetResponse *response,
-                    ::grpc::ClientUnaryReactor *reactor) override;
-      void CacheSet(::grpc::ClientContext *context,
-                    const ::agent_cache::CacheSetRequest *request,
-                    ::agent_cache::CacheSetResponse *response,
-                    std::function<void(::grpc::Status)>) override;
-      void CacheSet(::grpc::ClientContext *context,
-                    const ::agent_cache::CacheSetRequest *request,
-                    ::agent_cache::CacheSetResponse *response,
-                    ::grpc::ClientUnaryReactor *reactor) override;
-
-    private:
+    class async final :
+      public StubInterface::async_interface {
+     public:
+      void CacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest* request, ::agent_cache::CacheGetResponse* response, std::function<void(::grpc::Status)>) override;
+      void CacheGet(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest* request, ::agent_cache::CacheGetResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void CacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest* request, ::agent_cache::CacheSetResponse* response, std::function<void(::grpc::Status)>) override;
+      void CacheSet(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest* request, ::agent_cache::CacheSetResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+     private:
       friend class Stub;
-      explicit async(Stub *stub) : stub_(stub) {}
-      Stub *stub() { return stub_; }
-      Stub *stub_;
+      explicit async(Stub* stub): stub_(stub) { }
+      Stub* stub() { return stub_; }
+      Stub* stub_;
     };
-    class async *async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
-  private:
-    std::shared_ptr<::grpc::ChannelInterface> channel_;
+   private:
+    std::shared_ptr< ::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader<::agent_cache::CacheGetResponse> *
-    AsyncCacheGetRaw(::grpc::ClientContext *context,
-                     const ::agent_cache::CacheGetRequest &request,
-                     ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_cache::CacheGetResponse> *
-    PrepareAsyncCacheGetRaw(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheGetRequest &request,
-                            ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_cache::CacheSetResponse> *
-    AsyncCacheSetRaw(::grpc::ClientContext *context,
-                     const ::agent_cache::CacheSetRequest &request,
-                     ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_cache::CacheSetResponse> *
-    PrepareAsyncCacheSetRaw(::grpc::ClientContext *context,
-                            const ::agent_cache::CacheSetRequest &request,
-                            ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheGetResponse>* AsyncCacheGetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheGetResponse>* PrepareAsyncCacheGetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheGetRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheSetResponse>* AsyncCacheSetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_cache::CacheSetResponse>* PrepareAsyncCacheSetRaw(::grpc::ClientContext* context, const ::agent_cache::CacheSetRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_CacheGet_;
     const ::grpc::internal::RpcMethod rpcmethod_CacheSet_;
   };
-  static std::unique_ptr<Stub>
-  NewStub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
-          const ::grpc::StubOptions &options = ::grpc::StubOptions());
+  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
   class Service : public ::grpc::Service {
-  public:
+   public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status
-    CacheGet(::grpc::ServerContext *context,
-             const ::agent_cache::CacheGetRequest *request,
-             ::agent_cache::CacheGetResponse *response);
-    virtual ::grpc::Status
-    CacheSet(::grpc::ServerContext *context,
-             const ::agent_cache::CacheSetRequest *request,
-             ::agent_cache::CacheSetResponse *response);
+    virtual ::grpc::Status CacheGet(::grpc::ServerContext* context, const ::agent_cache::CacheGetRequest* request, ::agent_cache::CacheGetResponse* response);
+    virtual ::grpc::Status CacheSet(::grpc::ServerContext* context, const ::agent_cache::CacheSetRequest* request, ::agent_cache::CacheSetResponse* response);
   };
-  template <class BaseClass> class WithAsyncMethod_CacheGet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithAsyncMethod_CacheGet() { ::grpc::Service::MarkMethodAsync(0); }
+  template <class BaseClass>
+  class WithAsyncMethod_CacheGet : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_CacheGet() {
+      ::grpc::Service::MarkMethodAsync(0);
+    }
     ~WithAsyncMethod_CacheGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheGet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheGetRequest * /*request*/,
-             ::agent_cache::CacheGetResponse * /*response*/) override {
+    ::grpc::Status CacheGet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheGetRequest* /*request*/, ::agent_cache::CacheGetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestCacheGet(
-        ::grpc::ServerContext *context, ::agent_cache::CacheGetRequest *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_cache::CacheGetResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestCacheGet(::grpc::ServerContext* context, ::agent_cache::CacheGetRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_cache::CacheGetResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass> class WithAsyncMethod_CacheSet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithAsyncMethod_CacheSet() { ::grpc::Service::MarkMethodAsync(1); }
+  template <class BaseClass>
+  class WithAsyncMethod_CacheSet : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_CacheSet() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
     ~WithAsyncMethod_CacheSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheSet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheSetRequest * /*request*/,
-             ::agent_cache::CacheSetResponse * /*response*/) override {
+    ::grpc::Status CacheSet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheSetRequest* /*request*/, ::agent_cache::CacheSetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestCacheSet(
-        ::grpc::ServerContext *context, ::agent_cache::CacheSetRequest *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_cache::CacheSetResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestCacheSet(::grpc::ServerContext* context, ::agent_cache::CacheSetRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_cache::CacheSetResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_CacheGet<WithAsyncMethod_CacheSet<Service>>
-      AsyncService;
+  typedef WithAsyncMethod_CacheGet<WithAsyncMethod_CacheSet<Service > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_CacheGet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_CacheGet() {
-      ::grpc::Service::MarkMethodCallback(
-          0,
-          new ::grpc::internal::CallbackUnaryHandler<
-              ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse>(
-              [this](::grpc::CallbackServerContext *context,
-                     const ::agent_cache::CacheGetRequest *request,
-                     ::agent_cache::CacheGetResponse *response) {
-                return this->CacheGet(context, request, response);
-              }));
-    }
+      ::grpc::Service::MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agent_cache::CacheGetRequest* request, ::agent_cache::CacheGetResponse* response) { return this->CacheGet(context, request, response); }));}
     void SetMessageAllocatorFor_CacheGet(
-        ::grpc::MessageAllocator<::agent_cache::CacheGetRequest,
-                                 ::agent_cache::CacheGetResponse> *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse> *>(
-          handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_CacheGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheGet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheGetRequest * /*request*/,
-             ::agent_cache::CacheGetResponse * /*response*/) override {
+    ::grpc::Status CacheGet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheGetRequest* /*request*/, ::agent_cache::CacheGetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    CacheGet(::grpc::CallbackServerContext * /*context*/,
-             const ::agent_cache::CacheGetRequest * /*request*/,
-             ::agent_cache::CacheGetResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* CacheGet(
+      ::grpc::CallbackServerContext* /*context*/, const ::agent_cache::CacheGetRequest* /*request*/, ::agent_cache::CacheGetResponse* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithCallbackMethod_CacheSet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_CacheSet() {
-      ::grpc::Service::MarkMethodCallback(
-          1,
-          new ::grpc::internal::CallbackUnaryHandler<
-              ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse>(
-              [this](::grpc::CallbackServerContext *context,
-                     const ::agent_cache::CacheSetRequest *request,
-                     ::agent_cache::CacheSetResponse *response) {
-                return this->CacheSet(context, request, response);
-              }));
-    }
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agent_cache::CacheSetRequest* request, ::agent_cache::CacheSetResponse* response) { return this->CacheSet(context, request, response); }));}
     void SetMessageAllocatorFor_CacheSet(
-        ::grpc::MessageAllocator<::agent_cache::CacheSetRequest,
-                                 ::agent_cache::CacheSetResponse> *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(1);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse> *>(
-          handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_CacheSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheSet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheSetRequest * /*request*/,
-             ::agent_cache::CacheSetResponse * /*response*/) override {
+    ::grpc::Status CacheSet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheSetRequest* /*request*/, ::agent_cache::CacheSetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    CacheSet(::grpc::CallbackServerContext * /*context*/,
-             const ::agent_cache::CacheSetRequest * /*request*/,
-             ::agent_cache::CacheSetResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* CacheSet(
+      ::grpc::CallbackServerContext* /*context*/, const ::agent_cache::CacheSetRequest* /*request*/, ::agent_cache::CacheSetResponse* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_CacheGet<WithCallbackMethod_CacheSet<Service>>
-      CallbackService;
+  typedef WithCallbackMethod_CacheGet<WithCallbackMethod_CacheSet<Service > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_CacheGet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithGenericMethod_CacheGet() { ::grpc::Service::MarkMethodGeneric(0); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_CacheGet() {
+      ::grpc::Service::MarkMethodGeneric(0);
+    }
     ~WithGenericMethod_CacheGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheGet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheGetRequest * /*request*/,
-             ::agent_cache::CacheGetResponse * /*response*/) override {
+    ::grpc::Status CacheGet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheGetRequest* /*request*/, ::agent_cache::CacheGetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithGenericMethod_CacheSet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithGenericMethod_CacheSet() { ::grpc::Service::MarkMethodGeneric(1); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_CacheSet() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
     ~WithGenericMethod_CacheSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheSet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheSetRequest * /*request*/,
-             ::agent_cache::CacheSetResponse * /*response*/) override {
+    ::grpc::Status CacheSet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheSetRequest* /*request*/, ::agent_cache::CacheSetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
-  template <class BaseClass> class WithRawMethod_CacheGet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_CacheGet() { ::grpc::Service::MarkMethodRaw(0); }
+  template <class BaseClass>
+  class WithRawMethod_CacheGet : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_CacheGet() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
     ~WithRawMethod_CacheGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheGet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheGetRequest * /*request*/,
-             ::agent_cache::CacheGetResponse * /*response*/) override {
+    ::grpc::Status CacheGet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheGetRequest* /*request*/, ::agent_cache::CacheGetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestCacheGet(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestCacheGet(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass> class WithRawMethod_CacheSet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_CacheSet() { ::grpc::Service::MarkMethodRaw(1); }
+  template <class BaseClass>
+  class WithRawMethod_CacheSet : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_CacheSet() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
     ~WithRawMethod_CacheSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheSet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheSetRequest * /*request*/,
-             ::agent_cache::CacheSetResponse * /*response*/) override {
+    ::grpc::Status CacheSet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheSetRequest* /*request*/, ::agent_cache::CacheSetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestCacheSet(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestCacheSet(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_CacheGet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_CacheGet() {
-      ::grpc::Service::MarkMethodRawCallback(
-          0, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->CacheGet(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CacheGet(context, request, response); }));
     }
     ~WithRawCallbackMethod_CacheGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheGet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheGetRequest * /*request*/,
-             ::agent_cache::CacheGetResponse * /*response*/) override {
+    ::grpc::Status CacheGet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheGetRequest* /*request*/, ::agent_cache::CacheGetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    CacheGet(::grpc::CallbackServerContext * /*context*/,
-             const ::grpc::ByteBuffer * /*request*/,
-             ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* CacheGet(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_CacheSet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_CacheSet() {
-      ::grpc::Service::MarkMethodRawCallback(
-          1, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->CacheSet(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CacheSet(context, request, response); }));
     }
     ~WithRawCallbackMethod_CacheSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    CacheSet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheSetRequest * /*request*/,
-             ::agent_cache::CacheSetResponse * /*response*/) override {
+    ::grpc::Status CacheSet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheSetRequest* /*request*/, ::agent_cache::CacheSetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    CacheSet(::grpc::CallbackServerContext * /*context*/,
-             const ::grpc::ByteBuffer * /*request*/,
-             ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* CacheSet(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_CacheGet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_CacheGet() {
-      ::grpc::Service::MarkMethodStreamed(
-          0,
-          new ::grpc::internal::StreamedUnaryHandler<
-              ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse>(
-              [this](
-                  ::grpc::ServerContext *context,
-                  ::grpc::ServerUnaryStreamer<::agent_cache::CacheGetRequest,
-                                              ::agent_cache::CacheGetResponse>
-                      *streamer) {
-                return this->StreamedCacheGet(context, streamer);
-              }));
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agent_cache::CacheGetRequest, ::agent_cache::CacheGetResponse>* streamer) {
+                       return this->StreamedCacheGet(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_CacheGet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status
-    CacheGet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheGetRequest * /*request*/,
-             ::agent_cache::CacheGetResponse * /*response*/) override {
+    ::grpc::Status CacheGet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheGetRequest* /*request*/, ::agent_cache::CacheGetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedCacheGet(
-        ::grpc::ServerContext *context,
-        ::grpc::ServerUnaryStreamer<::agent_cache::CacheGetRequest,
-                                    ::agent_cache::CacheGetResponse>
-            *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedCacheGet(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_cache::CacheGetRequest,::agent_cache::CacheGetResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_CacheSet : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_CacheSet() {
-      ::grpc::Service::MarkMethodStreamed(
-          1,
-          new ::grpc::internal::StreamedUnaryHandler<
-              ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse>(
-              [this](
-                  ::grpc::ServerContext *context,
-                  ::grpc::ServerUnaryStreamer<::agent_cache::CacheSetRequest,
-                                              ::agent_cache::CacheSetResponse>
-                      *streamer) {
-                return this->StreamedCacheSet(context, streamer);
-              }));
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agent_cache::CacheSetRequest, ::agent_cache::CacheSetResponse>* streamer) {
+                       return this->StreamedCacheSet(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_CacheSet() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status
-    CacheSet(::grpc::ServerContext * /*context*/,
-             const ::agent_cache::CacheSetRequest * /*request*/,
-             ::agent_cache::CacheSetResponse * /*response*/) override {
+    ::grpc::Status CacheSet(::grpc::ServerContext* /*context*/, const ::agent_cache::CacheSetRequest* /*request*/, ::agent_cache::CacheSetResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedCacheSet(
-        ::grpc::ServerContext *context,
-        ::grpc::ServerUnaryStreamer<::agent_cache::CacheSetRequest,
-                                    ::agent_cache::CacheSetResponse>
-            *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedCacheSet(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_cache::CacheSetRequest,::agent_cache::CacheSetResponse>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_CacheGet<
-      WithStreamedUnaryMethod_CacheSet<Service>>
-      StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_CacheGet<WithStreamedUnaryMethod_CacheSet<Service > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_CacheGet<
-      WithStreamedUnaryMethod_CacheSet<Service>>
-      StreamedService;
+  typedef WithStreamedUnaryMethod_CacheGet<WithStreamedUnaryMethod_CacheSet<Service > > StreamedService;
 };
 
-} // namespace agent_cache
+}  // namespace agent_cache
+
 
 #include <grpcpp/ports_undef.inc>
-#endif // GRPC_agent_5fcache_2eproto__INCLUDED
+#endif  // GRPC_agent_5fcache_2eproto__INCLUDED

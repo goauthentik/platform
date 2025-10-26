@@ -63,12 +63,12 @@ extern "C" {
 /// multiple of this object and to destroy the object immediately after passing
 /// into the CefExecuteProcess() and/or CefInitialize() functions.
 ///
-void *cef_sandbox_info_create(void);
+void* cef_sandbox_info_create(void);
 
 ///
 /// Destroy the specified sandbox information object.
 ///
-void cef_sandbox_info_destroy(void *sandbox_info);
+void cef_sandbox_info_destroy(void* sandbox_info);
 
 #ifdef __cplusplus
 }
@@ -77,17 +77,17 @@ void cef_sandbox_info_destroy(void *sandbox_info);
 /// Manages the life span of a sandbox information object.
 ///
 class CefScopedSandboxInfo {
-public:
+ public:
   CefScopedSandboxInfo() { sandbox_info_ = cef_sandbox_info_create(); }
   ~CefScopedSandboxInfo() { cef_sandbox_info_destroy(sandbox_info_); }
 
-  void *sandbox_info() const { return sandbox_info_; }
+  void* sandbox_info() const { return sandbox_info_; }
 
-private:
-  void *sandbox_info_;
+ private:
+  void* sandbox_info_;
 };
-#endif // __cplusplus
+#endif  // __cplusplus
 
-#endif // defined(OS_WIN)
+#endif  // defined(OS_WIN)
 
-#endif // CEF_INCLUDE_CEF_SANDBOX_WIN_H_
+#endif  // CEF_INCLUDE_CEF_SANDBOX_WIN_H_

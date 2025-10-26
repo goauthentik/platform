@@ -57,7 +57,7 @@ extern "C" {
 
 // Handle types.
 typedef HCURSOR cef_cursor_handle_t;
-typedef MSG *cef_event_handle_t;
+typedef MSG* cef_event_handle_t;
 typedef HWND cef_window_handle_t;
 typedef HANDLE cef_shared_texture_handle_t;
 
@@ -157,6 +157,6 @@ typedef struct _cef_accelerated_paint_info_t {
 }
 #endif
 
-#endif // OS_WIN
+#endif  // OS_WIN
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_TYPES_WIN_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_WIN_H_

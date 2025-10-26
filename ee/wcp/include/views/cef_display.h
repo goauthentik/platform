@@ -52,7 +52,7 @@
 ///
 /*--cef(source=library)--*/
 class CefDisplay : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns the primary Display.
   ///
@@ -64,7 +64,7 @@ public:
   /// |point| is in pixel screen coordinates instead of DIP screen coordinates.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefDisplay> GetDisplayNearestPoint(const CefPoint &point,
+  static CefRefPtr<CefDisplay> GetDisplayNearestPoint(const CefPoint& point,
                                                       bool input_pixel_coords);
 
   ///
@@ -73,8 +73,9 @@ public:
   /// instead of DIP screen coordinates.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefDisplay>
-  GetDisplayMatchingBounds(const CefRect &bounds, bool input_pixel_coords);
+  static CefRefPtr<CefDisplay> GetDisplayMatchingBounds(
+      const CefRect& bounds,
+      bool input_pixel_coords);
 
   ///
   /// Returns the total number of Displays. Mirrored displays are excluded; this
@@ -88,35 +89,35 @@ public:
   /// intended to return distinct, usable displays.
   ///
   /*--cef(count_func=displays:GetDisplayCount)--*/
-  static void GetAllDisplays(std::vector<CefRefPtr<CefDisplay>> &displays);
+  static void GetAllDisplays(std::vector<CefRefPtr<CefDisplay>>& displays);
 
   ///
   /// Convert |point| from DIP screen coordinates to pixel screen coordinates.
   /// This method is only used on Windows.
   ///
   /*--cef()--*/
-  static CefPoint ConvertScreenPointToPixels(const CefPoint &point);
+  static CefPoint ConvertScreenPointToPixels(const CefPoint& point);
 
   ///
   /// Convert |point| from pixel screen coordinates to DIP screen coordinates.
   /// This method is only used on Windows.
   ///
   /*--cef()--*/
-  static CefPoint ConvertScreenPointFromPixels(const CefPoint &point);
+  static CefPoint ConvertScreenPointFromPixels(const CefPoint& point);
 
   ///
   /// Convert |rect| from DIP screen coordinates to pixel screen coordinates.
   /// This method is only used on Windows.
   ///
   /*--cef()--*/
-  static CefRect ConvertScreenRectToPixels(const CefRect &rect);
+  static CefRect ConvertScreenRectToPixels(const CefRect& rect);
 
   ///
   /// Convert |rect| from pixel screen coordinates to DIP screen coordinates.
   /// This method is only used on Windows.
   ///
   /*--cef()--*/
-  static CefRect ConvertScreenRectFromPixels(const CefRect &rect);
+  static CefRect ConvertScreenRectFromPixels(const CefRect& rect);
 
   ///
   /// Returns the unique identifier for this Display.
@@ -138,14 +139,14 @@ public:
   /// Display's device scale factor.
   ///
   /*--cef()--*/
-  virtual void ConvertPointToPixels(CefPoint &point) = 0;
+  virtual void ConvertPointToPixels(CefPoint& point) = 0;
 
   ///
   /// Convert |point| from pixel coordinates to DIP coordinates using this
   /// Display's device scale factor.
   ///
   /*--cef()--*/
-  virtual void ConvertPointFromPixels(CefPoint &point) = 0;
+  virtual void ConvertPointFromPixels(CefPoint& point) = 0;
 
   ///
   /// Returns this Display's bounds in DIP screen coordinates. This is the full
@@ -168,4 +169,4 @@ public:
   virtual int GetRotation() = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_DISPLAY_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_DISPLAY_H_

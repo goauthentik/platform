@@ -14,6 +14,6 @@ void AssertNotShutdown();
 // Called from libcef_dll.cc and libcef_dll_wrapper.cc.
 void SetIsShutdown();
 
-} // namespace shutdown_checker
+}  // namespace shutdown_checker
 
-#endif // CEF_LIBCEF_DLL_SHUTDOWN_CHECKER_H_
+#endif  // CEF_LIBCEF_DLL_SHUTDOWN_CHECKER_H_

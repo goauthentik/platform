@@ -30,7 +30,7 @@ class CefApiVersionTestScopedLibraryCToCpp
     : public CefCToCppScoped<CefApiVersionTestScopedLibraryCToCpp,
                              CefApiVersionTestScopedLibrary,
                              cef_api_version_test_scoped_library_t> {
-public:
+ public:
   CefApiVersionTestScopedLibraryCToCpp();
   virtual ~CefApiVersionTestScopedLibraryCToCpp();
 
@@ -70,4 +70,4 @@ constexpr auto CefApiVersionTestScopedLibraryCToCpp_UnwrapOwn =
 constexpr auto CefApiVersionTestScopedLibraryCToCpp_UnwrapRaw =
     CefApiVersionTestScopedLibraryCToCpp::UnwrapRaw;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_SCOPED_LIBRARY_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_SCOPED_LIBRARY_CTOCPP_H_

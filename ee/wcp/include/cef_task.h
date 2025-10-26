@@ -51,7 +51,7 @@ typedef cef_thread_id_t CefThreadId;
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefTask : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Method that will be executed on the target thread.
   ///
@@ -70,7 +70,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefTaskRunner : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns the task runner for the current thread. Only CEF threads will have
   /// task runners. An empty reference will be returned if this method is called
@@ -141,7 +141,8 @@ bool CefPostTask(CefThreadId threadId, CefRefPtr<CefTask> task);
 /// delay_ms).
 ///
 /*--cef()--*/
-bool CefPostDelayedTask(CefThreadId threadId, CefRefPtr<CefTask> task,
+bool CefPostDelayedTask(CefThreadId threadId,
+                        CefRefPtr<CefTask> task,
                         int64_t delay_ms);
 
-#endif // CEF_INCLUDE_CEF_TASK_H_
+#endif  // CEF_INCLUDE_CEF_TASK_H_

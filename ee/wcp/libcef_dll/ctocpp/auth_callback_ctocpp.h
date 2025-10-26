@@ -26,19 +26,19 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefAuthCallbackCToCpp
-    : public CefCToCppRefCounted<CefAuthCallbackCToCpp, CefAuthCallback,
-                                 cef_auth_callback_t> {
-public:
+class CefAuthCallbackCToCpp : public CefCToCppRefCounted<CefAuthCallbackCToCpp,
+                                                         CefAuthCallback,
+                                                         cef_auth_callback_t> {
+ public:
   CefAuthCallbackCToCpp();
   virtual ~CefAuthCallbackCToCpp();
 
   // CefAuthCallback methods.
-  void Continue(const CefString &username, const CefString &password) override;
+  void Continue(const CefString& username, const CefString& password) override;
   void Cancel() override;
 };
 
 constexpr auto CefAuthCallbackCToCpp_Wrap = CefAuthCallbackCToCpp::Wrap;
 constexpr auto CefAuthCallbackCToCpp_Unwrap = CefAuthCallbackCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_AUTH_CALLBACK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_AUTH_CALLBACK_CTOCPP_H_

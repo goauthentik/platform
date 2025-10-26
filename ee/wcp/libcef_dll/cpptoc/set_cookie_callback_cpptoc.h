@@ -30,7 +30,7 @@ class CefSetCookieCallbackCppToC
     : public CefCppToCRefCounted<CefSetCookieCallbackCppToC,
                                  CefSetCookieCallback,
                                  cef_set_cookie_callback_t> {
-public:
+ public:
   CefSetCookieCallbackCppToC();
   virtual ~CefSetCookieCallbackCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefSetCookieCallbackCppToC_Wrap =
 constexpr auto CefSetCookieCallbackCppToC_Unwrap =
     CefSetCookieCallbackCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_SET_COOKIE_CALLBACK_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_SET_COOKIE_CALLBACK_CPPTOC_H_

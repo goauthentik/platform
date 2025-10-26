@@ -48,7 +48,7 @@ class CefBrowser;
 ///
 /*--cef(source=client)--*/
 class CefDevToolsMessageObserver : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Method that will be called on receipt of a DevTools protocol message.
   /// |browser| is the originating browser instance. |message| is a UTF8-encoded
@@ -73,7 +73,8 @@ public:
   ///
   /*--cef()--*/
   virtual bool OnDevToolsMessage(CefRefPtr<CefBrowser> browser,
-                                 const void *message, size_t message_size) {
+                                 const void* message,
+                                 size_t message_size) {
     return false;
   }
 
@@ -91,8 +92,10 @@ public:
   ///
   /*--cef(optional_param=result)--*/
   virtual void OnDevToolsMethodResult(CefRefPtr<CefBrowser> browser,
-                                      int message_id, bool success,
-                                      const void *result, size_t result_size) {}
+                                      int message_id,
+                                      bool success,
+                                      const void* result,
+                                      size_t result_size) {}
 
   ///
   /// Method that will be called on receipt of a DevTools protocol event.
@@ -104,7 +107,8 @@ public:
   ///
   /*--cef(optional_param=params)--*/
   virtual void OnDevToolsEvent(CefRefPtr<CefBrowser> browser,
-                               const CefString &method, const void *params,
+                               const CefString& method,
+                               const void* params,
                                size_t params_size) {}
 
   ///
@@ -125,4 +129,4 @@ public:
   virtual void OnDevToolsAgentDetached(CefRefPtr<CefBrowser> browser) {}
 };
 
-#endif // CEF_INCLUDE_CEF_DEVTOOLS_MESSAGE_OBSERVER_H_
+#endif  // CEF_INCLUDE_CEF_DEVTOOLS_MESSAGE_OBSERVER_H_

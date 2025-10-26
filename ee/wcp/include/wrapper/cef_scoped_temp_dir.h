@@ -53,14 +53,14 @@
 /// intervening calls to Delete or Take, or the calls will fail.
 ///
 class CefScopedTempDir {
-public:
+ public:
   ///
   /// No directory is owned/created initially.
   ///
   CefScopedTempDir();
 
-  CefScopedTempDir(const CefScopedTempDir &) = delete;
-  CefScopedTempDir &operator=(const CefScopedTempDir &) = delete;
+  CefScopedTempDir(const CefScopedTempDir&) = delete;
+  CefScopedTempDir& operator=(const CefScopedTempDir&) = delete;
 
   ///
   /// Recursively delete path.
@@ -76,13 +76,13 @@ public:
   ///
   /// Creates a unique directory under a given path, and takes ownership of it.
   ///
-  [[nodiscard]] bool CreateUniqueTempDirUnderPath(const CefString &path);
+  [[nodiscard]] bool CreateUniqueTempDirUnderPath(const CefString& path);
 
   ///
   /// Takes ownership of directory at |path|, creating it if necessary.
   /// Don't call multiple times unless Take() has been called first.
   ///
-  [[nodiscard]] bool Set(const CefString &path);
+  [[nodiscard]] bool Set(const CefString& path);
 
   ///
   /// Deletes the temporary directory wrapped by this object.
@@ -99,7 +99,7 @@ public:
   /// Returns the path to the created directory. Call one of the
   /// CreateUniqueTempDir* methods before getting the path.
   ///
-  const CefString &GetPath() const;
+  const CefString& GetPath() const;
 
   ///
   /// Returns true if path_ is empty.
@@ -111,8 +111,8 @@ public:
   ///
   bool IsValid() const;
 
-private:
+ private:
   CefString path_;
 };
 
-#endif // CEF_INCLUDE_SCOPED_TEMP_DIR_H_
+#endif  // CEF_INCLUDE_SCOPED_TEMP_DIR_H_

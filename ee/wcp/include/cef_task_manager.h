@@ -48,7 +48,7 @@
 ///
 /*--cef(source=library)--*/
 class CefTaskManager : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef std::vector<int64_t> TaskIdList;
   typedef cef_task_type_t TaskType;
 
@@ -77,7 +77,7 @@ public:
   /// Returns false if the method was called from the incorrect thread.
   ///
   /*--cef(count_func=task_ids:GetTasksCount)--*/
-  virtual bool GetTaskIdsList(TaskIdList &task_ids) = 0;
+  virtual bool GetTaskIdsList(TaskIdList& task_ids) = 0;
 
   ///
   /// Gets information about the task with |task_id|.
@@ -86,7 +86,7 @@ public:
   /// from the incorrect thread.
   ///
   /*--cef()--*/
-  virtual bool GetTaskInfo(int64_t task_id, CefTaskInfo &info) = 0;
+  virtual bool GetTaskInfo(int64_t task_id, CefTaskInfo& info) = 0;
 
   ///
   /// Attempts to terminate a task with |task_id|.
@@ -106,4 +106,4 @@ public:
   virtual int64_t GetTaskIdForBrowserId(int browser_id) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_TASK_MANAGER_H_
+#endif  // CEF_INCLUDE_CEF_TASK_MANAGER_H_

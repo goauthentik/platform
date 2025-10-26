@@ -60,10 +60,10 @@ extern "C" {
 /// - If the first argument on the command line does not contain a slash, PATH
 ///   will be searched. (See man execvp.)
 ///
-CEF_EXPORT int cef_launch_process(struct _cef_command_line_t *command_line);
+CEF_EXPORT int cef_launch_process(struct _cef_command_line_t* command_line);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_PROCESS_UTIL_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_PROCESS_UTIL_CAPI_H_

@@ -66,7 +66,7 @@ typedef struct _cef_response_filter_t {
   /// Initialize the response filter. Will only be called a single time. The
   /// filter will not be installed if this function returns false (0).
   ///
-  int(CEF_CALLBACK *init_filter)(struct _cef_response_filter_t *self);
+  int(CEF_CALLBACK* init_filter)(struct _cef_response_filter_t* self);
 
   ///
   /// Called to filter a chunk of data. Expected usage is as follows:
@@ -99,14 +99,18 @@ typedef struct _cef_response_filter_t {
   ///
   /// Do not keep a reference to the buffers passed to this function.
   ///
-  cef_response_filter_status_t(CEF_CALLBACK *filter)(
-      struct _cef_response_filter_t *self, void *data_in, size_t data_in_size,
-      size_t *data_in_read, void *data_out, size_t data_out_size,
-      size_t *data_out_written);
+  cef_response_filter_status_t(CEF_CALLBACK* filter)(
+      struct _cef_response_filter_t* self,
+      void* data_in,
+      size_t data_in_size,
+      size_t* data_in_read,
+      void* data_out,
+      size_t data_out_size,
+      size_t* data_out_written);
 } cef_response_filter_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_RESPONSE_FILTER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_RESPONSE_FILTER_CAPI_H_

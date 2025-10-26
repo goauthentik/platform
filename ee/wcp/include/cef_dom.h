@@ -51,7 +51,7 @@ class CefDOMNode;
 ///
 /*--cef(source=client)--*/
 class CefDOMVisitor : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Method executed for visiting the DOM. The document object passed to this
   /// method represents a snapshot of the DOM at the time this method is
@@ -69,7 +69,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefDOMDocument : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_dom_document_type_t Type;
 
   ///
@@ -106,7 +106,7 @@ public:
   /// Returns the document element with the specified ID value.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefDOMNode> GetElementById(const CefString &id) = 0;
+  virtual CefRefPtr<CefDOMNode> GetElementById(const CefString& id) = 0;
 
   ///
   /// Returns the node that currently has keyboard focus.
@@ -155,7 +155,7 @@ public:
   /// partial URL.
   ///
   /*--cef()--*/
-  virtual CefString GetCompleteURL(const CefString &partialURL) = 0;
+  virtual CefString GetCompleteURL(const CefString& partialURL) = 0;
 };
 
 ///
@@ -164,7 +164,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefDOMNode : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef std::map<CefString, CefString> AttributeMap;
   typedef cef_dom_node_type_t Type;
   typedef cef_dom_form_control_type_t FormControlType;
@@ -228,7 +228,7 @@ public:
   /// Set the value of this node. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool SetValue(const CefString &value) = 0;
+  virtual bool SetValue(const CefString& value) = 0;
 
   ///
   /// Returns the contents of this node as markup.
@@ -296,27 +296,27 @@ public:
   /// Returns true if this element has an attribute named |attrName|.
   ///
   /*--cef()--*/
-  virtual bool HasElementAttribute(const CefString &attrName) = 0;
+  virtual bool HasElementAttribute(const CefString& attrName) = 0;
 
   ///
   /// Returns the element attribute named |attrName|.
   ///
   /*--cef()--*/
-  virtual CefString GetElementAttribute(const CefString &attrName) = 0;
+  virtual CefString GetElementAttribute(const CefString& attrName) = 0;
 
   ///
   /// Returns a map of all element attributes.
   ///
   /*--cef()--*/
-  virtual void GetElementAttributes(AttributeMap &attrMap) = 0;
+  virtual void GetElementAttributes(AttributeMap& attrMap) = 0;
 
   ///
   /// Set the value for the element attribute named |attrName|. Returns true on
   /// success.
   ///
   /*--cef()--*/
-  virtual bool SetElementAttribute(const CefString &attrName,
-                                   const CefString &value) = 0;
+  virtual bool SetElementAttribute(const CefString& attrName,
+                                   const CefString& value) = 0;
 
   ///
   /// Returns the inner text of the element.
@@ -332,4 +332,4 @@ public:
   virtual CefRect GetElementBounds() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_DOM_H_
+#endif  // CEF_INCLUDE_CEF_DOM_H_

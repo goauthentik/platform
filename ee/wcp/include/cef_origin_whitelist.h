@@ -78,9 +78,9 @@
 /// is invalid or the whitelist cannot be accessed.
 ///
 /*--cef(optional_param=target_domain)--*/
-bool CefAddCrossOriginWhitelistEntry(const CefString &source_origin,
-                                     const CefString &target_protocol,
-                                     const CefString &target_domain,
+bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin,
+                                     const CefString& target_protocol,
+                                     const CefString& target_domain,
                                      bool allow_target_subdomains);
 
 ///
@@ -88,9 +88,9 @@ bool CefAddCrossOriginWhitelistEntry(const CefString &source_origin,
 /// |source_origin| is invalid or the whitelist cannot be accessed.
 ///
 /*--cef(optional_param=target_domain)--*/
-bool CefRemoveCrossOriginWhitelistEntry(const CefString &source_origin,
-                                        const CefString &target_protocol,
-                                        const CefString &target_domain,
+bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin,
+                                        const CefString& target_protocol,
+                                        const CefString& target_domain,
                                         bool allow_target_subdomains);
 
 ///
@@ -100,4 +100,4 @@ bool CefRemoveCrossOriginWhitelistEntry(const CefString &source_origin,
 /*--cef()--*/
 bool CefClearCrossOriginWhitelist();
 
-#endif // CEF_INCLUDE_CEF_ORIGIN_WHITELIST_H_
+#endif  // CEF_INCLUDE_CEF_ORIGIN_WHITELIST_H_

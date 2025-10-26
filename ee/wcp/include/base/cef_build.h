@@ -84,7 +84,7 @@
 #endif
 #endif
 
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 
 #if !defined(GENERATING_CEF_API_HASH)
 #include "include/cef_config.h"
@@ -108,13 +108,13 @@
 #define OS_MAC 1
 // For backwards compatibility.
 #define OS_MACOSX 1
-#endif // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+#endif  // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
 #elif defined(__linux__)
 #if !defined(OS_CHROMEOS)
 // Do not define OS_LINUX on Chrome OS build.
 // The OS_CHROMEOS macro is defined in GN.
 #define OS_LINUX 1
-#endif // !defined(OS_CHROMEOS)
+#endif  // !defined(OS_CHROMEOS)
 // Include a system header to pull in features.h for glibc/uclibc macros.
 #include <unistd.h>
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
@@ -157,10 +157,10 @@
 
 // For access to standard POSIXish features, use OS_POSIX instead of a
 // more specific macro.
-#if defined(OS_AIX) || defined(OS_ANDROID) || defined(OS_ASMJS) ||             \
-    defined(OS_FREEBSD) || defined(OS_IOS) || defined(OS_LINUX) ||             \
-    defined(OS_CHROMEOS) || defined(OS_MAC) || defined(OS_NACL) ||             \
-    defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_QNX) ||            \
+#if defined(OS_AIX) || defined(OS_ANDROID) || defined(OS_ASMJS) ||  \
+    defined(OS_FREEBSD) || defined(OS_IOS) || defined(OS_LINUX) ||  \
+    defined(OS_CHROMEOS) || defined(OS_MAC) || defined(OS_NACL) ||  \
+    defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_QNX) || \
     defined(OS_SOLARIS)
 #define OS_POSIX 1
 #endif
@@ -255,10 +255,10 @@
 #define WCHAR_T_IS_16_BIT
 #elif defined(OS_FUCHSIA)
 #define WCHAR_T_IS_32_BIT
-#elif defined(OS_POSIX) && defined(COMPILER_GCC) && defined(__WCHAR_MAX__) &&  \
+#elif defined(OS_POSIX) && defined(COMPILER_GCC) && defined(__WCHAR_MAX__) && \
     (__WCHAR_MAX__ == 0x7fffffff || __WCHAR_MAX__ == 0xffffffff)
 #define WCHAR_T_IS_32_BIT
-#elif defined(OS_POSIX) && defined(COMPILER_GCC) && defined(__WCHAR_MAX__) &&  \
+#elif defined(OS_POSIX) && defined(COMPILER_GCC) && defined(__WCHAR_MAX__) && \
     (__WCHAR_MAX__ == 0x7fff || __WCHAR_MAX__ == 0xffff)
 // On Posix, we'll detect short wchar_t, but projects aren't guaranteed to
 // compile in this mode (in particular, Chrome doesn't). This is intended for
@@ -278,6 +278,6 @@
 #define BASE_STRING16_ITERATOR_IS_CHAR16_POINTER
 #endif
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_BUILD_H_
+#endif  // CEF_INCLUDE_BASE_CEF_BUILD_H_

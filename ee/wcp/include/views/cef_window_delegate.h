@@ -48,7 +48,7 @@ class CefWindow;
 ///
 /*--cef(source=client)--*/
 class CefWindowDelegate : public CefPanelDelegate {
-public:
+ public:
   ///
   /// Called when |window| is created.
   ///
@@ -82,7 +82,7 @@ public:
   ///
   /*--cef()--*/
   virtual void OnWindowBoundsChanged(CefRefPtr<CefWindow> window,
-                                     const CefRect &new_bounds) {}
+                                     const CefRect& new_bounds) {}
 
   ///
   /// Called when |window| is transitioning to or from fullscreen mode. On MacOS
@@ -107,8 +107,8 @@ public:
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefWindow> GetParentWindow(CefRefPtr<CefWindow> window,
-                                               bool *is_menu,
-                                               bool *can_activate_menu) {
+                                               bool* is_menu,
+                                               bool* can_activate_menu) {
     return nullptr;
   }
 
@@ -172,7 +172,7 @@ public:
   ///
   /*--cef()--*/
   virtual bool GetTitlebarHeight(CefRefPtr<CefWindow> window,
-                                 float *titlebar_height) {
+                                 float* titlebar_height) {
     return false;
   }
 
@@ -233,7 +233,7 @@ public:
   ///
   /*--cef()--*/
   virtual bool OnKeyEvent(CefRefPtr<CefWindow> window,
-                          const CefKeyEvent &event) {
+                          const CefKeyEvent& event) {
     return false;
   }
 
@@ -285,9 +285,9 @@ public:
   ///
   /*--cef()--*/
   virtual bool GetLinuxWindowProperties(CefRefPtr<CefWindow> window,
-                                        CefLinuxWindowProperties &properties) {
+                                        CefLinuxWindowProperties& properties) {
     return false;
   }
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_WINDOW_DELEGATE_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_WINDOW_DELEGATE_H_

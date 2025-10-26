@@ -30,7 +30,7 @@ class CefResourceBundleHandlerCppToC
     : public CefCppToCRefCounted<CefResourceBundleHandlerCppToC,
                                  CefResourceBundleHandler,
                                  cef_resource_bundle_handler_t> {
-public:
+ public:
   CefResourceBundleHandlerCppToC();
   virtual ~CefResourceBundleHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefResourceBundleHandlerCppToC_Wrap =
 constexpr auto CefResourceBundleHandlerCppToC_Unwrap =
     CefResourceBundleHandlerCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_BUNDLE_HANDLER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_RESOURCE_BUNDLE_HANDLER_CPPTOC_H_

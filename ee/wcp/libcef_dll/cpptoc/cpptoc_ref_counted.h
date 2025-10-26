@@ -16,19 +16,19 @@
 // called from the other side of the DLL boundary.
 template <class ClassName, class BaseName, class StructName>
 class CefCppToCRefCounted : public CefBaseRefCounted {
-public:
-  CefCppToCRefCounted(const CefCppToCRefCounted &) = delete;
-  CefCppToCRefCounted &operator=(const CefCppToCRefCounted &) = delete;
+ public:
+  CefCppToCRefCounted(const CefCppToCRefCounted&) = delete;
+  CefCppToCRefCounted& operator=(const CefCppToCRefCounted&) = delete;
 
   // Create a new wrapper instance and associated structure reference for
   // passing an object instance the other side.
-  static StructName *Wrap(CefRefPtr<BaseName> c) {
+  static StructName* Wrap(CefRefPtr<BaseName> c) {
     if (!c.get()) {
       return nullptr;
     }
 
     // Wrap our object with the CefCppToCRefCounted class.
-    ClassName *wrapper = new ClassName();
+    ClassName* wrapper = new ClassName();
     wrapper->wrapper_struct_.object_ = c.get();
     // Add a reference to our wrapper object that will be released once our
     // structure arrives on the other side.
@@ -39,13 +39,13 @@ public:
 
   // Retrieve the underlying object instance for a structure reference passed
   // back from the other side.
-  static CefRefPtr<BaseName> Unwrap(StructName *s) {
+  static CefRefPtr<BaseName> Unwrap(StructName* s) {
     if (!s) {
       return nullptr;
     }
 
     // Cast our structure to the wrapper structure type.
-    WrapperStruct *wrapperStruct =
+    WrapperStruct* wrapperStruct =
         GetWrapperStruct(s, /*require_exact_type=*/false);
 
     // If the type does not match this object then we need to unwrap as the
@@ -66,16 +66,16 @@ public:
   // Retrieve the underlying object instance from our own structure reference
   // when the reference is passed as the required first parameter of a C API
   // function call. No explicit reference counting is done in this case.
-  static CefRefPtr<BaseName> Get(StructName *s) {
+  static CefRefPtr<BaseName> Get(StructName* s) {
     DCHECK(s);
-    WrapperStruct *wrapperStruct = GetWrapperStruct(s);
+    WrapperStruct* wrapperStruct = GetWrapperStruct(s);
     return wrapperStruct->object_;
   }
 
   // If returning the structure across the DLL boundary you should call
   // AddRef() on this CefCppToCRefCounted object. On the other side of the DLL
   // boundary, call UnderlyingRelease() on the wrapping CefCToCpp object.
-  StructName *GetStruct() { return &wrapper_struct_.struct_; }
+  StructName* GetStruct() { return &wrapper_struct_.struct_; }
 
   // CefBaseRefCounted methods increment/decrement reference counts on both this
   // object and the underlying wrapper class.
@@ -94,14 +94,14 @@ public:
   bool HasOneRef() const { return UnderlyingHasOneRef(); }
   bool HasAtLeastOneRef() const { return UnderlyingHasAtLeastOneRef(); }
 
-protected:
+ protected:
   CefCppToCRefCounted() {
     wrapper_struct_.type_ = kWrapperType;
     wrapper_struct_.wrapper_ = this;
     memset(GetStruct(), 0, sizeof(StructName));
 
-    cef_base_ref_counted_t *base =
-        reinterpret_cast<cef_base_ref_counted_t *>(GetStruct());
+    cef_base_ref_counted_t* base =
+        reinterpret_cast<cef_base_ref_counted_t*>(GetStruct());
     base->size = sizeof(StructName);
     base->add_ref = struct_add_ref;
     base->release = struct_release;
@@ -111,23 +111,23 @@ protected:
 
   virtual ~CefCppToCRefCounted() = default;
 
-private:
+ private:
   // Used to associate this wrapper object, the underlying object instance and
   // the structure that will be passed to the other side.
   struct WrapperStruct {
     CefWrapperType type_;
-    BaseName *object_;
-    CefCppToCRefCounted<ClassName, BaseName, StructName> *wrapper_;
+    BaseName* object_;
+    CefCppToCRefCounted<ClassName, BaseName, StructName>* wrapper_;
     StructName struct_;
   };
 
-  static WrapperStruct *GetWrapperStruct(StructName *s,
+  static WrapperStruct* GetWrapperStruct(StructName* s,
                                          bool require_exact_type = true) {
     // Offset using the WrapperStruct size instead of individual member sizes
     // to avoid problems due to platform/compiler differences in structure
     // padding.
-    auto *wrapperStruct = reinterpret_cast<WrapperStruct *>(
-        reinterpret_cast<char *>(s) -
+    auto* wrapperStruct = reinterpret_cast<WrapperStruct*>(
+        reinterpret_cast<char*>(s) -
         (sizeof(WrapperStruct) - sizeof(StructName)));
 
     if (require_exact_type) {
@@ -139,7 +139,7 @@ private:
   }
 
   // Unwrap as the derived type.
-  static CefRefPtr<BaseName> UnwrapDerived(CefWrapperType type, StructName *s);
+  static CefRefPtr<BaseName> UnwrapDerived(CefWrapperType type, StructName* s);
 
   // Increment/decrement reference counts on only the underlying class.
   void UnderlyingAddRef() const { wrapper_struct_.object_->AddRef(); }
@@ -151,48 +151,48 @@ private:
     return wrapper_struct_.object_->HasAtLeastOneRef();
   }
 
-  static void CEF_CALLBACK struct_add_ref(cef_base_ref_counted_t *base) {
+  static void CEF_CALLBACK struct_add_ref(cef_base_ref_counted_t* base) {
     DCHECK(base);
     if (!base) {
       return;
     }
 
-    WrapperStruct *wrapperStruct =
-        GetWrapperStruct(reinterpret_cast<StructName *>(base));
+    WrapperStruct* wrapperStruct =
+        GetWrapperStruct(reinterpret_cast<StructName*>(base));
     wrapperStruct->wrapper_->AddRef();
   }
 
-  static int CEF_CALLBACK struct_release(cef_base_ref_counted_t *base) {
+  static int CEF_CALLBACK struct_release(cef_base_ref_counted_t* base) {
     DCHECK(base);
     if (!base) {
       return 0;
     }
 
-    WrapperStruct *wrapperStruct =
-        GetWrapperStruct(reinterpret_cast<StructName *>(base));
+    WrapperStruct* wrapperStruct =
+        GetWrapperStruct(reinterpret_cast<StructName*>(base));
     return wrapperStruct->wrapper_->Release();
   }
 
-  static int CEF_CALLBACK struct_has_one_ref(cef_base_ref_counted_t *base) {
+  static int CEF_CALLBACK struct_has_one_ref(cef_base_ref_counted_t* base) {
     DCHECK(base);
     if (!base) {
       return 0;
     }
 
-    WrapperStruct *wrapperStruct =
-        GetWrapperStruct(reinterpret_cast<StructName *>(base));
+    WrapperStruct* wrapperStruct =
+        GetWrapperStruct(reinterpret_cast<StructName*>(base));
     return wrapperStruct->wrapper_->HasOneRef();
   }
 
   static int CEF_CALLBACK
-  struct_has_at_least_one_ref(cef_base_ref_counted_t *base) {
+  struct_has_at_least_one_ref(cef_base_ref_counted_t* base) {
     DCHECK(base);
     if (!base) {
       return 0;
     }
 
-    WrapperStruct *wrapperStruct =
-        GetWrapperStruct(reinterpret_cast<StructName *>(base));
+    WrapperStruct* wrapperStruct =
+        GetWrapperStruct(reinterpret_cast<StructName*>(base));
     return wrapperStruct->wrapper_->HasAtLeastOneRef();
   }
 
@@ -202,4 +202,4 @@ private:
   static CefWrapperType kWrapperType;
 };
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_CPPTOC_REF_COUNTED_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_CPPTOC_REF_COUNTED_H_

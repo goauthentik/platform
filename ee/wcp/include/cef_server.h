@@ -56,7 +56,7 @@ class CefServerHandler;
 ///
 /*--cef(source=library)--*/
 class CefServer : public CefBaseRefCounted {
-public:
+ public:
   typedef std::multimap<CefString, CefString> HeaderMap;
 
   ///
@@ -74,7 +74,9 @@ public:
   /// server lifespan.
   ///
   /*--cef()--*/
-  static void CreateServer(const CefString &address, uint16_t port, int backlog,
+  static void CreateServer(const CefString& address,
+                           uint16_t port,
+                           int backlog,
                            CefRefPtr<CefServerHandler> handler);
 
   ///
@@ -129,8 +131,9 @@ public:
   ///
   /*--cef()--*/
   virtual void SendHttp200Response(int connection_id,
-                                   const CefString &content_type,
-                                   const void *data, size_t data_size) = 0;
+                                   const CefString& content_type,
+                                   const void* data,
+                                   size_t data_size) = 0;
 
   ///
   /// Send an HTTP 404 "Not Found" response to the connection identified by
@@ -148,7 +151,7 @@ public:
   ///
   /*--cef()--*/
   virtual void SendHttp500Response(int connection_id,
-                                   const CefString &error_message) = 0;
+                                   const CefString& error_message) = 0;
 
   ///
   /// Send a custom HTTP response to the connection identified by
@@ -165,10 +168,11 @@ public:
   /// CloseConnection after all content has been sent.
   ///
   /*--cef(optional_param=extra_headers)--*/
-  virtual void SendHttpResponse(int connection_id, int response_code,
-                                const CefString &content_type,
+  virtual void SendHttpResponse(int connection_id,
+                                int response_code,
+                                const CefString& content_type,
                                 int64_t content_length,
-                                const HeaderMap &extra_headers) = 0;
+                                const HeaderMap& extra_headers) = 0;
 
   ///
   /// Send raw data directly to the connection identified by |connection_id|.
@@ -179,7 +183,8 @@ public:
   /// SendHttpResponse documentation for intended usage.
   ///
   /*--cef()--*/
-  virtual void SendRawData(int connection_id, const void *data,
+  virtual void SendRawData(int connection_id,
+                           const void* data,
                            size_t data_size) = 0;
 
   ///
@@ -196,7 +201,8 @@ public:
   /// CefServerHandler::OnWebSocketRequest documentation for intended usage.
   ///
   /*--cef()--*/
-  virtual void SendWebSocketMessage(int connection_id, const void *data,
+  virtual void SendWebSocketMessage(int connection_id,
+                                    const void* data,
                                     size_t data_size) = 0;
 };
 
@@ -210,7 +216,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefServerHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Called when |server| is created. If the server was started successfully
   /// then CefServer::IsRunning will return true. The server will continue
@@ -259,8 +265,9 @@ public:
   /// methods either synchronously or asynchronusly to send a response.
   ///
   /*--cef()--*/
-  virtual void OnHttpRequest(CefRefPtr<CefServer> server, int connection_id,
-                             const CefString &client_address,
+  virtual void OnHttpRequest(CefRefPtr<CefServer> server,
+                             int connection_id,
+                             const CefString& client_address,
                              CefRefPtr<CefRequest> request) = 0;
 
   ///
@@ -280,7 +287,7 @@ public:
   /*--cef()--*/
   virtual void OnWebSocketRequest(CefRefPtr<CefServer> server,
                                   int connection_id,
-                                  const CefString &client_address,
+                                  const CefString& client_address,
                                   CefRefPtr<CefRequest> request,
                                   CefRefPtr<CefCallback> callback) = 0;
 
@@ -302,8 +309,9 @@ public:
   ///
   /*--cef()--*/
   virtual void OnWebSocketMessage(CefRefPtr<CefServer> server,
-                                  int connection_id, const void *data,
+                                  int connection_id,
+                                  const void* data,
                                   size_t data_size) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_SERVER_H_
+#endif  // CEF_INCLUDE_CEF_SERVER_H_

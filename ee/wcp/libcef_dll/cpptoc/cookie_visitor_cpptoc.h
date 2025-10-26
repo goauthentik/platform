@@ -27,9 +27,10 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCookieVisitorCppToC
-    : public CefCppToCRefCounted<CefCookieVisitorCppToC, CefCookieVisitor,
+    : public CefCppToCRefCounted<CefCookieVisitorCppToC,
+                                 CefCookieVisitor,
                                  cef_cookie_visitor_t> {
-public:
+ public:
   CefCookieVisitorCppToC();
   virtual ~CefCookieVisitorCppToC();
 };
@@ -37,4 +38,4 @@ public:
 constexpr auto CefCookieVisitorCppToC_Wrap = CefCookieVisitorCppToC::Wrap;
 constexpr auto CefCookieVisitorCppToC_Unwrap = CefCookieVisitorCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_COOKIE_VISITOR_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_COOKIE_VISITOR_CPPTOC_H_

@@ -47,7 +47,7 @@
 ///
 /*--cef(source=library)--*/
 class CefSSLStatus : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns true if the status is related to a secure SSL/TLS connection.
   ///
@@ -80,4 +80,4 @@ public:
   virtual CefRefPtr<CefX509Certificate> GetX509Certificate() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_SSL_STATUS_H_
+#endif  // CEF_INCLUDE_CEF_SSL_STATUS_H_

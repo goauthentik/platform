@@ -148,11 +148,11 @@ CEF_EXPORT int cef_crash_reporting_enabled(void);
 ///
 /// Sets or clears a specific key-value pair from the crash metadata.
 ///
-CEF_EXPORT void cef_set_crash_key_value(const cef_string_t *key,
-                                        const cef_string_t *value);
+CEF_EXPORT void cef_set_crash_key_value(const cef_string_t* key,
+                                        const cef_string_t* value);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_CRASH_UTIL_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_CRASH_UTIL_CAPI_H_

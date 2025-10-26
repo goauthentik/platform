@@ -69,7 +69,7 @@ class CefStreamReader;
 ///    3. Element nodes are represented by their outer XML string.
 ///
 class CefXmlObject : public base::RefCountedThreadSafe<CefXmlObject> {
-public:
+ public:
   using ObjectVector = std::vector<CefRefPtr<CefXmlObject>>;
   using AttributeMap = std::map<CefString, CefString>;
 
@@ -77,18 +77,19 @@ public:
   /// Create a new object with the specified name. An object name must always be
   /// at least one character long.
   ///
-  explicit CefXmlObject(const CefString &name);
+  explicit CefXmlObject(const CefString& name);
 
-  CefXmlObject(const CefXmlObject &) = delete;
-  CefXmlObject &operator=(const CefXmlObject &) = delete;
+  CefXmlObject(const CefXmlObject&) = delete;
+  CefXmlObject& operator=(const CefXmlObject&) = delete;
 
   ///
   /// Load the contents of the specified XML stream into this object.  The
   /// existing children and attributes, if any, will first be cleared.
   ///
   bool Load(CefRefPtr<CefStreamReader> stream,
-            CefXmlReader::EncodingType encodingType, const CefString &URI,
-            CefString *loadError);
+            CefXmlReader::EncodingType encodingType,
+            const CefString& URI,
+            CefString* loadError);
 
   ///
   /// Set the name, children and attributes of this object to a duplicate of the
@@ -122,7 +123,7 @@ public:
   /// character long.
   ///
   CefString GetName();
-  bool SetName(const CefString &name);
+  bool SetName(const CefString& name);
 
   ///
   /// Access the object's parent. The parent can be NULL if this object has not
@@ -137,17 +138,17 @@ public:
   ///
   bool HasValue();
   CefString GetValue();
-  bool SetValue(const CefString &value);
+  bool SetValue(const CefString& value);
 
   ///
   /// Access the object's attributes. Attributes must have unique names.
   ///
   bool HasAttributes();
   size_t GetAttributeCount();
-  bool HasAttribute(const CefString &name);
-  CefString GetAttributeValue(const CefString &name);
-  bool SetAttributeValue(const CefString &name, const CefString &value);
-  size_t GetAttributes(AttributeMap &attributes);
+  bool HasAttribute(const CefString& name);
+  CefString GetAttributeValue(const CefString& name);
+  bool SetAttributeValue(const CefString& name, const CefString& value);
+  size_t GetAttributes(AttributeMap& attributes);
   void ClearAttributes();
 
   ///
@@ -162,28 +163,28 @@ public:
   bool HasChild(CefRefPtr<CefXmlObject> child);
   bool AddChild(CefRefPtr<CefXmlObject> child);
   bool RemoveChild(CefRefPtr<CefXmlObject> child);
-  size_t GetChildren(ObjectVector &children);
+  size_t GetChildren(ObjectVector& children);
   void ClearChildren();
 
   ///
   /// Find the first child with the specified name.
   ///
-  CefRefPtr<CefXmlObject> FindChild(const CefString &name);
+  CefRefPtr<CefXmlObject> FindChild(const CefString& name);
 
   ///
   /// Find all children with the specified name.
   ///
-  size_t FindChildren(const CefString &name, ObjectVector &children);
+  size_t FindChildren(const CefString& name, ObjectVector& children);
 
-private:
+ private:
   // Protect against accidental deletion of this object.
   friend class base::RefCountedThreadSafe<CefXmlObject>;
   ~CefXmlObject();
 
-  void SetParent(CefXmlObject *parent);
+  void SetParent(CefXmlObject* parent);
 
   CefString name_;
-  CefXmlObject *parent_ = nullptr;
+  CefXmlObject* parent_ = nullptr;
   CefString value_;
   AttributeMap attributes_;
   ObjectVector children_;
@@ -191,4 +192,4 @@ private:
   base::Lock lock_;
 };
 
-#endif // CEF_INCLUDE_WRAPPER_CEF_XML_OBJECT_H_
+#endif  // CEF_INCLUDE_WRAPPER_CEF_XML_OBJECT_H_

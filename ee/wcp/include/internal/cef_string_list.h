@@ -41,7 +41,7 @@ extern "C" {
 ///
 /// CEF string maps are a set of key/value string pairs.
 ///
-typedef struct _cef_string_list_t *cef_string_list_t;
+typedef struct _cef_string_list_t* cef_string_list_t;
 
 ///
 /// Allocate a new string map.
@@ -57,14 +57,15 @@ CEF_EXPORT size_t cef_string_list_size(cef_string_list_t list);
 /// Retrieve the value at the specified zero-based string list index. Returns
 /// true (1) if the value was successfully retrieved.
 ///
-CEF_EXPORT int cef_string_list_value(cef_string_list_t list, size_t index,
-                                     cef_string_t *value);
+CEF_EXPORT int cef_string_list_value(cef_string_list_t list,
+                                     size_t index,
+                                     cef_string_t* value);
 
 ///
 /// Append a new value at the end of the string list.
 ///
 CEF_EXPORT void cef_string_list_append(cef_string_list_t list,
-                                       const cef_string_t *value);
+                                       const cef_string_t* value);
 
 ///
 /// Clear the string list.
@@ -85,4 +86,4 @@ CEF_EXPORT cef_string_list_t cef_string_list_copy(cef_string_list_t list);
 }
 #endif
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_STRING_LIST_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_STRING_LIST_H_

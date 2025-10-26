@@ -34,7 +34,7 @@ class CefOverlayControllerCToCpp
     : public CefCToCppRefCounted<CefOverlayControllerCToCpp,
                                  CefOverlayController,
                                  cef_overlay_controller_t> {
-public:
+ public:
   CefOverlayControllerCToCpp();
   virtual ~CefOverlayControllerCToCpp();
 
@@ -45,14 +45,14 @@ public:
   CefRefPtr<CefWindow> GetWindow() override;
   cef_docking_mode_t GetDockingMode() override;
   void Destroy() override;
-  void SetBounds(const CefRect &bounds) override;
+  void SetBounds(const CefRect& bounds) override;
   CefRect GetBounds() override;
   CefRect GetBoundsInScreen() override;
-  void SetSize(const CefSize &size) override;
+  void SetSize(const CefSize& size) override;
   CefSize GetSize() override;
-  void SetPosition(const CefPoint &position) override;
+  void SetPosition(const CefPoint& position) override;
   CefPoint GetPosition() override;
-  void SetInsets(const CefInsets &insets) override;
+  void SetInsets(const CefInsets& insets) override;
   CefInsets GetInsets() override;
   void SizeToPreferredSize() override;
   void SetVisible(bool visible) override;
@@ -65,4 +65,4 @@ constexpr auto CefOverlayControllerCToCpp_Wrap =
 constexpr auto CefOverlayControllerCToCpp_Unwrap =
     CefOverlayControllerCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_OVERLAY_CONTROLLER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_OVERLAY_CONTROLLER_CTOCPP_H_

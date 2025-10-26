@@ -48,13 +48,13 @@
 ///
 /*--cef(source=library)--*/
 class CefTextfield : public CefView {
-public:
+ public:
   ///
   /// Create a new Textfield.
   ///
   /*--cef(optional_param=delegate)--*/
-  static CefRefPtr<CefTextfield>
-  CreateTextfield(CefRefPtr<CefTextfieldDelegate> delegate);
+  static CefRefPtr<CefTextfield> CreateTextfield(
+      CefRefPtr<CefTextfieldDelegate> delegate);
 
   ///
   /// Sets whether the text will be displayed as asterisks.
@@ -91,19 +91,19 @@ public:
   /// if the current position is outside of the text range.
   ///
   /*--cef()--*/
-  virtual void SetText(const CefString &text) = 0;
+  virtual void SetText(const CefString& text) = 0;
 
   ///
   /// Appends |text| to the previously-existing text.
   ///
   /*--cef()--*/
-  virtual void AppendText(const CefString &text) = 0;
+  virtual void AppendText(const CefString& text) = 0;
 
   ///
   /// Inserts |text| at the current cursor position replacing any selected text.
   ///
   /*--cef()--*/
-  virtual void InsertOrReplaceText(const CefString &text) = 0;
+  virtual void InsertOrReplaceText(const CefString& text) = 0;
 
   ///
   /// Returns true if there is any selected text.
@@ -141,7 +141,7 @@ public:
   /// Selects the specified logical text range.
   ///
   /*--cef()--*/
-  virtual void SelectRange(const CefRange &range) = 0;
+  virtual void SelectRange(const CefRange& range) = 0;
 
   ///
   /// Returns the current cursor position.
@@ -198,7 +198,7 @@ public:
   /// - "Arial, 14px"
   ///
   /*--cef()--*/
-  virtual void SetFontList(const CefString &font_list) = 0;
+  virtual void SetFontList(const CefString& font_list) = 0;
 
   ///
   /// Applies |color| to the specified |range| without changing the default
@@ -206,7 +206,7 @@ public:
   /// contents.
   ///
   /*--cef()--*/
-  virtual void ApplyTextColor(cef_color_t color, const CefRange &range) = 0;
+  virtual void ApplyTextColor(cef_color_t color, const CefRange& range) = 0;
 
   ///
   /// Applies |style| to the specified |range| without changing the default
@@ -215,8 +215,9 @@ public:
   /// contents.
   ///
   /*--cef()--*/
-  virtual void ApplyTextStyle(cef_text_style_t style, bool add,
-                              const CefRange &range) = 0;
+  virtual void ApplyTextStyle(cef_text_style_t style,
+                              bool add,
+                              const CefRange& range) = 0;
 
   ///
   /// Returns true if the action associated with the specified command id is
@@ -242,7 +243,7 @@ public:
   /// empty.
   ///
   /*--cef()--*/
-  virtual void SetPlaceholderText(const CefString &text) = 0;
+  virtual void SetPlaceholderText(const CefString& text) = 0;
 
   ///
   /// Returns the placeholder text that will be displayed when the Textfield is
@@ -261,7 +262,7 @@ public:
   /// Set the accessible name that will be exposed to assistive technology (AT).
   ///
   /*--cef()--*/
-  virtual void SetAccessibleName(const CefString &name) = 0;
+  virtual void SetAccessibleName(const CefString& name) = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_TEXTFIELD_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_TEXTFIELD_H_

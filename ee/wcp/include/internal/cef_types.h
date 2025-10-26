@@ -65,29 +65,29 @@ typedef uint32_t cef_color_t;
 #define CefColorGetB(color) (((color) >> 0) & 0xFF)
 
 // Return an cef_color_t value with the specified byte component values.
-#define CefColorSetARGB(a, r, g, b)                                            \
-  static_cast<cef_color_t>(                                                    \
-      (static_cast<unsigned>(a) << 24) | (static_cast<unsigned>(r) << 16) |    \
+#define CefColorSetARGB(a, r, g, b)                                         \
+  static_cast<cef_color_t>(                                                 \
+      (static_cast<unsigned>(a) << 24) | (static_cast<unsigned>(r) << 16) | \
       (static_cast<unsigned>(g) << 8) | (static_cast<unsigned>(b) << 0))
 
 // Return an int64_t value with the specified low and high int32_t component
 // values.
-#define CefInt64Set(int32_low, int32_high)                                     \
-  static_cast<int64_t>(                                                        \
-      (static_cast<uint32_t>(int32_low)) |                                     \
+#define CefInt64Set(int32_low, int32_high) \
+  static_cast<int64_t>(                    \
+      (static_cast<uint32_t>(int32_low)) | \
       (static_cast<int64_t>(static_cast<int32_t>(int32_high))) << 32)
 
 // Return the low int32_t value from an int64_t value.
 #define CefInt64GetLow(int64_val) static_cast<int32_t>(int64_val)
 // Return the high int32_t value from an int64_t value.
-#define CefInt64GetHigh(int64_val)                                             \
+#define CefInt64GetHigh(int64_val) \
   static_cast<int32_t>((static_cast<int64_t>(int64_val) >> 32) & 0xFFFFFFFFL)
 
 // Check that the structure |s|, which is defined with a `size_t size` member
 // at the top, is large enough to contain the specified member |f|.
-#define CEF_MEMBER_EXISTS(s, f)                                                \
-  (reinterpret_cast<intptr_t>(&((s)->f)) -                                     \
-       reinterpret_cast<intptr_t>(&((s)->size)) + sizeof((s)->f) <=            \
+#define CEF_MEMBER_EXISTS(s, f)                                     \
+  (reinterpret_cast<intptr_t>(&((s)->f)) -                          \
+       reinterpret_cast<intptr_t>(&((s)->size)) + sizeof((s)->f) <= \
    (s)->size)
 
 #ifdef __cplusplus
@@ -2579,21 +2579,21 @@ typedef enum {
   COLOR_MODEL_CMYK,
   COLOR_MODEL_CMY,
   COLOR_MODEL_KCMY,
-  COLOR_MODEL_CMY_K, // CMY_K represents CMY+K.
+  COLOR_MODEL_CMY_K,  // CMY_K represents CMY+K.
   COLOR_MODEL_BLACK,
   COLOR_MODEL_GRAYSCALE,
   COLOR_MODEL_RGB,
   COLOR_MODEL_RGB16,
   COLOR_MODEL_RGBA,
-  COLOR_MODEL_COLORMODE_COLOR,             // Used in samsung printer ppds.
-  COLOR_MODEL_COLORMODE_MONOCHROME,        // Used in samsung printer ppds.
-  COLOR_MODEL_HP_COLOR_COLOR,              // Used in HP color printer ppds.
-  COLOR_MODEL_HP_COLOR_BLACK,              // Used in HP color printer ppds.
-  COLOR_MODEL_PRINTOUTMODE_NORMAL,         // Used in foomatic ppds.
-  COLOR_MODEL_PRINTOUTMODE_NORMAL_GRAY,    // Used in foomatic ppds.
-  COLOR_MODEL_PROCESSCOLORMODEL_CMYK,      // Used in canon printer ppds.
-  COLOR_MODEL_PROCESSCOLORMODEL_GREYSCALE, // Used in canon printer ppds.
-  COLOR_MODEL_PROCESSCOLORMODEL_RGB,       // Used in canon printer ppds
+  COLOR_MODEL_COLORMODE_COLOR,              // Used in samsung printer ppds.
+  COLOR_MODEL_COLORMODE_MONOCHROME,         // Used in samsung printer ppds.
+  COLOR_MODEL_HP_COLOR_COLOR,               // Used in HP color printer ppds.
+  COLOR_MODEL_HP_COLOR_BLACK,               // Used in HP color printer ppds.
+  COLOR_MODEL_PRINTOUTMODE_NORMAL,          // Used in foomatic ppds.
+  COLOR_MODEL_PRINTOUTMODE_NORMAL_GRAY,     // Used in foomatic ppds.
+  COLOR_MODEL_PROCESSCOLORMODEL_CMYK,       // Used in canon printer ppds.
+  COLOR_MODEL_PROCESSCOLORMODEL_GREYSCALE,  // Used in canon printer ppds.
+  COLOR_MODEL_PROCESSCOLORMODEL_RGB,        // Used in canon printer ppds
   COLOR_MODEL_NUM_VALUES,
 } cef_color_model_t;
 
@@ -2673,7 +2673,7 @@ typedef enum {
 typedef struct _cef_cursor_info_t {
   cef_point_t hotspot;
   float image_scale_factor;
-  void *buffer;
+  void* buffer;
   cef_size_t size;
 } cef_cursor_info_t;
 
@@ -4074,4 +4074,4 @@ typedef struct _cef_task_info_t {
 }
 #endif
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_TYPES_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_H_

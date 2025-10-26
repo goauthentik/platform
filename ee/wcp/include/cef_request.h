@@ -52,7 +52,7 @@ class CefPostDataElement;
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefRequest : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef std::multimap<CefString, CefString> HeaderMap;
   typedef cef_referrer_policy_t ReferrerPolicy;
   typedef cef_resource_type_t ResourceType;
@@ -80,7 +80,7 @@ public:
   /// Set the fully qualified URL.
   ///
   /*--cef()--*/
-  virtual void SetURL(const CefString &url) = 0;
+  virtual void SetURL(const CefString& url) = 0;
 
   ///
   /// Get the request method type. The value will default to POST if post data
@@ -93,7 +93,7 @@ public:
   /// Set the request method type.
   ///
   /*--cef()--*/
-  virtual void SetMethod(const CefString &method) = 0;
+  virtual void SetMethod(const CefString& method) = 0;
 
   ///
   /// Set the referrer URL and policy. If non-empty the referrer URL must be
@@ -101,7 +101,7 @@ public:
   /// password or ref component will be removed.
   ///
   /*--cef(optional_param=referrer_url)--*/
-  virtual void SetReferrer(const CefString &referrer_url,
+  virtual void SetReferrer(const CefString& referrer_url,
                            ReferrerPolicy policy) = 0;
 
   ///
@@ -132,14 +132,14 @@ public:
   /// Get the header values. Will not include the Referer value if any.
   ///
   /*--cef()--*/
-  virtual void GetHeaderMap(HeaderMap &headerMap) = 0;
+  virtual void GetHeaderMap(HeaderMap& headerMap) = 0;
 
   ///
   /// Set the header values. If a Referer value exists in the header map it will
   /// be removed and ignored.
   ///
   /*--cef()--*/
-  virtual void SetHeaderMap(const HeaderMap &headerMap) = 0;
+  virtual void SetHeaderMap(const HeaderMap& headerMap) = 0;
 
   ///
   /// Returns the first header value for |name| or an empty string if not found.
@@ -147,7 +147,7 @@ public:
   /// |name| might have multiple values.
   ///
   /*--cef()--*/
-  virtual CefString GetHeaderByName(const CefString &name) = 0;
+  virtual CefString GetHeaderByName(const CefString& name) = 0;
 
   ///
   /// Set the header |name| to |value|. If |overwrite| is true any existing
@@ -156,16 +156,18 @@ public:
   /// using this method.
   ///
   /*--cef(optional_param=value)--*/
-  virtual void SetHeaderByName(const CefString &name, const CefString &value,
+  virtual void SetHeaderByName(const CefString& name,
+                               const CefString& value,
                                bool overwrite) = 0;
 
   ///
   /// Set all values at one time.
   ///
   /*--cef(optional_param=postData)--*/
-  virtual void Set(const CefString &url, const CefString &method,
+  virtual void Set(const CefString& url,
+                   const CefString& method,
                    CefRefPtr<CefPostData> postData,
-                   const HeaderMap &headerMap) = 0;
+                   const HeaderMap& headerMap) = 0;
 
   ///
   /// Get the flags used in combination with CefURLRequest. See
@@ -193,7 +195,7 @@ public:
   /// CefURLRequest.
   ///
   /*--cef(optional_param=url)--*/
-  virtual void SetFirstPartyForCookies(const CefString &url) = 0;
+  virtual void SetFirstPartyForCookies(const CefString& url) = 0;
 
   ///
   /// Get the resource type for this request. Only available in the browser
@@ -225,7 +227,7 @@ public:
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefPostData : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef std::vector<CefRefPtr<CefPostDataElement>> ElementVector;
 
   ///
@@ -259,7 +261,7 @@ public:
   /// Retrieve the post data elements.
   ///
   /*--cef(count_func=elements:GetElementCount)--*/
-  virtual void GetElements(ElementVector &elements) = 0;
+  virtual void GetElements(ElementVector& elements) = 0;
 
   ///
   /// Remove the specified post data element.  Returns true if the removal
@@ -287,7 +289,7 @@ public:
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefPostDataElement : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Post data elements may represent either bytes or files.
   ///
@@ -315,14 +317,14 @@ public:
   /// The post data element will represent a file.
   ///
   /*--cef()--*/
-  virtual void SetToFile(const CefString &fileName) = 0;
+  virtual void SetToFile(const CefString& fileName) = 0;
 
   ///
   /// The post data element will represent bytes.  The bytes passed
   /// in will be copied.
   ///
   /*--cef()--*/
-  virtual void SetToBytes(size_t size, const void *bytes) = 0;
+  virtual void SetToBytes(size_t size, const void* bytes) = 0;
 
   ///
   /// Return the type of this post data element.
@@ -347,7 +349,7 @@ public:
   /// actually read.
   ///
   /*--cef()--*/
-  virtual size_t GetBytes(size_t size, void *bytes) = 0;
+  virtual size_t GetBytes(size_t size, void* bytes) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_REQUEST_H_
+#endif  // CEF_INCLUDE_CEF_REQUEST_H_

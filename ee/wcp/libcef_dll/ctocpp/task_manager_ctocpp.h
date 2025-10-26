@@ -26,17 +26,17 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefTaskManagerCToCpp
-    : public CefCToCppRefCounted<CefTaskManagerCToCpp, CefTaskManager,
-                                 cef_task_manager_t> {
-public:
+class CefTaskManagerCToCpp : public CefCToCppRefCounted<CefTaskManagerCToCpp,
+                                                        CefTaskManager,
+                                                        cef_task_manager_t> {
+ public:
   CefTaskManagerCToCpp();
   virtual ~CefTaskManagerCToCpp();
 
   // CefTaskManager methods.
   size_t GetTasksCount() override;
-  bool GetTaskIdsList(TaskIdList &task_ids) override;
-  bool GetTaskInfo(int64_t task_id, CefTaskInfo &info) override;
+  bool GetTaskIdsList(TaskIdList& task_ids) override;
+  bool GetTaskInfo(int64_t task_id, CefTaskInfo& info) override;
   bool KillTask(int64_t task_id) override;
   int64_t GetTaskIdForBrowserId(int browser_id) override;
 };
@@ -44,4 +44,4 @@ public:
 constexpr auto CefTaskManagerCToCpp_Wrap = CefTaskManagerCToCpp::Wrap;
 constexpr auto CefTaskManagerCToCpp_Unwrap = CefTaskManagerCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_TASK_MANAGER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_TASK_MANAGER_CTOCPP_H_

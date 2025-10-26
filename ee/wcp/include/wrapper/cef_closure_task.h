@@ -95,22 +95,23 @@
 /// combination with CefTaskRunner.
 ///
 CefRefPtr<CefTask> CefCreateClosureTask(base::OnceClosure closure);
-CefRefPtr<CefTask> CefCreateClosureTask(const base::RepeatingClosure &closure);
+CefRefPtr<CefTask> CefCreateClosureTask(const base::RepeatingClosure& closure);
 
 ///
 /// Post a base::[Once|Repeating]Closure for execution on the specified thread.
 ///
 bool CefPostTask(CefThreadId threadId, base::OnceClosure closure);
-bool CefPostTask(CefThreadId threadId, const base::RepeatingClosure &closure);
+bool CefPostTask(CefThreadId threadId, const base::RepeatingClosure& closure);
 
 ///
 /// Post a base::[Once|Repeating]Closure for delayed execution on the specified
 /// thread.
 ///
-bool CefPostDelayedTask(CefThreadId threadId, base::OnceClosure closure,
+bool CefPostDelayedTask(CefThreadId threadId,
+                        base::OnceClosure closure,
                         int64_t delay_ms);
 bool CefPostDelayedTask(CefThreadId threadId,
-                        const base::RepeatingClosure &closure,
+                        const base::RepeatingClosure& closure,
                         int64_t delay_ms);
 
-#endif // CEF_INCLUDE_WRAPPER_CEF_CLOSURE_TASK_H_
+#endif  // CEF_INCLUDE_WRAPPER_CEF_CLOSURE_TASK_H_

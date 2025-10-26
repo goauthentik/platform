@@ -50,7 +50,7 @@ class CefClient;
 ///
 /*--cef(source=client)--*/
 class CefLifeSpanHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_window_open_disposition_t WindowOpenDisposition;
 
   ///
@@ -85,13 +85,19 @@ public:
   /// additional details.
   ///
   /*--cef(optional_param=target_url,optional_param=target_frame_name)--*/
-  virtual bool OnBeforePopup(
-      CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int popup_id,
-      const CefString &target_url, const CefString &target_frame_name,
-      WindowOpenDisposition target_disposition, bool user_gesture,
-      const CefPopupFeatures &popupFeatures, CefWindowInfo &windowInfo,
-      CefRefPtr<CefClient> &client, CefBrowserSettings &settings,
-      CefRefPtr<CefDictionaryValue> &extra_info, bool *no_javascript_access) {
+  virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
+                             CefRefPtr<CefFrame> frame,
+                             int popup_id,
+                             const CefString& target_url,
+                             const CefString& target_frame_name,
+                             WindowOpenDisposition target_disposition,
+                             bool user_gesture,
+                             const CefPopupFeatures& popupFeatures,
+                             CefWindowInfo& windowInfo,
+                             CefRefPtr<CefClient>& client,
+                             CefBrowserSettings& settings,
+                             CefRefPtr<CefDictionaryValue>& extra_info,
+                             bool* no_javascript_access) {
     return false;
   }
 
@@ -135,11 +141,11 @@ public:
   ///
   /*--cef()--*/
   virtual void OnBeforeDevToolsPopup(CefRefPtr<CefBrowser> browser,
-                                     CefWindowInfo &windowInfo,
-                                     CefRefPtr<CefClient> &client,
-                                     CefBrowserSettings &settings,
-                                     CefRefPtr<CefDictionaryValue> &extra_info,
-                                     bool *use_default_window) {}
+                                     CefWindowInfo& windowInfo,
+                                     CefRefPtr<CefClient>& client,
+                                     CefBrowserSettings& settings,
+                                     CefRefPtr<CefDictionaryValue>& extra_info,
+                                     bool* use_default_window) {}
 
   ///
   /// Called after a new browser is created. It is now safe to begin performing
@@ -275,4 +281,4 @@ public:
   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) {}
 };
 
-#endif // CEF_INCLUDE_CEF_LIFE_SPAN_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_LIFE_SPAN_HANDLER_H_

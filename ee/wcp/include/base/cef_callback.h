@@ -68,7 +68,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/functional/callback.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -84,33 +84,33 @@ namespace base {
 
 template <typename R, typename... Args>
 class OnceCallback<R(Args...)> : public cef_internal::CallbackBase {
-public:
+ public:
   using ResultType = R;
   using RunType = R(Args...);
-  using PolymorphicInvoke = R (*)(cef_internal::BindStateBase *,
+  using PolymorphicInvoke = R (*)(cef_internal::BindStateBase*,
                                   cef_internal::PassingType<Args>...);
 
   constexpr OnceCallback() = default;
   OnceCallback(std::nullptr_t) = delete;
 
-  explicit OnceCallback(cef_internal::BindStateBase *bind_state)
+  explicit OnceCallback(cef_internal::BindStateBase* bind_state)
       : cef_internal::CallbackBase(bind_state) {}
 
-  OnceCallback(const OnceCallback &) = delete;
-  OnceCallback &operator=(const OnceCallback &) = delete;
+  OnceCallback(const OnceCallback&) = delete;
+  OnceCallback& operator=(const OnceCallback&) = delete;
 
-  OnceCallback(OnceCallback &&) noexcept = default;
-  OnceCallback &operator=(OnceCallback &&) noexcept = default;
+  OnceCallback(OnceCallback&&) noexcept = default;
+  OnceCallback& operator=(OnceCallback&&) noexcept = default;
 
   OnceCallback(RepeatingCallback<RunType> other)
       : cef_internal::CallbackBase(std::move(other)) {}
 
-  OnceCallback &operator=(RepeatingCallback<RunType> other) {
-    static_cast<cef_internal::CallbackBase &>(*this) = std::move(other);
+  OnceCallback& operator=(RepeatingCallback<RunType> other) {
+    static_cast<cef_internal::CallbackBase&>(*this) = std::move(other);
     return *this;
   }
 
-  R Run(Args... args) const & {
+  R Run(Args... args) const& {
     static_assert(!sizeof(*this),
                   "OnceCallback::Run() may only be invoked on a non-const "
                   "rvalue, i.e. std::move(callback).Run().");
@@ -151,8 +151,8 @@ public:
   // convertible to OnceCallback, that conversion will not used when matching
   // for template argument deduction.
   template <typename ThenR, typename... ThenArgs>
-  OnceCallback<ThenR(Args...)>
-  Then(RepeatingCallback<ThenR(ThenArgs...)> then) && {
+  OnceCallback<ThenR(Args...)> Then(
+      RepeatingCallback<ThenR(ThenArgs...)> then) && {
     CHECK(then);
     return BindOnce(
         cef_internal::ThenHelper<
@@ -165,33 +165,33 @@ public:
 template <typename R, typename... Args>
 class RepeatingCallback<R(Args...)>
     : public cef_internal::CallbackBaseCopyable {
-public:
+ public:
   using ResultType = R;
   using RunType = R(Args...);
-  using PolymorphicInvoke = R (*)(cef_internal::BindStateBase *,
+  using PolymorphicInvoke = R (*)(cef_internal::BindStateBase*,
                                   cef_internal::PassingType<Args>...);
 
   constexpr RepeatingCallback() = default;
   RepeatingCallback(std::nullptr_t) = delete;
 
-  explicit RepeatingCallback(cef_internal::BindStateBase *bind_state)
+  explicit RepeatingCallback(cef_internal::BindStateBase* bind_state)
       : cef_internal::CallbackBaseCopyable(bind_state) {}
 
   // Copyable and movable.
-  RepeatingCallback(const RepeatingCallback &) = default;
-  RepeatingCallback &operator=(const RepeatingCallback &) = default;
-  RepeatingCallback(RepeatingCallback &&) noexcept = default;
-  RepeatingCallback &operator=(RepeatingCallback &&) noexcept = default;
+  RepeatingCallback(const RepeatingCallback&) = default;
+  RepeatingCallback& operator=(const RepeatingCallback&) = default;
+  RepeatingCallback(RepeatingCallback&&) noexcept = default;
+  RepeatingCallback& operator=(RepeatingCallback&&) noexcept = default;
 
-  bool operator==(const RepeatingCallback &other) const {
+  bool operator==(const RepeatingCallback& other) const {
     return EqualsInternal(other);
   }
 
-  bool operator!=(const RepeatingCallback &other) const {
+  bool operator!=(const RepeatingCallback& other) const {
     return !operator==(other);
   }
 
-  R Run(Args... args) const & {
+  R Run(Args... args) const& {
     PolymorphicInvoke f =
         reinterpret_cast<PolymorphicInvoke>(this->polymorphic_invoke());
     return f(this->bind_state_.get(), std::forward<Args>(args)...);
@@ -221,8 +221,8 @@ public:
   // will be consumed and reset to a null callback to ensure the
   // originally-bound functor will be run at most once.
   template <typename ThenR, typename... ThenArgs>
-  RepeatingCallback<ThenR(Args...)>
-  Then(RepeatingCallback<ThenR(ThenArgs...)> then) const & {
+  RepeatingCallback<ThenR(Args...)> Then(
+      RepeatingCallback<ThenR(ThenArgs...)> then) const& {
     CHECK(then);
     return BindRepeating(
         cef_internal::ThenHelper<
@@ -232,8 +232,8 @@ public:
   }
 
   template <typename ThenR, typename... ThenArgs>
-  RepeatingCallback<ThenR(Args...)>
-  Then(RepeatingCallback<ThenR(ThenArgs...)> then) && {
+  RepeatingCallback<ThenR(Args...)> Then(
+      RepeatingCallback<ThenR(ThenArgs...)> then) && {
     CHECK(then);
     return BindRepeating(
         cef_internal::ThenHelper<
@@ -243,8 +243,8 @@ public:
   }
 };
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_CALLBACK_H_
+#endif  // CEF_INCLUDE_BASE_CEF_CALLBACK_H_

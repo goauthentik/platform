@@ -30,7 +30,7 @@ class CefRequestContextHandlerCppToC
     : public CefCppToCRefCounted<CefRequestContextHandlerCppToC,
                                  CefRequestContextHandler,
                                  cef_request_context_handler_t> {
-public:
+ public:
   CefRequestContextHandlerCppToC();
   virtual ~CefRequestContextHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefRequestContextHandlerCppToC_Wrap =
 constexpr auto CefRequestContextHandlerCppToC_Unwrap =
     CefRequestContextHandlerCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_REQUEST_CONTEXT_HANDLER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_REQUEST_CONTEXT_HANDLER_CPPTOC_H_

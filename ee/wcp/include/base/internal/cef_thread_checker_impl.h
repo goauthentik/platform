@@ -46,7 +46,7 @@ namespace cef_internal {
 // Note: You should almost always use the ThreadChecker class to get the
 // right version for your build configuration.
 class ThreadCheckerImpl {
-public:
+ public:
   ThreadCheckerImpl();
   ~ThreadCheckerImpl();
 
@@ -57,7 +57,7 @@ public:
   // exclusively on another thread.
   void DetachFromThread();
 
-private:
+ private:
   void EnsureThreadIdAssigned() const;
 
   mutable base::Lock lock_;
@@ -66,7 +66,7 @@ private:
   mutable PlatformThreadRef valid_thread_id_;
 };
 
-} // namespace cef_internal
-} // namespace base
+}  // namespace cef_internal
+}  // namespace base
 
-#endif // CEF_INCLUDE_BASE_INTERNAL_THREAD_CHECKER_IMPL_H_
+#endif  // CEF_INCLUDE_BASE_INTERNAL_THREAD_CHECKER_IMPL_H_

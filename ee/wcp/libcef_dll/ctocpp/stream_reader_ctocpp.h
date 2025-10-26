@@ -26,15 +26,15 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefStreamReaderCToCpp
-    : public CefCToCppRefCounted<CefStreamReaderCToCpp, CefStreamReader,
-                                 cef_stream_reader_t> {
-public:
+class CefStreamReaderCToCpp : public CefCToCppRefCounted<CefStreamReaderCToCpp,
+                                                         CefStreamReader,
+                                                         cef_stream_reader_t> {
+ public:
   CefStreamReaderCToCpp();
   virtual ~CefStreamReaderCToCpp();
 
   // CefStreamReader methods.
-  size_t Read(void *ptr, size_t size, size_t n) override;
+  size_t Read(void* ptr, size_t size, size_t n) override;
   int Seek(int64_t offset, int whence) override;
   int64_t Tell() override;
   int Eof() override;
@@ -44,4 +44,4 @@ public:
 constexpr auto CefStreamReaderCToCpp_Wrap = CefStreamReaderCToCpp::Wrap;
 constexpr auto CefStreamReaderCToCpp_Unwrap = CefStreamReaderCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_STREAM_READER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_STREAM_READER_CTOCPP_H_

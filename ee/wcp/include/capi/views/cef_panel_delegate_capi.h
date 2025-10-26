@@ -68,4 +68,4 @@ typedef struct _cef_panel_delegate_t {
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_PANEL_DELEGATE_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_PANEL_DELEGATE_CAPI_H_

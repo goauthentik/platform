@@ -27,9 +27,10 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefKeyboardHandlerCppToC
-    : public CefCppToCRefCounted<CefKeyboardHandlerCppToC, CefKeyboardHandler,
+    : public CefCppToCRefCounted<CefKeyboardHandlerCppToC,
+                                 CefKeyboardHandler,
                                  cef_keyboard_handler_t> {
-public:
+ public:
   CefKeyboardHandlerCppToC();
   virtual ~CefKeyboardHandlerCppToC();
 };
@@ -38,4 +39,4 @@ constexpr auto CefKeyboardHandlerCppToC_Wrap = CefKeyboardHandlerCppToC::Wrap;
 constexpr auto CefKeyboardHandlerCppToC_Unwrap =
     CefKeyboardHandlerCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_KEYBOARD_HANDLER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_KEYBOARD_HANDLER_CPPTOC_H_

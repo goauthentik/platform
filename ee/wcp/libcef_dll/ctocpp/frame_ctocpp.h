@@ -34,7 +34,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefFrameCToCpp
     : public CefCToCppRefCounted<CefFrameCToCpp, CefFrame, cef_frame_t> {
-public:
+ public:
   CefFrameCToCpp();
   virtual ~CefFrameCToCpp();
 
@@ -52,8 +52,9 @@ public:
   void GetSource(CefRefPtr<CefStringVisitor> visitor) override;
   void GetText(CefRefPtr<CefStringVisitor> visitor) override;
   void LoadRequest(CefRefPtr<CefRequest> request) override;
-  void LoadURL(const CefString &url) override;
-  void ExecuteJavaScript(const CefString &code, const CefString &script_url,
+  void LoadURL(const CefString& url) override;
+  void ExecuteJavaScript(const CefString& code,
+                         const CefString& script_url,
                          int start_line) override;
   bool IsMain() override;
   bool IsFocused() override;
@@ -64,9 +65,9 @@ public:
   CefRefPtr<CefBrowser> GetBrowser() override;
   CefRefPtr<CefV8Context> GetV8Context() override;
   void VisitDOM(CefRefPtr<CefDOMVisitor> visitor) override;
-  CefRefPtr<CefURLRequest>
-  CreateURLRequest(CefRefPtr<CefRequest> request,
-                   CefRefPtr<CefURLRequestClient> client) override;
+  CefRefPtr<CefURLRequest> CreateURLRequest(
+      CefRefPtr<CefRequest> request,
+      CefRefPtr<CefURLRequestClient> client) override;
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
 };
@@ -74,4 +75,4 @@ public:
 constexpr auto CefFrameCToCpp_Wrap = CefFrameCToCpp::Wrap;
 constexpr auto CefFrameCToCpp_Unwrap = CefFrameCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_

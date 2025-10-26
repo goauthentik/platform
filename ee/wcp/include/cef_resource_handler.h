@@ -50,7 +50,7 @@
 ///
 /*--cef(source=library)--*/
 class CefResourceSkipCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Callback for asynchronous continuation of Skip(). If |bytes_skipped| > 0
   /// then either Skip() will be called again until the requested number of
@@ -66,7 +66,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefResourceReadCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Callback for asynchronous continuation of Read(). If |bytes_read| == 0
   /// the response will be considered complete. If |bytes_read| > 0 then Read()
@@ -85,7 +85,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefResourceHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Open the response stream. To handle the request immediately set
   /// |handle_request| to true and return true. To decide at a later time set
@@ -97,7 +97,8 @@ public:
   /// will be called.
   ///
   /*--cef()--*/
-  virtual bool Open(CefRefPtr<CefRequest> request, bool &handle_request,
+  virtual bool Open(CefRefPtr<CefRequest> request,
+                    bool& handle_request,
                     CefRefPtr<CefCallback> callback) {
     handle_request = false;
     return false;
@@ -135,8 +136,8 @@ public:
   ///
   /*--cef()--*/
   virtual void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                                  int64_t &response_length,
-                                  CefString &redirectUrl) = 0;
+                                  int64_t& response_length,
+                                  CefString& redirectUrl) = 0;
 
   ///
   /// Skip response data when requested by a Range header. Skip over and discard
@@ -148,7 +149,8 @@ public:
   /// method will be called in sequence but not from a dedicated thread.
   ///
   /*--cef()--*/
-  virtual bool Skip(int64_t bytes_to_skip, int64_t &bytes_skipped,
+  virtual bool Skip(int64_t bytes_to_skip,
+                    int64_t& bytes_skipped,
                     CefRefPtr<CefResourceSkipCallback> callback) {
     bytes_skipped = -2;
     return false;
@@ -168,7 +170,9 @@ public:
   /// method will be called.
   ///
   /*--cef()--*/
-  virtual bool Read(void *data_out, int bytes_to_read, int &bytes_read,
+  virtual bool Read(void* data_out,
+                    int bytes_to_read,
+                    int& bytes_read,
                     CefRefPtr<CefResourceReadCallback> callback) {
     bytes_read = -1;
     return false;
@@ -184,7 +188,9 @@ public:
   /// WARNING: This method is deprecated. Use Skip and Read instead.
   ///
   /*--cef()--*/
-  virtual bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read,
+  virtual bool ReadResponse(void* data_out,
+                            int bytes_to_read,
+                            int& bytes_read,
                             CefRefPtr<CefCallback> callback) {
     bytes_read = -2;
     return false;
@@ -197,4 +203,4 @@ public:
   virtual void Cancel() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_RESOURCE_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_RESOURCE_HANDLER_H_

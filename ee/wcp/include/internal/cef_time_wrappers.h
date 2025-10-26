@@ -45,12 +45,12 @@
 /// This is equivalent of Chromium `base::Time` (see base/time/time.h).
 ///
 class CefBaseTime : public cef_basetime_t {
-public:
+ public:
   CefBaseTime() : cef_basetime_t{} {}
-  CefBaseTime(const cef_basetime_t &value) : cef_basetime_t(value) {}
+  CefBaseTime(const cef_basetime_t& value) : cef_basetime_t(value) {}
 
 #if defined(USING_CHROMIUM_INCLUDES)
-  CefBaseTime(const base::Time &value)
+  CefBaseTime(const base::Time& value)
       : cef_basetime_t{value.ToDeltaSinceWindowsEpoch().InMicroseconds()} {}
 
   operator base::Time() const {
@@ -65,9 +65,9 @@ public:
 /// Class representing a time.
 ///
 class CefTime : public cef_time_t {
-public:
+ public:
   CefTime() : cef_time_t{} {}
-  CefTime(const cef_time_t &r) : cef_time_t(r) {}
+  CefTime(const cef_time_t& r) : cef_time_t(r) {}
   explicit CefTime(time_t r) { SetTimeT(r); }
   explicit CefTime(double r) { SetDoubleT(r); }
 
@@ -101,11 +101,11 @@ public:
   ///
   /// Return the delta between this object and |other| in milliseconds.
   ///
-  long long Delta(const CefTime &other) {
+  long long Delta(const CefTime& other) {
     long long delta = 0;
     cef_time_delta(this, &other, &delta);
     return delta;
   }
 };
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_TIME_WRAPPERS_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_TIME_WRAPPERS_H_

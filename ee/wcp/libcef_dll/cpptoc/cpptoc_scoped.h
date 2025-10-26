@@ -18,9 +18,9 @@
 // called from the other side of the DLL boundary.
 template <class ClassName, class BaseName, class StructName>
 class CefCppToCScoped : public CefBaseScoped {
-public:
-  CefCppToCScoped(const CefCppToCScoped &) = delete;
-  CefCppToCScoped &operator=(const CefCppToCScoped &) = delete;
+ public:
+  CefCppToCScoped(const CefCppToCScoped&) = delete;
+  CefCppToCScoped& operator=(const CefCppToCScoped&) = delete;
 
   // Create a new wrapper instance and associated structure reference for
   // passing an object instance the other side. The wrapper object will be
@@ -35,13 +35,13 @@ public:
   //   // Delete the MyTypeCppToC wrapper and the owned MyType object.
   //   struct->del(struct);
   // }
-  static StructName *WrapOwn(CefOwnPtr<BaseName> c) {
+  static StructName* WrapOwn(CefOwnPtr<BaseName> c) {
     if (!c) {
       return nullptr;
     }
 
     // Wrap our object with the CefCppToC class.
-    ClassName *wrapper = new ClassName();
+    ClassName* wrapper = new ClassName();
     wrapper->Initialize(c.release(), true);
 
     // Return the structure pointer that can now be passed to the other side.
@@ -62,19 +62,19 @@ public:
   // void my_method(my_type_t* struct) {
   //   // Access |struct| here but you can't delete it.
   // }
-  static std::pair<CefOwnPtr<CefBaseScoped>, StructName *>
-  WrapRaw(CefRawPtr<BaseName> c) {
+  static std::pair<CefOwnPtr<CefBaseScoped>, StructName*> WrapRaw(
+      CefRawPtr<BaseName> c) {
     if (!c) {
       return std::make_pair(nullptr, nullptr);
     }
 
     // Wrap our object with the CefCppToC class.
-    ClassName *wrapper = new ClassName();
+    ClassName* wrapper = new ClassName();
     wrapper->Initialize(c, false);
 
     // Return the owned wrapper object.
     CefOwnPtr<ClassName> wrapperPtr(wrapper);
-    auto *wrapperStruct = wrapperPtr->GetStruct();
+    auto* wrapperStruct = wrapperPtr->GetStruct();
     return std::make_pair(std::move(wrapperPtr), wrapperStruct);
   }
 
@@ -86,13 +86,13 @@ public:
   //   CefOwnPtr<MyType> MyTypePtr = MyTypeCppToC::UnwrapOwn(struct);
   //   // |struct| has been deleted and should no longer be accessed.
   // }
-  static CefOwnPtr<BaseName> UnwrapOwn(StructName *s) {
+  static CefOwnPtr<BaseName> UnwrapOwn(StructName* s) {
     if (!s) {
       return CefOwnPtr<BaseName>();
     }
 
     // Cast our structure to the wrapper structure type.
-    WrapperStruct *wrapperStruct =
+    WrapperStruct* wrapperStruct =
         GetWrapperStruct(s, /*require_exact_type=*/false);
 
     // If the type does not match this object then we need to unwrap as the
@@ -107,7 +107,7 @@ public:
 
     // We're giving up ownership of the underlying object. Clear the pointer so
     // it doesn't get deleted.
-    BaseName *object = wrapperStruct->object_;
+    BaseName* object = wrapperStruct->object_;
     wrapperStruct->object_ = nullptr;
 
     delete wrapperStruct->wrapper_;
@@ -123,13 +123,13 @@ public:
   //   CefRawPtr<MyType> MyTypePtr = MyTypeCppToC::UnwrapRaw(struct);
   //   // |struct| is still valid.
   // }
-  static CefRawPtr<BaseName> UnwrapRaw(StructName *s) {
+  static CefRawPtr<BaseName> UnwrapRaw(StructName* s) {
     if (!s) {
       return nullptr;
     }
 
     // Cast our structure to the wrapper structure type.
-    WrapperStruct *wrapperStruct =
+    WrapperStruct* wrapperStruct =
         GetWrapperStruct(s, /*require_exact_type=*/false);
 
     // If the type does not match this object then we need to unwrap as the
@@ -144,27 +144,27 @@ public:
 
   // Retrieve the same side wrapper associated with the structure. Ownership
   // does not change.
-  static CefBaseScoped *GetWrapper(StructName *s) {
+  static CefBaseScoped* GetWrapper(StructName* s) {
     DCHECK(s);
-    WrapperStruct *wrapperStruct = GetWrapperStruct(s);
+    WrapperStruct* wrapperStruct = GetWrapperStruct(s);
     return wrapperStruct->wrapper_;
   }
 
   // Retrieve the underlying object instance from our own structure reference
   // when the reference is passed as the required first parameter of a C API
   // function call. Ownership of the object does not change.
-  static BaseName *Get(StructName *s) {
+  static BaseName* Get(StructName* s) {
     DCHECK(s);
-    WrapperStruct *wrapperStruct = GetWrapperStruct(s);
+    WrapperStruct* wrapperStruct = GetWrapperStruct(s);
     return wrapperStruct->object_;
   }
 
   // If returning the structure across the DLL boundary you should call
   // AddRef() on this CefCppToC object.  On the other side of the DLL boundary,
   // call UnderlyingRelease() on the wrapping CefCToCpp object.
-  StructName *GetStruct() { return &wrapper_struct_.struct_; }
+  StructName* GetStruct() { return &wrapper_struct_.struct_; }
 
-protected:
+ protected:
   CefCppToCScoped() {
     wrapper_struct_.type_ = kWrapperType;
     wrapper_struct_.wrapper_ = this;
@@ -178,35 +178,34 @@ protected:
     }
   }
 
-private:
+ private:
   // Used to associate this wrapper object, the underlying object instance and
   // the structure that will be passed to the other side.
   struct WrapperStruct {
     CefWrapperType type_;
-    BaseName *object_;
-    CefCppToCScoped<ClassName, BaseName, StructName> *wrapper_;
+    BaseName* object_;
+    CefCppToCScoped<ClassName, BaseName, StructName>* wrapper_;
     StructName struct_;
   };
 
-  void Initialize(BaseName *obj, bool owned) {
+  void Initialize(BaseName* obj, bool owned) {
     wrapper_struct_.object_ = obj;
     owned_ = owned;
 
-    cef_base_scoped_t *base =
-        reinterpret_cast<cef_base_scoped_t *>(GetStruct());
+    cef_base_scoped_t* base = reinterpret_cast<cef_base_scoped_t*>(GetStruct());
     base->size = sizeof(StructName);
     if (owned) {
       base->del = struct_del;
     }
   }
 
-  static WrapperStruct *GetWrapperStruct(StructName *s,
+  static WrapperStruct* GetWrapperStruct(StructName* s,
                                          bool require_exact_type = true) {
     // Offset using the WrapperStruct size instead of individual member sizes
     // to avoid problems due to platform/compiler differences in structure
     // padding.
-    auto *wrapperStruct = reinterpret_cast<WrapperStruct *>(
-        reinterpret_cast<char *>(s) -
+    auto* wrapperStruct = reinterpret_cast<WrapperStruct*>(
+        reinterpret_cast<char*>(s) -
         (sizeof(WrapperStruct) - sizeof(StructName)));
 
     if (require_exact_type) {
@@ -219,18 +218,18 @@ private:
 
   // Unwrap as the derived type.
   static CefOwnPtr<BaseName> UnwrapDerivedOwn(CefWrapperType type,
-                                              StructName *s);
+                                              StructName* s);
   static CefRawPtr<BaseName> UnwrapDerivedRaw(CefWrapperType type,
-                                              StructName *s);
+                                              StructName* s);
 
-  static void CEF_CALLBACK struct_del(cef_base_scoped_t *base) {
+  static void CEF_CALLBACK struct_del(cef_base_scoped_t* base) {
     DCHECK(base);
     if (!base) {
       return;
     }
 
-    WrapperStruct *wrapperStruct =
-        GetWrapperStruct(reinterpret_cast<StructName *>(base));
+    WrapperStruct* wrapperStruct =
+        GetWrapperStruct(reinterpret_cast<StructName*>(base));
 
     // Should only be deleting wrappers that own the underlying object.
     CHECK(wrapperStruct->wrapper_->owned_);
@@ -243,4 +242,4 @@ private:
   static CefWrapperType kWrapperType;
 };
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_CPPTOC_SCOPED_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_CPPTOC_SCOPED_H_

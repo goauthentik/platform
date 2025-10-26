@@ -30,9 +30,10 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefTranslatorTestCToCpp
-    : public CefCToCppRefCounted<CefTranslatorTestCToCpp, CefTranslatorTest,
+    : public CefCToCppRefCounted<CefTranslatorTestCToCpp,
+                                 CefTranslatorTest,
                                  cef_translator_test_t> {
-public:
+ public:
   CefTranslatorTestCToCpp();
   virtual ~CefTranslatorTestCToCpp();
 
@@ -49,24 +50,24 @@ public:
   bool SetDouble(double val) override;
   bool SetLong(long val) override;
   bool SetSizet(size_t val) override;
-  bool SetIntList(const std::vector<int> &val) override;
-  bool GetIntListByRef(IntList &val) override;
+  bool SetIntList(const std::vector<int>& val) override;
+  bool GetIntListByRef(IntList& val) override;
   size_t GetIntListSize() override;
   CefString GetString() override;
-  bool SetString(const CefString &val) override;
-  void GetStringByRef(CefString &val) override;
-  bool SetStringList(const std::vector<CefString> &val) override;
-  bool GetStringListByRef(StringList &val) override;
-  bool SetStringMap(const StringMap &val) override;
-  bool GetStringMapByRef(std::map<CefString, CefString> &val) override;
-  bool
-  SetStringMultimap(const std::multimap<CefString, CefString> &val) override;
-  bool GetStringMultimapByRef(StringMultimap &val) override;
+  bool SetString(const CefString& val) override;
+  void GetStringByRef(CefString& val) override;
+  bool SetStringList(const std::vector<CefString>& val) override;
+  bool GetStringListByRef(StringList& val) override;
+  bool SetStringMap(const StringMap& val) override;
+  bool GetStringMapByRef(std::map<CefString, CefString>& val) override;
+  bool SetStringMultimap(
+      const std::multimap<CefString, CefString>& val) override;
+  bool GetStringMultimapByRef(StringMultimap& val) override;
   CefPoint GetPoint() override;
-  bool SetPoint(const CefPoint &val) override;
-  void GetPointByRef(CefPoint &val) override;
-  bool SetPointList(const std::vector<CefPoint> &val) override;
-  bool GetPointListByRef(PointList &val) override;
+  bool SetPoint(const CefPoint& val) override;
+  void GetPointByRef(CefPoint& val) override;
+  bool SetPointList(const std::vector<CefPoint>& val) override;
+  bool GetPointListByRef(PointList& val) override;
   size_t GetPointListSize() override;
   CefRefPtr<CefTranslatorTestRefPtrLibrary> GetRefPtrLibrary(int val) override;
   int SetRefPtrLibrary(CefRefPtr<CefTranslatorTestRefPtrLibrary> val) override;
@@ -78,9 +79,11 @@ public:
   SetChildRefPtrLibraryAndReturnParent(
       CefRefPtr<CefTranslatorTestRefPtrLibraryChild> val) override;
   bool SetRefPtrLibraryList(
-      const std::vector<CefRefPtr<CefTranslatorTestRefPtrLibrary>> &val,
-      int val1, int val2) override;
-  bool GetRefPtrLibraryListByRef(RefPtrLibraryList &val, int val1,
+      const std::vector<CefRefPtr<CefTranslatorTestRefPtrLibrary>>& val,
+      int val1,
+      int val2) override;
+  bool GetRefPtrLibraryListByRef(RefPtrLibraryList& val,
+                                 int val1,
                                  int val2) override;
   size_t GetRefPtrLibraryListSize() override;
   int SetRefPtrClient(CefRefPtr<CefTranslatorTestRefPtrClient> val) override;
@@ -91,10 +94,12 @@ public:
   CefRefPtr<CefTranslatorTestRefPtrClient> SetChildRefPtrClientAndReturnParent(
       CefRefPtr<CefTranslatorTestRefPtrClientChild> val) override;
   bool SetRefPtrClientList(
-      const std::vector<CefRefPtr<CefTranslatorTestRefPtrClient>> &val,
-      int val1, int val2) override;
+      const std::vector<CefRefPtr<CefTranslatorTestRefPtrClient>>& val,
+      int val1,
+      int val2) override;
   bool GetRefPtrClientListByRef(
-      RefPtrClientList &val, CefRefPtr<CefTranslatorTestRefPtrClient> val1,
+      RefPtrClientList& val,
+      CefRefPtr<CefTranslatorTestRefPtrClient> val1,
       CefRefPtr<CefTranslatorTestRefPtrClient> val2) override;
   size_t GetRefPtrClientListSize() override;
   CefOwnPtr<CefTranslatorTestScopedLibrary> GetOwnPtrLibrary(int val) override;
@@ -117,17 +122,19 @@ public:
   int SetChildRawPtrLibrary(
       CefRawPtr<CefTranslatorTestScopedLibraryChild> val) override;
   bool SetRawPtrLibraryList(
-      const std::vector<CefRawPtr<CefTranslatorTestScopedLibrary>> &val,
-      int val1, int val2) override;
+      const std::vector<CefRawPtr<CefTranslatorTestScopedLibrary>>& val,
+      int val1,
+      int val2) override;
   int SetRawPtrClient(CefRawPtr<CefTranslatorTestScopedClient> val) override;
   int SetChildRawPtrClient(
       CefRawPtr<CefTranslatorTestScopedClientChild> val) override;
   bool SetRawPtrClientList(
-      const std::vector<CefRawPtr<CefTranslatorTestScopedClient>> &val,
-      int val1, int val2) override;
+      const std::vector<CefRawPtr<CefTranslatorTestScopedClient>>& val,
+      int val1,
+      int val2) override;
 };
 
 constexpr auto CefTranslatorTestCToCpp_Wrap = CefTranslatorTestCToCpp::Wrap;
 constexpr auto CefTranslatorTestCToCpp_Unwrap = CefTranslatorTestCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_TRANSLATOR_TEST_CTOCPP_H_

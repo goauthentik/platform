@@ -50,7 +50,7 @@
 ///
 /*--cef(source=library)--*/
 class CefDragData : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Create a new CefDragData object.
   ///
@@ -144,50 +144,50 @@ public:
   /// window.
   ///
   /*--cef()--*/
-  virtual bool GetFileNames(std::vector<CefString> &names) = 0;
+  virtual bool GetFileNames(std::vector<CefString>& names) = 0;
 
   ///
   /// Retrieve the list of file paths that are being dragged into the browser
   /// window.
   ///
   /*--cef()--*/
-  virtual bool GetFilePaths(std::vector<CefString> &paths) = 0;
+  virtual bool GetFilePaths(std::vector<CefString>& paths) = 0;
 
   ///
   /// Set the link URL that is being dragged.
   ///
   /*--cef(optional_param=url)--*/
-  virtual void SetLinkURL(const CefString &url) = 0;
+  virtual void SetLinkURL(const CefString& url) = 0;
 
   ///
   /// Set the title associated with the link being dragged.
   ///
   /*--cef(optional_param=title)--*/
-  virtual void SetLinkTitle(const CefString &title) = 0;
+  virtual void SetLinkTitle(const CefString& title) = 0;
 
   ///
   /// Set the metadata associated with the link being dragged.
   ///
   /*--cef(optional_param=data)--*/
-  virtual void SetLinkMetadata(const CefString &data) = 0;
+  virtual void SetLinkMetadata(const CefString& data) = 0;
 
   ///
   /// Set the plain text fragment that is being dragged.
   ///
   /*--cef(optional_param=text)--*/
-  virtual void SetFragmentText(const CefString &text) = 0;
+  virtual void SetFragmentText(const CefString& text) = 0;
 
   ///
   /// Set the text/html fragment that is being dragged.
   ///
   /*--cef(optional_param=html)--*/
-  virtual void SetFragmentHtml(const CefString &html) = 0;
+  virtual void SetFragmentHtml(const CefString& html) = 0;
 
   ///
   /// Set the base URL that the fragment came from.
   ///
   /*--cef(optional_param=base_url)--*/
-  virtual void SetFragmentBaseURL(const CefString &base_url) = 0;
+  virtual void SetFragmentBaseURL(const CefString& base_url) = 0;
 
   ///
   /// Reset the file contents. You should do this before calling
@@ -201,8 +201,8 @@ public:
   /// Add a file that is being dragged into the webview.
   ///
   /*--cef(optional_param=display_name)--*/
-  virtual void AddFile(const CefString &path,
-                       const CefString &display_name) = 0;
+  virtual void AddFile(const CefString& path,
+                       const CefString& display_name) = 0;
 
   ///
   /// Clear list of filenames.
@@ -230,4 +230,4 @@ public:
   virtual bool HasImage() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_DRAG_DATA_H_
+#endif  // CEF_INCLUDE_CEF_DRAG_DATA_H_

@@ -27,20 +27,22 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefResourceBundleCToCpp
-    : public CefCToCppRefCounted<CefResourceBundleCToCpp, CefResourceBundle,
+    : public CefCToCppRefCounted<CefResourceBundleCToCpp,
+                                 CefResourceBundle,
                                  cef_resource_bundle_t> {
-public:
+ public:
   CefResourceBundleCToCpp();
   virtual ~CefResourceBundleCToCpp();
 
   // CefResourceBundle methods.
   CefString GetLocalizedString(int string_id) override;
   CefRefPtr<CefBinaryValue> GetDataResource(int resource_id) override;
-  CefRefPtr<CefBinaryValue>
-  GetDataResourceForScale(int resource_id, ScaleFactor scale_factor) override;
+  CefRefPtr<CefBinaryValue> GetDataResourceForScale(
+      int resource_id,
+      ScaleFactor scale_factor) override;
 };
 
 constexpr auto CefResourceBundleCToCpp_Wrap = CefResourceBundleCToCpp::Wrap;
 constexpr auto CefResourceBundleCToCpp_Unwrap = CefResourceBundleCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_BUNDLE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_RESOURCE_BUNDLE_CTOCPP_H_

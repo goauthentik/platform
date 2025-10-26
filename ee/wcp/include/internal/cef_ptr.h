@@ -153,7 +153,8 @@
 ///   }
 /// </pre>
 ///
-template <class T> using CefRefPtr = scoped_refptr<T>;
+template <class T>
+using CefRefPtr = scoped_refptr<T>;
 
 ///
 /// A CefOwnPtr<T> is like a T*, except that the destructor of CefOwnPtr<T>
@@ -169,6 +170,7 @@ using CefOwnPtr = std::unique_ptr<T, D>;
 ///
 /// A CefRawPtr<T> is the same as T*
 ///
-template <class T> using CefRawPtr = T *;
+template <class T>
+using CefRawPtr = T*;
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_PTR_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_PTR_H_

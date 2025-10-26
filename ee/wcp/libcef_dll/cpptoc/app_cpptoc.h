@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefAppCppToC
     : public CefCppToCRefCounted<CefAppCppToC, CefApp, cef_app_t> {
-public:
+ public:
   CefAppCppToC();
   virtual ~CefAppCppToC();
 };
@@ -36,4 +36,4 @@ public:
 constexpr auto CefAppCppToC_Wrap = CefAppCppToC::Wrap;
 constexpr auto CefAppCppToC_Unwrap = CefAppCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_APP_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_APP_CPPTOC_H_

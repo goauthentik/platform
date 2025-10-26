@@ -27,25 +27,26 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPostDataElementCToCpp
-    : public CefCToCppRefCounted<CefPostDataElementCToCpp, CefPostDataElement,
+    : public CefCToCppRefCounted<CefPostDataElementCToCpp,
+                                 CefPostDataElement,
                                  cef_post_data_element_t> {
-public:
+ public:
   CefPostDataElementCToCpp();
   virtual ~CefPostDataElementCToCpp();
 
   // CefPostDataElement methods.
   bool IsReadOnly() override;
   void SetToEmpty() override;
-  void SetToFile(const CefString &fileName) override;
-  void SetToBytes(size_t size, const void *bytes) override;
+  void SetToFile(const CefString& fileName) override;
+  void SetToBytes(size_t size, const void* bytes) override;
   Type GetType() override;
   CefString GetFile() override;
   size_t GetBytesCount() override;
-  size_t GetBytes(size_t size, void *bytes) override;
+  size_t GetBytes(size_t size, void* bytes) override;
 };
 
 constexpr auto CefPostDataElementCToCpp_Wrap = CefPostDataElementCToCpp::Wrap;
 constexpr auto CefPostDataElementCToCpp_Unwrap =
     CefPostDataElementCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_POST_DATA_ELEMENT_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_POST_DATA_ELEMENT_CTOCPP_H_

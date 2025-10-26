@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMediaRouteCToCpp
-    : public CefCToCppRefCounted<CefMediaRouteCToCpp, CefMediaRoute,
-                                 cef_media_route_t> {
-public:
+class CefMediaRouteCToCpp : public CefCToCppRefCounted<CefMediaRouteCToCpp,
+                                                       CefMediaRoute,
+                                                       cef_media_route_t> {
+ public:
   CefMediaRouteCToCpp();
   virtual ~CefMediaRouteCToCpp();
 
@@ -37,11 +37,11 @@ public:
   CefString GetId() override;
   CefRefPtr<CefMediaSource> GetSource() override;
   CefRefPtr<CefMediaSink> GetSink() override;
-  void SendRouteMessage(const void *message, size_t message_size) override;
+  void SendRouteMessage(const void* message, size_t message_size) override;
   void Terminate() override;
 };
 
 constexpr auto CefMediaRouteCToCpp_Wrap = CefMediaRouteCToCpp::Wrap;
 constexpr auto CefMediaRouteCToCpp_Unwrap = CefMediaRouteCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_ROUTE_CTOCPP_H_

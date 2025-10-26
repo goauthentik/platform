@@ -61,8 +61,9 @@ class CefApp;
 ///
 /*--cef(api_hash_check,optional_param=application,
         optional_param=windows_sandbox_info)--*/
-int CefExecuteProcess(const CefMainArgs &args, CefRefPtr<CefApp> application,
-                      void *windows_sandbox_info);
+int CefExecuteProcess(const CefMainArgs& args,
+                      CefRefPtr<CefApp> application,
+                      void* windows_sandbox_info);
 
 ///
 /// This function should be called on the main application thread to initialize
@@ -76,8 +77,10 @@ int CefExecuteProcess(const CefMainArgs &args, CefRefPtr<CefApp> application,
 ///
 /*--cef(api_hash_check,optional_param=application,
         optional_param=windows_sandbox_info)--*/
-bool CefInitialize(const CefMainArgs &args, const CefSettings &settings,
-                   CefRefPtr<CefApp> application, void *windows_sandbox_info);
+bool CefInitialize(const CefMainArgs& args,
+                   const CefSettings& settings,
+                   CefRefPtr<CefApp> application,
+                   void* windows_sandbox_info);
 
 ///
 /// This function can optionally be called on the main application thread after
@@ -142,7 +145,7 @@ void CefQuitMessageLoop();
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefApp : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Provides an opportunity to view and/or modify command-line arguments
   /// before processing by CEF and Chromium. The |process_type| value will be
@@ -156,9 +159,9 @@ public:
   /// crashes.
   ///
   /*--cef(optional_param=process_type)--*/
-  virtual void
-  OnBeforeCommandLineProcessing(const CefString &process_type,
-                                CefRefPtr<CefCommandLine> command_line) {}
+  virtual void OnBeforeCommandLineProcessing(
+      const CefString& process_type,
+      CefRefPtr<CefCommandLine> command_line) {}
 
   ///
   /// Provides an opportunity to register custom schemes. Do not keep a
@@ -167,8 +170,8 @@ public:
   /// across all processes.
   ///
   /*--cef()--*/
-  virtual void
-  OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) {}
+  virtual void OnRegisterCustomSchemes(
+      CefRawPtr<CefSchemeRegistrar> registrar) {}
 
   ///
   /// Return the handler for resource bundle events. If no handler is returned
@@ -199,4 +202,4 @@ public:
   }
 };
 
-#endif // CEF_INCLUDE_CEF_APP_H_
+#endif  // CEF_INCLUDE_CEF_APP_H_

@@ -29,9 +29,10 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefApiVersionTestCToCpp
-    : public CefCToCppRefCounted<CefApiVersionTestCToCpp, CefApiVersionTest,
+    : public CefCToCppRefCounted<CefApiVersionTestCToCpp,
+                                 CefApiVersionTest,
                                  cef_api_version_test_t> {
-public:
+ public:
   CefApiVersionTestCToCpp();
   virtual ~CefApiVersionTestCToCpp();
 
@@ -46,9 +47,11 @@ public:
   SetChildRefPtrLibraryAndReturnParent(
       CefRefPtr<CefApiVersionTestRefPtrLibraryChild> val) override;
   bool SetRefPtrLibraryList(
-      const std::vector<CefRefPtr<CefApiVersionTestRefPtrLibrary>> &val,
-      int val1, int val2) override;
-  bool GetRefPtrLibraryListByRef(RefPtrLibraryList &val, int val1,
+      const std::vector<CefRefPtr<CefApiVersionTestRefPtrLibrary>>& val,
+      int val1,
+      int val2) override;
+  bool GetRefPtrLibraryListByRef(RefPtrLibraryList& val,
+                                 int val1,
                                  int val2) override;
   size_t GetRefPtrLibraryListSize() override;
   int SetRefPtrClient(CefRefPtr<CefApiVersionTestRefPtrClient> val) override;
@@ -71,10 +74,12 @@ public:
       CefRefPtr<CefApiVersionTestRefPtrClientChildV2> val) override;
 #endif
   bool SetRefPtrClientList(
-      const std::vector<CefRefPtr<CefApiVersionTestRefPtrClient>> &val,
-      int val1, int val2) override;
+      const std::vector<CefRefPtr<CefApiVersionTestRefPtrClient>>& val,
+      int val1,
+      int val2) override;
   bool GetRefPtrClientListByRef(
-      RefPtrClientList &val, CefRefPtr<CefApiVersionTestRefPtrClient> val1,
+      RefPtrClientList& val,
+      CefRefPtr<CefApiVersionTestRefPtrClient> val1,
       CefRefPtr<CefApiVersionTestRefPtrClient> val2) override;
   size_t GetRefPtrClientListSize() override;
   CefOwnPtr<CefApiVersionTestScopedLibrary> GetOwnPtrLibrary(int val) override;
@@ -109,8 +114,9 @@ public:
   int SetChildRawPtrLibrary(
       CefRawPtr<CefApiVersionTestScopedLibraryChild> val) override;
   bool SetRawPtrLibraryList(
-      const std::vector<CefRawPtr<CefApiVersionTestScopedLibrary>> &val,
-      int val1, int val2) override;
+      const std::vector<CefRawPtr<CefApiVersionTestScopedLibrary>>& val,
+      int val1,
+      int val2) override;
   int SetRawPtrClient(CefRawPtr<CefApiVersionTestScopedClient> val) override;
 #if CEF_API_REMOVED(13302)
   int SetChildRawPtrClient(
@@ -121,11 +127,12 @@ public:
       CefRawPtr<CefApiVersionTestScopedClientChildV2> val) override;
 #endif
   bool SetRawPtrClientList(
-      const std::vector<CefRawPtr<CefApiVersionTestScopedClient>> &val,
-      int val1, int val2) override;
+      const std::vector<CefRawPtr<CefApiVersionTestScopedClient>>& val,
+      int val1,
+      int val2) override;
 };
 
 constexpr auto CefApiVersionTestCToCpp_Wrap = CefApiVersionTestCToCpp::Wrap;
 constexpr auto CefApiVersionTestCToCpp_Unwrap = CefApiVersionTestCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_TEST_API_VERSION_TEST_CTOCPP_H_

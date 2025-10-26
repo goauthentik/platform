@@ -88,16 +88,20 @@ extern "C" {
 /// |source_origin| is invalid or the whitelist cannot be accessed.
 ///
 CEF_EXPORT int cef_add_cross_origin_whitelist_entry(
-    const cef_string_t *source_origin, const cef_string_t *target_protocol,
-    const cef_string_t *target_domain, int allow_target_subdomains);
+    const cef_string_t* source_origin,
+    const cef_string_t* target_protocol,
+    const cef_string_t* target_domain,
+    int allow_target_subdomains);
 
 ///
 /// Remove an entry from the cross-origin access whitelist. Returns false (0) if
 /// |source_origin| is invalid or the whitelist cannot be accessed.
 ///
 CEF_EXPORT int cef_remove_cross_origin_whitelist_entry(
-    const cef_string_t *source_origin, const cef_string_t *target_protocol,
-    const cef_string_t *target_domain, int allow_target_subdomains);
+    const cef_string_t* source_origin,
+    const cef_string_t* target_protocol,
+    const cef_string_t* target_domain,
+    int allow_target_subdomains);
 
 ///
 /// Remove all entries from the cross-origin access whitelist. Returns false (0)
@@ -109,4 +113,4 @@ CEF_EXPORT int cef_clear_cross_origin_whitelist(void);
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_ORIGIN_WHITELIST_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_ORIGIN_WHITELIST_CAPI_H_

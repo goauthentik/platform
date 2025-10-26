@@ -38,7 +38,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/threading/platform_thread.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -64,7 +64,7 @@ typedef cef_platform_thread_id_t PlatformThreadId;
 /// to distinguish a new thread from an old, dead thread.
 ///
 class PlatformThreadRef {
-public:
+ public:
   typedef cef_platform_thread_handle_t RefType;
 
   PlatformThreadRef() : id_(0) {}
@@ -75,7 +75,7 @@ public:
 
   bool is_null() const { return id_ == 0; }
 
-private:
+ private:
   RefType id_;
 };
 
@@ -101,10 +101,10 @@ inline PlatformThreadRef CurrentRef() {
   return PlatformThreadRef(cef_get_current_platform_thread_handle());
 }
 
-} // namespace PlatformThread
+}  // namespace PlatformThread
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_PLATFORM_THREAD_H_
+#endif  // CEF_INCLUDE_BASE_PLATFORM_THREAD_H_

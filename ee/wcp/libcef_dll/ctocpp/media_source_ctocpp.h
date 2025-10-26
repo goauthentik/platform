@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMediaSourceCToCpp
-    : public CefCToCppRefCounted<CefMediaSourceCToCpp, CefMediaSource,
-                                 cef_media_source_t> {
-public:
+class CefMediaSourceCToCpp : public CefCToCppRefCounted<CefMediaSourceCToCpp,
+                                                        CefMediaSource,
+                                                        cef_media_source_t> {
+ public:
   CefMediaSourceCToCpp();
   virtual ~CefMediaSourceCToCpp();
 
@@ -42,4 +42,4 @@ public:
 constexpr auto CefMediaSourceCToCpp_Wrap = CefMediaSourceCToCpp::Wrap;
 constexpr auto CefMediaSourceCToCpp_Unwrap = CefMediaSourceCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_MEDIA_SOURCE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_SOURCE_CTOCPP_H_

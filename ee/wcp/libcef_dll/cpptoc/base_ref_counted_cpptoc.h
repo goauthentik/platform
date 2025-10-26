@@ -16,13 +16,14 @@
 
 // Wrap a C++ class with a C structure.
 class CefBaseRefCountedCppToC
-    : public CefCppToCRefCounted<CefBaseRefCountedCppToC, CefBaseRefCounted,
+    : public CefCppToCRefCounted<CefBaseRefCountedCppToC,
+                                 CefBaseRefCounted,
                                  cef_base_ref_counted_t> {
-public:
+ public:
   CefBaseRefCountedCppToC();
 };
 
 constexpr auto CefBaseRefCountedCppToC_Wrap = CefBaseRefCountedCppToC::Wrap;
 constexpr auto CefBaseRefCountedCppToC_Unwrap = CefBaseRefCountedCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_BASE_REF_COUNTED_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_BASE_REF_COUNTED_CPPTOC_H_

@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefListValueCToCpp
-    : public CefCToCppRefCounted<CefListValueCToCpp, CefListValue,
-                                 cef_list_value_t> {
-public:
+class CefListValueCToCpp : public CefCToCppRefCounted<CefListValueCToCpp,
+                                                      CefListValue,
+                                                      cef_list_value_t> {
+ public:
   CefListValueCToCpp();
   virtual ~CefListValueCToCpp();
 
@@ -58,7 +58,7 @@ public:
   bool SetBool(size_t index, bool value) override;
   bool SetInt(size_t index, int value) override;
   bool SetDouble(size_t index, double value) override;
-  bool SetString(size_t index, const CefString &value) override;
+  bool SetString(size_t index, const CefString& value) override;
   bool SetBinary(size_t index, CefRefPtr<CefBinaryValue> value) override;
   bool SetDictionary(size_t index,
                      CefRefPtr<CefDictionaryValue> value) override;
@@ -68,4 +68,4 @@ public:
 constexpr auto CefListValueCToCpp_Wrap = CefListValueCToCpp::Wrap;
 constexpr auto CefListValueCToCpp_Unwrap = CefListValueCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_LIST_VALUE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_LIST_VALUE_CTOCPP_H_

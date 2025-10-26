@@ -7,622 +7,393 @@
 #include "agent_config.pb.h"
 
 #include <functional>
-#include <grpcpp/client_context.h>
-#include <grpcpp/completion_queue.h>
 #include <grpcpp/generic/async_generic_service.h>
-#include <grpcpp/impl/proto_utils.h>
-#include <grpcpp/impl/rpc_method.h>
-#include <grpcpp/impl/server_callback_handlers.h>
-#include <grpcpp/impl/service_type.h>
-#include <grpcpp/ports_def.inc>
-#include <grpcpp/server_context.h>
 #include <grpcpp/support/async_stream.h>
 #include <grpcpp/support/async_unary_call.h>
 #include <grpcpp/support/client_callback.h>
+#include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
 #include <grpcpp/support/message_allocator.h>
 #include <grpcpp/support/method_handler.h>
+#include <grpcpp/impl/proto_utils.h>
+#include <grpcpp/impl/rpc_method.h>
 #include <grpcpp/support/server_callback.h>
+#include <grpcpp/impl/server_callback_handlers.h>
+#include <grpcpp/server_context.h>
+#include <grpcpp/impl/service_type.h>
 #include <grpcpp/support/status.h>
 #include <grpcpp/support/stub_options.h>
 #include <grpcpp/support/sync_stream.h>
+#include <grpcpp/ports_def.inc>
 
 namespace agent_config {
 
 class AgentConfig final {
-public:
-  static constexpr char const *service_full_name() {
+ public:
+  static constexpr char const* service_full_name() {
     return "agent_config.AgentConfig";
   }
   class StubInterface {
-  public:
+   public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status
-    ListProfiles(::grpc::ClientContext *context,
-                 const ::google::protobuf::Empty &request,
-                 ::agent_config::ListProfilesResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::ListProfilesResponse>>
-    AsyncListProfiles(::grpc::ClientContext *context,
-                      const ::google::protobuf::Empty &request,
-                      ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_config::ListProfilesResponse>>(
-          AsyncListProfilesRaw(context, request, cq));
+    virtual ::grpc::Status ListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::agent_config::ListProfilesResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::ListProfilesResponse>> AsyncListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::ListProfilesResponse>>(AsyncListProfilesRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::ListProfilesResponse>>
-    PrepareAsyncListProfiles(::grpc::ClientContext *context,
-                             const ::google::protobuf::Empty &request,
-                             ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_config::ListProfilesResponse>>(
-          PrepareAsyncListProfilesRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::ListProfilesResponse>> PrepareAsyncListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::ListProfilesResponse>>(PrepareAsyncListProfilesRaw(context, request, cq));
     }
-    virtual ::grpc::Status Setup(::grpc::ClientContext *context,
-                                 const ::agent_config::SetupRequest &request,
-                                 ::agent_config::SetupResponse *response) = 0;
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::SetupResponse>>
-    AsyncSetup(::grpc::ClientContext *context,
-               const ::agent_config::SetupRequest &request,
-               ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_config::SetupResponse>>(AsyncSetupRaw(context, request, cq));
+    virtual ::grpc::Status Setup(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::agent_config::SetupResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::SetupResponse>> AsyncSetup(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::SetupResponse>>(AsyncSetupRaw(context, request, cq));
     }
-    std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::SetupResponse>>
-    PrepareAsyncSetup(::grpc::ClientContext *context,
-                      const ::agent_config::SetupRequest &request,
-                      ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReaderInterface<
-          ::agent_config::SetupResponse>>(
-          PrepareAsyncSetupRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::SetupResponse>> PrepareAsyncSetup(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::SetupResponse>>(PrepareAsyncSetupRaw(context, request, cq));
     }
     class async_interface {
-    public:
+     public:
       virtual ~async_interface() {}
-      virtual void ListProfiles(::grpc::ClientContext *context,
-                                const ::google::protobuf::Empty *request,
-                                ::agent_config::ListProfilesResponse *response,
-                                std::function<void(::grpc::Status)>) = 0;
-      virtual void ListProfiles(::grpc::ClientContext *context,
-                                const ::google::protobuf::Empty *request,
-                                ::agent_config::ListProfilesResponse *response,
-                                ::grpc::ClientUnaryReactor *reactor) = 0;
-      virtual void Setup(::grpc::ClientContext *context,
-                         const ::agent_config::SetupRequest *request,
-                         ::agent_config::SetupResponse *response,
-                         std::function<void(::grpc::Status)>) = 0;
-      virtual void Setup(::grpc::ClientContext *context,
-                         const ::agent_config::SetupRequest *request,
-                         ::agent_config::SetupResponse *response,
-                         ::grpc::ClientUnaryReactor *reactor) = 0;
+      virtual void ListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::agent_config::ListProfilesResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void ListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::agent_config::ListProfilesResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void Setup(::grpc::ClientContext* context, const ::agent_config::SetupRequest* request, ::agent_config::SetupResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Setup(::grpc::ClientContext* context, const ::agent_config::SetupRequest* request, ::agent_config::SetupResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
-    virtual class async_interface *async() { return nullptr; }
-    class async_interface *experimental_async() { return async(); }
-
-  private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::ListProfilesResponse> *
-    AsyncListProfilesRaw(::grpc::ClientContext *context,
-                         const ::google::protobuf::Empty &request,
-                         ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::ListProfilesResponse> *
-    PrepareAsyncListProfilesRaw(::grpc::ClientContext *context,
-                                const ::google::protobuf::Empty &request,
-                                ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::SetupResponse> *
-    AsyncSetupRaw(::grpc::ClientContext *context,
-                  const ::agent_config::SetupRequest &request,
-                  ::grpc::CompletionQueue *cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface<
-        ::agent_config::SetupResponse> *
-    PrepareAsyncSetupRaw(::grpc::ClientContext *context,
-                         const ::agent_config::SetupRequest &request,
-                         ::grpc::CompletionQueue *cq) = 0;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::ListProfilesResponse>* AsyncListProfilesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::ListProfilesResponse>* PrepareAsyncListProfilesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::SetupResponse>* AsyncSetupRaw(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::agent_config::SetupResponse>* PrepareAsyncSetupRaw(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
-  public:
-    Stub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
-         const ::grpc::StubOptions &options = ::grpc::StubOptions());
-    ::grpc::Status
-    ListProfiles(::grpc::ClientContext *context,
-                 const ::google::protobuf::Empty &request,
-                 ::agent_config::ListProfilesResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_config::ListProfilesResponse>>
-    AsyncListProfiles(::grpc::ClientContext *context,
-                      const ::google::protobuf::Empty &request,
-                      ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
-          ::agent_config::ListProfilesResponse>>(
-          AsyncListProfilesRaw(context, request, cq));
+   public:
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+    ::grpc::Status ListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::agent_config::ListProfilesResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::ListProfilesResponse>> AsyncListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::ListProfilesResponse>>(AsyncListProfilesRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_config::ListProfilesResponse>>
-    PrepareAsyncListProfiles(::grpc::ClientContext *context,
-                             const ::google::protobuf::Empty &request,
-                             ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<::grpc::ClientAsyncResponseReader<
-          ::agent_config::ListProfilesResponse>>(
-          PrepareAsyncListProfilesRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::ListProfilesResponse>> PrepareAsyncListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::ListProfilesResponse>>(PrepareAsyncListProfilesRaw(context, request, cq));
     }
-    ::grpc::Status Setup(::grpc::ClientContext *context,
-                         const ::agent_config::SetupRequest &request,
-                         ::agent_config::SetupResponse *response) override;
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_config::SetupResponse>>
-    AsyncSetup(::grpc::ClientContext *context,
-               const ::agent_config::SetupRequest &request,
-               ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_config::SetupResponse>>(
-          AsyncSetupRaw(context, request, cq));
+    ::grpc::Status Setup(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::agent_config::SetupResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::SetupResponse>> AsyncSetup(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::SetupResponse>>(AsyncSetupRaw(context, request, cq));
     }
-    std::unique_ptr<
-        ::grpc::ClientAsyncResponseReader<::agent_config::SetupResponse>>
-    PrepareAsyncSetup(::grpc::ClientContext *context,
-                      const ::agent_config::SetupRequest &request,
-                      ::grpc::CompletionQueue *cq) {
-      return std::unique_ptr<
-          ::grpc::ClientAsyncResponseReader<::agent_config::SetupResponse>>(
-          PrepareAsyncSetupRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::SetupResponse>> PrepareAsyncSetup(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::agent_config::SetupResponse>>(PrepareAsyncSetupRaw(context, request, cq));
     }
-    class async final : public StubInterface::async_interface {
-    public:
-      void ListProfiles(::grpc::ClientContext *context,
-                        const ::google::protobuf::Empty *request,
-                        ::agent_config::ListProfilesResponse *response,
-                        std::function<void(::grpc::Status)>) override;
-      void ListProfiles(::grpc::ClientContext *context,
-                        const ::google::protobuf::Empty *request,
-                        ::agent_config::ListProfilesResponse *response,
-                        ::grpc::ClientUnaryReactor *reactor) override;
-      void Setup(::grpc::ClientContext *context,
-                 const ::agent_config::SetupRequest *request,
-                 ::agent_config::SetupResponse *response,
-                 std::function<void(::grpc::Status)>) override;
-      void Setup(::grpc::ClientContext *context,
-                 const ::agent_config::SetupRequest *request,
-                 ::agent_config::SetupResponse *response,
-                 ::grpc::ClientUnaryReactor *reactor) override;
-
-    private:
+    class async final :
+      public StubInterface::async_interface {
+     public:
+      void ListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::agent_config::ListProfilesResponse* response, std::function<void(::grpc::Status)>) override;
+      void ListProfiles(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::agent_config::ListProfilesResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void Setup(::grpc::ClientContext* context, const ::agent_config::SetupRequest* request, ::agent_config::SetupResponse* response, std::function<void(::grpc::Status)>) override;
+      void Setup(::grpc::ClientContext* context, const ::agent_config::SetupRequest* request, ::agent_config::SetupResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+     private:
       friend class Stub;
-      explicit async(Stub *stub) : stub_(stub) {}
-      Stub *stub() { return stub_; }
-      Stub *stub_;
+      explicit async(Stub* stub): stub_(stub) { }
+      Stub* stub() { return stub_; }
+      Stub* stub_;
     };
-    class async *async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
-  private:
-    std::shared_ptr<::grpc::ChannelInterface> channel_;
+   private:
+    std::shared_ptr< ::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader<::agent_config::ListProfilesResponse> *
-    AsyncListProfilesRaw(::grpc::ClientContext *context,
-                         const ::google::protobuf::Empty &request,
-                         ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_config::ListProfilesResponse> *
-    PrepareAsyncListProfilesRaw(::grpc::ClientContext *context,
-                                const ::google::protobuf::Empty &request,
-                                ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_config::SetupResponse> *
-    AsyncSetupRaw(::grpc::ClientContext *context,
-                  const ::agent_config::SetupRequest &request,
-                  ::grpc::CompletionQueue *cq) override;
-    ::grpc::ClientAsyncResponseReader<::agent_config::SetupResponse> *
-    PrepareAsyncSetupRaw(::grpc::ClientContext *context,
-                         const ::agent_config::SetupRequest &request,
-                         ::grpc::CompletionQueue *cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_config::ListProfilesResponse>* AsyncListProfilesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_config::ListProfilesResponse>* PrepareAsyncListProfilesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_config::SetupResponse>* AsyncSetupRaw(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::agent_config::SetupResponse>* PrepareAsyncSetupRaw(::grpc::ClientContext* context, const ::agent_config::SetupRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_ListProfiles_;
     const ::grpc::internal::RpcMethod rpcmethod_Setup_;
   };
-  static std::unique_ptr<Stub>
-  NewStub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
-          const ::grpc::StubOptions &options = ::grpc::StubOptions());
+  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
   class Service : public ::grpc::Service {
-  public:
+   public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status
-    ListProfiles(::grpc::ServerContext *context,
-                 const ::google::protobuf::Empty *request,
-                 ::agent_config::ListProfilesResponse *response);
-    virtual ::grpc::Status Setup(::grpc::ServerContext *context,
-                                 const ::agent_config::SetupRequest *request,
-                                 ::agent_config::SetupResponse *response);
+    virtual ::grpc::Status ListProfiles(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::agent_config::ListProfilesResponse* response);
+    virtual ::grpc::Status Setup(::grpc::ServerContext* context, const ::agent_config::SetupRequest* request, ::agent_config::SetupResponse* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_ListProfiles : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithAsyncMethod_ListProfiles() { ::grpc::Service::MarkMethodAsync(0); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_ListProfiles() {
+      ::grpc::Service::MarkMethodAsync(0);
+    }
     ~WithAsyncMethod_ListProfiles() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    ListProfiles(::grpc::ServerContext * /*context*/,
-                 const ::google::protobuf::Empty * /*request*/,
-                 ::agent_config::ListProfilesResponse * /*response*/) override {
+    ::grpc::Status ListProfiles(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::agent_config::ListProfilesResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestListProfiles(
-        ::grpc::ServerContext *context, ::google::protobuf::Empty *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_config::ListProfilesResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestListProfiles(::grpc::ServerContext* context, ::google::protobuf::Empty* request, ::grpc::ServerAsyncResponseWriter< ::agent_config::ListProfilesResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass> class WithAsyncMethod_Setup : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithAsyncMethod_Setup() { ::grpc::Service::MarkMethodAsync(1); }
+  template <class BaseClass>
+  class WithAsyncMethod_Setup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Setup() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
     ~WithAsyncMethod_Setup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Setup(::grpc::ServerContext * /*context*/,
-          const ::agent_config::SetupRequest * /*request*/,
-          ::agent_config::SetupResponse * /*response*/) override {
+    ::grpc::Status Setup(::grpc::ServerContext* /*context*/, const ::agent_config::SetupRequest* /*request*/, ::agent_config::SetupResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestSetup(
-        ::grpc::ServerContext *context, ::agent_config::SetupRequest *request,
-        ::grpc::ServerAsyncResponseWriter<::agent_config::SetupResponse>
-            *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestSetup(::grpc::ServerContext* context, ::agent_config::SetupRequest* request, ::grpc::ServerAsyncResponseWriter< ::agent_config::SetupResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_ListProfiles<WithAsyncMethod_Setup<Service>>
-      AsyncService;
+  typedef WithAsyncMethod_ListProfiles<WithAsyncMethod_Setup<Service > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_ListProfiles : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_ListProfiles() {
-      ::grpc::Service::MarkMethodCallback(
-          0,
-          new ::grpc::internal::CallbackUnaryHandler<
-              ::google::protobuf::Empty, ::agent_config::ListProfilesResponse>(
-              [this](::grpc::CallbackServerContext *context,
-                     const ::google::protobuf::Empty *request,
-                     ::agent_config::ListProfilesResponse *response) {
-                return this->ListProfiles(context, request, response);
-              }));
-    }
+      ::grpc::Service::MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::agent_config::ListProfilesResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::agent_config::ListProfilesResponse* response) { return this->ListProfiles(context, request, response); }));}
     void SetMessageAllocatorFor_ListProfiles(
-        ::grpc::MessageAllocator<::google::protobuf::Empty,
-                                 ::agent_config::ListProfilesResponse>
-            *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::google::protobuf::Empty, ::agent_config::ListProfilesResponse> *>(
-          handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::agent_config::ListProfilesResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::agent_config::ListProfilesResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_ListProfiles() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    ListProfiles(::grpc::ServerContext * /*context*/,
-                 const ::google::protobuf::Empty * /*request*/,
-                 ::agent_config::ListProfilesResponse * /*response*/) override {
+    ::grpc::Status ListProfiles(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::agent_config::ListProfilesResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    ListProfiles(::grpc::CallbackServerContext * /*context*/,
-                 const ::google::protobuf::Empty * /*request*/,
-                 ::agent_config::ListProfilesResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* ListProfiles(
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::agent_config::ListProfilesResponse* /*response*/)  { return nullptr; }
   };
-  template <class BaseClass> class WithCallbackMethod_Setup : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+  template <class BaseClass>
+  class WithCallbackMethod_Setup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithCallbackMethod_Setup() {
-      ::grpc::Service::MarkMethodCallback(
-          1, new ::grpc::internal::CallbackUnaryHandler<
-                 ::agent_config::SetupRequest, ::agent_config::SetupResponse>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::agent_config::SetupRequest *request,
-                        ::agent_config::SetupResponse *response) {
-                   return this->Setup(context, request, response);
-                 }));
-    }
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::agent_config::SetupRequest, ::agent_config::SetupResponse>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::agent_config::SetupRequest* request, ::agent_config::SetupResponse* response) { return this->Setup(context, request, response); }));}
     void SetMessageAllocatorFor_Setup(
-        ::grpc::MessageAllocator<::agent_config::SetupRequest,
-                                 ::agent_config::SetupResponse> *allocator) {
-      ::grpc::internal::MethodHandler *const handler =
-          ::grpc::Service::GetHandler(1);
-      static_cast<::grpc::internal::CallbackUnaryHandler<
-          ::agent_config::SetupRequest, ::agent_config::SetupResponse> *>(
-          handler)
-          ->SetMessageAllocator(allocator);
+        ::grpc::MessageAllocator< ::agent_config::SetupRequest, ::agent_config::SetupResponse>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::agent_config::SetupRequest, ::agent_config::SetupResponse>*>(handler)
+              ->SetMessageAllocator(allocator);
     }
     ~WithCallbackMethod_Setup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Setup(::grpc::ServerContext * /*context*/,
-          const ::agent_config::SetupRequest * /*request*/,
-          ::agent_config::SetupResponse * /*response*/) override {
+    ::grpc::Status Setup(::grpc::ServerContext* /*context*/, const ::agent_config::SetupRequest* /*request*/, ::agent_config::SetupResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    Setup(::grpc::CallbackServerContext * /*context*/,
-          const ::agent_config::SetupRequest * /*request*/,
-          ::agent_config::SetupResponse * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* Setup(
+      ::grpc::CallbackServerContext* /*context*/, const ::agent_config::SetupRequest* /*request*/, ::agent_config::SetupResponse* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_ListProfiles<WithCallbackMethod_Setup<Service>>
-      CallbackService;
+  typedef WithCallbackMethod_ListProfiles<WithCallbackMethod_Setup<Service > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_ListProfiles : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithGenericMethod_ListProfiles() { ::grpc::Service::MarkMethodGeneric(0); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_ListProfiles() {
+      ::grpc::Service::MarkMethodGeneric(0);
+    }
     ~WithGenericMethod_ListProfiles() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    ListProfiles(::grpc::ServerContext * /*context*/,
-                 const ::google::protobuf::Empty * /*request*/,
-                 ::agent_config::ListProfilesResponse * /*response*/) override {
+    ::grpc::Status ListProfiles(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::agent_config::ListProfilesResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
-  template <class BaseClass> class WithGenericMethod_Setup : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithGenericMethod_Setup() { ::grpc::Service::MarkMethodGeneric(1); }
+  template <class BaseClass>
+  class WithGenericMethod_Setup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Setup() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
     ~WithGenericMethod_Setup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Setup(::grpc::ServerContext * /*context*/,
-          const ::agent_config::SetupRequest * /*request*/,
-          ::agent_config::SetupResponse * /*response*/) override {
+    ::grpc::Status Setup(::grpc::ServerContext* /*context*/, const ::agent_config::SetupRequest* /*request*/, ::agent_config::SetupResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
   class WithRawMethod_ListProfiles : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_ListProfiles() { ::grpc::Service::MarkMethodRaw(0); }
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_ListProfiles() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
     ~WithRawMethod_ListProfiles() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    ListProfiles(::grpc::ServerContext * /*context*/,
-                 const ::google::protobuf::Empty * /*request*/,
-                 ::agent_config::ListProfilesResponse * /*response*/) override {
+    ::grpc::Status ListProfiles(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::agent_config::ListProfilesResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestListProfiles(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(0, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestListProfiles(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  template <class BaseClass> class WithRawMethod_Setup : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
-    WithRawMethod_Setup() { ::grpc::Service::MarkMethodRaw(1); }
-    ~WithRawMethod_Setup() override { BaseClassMustBeDerivedFromService(this); }
+  template <class BaseClass>
+  class WithRawMethod_Setup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Setup() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_Setup() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
     // disable synchronous version of this method
-    ::grpc::Status
-    Setup(::grpc::ServerContext * /*context*/,
-          const ::agent_config::SetupRequest * /*request*/,
-          ::agent_config::SetupResponse * /*response*/) override {
+    ::grpc::Status Setup(::grpc::ServerContext* /*context*/, const ::agent_config::SetupRequest* /*request*/, ::agent_config::SetupResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestSetup(
-        ::grpc::ServerContext *context, ::grpc::ByteBuffer *request,
-        ::grpc::ServerAsyncResponseWriter<::grpc::ByteBuffer> *response,
-        ::grpc::CompletionQueue *new_call_cq,
-        ::grpc::ServerCompletionQueue *notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response,
-                                         new_call_cq, notification_cq, tag);
+    void RequestSetup(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_ListProfiles : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_ListProfiles() {
-      ::grpc::Service::MarkMethodRawCallback(
-          0, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->ListProfiles(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->ListProfiles(context, request, response); }));
     }
     ~WithRawCallbackMethod_ListProfiles() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    ListProfiles(::grpc::ServerContext * /*context*/,
-                 const ::google::protobuf::Empty * /*request*/,
-                 ::agent_config::ListProfilesResponse * /*response*/) override {
+    ::grpc::Status ListProfiles(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::agent_config::ListProfilesResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    ListProfiles(::grpc::CallbackServerContext * /*context*/,
-                 const ::grpc::ByteBuffer * /*request*/,
-                 ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* ListProfiles(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithRawCallbackMethod_Setup : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithRawCallbackMethod_Setup() {
-      ::grpc::Service::MarkMethodRawCallback(
-          1, new ::grpc::internal::CallbackUnaryHandler<::grpc::ByteBuffer,
-                                                        ::grpc::ByteBuffer>(
-                 [this](::grpc::CallbackServerContext *context,
-                        const ::grpc::ByteBuffer *request,
-                        ::grpc::ByteBuffer *response) {
-                   return this->Setup(context, request, response);
-                 }));
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Setup(context, request, response); }));
     }
     ~WithRawCallbackMethod_Setup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status
-    Setup(::grpc::ServerContext * /*context*/,
-          const ::agent_config::SetupRequest * /*request*/,
-          ::agent_config::SetupResponse * /*response*/) override {
+    ::grpc::Status Setup(::grpc::ServerContext* /*context*/, const ::agent_config::SetupRequest* /*request*/, ::agent_config::SetupResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor *
-    Setup(::grpc::CallbackServerContext * /*context*/,
-          const ::grpc::ByteBuffer * /*request*/,
-          ::grpc::ByteBuffer * /*response*/) {
-      return nullptr;
-    }
+    virtual ::grpc::ServerUnaryReactor* Setup(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_ListProfiles : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_ListProfiles() {
-      ::grpc::Service::MarkMethodStreamed(
-          0,
-          new ::grpc::internal::StreamedUnaryHandler<
-              ::google::protobuf::Empty, ::agent_config::ListProfilesResponse>(
-              [this](::grpc::ServerContext *context,
-                     ::grpc::ServerUnaryStreamer<
-                         ::google::protobuf::Empty,
-                         ::agent_config::ListProfilesResponse> *streamer) {
-                return this->StreamedListProfiles(context, streamer);
-              }));
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::google::protobuf::Empty, ::agent_config::ListProfilesResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::google::protobuf::Empty, ::agent_config::ListProfilesResponse>* streamer) {
+                       return this->StreamedListProfiles(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_ListProfiles() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status
-    ListProfiles(::grpc::ServerContext * /*context*/,
-                 const ::google::protobuf::Empty * /*request*/,
-                 ::agent_config::ListProfilesResponse * /*response*/) override {
+    ::grpc::Status ListProfiles(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::agent_config::ListProfilesResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedListProfiles(
-        ::grpc::ServerContext *context,
-        ::grpc::ServerUnaryStreamer<::google::protobuf::Empty,
-                                    ::agent_config::ListProfilesResponse>
-            *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedListProfiles(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::google::protobuf::Empty,::agent_config::ListProfilesResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_Setup : public BaseClass {
-  private:
-    void BaseClassMustBeDerivedFromService(const Service * /*service*/) {}
-
-  public:
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
     WithStreamedUnaryMethod_Setup() {
-      ::grpc::Service::MarkMethodStreamed(
-          1,
-          new ::grpc::internal::StreamedUnaryHandler<
-              ::agent_config::SetupRequest, ::agent_config::SetupResponse>(
-              [this](::grpc::ServerContext *context,
-                     ::grpc::ServerUnaryStreamer<::agent_config::SetupRequest,
-                                                 ::agent_config::SetupResponse>
-                         *streamer) {
-                return this->StreamedSetup(context, streamer);
-              }));
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::agent_config::SetupRequest, ::agent_config::SetupResponse>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::agent_config::SetupRequest, ::agent_config::SetupResponse>* streamer) {
+                       return this->StreamedSetup(context,
+                         streamer);
+                  }));
     }
     ~WithStreamedUnaryMethod_Setup() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status
-    Setup(::grpc::ServerContext * /*context*/,
-          const ::agent_config::SetupRequest * /*request*/,
-          ::agent_config::SetupResponse * /*response*/) override {
+    ::grpc::Status Setup(::grpc::ServerContext* /*context*/, const ::agent_config::SetupRequest* /*request*/, ::agent_config::SetupResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status
-    StreamedSetup(::grpc::ServerContext *context,
-                  ::grpc::ServerUnaryStreamer<::agent_config::SetupRequest,
-                                              ::agent_config::SetupResponse>
-                      *server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedSetup(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::agent_config::SetupRequest,::agent_config::SetupResponse>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_ListProfiles<
-      WithStreamedUnaryMethod_Setup<Service>>
-      StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_ListProfiles<WithStreamedUnaryMethod_Setup<Service > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_ListProfiles<
-      WithStreamedUnaryMethod_Setup<Service>>
-      StreamedService;
+  typedef WithStreamedUnaryMethod_ListProfiles<WithStreamedUnaryMethod_Setup<Service > > StreamedService;
 };
 
-} // namespace agent_config
+}  // namespace agent_config
+
 
 #include <grpcpp/ports_undef.inc>
-#endif // GRPC_agent_5fconfig_2eproto__INCLUDED
+#endif  // GRPC_agent_5fconfig_2eproto__INCLUDED

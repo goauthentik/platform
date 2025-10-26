@@ -16,21 +16,21 @@
 // Copy contents from one list type to another.
 using StringList = std::vector<CefString>;
 void transfer_string_list_contents(cef_string_list_t fromList,
-                                   StringList &toList);
-void transfer_string_list_contents(const StringList &fromList,
+                                   StringList& toList);
+void transfer_string_list_contents(const StringList& fromList,
                                    cef_string_list_t toList);
 
 // Copy contents from one map type to another.
 using StringMap = std::map<CefString, CefString>;
-void transfer_string_map_contents(cef_string_map_t fromMap, StringMap &toMap);
-void transfer_string_map_contents(const StringMap &fromMap,
+void transfer_string_map_contents(cef_string_map_t fromMap, StringMap& toMap);
+void transfer_string_map_contents(const StringMap& fromMap,
                                   cef_string_map_t toMap);
 
 // Copy contents from one map type to another.
 using StringMultimap = std::multimap<CefString, CefString>;
 void transfer_string_multimap_contents(cef_string_multimap_t fromMap,
-                                       StringMultimap &toMap);
-void transfer_string_multimap_contents(const StringMultimap &fromMap,
+                                       StringMultimap& toMap);
+void transfer_string_multimap_contents(const StringMultimap& fromMap,
                                        cef_string_multimap_t toMap);
 
-#endif // CEF_LIBCEF_DLL_TRANSFER_UTIL_H_
+#endif  // CEF_LIBCEF_DLL_TRANSFER_UTIL_H_

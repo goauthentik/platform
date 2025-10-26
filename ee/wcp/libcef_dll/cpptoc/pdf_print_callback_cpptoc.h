@@ -29,9 +29,10 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPdfPrintCallbackCppToC
-    : public CefCppToCRefCounted<CefPdfPrintCallbackCppToC, CefPdfPrintCallback,
+    : public CefCppToCRefCounted<CefPdfPrintCallbackCppToC,
+                                 CefPdfPrintCallback,
                                  cef_pdf_print_callback_t> {
-public:
+ public:
   CefPdfPrintCallbackCppToC();
   virtual ~CefPdfPrintCallbackCppToC();
 };
@@ -40,4 +41,4 @@ constexpr auto CefPdfPrintCallbackCppToC_Wrap = CefPdfPrintCallbackCppToC::Wrap;
 constexpr auto CefPdfPrintCallbackCppToC_Unwrap =
     CefPdfPrintCallbackCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_PDF_PRINT_CALLBACK_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_PDF_PRINT_CALLBACK_CPPTOC_H_

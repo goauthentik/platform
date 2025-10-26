@@ -32,7 +32,7 @@ class CefNavigationEntryVisitorCppToC
     : public CefCppToCRefCounted<CefNavigationEntryVisitorCppToC,
                                  CefNavigationEntryVisitor,
                                  cef_navigation_entry_visitor_t> {
-public:
+ public:
   CefNavigationEntryVisitorCppToC();
   virtual ~CefNavigationEntryVisitorCppToC();
 };
@@ -42,4 +42,4 @@ constexpr auto CefNavigationEntryVisitorCppToC_Wrap =
 constexpr auto CefNavigationEntryVisitorCppToC_Unwrap =
     CefNavigationEntryVisitorCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_NAVIGATION_ENTRY_VISITOR_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_NAVIGATION_ENTRY_VISITOR_CPPTOC_H_

@@ -34,19 +34,19 @@
 ///
 /// Helper for declaring a static IDR variable.
 ///
-#define CEF_DECLARE_PACK_RESOURCE_ID(name)                                     \
+#define CEF_DECLARE_PACK_RESOURCE_ID(name) \
   static const int name = cef_id_for_pack_resource_name(#name)
 
 ///
 /// Helper for declaring a static IDS variable.
 ///
-#define CEF_DECLARE_PACK_STRING_ID(name)                                       \
+#define CEF_DECLARE_PACK_STRING_ID(name) \
   static const int name = cef_id_for_pack_string_name(#name)
 
 ///
 /// Helper for declaring a static IDC variable.
 ///
-#define CEF_DECLARE_COMMAND_ID(name)                                           \
+#define CEF_DECLARE_COMMAND_ID(name) \
   static const int name = cef_id_for_command_id_name(#name)
 
 #ifdef __cplusplus
@@ -62,7 +62,7 @@ extern "C" {
 /// version-specific numeric ID values. Numeric ID values are likely to change
 /// across CEF/Chromium versions but names generally remain the same.
 ///
-CEF_EXPORT int cef_id_for_pack_resource_name(const char *name);
+CEF_EXPORT int cef_id_for_pack_resource_name(const char* name);
 
 ///
 /// Returns the numeric ID value for an IDS |name| from cef_pack_strings.h or -1
@@ -71,7 +71,7 @@ CEF_EXPORT int cef_id_for_pack_resource_name(const char *name);
 /// numeric ID values. Numeric ID values are likely to change across
 /// CEF/Chromium versions but names generally remain the same.
 ///
-CEF_EXPORT int cef_id_for_pack_string_name(const char *name);
+CEF_EXPORT int cef_id_for_pack_string_name(const char* name);
 
 ///
 /// Returns the numeric ID value for an IDC |name| from cef_command_ids.h or -1
@@ -80,10 +80,10 @@ CEF_EXPORT int cef_id_for_pack_string_name(const char *name);
 /// numeric ID values. Numeric ID values are likely to change across
 /// CEF/Chromium versions but names generally remain the same.
 ///
-CEF_EXPORT int cef_id_for_command_id_name(const char *name);
+CEF_EXPORT int cef_id_for_command_id_name(const char* name);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CEF_ID_MAPPERS_H_
+#endif  // CEF_INCLUDE_CEF_ID_MAPPERS_H_

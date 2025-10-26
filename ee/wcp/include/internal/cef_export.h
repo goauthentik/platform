@@ -50,7 +50,7 @@
 
 #define CEF_EXPORT __attribute__((visibility("default")))
 
-#endif // COMPILER_GCC
+#endif  // COMPILER_GCC
 
 #if defined(OS_WIN)
 #define CEF_CALLBACK __stdcall
@@ -58,4 +58,4 @@
 #define CEF_CALLBACK
 #endif
 
-#endif // CEF_INCLUDE_INTERNAL_CEF_EXPORT_H_
+#endif  // CEF_INCLUDE_INTERNAL_CEF_EXPORT_H_

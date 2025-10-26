@@ -45,7 +45,7 @@
 ///
 /*--cef(source=library)--*/
 class CefSharedMemoryRegion : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns true if the mapping is valid.
   ///
@@ -63,7 +63,7 @@ public:
   /// The returned pointer is only valid for the life span of this object.
   ///
   /*--cef()--*/
-  virtual void *Memory() = 0;
+  virtual void* Memory() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_SHARED_MEMORY_REGION_H_
+#endif  // CEF_INCLUDE_CEF_SHARED_MEMORY_REGION_H_

@@ -48,7 +48,7 @@
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefResponse : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef std::multimap<CefString, CefString> HeaderMap;
 
   ///
@@ -98,7 +98,7 @@ public:
   /// Set the response status text.
   ///
   /*--cef(optional_param=statusText)--*/
-  virtual void SetStatusText(const CefString &statusText) = 0;
+  virtual void SetStatusText(const CefString& statusText) = 0;
 
   ///
   /// Get the response mime type.
@@ -110,7 +110,7 @@ public:
   /// Set the response mime type.
   ///
   /*--cef(optional_param=mimeType)--*/
-  virtual void SetMimeType(const CefString &mimeType) = 0;
+  virtual void SetMimeType(const CefString& mimeType) = 0;
 
   ///
   /// Get the response charset.
@@ -122,13 +122,13 @@ public:
   /// Set the response charset.
   ///
   /*--cef(optional_param=charset)--*/
-  virtual void SetCharset(const CefString &charset) = 0;
+  virtual void SetCharset(const CefString& charset) = 0;
 
   ///
   /// Get the value for the specified response header field.
   ///
   /*--cef()--*/
-  virtual CefString GetHeaderByName(const CefString &name) = 0;
+  virtual CefString GetHeaderByName(const CefString& name) = 0;
 
   ///
   /// Set the header |name| to |value|. If |overwrite| is true any existing
@@ -136,20 +136,21 @@ public:
   /// existing values will not be overwritten.
   ///
   /*--cef(optional_param=value)--*/
-  virtual void SetHeaderByName(const CefString &name, const CefString &value,
+  virtual void SetHeaderByName(const CefString& name,
+                               const CefString& value,
                                bool overwrite) = 0;
 
   ///
   /// Get all response header fields.
   ///
   /*--cef()--*/
-  virtual void GetHeaderMap(HeaderMap &headerMap) = 0;
+  virtual void GetHeaderMap(HeaderMap& headerMap) = 0;
 
   ///
   /// Set all response header fields.
   ///
   /*--cef()--*/
-  virtual void SetHeaderMap(const HeaderMap &headerMap) = 0;
+  virtual void SetHeaderMap(const HeaderMap& headerMap) = 0;
 
   ///
   /// Get the resolved URL after redirects or changed as a result of HSTS.
@@ -161,7 +162,7 @@ public:
   /// Set the resolved URL after redirects or changed as a result of HSTS.
   ///
   /*--cef(optional_param=url)--*/
-  virtual void SetURL(const CefString &url) = 0;
+  virtual void SetURL(const CefString& url) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_RESPONSE_H_
+#endif  // CEF_INCLUDE_CEF_RESPONSE_H_

@@ -27,9 +27,10 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefX509CertificateCToCpp
-    : public CefCToCppRefCounted<CefX509CertificateCToCpp, CefX509Certificate,
+    : public CefCToCppRefCounted<CefX509CertificateCToCpp,
+                                 CefX509Certificate,
                                  cef_x509_certificate_t> {
-public:
+ public:
   CefX509CertificateCToCpp();
   virtual ~CefX509CertificateCToCpp();
 
@@ -42,12 +43,12 @@ public:
   CefRefPtr<CefBinaryValue> GetDEREncoded() override;
   CefRefPtr<CefBinaryValue> GetPEMEncoded() override;
   size_t GetIssuerChainSize() override;
-  void GetDEREncodedIssuerChain(IssuerChainBinaryList &chain) override;
-  void GetPEMEncodedIssuerChain(IssuerChainBinaryList &chain) override;
+  void GetDEREncodedIssuerChain(IssuerChainBinaryList& chain) override;
+  void GetPEMEncodedIssuerChain(IssuerChainBinaryList& chain) override;
 };
 
 constexpr auto CefX509CertificateCToCpp_Wrap = CefX509CertificateCToCpp::Wrap;
 constexpr auto CefX509CertificateCToCpp_Unwrap =
     CefX509CertificateCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_X509_CERTIFICATE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_X509_CERTIFICATE_CTOCPP_H_

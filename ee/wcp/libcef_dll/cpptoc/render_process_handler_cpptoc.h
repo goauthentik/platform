@@ -30,7 +30,7 @@ class CefRenderProcessHandlerCppToC
     : public CefCppToCRefCounted<CefRenderProcessHandlerCppToC,
                                  CefRenderProcessHandler,
                                  cef_render_process_handler_t> {
-public:
+ public:
   CefRenderProcessHandlerCppToC();
   virtual ~CefRenderProcessHandlerCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefRenderProcessHandlerCppToC_Wrap =
 constexpr auto CefRenderProcessHandlerCppToC_Unwrap =
     CefRenderProcessHandlerCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_RENDER_PROCESS_HANDLER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_RENDER_PROCESS_HANDLER_CPPTOC_H_

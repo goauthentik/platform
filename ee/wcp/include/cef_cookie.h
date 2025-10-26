@@ -53,7 +53,7 @@ class CefDeleteCookiesCallback;
 ///
 /*--cef(source=library,no_debugct_check)--*/
 class CefCookieManager : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns the global cookie manager. By default data will be stored at
   /// cef_settings_t.cache_path if specified or in memory otherwise. If
@@ -63,8 +63,8 @@ public:
   /// CefRequestContext::GetGlobalContext()->GetDefaultCookieManager().
   ///
   /*--cef(optional_param=callback)--*/
-  static CefRefPtr<CefCookieManager>
-  GetGlobalManager(CefRefPtr<CefCompletionCallback> callback);
+  static CefRefPtr<CefCookieManager> GetGlobalManager(
+      CefRefPtr<CefCompletionCallback> callback);
 
   ///
   /// Visit all cookies on the UI thread. The returned cookies are ordered by
@@ -82,7 +82,8 @@ public:
   /// Returns false if cookies cannot be accessed.
   ///
   /*--cef()--*/
-  virtual bool VisitUrlCookies(const CefString &url, bool includeHttpOnly,
+  virtual bool VisitUrlCookies(const CefString& url,
+                               bool includeHttpOnly,
                                CefRefPtr<CefCookieVisitor> visitor) = 0;
 
   ///
@@ -95,7 +96,8 @@ public:
   /// false if an invalid URL is specified or if cookies cannot be accessed.
   ///
   /*--cef(optional_param=callback)--*/
-  virtual bool SetCookie(const CefString &url, const CefCookie &cookie,
+  virtual bool SetCookie(const CefString& url,
+                         const CefCookie& cookie,
                          CefRefPtr<CefSetCookieCallback> callback) = 0;
 
   ///
@@ -111,7 +113,8 @@ public:
   ///
   /*--cef(optional_param=url,optional_param=cookie_name,
           optional_param=callback)--*/
-  virtual bool DeleteCookies(const CefString &url, const CefString &cookie_name,
+  virtual bool DeleteCookies(const CefString& url,
+                             const CefString& cookie_name,
                              CefRefPtr<CefDeleteCookiesCallback> callback) = 0;
 
   ///
@@ -129,7 +132,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefCookieVisitor : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Method that will be called once for each cookie. |count| is the 0-based
   /// index for the current cookie. |total| is the total number of cookies.
@@ -138,8 +141,10 @@ public:
   /// no cookies are found.
   ///
   /*--cef()--*/
-  virtual bool Visit(const CefCookie &cookie, int count, int total,
-                     bool &deleteCookie) = 0;
+  virtual bool Visit(const CefCookie& cookie,
+                     int count,
+                     int total,
+                     bool& deleteCookie) = 0;
 };
 
 ///
@@ -148,7 +153,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefSetCookieCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Method that will be called upon completion. |success| will be true if the
   /// cookie was set successfully.
@@ -163,7 +168,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefDeleteCookiesCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Method that will be called upon completion. |num_deleted| will be the
   /// number of cookies that were deleted.
@@ -172,4 +177,4 @@ public:
   virtual void OnComplete(int num_deleted) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_COOKIE_H_
+#endif  // CEF_INCLUDE_CEF_COOKIE_H_

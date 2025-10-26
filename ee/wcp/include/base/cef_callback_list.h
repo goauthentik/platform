@@ -87,7 +87,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/functional/callback_list.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -106,12 +106,15 @@
 
 namespace base {
 namespace internal {
-template <typename CallbackListImpl> class CallbackListBase;
-} // namespace internal
+template <typename CallbackListImpl>
+class CallbackListBase;
+}  // namespace internal
 
-template <typename Signature> class OnceCallbackList;
+template <typename Signature>
+class OnceCallbackList;
 
-template <typename Signature> class RepeatingCallbackList;
+template <typename Signature>
+class RepeatingCallbackList;
 
 // A trimmed-down version of ScopedClosureRunner that can be used to guarantee a
 // closure is run on destruction. This is designed to be used by
@@ -121,16 +124,17 @@ template <typename Signature> class RepeatingCallbackList;
 // callback. A typical way to do this is to bind a callback to a member function
 // on `this` and store the returned subscription as a member variable.
 class CallbackListSubscription {
-public:
+ public:
   CallbackListSubscription();
-  CallbackListSubscription(CallbackListSubscription &&subscription);
-  CallbackListSubscription &operator=(CallbackListSubscription &&subscription);
+  CallbackListSubscription(CallbackListSubscription&& subscription);
+  CallbackListSubscription& operator=(CallbackListSubscription&& subscription);
   ~CallbackListSubscription();
 
   explicit operator bool() const { return !!closure_; }
 
-private:
-  template <typename T> friend class internal::CallbackListBase;
+ private:
+  template <typename T>
+  friend class internal::CallbackListBase;
 
   explicit CallbackListSubscription(base::OnceClosure closure);
 
@@ -143,7 +147,7 @@ namespace internal {
 
 // From base/stl_util.h.
 template <class T, class Allocator, class Predicate>
-size_t EraseIf(std::list<T, Allocator> &container, Predicate pred) {
+size_t EraseIf(std::list<T, Allocator>& container, Predicate pred) {
   size_t old_size = container.size();
   container.remove_if(pred);
   return old_size - container.size();
@@ -151,7 +155,8 @@ size_t EraseIf(std::list<T, Allocator> &container, Predicate pred) {
 
 // A traits class to break circular type dependencies between CallbackListBase
 // and its subclasses.
-template <typename CallbackList> struct CallbackListTraits;
+template <typename CallbackList>
+struct CallbackListTraits;
 
 // NOTE: It's important that Callbacks provide iterator stability when items are
 // added to the end, so e.g. a std::vector<> is not suitable here.
@@ -166,8 +171,9 @@ struct CallbackListTraits<RepeatingCallbackList<Signature>> {
   using Callbacks = std::list<CallbackType>;
 };
 
-template <typename CallbackListImpl> class CallbackListBase {
-public:
+template <typename CallbackListImpl>
+class CallbackListBase {
+ public:
   using CallbackType =
       typename CallbackListTraits<CallbackListImpl>::CallbackType;
   static_assert(IsBaseCallback<CallbackType>::value, "");
@@ -177,8 +183,8 @@ public:
   using Subscription = CallbackListSubscription;
 
   CallbackListBase() = default;
-  CallbackListBase(const CallbackListBase &) = delete;
-  CallbackListBase &operator=(const CallbackListBase &) = delete;
+  CallbackListBase(const CallbackListBase&) = delete;
+  CallbackListBase& operator=(const CallbackListBase&) = delete;
 
   ~CallbackListBase() {
     // Destroying the list during iteration is unsupported and will cause a UAF.
@@ -207,7 +213,7 @@ public:
 
   // Registers |removal_callback| to be run after elements are removed from the
   // list of registered callbacks.
-  void set_removal_callback(const RepeatingClosure &removal_callback) {
+  void set_removal_callback(const RepeatingClosure& removal_callback) {
     removal_callback_ = removal_callback;
   }
 
@@ -215,7 +221,7 @@ public:
   // perspective -- meaning no remaining callbacks are live).
   bool empty() const {
     return std::all_of(callbacks_.cbegin(), callbacks_.cend(),
-                       [](const auto &callback) { return callback.is_null(); });
+                       [](const auto& callback) { return callback.is_null(); });
   }
 
   // Calls all registered callbacks that are not canceled beforehand. If any
@@ -234,9 +240,10 @@ public:
   // call can be notified by outer calls -- meaning it will be notified about
   // things that happened before it was added -- if its subscription outlives
   // the reentrant Notify() call.
-  template <typename... RunArgs> void Notify(RunArgs &&...args) {
+  template <typename... RunArgs>
+  void Notify(RunArgs&&... args) {
     if (empty()) {
-      return; // Nothing to do.
+      return;  // Nothing to do.
     }
 
     {
@@ -246,7 +253,7 @@ public:
       // NOTE: Since RunCallback() may call Add(), it's not safe to cache the
       // value of callbacks_.end() across loop iterations.
       const auto next_valid = [this](const auto it) {
-        return std::find_if_not(it, callbacks_.end(), [](const auto &callback) {
+        return std::find_if_not(it, callbacks_.end(), [](const auto& callback) {
           return callback.is_null();
         });
       };
@@ -254,7 +261,7 @@ public:
            it = next_valid(it)) {
         // NOTE: Intentionally does not call std::forward<RunArgs>(args)...,
         // since that would allow move-only arguments.
-        static_cast<CallbackListImpl *>(this)->RunCallback(it++, args...);
+        static_cast<CallbackListImpl*>(this)->RunCallback(it++, args...);
       }
     }
 
@@ -269,7 +276,7 @@ public:
     // Any null callbacks remaining in the list were canceled due to
     // Subscription destruction during iteration, and can safely be erased now.
     const size_t erased_callbacks =
-        EraseIf(callbacks_, [](const auto &cb) { return cb.is_null(); });
+        EraseIf(callbacks_, [](const auto& cb) { return cb.is_null(); });
 
     // Run |removal_callback_| if any callbacks were canceled. Note that we
     // cannot simply compare list sizes before and after iterating, since
@@ -279,20 +286,20 @@ public:
     // they're counted in |erased_callbacks_|.
     if (removal_callback_ &&
         (erased_callbacks || IsOnceCallback<CallbackType>::value)) {
-      removal_callback_.Run(); // May delete |this|!
+      removal_callback_.Run();  // May delete |this|!
     }
   }
 
-protected:
+ protected:
   using Callbacks = typename CallbackListTraits<CallbackListImpl>::Callbacks;
 
   // Holds non-null callbacks, which will be called during Notify().
   Callbacks callbacks_;
 
-private:
+ private:
   // Cancels the callback pointed to by |it|, which is guaranteed to be valid.
-  void CancelCallback(const typename Callbacks::iterator &it) {
-    if (static_cast<CallbackListImpl *>(this)->CancelNullCallback(it)) {
+  void CancelCallback(const typename Callbacks::iterator& it) {
+    if (static_cast<CallbackListImpl*>(this)->CancelNullCallback(it)) {
       return;
     }
 
@@ -305,7 +312,7 @@ private:
     } else {
       callbacks_.erase(it);
       if (removal_callback_) {
-        removal_callback_.Run(); // May delete |this|!
+        removal_callback_.Run();  // May delete |this|!
       }
     }
   }
@@ -320,18 +327,18 @@ private:
   WeakPtrFactory<CallbackListBase> weak_ptr_factory_{this};
 };
 
-} // namespace internal
+}  // namespace internal
 
 template <typename Signature>
 class OnceCallbackList
     : public internal::CallbackListBase<OnceCallbackList<Signature>> {
-private:
+ private:
   friend internal::CallbackListBase<OnceCallbackList>;
   using Traits = internal::CallbackListTraits<OnceCallbackList>;
 
   // Runs the current callback, which may cancel it or any other callbacks.
   template <typename... RunArgs>
-  void RunCallback(typename Traits::Callbacks::iterator it, RunArgs &&...args) {
+  void RunCallback(typename Traits::Callbacks::iterator it, RunArgs&&... args) {
     // OnceCallbacks still have Subscriptions with outstanding iterators;
     // splice() removes them from |callbacks_| without invalidating those.
     null_callbacks_.splice(null_callbacks_.end(), this->callbacks_, it);
@@ -343,7 +350,7 @@ private:
 
   // If |it| refers to an already-canceled callback, does any necessary cleanup
   // and returns true.  Otherwise returns false.
-  bool CancelNullCallback(const typename Traits::Callbacks::iterator &it) {
+  bool CancelNullCallback(const typename Traits::Callbacks::iterator& it) {
     if (it->is_null()) {
       null_callbacks_.erase(it);
       return true;
@@ -361,12 +368,12 @@ private:
 template <typename Signature>
 class RepeatingCallbackList
     : public internal::CallbackListBase<RepeatingCallbackList<Signature>> {
-private:
+ private:
   friend internal::CallbackListBase<RepeatingCallbackList>;
   using Traits = internal::CallbackListTraits<RepeatingCallbackList>;
   // Runs the current callback, which may cancel it or any other callbacks.
   template <typename... RunArgs>
-  void RunCallback(typename Traits::Callbacks::iterator it, RunArgs &&...args) {
+  void RunCallback(typename Traits::Callbacks::iterator it, RunArgs&&... args) {
     // NOTE: Intentionally does not call std::forward<RunArgs>(args)...; see
     // comments in Notify().
     it->Run(args...);
@@ -374,7 +381,7 @@ private:
 
   // If |it| refers to an already-canceled callback, does any necessary cleanup
   // and returns true.  Otherwise returns false.
-  bool CancelNullCallback(const typename Traits::Callbacks::iterator &it) {
+  bool CancelNullCallback(const typename Traits::Callbacks::iterator& it) {
     // Because at most one Subscription can point to a given callback, and
     // RepeatingCallbacks are only reset by CancelCallback(), no one should be
     // able to request cancellation of a canceled RepeatingCallback.
@@ -389,8 +396,8 @@ private:
 using OnceClosureList = OnceCallbackList<void()>;
 using RepeatingClosureList = RepeatingCallbackList<void()>;
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_CALLBACK_LIST_H_
+#endif  // CEF_INCLUDE_BASE_CEF_CALLBACK_LIST_H_

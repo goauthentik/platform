@@ -30,22 +30,23 @@ class CefPreferenceManagerCToCpp
     : public CefCToCppRefCounted<CefPreferenceManagerCToCpp,
                                  CefPreferenceManager,
                                  cef_preference_manager_t> {
-public:
+ public:
   CefPreferenceManagerCToCpp();
   virtual ~CefPreferenceManagerCToCpp();
 
   // CefPreferenceManager methods.
-  bool HasPreference(const CefString &name) override;
-  CefRefPtr<CefValue> GetPreference(const CefString &name) override;
-  CefRefPtr<CefDictionaryValue>
-  GetAllPreferences(bool include_defaults) override;
-  bool CanSetPreference(const CefString &name) override;
-  bool SetPreference(const CefString &name, CefRefPtr<CefValue> value,
-                     CefString &error) override;
+  bool HasPreference(const CefString& name) override;
+  CefRefPtr<CefValue> GetPreference(const CefString& name) override;
+  CefRefPtr<CefDictionaryValue> GetAllPreferences(
+      bool include_defaults) override;
+  bool CanSetPreference(const CefString& name) override;
+  bool SetPreference(const CefString& name,
+                     CefRefPtr<CefValue> value,
+                     CefString& error) override;
 #if CEF_API_ADDED(13401)
-  CefRefPtr<CefRegistration>
-  AddPreferenceObserver(const CefString &name,
-                        CefRefPtr<CefPreferenceObserver> observer) override;
+  CefRefPtr<CefRegistration> AddPreferenceObserver(
+      const CefString& name,
+      CefRefPtr<CefPreferenceObserver> observer) override;
 #endif
 };
 
@@ -54,4 +55,4 @@ constexpr auto CefPreferenceManagerCToCpp_Wrap =
 constexpr auto CefPreferenceManagerCToCpp_Unwrap =
     CefPreferenceManagerCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_MANAGER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_PREFERENCE_MANAGER_CTOCPP_H_

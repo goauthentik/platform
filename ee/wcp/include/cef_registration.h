@@ -46,4 +46,4 @@
 /*--cef(source=library)--*/
 class CefRegistration : public virtual CefBaseRefCounted {};
 
-#endif // CEF_INCLUDE_CEF_REGISTRATION_H_
+#endif  // CEF_INCLUDE_CEF_REGISTRATION_H_

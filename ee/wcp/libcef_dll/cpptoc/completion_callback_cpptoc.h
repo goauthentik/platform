@@ -30,7 +30,7 @@ class CefCompletionCallbackCppToC
     : public CefCppToCRefCounted<CefCompletionCallbackCppToC,
                                  CefCompletionCallback,
                                  cef_completion_callback_t> {
-public:
+ public:
   CefCompletionCallbackCppToC();
   virtual ~CefCompletionCallbackCppToC();
 };
@@ -40,4 +40,4 @@ constexpr auto CefCompletionCallbackCppToC_Wrap =
 constexpr auto CefCompletionCallbackCppToC_Unwrap =
     CefCompletionCallbackCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_COMPLETION_CALLBACK_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_COMPLETION_CALLBACK_CPPTOC_H_

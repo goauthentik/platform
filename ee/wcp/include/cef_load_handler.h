@@ -49,7 +49,7 @@
 ///
 /*--cef(source=client)--*/
 class CefLoadHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_errorcode_t ErrorCode;
   typedef cef_transition_type_t TransitionType;
 
@@ -62,7 +62,8 @@ public:
   ///
   /*--cef()--*/
   virtual void OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
-                                    bool isLoading, bool canGoBack,
+                                    bool isLoading,
+                                    bool canGoBack,
                                     bool canGoForward) {}
 
   ///
@@ -94,7 +95,8 @@ public:
   ///
   /*--cef()--*/
   virtual void OnLoadEnd(CefRefPtr<CefBrowser> browser,
-                         CefRefPtr<CefFrame> frame, int httpStatusCode) {}
+                         CefRefPtr<CefFrame> frame,
+                         int httpStatusCode) {}
 
   ///
   /// Called when a navigation fails or is canceled. This method may be called
@@ -106,9 +108,10 @@ public:
   ///
   /*--cef(optional_param=errorText)--*/
   virtual void OnLoadError(CefRefPtr<CefBrowser> browser,
-                           CefRefPtr<CefFrame> frame, ErrorCode errorCode,
-                           const CefString &errorText,
-                           const CefString &failedUrl) {}
+                           CefRefPtr<CefFrame> frame,
+                           ErrorCode errorCode,
+                           const CefString& errorText,
+                           const CefString& failedUrl) {}
 };
 
-#endif // CEF_INCLUDE_CEF_LOAD_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_LOAD_HANDLER_H_

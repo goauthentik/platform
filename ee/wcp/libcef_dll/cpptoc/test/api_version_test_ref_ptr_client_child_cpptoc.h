@@ -32,7 +32,7 @@ class CefApiVersionTestRefPtrClientChildCppToC
     : public CefCppToCRefCounted<CefApiVersionTestRefPtrClientChildCppToC,
                                  CefApiVersionTestRefPtrClientChild,
                                  cef_api_version_test_ref_ptr_client_child_t> {
-public:
+ public:
   CefApiVersionTestRefPtrClientChildCppToC();
   virtual ~CefApiVersionTestRefPtrClientChildCppToC();
 };
@@ -42,6 +42,6 @@ constexpr auto CefApiVersionTestRefPtrClientChildCppToC_Wrap =
 constexpr auto CefApiVersionTestRefPtrClientChildCppToC_Unwrap =
     CefApiVersionTestRefPtrClientChildCppToC::Unwrap;
 
-#endif // CEF_API_REMOVED(13302)
+#endif  // CEF_API_REMOVED(13302)
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_REF_PTR_CLIENT_CHILD_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_TEST_API_VERSION_TEST_REF_PTR_CLIENT_CHILD_CPPTOC_H_

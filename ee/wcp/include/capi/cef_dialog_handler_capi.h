@@ -67,13 +67,13 @@ typedef struct _cef_file_dialog_callback_t {
   /// list of values depending on the dialog mode. An NULL |file_paths| value is
   /// treated the same as calling cancel().
   ///
-  void(CEF_CALLBACK *cont)(struct _cef_file_dialog_callback_t *self,
+  void(CEF_CALLBACK* cont)(struct _cef_file_dialog_callback_t* self,
                            cef_string_list_t file_paths);
 
   ///
   /// Cancel the file selection.
   ///
-  void(CEF_CALLBACK *cancel)(struct _cef_file_dialog_callback_t *self);
+  void(CEF_CALLBACK* cancel)(struct _cef_file_dialog_callback_t* self);
 } cef_file_dialog_callback_t;
 
 ///
@@ -109,17 +109,20 @@ typedef struct _cef_dialog_handler_t {
   /// additional time for the same dialog (both before and after MIME type
   /// expansion).
   ///
-  int(CEF_CALLBACK *on_file_dialog)(
-      struct _cef_dialog_handler_t *self, struct _cef_browser_t *browser,
-      cef_file_dialog_mode_t mode, const cef_string_t *title,
-      const cef_string_t *default_file_path, cef_string_list_t accept_filters,
+  int(CEF_CALLBACK* on_file_dialog)(
+      struct _cef_dialog_handler_t* self,
+      struct _cef_browser_t* browser,
+      cef_file_dialog_mode_t mode,
+      const cef_string_t* title,
+      const cef_string_t* default_file_path,
+      cef_string_list_t accept_filters,
       cef_string_list_t accept_extensions,
       cef_string_list_t accept_descriptions,
-      struct _cef_file_dialog_callback_t *callback);
+      struct _cef_file_dialog_callback_t* callback);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_

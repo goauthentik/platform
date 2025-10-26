@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefCallbackCToCpp
-    : public CefCToCppRefCounted<CefCallbackCToCpp, CefCallback,
-                                 cef_callback_t> {
-public:
+class CefCallbackCToCpp : public CefCToCppRefCounted<CefCallbackCToCpp,
+                                                     CefCallback,
+                                                     cef_callback_t> {
+ public:
   CefCallbackCToCpp();
   virtual ~CefCallbackCToCpp();
 
@@ -41,4 +41,4 @@ public:
 constexpr auto CefCallbackCToCpp_Wrap = CefCallbackCToCpp::Wrap;
 constexpr auto CefCallbackCToCpp_Unwrap = CefCallbackCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_CALLBACK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_CALLBACK_CTOCPP_H_

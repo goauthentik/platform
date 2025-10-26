@@ -55,7 +55,7 @@ class CefURLRequestClient;
 ///
 /*--cef(source=library)--*/
 class CefURLRequest : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_urlrequest_status_t Status;
   typedef cef_errorcode_t ErrorCode;
 
@@ -75,9 +75,10 @@ public:
   /// method.
   ///
   /*--cef(optional_param=request_context)--*/
-  static CefRefPtr<CefURLRequest>
-  Create(CefRefPtr<CefRequest> request, CefRefPtr<CefURLRequestClient> client,
-         CefRefPtr<CefRequestContext> request_context);
+  static CefRefPtr<CefURLRequest> Create(
+      CefRefPtr<CefRequest> request,
+      CefRefPtr<CefURLRequestClient> client,
+      CefRefPtr<CefRequestContext> request_context);
 
   ///
   /// Returns the request object used to create this URL request. The returned
@@ -134,7 +135,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefURLRequestClient : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Notifies the client that the request has completed. Use the
   /// CefURLRequest::GetRequestStatus method to determine if the request was
@@ -151,7 +152,8 @@ public:
   ///
   /*--cef()--*/
   virtual void OnUploadProgress(CefRefPtr<CefURLRequest> request,
-                                int64_t current, int64_t total) = 0;
+                                int64_t current,
+                                int64_t total) = 0;
 
   ///
   /// Notifies the client of download progress. |current| denotes the number of
@@ -160,7 +162,8 @@ public:
   ///
   /*--cef()--*/
   virtual void OnDownloadProgress(CefRefPtr<CefURLRequest> request,
-                                  int64_t current, int64_t total) = 0;
+                                  int64_t current,
+                                  int64_t total) = 0;
 
   ///
   /// Called when some part of the response is read. |data| contains the current
@@ -169,7 +172,8 @@ public:
   ///
   /*--cef()--*/
   virtual void OnDownloadData(CefRefPtr<CefURLRequest> request,
-                              const void *data, size_t data_length) = 0;
+                              const void* data,
+                              size_t data_length) = 0;
 
   ///
   /// Called on the IO thread when the browser needs credentials from the user.
@@ -183,10 +187,12 @@ public:
   /// be called for requests initiated from the browser process.
   ///
   /*--cef(optional_param=realm)--*/
-  virtual bool GetAuthCredentials(bool isProxy, const CefString &host, int port,
-                                  const CefString &realm,
-                                  const CefString &scheme,
+  virtual bool GetAuthCredentials(bool isProxy,
+                                  const CefString& host,
+                                  int port,
+                                  const CefString& realm,
+                                  const CefString& scheme,
                                   CefRefPtr<CefAuthCallback> callback) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_URLREQUEST_H_
+#endif  // CEF_INCLUDE_CEF_URLREQUEST_H_

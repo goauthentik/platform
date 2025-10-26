@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefMediaSinkCToCpp
-    : public CefCToCppRefCounted<CefMediaSinkCToCpp, CefMediaSink,
-                                 cef_media_sink_t> {
-public:
+class CefMediaSinkCToCpp : public CefCToCppRefCounted<CefMediaSinkCToCpp,
+                                                      CefMediaSink,
+                                                      cef_media_sink_t> {
+ public:
   CefMediaSinkCToCpp();
   virtual ~CefMediaSinkCToCpp();
 
@@ -37,8 +37,8 @@ public:
   CefString GetId() override;
   CefString GetName() override;
   IconType GetIconType() override;
-  void
-  GetDeviceInfo(CefRefPtr<CefMediaSinkDeviceInfoCallback> callback) override;
+  void GetDeviceInfo(
+      CefRefPtr<CefMediaSinkDeviceInfoCallback> callback) override;
   bool IsCastSink() override;
   bool IsDialSink() override;
   bool IsCompatibleWith(CefRefPtr<CefMediaSource> source) override;
@@ -47,4 +47,4 @@ public:
 constexpr auto CefMediaSinkCToCpp_Wrap = CefMediaSinkCToCpp::Wrap;
 constexpr auto CefMediaSinkCToCpp_Unwrap = CefMediaSinkCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_MEDIA_SINK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_SINK_CTOCPP_H_

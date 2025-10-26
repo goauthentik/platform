@@ -47,7 +47,7 @@
 ///
 /*--cef(source=library)--*/
 class CefSSLInfo : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns a bitmask containing any and all problems verifying the server
   /// certificate.
@@ -68,4 +68,4 @@ public:
 /*--cef()--*/
 bool CefIsCertStatusError(cef_cert_status_t status);
 
-#endif // CEF_INCLUDE_CEF_SSL_INFO_H_
+#endif  // CEF_INCLUDE_CEF_SSL_INFO_H_

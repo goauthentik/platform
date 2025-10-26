@@ -88,8 +88,8 @@ typedef struct _cef_api_version_test_t {
   ///
   /// Return an new library-side object.
   ///
-  struct _cef_api_version_test_ref_ptr_library_t *(
-      CEF_CALLBACK *get_ref_ptr_library)(struct _cef_api_version_test_t *self,
+  struct _cef_api_version_test_ref_ptr_library_t*(
+      CEF_CALLBACK* get_ref_ptr_library)(struct _cef_api_version_test_t* self,
                                          int val);
 
   ///
@@ -97,75 +97,80 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_ref_ptr_library_t::get_value(). This tests input and
   /// execution of a library-side object type.
   ///
-  int(CEF_CALLBACK *set_ref_ptr_library)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_library_t *val);
+  int(CEF_CALLBACK* set_ref_ptr_library)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_library_t* val);
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
-  struct _cef_api_version_test_ref_ptr_library_t *(
-      CEF_CALLBACK *set_ref_ptr_library_and_return)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_library_t *val);
+  struct _cef_api_version_test_ref_ptr_library_t*(
+      CEF_CALLBACK* set_ref_ptr_library_and_return)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_library_t* val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_api_version_test_ref_ptr_library_t::get_value(). This tests input of a
   /// library- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_ref_ptr_library)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_library_child_t *val);
+  int(CEF_CALLBACK* set_child_ref_ptr_library)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_library_child_t* val);
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a library-side child object type and return as the parent type.
   ///
-  struct _cef_api_version_test_ref_ptr_library_t *(
-      CEF_CALLBACK *set_child_ref_ptr_library_and_return_parent)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_library_child_t *val);
+  struct _cef_api_version_test_ref_ptr_library_t*(
+      CEF_CALLBACK* set_child_ref_ptr_library_and_return_parent)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_library_child_t* val);
 
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK *set_ref_ptr_library_list)(
-      struct _cef_api_version_test_t *self, size_t valCount,
-      struct _cef_api_version_test_ref_ptr_library_t *const *val, int val1,
+  int(CEF_CALLBACK* set_ref_ptr_library_list)(
+      struct _cef_api_version_test_t* self,
+      size_t valCount,
+      struct _cef_api_version_test_ref_ptr_library_t* const* val,
+      int val1,
       int val2);
 
   ///
   /// Return an object list value by out-param.
   ///
-  int(CEF_CALLBACK *get_ref_ptr_library_list_by_ref)(
-      struct _cef_api_version_test_t *self, size_t *valCount,
-      struct _cef_api_version_test_ref_ptr_library_t **val, int val1, int val2);
+  int(CEF_CALLBACK* get_ref_ptr_library_list_by_ref)(
+      struct _cef_api_version_test_t* self,
+      size_t* valCount,
+      struct _cef_api_version_test_ref_ptr_library_t** val,
+      int val1,
+      int val2);
 
   ///
   /// Return the number of object that will be output above.
   ///
-  size_t(CEF_CALLBACK *get_ref_ptr_library_list_size)(
-      struct _cef_api_version_test_t *self);
+  size_t(CEF_CALLBACK* get_ref_ptr_library_list_size)(
+      struct _cef_api_version_test_t* self);
 
   ///
   /// Set an object. Returns the value from
   /// cef_api_version_test_ref_ptr_client_t::get_value(). This tests input and
   /// execution of a client-side object type.
   ///
-  int(CEF_CALLBACK *set_ref_ptr_client)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_client_t *val);
+  int(CEF_CALLBACK* set_ref_ptr_client)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_client_t* val);
 
   ///
   /// Set an object. Returns the handler passed in. This tests input and output
   /// of a client-side object type.
   ///
-  struct _cef_api_version_test_ref_ptr_client_t *(
-      CEF_CALLBACK *set_ref_ptr_client_and_return)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_client_t *val);
+  struct _cef_api_version_test_ref_ptr_client_t*(
+      CEF_CALLBACK* set_ref_ptr_client_and_return)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_client_t* val);
 
 #if CEF_API_REMOVED(13302)
   ///
@@ -173,9 +178,9 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_ref_ptr_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_ref_ptr_client)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_client_child_t *val);
+  int(CEF_CALLBACK* set_child_ref_ptr_client)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_client_child_t* val);
 #else
   uintptr_t set_child_ref_ptr_client_removed;
 #endif
@@ -185,10 +190,10 @@ typedef struct _cef_api_version_test_t {
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a client-side child object type and return as the parent type.
   ///
-  struct _cef_api_version_test_ref_ptr_client_t *(
-      CEF_CALLBACK *set_child_ref_ptr_client_and_return_parent)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_client_child_t *val);
+  struct _cef_api_version_test_ref_ptr_client_t*(
+      CEF_CALLBACK* set_child_ref_ptr_client_and_return_parent)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_client_child_t* val);
 #else
   uintptr_t set_child_ref_ptr_client_and_return_parent_removed;
 #endif
@@ -196,31 +201,34 @@ typedef struct _cef_api_version_test_t {
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK *set_ref_ptr_client_list)(
-      struct _cef_api_version_test_t *self, size_t valCount,
-      struct _cef_api_version_test_ref_ptr_client_t *const *val, int val1,
+  int(CEF_CALLBACK* set_ref_ptr_client_list)(
+      struct _cef_api_version_test_t* self,
+      size_t valCount,
+      struct _cef_api_version_test_ref_ptr_client_t* const* val,
+      int val1,
       int val2);
 
   ///
   /// Return an object list value by out-param.
   ///
-  int(CEF_CALLBACK *get_ref_ptr_client_list_by_ref)(
-      struct _cef_api_version_test_t *self, size_t *valCount,
-      struct _cef_api_version_test_ref_ptr_client_t **val,
-      struct _cef_api_version_test_ref_ptr_client_t *val1,
-      struct _cef_api_version_test_ref_ptr_client_t *val2);
+  int(CEF_CALLBACK* get_ref_ptr_client_list_by_ref)(
+      struct _cef_api_version_test_t* self,
+      size_t* valCount,
+      struct _cef_api_version_test_ref_ptr_client_t** val,
+      struct _cef_api_version_test_ref_ptr_client_t* val1,
+      struct _cef_api_version_test_ref_ptr_client_t* val2);
 
   ///
   /// Return the number of object that will be output above.
   ///
-  size_t(CEF_CALLBACK *get_ref_ptr_client_list_size)(
-      struct _cef_api_version_test_t *self);
+  size_t(CEF_CALLBACK* get_ref_ptr_client_list_size)(
+      struct _cef_api_version_test_t* self);
 
   ///
   /// Return an new library-side object.
   ///
-  struct _cef_api_version_test_scoped_library_t *(
-      CEF_CALLBACK *get_own_ptr_library)(struct _cef_api_version_test_t *self,
+  struct _cef_api_version_test_scoped_library_t*(
+      CEF_CALLBACK* get_own_ptr_library)(struct _cef_api_version_test_t* self,
                                          int val);
 
   ///
@@ -228,54 +236,54 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_scoped_library_t::get_value(). This tests input and
   /// execution of a library-side object type.
   ///
-  int(CEF_CALLBACK *set_own_ptr_library)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_library_t *val);
+  int(CEF_CALLBACK* set_own_ptr_library)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_library_t* val);
 
   ///
   /// Set an object. Returns the object passed in. This tests input and output
   /// of a library-side object type.
   ///
-  struct _cef_api_version_test_scoped_library_t *(
-      CEF_CALLBACK *set_own_ptr_library_and_return)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_library_t *val);
+  struct _cef_api_version_test_scoped_library_t*(
+      CEF_CALLBACK* set_own_ptr_library_and_return)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_library_t* val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_api_version_test_scoped_library_t::get_value(). This tests input of a
   /// library- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_own_ptr_library)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_library_child_t *val);
+  int(CEF_CALLBACK* set_child_own_ptr_library)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_library_child_t* val);
 
   ///
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a library-side child object type and return as the parent type.
   ///
-  struct _cef_api_version_test_scoped_library_t *(
-      CEF_CALLBACK *set_child_own_ptr_library_and_return_parent)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_library_child_t *val);
+  struct _cef_api_version_test_scoped_library_t*(
+      CEF_CALLBACK* set_child_own_ptr_library_and_return_parent)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_library_child_t* val);
 
   ///
   /// Set an object. Returns the value from
   /// cef_api_version_test_scoped_client_t::get_value(). This tests input and
   /// execution of a client-side object type.
   ///
-  int(CEF_CALLBACK *set_own_ptr_client)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_t *val);
+  int(CEF_CALLBACK* set_own_ptr_client)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_t* val);
 
   ///
   /// Set an object. Returns the handler passed in. This tests input and output
   /// of a client-side object type.
   ///
-  struct _cef_api_version_test_scoped_client_t *(
-      CEF_CALLBACK *set_own_ptr_client_and_return)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_t *val);
+  struct _cef_api_version_test_scoped_client_t*(
+      CEF_CALLBACK* set_own_ptr_client_and_return)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_t* val);
 
 #if CEF_API_REMOVED(13302)
   ///
@@ -283,9 +291,9 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_scoped_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_own_ptr_client)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_child_t *val);
+  int(CEF_CALLBACK* set_child_own_ptr_client)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_child_t* val);
 #else
   uintptr_t set_child_own_ptr_client_removed;
 #endif
@@ -295,10 +303,10 @@ typedef struct _cef_api_version_test_t {
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a client-side child object type and return as the parent type.
   ///
-  struct _cef_api_version_test_scoped_client_t *(
-      CEF_CALLBACK *set_child_own_ptr_client_and_return_parent)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_child_t *val);
+  struct _cef_api_version_test_scoped_client_t*(
+      CEF_CALLBACK* set_child_own_ptr_client_and_return_parent)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_child_t* val);
 #else
   uintptr_t set_child_own_ptr_client_and_return_parent_removed;
 #endif
@@ -308,25 +316,27 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_scoped_library_t::get_value(). This tests input and
   /// execution of a library-side object type.
   ///
-  int(CEF_CALLBACK *set_raw_ptr_library)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_library_t *val);
+  int(CEF_CALLBACK* set_raw_ptr_library)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_library_t* val);
 
   ///
   /// Set a child object. Returns the value from
   /// cef_api_version_test_scoped_library_t::get_value(). This tests input of a
   /// library- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_raw_ptr_library)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_library_child_t *val);
+  int(CEF_CALLBACK* set_child_raw_ptr_library)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_library_child_t* val);
 
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK *set_raw_ptr_library_list)(
-      struct _cef_api_version_test_t *self, size_t valCount,
-      struct _cef_api_version_test_scoped_library_t *const *val, int val1,
+  int(CEF_CALLBACK* set_raw_ptr_library_list)(
+      struct _cef_api_version_test_t* self,
+      size_t valCount,
+      struct _cef_api_version_test_scoped_library_t* const* val,
+      int val1,
       int val2);
 
   ///
@@ -334,9 +344,9 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_scoped_client_t::get_value(). This tests input and
   /// execution of a client-side object type.
   ///
-  int(CEF_CALLBACK *set_raw_ptr_client)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_t *val);
+  int(CEF_CALLBACK* set_raw_ptr_client)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_t* val);
 
 #if CEF_API_REMOVED(13302)
   ///
@@ -344,9 +354,9 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_scoped_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_raw_ptr_client)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_child_t *val);
+  int(CEF_CALLBACK* set_child_raw_ptr_client)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_child_t* val);
 #else
   uintptr_t set_child_raw_ptr_client_removed;
 #endif
@@ -354,9 +364,11 @@ typedef struct _cef_api_version_test_t {
   ///
   /// Set an object list vlaue.
   ///
-  int(CEF_CALLBACK *set_raw_ptr_client_list)(
-      struct _cef_api_version_test_t *self, size_t valCount,
-      struct _cef_api_version_test_scoped_client_t *const *val, int val1,
+  int(CEF_CALLBACK* set_raw_ptr_client_list)(
+      struct _cef_api_version_test_t* self,
+      size_t valCount,
+      struct _cef_api_version_test_scoped_client_t* const* val,
+      int val1,
       int val2);
 
 #if CEF_API_ADDED(13302)
@@ -365,9 +377,9 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_ref_ptr_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_ref_ptr_client_v2)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_client_child_v2_t *val);
+  int(CEF_CALLBACK* set_child_ref_ptr_client_v2)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_client_child_v2_t* val);
 #endif
 
 #if CEF_API_ADDED(13302)
@@ -375,10 +387,10 @@ typedef struct _cef_api_version_test_t {
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a client-side child object type and return as the parent type.
   ///
-  struct _cef_api_version_test_ref_ptr_client_t *(
-      CEF_CALLBACK *set_child_ref_ptr_client_and_return_parent_v2)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_ref_ptr_client_child_v2_t *val);
+  struct _cef_api_version_test_ref_ptr_client_t*(
+      CEF_CALLBACK* set_child_ref_ptr_client_and_return_parent_v2)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_ref_ptr_client_child_v2_t* val);
 #endif
 
 #if CEF_API_ADDED(13302)
@@ -387,9 +399,9 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_scoped_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_own_ptr_client_v2)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_child_v2_t *val);
+  int(CEF_CALLBACK* set_child_own_ptr_client_v2)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_child_v2_t* val);
 #endif
 
 #if CEF_API_ADDED(13302)
@@ -397,10 +409,10 @@ typedef struct _cef_api_version_test_t {
   /// Set a child object. Returns the object as the parent type. This tests
   /// input of a client-side child object type and return as the parent type.
   ///
-  struct _cef_api_version_test_scoped_client_t *(
-      CEF_CALLBACK *set_child_own_ptr_client_and_return_parent_v2)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_child_v2_t *val);
+  struct _cef_api_version_test_scoped_client_t*(
+      CEF_CALLBACK* set_child_own_ptr_client_and_return_parent_v2)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_child_v2_t* val);
 #endif
 
 #if CEF_API_ADDED(13302)
@@ -409,16 +421,16 @@ typedef struct _cef_api_version_test_t {
   /// cef_api_version_test_scoped_client_t::get_value(). This tests input of a
   /// client- side child object type and execution as the parent type.
   ///
-  int(CEF_CALLBACK *set_child_raw_ptr_client_v2)(
-      struct _cef_api_version_test_t *self,
-      struct _cef_api_version_test_scoped_client_child_v2_t *val);
+  int(CEF_CALLBACK* set_child_raw_ptr_client_v2)(
+      struct _cef_api_version_test_t* self,
+      struct _cef_api_version_test_scoped_client_child_v2_t* val);
 #endif
 } cef_api_version_test_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_t *cef_api_version_test_create(void);
+CEF_EXPORT cef_api_version_test_t* cef_api_version_test_create(void);
 
 ///
 /// Library-side test object for RefPtr.
@@ -434,21 +446,22 @@ typedef struct _cef_api_version_test_ref_ptr_library_t {
   ///
   /// Return a legacy value.
   ///
-  int(CEF_CALLBACK *get_value_legacy)(
-      struct _cef_api_version_test_ref_ptr_library_t *self);
+  int(CEF_CALLBACK* get_value_legacy)(
+      struct _cef_api_version_test_ref_ptr_library_t* self);
 
   ///
   /// Set a legacy value.
   ///
-  void(CEF_CALLBACK *set_value_legacy)(
-      struct _cef_api_version_test_ref_ptr_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_legacy)(
+      struct _cef_api_version_test_ref_ptr_library_t* self,
+      int value);
 
 #if CEF_API_REMOVED(13301)
   ///
   /// Return a value. This is replaced by GetValueV1 in version 13301.
   ///
-  int(CEF_CALLBACK *get_value)(
-      struct _cef_api_version_test_ref_ptr_library_t *self);
+  int(CEF_CALLBACK* get_value)(
+      struct _cef_api_version_test_ref_ptr_library_t* self);
 #else
   uintptr_t get_value_removed;
 #endif
@@ -457,8 +470,9 @@ typedef struct _cef_api_version_test_ref_ptr_library_t {
   ///
   /// Set a value. This is replaced by SetValueV1 in version 13301.
   ///
-  void(CEF_CALLBACK *set_value)(
-      struct _cef_api_version_test_ref_ptr_library_t *self, int value);
+  void(CEF_CALLBACK* set_value)(
+      struct _cef_api_version_test_ref_ptr_library_t* self,
+      int value);
 #else
   uintptr_t set_value_removed;
 #endif
@@ -468,8 +482,8 @@ typedef struct _cef_api_version_test_ref_ptr_library_t {
   /// Return a value (V1). This replaces GetValue in version 13301 and is
   /// replaced by cef_value_tV2 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v1)(
-      struct _cef_api_version_test_ref_ptr_library_t *self);
+  int(CEF_CALLBACK* get_value_v1)(
+      struct _cef_api_version_test_ref_ptr_library_t* self);
 #elif CEF_API_ADDED(13302)
   uintptr_t get_value_v1_removed;
 #endif
@@ -479,8 +493,9 @@ typedef struct _cef_api_version_test_ref_ptr_library_t {
   /// Set a value (V1). This replaces SetValue in version 13301 and is replaced
   /// by SefValueV2 in version 13302.
   ///
-  void(CEF_CALLBACK *set_value_v1)(
-      struct _cef_api_version_test_ref_ptr_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_v1)(
+      struct _cef_api_version_test_ref_ptr_library_t* self,
+      int value);
 #elif CEF_API_ADDED(13302)
   uintptr_t set_value_v1_removed;
 #endif
@@ -489,46 +504,48 @@ typedef struct _cef_api_version_test_ref_ptr_library_t {
   ///
   /// Return a value (V2). This replaces GetValueV1 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v2)(
-      struct _cef_api_version_test_ref_ptr_library_t *self);
+  int(CEF_CALLBACK* get_value_v2)(
+      struct _cef_api_version_test_ref_ptr_library_t* self);
 #endif
 
 #if CEF_API_ADDED(13302)
   ///
   /// Set a value (V2). This replaces SetValueV1 in version 13302.
   ///
-  void(CEF_CALLBACK *set_value_v2)(
-      struct _cef_api_version_test_ref_ptr_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_v2)(
+      struct _cef_api_version_test_ref_ptr_library_t* self,
+      int value);
 #endif
 
 #if CEF_API_ADDED(CEF_EXPERIMENTAL)
   ///
   /// Return an experimental value.
   ///
-  int(CEF_CALLBACK *get_value_exp)(
-      struct _cef_api_version_test_ref_ptr_library_t *self);
+  int(CEF_CALLBACK* get_value_exp)(
+      struct _cef_api_version_test_ref_ptr_library_t* self);
 #endif
 
 #if CEF_API_ADDED(CEF_EXPERIMENTAL)
   ///
   /// Set an experimental value.
   ///
-  void(CEF_CALLBACK *set_value_exp)(
-      struct _cef_api_version_test_ref_ptr_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_exp)(
+      struct _cef_api_version_test_ref_ptr_library_t* self,
+      int value);
 #endif
 } cef_api_version_test_ref_ptr_library_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_t*
 cef_api_version_test_ref_ptr_library_create(void);
 
 #if CEF_API_ADDED(13301)
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_t*
 cef_api_version_test_ref_ptr_library_create_with_default(int value);
 #endif
 
@@ -546,27 +563,28 @@ typedef struct _cef_api_version_test_ref_ptr_library_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_t *self);
+  int(CEF_CALLBACK* get_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_t* self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK *set_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_t *self, int value);
+  void(CEF_CALLBACK* set_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_t* self,
+      int value);
 } cef_api_version_test_ref_ptr_library_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_child_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_child_t*
 cef_api_version_test_ref_ptr_library_child_create(void);
 
 #if CEF_API_ADDED(13301)
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_child_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_child_t*
 cef_api_version_test_ref_ptr_library_child_create_with_default(int value,
                                                                int other_value);
 #endif
@@ -588,24 +606,24 @@ typedef struct _cef_api_version_test_ref_ptr_library_child_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_child_t *self);
+  int(CEF_CALLBACK* get_other_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_child_t* self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK *set_other_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_child_t *self,
+  void(CEF_CALLBACK* set_other_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_child_t* self,
       int value);
 } cef_api_version_test_ref_ptr_library_child_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_t*
 cef_api_version_test_ref_ptr_library_child_child_create(void);
 
-#endif // CEF_API_REMOVED(13301)
+#endif  // CEF_API_REMOVED(13301)
 
 #if CEF_API_RANGE(13301, 13302)
 
@@ -626,31 +644,33 @@ typedef struct _cef_api_version_test_ref_ptr_library_child_child_v1_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_child_v1_t *self);
+  int(CEF_CALLBACK* get_other_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_child_v1_t* self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK *set_other_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_child_v1_t *self,
+  void(CEF_CALLBACK* set_other_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_child_v1_t* self,
       int value);
 } cef_api_version_test_ref_ptr_library_child_child_v1_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v1_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v1_t*
 cef_api_version_test_ref_ptr_library_child_child_v1_create(void);
 
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v1_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v1_t*
 cef_api_version_test_ref_ptr_library_child_child_v1_create_with_default(
-    int value, int other_value, int other_other_value);
+    int value,
+    int other_value,
+    int other_other_value);
 
-#endif // CEF_API_RANGE(13301, 13302)
+#endif  // CEF_API_RANGE(13301, 13302)
 
 #if CEF_API_ADDED(13302)
 
@@ -669,31 +689,33 @@ typedef struct _cef_api_version_test_ref_ptr_library_child_child_v2_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_child_v2_t *self);
+  int(CEF_CALLBACK* get_other_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_child_v2_t* self);
 
   ///
   /// Set a value (v3).
   ///
-  void(CEF_CALLBACK *set_other_other_value)(
-      struct _cef_api_version_test_ref_ptr_library_child_child_v2_t *self,
+  void(CEF_CALLBACK* set_other_other_value)(
+      struct _cef_api_version_test_ref_ptr_library_child_child_v2_t* self,
       int value);
 } cef_api_version_test_ref_ptr_library_child_child_v2_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v2_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v2_t*
 cef_api_version_test_ref_ptr_library_child_child_v2_create(void);
 
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v2_t *
+CEF_EXPORT cef_api_version_test_ref_ptr_library_child_child_v2_t*
 cef_api_version_test_ref_ptr_library_child_child_v2_create_with_default(
-    int value, int other_value, int other_other_value);
+    int value,
+    int other_value,
+    int other_other_value);
 
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
 ///
 /// Client-side test object for RefPtr.
@@ -709,15 +731,15 @@ typedef struct _cef_api_version_test_ref_ptr_client_t {
   ///
   /// Return a legacy value.
   ///
-  int(CEF_CALLBACK *get_value_legacy)(
-      struct _cef_api_version_test_ref_ptr_client_t *self);
+  int(CEF_CALLBACK* get_value_legacy)(
+      struct _cef_api_version_test_ref_ptr_client_t* self);
 
 #if CEF_API_REMOVED(13301)
   ///
   /// Return a value. This is replaced with GetValueV1 in version 13301.
   ///
-  int(CEF_CALLBACK *get_value)(
-      struct _cef_api_version_test_ref_ptr_client_t *self);
+  int(CEF_CALLBACK* get_value)(
+      struct _cef_api_version_test_ref_ptr_client_t* self);
 #else
   uintptr_t get_value_removed;
 #endif
@@ -727,8 +749,8 @@ typedef struct _cef_api_version_test_ref_ptr_client_t {
   /// Return a value (V1). This replaces GetValue in version 13301 and is
   /// replaced with GetValueV2 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v1)(
-      struct _cef_api_version_test_ref_ptr_client_t *self);
+  int(CEF_CALLBACK* get_value_v1)(
+      struct _cef_api_version_test_ref_ptr_client_t* self);
 #elif CEF_API_ADDED(13302)
   uintptr_t get_value_v1_removed;
 #endif
@@ -737,16 +759,16 @@ typedef struct _cef_api_version_test_ref_ptr_client_t {
   ///
   /// Return a value (V2). This replaces GetValueV1 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v2)(
-      struct _cef_api_version_test_ref_ptr_client_t *self);
+  int(CEF_CALLBACK* get_value_v2)(
+      struct _cef_api_version_test_ref_ptr_client_t* self);
 #endif
 
 #if CEF_API_ADDED(CEF_EXPERIMENTAL)
   ///
   /// Return an experimental value.
   ///
-  int(CEF_CALLBACK *get_value_exp)(
-      struct _cef_api_version_test_ref_ptr_client_t *self);
+  int(CEF_CALLBACK* get_value_exp)(
+      struct _cef_api_version_test_ref_ptr_client_t* self);
 #endif
 } cef_api_version_test_ref_ptr_client_t;
 
@@ -768,8 +790,8 @@ typedef struct _cef_api_version_test_ref_ptr_client_child_t {
   ///
   /// Return a value. This is replaced with GetOtherValueV1 in version 13301.
   ///
-  int(CEF_CALLBACK *get_other_value)(
-      struct _cef_api_version_test_ref_ptr_client_child_t *self);
+  int(CEF_CALLBACK* get_other_value)(
+      struct _cef_api_version_test_ref_ptr_client_child_t* self);
 #else
   uintptr_t get_other_value_removed;
 #endif
@@ -778,12 +800,12 @@ typedef struct _cef_api_version_test_ref_ptr_client_child_t {
   ///
   /// Return a value (V1). This replaces GetOtherValue in version 13301.
   ///
-  int(CEF_CALLBACK *get_other_value_v1)(
-      struct _cef_api_version_test_ref_ptr_client_child_t *self);
+  int(CEF_CALLBACK* get_other_value_v1)(
+      struct _cef_api_version_test_ref_ptr_client_child_t* self);
 #endif
 } cef_api_version_test_ref_ptr_client_child_t;
 
-#endif // CEF_API_REMOVED(13302)
+#endif  // CEF_API_REMOVED(13302)
 
 #if CEF_API_ADDED(13302)
 
@@ -802,19 +824,19 @@ typedef struct _cef_api_version_test_ref_ptr_client_child_v2_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_value)(
-      struct _cef_api_version_test_ref_ptr_client_child_v2_t *self);
+  int(CEF_CALLBACK* get_other_value)(
+      struct _cef_api_version_test_ref_ptr_client_child_v2_t* self);
 
 #if CEF_API_ADDED(13303)
   ///
   /// Return another value.
   ///
-  int(CEF_CALLBACK *get_another_value)(
-      struct _cef_api_version_test_ref_ptr_client_child_v2_t *self);
+  int(CEF_CALLBACK* get_another_value)(
+      struct _cef_api_version_test_ref_ptr_client_child_v2_t* self);
 #endif
 } cef_api_version_test_ref_ptr_client_child_v2_t;
 
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
 ///
 /// Library-side test object for OwnPtr/RawPtr.
@@ -830,21 +852,22 @@ typedef struct _cef_api_version_test_scoped_library_t {
   ///
   /// Return a legacy value.
   ///
-  int(CEF_CALLBACK *get_value_legacy)(
-      struct _cef_api_version_test_scoped_library_t *self);
+  int(CEF_CALLBACK* get_value_legacy)(
+      struct _cef_api_version_test_scoped_library_t* self);
 
   ///
   /// Set a legacy value.
   ///
-  void(CEF_CALLBACK *set_value_legacy)(
-      struct _cef_api_version_test_scoped_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_legacy)(
+      struct _cef_api_version_test_scoped_library_t* self,
+      int value);
 
 #if CEF_API_REMOVED(13301)
   ///
   /// Return a value. This is replaced by GetValueV1 in version 13301.
   ///
-  int(CEF_CALLBACK *get_value)(
-      struct _cef_api_version_test_scoped_library_t *self);
+  int(CEF_CALLBACK* get_value)(
+      struct _cef_api_version_test_scoped_library_t* self);
 #else
   uintptr_t get_value_removed;
 #endif
@@ -853,8 +876,9 @@ typedef struct _cef_api_version_test_scoped_library_t {
   ///
   /// Set a value. This is replaced by SetValueV1 in version 13301.
   ///
-  void(CEF_CALLBACK *set_value)(
-      struct _cef_api_version_test_scoped_library_t *self, int value);
+  void(CEF_CALLBACK* set_value)(
+      struct _cef_api_version_test_scoped_library_t* self,
+      int value);
 #else
   uintptr_t set_value_removed;
 #endif
@@ -864,8 +888,8 @@ typedef struct _cef_api_version_test_scoped_library_t {
   /// Return a value (V1). This replaces GetValue in version 13301 and is
   /// replaced by cef_value_tV2 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v1)(
-      struct _cef_api_version_test_scoped_library_t *self);
+  int(CEF_CALLBACK* get_value_v1)(
+      struct _cef_api_version_test_scoped_library_t* self);
 #elif CEF_API_ADDED(13302)
   uintptr_t get_value_v1_removed;
 #endif
@@ -875,8 +899,9 @@ typedef struct _cef_api_version_test_scoped_library_t {
   /// Set a value (V1). This replaces SetValue in version 13301 and is replaced
   /// by SefValueV2 in version 13302.
   ///
-  void(CEF_CALLBACK *set_value_v1)(
-      struct _cef_api_version_test_scoped_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_v1)(
+      struct _cef_api_version_test_scoped_library_t* self,
+      int value);
 #elif CEF_API_ADDED(13302)
   uintptr_t set_value_v1_removed;
 #endif
@@ -885,46 +910,48 @@ typedef struct _cef_api_version_test_scoped_library_t {
   ///
   /// Return a value (V2). This replaces GetValueV1 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v2)(
-      struct _cef_api_version_test_scoped_library_t *self);
+  int(CEF_CALLBACK* get_value_v2)(
+      struct _cef_api_version_test_scoped_library_t* self);
 #endif
 
 #if CEF_API_ADDED(13302)
   ///
   /// Set a value (V2). This replaces SetValueV1 in version 13302.
   ///
-  void(CEF_CALLBACK *set_value_v2)(
-      struct _cef_api_version_test_scoped_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_v2)(
+      struct _cef_api_version_test_scoped_library_t* self,
+      int value);
 #endif
 
 #if CEF_API_ADDED(CEF_EXPERIMENTAL)
   ///
   /// Return an experimental value.
   ///
-  int(CEF_CALLBACK *get_value_exp)(
-      struct _cef_api_version_test_scoped_library_t *self);
+  int(CEF_CALLBACK* get_value_exp)(
+      struct _cef_api_version_test_scoped_library_t* self);
 #endif
 
 #if CEF_API_ADDED(CEF_EXPERIMENTAL)
   ///
   /// Set an experimental value.
   ///
-  void(CEF_CALLBACK *set_value_exp)(
-      struct _cef_api_version_test_scoped_library_t *self, int value);
+  void(CEF_CALLBACK* set_value_exp)(
+      struct _cef_api_version_test_scoped_library_t* self,
+      int value);
 #endif
 } cef_api_version_test_scoped_library_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_t *
+CEF_EXPORT cef_api_version_test_scoped_library_t*
 cef_api_version_test_scoped_library_create(void);
 
 #if CEF_API_ADDED(13301)
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_t *
+CEF_EXPORT cef_api_version_test_scoped_library_t*
 cef_api_version_test_scoped_library_create_with_default(int value);
 #endif
 
@@ -942,27 +969,28 @@ typedef struct _cef_api_version_test_scoped_library_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_value)(
-      struct _cef_api_version_test_scoped_library_child_t *self);
+  int(CEF_CALLBACK* get_other_value)(
+      struct _cef_api_version_test_scoped_library_child_t* self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK *set_other_value)(
-      struct _cef_api_version_test_scoped_library_child_t *self, int value);
+  void(CEF_CALLBACK* set_other_value)(
+      struct _cef_api_version_test_scoped_library_child_t* self,
+      int value);
 } cef_api_version_test_scoped_library_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_child_t *
+CEF_EXPORT cef_api_version_test_scoped_library_child_t*
 cef_api_version_test_scoped_library_child_create(void);
 
 #if CEF_API_ADDED(13301)
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_child_t *
+CEF_EXPORT cef_api_version_test_scoped_library_child_t*
 cef_api_version_test_scoped_library_child_create_with_default(int value,
                                                               int other_value);
 #endif
@@ -984,24 +1012,24 @@ typedef struct _cef_api_version_test_scoped_library_child_child_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_other_value)(
-      struct _cef_api_version_test_scoped_library_child_child_t *self);
+  int(CEF_CALLBACK* get_other_other_value)(
+      struct _cef_api_version_test_scoped_library_child_child_t* self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK *set_other_other_value)(
-      struct _cef_api_version_test_scoped_library_child_child_t *self,
+  void(CEF_CALLBACK* set_other_other_value)(
+      struct _cef_api_version_test_scoped_library_child_child_t* self,
       int value);
 } cef_api_version_test_scoped_library_child_child_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_child_child_t *
+CEF_EXPORT cef_api_version_test_scoped_library_child_child_t*
 cef_api_version_test_scoped_library_child_child_create(void);
 
-#endif // CEF_API_REMOVED(13301)
+#endif  // CEF_API_REMOVED(13301)
 
 #if CEF_API_RANGE(13301, 13302)
 
@@ -1022,31 +1050,33 @@ typedef struct _cef_api_version_test_scoped_library_child_child_v1_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_other_value)(
-      struct _cef_api_version_test_scoped_library_child_child_v1_t *self);
+  int(CEF_CALLBACK* get_other_other_value)(
+      struct _cef_api_version_test_scoped_library_child_child_v1_t* self);
 
   ///
   /// Set a value.
   ///
-  void(CEF_CALLBACK *set_other_other_value)(
-      struct _cef_api_version_test_scoped_library_child_child_v1_t *self,
+  void(CEF_CALLBACK* set_other_other_value)(
+      struct _cef_api_version_test_scoped_library_child_child_v1_t* self,
       int value);
 } cef_api_version_test_scoped_library_child_child_v1_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_child_child_v1_t *
+CEF_EXPORT cef_api_version_test_scoped_library_child_child_v1_t*
 cef_api_version_test_scoped_library_child_child_v1_create(void);
 
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_child_child_v1_t *
+CEF_EXPORT cef_api_version_test_scoped_library_child_child_v1_t*
 cef_api_version_test_scoped_library_child_child_v1_create_with_default(
-    int value, int other_value, int other_other_value);
+    int value,
+    int other_value,
+    int other_other_value);
 
-#endif // CEF_API_RANGE(13301, 13302)
+#endif  // CEF_API_RANGE(13301, 13302)
 
 #if CEF_API_ADDED(13302)
 
@@ -1065,31 +1095,33 @@ typedef struct _cef_api_version_test_scoped_library_child_child_v2_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_other_value)(
-      struct _cef_api_version_test_scoped_library_child_child_v2_t *self);
+  int(CEF_CALLBACK* get_other_other_value)(
+      struct _cef_api_version_test_scoped_library_child_child_v2_t* self);
 
   ///
   /// Set a value (v3).
   ///
-  void(CEF_CALLBACK *set_other_other_value)(
-      struct _cef_api_version_test_scoped_library_child_child_v2_t *self,
+  void(CEF_CALLBACK* set_other_other_value)(
+      struct _cef_api_version_test_scoped_library_child_child_v2_t* self,
       int value);
 } cef_api_version_test_scoped_library_child_child_v2_t;
 
 ///
 /// Create the test object.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_child_child_v2_t *
+CEF_EXPORT cef_api_version_test_scoped_library_child_child_v2_t*
 cef_api_version_test_scoped_library_child_child_v2_create(void);
 
 ///
 /// Create the test object with default value.
 ///
-CEF_EXPORT cef_api_version_test_scoped_library_child_child_v2_t *
+CEF_EXPORT cef_api_version_test_scoped_library_child_child_v2_t*
 cef_api_version_test_scoped_library_child_child_v2_create_with_default(
-    int value, int other_value, int other_other_value);
+    int value,
+    int other_value,
+    int other_other_value);
 
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
 ///
 /// Client-side test object for OwnPtr/RawPtr.
@@ -1105,15 +1137,15 @@ typedef struct _cef_api_version_test_scoped_client_t {
   ///
   /// Return a legacy value.
   ///
-  int(CEF_CALLBACK *get_value_legacy)(
-      struct _cef_api_version_test_scoped_client_t *self);
+  int(CEF_CALLBACK* get_value_legacy)(
+      struct _cef_api_version_test_scoped_client_t* self);
 
 #if CEF_API_REMOVED(13301)
   ///
   /// Return a value. This is replaced with GetValueV1 in version 13301.
   ///
-  int(CEF_CALLBACK *get_value)(
-      struct _cef_api_version_test_scoped_client_t *self);
+  int(CEF_CALLBACK* get_value)(
+      struct _cef_api_version_test_scoped_client_t* self);
 #else
   uintptr_t get_value_removed;
 #endif
@@ -1123,8 +1155,8 @@ typedef struct _cef_api_version_test_scoped_client_t {
   /// Return a value (V1). This replaces GetValue in version 13301 and is
   /// replaced with GetValueV2 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v1)(
-      struct _cef_api_version_test_scoped_client_t *self);
+  int(CEF_CALLBACK* get_value_v1)(
+      struct _cef_api_version_test_scoped_client_t* self);
 #elif CEF_API_ADDED(13302)
   uintptr_t get_value_v1_removed;
 #endif
@@ -1133,16 +1165,16 @@ typedef struct _cef_api_version_test_scoped_client_t {
   ///
   /// Return a value (V2). This replaces GetValueV1 in version 13302.
   ///
-  int(CEF_CALLBACK *get_value_v2)(
-      struct _cef_api_version_test_scoped_client_t *self);
+  int(CEF_CALLBACK* get_value_v2)(
+      struct _cef_api_version_test_scoped_client_t* self);
 #endif
 
 #if CEF_API_ADDED(CEF_EXPERIMENTAL)
   ///
   /// Return an experimental value.
   ///
-  int(CEF_CALLBACK *get_value_exp)(
-      struct _cef_api_version_test_scoped_client_t *self);
+  int(CEF_CALLBACK* get_value_exp)(
+      struct _cef_api_version_test_scoped_client_t* self);
 #endif
 } cef_api_version_test_scoped_client_t;
 
@@ -1164,8 +1196,8 @@ typedef struct _cef_api_version_test_scoped_client_child_t {
   ///
   /// Return a value. This is replaced with GetOtherValueV1 in version 13301.
   ///
-  int(CEF_CALLBACK *get_other_value)(
-      struct _cef_api_version_test_scoped_client_child_t *self);
+  int(CEF_CALLBACK* get_other_value)(
+      struct _cef_api_version_test_scoped_client_child_t* self);
 #else
   uintptr_t get_other_value_removed;
 #endif
@@ -1174,12 +1206,12 @@ typedef struct _cef_api_version_test_scoped_client_child_t {
   ///
   /// Return a value (V1). This replaces GetOtherValue in version 13301.
   ///
-  int(CEF_CALLBACK *get_other_value_v1)(
-      struct _cef_api_version_test_scoped_client_child_t *self);
+  int(CEF_CALLBACK* get_other_value_v1)(
+      struct _cef_api_version_test_scoped_client_child_t* self);
 #endif
 } cef_api_version_test_scoped_client_child_t;
 
-#endif // CEF_API_REMOVED(13302)
+#endif  // CEF_API_REMOVED(13302)
 
 #if CEF_API_ADDED(13302)
 
@@ -1198,22 +1230,22 @@ typedef struct _cef_api_version_test_scoped_client_child_v2_t {
   ///
   /// Return a value.
   ///
-  int(CEF_CALLBACK *get_other_value)(
-      struct _cef_api_version_test_scoped_client_child_v2_t *self);
+  int(CEF_CALLBACK* get_other_value)(
+      struct _cef_api_version_test_scoped_client_child_v2_t* self);
 
 #if CEF_API_ADDED(13303)
   ///
   /// Return another value.
   ///
-  int(CEF_CALLBACK *get_another_value)(
-      struct _cef_api_version_test_scoped_client_child_v2_t *self);
+  int(CEF_CALLBACK* get_another_value)(
+      struct _cef_api_version_test_scoped_client_child_v2_t* self);
 #endif
 } cef_api_version_test_scoped_client_child_v2_t;
 
-#endif // CEF_API_ADDED(13302)
+#endif  // CEF_API_ADDED(13302)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_TEST_CEF_API_VERSION_TEST_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_TEST_CEF_API_VERSION_TEST_CAPI_H_

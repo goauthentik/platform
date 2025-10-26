@@ -26,10 +26,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefV8ExceptionCToCpp
-    : public CefCToCppRefCounted<CefV8ExceptionCToCpp, CefV8Exception,
-                                 cef_v8_exception_t> {
-public:
+class CefV8ExceptionCToCpp : public CefCToCppRefCounted<CefV8ExceptionCToCpp,
+                                                        CefV8Exception,
+                                                        cef_v8_exception_t> {
+ public:
   CefV8ExceptionCToCpp();
   virtual ~CefV8ExceptionCToCpp();
 
@@ -47,4 +47,4 @@ public:
 constexpr auto CefV8ExceptionCToCpp_Wrap = CefV8ExceptionCToCpp::Wrap;
 constexpr auto CefV8ExceptionCToCpp_Unwrap = CefV8ExceptionCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_V8_EXCEPTION_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_V8_EXCEPTION_CTOCPP_H_

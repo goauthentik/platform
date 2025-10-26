@@ -45,35 +45,38 @@
 /// Implementation of the CefResourceHandler class for reading from a CefStream.
 ///
 class CefStreamResourceHandler : public CefResourceHandler {
-public:
+ public:
   ///
   /// Create a new object with default response values.
   ///
-  CefStreamResourceHandler(const CefString &mime_type,
+  CefStreamResourceHandler(const CefString& mime_type,
                            CefRefPtr<CefStreamReader> stream);
   ///
   /// Create a new object with explicit response values.
   ///
-  CefStreamResourceHandler(int status_code, const CefString &status_text,
-                           const CefString &mime_type,
+  CefStreamResourceHandler(int status_code,
+                           const CefString& status_text,
+                           const CefString& mime_type,
                            CefResponse::HeaderMap header_map,
                            CefRefPtr<CefStreamReader> stream);
 
-  CefStreamResourceHandler(const CefStreamResourceHandler &) = delete;
-  CefStreamResourceHandler &
-  operator=(const CefStreamResourceHandler &) = delete;
+  CefStreamResourceHandler(const CefStreamResourceHandler&) = delete;
+  CefStreamResourceHandler& operator=(const CefStreamResourceHandler&) = delete;
 
   // CefResourceHandler methods.
-  bool Open(CefRefPtr<CefRequest> request, bool &handle_request,
+  bool Open(CefRefPtr<CefRequest> request,
+            bool& handle_request,
             CefRefPtr<CefCallback> callback) override;
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64_t &response_length,
-                          CefString &redirectUrl) override;
-  bool Read(void *data_out, int bytes_to_read, int &bytes_read,
+                          int64_t& response_length,
+                          CefString& redirectUrl) override;
+  bool Read(void* data_out,
+            int bytes_to_read,
+            int& bytes_read,
             CefRefPtr<CefResourceReadCallback> callback) override;
   void Cancel() override;
 
-private:
+ private:
   const int status_code_;
   const CefString status_text_;
   const CefString mime_type_;
@@ -83,4 +86,4 @@ private:
   IMPLEMENT_REFCOUNTING(CefStreamResourceHandler);
 };
 
-#endif // CEF_INCLUDE_WRAPPER_CEF_STREAM_RESOURCE_HANDLER_H_
+#endif  // CEF_INCLUDE_WRAPPER_CEF_STREAM_RESOURCE_HANDLER_H_

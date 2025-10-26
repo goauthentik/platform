@@ -49,15 +49,15 @@
 ///
 /*--cef(source=library)--*/
 class CefMenuModel : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_menu_item_type_t MenuItemType;
 
   ///
   /// Create a new MenuModel with the specified |delegate|.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefMenuModel>
-  CreateMenuModel(CefRefPtr<CefMenuModelDelegate> delegate);
+  static CefRefPtr<CefMenuModel> CreateMenuModel(
+      CefRefPtr<CefMenuModelDelegate> delegate);
 
   ///
   /// Returns true if this menu is a submenu.
@@ -87,19 +87,20 @@ public:
   /// Add an item to the menu. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool AddItem(int command_id, const CefString &label) = 0;
+  virtual bool AddItem(int command_id, const CefString& label) = 0;
 
   ///
   /// Add a check item to the menu. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool AddCheckItem(int command_id, const CefString &label) = 0;
+  virtual bool AddCheckItem(int command_id, const CefString& label) = 0;
   ///
   /// Add a radio item to the menu. Only a single item with the specified
   /// |group_id| can be checked at a time. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool AddRadioItem(int command_id, const CefString &label,
+  virtual bool AddRadioItem(int command_id,
+                            const CefString& label,
                             int group_id) = 0;
 
   ///
@@ -107,7 +108,7 @@ public:
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefMenuModel> AddSubMenu(int command_id,
-                                             const CefString &label) = 0;
+                                             const CefString& label) = 0;
 
   ///
   /// Insert a separator in the menu at the specified |index|. Returns true on
@@ -121,16 +122,18 @@ public:
   /// success.
   ///
   /*--cef()--*/
-  virtual bool InsertItemAt(size_t index, int command_id,
-                            const CefString &label) = 0;
+  virtual bool InsertItemAt(size_t index,
+                            int command_id,
+                            const CefString& label) = 0;
 
   ///
   /// Insert a check item in the menu at the specified |index|. Returns true on
   /// success.
   ///
   /*--cef()--*/
-  virtual bool InsertCheckItemAt(size_t index, int command_id,
-                                 const CefString &label) = 0;
+  virtual bool InsertCheckItemAt(size_t index,
+                                 int command_id,
+                                 const CefString& label) = 0;
 
   ///
   /// Insert a radio item in the menu at the specified |index|. Only a single
@@ -138,16 +141,19 @@ public:
   /// on success.
   ///
   /*--cef()--*/
-  virtual bool InsertRadioItemAt(size_t index, int command_id,
-                                 const CefString &label, int group_id) = 0;
+  virtual bool InsertRadioItemAt(size_t index,
+                                 int command_id,
+                                 const CefString& label,
+                                 int group_id) = 0;
 
   ///
   /// Insert a sub-menu in the menu at the specified |index|. The new sub-menu
   /// is returned.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefMenuModel> InsertSubMenuAt(size_t index, int command_id,
-                                                  const CefString &label) = 0;
+  virtual CefRefPtr<CefMenuModel> InsertSubMenuAt(size_t index,
+                                                  int command_id,
+                                                  const CefString& label) = 0;
 
   ///
   /// Removes the item with the specified |command_id|. Returns true on success.
@@ -198,13 +204,13 @@ public:
   /// Sets the label for the specified |command_id|. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool SetLabel(int command_id, const CefString &label) = 0;
+  virtual bool SetLabel(int command_id, const CefString& label) = 0;
 
   ///
   /// Set the label at the specified |index|. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool SetLabelAt(size_t index, const CefString &label) = 0;
+  virtual bool SetLabelAt(size_t index, const CefString& label) = 0;
 
   ///
   /// Returns the item type for the specified |command_id|.
@@ -351,16 +357,22 @@ public:
   /// can be any virtual key or character value. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool SetAccelerator(int command_id, int key_code, bool shift_pressed,
-                              bool ctrl_pressed, bool alt_pressed) = 0;
+  virtual bool SetAccelerator(int command_id,
+                              int key_code,
+                              bool shift_pressed,
+                              bool ctrl_pressed,
+                              bool alt_pressed) = 0;
 
   ///
   /// Set the keyboard accelerator at the specified |index|. |key_code| can be
   /// any virtual key or character value. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool SetAcceleratorAt(size_t index, int key_code, bool shift_pressed,
-                                bool ctrl_pressed, bool alt_pressed) = 0;
+  virtual bool SetAcceleratorAt(size_t index,
+                                int key_code,
+                                bool shift_pressed,
+                                bool ctrl_pressed,
+                                bool alt_pressed) = 0;
 
   ///
   /// Remove the keyboard accelerator for the specified |command_id|. Returns
@@ -381,18 +393,22 @@ public:
   /// true on success.
   ///
   /*--cef()--*/
-  virtual bool GetAccelerator(int command_id, int &key_code,
-                              bool &shift_pressed, bool &ctrl_pressed,
-                              bool &alt_pressed) = 0;
+  virtual bool GetAccelerator(int command_id,
+                              int& key_code,
+                              bool& shift_pressed,
+                              bool& ctrl_pressed,
+                              bool& alt_pressed) = 0;
 
   ///
   /// Retrieves the keyboard accelerator for the specified |index|. Returns true
   /// on success.
   ///
   /*--cef()--*/
-  virtual bool GetAcceleratorAt(size_t index, int &key_code,
-                                bool &shift_pressed, bool &ctrl_pressed,
-                                bool &alt_pressed) = 0;
+  virtual bool GetAcceleratorAt(size_t index,
+                                int& key_code,
+                                bool& shift_pressed,
+                                bool& ctrl_pressed,
+                                bool& alt_pressed) = 0;
 
   ///
   /// Set the explicit color for |command_id| and |color_type| to |color|.
@@ -401,7 +417,8 @@ public:
   /// be used. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool SetColor(int command_id, cef_menu_color_type_t color_type,
+  virtual bool SetColor(int command_id,
+                        cef_menu_color_type_t color_type,
                         cef_color_t color) = 0;
 
   ///
@@ -412,7 +429,8 @@ public:
   /// then the system color will be used. Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool SetColorAt(int index, cef_menu_color_type_t color_type,
+  virtual bool SetColorAt(int index,
+                          cef_menu_color_type_t color_type,
                           cef_color_t color) = 0;
 
   ///
@@ -421,8 +439,9 @@ public:
   /// Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool GetColor(int command_id, cef_menu_color_type_t color_type,
-                        cef_color_t &color) = 0;
+  virtual bool GetColor(int command_id,
+                        cef_menu_color_type_t color_type,
+                        cef_color_t& color) = 0;
 
   ///
   /// Returns in |color| the color that was explicitly set for |command_id| and
@@ -431,8 +450,9 @@ public:
   /// Returns true on success.
   ///
   /*--cef()--*/
-  virtual bool GetColorAt(int index, cef_menu_color_type_t color_type,
-                          cef_color_t &color) = 0;
+  virtual bool GetColorAt(int index,
+                          cef_menu_color_type_t color_type,
+                          cef_color_t& color) = 0;
 
   ///
   /// Sets the font list for the specified |command_id|. If |font_list| is empty
@@ -448,7 +468,7 @@ public:
   /// - "Arial, 14px"
   ///
   /*--cef(optional_param=font_list)--*/
-  virtual bool SetFontList(int command_id, const CefString &font_list) = 0;
+  virtual bool SetFontList(int command_id, const CefString& font_list) = 0;
 
   ///
   /// Sets the font list for the specified |index|. Specify an |index| value of
@@ -465,7 +485,7 @@ public:
   /// - "Arial, 14px"
   ///
   /*--cef(optional_param=font_list)--*/
-  virtual bool SetFontListAt(int index, const CefString &font_list) = 0;
+  virtual bool SetFontListAt(int index, const CefString& font_list) = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_MENU_MODEL_H_
+#endif  // CEF_INCLUDE_CEF_MENU_MODEL_H_

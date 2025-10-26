@@ -43,7 +43,7 @@
 #define CEF_INCLUDE_TEST_CEF_TEST_SERVER_H_
 #pragma once
 
-#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) &&          \
+#if !defined(BUILDING_CEF_SHARED) && !defined(WRAPPING_CEF_SHARED) && \
     !defined(UNIT_TEST)
 #error This file can be included for unit tests only
 #endif
@@ -68,7 +68,7 @@ class CefTestServerHandler;
 ///
 /*--cef(source=library)--*/
 class CefTestServer : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Create and start a new test server that binds to |port|. If |port| is 0 an
   /// available port number will be selected. If |https_server| is true the
@@ -86,10 +86,11 @@ public:
   /// started. The server will continue running until Stop is called.
   ///
   /*--cef()--*/
-  static CefRefPtr<CefTestServer>
-  CreateAndStart(uint16_t port, bool https_server,
-                 cef_test_cert_type_t https_cert_type,
-                 CefRefPtr<CefTestServerHandler> handler);
+  static CefRefPtr<CefTestServer> CreateAndStart(
+      uint16_t port,
+      bool https_server,
+      cef_test_cert_type_t https_cert_type,
+      CefRefPtr<CefTestServerHandler> handler);
 
   ///
   /// Stop the server and shut down the dedicated server thread. This method
@@ -115,7 +116,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefTestServerHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Called when |server| receives a request. To handle the request return true
   /// and use |connection| to send the response either synchronously or
@@ -123,10 +124,10 @@ public:
   /// returning false do not call any |connection| methods.
   ///
   /*--cef()--*/
-  virtual bool
-  OnTestServerRequest(CefRefPtr<CefTestServer> server,
-                      CefRefPtr<CefRequest> request,
-                      CefRefPtr<CefTestServerConnection> connection) = 0;
+  virtual bool OnTestServerRequest(
+      CefRefPtr<CefTestServer> server,
+      CefRefPtr<CefRequest> request,
+      CefRefPtr<CefTestServerConnection> connection) = 0;
 };
 
 ///
@@ -136,7 +137,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefTestServerConnection : public CefBaseRefCounted {
-public:
+ public:
   typedef std::multimap<CefString, CefString> HeaderMap;
 
   ///
@@ -146,8 +147,9 @@ public:
   /// connection will be closed automatically after the response is sent.
   ///
   /*--cef()--*/
-  virtual void SendHttp200Response(const CefString &content_type,
-                                   const void *data, size_t data_size) = 0;
+  virtual void SendHttp200Response(const CefString& content_type,
+                                   const void* data,
+                                   size_t data_size) = 0;
 
   ///
   /// Send an HTTP 404 "Not Found" response. The connection will be closed
@@ -162,7 +164,7 @@ public:
   /// after the response is sent.
   ///
   /*--cef()--*/
-  virtual void SendHttp500Response(const CefString &error_message) = 0;
+  virtual void SendHttp500Response(const CefString& error_message) = 0;
 
   ///
   /// Send a custom HTTP response. |response_code| is the HTTP response code
@@ -174,9 +176,10 @@ public:
   ///
   /*--cef(optional_param=extra_headers)--*/
   virtual void SendHttpResponse(int response_code,
-                                const CefString &content_type, const void *data,
+                                const CefString& content_type,
+                                const void* data,
                                 size_t data_size,
-                                const HeaderMap &extra_headers) = 0;
+                                const HeaderMap& extra_headers) = 0;
 };
 
-#endif // CEF_INCLUDE_TEST_CEF_TEST_SERVER_H_
+#endif  // CEF_INCLUDE_TEST_CEF_TEST_SERVER_H_

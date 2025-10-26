@@ -72,7 +72,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/functional/bind.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -97,9 +97,9 @@ namespace base {
 ///
 template <typename Functor, typename... Args>
 inline OnceCallback<cef_internal::MakeUnboundRunType<Functor, Args...>>
-BindOnce(Functor &&functor, Args &&...args) {
+BindOnce(Functor&& functor, Args&&... args) {
   static_assert(!cef_internal::IsOnceCallback<std::decay_t<Functor>>() ||
-                    (std::is_rvalue_reference<Functor &&>() &&
+                    (std::is_rvalue_reference<Functor&&>() &&
                      !std::is_const<std::remove_reference_t<Functor>>()),
                 "BindOnce requires non-const rvalue for OnceCallback binding."
                 " I.e.: base::BindOnce(std::move(callback)).");
@@ -117,7 +117,7 @@ BindOnce(Functor &&functor, Args &&...args) {
 ///
 template <typename Functor, typename... Args>
 inline RepeatingCallback<cef_internal::MakeUnboundRunType<Functor, Args...>>
-BindRepeating(Functor &&functor, Args &&...args) {
+BindRepeating(Functor&& functor, Args&&... args) {
   static_assert(
       !cef_internal::IsOnceCallback<std::decay_t<Functor>>(),
       "BindRepeating cannot bind OnceCallback. Use BindOnce with std::move().");
@@ -144,8 +144,8 @@ OnceCallback<Signature> BindOnce(RepeatingCallback<Signature> callback) {
 }
 
 template <typename Signature>
-RepeatingCallback<Signature>
-BindRepeating(RepeatingCallback<Signature> callback) {
+RepeatingCallback<Signature> BindRepeating(
+    RepeatingCallback<Signature> callback) {
   CHECK(callback);
   return callback;
 }
@@ -173,7 +173,7 @@ BindRepeating(RepeatingCallback<Signature> callback) {
 /// to compile because Foo does not support the AddRef() and Release() methods.
 ///
 template <typename T>
-inline cef_internal::UnretainedWrapper<T> Unretained(T *o) {
+inline cef_internal::UnretainedWrapper<T> Unretained(T* o) {
   return cef_internal::UnretainedWrapper<T>(o);
 }
 
@@ -199,7 +199,7 @@ inline cef_internal::UnretainedWrapper<T> Unretained(T *o) {
 /// </pre>
 ///
 template <typename T>
-inline cef_internal::RetainedRefWrapper<T> RetainedRef(T *o) {
+inline cef_internal::RetainedRefWrapper<T> RetainedRef(T* o) {
   return cef_internal::RetainedRefWrapper<T>(o);
 }
 template <typename T>
@@ -231,13 +231,14 @@ inline cef_internal::RetainedRefWrapper<T> RetainedRef(scoped_refptr<T> o) {
 /// Without Owned(), someone would have to know to delete |pn| when the last
 /// reference to the callback is deleted.
 ///
-template <typename T> inline cef_internal::OwnedWrapper<T> Owned(T *o) {
+template <typename T>
+inline cef_internal::OwnedWrapper<T> Owned(T* o) {
   return cef_internal::OwnedWrapper<T>(o);
 }
 
 template <typename T, typename Deleter>
-inline cef_internal::OwnedWrapper<T, Deleter>
-Owned(std::unique_ptr<T, Deleter> &&ptr) {
+inline cef_internal::OwnedWrapper<T, Deleter> Owned(
+    std::unique_ptr<T, Deleter>&& ptr) {
   return cef_internal::OwnedWrapper<T, Deleter>(std::move(ptr));
 }
 
@@ -274,7 +275,7 @@ Owned(std::unique_ptr<T, Deleter> &&ptr) {
 /// an object owned by the callback.
 ///
 template <typename T>
-cef_internal::OwnedRefWrapper<std::decay_t<T>> OwnedRef(T &&t) {
+cef_internal::OwnedRefWrapper<std::decay_t<T>> OwnedRef(T&& t) {
   return cef_internal::OwnedRefWrapper<std::decay_t<T>>(std::forward<T>(t));
 }
 
@@ -325,11 +326,12 @@ cef_internal::OwnedRefWrapper<std::decay_t<T>> OwnedRef(T &&t) {
 /// T&.
 ///
 template <typename T,
-          std::enable_if_t<!std::is_lvalue_reference<T>::value> * = nullptr>
-inline cef_internal::PassedWrapper<T> Passed(T &&scoper) {
+          std::enable_if_t<!std::is_lvalue_reference<T>::value>* = nullptr>
+inline cef_internal::PassedWrapper<T> Passed(T&& scoper) {
   return cef_internal::PassedWrapper<T>(std::move(scoper));
 }
-template <typename T> inline cef_internal::PassedWrapper<T> Passed(T *scoper) {
+template <typename T>
+inline cef_internal::PassedWrapper<T> Passed(T* scoper) {
   return cef_internal::PassedWrapper<T>(std::move(*scoper));
 }
 
@@ -379,10 +381,10 @@ base::mac::ScopedBlock<R (^)(Args...)> RetainBlock(R (^block)(Args...)) {
                                                 base::scoped_policy::RETAIN);
 }
 
-#endif // defined(OS_APPLE) && !HAS_FEATURE(objc_arc)
+#endif  // defined(OS_APPLE) && !HAS_FEATURE(objc_arc)
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_BIND_H_
+#endif  // CEF_INCLUDE_BASE_CEF_BIND_H_

@@ -52,7 +52,7 @@ class CefView;
 ///
 /*--cef(source=library)--*/
 class CefBoxLayout : public CefLayout {
-public:
+ public:
   ///
   /// Set the flex weight for the given |view|. Using the preferred size as
   /// the basis, free space along the main axis is distributed to views in the
@@ -71,4 +71,4 @@ public:
   virtual void ClearFlexForView(CefRefPtr<CefView> view) = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_BOX_LAYOUT_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_BOX_LAYOUT_H_

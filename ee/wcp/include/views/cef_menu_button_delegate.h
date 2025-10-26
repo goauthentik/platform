@@ -55,7 +55,7 @@ class CefMenuButtonPressedLock : public CefBaseRefCounted {};
 ///
 /*--cef(source=client)--*/
 class CefMenuButtonDelegate : public CefButtonDelegate {
-public:
+ public:
   ///
   /// Called when |button| is pressed. Call CefMenuButton::ShowMenu() to show a
   /// popup menu at |screen_point|. When showing a custom popup such as a window
@@ -64,8 +64,9 @@ public:
   ///
   /*--cef()--*/
   virtual void OnMenuButtonPressed(
-      CefRefPtr<CefMenuButton> menu_button, const CefPoint &screen_point,
+      CefRefPtr<CefMenuButton> menu_button,
+      const CefPoint& screen_point,
       CefRefPtr<CefMenuButtonPressedLock> button_pressed_lock) = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_MENU_BUTTON_DELEGATE_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_MENU_BUTTON_DELEGATE_H_

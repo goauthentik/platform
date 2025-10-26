@@ -49,7 +49,7 @@ class CefMenuModel;
 ///
 /*--cef(source=client)--*/
 class CefMenuModelDelegate : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Perform the action associated with the specified |command_id| and
   /// optional |event_flags|.
@@ -65,7 +65,7 @@ public:
   ///
   /*--cef()--*/
   virtual void MouseOutsideMenu(CefRefPtr<CefMenuModel> menu_model,
-                                const CefPoint &screen_point) {}
+                                const CefPoint& screen_point) {}
 
   ///
   /// Called on unhandled open submenu keyboard commands. |is_rtl| will be true
@@ -100,9 +100,9 @@ public:
   ///
   /*--cef()--*/
   virtual bool FormatLabel(CefRefPtr<CefMenuModel> menu_model,
-                           CefString &label) {
+                           CefString& label) {
     return false;
   }
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_MENU_MODEL_DELEGATE_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_MENU_MODEL_DELEGATE_H_

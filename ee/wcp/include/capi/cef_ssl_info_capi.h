@@ -67,13 +67,13 @@ typedef struct _cef_sslinfo_t {
   /// Returns a bitmask containing any and all problems verifying the server
   /// certificate.
   ///
-  cef_cert_status_t(CEF_CALLBACK *get_cert_status)(struct _cef_sslinfo_t *self);
+  cef_cert_status_t(CEF_CALLBACK* get_cert_status)(struct _cef_sslinfo_t* self);
 
   ///
   /// Returns the X.509 certificate.
   ///
-  struct _cef_x509_certificate_t *(CEF_CALLBACK *get_x509_certificate)(
-      struct _cef_sslinfo_t *self);
+  struct _cef_x509_certificate_t*(CEF_CALLBACK* get_x509_certificate)(
+      struct _cef_sslinfo_t* self);
 } cef_sslinfo_t;
 
 ///
@@ -85,4 +85,4 @@ CEF_EXPORT int cef_is_cert_status_error(cef_cert_status_t status);
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_SSL_INFO_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_SSL_INFO_CAPI_H_

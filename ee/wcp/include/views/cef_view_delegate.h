@@ -50,7 +50,7 @@ class CefView;
 ///
 /*--cef(source=client)--*/
 class CefViewDelegate : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Return the preferred size for |view|. The Layout will use this information
   /// to determine the display size.
@@ -91,7 +91,8 @@ public:
   /// modify the view hierarchy in this callback.
   ///
   /*--cef()--*/
-  virtual void OnParentViewChanged(CefRefPtr<CefView> view, bool added,
+  virtual void OnParentViewChanged(CefRefPtr<CefView> view,
+                                   bool added,
                                    CefRefPtr<CefView> parent) {}
 
   ///
@@ -102,7 +103,8 @@ public:
   /// sent to the new parent. Do not modify the view hierarchy in this callback.
   ///
   /*--cef()--*/
-  virtual void OnChildViewChanged(CefRefPtr<CefView> view, bool added,
+  virtual void OnChildViewChanged(CefRefPtr<CefView> view,
+                                  bool added,
                                   CefRefPtr<CefView> child) {}
 
   ///
@@ -116,7 +118,7 @@ public:
   ///
   /*--cef()--*/
   virtual void OnLayoutChanged(CefRefPtr<CefView> view,
-                               const CefRect &new_bounds) {}
+                               const CefRect& new_bounds) {}
 
   ///
   /// Called when |view| gains focus.
@@ -152,4 +154,4 @@ public:
   virtual void OnThemeChanged(CefRefPtr<CefView> view) {}
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_WINDOW_DELEGATE_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_WINDOW_DELEGATE_H_

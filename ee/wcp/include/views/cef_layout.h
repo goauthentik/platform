@@ -50,7 +50,7 @@ class CefFillLayout;
 ///
 /*--cef(source=library)--*/
 class CefLayout : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns this Layout as a BoxLayout or NULL if this is not a BoxLayout.
   ///
@@ -70,4 +70,4 @@ public:
   virtual bool IsValid() = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_LAYOUT_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_LAYOUT_H_

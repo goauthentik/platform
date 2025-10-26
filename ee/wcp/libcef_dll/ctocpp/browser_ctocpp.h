@@ -32,7 +32,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefBrowserCToCpp
     : public CefCToCppRefCounted<CefBrowserCToCpp, CefBrowser, cef_browser_t> {
-public:
+ public:
   CefBrowserCToCpp();
   virtual ~CefBrowserCToCpp();
 
@@ -53,15 +53,15 @@ public:
   bool HasDocument() override;
   CefRefPtr<CefFrame> GetMainFrame() override;
   CefRefPtr<CefFrame> GetFocusedFrame() override;
-  CefRefPtr<CefFrame>
-  GetFrameByIdentifier(const CefString &identifier) override;
-  CefRefPtr<CefFrame> GetFrameByName(const CefString &name) override;
+  CefRefPtr<CefFrame> GetFrameByIdentifier(
+      const CefString& identifier) override;
+  CefRefPtr<CefFrame> GetFrameByName(const CefString& name) override;
   size_t GetFrameCount() override;
-  void GetFrameIdentifiers(std::vector<CefString> &identifiers) override;
-  void GetFrameNames(std::vector<CefString> &names) override;
+  void GetFrameIdentifiers(std::vector<CefString>& identifiers) override;
+  void GetFrameNames(std::vector<CefString>& names) override;
 };
 
 constexpr auto CefBrowserCToCpp_Wrap = CefBrowserCToCpp::Wrap;
 constexpr auto CefBrowserCToCpp_Unwrap = CefBrowserCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

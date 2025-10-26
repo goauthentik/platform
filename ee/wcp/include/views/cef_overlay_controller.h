@@ -52,7 +52,7 @@ class CefWindow;
 ///
 /*--cef(source=library)--*/
 class CefOverlayController : public CefBaseRefCounted {
-public:
+ public:
   ///
   /// Returns true if this object is valid.
   ///
@@ -101,7 +101,7 @@ public:
   /// re-position the overlay if necessary.
   ///
   /*--cef()--*/
-  virtual void SetBounds(const CefRect &bounds) = 0;
+  virtual void SetBounds(const CefRect& bounds) = 0;
 
   ///
   /// Returns the bounds (size and position) of this overlay in parent
@@ -128,7 +128,7 @@ public:
   /// re-position the overlay if necessary.
   ///
   /*--cef()--*/
-  virtual void SetSize(const CefSize &size) = 0;
+  virtual void SetSize(const CefSize& size) = 0;
 
   ///
   /// Returns the size of this overlay in parent coordinates.
@@ -146,7 +146,7 @@ public:
   /// the overlay if necessary.
   ///
   /*--cef()--*/
-  virtual void SetPosition(const CefPoint &position) = 0;
+  virtual void SetPosition(const CefPoint& position) = 0;
 
   ///
   /// Returns the position of this overlay in parent coordinates.
@@ -160,7 +160,7 @@ public:
   /// CEF_DOCKING_MODE_CUSTOM.
   ///
   /*--cef()--*/
-  virtual void SetInsets(const CefInsets &insets) = 0;
+  virtual void SetInsets(const CefInsets& insets) = 0;
 
   ///
   /// Returns the insets for this overlay in parent coordinates.
@@ -207,4 +207,4 @@ public:
   virtual bool IsDrawn() = 0;
 };
 
-#endif // CEF_INCLUDE_VIEWS_CEF_OVERLAY_CONTROLLER_H_
+#endif  // CEF_INCLUDE_VIEWS_CEF_OVERLAY_CONTROLLER_H_

@@ -48,15 +48,16 @@
 /// Returns false if one of the URLs is empty or invalid.
 ///
 /*--cef()--*/
-bool CefResolveURL(const CefString &base_url, const CefString &relative_url,
-                   CefString &resolved_url);
+bool CefResolveURL(const CefString& base_url,
+                   const CefString& relative_url,
+                   CefString& resolved_url);
 
 ///
 /// Parse the specified |url| into its component parts.
 /// Returns false if the URL is empty or invalid.
 ///
 /*--cef()--*/
-bool CefParseURL(const CefString &url, CefURLParts &parts);
+bool CefParseURL(const CefString& url, CefURLParts& parts);
 
 ///
 /// Creates a URL from the specified |parts|, which must contain a non-empty
@@ -64,7 +65,7 @@ bool CefParseURL(const CefString &url, CefURLParts &parts);
 /// Returns false if |parts| isn't initialized as described.
 ///
 /*--cef()--*/
-bool CefCreateURL(const CefURLParts &parts, CefString &url);
+bool CefCreateURL(const CefURLParts& parts, CefString& url);
 
 ///
 /// This is a convenience function for formatting a URL in a concise and human-
@@ -77,14 +78,14 @@ bool CefCreateURL(const CefURLParts &parts, CefString &url);
 /// not use this for URLs which will be parsed or sent to other applications.
 ///
 /*--cef(optional_param=languages)--*/
-CefString CefFormatUrlForSecurityDisplay(const CefString &origin_url);
+CefString CefFormatUrlForSecurityDisplay(const CefString& origin_url);
 
 ///
 /// Returns the mime type for the specified file extension or an empty string if
 /// unknown.
 ///
 /*--cef()--*/
-CefString CefGetMimeType(const CefString &extension);
+CefString CefGetMimeType(const CefString& extension);
 
 ///
 /// Get the extensions associated with the given mime type. This should be
@@ -93,21 +94,21 @@ CefString CefGetMimeType(const CefString &extension);
 /// Any existing elements in the provided vector will not be erased.
 ///
 /*--cef()--*/
-void CefGetExtensionsForMimeType(const CefString &mime_type,
-                                 std::vector<CefString> &extensions);
+void CefGetExtensionsForMimeType(const CefString& mime_type,
+                                 std::vector<CefString>& extensions);
 
 ///
 /// Encodes |data| as a base64 string.
 ///
 /*--cef()--*/
-CefString CefBase64Encode(const void *data, size_t data_size);
+CefString CefBase64Encode(const void* data, size_t data_size);
 
 ///
 /// Decodes the base64 encoded string |data|. The returned value will be NULL if
 /// the decoding fails.
 ///
 /*--cef()--*/
-CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString &data);
+CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString& data);
 
 ///
 /// Escapes characters in |text| which are unsuitable for use as a query
@@ -116,7 +117,7 @@ CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString &data);
 /// result is basically the same as encodeURIComponent in Javacript.
 ///
 /*--cef()--*/
-CefString CefURIEncode(const CefString &text, bool use_plus);
+CefString CefURIEncode(const CefString& text, bool use_plus);
 
 ///
 /// Unescapes |text| and returns the result. Unescaping consists of looking for
@@ -129,7 +130,8 @@ CefString CefURIEncode(const CefString &text, bool use_plus);
 /// supports further customization the decoding process.
 ///
 /*--cef()--*/
-CefString CefURIDecode(const CefString &text, bool convert_to_utf8,
+CefString CefURIDecode(const CefString& text,
+                       bool convert_to_utf8,
                        cef_uri_unescape_rule_t unescape_rule);
 
 ///
@@ -137,7 +139,7 @@ CefString CefURIDecode(const CefString &text, bool convert_to_utf8,
 /// representation. If JSON parsing fails this method returns NULL.
 ///
 /*--cef()--*/
-CefRefPtr<CefValue> CefParseJSON(const CefString &json_string,
+CefRefPtr<CefValue> CefParseJSON(const CefString& json_string,
                                  cef_json_parser_options_t options);
 
 ///
@@ -146,7 +148,8 @@ CefRefPtr<CefValue> CefParseJSON(const CefString &json_string,
 /// method returns NULL.
 ///
 /*--cef(capi_name=cef_parse_json_buffer)--*/
-CefRefPtr<CefValue> CefParseJSON(const void *json, size_t json_size,
+CefRefPtr<CefValue> CefParseJSON(const void* json,
+                                 size_t json_size,
                                  cef_json_parser_options_t options);
 
 ///
@@ -155,10 +158,10 @@ CefRefPtr<CefValue> CefParseJSON(const void *json, size_t json_size,
 /// |error_msg_out| with a formatted error message.
 ///
 /*--cef()--*/
-CefRefPtr<CefValue>
-CefParseJSONAndReturnError(const CefString &json_string,
-                           cef_json_parser_options_t options,
-                           CefString &error_msg_out);
+CefRefPtr<CefValue> CefParseJSONAndReturnError(
+    const CefString& json_string,
+    cef_json_parser_options_t options,
+    CefString& error_msg_out);
 
 ///
 /// Generates a JSON string from the specified root |node| which should be a
@@ -169,4 +172,4 @@ CefParseJSONAndReturnError(const CefString &json_string,
 CefString CefWriteJSON(CefRefPtr<CefValue> node,
                        cef_json_writer_options_t options);
 
-#endif // CEF_INCLUDE_CEF_PARSER_H_
+#endif  // CEF_INCLUDE_CEF_PARSER_H_

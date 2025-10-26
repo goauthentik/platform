@@ -80,10 +80,11 @@ typedef struct _cef_resource_request_handler_t {
   /// cef_cookie_access_filter_t object. The |request| object cannot not be
   /// modified in this callback.
   ///
-  struct _cef_cookie_access_filter_t *(CEF_CALLBACK *get_cookie_access_filter)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request);
+  struct _cef_cookie_access_filter_t*(CEF_CALLBACK* get_cookie_access_filter)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request);
 
   ///
   /// Called on the IO thread before a resource request is loaded. The |browser|
@@ -96,10 +97,12 @@ typedef struct _cef_resource_request_handler_t {
   /// the request asynchronously. Return RV_CANCEL to cancel the request
   /// immediately.
   ///
-  cef_return_value_t(CEF_CALLBACK *on_before_resource_load)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request, struct _cef_callback_t *callback);
+  cef_return_value_t(CEF_CALLBACK* on_before_resource_load)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      struct _cef_callback_t* callback);
 
   ///
   /// Called on the IO thread before a resource is loaded. The |browser| and
@@ -109,10 +112,11 @@ typedef struct _cef_resource_request_handler_t {
   /// specify a handler for the resource return a cef_resource_handler_t object.
   /// The |request| object cannot not be modified in this callback.
   ///
-  struct _cef_resource_handler_t *(CEF_CALLBACK *get_resource_handler)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request);
+  struct _cef_resource_handler_t*(CEF_CALLBACK* get_resource_handler)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request);
 
   ///
   /// Called on the IO thread when a resource load is redirected. The |browser|
@@ -124,11 +128,13 @@ typedef struct _cef_resource_request_handler_t {
   /// and can be changed if desired. The |request| and |response| objects cannot
   /// be modified in this callback.
   ///
-  void(CEF_CALLBACK *on_resource_redirect)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request, struct _cef_response_t *response,
-      cef_string_t *new_url);
+  void(CEF_CALLBACK* on_resource_redirect)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      struct _cef_response_t* response,
+      cef_string_t* new_url);
 
   ///
   /// Called on the IO thread when a resource response is received. The
@@ -144,10 +150,12 @@ typedef struct _cef_resource_request_handler_t {
   /// WARNING: Redirecting using this function is deprecated. Use
   /// OnBeforeResourceLoad or GetResourceHandler to perform redirects.
   ///
-  int(CEF_CALLBACK *on_resource_response)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request, struct _cef_response_t *response);
+  int(CEF_CALLBACK* on_resource_response)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      struct _cef_response_t* response);
 
   ///
   /// Called on the IO thread to optionally filter resource response content.
@@ -156,10 +164,12 @@ typedef struct _cef_resource_request_handler_t {
   /// cef_urlrequest_t. |request| and |response| represent the request and
   /// response respectively and cannot be modified in this callback.
   ///
-  struct _cef_response_filter_t *(CEF_CALLBACK *get_resource_response_filter)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request, struct _cef_response_t *response);
+  struct _cef_response_filter_t*(CEF_CALLBACK* get_resource_response_filter)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      struct _cef_response_t* response);
 
   ///
   /// Called on the IO thread when a resource load has completed. The |browser|
@@ -177,11 +187,14 @@ typedef struct _cef_resource_request_handler_t {
   /// or |frame| functions that modify state (like LoadURL, SendProcessMessage,
   /// etc.) if the frame is invalid.
   ///
-  void(CEF_CALLBACK *on_resource_load_complete)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request, struct _cef_response_t *response,
-      cef_urlrequest_status_t status, int64_t received_content_length);
+  void(CEF_CALLBACK* on_resource_load_complete)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      struct _cef_response_t* response,
+      cef_urlrequest_status_t status,
+      int64_t received_content_length);
 
   ///
   /// Called on the IO thread to handle requests for URLs with an unknown
@@ -193,10 +206,12 @@ typedef struct _cef_resource_request_handler_t {
   /// USE THIS METHOD TO ENFORCE RESTRICTIONS BASED ON SCHEME, HOST OR OTHER URL
   /// ANALYSIS BEFORE ALLOWING OS EXECUTION.
   ///
-  void(CEF_CALLBACK *on_protocol_execution)(
-      struct _cef_resource_request_handler_t *self,
-      struct _cef_browser_t *browser, struct _cef_frame_t *frame,
-      struct _cef_request_t *request, int *allow_os_execution);
+  void(CEF_CALLBACK* on_protocol_execution)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      int* allow_os_execution);
 } cef_resource_request_handler_t;
 
 ///
@@ -219,11 +234,11 @@ typedef struct _cef_cookie_access_filter_t {
   /// |request| cannot be modified in this callback. Return true (1) if the
   /// specified cookie can be sent with the request or false (0) otherwise.
   ///
-  int(CEF_CALLBACK *can_send_cookie)(struct _cef_cookie_access_filter_t *self,
-                                     struct _cef_browser_t *browser,
-                                     struct _cef_frame_t *frame,
-                                     struct _cef_request_t *request,
-                                     const struct _cef_cookie_t *cookie);
+  int(CEF_CALLBACK* can_send_cookie)(struct _cef_cookie_access_filter_t* self,
+                                     struct _cef_browser_t* browser,
+                                     struct _cef_frame_t* frame,
+                                     struct _cef_request_t* request,
+                                     const struct _cef_cookie_t* cookie);
 
   ///
   /// Called on the IO thread after a resource response is received. The
@@ -233,16 +248,16 @@ typedef struct _cef_cookie_access_filter_t {
   /// specified cookie returned with the response can be saved or false (0)
   /// otherwise.
   ///
-  int(CEF_CALLBACK *can_save_cookie)(struct _cef_cookie_access_filter_t *self,
-                                     struct _cef_browser_t *browser,
-                                     struct _cef_frame_t *frame,
-                                     struct _cef_request_t *request,
-                                     struct _cef_response_t *response,
-                                     const struct _cef_cookie_t *cookie);
+  int(CEF_CALLBACK* can_save_cookie)(struct _cef_cookie_access_filter_t* self,
+                                     struct _cef_browser_t* browser,
+                                     struct _cef_frame_t* frame,
+                                     struct _cef_request_t* request,
+                                     struct _cef_response_t* response,
+                                     const struct _cef_cookie_t* cookie);
 } cef_cookie_access_filter_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_RESOURCE_REQUEST_HANDLER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_RESOURCE_REQUEST_HANDLER_CAPI_H_

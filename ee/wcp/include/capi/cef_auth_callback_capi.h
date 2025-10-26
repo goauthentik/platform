@@ -65,18 +65,18 @@ typedef struct _cef_auth_callback_t {
   ///
   /// Continue the authentication request.
   ///
-  void(CEF_CALLBACK *cont)(struct _cef_auth_callback_t *self,
-                           const cef_string_t *username,
-                           const cef_string_t *password);
+  void(CEF_CALLBACK* cont)(struct _cef_auth_callback_t* self,
+                           const cef_string_t* username,
+                           const cef_string_t* password);
 
   ///
   /// Cancel the authentication request.
   ///
-  void(CEF_CALLBACK *cancel)(struct _cef_auth_callback_t *self);
+  void(CEF_CALLBACK* cancel)(struct _cef_auth_callback_t* self);
 } cef_auth_callback_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_

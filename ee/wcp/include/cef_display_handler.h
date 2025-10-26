@@ -48,28 +48,28 @@
 ///
 /*--cef(source=client)--*/
 class CefDisplayHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Called when a frame's address has changed.
   ///
   /*--cef()--*/
   virtual void OnAddressChange(CefRefPtr<CefBrowser> browser,
                                CefRefPtr<CefFrame> frame,
-                               const CefString &url) {}
+                               const CefString& url) {}
 
   ///
   /// Called when the page title changes.
   ///
   /*--cef(optional_param=title)--*/
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
-                             const CefString &title) {}
+                             const CefString& title) {}
 
   ///
   /// Called when the page icon changes.
   ///
   /*--cef(optional_param=icon_urls)--*/
   virtual void OnFaviconURLChange(CefRefPtr<CefBrowser> browser,
-                                  const std::vector<CefString> &icon_urls) {}
+                                  const std::vector<CefString>& icon_urls) {}
 
   ///
   /// Called when web content in the page has toggled fullscreen mode. If
@@ -95,7 +95,7 @@ public:
   /// drawing tooltips and the return value is ignored.
   ///
   /*--cef(optional_param=text)--*/
-  virtual bool OnTooltip(CefRefPtr<CefBrowser> browser, CefString &text) {
+  virtual bool OnTooltip(CefRefPtr<CefBrowser> browser, CefString& text) {
     return false;
   }
 
@@ -105,7 +105,7 @@ public:
   ///
   /*--cef(optional_param=value)--*/
   virtual void OnStatusMessage(CefRefPtr<CefBrowser> browser,
-                               const CefString &value) {}
+                               const CefString& value) {}
 
   ///
   /// Called to display a console message. Return true to stop the message from
@@ -114,8 +114,9 @@ public:
   /*--cef(optional_param=message,optional_param=source)--*/
   virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
                                 cef_log_severity_t level,
-                                const CefString &message,
-                                const CefString &source, int line) {
+                                const CefString& message,
+                                const CefString& source,
+                                int line) {
     return false;
   }
 
@@ -127,7 +128,7 @@ public:
   ///
   /*--cef()--*/
   virtual bool OnAutoResize(CefRefPtr<CefBrowser> browser,
-                            const CefSize &new_size) {
+                            const CefSize& new_size) {
     return false;
   }
 
@@ -147,8 +148,9 @@ public:
   ///
   /*--cef()--*/
   virtual bool OnCursorChange(CefRefPtr<CefBrowser> browser,
-                              CefCursorHandle cursor, cef_cursor_type_t type,
-                              const CefCursorInfo &custom_cursor_info) {
+                              CefCursorHandle cursor,
+                              cef_cursor_type_t type,
+                              const CefCursorInfo& custom_cursor_info) {
     return false;
   }
 
@@ -162,4 +164,4 @@ public:
                                    bool has_audio_access) {}
 };
 
-#endif // CEF_INCLUDE_CEF_DISPLAY_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_DISPLAY_HANDLER_H_

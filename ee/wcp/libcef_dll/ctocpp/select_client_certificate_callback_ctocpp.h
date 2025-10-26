@@ -30,7 +30,7 @@ class CefSelectClientCertificateCallbackCToCpp
     : public CefCToCppRefCounted<CefSelectClientCertificateCallbackCToCpp,
                                  CefSelectClientCertificateCallback,
                                  cef_select_client_certificate_callback_t> {
-public:
+ public:
   CefSelectClientCertificateCallbackCToCpp();
   virtual ~CefSelectClientCertificateCallbackCToCpp();
 
@@ -43,4 +43,4 @@ constexpr auto CefSelectClientCertificateCallbackCToCpp_Wrap =
 constexpr auto CefSelectClientCertificateCallbackCToCpp_Unwrap =
     CefSelectClientCertificateCallbackCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_SELECT_CLIENT_CERTIFICATE_CALLBACK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_SELECT_CLIENT_CERTIFICATE_CALLBACK_CTOCPP_H_

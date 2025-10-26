@@ -32,7 +32,7 @@ class CefX509CertPrincipalCToCpp
     : public CefCToCppRefCounted<CefX509CertPrincipalCToCpp,
                                  CefX509CertPrincipal,
                                  cef_x509_cert_principal_t> {
-public:
+ public:
   CefX509CertPrincipalCToCpp();
   virtual ~CefX509CertPrincipalCToCpp();
 
@@ -42,8 +42,8 @@ public:
   CefString GetLocalityName() override;
   CefString GetStateOrProvinceName() override;
   CefString GetCountryName() override;
-  void GetOrganizationNames(std::vector<CefString> &names) override;
-  void GetOrganizationUnitNames(std::vector<CefString> &names) override;
+  void GetOrganizationNames(std::vector<CefString>& names) override;
+  void GetOrganizationUnitNames(std::vector<CefString>& names) override;
 };
 
 constexpr auto CefX509CertPrincipalCToCpp_Wrap =
@@ -51,4 +51,4 @@ constexpr auto CefX509CertPrincipalCToCpp_Wrap =
 constexpr auto CefX509CertPrincipalCToCpp_Unwrap =
     CefX509CertPrincipalCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_X509_CERT_PRINCIPAL_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_X509_CERT_PRINCIPAL_CTOCPP_H_

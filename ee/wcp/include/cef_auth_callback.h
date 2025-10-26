@@ -46,13 +46,13 @@
 ///
 /*--cef(source=library)--*/
 class CefAuthCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Continue the authentication request.
   ///
   /*--cef(capi_name=cont,optional_param=username,optional_param=password)--*/
-  virtual void Continue(const CefString &username,
-                        const CefString &password) = 0;
+  virtual void Continue(const CefString& username,
+                        const CefString& password) = 0;
 
   ///
   /// Cancel the authentication request.
@@ -61,4 +61,4 @@ public:
   virtual void Cancel() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_AUTH_CALLBACK_H_
+#endif  // CEF_INCLUDE_CEF_AUTH_CALLBACK_H_

@@ -48,7 +48,7 @@
 ///
 /*--cef(source=library)--*/
 class CefXmlReader : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_xml_encoding_type_t EncodingType;
   typedef cef_xml_node_type_t NodeType;
 
@@ -59,7 +59,7 @@ public:
   /*--cef()--*/
   static CefRefPtr<CefXmlReader> Create(CefRefPtr<CefStreamReader> stream,
                                         EncodingType encodingType,
-                                        const CefString &URI);
+                                        const CefString& URI);
 
   ///
   /// Moves the cursor to the next node in the document. This method must be
@@ -186,15 +186,15 @@ public:
   /// Returns the value of the attribute with the specified qualified name.
   ///
   /*--cef(capi_name=get_attribute_byqname)--*/
-  virtual CefString GetAttribute(const CefString &qualifiedName) = 0;
+  virtual CefString GetAttribute(const CefString& qualifiedName) = 0;
 
   ///
   /// Returns the value of the attribute with the specified local name and
   /// namespace URI.
   ///
   /*--cef(capi_name=get_attribute_bylname)--*/
-  virtual CefString GetAttribute(const CefString &localName,
-                                 const CefString &namespaceURI) = 0;
+  virtual CefString GetAttribute(const CefString& localName,
+                                 const CefString& namespaceURI) = 0;
 
   ///
   /// Returns an XML representation of the current node's children.
@@ -231,15 +231,15 @@ public:
   /// Returns true if the cursor position was set successfully.
   ///
   /*--cef(capi_name=move_to_attribute_byqname)--*/
-  virtual bool MoveToAttribute(const CefString &qualifiedName) = 0;
+  virtual bool MoveToAttribute(const CefString& qualifiedName) = 0;
 
   ///
   /// Moves the cursor to the attribute with the specified local name and
   /// namespace URI. Returns true if the cursor position was set successfully.
   ///
   /*--cef(capi_name=move_to_attribute_bylname)--*/
-  virtual bool MoveToAttribute(const CefString &localName,
-                               const CefString &namespaceURI) = 0;
+  virtual bool MoveToAttribute(const CefString& localName,
+                               const CefString& namespaceURI) = 0;
 
   ///
   /// Moves the cursor to the first attribute in the current element. Returns
@@ -263,4 +263,4 @@ public:
   virtual bool MoveToCarryingElement() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_XML_READER_H_
+#endif  // CEF_INCLUDE_CEF_XML_READER_H_

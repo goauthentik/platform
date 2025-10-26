@@ -12,8 +12,8 @@ struct sHookData;
 
 // extern "C"
 // {
-int CEFLaunch(sHookData *pData, HWND hWnd, int nCmdShow);
-void CEFTest();
+    int CEFLaunch(sHookData* pData, HWND hWnd, int nCmdShow);
+    void CEFTest();
 // }
 
-#endif // CEF_TESTS_CEFSIMPLE_CEFSIMPLE_WIN_H_
+#endif  // CEF_TESTS_CEFSIMPLE_CEFSIMPLE_WIN_H_

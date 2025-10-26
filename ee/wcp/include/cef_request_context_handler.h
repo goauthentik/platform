@@ -52,14 +52,14 @@
 ///
 /*--cef(source=client,no_debugct_check)--*/
 class CefRequestContextHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Called on the browser process UI thread immediately after the request
   /// context has been initialized.
   ///
   /*--cef()--*/
-  virtual void
-  OnRequestContextInitialized(CefRefPtr<CefRequestContext> request_context) {}
+  virtual void OnRequestContextInitialized(
+      CefRefPtr<CefRequestContext> request_context) {}
 
   ///
   /// Called on the browser process IO thread before a resource request is
@@ -82,11 +82,15 @@ public:
   /*--cef(optional_param=browser,optional_param=frame,
           optional_param=request_initiator)--*/
   virtual CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
-      CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request, bool is_navigation, bool is_download,
-      const CefString &request_initiator, bool &disable_default_handling) {
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request,
+      bool is_navigation,
+      bool is_download,
+      const CefString& request_initiator,
+      bool& disable_default_handling) {
     return nullptr;
   }
 };
 
-#endif // CEF_INCLUDE_CEF_REQUEST_CONTEXT_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_REQUEST_CONTEXT_HANDLER_H_

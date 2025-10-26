@@ -59,4 +59,4 @@ CEF_EXPORT int cef_is_rtl(void);
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_I18N_UTIL_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_I18N_UTIL_CAPI_H_

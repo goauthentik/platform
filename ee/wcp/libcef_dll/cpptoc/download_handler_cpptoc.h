@@ -27,9 +27,10 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefDownloadHandlerCppToC
-    : public CefCppToCRefCounted<CefDownloadHandlerCppToC, CefDownloadHandler,
+    : public CefCppToCRefCounted<CefDownloadHandlerCppToC,
+                                 CefDownloadHandler,
                                  cef_download_handler_t> {
-public:
+ public:
   CefDownloadHandlerCppToC();
   virtual ~CefDownloadHandlerCppToC();
 };
@@ -38,4 +39,4 @@ constexpr auto CefDownloadHandlerCppToC_Wrap = CefDownloadHandlerCppToC::Wrap;
 constexpr auto CefDownloadHandlerCppToC_Unwrap =
     CefDownloadHandlerCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_HANDLER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_DOWNLOAD_HANDLER_CPPTOC_H_

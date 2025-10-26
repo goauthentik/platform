@@ -30,14 +30,14 @@ class CefSharedProcessMessageBuilderCToCpp
     : public CefCToCppRefCounted<CefSharedProcessMessageBuilderCToCpp,
                                  CefSharedProcessMessageBuilder,
                                  cef_shared_process_message_builder_t> {
-public:
+ public:
   CefSharedProcessMessageBuilderCToCpp();
   virtual ~CefSharedProcessMessageBuilderCToCpp();
 
   // CefSharedProcessMessageBuilder methods.
   bool IsValid() override;
   size_t Size() override;
-  void *Memory() override;
+  void* Memory() override;
   CefRefPtr<CefProcessMessage> Build() override;
 };
 
@@ -46,4 +46,4 @@ constexpr auto CefSharedProcessMessageBuilderCToCpp_Wrap =
 constexpr auto CefSharedProcessMessageBuilderCToCpp_Unwrap =
     CefSharedProcessMessageBuilderCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_SHARED_PROCESS_MESSAGE_BUILDER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_SHARED_PROCESS_MESSAGE_BUILDER_CTOCPP_H_

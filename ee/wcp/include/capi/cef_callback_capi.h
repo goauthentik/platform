@@ -64,12 +64,12 @@ typedef struct _cef_callback_t {
   ///
   /// Continue processing.
   ///
-  void(CEF_CALLBACK *cont)(struct _cef_callback_t *self);
+  void(CEF_CALLBACK* cont)(struct _cef_callback_t* self);
 
   ///
   /// Cancel processing.
   ///
-  void(CEF_CALLBACK *cancel)(struct _cef_callback_t *self);
+  void(CEF_CALLBACK* cancel)(struct _cef_callback_t* self);
 } cef_callback_t;
 
 ///
@@ -86,11 +86,11 @@ typedef struct _cef_completion_callback_t {
   ///
   /// Method that will be called once the task is complete.
   ///
-  void(CEF_CALLBACK *on_complete)(struct _cef_completion_callback_t *self);
+  void(CEF_CALLBACK* on_complete)(struct _cef_completion_callback_t* self);
 } cef_completion_callback_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_CALLBACK_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_CALLBACK_CAPI_H_

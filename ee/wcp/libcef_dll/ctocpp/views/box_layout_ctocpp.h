@@ -28,10 +28,10 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefBoxLayoutCToCpp
-    : public CefCToCppRefCounted<CefBoxLayoutCToCpp, CefBoxLayout,
-                                 cef_box_layout_t> {
-public:
+class CefBoxLayoutCToCpp : public CefCToCppRefCounted<CefBoxLayoutCToCpp,
+                                                      CefBoxLayout,
+                                                      cef_box_layout_t> {
+ public:
   CefBoxLayoutCToCpp();
   virtual ~CefBoxLayoutCToCpp();
 
@@ -48,4 +48,4 @@ public:
 constexpr auto CefBoxLayoutCToCpp_Wrap = CefBoxLayoutCToCpp::Wrap;
 constexpr auto CefBoxLayoutCToCpp_Unwrap = CefBoxLayoutCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BOX_LAYOUT_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BOX_LAYOUT_CTOCPP_H_

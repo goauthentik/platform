@@ -49,7 +49,7 @@
 ///
 /*--cef(source=client)--*/
 class CefFocusHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   typedef cef_focus_source_t FocusSource;
 
   ///
@@ -78,4 +78,4 @@ public:
   virtual void OnGotFocus(CefRefPtr<CefBrowser> browser) {}
 };
 
-#endif // CEF_INCLUDE_CEF_FOCUS_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_FOCUS_HANDLER_H_

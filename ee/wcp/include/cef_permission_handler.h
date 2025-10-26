@@ -47,7 +47,7 @@
 ///
 /*--cef(source=library)--*/
 class CefMediaAccessCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Call to allow or deny media access. If this callback was initiated in
   /// response to a getUserMedia (indicated by
@@ -71,7 +71,7 @@ public:
 ///
 /*--cef(source=library)--*/
 class CefPermissionPromptCallback : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Complete the permissions request with the specified |result|.
   ///
@@ -85,7 +85,7 @@ public:
 ///
 /*--cef(source=client)--*/
 class CefPermissionHandler : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Called when a page requests permission to access media.
   /// |requesting_origin| is the URL origin requesting permission.
@@ -101,8 +101,10 @@ public:
   ///
   /*--cef()--*/
   virtual bool OnRequestMediaAccessPermission(
-      CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-      const CefString &requesting_origin, uint32_t requested_permissions,
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      const CefString& requesting_origin,
+      uint32_t requested_permissions,
       CefRefPtr<CefMediaAccessCallback> callback) {
     return false;
   }
@@ -119,11 +121,12 @@ public:
   /// CEF_PERMISSION_RESULT_IGNORE.
   ///
   /*--cef()--*/
-  virtual bool
-  OnShowPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64_t prompt_id,
-                         const CefString &requesting_origin,
-                         uint32_t requested_permissions,
-                         CefRefPtr<CefPermissionPromptCallback> callback) {
+  virtual bool OnShowPermissionPrompt(
+      CefRefPtr<CefBrowser> browser,
+      uint64_t prompt_id,
+      const CefString& requesting_origin,
+      uint32_t requested_permissions,
+      CefRefPtr<CefPermissionPromptCallback> callback) {
     return false;
   }
 
@@ -137,9 +140,10 @@ public:
   /// returned false for |prompt_id|.
   ///
   /*--cef()--*/
-  virtual void
-  OnDismissPermissionPrompt(CefRefPtr<CefBrowser> browser, uint64_t prompt_id,
-                            cef_permission_request_result_t result) {}
+  virtual void OnDismissPermissionPrompt(
+      CefRefPtr<CefBrowser> browser,
+      uint64_t prompt_id,
+      cef_permission_request_result_t result) {}
 };
 
-#endif // CEF_INCLUDE_CEF_PERMISSION_HANDLER_H_
+#endif  // CEF_INCLUDE_CEF_PERMISSION_HANDLER_H_

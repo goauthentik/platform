@@ -68,43 +68,43 @@ typedef struct _cef_button_t {
   ///
   /// Returns this Button as a LabelButton or NULL if this is not a LabelButton.
   ///
-  struct _cef_label_button_t *(CEF_CALLBACK *as_label_button)(
-      struct _cef_button_t *self);
+  struct _cef_label_button_t*(CEF_CALLBACK* as_label_button)(
+      struct _cef_button_t* self);
 
   ///
   /// Sets the current display state of the Button.
   ///
-  void(CEF_CALLBACK *set_state)(struct _cef_button_t *self,
+  void(CEF_CALLBACK* set_state)(struct _cef_button_t* self,
                                 cef_button_state_t state);
 
   ///
   /// Returns the current display state of the Button.
   ///
-  cef_button_state_t(CEF_CALLBACK *get_state)(struct _cef_button_t *self);
+  cef_button_state_t(CEF_CALLBACK* get_state)(struct _cef_button_t* self);
 
   ///
   /// Sets the Button will use an ink drop effect for displaying state changes.
   ///
-  void(CEF_CALLBACK *set_ink_drop_enabled)(struct _cef_button_t *self,
+  void(CEF_CALLBACK* set_ink_drop_enabled)(struct _cef_button_t* self,
                                            int enabled);
 
   ///
   /// Sets the tooltip text that will be displayed when the user hovers the
   /// mouse cursor over the Button.
   ///
-  void(CEF_CALLBACK *set_tooltip_text)(struct _cef_button_t *self,
-                                       const cef_string_t *tooltip_text);
+  void(CEF_CALLBACK* set_tooltip_text)(struct _cef_button_t* self,
+                                       const cef_string_t* tooltip_text);
 
   ///
   /// Sets the accessible name that will be exposed to assistive technology
   /// (AT).
   ///
-  void(CEF_CALLBACK *set_accessible_name)(struct _cef_button_t *self,
-                                          const cef_string_t *name);
+  void(CEF_CALLBACK* set_accessible_name)(struct _cef_button_t* self,
+                                          const cef_string_t* name);
 } cef_button_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_VIEWS_CEF_BUTTON_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_VIEWS_CEF_BUTTON_CAPI_H_

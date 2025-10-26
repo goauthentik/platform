@@ -29,9 +29,10 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefWindowDelegateCppToC
-    : public CefCppToCRefCounted<CefWindowDelegateCppToC, CefWindowDelegate,
+    : public CefCppToCRefCounted<CefWindowDelegateCppToC,
+                                 CefWindowDelegate,
                                  cef_window_delegate_t> {
-public:
+ public:
   CefWindowDelegateCppToC();
   virtual ~CefWindowDelegateCppToC();
 };
@@ -39,4 +40,4 @@ public:
 constexpr auto CefWindowDelegateCppToC_Wrap = CefWindowDelegateCppToC::Wrap;
 constexpr auto CefWindowDelegateCppToC_Unwrap = CefWindowDelegateCppToC::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_VIEWS_WINDOW_DELEGATE_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_VIEWS_WINDOW_DELEGATE_CPPTOC_H_

@@ -30,7 +30,7 @@ class CefPrintDialogCallbackCToCpp
     : public CefCToCppRefCounted<CefPrintDialogCallbackCToCpp,
                                  CefPrintDialogCallback,
                                  cef_print_dialog_callback_t> {
-public:
+ public:
   CefPrintDialogCallbackCToCpp();
   virtual ~CefPrintDialogCallbackCToCpp();
 
@@ -44,4 +44,4 @@ constexpr auto CefPrintDialogCallbackCToCpp_Wrap =
 constexpr auto CefPrintDialogCallbackCToCpp_Unwrap =
     CefPrintDialogCallbackCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_PRINT_DIALOG_CALLBACK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_PRINT_DIALOG_CALLBACK_CTOCPP_H_

@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed wrapper-side only.
 class CefThreadCToCpp
     : public CefCToCppRefCounted<CefThreadCToCpp, CefThread, cef_thread_t> {
-public:
+ public:
   CefThreadCToCpp();
   virtual ~CefThreadCToCpp();
 
@@ -42,4 +42,4 @@ public:
 constexpr auto CefThreadCToCpp_Wrap = CefThreadCToCpp::Wrap;
 constexpr auto CefThreadCToCpp_Unwrap = CefThreadCToCpp::Unwrap;
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_THREAD_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_THREAD_CTOCPP_H_

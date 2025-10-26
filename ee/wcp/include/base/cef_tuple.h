@@ -60,7 +60,7 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 // When building CEF include the Chromium header directly.
 #include "base/tuple.h"
-#else // !USING_CHROMIUM_INCLUDES
+#else  // !USING_CHROMIUM_INCLUDES
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
 // updated to match.
@@ -86,13 +86,15 @@ namespace base {
 // Non-Static Dispatchers with no out params.
 
 template <typename ObjT, typename Method, typename Tuple, size_t... Ns>
-inline void DispatchToMethodImpl(const ObjT &obj, Method method, Tuple &&args,
+inline void DispatchToMethodImpl(const ObjT& obj,
+                                 Method method,
+                                 Tuple&& args,
                                  std::index_sequence<Ns...>) {
   (obj->*method)(std::get<Ns>(std::forward<Tuple>(args))...);
 }
 
 template <typename ObjT, typename Method, typename Tuple>
-inline void DispatchToMethod(const ObjT &obj, Method method, Tuple &&args) {
+inline void DispatchToMethod(const ObjT& obj, Method method, Tuple&& args) {
   constexpr size_t size = std::tuple_size<std::decay_t<Tuple>>::value;
   DispatchToMethodImpl(obj, method, std::forward<Tuple>(args),
                        std::make_index_sequence<size>());
@@ -101,13 +103,14 @@ inline void DispatchToMethod(const ObjT &obj, Method method, Tuple &&args) {
 // Static Dispatchers with no out params.
 
 template <typename Function, typename Tuple, size_t... Ns>
-inline void DispatchToFunctionImpl(Function function, Tuple &&args,
+inline void DispatchToFunctionImpl(Function function,
+                                   Tuple&& args,
                                    std::index_sequence<Ns...>) {
   (*function)(std::get<Ns>(std::forward<Tuple>(args))...);
 }
 
 template <typename Function, typename Tuple>
-inline void DispatchToFunction(Function function, Tuple &&args) {
+inline void DispatchToFunction(Function function, Tuple&& args) {
   constexpr size_t size = std::tuple_size<std::decay_t<Tuple>>::value;
   DispatchToFunctionImpl(function, std::forward<Tuple>(args),
                          std::make_index_sequence<size>());
@@ -115,18 +118,27 @@ inline void DispatchToFunction(Function function, Tuple &&args) {
 
 // Dispatchers with out parameters.
 
-template <typename ObjT, typename Method, typename InTuple, typename OutTuple,
-          size_t... InNs, size_t... OutNs>
-inline void DispatchToMethodImpl(const ObjT &obj, Method method, InTuple &&in,
-                                 OutTuple *out, std::index_sequence<InNs...>,
+template <typename ObjT,
+          typename Method,
+          typename InTuple,
+          typename OutTuple,
+          size_t... InNs,
+          size_t... OutNs>
+inline void DispatchToMethodImpl(const ObjT& obj,
+                                 Method method,
+                                 InTuple&& in,
+                                 OutTuple* out,
+                                 std::index_sequence<InNs...>,
                                  std::index_sequence<OutNs...>) {
   (obj->*method)(std::get<InNs>(std::forward<InTuple>(in))...,
                  &std::get<OutNs>(*out)...);
 }
 
 template <typename ObjT, typename Method, typename InTuple, typename OutTuple>
-inline void DispatchToMethod(const ObjT &obj, Method method, InTuple &&in,
-                             OutTuple *out) {
+inline void DispatchToMethod(const ObjT& obj,
+                             Method method,
+                             InTuple&& in,
+                             OutTuple* out) {
   constexpr size_t in_size = std::tuple_size<std::decay_t<InTuple>>::value;
   constexpr size_t out_size = std::tuple_size<OutTuple>::value;
   DispatchToMethodImpl(obj, method, std::forward<InTuple>(in), out,
@@ -134,8 +146,8 @@ inline void DispatchToMethod(const ObjT &obj, Method method, InTuple &&in,
                        std::make_index_sequence<out_size>());
 }
 
-} // namespace base
+}  // namespace base
 
-#endif // !USING_CHROMIUM_INCLUDES
+#endif  // !USING_CHROMIUM_INCLUDES
 
-#endif // CEF_INCLUDE_BASE_CEF_TUPLE_H_
+#endif  // CEF_INCLUDE_BASE_CEF_TUPLE_H_

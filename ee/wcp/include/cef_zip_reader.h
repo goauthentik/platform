@@ -47,7 +47,7 @@
 ///
 /*--cef(source=library)--*/
 class CefZipReader : public virtual CefBaseRefCounted {
-public:
+ public:
   ///
   /// Create a new CefZipReader object. The returned object's methods can only
   /// be called from the thread that created the object.
@@ -75,7 +75,7 @@ public:
   /// position was set successfully.
   ///
   /*--cef()--*/
-  virtual bool MoveToFile(const CefString &fileName, bool caseSensitive) = 0;
+  virtual bool MoveToFile(const CefString& fileName, bool caseSensitive) = 0;
 
   ///
   /// Closes the archive. This should be called directly to ensure that cleanup
@@ -109,7 +109,7 @@ public:
   /// optionally be specified.
   ///
   /*--cef(optional_param=password)--*/
-  virtual bool OpenFile(const CefString &password) = 0;
+  virtual bool OpenFile(const CefString& password) = 0;
 
   ///
   /// Closes the file.
@@ -122,7 +122,7 @@ public:
   /// an error occurred, 0 if at the end of file, or the number of bytes read.
   ///
   /*--cef()--*/
-  virtual int ReadFile(void *buffer, size_t bufferSize) = 0;
+  virtual int ReadFile(void* buffer, size_t bufferSize) = 0;
 
   ///
   /// Returns the current offset in the uncompressed file contents.
@@ -137,4 +137,4 @@ public:
   virtual bool Eof() = 0;
 };
 
-#endif // CEF_INCLUDE_CEF_ZIP_READER_H_
+#endif  // CEF_INCLUDE_CEF_ZIP_READER_H_
