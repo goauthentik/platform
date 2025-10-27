@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           path: ./bin
       - uses: ./.github/actions/apt
@@ -204,12 +204,12 @@ jobs:
             echo "component=main" >> $GITHUB_OUTPUT
           fi
       - name: Download repository
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: apt-repository
           path: ./deploy
       - name: Download packages
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: all-packages
           path: ./deploy/packages
