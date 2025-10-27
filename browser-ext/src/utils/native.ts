@@ -105,18 +105,23 @@ export class Native {
     async getApplications(profile: string): Promise<Application[]> {
         const token = await this.getToken(profile);
 
-        const response = await new CoreApi(
-            new Configuration({
-                basePath: `${token.url}/api/v3`,
-                accessToken: token.token,
-            }),
-        ).coreApplicationsList({});
-        const apps = response.results.map((app) => {
-            if (app.launchUrl && app.launchUrl.startsWith("/")) {
-                return { ...app, launchUrl: `${token.url}${app.launchUrl}` };
-            }
-            return app;
-        });
-        return apps;
+        try {
+            const response = await new CoreApi(
+                new Configuration({
+                    basePath: `${token.url}/api/v3`,
+                    accessToken: token.token,
+                }),
+            ).coreApplicationsList({});
+            const apps = response.results.map((app) => {
+                if (app.launchUrl && app.launchUrl.startsWith("/")) {
+                    return { ...app, launchUrl: `${token.url}${app.launchUrl}` };
+                }
+                return app;
+            });
+            return apps;
+        } catch (exc) {
+            console.warn(`authentik/bext: failed to get applications: ${exc}`);
+            return [];
+        }
     }
 }
