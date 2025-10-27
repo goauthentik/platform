@@ -65,7 +65,7 @@ jobs:
         run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
           path: bin/
@@ -85,7 +85,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: "${{ matrix.target }}/package-lock.json"
       - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: authentik_${{ matrix.target }}
           path: bin/
@@ -108,7 +108,7 @@ jobs:
           sudo apt-get install -y libpam0g-dev
       - run: make ${{ matrix.target }}/build
       - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: authentik_linux_${{ matrix.platform }}_${{ matrix.target }}
           path: ${{ matrix.target }}/target/debian/*.deb
@@ -179,12 +179,12 @@ jobs:
           echo "Component: ${{ steps.apt-repo.outputs.component-name }}"
           echo "Repository size: ${{ steps.apt-repo.outputs.repository-size }}"
       - name: Upload repository
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: apt-repository
           path: ${{ steps.apt-repo.outputs.repository-path }}
       - name: Upload packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: all-packages
           path: ./bin
