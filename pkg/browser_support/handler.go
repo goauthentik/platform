@@ -39,7 +39,7 @@ func (tk *response) SetInResponseTo(m native_messaging.Message) {
 }
 
 type BrowserSupport struct {
-	agentClient  *aclient.Client
+	agentClient  *aclient.AgentClient
 	systemClient *sclient.SysdClient
 	l            *native_messaging.Listener[message, *response]
 	ctx          context.Context

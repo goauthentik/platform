@@ -24,7 +24,7 @@ func (kco KubeCredentialOutput) Expiry() time.Time {
 	return kco.ExpirationTimestamp.Time
 }
 
-func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts) *KubeCredentialOutput {
+func GetCredentials(c *client.AgentClient, ctx context.Context, opts CredentialsOpts) *KubeCredentialOutput {
 	log := log.WithField("logger", "auth.kube")
 
 	res, err := c.CachedTokenExchange(ctx, &pb.TokenExchangeRequest{

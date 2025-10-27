@@ -27,7 +27,7 @@ func (vco VaultCredentialOutput) Expiry() time.Time {
 	return time.Now().Add(time.Duration(vco.LeaseDuration) * time.Second)
 }
 
-func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts) *VaultCredentialOutput {
+func GetCredentials(c *client.AgentClient, ctx context.Context, opts CredentialsOpts) *VaultCredentialOutput {
 	log := log.WithField("logger", "auth.vault")
 
 	cc := client.NewCache[VaultCredentialOutput](c, &pb.RequestHeader{

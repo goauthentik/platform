@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package ping;
+option go_package = "pkg/pb";
+option swift_prefix = "";
+
+import "google/protobuf/empty.proto";
+
+service Ping {
+  rpc Ping(google.protobuf.Empty) returns (PingResponse);
+}
+
+message PingResponse {
+  string component = 1;
+  string version = 2;
+}

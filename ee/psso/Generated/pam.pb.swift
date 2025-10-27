@@ -102,6 +102,8 @@ struct InteractiveAuthInitRequest: Sendable {
 
   var username: String = String()
 
+  var password: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -342,7 +344,7 @@ extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 
 extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthInitRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}password\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -351,6 +353,7 @@ extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._Mess
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.username) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.password) }()
       default: break
       }
     }
@@ -360,11 +363,15 @@ extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._Mess
     if !self.username.isEmpty {
       try visitor.visitSingularStringField(value: self.username, fieldNumber: 1)
     }
+    if !self.password.isEmpty {
+      try visitor.visitSingularStringField(value: self.password, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: InteractiveAuthInitRequest, rhs: InteractiveAuthInitRequest) -> Bool {
     if lhs.username != rhs.username {return false}
+    if lhs.password != rhs.password {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

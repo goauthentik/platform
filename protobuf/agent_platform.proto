@@ -5,7 +5,6 @@ option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "agent.proto";
-import "google/protobuf/empty.proto";
 
 service AgentPlatform {
   rpc SignedEndpointHeader(PlatformEndpointRequest) returns (PlatformEndpointResponse);

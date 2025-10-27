@@ -17,7 +17,7 @@ type RawCredentialOutput struct {
 	AccessToken string
 }
 
-func GetCredentials(client *client.Client, ctx context.Context, opts CredentialsOpts) *RawCredentialOutput {
+func GetCredentials(client *client.AgentClient, ctx context.Context, opts CredentialsOpts) *RawCredentialOutput {
 	log := log.WithField("logger", "auth.raw")
 
 	res, err := client.CachedTokenExchange(ctx, &pb.TokenExchangeRequest{

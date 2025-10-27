@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type Client struct {
+type AgentClient struct {
 	pb.AgentAuthClient
 	pb.AgentCacheClient
 	pb.AgentConfigClient
@@ -23,7 +23,7 @@ type Client struct {
 	conn *grpc.ClientConn
 }
 
-func New(socketPath string) (*Client, error) {
+func New(socketPath string) (*AgentClient, error) {
 	l := log.WithField("logger", "cli.grpc")
 	conn, err := grpc.NewClient(
 		"localhost",
@@ -49,7 +49,7 @@ func New(socketPath string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
+	return &AgentClient{
 		pb.NewAgentAuthClient(conn),
 		pb.NewAgentCacheClient(conn),
 		pb.NewAgentConfigClient(conn),
@@ -57,6 +57,6 @@ func New(socketPath string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) Close() error {
+func (c *AgentClient) Close() error {
 	return c.conn.Close()
 }

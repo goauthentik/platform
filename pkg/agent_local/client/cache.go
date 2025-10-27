@@ -11,12 +11,12 @@ import (
 )
 
 type ClientCache[T storage.CacheData] struct {
-	client *Client
+	client *AgentClient
 	keys   []string
 	header *pb.RequestHeader
 }
 
-func NewCache[T storage.CacheData](c *Client, header *pb.RequestHeader, keys ...string) ClientCache[T] {
+func NewCache[T storage.CacheData](c *AgentClient, header *pb.RequestHeader, keys ...string) ClientCache[T] {
 	return ClientCache[T]{
 		client: c,
 		keys:   keys,

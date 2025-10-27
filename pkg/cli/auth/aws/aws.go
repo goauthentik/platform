@@ -31,7 +31,7 @@ func (aco AWSCredentialOutput) Expiry() time.Time {
 	return aco.Expiration
 }
 
-func GetCredentials(c *client.Client, ctx context.Context, opts CredentialsOpts) *AWSCredentialOutput {
+func GetCredentials(c *client.AgentClient, ctx context.Context, opts CredentialsOpts) *AWSCredentialOutput {
 	log := log.WithField("logger", "auth.aws")
 
 	cc := client.NewCache[AWSCredentialOutput](c, &pb.RequestHeader{

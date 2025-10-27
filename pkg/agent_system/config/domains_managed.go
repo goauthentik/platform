@@ -9,8 +9,8 @@ import (
 )
 
 type SysdManagedConfig struct {
-	RegistrationToken string
-	URL               string
+	RegistrationToken string `registry:"registration_token"`
+	URL               string `registry:"url"`
 }
 
 const managedDomainName = "ak-mdm-managed"

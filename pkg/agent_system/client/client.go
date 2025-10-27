@@ -18,6 +18,7 @@ import (
 type SysdClient struct {
 	pb.SessionManagerClient
 	pb.AgentPlatformClient
+	pb.PingClient
 
 	conn *grpc.ClientConn
 }
@@ -49,6 +50,7 @@ func New() (*SysdClient, error) {
 	return &SysdClient{
 		pb.NewSessionManagerClient(conn),
 		pb.NewAgentPlatformClient(conn),
+		pb.NewPingClient(conn),
 		conn,
 	}, nil
 }
