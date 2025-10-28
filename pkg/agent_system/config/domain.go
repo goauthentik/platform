@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/keyring"
 )
@@ -21,6 +22,8 @@ type DomainConfig struct {
 
 	// Saved to keyring
 	Token string `json:"-"`
+
+	FallbackToken string `json:"token"`
 
 	c *api.APIClient
 	r *Config
@@ -73,8 +76,8 @@ func (dc DomainConfig) Delete() error {
 	return nil
 }
 
-func (c *Config) NewDomain() DomainConfig {
-	return DomainConfig{
+func (c *Config) NewDomain() *DomainConfig {
+	return &DomainConfig{
 		Enabled: true,
 		r:       c,
 	}
@@ -102,12 +105,15 @@ func (c *Config) loadDomains() error {
 		}
 		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain)
 		if err != nil {
-			c.log.WithError(err).Warning("failed to load domain token")
-			continue
+			if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
+				c.log.WithError(err).Warning("failed to load domain token")
+				continue
+			}
+			token = d.FallbackToken
 		}
 		d.Token = token
 		c.log.WithField("domain", d.Domain).Debug("loaded domain")
-		dom = append(dom, d)
+		dom = append(dom, *d)
 	}
 	c.domains = dom
 	c.log.Debug("Checking for managed domains...")

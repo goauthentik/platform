@@ -11,9 +11,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>io.goauthentik.platform.agent</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.16.4</string>
+	<string>0.16.5</string>
 	<key>CFBundleVersion</key>
-	<string>0.16.4</string>
+	<string>0.16.5</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>15.0</string>
 	<key>LSUIElement</key>

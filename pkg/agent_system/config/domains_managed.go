@@ -43,7 +43,7 @@ func (c *Config) loadDomainsManaged() error {
 			continue
 		}
 	}
-	d := DomainConfig{
+	d := &DomainConfig{
 		Enabled:            true,
 		AuthentikURL:       mc.URL,
 		AppSlug:            "",
