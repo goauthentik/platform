@@ -76,8 +76,8 @@ func (dc DomainConfig) Delete() error {
 	return nil
 }
 
-func (c *Config) NewDomain() DomainConfig {
-	return DomainConfig{
+func (c *Config) NewDomain() *DomainConfig {
+	return &DomainConfig{
 		Enabled: true,
 		r:       c,
 	}
@@ -113,7 +113,7 @@ func (c *Config) loadDomains() error {
 		}
 		d.Token = token
 		c.log.WithField("domain", d.Domain).Debug("loaded domain")
-		dom = append(dom, d)
+		dom = append(dom, *d)
 	}
 	c.domains = dom
 	c.log.Debug("Checking for managed domains...")
