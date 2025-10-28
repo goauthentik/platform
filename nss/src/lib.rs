@@ -21,6 +21,6 @@ fn ctor() {
 
 #[dtor]
 fn dtor() {
-    exit_log();
     log_hook("dtor");
+    exit_log();
 }
