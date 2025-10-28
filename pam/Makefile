@@ -5,6 +5,9 @@ PROTO_OUT := "${PWD}/src/generated"
 clean:
 	cargo clean
 
+bump:
+	sed -i 's/version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml
+
 build:
 	cargo build --verbose --release
 

@@ -62,6 +62,8 @@ bump:
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" agent/bump
 	"$(MAKE)" ee/psso/bump || true
+	"$(MAKE)" nss/bump
+	"$(MAKE)" pam/bump
 
 pam/%:
 	"$(MAKE)" -C "${TOP}/pam" $*
