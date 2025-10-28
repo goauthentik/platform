@@ -59,6 +59,7 @@ func New() (*BrowserSupport, error) {
 		agentClient:  ac,
 		systemClient: sc,
 		log:          systemlog.Get().WithField("logger", "browser-support"),
+		l:            native_messaging.NewListener[message, *response](),
 	}
 	bs.setup()
 	return bs, nil
