@@ -264,8 +264,11 @@ func Shell(client *ssh.Client) error {
 		if err != nil {
 			width, height = 80, 24
 		}
-
-		if err := session.RequestPty("xterm", height, width, ssh.TerminalModes{}); err != nil {
+		term := os.Getenv("TERM")
+		if term == "" {
+			term = "xterm"
+		}
+		if err := session.RequestPty(term, height, width, ssh.TerminalModes{}); err != nil {
 			log.Fatalf("Failed to request pty: %v", err)
 		}
 	}
