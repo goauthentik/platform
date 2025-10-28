@@ -2,14 +2,11 @@ use std::time::Duration;
 
 use libc::{getegid, geteuid, getgid, getuid};
 use log::LevelFilter;
-use sentry::ClientInitGuard;
 use syslog::BasicLogger;
 use syslog::{Facility, Formatter3164};
 
-static mut SENTRY_CLIENT: Option<ClientInitGuard> = None;
-
 pub fn init_log(name: &str) {
-    let ver = option_env!("CARGO_PKG_VERSION").unwrap_or("foo");
+    let ver = option_env!("CARGO_PKG_VERSION").unwrap_or("dev");
     let rel_str = format!("ak-platform-{name}@{ver}");
     let _guard = sentry::init((
         "https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512",
@@ -19,7 +16,6 @@ pub fn init_log(name: &str) {
             ..Default::default()
         },
     ));
-    unsafe { SENTRY_CLIENT = Some(_guard) };
 
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
