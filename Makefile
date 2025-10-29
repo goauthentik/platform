@@ -91,3 +91,6 @@ browser-ext/%:
 
 ee/psso/%:
 	"$(MAKE)" -C "${TOP}/ee/psso/" $*
+
+ee/wcp/%:
+	"$(MAKE)" -C "${TOP}/ee/wcp/" $*

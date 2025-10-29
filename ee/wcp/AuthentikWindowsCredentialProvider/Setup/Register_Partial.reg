@@ -1,0 +1,13 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}]
+@="AuthentikWindowsCredentialProvider"
+
+[HKEY_CLASSES_ROOT\CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}]
+@="AuthentikWindowsCredentialProvider"
+"URL"="https://windows-cred-provider.pr.test.goauthentik.io" ; Not a Windows Credential Provider requirement
+"ClientID"="UCAXCsLq1DVR08hYrjDGFPFekCVXmNTEn6eeoenO"        ; Not a Windows Credential Provider requirement
+
+[HKEY_CLASSES_ROOT\CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}\InprocServer32]
+@="C:\\Users\\mbkha\\source\\repos\\AuthentikCEFWCP\\build\\libcef_dll_wrapper\\Release\\libcef_dll_wrapper.dll"
+"ThreadingModel"="Apartment"

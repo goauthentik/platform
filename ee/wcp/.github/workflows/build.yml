@@ -1,0 +1,41 @@
+name: build
+
+"on":
+  push:
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: ${{ runner.os }}-deps
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+      - run: |
+          winget install StrawberryPerl.StrawberryPerl --accept-package-agreements --accept-source-agreements --disable-interactivity --no-upgrade
+          # Invoke-WebRequest https://visualstudioclient.gallerycdn.vsassets.io/extensions/visualstudioclient/microsoftvisualstudio2022installerprojects/2.0.1/1695850559442/InstallerProjects2022.vsix -OutFile InstallerProjects2022.vsix
+          # $srcpath = (Get-Location).Path
+          # cd "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\VSI\DisableOutOfProcBuild"
+          # & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\CommonExtensions\Microsoft\VSI\DisableOutOfProcBuild\DisableOutOfProcBuild.exe"
+          # $vsixpath = $srcpath + "\" + "InstallerProjects2022.vsix"
+          # & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\ServiceHub\Services\Microsoft.VisualStudio.Setup.Service\VSIXInstaller.exe" /q $vsixpath
+          # cd $srcpath
+          if (Test-Path -Path "build") {Remove-Item -Path "build" -Recurse -Force}
+          if (! (Test-Path -Path "build")) {mkdir build}
+          cd build
+          cmake -G "Visual Studio 17" -A x64 ..
+          cmake --build . --config Release
+          gc cef.sln
+          python ../.utils/addsetup.py
+          gc cef.sln
+          # devenv cef.sln /build Release /project .\Setup\Setup.vdproj /out build.txt /projectconfig Release
+          devenv cef.sln /build Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            build/Release
