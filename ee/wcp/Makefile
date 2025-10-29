@@ -2,6 +2,8 @@ include ../../common.mk
 
 .ONESHELL:
 
+SHELL := powershell.exe
+.SHELLFLAGS := -NoProfile -Command
 TARGET := wcp
 
 .PHONY: clean
@@ -12,5 +14,5 @@ clean:
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	cd "${TOP}/bin/${TARGET}"
-	PERL5LIB=/c/Strawberry/perl/vendor/lib cmake -G "Visual Studio 17" "$(CURDIR)"
+	cmake -G "Visual Studio 17" "$(CURDIR)"
 	cmake --build . --config Release
