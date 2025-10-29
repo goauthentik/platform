@@ -11,6 +11,7 @@ clean:
 .PHONY: build
 build:
 	${TOP}/hack/windows/setup.sh
+	rm /usr/bin/perl
 	mkdir -p "${TOP}/bin/${TARGET}"
 	cd "${TOP}/bin/${TARGET}"
 	cmake --debug-find -G "Visual Studio 17" "$(CURDIR)"
