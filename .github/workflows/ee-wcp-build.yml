@@ -19,4 +19,10 @@ jobs:
         with:
           arch: amd64
       - run: |
+          winget install StrawberryPerl.StrawberryPerl \
+            --accept-package-agreements \
+            --accept-source-agreements \
+            --disable-interactivity \
+            --silent
+      - run: |
           make ee/wcp/build

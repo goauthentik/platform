@@ -404,3 +404,4 @@ FodyWeavers.xsd
 
 _deps
 CMakeCache.txt
+CMakeFiles/**
