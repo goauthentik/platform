@@ -2,7 +2,8 @@ include ../../common.mk
 
 .ONESHELL:
 
-SHELL = powershell.exe
+SHELL := powershell.exe
+.SHELLFLAGS := -NoProfile -Command
 TARGET := wcp
 
 .PHONY: clean
