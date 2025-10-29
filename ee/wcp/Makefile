@@ -14,5 +14,6 @@ clean:
 build:
 	mkdir -Force "${TOP}/bin/${TARGET}"
 	cd "${TOP}/bin/${TARGET}"
+	export PERL5LIB=/c/Strawberry/perl/vendor/lib
 	cmake -G "Visual Studio 17" "$(CURDIR)"
 	cmake --build . --config Release
