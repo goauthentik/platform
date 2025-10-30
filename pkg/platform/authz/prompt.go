@@ -40,7 +40,7 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 		return false, err
 	}
 	systemlog.Get().WithField("uid", uid).Debug("Prompting for authz")
-	success, err := prompt(msg)
+	success, err := prompt(action, msg)
 	if err != nil {
 		return false, err
 	}
