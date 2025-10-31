@@ -233,6 +233,8 @@ endif()
 find_package(Perl REQUIRED)       # Needed to build OpenSSL
 list(APPEND CMAKE_MODULE_PATH "C:/Strawberry/perl")
 set(PERL "C:\\Strawberry\\perl\\bin\\perl.exe")
+message(INFO " > Perl Path: ${PERL_EXECUTABLE}")
+message(INFO " > Perl Version: ${PERL_VERSION_STRING}")
 
 include(FetchContent)
 
