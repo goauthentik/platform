@@ -1,4 +1,4 @@
-name: ee-wcp-build
+name: build-ee-wcp
 
 on:
   push:

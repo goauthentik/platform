@@ -12,7 +12,9 @@ clean:
 
 .PHONY: build
 build:
+	rm -Force CMakeCache.txt
 	mkdir -Force "${TOP}/bin/${TARGET}"
 	cd "${TOP}/bin/${TARGET}"
-	cmake -G "Visual Studio 17" "$(CURDIR)"
+	. ${TOP}/hack/windows/setup.ps1
+	cmake --debug-find -G "Visual Studio 17" "$(CURDIR)"
 	cmake --build . --config Release
