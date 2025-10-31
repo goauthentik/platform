@@ -9,7 +9,3 @@ TARGET := wcp
 .PHONY: clean
 clean:
 	rm -rf build
-
-.PHONY: build
-build:
-	.\build.ps1

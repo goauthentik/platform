@@ -1,5 +1,4 @@
 Set-PSDebug -Trace 1
-cd ../..
 New-Item -ea 0 -Force -ItemType Directory "bin/wcp"
 . hack/windows/setup.ps1
 nmake -P

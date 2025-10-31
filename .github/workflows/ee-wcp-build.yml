@@ -20,4 +20,4 @@ jobs:
           arch: amd64
       - shell: bash
         run: |
-          make ee/wcp/build
+          ./ee/wcp/build.ps1
