@@ -1,7 +1,8 @@
+#!/usr/bin/env pwsh
 Set-PSDebug -Trace 1
 New-Item -ea 0 -Force -ItemType Directory "bin/wcp"
 . hack/windows/setup.ps1
-nmake -P
+nmake /P
 pwd
 cd "./bin/wcp"
 pwd
