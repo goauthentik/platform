@@ -8,7 +8,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/aletheia7/ul v1.5.0
 	github.com/avast/retry-go/v4 v4.7.0
-	github.com/aws/aws-sdk-go-v2 v1.39.4
+	github.com/aws/aws-sdk-go-v2 v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.9
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.9.0
