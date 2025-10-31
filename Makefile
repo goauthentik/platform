@@ -93,4 +93,4 @@ ee/psso/%:
 	"$(MAKE)" -C "${TOP}/ee/psso/" $*
 
 ee/wcp/%:
-	"$(MAKE)" -C "${TOP}/ee/wcp/" $*
+	"$(MAKE)" -C "${TOP}/ee/wcp/" $* SHELL=C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe IFS=.
