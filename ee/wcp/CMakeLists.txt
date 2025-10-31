@@ -136,7 +136,6 @@ cmake_minimum_required(VERSION 3.21)
 
 # Only generate Debug and Release configuration types.
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
-list(APPEND CMAKE_MODULE_PATH "C:/Strawberry/perl")
 
 # Project name.
 # TODO: Change this line to match your project name when you copy this file.
@@ -232,6 +231,8 @@ endif()
 
 # --- jwt-cpp and OpenSSL - Begin
 find_package(Perl REQUIRED)       # Needed to build OpenSSL
+list(APPEND CMAKE_MODULE_PATH "C:/Strawberry/perl")
+set(PERL "C:\\Strawberry\\perl\\bin\\perl.exe")
 
 include(FetchContent)
 
