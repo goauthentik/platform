@@ -12,8 +12,8 @@ clean:
 
 .PHONY: build
 build:
-	Remove-Item -Force CMakeCache.txt
-	New-Item -ItemType Directory "${TOP}/bin/${TARGET}"
+	Remove-Item -ea 0 -Force CMakeCache.txt
+	New-Item -ea 0 -Force -ItemType Directory "${TOP}/bin/${TARGET}"
 	cd "${TOP}/bin/${TARGET}"
 	. ${TOP}/hack/windows/setup.ps1
 	nmake /P

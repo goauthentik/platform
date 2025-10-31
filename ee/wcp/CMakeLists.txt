@@ -231,8 +231,8 @@ endif()
 
 # --- jwt-cpp and OpenSSL - Begin
 find_package(Perl REQUIRED)       # Needed to build OpenSSL
-list(APPEND CMAKE_MODULE_PATH "C:/Strawberry/perl")
 set(PERL "C:\\Strawberry\\perl\\bin\\perl.exe")
+set(PERL_EXECUTABLE "C:\\Strawberry\\perl\\bin\\perl.exe")
 message(INFO " > Perl Path: ${PERL_EXECUTABLE}")
 message(INFO " > Perl Version: ${PERL_VERSION_STRING}")
 
