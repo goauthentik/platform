@@ -50,6 +50,10 @@ jobs:
         run: |
           platform=$(uname -o | tr '[:upper:]' '[:lower:]')
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: cache/${{ matrix.target }}
+          key: target-cache-${{ matrix.target }}-${{ runner.os }}
 
       # macOS Specific
       - uses: ./.github/actions/macos-signing
