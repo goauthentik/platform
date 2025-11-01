@@ -1,5 +1,4 @@
 //go:build !windows
-// +build !windows
 
 package socket
 
@@ -20,7 +19,7 @@ func listen(spath pstr.PlatformString, perm SocketPermMode) (InfoListener, error
 	case SocketEveryone:
 		uperm = 0666
 	}
-	err := os.MkdirAll(path.Dir(p), os.FileMode(uperm))
+	err := os.MkdirAll(path.Dir(p), os.FileMode(uperm+0100))
 	if err != nil {
 		return nil, err
 	}

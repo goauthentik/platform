@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+        "https://specifications.freedesktop.org/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+    <vendor>authentik Platform Agent</vendor>
+    <vendor_url>https://goauthentik.io</vendor_url>
+    <action id="io.goauthentik.platform.authorize">
+        <description>Authorize actions on behalf of your authentik account.</description>
+        <message>Authorize access to your account.</message>
+        <defaults>
+            <allow_any>auth_self</allow_any>
+            <allow_inactive>auth_self</allow_inactive>
+            <allow_active>auth_self_keep</allow_active>
+        </defaults>
+    </action>
+</policyconfig>

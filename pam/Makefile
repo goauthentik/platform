@@ -1,6 +1,6 @@
 include ../common.mk
 
-PROTO_OUT := "${PWD}/src/generated"
+TARGET = pam
 
 clean:
 	cargo clean
@@ -9,7 +9,12 @@ bump:
 	sed -i 's/version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml
 
 build:
-	cargo build --verbose --release
+	mkdir -p ${TOP}/bin/${TARGET}
+	mkdir -p ${TOP}/cache/${TARGET}
+	cargo build \
+		--target-dir ${TOP}/cache/${TARGET} \
+		--verbose \
+		--release
 
 lint:
 	cargo clippy --fix --allow-dirty
@@ -17,10 +22,13 @@ lint:
 test:
 	cargo test --verbose
 
-package:
+package: build
 	cargo install cargo-deb
-	cargo deb --verbose --deb-version ${VERSION}
+	CARGO_TARGET_DIR="${TOP}/cache/${TARGET}" cargo deb \
+		--output ${TOP}/bin/${TARGET} \
+		--verbose \
+		--deb-version ${VERSION}
 
 test-deploy: package
-	$(TME) dpkg -i /workspaces/pam/target/debian/libpam-authentik_${VERSION}_${ARCH}.deb
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/libpam-authentik_${VERSION}_${ARCH}.deb
 	$(TME) systemctl restart ssh
