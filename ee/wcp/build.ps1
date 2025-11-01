@@ -7,6 +7,9 @@ nmake /P
 pwd
 cd "./cache/wcp"
 pwd
+# To avoid the OpenSSL build using linux `link.exe`
+mv /usr/bin/link.exe /usr/bin/link_bak
+
 cmake --debug-find -G "Visual Studio 17" "../../ee/wcp"
 cmake --build . --config Release
 cd ../..
