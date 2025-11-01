@@ -109,11 +109,11 @@
         <File Id="wcp_vulkan_1_dll" Source="$(env.ROOT)/bin/wcp/vulkan-1.dll" />
         <RegistryKey Root="HKLM"
                     Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
-          <RegistryValue Type="string" Value="AuthentikWindowsCredentialProvider" />
+          <RegistryValue Type="string" Value="authentik Credential Provider" />
         </RegistryKey>
         <RegistryKey Root="HKCR"
                     Key="CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
-          <RegistryValue Type="string" Value="AuthentikWindowsCredentialProvider" />
+          <RegistryValue Type="string" Value="authentik Credential Provider" />
           <RegistryValue Key="InprocServer32" Type="string" Value="[INSTALLFOLDER]libcef_dll_wrapper.dll" />
           <RegistryValue Key="InprocServer32" Type="string" Name="ThreadingModel" Value="Apartment" />
         </RegistryKey>
