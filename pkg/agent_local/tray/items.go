@@ -79,7 +79,7 @@ func (t *Tray) addSysd() {
 	pr, err := sysc.Ping(t.ctx, &emptypb.Empty{})
 	if err != nil {
 		t.log.WithError(err).Warning("failed to ping sysd")
-		systray.AddMenuItem(fmt.Sprintf("🔴 Failed to connect system agent"), "").Disable()
+		systray.AddMenuItem("🔴 Failed to connect system agent", "").Disable()
 		return
 	}
 	systray.AddMenuItem(fmt.Sprintf("🟢 System agent running: %s", pr.Version), "").Disable()
