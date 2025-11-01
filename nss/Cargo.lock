@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "authentik_nss"
-version = "0.16.6"
+version = "0.16.7"
 dependencies = [
  "authentik_sys",
  "ctor",
