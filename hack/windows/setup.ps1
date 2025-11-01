@@ -4,4 +4,4 @@ $go = "C:\Program Files\Go\bin"
 $perl = "C:\Strawberry\perl\bin\"
 
 $env:Path = "$perl;$rust;$make;$go;$env:Path"
-# . 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1' -Arch amd64
+. "$env:VS170COMNTOOLS/Launch-VsDevShell.ps1" -Arch amd64
