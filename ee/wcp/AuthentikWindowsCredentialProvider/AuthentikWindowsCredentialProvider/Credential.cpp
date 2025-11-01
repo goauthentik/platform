@@ -129,11 +129,11 @@ IFACEMETHODIMP Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     // Initialize the String value of all the fields.
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"Authentik Credential Provider", &m_rgFieldStrings[FI_LABEL]);
+        hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LABEL]);
     }
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"Authentik Credential Provider", &m_rgFieldStrings[FI_LARGE_TEXT]);
+        hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LARGE_TEXT]);
     }
     if (SUCCEEDED(hr))
     {
@@ -334,7 +334,7 @@ LRESULT APIENTRY Credential::WndProc(
                     }
                     else
                     {
-                        ::MessageBox(hWnd, L"Failure: CEF setup call not set. The Authentik UI cannot be launched.", L"Error", 0);
+                        ::MessageBox(hWnd, L"Failure: CEF setup call not set. The authentik UI cannot be launched.", L"Error", 0);
                     }
                 }
                 Debug(std::string("(m_oCefAppData.pCefApp) after:  " + std::to_string((size_t)((m_oCefAppData.pCefApp).get()))).c_str());
@@ -355,7 +355,7 @@ LRESULT APIENTRY Credential::WndProc(
                 }
                 else
                 {
-                    ::MessageBox(hWnd, L"Failure: CEF app is not set up. The Authentik UI cannot be launched.", L"Error", 0);
+                    ::MessageBox(hWnd, L"Failure: CEF app is not set up. The authentik UI cannot be launched.", L"Error", 0);
                 }
                 pData->SetComplete(true);
                 Debug("UI... end");
@@ -371,7 +371,7 @@ LRESULT APIENTRY Credential::WndProc(
                     }
                     else
                     {
-                        ::MessageBox(hWnd, L"Failure: CEF shutdown call not set. The Authentik UI may not close properly.", L"Error", 0);
+                        ::MessageBox(hWnd, L"Failure: CEF shutdown call not set. The authentik UI may not close properly.", L"Error", 0);
                     }
                 }
                 Debug("WndProc:: Shut exit");
@@ -398,7 +398,7 @@ LRESULT CALLBACK Credential::CallWndProc(
     switch(nCode)
     {
         case WM_NULL:
-        { 
+        {
             Debug("WM_NULL");
             if (InSendMessage())
             {
@@ -946,13 +946,13 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws)
             Debug(strErr.c_str());
         }
         SetLastError(0);
-        pqcws->SetStatusMessage(L"Please sign in to your Authentik account...");
+        pqcws->SetStatusMessage(L"Please sign in to your authentik account...");
         Sleep(500); // Short delay to let the message appear
         m_oHookData.SetExit(false);
         m_oHookData.SetCancel(false);
         m_oHookData.SetComplete(false);
         m_oHookData.pqcws = pqcws;
-        // pqcws->SetStatusMessage(L"Please sign in to your Authentik account...\n\n(You may click `reload` in right-click menu if the Authentik sign-in page does not load)");
+        // pqcws->SetStatusMessage(L"Please sign in to your authentik account...\n\n(You may click `reload` in right-click menu if the authentik sign-in page does not load)");
         // LRESULT hRet = SendMessage(hwndOwner, WM_NULL, 100, (LPARAM)(&m_oHookData));
         LRESULT hRet = PostMessage(hwndOwner, WM_NULL, 100, (LPARAM)(&m_oHookData));
         {

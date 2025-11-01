@@ -61,7 +61,7 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
 {
     { FI_TILEIMAGE,         CPFT_TILE_IMAGE,    const_cast<LPWSTR>(L"Image"),                       CPFG_CREDENTIAL_PROVIDER_LOGO  },
     { FI_LABEL,             CPFT_SMALL_TEXT,    const_cast<LPWSTR>(L"Tooltip"),                     CPFG_CREDENTIAL_PROVIDER_LABEL },
-    { FI_LARGE_TEXT,        CPFT_LARGE_TEXT,    const_cast<LPWSTR>(L"Authentik Credential Provider")                               },
+    { FI_LARGE_TEXT,        CPFT_LARGE_TEXT,    const_cast<LPWSTR>(L"Sign in with authentik")                               },
     { FI_PASSWORD,          CPFT_PASSWORD_TEXT, const_cast<LPWSTR>(L"Password text")                                               },
     { FI_SUBMIT_BUTTON,     CPFT_SUBMIT_BUTTON, const_cast<LPWSTR>(L"Submit"),                      CPFG_STANDALONE_SUBMIT_BUTTON  },
     { FI_LAUNCHWINDOW_LINK, CPFT_COMMAND_LINK,  const_cast<LPWSTR>(L"Launch helper window2")                                       },
