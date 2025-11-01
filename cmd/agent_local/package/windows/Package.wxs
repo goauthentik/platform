@@ -95,8 +95,8 @@
         <File Id="wcp_dxcompiler_dll" Source="$(env.ROOT)/bin/wcp/dxcompiler.dll" />
         <File Id="wcp_dxil_dll" Source="$(env.ROOT)/bin/wcp/dxil.dll" />
         <File Id="wcp_icudtl_dat" Source="$(env.ROOT)/bin/wcp/icudtl.dat" />
-        <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" KeyPath="true" />
-        <File Id="wcp_libcef_dll_wrapper_dll" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.dll" />
+        <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" />
+        <File Id="wcp_libcef_dll_wrapper_dll" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.dll" KeyPath="true" />
         <File Id="wcp_libcef_dll_wrapper_exp" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.exp" />
         <File Id="wcp_libcef_dll_wrapper_lib" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.lib" />
         <File Id="wcp_libcrypto_3_x64_dll" Source="$(env.ROOT)/bin/wcp/libcrypto-3-x64.dll" />
@@ -114,6 +114,7 @@
         <RegistryKey Root="HKCR"
                     Key="CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
           <RegistryValue Type="string" Value="AuthentikWindowsCredentialProvider" />
+          <RegistryValue Key="InprocServer32" Type="string" Value="[INSTALLFOLDER]libcef_dll_wrapper.dll" />
           <RegistryValue Key="InprocServer32" Type="string" Name="ThreadingModel" Value="Apartment" />
         </RegistryKey>
       </Component>
