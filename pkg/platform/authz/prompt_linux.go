@@ -14,9 +14,7 @@ func prompt(msg pstr.PlatformString) (bool, error) {
 	}
 	result, err := authority.CheckAuthorization(
 		"io.goauthentik.platform.authorize",
-		map[string]string{
-			"polkit.message": msg.ForCurrent(),
-		},
+		nil,
 		polkit.CheckAuthorizationAllowUserInteraction,
 		"",
 	)
