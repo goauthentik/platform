@@ -15,6 +15,7 @@ clean:
 	"$(MAKE)" -C ${TOP} cli/clean
 	"$(MAKE)" -C ${TOP} sysd/clean
 	"$(MAKE)" -C ${TOP} browser_support/clean
+	"$(MAKE)" -C ${TOP} ee/wcp/clean || true
 	"$(MAKE)" -C ${TOP} ee/psso/clean || true
 
 build:

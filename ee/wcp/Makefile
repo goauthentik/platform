@@ -6,7 +6,7 @@ TARGET := wcp
 
 .PHONY: clean
 clean:
-	rm -rf build
+	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
 .PHONY: build
 build:

@@ -22,6 +22,7 @@
         <Directory Id="INSTALLFOLDER" Name="$(Name)">
           <Directory Id="sysd_domains" Name="domains" />
           <Directory Id="sysd_runtime" Name="runtime" />
+          <Directory Id="wcp_locale" Name="locales" />
         </Directory>
       </Directory>
     </StandardDirectory>
@@ -85,6 +86,95 @@
           <RegistryValue Type="string" Value="[INSTALLFOLDER]browser-host.json"/>
         </RegistryKey>
       </Component>
+      <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64">
+        <File Id="wcp_cefexe_exe" Source="$(env.ROOT)/bin/wcp/cefexe.exe" />
+        <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
+        <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />
+        <File Id="wcp_chrome_elf_dll" Source="$(env.ROOT)/bin/wcp/chrome_elf.dll" />
+        <File Id="wcp_CMakeCache_txt" Source="$(env.ROOT)/bin/wcp/CMakeCache.txt" />
+        <File Id="wcp_d3dcompiler_47_dll" Source="$(env.ROOT)/bin/wcp/d3dcompiler_47.dll" />
+        <File Id="wcp_dxcompiler_dll" Source="$(env.ROOT)/bin/wcp/dxcompiler.dll" />
+        <File Id="wcp_dxil_dll" Source="$(env.ROOT)/bin/wcp/dxil.dll" />
+        <File Id="wcp_icudtl_dat" Source="$(env.ROOT)/bin/wcp/icudtl.dat" />
+        <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" KeyPath="true" />
+        <File Id="wcp_libcef_dll_wrapper_dll" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.dll" />
+        <File Id="wcp_libcef_dll_wrapper_exp" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.exp" />
+        <File Id="wcp_libcef_dll_wrapper_lib" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.lib" />
+        <File Id="wcp_libcrypto_3_x64_dll" Source="$(env.ROOT)/bin/wcp/libcrypto-3-x64.dll" />
+        <File Id="wcp_libEGL_dll" Source="$(env.ROOT)/bin/wcp/libEGL.dll" />
+        <File Id="wcp_libGLESv2_dll" Source="$(env.ROOT)/bin/wcp/libGLESv2.dll" />
+        <File Id="wcp_resources_pak" Source="$(env.ROOT)/bin/wcp/resources.pak" />
+        <File Id="wcp_v8_context_snapshot_bin" Source="$(env.ROOT)/bin/wcp/v8_context_snapshot.bin" />
+        <File Id="wcp_vk_swiftshader_dll" Source="$(env.ROOT)/bin/wcp/vk_swiftshader.dll" />
+        <File Id="wcp_vk_swiftshader_icd_json" Source="$(env.ROOT)/bin/wcp/vk_swiftshader_icd.json" />
+        <File Id="wcp_vulkan_1_dll" Source="$(env.ROOT)/bin/wcp/vulkan-1.dll" />
+        <RegistryKey Root="HKLM"
+                    Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
+          <RegistryValue Type="string" Value="AuthentikWindowsCredentialProvider" />
+        </RegistryKey>
+        <RegistryKey Root="HKCR"
+                    Key="CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
+          <RegistryValue Type="string" Value="AuthentikWindowsCredentialProvider" />
+          <RegistryValue Key="\InprocServer32" Type="string" Name="ThreadingModel" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="credential_provider_locales" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e2" Bitness="always64" Directory="wcp_locale">
+        <File Id="wcp_locales_af_pak" Source="$(env.ROOT)/bin/wcp/locales/af.pak" />
+        <File Id="wcp_locales_am_pak" Source="$(env.ROOT)/bin/wcp/locales/am.pak" />
+        <File Id="wcp_locales_ar_pak" Source="$(env.ROOT)/bin/wcp/locales/ar.pak" />
+        <File Id="wcp_locales_bg_pak" Source="$(env.ROOT)/bin/wcp/locales/bg.pak" />
+        <File Id="wcp_locales_bn_pak" Source="$(env.ROOT)/bin/wcp/locales/bn.pak" />
+        <File Id="wcp_locales_ca_pak" Source="$(env.ROOT)/bin/wcp/locales/ca.pak" />
+        <File Id="wcp_locales_cs_pak" Source="$(env.ROOT)/bin/wcp/locales/cs.pak" />
+        <File Id="wcp_locales_da_pak" Source="$(env.ROOT)/bin/wcp/locales/da.pak" />
+        <File Id="wcp_locales_de_pak" Source="$(env.ROOT)/bin/wcp/locales/de.pak" />
+        <File Id="wcp_locales_el_pak" Source="$(env.ROOT)/bin/wcp/locales/el.pak" />
+        <File Id="wcp_locales_en_GB_pak" Source="$(env.ROOT)/bin/wcp/locales/en-GB.pak" />
+        <File Id="wcp_locales_en_US_pak" Source="$(env.ROOT)/bin/wcp/locales/en-US.pak" />
+        <File Id="wcp_locales_es_419_pak" Source="$(env.ROOT)/bin/wcp/locales/es-419.pak" />
+        <File Id="wcp_locales_es_pak" Source="$(env.ROOT)/bin/wcp/locales/es.pak" />
+        <File Id="wcp_locales_et_pak" Source="$(env.ROOT)/bin/wcp/locales/et.pak" />
+        <File Id="wcp_locales_fa_pak" Source="$(env.ROOT)/bin/wcp/locales/fa.pak" />
+        <File Id="wcp_locales_fi_pak" Source="$(env.ROOT)/bin/wcp/locales/fi.pak" />
+        <File Id="wcp_locales_fil_pak" Source="$(env.ROOT)/bin/wcp/locales/fil.pak" />
+        <File Id="wcp_locales_fr_pak" Source="$(env.ROOT)/bin/wcp/locales/fr.pak" />
+        <File Id="wcp_locales_gu_pak" Source="$(env.ROOT)/bin/wcp/locales/gu.pak" />
+        <File Id="wcp_locales_he_pak" Source="$(env.ROOT)/bin/wcp/locales/he.pak" />
+        <File Id="wcp_locales_hi_pak" Source="$(env.ROOT)/bin/wcp/locales/hi.pak" />
+        <File Id="wcp_locales_hr_pak" Source="$(env.ROOT)/bin/wcp/locales/hr.pak" />
+        <File Id="wcp_locales_hu_pak" Source="$(env.ROOT)/bin/wcp/locales/hu.pak" />
+        <File Id="wcp_locales_id_pak" Source="$(env.ROOT)/bin/wcp/locales/id.pak" />
+        <File Id="wcp_locales_it_pak" Source="$(env.ROOT)/bin/wcp/locales/it.pak" />
+        <File Id="wcp_locales_ja_pak" Source="$(env.ROOT)/bin/wcp/locales/ja.pak" />
+        <File Id="wcp_locales_kn_pak" Source="$(env.ROOT)/bin/wcp/locales/kn.pak" />
+        <File Id="wcp_locales_ko_pak" Source="$(env.ROOT)/bin/wcp/locales/ko.pak" />
+        <File Id="wcp_locales_lt_pak" Source="$(env.ROOT)/bin/wcp/locales/lt.pak" />
+        <File Id="wcp_locales_lv_pak" Source="$(env.ROOT)/bin/wcp/locales/lv.pak" />
+        <File Id="wcp_locales_ml_pak" Source="$(env.ROOT)/bin/wcp/locales/ml.pak" />
+        <File Id="wcp_locales_mr_pak" Source="$(env.ROOT)/bin/wcp/locales/mr.pak" />
+        <File Id="wcp_locales_ms_pak" Source="$(env.ROOT)/bin/wcp/locales/ms.pak" />
+        <File Id="wcp_locales_nb_pak" Source="$(env.ROOT)/bin/wcp/locales/nb.pak" />
+        <File Id="wcp_locales_nl_pak" Source="$(env.ROOT)/bin/wcp/locales/nl.pak" />
+        <File Id="wcp_locales_pl_pak" Source="$(env.ROOT)/bin/wcp/locales/pl.pak" />
+        <File Id="wcp_locales_pt_BR_pak" Source="$(env.ROOT)/bin/wcp/locales/pt-BR.pak" />
+        <File Id="wcp_locales_pt_PT_pak" Source="$(env.ROOT)/bin/wcp/locales/pt-PT.pak" />
+        <File Id="wcp_locales_ro_pak" Source="$(env.ROOT)/bin/wcp/locales/ro.pak" />
+        <File Id="wcp_locales_ru_pak" Source="$(env.ROOT)/bin/wcp/locales/ru.pak" />
+        <File Id="wcp_locales_sk_pak" Source="$(env.ROOT)/bin/wcp/locales/sk.pak" />
+        <File Id="wcp_locales_sl_pak" Source="$(env.ROOT)/bin/wcp/locales/sl.pak" />
+        <File Id="wcp_locales_sr_pak" Source="$(env.ROOT)/bin/wcp/locales/sr.pak" />
+        <File Id="wcp_locales_sv_pak" Source="$(env.ROOT)/bin/wcp/locales/sv.pak" />
+        <File Id="wcp_locales_sw_pak" Source="$(env.ROOT)/bin/wcp/locales/sw.pak" />
+        <File Id="wcp_locales_ta_pak" Source="$(env.ROOT)/bin/wcp/locales/ta.pak" />
+        <File Id="wcp_locales_te_pak" Source="$(env.ROOT)/bin/wcp/locales/te.pak" />
+        <File Id="wcp_locales_th_pak" Source="$(env.ROOT)/bin/wcp/locales/th.pak" />
+        <File Id="wcp_locales_tr_pak" Source="$(env.ROOT)/bin/wcp/locales/tr.pak" />
+        <File Id="wcp_locales_uk_pak" Source="$(env.ROOT)/bin/wcp/locales/uk.pak" />
+        <File Id="wcp_locales_ur_pak" Source="$(env.ROOT)/bin/wcp/locales/ur.pak" />
+        <File Id="wcp_locales_vi_pak" Source="$(env.ROOT)/bin/wcp/locales/vi.pak" />
+        <File Id="wcp_locales_zh_CN_pak" Source="$(env.ROOT)/bin/wcp/locales/zh-CN.pak" />
+        <File Id="wcp_locales_zh_TW_pak" Source="$(env.ROOT)/bin/wcp/locales/zh-TW.pak" />
+      </Component>
     </DirectoryRef>
 
     <Feature Id="Main" Title="authentik Agent Setup" Level="1">
@@ -92,6 +182,8 @@
       <ComponentRef Id="agent" />
       <ComponentRef Id="cli" />
       <ComponentRef Id="browser_support" />
+      <ComponentRef Id="credential_provider" />
+      <ComponentRef Id="credential_provider_locales" />
     </Feature>
   </Package>
 </Wix>
