@@ -29,7 +29,10 @@ updates:
     assignees:
       - BeryJu
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - /
+      - .github/actions/apt/
+      - .github/actions/macos-signing/
     schedule:
       interval: daily
       time: "04:00"
