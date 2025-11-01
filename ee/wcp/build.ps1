@@ -8,7 +8,7 @@ $target = $args[2]
 cd $top
 New-Item -ea 0 -Force -ItemType Directory "$top/bin/wcp"
 New-Item -ea 0 -Force -ItemType Directory "$top/cache/wcp"
-. hack/windows/setup.ps1
+"${top}/hack/windows/setup.ps1"
 nmake /P
 pwd
 cd "$top/cache/wcp"
