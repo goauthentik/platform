@@ -15,8 +15,5 @@ jobs:
         with:
           path: cache/
           key: ee-wcp-deps-${{ runner.os }}
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
       - run: |
           make ee/wcp/build

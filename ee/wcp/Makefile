@@ -1,13 +1,19 @@
 include ../../common.mk
 
+.ONESHELL:
+
 TARGET := wcp
 
 .PHONY: clean
 clean:
 	rm -rf build
 
+.PHONY: setup
+setup:
+	${TOP}/hack/windows/setup.sh
+
 .PHONY: build
-build:
+build: setup
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
 	# To avoid the OpenSSL build using linux `link.exe`
