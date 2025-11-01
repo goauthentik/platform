@@ -18,6 +18,5 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
-      - shell: powershell
-        run: |
-          ./ee/wcp/build.ps1
+      - run: |
+          make ee/wcp/build

@@ -1,4 +1,5 @@
 Set-PSDebug -Trace 1
+cd ../..
 New-Item -ea 0 -Force -ItemType Directory "bin/wcp"
 New-Item -ea 0 -Force -ItemType Directory "cache/wcp"
 . hack/windows/setup.ps1
