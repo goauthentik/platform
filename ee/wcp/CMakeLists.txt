@@ -284,8 +284,8 @@ endif()
 
 # If OpenSSL is sorted, fetch and build jwt-cpp that relies on it
 FetchContent_Declare(jwtcpp
-  URL https://github.com/Thalhammer/jwt-cpp/releases/download/v0.7.1/jwt-cpp-v0.7.1.tar.gz
-  # URL_HASH SHA256=
+  GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
+  GIT_TAG v0.7.1
   DOWNLOAD_EXTRACT_TIMESTAMP OFF
 )
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
