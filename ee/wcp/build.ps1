@@ -1,13 +1,17 @@
 Set-PSDebug -Trace 1
-cd ../..
-New-Item -ea 0 -Force -ItemType Directory "bin/wcp"
-New-Item -ea 0 -Force -ItemType Directory "cache/wcp"
+$ErrorActionPreference = "Stop"
+
+$pwd = $args[0]
+$top = $args[1]
+$target = $args[2]
+
+cd $top
+New-Item -ea 0 -Force -ItemType Directory "$top/bin/wcp"
+New-Item -ea 0 -Force -ItemType Directory "$top/cache/wcp"
 . hack/windows/setup.ps1
 nmake /P
 pwd
-cd "./cache/wcp"
+cd "$top/cache/wcp"
 pwd
-cmake --debug-find -G "Visual Studio 17" "../../ee/wcp"
+cmake --debug-find -G "Visual Studio 17" "$top/ee/wcp"
 cmake --build . --config Release
-cd ../..
-cp "./cache/wcp/Release/*" "bin/wcp/"
