@@ -23,6 +23,7 @@ func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRe
 			return pstr.PlatformString{
 				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account '%s' in '%s'", req.ClientId, creds.ParentCmdline)),
 				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account in '%s'", req.ClientId, creds.ParentCmdline)),
+				Linux:   pstr.S(fmt.Sprintf("'%s' is attempting to access your account in '%s'", req.ClientId, creds.ParentCmdline)),
 			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {

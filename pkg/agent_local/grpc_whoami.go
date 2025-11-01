@@ -21,6 +21,7 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 			return pstr.PlatformString{
 				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account info in '%s'", creds.ParentCmdline)),
 				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account info", creds.ParentCmdline)),
+				Linux:   pstr.S(fmt.Sprintf("'%s' is attempting to access your account info", creds.ParentCmdline)),
 			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
