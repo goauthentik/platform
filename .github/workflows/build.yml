@@ -118,8 +118,8 @@ jobs:
       - run: make ${{ matrix.target }}/package
       - uses: actions/upload-artifact@v5
         with:
-          path: bin/${{ matrix.target }}/*.deb
-          name: authentik_linux_${{ matrix.platform }}_${{ matrix.target }}
+          name: authentik_${{ matrix.platform }}_${{ matrix.target }}
+          path: bin/
   lint_go:
     name: Lint
     runs-on: ubuntu-latest

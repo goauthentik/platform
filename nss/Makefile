@@ -1,6 +1,6 @@
 include ../common.mk
 
-TARGET = libnss-authentik
+TARGET = nss
 
 clean:
 	cargo clean

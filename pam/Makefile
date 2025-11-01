@@ -1,6 +1,6 @@
 include ../common.mk
 
-TARGET = libpam-authentik
+TARGET = pam
 
 clean:
 	cargo clean
