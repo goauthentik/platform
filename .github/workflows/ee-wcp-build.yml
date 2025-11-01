@@ -15,5 +15,6 @@ jobs:
         with:
           path: cache/
           key: ee-wcp-deps-${{ runner.os }}
-      - run: |
+      - shell: bash
+        run: |
           make ee/wcp/build
