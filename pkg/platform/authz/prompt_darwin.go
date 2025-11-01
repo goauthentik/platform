@@ -9,7 +9,7 @@ import (
 	"goauthentik.io/platform/vnd/go-touchid"
 )
 
-func prompt(uid string, msg pstr.PlatformString) (bool, error) {
+func prompt(msg pstr.PlatformString) (bool, error) {
 	result, err := touchid.Auth(touchid.DeviceTypeAny, msg.ForDarwin())
 	if err != nil && errors.Is(err, touchid.ErrCannotEvaluate) {
 		return false, nil

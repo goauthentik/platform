@@ -7,12 +7,19 @@ import (
 	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
-func prompt(uid string, msg pstr.PlatformString) (bool, error) {
+func prompt(msg pstr.PlatformString) (bool, error) {
 	authority, err := polkit.NewAuthority()
 	if err != nil {
 		return false, err
 	}
-	result, err := authority.CheckAuthorization(uid, nil, polkit.CheckAuthorizationAllowUserInteraction, "")
+	result, err := authority.CheckAuthorization(
+		"io.goauthentik.platform.authorize",
+		map[string]string{
+			"polkit.message": msg.ForCurrent(),
+		},
+		polkit.CheckAuthorizationAllowUserInteraction,
+		"",
+	)
 	if err != nil {
 		return false, err
 	}

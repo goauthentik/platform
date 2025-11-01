@@ -16,12 +16,13 @@ contents:
     dst: /usr/bin/ak-agent
   - src: ../../bin/browser_support/ak-browser-support
     dst: /usr/bin/ak-browser-support
-  - src: ./package/linux/ak-agent.service
+  - src: ./package/linux/etc/systemd/user/ak-agent.service
     dst: /etc/systemd/user/ak-agent.service
-    type: config
+  - src: ./package/linux/usr/share/polkit-1/actions/io.goauthentik.platform.policy
+    dst: /usr/share/polkit-1/actions/io.goauthentik.platform.policy
   - src: ./package/linux/browser-host.json
     dst: /etc/opt/chrome/native-messaging-hosts/io.goauthentik.platform.json
   - src: ./package/linux/browser-host.json
     dst: /etc/opt/edge/native-messaging-hosts/io.goauthentik.platform.json
   - src: ./package/linux/browser-host.json
-    dst: //usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json
+    dst: /usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json
