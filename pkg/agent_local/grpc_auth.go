@@ -20,6 +20,7 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 			return pstr.PlatformString{
 				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account in '%s'", creds.ParentCmdline)),
 				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account.", creds.ParentCmdline)),
+				Linux:   pstr.S(fmt.Sprintf("'%s' is attempting to access your account.", creds.ParentCmdline)),
 			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
@@ -68,6 +69,7 @@ func (a *Agent) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.Au
 			return pstr.PlatformString{
 				Darwin:  pstr.S(fmt.Sprintf("authorize access to '%s'", req.Service)),
 				Windows: pstr.S(fmt.Sprintf("'%s' is requesting access.", creds.ParentCmdline)),
+				Linux:   pstr.S(fmt.Sprintf("'%s' is requesting access.", creds.ParentCmdline)),
 			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
