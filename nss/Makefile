@@ -1,6 +1,6 @@
 include ../common.mk
 
-PROTO_OUT := "${PWD}/src/generated"
+TARGET = libnss-authentik
 
 clean:
 	cargo clean
@@ -9,7 +9,12 @@ bump:
 	sed -i 's/version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml
 
 build:
-	cargo build --verbose --release
+	mkdir -p ${TOP}/bin/${TARGET}
+	mkdir -p ${TOP}/cache/${TARGET}
+	cargo build \
+		--target-dir ${TOP}/cache/${TARGET} \
+		--verbose \
+		--release
 
 lint:
 	cargo clippy --fix --allow-dirty
@@ -17,9 +22,12 @@ lint:
 test:
 	cargo test --verbose
 
-package:
+package: build
 	cargo install cargo-deb
-	cargo deb --verbose --deb-version ${VERSION} --variant ${ARCH}
+	CARGO_TARGET_DIR="${TOP}/cache/${TARGET}" cargo deb \
+		--output ${TOP}/bin/${TARGET} \
+		--verbose \
+		--deb-version ${VERSION}
 
 test-deploy: package
-	$(TME) dpkg -i /workspaces/nss/target/debian/libnss-authentik_${VERSION}_${ARCH}.deb
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/libnss-authentik_${VERSION}_${ARCH}.deb

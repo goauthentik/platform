@@ -110,12 +110,16 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install -y libpam0g-dev
+      - uses: actions/cache@v4
+        with:
+          path: cache/${{ matrix.target }}
+          key: target-cache-${{ matrix.target }}-${{ runner.os }}
       - run: make ${{ matrix.target }}/build
       - run: make ${{ matrix.target }}/package
       - uses: actions/upload-artifact@v5
         with:
+          path: bin/${{ matrix.target }}/*.deb
           name: authentik_linux_${{ matrix.platform }}_${{ matrix.target }}
-          path: ${{ matrix.target }}/target/debian/*.deb
   lint_go:
     name: Lint
     runs-on: ubuntu-latest
