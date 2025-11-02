@@ -10,7 +10,6 @@ use tokio::runtime::Builder;
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
 use tower::service_fn;
-use hyper_util::rt::TokioIo;
 
 use crate::config::Config;
 
@@ -27,7 +26,8 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
                     return Err(e);
                 }
             };
-            Ok::<_, std::io::Error>(TokioIo::new(client))
+            Ok(client)
+            // Ok::<_, std::io::Error>(TokioIo::new(client))
         })).await;
 }
 
