@@ -293,6 +293,14 @@ FetchContent_MakeAvailable(jwtcpp)
 
 # --- jwt-cpp and OpenSSL - End
 
+FetchContent_Declare(sentry
+  GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
+  GIT_TAG 0.12.0
+  DOWNLOAD_EXTRACT_TIMESTAMP OFF
+)
+set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(sentry)
+
 #
 # Define CEF-based targets.
 #
