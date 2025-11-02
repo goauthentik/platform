@@ -27,7 +27,6 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
                 }
             };
             Ok(client)
-            // Ok::<_, std::io::Error>(TokioIo::new(client))
         })).await;
 }
 
@@ -54,7 +53,7 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
                 time::sleep(Duration::from_millis(50)).await;
             };
 
-            Ok::<_, std::io::Error>(TokioIo::new(client))
+            Ok(client)
         }))
         .await;
 }

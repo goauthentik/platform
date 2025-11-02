@@ -242,7 +242,6 @@ name = "authentik_sys"
 version = "0.1.0"
 dependencies = [
  "cxx",
- "hyper-util",
  "libc",
  "log",
  "prost",
