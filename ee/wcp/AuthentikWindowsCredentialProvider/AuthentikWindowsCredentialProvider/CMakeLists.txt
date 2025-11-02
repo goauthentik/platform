@@ -151,15 +151,6 @@ include_directories(
   ../..
 )
 
-
-# corrosion_import_crate(MANIFEST_PATH ../../../../utils_rs/Cargo.toml)
-# corrosion_add_cxxbridge(
-#   authentik_sys_bridge
-#   CRATE authentik_sys
-#   FILES ffi.rs
-# )
-
-
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()
