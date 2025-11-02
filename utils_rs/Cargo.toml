@@ -9,6 +9,9 @@ crate-type = ["staticlib", "lib"]
 [[example]]
 name = "grpc"
 
+[[example]]
+name = "log"
+
 [dependencies]
 libc = "0.2.177"
 log = "0.4.28"

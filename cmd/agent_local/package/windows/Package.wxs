@@ -2,7 +2,6 @@
 <?define Name = "authentik Agent" ?>
 <?define Manufacturer = "Authentik Security Inc" ?>
 <?define Version = "$(env.VERSION)" ?>
-<?define ProductCode = "c44be1c5-b80d-4340-8820-8e766bb328a4" ?>
 <?define UpgradeCode = "3200363b-996e-4fd7-ae14-e3a425132b63" ?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
   xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
@@ -11,7 +10,6 @@
            Name="$(Name)"
            Manufacturer="$(Manufacturer)"
            Version="$(Version)"
-           ProductCode="$(var.ProductCode)"
            UpgradeCode="$(var.UpgradeCode)"
            Compressed="true">
     <ui:WixUI Id="WixUI_InstallDir"
