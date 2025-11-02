@@ -5,32 +5,40 @@ pub mod pam;
 pub mod pam_session;
 pub mod ping;
 use std::error::Error;
-use std::time::Duration;
-use tokio::time;
 
-#[cfg(unix)]
-use tokio::net::UnixStream;
-#[cfg(windows)]
-use tokio::net::windows::named_pipe::ClientOptions;
 use tokio::runtime::Builder;
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
 use tower::service_fn;
+use hyper_util::rt::TokioIo;
 
 use crate::config::Config;
 
 #[cfg(unix)]
 async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
     return ep
-        .connect_with_connector(service_fn(move |p: Uri| UnixStream::connect(p.to_string())))
-        .await;
+        .connect_with_connector(service_fn(async move |p: Uri| {
+            use tokio::net::UnixStream;
+
+            let path = p.query().unwrap().to_string();
+            let client = match UnixStream::connect(path).await {
+                Ok(c) => c,
+                Err(e) => {
+                    return Err(e);
+                }
+            };
+            Ok::<_, std::io::Error>(TokioIo::new(client))
+        })).await;
 }
 
 #[cfg(windows)]
 async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
     return ep
         .connect_with_connector(service_fn(async |p: Uri| {
-            use hyper_util::rt::TokioIo;
+            use std::time::Duration;
+            use tokio::time;
+            use tokio::net::windows::named_pipe::ClientOptions;
+
             let path = p.query().unwrap().to_string();
             eprintln!("connecting to '{}'", path);
             let client = loop {
