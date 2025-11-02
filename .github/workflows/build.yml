@@ -64,6 +64,11 @@ jobs:
           ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
+      # Windows Specific
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
+        with:
+          arch: amd64
 
       - shell: bash
         run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}

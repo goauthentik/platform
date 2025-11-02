@@ -15,6 +15,7 @@ clean:
 	"$(MAKE)" -C ${TOP} cli/clean
 	"$(MAKE)" -C ${TOP} sysd/clean
 	"$(MAKE)" -C ${TOP} browser_support/clean
+	"$(MAKE)" -C ${TOP} ee/wcp/clean || true
 	"$(MAKE)" -C ${TOP} ee/psso/clean || true
 
 build:
@@ -83,6 +84,7 @@ package-msys: clean build
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
 	"$(MAKE)" -C ${TOP} browser_support/build
+	"$(MAKE)" -C ${TOP} ee/wcp/build || true
 	ROOT=${TOP} VERSION=${VERSION} dotnet build \
 		-o "${TOP}/bin/${TARGET}/" \
 		"$(shell pwd)/package/windows/"

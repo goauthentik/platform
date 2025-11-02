@@ -30,6 +30,7 @@ brew install gmake go rustup
 
 ```powershell
 winget install -e --id GnuWin32.Make
+winget install -e --id Kitware.CMake
 winget install -e --id=WiXToolset.WiXToolset
 . 'C:\Program Files\Git\bin\bash.exe'
 source "hack/windows/setup.sh"
