@@ -6,7 +6,7 @@ TARGET := wcp
 
 .PHONY: bump
 bump:
-	sed -i 's/project(cef VERSION .*)/project(cef VERSION ${VERSION})/g' ${PWD}/CMakeLists.txt
+	sed -i 's/#define AK_WCP_VERSION ".*"/#define AK_WCP_VERSION ${VERSION}/g' ${PWD}/AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/Version.h
 
 .PHONY: clean
 clean:

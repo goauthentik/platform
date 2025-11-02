@@ -139,15 +139,10 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release)
 
 # Project name.
 # TODO: Change this line to match your project name when you copy this file.
-project(cef VERSION 0.16.7)
+project(cef)
 
 # Use folders in the resulting project files.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-configure_file (
-  "${PROJECT_SOURCE_DIR}/AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/Version.h.in"
-  "${PROJECT_BINARY_DIR}/AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/Version.h"
-)
 
 #
 # CEF_ROOT setup.

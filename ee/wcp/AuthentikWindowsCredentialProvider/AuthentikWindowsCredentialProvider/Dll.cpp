@@ -1,6 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include "Dll.h"
+#include "Version.h"
 
 #include <string>
 #include <sentry.h>
@@ -47,9 +48,10 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
                         __in LPVOID lpReserved
                      )
 {
+    std::string release = std::string("ak-platform-wcp@").append(AK_WCP_VERSION);
     sentry_options_t *options = sentry_options_new();
     sentry_options_set_dsn(options, "https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512");
-    sentry_options_set_release(options, "ak-platform-wcp@" + AK_WCP_VERSION);
+    sentry_options_set_release(options, release.c_str());
     sentry_init(options);
     g_hinst = hinstDll;
     switch (dwReason)
