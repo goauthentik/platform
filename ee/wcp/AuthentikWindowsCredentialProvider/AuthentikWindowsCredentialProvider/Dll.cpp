@@ -1,8 +1,11 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
 #include "Dll.h"
+#include "Version.h"
 
 #include <string>
+// #define SENTRY_BUILD_STATIC 1
+// #include <sentry.h>
 
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
@@ -46,6 +49,11 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
                         __in LPVOID lpReserved
                      )
 {
+    // std::string release = std::string("ak-platform-wcp@").append(AK_WCP_VERSION);
+    // sentry_options_t *options = sentry_options_new();
+    // sentry_options_set_dsn(options, "https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512");
+    // sentry_options_set_release(options, release.c_str());
+    // sentry_init(options);
     g_hinst = hinstDll;
     switch (dwReason)
     {
@@ -108,5 +116,9 @@ void DllRelease()
 
 STDAPI DllCanUnloadNow()
 {
-    return (g_cRef > 0) ? S_FALSE : S_OK;
+    if (g_cRef > 0) {
+        return S_FALSE;
+    }
+    // sentry_shutdown();
+    return S_OK;
 }

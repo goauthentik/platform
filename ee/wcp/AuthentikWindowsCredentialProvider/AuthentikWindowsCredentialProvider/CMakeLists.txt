@@ -4,7 +4,11 @@
 
 set(CMAKE_BUILD_TYPE Release)
 
-project(AuthentikWindowsCredentialProvider LANGUAGES CXX)
+project(
+  AuthentikWindowsCredentialProvider
+  LANGUAGES CXX
+  VERSION 0.16.7
+)
 
 # TODO: Add tests and install targets if needed.
 
@@ -121,7 +125,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 
 # Add source to this project's executable.
-set(SRCS 
+set(SRCS
   "ClassFactory.cpp"
   "Credential.cpp"
   "Debug.cpp"
@@ -168,7 +172,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   # ${LIBCEF_LIB_PATH}
   cefsimple
   # libcef_lib
-  # libcef_dll_wrapper
+  # libcef_dll_wrappe
 )
 
 # TODO: Add tests and install targets if needed.

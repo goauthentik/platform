@@ -4,6 +4,10 @@ include ../../common.mk
 
 TARGET := wcp
 
+.PHONY: bump
+bump:
+	sed -i 's/#define AK_WCP_VERSION ".*"/#define AK_WCP_VERSION ${VERSION}/g' ${PWD}/AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/Version.h
+
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"

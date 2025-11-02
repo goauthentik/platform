@@ -144,7 +144,6 @@ project(cef)
 # Use folders in the resulting project files.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-
 #
 # CEF_ROOT setup.
 # This variable must be set to locate the binary distribution.
@@ -293,6 +292,14 @@ FetchContent_MakeAvailable(jwtcpp)
 
 # --- jwt-cpp and OpenSSL - End
 
+# FetchContent_Declare(sentry
+#   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
+#   GIT_TAG 0.12.0
+#   DOWNLOAD_EXTRACT_TIMESTAMP OFF
+# )
+# set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
+# FetchContent_MakeAvailable(sentry)
+
 #
 # Define CEF-based targets.
 #
@@ -340,34 +347,3 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile")
     message(WARNING "Doxygen must be installed to generate API documentation.")
   endif()
 endif()
-
-
-# Copy the Setup (installer) project to the build directory for integration into the
-# Visual Studio Solution file
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/Setup" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-
-# macro(ADD_SETUP_PROJECT)
-#   set(PROJECT_SLN_FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.sln")
-#   message(WARNING "Execute.")
-#   if(EXISTS "${PROJECT_SLN_FILE}")
-#     message(WARNING "Exists.")
-#     set(SETUP_PROJECT "
-#       Project(\"{54435603-DBB4-11D2-8724-00A0C9A8B90C}\") = \"Setup\", \"..\\Setup\\Setup.vdproj\", \"{8818B3B0-D7DD-4294-A5C0-29BA5DE85BEE}\"
-#       EndProject
-#     ")
-#     # Read solution file contents
-#     file(READ "${PROJECT_SLN_FILE}" SLN_CONTENTS)
-
-#     # Check if the Setup project has already been added to the solution (i.e., whether this is a re-run of CMake)
-#     string(FIND "${SLN_CONTENTS}" "Setup.vdproj" SETUP_POS)
-#     if (SETUP_POS GREATER_EQUAL 0)
-#       string(FIND "${SLN_CONTENTS}" "EndProject" EP_POS REVERSE)
-#       string(SUBSTRING "${SLN_CONTENTS}" 0 ${EP_POS} PRE_STR)
-#       string(SUBSTRING "${SLN_CONTENTS}" ${EP_POS} -1 POST_STR)
-#       string(CONCAT STR_COMBINED "${PRE_STR}" "${SETUP_PROJECT}" "${POST_STR}")
-#       file(WRITE "${PROJECT_SLN_FILE}" "${STR_COMBINED}")
-#     endif()
-#   endif()
-# endmacro()
-
-# cmake_language(DEFER CALL ADD_SETUP_PROJECT)
