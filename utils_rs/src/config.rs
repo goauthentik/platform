@@ -13,7 +13,10 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             debug: false,
+            #[cfg(unix)]
             socket: "/var/run/authentik/sys.sock".to_string(),
+            #[cfg(windows)]
+            socket: r"\\.\pipe\authentik\sysd".to_string(),
         }
     }
 }

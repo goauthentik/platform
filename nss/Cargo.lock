@@ -260,6 +260,7 @@ dependencies = [
  "tokio",
  "tonic",
  "tower 0.5.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

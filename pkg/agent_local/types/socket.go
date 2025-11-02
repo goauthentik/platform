@@ -16,6 +16,6 @@ func GetAgentSocketPath() pstr.PlatformString {
 	}
 	return pstr.PlatformString{
 		Linux:   pstr.S(path.Join(xdg.DataHome, "authentik", "agent.sock")),
-		Windows: pstr.S("authentik-socket"),
+		Windows: pstr.S("authentik/socket"),
 	}
 }
