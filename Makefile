@@ -61,9 +61,10 @@ bump:
 	sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" agent/bump
-	"$(MAKE)" ee/psso/bump || true
 	"$(MAKE)" nss/bump
 	"$(MAKE)" pam/bump
+	"$(MAKE)" ee/psso/bump || true
+	"$(MAKE)" ee/wcp/bump || true
 
 pam/%:
 	"$(MAKE)" -C "${TOP}/pam" $*

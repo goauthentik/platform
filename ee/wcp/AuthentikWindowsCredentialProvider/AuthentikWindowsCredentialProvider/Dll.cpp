@@ -48,7 +48,7 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
 {
     sentry_options_t *options = sentry_options_new();
     sentry_options_set_dsn(options, "https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512");
-    sentry_options_set_release(options, "ak-platform-wcp@$0.0.1");
+    sentry_options_set_release(options, "ak-platform-wcp@" + AK_WCP_VERSION);
     sentry_init(options);
     g_hinst = hinstDll;
     switch (dwReason)

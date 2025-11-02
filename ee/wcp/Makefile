@@ -4,6 +4,10 @@ include ../../common.mk
 
 TARGET := wcp
 
+.PHONY: bump
+bump:
+	sed -i 's/project(cef VERSION .*)/project(cef VERSION ${VERSION})/g' ${PWD}/CMakeLists.txt
+
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
