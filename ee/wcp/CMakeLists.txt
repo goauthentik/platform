@@ -325,7 +325,6 @@ if(MSVC)
     corrosion_set_env_vars(authentik_sys_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
 endif()
 
-
 # FetchContent_Declare(sentry
 #   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
 #   GIT_TAG 0.12.0

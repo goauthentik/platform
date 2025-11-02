@@ -169,6 +169,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   # ${LIBCEF_LIB_PATH}
   cefsimple
   authentik_sys_bridge
+  # sentry
   # libcef_lib
   # libcef_dll_wrappe
 )

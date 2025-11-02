@@ -23,5 +23,8 @@ sentry = "0.45.0"
 cxx = "1.0.187"
 windows-sys = "0.61.2"
 
+[target.'cfg(windows)'.dependencies]
+eventlog = "0.3.0"
+
 [target.'cfg(unix)'.dependencies]
 syslog = "7.0.0"
