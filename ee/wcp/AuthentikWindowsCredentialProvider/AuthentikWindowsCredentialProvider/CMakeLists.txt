@@ -134,6 +134,7 @@ set(SRCS
   "pch.cpp"
   "Provider.cpp"
   "res/resource.rc"
+  "res/event.rc"
 )
 
 

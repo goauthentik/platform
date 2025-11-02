@@ -3,21 +3,24 @@
 #include "authentik_sys_bridge/ffi.h"
 #include <Windows.h>
 #include <string>
+#include "event.h"
 
 #define BUFFER_SIZE 10000
 
 std::mutex g_dbgMutex;
-bool g_hasInit;
+HANDLE g_evtSource;
 
 void Debug(const char* data, bool bReset)
 {
     g_dbgMutex.lock();
-    if (!g_hasInit) {
-        ak_log_init("authentik WCP");
-        g_hasInit = true;
+    if (g_evtSource == NULL) {
+        g_evtSource = RegisterEventSourceW(L"", L"authentik WCP");
     }
 
-    ak_log_msg(data);
+    if (!ReportEvent(g_evtSource, EVENTLOG_ERROR_TYPE, 0, MSG_DEBUG, NULL, 1, 0, (LPCWSTR*)data, NULL))
+    {
+        wprintf(L"ReportEvent failed with 0x%x for event 0x%x.\n", GetLastError(), MSG_DEBUG);
+    }
     g_dbgMutex.unlock();
 }
 
