@@ -30,8 +30,8 @@ jobs:
             platform: ubuntu-24.04
           # - language: "swift"
           #   platform: macos-15
-          - language: "cpp"
-            platform: windows-2025
+          # - language: "cpp"
+          #   platform: windows-2025
     runs-on: ${{ matrix.language-platform.platform }}
     steps:
       - name: Checkout repository
