@@ -14,7 +14,6 @@ project(
 
 set(CMAKE_CXX_STANDARD 11)
 
-
 # # cefsimple sources.
 # set(CEFSIMPLE_SRCS
 #   simple_app.cc
@@ -153,6 +152,13 @@ include_directories(
 )
 
 
+# corrosion_import_crate(MANIFEST_PATH ../../../../utils_rs/Cargo.toml)
+# corrosion_add_cxxbridge(
+#   authentik_sys_bridge
+#   CRATE authentik_sys
+#   FILES ffi.rs
+# )
+
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
@@ -171,6 +177,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   #${CEFSIMPLE_LIB_PATH}
   # ${LIBCEF_LIB_PATH}
   cefsimple
+  authentik_sys_bridge
   # libcef_lib
   # libcef_dll_wrappe
 )

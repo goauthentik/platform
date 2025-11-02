@@ -19,5 +19,5 @@ build:
 	mkdir -p ${TOP}/cache/${TARGET}
 	# To avoid the OpenSSL build using linux `link.exe`
 	mv /usr/bin/link.exe /usr/bin/link_bak || true
-	powershell.exe ./build.ps1 ${PWD} ${TOP} ${TARGET}
+	powershell.exe -noprofile -executionpolicy bypass -file ./build.ps1 ${PWD} ${TOP} ${TARGET}
 	cp -r ${TOP}/cache/${TARGET}/libcef_dll_wrapper/Release/* ${TOP}/bin/${TARGET}/

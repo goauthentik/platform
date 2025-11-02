@@ -3,15 +3,22 @@ name = "authentik_sys"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["staticlib"]
+
 [dependencies]
-syslog = "7.0.0"
 libc = "0.2.177"
 log = "0.4.28"
 serde = { version = "1.0.228", features = ["derive"] }
-prost = "0.12"
-prost-types = "0.12"
-tokio = "1.48.0"
-tonic = "0.11"
+prost = "0.13"
+prost-types = "0.13"
+tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
+tonic = "0.12.3"
 tower = { version = "0.5.2", features = ["util" ]}
 serde_json = "1.0.145"
 sentry = "0.45.0"
+cxx = "1.0.187"
+hyper-util = { version = "0.1.9", features = ["tokio"] }
+
+[target.'cfg(unix)'.dependencies]
+syslog = "7.0.0"
