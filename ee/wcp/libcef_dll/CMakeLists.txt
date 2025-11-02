@@ -976,6 +976,9 @@ if (MSVC)
     )
 endif()
 
+# set(SENTRY_BUILD_SHARED_LIBS OFF)
+# set(SENTRY_BUILD_RUNTIMESTATIC ON)
+
 target_link_libraries(${CEF_TARGET}
 	${CREDUI_LIB_PATH}
 	${SECUR32_LIB_PATH}
@@ -983,7 +986,7 @@ target_link_libraries(${CEF_TARGET}
   ${CRYPT32_LIB_PATH}
   ${NETAPI32_LIB_PATH}
   jwt-cpp
-  sentry
+  # sentry
   #${CEFSIMPLE_LIB_PATH}
   # ${LIBCEF_LIB_PATH}
   # cefsimple
