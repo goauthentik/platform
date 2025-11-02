@@ -986,6 +986,7 @@ target_link_libraries(${CEF_TARGET}
   ${CRYPT32_LIB_PATH}
   ${NETAPI32_LIB_PATH}
   jwt-cpp
+  authentik_sys_bridge
   # sentry
   #${CEFSIMPLE_LIB_PATH}
   # ${LIBCEF_LIB_PATH}

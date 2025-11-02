@@ -1,9 +1,14 @@
-use libc::{getegid, geteuid, getgid, getuid};
-use log::LevelFilter;
-use syslog::BasicLogger;
-use syslog::{Facility, Formatter3164};
-
+#[cfg(windows)]
 pub fn init_log(name: &str) {
+    eventlog::init(name, log::Level::Trace).unwrap();
+}
+
+#[cfg(unix)]
+pub fn init_log(name: &str) {
+    use syslog::BasicLogger;
+    use syslog::{Facility, Formatter3164};
+    use log::LevelFilter;
+
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
         hostname: None,
@@ -25,7 +30,10 @@ pub fn init_log(name: &str) {
 pub fn exit_log() {
 }
 
+#[cfg(unix)]
 pub fn log_hook(name: &str) {
+    use libc::{getegid, geteuid, getgid, getuid};
+
     let pid = std::process::id();
     let ppid = std::os::unix::process::parent_id();
     let uid = unsafe { getuid() };

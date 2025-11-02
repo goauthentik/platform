@@ -3,17 +3,11 @@
 package socket
 
 import (
-	"fmt"
 	"net"
-	"path"
 
 	"github.com/Microsoft/go-winio"
 	"goauthentik.io/platform/pkg/platform/pstr"
 )
-
-func pipeName(p string) string {
-	return fmt.Sprintf(`\\.\pipe\%s`, path.Base(p))
-}
 
 func listen(name pstr.PlatformString, perm SocketPermMode) (InfoListener, error) {
 	p := name.ForWindows()
@@ -31,13 +25,12 @@ func listen(name pstr.PlatformString, perm SocketPermMode) (InfoListener, error)
 	case SocketOwner:
 		sd = "D:(A;;FA;;;OW)"
 	}
-	n := pipeName(p)
-	l, err := winio.ListenPipe(n, &winio.PipeConfig{
+	l, err := winio.ListenPipe(p, &winio.PipeConfig{
 		SecurityDescriptor: sd,
 	})
 	return infoSocket{l, name}, err
 }
 
 func connect(path pstr.PlatformString) (net.Conn, error) {
-	return winio.DialPipe(pipeName(path.ForWindows()), nil)
+	return winio.DialPipe(path.ForWindows(), nil)
 }

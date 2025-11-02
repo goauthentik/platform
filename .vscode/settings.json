@@ -3,6 +3,8 @@
     "options": ["-I=protos/"]
   },
   "files.associations": {
+    "zshrc": "shellscript",
+    "*.hcl": "terraform",
     "xstring": "cpp"
   }
 }

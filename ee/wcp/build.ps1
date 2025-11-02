@@ -17,5 +17,6 @@ nmake /P
 pwd
 cd "$top/cache/$target"
 pwd
-cmake -B"$top/cache/$target" --debug-find -G "Visual Studio 17" "$top/ee/wcp"
+$env:VERBOSE = "true"
+cmake -B"$top/cache/$target" -G "Visual Studio 17" "$top/ee/wcp"
 cmake --build . --config Release

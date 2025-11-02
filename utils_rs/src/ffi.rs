@@ -1,0 +1,72 @@
+use cxx::CxxString;
+use std::error::Error;
+use std::pin::Pin;
+
+use crate::generated::agent::{Token};
+use crate::generated::grpc_request;
+use crate::generated::pam::pam_client::PamClient;
+use crate::generated::ping::ping_client::PingClient;
+use crate::generated::pam::{TokenAuthResponse, TokenAuthRequest};
+use crate::logger::init_log;
+
+#[cxx::bridge]
+mod ffi {
+    extern "Rust" {
+        type Token;
+        type TokenAuthRequest;
+        type TokenAuthResponse;
+
+        fn ak_grpc_ping(res: Pin<&mut CxxString>);
+        fn ak_token_validate(username: &CxxString, token: &CxxString) -> Result<bool>;
+
+        fn ak_log_init(name: &CxxString) -> Result<()>;
+        fn ak_log_msg(msg: &CxxString) -> Result<()>;
+    }
+}
+
+fn ak_grpc_ping(res: Pin<&mut CxxString>) {
+    let resp = match grpc_request(async |ch| {
+        return Ok(PingClient::new(ch)
+            .ping(())
+            .await?);
+    }) {
+        Ok(r) => r.into_inner().version,
+        Err(e) => e.to_string(),
+    };
+    res.push_str(&resp);
+}
+
+fn ak_token_validate(username: &CxxString, token: &CxxString) -> Result<bool, Box<dyn Error>> {
+    let u = username.to_str()?;
+    let p = token.to_str()?;
+    let response = match grpc_request(async |ch| {
+        return Ok(PamClient::new(ch)
+            .token_auth(TokenAuthRequest {
+                username: u.to_owned(),
+                token: p.to_owned(),
+            })
+            .await?);
+    }) {
+        Ok(t) => t.into_inner(),
+        Err(e) => {
+            return Err(e);
+        }
+    };
+
+    if !response.successful {
+        return Ok(false);
+    }
+    return Ok(true);
+}
+
+fn ak_log_init(name: &CxxString) -> Result<(), Box<dyn Error>> {
+    let n = name.to_str()?;
+    init_log(n);
+    Ok(())
+}
+
+fn ak_log_msg(msg: &CxxString) -> Result<(), Box<dyn Error>> {
+    let m = msg.to_str()?;
+    log::debug!("{}", m);
+    Ok(())
+}

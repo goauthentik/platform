@@ -14,7 +14,6 @@ project(
 
 set(CMAKE_CXX_STANDARD 11)
 
-
 # # cefsimple sources.
 # set(CEFSIMPLE_SRCS
 #   simple_app.cc
@@ -135,6 +134,7 @@ set(SRCS
   "pch.cpp"
   "Provider.cpp"
   "res/resource.rc"
+  "res/event.rc"
 )
 
 
@@ -151,8 +151,6 @@ include_directories(
 	res
   ../..
 )
-
-
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
 	set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
@@ -171,6 +169,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   #${CEFSIMPLE_LIB_PATH}
   # ${LIBCEF_LIB_PATH}
   cefsimple
+  authentik_sys_bridge
+  # sentry
   # libcef_lib
   # libcef_dll_wrappe
 )

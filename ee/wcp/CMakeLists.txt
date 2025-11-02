@@ -292,6 +292,39 @@ FetchContent_MakeAvailable(jwtcpp)
 
 # --- jwt-cpp and OpenSSL - End
 
+FetchContent_Declare(
+    Corrosion
+    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+    GIT_TAG v0.5 # Optionally specify a commit hash, version tag or branch here
+)
+# Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
+FetchContent_MakeAvailable(Corrosion)
+
+find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
+if (CXXBRIDGE STREQUAL "CXXBRIDGE-NOTFOUND")
+    message("Could not find cxxbridge, trying to install with `cargo install cxxbridge-cmd'")
+    find_program(CARGO cargo PATHS "$ENV{HOME}/.cargo/bin/")
+    if (CARGO STREQUAL "CARGO-NOTFOUND")
+        message(FATAL_ERROR "Requires cargo available in path, install via rustup https://rustup.rs/")
+    endif()
+    execute_process(COMMAND ${CARGO} install cxxbridge-cmd)
+    find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
+endif()
+
+corrosion_import_crate(MANIFEST_PATH ../../utils_rs/Cargo.toml)
+corrosion_add_cxxbridge(
+  authentik_sys_bridge
+  CRATE authentik_sys
+  FILES ffi.rs
+)
+
+if(MSVC)
+    set_property(TARGET authentik_sys PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+    set_property(TARGET authentik_sys_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+    corrosion_set_env_vars(authentik_sys "CFLAGS=-MT" "CXXFLAGS=-MT")
+    corrosion_set_env_vars(authentik_sys_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
+endif()
+
 # FetchContent_Declare(sentry
 #   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
 #   GIT_TAG 0.12.0
