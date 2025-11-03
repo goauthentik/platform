@@ -20,9 +20,14 @@
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
         <Directory Id="INSTALLFOLDER" Name="$(Name)">
-          <Directory Id="sysd_domains" Name="domains" />
-          <Directory Id="sysd_runtime" Name="runtime" />
-          <Directory Id="wcp_locale" Name="locales" />
+          <Directory Id="sysd" Name="sysd">
+            <Directory Id="sysd_domains" Name="domains" />
+            <Directory Id="sysd_runtime" Name="runtime" />
+          </Directory>
+          <Directory Id="browser_support" Name="browser_support" />
+          <Directory Id="wcp" Name="wcp">
+            <Directory Id="wcp_locale" Name="locales" />
+          </Directory>
         </Directory>
       </Directory>
     </StandardDirectory>
@@ -30,7 +35,7 @@
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
 
     <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64">
+      <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64" Directory="sysd">
         <CreateFolder Directory="sysd_domains" Subdirectory="domains" />
         <CreateFolder Directory="sysd_runtime" Subdirectory="runtime" />
         <File Id="ak_sysd"
@@ -68,7 +73,7 @@
         <File Id="ak_cli"
               Source="$(env.ROOT)/bin/cli/ak.exe" />
       </Component>
-      <Component Id="browser_support" Guid="e027d360-a9e1-4bd6-b168-1f56d1fcaf8f" Bitness="always64">
+      <Component Id="browser_support" Guid="e027d360-a9e1-4bd6-b168-1f56d1fcaf8f" Bitness="always64" Directory="browser_support">
         <File Id="ak_browser_support"
               Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe" KeyPath="true" />
         <File Id="browser_support_json"
@@ -86,7 +91,7 @@
           <RegistryValue Type="string" Value="[INSTALLFOLDER]browser-host.json"/>
         </RegistryKey>
       </Component>
-      <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64">
+      <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
         <util:EventSource Log="Application"
                           Name="authentik WCP"
                           EventMessageFile="[System64Folder]\mscoree.dll"/>
