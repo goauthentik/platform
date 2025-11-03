@@ -58,7 +58,7 @@ var agentCmd = &cobra.Command{
 }
 
 func init() {
-	defaultConfigFile = "C:\\Program Files\\Authentik Security Inc\\authentik Agent\\config.json"
+	defaultConfigFile = `C:\Program Files\Authentik Security Inc\sysd\config.json`
 	agentCmd.Flags().BoolVarP(&isDebug, "debug", "d", false, "Run in debug mode.")
 	rootCmd.AddCommand(agentCmd)
 }

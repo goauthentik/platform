@@ -7,9 +7,9 @@
   xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
   xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Id="authentik.Agent"
-           Name="$(Name)"
-           Manufacturer="$(Manufacturer)"
-           Version="$(Version)"
+           Name="$(var.Name)"
+           Manufacturer="$(var.Manufacturer)"
+           Version="$(var.Version)"
            UpgradeCode="$(var.UpgradeCode)"
            Compressed="true">
     <ui:WixUI Id="WixUI_InstallDir"
@@ -19,16 +19,16 @@
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
-        <Directory Id="INSTALLFOLDER" Name="$(Name)">
-          <Directory Id="sysd" Name="sysd">
-            <Directory Id="sysd_domains" Name="domains" />
-            <Directory Id="sysd_runtime" Name="runtime" />
-          </Directory>
-          <Directory Id="browser_support" Name="browser_support" />
-          <Directory Id="wcp" Name="wcp">
-            <Directory Id="wcp_locale" Name="locales" />
-          </Directory>
+        <Directory Id="sysd" Name="sysd">
+          <Directory Id="sysd_domains" Name="domains" />
+          <Directory Id="sysd_runtime" Name="runtime" />
         </Directory>
+        <Directory Id="browser_support" Name="browser_support" />
+        <Directory Id="wcp" Name="wcp">
+          <Directory Id="wcp_locale" Name="locales" />
+        </Directory>
+        <Directory Id="cli" Name="cli" />
+        <Directory Id="agent" Name="agent" />
       </Directory>
     </StandardDirectory>
     <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/icon.ico" />
@@ -65,11 +65,11 @@
                         Name="ak_sysd"
                         Wait="true" />
       </Component>
-      <Component Id="agent" Bitness="always64">
+      <Component Id="agent" Bitness="always64" Directory="agent">
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
       </Component>
-      <Component Id="cli" Bitness="always64">
+      <Component Id="cli" Bitness="always64" Directory="cli">
         <File Id="ak_cli"
               Source="$(env.ROOT)/bin/cli/ak.exe" />
       </Component>
