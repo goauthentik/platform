@@ -134,7 +134,6 @@ set(SRCS
   "pch.cpp"
   "Provider.cpp"
   "res/resource.rc"
-  "res/event.rc"
 )
 
 
@@ -170,6 +169,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   # ${LIBCEF_LIB_PATH}
   cefsimple
   authentik_sys_bridge
+  spdlog
   # sentry
   # libcef_lib
   # libcef_dll_wrappe

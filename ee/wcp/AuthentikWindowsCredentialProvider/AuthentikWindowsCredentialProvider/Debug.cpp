@@ -1,26 +1,29 @@
 #include "pch.h"
 #include "Debug.h"
-#include "authentik_sys_bridge/ffi.h"
-#include <Windows.h>
+#include "spdlog/spdlog.h"
+#include "spdlog/async.h"
+#include "spdlog/sinks/win_eventlog_sink.h"
+#include "spdlog/sinks/basic_file_sink.h"
 #include <string>
-#include "event.h"
-
 #define BUFFER_SIZE 10000
 
 std::mutex g_dbgMutex;
-HANDLE g_evtSource;
+bool g_logSetup;
 
 void Debug(const char* data, bool bReset)
 {
     g_dbgMutex.lock();
-    if (g_evtSource == NULL) {
-        g_evtSource = RegisterEventSourceW(L"", L"authentik WCP");
+    if (!g_logSetup) {
+        const auto win_sink = std::make_shared<spdlog::sinks::win_eventlog_sink_mt>("authentik WCP");
+        const auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("wcp.log");
+        std::vector<spdlog::sink_ptr> sinks {win_sink, file_sink};
+
+        const auto logger = std::make_shared<spdlog::async_logger>("wcp", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block);
+        spdlog::set_default_logger(logger);
+        g_logSetup = true;
     }
 
-    if (!ReportEvent(g_evtSource, EVENTLOG_ERROR_TYPE, 0, MSG_DEBUG, NULL, 1, 0, (LPCWSTR*)data, NULL))
-    {
-        wprintf(L"ReportEvent failed with 0x%x for event 0x%x.\n", GetLastError(), MSG_DEBUG);
-    }
+    spdlog::debug(data);
     g_dbgMutex.unlock();
 }
 

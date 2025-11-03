@@ -325,6 +325,13 @@ if(MSVC)
     corrosion_set_env_vars(authentik_sys_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
 endif()
 
+FetchContent_Declare(spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.16.0
+)
+FetchContent_MakeAvailable(spdlog)
+set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+
 # FetchContent_Declare(sentry
 #   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
 #   GIT_TAG 0.12.0
