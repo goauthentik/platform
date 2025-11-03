@@ -1,6 +1,6 @@
 [package]
 name = "authentik_pam"
-version = "0.16.7"
+version = "0.17.0"
 edition = "2024"
 license = "MIT"
 description = "libpam-authentik authenticates users through authentik."
