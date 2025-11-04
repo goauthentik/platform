@@ -256,6 +256,11 @@ endif()
 
 set(CMAKE_FIND_DEBUG_MODE OFF)
 
+add_compile_options("$<$<NOT:$<CONFIG:Debug>>:/Zi>")
+add_link_options("$<$<NOT:$<CONFIG:Debug>>:/DEBUG>")
+add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:REF>")
+add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>")
+
 # Set path to OpenSSL library directory for search
 set(OPENSSL_ROOT_DIR "${openssl_SOURCE_DIR}")
 
