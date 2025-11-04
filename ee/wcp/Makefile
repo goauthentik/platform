@@ -25,3 +25,11 @@ build:
 	mv /usr/bin/link.exe /usr/bin/link_bak || true
 	powershell.exe -noprofile -executionpolicy bypass -file ./build.ps1 ${PWD} ${TOP} ${TARGET}
 	cp -r ${TOP}/cache/${TARGET}/libcef_dll_wrapper/Release/* ${TOP}/bin/${TARGET}/
+ifdef SENTRY_AUTH_TOKEN
+	npx getsentry/sentry-cli debug-files upload \
+		--auth-token ${SENTRY_AUTH_TOKEN} \
+		--include-sources \
+		--org authentik-security-inc \
+		--project platform \
+		${TOP}/cache/${TARGET}/
+endif

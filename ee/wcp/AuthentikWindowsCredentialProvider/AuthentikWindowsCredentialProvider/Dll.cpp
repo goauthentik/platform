@@ -47,8 +47,9 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
   switch (dwReason) {
   case DLL_PROCESS_ATTACH: {
     SetPaths();
-    Debug("DllMain::DLL_PROCESS_ATTACH");
+    SetupLogs("libcef_dll_wrapper");
     SentrySetup("libcef_dll_wrapper");
+    Debug("DllMain::DLL_PROCESS_ATTACH");
     try {
       std::string ping = std::string("");
       ak_sys_grpc_ping(ping);

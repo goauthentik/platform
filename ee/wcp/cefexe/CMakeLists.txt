@@ -10,7 +10,7 @@ project(cefexe)
 
 set(SRCS
   cefexe.cpp
-  )
+)
 
 #
 # Windows configuration.
