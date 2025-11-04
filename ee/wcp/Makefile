@@ -6,7 +6,7 @@ TARGET := wcp
 
 .PHONY: bump
 bump:
-	sed -i 's/#define AK_WCP_VERSION ".*"/#define AK_WCP_VERSION ${VERSION}/g' ${PWD}/AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/Version.h
+	sed -i 's/#define AK_WCP_VERSION ".*"/#define AK_WCP_VERSION ${VERSION}/g' ${PWD}/AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/ak_version.h
 
 .PHONY: clean
 clean:

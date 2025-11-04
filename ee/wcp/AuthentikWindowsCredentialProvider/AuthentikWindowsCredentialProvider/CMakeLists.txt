@@ -125,6 +125,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Add source to this project's executable.
 set(SRCS
+  "ak_sentry.cpp"
   "ClassFactory.cpp"
   "Credential.cpp"
   "Debug.cpp"
@@ -170,7 +171,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   cefsimple
   authentik_sys_bridge
   spdlog
-  # sentry
+  sentry
   # libcef_lib
   # libcef_dll_wrappe
 )

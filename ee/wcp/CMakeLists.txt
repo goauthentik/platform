@@ -256,6 +256,7 @@ endif()
 
 set(CMAKE_FIND_DEBUG_MODE OFF)
 
+# Always generate debug symbols
 add_compile_options("$<$<NOT:$<CONFIG:Debug>>:/Zi>")
 add_link_options("$<$<NOT:$<CONFIG:Debug>>:/DEBUG>")
 add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:REF>")
@@ -337,13 +338,18 @@ FetchContent_Declare(spdlog
 FetchContent_MakeAvailable(spdlog)
 set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
-# FetchContent_Declare(sentry
-#   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
-#   GIT_TAG 0.12.0
-#   DOWNLOAD_EXTRACT_TIMESTAMP OFF
-# )
-# set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
-# FetchContent_MakeAvailable(sentry)
+FetchContent_Declare(sentry
+  GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
+  GIT_TAG 0.12.0
+  DOWNLOAD_EXTRACT_TIMESTAMP OFF
+)
+set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
+set(SENTRY_BUILD_SHARED_LIBS OFF)
+set(SENTRY_BUILD_RUNTIMESTATIC ON)
+set(SENTRY_BACKEND breakpad)
+FetchContent_MakeAvailable(sentry)
+set_property(TARGET sentry PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+
 
 #
 # Define CEF-based targets.

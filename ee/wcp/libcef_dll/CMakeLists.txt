@@ -901,6 +901,7 @@ set(WCP_PATH "../AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialPr
 set(WCP_SRCS
   "${WCP_PATH}/ClassFactory.cpp"
   "${WCP_PATH}/Credential.cpp"
+  "${WCP_PATH}/ak_sentry.cpp"
   "${WCP_PATH}/Debug.cpp"
   "${WCP_PATH}/Dll.cpp"
   "${WCP_PATH}/GUIDs.cpp"
@@ -976,9 +977,6 @@ if (MSVC)
     )
 endif()
 
-# set(SENTRY_BUILD_SHARED_LIBS OFF)
-# set(SENTRY_BUILD_RUNTIMESTATIC ON)
-
 target_link_libraries(${CEF_TARGET}
 	${CREDUI_LIB_PATH}
 	${SECUR32_LIB_PATH}
@@ -988,7 +986,7 @@ target_link_libraries(${CEF_TARGET}
   jwt-cpp
   authentik_sys_bridge
   spdlog
-  # sentry
+  sentry
   #${CEFSIMPLE_LIB_PATH}
   # ${LIBCEF_LIB_PATH}
   # cefsimple
