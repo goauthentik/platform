@@ -44,7 +44,7 @@ func run(path string, opts eopts) (lastLogs string, err error) {
 	var cmd *exec.Cmd
 	// If we have a user in the options, use sudo to run "open" as that user
 	if opts.user != "" {
-		arg = append([]string{"-u", opts.user, "/usr/bin/open"}, arg...)
+		arg = append([]string{"-H", "-u", opts.user, "/usr/bin/open"}, arg...)
 		cmd = exec.Command("sudo", arg...)
 	} else {
 		// Otherwise, just run "open" as the current user
