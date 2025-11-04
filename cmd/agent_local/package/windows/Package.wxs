@@ -12,9 +12,11 @@
            Version="$(var.Version)"
            UpgradeCode="$(var.UpgradeCode)"
            Compressed="true">
-    <ui:WixUI Id="WixUI_InstallDir"
+    <ui:WixUI Id="AK_WixUI_FeatureTree"
               InstallDirectory="INSTALLFOLDER" />
-    <UIRef Id="WixUI_ErrorProgressText" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(env.PWD)/package/windows/resources/WixUIDialogBmp.png" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(env.PWD)/package/windows/resources/WixUIBannerBmp.png" />
+
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFiles64Folder">
@@ -31,7 +33,7 @@
         <Directory Id="agent" Name="agent" />
       </Directory>
     </StandardDirectory>
-    <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/icon.ico" />
+    <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
 
     <DirectoryRef Id="INSTALLFOLDER">
@@ -182,13 +184,41 @@
       </Component>
     </DirectoryRef>
 
-    <Feature Id="Main" Title="authentik Agent Setup" Level="1">
-      <ComponentRef Id="sysd" />
-      <ComponentRef Id="agent" />
-      <ComponentRef Id="cli" />
-      <ComponentRef Id="browser_support" />
-      <ComponentRef Id="credential_provider" />
-      <ComponentRef Id="credential_provider_locales" />
+    <Feature Id="root"
+             Title="authentik Platform Agent"
+             Level="1"
+             Display="expand"
+             Description="authentik Platform Agent">
+      <Feature Id="agents"
+               Title="System &amp; User agents"
+               Level="1"
+               AllowAbsent="no"
+               Description="System and User agents, required.">
+        <ComponentRef Id="sysd" />
+        <ComponentRef Id="agent" />
+      </Feature>
+      <Feature Id="cli"
+               Title="authentik CLI"
+               Level="1"
+               AllowAbsent="yes"
+               Description="CLI to access applications and services.">
+        <ComponentRef Id="cli" />
+      </Feature>
+      <Feature Id="browser_support"
+               Title="Browser support"
+               Level="1"
+               AllowAbsent="yes"
+               Description="Helper for use with the browser extension.">
+        <ComponentRef Id="browser_support" />
+      </Feature>
+      <Feature Id="credential_provider"
+               Title="Credential provider"
+               Level="2"
+               AllowAbsent="yes"
+               Description="Log into Windows using authentik.">
+        <ComponentRef Id="credential_provider" />
+        <ComponentRef Id="credential_provider_locales" />
+      </Feature>
     </Feature>
   </Package>
 </Wix>
