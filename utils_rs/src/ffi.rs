@@ -7,7 +7,6 @@ use crate::generated::grpc_request;
 use crate::generated::pam::pam_client::PamClient;
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::pam::{TokenAuthResponse, TokenAuthRequest};
-use crate::logger::init_log;
 
 #[cxx::bridge]
 mod ffi {
@@ -18,9 +17,6 @@ mod ffi {
 
         fn ak_grpc_ping(res: Pin<&mut CxxString>);
         fn ak_token_validate(username: &CxxString, token: &CxxString) -> Result<bool>;
-
-        fn ak_log_init(name: &CxxString) -> Result<()>;
-        fn ak_log_msg(msg: &CxxString) -> Result<()>;
     }
 }
 
@@ -57,16 +53,4 @@ fn ak_token_validate(username: &CxxString, token: &CxxString) -> Result<bool, Bo
         return Ok(false);
     }
     return Ok(true);
-}
-
-fn ak_log_init(name: &CxxString) -> Result<(), Box<dyn Error>> {
-    let n = name.to_str()?;
-    init_log(n);
-    Ok(())
-}
-
-fn ak_log_msg(msg: &CxxString) -> Result<(), Box<dyn Error>> {
-    let m = msg.to_str()?;
-    log::debug!("{}", m);
-    Ok(())
 }

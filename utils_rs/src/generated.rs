@@ -38,16 +38,12 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
             use tokio::time;
             use tokio::net::windows::named_pipe::ClientOptions;
 
-            let path = p.query().unwrap().to_string();
-            eprintln!("connecting to '{}'", path);
+            let path = p.query().ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?.to_string();
             let client = loop {
                 match ClientOptions::new().open(&path) {
                     Ok(client) => break client,
                     Err(e) if e.raw_os_error() == Some(231) => (),
-                    Err(e) => {
-                        eprintln!("err {}", e);
-                        return Err(e)
-                    },
+                    Err(e) => return Err(e),
                 }
 
                 time::sleep(Duration::from_millis(50)).await;
@@ -61,13 +57,7 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
 pub fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
     future: impl Fn(Channel) -> F,
 ) -> Result<T, Box<dyn Error>> {
-    let rt = match Builder::new_current_thread().enable_all().build() {
-        Ok(rt) => rt,
-        Err(e) => {
-            log::warn!("Failed to create runtime: {e}");
-            return Err(Box::from(e));
-        }
-    };
+    let rt = Builder::new_current_thread().enable_all().build()?;
     let config = Config::get();
 
     rt.block_on(async {
