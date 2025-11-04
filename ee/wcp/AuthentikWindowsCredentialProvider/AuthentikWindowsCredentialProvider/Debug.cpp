@@ -23,6 +23,7 @@ void Debug(const char* data, bool bReset)
         // const auto logger = std::make_shared<spdlog::async_logger>("wcp", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block);
         const auto logger = spdlog::basic_logger_mt("authentik-wcp", g_strPath+"\\wcp.log");
         spdlog::set_level(spdlog::level::debug);
+        spdlog::flush_every(std::chrono::seconds(5));
         spdlog::set_default_logger(logger);
         g_logSetup = true;
     }

@@ -10,17 +10,25 @@ use crate::generated::pam::{TokenAuthResponse, TokenAuthRequest};
 
 #[cxx::bridge]
 mod ffi {
+    struct WCPOAuthConfig {
+        pub url: String,
+        pub client_id: String,
+    }
+
     extern "Rust" {
         type Token;
         type TokenAuthRequest;
         type TokenAuthResponse;
 
-        fn ak_grpc_ping(res: Pin<&mut CxxString>);
-        fn ak_token_validate(username: &CxxString, token: &CxxString) -> Result<bool>;
+        fn ak_sys_grpc_ping(res: Pin<&mut CxxString>);
+        fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool>;
+
+        fn ak_sys_wcp_oauth_config(res: &mut WCPOAuthConfig) -> Result<bool>;
     }
 }
 
-fn ak_grpc_ping(res: Pin<&mut CxxString>) {
+
+fn ak_sys_grpc_ping(res: Pin<&mut CxxString>) {
     let resp = match grpc_request(async |ch| {
         return Ok(PingClient::new(ch)
             .ping(())
@@ -32,7 +40,7 @@ fn ak_grpc_ping(res: Pin<&mut CxxString>) {
     res.push_str(&resp);
 }
 
-fn ak_token_validate(username: &CxxString, token: &CxxString) -> Result<bool, Box<dyn Error>> {
+fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool, Box<dyn Error>> {
     let u = username.to_str()?;
     let p = token.to_str()?;
     let response = match grpc_request(async |ch| {
@@ -53,4 +61,14 @@ fn ak_token_validate(username: &CxxString, token: &CxxString) -> Result<bool, Bo
         return Ok(false);
     }
     return Ok(true);
+}
+
+fn ak_sys_wcp_oauth_config(res: &mut ffi::WCPOAuthConfig) -> Result<bool, Box<dyn Error>> {
+    let config = ffi::WCPOAuthConfig{
+        url: "https://windows-cred-provider.pr.test.goauthentik.io".to_string(),
+        client_id: "UCAXCsLq1DVR08hYrjDGFPFekCVXmNTEn6eeoenO".to_string(),
+    };
+    res.url = config.url;
+    res.client_id = config.client_id;
+    Ok(true)
 }

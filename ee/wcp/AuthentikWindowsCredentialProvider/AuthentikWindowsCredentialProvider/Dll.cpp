@@ -6,7 +6,7 @@
 
 #include <string>
 #include "ak_sentry.h"
-
+#include "spdlog/spdlog.h"
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
 
@@ -56,7 +56,7 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
 
     try {
         std::string ping = std::string("");
-        ak_grpc_ping(ping);
+        ak_sys_grpc_ping(ping);
         Debug(std::string("sysd version: ").append(ping).c_str());
     } catch (const std::exception& ex) {
         Debug("Exception in ak_grpc_ping");
@@ -128,5 +128,6 @@ STDAPI DllCanUnloadNow()
         return S_FALSE;
     }
     // SentryShutdown();
+    spdlog::shutdown();
     return S_OK;
 }

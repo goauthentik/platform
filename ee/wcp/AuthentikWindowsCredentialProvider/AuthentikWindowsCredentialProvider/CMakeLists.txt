@@ -126,6 +126,7 @@ set(CMAKE_CXX_STANDARD 11)
 # Add source to this project's executable.
 set(SRCS
   "ak_sentry.cpp"
+  "ak_config.cpp"
   "ClassFactory.cpp"
   "Credential.cpp"
   "Debug.cpp"
