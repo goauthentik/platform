@@ -43,11 +43,10 @@
               KeyPath="true" />
         <File Id="ak_sysd_config"
               Source="$(env.ROOT)/cmd/agent_system/package/windows/config.json" />
-        <!-- <RemoveFile Id="ALLFILES" Name="*.*" On="both" /> -->
 
         <util:EventSource Log="Application"
-                          Name="authentik Sysd"
-                          EventMessageFile="[System64Folder]\EventCreate.exe"/>
+                          Name="authentik System Service"
+                          EventMessageFile="[System64Folder]EventCreate.exe"/>
 
         <ServiceInstall Id="ServiceInstaller"
                         Type="ownProcess"
@@ -92,10 +91,6 @@
         </RegistryKey>
       </Component>
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
-        <util:EventSource Log="Application"
-                          Name="authentik WCP"
-                          EventMessageFile="[System64Folder]\mscoree.dll"/>
-
         <File Id="wcp_cefexe_exe" Source="$(env.ROOT)/bin/wcp/cefexe.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
         <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />

@@ -20,6 +20,7 @@ TCHAR g_path[MAX_PATH];
 std::string g_strPath = "";
 
 
+// Find the path of us (the dll) and the parent directory
 void SetPaths()
 {
     GetModuleFileName(g_hinst, g_path, MAX_PATH);
@@ -51,17 +52,22 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
                         __in LPVOID lpReserved
                      )
 {
+    g_hinst = hinstDll;
     // std::string release = std::string("ak-platform-wcp@").append(AK_WCP_VERSION);
     // sentry_options_t *options = sentry_options_new();
     // sentry_options_set_dsn(options, "https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512");
     // sentry_options_set_release(options, release.c_str());
     // sentry_init(options);
 
-    std::string ping = std::string("");
-    ak_grpc_ping(ping);
-    Debug(std::string("sysd version: ").append(ping).c_str());
+    try {
+        std::string ping = std::string("");
+        ak_grpc_ping(ping);
+        Debug(std::string("sysd version: ").append(ping).c_str());
+    } catch (const std::exception& ex) {
+        Debug("Exception in ak_grpc_ping");
+        Debug(ex.what());
+    }
 
-    g_hinst = hinstDll;
     switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
