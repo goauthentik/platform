@@ -51,7 +51,8 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
                      )
 {
     g_hinst = hinstDll;
-    SentrySetup("libcef_dll_wrapper");
+    // SentrySetup("libcef_dll_wrapper");
+    Debug("DllMain");
 
     try {
         std::string ping = std::string("");
@@ -126,6 +127,6 @@ STDAPI DllCanUnloadNow()
     if (g_cRef > 0) {
         return S_FALSE;
     }
-    SentryShutdown();
+    // SentryShutdown();
     return S_OK;
 }
