@@ -2,7 +2,7 @@ package agentstarter
 
 import (
 	"context"
-	"errors"
+	"time"
 
 	"github.com/avast/retry-go/v4"
 	log "github.com/sirupsen/logrus"
@@ -16,19 +16,20 @@ import (
 type Server struct {
 	log *log.Entry
 
-	ctx context.Context
+	ctx     context.Context
+	started bool
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log: ctx.Log,
-		ctx: ctx.Context,
+		log:     ctx.Log,
+		ctx:     ctx.Context,
+		started: false,
 	}
 	return srv, nil
 }
 
 func (as *Server) Start() error {
-
 	go as.start()
 	return nil
 }
@@ -40,22 +41,40 @@ func (as *Server) Stop() error {
 func (as *Server) Register(s grpc.ServiceRegistrar) {}
 
 func (as *Server) start() {
-	retry.Do(
-		as.startSingle,
-		retry.Context(as.ctx),
-	)
+	for {
+		select {
+		case <-as.ctx.Done():
+			return
+		default:
+			_ = retry.Do(
+				as.startSingle,
+				retry.Context(as.ctx),
+				retry.DelayType(retry.FixedDelay),
+				retry.Delay(3*time.Second),
+				retry.OnRetry(func(attempt uint, err error) {
+					if err != nil {
+						as.log.WithField("attempt", attempt).WithError(err).Warning("failed to start agent")
+					}
+				}),
+			)
+			as.started = true
+			return
+		}
+	}
 }
 
 func (as *Server) agentExec() pstr.PlatformString {
 	return pstr.PlatformString{
-		Darwin:  pstr.S("/Applications/authentik Agent.app/Contents/MacOS/ak-agent"),
+		Darwin:  pstr.S("/Applications/authentik Agent.app"),
 		Linux:   pstr.S("/usr/bin/ak-agent"),
 		Windows: pstr.S(`C:\Program Files\Authentik Security Inc\agent\ak-agent.exe`),
 	}
 }
 
 func (as *Server) startSingle() error {
-	opts := []execuser.Option{}
+	opts := []execuser.Option{
+		execuser.WithEnv("AK_AGENT_SUPERVISED", "true"),
+	}
 
 	loggedInUser, err := userpkg.UserLoggedInViaGui()
 	if err != nil {
@@ -66,8 +85,8 @@ func (as *Server) startSingle() error {
 		as.log.Debug("No GUI user found, skipping ak-agent start")
 		return nil
 	}
-	as.log.Debugf("Found GUI user: %v, attempting ak-agent start", loggedInUser)
 	if *loggedInUser != "" {
+		as.log.WithField("user", *loggedInUser).Debug("Found GUI user, attempting ak-agent start")
 		opts = append(opts, execuser.WithUser(*loggedInUser))
 	}
 
@@ -75,10 +94,10 @@ func (as *Server) startSingle() error {
 	// To be able to run the desktop application (mostly to register the icon in the system tray)
 	// we need to run the application as the login user.
 	// Package execuser provides multi-platform support for this.
-	if _, err := execuser.Run(as.agentExec().ForCurrent(), opts...); err != nil {
-		as.log.WithError(err).Debug("execuser.Run")
-		// d.processLog(lastLogs)
-		return nil
+	lastLogs, err := execuser.Run(as.agentExec().ForCurrent(), opts...)
+	if err != nil {
+		as.log.WithField("logs", lastLogs).WithError(err).Debug("execuser.Run")
+		return err
 	}
-	return errors.New("retry")
+	return nil
 }
