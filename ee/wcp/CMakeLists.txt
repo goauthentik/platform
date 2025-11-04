@@ -346,7 +346,7 @@ FetchContent_Declare(sentry
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 set(SENTRY_BUILD_SHARED_LIBS OFF)
 set(SENTRY_BUILD_RUNTIMESTATIC ON)
-set(SENTRY_BACKEND breakpad)
+set(SENTRY_BACKEND inproc)
 FetchContent_MakeAvailable(sentry)
 set_property(TARGET sentry PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 

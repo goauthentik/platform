@@ -51,24 +51,23 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
                      )
 {
     g_hinst = hinstDll;
-    // SentrySetup("libcef_dll_wrapper");
-    Debug("DllMain");
-
-    try {
-        std::string ping = std::string("");
-        ak_sys_grpc_ping(ping);
-        Debug(std::string("sysd version: ").append(ping).c_str());
-    } catch (const std::exception& ex) {
-        Debug("Exception in ak_grpc_ping");
-        Debug(ex.what());
-    }
 
     switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
     {
         SetPaths();
-        Debug("BISMILLAAHIRRAHMAANIRRAHEEM");
+        Debug("DllMain::DLL_PROCESS_ATTACH");
+        SentrySetup("libcef_dll_wrapper");
+        try {
+            std::string ping = std::string("");
+            ak_sys_grpc_ping(ping);
+            Debug(std::string("sysd version: ").append(ping).c_str());
+        } catch (const std::exception& ex) {
+            Debug("Exception in ak_grpc_ping");
+            Debug(ex.what());
+        }
+
         DisableThreadLibraryCalls(hinstDll);
         Debug(std::string("DLL hInstance: " + std::to_string((size_t)hinstDll)).c_str());
         std::string strID = "DLL ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
@@ -79,10 +78,9 @@ STDAPI_(BOOL) DllMain(  __in HINSTANCE hinstDll,
     case DLL_THREAD_DETACH:
         break;
     case DLL_PROCESS_DETACH:
-    // {
-    //     std::string strID = "Detach DLL ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    //     Debug(strID.c_str());
-    // }
+        Debug("DllMain::DLL_PROCESS_DETACH");
+        SentryShutdown();
+        spdlog::shutdown();
         break;
     }
     return TRUE;
@@ -127,7 +125,5 @@ STDAPI DllCanUnloadNow()
     if (g_cRef > 0) {
         return S_FALSE;
     }
-    // SentryShutdown();
-    spdlog::shutdown();
     return S_OK;
 }
