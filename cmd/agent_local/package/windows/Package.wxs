@@ -103,6 +103,7 @@
         <File Id="wcp_libcef_dll_wrapper_dll" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.dll" KeyPath="true" />
         <File Id="wcp_libcef_dll_wrapper_exp" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.exp" />
         <File Id="wcp_libcef_dll_wrapper_lib" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.lib" />
+        <File Id="wcp_libcef_dll_wrapper_pdb" Source="$(env.ROOT)/bin/wcp/libcef_dll_wrapper.pdb" />
         <File Id="wcp_libcrypto_3_x64_dll" Source="$(env.ROOT)/bin/wcp/libcrypto-3-x64.dll" />
         <File Id="wcp_libEGL_dll" Source="$(env.ROOT)/bin/wcp/libEGL.dll" />
         <File Id="wcp_libGLESv2_dll" Source="$(env.ROOT)/bin/wcp/libGLESv2.dll" />
