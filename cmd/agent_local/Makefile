@@ -85,8 +85,15 @@ package-msys: clean build
 	"$(MAKE)" -C ${TOP} sysd/build
 	"$(MAKE)" -C ${TOP} browser_support/build
 	"$(MAKE)" -C ${TOP} ee/wcp/build || true
+	mkdir -p "${TOP}/cache/${TARGET}"
+	dotnet restore \
+		--packages "${TOP}/cache/${TARGET}" \
+		"$(shell pwd)/package/windows/"
 	ROOT=${TOP} VERSION=${VERSION} dotnet build \
-		-o "${TOP}/bin/${TARGET}/" \
+		--packages "${TOP}/cache/${TARGET}" \
+		--artifacts-path "${TOP}/cache/${TARGET}" \
+		--output "${TOP}/bin/${TARGET}/" \
+		--no-restore \
 		"$(shell pwd)/package/windows/"
 
 test-deploy: package

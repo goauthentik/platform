@@ -26,7 +26,7 @@
 #
 # CMakeLists.txt              Bootstrap that sets up the CMake environment.
 # cmake/*.cmake               CEF configuration files shared by all targets.
-# libcef_dll/CMakeLists.txt   Defines the libcef_dll_wrapper target.
+# libcef_dll/CMakeLists.txt   Defines the ak_cred_provider target.
 # tests/*/CMakeLists.txt      Defines the test application target.
 #
 # See the "TODO:" comments below for guidance on how to integrate this CEF
@@ -256,6 +256,12 @@ endif()
 
 set(CMAKE_FIND_DEBUG_MODE OFF)
 
+# Always generate debug symbols
+add_compile_options("$<$<NOT:$<CONFIG:Debug>>:/Zi>")
+add_link_options("$<$<NOT:$<CONFIG:Debug>>:/DEBUG>")
+add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:REF>")
+add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>")
+
 # Set path to OpenSSL library directory for search
 set(OPENSSL_ROOT_DIR "${openssl_SOURCE_DIR}")
 
@@ -332,22 +338,27 @@ FetchContent_Declare(spdlog
 FetchContent_MakeAvailable(spdlog)
 set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
-# FetchContent_Declare(sentry
-#   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
-#   GIT_TAG 0.12.0
-#   DOWNLOAD_EXTRACT_TIMESTAMP OFF
-# )
-# set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
-# FetchContent_MakeAvailable(sentry)
+FetchContent_Declare(sentry
+  GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
+  GIT_TAG 0.12.0
+  DOWNLOAD_EXTRACT_TIMESTAMP OFF
+)
+set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
+set(SENTRY_BUILD_SHARED_LIBS OFF)
+set(SENTRY_BUILD_RUNTIMESTATIC ON)
+set(SENTRY_BACKEND inproc)
+FetchContent_MakeAvailable(sentry)
+set_property(TARGET sentry PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+
 
 #
 # Define CEF-based targets.
 #
 
-# Include the libcef_dll_wrapper target.
+# Include the ak_cred_provider target.
 # Comes from the libcef_dll/CMakeLists.txt file in the binary distribution
 # directory.
-add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
+add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} ak_cred_provider)
 
 # Include application targets.
 # Comes from the <target>/CMakeLists.txt file in the current directory.
@@ -356,10 +367,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
   # add_subdirectory(tests/cefsimple)
 endif()
 
-# add_subdirectory(AuthentikWindowsCredentialProvider)
+# add_subdirectory(ak_cred_provider)
 
 # Set the project output directory for subprojects, such as `cefexe`, to copy their binaries to
-set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/libcef_dll_wrapper/Release")
+set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 add_subdirectory(cefexe)
 # Copy cefexe executable and OpenSSL library file to the common build directory
 file(COPY "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll" DESTINATION "${PROJECT_INSALL_DIR}")

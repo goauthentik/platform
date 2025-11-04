@@ -1,7 +1,8 @@
 #include "include/cef_app.h"
 #include "cefsimple/simple_app.h"
 
-#include "AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/Debug.h"
+#include "ak_cred_provider/include/Debug.h"
+#include "ak_cred_provider/include/ak_sentry.h"
 #include <Synchapi.h>
 //#pragma comment(lib,"libcef.lib")
 
@@ -19,7 +20,10 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	HINSTANCE hInst = GetModuleHandle(0);
 
 	CefMainArgs main_args(hInst);
-	// Debug("cefexe");
+
+	SetupLogs("cefexe");
+	SentrySetup("cefexe");
+	Debug("wWinMain");
 
 	// printf("> %d\n", argc);
 	// for (int i = 0; i < argc; ++i)
@@ -46,6 +50,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	{
 		Debug("cefexe: CefExecuteProcess... catch...!");
 	}
-
+	SentryShutdown();
 	return ret;
 }

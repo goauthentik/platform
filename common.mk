@@ -19,3 +19,13 @@ LD_FLAGS = -X goauthentik.io/platform/pkg/meta.Version=${VERSION} -X goauthentik
 GO_FLAGS = -ldflags "${LD_FLAGS}" -v
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
+
+define sentry_upload_symbols
+	npx getsentry/sentry-cli debug-files upload \
+		--auth-token ${SENTRY_AUTH_TOKEN} \
+		--include-sources \
+		--org authentik-security-inc \
+		--project platform \
+		--log-level debug \
+		$(1)
+endef

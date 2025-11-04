@@ -9,9 +9,10 @@
 // #include "cefsimple/simple_app.h"
 #include "cefsimple/simple_handler.h"
 #include "cefsimple/cefsimple_win.h"
-#include "AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/Debug.h"
+#include "ak_cred_provider/include/Debug.h"
 #include "crypt.h"
 #include "Credential.h"
+#include <ak_sentry.h>
 
 extern std::string g_strPath;
 
@@ -29,6 +30,9 @@ extern std::string g_strPath;
 
 int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
 
+  SetupLogs("cef");
+  SentrySetup("cef");
+
   Debug("CEFLaunch(...)");
   Debug(std::string("CEFLaunch(...):  " + std::to_string((size_t)(Credential::m_oCefAppData.IsInit()))).c_str());
   MSG msg;
@@ -44,14 +48,14 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
-    Sleep(3);
+    Sleep(1);
   }
   Debug("CEFLaunch first loop end");
 
   CefRefPtr<CefCommandLine> command_line =
       CefCommandLine::GetGlobalCommandLine();
 
-      bool use_alloy_style = command_line->HasSwitch("use-alloy-style");
+  bool use_alloy_style = command_line->HasSwitch("use-alloy-style");
   CefRefPtr<SimpleHandler> pHandler(new SimpleHandler(use_alloy_style, pData));
   if (! (pCefApp->LaunchBrowser(pHandler, use_alloy_style)))
   {
@@ -141,6 +145,6 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
   }
 
   Debug("CefRunMessageLoop end");
-
+  SentryShutdown();
   return 0;
 }

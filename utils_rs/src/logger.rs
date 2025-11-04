@@ -1,9 +1,3 @@
-#[cfg(windows)]
-pub fn init_log(name: &str) {
-    eventlog::init(name, log::Level::Trace).unwrap();
-}
-
-#[cfg(unix)]
 pub fn init_log(name: &str) {
     use syslog::BasicLogger;
     use syslog::{Facility, Formatter3164};
@@ -30,7 +24,6 @@ pub fn init_log(name: &str) {
 pub fn exit_log() {
 }
 
-#[cfg(unix)]
 pub fn log_hook(name: &str) {
     use libc::{getegid, geteuid, getgid, getuid};
 

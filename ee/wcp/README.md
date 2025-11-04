@@ -25,7 +25,7 @@ cmake --build . --config Release
 
 Alternatively, instead of the last step, open the Visual Studio solution file `cef.sln` inside the *build* directory and build the solution (F7) inside the Visual Studio.
 
-The credential provider files are generated inside the `build/libcef_dll_wrapper/Release` subdirectory.
+The credential provider files are generated inside the `build/ak_cred_provider/Release` subdirectory.
 
 #### Installer package
 
@@ -45,7 +45,7 @@ The setup package files are available in `build/Release` subdirectory.
 
 #### Testing
 
-During development, the registry setup files inside the `AuthentikWindowsCredentialProvider/Setup` path could be used to register the credential provide inside the `build` directory for testing.
+During development, the registry setup files inside the `ak_cred_provider/Setup` path could be used to register the credential provide inside the `build` directory for testing.
 
 The setup file/ installer registers the credential provider similarly, so **take note** that either the credential provider inside the build directory or the credential provider installed via the Setup file could be displayed at the logon prompt UI at a time and not both simultaneously.
 

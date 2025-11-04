@@ -25,12 +25,7 @@ build:
 		-derivedDataPath "${TOP}/cache/${TARGET}"
 	cp -R "${TOP}/cache/${TARGET}/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 ifdef SENTRY_AUTH_TOKEN
-	npx getsentry/sentry-cli debug-files upload \
-		--auth-token ${SENTRY_AUTH_TOKEN} \
-		--include-sources \
-		--org authentik-security-inc \
-		--project platform \
-		${TOP}/cache/${TARGET}/Build/Products/Release
+	@$(call sentry_upload_symbols,"${TOP}/cache/${TARGET}/Build/Products/Release")
 endif
 
 .PHONY: format

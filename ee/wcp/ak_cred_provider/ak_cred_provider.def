@@ -1,0 +1,17 @@
+;ak_cred_provider.def
+; ak_cred_provider module-definition file
+; LIBRARY ak_cred_provider.dll
+; LIBRARY
+; LIBRARY ak_cred_provider.dll
+LIBRARY ak_cred_provider.dll
+
+EXPORTS
+    DllCanUnloadNow                                 PRIVATE
+    DllGetClassObject                               PRIVATE
+    CefExecuteProcess
+    Debug
+    SetupLogs
+    SentrySetup
+    SentryShutdown
+
+    CEFLaunch   ; //- todo: remove

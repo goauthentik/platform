@@ -5,6 +5,8 @@
 #include "cefsimple/simple_app.h"
 
 #include <string>
+#include "Debug.h"
+#include "Credential.h"
 
 #include "include/cef_browser.h"
 #include "include/cef_command_line.h"
@@ -12,7 +14,7 @@
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_helpers.h"
 #include "cefsimple/simple_handler.h"
-#include "AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/resource.h"
+#include "ak_cred_provider/include/resource.h"
 #include "include/cef_image.h"
 
 // GetModuleHandle(NULL) returns a handle to the module that was used to create the process.
