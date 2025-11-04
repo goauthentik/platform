@@ -43,24 +43,16 @@ fn ak_sys_grpc_ping(res: Pin<&mut CxxString>) {
 fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool, Box<dyn Error>> {
     let u = username.to_str()?;
     let p = token.to_str()?;
-    let response = match grpc_request(async |ch| {
+    let response = grpc_request(async |ch| {
         return Ok(PamClient::new(ch)
             .token_auth(TokenAuthRequest {
                 username: u.to_owned(),
                 token: p.to_owned(),
             })
             .await?);
-    }) {
-        Ok(t) => t.into_inner(),
-        Err(e) => {
-            return Err(e);
-        }
-    };
+    })?.into_inner();
 
-    if !response.successful {
-        return Ok(false);
-    }
-    return Ok(true);
+    return Ok(response.successful);
 }
 
 fn ak_sys_wcp_oauth_config(res: &mut ffi::WCPOAuthConfig) -> Result<bool, Box<dyn Error>> {
