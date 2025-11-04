@@ -1,11 +1,11 @@
-﻿# CMakeList.txt : CMake project for AuthentikWindowsCredentialProvider, include source and define
+﻿# CMakeList.txt : CMake project for ak_cred_provider, include source and define
 # project specific logic here.
 #
 
 set(CMAKE_BUILD_TYPE Release)
 
 project(
-  AuthentikWindowsCredentialProvider
+  ak_cred_provider
   LANGUAGES CXX
   VERSION 0.16.7
 )
@@ -40,7 +40,7 @@ add_library (${PROJECT_NAME} SHARED
 include_directories(
 	include
 	res
-  ../..
+  ../
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

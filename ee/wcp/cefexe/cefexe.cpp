@@ -1,8 +1,8 @@
 #include "include/cef_app.h"
 #include "cefsimple/simple_app.h"
 
-#include "AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/Debug.h"
-#include "AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider/include/ak_sentry.h"
+#include "ak_cred_provider/include/Debug.h"
+#include "ak_cred_provider/include/ak_sentry.h"
 #include <Synchapi.h>
 //#pragma comment(lib,"libcef.lib")
 

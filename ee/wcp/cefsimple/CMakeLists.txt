@@ -27,7 +27,7 @@ set(CEFSIMPLE_SRCS_MAC
   )
 set(CEFSIMPLE_SRCS_WINDOWS
   # cefsimple_win.h
-  
+
   cefsimple_win.cc
   resource.h
   simple_handler_win.cc
@@ -106,8 +106,8 @@ if(OS_LINUX)
   # Executable target.
   add_executable(${CEF_TARGET} ${CEFSIMPLE_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  add_dependencies(${CEF_TARGET} ak_cred_provider)
+  target_link_libraries(${CEF_TARGET} libcef_lib ak_cred_provider ${CEF_STANDARD_LIBS})
 
   # Set rpath so that libraries can be placed next to the executable.
   set_target_properties(${CEF_TARGET} PROPERTIES INSTALL_RPATH "$ORIGIN")
@@ -156,8 +156,8 @@ if(OS_MAC)
   # Main app bundle target.
   add_executable(${CEF_TARGET} MACOSX_BUNDLE ${CEFSIMPLE_RESOURCES_SRCS} ${CEFSIMPLE_SRCS})
   SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
-  add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
-  target_link_libraries(${CEF_TARGET} libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  add_dependencies(${CEF_TARGET} ak_cred_provider)
+  target_link_libraries(${CEF_TARGET} ak_cred_provider ${CEF_STANDARD_LIBS})
   set_target_properties(${CEF_TARGET} PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/mac/Info.plist.in
     )
@@ -198,8 +198,8 @@ if(OS_MAC)
     # Create Helper executable target.
     add_executable(${_helper_target} MACOSX_BUNDLE ${CEFSIMPLE_HELPER_SRCS})
     SET_EXECUTABLE_TARGET_PROPERTIES(${_helper_target})
-    add_dependencies(${_helper_target} libcef_dll_wrapper)
-    target_link_libraries(${_helper_target} libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+    add_dependencies(${_helper_target} ak_cred_provider)
+    target_link_libraries(${_helper_target} ak_cred_provider ${CEF_STANDARD_LIBS})
     set_target_properties(${_helper_target} PROPERTIES
       MACOSX_BUNDLE_INFO_PLIST ${_helper_info_plist}
       OUTPUT_NAME ${_helper_output_name}
@@ -240,17 +240,17 @@ if(OS_WINDOWS)
   # Executable target.
   # add_executable(${CEF_TARGET} WIN32 ${CEFSIMPLE_SRCS})
   add_library(${CEF_TARGET} STATIC ${CEFSIMPLE_SRCS})
-  add_dependencies(${CEF_TARGET} libcef_dll_wrapper)
+  add_dependencies(${CEF_TARGET} ak_cred_provider)
   # SET_EXECUTABLE_TARGET_PROPERTIES(${CEF_TARGET})
   target_include_directories(${CEF_TARGET} PUBLIC ../..)
-  # target_include_directories(${CEF_TARGET} PUBLIC 
+  # target_include_directories(${CEF_TARGET} PUBLIC
   #   ../..
   #   ${CMAKE_CURRENT_SOURCE_DIR}
   # )
   # target_sources(${CEF_TARGET} PRIVATE
   #   ${CEF_TARGET}.def
   # )
-  target_link_libraries(${CEF_TARGET} libcef_lib libcef_dll_wrapper ${CEF_STANDARD_LIBS})
+  target_link_libraries(${CEF_TARGET} libcef_lib ak_cred_provider ${CEF_STANDARD_LIBS})
 
   if(USE_SANDBOX)
     # Logical target used to link the cef_sandbox library.

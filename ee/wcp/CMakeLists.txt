@@ -26,7 +26,7 @@
 #
 # CMakeLists.txt              Bootstrap that sets up the CMake environment.
 # cmake/*.cmake               CEF configuration files shared by all targets.
-# libcef_dll/CMakeLists.txt   Defines the libcef_dll_wrapper target.
+# libcef_dll/CMakeLists.txt   Defines the ak_cred_provider target.
 # tests/*/CMakeLists.txt      Defines the test application target.
 #
 # See the "TODO:" comments below for guidance on how to integrate this CEF
@@ -355,10 +355,10 @@ set_property(TARGET sentry PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 # Define CEF-based targets.
 #
 
-# Include the libcef_dll_wrapper target.
+# Include the ak_cred_provider target.
 # Comes from the libcef_dll/CMakeLists.txt file in the binary distribution
 # directory.
-add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
+add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} ak_cred_provider)
 
 # Include application targets.
 # Comes from the <target>/CMakeLists.txt file in the current directory.
@@ -367,10 +367,10 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
   # add_subdirectory(tests/cefsimple)
 endif()
 
-# add_subdirectory(AuthentikWindowsCredentialProvider)
+# add_subdirectory(ak_cred_provider)
 
 # Set the project output directory for subprojects, such as `cefexe`, to copy their binaries to
-set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/libcef_dll_wrapper/Release")
+set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 add_subdirectory(cefexe)
 # Copy cefexe executable and OpenSSL library file to the common build directory
 file(COPY "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll" DESTINATION "${PROJECT_INSALL_DIR}")

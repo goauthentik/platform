@@ -1,9 +1,9 @@
-;AuthentikWindowsCredentialProvider.def
-; AuthentikWindowsCredentialProvider module-definition file
-; LIBRARY AuthentikWindowsCredentialProvider.dll
+;ak_cred_provider.def
+; ak_cred_provider module-definition file
+; LIBRARY ak_cred_provider.dll
 ; LIBRARY
-; LIBRARY AuthentikWindowsCredentialProvider.dll
-LIBRARY libcef_dll_wrapper.dll
+; LIBRARY ak_cred_provider.dll
+LIBRARY ak_cred_provider.dll
 
 EXPORTS
     DllCanUnloadNow                                 PRIVATE

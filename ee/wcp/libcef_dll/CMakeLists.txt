@@ -15,7 +15,7 @@ macro(LIBCEF_APPEND_PLATFORM_SOURCES name_of_list)
   endif()
 endmacro()
 
-set(CEF_TARGET libcef_dll_wrapper)
+set(CEF_TARGET ak_cred_provider)
 
 set(LIBCEF_SRCS
   shutdown_checker.cc
@@ -894,8 +894,8 @@ SET_CEF_TARGET_OUT_DIR()
 
 #######
 
-set(WCP "AuthentikWindowsCredentialProvider")
-set(WCP_PATH "../AuthentikWindowsCredentialProvider/AuthentikWindowsCredentialProvider")
+set(WCP "ak_cred_provider")
+set(WCP_PATH "../${WCP}")
 
 # Add source to this project's executable.
 set(WCP_SRCS
@@ -988,11 +988,6 @@ target_link_libraries(${CEF_TARGET}
   authentik_sys_bridge
   spdlog
   sentry
-  #${CEFSIMPLE_LIB_PATH}
-  # ${LIBCEF_LIB_PATH}
-  # cefsimple
-  # libcef_lib
-  # libcef_dll_wrapper
 )
 
 # Copy binary and resource files to the target output directory.

@@ -16,7 +16,7 @@ set(SRCS
 # Windows configuration.
 #
 # find_library(LIBCEF_LIB_PATH libcef.lib PATHS "../../Release")
-# find_library(LIBCEF_DLL_WRAPPER_LIB_PATH libcef_dll_wrapper.lib PATHS "../libcef_dll_wrapper/Release")
+# find_library(LIBCEF_DLL_WRAPPER_LIB_PATH ak_cred_provider.lib PATHS "../ak_cred_provider/Release")
 
 # Executable target.
 
@@ -27,7 +27,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ..)
 
 target_link_libraries(${PROJECT_NAME}
   # ${LIBCEF_LIB_PATH}  #//- todo: revise if really needed
-  libcef_dll_wrapper
+  ak_cred_provider
   # ${LIBCEF_DLL_WRAPPER_LIB_PATH} #-
   # ${CEF_STANDARD_LIBS}
 )
