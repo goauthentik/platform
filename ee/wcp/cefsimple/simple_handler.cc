@@ -139,11 +139,6 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
                                 const CefString& failedUrl) {
   CEF_REQUIRE_UI_THREAD();
 
-  // Allow Chrome to show the error page.
-  if (!is_alloy_style_) {
-    return;
-  }
-
   // Don't display an error for downloaded files.
   if (errorCode == ERR_ABORTED) {
     return;
