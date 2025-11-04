@@ -1,4 +1,4 @@
-package agentsystem
+package cli
 
 import (
 	"bufio"

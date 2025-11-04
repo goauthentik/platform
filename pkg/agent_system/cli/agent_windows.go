@@ -1,6 +1,6 @@
 //go:build windows
 
-package agentsystem
+package cli
 
 import (
 	"os"
@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	agentsystem "goauthentik.io/platform/pkg/agent_system"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	windowssvc "goauthentik.io/platform/pkg/platform/windows_svc"
@@ -40,7 +41,7 @@ var agentCmd = &cobra.Command{
 		log.SetLevel(log.DebugLevel)
 		w := &windowssvc.ServiceWrapper{
 			Callback: func() {
-				New().Start()
+				agentsystem.New().Start()
 			},
 		}
 		if isDebug {

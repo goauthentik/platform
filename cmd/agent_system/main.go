@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	agentsystem "goauthentik.io/platform/pkg/agent_system"
+	agentsystem "goauthentik.io/platform/pkg/agent_system/cli"
 	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/platform/log"
 )
