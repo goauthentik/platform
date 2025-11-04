@@ -12,6 +12,10 @@ bump:
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
+.PHONY: format
+format:
+	find "${PWD}" -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i
+
 .PHONY: build
 build:
 	${TOP}/hack/windows/setup.sh
