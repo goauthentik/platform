@@ -15,6 +15,6 @@ clean:
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	go build \
-		-ldflags "${LD_FLAGS}" \
-		-v -a -o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
+		${GO_BUILD_FLAGS} \
+		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"

@@ -47,7 +47,7 @@ test-agent:
 	go run -v ./cmd/agent_local/
 
 test-setup:
-	go run -v ./cmd/cli setup -v -a http://authentik:9000
+	go run -v ./cmd/cli setup -v http://authentik:9000
 
 test-ssh:
 	go run -v ./cmd/cli ssh akadmin@authentik-platform_devcontainer-test-machine-1
