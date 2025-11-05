@@ -70,6 +70,10 @@ func (t *Tray) addProfile(name string, profile *config.ConfigV1Profile) {
 	), "").Disable()
 }
 
+func (t *Tray) addNoProfiles() {
+	systray.AddMenuItem("No profiles configured", "").Disable()
+}
+
 func (t *Tray) addSysd() {
 	sysc, err := client.New()
 	if err != nil {

@@ -95,8 +95,13 @@ func (t *Tray) systrayConfigUpdate() {
 	t.addVersion()
 	systray.AddSeparator()
 
-	for n, p := range t.cfg.Get().Profiles {
-		t.addProfile(n, p)
+	profiles := t.cfg.Get().Profiles
+	if len(profiles) > 0 {
+		for n, p := range profiles {
+			t.addProfile(n, p)
+		}
+	} else {
+		t.addNoProfiles()
 	}
 	systray.AddSeparator()
 	t.addSysd()
