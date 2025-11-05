@@ -3,11 +3,12 @@ include ../../common.mk
 TARGET := psso
 XCB_ARGS = -scheme PSSO \
 		-project authentikPlatform.xcodeproj \
-		-configuration Release
+		-configuration Release \
+		-derivedDataPath "${TOP}/cache/${TARGET}"
 
 .PHONY: clean
 clean:
-	xcodebuild clean
+	xcodebuild ${XCB_ARGS} clean
 	cd ${TOP} && rm -rf bin/${TARGET}
 
 .PHONY: bump
@@ -21,8 +22,7 @@ build:
 	mkdir -p ${TOP}/cache/${TARGET}
 	xcodebuild ${XCB_ARGS} \
 		-showBuildSettings
-	xcodebuild ${XCB_ARGS} \
-		-derivedDataPath "${TOP}/cache/${TARGET}"
+	xcodebuild ${XCB_ARGS}
 	cp -R "${TOP}/cache/${TARGET}/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}/cache/${TARGET}/Build/Products/Release")
