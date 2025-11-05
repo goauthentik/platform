@@ -80,7 +80,9 @@ package-gnu/linux: clean build
 			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
 
 .PHONY: package-msys
-package-msys: clean build
+package-msys: clean
+# build with -H=windowsgui to run as a true systray application
+	"$(MAKE)" -C ${TOP} agent/build LD_FLAGS=-H=windowsgui
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
 	"$(MAKE)" -C ${TOP} browser_support/build
