@@ -2,6 +2,7 @@ package tray
 
 import (
 	"context"
+	"os"
 	"runtime"
 
 	"github.com/kolide/systray"
@@ -100,8 +101,10 @@ func (t *Tray) systrayConfigUpdate() {
 	systray.AddSeparator()
 	t.addSysd()
 
-	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
-	t.onClick(mQuit, func() {
-		systray.Quit()
-	})
+	if os.Getenv("AK_AGENT_SUPERVISED") != "true" {
+		mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
+		t.onClick(mQuit, func() {
+			systray.Quit()
+		})
+	}
 }

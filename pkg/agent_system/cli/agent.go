@@ -1,6 +1,6 @@
 //go:build !windows
 
-package agentsystem
+package cli
 
 import (
 	"os"
@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	agentsystem "goauthentik.io/platform/pkg/agent_system"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 )
@@ -34,7 +35,7 @@ var agentCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		defer systemlog.Cleanup()
 		log.SetLevel(log.DebugLevel)
-		New().Start()
+		agentsystem.New().Start()
 	},
 }
 
