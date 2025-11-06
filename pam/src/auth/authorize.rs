@@ -7,6 +7,7 @@ use pam::{constants::PamResultCode, module::PamHandle};
 use std::ffi::CStr;
 use whoami::username;
 
+use crate::ENV_SESSION_ID;
 use crate::auth::interactive::result_to_pam_result;
 
 pub fn authenticate_authorize_impl(
@@ -23,7 +24,7 @@ pub fn authenticate_authorize_impl(
         }
     };
     let user = username();
-    let ak = std::env::vars().find(|k| k.0 == "AUTHENTIK_SESSION_ID");
+    let ak = std::env::vars().find(|k| k.0 == ENV_SESSION_ID);
     let session_id = match ak {
         Some(s) => s.1,
         None => {

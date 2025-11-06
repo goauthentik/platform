@@ -4,10 +4,6 @@ use syslog::{Facility, Formatter3164};
 use libc::{getegid, geteuid, getgid, getuid};
 
 pub fn init_log(name: &str) {
-    init_log_level(name, LevelFilter::Trace);
-}
-
-pub fn init_log_level(name: &str, level: LevelFilter) {
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
         hostname: None,
@@ -22,8 +18,12 @@ pub fn init_log_level(name: &str, level: LevelFilter) {
         }
     };
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
-        .map(|()| log::set_max_level(level))
+        .map(|()| log::set_max_level(LevelFilter::Trace))
         .expect("Failed to setup logger");
+}
+
+pub fn set_log_level(level: LevelFilter) {
+    log::set_max_level(level);
 }
 
 pub fn exit_log() {}

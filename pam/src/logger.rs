@@ -1,6 +1,6 @@
 use std::{env, ffi::CStr};
 
-use authentik_sys::logger::{init_log_level, log_hook};
+use authentik_sys::logger::{log_hook, set_log_level};
 use log::LevelFilter;
 use pam::{constants::PamFlag, module::PamHandle};
 
@@ -15,7 +15,7 @@ pub fn prelude(name: &str, pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFl
     if args.contains(&"debug".to_string()) {
         level = LevelFilter::Debug;
     }
-    init_log_level("libpam-authentik", level);
+    set_log_level(level);
 
     log_hook(name);
     log::debug!(

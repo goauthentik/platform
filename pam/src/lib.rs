@@ -10,6 +10,7 @@ use crate::logger::prelude;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
 use authentik_sys::logger::exit_log;
+use authentik_sys::logger::init_log;
 use authentik_sys::logger::log_hook;
 use ctor::{ctor, dtor};
 use pam::constants::{PamFlag, PamResultCode};
@@ -24,6 +25,7 @@ pam::pam_hooks!(PAMAuthentik);
 
 #[ctor]
 fn ctor() {
+    init_log("libpam-authentik");
     log_hook("ctor");
 }
 
