@@ -30,7 +30,7 @@ const (
 type PAMClient interface {
 	TokenAuth(ctx context.Context, in *TokenAuthRequest, opts ...grpc.CallOption) (*TokenAuthResponse, error)
 	InteractiveAuth(ctx context.Context, in *InteractiveAuthRequest, opts ...grpc.CallOption) (*InteractiveChallenge, error)
-	Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*PAMAuthorizationResponse, error)
+	Authorize(ctx context.Context, in *PAMAuthorizeRequest, opts ...grpc.CallOption) (*PAMAuthorizeResponse, error)
 }
 
 type pAMClient struct {
@@ -61,9 +61,9 @@ func (c *pAMClient) InteractiveAuth(ctx context.Context, in *InteractiveAuthRequ
 	return out, nil
 }
 
-func (c *pAMClient) Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*PAMAuthorizationResponse, error) {
+func (c *pAMClient) Authorize(ctx context.Context, in *PAMAuthorizeRequest, opts ...grpc.CallOption) (*PAMAuthorizeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(PAMAuthorizationResponse)
+	out := new(PAMAuthorizeResponse)
 	err := c.cc.Invoke(ctx, PAM_Authorize_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (c *pAMClient) Authorize(ctx context.Context, in *AuthorizeRequest, opts ..
 type PAMServer interface {
 	TokenAuth(context.Context, *TokenAuthRequest) (*TokenAuthResponse, error)
 	InteractiveAuth(context.Context, *InteractiveAuthRequest) (*InteractiveChallenge, error)
-	Authorize(context.Context, *AuthorizeRequest) (*PAMAuthorizationResponse, error)
+	Authorize(context.Context, *PAMAuthorizeRequest) (*PAMAuthorizeResponse, error)
 	mustEmbedUnimplementedPAMServer()
 }
 
@@ -94,7 +94,7 @@ func (UnimplementedPAMServer) TokenAuth(context.Context, *TokenAuthRequest) (*To
 func (UnimplementedPAMServer) InteractiveAuth(context.Context, *InteractiveAuthRequest) (*InteractiveChallenge, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InteractiveAuth not implemented")
 }
-func (UnimplementedPAMServer) Authorize(context.Context, *AuthorizeRequest) (*PAMAuthorizationResponse, error) {
+func (UnimplementedPAMServer) Authorize(context.Context, *PAMAuthorizeRequest) (*PAMAuthorizeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
 }
 func (UnimplementedPAMServer) mustEmbedUnimplementedPAMServer() {}
@@ -155,7 +155,7 @@ func _PAM_InteractiveAuth_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _PAM_Authorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AuthorizeRequest)
+	in := new(PAMAuthorizeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func _PAM_Authorize_Handler(srv interface{}, ctx context.Context, dec func(inter
 		FullMethod: PAM_Authorize_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PAMServer).Authorize(ctx, req.(*AuthorizeRequest))
+		return srv.(PAMServer).Authorize(ctx, req.(*PAMAuthorizeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -1,7 +1,6 @@
 package pam
 
 import (
-	"context"
 	"errors"
 	"sync"
 
@@ -16,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ID = "pam"
+
 type Server struct {
 	pb.UnimplementedPAMServer
 
@@ -23,7 +24,7 @@ type Server struct {
 	log *log.Entry
 	kf  keyfunc.Keyfunc
 
-	ctx context.Context
+	ctx component.Context
 
 	cfg  *config.Config
 	txns map[string]*InteractiveAuthTransaction
@@ -33,9 +34,9 @@ type Server struct {
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log:  ctx.Log,
+		log:  ctx.Log(),
 		cfg:  config.Manager().Get(),
-		ctx:  ctx.Context,
+		ctx:  ctx,
 		txns: map[string]*InteractiveAuthTransaction{},
 		m:    sync.RWMutex{},
 	}
@@ -53,7 +54,7 @@ func (pam *Server) Start() error {
 	}
 	pam.dom = dom
 	pam.api = ac
-	k, err := keyfunc.NewDefaultCtx(pam.ctx, []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
+	k, err := keyfunc.NewDefaultCtx(pam.ctx.Context(), []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
 		AuthentikURL: dom.AuthentikURL,
 		AppSlug:      dom.AppSlug,
 	}).JWKS})

@@ -1,12 +1,13 @@
-use authentik_sys::generated::agent::RequestHeader;
 use authentik_sys::generated::agent_auth::AuthorizeRequest;
-use authentik_sys::generated::grpc_request;
+use authentik_sys::generated::{agent::RequestHeader, grpc_request};
+use authentik_sys::generated::pam::PamAuthorizeRequest;
 use authentik_sys::generated::pam::pam_client::PamClient;
 use gethostname::gethostname;
 use pam::{constants::PamResultCode, module::PamHandle};
 use std::ffi::CStr;
 use whoami::username;
 
+use crate::ENV_SESSION_ID;
 use crate::auth::interactive::result_to_pam_result;
 
 pub fn authenticate_authorize_impl(
@@ -19,18 +20,29 @@ pub fn authenticate_authorize_impl(
         Some(t) => t,
         None => {
             log::warn!("failed to get hostname");
-            return PamResultCode::PAM_PERM_DENIED;
+            return PamResultCode::PAM_IGNORE;
         }
     };
     let user = username();
+    let ak = std::env::vars().find(|k| k.0 == ENV_SESSION_ID);
+    let session_id = match ak {
+        Some(s) => s.1,
+        None => {
+            log::warn!("Couldn't find session ID");
+            return PamResultCode::PAM_IGNORE;
+        }
+    };
     match grpc_request(async |ch| {
         return Ok(PamClient::new(ch)
-            .authorize(AuthorizeRequest {
-                header: Some(RequestHeader {
-                    profile: "".to_string(),
-                }),
-                uid: format!("pam-{host}-{user}-{service}-"),
-                service: service.to_string(),
+            .authorize(PamAuthorizeRequest {
+                session_id: session_id.clone(),
+                authz: Some(AuthorizeRequest {
+                    header: Some(RequestHeader {
+                        profile: "".to_string(),
+                    }),
+                    uid: format!("pam-{host}-{user}-{service}-"),
+                    service: service.to_string(),
+                })
             })
             .await?);
     }) {

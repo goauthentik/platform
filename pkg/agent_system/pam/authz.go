@@ -4,22 +4,35 @@ import (
 	"context"
 
 	"goauthentik.io/platform/pkg/agent_local/client"
-	"goauthentik.io/platform/pkg/agent_local/types"
+	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-func (pam *Server) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.PAMAuthorizationResponse, error) {
-	agentSocket := types.GetAgentSocketPath()
-	c, err := client.New(agentSocket.Fallback)
+func (pam *Server) Authorize(ctx context.Context, req *pb.PAMAuthorizeRequest) (*pb.PAMAuthorizeResponse, error) {
+	sm := pam.ctx.GetComponent(session.ID).(*session.Monitor)
+	if sm == nil {
+		return nil, status.Error(codes.Internal, "cant find session component")
+	}
+	sess, found := sm.GetSession(req.SessionId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "session not found")
+	}
+	c, err := client.New(sess.LocalSocket)
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.Authorize(ctx, req)
+	res, err := c.Authorize(ctx, req.Authz)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.PAMAuthorizationResponse{
+	code := pb.InteractiveAuthResult_PAM_PERM_DENIED
+	if res.Header.Successful {
+		code = pb.InteractiveAuthResult_PAM_SUCCESS
+	}
+	return &pb.PAMAuthorizeResponse{
 		Response: res,
-		Code:     pb.InteractiveAuthResult_PAM_SUCCESS,
+		Code:     code,
 	}, nil
 }

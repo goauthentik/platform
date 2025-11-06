@@ -2,11 +2,11 @@ use cxx::CxxString;
 use std::error::Error;
 use std::pin::Pin;
 
-use crate::generated::agent::{Token};
+use crate::generated::agent::Token;
 use crate::generated::grpc_request;
 use crate::generated::pam::pam_client::PamClient;
+use crate::generated::pam::{TokenAuthRequest, TokenAuthResponse};
 use crate::generated::ping::ping_client::PingClient;
-use crate::generated::pam::{TokenAuthResponse, TokenAuthRequest};
 
 #[cxx::bridge]
 mod ffi {
@@ -27,12 +27,9 @@ mod ffi {
     }
 }
 
-
 fn ak_sys_grpc_ping(res: Pin<&mut CxxString>) {
     let resp = match grpc_request(async |ch| {
-        return Ok(PingClient::new(ch)
-            .ping(())
-            .await?);
+        return Ok(PingClient::new(ch).ping(()).await?);
     }) {
         Ok(r) => r.into_inner().version,
         Err(e) => e.to_string(),
@@ -50,13 +47,14 @@ fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool
                 token: p.to_owned(),
             })
             .await?);
-    })?.into_inner();
+    })?
+    .into_inner();
 
-    return Ok(response.successful);
+    Ok(response.successful)
 }
 
 fn ak_sys_wcp_oauth_config(res: &mut ffi::WCPOAuthConfig) -> Result<bool, Box<dyn Error>> {
-    let config = ffi::WCPOAuthConfig{
+    let config = ffi::WCPOAuthConfig {
         url: "https://windows-cred-provider.pr.test.goauthentik.io".to_string(),
         client_id: "UCAXCsLq1DVR08hYrjDGFPFekCVXmNTEn6eeoenO".to_string(),
     };

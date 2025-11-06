@@ -11,6 +11,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+const ID = "ping"
+
 type Server struct {
 	pb.UnimplementedPingServer
 	log *log.Entry
@@ -18,7 +20,7 @@ type Server struct {
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log: ctx.Log,
+		log: ctx.Log(),
 	}
 	return srv, nil
 }

@@ -134,9 +134,9 @@ pub mod pam_client {
         }
         pub async fn authorize(
             &mut self,
-            request: impl tonic::IntoRequest<super::super::agent_auth::AuthorizeRequest>,
+            request: impl tonic::IntoRequest<super::PamAuthorizeRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::PamAuthorizationResponse>,
+            tonic::Response<super::PamAuthorizeResponse>,
             tonic::Status,
         > {
             self.inner

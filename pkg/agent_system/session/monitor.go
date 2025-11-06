@@ -1,5 +1,3 @@
-//go:build !windows
-
 package session
 
 import (
@@ -15,9 +13,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"syscall"
 	"time"
 )
+
+const ID = "session"
 
 type Session struct {
 	ID          string
@@ -46,7 +45,7 @@ func NewMonitor(ctx component.Context) (component.Component, error) {
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
-		log:           ctx.Log,
+		log:           ctx.Log(),
 	}, nil
 }
 
@@ -85,7 +84,7 @@ func (m *Monitor) checkExpiredSessions() {
 
 			err := m.terminateSession(session)
 			if err != nil && !strings.Contains(err.Error(), "no such process") {
-				log.Infof("Failed to terminate session %s: %v", sessionID, err)
+				log.WithError(err).Infof("Failed to terminate session %s", sessionID)
 			} else {
 				m.Delete(sessionID)
 			}
@@ -110,26 +109,6 @@ func (m *Monitor) Delete(id string) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	delete(m.sessions, id)
-}
-
-func (m *Monitor) terminateSession(session *Session) error {
-	_ = os.Remove(session.LocalSocket)
-
-	// Try graceful termination first
-	if err := syscall.Kill(int(session.PID), syscall.SIGTERM); err != nil {
-		return err
-	}
-
-	// Wait a bit, then force kill if needed
-	time.Sleep(5 * time.Second)
-
-	// Check if process still exists
-	if err := syscall.Kill(int(session.PID), 0); err == nil {
-		// Process still exists, force kill
-		return syscall.Kill(int(session.PID), syscall.SIGKILL)
-	}
-
-	return nil
 }
 
 func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {

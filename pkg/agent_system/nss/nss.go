@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ID = "nss"
+
 type Server struct {
 	pb.UnimplementedNSSServer
 
@@ -29,9 +31,9 @@ type Server struct {
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log: ctx.Log,
+		log: ctx.Log(),
+		ctx: ctx.Context(),
 		cfg: config.Manager().Get(),
-		ctx: ctx.Context,
 	}
 	return srv, nil
 }

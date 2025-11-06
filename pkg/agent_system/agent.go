@@ -73,10 +73,7 @@ func (sm *SystemAgent) registerComponents() {
 		l := sm.log.WithField("logger", fmt.Sprintf("component.%s", name))
 		l.Info("Registering component")
 		ctx, cancel := context.WithCancel(sm.ctx)
-		comp, err := constr(component.Context{
-			Log:     l,
-			Context: ctx,
-		})
+		comp, err := constr(component.NewContext(ctx, l, sm))
 		if err != nil {
 			panic(err)
 		}
@@ -87,6 +84,16 @@ func (sm *SystemAgent) registerComponents() {
 		}
 		comp.Register(sm.srv)
 	}
+}
+
+func (sm *SystemAgent) GetComponent(id string) component.Component {
+	sm.mtx.Lock()
+	defer sm.mtx.Unlock()
+	ci, ok := sm.cm[id]
+	if !ok {
+		return nil
+	}
+	return ci.comp
 }
 
 func (sm *SystemAgent) DomainCheck() {

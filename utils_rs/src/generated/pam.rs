@@ -113,8 +113,15 @@ pub mod interactive_challenge {
         }
     }
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PamAuthorizeRequest {
+    #[prost(string, tag = "1")]
+    pub session_id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub authz: ::core::option::Option<super::agent_auth::AuthorizeRequest>,
+}
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct PamAuthorizationResponse {
+pub struct PamAuthorizeResponse {
     #[prost(message, optional, tag = "1")]
     pub response: ::core::option::Option<super::agent_auth::AuthorizeResponse>,
     #[prost(enumeration = "InteractiveAuthResult", tag = "2")]

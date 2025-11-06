@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ID = "device"
+
 type Server struct {
 	pb.UnimplementedAgentPlatformServer
 
@@ -26,8 +28,8 @@ type Server struct {
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log: ctx.Log,
-		ctx: ctx.Context,
+		log: ctx.Log(),
+		ctx: ctx.Context(),
 	}
 	return srv, nil
 }
