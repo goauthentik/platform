@@ -57,8 +57,7 @@ func (k *Key) Copy() *Key {
 	}
 }
 
-func (k *Key) String() []byte {
-	// This can probably be optimized to directly create a byte buffer
+func (k *Key) String() string {
 	b := strings.Builder{}
 	b.WriteRune(SEP)
 	for idx, part := range k.parts {
@@ -74,5 +73,5 @@ func (k *Key) String() []byte {
 	if k.prefix {
 		b.WriteRune(SEP)
 	}
-	return []byte(b.String())
+	return b.String()
 }
