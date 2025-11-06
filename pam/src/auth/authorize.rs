@@ -25,7 +25,12 @@ pub fn authenticate_authorize_impl(
     let user = username();
     log::debug!(
         "\tProc env: {}",
-        Vec::from_iter(std::env::vars().map(|(k, v)| format!("{k}={v}"))).join(", ")
+        Vec::from_iter(std::env::vars().map(|(k, v)| format!("'{k}'='{v}'"))).join(", ")
+    );
+    let ak = std::env::vars().filter(|k| k.0 == "AUTHENTIK_SESSION_ID");
+    log::debug!(
+        "\tProc env: {}",
+        Vec::from_iter(ak.map(|(k, v)| format!("'{k}'='{v}'"))).join(", ")
     );
     let session_id = match std::env::var("AUTHENTIK_SESSION_ID") {
         Ok(s) => s,
