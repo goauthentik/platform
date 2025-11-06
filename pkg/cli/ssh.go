@@ -1,8 +1,8 @@
 package cli
 
 import (
+	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/skeema/knownhosts"
 	"github.com/spf13/cobra"
@@ -40,103 +41,16 @@ var sshCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
-		u, err := user.Current()
-		if err != nil {
-			log.WithError(err).Warning("failed to get user")
-			return err
-		}
-
-		host := args[0]
-		user := u.Username
-		port := "22"
-		if strings.Contains(host, "@") {
-			_parts := strings.Split(host, "@")
-			user = _parts[0]
-			host = _parts[1]
-		}
-		if strings.Contains(host, ":") {
-			_parts := strings.Split(host, ":")
-			host = _parts[0]
-			port = _parts[1]
-		}
-
 		uid := uuid.New().String()
 		remoteSocketPath := fmt.Sprintf("/var/run/authentik/agent-%s.sock", uid)
 
-		khf, err := DefaultKnownHostsPath()
-		if err != nil {
-			log.WithError(err).Warning("failed to locate known_hosts")
-			return err
-		}
-		if _, err := os.Stat(khf); os.IsNotExist(err) {
-			_, err := os.OpenFile(khf, os.O_CREATE, 0600)
-			if err != nil {
-				log.WithError(err).Warning("failed to create known_hosts file")
-				return err
-			}
-		}
-		kh, err := knownhosts.NewDB(khf)
-		if err != nil {
-			log.Fatal("Failed to read known_hosts: ", err)
-		}
-
-		config := &ssh.ClientConfig{
-			User: user,
-			Auth: []ssh.AuthMethod{
-				ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
-					log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
-					if len(questions) > 0 && questions[0] == "authentik Password: " {
-						fmt.Printf("Getting token to access '%s'...\n", host)
-						cc := raw.GetCredentials(c, cmd.Context(), raw.CredentialsOpts{
-							Profile:  profile,
-							ClientID: "authentik-pam",
-						})
-						return []string{FormatToken(cc, remoteSocketPath)}, nil
-					}
-					ans := []string{}
-					for _, q := range questions {
-						l, err := ReadPassword(q)
-						fmt.Println("")
-						if err != nil {
-							return ans, err
-						}
-						ans = append(ans, l)
-					}
-					return ans, nil
-				}),
-			},
-			HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-				innerCallback := kh.HostKeyCallback()
-				err := innerCallback(hostname, remote, key)
-				if knownhosts.IsHostKeyChanged(err) {
-					fmt.Printf("REMOTE HOST IDENTIFICATION HAS CHANGED for host %s! This may indicate a MitM attack.", hostname)
-					return errors.New("hostkey changed")
-				} else if knownhosts.IsHostUnknown(err) {
-					f, ferr := os.OpenFile(khf, os.O_APPEND|os.O_WRONLY, 0600)
-					if ferr == nil {
-						defer func() {
-							err := f.Close()
-							if err != nil {
-								log.WithError(err).Warning("failed to close known_hosts file")
-							}
-						}()
-						ferr = knownhosts.WriteKnownHost(f, hostname, remote, key)
-					}
-					if ferr == nil {
-						log.Infof("Added host %s to known_hosts\n", hostname)
-					} else {
-						log.Infof("Failed to add host %s to known_hosts: %v\n", hostname, ferr)
-					}
-					return nil // permit previously-unknown hosts (warning: may be insecure)
-				}
-				return err
-			}),
-		}
-		if insecure {
-			config.HostKeyCallback = ssh.InsecureIgnoreHostKey()
-		}
-		client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
+		client, err := SSHClient(SSHClientOptions{
+			RawHost:          args[0],
+			Profile:          profile,
+			AgentClient:      c,
+			Context:          cmd.Context(),
+			RemoteSocketPath: remoteSocketPath,
+		})
 		if err != nil {
 			return err
 		}
@@ -162,6 +76,114 @@ func init() {
 	rootCmd.AddCommand(sshCmd)
 }
 
+type SSHClientOptions struct {
+	RawHost          string
+	Profile          string
+	AgentClient      *client.AgentClient
+	Context          context.Context
+	RemoteSocketPath string
+}
+
+func SSHClient(opts SSHClientOptions) (*ssh.Client, error) {
+	u, err := user.Current()
+	if err != nil {
+		log.WithError(err).Warning("failed to get user")
+		return nil, err
+	}
+
+	host := opts.RawHost
+	user := u.Username
+	port := "22"
+	if strings.Contains(host, "@") {
+		_parts := strings.Split(host, "@")
+		user = _parts[0]
+		host = _parts[1]
+	}
+	if strings.Contains(host, ":") {
+		_parts := strings.Split(host, ":")
+		host = _parts[0]
+		port = _parts[1]
+	}
+
+	khf, err := DefaultKnownHostsPath()
+	if err != nil {
+		log.WithError(err).Warning("failed to locate known_hosts")
+		return nil, err
+	}
+	if _, err := os.Stat(khf); os.IsNotExist(err) {
+		_, err := os.OpenFile(khf, os.O_CREATE, 0600)
+		if err != nil {
+			log.WithError(err).Warning("failed to create known_hosts file")
+			return nil, err
+		}
+	}
+	kh, err := knownhosts.NewDB(khf)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read known_hosts")
+	}
+
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
+				log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
+				if len(questions) > 0 && questions[0] == "authentik Password: " {
+					fmt.Printf("Getting token to access '%s'...\n", host)
+					cc := raw.GetCredentials(opts.AgentClient, opts.Context, raw.CredentialsOpts{
+						Profile:  opts.Profile,
+						ClientID: "authentik-pam",
+					})
+					return []string{FormatToken(cc, opts.RemoteSocketPath)}, nil
+				}
+				ans := []string{}
+				for _, q := range questions {
+					l, err := ReadPassword(q)
+					fmt.Println("")
+					if err != nil {
+						return ans, err
+					}
+					ans = append(ans, l)
+				}
+				return ans, nil
+			}),
+		},
+		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			innerCallback := kh.HostKeyCallback()
+			err := innerCallback(hostname, remote, key)
+			if knownhosts.IsHostKeyChanged(err) {
+				fmt.Printf("REMOTE HOST IDENTIFICATION HAS CHANGED for host %s! This may indicate a MitM attack.", hostname)
+				return errors.New("hostkey changed")
+			} else if knownhosts.IsHostUnknown(err) {
+				f, ferr := os.OpenFile(khf, os.O_APPEND|os.O_WRONLY, 0600)
+				if ferr == nil {
+					defer func() {
+						err := f.Close()
+						if err != nil {
+							log.WithError(err).Warning("failed to close known_hosts file")
+						}
+					}()
+					ferr = knownhosts.WriteKnownHost(f, hostname, remote, key)
+				}
+				if ferr == nil {
+					log.Infof("Added host %s to known_hosts\n", hostname)
+				} else {
+					log.Infof("Failed to add host %s to known_hosts: %v\n", hostname, ferr)
+				}
+				return nil // permit previously-unknown hosts (warning: may be insecure)
+			}
+			return err
+		}),
+	}
+	if insecure {
+		config.HostKeyCallback = ssh.InsecureIgnoreHostKey()
+	}
+	client, err := ssh.Dial("tcp", net.JoinHostPort(host, port), config)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
 func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
 	msg := pb.PAMAuthentication{
 		Token:       cc.AccessToken,
@@ -178,7 +200,7 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) error {
 	localSocket := types.GetAgentSocketPath()
 	remoteListener, err := client.Listen("unix", remoteSocket)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to forward agent")
 	}
 	defer func() {
 		err := remoteListener.Close()
