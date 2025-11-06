@@ -1,7 +1,7 @@
 pub fn init_log(name: &str) {
+    use log::LevelFilter;
     use syslog::BasicLogger;
     use syslog::{Facility, Formatter3164};
-    use log::LevelFilter;
 
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
@@ -21,8 +21,7 @@ pub fn init_log(name: &str) {
         .expect("Failed to setup logger");
 }
 
-pub fn exit_log() {
-}
+pub fn exit_log() {}
 
 pub fn log_hook(name: &str) {
     use libc::{getegid, geteuid, getgid, getuid};

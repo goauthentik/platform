@@ -1,5 +1,6 @@
-use authentik_sys::generated::{agent::RequestHeader, grpc_request_path};
 use authentik_sys::generated::agent_auth::AuthorizeRequest;
+use authentik_sys::generated::{agent::RequestHeader, grpc_request};
+use authentik_sys::generated::pam::PamAuthorizeRequest;
 use authentik_sys::generated::pam::pam_client::PamClient;
 use gethostname::gethostname;
 use pam::{constants::PamResultCode, module::PamHandle};
@@ -22,21 +23,24 @@ pub fn authenticate_authorize_impl(
         }
     };
     let user = username();
-    let cli_socket = match std::env::var("AUTHENTIK_CLI_SOCKET") {
-        Ok(c) => c,
+    let session_id = match std::env::var("AUTHENTIK_SESSION_ID") {
+        Ok(s) => s,
         Err(e) => {
-            log::warn!("failed to get CLI socket path: {}", e);
+            log::warn!("Couldn't get session ID: {}", e);
             return PamResultCode::PAM_IGNORE;
         }
     };
-    match grpc_request_path(cli_socket, async |ch| {
+    match grpc_request(async |ch| {
         return Ok(PamClient::new(ch)
-            .authorize(AuthorizeRequest {
-                header: Some(RequestHeader {
-                    profile: "".to_string(),
-                }),
-                uid: format!("pam-{host}-{user}-{service}-"),
-                service: service.to_string(),
+            .authorize(PamAuthorizeRequest {
+                session_id: session_id.clone(),
+                authz: Some(AuthorizeRequest {
+                    header: Some(RequestHeader {
+                        profile: "".to_string(),
+                    }),
+                    uid: format!("pam-{host}-{user}-{service}-"),
+                    service: service.to_string(),
+                })
             })
             .await?);
     }) {

@@ -27,7 +27,8 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
                 }
             };
             Ok(client)
-        })).await;
+        }))
+        .await;
 }
 
 #[cfg(windows)]
@@ -35,10 +36,13 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
     return ep
         .connect_with_connector(service_fn(async |p: Uri| {
             use std::time::Duration;
-            use tokio::time;
             use tokio::net::windows::named_pipe::ClientOptions;
+            use tokio::time;
 
-            let path = p.query().ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?.to_string();
+            let path = p
+                .query()
+                .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?
+                .to_string();
             let client = loop {
                 match ClientOptions::new().open(&path) {
                     Ok(client) => break client,
