@@ -22,7 +22,6 @@ type InteractiveAuthTransaction struct {
 }
 
 func (pam *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
-	pam.log.Debugf("init %+v\n", req)
 	var ch *pb.InteractiveChallenge
 	var err error
 	if i := req.GetInit(); i != nil {
@@ -30,7 +29,6 @@ func (pam *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthR
 	} else if i := req.GetContinue(); i != nil {
 		ch, err = pam.interactiveAuthContinue(ctx, i)
 	}
-	pam.log.Debugf("res %+v\n", ch)
 	return ch, err
 }
 
@@ -62,7 +60,6 @@ func (pam *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAut
 }
 
 func (pam *Server) interactiveAuthContinue(_ context.Context, req *pb.InteractiveAuthContinueRequest) (*pb.InteractiveChallenge, error) {
-	pam.log.Debugf("cont %+v\n", req)
 	pam.m.RLock()
 	txn, ok := pam.txns[req.Txid]
 	pam.m.RUnlock()
