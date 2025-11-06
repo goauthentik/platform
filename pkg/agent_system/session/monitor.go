@@ -18,21 +18,10 @@ import (
 
 const ID = "session"
 
-type Session struct {
-	ID          string
-	Username    string
-	TokenHash   string
-	ExpiresAt   time.Time
-	PID         uint32
-	PPID        uint32
-	CreatedAt   time.Time
-	LocalSocket string
-}
-
 type Monitor struct {
 	pb.UnimplementedSessionManagerServer
 
-	sessions      map[string]*Session
+	sessions      map[string]*pb.StateSession
 	mtx           sync.RWMutex
 	checkInterval time.Duration
 	log           *log.Entry
@@ -42,7 +31,7 @@ type Monitor struct {
 
 func NewMonitor(ctx component.Context) (component.Component, error) {
 	return &Monitor{
-		sessions:      make(map[string]*Session),
+		sessions:      make(map[string]*pb.StateSession),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
 		log:           ctx.Log(),
@@ -75,10 +64,10 @@ func (m *Monitor) checkExpiredSessions() {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	for sessionID, session := range m.sessions {
-		if session.ExpiresAt.Unix() == -1 {
+		if session.ExpiresAt.AsTime().Unix() == -1 {
 			continue
 		}
-		if now.After(session.ExpiresAt) {
+		if now.After(session.ExpiresAt.AsTime()) {
 			log.Infof("Session %s expired for user %s, terminating PID %d",
 				sessionID, session.Username, session.PID)
 
@@ -92,13 +81,13 @@ func (m *Monitor) checkExpiredSessions() {
 	}
 }
 
-func (m *Monitor) AddSession(session *Session) {
+func (m *Monitor) AddSession(session *pb.StateSession) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
 	m.sessions[session.ID] = session
 }
 
-func (m *Monitor) GetSession(id string) (*Session, bool) {
+func (m *Monitor) GetSession(id string) (*pb.StateSession, bool) {
 	m.mtx.RLock()
 	defer m.mtx.RUnlock()
 	s, ok := m.sessions[id]
@@ -112,24 +101,30 @@ func (m *Monitor) Delete(id string) {
 }
 
 func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {
-	session := &Session{
+	session := &pb.StateSession{
 		ID:          req.SessionId,
 		Username:    req.Username,
 		TokenHash:   req.TokenHash,
-		ExpiresAt:   time.Unix(int64(req.ExpiresAt), 0),
+		ExpiresAt:   timestamppb.New(time.Unix(int64(req.ExpiresAt), 0)),
 		PID:         req.Pid,
 		PPID:        req.Ppid,
-		CreatedAt:   time.Now(),
+		CreatedAt:   timestamppb.New(time.Now()),
 		LocalSocket: req.LocalSocket,
 	}
 
 	if config.Manager().Get().PAM.TerminateOnExpiry {
-		session.ExpiresAt = time.Unix(-1, 0)
+		session.ExpiresAt = timestamppb.New(time.Unix(-1, 0))
 	}
 
 	m.AddSession(session)
 
-	m.log.Infof("Registered session %s for user %s (PID: %d, exp: %s)", session.ID, session.Username, req.Pid, time.Until(session.ExpiresAt).String())
+	m.log.Infof(
+		"Registered session %s for user %s (PID: %d, exp: %s)",
+		session.ID,
+		session.Username,
+		req.Pid,
+		time.Until(session.ExpiresAt.AsTime()).String(),
+	)
 
 	return &pb.RegisterSessionResponse{
 		Success:   true,
@@ -142,7 +137,7 @@ func (m *Monitor) SessionStatus(ctx context.Context, req *pb.SessionStatusReques
 	if !ok {
 		return &pb.SessionStatusResponse{Success: false}, nil
 	}
-	return &pb.SessionStatusResponse{Success: true, Expiry: timestamppb.New(sess.ExpiresAt)}, nil
+	return &pb.SessionStatusResponse{Success: true, Expiry: sess.ExpiresAt}, nil
 }
 
 func (m *Monitor) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {

@@ -6,9 +6,11 @@ import (
 	"os"
 	"syscall"
 	"time"
+
+	"goauthentik.io/platform/pkg/pb"
 )
 
-func (m *Monitor) terminateSession(session *Session) error {
+func (m *Monitor) terminateSession(session *pb.StateSession) error {
 	_ = os.Remove(session.LocalSocket)
 
 	// Try graceful termination first
