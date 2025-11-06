@@ -47,9 +47,9 @@ internal enum PAM {
         /// Namespace for "Authorize" metadata.
         internal enum Authorize {
             /// Request type for "Authorize".
-            internal typealias Input = AuthorizeRequest
+            internal typealias Input = PAMAuthorizeRequest
             /// Response type for "Authorize".
-            internal typealias Output = PAMAuthorizationResponse
+            internal typealias Output = PAMAuthorizeResponse
             /// Descriptor for "Authorize".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "pam.PAM"),
@@ -121,20 +121,20 @@ extension PAM {
         /// Call the "Authorize" method.
         ///
         /// - Parameters:
-        ///   - request: A request containing a single `AuthorizeRequest` message.
-        ///   - serializer: A serializer for `AuthorizeRequest` messages.
-        ///   - deserializer: A deserializer for `PAMAuthorizationResponse` messages.
+        ///   - request: A request containing a single `PAMAuthorizeRequest` message.
+        ///   - serializer: A serializer for `PAMAuthorizeRequest` messages.
+        ///   - deserializer: A deserializer for `PAMAuthorizeResponse` messages.
         ///   - options: Options to apply to this RPC.
         ///   - handleResponse: A closure which handles the response, the result of which is
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
         func authorize<Result>(
-            request: GRPCCore.ClientRequest<AuthorizeRequest>,
-            serializer: some GRPCCore.MessageSerializer<AuthorizeRequest>,
-            deserializer: some GRPCCore.MessageDeserializer<PAMAuthorizationResponse>,
+            request: GRPCCore.ClientRequest<PAMAuthorizeRequest>,
+            serializer: some GRPCCore.MessageSerializer<PAMAuthorizeRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<PAMAuthorizeResponse>,
             options: GRPCCore.CallOptions,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizationResponse>) async throws -> Result
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizeResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -217,20 +217,20 @@ extension PAM {
         /// Call the "Authorize" method.
         ///
         /// - Parameters:
-        ///   - request: A request containing a single `AuthorizeRequest` message.
-        ///   - serializer: A serializer for `AuthorizeRequest` messages.
-        ///   - deserializer: A deserializer for `PAMAuthorizationResponse` messages.
+        ///   - request: A request containing a single `PAMAuthorizeRequest` message.
+        ///   - serializer: A serializer for `PAMAuthorizeRequest` messages.
+        ///   - deserializer: A deserializer for `PAMAuthorizeResponse` messages.
         ///   - options: Options to apply to this RPC.
         ///   - handleResponse: A closure which handles the response, the result of which is
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
         ///       hasn't already finished.
         /// - Returns: The result of `handleResponse`.
         internal func authorize<Result>(
-            request: GRPCCore.ClientRequest<AuthorizeRequest>,
-            serializer: some GRPCCore.MessageSerializer<AuthorizeRequest>,
-            deserializer: some GRPCCore.MessageDeserializer<PAMAuthorizationResponse>,
+            request: GRPCCore.ClientRequest<PAMAuthorizeRequest>,
+            serializer: some GRPCCore.MessageSerializer<PAMAuthorizeRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<PAMAuthorizeResponse>,
             options: GRPCCore.CallOptions = .defaults,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizationResponse>) async throws -> Result = { response in
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizeResponse>) async throws -> Result = { response in
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
@@ -302,23 +302,23 @@ extension PAM.ClientProtocol {
     /// Call the "Authorize" method.
     ///
     /// - Parameters:
-    ///   - request: A request containing a single `AuthorizeRequest` message.
+    ///   - request: A request containing a single `PAMAuthorizeRequest` message.
     ///   - options: Options to apply to this RPC.
     ///   - handleResponse: A closure which handles the response, the result of which is
     ///       returned to the caller. Returning from the closure will cancel the RPC if it
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
     internal func authorize<Result>(
-        request: GRPCCore.ClientRequest<AuthorizeRequest>,
+        request: GRPCCore.ClientRequest<PAMAuthorizeRequest>,
         options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizationResponse>) async throws -> Result = { response in
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizeResponse>) async throws -> Result = { response in
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
         try await self.authorize(
             request: request,
-            serializer: GRPCProtobuf.ProtobufSerializer<AuthorizeRequest>(),
-            deserializer: GRPCProtobuf.ProtobufDeserializer<PAMAuthorizationResponse>(),
+            serializer: GRPCProtobuf.ProtobufSerializer<PAMAuthorizeRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<PAMAuthorizeResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -397,14 +397,14 @@ extension PAM.ClientProtocol {
     ///       hasn't already finished.
     /// - Returns: The result of `handleResponse`.
     internal func authorize<Result>(
-        _ message: AuthorizeRequest,
+        _ message: PAMAuthorizeRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizationResponse>) async throws -> Result = { response in
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PAMAuthorizeResponse>) async throws -> Result = { response in
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        let request = GRPCCore.ClientRequest<AuthorizeRequest>(
+        let request = GRPCCore.ClientRequest<PAMAuthorizeRequest>(
             message: message,
             metadata: metadata
         )

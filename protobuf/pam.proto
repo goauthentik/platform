@@ -10,7 +10,7 @@ import "agent_auth.proto";
 service PAM {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
-  rpc Authorize(agent_auth.AuthorizeRequest) returns (PAMAuthorizationResponse);
+  rpc Authorize(PAMAuthorizeRequest) returns (PAMAuthorizeResponse);
 }
 
 message TokenAuthRequest {
@@ -67,7 +67,12 @@ message InteractiveChallenge {
   string debug_info = 6;
 }
 
-message PAMAuthorizationResponse {
+message PAMAuthorizeRequest {
+  string session_id = 1;
+  agent_auth.AuthorizeRequest authz = 2;
+}
+
+message PAMAuthorizeResponse {
   agent_auth.AuthorizeResponse response = 1;
   InteractiveAuthResult code = 2;
 }
