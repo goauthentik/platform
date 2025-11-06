@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
@@ -20,6 +21,9 @@ var agentCmd = &cobra.Command{
 		err := agentPrecheck()
 		if err != nil {
 			return err
+		}
+		if config.Manager().Get().Debug {
+			log.SetLevel(log.DebugLevel)
 		}
 		if _, err := os.Stat(config.Manager().Get().RuntimeDir); err != nil {
 			return errors.Wrap(err, "failed to check runtime directory")
