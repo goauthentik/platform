@@ -232,7 +232,6 @@ func ForwardAgentSocket(remoteSocket string, client *ssh.Client) error {
 			<-done
 		}(remoteConn)
 	}
-	return nil
 }
 
 func Shell(client *ssh.Client) error {
