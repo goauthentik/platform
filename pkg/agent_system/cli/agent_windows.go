@@ -27,5 +27,4 @@ func runAgentPlatform(cmd *cobra.Command, args []string) error {
 	} else {
 		return svc.Run("ak_sysd", w)
 	}
-	return nil
 }
