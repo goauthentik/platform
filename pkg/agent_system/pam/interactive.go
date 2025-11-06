@@ -39,7 +39,7 @@ func (pam *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAut
 		username: req.Username,
 		password: req.Password,
 	}
-	txn.ctx, txn.cancel = context.WithCancel(pam.ctx)
+	txn.ctx, txn.cancel = context.WithCancel(pam.ctx.Context())
 	fex, err := flow.NewFlowExecutor(txn.ctx, pam.dom.AuthenticationFlow, pam.api.GetConfig(), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
 			pam.log.WithField("logger", "component.pam.flow").WithFields(fields).Info(msg)

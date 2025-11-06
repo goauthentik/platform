@@ -29,9 +29,9 @@ type Server struct {
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log: ctx.Log,
+		log: ctx.Log(),
+		ctx: ctx.Context(),
 		cfg: config.Manager().Get(),
-		ctx: ctx.Context,
 	}
 	return srv, nil
 }

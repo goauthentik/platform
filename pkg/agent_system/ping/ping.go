@@ -18,7 +18,7 @@ type Server struct {
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log: ctx.Log,
+		log: ctx.Log(),
 	}
 	return srv, nil
 }

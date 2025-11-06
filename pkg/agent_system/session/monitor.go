@@ -46,7 +46,7 @@ func NewMonitor(ctx component.Context) (component.Component, error) {
 		sessions:      make(map[string]*Session),
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
-		log:           ctx.Log,
+		log:           ctx.Log(),
 	}, nil
 }
 
