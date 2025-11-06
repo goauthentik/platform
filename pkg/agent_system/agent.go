@@ -17,6 +17,7 @@ import (
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
+	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
 )
 
@@ -24,6 +25,7 @@ type ComponentInstance struct {
 	comp   component.Component
 	ctx    context.Context
 	cancel context.CancelFunc
+	st     *state.ScopedState
 }
 
 type SystemAgent struct {
@@ -34,9 +36,10 @@ type SystemAgent struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	lis    socket.InfoListener
+	st     *state.State
 }
 
-func New() *SystemAgent {
+func New() (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
 
 	sm := &SystemAgent{
@@ -61,9 +64,14 @@ func New() *SystemAgent {
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	sm.DomainCheck()
 	sm.registerComponents()
+	sst, err := state.Open(types.StatePath().ForCurrent())
+	if err != nil {
+		return nil, err
+	}
+	sm.st = sst
 
 	go sm.watchConfig()
-	return sm
+	return sm, nil
 }
 
 func (sm *SystemAgent) registerComponents() {
@@ -73,7 +81,8 @@ func (sm *SystemAgent) registerComponents() {
 		l := sm.log.WithField("logger", fmt.Sprintf("component.%s", name))
 		l.Info("Registering component")
 		ctx, cancel := context.WithCancel(sm.ctx)
-		comp, err := constr(component.NewContext(ctx, l, sm))
+		ss := sm.st.ForBucket(types.KeyComponent, name)
+		comp, err := constr(component.NewContext(ctx, l, sm, ss))
 		if err != nil {
 			panic(err)
 		}
@@ -81,6 +90,7 @@ func (sm *SystemAgent) registerComponents() {
 			comp:   comp,
 			ctx:    ctx,
 			cancel: cancel,
+			st:     ss,
 		}
 		comp.Register(sm.srv)
 	}
@@ -175,7 +185,7 @@ func (sm *SystemAgent) Stop() {
 			sm.log.WithError(err).WithField("component", n).Warning("failed to stop component")
 		}
 	}
-	err := config.State().Close()
+	err := sm.st.Close()
 	if err != nil {
 		sm.log.WithError(err).Warning("failed to close state")
 	}

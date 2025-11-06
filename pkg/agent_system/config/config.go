@@ -8,14 +8,11 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/platform/keyring"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
-	"goauthentik.io/platform/pkg/storage/state"
 )
 
 var manager *cfgmgr.Manager[*Config]
-var st *state.State
 
 func Init(path string) error {
 	m, err := cfgmgr.NewManager[*Config](path)
@@ -23,20 +20,11 @@ func Init(path string) error {
 		return err
 	}
 	manager = m
-	sst, err := state.Open(types.StatePath().ForCurrent())
-	if err != nil {
-		return err
-	}
-	st = sst
 	return nil
 }
 
 func Manager() *cfgmgr.Manager[*Config] {
 	return manager
-}
-
-func State() *state.State {
-	return st
 }
 
 type Config struct {

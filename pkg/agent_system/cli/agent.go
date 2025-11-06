@@ -31,10 +31,15 @@ var agentCmd = &cobra.Command{
 		}
 		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		defer systemlog.Cleanup()
 		log.SetLevel(log.DebugLevel)
-		agentsystem.New().Start()
+		agent, err := agentsystem.New()
+		if err != nil {
+			return err
+		}
+		agent.Start()
+		return nil
 	},
 }
 

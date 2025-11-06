@@ -23,11 +23,11 @@ func KeyFromString(raw string) *Key {
 	}
 }
 
-// func (c *Client) Key(parts ...string) *Key {
-// 	return &Key{
-// 		parts: parts,
-// 	}
-// }
+func (st *State) Key(parts ...string) *Key {
+	return &Key{
+		parts: parts,
+	}
+}
 
 func (k *Key) Add(parts ...string) *Key {
 	k.parts = append(k.parts, parts...)
@@ -57,7 +57,8 @@ func (k *Key) Copy() *Key {
 	}
 }
 
-func (k *Key) String() string {
+func (k *Key) String() []byte {
+	// This can probably be optimized to directly create a byte buffer
 	b := strings.Builder{}
 	b.WriteRune(SEP)
 	for idx, part := range k.parts {
@@ -73,5 +74,5 @@ func (k *Key) String() string {
 	if k.prefix {
 		b.WriteRune(SEP)
 	}
-	return b.String()
+	return []byte(b.String())
 }
