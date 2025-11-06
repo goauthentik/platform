@@ -113,7 +113,7 @@ func (m *Monitor) AddSession(session *pb.StateSession) {
 func (m *Monitor) GetSession(id string) (*pb.StateSession, bool) {
 	m.mtx.RLock()
 	defer m.mtx.RUnlock()
-	var session pb.StateSession
+	session := pb.StateSession{}
 	var exists bool
 	err := m.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		d := b.Get([]byte(id))
@@ -125,6 +125,7 @@ func (m *Monitor) GetSession(id string) (*pb.StateSession, bool) {
 		if err != nil {
 			return err
 		}
+		exists = true
 		return nil
 	})
 	if err != nil {
@@ -137,7 +138,7 @@ func (m *Monitor) GetSession(id string) (*pb.StateSession, bool) {
 func (m *Monitor) Delete(id string) {
 	m.mtx.Lock()
 	defer m.mtx.Unlock()
-	err := m.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+	err := m.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		return b.Delete([]byte(id))
 	})
 	if err != nil {
@@ -165,7 +166,7 @@ func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRe
 
 	m.log.Infof(
 		"Registered session %s for user %s (PID: %d, exp: %s)",
-		session.ID,
+		session.ID[:4],
 		session.Username,
 		req.Pid,
 		time.Until(session.ExpiresAt.AsTime()).String(),
