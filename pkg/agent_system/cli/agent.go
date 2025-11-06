@@ -26,7 +26,7 @@ var agentCmd = &cobra.Command{
 		}
 		err = systemlog.Setup(pstr.PlatformString{
 			Windows: pstr.S("authentik Sysd"),
-			Linux:   pstr.S("sysd"),
+			Linux:   pstr.S("ak-sysd"),
 		}.ForCurrent())
 		if err != nil {
 			return err

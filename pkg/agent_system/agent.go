@@ -41,6 +41,10 @@ type SystemAgent struct {
 
 func New() (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
+	sst, err := state.Open(types.StatePath().ForCurrent())
+	if err != nil {
+		return nil, err
+	}
 
 	sm := &SystemAgent{
 		srv: grpc.NewServer(
@@ -60,15 +64,11 @@ func New() (*SystemAgent, error) {
 		log: l,
 		cm:  map[string]ComponentInstance{},
 		mtx: sync.Mutex{},
+		st:  sst,
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	sm.DomainCheck()
 	sm.registerComponents()
-	sst, err := state.Open(types.StatePath().ForCurrent())
-	if err != nil {
-		return nil, err
-	}
-	sm.st = sst
 
 	go sm.watchConfig()
 	return sm, nil

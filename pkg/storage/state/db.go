@@ -1,7 +1,6 @@
 package state
 
 import (
-	"context"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -9,10 +8,8 @@ import (
 )
 
 type State struct {
-	b      *bbolt.DB
-	log    *log.Entry
-	ctx    context.Context
-	cancel context.CancelFunc
+	b   *bbolt.DB
+	log *log.Entry
 }
 
 const RootBucket = "authentik_v1"
@@ -30,7 +27,6 @@ func Open(path string) (*State, error) {
 		b:   db,
 		log: l,
 	}
-	d.ctx, d.cancel = context.WithCancel(context.Background())
 	return d, nil
 }
 
