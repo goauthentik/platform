@@ -19,6 +19,8 @@ import (
 	"time"
 )
 
+const ID = "session"
+
 type Session struct {
 	ID          string
 	Username    string

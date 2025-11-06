@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ID = "agent_starter"
+
 type Server struct {
 	log *log.Entry
 

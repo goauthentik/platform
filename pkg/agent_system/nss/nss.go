@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ID = "nss"
+
 type Server struct {
 	pb.UnimplementedNSSServer
 

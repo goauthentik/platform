@@ -1,18 +1,22 @@
-//go:build !linux
+//go:build linux
 
 package agentsystem
 
 import (
-	agentstarter "goauthentik.io/platform/pkg/agent_system/agent_starter"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/device"
+	"goauthentik.io/platform/pkg/agent_system/nss"
+	"goauthentik.io/platform/pkg/agent_system/pam"
 	"goauthentik.io/platform/pkg/agent_system/ping"
+	"goauthentik.io/platform/pkg/agent_system/session"
 )
 
 func (sm *SystemAgent) RegisterPlatformComponents() map[string]component.Constructor {
 	return map[string]component.Constructor{
-		"device":        device.NewServer,
-		"ping":          ping.NewServer,
-		"agent_starter": agentstarter.NewServer,
+		device.ID:  device.NewServer,
+		session.ID: session.NewMonitor,
+		nss.ID:     nss.NewServer,
+		pam.ID:     pam.NewServer,
+		ping.ID:    ping.NewServer,
 	}
 }

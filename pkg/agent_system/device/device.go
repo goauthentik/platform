@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ID = "device"
+
 type Server struct {
 	pb.UnimplementedAgentPlatformServer
 

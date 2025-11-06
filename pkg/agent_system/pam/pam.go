@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const ID = "pam"
+
 type Server struct {
 	pb.UnimplementedPAMServer
 

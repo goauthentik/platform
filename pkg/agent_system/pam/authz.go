@@ -11,7 +11,10 @@ import (
 )
 
 func (pam *Server) Authorize(ctx context.Context, req *pb.PAMAuthorizeRequest) (*pb.PAMAuthorizeResponse, error) {
-	sm := pam.ctx.GetComponent("session").(*session.Monitor)
+	sm := pam.ctx.GetComponent(session.ID).(*session.Monitor)
+	if sm == nil {
+		return nil, status.Error(codes.Internal, "cant find session component")
+	}
 	sess, found := sm.GetSession(req.SessionId)
 	if !found {
 		return nil, status.Error(codes.NotFound, "session not found")

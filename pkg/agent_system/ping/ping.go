@@ -11,6 +11,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+const ID = "ping"
+
 type Server struct {
 	pb.UnimplementedPingServer
 	log *log.Entry
