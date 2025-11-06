@@ -84,7 +84,7 @@ func (m *Monitor) checkExpiredSessions() {
 
 			err := m.terminateSession(session)
 			if err != nil && !strings.Contains(err.Error(), "no such process") {
-				log.Infof("Failed to terminate session %s: %v", sessionID, err)
+				log.WithError(err).Infof("Failed to terminate session %s", sessionID)
 			} else {
 				m.Delete(sessionID)
 			}

@@ -19,7 +19,7 @@ pub fn authenticate_authorize_impl(
         Some(t) => t,
         None => {
             log::warn!("failed to get hostname");
-            return PamResultCode::PAM_PERM_DENIED;
+            return PamResultCode::PAM_IGNORE;
         }
     };
     let user = username();
