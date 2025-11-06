@@ -4,7 +4,6 @@ package cli
 
 import (
 	"os"
-	"runtime"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -40,9 +39,5 @@ var agentCmd = &cobra.Command{
 }
 
 func init() {
-	defaultConfigFile = "/etc/authentik/config.json"
-	if runtime.GOOS == "darwin" {
-		defaultConfigFile = "/opt/authentik/config/config.json"
-	}
 	rootCmd.AddCommand(agentCmd)
 }

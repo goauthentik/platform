@@ -175,5 +175,9 @@ func (sm *SystemAgent) Stop() {
 			sm.log.WithError(err).WithField("component", n).Warning("failed to stop component")
 		}
 	}
+	err := config.State().Close()
+	if err != nil {
+		sm.log.WithError(err).Warning("failed to close state")
+	}
 	sm.srv.GracefulStop()
 }
