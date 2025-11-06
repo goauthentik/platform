@@ -23,19 +23,11 @@ pub fn authenticate_authorize_impl(
         }
     };
     let user = username();
-    log::debug!(
-        "\tProc env: {}",
-        Vec::from_iter(std::env::vars().map(|(k, v)| format!("'{k}'='{v}'"))).join(", ")
-    );
-    let ak = std::env::vars().filter(|k| k.0 == "AUTHENTIK_SESSION_ID");
-    log::debug!(
-        "\tProc env: {}",
-        Vec::from_iter(ak.map(|(k, v)| format!("'{k}'='{v}'"))).join(", ")
-    );
-    let session_id = match std::env::var("AUTHENTIK_SESSION_ID") {
-        Ok(s) => s,
-        Err(e) => {
-            log::warn!("Couldn't get session ID: {}", e);
+    let ak = std::env::vars().filter(|k| k.0 == "AUTHENTIK_SESSION_ID").next();
+    let session_id = match ak {
+        Some(s) => s.1,
+        None => {
+            log::warn!("Couldn't find session ID");
             return PamResultCode::PAM_IGNORE;
         }
     };
