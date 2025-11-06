@@ -1,6 +1,5 @@
-use authentik_sys::generated::agent::RequestHeader;
+use authentik_sys::generated::{agent::RequestHeader, grpc_request_path};
 use authentik_sys::generated::agent_auth::AuthorizeRequest;
-use authentik_sys::generated::grpc_request;
 use authentik_sys::generated::pam::pam_client::PamClient;
 use gethostname::gethostname;
 use pam::{constants::PamResultCode, module::PamHandle};
@@ -23,7 +22,14 @@ pub fn authenticate_authorize_impl(
         }
     };
     let user = username();
-    match grpc_request(async |ch| {
+    let cli_socket = match std::env::var("AUTHENTIK_CLI_SOCKET") {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("failed to get CLI socket path: {}", e);
+            return PamResultCode::PAM_IGNORE;
+        }
+    };
+    match grpc_request_path(cli_socket, async |ch| {
         return Ok(PamClient::new(ch)
             .authorize(AuthorizeRequest {
                 header: Some(RequestHeader {
