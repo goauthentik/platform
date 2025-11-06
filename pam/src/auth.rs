@@ -77,8 +77,6 @@ pub fn authenticate_impl(
         }
     };
 
-    log::debug!("username: '{}'", username.to_owned().as_str());
-
     let id = _generate_id().to_string();
     let mut session_data = SessionData {
         username: username.to_string(),
