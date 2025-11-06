@@ -23,3 +23,5 @@ contents:
     dst: /etc/bash_completion.d/ak-sysd
   - dst: /etc/authentik/domains
     type: dir
+  - dst: /var/lib/authentik
+    type: dir
