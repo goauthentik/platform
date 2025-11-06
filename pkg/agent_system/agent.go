@@ -41,7 +41,7 @@ type SystemAgent struct {
 
 func New() (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
-	sst, err := state.Open(types.StatePath().ForCurrent())
+	sst, err := state.Open(types.StatePath().ForCurrent(), nil)
 	if err != nil {
 		return nil, err
 	}

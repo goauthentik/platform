@@ -14,12 +14,15 @@ type State struct {
 
 const RootBucket = "authentik_v1"
 
-func Open(path string) (*State, error) {
+func Open(path string, opts *bbolt.Options) (*State, error) {
+	if opts == nil {
+		opts = &bbolt.Options{
+			Timeout: 1 * time.Second,
+		}
+	}
 	l := log.WithField("logger", "storage.state")
-	db, err := bbolt.Open(path, 0600, &bbolt.Options{
-		Timeout: 1 * time.Second,
-		Logger:  l,
-	})
+	opts.Logger = l
+	db, err := bbolt.Open(path, 0600, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +43,10 @@ func (st *State) ForBucket(path ...string) *ScopedState {
 		root:       st,
 		bucketPath: st.Key(path...),
 	}
+}
+
+func (st *State) View(fn func(tx *bbolt.Tx) error) error {
+	return st.b.View(fn)
 }
 
 func (st *State) Close() error {
