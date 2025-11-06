@@ -50,7 +50,7 @@ fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool
     })?
     .into_inner();
 
-    return Ok(response.successful);
+    Ok(response.successful)
 }
 
 fn ak_sys_wcp_oauth_config(res: &mut ffi::WCPOAuthConfig) -> Result<bool, Box<dyn Error>> {
