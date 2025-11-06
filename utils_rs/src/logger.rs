@@ -1,8 +1,13 @@
-pub fn init_log(name: &str) {
-    use log::LevelFilter;
-    use syslog::BasicLogger;
-    use syslog::{Facility, Formatter3164};
+use log::LevelFilter;
+use syslog::BasicLogger;
+use syslog::{Facility, Formatter3164};
+use libc::{getegid, geteuid, getgid, getuid};
 
+pub fn init_log(name: &str) {
+    init_log_level(name, LevelFilter::Trace);
+}
+
+pub fn init_log_level(name: &str, level: LevelFilter) {
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
         hostname: None,
@@ -17,15 +22,13 @@ pub fn init_log(name: &str) {
         }
     };
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
-        .map(|()| log::set_max_level(LevelFilter::Trace))
+        .map(|()| log::set_max_level(level))
         .expect("Failed to setup logger");
 }
 
 pub fn exit_log() {}
 
 pub fn log_hook(name: &str) {
-    use libc::{getegid, geteuid, getgid, getuid};
-
     let pid = std::process::id();
     let ppid = std::os::unix::process::parent_id();
     let uid = unsafe { getuid() };

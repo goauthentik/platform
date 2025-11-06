@@ -23,7 +23,7 @@ pub fn authenticate_authorize_impl(
         }
     };
     let user = username();
-    let ak = std::env::vars().filter(|k| k.0 == "AUTHENTIK_SESSION_ID").next();
+    let ak = std::env::vars().find(|k| k.0 == "AUTHENTIK_SESSION_ID");
     let session_id = match ak {
         Some(s) => s.1,
         None => {

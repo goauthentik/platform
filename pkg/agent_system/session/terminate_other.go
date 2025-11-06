@@ -7,5 +7,5 @@ import (
 )
 
 func (m *Monitor) terminateSession(session *Session) error {
-	return errors.New("Not supported on this platform")
+	return errors.New("not supported on this platform")
 }
