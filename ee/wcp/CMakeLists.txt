@@ -209,18 +209,24 @@ find_package(CEF REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CEF_VERSION "134.3.2+g615db2f+chromium-134.0.6998.89")
+set(CEF_HASH "856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265")
+
 # Download CEF binaries
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
   message(INFO " > CEF binary `Release` directory is missing.")
   message(INFO " > Downloading CEF binary package...")
-  file(DOWNLOAD "https://cef-builds.spotifycdn.com/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2" "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2"
-    EXPECTED_HASH SHA256=856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265
+  file(
+    DOWNLOAD
+    "https://cef-builds.spotifycdn.com/cef_binary_${CEF_VERSION}_windows64.tar.bz2"
+    "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_${CEF_VERSION}_windows64.tar.bz2"
+    EXPECTED_HASH SHA256=${CEF_HASH}
     SHOW_PROGRESS
   )
   message(INFO " > Extracting CEF binary package...")
-  file(ARCHIVE_EXTRACT INPUT "cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2")
+  file(ARCHIVE_EXTRACT INPUT "cef_binary_${CEF_VERSION}_windows64.tar.bz2")
   message(INFO " > Copying CEF binary `Release` directory...")
-  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_${CEF_VERSION}_windows64/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
     message(INFO " > CEF binary `Release` directory setup completed.")
   else()
@@ -354,11 +360,15 @@ set_property(TARGET sentry PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 #
 # Define CEF-based targets.
 #
+# Set the project output directory for subprojects, such as `cefexe`, to copy their binaries to
+set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 
 # Include the ak_cred_provider target.
 # Comes from the libcef_dll/CMakeLists.txt file in the binary distribution
 # directory.
 add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} ak_cred_provider)
+add_subdirectory(ak_lsa)
+add_subdirectory(ak_lsa_test)
 
 # Include application targets.
 # Comes from the <target>/CMakeLists.txt file in the current directory.
@@ -369,8 +379,6 @@ endif()
 
 # add_subdirectory(ak_cred_provider)
 
-# Set the project output directory for subprojects, such as `cefexe`, to copy their binaries to
-set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 add_subdirectory(cefexe)
 # Copy cefexe executable and OpenSSL library file to the common build directory
 file(COPY "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll" DESTINATION "${PROJECT_INSALL_DIR}")

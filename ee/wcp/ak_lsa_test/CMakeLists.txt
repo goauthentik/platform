@@ -2,14 +2,18 @@
 # reserved. Use of this source code is governed by a BSD-style license that
 # can be found in the LICENSE file.
 
-project(cefexe)
+project(ak_lsa_test)
 
 #
 # Source files.
 #
 
 set(SRCS
-  cefexe.cpp
+  main.cpp
+)
+
+include_directories(
+  ../
 )
 
 #
@@ -25,11 +29,13 @@ add_executable(${PROJECT_NAME} WIN32 ${SRCS})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ..)
 
-target_link_libraries(${PROJECT_NAME}
-  # ${LIBCEF_LIB_PATH}  #//- todo: revise if really needed
-  ak_cred_provider
-  # ${LIBCEF_DLL_WRAPPER_LIB_PATH} #-
-  # ${CEF_STANDARD_LIBS}
+find_library(CREDUI_LIB_PATH Credui.lib)
+find_library(SECUR32_LIB_PATH Secur32.lib)
+find_library(SHLWAPI_LIB_PATH Shlwapi.lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+	${CREDUI_LIB_PATH}
+	${SECUR32_LIB_PATH}
+	${SHLWAPI_LIB_PATH}
 )
 
 # Copy binary and resource files to the target output directory.

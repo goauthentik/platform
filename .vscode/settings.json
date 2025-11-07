@@ -3,8 +3,10 @@
     "options": ["-I=protos/"]
   },
   "files.associations": {
+    "**/requirements{/**,*}.{txt,in}": "pip-requirements",
     "zshrc": "shellscript",
     "*.hcl": "terraform",
-    "xstring": "cpp"
+    "xstring": "cpp",
+    "string": "cpp"
   }
 }
