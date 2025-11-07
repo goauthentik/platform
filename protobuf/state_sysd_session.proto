@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package state_sysd_session;
+option go_package = "pkg/pb";
+option swift_prefix = "";
+
+import "google/protobuf/timestamp.proto";
+
+message StateSession {
+  string ID = 1;
+  string Username = 2;
+  string TokenHash = 3;
+  google.protobuf.Timestamp ExpiresAt = 4;
+  uint32 PID = 5;
+  uint32 PPID = 6;
+  google.protobuf.Timestamp CreatedAt = 7;
+  string LocalSocket = 8;
+}

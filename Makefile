@@ -36,7 +36,7 @@ test:
 		-count=${TEST_COUNT} \
 		-json \
 		${TEST_FLAGS} \
-		$(shell go list ./... | grep -v goauthentik.io/platform/vnd) \
+		$(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb) \
 			2>&1 | tee ${TEST_OUTPUT}
 	go tool cover \
 		-html ${PWD}/coverage.txt \

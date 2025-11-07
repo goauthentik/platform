@@ -20,7 +20,7 @@
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="ROOTDIRECTORY" Name="$(var.Manufacturer)">
+      <Directory Name="$(var.Manufacturer)">
         <Directory Id="sysd" Name="sysd">
           <Directory Id="sysd_domains" Name="domains" />
           <Directory Id="sysd_runtime" Name="runtime" />
@@ -32,6 +32,9 @@
         <Directory Id="cli" Name="cli" />
         <Directory Id="agent" Name="agent" />
       </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="d_programdata" Name="$(var.Manufacturer)" />
     </StandardDirectory>
     <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />

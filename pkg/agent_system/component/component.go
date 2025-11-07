@@ -4,6 +4,7 @@ import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
 )
 
@@ -15,13 +16,15 @@ type Context struct {
 	ctx context.Context
 	log *log.Entry
 	reg ComponentRegistry
+	st  *state.ScopedState
 }
 
-func NewContext(ctx context.Context, log *log.Entry, reg ComponentRegistry) Context {
+func NewContext(ctx context.Context, log *log.Entry, reg ComponentRegistry, st *state.ScopedState) Context {
 	return Context{
 		ctx: ctx,
 		log: log,
 		reg: reg,
+		st:  st,
 	}
 }
 
@@ -35,6 +38,10 @@ func (c Context) Context() context.Context {
 
 func (c Context) Log() *log.Entry {
 	return c.log
+}
+
+func (c Context) State() *state.ScopedState {
+	return c.st
 }
 
 type Constructor func(Context) (Component, error)

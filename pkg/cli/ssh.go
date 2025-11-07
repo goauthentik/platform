@@ -147,7 +147,12 @@ var sshCmd = &cobra.Command{
 			}
 		}()
 
-		go ForwardAgentSocket(remoteSocketPath, client)
+		go func() {
+			err := ForwardAgentSocket(remoteSocketPath, client)
+			if err != nil {
+				fmt.Printf("Warning: %v\n", err.Error())
+			}
+		}()
 		return Shell(client)
 	},
 }
@@ -169,11 +174,11 @@ func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
 	return fmt.Sprintf("\u200b%s", base64.StdEncoding.EncodeToString(rv))
 }
 
-func ForwardAgentSocket(remoteSocket string, client *ssh.Client) {
+func ForwardAgentSocket(remoteSocket string, client *ssh.Client) error {
 	localSocket := types.GetAgentSocketPath()
 	remoteListener, err := client.Listen("unix", remoteSocket)
 	if err != nil {
-		log.WithError(err).Fatalf("remote listen on %s failed", remoteSocket)
+		return err
 	}
 	defer func() {
 		err := remoteListener.Close()

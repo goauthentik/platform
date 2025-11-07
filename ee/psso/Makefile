@@ -25,7 +25,7 @@ build:
 	xcodebuild ${XCB_ARGS}
 	cp -R "${TOP}/cache/${TARGET}/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 ifdef SENTRY_AUTH_TOKEN
-	@$(call sentry_upload_symbols,"${TOP}/cache/${TARGET}/Build/Products/Release")
+	@$(call sentry_upload_symbols,"${TOP}/bin/${TARGET}")
 endif
 
 .PHONY: format

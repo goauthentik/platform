@@ -5,7 +5,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/check"
 )
 
-var checkCmd = &cobra.Command{
+var troubleshootCheckCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check the status of the authentik system agent",
 	PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -17,5 +17,5 @@ var checkCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(checkCmd)
+	troubleshootCmd.AddCommand(troubleshootCheckCmd)
 }

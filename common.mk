@@ -26,6 +26,5 @@ define sentry_upload_symbols
 		--include-sources \
 		--org authentik-security-inc \
 		--project platform \
-		--log-level debug \
 		$(1)
 endef

@@ -8,11 +8,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/meta"
 )
 
 var configFile string
-var defaultConfigFile string
+var defaultConfigFile = types.ConfigPath().ForCurrent()
 
 var rootCmd = &cobra.Command{
 	Use:   "ak-sysd",

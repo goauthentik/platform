@@ -1,7 +1,7 @@
+use libc::{getegid, geteuid, getgid, getuid};
 use log::LevelFilter;
 use syslog::BasicLogger;
 use syslog::{Facility, Formatter3164};
-use libc::{getegid, geteuid, getgid, getuid};
 
 pub fn init_log(name: &str) {
     let formatter = Formatter3164 {

@@ -26,5 +26,5 @@ build:
 	powershell.exe -noprofile -executionpolicy bypass -file ./build.ps1 ${PWD} ${TOP} ${TARGET}
 	cp -r ${TOP}/cache/${TARGET}/ak_cred_provider/Release/* ${TOP}/bin/${TARGET}/
 ifdef SENTRY_AUTH_TOKEN
-	@$(call sentry_upload_symbols, "${TOP}/cache/${TARGET}/")
+	@$(call sentry_upload_symbols,"${TOP}/bin/${TARGET}/")
 endif
