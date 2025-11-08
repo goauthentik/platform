@@ -59,3 +59,11 @@ func (sst *ScopedState) View(fn func(*bbolt.Tx, *bbolt.Bucket) error) error {
 		return fn(tx, b)
 	})
 }
+
+func (sst *ScopedState) ForBucket(path ...string) *ScopedState {
+	path = append([]string{RootBucket}, path...)
+	return &ScopedState{
+		root:       sst.root,
+		bucketPath: sst.bucketPath.Add(path...),
+	}
+}

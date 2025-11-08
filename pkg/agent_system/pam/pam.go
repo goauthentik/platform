@@ -4,13 +4,10 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/MicahParks/keyfunc/v3"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
-	lconfig "goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
-	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
 )
@@ -22,7 +19,6 @@ type Server struct {
 
 	api *api.APIClient
 	log *log.Entry
-	kf  keyfunc.Keyfunc
 
 	ctx component.Context
 
@@ -54,14 +50,7 @@ func (pam *Server) Start() error {
 	}
 	pam.dom = dom
 	pam.api = ac
-	k, err := keyfunc.NewDefaultCtx(pam.ctx.Context(), []string{ak.URLsForProfile(&lconfig.ConfigV1Profile{
-		AuthentikURL: dom.AuthentikURL,
-		AppSlug:      dom.AppSlug,
-	}).JWKS})
-	if err != nil {
-		return err
-	}
-	pam.kf = k
+	pam.startFetch()
 	return nil
 }
 

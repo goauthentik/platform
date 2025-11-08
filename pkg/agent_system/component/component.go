@@ -4,6 +4,7 @@ import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
 )
@@ -42,6 +43,10 @@ func (c Context) Log() *log.Entry {
 
 func (c Context) State() *state.ScopedState {
 	return c.st
+}
+
+func (c Context) StateForDomain(dom config.DomainConfig) *state.ScopedState {
+	return c.st.ForBucket(dom.Domain)
 }
 
 type Constructor func(Context) (Component, error)

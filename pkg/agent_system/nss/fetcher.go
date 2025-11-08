@@ -31,14 +31,22 @@ func (nss *Server) startFetch() {
 }
 
 func (nss *Server) fetch() {
-	users, _ := ak.Paginator(nss.api.CoreApi.CoreUsersList(nss.ctx).IncludeGroups(true), ak.PaginatorOptions{
+	users, err := ak.Paginator(nss.api.CoreApi.CoreUsersList(nss.ctx).IncludeGroups(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   nss.log,
 	})
-	groups, _ := ak.Paginator(nss.api.CoreApi.CoreGroupsList(nss.ctx).IncludeUsers(true), ak.PaginatorOptions{
+	if err != nil {
+		nss.log.WithError(err).Warning("failed to fetch users")
+		return
+	}
+	groups, err := ak.Paginator(nss.api.CoreApi.CoreGroupsList(nss.ctx).IncludeUsers(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   nss.log,
 	})
+	if err != nil {
+		nss.log.WithError(err).Warning("failed to fetch groups")
+		return
+	}
 
 	nusers := make([]*pb.User, len(users))
 	ngroups := make([]*pb.Group, len(users)+len(groups))
