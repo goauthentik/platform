@@ -3,11 +3,14 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"path"
 
 	"github.com/bramvdbogaerde/go-scp"
 	"github.com/google/uuid"
+	"github.com/schollz/progressbar/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_local/client"
@@ -48,13 +51,17 @@ var scpCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		fb := path.Base(args[0])
 
 		scpClient, err := scp.NewClientBySSH(client)
 		if err != nil {
 			return err
 		}
 
-		return scpClient.CopyFromFile(cmd.Context(), *f, "/home/server/test.txt", "0655")
+		return scpClient.CopyFromFilePassThru(cmd.Context(), *f, fb, "0655", func(r io.Reader, total int64) io.Reader {
+			// fmt.Println(total)
+			return progressbar.DefaultBytes(-1)
+		})
 	},
 }
 
