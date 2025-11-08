@@ -16,8 +16,9 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Add source to this project's executable.
 set(SRCS
-  "DllMain.cpp"
+  "Dll.cpp"
   "Lsa.cpp"
+  "Debug.cpp"
   # "Debug.cpp"
   # "ustring.cpp"
 )

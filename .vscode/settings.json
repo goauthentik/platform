@@ -8,5 +8,6 @@
     "*.hcl": "terraform",
     "xstring": "cpp",
     "string": "cpp"
-  }
+  },
+  "cmake.ignoreCMakeListsMissing": true
 }

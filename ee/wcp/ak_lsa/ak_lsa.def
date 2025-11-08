@@ -1,9 +1,9 @@
 LIBRARY ak_lsa.dll
 
 EXPORTS
-
 	LsaApInitializePackage
 	LsaApLogonUserEx2
 	LsaApCallPackage
 	LsaApCallPackageUntrusted
 	LsaApLogonTerminated
+	LsaApCallPackagePassthrough

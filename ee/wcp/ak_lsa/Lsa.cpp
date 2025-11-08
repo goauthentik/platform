@@ -1,15 +1,12 @@
 ﻿#include "Lsa.hpp"
 #include <intrin.h>
-#include <ak_cred_provider/include/Debug.h>
-
-// CustomAuthPackage.cpp - Corrected version
-// Example LSA Authentication Package for custom password authentication
+#include "include/Debug.h"
 
 #include <windows.h>
 #include <ntsecapi.h>
 #include <subauth.h>
 #include <lm.h>
-#include "LogonData.h"
+#include "include/LogonData.h"
 
 // Global variables
 static PLSA_DISPATCH_TABLE g_LsaDispatchTable = NULL;
@@ -91,6 +88,7 @@ NTSTATUS NTAPI LsaApInitializePackage(
     PLSA_STRING *AuthenticationPackageName
 )
 {
+    // Debug("LsaApInitializePackage");
     PLSA_STRING packageName;
     const char* packageNameStr = "ak_lsa";
     SIZE_T nameLength = strlen(packageNameStr);
@@ -171,6 +169,7 @@ NTSTATUS NTAPI LsaApLogonUserEx2(
     PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials
 )
 {
+    // Debug("LsaApLogonUserEx2");
     PCUSTOM_LOGON_DATA logonData;
     PMSV1_0_INTERACTIVE_PROFILE profile;
     PLSA_TOKEN_INFORMATION_V1 tokenInfo;
@@ -307,6 +306,7 @@ NTSTATUS NTAPI LsaApCallPackage(
     PNTSTATUS ProtocolStatus
 )
 {
+    // Debug("LsaApCallPackage");
     *ProtocolReturnBuffer = NULL;
     *ReturnBufferLength = 0;
     *ProtocolStatus = STATUS_SUCCESS;
@@ -323,6 +323,7 @@ NTSTATUS NTAPI LsaApCallPackageUntrusted(
     PNTSTATUS ProtocolStatus
 )
 {
+    // Debug("LsaApCallPackageUntrusted");
     return LsaApCallPackage(ClientRequest, ProtocolSubmitBuffer,
                            ClientBufferBase, SubmitBufferLength,
                            ProtocolReturnBuffer, ReturnBufferLength,
@@ -331,5 +332,20 @@ NTSTATUS NTAPI LsaApCallPackageUntrusted(
 
 VOID NTAPI LsaApLogonTerminated(PLUID LogonId)
 {
+    // Debug("LsaApLogonTerminated");
     // Cleanup when logon session ends
+}
+
+
+NTSTATUS NTAPI LsaApCallPackagePassthrough(
+  PLSA_CLIENT_REQUEST ClientRequest,
+  PVOID ProtocolAuthenticationInformation,
+  PVOID ClientBufferBase,
+  ULONG AuthenticationInformationLength,
+  PVOID* ProtocolReturnBuffer,
+  PULONG ReturnBufferLength,
+  PNTSTATUS ProtocolStatus
+)
+{
+	return STATUS_NOT_IMPLEMENTED;
 }

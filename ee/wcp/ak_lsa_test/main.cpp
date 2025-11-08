@@ -5,7 +5,7 @@
 #include <SubAuth.h>
 #include <tchar.h>
 #include <string>
-#include <ak_lsa/LogonData.h>
+#include <ak_lsa/include/LogonData.h>
 
 using std::to_wstring;
 
