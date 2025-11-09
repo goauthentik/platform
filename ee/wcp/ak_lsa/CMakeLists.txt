@@ -19,6 +19,7 @@ set(SRCS
   "Dll.cpp"
   "Lsa.cpp"
   "Debug.cpp"
+  "ak.cpp"
   # "Debug.cpp"
   # "ustring.cpp"
 )
@@ -54,8 +55,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	${SHLWAPI_LIB_PATH}
   ${ADVAPI32_LIB_PATH}
   authentik_sys_bridge
-  spdlog
-  sentry
 )
 
 COPY_FILES(

@@ -7,10 +7,13 @@
 #include <subauth.h>
 #include <lm.h>
 #include "include/LogonData.h"
+#include "include/ak.h"
 
 // Global variables
 static PLSA_DISPATCH_TABLE g_LsaDispatchTable = NULL;
 static ULONG g_AuthenticationPackageId = 0;
+
+const char* PACKAGE_NAME = "ak_lsa";
 
 // Helper function to allocate and copy a Unicode string in LSA heap
 NTSTATUS AllocateAndCopyUnicodeString(
@@ -81,17 +84,15 @@ NTSTATUS CreateUnicodeStringFromWideString(
 
 // Initialize the authentication package
 NTSTATUS NTAPI LsaApInitializePackage(
-    ULONG AuthenticationPackageId,
-    PLSA_DISPATCH_TABLE LsaDispatchTable,
-    PLSA_STRING Database,
-    PLSA_STRING Confidentiality,
-    PLSA_STRING *AuthenticationPackageName
-)
-{
-    // Debug("LsaApInitializePackage");
+    _In_ ULONG AuthenticationPackageId,
+    _In_ PLSA_DISPATCH_TABLE LsaDispatchTable,
+    _In_opt_ PLSA_STRING Database,
+    _In_opt_ PLSA_STRING Confidentiality,
+    _Out_ PLSA_STRING *AuthenticationPackageName
+) {
+    // Debug("LsaApInitializePackage: " + AuthenticationPackageId);
     PLSA_STRING packageName;
-    const char* packageNameStr = "ak_lsa";
-    SIZE_T nameLength = strlen(packageNameStr);
+    SIZE_T nameLength = strlen(PACKAGE_NAME);
 
     // Store the dispatch table and package ID
     g_LsaDispatchTable = LsaDispatchTable;
@@ -110,7 +111,7 @@ NTSTATUS NTAPI LsaApInitializePackage(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    CopyMemory(packageName->Buffer, packageNameStr, nameLength);
+    CopyMemory(packageName->Buffer, PACKAGE_NAME, nameLength);
     packageName->Buffer[nameLength] = '\0';
     packageName->Length = (USHORT)nameLength;
     packageName->MaximumLength = (USHORT)(nameLength + 1);
@@ -120,55 +121,25 @@ NTSTATUS NTAPI LsaApInitializePackage(
     return STATUS_SUCCESS;
 }
 
-
-// Custom password validation function
-BOOLEAN ValidateCustomPassword(
-    PUNICODE_STRING Domain,
-    PUNICODE_STRING UserName,
-    PUNICODE_STRING Password
-)
-{
-    // Implement your custom password validation logic here
-    // This is where you would:
-    // - Connect to your custom authentication database
-    // - Validate the credentials against your system
-    // - Perform any additional security checks
-
-    // Example: Simple validation (NOT for production use)
-    if (Password->Length < 8 * sizeof(WCHAR)) {
-        return FALSE; // Password too short
-    }
-
-    // Add your custom validation logic here
-    // For demonstration, we'll accept any password with "custom" in it
-    if (wcsstr(Password->Buffer, L"custom") != NULL) {
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-
 // Main logon function - corrected version
 NTSTATUS NTAPI LsaApLogonUserEx2(
-    PLSA_CLIENT_REQUEST ClientRequest,
-    SECURITY_LOGON_TYPE LogonType,
-    PVOID AuthenticationInformation,
-    PVOID ClientAuthenticationBase,
-    ULONG AuthenticationInformationLength,
-    PVOID *ProfileBuffer,
-    PULONG ProfileBufferLength,
-    PLUID LogonId,
-    PNTSTATUS SubStatus,
-    PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
-    PVOID *TokenInformation,
-    PUNICODE_STRING *AccountName,
-    PUNICODE_STRING *AuthenticatingAuthority,
-    PUNICODE_STRING *MachineName,
-    PSECPKG_PRIMARY_CRED PrimaryCredentials,
-    PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials
-)
-{
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ SECURITY_LOGON_TYPE LogonType,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferSize,
+    _Out_ PVOID *ProfileBuffer,
+    _Out_ PULONG ProfileBufferSize,
+    _Out_ PLUID LogonId,
+    _Out_ PNTSTATUS SubStatus,
+    _Out_ PLSA_TOKEN_INFORMATION_TYPE TokenInformationType,
+    _Out_ PVOID *TokenInformation,
+    _Out_ PUNICODE_STRING *AccountName,
+    _Out_ PUNICODE_STRING *AuthenticatingAuthority,
+    _Out_ PUNICODE_STRING *MachineName,
+    _Out_ PSECPKG_PRIMARY_CRED PrimaryCredentials,
+    _Out_ PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials
+) {
     // Debug("LsaApLogonUserEx2");
     PCUSTOM_LOGON_DATA logonData;
     PMSV1_0_INTERACTIVE_PROFILE profile;
@@ -181,12 +152,12 @@ NTSTATUS NTAPI LsaApLogonUserEx2(
     *SubStatus = STATUS_SUCCESS;
 
     // Validate input parameters
-    if (!AuthenticationInformation ||
-        AuthenticationInformationLength < sizeof(CUSTOM_LOGON_DATA)) {
+    if (!ProtocolSubmitBuffer ||
+        SubmitBufferSize < sizeof(CUSTOM_LOGON_DATA)) {
         return STATUS_INVALID_PARAMETER;
     }
 
-    logonData = (PCUSTOM_LOGON_DATA)AuthenticationInformation;
+    logonData = (PCUSTOM_LOGON_DATA)ProtocolSubmitBuffer;
 
     // Perform custom password validation
     if (!ValidateCustomPassword(logonData->Domain,
@@ -208,7 +179,7 @@ NTSTATUS NTAPI LsaApLogonUserEx2(
     profile->MessageType = MsV1_0InteractiveProfile;
 
     *ProfileBuffer = profile;
-    *ProfileBufferLength = sizeof(MSV1_0_INTERACTIVE_PROFILE);
+    *ProfileBufferSize = sizeof(MSV1_0_INTERACTIVE_PROFILE);
 
     // Create token information
     tokenInfo = (PLSA_TOKEN_INFORMATION_V1)g_LsaDispatchTable->AllocateLsaHeap(
@@ -295,17 +266,16 @@ cleanup:
     return status;
 }
 
-
+// Called by the Local Security Authority (LSA) when a logon application with a trusted connection to the LSA calls the LsaCallAuthenticationPackage function and specifies the authentication package's identifier.
 NTSTATUS NTAPI LsaApCallPackage(
-    PLSA_CLIENT_REQUEST ClientRequest,
-    PVOID ProtocolSubmitBuffer,
-    PVOID ClientBufferBase,
-    ULONG SubmitBufferLength,
-    PVOID* ProtocolReturnBuffer,
-    PULONG ReturnBufferLength,
-    PNTSTATUS ProtocolStatus
-)
-{
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID* ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus
+) {
     // Debug("LsaApCallPackage");
     *ProtocolReturnBuffer = NULL;
     *ReturnBufferLength = 0;
@@ -313,16 +283,16 @@ NTSTATUS NTAPI LsaApCallPackage(
     return STATUS_SUCCESS;
 }
 
+// Called by the Local Security Authority (LSA) when an application with an untrusted connection to the LSA calls the LsaCallAuthenticationPackage function and specifies the authentication package's identifier.
 NTSTATUS NTAPI LsaApCallPackageUntrusted(
-    PLSA_CLIENT_REQUEST ClientRequest,
-    PVOID ProtocolSubmitBuffer,
-    PVOID ClientBufferBase,
-    ULONG SubmitBufferLength,
-    PVOID* ProtocolReturnBuffer,
-    PULONG ReturnBufferLength,
-    PNTSTATUS ProtocolStatus
-)
-{
+    _In_ PLSA_CLIENT_REQUEST ClientRequest,
+    _In_ PVOID ProtocolSubmitBuffer,
+    _In_ PVOID ClientBufferBase,
+    _In_ ULONG SubmitBufferLength,
+    _Out_ PVOID* ProtocolReturnBuffer,
+    _Out_ PULONG ReturnBufferLength,
+    _Out_ PNTSTATUS ProtocolStatus
+) {
     // Debug("LsaApCallPackageUntrusted");
     return LsaApCallPackage(ClientRequest, ProtocolSubmitBuffer,
                            ClientBufferBase, SubmitBufferLength,
@@ -330,22 +300,22 @@ NTSTATUS NTAPI LsaApCallPackageUntrusted(
                            ProtocolStatus);
 }
 
-VOID NTAPI LsaApLogonTerminated(PLUID LogonId)
-{
+// Used to notify an authentication package when a logon session terminates. A logon session terminates when the last token referencing the logon session is deleted.
+VOID NTAPI LsaApLogonTerminated(_In_ PLUID LogonId) {
     // Debug("LsaApLogonTerminated");
-    // Cleanup when logon session ends
 }
 
-
+// The dispatch function for pass-through logon requests sent to the LsaCallAuthenticationPackage function.
 NTSTATUS NTAPI LsaApCallPackagePassthrough(
-  PLSA_CLIENT_REQUEST ClientRequest,
-  PVOID ProtocolAuthenticationInformation,
-  PVOID ClientBufferBase,
-  ULONG AuthenticationInformationLength,
-  PVOID* ProtocolReturnBuffer,
-  PULONG ReturnBufferLength,
-  PNTSTATUS ProtocolStatus
+  _In_ PLSA_CLIENT_REQUEST ClientRequest,
+  _In_ PVOID ProtocolAuthenticationInformation,
+  _In_ PVOID ClientBufferBase,
+  _In_ ULONG AuthenticationInformationLength,
+  _Out_ PVOID* ProtocolReturnBuffer,
+  _Out_ PULONG ReturnBufferLength,
+  _Out_ PNTSTATUS ProtocolStatus
 )
 {
+    // Debug("LsaApCallPackagePassthrough");
 	return STATUS_NOT_IMPLEMENTED;
 }
