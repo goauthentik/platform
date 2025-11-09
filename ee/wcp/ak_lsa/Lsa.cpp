@@ -1,6 +1,6 @@
 ﻿#include "Lsa.hpp"
 #include <intrin.h>
-#include "include/Debug.h"
+#include "spdlog/spdlog.h"
 
 #include <windows.h>
 #include <ntsecapi.h>
@@ -8,6 +8,7 @@
 #include <lm.h>
 #include "include/LogonData.h"
 #include "include/ak.h"
+#include "authentik_sys_bridge/ffi.h"
 
 // Global variables
 static PLSA_DISPATCH_TABLE g_LsaDispatchTable = NULL;
@@ -90,7 +91,7 @@ extern "C" NTSTATUS NTAPI LsaApInitializePackage(
     _In_opt_ PLSA_STRING Confidentiality,
     _Out_ PLSA_STRING *AuthenticationPackageName
 ) {
-    LOG("LsaApInitializePackage: " + AuthenticationPackageId);
+    spdlog::debug(std::string("LsaApInitializePackage: ").append(std::to_string(AuthenticationPackageId)).c_str());
     PLSA_STRING packageName;
     SIZE_T nameLength = strlen(PACKAGE_NAME);
 
@@ -140,7 +141,151 @@ extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
     _Out_ PSECPKG_PRIMARY_CRED PrimaryCredentials,
     _Out_ PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials
 ) {
-    LOG("LsaApLogonUserEx2");
+    spdlog::debug("LsaApLogonUserEx2");
+    PCUSTOM_LOGON_DATA logonData;
+    PMSV1_0_INTERACTIVE_PROFILE profile;
+    PLSA_TOKEN_INFORMATION_V1 tokenInfo;
+    PUNICODE_STRING accountName;
+    PUNICODE_STRING authAuthority;
+    PUNICODE_STRING machineName;
+    NTSTATUS status;
+
+    {
+        try {
+            std::string ping = std::string("");
+            ak_sys_grpc_ping(ping);
+            spdlog::debug(std::string("sysd version: ").append(ping).c_str());
+        } catch (const std::exception &ex) {
+            spdlog::debug("Exception in ak_grpc_ping");
+            spdlog::debug(ex.what());
+        }
+    }
+
+    *SubStatus = STATUS_SUCCESS;
+
+    spdlog::debug("validate");
+    // Validate input parameters
+    if (!ProtocolSubmitBuffer ||
+        SubmitBufferSize < sizeof(CUSTOM_LOGON_DATA)) {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    logonData = (PCUSTOM_LOGON_DATA)ProtocolSubmitBuffer;
+
+    spdlog::debug("validate password");
+    // Perform custom password validation
+    // if (!ValidateCustomPassword(logonData->Domain,
+    //                            logonData->UserName,
+    //                            logonData->Password)) {
+    //     *SubStatus = STATUS_LOGON_FAILURE;
+    //     return STATUS_LOGON_FAILURE;
+    // }
+
+    spdlog::debug("profile buffer");
+    // Create profile buffer
+    profile = (PMSV1_0_INTERACTIVE_PROFILE)g_LsaDispatchTable->AllocateLsaHeap(
+        sizeof(MSV1_0_INTERACTIVE_PROFILE)
+    );
+    if (!profile) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    spdlog::debug("prepare profile");
+    ZeroMemory(profile, sizeof(MSV1_0_INTERACTIVE_PROFILE));
+    profile->MessageType = MsV1_0InteractiveProfile;
+
+    *ProfileBuffer = profile;
+    *ProfileBufferSize = sizeof(MSV1_0_INTERACTIVE_PROFILE);
+
+    spdlog::debug("create token info");
+    // Create token information
+    tokenInfo = (PLSA_TOKEN_INFORMATION_V1)g_LsaDispatchTable->AllocateLsaHeap(
+        sizeof(LSA_TOKEN_INFORMATION_V1)
+    );
+    if (!tokenInfo) {
+        g_LsaDispatchTable->FreeLsaHeap(profile);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    spdlog::debug("prepare token info");
+    ZeroMemory(tokenInfo, sizeof(LSA_TOKEN_INFORMATION_V1));
+    tokenInfo->ExpirationTime.QuadPart = 0x7FFFFFFFFFFFFFFF; // Never expire
+
+    *TokenInformationType = LsaTokenInformationV1;
+    *TokenInformation = tokenInfo;
+
+    spdlog::debug("set account name");
+    // Set account name - corrected allocation
+    accountName = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
+        sizeof(UNICODE_STRING)
+    );
+    if (!accountName) {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    status = AllocateAndCopyUnicodeString(accountName, logonData->UserName,
+                                         g_LsaDispatchTable);
+    if (!NT_SUCCESS(status)) {
+        goto cleanup;
+    }
+    *AccountName = accountName;
+
+    spdlog::debug("set authority");
+    // Set authenticating authority - corrected allocation
+    authAuthority = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
+        sizeof(UNICODE_STRING)
+    );
+    if (!authAuthority) {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    status = CreateUnicodeStringFromWideString(authAuthority, L"ak_lsa",
+                                              g_LsaDispatchTable);
+    if (!NT_SUCCESS(status)) {
+        goto cleanup;
+    }
+    *AuthenticatingAuthority = authAuthority;
+
+    spdlog::debug("set machine name");
+    // Set machine name (optional)
+    machineName = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
+        sizeof(UNICODE_STRING)
+    );
+    if (machineName) {
+        CreateUnicodeStringFromWideString(machineName, L"CUSTOM-AUTH-MACHINE",
+                                         g_LsaDispatchTable);
+        *MachineName = machineName;
+    } else {
+        *MachineName = NULL;
+    }
+
+    return STATUS_SUCCESS;
+
+cleanup:
+    spdlog::debug("Cleanup");
+    // Cleanup on failure
+    if (profile) {
+        g_LsaDispatchTable->FreeLsaHeap(profile);
+    }
+    if (tokenInfo) {
+        g_LsaDispatchTable->FreeLsaHeap(tokenInfo);
+    }
+    if (accountName) {
+        if (accountName->Buffer) {
+            g_LsaDispatchTable->FreeLsaHeap(accountName->Buffer);
+        }
+        g_LsaDispatchTable->FreeLsaHeap(accountName);
+    }
+    if (authAuthority) {
+        if (authAuthority->Buffer) {
+            g_LsaDispatchTable->FreeLsaHeap(authAuthority->Buffer);
+        }
+        g_LsaDispatchTable->FreeLsaHeap(authAuthority);
+    }
+
+    return status;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -180,7 +325,7 @@ extern "C" NTSTATUS NTAPI LsaApCallPackageUntrusted(
 
 // Used to notify an authentication package when a logon session terminates. A logon session terminates when the last token referencing the logon session is deleted.
 VOID NTAPI LsaApLogonTerminated(_In_ PLUID LogonId) {
-    LOG("LsaApLogonTerminated");
+    spdlog::debug("LsaApLogonTerminated");
 }
 
 // The dispatch function for pass-through logon requests sent to the LsaCallAuthenticationPackage function.
@@ -194,6 +339,6 @@ extern "C" NTSTATUS NTAPI LsaApCallPackagePassthrough(
   _Out_ PNTSTATUS ProtocolStatus
 )
 {
-    LOG("LsaApCallPackagePassthrough");
+    spdlog::debug("LsaApCallPackagePassthrough");
 	return STATUS_NOT_IMPLEMENTED;
 }

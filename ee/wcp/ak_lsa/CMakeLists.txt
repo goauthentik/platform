@@ -18,10 +18,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(SRCS
   "Dll.cpp"
   "Lsa.cpp"
-  "Debug.cpp"
   "ak.cpp"
-  # "Debug.cpp"
-  # "ustring.cpp"
 )
 
 find_library(CREDUI_LIB_PATH Credui.lib)
@@ -55,7 +52,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	${SHLWAPI_LIB_PATH}
   ${ADVAPI32_LIB_PATH}
   authentik_sys_bridge
+  spdlog
 )
+
+set_property(TARGET ak_lsa PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 COPY_FILES(
   ${PROJECT_NAME}

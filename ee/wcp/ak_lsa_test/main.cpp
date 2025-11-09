@@ -46,12 +46,12 @@ void InitLsaString(PLSA_STRING LsaString, LPSTR String)
 
 // Helper function to pack strings into a buffer with pointers
 NTSTATUS PackCustomLogonData(
-    LPCWSTR domain,
-    LPCWSTR username,
-    LPCWSTR password,
-    ULONG logonType,
-    PVOID* Buffer,
-    PULONG BufferSize
+    _In_ LPCWSTR domain,
+    _In_ LPCWSTR username,
+    _In_ LPCWSTR password,
+    _In_ ULONG logonType,
+    _Out_ PVOID* Buffer,
+    _Out_ PULONG BufferSize
 )
 {
     ULONG domainLen = domain ? (lstrlenW(domain) * sizeof(WCHAR)) : 0;
@@ -125,12 +125,52 @@ NTSTATUS PackCustomLogonData(
     return STATUS_SUCCESS;
 }
 
+void CreateConsole() {
+    bool attached = AttachConsole(ATTACH_PARENT_PROCESS) != 0;
+
+    // if failed create a new console
+    if(!attached) {
+        attached = AllocConsole() != 0;
+    }
+
+    if (!attached) {
+        // Add some error handling here.
+        // You can call GetLastError() to get more info about the error.
+        return;
+    }
+
+    // std::cout, std::clog, std::cerr, std::cin
+    FILE* fDummy;
+    freopen_s(&fDummy, "CONOUT$", "w", stdout);
+    freopen_s(&fDummy, "CONOUT$", "w", stderr);
+    freopen_s(&fDummy, "CONIN$", "r", stdin);
+    std::cout.clear();
+    std::clog.clear();
+    std::cerr.clear();
+    std::cin.clear();
+
+    // std::wcout, std::wclog, std::wcerr, std::wcin
+    HANDLE hConOut = CreateFile(_T("CONOUT$"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hConIn = CreateFile(_T("CONIN$"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    SetStdHandle(STD_OUTPUT_HANDLE, hConOut);
+    SetStdHandle(STD_ERROR_HANDLE, hConOut);
+    SetStdHandle(STD_INPUT_HANDLE, hConIn);
+    std::wcout.clear();
+    std::wclog.clear();
+    std::wcerr.clear();
+    std::wcin.clear();
+}
+
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
                        LPTSTR    lpCmdLine,
                        int       nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
+
+    CreateConsole();
+
     HANDLE lsaHandle = NULL;
     LSA_STRING packageName;
     ULONG packageId;
@@ -150,24 +190,26 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     // Initialize LSA connection
     status = LsaRegisterLogonProcess(&packageName, &lsaHandle, &securityMode);
     if (!NT_SUCCESS(status)) {
-        LOG(std::string("Failed to register with LSA: ").append(std::to_string((long) status)).c_str());
+        std::wcout << L"Failed to connect to LSA (trusted): 0x" << std::hex << status << std::endl;
 
         // Try untrusted connection
         status = LsaConnectUntrusted(&lsaHandle);
         if (!NT_SUCCESS(status)) {
-            LOG(std::string("Failed to connect to LSA: ").append(std::to_string((long) status)).c_str());
+            std::wcout << L"Failed to connect to LSA: 0x" << std::hex << status << std::endl;
             return 1;
         }
+        std::wcout << L"Connected to LSA: 0x" << std::hex << status << std::endl;
     }
 
     // Look up authentication package
     InitLsaString(&packageName, "ak_lsa");
     status = LsaLookupAuthenticationPackage(lsaHandle, &packageName, &packageId);
     if (!NT_SUCCESS(status)) {
-        LOG(std::string("Failed to lookup package: ").append(std::to_string((long) status)).c_str());
+        std::wcout << L"Failed to lookup package: 0x" << std::hex << status << std::endl;
         LsaDeregisterLogonProcess(lsaHandle);
         return 1;
     }
+    std::wcout << L"Found authentication package with ID: " << packageId << std::endl;
 
     wchar_t wcharDomain[11] = L"testdomain";
     PWSTR pwstrDomain = wcharDomain;
@@ -187,8 +229,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     );
 
     if (!NT_SUCCESS(status)) {
-        // std::wcout << L"Failed to pack logon data: 0x" << std::hex << status << std::endl;
-        LOG("Failed to pack logon data");
+        std::wcout << L"Failed to pack logon data: 0x" << std::hex << status << std::endl;
         LsaDeregisterLogonProcess(lsaHandle);
         return 1;
     }
@@ -221,13 +262,20 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     );
 
     if (NT_SUCCESS(status)) {
-        LOG("Custom authentication successful!");
+        std::wcout << L"Custom authentication successful!" << std::endl;
+        std::wcout << L"Profile buffer size: " << profileBufferLength << L" bytes" << std::endl;
+
+        // You can cast profileBuffer to PCUSTOM_PROFILE_DATA to access the data
+        if (profileBuffer && profileBufferLength >= sizeof(CUSTOM_PROFILE_DATA)) {
+            PCUSTOM_PROFILE_DATA profile = (PCUSTOM_PROFILE_DATA)profileBuffer;
+            std::wcout << L"Message Type: " << profile->MessageType << std::endl;
+            std::wcout << L"User Flags: 0x" << std::hex << profile->UserFlags << std::endl;
+        }
+
         CloseHandle(tokenHandle);
     } else {
-        LOG(std::string("Authentication failed: ").append(std::to_string((long)status)).c_str());
-        LOG(std::string("Sub status: ").append(std::to_string((long)substatus)).c_str());
-        // std::string().append(std::to_string((long) status) ).c_str()<<
-        //               L" (substatus: " << std::hex << substatus << L")");
+        std::wcout << L"Authentication failed: 0x" << std::hex << status <<
+                      L" (substatus: 0x" << std::hex << substatus << L")" << std::endl;
     }
 
     // Cleanup

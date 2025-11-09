@@ -331,10 +331,10 @@ corrosion_add_cxxbridge(
 )
 
 if(MSVC)
-    set_property(TARGET authentik_sys PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-    set_property(TARGET authentik_sys_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-    corrosion_set_env_vars(authentik_sys "CFLAGS=-MT" "CXXFLAGS=-MT")
-    corrosion_set_env_vars(authentik_sys_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
+  set_property(TARGET authentik_sys PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+  set_property(TARGET authentik_sys_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+  corrosion_set_env_vars(authentik_sys "CFLAGS=-MT" "CXXFLAGS=-MT")
+  corrosion_set_env_vars(authentik_sys_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
 endif()
 
 FetchContent_Declare(spdlog
