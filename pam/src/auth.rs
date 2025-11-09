@@ -14,7 +14,7 @@ use crate::{
     },
     pam_env::pam_put_env,
     pam_try_log,
-    session_data::{_generate_id, _write_session_data, SessionData, hash_token},
+    session_data::{_write_session_data, SessionData, hash_token},
 };
 
 pub mod authorize;
@@ -77,29 +77,36 @@ pub fn authenticate_impl(
         }
     };
 
-    let id = _generate_id().to_string();
     let mut session_data = SessionData {
         username: username.to_string(),
         token: password.to_owned(),
         expiry: -1,
         local_socket: "".to_owned(),
     };
-    pam_try_log!(
-        pam_put_env(pamh, ENV_SESSION_ID, id.to_owned().as_str()),
-        "failed to set session_id env"
-    );
+    let session_id: String;
 
     if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
         let decoded = pam_try_log!(decode_token(raw_token), "failed to decode token");
-        let token = match auth_token(username, decoded.token.to_owned()) {
+        let token_res = match auth_token(username, decoded.token.to_owned()) {
             Ok(t) => t,
             Err(e) => return e,
         };
         session_data.token = decoded.token;
-        session_data.expiry = token.exp.unwrap().seconds;
+        session_data.expiry = token_res.token.unwrap().exp.unwrap().seconds;
         session_data.local_socket = decoded.local_socket;
+        session_id = token_res.session_id;
+    } else {
+        log::debug!("Interactive authentication");
+        let int_res = match auth_interactive(username, password.to_owned(), &conv) {
+            Ok(ss) => ss,
+            Err(code) => return code,
+        };
+        session_data.token = hash_token(password.to_owned());
+        session_id = int_res.session_id;
+    }
+    if !session_data.local_socket.is_empty() {
         pam_try_log!(
             pam_put_env(
                 pamh,
@@ -108,18 +115,14 @@ pub fn authenticate_impl(
             ),
             "Failed to set env"
         );
-        pam_try_log!(
-            _write_session_data(id, session_data),
-            "failed to write session data"
-        );
-        PamResultCode::PAM_SUCCESS
-    } else {
-        log::debug!("Interactive authentication");
-        session_data.token = hash_token(password.to_owned());
-        pam_try_log!(
-            _write_session_data(id, session_data),
-            "failed to write session data"
-        );
-        auth_interactive(username, password.to_owned(), &conv)
     }
+    pam_try_log!(
+        _write_session_data(session_id.clone(), session_data),
+        "failed to write session data"
+    );
+    pam_try_log!(
+        pam_put_env(pamh, ENV_SESSION_ID, session_id.to_owned().as_str()),
+        "failed to set session_id env"
+    );
+    PamResultCode::PAM_SUCCESS
 }

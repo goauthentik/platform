@@ -1,6 +1,5 @@
 use pam::constants::PamResultCode;
 
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use sha2::{Digest, Sha256};
@@ -71,21 +70,6 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
             Err(PamResultCode::PAM_AUTH_ERR)
         }
     }
-}
-
-pub fn _generate_id() -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-                            abcdefghijklmnopqrstuvwxyz\
-                            0123456789";
-    const PASSWORD_LEN: usize = 30;
-    let mut rng = rand::rng();
-
-    (0..PASSWORD_LEN)
-        .map(|_| {
-            let idx = rng.random_range(0..CHARSET.len());
-            CHARSET[idx] as char
-        })
-        .collect()
 }
 
 pub fn hash_token(token: String) -> String {

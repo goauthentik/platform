@@ -2,12 +2,14 @@ package pam
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"time"
 
 	"github.com/MicahParks/jwkset"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/securecookie"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	lconfig "goauthentik.io/platform/pkg/agent_local/config"
@@ -110,5 +112,6 @@ func (pam *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*pb
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
+		SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
 	}, nil
 }

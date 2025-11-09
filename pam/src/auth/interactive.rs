@@ -14,7 +14,7 @@ use pam::{
     conv::Conv,
 };
 
-use crate::{auth::PW_PROMPT, pam_try_log};
+use crate::{auth::PW_PROMPT};
 
 const MAX_ITER: i8 = 30;
 
@@ -40,7 +40,11 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
     }
 }
 
-pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> PamResultCode {
+pub fn auth_interactive(
+    username: String,
+    password: String,
+    conv: &Conv<'_>,
+) -> Result<InteractiveChallenge, PamResultCode> {
     // Init transaction
     let mut challenge = match grpc_request(async |ch| {
         return Ok(PamClient::new(ch)
@@ -55,7 +59,7 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
         Ok(t) => t.into_inner(),
         Err(e) => {
             log::warn!("failed to init interactive auth: {e}");
-            return PamResultCode::PAM_AUTH_ERR;
+            return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
     // We always prompt for password to distinguish between token/interactive
@@ -68,16 +72,23 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
         prompt: PW_PROMPT.to_owned(),
         prompt_meta: PAM_PROMPT_ECHO_OFF,
         debug_info: "".to_owned(),
+        session_id: "".to_owned(),
     };
     let mut iter = 0;
     while iter <= MAX_ITER {
         log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
-            pam_try_log!(
-                conv.send(prompt_meta_to_pam_message_style(&challenge), &challenge.prompt),
-                "failed to send prompt"
-            );
-            return result_to_pam_result(challenge.result);
+            match conv.send(
+                prompt_meta_to_pam_message_style(&challenge),
+                &challenge.prompt,
+            ) {
+                Ok(_) => {}
+                Err(e) => {
+                    log::warn!("failed to send prompt");
+                    return Err(e);
+                }
+            };
+            return Ok(challenge);
         }
         let mut req_inner = InteractiveAuthContinueRequest {
             txid: challenge.txid.to_owned(),
@@ -87,30 +98,32 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
         match PromptMeta::try_from(challenge.prompt_meta) {
             Ok(PromptMeta::Unspecified) => {
                 log::warn!("Unspecified prompt meta");
-                return PamResultCode::PAM_ABORT;
+                return Err(PamResultCode::PAM_ABORT);
             }
             Ok(_) => {
                 log::debug!("Prompt meta generic, prompt user");
                 let style = prompt_meta_to_pam_message_style(&challenge);
-                let credential = match pam_try_log!(
-                    conv.send(style, &challenge.prompt),
-                    "failed to send prompt"
-                ) {
-                    Some(c) => match c.to_str() {
-                        Ok(cc) => cc,
-                        Err(_) => {
-                            log::warn!("failed to convert PAM Conversation response to string");
-                            return PamResultCode::PAM_ABORT;
+                let credential = match conv.send(style, &challenge.prompt) {
+                    Ok(c) => match c {
+                        Some(c) => match c.to_str() {
+                            Ok(cc) => cc,
+                            Err(_) => {
+                                log::warn!("failed to convert PAM Conversation response to string");
+                                return Err(PamResultCode::PAM_ABORT);
+                            }
+                        },
+                        None => {
+                            if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
+                                challenge = prev_challenge.clone();
+                                log::debug!("Restarting loop due to message");
+                                continue;
+                            }
+                            log::warn!("No PAM conversation response");
+                            return Err(PamResultCode::PAM_ABORT);
                         }
                     },
-                    None => {
-                        if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
-                            challenge = prev_challenge.clone();
-                            log::debug!("Restarting loop due to message");
-                            continue;
-                        }
-                        log::warn!("No PAM conversation response");
-                        return PamResultCode::PAM_ABORT;
+                    Err(e) => {
+                        return Err(e);
                     }
                 };
                 req_inner.value = credential.to_owned();
@@ -120,7 +133,7 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
                     "Failed to convert prompt meta value to allowed values: {}",
                     challenge.prompt_meta
                 );
-                return PamResultCode::PAM_ABORT;
+                return Err(PamResultCode::PAM_ABORT);
             }
         }
         prev_challenge = challenge;
@@ -135,11 +148,11 @@ pub fn auth_interactive(username: String, password: String, conv: &Conv<'_>) -> 
             Ok(t) => t.into_inner(),
             Err(e) => {
                 log::warn!("failed to continue auth: {e}");
-                return PamResultCode::PAM_AUTH_ERR;
+                return Err(PamResultCode::PAM_AUTH_ERR);
             }
         };
         iter += 1;
     }
     log::warn!("Exceeded maximum iterations");
-    PamResultCode::PAM_ABORT
+    Err(PamResultCode::PAM_ABORT)
 }

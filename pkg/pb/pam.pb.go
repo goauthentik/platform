@@ -190,6 +190,7 @@ type TokenAuthResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Successful    bool                   `protobuf:"varint,1,opt,name=successful,proto3" json:"successful,omitempty"`
 	Token         *Token                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	SessionId     string                 `protobuf:"bytes,3,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -236,6 +237,13 @@ func (x *TokenAuthResponse) GetToken() *Token {
 		return x.Token
 	}
 	return nil
+}
+
+func (x *TokenAuthResponse) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
 }
 
 type InteractiveAuthInitRequest struct {
@@ -432,6 +440,7 @@ type InteractiveChallenge struct {
 	Prompt        string                          `protobuf:"bytes,4,opt,name=prompt,proto3" json:"prompt,omitempty"`
 	PromptMeta    InteractiveChallenge_PromptMeta `protobuf:"varint,5,opt,name=prompt_meta,json=promptMeta,proto3,enum=pam.InteractiveChallenge_PromptMeta" json:"prompt_meta,omitempty"`
 	DebugInfo     string                          `protobuf:"bytes,6,opt,name=debug_info,json=debugInfo,proto3" json:"debug_info,omitempty"`
+	SessionId     string                          `protobuf:"bytes,7,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -504,6 +513,13 @@ func (x *InteractiveChallenge) GetPromptMeta() InteractiveChallenge_PromptMeta {
 func (x *InteractiveChallenge) GetDebugInfo() string {
 	if x != nil {
 		return x.DebugInfo
+	}
+	return ""
+}
+
+func (x *InteractiveChallenge) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
 	}
 	return ""
 }
@@ -619,12 +635,14 @@ const file_pam_proto_rawDesc = "" +
 	"\tpam.proto\x12\x03pam\x1a\vagent.proto\x1a\x10agent_auth.proto\"D\n" +
 	"\x10TokenAuthRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\"W\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"v\n" +
 	"\x11TokenAuthResponse\x12\x1e\n" +
 	"\n" +
 	"successful\x18\x01 \x01(\bR\n" +
 	"successful\x12\"\n" +
-	"\x05token\x18\x02 \x01(\v2\f.agent.TokenR\x05token\"T\n" +
+	"\x05token\x18\x02 \x01(\v2\f.agent.TokenR\x05token\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x03 \x01(\tR\tsessionId\"T\n" +
 	"\x1aInteractiveAuthInitRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"J\n" +
@@ -634,7 +652,7 @@ const file_pam_proto_rawDesc = "" +
 	"\x16InteractiveAuthRequest\x125\n" +
 	"\x04init\x18\x01 \x01(\v2\x1f.pam.InteractiveAuthInitRequestH\x00R\x04init\x12A\n" +
 	"\bcontinue\x18\x02 \x01(\v2#.pam.InteractiveAuthContinueRequestH\x00R\bcontinueB\x12\n" +
-	"\x10interactive_auth\"\xa8\x03\n" +
+	"\x10interactive_auth\"\xc7\x03\n" +
 	"\x14InteractiveChallenge\x12\x12\n" +
 	"\x04txid\x18\x01 \x01(\tR\x04txid\x12\x1a\n" +
 	"\bfinished\x18\x02 \x01(\bR\bfinished\x122\n" +
@@ -643,7 +661,9 @@ const file_pam_proto_rawDesc = "" +
 	"\vprompt_meta\x18\x05 \x01(\x0e2$.pam.InteractiveChallenge.PromptMetaR\n" +
 	"promptMeta\x12\x1d\n" +
 	"\n" +
-	"debug_info\x18\x06 \x01(\tR\tdebugInfo\"\xad\x01\n" +
+	"debug_info\x18\x06 \x01(\tR\tdebugInfo\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\a \x01(\tR\tsessionId\"\xad\x01\n" +
 	"\n" +
 	"PromptMeta\x12\x0f\n" +
 	"\vUNSPECIFIED\x10\x00\x12\x17\n" +

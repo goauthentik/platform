@@ -21,6 +21,8 @@ pub struct TokenAuthResponse {
     pub successful: bool,
     #[prost(message, optional, tag = "2")]
     pub token: ::core::option::Option<super::agent::Token>,
+    #[prost(string, tag = "3")]
+    pub session_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InteractiveAuthInitRequest {
@@ -65,6 +67,8 @@ pub struct InteractiveChallenge {
     pub prompt_meta: i32,
     #[prost(string, tag = "6")]
     pub debug_info: ::prost::alloc::string::String,
+    #[prost(string, tag = "7")]
+    pub session_id: ::prost::alloc::string::String,
 }
 /// Nested message and enum types in `InteractiveChallenge`.
 pub mod interactive_challenge {

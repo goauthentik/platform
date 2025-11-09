@@ -1,5 +1,5 @@
+use authentik_sys::generated::pam::TokenAuthResponse;
 use ::prost::Message;
-use authentik_sys::generated::agent::Token;
 use authentik_sys::generated::pam::pam_client::PamClient;
 use authentik_sys::generated::{
     grpc_request,
@@ -27,7 +27,7 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
     Ok(msg)
 }
 
-pub fn auth_token(username: String, token: String) -> Result<Token, PamResultCode> {
+pub fn auth_token(username: String, token: String) -> Result<TokenAuthResponse, PamResultCode> {
     let response = match grpc_request(async |ch| {
         return Ok(PamClient::new(ch)
             .token_auth(TokenAuthRequest {
@@ -56,5 +56,5 @@ pub fn auth_token(username: String, token: String) -> Result<Token, PamResultCod
         );
         return Err(PamResultCode::PAM_USER_UNKNOWN);
     }
-    Ok(response.token.unwrap())
+    Ok(response)
 }

@@ -69,9 +69,10 @@ func (pam *Server) interactiveAuthContinue(_ context.Context, req *pb.Interactiv
 	if txn.result != nil {
 		pam.log.WithField("result", *txn.result).Debug("flow has finished with result")
 		return &pb.InteractiveChallenge{
-			Txid:     txn.ID,
-			Finished: true,
-			Result:   *txn.result,
+			Txid:      txn.ID,
+			Finished:  true,
+			Result:    *txn.result,
+			SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
 		}, nil
 	}
 	c, err := pam.solveChallenge(txn, req)
@@ -99,9 +100,10 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 	case string(flow.StageRedirect):
 		txn.result = pb.InteractiveAuthResult_PAM_SUCCESS.Enum()
 		return &pb.InteractiveChallenge{
-			Txid:     txn.ID,
-			Finished: true,
-			Result:   pb.InteractiveAuthResult_PAM_SUCCESS,
+			Txid:      txn.ID,
+			Finished:  true,
+			Result:    pb.InteractiveAuthResult_PAM_SUCCESS,
+			SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
 		}, nil
 	case string(flow.StageAccessDenied):
 		txn.result = pb.InteractiveAuthResult_PAM_PERM_DENIED.Enum()

@@ -88,6 +88,8 @@ struct TokenAuthResponse: Sendable {
   /// Clears the value of `token`. Subsequent reads from it will return its default value.
   mutating func clearToken() {self._token = nil}
 
+  var sessionID: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -173,6 +175,8 @@ struct InteractiveChallenge: Sendable {
   var promptMeta: InteractiveChallenge.PromptMeta = .unspecified
 
   var debugInfo: String = String()
+
+  var sessionID: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -328,7 +332,7 @@ extension TokenAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
 
 extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TokenAuthResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}successful\0\u{1}token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}successful\0\u{1}token\0\u{3}session_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -338,6 +342,7 @@ extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBoolField(value: &self.successful) }()
       case 2: try { try decoder.decodeSingularMessageField(value: &self._token) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.sessionID) }()
       default: break
       }
     }
@@ -354,12 +359,16 @@ extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     try { if let v = self._token {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     } }()
+    if !self.sessionID.isEmpty {
+      try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: TokenAuthResponse, rhs: TokenAuthResponse) -> Bool {
     if lhs.successful != rhs.successful {return false}
     if lhs._token != rhs._token {return false}
+    if lhs.sessionID != rhs.sessionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -504,7 +513,7 @@ extension InteractiveAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveChallenge"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}txid\0\u{1}finished\0\u{1}result\0\u{1}prompt\0\u{3}prompt_meta\0\u{3}debug_info\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}txid\0\u{1}finished\0\u{1}result\0\u{1}prompt\0\u{3}prompt_meta\0\u{3}debug_info\0\u{3}session_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -518,6 +527,7 @@ extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       case 4: try { try decoder.decodeSingularStringField(value: &self.prompt) }()
       case 5: try { try decoder.decodeSingularEnumField(value: &self.promptMeta) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.debugInfo) }()
+      case 7: try { try decoder.decodeSingularStringField(value: &self.sessionID) }()
       default: break
       }
     }
@@ -542,6 +552,9 @@ extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if !self.debugInfo.isEmpty {
       try visitor.visitSingularStringField(value: self.debugInfo, fieldNumber: 6)
     }
+    if !self.sessionID.isEmpty {
+      try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -552,6 +565,7 @@ extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if lhs.prompt != rhs.prompt {return false}
     if lhs.promptMeta != rhs.promptMeta {return false}
     if lhs.debugInfo != rhs.debugInfo {return false}
+    if lhs.sessionID != rhs.sessionID {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
