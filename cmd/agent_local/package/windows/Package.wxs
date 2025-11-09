@@ -21,10 +21,7 @@
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Name="$(var.Manufacturer)">
-        <Directory Id="sysd" Name="sysd">
-          <Directory Id="sysd_domains" Name="domains" />
-          <Directory Id="sysd_runtime" Name="runtime" />
-        </Directory>
+        <Directory Id="sysd" Name="sysd" />
         <Directory Id="browser_support" Name="browser_support" />
         <Directory Id="wcp" Name="wcp">
           <Directory Id="wcp_locale" Name="locales" />
@@ -33,16 +30,15 @@
         <Directory Id="agent" Name="agent" />
       </Directory>
     </StandardDirectory>
-    <StandardDirectory Id="CommonAppDataFolder">
-      <Directory Id="d_programdata" Name="$(var.Manufacturer)" />
-    </StandardDirectory>
+    <StandardDirectory Id="CommonAppDataFolder" />
     <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64" Directory="sysd">
-        <CreateFolder Directory="sysd_domains" Subdirectory="domains" />
-        <CreateFolder Directory="sysd_runtime" Subdirectory="runtime" />
+        <CreateFolder Directory="sysd" Subdirectory="domains" />
+        <CreateFolder Directory="sysd" Subdirectory="runtime" />
+        <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)" />
         <File Id="ak_sysd"
               Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
               KeyPath="true" />
