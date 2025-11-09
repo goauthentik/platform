@@ -7,7 +7,24 @@
 #include <string>
 #include <ak_lsa/include/LogonData.h>
 
-using std::to_wstring;
+#include <Windows.h>
+#include <string>
+#include <mutex>
+#include <fstream>
+#include <iostream>
+
+using std::string;
+using std::ofstream;
+
+void LOG(const char* data) {
+    std::fstream fs("c:\\ak_lsa.txt", std::ios_base::app);
+
+    if(fs) {
+        fs << data << std::endl;
+        fs.flush();
+        fs.close();
+    }
+}
 
 // Helper function to initialize LSA_STRING from char string
 void InitLsaString(PLSA_STRING LsaString, LPSTR String)
@@ -25,37 +42,87 @@ void InitLsaString(PLSA_STRING LsaString, LPSTR String)
     LsaString->Buffer = String;
     LsaString->Length = (USHORT)StringLength;
     LsaString->MaximumLength = (USHORT)(StringLength + 1);
-}
-HRESULT UnicodeStringInitWithString(_In_ PWSTR pwz, _Out_ UNICODE_STRING *pus) {
-  HRESULT hr;
-  if (pwz) {
-    size_t lenString = wcslen(pwz);
-    USHORT usCharCount;
-    hr = SizeTToUShort(lenString, &usCharCount);
-    if (SUCCEEDED(hr)) {
-      USHORT usSize;
-      hr = SizeTToUShort(sizeof(wchar_t), &usSize);
-      if (SUCCEEDED(hr)) {
-        hr = UShortMult(
-            usCharCount, usSize,
-            &(pus->Length)); // Explicitly NOT including NULL terminator
-        if (SUCCEEDED(hr)) {
-          pus->MaximumLength = pus->Length;
-          pus->Buffer = pwz;
-          hr = S_OK;
-        } else {
-          hr = HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
-        }
-      }
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-  return hr;
-}
+}// CustomAuthClient.cpp - Updated for CUSTOM_LOGON_DATA with pointers
 
-void Debug(std::wstring data) {
-    MessageBoxW(0,data.c_str(),0,0);
+// Helper function to pack strings into a buffer with pointers
+NTSTATUS PackCustomLogonData(
+    LPCWSTR domain,
+    LPCWSTR username,
+    LPCWSTR password,
+    ULONG logonType,
+    PVOID* Buffer,
+    PULONG BufferSize
+)
+{
+    ULONG domainLen = domain ? (lstrlenW(domain) * sizeof(WCHAR)) : 0;
+    ULONG usernameLen = username ? (lstrlenW(username) * sizeof(WCHAR)) : 0;
+    ULONG passwordLen = password ? (lstrlenW(password) * sizeof(WCHAR)) : 0;
+
+    ULONG totalSize = sizeof(CUSTOM_LOGON_DATA) +
+                     sizeof(UNICODE_STRING) * 3 +  // Three UNICODE_STRING structures
+                     domainLen + sizeof(WCHAR) +    // Domain string + null terminator
+                     usernameLen + sizeof(WCHAR) +  // Username string + null terminator
+                     passwordLen + sizeof(WCHAR);   // Password string + null terminator
+
+    PBYTE buffer = (PBYTE)LocalAlloc(LMEM_ZEROINIT, totalSize);
+    if (!buffer) {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    PCUSTOM_LOGON_DATA logonData = (PCUSTOM_LOGON_DATA)buffer;
+    PUNICODE_STRING domainStr = (PUNICODE_STRING)(buffer + sizeof(CUSTOM_LOGON_DATA));
+    PUNICODE_STRING usernameStr = domainStr + 1;
+    PUNICODE_STRING passwordStr = usernameStr + 1;
+    PWSTR stringData = (PWSTR)(passwordStr + 1);
+
+    // Set up the main structure
+    logonData->Domain = domainStr;
+    logonData->UserName = usernameStr;
+    logonData->Password = passwordStr;
+    logonData->LogonType = logonType;
+
+    // Pack domain string
+    if (domain && domainLen > 0) {
+        domainStr->Buffer = stringData;
+        domainStr->Length = (USHORT)domainLen;
+        domainStr->MaximumLength = (USHORT)(domainLen + sizeof(WCHAR));
+        CopyMemory(stringData, domain, domainLen);
+        stringData = (PWSTR)((PBYTE)stringData + domainLen + sizeof(WCHAR));
+    } else {
+        domainStr->Buffer = NULL;
+        domainStr->Length = 0;
+        domainStr->MaximumLength = 0;
+    }
+
+    // Pack username string
+    if (username && usernameLen > 0) {
+        usernameStr->Buffer = stringData;
+        usernameStr->Length = (USHORT)usernameLen;
+        usernameStr->MaximumLength = (USHORT)(usernameLen + sizeof(WCHAR));
+        CopyMemory(stringData, username, usernameLen);
+        stringData = (PWSTR)((PBYTE)stringData + usernameLen + sizeof(WCHAR));
+    } else {
+        usernameStr->Buffer = NULL;
+        usernameStr->Length = 0;
+        usernameStr->MaximumLength = 0;
+    }
+
+    // Pack password string
+    if (password && passwordLen > 0) {
+        passwordStr->Buffer = stringData;
+        passwordStr->Length = (USHORT)passwordLen;
+        passwordStr->MaximumLength = (USHORT)(passwordLen + sizeof(WCHAR));
+        CopyMemory(stringData, password, passwordLen);
+    } else {
+        passwordStr->Buffer = NULL;
+        passwordStr->Length = 0;
+        passwordStr->MaximumLength = 0;
+    }
+
+    *Buffer = buffer;
+    *BufferSize = totalSize;
+
+    return STATUS_SUCCESS;
 }
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -70,13 +137,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     NTSTATUS status;
     NTSTATUS substatus;
     LSA_OPERATIONAL_MODE securityMode;
-
-    PCUSTOM_LOGON_DATA logonInfo;
-    ULONG logonInfoSize;
-
-    TOKEN_SOURCE sourceContext;
     PVOID profileBuffer = NULL;
     ULONG profileBufferLength;
+
+    TOKEN_SOURCE sourceContext;
+    PVOID logonBuffer = NULL;
+    ULONG logonBufferSize;
     LUID logonId;
     HANDLE tokenHandle;
     QUOTA_LIMITS quotas;
@@ -84,12 +150,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     // Initialize LSA connection
     status = LsaRegisterLogonProcess(&packageName, &lsaHandle, &securityMode);
     if (!NT_SUCCESS(status)) {
-        Debug(L"Failed to register with LSA: " +to_wstring((long) status));
+        LOG(std::string("Failed to register with LSA: ").append(std::to_string((long) status)).c_str());
 
         // Try untrusted connection
         status = LsaConnectUntrusted(&lsaHandle);
         if (!NT_SUCCESS(status)) {
-            Debug(L"Failed to connect to LSA: " + to_wstring((long) status));
+            LOG(std::string("Failed to connect to LSA: ").append(std::to_string((long) status)).c_str());
             return 1;
         }
     }
@@ -98,7 +164,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     InitLsaString(&packageName, "ak_lsa");
     status = LsaLookupAuthenticationPackage(lsaHandle, &packageName, &packageId);
     if (!NT_SUCCESS(status)) {
-        Debug(L"Failed to lookup package: " + to_wstring((long) status));
+        LOG(std::string("Failed to lookup package: ").append(std::to_string((long) status)).c_str());
         LsaDeregisterLogonProcess(lsaHandle);
         return 1;
     }
@@ -110,35 +176,19 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     wchar_t wcharPassword[18] = L"custompassword123";
     PWSTR pwstrPassword = wcharPassword;
 
-    // Prepare logon information (simplified example)
-    logonInfoSize = sizeof(MSV1_0_INTERACTIVE_LOGON) +
-        (wcslen(pwstrDomain) * sizeof(WCHAR)) +
-        (wcslen(pwstrUser) * sizeof(WCHAR)) +
-        (wcslen(pwstrPassword) * sizeof(WCHAR)) +
-        3 * sizeof(WCHAR); // null terminators
+    // Prepare custom logon information
+    status = PackCustomLogonData(
+        L"MYDOMAIN",           // Domain
+        L"testuser",           // Username
+        L"custompassword123",  // Password (contains "custom" so will be accepted)
+        Interactive,           // Logon type
+        &logonBuffer,
+        &logonBufferSize
+    );
 
-    logonInfo = (PCUSTOM_LOGON_DATA)LocalAlloc(LMEM_ZEROINIT, logonInfoSize);
-    if (!logonInfo) {
-        Debug(L"Failed to allocate logon info");
-        LsaDeregisterLogonProcess(lsaHandle);
-        return 1;
-    }
-
-    HRESULT hr = UnicodeStringInitWithString(pwstrDomain, logonInfo->Domain);
-    if (!SUCCEEDED(hr)) {
-        Debug(L"Failed to set domain");
-        LsaDeregisterLogonProcess(lsaHandle);
-        return 1;
-    }
-    hr = UnicodeStringInitWithString(pwstrUser, logonInfo->UserName);
-    if (!SUCCEEDED(hr)) {
-        Debug(L"Failed to set user");
-        LsaDeregisterLogonProcess(lsaHandle);
-        return 1;
-    }
-    hr = UnicodeStringInitWithString(pwstrPassword, logonInfo->Password);
-    if (!SUCCEEDED(hr)) {
-        Debug(L"Failed to set password");
+    if (!NT_SUCCESS(status)) {
+        // std::wcout << L"Failed to pack logon data: 0x" << std::hex << status << std::endl;
+        LOG("Failed to pack logon data");
         LsaDeregisterLogonProcess(lsaHandle);
         return 1;
     }
@@ -149,14 +199,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     lstrcpynA(sourceContext.SourceName, "CustomApp", sizeof(sourceContext.SourceName));
     AllocateLocallyUniqueId(&sourceContext.SourceIdentifier);
 
+    LSA_STRING origin;
+    InitLsaString(&origin, (LPSTR)"lsatest");
+
     // Perform logon (this is simplified - you'd need to properly format your custom data)
     status = LsaLogonUser(
         lsaHandle,
-        &packageName,
+        &origin,
         Interactive,
         packageId,
-        logonInfo,
-        logonInfoSize,
+        logonBuffer,
+        logonBufferSize,
         NULL, // No additional groups
         &sourceContext,
         &profileBuffer,
@@ -168,12 +221,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     );
 
     if (NT_SUCCESS(status)) {
-        Debug(L"Custom authentication successful!");
+        LOG("Custom authentication successful!");
         CloseHandle(tokenHandle);
     } else {
-        Debug(L"Authentication failed: " + to_wstring((long)status));
-        Debug(L"Sub status: " + to_wstring((long)substatus));
-        //  + to_wstring((long) status) <<
+        LOG(std::string("Authentication failed: ").append(std::to_string((long)status)).c_str());
+        LOG(std::string("Sub status: ").append(std::to_string((long)substatus)).c_str());
+        // std::string().append(std::to_string((long) status) ).c_str()<<
         //               L" (substatus: " << std::hex << substatus << L")");
     }
 
@@ -181,10 +234,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     if (profileBuffer) {
         LsaFreeReturnBuffer(profileBuffer);
     }
-    if (logonInfo) {
-        LocalFree(logonInfo);
+    if (logonBuffer) {
+        LocalFree(logonBuffer);
     }
     LsaDeregisterLogonProcess(lsaHandle);
-
+    // _getch();
     return 0;
 }

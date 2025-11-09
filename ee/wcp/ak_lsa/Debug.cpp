@@ -8,14 +8,12 @@
 using std::ofstream;
 std::mutex g_dbgMutex;
 
-void Debug(const char* data) {
-    g_dbgMutex.lock();
-    std::ofstream fs("c:\\ak_lsa.txt");
+void LOG(const char* data) {
+    std::fstream fs("c:\\ak_lsa.txt", std::ios_base::app);
 
     if(fs) {
         fs << data << std::endl;
         fs.flush();
         fs.close();
     }
-    g_dbgMutex.unlock();
 }

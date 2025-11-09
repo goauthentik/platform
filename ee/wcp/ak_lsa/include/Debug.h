@@ -2,4 +2,4 @@
 #include <string>
 #include <thread>
 
-void Debug(const char* data);
+void LOG(const char* data);

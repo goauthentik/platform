@@ -83,14 +83,14 @@ NTSTATUS CreateUnicodeStringFromWideString(
 }
 
 // Initialize the authentication package
-NTSTATUS NTAPI LsaApInitializePackage(
+extern "C" NTSTATUS NTAPI LsaApInitializePackage(
     _In_ ULONG AuthenticationPackageId,
     _In_ PLSA_DISPATCH_TABLE LsaDispatchTable,
     _In_opt_ PLSA_STRING Database,
     _In_opt_ PLSA_STRING Confidentiality,
     _Out_ PLSA_STRING *AuthenticationPackageName
 ) {
-    // Debug("LsaApInitializePackage: " + AuthenticationPackageId);
+    LOG("LsaApInitializePackage: " + AuthenticationPackageId);
     PLSA_STRING packageName;
     SIZE_T nameLength = strlen(PACKAGE_NAME);
 
@@ -122,7 +122,7 @@ NTSTATUS NTAPI LsaApInitializePackage(
 }
 
 // Main logon function - corrected version
-NTSTATUS NTAPI LsaApLogonUserEx2(
+extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
     _In_ PLSA_CLIENT_REQUEST ClientRequest,
     _In_ SECURITY_LOGON_TYPE LogonType,
     _In_ PVOID ProtocolSubmitBuffer,
@@ -140,134 +140,12 @@ NTSTATUS NTAPI LsaApLogonUserEx2(
     _Out_ PSECPKG_PRIMARY_CRED PrimaryCredentials,
     _Out_ PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials
 ) {
-    // Debug("LsaApLogonUserEx2");
-    PCUSTOM_LOGON_DATA logonData;
-    PMSV1_0_INTERACTIVE_PROFILE profile;
-    PLSA_TOKEN_INFORMATION_V1 tokenInfo;
-    PUNICODE_STRING accountName;
-    PUNICODE_STRING authAuthority;
-    PUNICODE_STRING machineName;
-    NTSTATUS status;
-
-    *SubStatus = STATUS_SUCCESS;
-
-    // Validate input parameters
-    if (!ProtocolSubmitBuffer ||
-        SubmitBufferSize < sizeof(CUSTOM_LOGON_DATA)) {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    logonData = (PCUSTOM_LOGON_DATA)ProtocolSubmitBuffer;
-
-    // Perform custom password validation
-    if (!ValidateCustomPassword(logonData->Domain,
-                               logonData->UserName,
-                               logonData->Password)) {
-        *SubStatus = STATUS_LOGON_FAILURE;
-        return STATUS_LOGON_FAILURE;
-    }
-
-    // Create profile buffer
-    profile = (PMSV1_0_INTERACTIVE_PROFILE)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(MSV1_0_INTERACTIVE_PROFILE)
-    );
-    if (!profile) {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    ZeroMemory(profile, sizeof(MSV1_0_INTERACTIVE_PROFILE));
-    profile->MessageType = MsV1_0InteractiveProfile;
-
-    *ProfileBuffer = profile;
-    *ProfileBufferSize = sizeof(MSV1_0_INTERACTIVE_PROFILE);
-
-    // Create token information
-    tokenInfo = (PLSA_TOKEN_INFORMATION_V1)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(LSA_TOKEN_INFORMATION_V1)
-    );
-    if (!tokenInfo) {
-        g_LsaDispatchTable->FreeLsaHeap(profile);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    ZeroMemory(tokenInfo, sizeof(LSA_TOKEN_INFORMATION_V1));
-    tokenInfo->ExpirationTime.QuadPart = 0x7FFFFFFFFFFFFFFF; // Never expire
-
-    *TokenInformationType = LsaTokenInformationV1;
-    *TokenInformation = tokenInfo;
-
-    // Set account name - corrected allocation
-    accountName = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(UNICODE_STRING)
-    );
-    if (!accountName) {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
-
-    status = AllocateAndCopyUnicodeString(accountName, logonData->UserName,
-                                         g_LsaDispatchTable);
-    if (!NT_SUCCESS(status)) {
-        goto cleanup;
-    }
-    *AccountName = accountName;
-
-    // Set authenticating authority - corrected allocation
-    authAuthority = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(UNICODE_STRING)
-    );
-    if (!authAuthority) {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
-
-    status = CreateUnicodeStringFromWideString(authAuthority, L"ak_lsa",
-                                              g_LsaDispatchTable);
-    if (!NT_SUCCESS(status)) {
-        goto cleanup;
-    }
-    *AuthenticatingAuthority = authAuthority;
-
-    // Set machine name (optional)
-    machineName = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(UNICODE_STRING)
-    );
-    if (machineName) {
-        CreateUnicodeStringFromWideString(machineName, L"CUSTOM-AUTH-MACHINE",
-                                         g_LsaDispatchTable);
-        *MachineName = machineName;
-    } else {
-        *MachineName = NULL;
-    }
-
-    return STATUS_SUCCESS;
-
-cleanup:
-    // Cleanup on failure
-    if (profile) {
-        g_LsaDispatchTable->FreeLsaHeap(profile);
-    }
-    if (tokenInfo) {
-        g_LsaDispatchTable->FreeLsaHeap(tokenInfo);
-    }
-    if (accountName) {
-        if (accountName->Buffer) {
-            g_LsaDispatchTable->FreeLsaHeap(accountName->Buffer);
-        }
-        g_LsaDispatchTable->FreeLsaHeap(accountName);
-    }
-    if (authAuthority) {
-        if (authAuthority->Buffer) {
-            g_LsaDispatchTable->FreeLsaHeap(authAuthority->Buffer);
-        }
-        g_LsaDispatchTable->FreeLsaHeap(authAuthority);
-    }
-
-    return status;
+    LOG("LsaApLogonUserEx2");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 // Called by the Local Security Authority (LSA) when a logon application with a trusted connection to the LSA calls the LsaCallAuthenticationPackage function and specifies the authentication package's identifier.
-NTSTATUS NTAPI LsaApCallPackage(
+extern "C" NTSTATUS NTAPI LsaApCallPackage(
     _In_ PLSA_CLIENT_REQUEST ClientRequest,
     _In_ PVOID ProtocolSubmitBuffer,
     _In_ PVOID ClientBufferBase,
@@ -277,14 +155,14 @@ NTSTATUS NTAPI LsaApCallPackage(
     _Out_ PNTSTATUS ProtocolStatus
 ) {
     // Debug("LsaApCallPackage");
-    *ProtocolReturnBuffer = NULL;
-    *ReturnBufferLength = 0;
-    *ProtocolStatus = STATUS_SUCCESS;
-    return STATUS_SUCCESS;
+    // *ProtocolReturnBuffer = NULL;
+    // *ReturnBufferLength = 0;
+    // *ProtocolStatus = STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 // Called by the Local Security Authority (LSA) when an application with an untrusted connection to the LSA calls the LsaCallAuthenticationPackage function and specifies the authentication package's identifier.
-NTSTATUS NTAPI LsaApCallPackageUntrusted(
+extern "C" NTSTATUS NTAPI LsaApCallPackageUntrusted(
     _In_ PLSA_CLIENT_REQUEST ClientRequest,
     _In_ PVOID ProtocolSubmitBuffer,
     _In_ PVOID ClientBufferBase,
@@ -302,11 +180,11 @@ NTSTATUS NTAPI LsaApCallPackageUntrusted(
 
 // Used to notify an authentication package when a logon session terminates. A logon session terminates when the last token referencing the logon session is deleted.
 VOID NTAPI LsaApLogonTerminated(_In_ PLUID LogonId) {
-    // Debug("LsaApLogonTerminated");
+    LOG("LsaApLogonTerminated");
 }
 
 // The dispatch function for pass-through logon requests sent to the LsaCallAuthenticationPackage function.
-NTSTATUS NTAPI LsaApCallPackagePassthrough(
+extern "C" NTSTATUS NTAPI LsaApCallPackagePassthrough(
   _In_ PLSA_CLIENT_REQUEST ClientRequest,
   _In_ PVOID ProtocolAuthenticationInformation,
   _In_ PVOID ClientBufferBase,
@@ -316,6 +194,6 @@ NTSTATUS NTAPI LsaApCallPackagePassthrough(
   _Out_ PNTSTATUS ProtocolStatus
 )
 {
-    // Debug("LsaApCallPackagePassthrough");
+    LOG("LsaApCallPackagePassthrough");
 	return STATUS_NOT_IMPLEMENTED;
 }
