@@ -19,6 +19,7 @@ set(SRCS
   "Dll.cpp"
   "Lsa.cpp"
   "ak.cpp"
+  "ustring.cpp"
 )
 
 find_library(CREDUI_LIB_PATH Credui.lib)
@@ -45,6 +46,8 @@ if (MSVC)
         ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.def
     )
 endif()
+
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
 	${CREDUI_LIB_PATH}

@@ -8,6 +8,7 @@
 #include <lm.h>
 #include "include/LogonData.h"
 #include "include/ak.h"
+#include "include/ustring.h"
 #include "authentik_sys_bridge/ffi.h"
 
 // Global variables
@@ -16,71 +17,14 @@ static ULONG g_AuthenticationPackageId = 0;
 
 const char* PACKAGE_NAME = "ak_lsa";
 
-// Helper function to allocate and copy a Unicode string in LSA heap
-NTSTATUS AllocateAndCopyUnicodeString(
-    PUNICODE_STRING Destination,
-    PUNICODE_STRING Source,
-    PLSA_DISPATCH_TABLE LsaDispatchTable
-)
+extern "C" void * SpAlloc(size_t s)
 {
-    if (!Source || !Source->Buffer || Source->Length == 0) {
-        Destination->Buffer = NULL;
-        Destination->Length = 0;
-        Destination->MaximumLength = 0;
-        return STATUS_SUCCESS;
-    }
-
-    Destination->MaximumLength = Source->Length + sizeof(WCHAR);
-    Destination->Buffer = (PWSTR)LsaDispatchTable->AllocateLsaHeap(
-        Destination->MaximumLength
-    );
-
-    if (!Destination->Buffer) {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    CopyMemory(Destination->Buffer, Source->Buffer, Source->Length);
-    Destination->Buffer[Source->Length / sizeof(WCHAR)] = L'\0';
-    Destination->Length = Source->Length;
-
-    return STATUS_SUCCESS;
+	return (*g_LsaDispatchTable->AllocateLsaHeap)(static_cast<ULONG>(s));
 }
 
-// Helper function to create a Unicode string from a wide string
-NTSTATUS CreateUnicodeStringFromWideString(
-    PUNICODE_STRING Destination,
-    PCWSTR Source,
-    PLSA_DISPATCH_TABLE LsaDispatchTable
-)
+extern "C" void SpFree(void * p)
 {
-    SIZE_T length;
-
-    if (!Source) {
-        Destination->Buffer = NULL;
-        Destination->Length = 0;
-        Destination->MaximumLength = 0;
-        return STATUS_SUCCESS;
-    }
-
-    length = wcslen(Source) * sizeof(WCHAR);
-    if (length > USHRT_MAX - sizeof(WCHAR)) {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Destination->Length = (USHORT)length;
-    Destination->MaximumLength = Destination->Length + sizeof(WCHAR);
-    Destination->Buffer = (PWSTR)LsaDispatchTable->AllocateLsaHeap(
-        Destination->MaximumLength
-    );
-
-    if (!Destination->Buffer) {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    CopyMemory(Destination->Buffer, Source, Destination->Length);
-    Destination->Buffer[Destination->Length / sizeof(WCHAR)] = L'\0';
-
-    return STATUS_SUCCESS;
+	(*g_LsaDispatchTable->FreeLsaHeap)(p);
 }
 
 // Initialize the authentication package
@@ -91,7 +35,7 @@ extern "C" NTSTATUS NTAPI LsaApInitializePackage(
     _In_opt_ PLSA_STRING Confidentiality,
     _Out_ PLSA_STRING *AuthenticationPackageName
 ) {
-    spdlog::debug(std::string("LsaApInitializePackage: ").append(std::to_string(AuthenticationPackageId)).c_str());
+    SPDLOG_DEBUG(std::string("LsaApInitializePackage: ").append(std::to_string(AuthenticationPackageId)).c_str());
     PLSA_STRING packageName;
     SIZE_T nameLength = strlen(PACKAGE_NAME);
 
@@ -122,7 +66,6 @@ extern "C" NTSTATUS NTAPI LsaApInitializePackage(
     return STATUS_SUCCESS;
 }
 
-// Main logon function - corrected version
 extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
     _In_ PLSA_CLIENT_REQUEST ClientRequest,
     _In_ SECURITY_LOGON_TYPE LogonType,
@@ -141,29 +84,24 @@ extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
     _Out_ PSECPKG_PRIMARY_CRED PrimaryCredentials,
     _Out_ PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials
 ) {
-    spdlog::debug("LsaApLogonUserEx2");
+    SPDLOG_DEBUG("LsaApLogonUserEx2");
     PCUSTOM_LOGON_DATA logonData;
     PMSV1_0_INTERACTIVE_PROFILE profile;
     PLSA_TOKEN_INFORMATION_V1 tokenInfo;
-    PUNICODE_STRING accountName;
-    PUNICODE_STRING authAuthority;
-    PUNICODE_STRING machineName;
     NTSTATUS status;
 
-    {
-        try {
-            std::string ping = std::string("");
-            ak_sys_grpc_ping(ping);
-            spdlog::debug(std::string("sysd version: ").append(ping).c_str());
-        } catch (const std::exception &ex) {
-            spdlog::debug("Exception in ak_grpc_ping");
-            spdlog::debug(ex.what());
-        }
+    try {
+        std::string ping = std::string("");
+        ak_sys_grpc_ping(ping);
+        SPDLOG_DEBUG(std::string("sysd version: ").append(ping).c_str());
+    } catch (const std::exception &ex) {
+        SPDLOG_DEBUG("Exception in ak_grpc_ping");
+        SPDLOG_DEBUG(ex.what());
     }
 
     *SubStatus = STATUS_SUCCESS;
 
-    spdlog::debug("validate");
+    SPDLOG_DEBUG("validate");
     // Validate input parameters
     if (!ProtocolSubmitBuffer ||
         SubmitBufferSize < sizeof(CUSTOM_LOGON_DATA)) {
@@ -172,7 +110,7 @@ extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
 
     logonData = (PCUSTOM_LOGON_DATA)ProtocolSubmitBuffer;
 
-    spdlog::debug("validate password");
+    // SPDLOG_DEBUG("validate password");
     // Perform custom password validation
     // if (!ValidateCustomPassword(logonData->Domain,
     //                            logonData->UserName,
@@ -181,7 +119,7 @@ extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
     //     return STATUS_LOGON_FAILURE;
     // }
 
-    spdlog::debug("profile buffer");
+    SPDLOG_DEBUG("profile buffer");
     // Create profile buffer
     profile = (PMSV1_0_INTERACTIVE_PROFILE)g_LsaDispatchTable->AllocateLsaHeap(
         sizeof(MSV1_0_INTERACTIVE_PROFILE)
@@ -190,14 +128,14 @@ extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    spdlog::debug("prepare profile");
+    SPDLOG_DEBUG("prepare profile");
     ZeroMemory(profile, sizeof(MSV1_0_INTERACTIVE_PROFILE));
     profile->MessageType = MsV1_0InteractiveProfile;
 
     *ProfileBuffer = profile;
     *ProfileBufferSize = sizeof(MSV1_0_INTERACTIVE_PROFILE);
 
-    spdlog::debug("create token info");
+    SPDLOG_DEBUG("create token info");
     // Create token information
     tokenInfo = (PLSA_TOKEN_INFORMATION_V1)g_LsaDispatchTable->AllocateLsaHeap(
         sizeof(LSA_TOKEN_INFORMATION_V1)
@@ -207,86 +145,47 @@ extern "C" NTSTATUS NTAPI LsaApLogonUserEx2(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    spdlog::debug("prepare token info");
+    SPDLOG_DEBUG("prepare token info");
     ZeroMemory(tokenInfo, sizeof(LSA_TOKEN_INFORMATION_V1));
     tokenInfo->ExpirationTime.QuadPart = 0x7FFFFFFFFFFFFFFF; // Never expire
 
     *TokenInformationType = LsaTokenInformationV1;
     *TokenInformation = tokenInfo;
 
-    spdlog::debug("set account name");
+    SPDLOG_DEBUG("set account name");
     // Set account name - corrected allocation
-    accountName = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(UNICODE_STRING)
-    );
-    if (!accountName) {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
+    ustring account_name(L"Administrator");
+    account_name.set_allocater(SpAlloc, SpFree);
+    *AccountName = account_name.to_unicode_string();
 
-    status = AllocateAndCopyUnicodeString(accountName, logonData->UserName,
-                                         g_LsaDispatchTable);
-    if (!NT_SUCCESS(status)) {
-        goto cleanup;
-    }
-    *AccountName = accountName;
+    // SPDLOG_DEBUG("set authority");
+    // // Set authenticating authority - corrected allocation
+    // ustring authority (L"WORKGROUP");
+    // account_name.set_allocater(SpAlloc, SpFree);
+    // *AuthenticatingAuthority = authority.to_unicode_string();
 
-    spdlog::debug("set authority");
-    // Set authenticating authority - corrected allocation
-    authAuthority = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(UNICODE_STRING)
-    );
-    if (!authAuthority) {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
+    // SPDLOG_DEBUG("set machine name");
+    // // Set machine name (optional)
+    // machineName = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
+    //     sizeof(UNICODE_STRING)
+    // );
+    // if (machineName) {
+    //     CreateUnicodeStringFromWideString(machineName, L"CUSTOM-AUTH-MACHINE",
+    //                                      g_LsaDispatchTable);
+    //     *MachineName = machineName;
+    // } else {
+    //     *MachineName = NULL;
+    // }
 
-    status = CreateUnicodeStringFromWideString(authAuthority, L"ak_lsa",
-                                              g_LsaDispatchTable);
-    if (!NT_SUCCESS(status)) {
-        goto cleanup;
-    }
-    *AuthenticatingAuthority = authAuthority;
-
-    spdlog::debug("set machine name");
-    // Set machine name (optional)
-    machineName = (PUNICODE_STRING)g_LsaDispatchTable->AllocateLsaHeap(
-        sizeof(UNICODE_STRING)
-    );
-    if (machineName) {
-        CreateUnicodeStringFromWideString(machineName, L"CUSTOM-AUTH-MACHINE",
-                                         g_LsaDispatchTable);
-        *MachineName = machineName;
-    } else {
-        *MachineName = NULL;
-    }
+    SPDLOG_DEBUG("LogonId");
+    {
+        int64u luid;
+        luid.ui64 = __rdtsc();
+        //GetSystemTimePreciseAsFileTime(&luid.ft);
+        *LogonId = luid.id;
+	}
 
     return STATUS_SUCCESS;
-
-cleanup:
-    spdlog::debug("Cleanup");
-    // Cleanup on failure
-    if (profile) {
-        g_LsaDispatchTable->FreeLsaHeap(profile);
-    }
-    if (tokenInfo) {
-        g_LsaDispatchTable->FreeLsaHeap(tokenInfo);
-    }
-    if (accountName) {
-        if (accountName->Buffer) {
-            g_LsaDispatchTable->FreeLsaHeap(accountName->Buffer);
-        }
-        g_LsaDispatchTable->FreeLsaHeap(accountName);
-    }
-    if (authAuthority) {
-        if (authAuthority->Buffer) {
-            g_LsaDispatchTable->FreeLsaHeap(authAuthority->Buffer);
-        }
-        g_LsaDispatchTable->FreeLsaHeap(authAuthority);
-    }
-
-    return status;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 // Called by the Local Security Authority (LSA) when a logon application with a trusted connection to the LSA calls the LsaCallAuthenticationPackage function and specifies the authentication package's identifier.
@@ -325,7 +224,7 @@ extern "C" NTSTATUS NTAPI LsaApCallPackageUntrusted(
 
 // Used to notify an authentication package when a logon session terminates. A logon session terminates when the last token referencing the logon session is deleted.
 VOID NTAPI LsaApLogonTerminated(_In_ PLUID LogonId) {
-    spdlog::debug("LsaApLogonTerminated");
+    SPDLOG_DEBUG("LsaApLogonTerminated");
 }
 
 // The dispatch function for pass-through logon requests sent to the LsaCallAuthenticationPackage function.
@@ -339,6 +238,6 @@ extern "C" NTSTATUS NTAPI LsaApCallPackagePassthrough(
   _Out_ PNTSTATUS ProtocolStatus
 )
 {
-    spdlog::debug("LsaApCallPackagePassthrough");
+    SPDLOG_DEBUG("LsaApCallPackagePassthrough");
 	return STATUS_NOT_IMPLEMENTED;
 }

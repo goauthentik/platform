@@ -17,10 +17,10 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
   switch (dwReason) {
   case DLL_PROCESS_ATTACH:
     SetupLogsPath("C:", "ak_lsa");
-    spdlog::debug("DllMain::DLL_PROCESS_ATTACH");
+    SPDLOG_DEBUG("DllMain::DLL_PROCESS_ATTACH");
     break;
   case DLL_PROCESS_DETACH:
-    spdlog::debug("DllMain::DLL_PROCESS_DETACH");
+    SPDLOG_DEBUG("DllMain::DLL_PROCESS_DETACH");
     spdlog::shutdown();
     break;
   }
