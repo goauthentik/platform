@@ -96,11 +96,11 @@ class SimpleHandler : public CefClient,
     CefRefPtr<CefResponse> response
   ) override {
     std::string strURL = request->GetURL().ToString();
-    SPDLOG_DEBUG("URL: ");
-    SPDLOG_DEBUG(strURL.c_str());
-    SPDLOG_DEBUG(request->GetMethod().ToString().c_str());
+    Debug("URL: ");
+    Debug(strURL.c_str());
+    Debug(request->GetMethod().ToString().c_str());
     std::string str = "OnResourceResponse ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    SPDLOG_DEBUG(str.c_str());
+    Debug(str.c_str());
 
     return false;
   }
@@ -112,22 +112,22 @@ class SimpleHandler : public CefClient,
   ) override {
     const std::string strKey = "goauthentik.io://";
     std::string strURL = request->GetURL().ToString();
-    SPDLOG_DEBUG(strURL.c_str());
+    Debug(strURL.c_str());
     if (strURL.length() >= strKey.length())
     {
       if (strURL.substr(0, strKey.length()) == strKey)
       {
-        SPDLOG_DEBUG("URL inhibited: ");
-        //SPDLOG_DEBUG(std::hash<std::thread::id>{}(std::thread::get_id));
-        SPDLOG_DEBUG(strURL.c_str());
+        Debug("URL inhibited: ");
+        //Debug(std::hash<std::thread::id>{}(std::thread::get_id));
+        Debug(strURL.c_str());
         std::string str = "OnBeforeResourceLoad ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
-        SPDLOG_DEBUG(str.c_str());
+        Debug(str.c_str());
         size_t nPos = strURL.find("code=") + 5;
         m_strCode = strURL.substr(nPos, strURL.find("&", nPos) - nPos);
-        SPDLOG_DEBUG(std::string("Code: " + m_strCode).c_str());
+        Debug(std::string("Code: " + m_strCode).c_str());
         nPos = strURL.find("state=") + 6;
         std::string strState = strURL.substr(nPos, strURL.find("&", nPos) - nPos);
-        SPDLOG_DEBUG(std::string("State:: " + strState).c_str());
+        Debug(std::string("State:: " + strState).c_str());
 
         if (strState == m_strState) //- else notify error?
         {
@@ -151,7 +151,7 @@ class SimpleHandler : public CefClient,
     if (strURL == (m_pData->strBaseURL + g_strTokenEndpoint))
     {
       std::string str = "Resource load: " + strURL;
-      SPDLOG_DEBUG(str.c_str());
+      Debug(str.c_str());
       request->SetMethod("POST");
 
       //- todo: out to URLEncode
@@ -215,6 +215,19 @@ class SimpleHandler : public CefClient,
       size_t data_out_size,
       size_t& data_out_written
   ) override {
+      // const size_t max_write = std::min(data_in_size, data_out_size);
+      // memcpy(data_out, data_in, max_write);
+      // data_out_size = max_write; //?
+      // data_out_written = data_in_size; //?
+      // LOG(INFO) << "The data here:" << std::string((char*)data_out);
+      // data_in_read = data_in_size;
+      // return RESPONSE_FILTER_DONE;
+      const size_t max_write = std::min(data_in_size, data_out_size);
+      //-memcpy(data_out, data_in, max_write);
+      // data_out_size = max_write; //?
+      // data_out_written = data_in_size; //?
+      //-data_out_written = max_write;
+      // LOG(INFO) << "The data here:" << std::string((char*)data_out);
       data_in_read = data_in_size;
 
       // Alternate output message to display
@@ -243,12 +256,13 @@ class SimpleHandler : public CefClient,
       {
         strOut.append(1, ((char*)data_out)[i]);
       }
-      SPDLOG_DEBUG("-------------------");
-      SPDLOG_DEBUG(std::string("Data in: Size:" + std::to_string(data_in_size) + " Read: " + std::to_string(data_in_read)).c_str());
-      SPDLOG_DEBUG(strIn.c_str());
-      SPDLOG_DEBUG(std::string("Data out: Size:" + std::to_string(data_out_size) + " Written: " + std::to_string(data_out_written)).c_str());
-      SPDLOG_DEBUG(strOut.c_str());
-      SPDLOG_DEBUG("-------------------");
+      Debug("-------------------");
+      Debug(std::string("max_write:" + std::to_string(max_write)).c_str());
+      Debug(std::string("Data in: Size:" + std::to_string(data_in_size) + " Read: " + std::to_string(data_in_read)).c_str());
+      Debug(strIn.c_str());
+      Debug(std::string("Data out: Size:" + std::to_string(data_out_size) + " Written: " + std::to_string(data_out_written)).c_str());
+      Debug(strOut.c_str());
+      Debug("-------------------");
       return RESPONSE_FILTER_DONE; //- todo: check for residual data
   }
 
@@ -268,8 +282,8 @@ class SimpleHandler : public CefClient,
       size_t nPos = m_strResponseContent.find(strTokenKey) + strTokenKey.size();
       m_strJWT = m_strResponseContent.substr(nPos, m_strResponseContent.find("\"", nPos) - nPos);
       m_strResponseContent = ""; // Delete JWT for security //- todo: do a proper overwrite
-      SPDLOG_DEBUG("JWT:");
-      SPDLOG_DEBUG(m_strJWT.c_str());
+      Debug("JWT:");
+      Debug(m_strJWT.c_str());
       auto validatedToken = TokenResponse();
       if (!ak_sys_token_validate("", m_strJWT, validatedToken)) {
         SPDLOG_WARN("failed to validate token");
