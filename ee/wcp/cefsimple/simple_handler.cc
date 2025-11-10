@@ -6,6 +6,7 @@
 
 #include <sstream>
 #include <string>
+#include "spdlog/spdlog.h"
 
 #include "include/base/cef_callback.h"
 #include "include/cef_app.h"
@@ -34,15 +35,15 @@ SimpleHandler::SimpleHandler(bool is_alloy_style, sHookData* pData)
   g_instance = this;
   m_strCodeVerifier = GetRandomStr(OAUTH_CHALLENGE_LEN);
   m_strState = GetRandomStr(OAUTH_STATE_LEN);
-  Debug("SimpleHandler");
+  SPDLOG_DEBUG("SimpleHandler");
 }
 
 SimpleHandler::~SimpleHandler() {
   g_instance = nullptr;
-  Debug("~SimpleHandler");
+  SPDLOG_DEBUG("~SimpleHandler");
   if (m_pData)
   {
-    Debug("~SimpleHandler SetExit");
+    SPDLOG_DEBUG("~SimpleHandler SetExit");
     m_pData->SetExit(true);
     m_pData = nullptr;
   }
@@ -82,7 +83,7 @@ void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
-  Debug("DoClose");
+  SPDLOG_DEBUG("DoClose");
 
   // Closing the main window requires special handling. See the DoClose()
   // documentation in the CEF header for a detailed destription of this
@@ -98,14 +99,14 @@ bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 }
 
 void SimpleHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
-  Debug("OnBeforeClose any");
+  SPDLOG_DEBUG("OnBeforeClose any");
   CEF_REQUIRE_UI_THREAD();
 
   // wait for CefDeleteCookiesCallback::OnComplete() to complete
   if (! IsWindowInitialized())
   {
-    Debug(std::string("window_initialized_count_: " + std::to_string(window_initialized_count_)).c_str());
-    Debug(std::string("handler: " + std::to_string((size_t)(this))).c_str());
+    SPDLOG_DEBUG(std::string("window_initialized_count_: " + std::to_string(window_initialized_count_)).c_str());
+    SPDLOG_DEBUG(std::string("handler: " + std::to_string((size_t)(this))).c_str());
     if (window_initialized_count_ > 0) // timeout
     {
       --window_initialized_count_;
@@ -186,7 +187,7 @@ void SimpleHandler::CloseAllBrowsers(bool force_close) {
                                        force_close));
     return;
   }
-  Debug("CloseAllBrowsers");
+  SPDLOG_DEBUG("CloseAllBrowsers");
   close_called_ = true;
 
   if (browser_list_.empty()) {
