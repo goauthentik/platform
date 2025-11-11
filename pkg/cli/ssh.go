@@ -163,7 +163,7 @@ func init() {
 }
 
 func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
-	msg := pb.PAMAuthentication{
+	msg := pb.SSHTokenAuthentication{
 		Token:       cc.AccessToken,
 		LocalSocket: rtp,
 	}

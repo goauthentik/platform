@@ -52,5 +52,5 @@ pub struct CloseSessionResponse {
     #[prost(bool, tag = "1")]
     pub success: bool,
 }
-include!("pam_session.tonic.rs");
+include!("session.tonic.rs");
 // @@protoc_insertion_point(module)

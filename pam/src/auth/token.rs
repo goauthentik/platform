@@ -3,12 +3,13 @@ use ::prost::Message;
 use authentik_sys::generated::pam::pam_client::PamClient;
 use authentik_sys::generated::{
     grpc_request,
-    pam::{PamAuthentication, TokenAuthRequest},
+    pam::{TokenAuthRequest},
+    ssh::SshTokenAuthentication,
 };
 use base64::{Engine, prelude::BASE64_STANDARD};
 use pam::constants::PamResultCode;
 
-pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
+pub fn decode_token(token: String) -> Result<SshTokenAuthentication, PamResultCode> {
     let raw = match BASE64_STANDARD.decode(token) {
         Ok(t) => t,
         Err(e) => {
@@ -17,7 +18,7 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
         }
     };
 
-    let msg = match PamAuthentication::decode(&*raw) {
+    let msg = match SshTokenAuthentication::decode(&*raw) {
         Ok(t) => t,
         Err(e) => {
             log::warn!("failed to decode message: {e}");

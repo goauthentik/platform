@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package pam_session;
+package session;
 option go_package = "pkg/pb";
 option swift_prefix = "";
 

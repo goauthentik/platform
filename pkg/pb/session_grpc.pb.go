@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.33.0
-// source: pam_session.proto
+// source: session.proto
 
 package pb
 
@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SessionManager_RegisterSession_FullMethodName = "/pam_session.SessionManager/RegisterSession"
-	SessionManager_SessionStatus_FullMethodName   = "/pam_session.SessionManager/SessionStatus"
-	SessionManager_CloseSession_FullMethodName    = "/pam_session.SessionManager/CloseSession"
+	SessionManager_RegisterSession_FullMethodName = "/session.SessionManager/RegisterSession"
+	SessionManager_SessionStatus_FullMethodName   = "/session.SessionManager/SessionStatus"
+	SessionManager_CloseSession_FullMethodName    = "/session.SessionManager/CloseSession"
 )
 
 // SessionManagerClient is the client API for SessionManager service.
@@ -176,7 +176,7 @@ func _SessionManager_CloseSession_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SessionManager_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "pam_session.SessionManager",
+	ServiceName: "session.SessionManager",
 	HandlerType: (*SessionManagerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -193,5 +193,5 @@ var SessionManager_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pam_session.proto",
+	Metadata: "session.proto",
 }

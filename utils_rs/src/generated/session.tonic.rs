@@ -107,13 +107,11 @@ pub mod session_manager_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/pam_session.SessionManager/RegisterSession",
+                "/session.SessionManager/RegisterSession",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("pam_session.SessionManager", "RegisterSession"),
-                );
+                .insert(GrpcMethod::new("session.SessionManager", "RegisterSession"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn session_status(
@@ -133,11 +131,11 @@ pub mod session_manager_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/pam_session.SessionManager/SessionStatus",
+                "/session.SessionManager/SessionStatus",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("pam_session.SessionManager", "SessionStatus"));
+                .insert(GrpcMethod::new("session.SessionManager", "SessionStatus"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn close_session(
@@ -157,11 +155,11 @@ pub mod session_manager_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/pam_session.SessionManager/CloseSession",
+                "/session.SessionManager/CloseSession",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("pam_session.SessionManager", "CloseSession"));
+                .insert(GrpcMethod::new("session.SessionManager", "CloseSession"));
             self.inner.unary(req, path, codec).await
         }
     }

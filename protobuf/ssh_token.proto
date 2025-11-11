@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package pam;
+package ssh;
 option go_package = "pkg/pb";
 option swift_prefix = "";
 
 // Message to encode token for SSH authenticaiton with CLI
-message PAMAuthentication {
+message SSHTokenAuthentication {
   string token = 1;
   string local_socket = 2;
 }
