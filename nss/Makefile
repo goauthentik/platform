@@ -27,7 +27,8 @@ package: build
 	CARGO_TARGET_DIR="${TOP}/cache/${TARGET}" cargo deb \
 		--output ${TOP}/bin/${TARGET} \
 		--verbose \
-		--deb-version ${VERSION}
+		--deb-version ${VERSION} \
+		--variant ${ARCH}
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/libnss-authentik_${VERSION}_${ARCH}.deb
