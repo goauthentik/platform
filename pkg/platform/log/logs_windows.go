@@ -35,6 +35,8 @@ func (e *eventLogHook) Levels() []log.Level {
 	}
 }
 
+const windowsEventID = 1000
+
 func (e *eventLogHook) Fire(entry *log.Entry) error {
 	msg := entry.Message
 	if len(entry.Data) > 0 {
@@ -47,14 +49,14 @@ func (e *eventLogHook) Fire(entry *log.Entry) error {
 	}
 	switch entry.Level {
 	case log.InfoLevel:
-		return e.log.Info(1, msg)
+		return e.log.Info(windowsEventID, msg)
 	case log.WarnLevel:
-		return e.log.Warning(1, msg)
+		return e.log.Warning(windowsEventID, msg)
 	case log.ErrorLevel:
-		return e.log.Error(1, msg)
+		return e.log.Error(windowsEventID, msg)
 	default:
 		// Fallback to info if we don't have a level-mapping
-		return e.log.Info(1, msg)
+		return e.log.Info(windowsEventID, msg)
 	}
 }
 
