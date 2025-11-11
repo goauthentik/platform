@@ -28,6 +28,9 @@ type Server struct {
 	txns map[string]*InteractiveAuthTransaction
 	m    sync.RWMutex
 	dom  config.DomainConfig
+
+	interactiveEnabled   bool
+	authorizationEnabled bool
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
@@ -38,6 +41,16 @@ func NewServer(ctx component.Context) (component.Component, error) {
 		txns: map[string]*InteractiveAuthTransaction{},
 		m:    sync.RWMutex{},
 	}
+	return srv, nil
+}
+
+func NewTokenServer(ctx component.Context) (component.Component, error) {
+	srv, err := NewServer(ctx)
+	if err != nil {
+		return nil, err
+	}
+	srv.(*Server).interactiveEnabled = false
+	srv.(*Server).authorizationEnabled = false
 	return srv, nil
 }
 
@@ -61,7 +74,11 @@ func (auth *Server) Stop() error {
 }
 
 func (auth *Server) Register(s grpc.ServiceRegistrar) {
-	pb.RegisterSystemAuthAuthorizeServer(s, auth)
-	pb.RegisterSystemAuthInteractiveServer(s, auth)
 	pb.RegisterSystemAuthTokenServer(s, auth)
+	if auth.interactiveEnabled {
+		pb.RegisterSystemAuthInteractiveServer(s, auth)
+	}
+	if auth.authorizationEnabled {
+		pb.RegisterSystemAuthAuthorizeServer(s, auth)
+	}
 }
