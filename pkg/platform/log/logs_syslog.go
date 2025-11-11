@@ -19,9 +19,9 @@ func platformSetup(appName string) error {
 		DisableTimestamp: true,
 		DisableColors:    true,
 	})
+	log.Info("Switching to syslog logging...")
 	log.StandardLogger().Hooks.Add(hook)
 	log.StandardLogger().SetOutput(io.Discard)
-	log.Info("Switched to syslog logging...")
 	return nil
 }
 

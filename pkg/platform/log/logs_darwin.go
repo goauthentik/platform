@@ -16,6 +16,7 @@ func platformSetup(appName string) error {
 		DisableColors:    true,
 		DisableSorting:   true,
 	})
+	log.Info("Switching to macOS Unified logging...")
 	log.SetOutput(ulog)
 	return nil
 }
