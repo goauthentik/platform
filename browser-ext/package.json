@@ -1,6 +1,6 @@
 {
     "name": "authentik-browser-ext",
-    "version": "0.19.0",
+    "version": "0.20.0",
     "description": "Authentik Application Launcher Chrome Extension",
     "scripts": {
         "build": "rollup -c",
@@ -20,11 +20,11 @@
         "@rollup/plugin-commonjs": "^29.0.0",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-typescript": "^12.3.0",
-        "@sentry/browser": "^10.23.0",
+        "@sentry/browser": "^10.24.0",
         "@types/chrome": "^0.1.27",
         "fuse.js": "^7.1.0",
         "lit": "^3.3.1",
-        "rollup": "^4.53.1",
+        "rollup": "^4.53.2",
         "tslib": "^2.8.1",
         "typescript": "^5.9.3"
     },
