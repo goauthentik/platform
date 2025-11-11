@@ -6,7 +6,7 @@ entries:
   - model: authentik_providers_oauth2.oauth2provider
     id: provider
     identifiers:
-      name: authentik-pam
+      name: authentik-platform
     attrs:
       authorization_flow:
         !Find [
@@ -19,7 +19,7 @@ entries:
           [slug, default-provider-invalidation-flow],
         ]
       client_type: public
-      client_id: authentik-pam
+      client_id: authentik-platform
       redirect_uris: []
       property_mappings:
         - !Find [
@@ -47,8 +47,8 @@ entries:
         - !Find [authentik_providers_oauth2.oauth2provider, [name, "authentik-cli"]]
   - model: authentik_core.application
     identifiers:
-      slug: authentik-pam
+      slug: authentik-platform
     attrs:
-      name: authentik PAM
+      name: authentik Platform
       provider: !KeyOf provider
       icon: https://goauthentik.io/img/icon.png

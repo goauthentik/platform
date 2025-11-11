@@ -90,7 +90,7 @@ var sshCmd = &cobra.Command{
 						fmt.Printf("Getting token to access '%s'...\n", host)
 						cc := raw.GetCredentials(c, cmd.Context(), raw.CredentialsOpts{
 							Profile:  profile,
-							ClientID: "authentik-pam",
+							ClientID: "authentik-platform",
 						})
 						return []string{FormatToken(cc, remoteSocketPath)}, nil
 					}
