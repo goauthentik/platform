@@ -67,7 +67,7 @@ func New() (*SystemAgent, error) {
 		st:  sst,
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
-	sm.DomainCheck()
+	go sm.DomainCheck()
 	sm.registerComponents()
 
 	go sm.watchConfig()
@@ -107,7 +107,9 @@ func (sm *SystemAgent) GetComponent(id string) component.Component {
 }
 
 func (sm *SystemAgent) DomainCheck() {
+	sm.log.Info("Starting domain healthcheck")
 	for _, dom := range config.Manager().Get().Domains() {
+		sm.log.WithField("domain", dom.Domain).Info("Starting domain healthcheck for domain")
 		err := dom.Test()
 		if err != nil {
 			sm.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to get API client for domain")
