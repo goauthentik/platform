@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod nss_client {
+pub mod system_directory_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod nss_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct NssClient<T> {
+    pub struct SystemDirectoryClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl NssClient<tonic::transport::Channel> {
+    impl SystemDirectoryClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,7 +25,7 @@ pub mod nss_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> NssClient<T>
+    impl<T> SystemDirectoryClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -43,7 +43,7 @@ pub mod nss_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> NssClient<InterceptedService<T, F>>
+        ) -> SystemDirectoryClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -57,7 +57,7 @@ pub mod nss_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            NssClient::new(InterceptedService::new(inner, interceptor))
+            SystemDirectoryClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -103,9 +103,12 @@ pub mod nss_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/ListUsers");
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_directory.SystemDirectory/ListUsers",
+            );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "ListUsers"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "ListUsers"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn get_user(
@@ -121,9 +124,12 @@ pub mod nss_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetUser");
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_directory.SystemDirectory/GetUser",
+            );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetUser"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "GetUser"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn list_groups(
@@ -139,9 +145,12 @@ pub mod nss_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/ListGroups");
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_directory.SystemDirectory/ListGroups",
+            );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "ListGroups"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "ListGroups"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn get_group(
@@ -157,9 +166,12 @@ pub mod nss_client {
                     )
                 })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/nss.NSS/GetGroup");
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_directory.SystemDirectory/GetGroup",
+            );
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new("nss.NSS", "GetGroup"));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "GetGroup"));
             self.inner.unary(req, path, codec).await
         }
     }

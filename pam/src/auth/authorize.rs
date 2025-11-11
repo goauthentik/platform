@@ -1,7 +1,7 @@
 use authentik_sys::generated::agent_auth::AuthorizeRequest;
 use authentik_sys::generated::{agent::RequestHeader, grpc_request};
-use authentik_sys::generated::pam::PamAuthorizeRequest;
-use authentik_sys::generated::pam::pam_client::PamClient;
+use authentik_sys::generated::sys_auth::SystemAuthorizeRequest;
+use authentik_sys::generated::sys_auth::system_auth_authorize_client::SystemAuthAuthorizeClient;
 use gethostname::gethostname;
 use pam::{constants::PamResultCode, module::PamHandle};
 use std::ffi::CStr;
@@ -33,8 +33,8 @@ pub fn authenticate_authorize_impl(
         }
     };
     match grpc_request(async |ch| {
-        return Ok(PamClient::new(ch)
-            .authorize(PamAuthorizeRequest {
+        return Ok(SystemAuthAuthorizeClient::new(ch)
+            .authorize(SystemAuthorizeRequest {
                 session_id: session_id.clone(),
                 authz: Some(AuthorizeRequest {
                     header: Some(RequestHeader {

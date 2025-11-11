@@ -1,10 +1,10 @@
 pub mod agent;
 pub mod agent_auth;
-pub mod nss;
-pub mod pam;
 pub mod ping;
-pub mod ssh;
 pub mod session;
+pub mod ssh;
+pub mod sys_auth;
+pub mod sys_directory;
 use std::error::Error;
 
 use tokio::runtime::Builder;

@@ -1,4 +1,4 @@
-package nss
+package directory
 
 import (
 	"context"
@@ -10,14 +10,14 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (nss *Server) ListGroups(ctx context.Context, req *emptypb.Empty) (*pb.Groups, error) {
-	res := &pb.Groups{Groups: make([]*pb.Group, len(nss.groups))}
-	copy(res.Groups, nss.groups)
+func (directory *Server) ListGroups(ctx context.Context, req *emptypb.Empty) (*pb.Groups, error) {
+	res := &pb.Groups{Groups: make([]*pb.Group, len(directory.groups))}
+	copy(res.Groups, directory.groups)
 	return res, nil
 }
 
-func (nss *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.Group, error) {
-	for _, g := range nss.groups {
+func (directory *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.Group, error) {
+	for _, g := range directory.groups {
 		if req.Id != nil && g.Gid == *req.Id {
 			return g, nil
 		} else if req.Name != nil && g.Name == *req.Name {
@@ -27,10 +27,10 @@ func (nss *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.Group,
 	return nil, status.Error(codes.NotFound, "Group not found")
 }
 
-func (nss *Server) convertGroup(g api.Group) *pb.Group {
+func (directory *Server) convertGroup(g api.Group) *pb.Group {
 	gg := &pb.Group{
 		Name:    g.Name,
-		Gid:     nss.GetGroupGidNumber(g),
+		Gid:     directory.GetGroupGidNumber(g),
 		Members: make([]string, len(g.UsersObj)),
 	}
 	for i, m := range g.UsersObj {

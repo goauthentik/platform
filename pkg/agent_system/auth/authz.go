@@ -1,4 +1,4 @@
-package pam
+package auth
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (pam *Server) Authorize(ctx context.Context, req *pb.PAMAuthorizeRequest) (*pb.PAMAuthorizeResponse, error) {
-	sm := pam.ctx.GetComponent(session.ID).(*session.Monitor)
+func (auth *Server) Authorize(ctx context.Context, req *pb.SystemAuthorizeRequest) (*pb.SystemAuthorizeResponse, error) {
+	sm := auth.ctx.GetComponent(session.ID).(*session.Monitor)
 	if sm == nil {
 		return nil, status.Error(codes.Internal, "cant find session component")
 	}
@@ -31,7 +31,7 @@ func (pam *Server) Authorize(ctx context.Context, req *pb.PAMAuthorizeRequest) (
 	if res.Header.Successful {
 		code = pb.InteractiveAuthResult_PAM_SUCCESS
 	}
-	return &pb.PAMAuthorizeResponse{
+	return &pb.SystemAuthorizeResponse{
 		Response: res,
 		Code:     code,
 	}, nil

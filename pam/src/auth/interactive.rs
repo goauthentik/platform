@@ -1,9 +1,9 @@
 use authentik_sys::generated::{
     grpc_request,
-    pam::{
+    sys_auth::{
         InteractiveAuthContinueRequest, InteractiveAuthInitRequest, InteractiveAuthRequest,
         InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
-        interactive_challenge::PromptMeta, pam_client::PamClient,
+        interactive_challenge::PromptMeta, system_auth_interactive_client::SystemAuthInteractiveClient,
     },
 };
 use pam::{
@@ -47,7 +47,7 @@ pub fn auth_interactive(
 ) -> Result<InteractiveChallenge, PamResultCode> {
     // Init transaction
     let mut challenge = match grpc_request(async |ch| {
-        return Ok(PamClient::new(ch)
+        return Ok(SystemAuthInteractiveClient::new(ch)
             .interactive_auth(InteractiveAuthRequest {
                 interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
                     username: username.to_owned(),
@@ -139,7 +139,7 @@ pub fn auth_interactive(
         prev_challenge = challenge;
         // Send the response
         challenge = match grpc_request(async |ch| {
-            return Ok(PamClient::new(ch)
+            return Ok(SystemAuthInteractiveClient::new(ch)
                 .interactive_auth(InteractiveAuthRequest {
                     interactive_auth: Some(InteractiveAuth::Continue(req_inner.to_owned())),
                 })

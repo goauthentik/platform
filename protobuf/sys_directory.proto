@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-package nss;
+package sys_directory;
 option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "google/protobuf/empty.proto";
 
-service NSS {
+service SystemDirectory {
   rpc ListUsers(google.protobuf.Empty) returns (Users);
   rpc GetUser(GetRequest) returns (User);
 

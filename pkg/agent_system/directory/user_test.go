@@ -1,4 +1,4 @@
-package nss
+package directory
 
 import (
 	"testing"

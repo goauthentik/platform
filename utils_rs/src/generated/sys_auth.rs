@@ -110,14 +110,14 @@ pub mod interactive_challenge {
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct PamAuthorizeRequest {
+pub struct SystemAuthorizeRequest {
     #[prost(string, tag = "1")]
     pub session_id: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
     pub authz: ::core::option::Option<super::agent_auth::AuthorizeRequest>,
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct PamAuthorizeResponse {
+pub struct SystemAuthorizeResponse {
     #[prost(message, optional, tag = "1")]
     pub response: ::core::option::Option<super::agent_auth::AuthorizeResponse>,
     #[prost(enumeration = "InteractiveAuthResult", tag = "2")]
@@ -152,5 +152,5 @@ impl InteractiveAuthResult {
         }
     }
 }
-include!("pam.tonic.rs");
+include!("sys_auth.tonic.rs");
 // @@protoc_insertion_point(module)

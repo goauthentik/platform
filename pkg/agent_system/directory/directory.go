@@ -1,4 +1,4 @@
-package nss
+package directory
 
 import (
 	"context"
@@ -13,10 +13,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-const ID = "nss"
+const ID = "directory"
 
 type Server struct {
-	pb.UnimplementedNSSServer
+	pb.UnimplementedSystemDirectoryServer
 
 	api *api.APIClient
 	log *log.Entry
@@ -38,7 +38,7 @@ func NewServer(ctx component.Context) (component.Component, error) {
 	return srv, nil
 }
 
-func (nss *Server) Start() error {
+func (directory *Server) Start() error {
 	if len(config.Manager().Get().Domains()) < 1 {
 		return errors.New("no domains")
 	}
@@ -46,26 +46,26 @@ func (nss *Server) Start() error {
 	if err != nil {
 		return err
 	}
-	nss.api = ac
-	nss.startFetch()
+	directory.api = ac
+	directory.startFetch()
 	return nil
 }
 
-func (nss *Server) Stop() error {
+func (directory *Server) Stop() error {
 	return nil
 }
 
-func (nss *Server) Register(s grpc.ServiceRegistrar) {
-	pb.RegisterNSSServer(s, nss)
+func (directory *Server) Register(s grpc.ServiceRegistrar) {
+	pb.RegisterSystemDirectoryServer(s, directory)
 }
 
-func (nss *Server) GetUserUidNumber(user api.User) uint32 {
+func (directory *Server) GetUserUidNumber(user api.User) uint32 {
 	uidNumber, ok := user.GetAttributes()["uidNumber"].(string)
-	def := uint32(nss.cfg.NSS.UIDOffset + user.Pk)
+	def := uint32(directory.cfg.NSS.UIDOffset + user.Pk)
 	if ok {
 		id, err := strconv.ParseUint(uidNumber, 10, 32)
 		if err != nil {
-			nss.log.WithField("user", user.Username).WithError(err).Warn("failed to get uid from user attributes")
+			directory.log.WithField("user", user.Username).WithError(err).Warn("failed to get uid from user attributes")
 			return def
 		}
 		return uint32(id)
@@ -73,13 +73,13 @@ func (nss *Server) GetUserUidNumber(user api.User) uint32 {
 	return def
 }
 
-func (nss *Server) GetUserGidNumber(user api.User) uint32 {
+func (directory *Server) GetUserGidNumber(user api.User) uint32 {
 	gidNumber, ok := user.GetAttributes()["gidNumber"].(string)
-	def := nss.GetUserUidNumber(user)
+	def := directory.GetUserUidNumber(user)
 	if ok {
 		id, err := strconv.ParseUint(gidNumber, 10, 32)
 		if err != nil {
-			nss.log.WithField("user", user.Username).WithError(err).Warn("failed to get gid from user attributes")
+			directory.log.WithField("user", user.Username).WithError(err).Warn("failed to get gid from user attributes")
 			return def
 		}
 		return uint32(id)
@@ -87,13 +87,13 @@ func (nss *Server) GetUserGidNumber(user api.User) uint32 {
 	return def
 }
 
-func (nss *Server) GetGroupGidNumber(group api.Group) uint32 {
+func (directory *Server) GetGroupGidNumber(group api.Group) uint32 {
 	gidNumber, ok := group.GetAttributes()["gidNumber"].(string)
-	def := uint32(nss.cfg.NSS.GIDOffset + group.NumPk)
+	def := uint32(directory.cfg.NSS.GIDOffset + group.NumPk)
 	if ok {
 		id, err := strconv.ParseUint(gidNumber, 10, 32)
 		if err != nil {
-			nss.log.WithField("group", group.Name).WithError(err).Warn("failed to get gid from group attributes")
+			directory.log.WithField("group", group.Name).WithError(err).Warn("failed to get gid from group attributes")
 			return def
 		}
 		return uint32(id)

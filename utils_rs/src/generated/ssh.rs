@@ -3,9 +3,9 @@
 /// Message to encode token for SSH authenticaiton with CLI
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SshTokenAuthentication {
-    #[prost(string, tag="1")]
+    #[prost(string, tag = "1")]
     pub token: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
+    #[prost(string, tag = "2")]
     pub local_socket: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)

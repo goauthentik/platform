@@ -1,6 +1,6 @@
 use authentik_sys::generated::grpc_request;
-use authentik_sys::generated::nss::nss_client::NssClient;
-use authentik_sys::generated::nss::{GetRequest, Group as AKGroup};
+use authentik_sys::generated::sys_directory::system_directory_client::SystemDirectoryClient;
+use authentik_sys::generated::sys_directory::{GetRequest, Group as AKGroup};
 use authentik_sys::logger::log_hook;
 use libc::gid_t;
 use libnss::group::{Group, GroupHooks};
@@ -26,7 +26,7 @@ impl GroupHooks for AuthentikGroupHooks {
 
 fn get_all_entries() -> Response<Vec<Group>> {
     match grpc_request(async |ch| {
-        return Ok(NssClient::new(ch).list_groups(()).await?);
+        return Ok(SystemDirectoryClient::new(ch).list_groups(()).await?);
     }) {
         Ok(r) => {
             let groups = r
@@ -46,7 +46,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
 
 fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
     match grpc_request(async |ch| {
-        return Ok(NssClient::new(ch)
+        return Ok(SystemDirectoryClient::new(ch)
             .get_group(GetRequest {
                 name: None,
                 id: Some(gid),
@@ -63,7 +63,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
 
 fn get_entry_by_name(name: String) -> Response<Group> {
     match grpc_request(async |ch| {
-        return Ok(NssClient::new(ch)
+        return Ok(SystemDirectoryClient::new(ch)
             .get_group(GetRequest {
                 name: Some(name.clone()),
                 id: None,

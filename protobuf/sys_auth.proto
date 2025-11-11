@@ -1,16 +1,22 @@
 syntax = "proto3";
 
-package pam;
+package sys_auth;
 option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "agent.proto";
 import "agent_auth.proto";
 
-service PAM {
+service SystemAuthToken {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
+}
+
+service SystemAuthInteractive {
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
-  rpc Authorize(PAMAuthorizeRequest) returns (PAMAuthorizeResponse);
+}
+
+service SystemAuthAuthorize {
+  rpc Authorize(SystemAuthorizeRequest) returns (SystemAuthorizeResponse);
 }
 
 message TokenAuthRequest {
@@ -69,12 +75,12 @@ message InteractiveChallenge {
   string session_id = 7;
 }
 
-message PAMAuthorizeRequest {
+message SystemAuthorizeRequest {
   string session_id = 1;
   agent_auth.AuthorizeRequest authz = 2;
 }
 
-message PAMAuthorizeResponse {
+message SystemAuthorizeResponse {
   agent_auth.AuthorizeResponse response = 1;
   InteractiveAuthResult code = 2;
 }

@@ -1,9 +1,8 @@
-use authentik_sys::generated::pam::TokenAuthResponse;
+use authentik_sys::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
 use ::prost::Message;
-use authentik_sys::generated::pam::pam_client::PamClient;
+use authentik_sys::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use authentik_sys::generated::{
     grpc_request,
-    pam::{TokenAuthRequest},
     ssh::SshTokenAuthentication,
 };
 use base64::{Engine, prelude::BASE64_STANDARD};
@@ -30,7 +29,7 @@ pub fn decode_token(token: String) -> Result<SshTokenAuthentication, PamResultCo
 
 pub fn auth_token(username: String, token: String) -> Result<TokenAuthResponse, PamResultCode> {
     let response = match grpc_request(async |ch| {
-        return Ok(PamClient::new(ch)
+        return Ok(SystemAuthTokenClient::new(ch)
             .token_auth(TokenAuthRequest {
                 username: username.to_owned(),
                 token: token.to_owned(),

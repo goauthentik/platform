@@ -1,4 +1,4 @@
-package pam
+package auth
 
 import (
 	"context"
@@ -20,36 +20,36 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (pam *Server) startFetch() {
+func (auth *Server) startFetch() {
 	d := time.Second * time.Duration(config.Manager().Get().NSS.RefreshIntervalSec)
-	pam.log.Info("Starting initial JWKS fetch")
-	pam.refreshTokenJWKS()
-	pam.log.WithField("next", d.String()).Info("Finished initial JWKS fetch")
+	auth.log.Info("Starting initial JWKS fetch")
+	auth.refreshTokenJWKS()
+	auth.log.WithField("next", d.String()).Info("Finished initial JWKS fetch")
 	t := time.NewTimer(d)
 	go func() {
 		for {
 			select {
 			case <-t.C:
-				pam.log.Info("Starting JWKS fetch")
-				pam.refreshTokenJWKS()
-				pam.log.WithField("next", d.String()).Info("Finished JWKS fetch")
-			case <-pam.ctx.Context().Done():
+				auth.log.Info("Starting JWKS fetch")
+				auth.refreshTokenJWKS()
+				auth.log.WithField("next", d.String()).Info("Finished JWKS fetch")
+			case <-auth.ctx.Context().Done():
 				return
 			}
 		}
 	}()
 }
 
-func (pam *Server) refreshTokenJWKS() {
+func (auth *Server) refreshTokenJWKS() {
 	jwk, err := jwkset.NewStorageFromHTTP(ak.URLsForProfile(&lconfig.ConfigV1Profile{
-		AuthentikURL: pam.dom.AuthentikURL,
-		AppSlug:      pam.dom.AppSlug,
+		AuthentikURL: auth.dom.AuthentikURL,
+		AppSlug:      auth.dom.AppSlug,
 	}).JWKS, jwkset.HTTPClientStorageOptions{})
 	if err != nil {
-		pam.log.WithError(err).Warning("failed to fetch JWKS")
+		auth.log.WithError(err).Warning("failed to fetch JWKS")
 		return
 	}
-	err = pam.ctx.StateForDomain(pam.dom).Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+	err = auth.ctx.StateForDomain(auth.dom).Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		jwk, err := jwk.Marshal(context.Background())
 		if err != nil {
 			return err
@@ -61,13 +61,13 @@ func (pam *Server) refreshTokenJWKS() {
 		return b.Put([]byte("jwks"), r)
 	})
 	if err != nil {
-		pam.log.WithError(err).Warning("failed to save updated JWKS")
+		auth.log.WithError(err).Warning("failed to save updated JWKS")
 	}
 }
 
-func (pam *Server) validateToken(rawToken string) (*token.Token, error) {
+func (auth *Server) validateToken(rawToken string) (*token.Token, error) {
 	var st jwkset.Storage
-	err := pam.ctx.StateForDomain(pam.dom).View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+	err := auth.ctx.StateForDomain(auth.dom).View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		r := b.Get([]byte("jwks"))
 		jw := jwkset.JWKSMarshal{}
 		err := json.Unmarshal(r, &jw)
@@ -95,8 +95,8 @@ func (pam *Server) validateToken(rawToken string) (*token.Token, error) {
 	return &token, nil
 }
 
-func (pam *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*pb.TokenAuthResponse, error) {
-	token, err := pam.validateToken(req.Token)
+func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*pb.TokenAuthResponse, error) {
+	token, err := auth.validateToken(req.Token)
 	if err != nil {
 		return nil, err
 	}

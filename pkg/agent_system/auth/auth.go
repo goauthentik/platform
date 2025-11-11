@@ -1,4 +1,4 @@
-package pam
+package auth
 
 import (
 	"errors"
@@ -12,10 +12,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-const ID = "pam"
+const ID = "auth"
 
 type Server struct {
-	pb.UnimplementedPAMServer
+	pb.UnimplementedSystemAuthTokenServer
+	pb.UnimplementedSystemAuthInteractiveServer
+	pb.UnimplementedSystemAuthAuthorizeServer
 
 	api *api.APIClient
 	log *log.Entry
@@ -39,7 +41,7 @@ func NewServer(ctx component.Context) (component.Component, error) {
 	return srv, nil
 }
 
-func (pam *Server) Start() error {
+func (auth *Server) Start() error {
 	if len(config.Manager().Get().Domains()) < 1 {
 		return errors.New("no domains")
 	}
@@ -48,16 +50,18 @@ func (pam *Server) Start() error {
 	if err != nil {
 		return err
 	}
-	pam.dom = dom
-	pam.api = ac
-	pam.startFetch()
+	auth.dom = dom
+	auth.api = ac
+	auth.startFetch()
 	return nil
 }
 
-func (pam *Server) Stop() error {
+func (auth *Server) Stop() error {
 	return nil
 }
 
-func (pam *Server) Register(s grpc.ServiceRegistrar) {
-	pb.RegisterPAMServer(s, pam)
+func (auth *Server) Register(s grpc.ServiceRegistrar) {
+	pb.RegisterSystemAuthAuthorizeServer(s, auth)
+	pb.RegisterSystemAuthInteractiveServer(s, auth)
+	pb.RegisterSystemAuthTokenServer(s, auth)
 }

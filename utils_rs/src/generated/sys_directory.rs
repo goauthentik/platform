@@ -43,5 +43,5 @@ pub struct Group {
     #[prost(string, tag = "4")]
     pub passwd: ::prost::alloc::string::String,
 }
-include!("nss.tonic.rs");
+include!("sys_directory.tonic.rs");
 // @@protoc_insertion_point(module)

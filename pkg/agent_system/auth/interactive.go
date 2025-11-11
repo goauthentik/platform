@@ -1,4 +1,4 @@
-package pam
+package auth
 
 import (
 	"context"
@@ -21,28 +21,28 @@ type InteractiveAuthTransaction struct {
 	result   *pb.InteractiveAuthResult
 }
 
-func (pam *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
+func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
 	var ch *pb.InteractiveChallenge
 	var err error
 	if i := req.GetInit(); i != nil {
-		ch, err = pam.interactiveAuthInit(ctx, i)
+		ch, err = auth.interactiveAuthInit(ctx, i)
 	} else if i := req.GetContinue(); i != nil {
-		ch, err = pam.interactiveAuthContinue(ctx, i)
+		ch, err = auth.interactiveAuthContinue(ctx, i)
 	}
 	return ch, err
 }
 
-func (pam *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAuthInitRequest) (*pb.InteractiveChallenge, error) {
+func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAuthInitRequest) (*pb.InteractiveChallenge, error) {
 	id := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
 	txn := &InteractiveAuthTransaction{
 		ID:       id,
 		username: req.Username,
 		password: req.Password,
 	}
-	txn.ctx, txn.cancel = context.WithCancel(pam.ctx.Context())
-	fex, err := flow.NewFlowExecutor(txn.ctx, pam.dom.AuthenticationFlow, pam.api.GetConfig(), flow.FlowExecutorOptions{
+	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())
+	fex, err := flow.NewFlowExecutor(txn.ctx, auth.dom.AuthenticationFlow, auth.api.GetConfig(), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
-			pam.log.WithField("logger", "component.pam.flow").WithFields(fields).Info(msg)
+			auth.log.WithField("logger", "component.pam.flow").WithFields(fields).Info(msg)
 		},
 	})
 	if err != nil {
@@ -53,21 +53,21 @@ func (pam *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAut
 		return nil, err
 	}
 	txn.fex = fex
-	pam.m.Lock()
-	defer pam.m.Unlock()
-	pam.txns[id] = txn
-	return pam.getNextChallenge(txn)
+	auth.m.Lock()
+	defer auth.m.Unlock()
+	auth.txns[id] = txn
+	return auth.getNextChallenge(txn)
 }
 
-func (pam *Server) interactiveAuthContinue(_ context.Context, req *pb.InteractiveAuthContinueRequest) (*pb.InteractiveChallenge, error) {
-	pam.m.RLock()
-	txn, ok := pam.txns[req.Txid]
-	pam.m.RUnlock()
+func (auth *Server) interactiveAuthContinue(_ context.Context, req *pb.InteractiveAuthContinueRequest) (*pb.InteractiveChallenge, error) {
+	auth.m.RLock()
+	txn, ok := auth.txns[req.Txid]
+	auth.m.RUnlock()
 	if !ok {
 		return nil, errors.New("no active transaction with ID")
 	}
 	if txn.result != nil {
-		pam.log.WithField("result", *txn.result).Debug("flow has finished with result")
+		auth.log.WithField("result", *txn.result).Debug("flow has finished with result")
 		return &pb.InteractiveChallenge{
 			Txid:      txn.ID,
 			Finished:  true,
@@ -75,17 +75,17 @@ func (pam *Server) interactiveAuthContinue(_ context.Context, req *pb.Interactiv
 			SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
 		}, nil
 	}
-	c, err := pam.solveChallenge(txn, req)
+	c, err := auth.solveChallenge(txn, req)
 	if c != nil {
 		return c, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return pam.getNextChallenge(txn)
+	return auth.getNextChallenge(txn)
 }
 
-func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.InteractiveChallenge, error) {
+func (auth *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.InteractiveChallenge, error) {
 	c := &pb.InteractiveChallenge{
 		Txid: txn.ID,
 	}
@@ -118,7 +118,7 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 		cc := nc.IdentificationChallenge
 		if !cc.PasswordFields {
 			// No password field, only identification -> directly answer
-			c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
+			c, err := auth.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
 				Value: txn.username,
 			})
 			if c != nil {
@@ -127,11 +127,11 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 			if err != nil {
 				return nil, err
 			}
-			return pam.getNextChallenge(txn)
+			return auth.getNextChallenge(txn)
 		}
 	case string(flow.StagePassword):
 		if txn.password != "" {
-			c, err := pam.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
+			c, err := auth.solveChallenge(txn, &pb.InteractiveAuthContinueRequest{
 				Value: txn.password,
 			})
 			txn.password = ""
@@ -141,7 +141,7 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 			if err != nil {
 				return nil, err
 			}
-			return pam.getNextChallenge(txn)
+			return auth.getNextChallenge(txn)
 		}
 		return &pb.InteractiveChallenge{
 			Txid:       txn.ID,
@@ -149,12 +149,12 @@ func (pam *Server) getNextChallenge(txn *InteractiveAuthTransaction) (*pb.Intera
 			PromptMeta: pb.InteractiveChallenge_PAM_PROMPT_ECHO_OFF,
 		}, nil
 	default:
-		pam.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
+		auth.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
 	return c, nil
 }
 
-func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.InteractiveAuthContinueRequest) (*pb.InteractiveChallenge, error) {
+func (auth *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.InteractiveAuthContinueRequest) (*pb.InteractiveChallenge, error) {
 	nc := txn.fex.Challenge()
 	i := nc.GetActualInstance()
 	if i == nil {
@@ -173,7 +173,7 @@ func (pam *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.Inter
 			Password: req.Value,
 		}
 	default:
-		pam.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
+		auth.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
 	_, err := txn.fex.SolveFlowChallenge(freq)
 	if err != nil {
