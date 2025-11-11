@@ -29,6 +29,7 @@ var agentCmd = &cobra.Command{
 			return errors.Wrap(err, "failed to check runtime directory")
 		}
 		err = systemlog.Setup(pstr.PlatformString{
+			// Needs to match event log name in Package.wxs
 			Windows: pstr.S("authentik System Service"),
 			Linux:   pstr.S("ak-sysd"),
 		}.ForCurrent())

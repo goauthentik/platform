@@ -225,7 +225,7 @@ dependencies = [
 
 [[package]]
 name = "authentik_nss"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "authentik_sys",
  "ctor",
