@@ -1,7 +1,7 @@
 package state
 
 import (
-	"errors"
+	"fmt"
 
 	"go.etcd.io/bbolt"
 )
@@ -33,7 +33,7 @@ func (sst *ScopedState) ensureBucket(tx *bbolt.Tx, write bool) (*bbolt.Bucket, e
 			return nil, err
 		}
 		if bb == nil {
-			return nil, errors.New("bucket does not exist")
+			return nil, fmt.Errorf("bucket '%s' does not exist in path '%s'", part, sst.bucketPath.String())
 		}
 		b = bb
 	}
@@ -61,9 +61,8 @@ func (sst *ScopedState) View(fn func(*bbolt.Tx, *bbolt.Bucket) error) error {
 }
 
 func (sst *ScopedState) ForBucket(path ...string) *ScopedState {
-	path = append([]string{RootBucket}, path...)
 	return &ScopedState{
 		root:       sst.root,
-		bucketPath: sst.bucketPath.Add(path...),
+		bucketPath: sst.bucketPath.Copy().Add(path...),
 	}
 }
