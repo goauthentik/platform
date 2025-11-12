@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/cli/setup"
 	managedconfig "goauthentik.io/platform/pkg/platform/managed_config"
 	"goauthentik.io/platform/pkg/platform/pstr"
 )
@@ -18,7 +19,7 @@ const managedDomainName = "ak-mdm-managed"
 func (c *Config) loadDomainsManaged() error {
 	mc, err := managedconfig.Get[SysdManagedConfig](pstr.PlatformString{
 		Darwin:  pstr.S("io.goauthentik.platform"),
-		Windows: pstr.S(`SOFTWARE\authentik Security Inc.\Platform`),
+		Windows: pstr.S(`SOFTWARE\authentik Security Inc.\Platform\ManagedConfig`),
 	})
 	if err != nil {
 		if errors.Is(err, managedconfig.ErrNotFound) || errors.Is(err, managedconfig.ErrNotSupported) {
@@ -46,8 +47,8 @@ func (c *Config) loadDomainsManaged() error {
 	d := &DomainConfig{
 		Enabled:            true,
 		AuthentikURL:       mc.URL,
-		AppSlug:            "",
 		Token:              mc.RegistrationToken,
+		AppSlug:            setup.DefaultAppSlug,
 		AuthenticationFlow: "default-authentication-flow",
 		Domain:             managedDomainName,
 	}
