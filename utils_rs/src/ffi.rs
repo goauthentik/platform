@@ -5,7 +5,7 @@ use std::pin::Pin;
 use crate::generated::grpc_request;
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
-use crate::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
+use crate::generated::sys_auth::TokenAuthRequest;
 
 #[cxx::bridge]
 mod ffi {

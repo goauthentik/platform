@@ -285,10 +285,15 @@ class SimpleHandler : public CefClient,
       Debug("JWT:");
       Debug(m_strJWT.c_str());
       auto validatedToken = TokenResponse();
-      if (!ak_sys_token_validate("", m_strJWT, validatedToken)) {
-        SPDLOG_WARN("failed to validate token");
+      try {
+        if (!ak_sys_token_validate("", m_strJWT, validatedToken)) {
+          SPDLOG_WARN("failed to validate token");
+        }
+        m_pData->UpdateUser(validatedToken.username.c_str());
+      } catch (const std::exception &ex) {
+        Debug("Exception in ak_sys_token_validate");
+        Debug(ex.what());
       }
-      m_pData->UpdateUser(validatedToken.username.c_str());
       CloseAllBrowsers(false);
     }
   }
