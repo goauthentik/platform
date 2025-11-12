@@ -10,7 +10,7 @@
             "buildFlags": ["-tags=debug"]
         },
         {
-            "name": "Attach local agent",
+            "name": "Attach to agent (local)",
             "type": "go",
             "request": "attach",
             "mode": "local",
@@ -18,6 +18,22 @@
                 {
                     "from": "${workspaceFolder}",
                     "to": "/Users/runner/work/platform/platform/"
+                },
+            ]
+        },
+        {
+            "name": "Attach to agent (network)",
+            "type": "go",
+            "request": "attach",
+            "debugAdapter": "dlv-dap",
+            "mode": "remote",
+            "port": 8011,
+            // Replace with IP of machine gravity is running on
+            "host": "127.0.0.1",
+            "substitutePath": [
+                {
+                    "from": "${workspaceFolder}",
+                    "to": "/workspace"
                 },
             ]
         }

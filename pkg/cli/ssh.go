@@ -90,7 +90,7 @@ var sshCmd = &cobra.Command{
 						fmt.Printf("Getting token to access '%s'...\n", host)
 						cc := raw.GetCredentials(c, cmd.Context(), raw.CredentialsOpts{
 							Profile:  profile,
-							ClientID: "authentik-pam",
+							ClientID: "authentik-platform",
 						})
 						return []string{FormatToken(cc, remoteSocketPath)}, nil
 					}
@@ -163,7 +163,7 @@ func init() {
 }
 
 func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
-	msg := pb.PAMAuthentication{
+	msg := pb.SSHTokenAuthentication{
 		Token:       cc.AccessToken,
 		LocalSocket: rtp,
 	}

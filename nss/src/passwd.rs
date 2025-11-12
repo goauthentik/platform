@@ -1,6 +1,6 @@
 use authentik_sys::generated::grpc_request;
-use authentik_sys::generated::nss::nss_client::NssClient;
-use authentik_sys::generated::nss::{GetRequest, User};
+use authentik_sys::generated::sys_directory::system_directory_client::SystemDirectoryClient;
+use authentik_sys::generated::sys_directory::{GetRequest, User};
 use authentik_sys::logger::log_hook;
 use libc::uid_t;
 use libnss::interop::Response;
@@ -26,7 +26,7 @@ impl PasswdHooks for AuthentikPasswdHooks {
 
 fn get_all_entries() -> Response<Vec<Passwd>> {
     match grpc_request(async |ch| {
-        return Ok(NssClient::new(ch).list_users(()).await?);
+        return Ok(SystemDirectoryClient::new(ch).list_users(()).await?);
     }) {
         Ok(r) => {
             let users: Vec<Passwd> = r
@@ -46,7 +46,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
 
 fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
     match grpc_request(async |ch| {
-        return Ok(NssClient::new(ch)
+        return Ok(SystemDirectoryClient::new(ch)
             .get_user(GetRequest {
                 id: Some(uid),
                 name: None,
@@ -68,7 +68,7 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
         return Response::NotFound;
     }
     match grpc_request(async |ch| {
-        return Ok(NssClient::new(ch)
+        return Ok(SystemDirectoryClient::new(ch)
             .get_user(GetRequest {
                 name: Some(name.clone()),
                 id: None,

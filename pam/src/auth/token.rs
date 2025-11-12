@@ -1,14 +1,14 @@
-use authentik_sys::generated::pam::TokenAuthResponse;
+use authentik_sys::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
 use ::prost::Message;
-use authentik_sys::generated::pam::pam_client::PamClient;
+use authentik_sys::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use authentik_sys::generated::{
     grpc_request,
-    pam::{PamAuthentication, TokenAuthRequest},
+    ssh::SshTokenAuthentication,
 };
 use base64::{Engine, prelude::BASE64_STANDARD};
 use pam::constants::PamResultCode;
 
-pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
+pub fn decode_token(token: String) -> Result<SshTokenAuthentication, PamResultCode> {
     let raw = match BASE64_STANDARD.decode(token) {
         Ok(t) => t,
         Err(e) => {
@@ -17,7 +17,7 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
         }
     };
 
-    let msg = match PamAuthentication::decode(&*raw) {
+    let msg = match SshTokenAuthentication::decode(&*raw) {
         Ok(t) => t,
         Err(e) => {
             log::warn!("failed to decode message: {e}");
@@ -29,7 +29,7 @@ pub fn decode_token(token: String) -> Result<PamAuthentication, PamResultCode> {
 
 pub fn auth_token(username: String, token: String) -> Result<TokenAuthResponse, PamResultCode> {
     let response = match grpc_request(async |ch| {
-        return Ok(PamClient::new(ch)
+        return Ok(SystemAuthTokenClient::new(ch)
             .token_auth(TokenAuthRequest {
                 username: username.to_owned(),
                 token: token.to_owned(),

@@ -51,8 +51,5 @@ func (c *Config) loadDomainsManaged() error {
 		AuthenticationFlow: "default-authentication-flow",
 		Domain:             managedDomainName,
 	}
-	if err := d.Test(); err != nil {
-		return errors.Wrap(err, "failed to test domain")
-	}
 	return c.SaveDomain(d)
 }

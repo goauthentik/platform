@@ -3,9 +3,9 @@ use std::error::Error;
 use std::pin::Pin;
 
 use crate::generated::grpc_request;
-use crate::generated::pam::pam_client::PamClient;
-use crate::generated::pam::TokenAuthRequest;
 use crate::generated::ping::ping_client::PingClient;
+use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
+use crate::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
 
 #[cxx::bridge]
 mod ffi {
@@ -45,7 +45,7 @@ fn ak_sys_token_validate(
     let u = username.to_str()?;
     let p = raw_token.to_str()?;
     let response = grpc_request(async |ch| {
-        return Ok(PamClient::new(ch)
+        return Ok(SystemAuthTokenClient::new(ch)
             .token_auth(TokenAuthRequest {
                 username: u.to_owned(),
                 token: p.to_owned(),

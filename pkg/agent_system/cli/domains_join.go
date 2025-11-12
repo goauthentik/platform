@@ -69,5 +69,5 @@ func readPassword(prompt string) (string, error) {
 func init() {
 	domainsCmd.AddCommand(domainsJoinCmd)
 	domainsJoinCmd.Flags().StringP("authentik-url", "a", "", "URL to the authentik Instance")
-	domainsJoinCmd.Flags().StringP("app", "d", "authentik-pam", "Slug of the Platform application")
+	domainsJoinCmd.Flags().StringP("app", "d", "authentik-platform", "Slug of the Platform application")
 }

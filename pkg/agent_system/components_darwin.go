@@ -11,8 +11,8 @@ import (
 
 func (sm *SystemAgent) RegisterPlatformComponents() map[string]component.Constructor {
 	return map[string]component.Constructor{
+		agentstarter.ID: agentstarter.NewServer,
 		device.ID:       device.NewServer,
 		ping.ID:         ping.NewServer,
-		agentstarter.ID: agentstarter.NewServer,
 	}
 }
