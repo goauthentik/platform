@@ -67,8 +67,12 @@
                         Wait="true" />
       </Component>
       <Component Id="agent" Bitness="always64" Directory="agent">
+        <util:EventSource Log="authentik"
+                          Name="authentik User Service"
+                          EventMessageFile="[System64Folder]EventCreate.exe"/>
         <File Id="ak_agent"
-              Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
+              Source="$(env.ROOT)/bin/agent_local/ak-agent.exe"
+              KeyPath="true" />
       </Component>
       <Component Id="cli" Bitness="always64" Directory="cli">
         <File Id="ak_cli"
@@ -76,7 +80,8 @@
       </Component>
       <Component Id="browser_support" Guid="e027d360-a9e1-4bd6-b168-1f56d1fcaf8f" Bitness="always64" Directory="browser_support">
         <File Id="ak_browser_support"
-              Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe" KeyPath="true" />
+              Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe"
+              KeyPath="true" />
         <File Id="browser_support_json"
               Source="$(env.PWD)/package/windows/browser-host.json" />
         <RegistryKey Root="HKLM"
@@ -94,8 +99,8 @@
       </Component>
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
         <util:EventSource Log="authentik"
-                  Name="authentik Credential Provider"
-                  EventMessageFile="C:\Windows\System32\mscoree.dll"/>
+                          Name="authentik Credential Provider"
+                          EventMessageFile="C:\Windows\System32\mscoree.dll"/>
         <File Id="wcp_cefexe_exe" Source="$(env.ROOT)/bin/wcp/cefexe.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
         <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />
