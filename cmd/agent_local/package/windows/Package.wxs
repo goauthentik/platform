@@ -67,6 +67,9 @@
                         Wait="true" />
       </Component>
       <Component Id="agent" Bitness="always64" Directory="agent">
+        <util:EventSource Log="authentik"
+                          Name="authentik User Service"
+                          EventMessageFile="[System64Folder]EventCreate.exe"/>
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe" />
       </Component>

@@ -9,10 +9,15 @@ import (
 	agent "goauthentik.io/platform/pkg/agent_local"
 	"goauthentik.io/platform/pkg/meta"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
 func main() {
-	err := systemlog.Setup("agent")
+	err := systemlog.Setup(pstr.PlatformString{
+		// Needs to match event log name in Package.wxs
+		Windows: pstr.S("authentik User Service"),
+		Linux:   pstr.S("ak-agent"),
+	}.ForCurrent())
 	if err != nil {
 		systemlog.Get().WithError(err).Warning("failed to setup logs")
 	}
