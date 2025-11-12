@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/kolide/systray"
 	log "github.com/sirupsen/logrus"
@@ -50,6 +51,12 @@ func (t *Tray) Start() {
 		t.log.Debug("Starting config file watch")
 		for range t.cfg.Watch() {
 			t.log.Debug("Updating systray due to config change")
+			t.systrayConfigUpdate()
+		}
+	}()
+	go func() {
+		for range time.NewTicker(30 * time.Second).C {
+			t.log.Debug("Updating systray")
 			t.systrayConfigUpdate()
 		}
 	}()
