@@ -2,11 +2,10 @@ use cxx::CxxString;
 use std::error::Error;
 use std::pin::Pin;
 
-use crate::generated::agent::Token;
 use crate::generated::grpc_request;
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
-use crate::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
+use crate::generated::sys_auth::TokenAuthRequest;
 
 #[cxx::bridge]
 mod ffi {
@@ -15,13 +14,14 @@ mod ffi {
         pub client_id: String,
     }
 
-    extern "Rust" {
-        type Token;
-        type TokenAuthRequest;
-        type TokenAuthResponse;
+    struct TokenResponse {
+        pub username: String,
+        pub session_id: String,
+    }
 
+    extern "Rust" {
         fn ak_sys_grpc_ping(res: Pin<&mut CxxString>);
-        fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool>;
+        fn ak_sys_token_validate(username: &CxxString, raw_token: &CxxString, token: &mut TokenResponse) -> Result<bool>;
 
         fn ak_sys_wcp_oauth_config(res: &mut WCPOAuthConfig) -> Result<bool>;
     }
@@ -37,9 +37,13 @@ fn ak_sys_grpc_ping(res: Pin<&mut CxxString>) {
     res.push_str(&resp);
 }
 
-fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool, Box<dyn Error>> {
+fn ak_sys_token_validate(
+    username: &CxxString,
+    raw_token: &CxxString,
+    token: &mut ffi::TokenResponse,
+) -> Result<bool, Box<dyn Error>> {
     let u = username.to_str()?;
-    let p = token.to_str()?;
+    let p = raw_token.to_str()?;
     let response = grpc_request(async |ch| {
         return Ok(SystemAuthTokenClient::new(ch)
             .token_auth(TokenAuthRequest {
@@ -50,6 +54,8 @@ fn ak_sys_token_validate(username: &CxxString, token: &CxxString) -> Result<bool
     })?
     .into_inner();
 
+    token.username = response.token.unwrap().preferred_username;
+    token.session_id = response.session_id;
     Ok(response.successful)
 }
 

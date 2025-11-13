@@ -10,6 +10,8 @@
 #include <jwt-cpp/jwt.h>
 #pragma warning(pop)
 #include <openssl/rand.h>
+#include "authentik_sys_bridge/ffi.h"
+#include <spdlog/spdlog.h>
 
 #include <string>
 #include "crypt.h"
@@ -27,7 +29,6 @@
 
 // https://windows-cred-provider.pr.test.goauthentik.io
 const std::string g_strTokenEndpoint = "/application/o/token/";
-const std::string g_strJWKs = "/application/o/wcp/jwks/";
 
 class SimpleHandler : public CefClient,
                       public CefDisplayHandler,
@@ -110,38 +111,8 @@ class SimpleHandler : public CefClient,
     CefRefPtr<CefCallback> callback
   ) override {
     const std::string strKey = "goauthentik.io://";
-    // std::string strURL = response->GetURL().ToString();
     std::string strURL = request->GetURL().ToString();
     Debug(strURL.c_str());
-    /*
-    // Base URL restriction protection - Work-in-progress
-    if (! (strURL.length() >= m_pData->strBaseURL.length()))
-    {
-      Debug(std::string("Unauthorized URL request. Skip: " + strURL).c_str());
-      // MessageBox(
-      //     NULL,
-      //     (LPCWSTR)L"Unauthorized URL request. Abort.",
-      //     (LPCWSTR)L"Error",
-      //     MB_OK | MB_TASKMODAL
-      //   );
-      return RV_CANCEL;
-    }
-    else
-    {
-      if (strURL.substr(0, m_pData->strBaseURL.length()) != m_pData->strBaseURL)
-      {
-        Debug(std::string("Unauthorized URL request. Skip: " + strURL).c_str());
-          // MessageBox(
-          //     NULL,
-          //     (LPCWSTR)L"Unauthorized URL request. Abort.",
-          //     (LPCWSTR)L"Error",
-          //     MB_OK | MB_TASKMODAL
-          //   );
-          return RV_CANCEL;
-      }
-    }
-    */
-
     if (strURL.length() >= strKey.length())
     {
       if (strURL.substr(0, strKey.length()) == strKey)
@@ -227,7 +198,7 @@ class SimpleHandler : public CefClient,
     //CEF_REQUIRE_IO_THREAD();
     const std::string& url = request->GetURL();
 
-    if ((url == (m_pData->strBaseURL + g_strTokenEndpoint)) || (url == (m_pData->strBaseURL + g_strJWKs)))
+    if ((url == (m_pData->strBaseURL + g_strTokenEndpoint)))
     {
       m_strResponseContent = ""; // reset
       return this;
@@ -313,118 +284,19 @@ class SimpleHandler : public CefClient,
       m_strResponseContent = ""; // Delete JWT for security //- todo: do a proper overwrite
       Debug("JWT:");
       Debug(m_strJWT.c_str());
-      browser->GetMainFrame()->LoadURL(CefString(m_pData->strBaseURL + g_strJWKs)); // Fetch JWKs
-    }
-    if (url == (m_pData->strBaseURL + g_strJWKs))
-    {
-      Debug("JWKS:");
-      Debug(m_strResponseContent.c_str());
-      //- todo: Perform jwt-cpp verification
-      // m_strJWT.at(m_strJWT.size() - 1) = 'R'; // induce error in JWT verification
-      auto decoded_jwt = jwt::decode(m_strJWT); // jwt
-
-      Debug(std::string("JWT:: " + m_strJWT).c_str());
-      Debug(std::string("JWT:: get_header " + decoded_jwt.get_header()).c_str());
-      Debug(std::string("JWT:: get_payload " + decoded_jwt.get_payload()).c_str());
-      m_strJWT = "";    // Delete JWT for security //-todo: do a proper overwrite
-
-      auto jwks = jwt::parse_jwks(m_strResponseContent); // raw jwks
-      auto jwk = jwks.get_jwk(decoded_jwt.get_key_id());
-
-      m_strResponseContent = ""; // Delete JWKS for security //- todo: do a proper overwrite
-
-      auto issuer = decoded_jwt.get_issuer();
-      auto x5c = jwk.get_x5c_key_value();
-
-      std::error_code ec;
-
-      if (!x5c.empty() && !issuer.empty()) {
-        Debug("Verifying with 'x5c' key");
-        auto verifier =
-          jwt::verify()
-            .allow_algorithm(jwt::algorithm::rs256(jwt::helper::convert_base64_der_to_pem(x5c), "", "", ""))
-            .with_issuer(issuer)
-            // .with_id(jti)
-            .leeway(60UL); // value in seconds, add some to compensate timeout
-
-        verifier.verify(decoded_jwt, ec);
-        Debug(std::string("Error code: " + std::to_string(ec.value())).c_str());
-        Debug(ec.message().c_str());
-      }
-      // else if the optional 'x5c' was not present
-      if (ec.value() == 0)
-      {
-        Debug("Verifying with RSA components");
-        const auto modulus = jwk.get_jwk_claim("n").as_string();
-        const auto exponent = jwk.get_jwk_claim("e").as_string();
-        auto verifier = jwt::verify()
-                  .allow_algorithm(jwt::algorithm::rs256(
-                    jwt::helper::create_public_key_from_rsa_components(modulus, exponent)))
-                  .with_issuer(issuer)
-                  // .with_id(jti)
-                  .leeway(60UL); // value in seconds, add some to compensate timeout
-
-        verifier.verify(decoded_jwt, ec);
-        Debug(std::string("Error code: " + std::to_string(ec.value())).c_str());
-        Debug(ec.message().c_str());
-      }
-
-      if (ec.value() != 0)
-      {
-        MessageBox(
-            NULL,
-            (LPCWSTR)L"Authentication integrity check failed.",
-            (LPCWSTR)L"Error",
-            MB_OK
-        );
-      }
-      else
-      {
-        const auto& payload_json = decoded_jwt.get_payload_json();
-        const auto& preferred_name = payload_json.find("preferred_username");
-        if (preferred_name != payload_json.end())
-        {
-          Debug(std::string((*preferred_name).first).c_str());
-          Debug(std::string((*preferred_name).second.get<std::string>()).c_str());
-          // {
-          //   std::string strMsg = "Access verified for user: " + (*preferred_name).second.get<std::string>();
-          //   MessageBox(
-          //       NULL,
-          //       std::wstring(strMsg.begin(), strMsg.end()).c_str(),
-          //       (LPCWSTR)L"Success",
-          //       MB_OK | MB_TASKMODAL
-          //   );
-          // }
-          if (m_pData)
-          {
-            m_pData->UpdateUser((*preferred_name).second.get<std::string>());
-          }
-          else
-          {
-            std::string strMsg = "Invalid data container pointer. Unable to login. You may re-try.";
-            MessageBox(
-                NULL,
-                std::wstring(strMsg.begin(), strMsg.end()).c_str(),
-                (LPCWSTR)L"Internal Error",
-                MB_OK
-            );
-          }
-          CloseAllBrowsers(false);
+      auto validatedToken = TokenResponse();
+      try {
+        if (!ak_sys_token_validate("", m_strJWT, validatedToken)) {
+          SPDLOG_WARN("failed to validate token");
         }
-        else
-        {
-          MessageBox(
-              NULL,
-              (LPCWSTR)L"Required information is missing from authentication data.",
-              (LPCWSTR)L"Error",
-              MB_OK
-          );
-        }
+        m_pData->UpdateUser(validatedToken.username.c_str());
+      } catch (const std::exception &ex) {
+        Debug("Exception in ak_sys_token_validate");
+        Debug(ex.what());
       }
-      //- todo: clean up and overwrite JWT objects for security
+      CloseAllBrowsers(false);
     }
   }
-
 
   // CefDisplayHandler methods:
   void OnTitleChange(CefRefPtr<CefBrowser> browser,
@@ -477,9 +349,5 @@ class SimpleHandler : public CefClient,
   // Include the default reference counting implementation.
   IMPLEMENT_REFCOUNTING(SimpleHandler);
 };
-
-
-
-
 
 #endif  // CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
