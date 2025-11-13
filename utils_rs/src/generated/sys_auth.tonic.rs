@@ -114,6 +114,30 @@ pub mod system_auth_token_client {
                 .insert(GrpcMethod::new("sys_auth.SystemAuthToken", "TokenAuth"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn o_auth_params(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::OAuthParamsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_auth.SystemAuthToken/OAuthParams",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sys_auth.SystemAuthToken", "OAuthParams"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated client implementations.

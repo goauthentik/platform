@@ -16,7 +16,9 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/ak/token"
+	"goauthentik.io/platform/pkg/cli/setup"
 	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -113,5 +115,12 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Jti:               token.Claims().ID,
 		},
 		SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
+	}, nil
+}
+
+func (auth *Server) OAuthParams(context.Context, *emptypb.Empty) (*pb.OAuthParamsResponse, error) {
+	return &pb.OAuthParamsResponse{
+		Url:      auth.dom.AuthentikURL,
+		ClientId: setup.DefaultClientID,
 	}, nil
 }

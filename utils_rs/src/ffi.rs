@@ -4,8 +4,8 @@ use std::pin::Pin;
 
 use crate::generated::grpc_request;
 use crate::generated::ping::ping_client::PingClient;
-use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use crate::generated::sys_auth::TokenAuthRequest;
+use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 
 #[cxx::bridge]
 mod ffi {
@@ -21,7 +21,11 @@ mod ffi {
 
     extern "Rust" {
         fn ak_sys_grpc_ping(res: Pin<&mut CxxString>);
-        fn ak_sys_token_validate(username: &CxxString, raw_token: &CxxString, token: &mut TokenResponse) -> Result<bool>;
+        fn ak_sys_token_validate(
+            username: &CxxString,
+            raw_token: &CxxString,
+            token: &mut TokenResponse,
+        ) -> Result<bool>;
 
         fn ak_sys_wcp_oauth_config(res: &mut WCPOAuthConfig) -> Result<bool>;
     }
@@ -60,11 +64,12 @@ fn ak_sys_token_validate(
 }
 
 fn ak_sys_wcp_oauth_config(res: &mut ffi::WCPOAuthConfig) -> Result<bool, Box<dyn Error>> {
-    let config = ffi::WCPOAuthConfig {
-        url: "https://windows-cred-provider.pr.test.goauthentik.io".to_string(),
-        client_id: "UCAXCsLq1DVR08hYrjDGFPFekCVXmNTEn6eeoenO".to_string(),
-    };
-    res.url = config.url;
-    res.client_id = config.client_id;
+    let response = grpc_request(async |ch| {
+        return Ok(SystemAuthTokenClient::new(ch)
+            .o_auth_params(()).await?);
+    })?
+    .into_inner();
+    res.url = response.url;
+    res.client_id = response.client_id;
     Ok(true)
 }

@@ -4,11 +4,13 @@ package sys_auth;
 option go_package = "pkg/pb";
 option swift_prefix = "";
 
+import "google/protobuf/empty.proto";
 import "agent.proto";
 import "agent_auth.proto";
 
 service SystemAuthToken {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
+  rpc OAuthParams(google.protobuf.Empty) returns (OAuthParamsResponse);
 }
 
 service SystemAuthInteractive {
@@ -28,6 +30,11 @@ message TokenAuthResponse {
   bool successful = 1;
   agent.Token token = 2;
   string session_id = 3;
+}
+
+message OAuthParamsResponse {
+  string url = 10;
+  string client_id = 11;
 }
 
 message InteractiveAuthInitRequest {
