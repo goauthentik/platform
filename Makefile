@@ -24,7 +24,10 @@ gen-proto:
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
 
-lint: nss/lint pam/lint utils_rs/lint
+lint:
+	$(MAKE) nss/lint
+	$(MAKE) pam/lint
+	$(MAKE) utils_rs/lint
 	golangci-lint run
 
 test:

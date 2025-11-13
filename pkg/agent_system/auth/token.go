@@ -121,6 +121,7 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 func (auth *Server) OAuthParams(context.Context, *emptypb.Empty) (*pb.OAuthParamsResponse, error) {
 	return &pb.OAuthParamsResponse{
 		Url:      auth.dom.AuthentikURL,
+		AppSlug:  auth.dom.AppSlug,
 		ClientId: setup.DefaultClientID,
 	}, nil
 }

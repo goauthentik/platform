@@ -35,6 +35,7 @@ message TokenAuthResponse {
 message OAuthParamsResponse {
   string url = 10;
   string client_id = 11;
+  string app_slug = 12;
 }
 
 message InteractiveAuthInitRequest {

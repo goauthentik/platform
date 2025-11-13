@@ -1,4 +1,5 @@
 import AuthenticationServices
+import Generated
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistrationHandler {
 
@@ -19,12 +20,13 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
     func beginDeviceRegistration(
         loginManager: ASAuthorizationProviderExtensionLoginManager,
         options: ASAuthorizationProviderExtensionRequestOptions = [],
-        completion: @escaping (
-            ASAuthorizationProviderExtensionRegistrationResult
-        ) -> Void
+        completion:
+            @escaping (
+                ASAuthorizationProviderExtensionRegistrationResult
+            ) -> Void
     ) {
         self.logger.debug("Begin Device Registration")
-        let config = ConfigManager.shared.getConfig(loginManager: loginManager)
+        let config = SysdBridge.shared.oauthConfig
         self.logger.debug("Options: \(String(describing: config))")
         let loginConfig = ASAuthorizationProviderExtensionLoginConfiguration(
             clientID: config.ClientID,
@@ -70,7 +72,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         self.logger.debug("options: \(String.init(describing: options))")
         let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
             loginUserName: userName ?? "")
-        let config = ConfigManager.shared.getConfig(loginManager: loginManager)
+        let config = SysdBridge.shared.oauthConfig
         self.cancelFunc = {
             completion(.failed)
         }

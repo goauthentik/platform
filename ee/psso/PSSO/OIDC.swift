@@ -1,5 +1,6 @@
 import AppAuth
 import AuthenticationServices
+import Generated
 
 class OIDC {
     static var shared: OIDC = OIDC()
@@ -12,7 +13,7 @@ class OIDC {
         loginConfig: ASAuthorizationProviderExtensionLoginConfiguration,
         loginManager: ASAuthorizationProviderExtensionLoginManager,
     ) {
-        let gconfig = ConfigManager.shared.getConfig(loginManager: loginManager)
+        let gconfig = SysdBridge.shared.oauthConfig
         let config = OIDServiceConfiguration(
             authorizationEndpoint: URL(string: "\(gconfig.BaseURL)/application/o/authorize/")!,
             tokenEndpoint: URL(string: "\(gconfig.BaseURL)/application/o/token/")!)

@@ -22,6 +22,8 @@ pub struct OAuthParamsResponse {
     pub url: ::prost::alloc::string::String,
     #[prost(string, tag = "11")]
     pub client_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "12")]
+    pub app_slug: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InteractiveAuthInitRequest {

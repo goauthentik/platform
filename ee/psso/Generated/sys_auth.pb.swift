@@ -106,6 +106,8 @@ struct OAuthParamsResponse: Sendable {
 
   var clientID: String = String()
 
+  var appSlug: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -390,7 +392,7 @@ extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 
 extension OAuthParamsResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".OAuthParamsResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\u{a}url\0\u{3}client_id\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\u{a}url\0\u{3}client_id\0\u{3}app_slug\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -400,6 +402,7 @@ extension OAuthParamsResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       switch fieldNumber {
       case 10: try { try decoder.decodeSingularStringField(value: &self.url) }()
       case 11: try { try decoder.decodeSingularStringField(value: &self.clientID) }()
+      case 12: try { try decoder.decodeSingularStringField(value: &self.appSlug) }()
       default: break
       }
     }
@@ -412,12 +415,16 @@ extension OAuthParamsResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if !self.clientID.isEmpty {
       try visitor.visitSingularStringField(value: self.clientID, fieldNumber: 11)
     }
+    if !self.appSlug.isEmpty {
+      try visitor.visitSingularStringField(value: self.appSlug, fieldNumber: 12)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: OAuthParamsResponse, rhs: OAuthParamsResponse) -> Bool {
     if lhs.url != rhs.url {return false}
     if lhs.clientID != rhs.clientID {return false}
+    if lhs.appSlug != rhs.appSlug {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

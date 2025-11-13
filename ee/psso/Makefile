@@ -28,8 +28,8 @@ ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}/bin/${TARGET}")
 endif
 
-.PHONY: format
-format:
+.PHONY: lint
+lint:
 	swift format format \
 		-i \
 		--configuration "${TOP}/.github/swift-format.json" \

@@ -65,8 +65,7 @@ fn ak_sys_token_validate(
 
 fn ak_sys_wcp_oauth_config(res: &mut ffi::WCPOAuthConfig) -> Result<bool, Box<dyn Error>> {
     let response = grpc_request(async |ch| {
-        return Ok(SystemAuthTokenClient::new(ch)
-            .o_auth_params(()).await?);
+        return Ok(SystemAuthTokenClient::new(ch).o_auth_params(()).await?);
     })?
     .into_inner();
     res.url = response.url;

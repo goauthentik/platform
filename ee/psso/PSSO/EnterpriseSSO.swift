@@ -8,7 +8,6 @@ extension URL {
     }
 }
 
-
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
 
@@ -17,12 +16,12 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
     static let queryResponse = "response"
 
     private func shouldSkip(request: ASAuthorizationProviderExtensionAuthorizationRequest) -> Bool {
-//        if !(request.loginManager?.isDeviceRegistered ?? false)
-//            || !(request.loginManager?.isUserRegistered ?? false)
-//        {
-//            self.logger.info("SSOE: Skipping due to unregistered user or device")
-//            return true
-//        }
+        //        if !(request.loginManager?.isDeviceRegistered ?? false)
+        //            || !(request.loginManager?.isUserRegistered ?? false)
+        //        {
+        //            self.logger.info("SSOE: Skipping due to unregistered user or device")
+        //            return true
+        //        }
         let callerBundle = request.callerBundleIdentifier
         if let exclusions = request.extensionData["ExcludedApps"] as? [String],
             exclusions.contains(callerBundle)
@@ -34,9 +33,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             self.logger.info("SSOE: No login manager, skipping")
             return true
         }
-        let config = ConfigManager.shared.getConfig(
-            loginManager: request.loginManager!
-        )
+        let config = Generated.SysdBridge.shared.oauthConfig
         guard let base = URL(string: config.BaseURL) else {
             self.logger.info("SSOE: Unable to parse base URL")
             return true
@@ -71,18 +68,22 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             request.doNotHandle()
             return
         }
-        guard let challenge = request.url.valueOf(AuthenticationViewController.queryChallenge) else {
+        guard let challenge = request.url.valueOf(AuthenticationViewController.queryChallenge)
+        else {
             self.logger.debug("SSOE: no challenge")
             request.doNotHandle()
             return
         }
         Task {
             do {
-                let header = try await Generated.GRPCsysd.shared.platformSignedEndpointHeader(
+                let header = try await Generated.SysdBridge.shared.platformSignedEndpointHeader(
                     challenge: challenge
                 )
                 let url = request.url.appending(
-                    queryItems: [URLQueryItem(name: AuthenticationViewController.queryResponse, value: header)]
+                    queryItems: [
+                        URLQueryItem(
+                            name: AuthenticationViewController.queryResponse, value: header)
+                    ]
                 )
                 let headers: [String: String] = [
                     "Location": url.absoluteString

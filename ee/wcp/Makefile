@@ -12,8 +12,8 @@ bump:
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
-.PHONY: format
-format:
+.PHONY: lint
+lint:
 	find "${PWD}" -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i
 
 .PHONY: build

@@ -20,7 +20,7 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     }
 
     required init?(coder: NSCoder) {
-        super.init(coder:coder)
+        super.init(coder: coder)
         self.load()
     }
 

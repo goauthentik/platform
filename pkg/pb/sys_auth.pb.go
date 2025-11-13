@@ -251,6 +251,7 @@ type OAuthParamsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Url           string                 `protobuf:"bytes,10,opt,name=url,proto3" json:"url,omitempty"`
 	ClientId      string                 `protobuf:"bytes,11,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	AppSlug       string                 `protobuf:"bytes,12,opt,name=app_slug,json=appSlug,proto3" json:"app_slug,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -295,6 +296,13 @@ func (x *OAuthParamsResponse) GetUrl() string {
 func (x *OAuthParamsResponse) GetClientId() string {
 	if x != nil {
 		return x.ClientId
+	}
+	return ""
+}
+
+func (x *OAuthParamsResponse) GetAppSlug() string {
+	if x != nil {
+		return x.AppSlug
 	}
 	return ""
 }
@@ -695,11 +703,12 @@ const file_sys_auth_proto_rawDesc = "" +
 	"successful\x12\"\n" +
 	"\x05token\x18\x02 \x01(\v2\f.agent.TokenR\x05token\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x03 \x01(\tR\tsessionId\"D\n" +
+	"session_id\x18\x03 \x01(\tR\tsessionId\"_\n" +
 	"\x13OAuthParamsResponse\x12\x10\n" +
 	"\x03url\x18\n" +
 	" \x01(\tR\x03url\x12\x1b\n" +
-	"\tclient_id\x18\v \x01(\tR\bclientId\"T\n" +
+	"\tclient_id\x18\v \x01(\tR\bclientId\x12\x19\n" +
+	"\bapp_slug\x18\f \x01(\tR\aappSlug\"T\n" +
 	"\x1aInteractiveAuthInitRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"J\n" +

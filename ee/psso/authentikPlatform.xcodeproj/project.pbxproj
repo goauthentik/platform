@@ -14,7 +14,6 @@
 		B404B2742E0DD88800A12D29 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = B404B2732E0DD88500A12D29 /* API.swift */; };
 		B42B450A2EA24B120046D847 /* Generated.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; };
 		B42B450B2EA24B120046D847 /* Generated.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		B44148B62E10A6EB00347A5F /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44148B52E10A6EA00347A5F /* Config.swift */; };
 		B49BA5572E0F445700184992 /* AppAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5562E0F445700184992 /* AppAuth */; };
 		B49BA5592E0F445700184992 /* AppAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5582E0F445700184992 /* AppAuthCore */; };
 		B49BA55B2E0F447A00184992 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA55A2E0F447A00184992 /* Sentry */; };
@@ -61,7 +60,6 @@
 		B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterpriseSSO.swift; sourceTree = "<group>"; };
 		B404B2732E0DD88500A12D29 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		B42B45022EA24AEA0046D847 /* Generated.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Generated.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		B44148B52E10A6EA00347A5F /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		B49BA55E2E0F466100184992 /* OIDC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OIDC.swift; sourceTree = "<group>"; };
 		B49BA5602E0F73AD00184992 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B49BA5622E100E4400184992 /* PlatformSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformSSO.swift; sourceTree = "<group>"; };
@@ -131,7 +129,6 @@
 				609FE38924893242009FD079 /* AuthenticationViewController.swift */,
 				B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */,
 				B49BA5622E100E4400184992 /* PlatformSSO.swift */,
-				B44148B52E10A6EA00347A5F /* Config.swift */,
 				B49BA5602E0F73AD00184992 /* Sentry.swift */,
 				B49BA55E2E0F466100184992 /* OIDC.swift */,
 				B404B2732E0DD88500A12D29 /* API.swift */,
@@ -272,7 +269,6 @@
 			files = (
 				B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */,
 				B49BA55F2E0F466300184992 /* OIDC.swift in Sources */,
-				B44148B62E10A6EB00347A5F /* Config.swift in Sources */,
 				B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */,
 				B404B2742E0DD88800A12D29 /* API.swift in Sources */,
 				609FE38A24893242009FD079 /* AuthenticationViewController.swift in Sources */,

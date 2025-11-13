@@ -2,6 +2,7 @@ import AppAuth
 import AuthenticationServices
 import CryptoKit
 import Foundation
+import Generated
 import OSLog
 
 class API {
@@ -75,9 +76,7 @@ class API {
                 completion(.failed)
                 return
             }
-            let config = ConfigManager.shared.getConfig(
-                loginManager: loginManager
-            )
+            let config = SysdBridge.shared.oauthConfig
             let request = DeviceRegistrationRequest(
                 DeviceIdentifier: deviceSerial!,
                 ClientID: config.ClientID,
@@ -142,7 +141,7 @@ class API {
                 completion(.failed)
                 return
             }
-            let config = ConfigManager.shared.getConfig(loginManager: loginManger)
+            let config = SysdBridge.shared.oauthConfig
             let request = UserRegistrationRequest(
                 DeviceIdentifier: deviceSerial!,
                 UserSecureEnclaveKey: UserSecureEnclaveKey,
