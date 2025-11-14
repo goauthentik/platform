@@ -40,20 +40,12 @@ func State() *state.State {
 }
 
 type Config struct {
-	Debug      bool      `json:"debug"`
-	RuntimeDir string    `json:"runtime"`
-	DomainDir  string    `json:"domains"`
-	NSS        NSSConfig `json:"nss"`
+	Debug      bool   `json:"debug"`
+	RuntimeDir string `json:"runtime"`
+	DomainDir  string `json:"domains"`
 
 	log     *log.Entry
 	domains []DomainConfig
-}
-
-type NSSConfig struct {
-	Enabled            bool  `json:"enabled"`
-	UIDOffset          int32 `json:"uid_offset"`
-	GIDOffset          int32 `json:"gid_offset"`
-	RefreshIntervalSec int64 `json:"refresh_interval_sec"`
 }
 
 func (c *Config) Default() cfgmgr.Configer {
