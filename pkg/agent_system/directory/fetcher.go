@@ -5,13 +5,12 @@ import (
 	"slices"
 	"time"
 
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 )
 
 func (directory *Server) startFetch() {
-	d := time.Second * time.Duration(config.Manager().Get().NSS.RefreshIntervalSec)
+	d := time.Second * time.Duration(directory.cfg.RefreshInterval)
 	directory.log.Info("Starting initial user/group fetch")
 	directory.fetch()
 	directory.log.WithField("next", d.String()).Info("Finished initial user/group fetch")

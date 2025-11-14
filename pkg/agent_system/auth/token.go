@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	lconfig "goauthentik.io/platform/pkg/agent_local/config"
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/cli/setup"
@@ -23,7 +22,7 @@ import (
 )
 
 func (auth *Server) startFetch() {
-	d := time.Second * time.Duration(config.Manager().Get().NSS.RefreshIntervalSec)
+	d := time.Second * time.Duration(auth.dom.Config().RefreshInterval)
 	auth.log.Info("Starting initial JWKS fetch")
 	auth.refreshTokenJWKS()
 	auth.log.WithField("next", d.String()).Info("Finished initial JWKS fetch")

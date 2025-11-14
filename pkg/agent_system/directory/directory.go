@@ -26,14 +26,13 @@ type Server struct {
 
 	ctx context.Context
 
-	cfg *config.Config
+	cfg *api.AgentConfig
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log: ctx.Log(),
 		ctx: ctx.Context(),
-		cfg: config.Manager().Get(),
 	}
 	return srv, nil
 }
@@ -42,11 +41,13 @@ func (directory *Server) Start() error {
 	if len(config.Manager().Get().Domains()) < 1 {
 		return errors.New("no domains")
 	}
-	ac, err := config.Manager().Get().Domains()[0].APIClient()
+	dom := config.Manager().Get().Domains()[0]
+	ac, err := dom.APIClient()
 	if err != nil {
 		return err
 	}
 	directory.api = ac
+	directory.cfg = dom.Config()
 	directory.startFetch()
 	return nil
 }
@@ -61,7 +62,7 @@ func (directory *Server) Register(s grpc.ServiceRegistrar) {
 
 func (directory *Server) GetUserUidNumber(user api.User) uint32 {
 	uidNumber, ok := user.GetAttributes()["uidNumber"].(string)
-	def := uint32(directory.cfg.NSS.UIDOffset + user.Pk)
+	def := uint32(directory.cfg.NssUidOffset + user.Pk)
 	if ok {
 		id, err := strconv.ParseUint(uidNumber, 10, 32)
 		if err != nil {
@@ -89,7 +90,7 @@ func (directory *Server) GetUserGidNumber(user api.User) uint32 {
 
 func (directory *Server) GetGroupGidNumber(group api.Group) uint32 {
 	gidNumber, ok := group.GetAttributes()["gidNumber"].(string)
-	def := uint32(directory.cfg.NSS.GIDOffset + group.NumPk)
+	def := uint32(directory.cfg.NssGidOffset + group.NumPk)
 	if ok {
 		id, err := strconv.ParseUint(gidNumber, 10, 32)
 		if err != nil {
