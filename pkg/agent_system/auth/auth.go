@@ -35,11 +35,13 @@ type Server struct {
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
-		log:  ctx.Log(),
-		cfg:  config.Manager().Get(),
-		ctx:  ctx,
-		txns: map[string]*InteractiveAuthTransaction{},
-		m:    sync.RWMutex{},
+		log:                  ctx.Log(),
+		cfg:                  config.Manager().Get(),
+		ctx:                  ctx,
+		txns:                 map[string]*InteractiveAuthTransaction{},
+		m:                    sync.RWMutex{},
+		interactiveEnabled:   true,
+		authorizationEnabled: true,
 	}
 	return srv, nil
 }
