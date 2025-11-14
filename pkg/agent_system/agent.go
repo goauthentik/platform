@@ -47,10 +47,6 @@ type SystemAgentOptions struct {
 
 func New(opts SystemAgentOptions) (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
-	sst, err := state.Open(types.StatePath().ForCurrent(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	sm := &SystemAgent{
 		srv: grpc.NewServer(
@@ -70,8 +66,8 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 		log:  l,
 		cm:   map[string]ComponentInstance{},
 		mtx:  sync.Mutex{},
-		st:   sst,
 		opts: opts,
+		st:   config.State(),
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	go sm.DomainCheck()
@@ -123,7 +119,7 @@ func (sm *SystemAgent) DomainCheck() {
 		sm.log.WithField("domain", dom.Domain).Info("Starting domain healthcheck for domain")
 		err := dom.Test()
 		if err != nil {
-			sm.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to get API client for domain")
+			sm.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to test API client for domain")
 			dom.Enabled = false
 			continue
 		}

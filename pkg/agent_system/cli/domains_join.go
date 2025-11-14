@@ -39,6 +39,10 @@ var domainsJoinCmd = &cobra.Command{
 		d.AppSlug = appSlug
 		d.Token = token
 		d.AuthenticationFlow = "default-authentication-flow"
+		err = d.Enroll()
+		if err != nil {
+			return err
+		}
 		if err := d.Test(); err != nil {
 			return err
 		}

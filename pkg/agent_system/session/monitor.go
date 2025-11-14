@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"errors"
 	"os"
 	"strings"
 	"sync"
@@ -28,6 +29,7 @@ type Monitor struct {
 	log           *log.Entry
 	ctx           component.Context
 
+	dom   config.DomainConfig
 	timer *time.Ticker
 }
 
@@ -42,6 +44,11 @@ func NewMonitor(ctx component.Context) (component.Component, error) {
 
 func (m *Monitor) Start() error {
 	m.timer = time.NewTicker(m.checkInterval)
+	if len(config.Manager().Get().Domains()) < 1 {
+		return errors.New("no domains")
+	}
+	dom := config.Manager().Get().Domains()[0]
+	m.dom = dom
 
 	go func() {
 		for range m.timer.C {
@@ -158,7 +165,7 @@ func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRe
 		LocalSocket: req.LocalSocket,
 	}
 
-	if config.Manager().Get().PAM.TerminateOnExpiry {
+	if m.dom.Config().AuthTerminateSessionOnExpiry {
 		session.ExpiresAt = timestamppb.New(time.Unix(-1, 0))
 	}
 

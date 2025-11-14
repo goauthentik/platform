@@ -8,13 +8,21 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/platform/keyring"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
+	"goauthentik.io/platform/pkg/storage/state"
 )
 
 var manager *cfgmgr.Manager[*Config]
+var st *state.State
 
 func Init(path string) error {
+	sst, err := state.Open(types.StatePath().ForCurrent(), nil)
+	if err != nil {
+		return err
+	}
+	st = sst
 	m, err := cfgmgr.NewManager[*Config](path)
 	if err != nil {
 		return err
@@ -27,20 +35,18 @@ func Manager() *cfgmgr.Manager[*Config] {
 	return manager
 }
 
+func State() *state.State {
+	return st
+}
+
 type Config struct {
 	Debug      bool      `json:"debug"`
 	RuntimeDir string    `json:"runtime"`
 	DomainDir  string    `json:"domains"`
 	NSS        NSSConfig `json:"nss"`
-	PAM        PAMConfig `json:"pam"`
 
 	log     *log.Entry
 	domains []DomainConfig
-}
-
-type PAMConfig struct {
-	Enabled           bool `json:"enabled"`
-	TerminateOnExpiry bool `json:"terminate_on_expiry"`
 }
 
 type NSSConfig struct {
@@ -77,9 +83,7 @@ func (c *Config) SaveDomain(dom *DomainConfig) error {
 	path := filepath.Join(c.DomainDir, dom.Domain+".json")
 	err := keyring.Set(keyring.Service("domain_token"), dom.Domain, dom.Token)
 	if err != nil {
-		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
-			return errors.Wrap(err, "failed to save domain token to keyring")
-		}
+		c.log.WithError(err).Warning("failed to save domain token in keyring")
 		dom.FallbackToken = dom.Token
 	}
 	b, err := json.Marshal(dom)

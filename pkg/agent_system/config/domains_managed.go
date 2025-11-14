@@ -44,6 +44,7 @@ func (c *Config) loadDomainsManaged() error {
 			continue
 		}
 	}
+	// Enroll in managed config domain
 	d := &DomainConfig{
 		Enabled:            true,
 		AuthentikURL:       mc.URL,
@@ -52,5 +53,14 @@ func (c *Config) loadDomainsManaged() error {
 		AuthenticationFlow: "default-authentication-flow",
 		Domain:             managedDomainName,
 	}
-	return c.SaveDomain(d)
+	err = d.Enroll()
+	if err != nil {
+		return err
+	}
+	err = c.SaveDomain(d)
+	if err != nil {
+		return err
+	}
+	d.loaded()
+	return nil
 }

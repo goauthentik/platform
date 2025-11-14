@@ -7,8 +7,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/pkg/errors"
+	"go.etcd.io/bbolt"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/keyring"
 )
@@ -25,8 +26,13 @@ type DomainConfig struct {
 
 	FallbackToken string `json:"token"`
 
-	c *api.APIClient
-	r *Config
+	c  *api.APIClient
+	r  *Config
+	rc *api.AgentConfig
+}
+
+func (dc DomainConfig) Config() *api.AgentConfig {
+	return dc.rc
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
@@ -57,7 +63,7 @@ func (dc DomainConfig) Test() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = ac.CoreApi.CoreUsersMeRetrieve(context.Background()).Execute()
+	_, _, err = ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 	if err != nil {
 		return err
 	}
@@ -83,6 +89,44 @@ func (c *Config) NewDomain() *DomainConfig {
 	}
 }
 
+func (dc *DomainConfig) loaded() {
+	State().ForBucket(dc.Domain).View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+		cfg := api.AgentConfig{}
+		err := json.Unmarshal(b.Get([]byte("config")), &cfg)
+		if err != nil {
+			return err
+		}
+		dc.r.log.Info("Loaded domain config")
+		dc.rc = &cfg
+		return nil
+	})
+	go func() {
+		for range time.NewTicker(1 * time.Hour).C {
+			dc.fetchRemoteConfig()
+		}
+	}()
+}
+
+func (dc *DomainConfig) fetchRemoteConfig() error {
+	return State().ForBucket(dc.Domain).Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+		api, err := dc.APIClient()
+		if err != nil {
+			return err
+		}
+		cfg, _, err := api.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
+		if err != nil {
+			return err
+		}
+		dc.rc = cfg
+		jc, err := json.Marshal(cfg)
+		if err != nil {
+			return err
+		}
+		b.Put([]byte("config"), jc)
+		return nil
+	})
+}
+
 func (c *Config) loadDomains() error {
 	c.log.Debug("Loading domains...")
 	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
@@ -105,15 +149,13 @@ func (c *Config) loadDomains() error {
 		}
 		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain)
 		if err != nil {
-			if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
-				c.log.WithError(err).Warning("failed to load domain token")
-				continue
-			}
+			c.log.WithError(err).Warning("failed to load domain token from keyring")
 			token = d.FallbackToken
 		}
 		d.Token = token
 		c.log.WithField("domain", d.Domain).Debug("loaded domain")
 		dom = append(dom, *d)
+		d.loaded()
 	}
 	c.domains = dom
 	c.log.Debug("Checking for managed domains...")
