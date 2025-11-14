@@ -57,14 +57,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	${CREDUI_LIB_PATH}
 	${SECUR32_LIB_PATH}
 	${SHLWAPI_LIB_PATH}
-  #${CEFSIMPLE_LIB_PATH}
-  # ${LIBCEF_LIB_PATH}
   cefsimple
   authentik_sys_bridge
   spdlog
   sentry
-  # libcef_lib
-  # libcef_dll_wrappe
 )
 
 # TODO: Add tests and install targets if needed.

@@ -28,3 +28,16 @@ define sentry_upload_symbols
 		--project platform \
 		$(1)
 endef
+
+define go_generate_resources
+	go tool goversioninfo \
+		-icon="${TOP}/cmd/agent_local/package/windows/resources/icon.ico" \
+		-company="Authentik Security Inc." \
+		-copyright="2025 Authentik Security Inc." \
+		-file-version=${VERSION} \
+		-product-version=${VERSION} \
+		-comment="$(1)" \
+		-description="$(1)" \
+		-product-name="$(1)" \
+		-skip-versioninfo
+endef
