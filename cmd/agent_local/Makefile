@@ -19,8 +19,10 @@ clean:
 	"$(MAKE)" -C ${TOP} ee/psso/clean || true
 
 build:
-	echo "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/bin/${TARGET}"
+ifeq ($(OS),Windows_NT)
+	$(call go_generate_resources,authentik Platform Agent)
+endif
 	go build \
 		${GO_BUILD_FLAGS} \
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \

@@ -12,6 +12,9 @@ clean:
 
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
+ifeq ($(OS),Windows_NT)
+	$(call go_generate_resources,authentik Platform CLI)
+endif
 	go build \
 		${GO_BUILD_FLAGS} \
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
