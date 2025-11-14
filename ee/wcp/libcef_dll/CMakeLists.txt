@@ -984,7 +984,6 @@ target_link_libraries(${CEF_TARGET}
 	${SHLWAPI_LIB_PATH}
   ${CRYPT32_LIB_PATH}
   ${NETAPI32_LIB_PATH}
-  jwt-cpp
   authentik_sys_bridge
   spdlog
   sentry
