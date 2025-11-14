@@ -77,6 +77,7 @@ func (t *Tray) Quit() {
 
 func (t *Tray) systrayReady() {
 	t.started = true
+	systray.SetTooltip("authentik Platform Agent")
 	if runtime.GOOS == "windows" {
 		systray.SetTemplateIcon(nil, icon.Ico)
 	} else {
