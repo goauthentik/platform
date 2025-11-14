@@ -91,15 +91,16 @@ func (c *Config) NewDomain() *DomainConfig {
 
 func (dc *DomainConfig) loaded() {
 	State().ForBucket(dc.Domain).View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
-		cfg := api.AgentConfig{}
-		err := json.Unmarshal(b.Get([]byte("config")), &cfg)
+		cfg := api.NullableAgentConfig{}
+		err := cfg.UnmarshalJSON(b.Get([]byte("config")))
 		if err != nil {
 			return err
 		}
 		dc.r.log.Info("Loaded domain config")
-		dc.rc = &cfg
+		dc.rc = cfg.Get()
 		return nil
 	})
+	dc.fetchRemoteConfig()
 	go func() {
 		for range time.NewTicker(1 * time.Hour).C {
 			dc.fetchRemoteConfig()
@@ -117,8 +118,9 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
+		dc.r.log.Debug("fetched remote config")
 		dc.rc = cfg
-		jc, err := json.Marshal(cfg)
+		jc, err := cfg.MarshalJSON()
 		if err != nil {
 			return err
 		}
@@ -134,7 +136,7 @@ func (c *Config) loadDomains() error {
 		c.log.WithError(err).Warning("failed to load domains")
 		return err
 	}
-	dom := []DomainConfig{}
+	dom := []*DomainConfig{}
 	for _, match := range m {
 		co, err := os.ReadFile(match)
 		if err != nil {
@@ -154,7 +156,7 @@ func (c *Config) loadDomains() error {
 		}
 		d.Token = token
 		c.log.WithField("domain", d.Domain).Debug("loaded domain")
-		dom = append(dom, *d)
+		dom = append(dom, d)
 		d.loaded()
 	}
 	c.domains = dom

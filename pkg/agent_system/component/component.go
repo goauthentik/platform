@@ -45,7 +45,7 @@ func (c Context) State() *state.ScopedState {
 	return c.st
 }
 
-func (c Context) StateForDomain(dom config.DomainConfig) *state.ScopedState {
+func (c Context) StateForDomain(dom *config.DomainConfig) *state.ScopedState {
 	return c.st.ForBucket(dom.Domain)
 }
 

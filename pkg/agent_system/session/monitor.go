@@ -29,7 +29,7 @@ type Monitor struct {
 	log           *log.Entry
 	ctx           component.Context
 
-	dom   config.DomainConfig
+	dom   *config.DomainConfig
 	timer *time.Ticker
 }
 

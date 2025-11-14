@@ -27,7 +27,7 @@ type Server struct {
 	cfg  *config.Config
 	txns map[string]*InteractiveAuthTransaction
 	m    sync.RWMutex
-	dom  config.DomainConfig
+	dom  *config.DomainConfig
 
 	interactiveEnabled   bool
 	authorizationEnabled bool

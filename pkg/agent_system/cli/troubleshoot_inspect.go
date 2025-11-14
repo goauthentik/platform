@@ -3,12 +3,10 @@ package cli
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"go.etcd.io/bbolt"
-	"goauthentik.io/platform/pkg/agent_system/types"
-	"goauthentik.io/platform/pkg/storage/state"
+	"goauthentik.io/platform/pkg/agent_system/config"
 )
 
 var troubleshootInspectCmd = &cobra.Command{
@@ -18,15 +16,8 @@ var troubleshootInspectCmd = &cobra.Command{
 		return agentPrecheck()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		sst, err := state.Open(types.StatePath().ForCurrent(), &bbolt.Options{
-			Timeout:  1 * time.Second,
-			ReadOnly: true,
-		})
-		if err != nil {
-			return err
-		}
 		depth := 0
-		return sst.View(func(tx *bbolt.Tx) error {
+		return config.State().View(func(tx *bbolt.Tx) error {
 			return tx.ForEach(func(name []byte, b *bbolt.Bucket) error {
 				inspectBucket(name, b, depth)
 				return nil

@@ -45,7 +45,7 @@ type Config struct {
 	DomainDir  string `json:"domains"`
 
 	log     *log.Entry
-	domains []DomainConfig
+	domains []*DomainConfig
 }
 
 func (c *Config) Default() cfgmgr.Configer {
@@ -67,7 +67,7 @@ func (c *Config) PostUpdate(cfgmgr.Configer, fsnotify.Event) cfgmgr.ConfigChange
 	return cfgmgr.ConfigChangedGeneric
 }
 
-func (c *Config) Domains() []DomainConfig {
+func (c *Config) Domains() []*DomainConfig {
 	return c.domains
 }
 
