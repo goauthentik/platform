@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"slices"
 	"sync"
 	"syscall"
 
@@ -37,9 +38,14 @@ type SystemAgent struct {
 	cancel context.CancelFunc
 	lis    socket.InfoListener
 	st     *state.State
+	opts   SystemAgentOptions
 }
 
-func New() (*SystemAgent, error) {
+type SystemAgentOptions struct {
+	DisabledComponents []string
+}
+
+func New(opts SystemAgentOptions) (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
 	sst, err := state.Open(types.StatePath().ForCurrent(), nil)
 	if err != nil {
@@ -61,10 +67,11 @@ func New() (*SystemAgent, error) {
 				})),
 			),
 		),
-		log: l,
-		cm:  map[string]ComponentInstance{},
-		mtx: sync.Mutex{},
-		st:  sst,
+		log:  l,
+		cm:   map[string]ComponentInstance{},
+		mtx:  sync.Mutex{},
+		st:   sst,
+		opts: opts,
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	go sm.DomainCheck()
@@ -79,6 +86,10 @@ func (sm *SystemAgent) registerComponents() {
 	defer sm.mtx.Unlock()
 	for name, constr := range sm.RegisterPlatformComponents() {
 		l := sm.log.WithField("logger", fmt.Sprintf("component.%s", name))
+		if slices.Contains(sm.opts.DisabledComponents, name) {
+			l.Info("Component disabled")
+			continue
+		}
 		l.Info("Registering component")
 		ctx, cancel := context.WithCancel(sm.ctx)
 		ss := sm.st.ForBucket(types.KeyComponent, name)

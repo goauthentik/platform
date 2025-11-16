@@ -11,7 +11,10 @@ import (
 	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
-var isDebug = false
+var (
+	isDebug            = false
+	disabledComponents = []string{}
+)
 
 var agentCmd = &cobra.Command{
 	Use:          "agent",
@@ -45,5 +48,6 @@ var agentCmd = &cobra.Command{
 
 func init() {
 	agentCmd.Flags().BoolVarP(&isDebug, "debug", "d", false, "Run in debug mode.")
+	agentCmd.Flags().StringArrayVar(&disabledComponents, "disable-component", []string{}, "ID component to disable")
 	rootCmd.AddCommand(agentCmd)
 }

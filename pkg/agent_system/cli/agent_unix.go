@@ -10,7 +10,9 @@ import (
 
 func runAgentPlatform(cmd *cobra.Command, args []string) error {
 	defer systemlog.Cleanup()
-	agent, err := agentsystem.New()
+	agent, err := agentsystem.New(agentsystem.SystemAgentOptions{
+		DisabledComponents: disabledComponents,
+	})
 	if err != nil {
 		return err
 	}
