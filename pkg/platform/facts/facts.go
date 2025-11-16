@@ -2,6 +2,7 @@ package facts
 
 import (
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/platform/facts/disk"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
 	"goauthentik.io/platform/pkg/platform/facts/network"
@@ -42,6 +43,10 @@ func Gather() (*api.DeviceFactsRequest, error) {
 		Network:   *api.NewNullableDeviceFactsRequestNetwork(&net),
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
-		Vendor:    map[string]interface{}{},
+		Vendor: map[string]any{
+			"io.goauthentik.platform": map[string]string{
+				"agent_version": meta.FullVersion(),
+			},
+		},
 	}, nil
 }
