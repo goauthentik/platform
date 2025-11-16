@@ -45,14 +45,12 @@ func (c *Config) loadDomainsManaged() error {
 		}
 	}
 	// Enroll in managed config domain
-	d := &DomainConfig{
-		Enabled:            true,
-		AuthentikURL:       mc.URL,
-		Token:              mc.RegistrationToken,
-		AppSlug:            setup.DefaultAppSlug,
-		AuthenticationFlow: "default-authentication-flow",
-		Domain:             managedDomainName,
-	}
+	d := c.NewDomain()
+	d.AuthentikURL = mc.URL
+	d.Token = mc.RegistrationToken
+	d.AppSlug = setup.DefaultAppSlug
+	d.AuthenticationFlow = "default-authentication-flow"
+	d.Domain = managedDomainName
 	err = d.Enroll()
 	if err != nil {
 		return err
