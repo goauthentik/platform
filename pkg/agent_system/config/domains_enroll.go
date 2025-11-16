@@ -2,10 +2,10 @@ package config
 
 import (
 	"context"
-	"os"
 
 	"goauthentik.io/api/v3"
-	"goauthentik.io/platform/pkg/agent_system/device/serial"
+	"goauthentik.io/platform/pkg/platform/facts/hardware"
+	"goauthentik.io/platform/pkg/platform/facts/network"
 )
 
 func (dc *DomainConfig) Enroll() error {
@@ -13,17 +13,17 @@ func (dc *DomainConfig) Enroll() error {
 	if err != nil {
 		return err
 	}
-	serial, err := serial.Read()
+	hw, err := hardware.Gather()
 	if err != nil {
 		return err
 	}
-	hostname, err := os.Hostname()
+	net, err := network.Gather()
 	if err != nil {
 		return err
 	}
 	res, _, err := a.EndpointsApi.EndpointsAgentsConnectorsEnrollCreate(context.Background()).EnrollRequest(api.EnrollRequest{
-		DeviceSerial: serial,
-		DeviceName:   hostname,
+		DeviceSerial: hw.Serial,
+		DeviceName:   net.Hostname,
 	}).Execute()
 	if err != nil {
 		return err
