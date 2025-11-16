@@ -55,6 +55,9 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			continue
 		}
 
+		if iface.HardwareAddr.String() == "" {
+			continue
+		}
 		for _, addr := range addrs {
 			ipnet, ok := addr.(*net.IPNet)
 			if !ok {

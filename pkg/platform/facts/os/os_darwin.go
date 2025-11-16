@@ -16,7 +16,7 @@ func gather() (api.DeviceFactsRequestOs, error) {
 
 	return api.DeviceFactsRequestOs{
 		Arch:    runtime.GOARCH,
-		Family:  "darwin",
+		Family:  api.FAMILYENUM_MAC_OS,
 		Name:    api.PtrString(name),
 		Version: api.PtrString(version),
 	}, nil

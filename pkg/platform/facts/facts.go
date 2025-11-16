@@ -42,6 +42,6 @@ func Gather() (*api.DeviceFactsRequest, error) {
 		Network:   *api.NewNullableDeviceFactsRequestNetwork(&net),
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
-		Vendor:    nil,
+		Vendor:    map[string]interface{}{},
 	}, nil
 }

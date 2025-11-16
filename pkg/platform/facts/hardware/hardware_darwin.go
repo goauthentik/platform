@@ -3,44 +3,42 @@
 package hardware
 
 import (
+	"encoding/json"
 	"os/exec"
-	"strings"
 
 	"goauthentik.io/api/v3"
 )
 
 func gather() (api.DeviceFactsRequestHardware, error) {
-	manufacturer := getSystemProfilerValue("SPHardwareDataType", "Manufacturer")
-	if manufacturer == "" {
-		manufacturer = "Apple Inc."
+	hardware, err := getSystemProfilerValue()
+	if err != nil {
+		return api.DeviceFactsRequestHardware{}, err
 	}
 
-	model := getSystemProfilerValue("SPHardwareDataType", "Model Name")
-	serial := getSystemProfilerValue("SPHardwareDataType", "Serial Number")
-
 	return api.DeviceFactsRequestHardware{
-		Manufacturer: manufacturer,
-		Model:        model,
-		Serial:       serial,
+		Manufacturer: "Apple Inc.",
+		Model:        hardware.SPHardwareDataType[0].Model,
+		Serial:       hardware.SPHardwareDataType[0].SerialNumber,
 	}, nil
 }
 
-func getSystemProfilerValue(dataType, key string) string {
-	cmd := exec.Command("system_profiler", dataType)
+type ProfilerSPHardwareDataType struct {
+	SPHardwareDataType []struct {
+		SerialNumber string `json:"serial_number"`
+		Model        string `json:"machine_model"`
+	} `json:"SPHardwareDataType"`
+}
+
+func getSystemProfilerValue() (ProfilerSPHardwareDataType, error) {
+	d := ProfilerSPHardwareDataType{}
+	cmd := exec.Command("system_profiler", "-json", "SPHardwareDataType")
 	output, err := cmd.Output()
 	if err != nil {
-		return ""
+		return d, err
 	}
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		if strings.Contains(line, key+":") {
-			parts := strings.Split(line, ":")
-			if len(parts) >= 2 {
-				return strings.TrimSpace(parts[1])
-			}
-		}
+	err = json.Unmarshal(output, &d)
+	if err != nil {
+		return d, err
 	}
-
-	return ""
+	return d, nil
 }
