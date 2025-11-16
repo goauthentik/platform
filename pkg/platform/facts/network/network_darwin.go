@@ -21,9 +21,9 @@ func gather() (api.DeviceFactsRequestNetwork, error) {
 	}
 
 	return api.DeviceFactsRequestNetwork{
-		FirewallEnabled: firewallEnabled,
 		Hostname:        hostname,
 		Interfaces:      interfaces,
+		FirewallEnabled: api.PtrBool(firewallEnabled),
 	}, nil
 }
 
