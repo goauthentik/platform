@@ -29,8 +29,8 @@ func gather() ([]api.DiskRequest, error) {
 		diskInfo := api.DiskRequest{
 			Name:               partition.Device,
 			Mountpoint:         partition.Mountpoint,
-			CapacityTotalBytes: api.PtrInt32(int32(usage.Total)),
-			CapacityUsedBytes:  api.PtrInt32(int32(usage.Used)),
+			CapacityTotalBytes: api.PtrInt64(int64(usage.Total)),
+			CapacityUsedBytes:  api.PtrInt64(int64(usage.Used)),
 			EncryptionEnabled:  &encrypted,
 		}
 
