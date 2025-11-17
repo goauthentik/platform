@@ -11,6 +11,7 @@ import (
 
 	"go.etcd.io/bbolt"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/platform/keyring"
 )
 
@@ -52,6 +53,7 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 		},
 	}
 	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
+	apiConfig.AddDefaultHeader("X-AK-Platform-Version", meta.Version)
 
 	c := api.NewAPIClient(apiConfig)
 	dc.c = c
