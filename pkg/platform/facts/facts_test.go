@@ -3,10 +3,12 @@ package facts
 import (
 	"encoding/json"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func TestGather(t *testing.T) {
-	sysInfo, err := Gather()
+	sysInfo, err := Gather(log.WithField("foo", "bar"))
 	if err != nil {
 		t.Fatalf("Failed to gather system info: %v", err)
 	}
@@ -33,7 +35,7 @@ func TestGather(t *testing.T) {
 }
 
 func TestSystemInfoStructure(t *testing.T) {
-	sysInfo, err := Gather()
+	sysInfo, err := Gather(log.WithField("foo", "bar"))
 	if err != nil {
 		t.Fatalf("Failed to gather system info: %v", err)
 	}

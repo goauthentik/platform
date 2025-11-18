@@ -50,7 +50,7 @@ func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
 		Vendor: map[string]any{
-			"io.goauthentik.platform": map[string]string{
+			"goauthentik.io/platform": map[string]string{
 				"agent_version": meta.FullVersion(),
 			},
 		},
