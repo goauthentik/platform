@@ -9,6 +9,7 @@ import (
 )
 
 func (dc *DomainConfig) Enroll() error {
+	dc.r.log.WithField("domain", dc.Domain).Info("Enrolling...")
 	a, err := dc.APIClient()
 	if err != nil {
 		return err

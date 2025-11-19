@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -21,10 +22,11 @@ type DomainConfig struct {
 	AppSlug            string `json:"app_slug"`
 	AuthenticationFlow string `json:"authentication_flow"`
 	Domain             string `json:"domain"`
+	Managed            bool   `json:"managed"`
 
 	// Saved to keyring
 	Token string `json:"-"`
-
+	// Fallback token when keyring is not available
 	FallbackToken string `json:"token"`
 
 	c  *api.APIClient
@@ -65,8 +67,16 @@ func (dc DomainConfig) Test() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
+	_, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 	if err != nil {
+		if hr.StatusCode == http.StatusForbidden && dc.Managed {
+			err := dc.Delete()
+			if err != nil {
+				dc.r.log.WithError(err).Warning("failed to delete domain")
+				return err
+			}
+			return dc.r.loadDomainsManaged()
+		}
 		return err
 	}
 	return nil

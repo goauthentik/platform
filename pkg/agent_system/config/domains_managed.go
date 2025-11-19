@@ -51,6 +51,7 @@ func (c *Config) loadDomainsManaged() error {
 	d.AppSlug = setup.DefaultAppSlug
 	d.AuthenticationFlow = "default-authentication-flow"
 	d.Domain = managedDomainName
+	d.Managed = true
 	err = d.Enroll()
 	if err != nil {
 		return err
