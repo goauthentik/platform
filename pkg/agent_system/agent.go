@@ -70,8 +70,8 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 		st:   config.State(),
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
-	go sm.DomainCheck()
 	sm.registerComponents()
+	sm.DomainCheck()
 
 	go sm.watchConfig()
 	return sm, nil
