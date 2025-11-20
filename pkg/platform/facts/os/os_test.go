@@ -46,8 +46,6 @@ func TestGatherLinux(t *testing.T) {
 	if *info.Name == "" {
 		t.Error("OS name should not be empty on Linux")
 	}
-
-	t.Logf("Linux distribution: %s %s", info.Name, info.Version)
 }
 
 func TestGatherWindows(t *testing.T) {
@@ -67,6 +65,4 @@ func TestGatherWindows(t *testing.T) {
 	if *info.Name == "" {
 		t.Error("OS name should not be empty on Windows")
 	}
-
-	t.Logf("Windows version: %s %s", info.Name, info.Version)
 }

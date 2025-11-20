@@ -102,7 +102,7 @@ func (c *Config) NewDomain() *DomainConfig {
 }
 
 func (dc *DomainConfig) loaded() {
-	State().ForBucket(dc.Domain).View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+	err := State().ForBucket(dc.Domain).View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		cfg := api.NullableAgentConfig{}
 		err := cfg.UnmarshalJSON(b.Get([]byte("config")))
 		if err != nil {
@@ -112,10 +112,19 @@ func (dc *DomainConfig) loaded() {
 		dc.rc = cfg.Get()
 		return nil
 	})
-	dc.fetchRemoteConfig()
+	if err != nil {
+		dc.r.log.WithError(err).Warning("failed to get cached config")
+	}
+	err = dc.fetchRemoteConfig()
+	if err != nil {
+		dc.r.log.WithError(err).Warning("failed to fetch config")
+	}
 	go func() {
 		for range time.NewTicker(1 * time.Hour).C {
-			dc.fetchRemoteConfig()
+			err := dc.fetchRemoteConfig()
+			if err != nil {
+				dc.r.log.WithError(err).Warning("failed to update config")
+			}
 		}
 	}()
 }
@@ -136,8 +145,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
-		b.Put([]byte("config"), jc)
-		return nil
+		return b.Put([]byte("config"), jc)
 	})
 }
 

@@ -16,7 +16,7 @@ func gather() (api.DeviceFactsRequestOs, error) {
 
 	return api.DeviceFactsRequestOs{
 		Arch:    runtime.GOARCH,
-		Family:  api.FAMILYENUM_LINUX,
+		Family:  api.DEVICEFACTSOSFAMILY_LINUX,
 		Name:    api.PtrString(name),
 		Version: api.PtrString(version),
 	}, nil
