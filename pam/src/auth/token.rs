@@ -1,10 +1,7 @@
-use authentik_sys::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
 use ::prost::Message;
 use authentik_sys::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
-use authentik_sys::generated::{
-    grpc_request,
-    ssh::SshTokenAuthentication,
-};
+use authentik_sys::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
+use authentik_sys::generated::{grpc_request, ssh::SshTokenAuthentication};
 use base64::{Engine, prelude::BASE64_STANDARD};
 use pam::constants::PamResultCode;
 

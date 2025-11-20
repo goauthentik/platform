@@ -10,9 +10,9 @@ updates:
       - BeryJu
   - package-ecosystem: cargo
     directories:
+      - /
       - /pam
       - /nss
-      - /utils_rs
     schedule:
       interval: daily
       time: "04:00"

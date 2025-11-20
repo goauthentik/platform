@@ -3,6 +3,7 @@ include common.mk
 TEST_COUNT = 1
 TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
+PROTO_OUT := "${PWD}/src/generated"
 
 .PHONY: all
 all: clean gen
@@ -12,10 +13,10 @@ clean: nss/clean pam/clean
 	rm -rf ${PWD}/bin/*
 
 .PHONY: gen
-gen: gen-proto utils_rs/gen ee/psso/gen
+gen: go-gen-proto rs-gen-proto ee/psso/gen
 	go generate ./...
 
-gen-proto:
+go-gen-proto:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	protoc \
@@ -24,10 +25,22 @@ gen-proto:
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
 
-lint:
-	$(MAKE) nss/lint
-	$(MAKE) pam/lint
-	$(MAKE) utils_rs/lint
+rs-gen-proto:
+	cargo install protoc-gen-prost
+	cargo install protoc-gen-tonic
+	mkdir -p $(PROTO_OUT)
+	protoc \
+		--prost_out=$(PROTO_OUT) \
+		--tonic_out=$(PROTO_OUT) \
+		--tonic_opt=no_server \
+		-I $(PROTO_DIR) \
+		${PROTO_DIR}/*
+	cargo fmt
+
+lint-rs:
+	cargo clippy --fix --allow-dirty
+
+lint: lint-rs
 	golangci-lint run
 
 test:
@@ -74,9 +87,6 @@ pam/%:
 
 nss/%:
 	"$(MAKE)" -C "${TOP}/nss" $*
-
-utils_rs/%:
-	"$(MAKE)" -C "${TOP}/utils_rs" $*
 
 browser_support/%:
 	"$(MAKE)" -C "${TOP}/cmd/browser_support" $*

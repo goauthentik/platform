@@ -1,5 +1,5 @@
 use pam::{
-    constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_OFF},
+    constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
     conv::Conv,
     items::User,
     module::PamHandle,
