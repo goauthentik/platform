@@ -77,7 +77,7 @@ jobs:
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
-          path: bin/
+          path: bin/${{ matrix.target }}
   build_js:
     name: Build
     strategy:
@@ -124,7 +124,7 @@ jobs:
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
-          path: bin/
+          path: bin/${{ matrix.target }}
   lint_go:
     name: Lint
     runs-on: ubuntu-latest
