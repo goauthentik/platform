@@ -61,7 +61,9 @@ func parseOSRelease(filename string) (string, string) {
 	if err != nil {
 		return "", ""
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	var name, version string
 	scanner := bufio.NewScanner(file)
@@ -83,7 +85,9 @@ func parseLSBRelease() (string, string) {
 	if err != nil {
 		return "", ""
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	var name, version string
 	scanner := bufio.NewScanner(file)
@@ -105,7 +109,9 @@ func readFirstLine(filename string) string {
 	if err != nil {
 		return ""
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	scanner := bufio.NewScanner(file)
 	if scanner.Scan() {

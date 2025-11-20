@@ -113,7 +113,9 @@ func getDNSServers() []string {
 	if err != nil {
 		return dnsServers
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {

@@ -43,7 +43,9 @@ func getCPUName() string {
 	// Try reading from /proc/cpuinfo
 	file, err := os.Open("/proc/cpuinfo")
 	if err == nil {
-		defer file.Close()
+		defer func() {
+			_ = file.Close()
+		}()
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
@@ -70,7 +72,9 @@ func getCPUCores() int {
 	// Try reading from /proc/cpuinfo
 	file, err := os.Open("/proc/cpuinfo")
 	if err == nil {
-		defer file.Close()
+		defer func() {
+			_ = file.Close()
+		}()
 
 		coreCount := 0
 		scanner := bufio.NewScanner(file)
@@ -111,7 +115,9 @@ func getTotalMemory() uint64 {
 	// Try reading from /proc/meminfo
 	file, err := os.Open("/proc/meminfo")
 	if err == nil {
-		defer file.Close()
+		defer func() {
+			_ = file.Close()
+		}()
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
