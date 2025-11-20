@@ -141,19 +141,13 @@ jobs:
           args: --timeout 5000s
   lint_rs:
     name: Lint
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - pam
-          - nss
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - run: |
           sudo apt-get update
           sudo apt-get install -y libpam0g-dev
-      - run: make ${{ matrix.target }}/lint
+      - run: make lint-rs
   lint_js:
     name: Lint
     strategy:

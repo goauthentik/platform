@@ -37,8 +37,10 @@ rs-gen-proto:
 		${PROTO_DIR}/*
 	cargo fmt
 
-lint:
+lint-rs:
 	cargo clippy --fix --allow-dirty
+
+lint: lint-rs
 	golangci-lint run
 
 test:
