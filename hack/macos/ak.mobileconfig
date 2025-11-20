@@ -18,7 +18,7 @@
 			<key>RegistrationToken</key>
 			<string>foo</string>
 			<key>URL</key>
-            <string>https://ak.beryju.dev</string>
+            <string>http://localhost:9000</string>
 		</dict>
 	</array>
 	<key>PayloadDisplayName</key>

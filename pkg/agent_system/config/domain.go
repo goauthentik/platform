@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/pkg/errors"
+	"go.etcd.io/bbolt"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/platform/keyring"
 )
 
@@ -19,14 +22,20 @@ type DomainConfig struct {
 	AppSlug            string `json:"app_slug"`
 	AuthenticationFlow string `json:"authentication_flow"`
 	Domain             string `json:"domain"`
+	Managed            bool   `json:"managed"`
 
 	// Saved to keyring
 	Token string `json:"-"`
-
+	// Fallback token when keyring is not available
 	FallbackToken string `json:"token"`
 
-	c *api.APIClient
-	r *Config
+	c  *api.APIClient
+	r  *Config
+	rc *api.AgentConfig
+}
+
+func (dc DomainConfig) Config() *api.AgentConfig {
+	return dc.rc
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
@@ -46,6 +55,7 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 		},
 	}
 	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
+	apiConfig.AddDefaultHeader("X-AK-Platform-Version", meta.Version)
 
 	c := api.NewAPIClient(apiConfig)
 	dc.c = c
@@ -57,8 +67,16 @@ func (dc DomainConfig) Test() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = ac.CoreApi.CoreUsersMeRetrieve(context.Background()).Execute()
+	_, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 	if err != nil {
+		if hr.StatusCode == http.StatusForbidden && dc.Managed {
+			err := dc.Delete()
+			if err != nil {
+				dc.r.log.WithError(err).Warning("failed to delete domain")
+				return err
+			}
+			return dc.r.loadDomainsManaged()
+		}
 		return err
 	}
 	return nil
@@ -83,6 +101,54 @@ func (c *Config) NewDomain() *DomainConfig {
 	}
 }
 
+func (dc *DomainConfig) loaded() {
+	err := State().ForBucket(dc.Domain).View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+		cfg := api.NullableAgentConfig{}
+		err := cfg.UnmarshalJSON(b.Get([]byte("config")))
+		if err != nil {
+			return err
+		}
+		dc.r.log.Info("Loaded domain config")
+		dc.rc = cfg.Get()
+		return nil
+	})
+	if err != nil {
+		dc.r.log.WithError(err).Warning("failed to get cached config")
+	}
+	err = dc.fetchRemoteConfig()
+	if err != nil {
+		dc.r.log.WithError(err).Warning("failed to fetch config")
+	}
+	go func() {
+		for range time.NewTicker(1 * time.Hour).C {
+			err := dc.fetchRemoteConfig()
+			if err != nil {
+				dc.r.log.WithError(err).Warning("failed to update config")
+			}
+		}
+	}()
+}
+
+func (dc *DomainConfig) fetchRemoteConfig() error {
+	return State().ForBucket(dc.Domain).Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+		api, err := dc.APIClient()
+		if err != nil {
+			return err
+		}
+		cfg, _, err := api.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
+		if err != nil {
+			return err
+		}
+		dc.r.log.Debug("fetched remote config")
+		dc.rc = cfg
+		jc, err := cfg.MarshalJSON()
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte("config"), jc)
+	})
+}
+
 func (c *Config) loadDomains() error {
 	c.log.Debug("Loading domains...")
 	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
@@ -90,7 +156,7 @@ func (c *Config) loadDomains() error {
 		c.log.WithError(err).Warning("failed to load domains")
 		return err
 	}
-	dom := []DomainConfig{}
+	dom := []*DomainConfig{}
 	for _, match := range m {
 		co, err := os.ReadFile(match)
 		if err != nil {
@@ -105,15 +171,13 @@ func (c *Config) loadDomains() error {
 		}
 		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain)
 		if err != nil {
-			if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
-				c.log.WithError(err).Warning("failed to load domain token")
-				continue
-			}
+			c.log.WithError(err).Warning("failed to load domain token from keyring")
 			token = d.FallbackToken
 		}
 		d.Token = token
 		c.log.WithField("domain", d.Domain).Debug("loaded domain")
-		dom = append(dom, *d)
+		dom = append(dom, d)
+		d.loaded()
 	}
 	c.domains = dom
 	c.log.Debug("Checking for managed domains...")

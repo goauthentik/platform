@@ -1,7 +1,10 @@
 package ak
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -71,4 +74,19 @@ func Paginator[Tobj any, Treq any, Tres PaginatorResponse[Tobj]](
 		}
 	}
 	return objects, errors.Join(errs...)
+}
+
+func HTTPToError(r *http.Response, err error) error {
+	if r == nil {
+		return fmt.Errorf("HTTP Error '%s' without http response", err.Error())
+	}
+	if r.StatusCode == 404 {
+		return errors.New("not found")
+	}
+	buff := &bytes.Buffer{}
+	_, er := io.Copy(buff, r.Body)
+	if er != nil {
+		log.Printf("[DEBUG] authentik: failed to read response: %s", er.Error())
+	}
+	return fmt.Errorf("HTTP Error '%s' during request '%s %s': \"%s\"", err.Error(), r.Request.Method, r.Request.URL.Path, buff.String())
 }

@@ -6,17 +6,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/api/v3"
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/pb"
 )
 
 func testNSS() Server {
 	return Server{
-		cfg: &config.Config{
-			NSS: config.NSSConfig{
-				UIDOffset: 1000,
-				GIDOffset: 1000,
-			},
+		cfg: &api.AgentConfig{
+			NssUidOffset: 1000,
+			NssGidOffset: 1000,
 		},
 		log:    log.WithField("component", "test"),
 		users:  []*pb.User{},

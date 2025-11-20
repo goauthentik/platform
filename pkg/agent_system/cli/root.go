@@ -16,8 +16,9 @@ var configFile string
 var defaultConfigFile = types.ConfigPath().ForCurrent()
 
 var rootCmd = &cobra.Command{
-	Use:   "ak-sysd",
-	Short: fmt.Sprintf("authentik System Agent v%s", meta.FullVersion()),
+	Use:     "ak-sysd",
+	Short:   fmt.Sprintf("authentik System Agent v%s", meta.FullVersion()),
+	Version: meta.FullVersion(),
 }
 
 func Execute() {

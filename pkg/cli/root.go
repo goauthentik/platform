@@ -23,8 +23,9 @@ func mustFlag[T any](res T, err error) T {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "ak",
-	Short: fmt.Sprintf("authentik CLI v%s", meta.FullVersion()),
+	Use:     "ak",
+	Short:   fmt.Sprintf("authentik CLI v%s", meta.FullVersion()),
+	Version: meta.FullVersion(),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		verbose := mustFlag(cmd.Flags().GetBool("verbose"))
 		if verbose {
