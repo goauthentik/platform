@@ -317,7 +317,7 @@ if (CXXBRIDGE STREQUAL "CXXBRIDGE-NOTFOUND")
     find_program(CXXBRIDGE cxxbridge PATHS "$ENV{HOME}/.cargo/bin/")
 endif()
 
-corrosion_import_crate(MANIFEST_PATH ../../utils_rs/Cargo.toml)
+corrosion_import_crate(MANIFEST_PATH ../../Cargo.toml)
 corrosion_add_cxxbridge(
   authentik_sys_bridge
   CRATE authentik_sys

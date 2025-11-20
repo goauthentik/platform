@@ -6,6 +6,10 @@ edition = "2024"
 [lib]
 crate-type = ["staticlib", "lib"]
 
+[workspace]
+resolver = "3"
+members = ["nss", "pam"]
+
 [[example]]
 name = "grpc"
 

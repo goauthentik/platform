@@ -3,7 +3,8 @@ use authentik_sys::generated::{
     sys_auth::{
         InteractiveAuthContinueRequest, InteractiveAuthInitRequest, InteractiveAuthRequest,
         InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
-        interactive_challenge::PromptMeta, system_auth_interactive_client::SystemAuthInteractiveClient,
+        interactive_challenge::PromptMeta,
+        system_auth_interactive_client::SystemAuthInteractiveClient,
     },
 };
 use pam::{
@@ -14,7 +15,7 @@ use pam::{
     conv::Conv,
 };
 
-use crate::{auth::PW_PROMPT};
+use crate::auth::PW_PROMPT;
 
 const MAX_ITER: i8 = 30;
 

@@ -16,9 +16,6 @@ build:
 		--verbose \
 		--release
 
-lint:
-	cargo clippy --fix --allow-dirty
-
 test:
 	cargo test --verbose
 

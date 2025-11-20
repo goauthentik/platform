@@ -10,7 +10,7 @@ name = "authentik_pam"
 crate-type = ["cdylib"]
 
 [dependencies]
-authentik_sys = { path = "../utils_rs" }
+authentik_sys = { path = ".." }
 base64 = "0.22.1"
 ctor = "0.6.1"
 gethostname = "1.1.0"
