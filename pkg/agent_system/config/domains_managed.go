@@ -54,11 +54,11 @@ func (c *Config) loadDomainsManaged() error {
 	d.Managed = true
 	err = d.Enroll()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to enroll")
 	}
 	err = c.SaveDomain(d)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to save domain")
 	}
 	d.loaded()
 	return nil
