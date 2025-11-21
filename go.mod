@@ -162,3 +162,5 @@ tool (
 )
 
 replace github.com/keybase/go-keychain => github.com/alexw23/go-keychain v0.0.0-20240507145345-41efe171240e
+
+replace goauthentik.io/api/v3 => ../authentik/gen-go-api

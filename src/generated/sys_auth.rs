@@ -55,6 +55,11 @@ pub mod interactive_auth_request {
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct InteractiveAuthAsyncResponse {
+    #[prost(string, tag = "1")]
+    pub url: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InteractiveChallenge {
     #[prost(string, tag = "1")]
     pub txid: ::prost::alloc::string::String,

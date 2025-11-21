@@ -14,7 +14,10 @@ service SystemAuthToken {
 }
 
 service SystemAuthInteractive {
+  // Interactive auth without a browser (for example, CLI)
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
+  // Interactive auth which is handed of to a browser
+  rpc InteractiveAuthAsync(google.protobuf.Empty) returns (InteractiveAuthAsyncResponse);
 }
 
 service SystemAuthAuthorize {
@@ -53,6 +56,10 @@ message InteractiveAuthRequest {
     InteractiveAuthInitRequest init = 1;
     InteractiveAuthContinueRequest continue = 2;
   }
+}
+
+message InteractiveAuthAsyncResponse {
+  string url = 1;
 }
 
 enum InteractiveAuthResult {

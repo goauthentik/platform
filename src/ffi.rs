@@ -5,13 +5,13 @@ use std::pin::Pin;
 use crate::generated::grpc_request;
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
+use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 
 #[cxx::bridge]
 mod ffi {
-    struct WCPOAuthConfig {
+    struct WCPAuthStartAsync {
         pub url: String,
-        pub client_id: String,
     }
 
     struct TokenResponse {
@@ -27,7 +27,7 @@ mod ffi {
             token: &mut TokenResponse,
         ) -> Result<bool>;
 
-        fn ak_sys_wcp_oauth_config(res: &mut WCPOAuthConfig) -> Result<bool>;
+        fn ak_sys_auth_start_async(res: &mut WCPAuthStartAsync) -> Result<bool>;
     }
 }
 
@@ -63,12 +63,13 @@ fn ak_sys_token_validate(
     Ok(response.successful)
 }
 
-fn ak_sys_wcp_oauth_config(res: &mut ffi::WCPOAuthConfig) -> Result<bool, Box<dyn Error>> {
+fn ak_sys_auth_start_async(res: &mut ffi::WCPAuthStartAsync) -> Result<bool, Box<dyn Error>> {
     let response = grpc_request(async |ch| {
-        return Ok(SystemAuthTokenClient::new(ch).o_auth_params(()).await?);
+        return Ok(SystemAuthInteractiveClient::new(ch)
+            .interactive_auth_async(())
+            .await?);
     })?
     .into_inner();
     res.url = response.url;
-    res.client_id = response.client_id;
     Ok(true)
 }
