@@ -61,5 +61,6 @@ func (c *Config) loadDomainsManaged() error {
 		return errors.Wrap(err, "failed to save domain")
 	}
 	d.loaded()
+	c.domains = append(c.domains, d)
 	return nil
 }
