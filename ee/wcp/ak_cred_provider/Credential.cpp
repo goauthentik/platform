@@ -8,7 +8,6 @@
 // {
 #include "cefsimple/cefsimple_win.h"
 // }
-#include "ak_config.h"
 #include "authentik_sys_bridge/ffi.h"
 #include <WinUser.h>
 
@@ -704,22 +703,6 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
   if (m_pCredProvCredentialEvents) {
     HWND hwndOwner = nullptr;
     m_pCredProvCredentialEvents->OnCreatingWindow(&hwndOwner);
-
-    auto config = WCPOAuthConfig();
-    hr = ak_get_config(&config);
-    if (hr != S_OK) {
-      if (hr == E_OUTOFMEMORY) {
-        pqcws->SetStatusMessage(L"Error reading GUID (out of memory).");
-      } else {
-        pqcws->SetStatusMessage(L"Error reading GUID.");
-      }
-      Sleep(500); // Short delay to let the message appear
-      MessageBox(NULL, std::wstring(L"Error retrieveing config.").c_str(),
-                 (LPCWSTR)L"Internal Error", MB_OK | MB_TASKMODAL);
-      return hr;
-    }
-    m_oHookData.UpdateBaseURL(config.url.c_str());
-    m_oHookData.UpdateClientID(config.client_id.c_str());
 
     std::string str =
         "Submit:: ProcessID: " + std::to_string(GetCurrentProcessId()) +

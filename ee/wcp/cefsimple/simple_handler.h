@@ -27,9 +27,6 @@
 
 #include "Credential.h"
 
-// https://windows-cred-provider.pr.test.goauthentik.io
-const std::string g_strTokenEndpoint = "/application/o/token/";
-
 class SimpleHandler : public CefClient,
                       public CefDisplayHandler,
                       public CefLifeSpanHandler,
@@ -122,70 +119,23 @@ class SimpleHandler : public CefClient,
         Debug(strURL.c_str());
         std::string str = "OnBeforeResourceLoad ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
         Debug(str.c_str());
-        size_t nPos = strURL.find("code=") + 5;
-        m_strCode = strURL.substr(nPos, strURL.find("&", nPos) - nPos);
-        Debug(std::string("Code: " + m_strCode).c_str());
-        nPos = strURL.find("state=") + 6;
-        std::string strState = strURL.substr(nPos, strURL.find("&", nPos) - nPos);
-        Debug(std::string("State:: " + strState).c_str());
-
-        if (strState == m_strState) //- else notify error?
-        {
-          Hide();
-          m_pData->UpdateStatus(L"Authenticating, please wait...");
-          browser->GetMainFrame()->LoadURL(CefString(m_pData->strBaseURL + g_strTokenEndpoint));
+        Hide();
+        m_pData->UpdateStatus(L"Authenticating, please wait...");
+        auto validatedToken = TokenResponse();
+        try {
+          if (!ak_sys_token_validate("", strURL, validatedToken)) {
+            SPDLOG_WARN("failed to validate token");
+          }
+          m_pData->UpdateUser(validatedToken.username.c_str());
+        } catch (const std::exception &ex) {
+          Debug("Exception in ak_sys_token_validate");
+          Debug(ex.what());
         }
-        else
-        {
-          MessageBox(
-              NULL,
-              (LPCWSTR)L"Server response is forged.",
-              (LPCWSTR)L"Error",
-              MB_OK
-            );
-        }
+        CloseAllBrowsers(false);
 
         return RV_CANCEL;
       }
     }
-    if (strURL == (m_pData->strBaseURL + g_strTokenEndpoint))
-    {
-      std::string str = "Resource load: " + strURL;
-      Debug(str.c_str());
-      request->SetMethod("POST");
-
-      //- todo: out to URLEncode
-      std::string strPostData = "grant_type=authorization_code";
-      strPostData += "&client_id=" + (m_pData->strClientID);
-      strPostData += "&code=" + m_strCode;
-      strPostData += "&code_verifier=" + m_strCodeVerifier;
-      std::string strHash = "";
-      strPostData += "&redirect_uri=goauthentik.io://windows/redirect";
-      strPostData += "&scope=openid%20email%20profile%20offline_access%20windows";
-      CefRefPtr<CefPostData> pPostData = CefPostData::Create();
-      CefRefPtr<CefPostDataElement> pPostDataElement = CefPostDataElement::Create();
-      pPostDataElement->SetToBytes(strPostData.size(), strPostData.c_str());
-      pPostData->AddElement(pPostDataElement);
-      request->SetPostData(pPostData);
-
-      CefRequest::HeaderMap mapHeader;
-      request->GetHeaderMap(mapHeader);
-      if (mapHeader.find("Content-Type") != mapHeader.end())
-      {
-        mapHeader.erase("Content-Type");
-      }
-      mapHeader.insert(std::make_pair<CefString, CefString>("Content-Type", "application/x-www-form-urlencoded"));
-      if (mapHeader.find("Accept") != mapHeader.end())
-      {
-        mapHeader.erase("Accept");
-      }
-      mapHeader.insert(std::make_pair<CefString, CefString>("Accept", "application/json"));
-      // Must not set Content-Length, its auto-set.
-      request->SetHeaderMap(mapHeader);
-      pPostDataElement = (std::nullptr_t)NULL;
-      pPostData = (std::nullptr_t)NULL;
-    }
-
     return RV_CONTINUE;
   }
 
@@ -194,16 +144,6 @@ class SimpleHandler : public CefClient,
     CefRefPtr<CefFrame> frame,
     CefRefPtr<CefRequest> request,
     CefRefPtr<CefResponse> response) {
-
-    //CEF_REQUIRE_IO_THREAD();
-    const std::string& url = request->GetURL();
-
-    if ((url == (m_pData->strBaseURL + g_strTokenEndpoint)))
-    {
-      m_strResponseContent = ""; // reset
-      return this;
-    }
-
     return nullptr;
   }
 
@@ -264,38 +204,6 @@ class SimpleHandler : public CefClient,
       Debug(strOut.c_str());
       Debug("-------------------");
       return RESPONSE_FILTER_DONE; //- todo: check for residual data
-  }
-
-  void OnResourceLoadComplete(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    CefRefPtr<CefRequest> request,
-    CefRefPtr<CefResponse> response,
-    URLRequestStatus status,
-    int64_t received_content_length
-  ) override {
-    const std::string& url = request->GetURL();
-
-    if (url == (m_pData->strBaseURL + g_strTokenEndpoint))
-    {
-      const std::string strTokenKey = "\"access_token\": \"";
-      size_t nPos = m_strResponseContent.find(strTokenKey) + strTokenKey.size();
-      m_strJWT = m_strResponseContent.substr(nPos, m_strResponseContent.find("\"", nPos) - nPos);
-      m_strResponseContent = ""; // Delete JWT for security //- todo: do a proper overwrite
-      Debug("JWT:");
-      Debug(m_strJWT.c_str());
-      auto validatedToken = TokenResponse();
-      try {
-        if (!ak_sys_token_validate("", m_strJWT, validatedToken)) {
-          SPDLOG_WARN("failed to validate token");
-        }
-        m_pData->UpdateUser(validatedToken.username.c_str());
-      } catch (const std::exception &ex) {
-        Debug("Exception in ak_sys_token_validate");
-        Debug(ex.what());
-      }
-      CloseAllBrowsers(false);
-    }
   }
 
   // CefDisplayHandler methods:

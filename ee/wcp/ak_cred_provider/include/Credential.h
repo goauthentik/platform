@@ -28,18 +28,6 @@ struct sHookData
         strUsername = strUser;
         oMutex.unlock();
     }
-    void UpdateBaseURL(const std::string& strURL)
-    {
-        oMutex.lock();
-        strBaseURL = strURL;
-        oMutex.unlock();
-    }
-    void UpdateClientID(const std::string& strAuthClientID)
-    {
-        oMutex.lock();
-        strClientID = strAuthClientID;
-        oMutex.unlock();
-    }
     void SetExit(const bool bVal)
     {
         Debug(std::string("SetExit: " + std::to_string((size_t)bVal)).c_str());
@@ -116,8 +104,6 @@ struct sHookData
     PWSTR           UserSid = NULL;
     HINSTANCE       hInstance = NULL;
     std::string     strUsername = "";
-    std::string     strBaseURL = "";
-    std::string     strClientID = "";
     bool            bExit = false;      // flag to exit the custom loop
     bool            bComplete = false;  // UI call complete
     bool            bCancel = false;    // whether the user clicked cancel

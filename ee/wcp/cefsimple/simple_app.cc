@@ -16,6 +16,7 @@
 #include "cefsimple/simple_handler.h"
 #include "ak_cred_provider/include/resource.h"
 #include "include/cef_image.h"
+#include "authentik_sys_bridge/ffi.h"
 
 // GetModuleHandle(NULL) returns a handle to the module that was used to create the process.
 // This fails when the resource is compiled into a DLL.
@@ -37,20 +38,16 @@ namespace {
     if (!(m_pHandler->CloseCalled()))
     {
       std::string url = "";
-      std::string strHash = "";
-      if (! Hash_SHA256(m_pHandler->GetCodeVerifier(), strHash))
-      {
-        MessageBox(
-            NULL,
-            (LPCWSTR)L"Internal error.",
-            (LPCWSTR)L"Error",
-            MB_OK
-        );
-      }
-      else
-      {
-        url = (m_pData->strBaseURL) + "/application/o/authorize/?client_id=" + (m_pData->strClientID) + "&redirect_uri=goauthentik.io://windows/redirect&response_type=code&code_challenge="
-            + strHash + "&code_challenge_method=S256&state=" + m_pHandler->GetState() + "&scope=openid%20email%20profile%20offline_access%20windows";
+      try {
+        WCPAuthStartAsync start;
+        if (!ak_sys_auth_start_async(start)) {
+          Debug("Failed to start auth async");
+          return;
+        }
+        url = start.url.c_str();
+      } catch (const std::exception &ex) {
+        Debug("Exception in ak_sys_token_validate");
+        Debug(ex.what());
       }
       Debug(std::string("m_pBrowserView: " + std::to_string((size_t)(m_pBrowserView.get()))).c_str());
       Debug(std::string("m_pBrowserView->GetBrowser(): " + std::to_string((size_t)(m_pBrowserView->GetBrowser().get()))).c_str());
@@ -323,26 +320,6 @@ bool SimpleApp::LaunchBrowser(CefRefPtr<SimpleHandler> handler, const bool use_a
   CefBrowserSettings browser_settings;
 
   std::string url = "";
-
-  // // Check if a "--url=" value was provided via the command-line. If so, use
-  // // that instead of the default URL.
-  // // url = command_line->GetSwitchValue("url");
-  // std::string strHash = "";
-  // if (! Hash_SHA256(handler->GetCodeVerifier(), strHash))
-  // {
-  //   MessageBox(
-  //       NULL,
-  //       (LPCWSTR)L"Internal error.",
-  //       (LPCWSTR)L"Error",
-  //       MB_OK
-  //   );
-  // }
-  // else
-  // {
-  //   // https://windows-cred-provider.pr.test.goauthentik.io
-  //   url = (m_pData->strBaseURL) + "/application/o/authorize/?client_id=" + (m_pData->strClientID) + "&redirect_uri=goauthentik.io://windows/redirect&response_type=code&code_challenge="
-  //       + strHash + "&code_challenge_method=S256&state=" + handler->GetState() + "&scope=openid%20email%20profile%20offline_access%20windows";
-  // }
 
   // Views is enabled by default (add `--use-native` to disable).
   const bool use_views = !command_line->HasSwitch("use-native");
