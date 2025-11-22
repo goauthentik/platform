@@ -36,15 +36,14 @@ func gather() ([]api.ProcessRequest, error) {
 			}
 		}
 
-		username, err := p.Username()
-		if err != nil {
-			username = ""
-		}
-
 		procInfo := api.ProcessRequest{
 			Id:   pids[i],
 			Name: name,
-			User: api.PtrString(username),
+		}
+
+		username, err := p.Username()
+		if err == nil {
+			procInfo.User = api.PtrString(username)
 		}
 
 		processes = append(processes, procInfo)
