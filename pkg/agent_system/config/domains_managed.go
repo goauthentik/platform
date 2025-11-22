@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"goauthentik.io/platform/pkg/cli/setup"
 	managedconfig "goauthentik.io/platform/pkg/platform/managed_config"
 	"goauthentik.io/platform/pkg/platform/pstr"
 )
@@ -48,8 +47,6 @@ func (c *Config) loadDomainsManaged() error {
 	d := c.NewDomain()
 	d.AuthentikURL = mc.URL
 	d.Token = mc.RegistrationToken
-	d.AppSlug = setup.DefaultAppSlug
-	d.AuthenticationFlow = "default-authentication-flow"
 	d.Domain = managedDomainName
 	d.Managed = true
 	err = d.Enroll()

@@ -12,12 +12,8 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
-	lconfig "goauthentik.io/platform/pkg/agent_local/config"
-	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/ak/token"
-	"goauthentik.io/platform/pkg/cli/setup"
 	"goauthentik.io/platform/pkg/pb"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -42,10 +38,7 @@ func (auth *Server) startFetch() {
 }
 
 func (auth *Server) refreshTokenJWKS() {
-	jwk, err := jwkset.NewStorageFromHTTP(ak.URLsForProfile(&lconfig.ConfigV1Profile{
-		AuthentikURL: auth.dom.AuthentikURL,
-		AppSlug:      auth.dom.AppSlug,
-	}).JWKS, jwkset.HTTPClientStorageOptions{})
+	jwk, err := jwkset.NewStorageFromHTTP(auth.dom.Config().JwksUrl, jwkset.HTTPClientStorageOptions{})
 	if err != nil {
 		auth.log.WithError(err).Warning("failed to fetch JWKS")
 		return
@@ -114,13 +107,5 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Jti:               token.Claims().ID,
 		},
 		SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
-	}, nil
-}
-
-func (auth *Server) OAuthParams(context.Context, *emptypb.Empty) (*pb.OAuthParamsResponse, error) {
-	return &pb.OAuthParamsResponse{
-		Url:      auth.dom.AuthentikURL,
-		AppSlug:  auth.dom.AppSlug,
-		ClientId: setup.DefaultClientID,
 	}, nil
 }

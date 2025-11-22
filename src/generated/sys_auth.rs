@@ -17,15 +17,6 @@ pub struct TokenAuthResponse {
     pub session_id: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct OAuthParamsResponse {
-    #[prost(string, tag = "10")]
-    pub url: ::prost::alloc::string::String,
-    #[prost(string, tag = "11")]
-    pub client_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "12")]
-    pub app_slug: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InteractiveAuthInitRequest {
     #[prost(string, tag = "1")]
     pub username: ::prost::alloc::string::String,

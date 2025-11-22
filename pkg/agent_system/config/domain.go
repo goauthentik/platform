@@ -17,12 +17,10 @@ import (
 )
 
 type DomainConfig struct {
-	Enabled            bool   `json:"enabled"`
-	AuthentikURL       string `json:"authentik_url"`
-	AppSlug            string `json:"app_slug"`
-	AuthenticationFlow string `json:"authentication_flow"`
-	Domain             string `json:"domain"`
-	Managed            bool   `json:"managed"`
+	Enabled      bool   `json:"enabled"`
+	AuthentikURL string `json:"authentik_url"`
+	Domain       string `json:"domain"`
+	Managed      bool   `json:"managed"`
 
 	// Saved to keyring
 	Token string `json:"-"`

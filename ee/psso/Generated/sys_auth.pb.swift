@@ -97,22 +97,6 @@ struct TokenAuthResponse: Sendable {
   fileprivate var _token: Token? = nil
 }
 
-struct OAuthParamsResponse: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  var url: String = String()
-
-  var clientID: String = String()
-
-  var appSlug: String = String()
-
-  var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  init() {}
-}
-
 struct InteractiveAuthInitRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -171,6 +155,18 @@ struct InteractiveAuthRequest: Sendable {
     case `continue`(InteractiveAuthContinueRequest)
 
   }
+
+  init() {}
+}
+
+struct InteractiveAuthAsyncResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var url: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
@@ -390,46 +386,6 @@ extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension OAuthParamsResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".OAuthParamsResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\u{a}url\0\u{3}client_id\0\u{3}app_slug\0")
-
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 10: try { try decoder.decodeSingularStringField(value: &self.url) }()
-      case 11: try { try decoder.decodeSingularStringField(value: &self.clientID) }()
-      case 12: try { try decoder.decodeSingularStringField(value: &self.appSlug) }()
-      default: break
-      }
-    }
-  }
-
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.url.isEmpty {
-      try visitor.visitSingularStringField(value: self.url, fieldNumber: 10)
-    }
-    if !self.clientID.isEmpty {
-      try visitor.visitSingularStringField(value: self.clientID, fieldNumber: 11)
-    }
-    if !self.appSlug.isEmpty {
-      try visitor.visitSingularStringField(value: self.appSlug, fieldNumber: 12)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  static func ==(lhs: OAuthParamsResponse, rhs: OAuthParamsResponse) -> Bool {
-    if lhs.url != rhs.url {return false}
-    if lhs.clientID != rhs.clientID {return false}
-    if lhs.appSlug != rhs.appSlug {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
 extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthInitRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}password\0")
@@ -562,6 +518,36 @@ extension InteractiveAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
   static func ==(lhs: InteractiveAuthRequest, rhs: InteractiveAuthRequest) -> Bool {
     if lhs.interactiveAuth != rhs.interactiveAuth {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".InteractiveAuthAsyncResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}url\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.url) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.url.isEmpty {
+      try visitor.visitSingularStringField(value: self.url, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: InteractiveAuthAsyncResponse, rhs: InteractiveAuthAsyncResponse) -> Bool {
+    if lhs.url != rhs.url {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

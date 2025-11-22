@@ -10,7 +10,6 @@ import "agent_auth.proto";
 
 service SystemAuthToken {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
-  rpc OAuthParams(google.protobuf.Empty) returns (OAuthParamsResponse);
 }
 
 service SystemAuthInteractive {
@@ -33,12 +32,6 @@ message TokenAuthResponse {
   bool successful = 1;
   agent.Token token = 2;
   string session_id = 3;
-}
-
-message OAuthParamsResponse {
-  string url = 10;
-  string client_id = 11;
-  string app_slug = 12;
 }
 
 message InteractiveAuthInitRequest {

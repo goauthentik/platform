@@ -28,7 +28,6 @@ var domainsJoinCmd = &cobra.Command{
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		base := mustFlag(cmd.Flags().GetString("authentik-url"))
-		appSlug := mustFlag(cmd.Flags().GetString("app"))
 		token, err := readPassword("Enter authentik enrollment token: ")
 		if err != nil {
 			return err
@@ -36,9 +35,7 @@ var domainsJoinCmd = &cobra.Command{
 		d := config.Manager().Get().NewDomain()
 		d.Domain = args[0]
 		d.AuthentikURL = base
-		d.AppSlug = appSlug
 		d.Token = token
-		d.AuthenticationFlow = "default-authentication-flow"
 		err = d.Enroll()
 		if err != nil {
 			return err
@@ -73,5 +70,4 @@ func readPassword(prompt string) (string, error) {
 func init() {
 	domainsCmd.AddCommand(domainsJoinCmd)
 	domainsJoinCmd.Flags().StringP("authentik-url", "a", "", "URL to the authentik Instance")
-	domainsJoinCmd.Flags().StringP("app", "d", "authentik-platform", "Slug of the Platform application")
 }

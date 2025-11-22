@@ -132,7 +132,7 @@ func (x InteractiveChallenge_PromptMeta) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use InteractiveChallenge_PromptMeta.Descriptor instead.
 func (InteractiveChallenge_PromptMeta) EnumDescriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{7, 0}
+	return file_sys_auth_proto_rawDescGZIP(), []int{6, 0}
 }
 
 type TokenAuthRequest struct {
@@ -247,66 +247,6 @@ func (x *TokenAuthResponse) GetSessionId() string {
 	return ""
 }
 
-type OAuthParamsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Url           string                 `protobuf:"bytes,10,opt,name=url,proto3" json:"url,omitempty"`
-	ClientId      string                 `protobuf:"bytes,11,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	AppSlug       string                 `protobuf:"bytes,12,opt,name=app_slug,json=appSlug,proto3" json:"app_slug,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *OAuthParamsResponse) Reset() {
-	*x = OAuthParamsResponse{}
-	mi := &file_sys_auth_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *OAuthParamsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OAuthParamsResponse) ProtoMessage() {}
-
-func (x *OAuthParamsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OAuthParamsResponse.ProtoReflect.Descriptor instead.
-func (*OAuthParamsResponse) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *OAuthParamsResponse) GetUrl() string {
-	if x != nil {
-		return x.Url
-	}
-	return ""
-}
-
-func (x *OAuthParamsResponse) GetClientId() string {
-	if x != nil {
-		return x.ClientId
-	}
-	return ""
-}
-
-func (x *OAuthParamsResponse) GetAppSlug() string {
-	if x != nil {
-		return x.AppSlug
-	}
-	return ""
-}
-
 type InteractiveAuthInitRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
@@ -317,7 +257,7 @@ type InteractiveAuthInitRequest struct {
 
 func (x *InteractiveAuthInitRequest) Reset() {
 	*x = InteractiveAuthInitRequest{}
-	mi := &file_sys_auth_proto_msgTypes[3]
+	mi := &file_sys_auth_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -329,7 +269,7 @@ func (x *InteractiveAuthInitRequest) String() string {
 func (*InteractiveAuthInitRequest) ProtoMessage() {}
 
 func (x *InteractiveAuthInitRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[3]
+	mi := &file_sys_auth_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -342,7 +282,7 @@ func (x *InteractiveAuthInitRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InteractiveAuthInitRequest.ProtoReflect.Descriptor instead.
 func (*InteractiveAuthInitRequest) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{3}
+	return file_sys_auth_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *InteractiveAuthInitRequest) GetUsername() string {
@@ -369,7 +309,7 @@ type InteractiveAuthContinueRequest struct {
 
 func (x *InteractiveAuthContinueRequest) Reset() {
 	*x = InteractiveAuthContinueRequest{}
-	mi := &file_sys_auth_proto_msgTypes[4]
+	mi := &file_sys_auth_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -381,7 +321,7 @@ func (x *InteractiveAuthContinueRequest) String() string {
 func (*InteractiveAuthContinueRequest) ProtoMessage() {}
 
 func (x *InteractiveAuthContinueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[4]
+	mi := &file_sys_auth_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -394,7 +334,7 @@ func (x *InteractiveAuthContinueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InteractiveAuthContinueRequest.ProtoReflect.Descriptor instead.
 func (*InteractiveAuthContinueRequest) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{4}
+	return file_sys_auth_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *InteractiveAuthContinueRequest) GetTxid() string {
@@ -424,7 +364,7 @@ type InteractiveAuthRequest struct {
 
 func (x *InteractiveAuthRequest) Reset() {
 	*x = InteractiveAuthRequest{}
-	mi := &file_sys_auth_proto_msgTypes[5]
+	mi := &file_sys_auth_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -436,7 +376,7 @@ func (x *InteractiveAuthRequest) String() string {
 func (*InteractiveAuthRequest) ProtoMessage() {}
 
 func (x *InteractiveAuthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[5]
+	mi := &file_sys_auth_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -449,7 +389,7 @@ func (x *InteractiveAuthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InteractiveAuthRequest.ProtoReflect.Descriptor instead.
 func (*InteractiveAuthRequest) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{5}
+	return file_sys_auth_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *InteractiveAuthRequest) GetInteractiveAuth() isInteractiveAuthRequest_InteractiveAuth {
@@ -502,7 +442,7 @@ type InteractiveAuthAsyncResponse struct {
 
 func (x *InteractiveAuthAsyncResponse) Reset() {
 	*x = InteractiveAuthAsyncResponse{}
-	mi := &file_sys_auth_proto_msgTypes[6]
+	mi := &file_sys_auth_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -514,7 +454,7 @@ func (x *InteractiveAuthAsyncResponse) String() string {
 func (*InteractiveAuthAsyncResponse) ProtoMessage() {}
 
 func (x *InteractiveAuthAsyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[6]
+	mi := &file_sys_auth_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -527,7 +467,7 @@ func (x *InteractiveAuthAsyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InteractiveAuthAsyncResponse.ProtoReflect.Descriptor instead.
 func (*InteractiveAuthAsyncResponse) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{6}
+	return file_sys_auth_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *InteractiveAuthAsyncResponse) GetUrl() string {
@@ -552,7 +492,7 @@ type InteractiveChallenge struct {
 
 func (x *InteractiveChallenge) Reset() {
 	*x = InteractiveChallenge{}
-	mi := &file_sys_auth_proto_msgTypes[7]
+	mi := &file_sys_auth_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -564,7 +504,7 @@ func (x *InteractiveChallenge) String() string {
 func (*InteractiveChallenge) ProtoMessage() {}
 
 func (x *InteractiveChallenge) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[7]
+	mi := &file_sys_auth_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -577,7 +517,7 @@ func (x *InteractiveChallenge) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InteractiveChallenge.ProtoReflect.Descriptor instead.
 func (*InteractiveChallenge) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{7}
+	return file_sys_auth_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *InteractiveChallenge) GetTxid() string {
@@ -639,7 +579,7 @@ type SystemAuthorizeRequest struct {
 
 func (x *SystemAuthorizeRequest) Reset() {
 	*x = SystemAuthorizeRequest{}
-	mi := &file_sys_auth_proto_msgTypes[8]
+	mi := &file_sys_auth_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -651,7 +591,7 @@ func (x *SystemAuthorizeRequest) String() string {
 func (*SystemAuthorizeRequest) ProtoMessage() {}
 
 func (x *SystemAuthorizeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[8]
+	mi := &file_sys_auth_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -664,7 +604,7 @@ func (x *SystemAuthorizeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SystemAuthorizeRequest.ProtoReflect.Descriptor instead.
 func (*SystemAuthorizeRequest) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{8}
+	return file_sys_auth_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SystemAuthorizeRequest) GetSessionId() string {
@@ -691,7 +631,7 @@ type SystemAuthorizeResponse struct {
 
 func (x *SystemAuthorizeResponse) Reset() {
 	*x = SystemAuthorizeResponse{}
-	mi := &file_sys_auth_proto_msgTypes[9]
+	mi := &file_sys_auth_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -703,7 +643,7 @@ func (x *SystemAuthorizeResponse) String() string {
 func (*SystemAuthorizeResponse) ProtoMessage() {}
 
 func (x *SystemAuthorizeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_auth_proto_msgTypes[9]
+	mi := &file_sys_auth_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -716,7 +656,7 @@ func (x *SystemAuthorizeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SystemAuthorizeResponse.ProtoReflect.Descriptor instead.
 func (*SystemAuthorizeResponse) Descriptor() ([]byte, []int) {
-	return file_sys_auth_proto_rawDescGZIP(), []int{9}
+	return file_sys_auth_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SystemAuthorizeResponse) GetResponse() *AuthorizeResponse {
@@ -747,12 +687,7 @@ const file_sys_auth_proto_rawDesc = "" +
 	"successful\x12\"\n" +
 	"\x05token\x18\x02 \x01(\v2\f.agent.TokenR\x05token\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x03 \x01(\tR\tsessionId\"_\n" +
-	"\x13OAuthParamsResponse\x12\x10\n" +
-	"\x03url\x18\n" +
-	" \x01(\tR\x03url\x12\x1b\n" +
-	"\tclient_id\x18\v \x01(\tR\bclientId\x12\x19\n" +
-	"\bapp_slug\x18\f \x01(\tR\aappSlug\"T\n" +
+	"session_id\x18\x03 \x01(\tR\tsessionId\"T\n" +
 	"\x1aInteractiveAuthInitRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"J\n" +
@@ -796,10 +731,9 @@ const file_sys_auth_proto_rawDesc = "" +
 	"\x15InteractiveAuthResult\x12\x0f\n" +
 	"\vPAM_SUCCESS\x10\x00\x12\x13\n" +
 	"\x0fPAM_PERM_DENIED\x10\x06\x12\x10\n" +
-	"\fPAM_AUTH_ERR\x10\a2\x9d\x01\n" +
+	"\fPAM_AUTH_ERR\x10\a2W\n" +
 	"\x0fSystemAuthToken\x12D\n" +
-	"\tTokenAuth\x12\x1a.sys_auth.TokenAuthRequest\x1a\x1b.sys_auth.TokenAuthResponse\x12D\n" +
-	"\vOAuthParams\x12\x16.google.protobuf.Empty\x1a\x1d.sys_auth.OAuthParamsResponse2\xc4\x01\n" +
+	"\tTokenAuth\x12\x1a.sys_auth.TokenAuthRequest\x1a\x1b.sys_auth.TokenAuthResponse2\xc4\x01\n" +
 	"\x15SystemAuthInteractive\x12S\n" +
 	"\x0fInteractiveAuth\x12 .sys_auth.InteractiveAuthRequest\x1a\x1e.sys_auth.InteractiveChallenge\x12V\n" +
 	"\x14InteractiveAuthAsync\x12\x16.google.protobuf.Empty\x1a&.sys_auth.InteractiveAuthAsyncResponse2g\n" +
@@ -819,46 +753,43 @@ func file_sys_auth_proto_rawDescGZIP() []byte {
 }
 
 var file_sys_auth_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_sys_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_sys_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_sys_auth_proto_goTypes = []any{
 	(InteractiveAuthResult)(0),             // 0: sys_auth.InteractiveAuthResult
 	(InteractiveChallenge_PromptMeta)(0),   // 1: sys_auth.InteractiveChallenge.PromptMeta
 	(*TokenAuthRequest)(nil),               // 2: sys_auth.TokenAuthRequest
 	(*TokenAuthResponse)(nil),              // 3: sys_auth.TokenAuthResponse
-	(*OAuthParamsResponse)(nil),            // 4: sys_auth.OAuthParamsResponse
-	(*InteractiveAuthInitRequest)(nil),     // 5: sys_auth.InteractiveAuthInitRequest
-	(*InteractiveAuthContinueRequest)(nil), // 6: sys_auth.InteractiveAuthContinueRequest
-	(*InteractiveAuthRequest)(nil),         // 7: sys_auth.InteractiveAuthRequest
-	(*InteractiveAuthAsyncResponse)(nil),   // 8: sys_auth.InteractiveAuthAsyncResponse
-	(*InteractiveChallenge)(nil),           // 9: sys_auth.InteractiveChallenge
-	(*SystemAuthorizeRequest)(nil),         // 10: sys_auth.SystemAuthorizeRequest
-	(*SystemAuthorizeResponse)(nil),        // 11: sys_auth.SystemAuthorizeResponse
-	(*Token)(nil),                          // 12: agent.Token
-	(*AuthorizeRequest)(nil),               // 13: agent_auth.AuthorizeRequest
-	(*AuthorizeResponse)(nil),              // 14: agent_auth.AuthorizeResponse
-	(*emptypb.Empty)(nil),                  // 15: google.protobuf.Empty
+	(*InteractiveAuthInitRequest)(nil),     // 4: sys_auth.InteractiveAuthInitRequest
+	(*InteractiveAuthContinueRequest)(nil), // 5: sys_auth.InteractiveAuthContinueRequest
+	(*InteractiveAuthRequest)(nil),         // 6: sys_auth.InteractiveAuthRequest
+	(*InteractiveAuthAsyncResponse)(nil),   // 7: sys_auth.InteractiveAuthAsyncResponse
+	(*InteractiveChallenge)(nil),           // 8: sys_auth.InteractiveChallenge
+	(*SystemAuthorizeRequest)(nil),         // 9: sys_auth.SystemAuthorizeRequest
+	(*SystemAuthorizeResponse)(nil),        // 10: sys_auth.SystemAuthorizeResponse
+	(*Token)(nil),                          // 11: agent.Token
+	(*AuthorizeRequest)(nil),               // 12: agent_auth.AuthorizeRequest
+	(*AuthorizeResponse)(nil),              // 13: agent_auth.AuthorizeResponse
+	(*emptypb.Empty)(nil),                  // 14: google.protobuf.Empty
 }
 var file_sys_auth_proto_depIdxs = []int32{
-	12, // 0: sys_auth.TokenAuthResponse.token:type_name -> agent.Token
-	5,  // 1: sys_auth.InteractiveAuthRequest.init:type_name -> sys_auth.InteractiveAuthInitRequest
-	6,  // 2: sys_auth.InteractiveAuthRequest.continue:type_name -> sys_auth.InteractiveAuthContinueRequest
+	11, // 0: sys_auth.TokenAuthResponse.token:type_name -> agent.Token
+	4,  // 1: sys_auth.InteractiveAuthRequest.init:type_name -> sys_auth.InteractiveAuthInitRequest
+	5,  // 2: sys_auth.InteractiveAuthRequest.continue:type_name -> sys_auth.InteractiveAuthContinueRequest
 	0,  // 3: sys_auth.InteractiveChallenge.result:type_name -> sys_auth.InteractiveAuthResult
 	1,  // 4: sys_auth.InteractiveChallenge.prompt_meta:type_name -> sys_auth.InteractiveChallenge.PromptMeta
-	13, // 5: sys_auth.SystemAuthorizeRequest.authz:type_name -> agent_auth.AuthorizeRequest
-	14, // 6: sys_auth.SystemAuthorizeResponse.response:type_name -> agent_auth.AuthorizeResponse
+	12, // 5: sys_auth.SystemAuthorizeRequest.authz:type_name -> agent_auth.AuthorizeRequest
+	13, // 6: sys_auth.SystemAuthorizeResponse.response:type_name -> agent_auth.AuthorizeResponse
 	0,  // 7: sys_auth.SystemAuthorizeResponse.code:type_name -> sys_auth.InteractiveAuthResult
 	2,  // 8: sys_auth.SystemAuthToken.TokenAuth:input_type -> sys_auth.TokenAuthRequest
-	15, // 9: sys_auth.SystemAuthToken.OAuthParams:input_type -> google.protobuf.Empty
-	7,  // 10: sys_auth.SystemAuthInteractive.InteractiveAuth:input_type -> sys_auth.InteractiveAuthRequest
-	15, // 11: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:input_type -> google.protobuf.Empty
-	10, // 12: sys_auth.SystemAuthAuthorize.Authorize:input_type -> sys_auth.SystemAuthorizeRequest
-	3,  // 13: sys_auth.SystemAuthToken.TokenAuth:output_type -> sys_auth.TokenAuthResponse
-	4,  // 14: sys_auth.SystemAuthToken.OAuthParams:output_type -> sys_auth.OAuthParamsResponse
-	9,  // 15: sys_auth.SystemAuthInteractive.InteractiveAuth:output_type -> sys_auth.InteractiveChallenge
-	8,  // 16: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:output_type -> sys_auth.InteractiveAuthAsyncResponse
-	11, // 17: sys_auth.SystemAuthAuthorize.Authorize:output_type -> sys_auth.SystemAuthorizeResponse
-	13, // [13:18] is the sub-list for method output_type
-	8,  // [8:13] is the sub-list for method input_type
+	6,  // 9: sys_auth.SystemAuthInteractive.InteractiveAuth:input_type -> sys_auth.InteractiveAuthRequest
+	14, // 10: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:input_type -> google.protobuf.Empty
+	9,  // 11: sys_auth.SystemAuthAuthorize.Authorize:input_type -> sys_auth.SystemAuthorizeRequest
+	3,  // 12: sys_auth.SystemAuthToken.TokenAuth:output_type -> sys_auth.TokenAuthResponse
+	8,  // 13: sys_auth.SystemAuthInteractive.InteractiveAuth:output_type -> sys_auth.InteractiveChallenge
+	7,  // 14: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:output_type -> sys_auth.InteractiveAuthAsyncResponse
+	10, // 15: sys_auth.SystemAuthAuthorize.Authorize:output_type -> sys_auth.SystemAuthorizeResponse
+	12, // [12:16] is the sub-list for method output_type
+	8,  // [8:12] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
 	8,  // [8:8] is the sub-list for extension extendee
 	0,  // [0:8] is the sub-list for field type_name
@@ -871,7 +802,7 @@ func file_sys_auth_proto_init() {
 	}
 	file_agent_proto_init()
 	file_agent_auth_proto_init()
-	file_sys_auth_proto_msgTypes[5].OneofWrappers = []any{
+	file_sys_auth_proto_msgTypes[4].OneofWrappers = []any{
 		(*InteractiveAuthRequest_Init)(nil),
 		(*InteractiveAuthRequest_Continue)(nil),
 	}
@@ -881,7 +812,7 @@ func file_sys_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sys_auth_proto_rawDesc), len(file_sys_auth_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   10,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   3,
 		},
