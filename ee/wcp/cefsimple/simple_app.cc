@@ -46,7 +46,7 @@ namespace {
         }
         url = start.url.c_str();
       } catch (const std::exception &ex) {
-        Debug("Exception in ak_sys_token_validate");
+        Debug("Exception in ak_sys_auth_start_async");
         Debug(ex.what());
       }
       Debug(std::string("m_pBrowserView: " + std::to_string((size_t)(m_pBrowserView.get()))).c_str());

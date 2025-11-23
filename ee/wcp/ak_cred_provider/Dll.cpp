@@ -52,7 +52,7 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
     Debug("DllMain::DLL_PROCESS_ATTACH");
     try {
       std::string ping = std::string("");
-      ak_sys_grpc_ping(ping);
+      ak_sys_ping(ping);
       Debug(std::string("sysd version: ").append(ping).c_str());
     } catch (const std::exception &ex) {
       Debug("Exception in ak_grpc_ping");

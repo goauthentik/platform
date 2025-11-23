@@ -123,12 +123,12 @@ class SimpleHandler : public CefClient,
         m_pData->UpdateStatus(L"Authenticating, please wait...");
         auto validatedToken = TokenResponse();
         try {
-          if (!ak_sys_token_validate("", strURL, validatedToken)) {
+          if (!ak_sys_auth_url(strURL, validatedToken)) {
             SPDLOG_WARN("failed to validate token");
           }
           m_pData->UpdateUser(validatedToken.username.c_str());
         } catch (const std::exception &ex) {
-          Debug("Exception in ak_sys_token_validate");
+          Debug("Exception in ak_sys_auth_url");
           Debug(ex.what());
         }
         CloseAllBrowsers(false);
