@@ -5,11 +5,6 @@
 #ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 #define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 
-#pragma warning(push)
-#pragma warning(disable: 4005)
-#include <jwt-cpp/jwt.h>
-#pragma warning(pop)
-#include <openssl/rand.h>
 #include "authentik_sys_bridge/ffi.h"
 #include <spdlog/spdlog.h>
 
