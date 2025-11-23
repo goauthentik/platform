@@ -1,11 +1,5 @@
 {
   "debug": false,
   "domains": "/opt/authentik/domains",
-  "runtime": "/opt/authentik/runtime",
-  "pam": {
-    "enabled": false
-  },
-  "nss": {
-    "enabled": false
-  }
+  "runtime": "/opt/authentik/runtime"
 }

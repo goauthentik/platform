@@ -12,12 +12,13 @@ import (
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gather() (api.DeviceFactsRequestHardware, error) {
-	manufacturer := getWMICValue("computersystem", "Manufacturer")
-	model := getWMICValue("computersystem", "Model")
-	serial := getWMICValue("bios", "SerialNumber")
+	manufacturer := common.GetWMICValue("computersystem", "Manufacturer")
+	model := common.GetWMICValue("computersystem", "Model")
+	serial := common.GetWMICValue("bios", "SerialNumber")
 
 	return api.DeviceFactsRequestHardware{
 		Manufacturer: manufacturer,
@@ -29,29 +30,9 @@ func gather() (api.DeviceFactsRequestHardware, error) {
 	}, nil
 }
 
-func getWMICValue(class, property string) string {
-	cmd := exec.Command("wmic", class, "get", property, "/value")
-	output, err := cmd.Output()
-	if err != nil {
-		return ""
-	}
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		if strings.Contains(line, property+"=") {
-			parts := strings.Split(line, "=")
-			if len(parts) >= 2 {
-				return strings.TrimSpace(parts[1])
-			}
-		}
-	}
-
-	return ""
-}
-
 func getCPUName() string {
 	// Try wmic first
-	cpuName := getWMICValue("cpu", "Name")
+	cpuName := common.GetWMICValue("cpu", "Name")
 	if cpuName != "" {
 		return cpuName
 	}
@@ -78,7 +59,7 @@ func getCPUName() string {
 
 func getCPUCores() int {
 	// Try wmic for total cores (logical processors)
-	coresStr := getWMICValue("cpu", "NumberOfLogicalProcessors")
+	coresStr := common.GetWMICValue("cpu", "NumberOfLogicalProcessors")
 	if coresStr != "" {
 		if cores, err := strconv.Atoi(coresStr); err == nil {
 			return cores
@@ -109,7 +90,7 @@ func getCPUCores() int {
 
 func getTotalMemory() uint64 {
 	// Try wmic first
-	memoryStr := getWMICValue("computersystem", "TotalPhysicalMemory")
+	memoryStr := common.GetWMICValue("computersystem", "TotalPhysicalMemory")
 	if memoryStr != "" {
 		if memory, err := strconv.ParseUint(memoryStr, 10, 64); err == nil {
 			return memory

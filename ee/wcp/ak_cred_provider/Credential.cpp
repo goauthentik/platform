@@ -293,7 +293,6 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
   switch (uMsg) {
   case WM_NULL: {
     if (wParam == 100) {
-      Debug("ALHAMDULILLAAH, null message received ______..._____");
       std::string strLog =
           "...>>> ProcessID: " + std::to_string(GetCurrentProcessId()) +
           ", ThreadID: " + std::to_string(GetCurrentThreadId()) + "\n";
@@ -393,7 +392,6 @@ LRESULT CALLBACK Credential::CallWndProc(
     }
     // sHookData* pData = (sHookData*)lParam;
     if (wParam == 100) {
-      Debug("ALHAMDULILLAAH, null message received ___________");
       std::string strLog =
           ">>> ProcessID: " + std::to_string(GetCurrentProcessId()) +
           ", ThreadID: " + std::to_string(GetCurrentThreadId()) + "\n";
@@ -422,7 +420,7 @@ IFACEMETHODIMP Credential::UnAdvise() {
   Debug("UnAdvise");
   if (hHook) {
     if (UnhookWindowsHookEx(hHook)) {
-      Debug("ALHAMDULILLAAH: Unhook successful");
+      Debug("Unhook successful");
     }
   }
   if (m_pCredProvCredentialEvents) {
