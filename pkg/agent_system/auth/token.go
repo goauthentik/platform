@@ -10,15 +10,28 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (auth *Server) validateToken(rawToken string) (*token.Token, error) {
+func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.Token, error) {
+	ac, err := auth.dom.APIClient()
+	if err != nil {
+		return nil, err
+	}
+	hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAuthValidateCreate(ctx).AgentAuthValidateRequest(api.AgentAuthValidateRequest{
+		Token: rawToken,
+	}).Execute()
+	if err != nil {
+		return nil, ak.HTTPToError(hr, err)
+	}
+
 	var st jwkset.Storage
 	jw := jwkset.JWKSMarshal{}
-	err := mapstructure.Decode(auth.dom.Config().Jwks, &jw)
+	err = mapstructure.Decode(auth.dom.Config().Jwks, &jw)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +52,7 @@ func (auth *Server) validateToken(rawToken string) (*token.Token, error) {
 }
 
 func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*pb.TokenAuthResponse, error) {
-	token, err := auth.validateToken(req.Token)
+	token, err := auth.validateToken(ctx, req.Token)
 	if err != nil {
 		return nil, err
 	}

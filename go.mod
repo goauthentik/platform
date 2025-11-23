@@ -25,6 +25,7 @@ require (
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.4
 	github.com/micromdm/plist v0.2.1
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nightlyone/lockfile v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
@@ -35,7 +36,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/zalando/go-keyring v0.2.6
 	go.etcd.io/bbolt v1.4.3
-	goauthentik.io/api/v3 v3.2025120.5-0.20251122211306-804d8f4998db
+	goauthentik.io/api/v3 v3.2025120.5-0.20251123204625-d378efcbcff3
 	golang.org/x/crypto v0.45.0
 	golang.org/x/sys v0.38.0
 	golang.org/x/term v0.37.0
@@ -106,7 +107,6 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect

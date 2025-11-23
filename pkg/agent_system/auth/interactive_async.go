@@ -14,7 +14,7 @@ func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get domain API client")
 	}
-	res, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAuthenticateInteractiveCreate(ctx).Execute()
+	res, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAuthIaCreate(ctx).Execute()
 	if err != nil {
 		auth.log.WithError(ak.HTTPToError(hr, err)).Warning("failed to start interactive auth")
 		return nil, err

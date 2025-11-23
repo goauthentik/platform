@@ -29,6 +29,7 @@ serde_json = "1.0.145"
 sentry = "0.45.0"
 cxx = "1.0.189"
 windows-sys = "0.61.2"
+url = "2.5.7"
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.3.0"

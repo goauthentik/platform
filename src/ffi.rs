@@ -1,4 +1,6 @@
-use cxx::CxxString;
+use cxx::{CxxString, let_cxx_string};
+use url::Url;
+use std::collections::HashMap;
 use std::error::Error;
 use std::pin::Pin;
 
@@ -20,18 +22,15 @@ mod ffi {
     }
 
     extern "Rust" {
-        fn ak_sys_grpc_ping(res: Pin<&mut CxxString>);
-        fn ak_sys_token_validate(
-            username: &CxxString,
-            raw_token: &CxxString,
-            token: &mut TokenResponse,
-        ) -> Result<bool>;
+        fn ak_sys_ping(res: Pin<&mut CxxString>);
 
+        fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
+        fn ak_sys_auth_token_validate(raw_token: &CxxString, token: &mut TokenResponse,) -> Result<bool>;
         fn ak_sys_auth_start_async(res: &mut WCPAuthStartAsync) -> Result<bool>;
     }
 }
 
-fn ak_sys_grpc_ping(res: Pin<&mut CxxString>) {
+fn ak_sys_ping(res: Pin<&mut CxxString>) {
     let resp = match grpc_request(async |ch| {
         return Ok(PingClient::new(ch).ping(()).await?);
     }) {
@@ -41,17 +40,25 @@ fn ak_sys_grpc_ping(res: Pin<&mut CxxString>) {
     res.push_str(&resp);
 }
 
-fn ak_sys_token_validate(
-    username: &CxxString,
+fn ak_sys_auth_url(url: &CxxString, token: &mut ffi::TokenResponse,) -> Result<bool, Box <dyn Error>> {
+    let p = Url::parse(url.to_str()?)?;
+    let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
+    if let Some(raw_token) = qm.get("ak-auth-ia-token") {
+        let_cxx_string!(crt = raw_token);
+        return ak_sys_auth_token_validate(&crt, token);
+    }
+    Ok(false)
+}
+
+fn ak_sys_auth_token_validate(
     raw_token: &CxxString,
     token: &mut ffi::TokenResponse,
 ) -> Result<bool, Box<dyn Error>> {
-    let u = username.to_str()?;
     let p = raw_token.to_str()?;
     let response = grpc_request(async |ch| {
         return Ok(SystemAuthTokenClient::new(ch)
             .token_auth(TokenAuthRequest {
-                username: u.to_owned(),
+                username: "".to_string(),
                 token: p.to_owned(),
             })
             .await?);
