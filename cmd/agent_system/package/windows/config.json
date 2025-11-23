@@ -1,11 +1,5 @@
 {
   "debug": false,
   "domains": "C:\\Program Files\\Authentik Security Inc\\sysd\\domains",
-  "runtime": "C:\\Program Files\\Authentik Security Inc\\sysd\\runtime",
-  "pam": {
-    "enabled": false
-  },
-  "nss": {
-    "enabled": false
-  }
+  "runtime": "C:\\Program Files\\Authentik Security Inc\\sysd\\runtime"
 }
