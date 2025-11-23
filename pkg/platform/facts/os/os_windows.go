@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gather() (api.DeviceFactsRequestOs, error) {
@@ -32,7 +33,7 @@ func getWindowsProductName() string {
 	}
 
 	// Fallback to wmic
-	return getWMICValue("os", "Caption")
+	return common.GetWMICValue("os", "Caption")
 }
 
 func getWindowsVersion() string {
@@ -56,31 +57,10 @@ func getWindowsVersion() string {
 	}
 
 	// Fallback to wmic
-	version := getWMICValue("os", "Version")
+	version := common.GetWMICValue("os", "Version")
 	if version == "" {
-		version = getWMICValue("os", "BuildNumber")
+		version = common.GetWMICValue("os", "BuildNumber")
 	}
 
 	return version
-}
-
-func getWMICValue(class, property string) string {
-	cmd := exec.Command("wmic", class, "get", property, "/value")
-	output, err := cmd.Output()
-	if err != nil {
-		return ""
-	}
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, property+"=") {
-			parts := strings.SplitN(line, "=", 2)
-			if len(parts) == 2 {
-				return strings.TrimSpace(parts[1])
-			}
-		}
-	}
-
-	return ""
 }
