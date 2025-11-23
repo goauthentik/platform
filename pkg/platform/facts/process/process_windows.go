@@ -15,14 +15,8 @@ func gather() ([]api.ProcessRequest, error) {
 		return nil, err
 	}
 
-	// Limit to first 50 processes for performance
-	limit := 50
-	if len(pids) < limit {
-		limit = len(pids)
-	}
-
-	for i := 0; i < limit; i++ {
-		p, err := process.NewProcess(pids[i])
+	for _, pid := range pids {
+		p, err := process.NewProcess(pid)
 		if err != nil {
 			continue
 		}
@@ -37,7 +31,7 @@ func gather() ([]api.ProcessRequest, error) {
 		}
 
 		procInfo := api.ProcessRequest{
-			Id:   pids[i],
+			Id:   p.Pid,
 			Name: name,
 		}
 
