@@ -5,6 +5,7 @@
 #include "Dll.h"
 
 #include "authentik_sys_bridge/ffi.h"
+#include "rust/cxx.h"
 
 #include "ak_sentry.h"
 #include "include/cef_command_line.h"
@@ -54,7 +55,7 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
       std::string ping = std::string("");
       ak_sys_ping(ping);
       Debug(std::string("sysd version: ").append(ping).c_str());
-    } catch (const std::exception &ex) {
+    } catch (const rust::Error &ex) {
       Debug("Exception in ak_grpc_ping");
       Debug(ex.what());
     }

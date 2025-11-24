@@ -10,6 +10,7 @@
 #include <jwt-cpp/jwt.h>
 #pragma warning(pop)
 #include <openssl/rand.h>
+#include "rust/cxx.h"
 #include "authentik_sys_bridge/ffi.h"
 #include <spdlog/spdlog.h>
 
@@ -129,7 +130,7 @@ class SimpleHandler : public CefClient,
             SPDLOG_DEBUG("successfully validated token");
             m_pData->UpdateUser(validatedToken.username.c_str());
           }
-        } catch (const std::exception &ex) {
+        } catch (const rust::Error &ex) {
           Debug("Exception in ak_sys_auth_url");
           Debug(ex.what());
         }

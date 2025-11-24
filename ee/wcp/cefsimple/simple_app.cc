@@ -17,6 +17,7 @@
 #include "ak_cred_provider/include/resource.h"
 #include "include/cef_image.h"
 #include "authentik_sys_bridge/ffi.h"
+#include "rust/cxx.h"
 
 // GetModuleHandle(NULL) returns a handle to the module that was used to create the process.
 // This fails when the resource is compiled into a DLL.
@@ -45,7 +46,7 @@ namespace {
           return;
         }
         url = start.url.c_str();
-      } catch (const rust::impl<::rust::Error> &ex) {
+      } catch (const rust::Error &ex) {
         Debug("Exception in ak_sys_auth_start_async");
         Debug(ex.what());
       }
