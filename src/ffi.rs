@@ -11,6 +11,7 @@ use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthIntera
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 
 #[cxx::bridge]
+#[allow(clippy::module_inception)]
 mod ffi {
     struct WCPAuthStartAsync {
         pub url: String,
@@ -45,7 +46,7 @@ fn ak_sys_auth_url(url: &CxxString, token: &mut ffi::TokenResponse,) -> Result<b
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
     let raw_token = qm.get("k").ok_or("failed to get token from URL")?;
     let_cxx_string!(crt = raw_token);
-    return ak_sys_auth_token_validate(&crt, token);
+    ak_sys_auth_token_validate(&crt, token)
 }
 
 fn ak_sys_auth_token_validate(
