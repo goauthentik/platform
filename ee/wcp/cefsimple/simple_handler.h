@@ -93,10 +93,8 @@ class SimpleHandler : public CefClient,
     CefRefPtr<CefRequest> request,
     CefRefPtr<CefResponse> response
   ) override {
-    std::string strURL = request->GetURL().ToString();
-    Debug("URL: ");
+    std::string strURL = "URL: " + request->GetURL().ToString() + " " + request->GetMethod().ToString();
     Debug(strURL.c_str());
-    Debug(request->GetMethod().ToString().c_str());
     std::string str = "OnResourceResponse ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
     Debug(str.c_str());
 
