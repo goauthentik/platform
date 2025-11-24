@@ -136,7 +136,7 @@ jobs:
           cache: true
       - name: Install libraries
         run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
-      - uses: golangci/golangci-lint-action@0a35821d5c230e903fcfe077583637dea1b27b47 # v8
+      - uses: golangci/golangci-lint-action@e7fa5ac41e1cf5b7d48e45e42232ce7ada589601 # v8
         with:
           args: --timeout 5000s
   lint_rs:
