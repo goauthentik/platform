@@ -43,11 +43,9 @@ fn ak_sys_ping(res: Pin<&mut CxxString>) {
 fn ak_sys_auth_url(url: &CxxString, token: &mut ffi::TokenResponse,) -> Result<bool, Box <dyn Error>> {
     let p = Url::parse(url.to_str()?)?;
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
-    if let Some(raw_token) = qm.get("ak-auth-ia-token") {
-        let_cxx_string!(crt = raw_token);
-        return ak_sys_auth_token_validate(&crt, token);
-    }
-    Ok(false)
+    let raw_token = qm.get("k").ok_or("failed to get token from URL")?;
+    let_cxx_string!(crt = raw_token);
+    return ak_sys_auth_token_validate(&crt, token);
 }
 
 fn ak_sys_auth_token_validate(
@@ -65,7 +63,9 @@ fn ak_sys_auth_token_validate(
     })?
     .into_inner();
 
-    token.username = response.token.unwrap().preferred_username;
+    if let Some(pt) = response.token {
+        token.username = pt.preferred_username;
+    }
     token.session_id = response.session_id;
     Ok(response.successful)
 }
