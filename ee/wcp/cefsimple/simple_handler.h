@@ -125,8 +125,10 @@ class SimpleHandler : public CefClient,
         try {
           if (!ak_sys_auth_url(strURL, validatedToken)) {
             SPDLOG_WARN("failed to validate token");
+          } else {
+            SPDLOG_DEBUG("successfully validated token");
+            m_pData->UpdateUser(validatedToken.username.c_str());
           }
-          m_pData->UpdateUser(validatedToken.username.c_str());
         } catch (const std::exception &ex) {
           Debug("Exception in ak_sys_auth_url");
           Debug(ex.what());

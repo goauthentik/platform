@@ -45,7 +45,7 @@ namespace {
           return;
         }
         url = start.url.c_str();
-      } catch (const std::exception &ex) {
+      } catch (const rust::impl<::rust::Error> &ex) {
         Debug("Exception in ak_sys_auth_start_async");
         Debug(ex.what());
       }

@@ -4,12 +4,13 @@
 
 Visual Studio 17 2022
 
-Microsoft Visual Studio Installer Projects 2022 2.0.1 (to package into Setup)
-
 Strawberry Perl (to build OpenSSL for jwt-cpp)
     (`winget install StrawberryPerl.StrawberryPerl`)
 
 Windows 10 x64
+
+Rust
+    `winget install -e --id Rustlang.Rustup`
 
 ### Build steps
 
@@ -19,7 +20,6 @@ Windows 10 x64
 mkdir build
 cd build
 cmake -G "Visual Studio 17" ..
-python ../.utils/addsetup.py
 cmake --build . --config Release
 ```
 
