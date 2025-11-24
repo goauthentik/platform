@@ -53,6 +53,7 @@ message InteractiveAuthRequest {
 
 message InteractiveAuthAsyncResponse {
   string url = 1;
+  string nonce = 2;
 }
 
 enum InteractiveAuthResult {

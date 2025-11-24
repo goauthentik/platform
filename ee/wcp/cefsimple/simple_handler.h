@@ -87,6 +87,7 @@ class SimpleHandler : public CefClient,
     const CefString& request_initiator,
     bool& disable_default_handling
   ) override { return this; }
+
   bool OnResourceResponse(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
@@ -97,9 +98,9 @@ class SimpleHandler : public CefClient,
     Debug(strURL.c_str());
     std::string str = "OnResourceResponse ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
     Debug(str.c_str());
-
     return false;
   }
+
   ReturnValue OnBeforeResourceLoad(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
@@ -109,6 +110,11 @@ class SimpleHandler : public CefClient,
     const std::string strKey = "goauthentik.io://";
     std::string strURL = request->GetURL().ToString();
     Debug(strURL.c_str());
+    CefString headerKey;
+    headerKey.FromString("X-Authentik-Platform-Auth-Nonce");
+    CefString headerValue;
+    headerValue.FromString(m_pData->strNonce);
+    request->SetHeaderByName(headerKey, headerValue, true);
     if (strURL.length() >= strKey.length())
     {
       if (strURL.substr(0, strKey.length()) == strKey)

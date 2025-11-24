@@ -15,6 +15,7 @@ use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 mod ffi {
     struct WCPAuthStartAsync {
         pub url: String,
+        pub header_token: String,
     }
 
     struct TokenResponse {
