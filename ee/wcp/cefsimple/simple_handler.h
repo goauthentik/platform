@@ -122,7 +122,7 @@ class SimpleHandler : public CefClient,
         Debug(str.c_str());
         Hide();
         m_pData->UpdateStatus(L"Authenticating, please wait...");
-        auto validatedToken = TokenResponse();
+        TokenResponse validatedToken;
         try {
           if (!ak_sys_auth_url(strURL, validatedToken)) {
             SPDLOG_WARN("failed to validate token");

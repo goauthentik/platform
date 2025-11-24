@@ -28,19 +28,26 @@ func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.
 	}
 	st = sst
 
-	k, _ := keyfunc.New(keyfunc.Options{Storage: st, Ctx: ctx})
+	k, err := keyfunc.New(keyfunc.Options{Storage: st, Ctx: ctx})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create keyfunc")
+	}
 	t, err := jwt.ParseWithClaims(rawToken, &token.AuthentikClaims{}, k.Keyfunc)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to validate token")
 	}
 
-	token := token.Token{AccessToken: t}
+	token := token.Token{
+		AccessToken:    t,
+		RawAccessToken: rawToken,
+	}
 	return &token, nil
 }
 
 func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*pb.TokenAuthResponse, error) {
 	token, err := auth.validateToken(ctx, req.Token)
 	if err != nil {
+		auth.log.WithError(err).Warning("failed to validate token")
 		return nil, err
 	}
 
