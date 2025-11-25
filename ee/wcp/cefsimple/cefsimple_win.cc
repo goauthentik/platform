@@ -29,10 +29,6 @@ extern std::string g_strPath;
 #endif
 
 int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
-
-  // SetupLogs("cef");
-  // SentrySetup("cef");
-
   Debug("CEFLaunch(...)");
   Debug(std::string("CEFLaunch(...):  " + std::to_string((size_t)(Credential::m_oCefAppData.IsInit()))).c_str());
   MSG msg;

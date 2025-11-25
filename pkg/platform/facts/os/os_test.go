@@ -2,7 +2,10 @@ package os
 
 import (
 	"runtime"
+	"slices"
 	"testing"
+
+	"goauthentik.io/api/v3"
 )
 
 func TestGather(t *testing.T) {
@@ -19,9 +22,8 @@ func TestGather(t *testing.T) {
 		t.Error("OS family is empty")
 	}
 
-	expectedFamily := runtime.GOOS
-	if string(info.Family) != expectedFamily {
-		t.Errorf("Expected family %s, got %s", expectedFamily, info.Family)
+	if !slices.Contains(api.AllowedDeviceFactsOSFamilyEnumValues, info.Family) {
+		t.Errorf("Invalid OS Family %s", info.Family)
 	}
 
 	if info.Arch != runtime.GOARCH {

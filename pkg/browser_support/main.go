@@ -11,7 +11,6 @@ import (
 
 func Main() {
 	_ = systemlog.Setup("browser-support")
-	defer systemlog.Cleanup()
 
 	bs, err := New()
 	if err != nil {
