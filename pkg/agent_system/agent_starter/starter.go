@@ -7,6 +7,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/vnd/fleet/orbit/pkg/execuser"
 	userpkg "goauthentik.io/platform/vnd/fleet/orbit/pkg/user"
@@ -76,6 +77,9 @@ func (as *Server) agentExec() pstr.PlatformString {
 func (as *Server) startSingle() error {
 	opts := []execuser.Option{
 		execuser.WithEnv("AK_AGENT_SUPERVISED", "true"),
+	}
+	if config.Manager().Get().Debug {
+		opts = append(opts, execuser.WithEnv("AK_AGENT_DEBUG", "true"))
 	}
 
 	loggedInUser, err := userpkg.UserLoggedInViaGui()

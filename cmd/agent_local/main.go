@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	agent "goauthentik.io/platform/pkg/agent_local"
-	"goauthentik.io/platform/pkg/agent_local/config"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/shared"
@@ -19,8 +20,7 @@ func main() {
 		systemlog.Get().WithError(err).Warning("failed to setup logs")
 	}
 	log.SetLevel(log.DebugLevel)
-	mgr := config.Manager()
-	shared.Start("ak-platform-agent-local", mgr.Get().Debug, func() {
+	shared.Start("ak-platform-agent-local", os.Getenv("AK_AGENT_DEBUG") == "true", func() {
 		a, err := agent.New()
 		if err != nil {
 			systemlog.Get().WithError(err).Warning("failed to start agent")
