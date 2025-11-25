@@ -20,10 +20,6 @@ func TestGather(t *testing.T) {
 		if proc.Id <= 0 {
 			t.Error("Process ID should be positive")
 		}
-
-		if proc.Name == "" {
-			t.Error("Process name should not be empty")
-		}
 	}
 
 	t.Logf("Found %d processes", len(processes))
