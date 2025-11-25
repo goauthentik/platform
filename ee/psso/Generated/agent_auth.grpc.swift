@@ -56,6 +56,18 @@ internal enum AgentAuth {
                 method: "CachedTokenExchange"
             )
         }
+        /// Namespace for "DeviceTokenExchange" metadata.
+        internal enum DeviceTokenExchange {
+            /// Request type for "DeviceTokenExchange".
+            internal typealias Input = DeviceTokenExchangeRequest
+            /// Response type for "DeviceTokenExchange".
+            internal typealias Output = TokenExchangeResponse
+            /// Descriptor for "DeviceTokenExchange".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth"),
+                method: "DeviceTokenExchange"
+            )
+        }
         /// Namespace for "Authorize" metadata.
         internal enum Authorize {
             /// Request type for "Authorize".
@@ -73,6 +85,7 @@ internal enum AgentAuth {
             WhoAmI.descriptor,
             GetCurrentToken.descriptor,
             CachedTokenExchange.descriptor,
+            DeviceTokenExchange.descriptor,
             Authorize.descriptor
         ]
     }
@@ -145,6 +158,25 @@ extension AgentAuth {
         func cachedTokenExchange<Result>(
             request: GRPCCore.ClientRequest<TokenExchangeRequest>,
             serializer: some GRPCCore.MessageSerializer<TokenExchangeRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<TokenExchangeResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TokenExchangeResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "DeviceTokenExchange" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `DeviceTokenExchangeRequest` message.
+        ///   - serializer: A serializer for `DeviceTokenExchangeRequest` messages.
+        ///   - deserializer: A deserializer for `TokenExchangeResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func deviceTokenExchange<Result>(
+            request: GRPCCore.ClientRequest<DeviceTokenExchangeRequest>,
+            serializer: some GRPCCore.MessageSerializer<DeviceTokenExchangeRequest>,
             deserializer: some GRPCCore.MessageDeserializer<TokenExchangeResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TokenExchangeResponse>) async throws -> Result
@@ -276,6 +308,36 @@ extension AgentAuth {
             )
         }
 
+        /// Call the "DeviceTokenExchange" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `DeviceTokenExchangeRequest` message.
+        ///   - serializer: A serializer for `DeviceTokenExchangeRequest` messages.
+        ///   - deserializer: A deserializer for `TokenExchangeResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func deviceTokenExchange<Result>(
+            request: GRPCCore.ClientRequest<DeviceTokenExchangeRequest>,
+            serializer: some GRPCCore.MessageSerializer<DeviceTokenExchangeRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<TokenExchangeResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TokenExchangeResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: AgentAuth.Method.DeviceTokenExchange.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
         /// Call the "Authorize" method.
         ///
         /// - Parameters:
@@ -380,6 +442,31 @@ extension AgentAuth.ClientProtocol {
         try await self.cachedTokenExchange(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<TokenExchangeRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<TokenExchangeResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "DeviceTokenExchange" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `DeviceTokenExchangeRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func deviceTokenExchange<Result>(
+        request: GRPCCore.ClientRequest<DeviceTokenExchangeRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TokenExchangeResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.deviceTokenExchange(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<DeviceTokenExchangeRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<TokenExchangeResponse>(),
             options: options,
             onResponse: handleResponse
@@ -496,6 +583,35 @@ extension AgentAuth.ClientProtocol {
             metadata: metadata
         )
         return try await self.cachedTokenExchange(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "DeviceTokenExchange" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func deviceTokenExchange<Result>(
+        _ message: DeviceTokenExchangeRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TokenExchangeResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<DeviceTokenExchangeRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.deviceTokenExchange(
             request: request,
             options: options,
             onResponse: handleResponse

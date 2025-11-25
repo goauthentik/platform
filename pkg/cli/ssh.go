@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_local/client"
 	"goauthentik.io/platform/pkg/agent_local/types"
-	"goauthentik.io/platform/pkg/cli/auth/raw"
+	"goauthentik.io/platform/pkg/cli/auth/device"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"golang.org/x/crypto/ssh"
@@ -88,9 +88,9 @@ var sshCmd = &cobra.Command{
 					log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
 					if len(questions) > 0 && questions[0] == "authentik Password: " {
 						fmt.Printf("Getting token to access '%s'...\n", host)
-						cc := raw.GetCredentials(c, cmd.Context(), raw.CredentialsOpts{
-							Profile:  profile,
-							ClientID: "authentik-platform",
+						cc := device.GetCredentials(c, cmd.Context(), device.CredentialsOpts{
+							Profile:    profile,
+							DeviceName: host,
 						})
 						return []string{FormatToken(cc, remoteSocketPath)}, nil
 					}
@@ -162,7 +162,7 @@ func init() {
 	rootCmd.AddCommand(sshCmd)
 }
 
-func FormatToken(cc *raw.RawCredentialOutput, rtp string) string {
+func FormatToken(cc *device.DeviceCredentialOutput, rtp string) string {
 	msg := pb.SSHTokenAuthentication{
 		Token:       cc.AccessToken,
 		LocalSocket: rtp,

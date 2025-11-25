@@ -159,6 +159,30 @@ pub mod agent_auth_client {
                 .insert(GrpcMethod::new("agent_auth.AgentAuth", "CachedTokenExchange"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn device_token_exchange(
+            &mut self,
+            request: impl tonic::IntoRequest<super::DeviceTokenExchangeRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::TokenExchangeResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_auth.AgentAuth/DeviceTokenExchange",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "DeviceTokenExchange"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn authorize(
             &mut self,
             request: impl tonic::IntoRequest<super::AuthorizeRequest>,

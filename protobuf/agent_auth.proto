@@ -10,6 +10,7 @@ service AgentAuth {
   rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
   rpc GetCurrentToken(CurrentTokenRequest) returns (CurrentTokenResponse);
   rpc CachedTokenExchange(TokenExchangeRequest) returns (TokenExchangeResponse);
+  rpc DeviceTokenExchange(DeviceTokenExchangeRequest) returns (TokenExchangeResponse);
   rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
 }
 
@@ -48,6 +49,11 @@ message TokenExchangeResponse {
   agent.ResponseHeader header = 1;
   string access_token = 2;
   uint64 expires_in = 3;
+}
+
+message DeviceTokenExchangeRequest {
+  agent.RequestHeader header = 1;
+  string device_name = 2;
 }
 
 message AuthorizeRequest {
