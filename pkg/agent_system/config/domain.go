@@ -69,7 +69,7 @@ func (dc DomainConfig) Test() error {
 	}
 	_, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 	if err != nil {
-		if hr.StatusCode == http.StatusForbidden && dc.Managed {
+		if hr != nil && hr.StatusCode == http.StatusForbidden && dc.Managed {
 			err := dc.Delete()
 			if err != nil {
 				dc.r.log.WithError(err).Warning("failed to delete domain")
