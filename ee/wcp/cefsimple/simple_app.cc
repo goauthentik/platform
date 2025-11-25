@@ -46,7 +46,7 @@ namespace {
           return;
         }
         url = start.url.c_str();
-        m_pData->UpdateNonce(start.header_token.c_str());
+        m_pData->UpdateHeaderToken(start.header_token.c_str());
       } catch (const rust::Error &ex) {
         Debug("Exception in ak_sys_auth_start_async");
         Debug(ex.what());

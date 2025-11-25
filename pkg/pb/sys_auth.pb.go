@@ -436,6 +436,7 @@ func (*InteractiveAuthRequest_Continue) isInteractiveAuthRequest_InteractiveAuth
 type InteractiveAuthAsyncResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Url           string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	HeaderToken   string                 `protobuf:"bytes,2,opt,name=header_token,json=headerToken,proto3" json:"header_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -473,6 +474,13 @@ func (*InteractiveAuthAsyncResponse) Descriptor() ([]byte, []int) {
 func (x *InteractiveAuthAsyncResponse) GetUrl() string {
 	if x != nil {
 		return x.Url
+	}
+	return ""
+}
+
+func (x *InteractiveAuthAsyncResponse) GetHeaderToken() string {
+	if x != nil {
+		return x.HeaderToken
 	}
 	return ""
 }
@@ -697,9 +705,10 @@ const file_sys_auth_proto_rawDesc = "" +
 	"\x16InteractiveAuthRequest\x12:\n" +
 	"\x04init\x18\x01 \x01(\v2$.sys_auth.InteractiveAuthInitRequestH\x00R\x04init\x12F\n" +
 	"\bcontinue\x18\x02 \x01(\v2(.sys_auth.InteractiveAuthContinueRequestH\x00R\bcontinueB\x12\n" +
-	"\x10interactive_auth\"0\n" +
+	"\x10interactive_auth\"S\n" +
 	"\x1cInteractiveAuthAsyncResponse\x12\x10\n" +
-	"\x03url\x18\x01 \x01(\tR\x03url\"\xd1\x03\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\x12!\n" +
+	"\fheader_token\x18\x02 \x01(\tR\vheaderToken\"\xd1\x03\n" +
 	"\x14InteractiveChallenge\x12\x12\n" +
 	"\x04txid\x18\x01 \x01(\tR\x04txid\x12\x1a\n" +
 	"\bfinished\x18\x02 \x01(\bR\bfinished\x127\n" +

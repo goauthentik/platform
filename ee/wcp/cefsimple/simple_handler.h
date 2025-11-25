@@ -110,10 +110,12 @@ class SimpleHandler : public CefClient,
     const std::string strKey = "goauthentik.io://";
     std::string strURL = request->GetURL().ToString();
     Debug(strURL.c_str());
+
     CefString headerKey;
-    headerKey.FromString("X-Authentik-Platform-Auth-Nonce");
+    headerKey.FromString("X-Authentik-Platform-Auth-DTH");
     CefString headerValue;
-    headerValue.FromString(m_pData->strNonce);
+    headerValue.FromString(m_pData->strHeaderToken);
+
     request->SetHeaderByName(headerKey, headerValue, true);
     if (strURL.length() >= strKey.length())
     {

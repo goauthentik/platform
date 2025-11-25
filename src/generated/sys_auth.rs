@@ -49,6 +49,8 @@ pub mod interactive_auth_request {
 pub struct InteractiveAuthAsyncResponse {
     #[prost(string, tag = "1")]
     pub url: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub header_token: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct InteractiveChallenge {

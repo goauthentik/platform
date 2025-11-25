@@ -28,10 +28,10 @@ struct sHookData
         strUsername = strUser;
         oMutex.unlock();
     }
-    void UpdateNonce(const std::string& nonce)
+    void UpdateHeaderToken(const std::string& headerToken)
     {
         oMutex.lock();
-        strNonce = nonce;
+        strHeaderToken = headerToken;
         oMutex.unlock();
     }
     void SetExit(const bool bVal)
@@ -110,7 +110,7 @@ struct sHookData
     PWSTR           UserSid = NULL;
     HINSTANCE       hInstance = NULL;
     std::string     strUsername = "";
-    std::string     strNonce = "";
+    std::string     strHeaderToken = "";
     bool            bExit = false;      // flag to exit the custom loop
     bool            bComplete = false;  // UI call complete
     bool            bCancel = false;    // whether the user clicked cancel

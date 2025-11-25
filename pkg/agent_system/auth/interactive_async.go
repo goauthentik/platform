@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 
 	"github.com/pkg/errors"
 	"goauthentik.io/platform/pkg/ak"
@@ -19,7 +21,10 @@ func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) 
 		auth.log.WithError(ak.HTTPToError(hr, err)).Warning("failed to start interactive auth")
 		return nil, err
 	}
+	hh := sha256.Sum256([]byte(auth.dom.Token))
+	h := hex.EncodeToString(hh[:])
 	return &pb.InteractiveAuthAsyncResponse{
-		Url: res.Url,
+		Url:         res.Url,
+		HeaderToken: h,
 	}, nil
 }

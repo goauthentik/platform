@@ -166,6 +166,8 @@ struct InteractiveAuthAsyncResponse: Sendable {
 
   var url: String = String()
 
+  var headerToken: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -525,7 +527,7 @@ extension InteractiveAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthAsyncResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}url\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}url\0\u{3}header_token\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -534,6 +536,7 @@ extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._Me
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.url) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.headerToken) }()
       default: break
       }
     }
@@ -543,11 +546,15 @@ extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._Me
     if !self.url.isEmpty {
       try visitor.visitSingularStringField(value: self.url, fieldNumber: 1)
     }
+    if !self.headerToken.isEmpty {
+      try visitor.visitSingularStringField(value: self.headerToken, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: InteractiveAuthAsyncResponse, rhs: InteractiveAuthAsyncResponse) -> Bool {
     if lhs.url != rhs.url {return false}
+    if lhs.headerToken != rhs.headerToken {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
