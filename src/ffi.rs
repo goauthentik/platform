@@ -51,7 +51,7 @@ fn ak_sys_auth_url(
 ) -> Result<bool, Box<dyn Error>> {
     let p = Url::parse(url.to_str()?)?;
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
-    let raw_token = qm.get("k").ok_or("failed to get token from URL")?;
+    let raw_token = qm.get("ak-auth-ia-token").ok_or("failed to get token from URL")?;
     let_cxx_string!(crt = raw_token);
     ak_sys_auth_token_validate(&crt, token)
 }

@@ -45,15 +45,6 @@ class SimpleHandler : public CefClient,
   static SimpleHandler* GetInstance();
 
   sHookData* m_pData = nullptr;
-  std::string m_strResponseContent = "";
-  std::string m_strJWT = "";
-
-  std::string GetCodeVerifier() { return m_strCodeVerifier; }
-  std::string GetState() { return m_strState; }
-  std::string m_strCode = "";
-  std::string m_strCodeVerifier = "";
-  std::string m_strCodeChallenge = "";
-  std::string m_strState = "";
 
   // CefClient methods:
   CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
@@ -121,11 +112,8 @@ class SimpleHandler : public CefClient,
     {
       if (strURL.substr(0, strKey.length()) == strKey)
       {
-        Debug("URL inhibited: ");
-        //Debug(std::hash<std::thread::id>{}(std::thread::get_id));
-        Debug(strURL.c_str());
-        std::string str = "OnBeforeResourceLoad ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
-        Debug(str.c_str());
+        SPDLOG_DEBUG("URL inhibited: ", strURL.c_str());
+        SPDLOG_DEBUG("OnBeforeResourceLoad ProcessID: ", std::to_string(GetCurrentProcessId()), ", ThreadID: ", std::to_string(GetCurrentThreadId()));
         Hide();
         m_pData->UpdateStatus(L"Authenticating, please wait...");
         TokenResponse validatedToken;
@@ -137,8 +125,7 @@ class SimpleHandler : public CefClient,
             m_pData->UpdateUser(validatedToken.username.c_str());
           }
         } catch (const rust::Error &ex) {
-          Debug("Exception in ak_sys_auth_url");
-          Debug(ex.what());
+          SPDLOG_WARN("Exception in ak_sys_auth_url: ", ex.what());
         }
         CloseAllBrowsers(false);
 
@@ -164,55 +151,7 @@ class SimpleHandler : public CefClient,
       size_t data_out_size,
       size_t& data_out_written
   ) override {
-      // const size_t max_write = std::min(data_in_size, data_out_size);
-      // memcpy(data_out, data_in, max_write);
-      // data_out_size = max_write; //?
-      // data_out_written = data_in_size; //?
-      // LOG(INFO) << "The data here:" << std::string((char*)data_out);
-      // data_in_read = data_in_size;
-      // return RESPONSE_FILTER_DONE;
-      const size_t max_write = std::min(data_in_size, data_out_size);
-      //-memcpy(data_out, data_in, max_write);
-      // data_out_size = max_write; //?
-      // data_out_written = data_in_size; //?
-      //-data_out_written = max_write;
-      // LOG(INFO) << "The data here:" << std::string((char*)data_out);
-      data_in_read = data_in_size;
-
-      // Alternate output message to display
-      std::string strDataOut = "";
-      // Only generate output at the first trigger of this method to avoid multiples of the display message
-      if (m_strResponseContent != "")
-      {
-        strDataOut = "Authenticating... please wait";
-        // check the output buffer size sufficiency while copying
-        memcpy(data_out, (void*)(strDataOut.c_str()), std::min(strDataOut.size(), data_out_size));
-      }
-      data_out_written = strDataOut.size();
-
-      // Append-copy input data as the input may arrive in parts (multiple triggers of this method)
-      m_strResponseContent += std::string((char*)data_in, data_in_size);
-
-      std::string strIn = "";
-      size_t nCount = 0;
-      for (size_t i = 0; i < data_in_size; ++i)
-      {
-        strIn.append(1, ((char*)data_in)[i]);
-        ++nCount;
-      }
-      std::string strOut = "";
-      for (size_t i = 0; i < data_out_written; ++i)
-      {
-        strOut.append(1, ((char*)data_out)[i]);
-      }
-      Debug("-------------------");
-      Debug(std::string("max_write:" + std::to_string(max_write)).c_str());
-      Debug(std::string("Data in: Size:" + std::to_string(data_in_size) + " Read: " + std::to_string(data_in_read)).c_str());
-      Debug(strIn.c_str());
-      Debug(std::string("Data out: Size:" + std::to_string(data_out_size) + " Written: " + std::to_string(data_out_written)).c_str());
-      Debug(strOut.c_str());
-      Debug("-------------------");
-      return RESPONSE_FILTER_DONE; //- todo: check for residual data
+      return RESPONSE_FILTER_DONE;
   }
 
   // CefDisplayHandler methods:
