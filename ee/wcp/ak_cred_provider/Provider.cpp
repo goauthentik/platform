@@ -2,9 +2,11 @@
 
 #include "Debug.h"
 #include "Provider.h"
+#include "ak_version.h"
 
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
+#include "include/cef_version.h"
 
 extern void DllAddRef();
 extern void DllRelease();
@@ -94,6 +96,13 @@ void Provider::SetCefApp(sHookData *pData) {
     strPath = g_strPath + "\\ceflog.txt";
     CefString(&settings.log_file).FromASCII(strPath.c_str());
     settings.log_severity = LOGSEVERITY_INFO;
+
+    std::string strUserAgent = std::string("authentik Platform/WCP/CredProvider@")
+        .append(AK_WCP_VERSION)
+        .append(" (CEF ")
+        .append(CEF_VERSION)
+        .append(")");
+    CefString(&settings.user_agent).FromString(strUserAgent);
 
 #if !defined(CEF_USE_SANDBOX)
     settings.no_sandbox = true;
