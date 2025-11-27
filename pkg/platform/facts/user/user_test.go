@@ -64,7 +64,7 @@ func TestGatherLinux(t *testing.T) {
 	// Linux specific tests
 	foundRoot := false
 	for _, user := range users {
-		if user.Username == api.PtrString("root") {
+		if user.Username != nil && *user.Username == "root" {
 			foundRoot = true
 			if user.Id != "0" {
 				t.Errorf("Expected root UID to be 0, got: %s", user.Id)
@@ -74,12 +74,6 @@ func TestGatherLinux(t *testing.T) {
 		// Linux UIDs should be numeric
 		if user.Id != "" && !isNumeric(user.Id) {
 			t.Errorf("Expected numeric UID on Linux, got: %s", user.Id)
-		}
-
-		// Home directories should start with /home/ or /root for regular users
-		if *user.Home != "" && !strings.HasPrefix(*user.Home, "/home/") &&
-			!strings.HasPrefix(*user.Home, "/root") && user.Username != api.PtrString("root") {
-			t.Logf("Unexpected home directory format: %s", *user.Home)
 		}
 	}
 
