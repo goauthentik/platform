@@ -21,8 +21,6 @@ func TestGather(t *testing.T) {
 		if *group.Name == "" {
 			t.Error("Group name should not be empty")
 		}
-
-		t.Logf("Group: %s (ID: %s)", *group.Name, group.Id)
 	}
 
 	t.Logf("Found %d groups", len(groups))

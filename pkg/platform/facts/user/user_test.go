@@ -27,8 +27,6 @@ func TestGather(t *testing.T) {
 		if user.Username == api.PtrString("") {
 			t.Error("Username should not be empty")
 		}
-
-		t.Logf("User: %s (ID: %s, Name: %s)", *user.Username, user.Id, *user.Name)
 	}
 
 	t.Logf("Found %d users", len(users))
