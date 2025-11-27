@@ -1,4 +1,4 @@
-.SHELLFLAGS += -x -e
+.SHELLFLAGS += -x -e -o pipefail
 SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)

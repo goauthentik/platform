@@ -41,6 +41,9 @@ func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.
 		AccessToken:    t,
 		RawAccessToken: rawToken,
 	}
+	if token.Claims().Audience[0] != auth.dom.Config().DeviceId {
+		return nil, errors.New("token not for device")
+	}
 	return &token, nil
 }
 
