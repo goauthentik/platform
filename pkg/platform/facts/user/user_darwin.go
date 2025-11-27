@@ -33,9 +33,9 @@ func gather() ([]api.DeviceUserRequest, error) {
 }
 
 type dsclUserInfo struct {
-	UniqueID         string `plist:"UniqueID"`
-	RealName         string `plist:"RealName"`
-	NFSHomeDirectory string `plist:"NFSHomeDirectory"`
+	UniqueID         []string `plist:"dsAttrTypeStandard:UniqueID"`
+	RealName         []string `plist:"dsAttrTypeStandard:RealName"`
+	NFSHomeDirectory []string `plist:"dsAttrTypeStandard:NFSHomeDirectory"`
 }
 
 func getUserInfoFromDscl(username string) api.DeviceUserRequest {
@@ -52,8 +52,12 @@ func getUserInfoFromDscl(username string) api.DeviceUserRequest {
 		return userInfo
 	}
 
-	userInfo.Id = dp.UniqueID
-	userInfo.Name = api.PtrString(dp.RealName)
-	userInfo.Home = api.PtrString(dp.NFSHomeDirectory)
+	userInfo.Id = dp.UniqueID[0]
+	if len(dp.RealName) > 0 {
+		userInfo.Name = api.PtrString(dp.RealName[0])
+	}
+	if len(dp.NFSHomeDirectory) > 0 {
+		userInfo.Home = api.PtrString(dp.NFSHomeDirectory[0])
+	}
 	return userInfo
 }
