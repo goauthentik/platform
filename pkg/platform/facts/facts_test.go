@@ -15,6 +15,7 @@ func TestGather(t *testing.T) {
 
 	if sysInfo == nil {
 		t.Fatal("SystemInfo is nil")
+		return
 	}
 
 	// Test JSON conversion

@@ -34,7 +34,7 @@ func GetCredentials(c *client.AgentClient, ctx context.Context, opts Credentials
 		return &v
 	}
 
-	dt, err := c.AgentAuthClient.DeviceTokenExchange(ctx, &pb.DeviceTokenExchangeRequest{
+	dt, err := c.DeviceTokenExchange(ctx, &pb.DeviceTokenExchangeRequest{
 		Header: &pb.RequestHeader{
 			Profile: opts.Profile,
 		},
