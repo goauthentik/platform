@@ -40,8 +40,14 @@ rs-gen-proto:
 lint-rs:
 	cargo clippy --fix --allow-dirty --workspace
 
-lint: lint-rs
+lint-go:
 	golangci-lint run
+
+lint:
+	"$(MAKE)" lint-rs
+	"$(MAKE)" lint-go
+	"$(MAKE)" browser-ext/lint
+	"$(MAKE)" ee/psso/lint
 
 test:
 	go test \

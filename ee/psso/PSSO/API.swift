@@ -11,78 +11,22 @@ class API {
     var logger: Logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!, category: "API")
 
-    func SendRequest<T: Encodable>(
-        data: T,
-        url: String,
-        auth: String,
-        completionHandler: @escaping @Sendable (Data?, URLResponse?, (any Error)?) -> Void
-    ) throws {
-        var request = URLRequest(url: URL(string: url)!)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(auth)", forHTTPHeaderField: "Authorization")
-        request.httpMethod = "POST"
-        request.httpBody = try JSONEncoder().encode(data)
-        URLSession.shared.dataTask(with: request) { data, res, err in
-            completionHandler(data, res, err)
-        }.resume()
-    }
-
-    func DeviceSerial() -> String? {
-        let platformExpertService = IOServiceGetMatchingService(
-            kIOMainPortDefault,
-            IOServiceMatching("IOPlatformExpertDevice")
-        )
-        guard platformExpertService != IO_OBJECT_NULL else {
-            return nil
-        }
-
-        defer {
-            IOObjectRelease(platformExpertService)
-        }
-
-        guard
-            let cftype = IORegistryEntryCreateCFProperty(
-                platformExpertService,
-                kIOPlatformSerialNumberKey as CFString,
-                kCFAllocatorDefault,
-                0
-            )
-        else {
-            return nil
-        }
-
-        guard let serialNumber = cftype.takeRetainedValue() as? String else {
-            return nil
-        }
-
-        return serialNumber
-    }
-
     func RegisterDevice(
         loginConfig: ASAuthorizationProviderExtensionLoginConfiguration,
         loginManager: ASAuthorizationProviderExtensionLoginManager,
-        token: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
             let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
                 from: loginManager.key(for: .currentDeviceSigning)!)!
             let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
                 from: loginManager.key(for: .currentDeviceEncryption)!)!
-            let deviceSerial = DeviceSerial()
-            guard deviceSerial != nil else {
-                self.logger.warning("Failed to get device serial")
-                return .failed
-            }
-            let request = DeviceRegistrationRequest(
-                DeviceIdentifier: deviceSerial!,
-                ClientID: "",
-                DeviceSigningKey: DeviceSigningKey,
-                DeviceEncryptionKey: DeviceEncryptionKey,
-                EncKeyID: EncKeyID,
-                SignKeyID: SignKeyID,
+            self.logger.debug("registering device with sysd...")
+            try await SysdBridge.shared.pssoRegisterDevice(
+                deviceSigningKey: DeviceSigningKey,
+                deviceEncryptionKey: DeviceEncryptionKey,
+                encKeyID: EncKeyID,
+                signKeyID: SignKeyID
             )
-            self.logger.debug(
-                "registration request: \(String(describing: request))")
             return .success
         } catch {
             self.logger.error("failed to register: \(error)")
@@ -93,23 +37,16 @@ class API {
     func RegisterUser(
         loginConfig: ASAuthorizationProviderExtensionUserLoginConfiguration,
         loginManger: ASAuthorizationProviderExtensionLoginManager,
-        token: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
             let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
                 from: loginManger.key(for: .userSecureEnclaveKey)!)!
-            let deviceSerial = DeviceSerial()
-            guard deviceSerial != nil else {
-                self.logger.warning("Failed to get device serial")
-                return .failed
-            }
-            let request = UserRegistrationRequest(
-                DeviceIdentifier: deviceSerial!,
-                UserSecureEnclaveKey: UserSecureEnclaveKey,
-                EnclaveKeyID: EnclaveKeyID,
-            )
-            self.logger.debug(
-                "registration request: \(String(describing: request))")
+            self.logger.debug("registering user with sysd...")
+            try await SysdBridge.shared
+                .pssoRegisterUser(
+                    enclaveKeyID: EnclaveKeyID,
+                    userSecureEnclaveKey: UserSecureEnclaveKey
+                )
             return .success
         } catch {
             self.logger.error("failed to register: \(error)")
@@ -231,45 +168,5 @@ class API {
 
         // Return both keyID, PEM encoded public key, and X.509 DER format
         return (keyID, publicKeyPEM, x509PublicKeyData)
-    }
-}
-
-struct DeviceRegistrationRequest: Codable {
-    let DeviceIdentifier: String
-    let ClientID: String
-
-    let DeviceSigningKey: String
-    let DeviceEncryptionKey: String
-    let EncKeyID: String
-    let SignKeyID: String
-
-    enum CodingKeys: String, CodingKey {
-        case DeviceSigningKey = "device_signing_key"
-        case DeviceEncryptionKey = "device_encryption_key"
-        case EncKeyID = "enc_key_id"
-        case SignKeyID = "sign_key_id"
-        case DeviceIdentifier = "identifier"
-        case ClientID = "client_id"
-    }
-}
-
-struct UserRegistrationRequest: Codable {
-    let DeviceIdentifier: String
-
-    let UserSecureEnclaveKey: String
-    let EnclaveKeyID: String
-
-    enum CodingKeys: String, CodingKey {
-        case DeviceIdentifier = "identifier"
-        case UserSecureEnclaveKey = "user_secure_enclave_key"
-        case EnclaveKeyID = "enclave_key_id"
-    }
-}
-
-struct UserRegistrationResponse: Codable {
-    let Username: String
-
-    enum CodingKeys: String, CodingKey {
-        case Username = "username"
     }
 }

@@ -106,4 +106,38 @@ public class SysdBridge {
             return reply.message
         }
     }
+
+    public func pssoRegisterUser(
+        enclaveKeyID: String,
+        userSecureEnclaveKey: String,
+    ) async throws {
+        return try await self.withClient {client in
+            let c = SystemAuthApple.Client(wrapping: client)
+            let _ = try await c.registerUser(request: ClientRequest(
+                message: RegisterUserRequest.with {
+                    $0.enclaveKeyID = enclaveKeyID
+                    $0.userSecureEnclaveKey = userSecureEnclaveKey
+                }
+            ))
+        }
+    }
+
+    public func pssoRegisterDevice(
+        deviceSigningKey: String,
+        deviceEncryptionKey: String,
+        encKeyID: String,
+        signKeyID: String,
+    ) async throws {
+        return try await self.withClient {client in
+            let c = SystemAuthApple.Client(wrapping: client)
+            let _ = try await c.registerDevice(request: ClientRequest(
+                message: RegisterDeviceRequest.with {
+                    $0.deviceSigningKey = deviceSigningKey
+                    $0.deviceEncryptionKey = deviceEncryptionKey
+                    $0.encKeyID = encKeyID
+                    $0.signKeyID = signKeyID
+                }
+            ))
+        }
+    }
 }

@@ -38,7 +38,6 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         return await API.shared.RegisterDevice(
             loginConfig: loginConfig,
             loginManager: loginManager,
-            token: loginManager.registrationToken ?? "",
         )
     }
 
@@ -52,13 +51,20 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             "beginUserRegistration \(userName ?? ""), method \(String(describing: method))"
         )
         self.logger.debug("options: \(String.init(describing: options))")
+        let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
+            loginUserName: userName ?? "")
         InteractiveAuth.shared.completion = { token async in
             self.logger.trace("got token \(String(describing: token))")
             do {
-                switch try await SysdBridge.shared.authToken(token: token) {
-                case true:
-                    return .success
-                case false:
+                self.logger.debug("Validating auth token")
+                if try await SysdBridge.shared.authToken(token: token) {
+                    self.logger.debug("Successfully validated token, registering user")
+                    return await API.shared
+                        .RegisterUser(
+                            loginConfig: loginConfig,
+                            loginManger: loginManager
+                        )
+                } else {
                     return .failed
                 }
             } catch {

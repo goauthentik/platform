@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package sys_auth_apple;
+option go_package = "pkg/pb";
+option swift_prefix = "";
+
+service SystemAuthApple {
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
+}
+
+message RegisterUserRequest {
+  string user_secure_enclave_key = 1;
+  string enclave_key_id = 2;
+
+}
+message RegisterUserResponse {}
+message RegisterDeviceRequest {
+  string device_signing_key = 1;
+  string device_encryption_key = 2;
+  string enc_key_id = 3;
+  string sign_key_id = 4;
+}
+message RegisterDeviceResponse {}
