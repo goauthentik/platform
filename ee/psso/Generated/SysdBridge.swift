@@ -110,15 +110,16 @@ public class SysdBridge {
     public func pssoRegisterUser(
         enclaveKeyID: String,
         userSecureEnclaveKey: String,
-    ) async throws {
+    ) async throws -> String {
         return try await self.withClient {client in
             let c = SystemAuthApple.Client(wrapping: client)
-            let _ = try await c.registerUser(request: ClientRequest(
+            let reply = try await c.registerUser(request: ClientRequest(
                 message: RegisterUserRequest.with {
                     $0.enclaveKeyID = enclaveKeyID
                     $0.userSecureEnclaveKey = userSecureEnclaveKey
                 }
             ))
+            return reply.username
         }
     }
 

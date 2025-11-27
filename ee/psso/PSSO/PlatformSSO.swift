@@ -35,10 +35,20 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         loginConfig.accountDisplayName = "authentik"
         loginConfig.includePreviousRefreshTokenInLoginRequest = true
 
-        return await API.shared.RegisterDevice(
+        let registration = await API.shared.RegisterDevice(
             loginConfig: loginConfig,
             loginManager: loginManager,
         )
+        if registration != .success {
+            return registration
+        }
+        do {
+            try loginManager.saveLoginConfiguration(loginConfig)
+            return .success
+        } catch {
+            self.logger.warning("failed to save login configuration: \(error)")
+            return .failed
+        }
     }
 
     func beginUserRegistration(

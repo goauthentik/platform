@@ -10,6 +10,7 @@
 
 internal import GRPCCore
 internal import GRPCProtobuf
+internal import SwiftProtobuf
 
 // MARK: - sys_auth_apple.SystemAuthApple
 
@@ -37,7 +38,7 @@ internal enum SystemAuthApple {
             /// Request type for "RegisterDevice".
             internal typealias Input = RegisterDeviceRequest
             /// Response type for "RegisterDevice".
-            internal typealias Output = RegisterDeviceResponse
+            internal typealias Output = SwiftProtobuf.Google_Protobuf_Empty
             /// Descriptor for "RegisterDevice".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth_apple.SystemAuthApple"),
@@ -91,7 +92,7 @@ extension SystemAuthApple {
         /// - Parameters:
         ///   - request: A request containing a single `RegisterDeviceRequest` message.
         ///   - serializer: A serializer for `RegisterDeviceRequest` messages.
-        ///   - deserializer: A deserializer for `RegisterDeviceResponse` messages.
+        ///   - deserializer: A deserializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - options: Options to apply to this RPC.
         ///   - handleResponse: A closure which handles the response, the result of which is
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
@@ -100,9 +101,9 @@ extension SystemAuthApple {
         func registerDevice<Result>(
             request: GRPCCore.ClientRequest<RegisterDeviceRequest>,
             serializer: some GRPCCore.MessageSerializer<RegisterDeviceRequest>,
-            deserializer: some GRPCCore.MessageDeserializer<RegisterDeviceResponse>,
+            deserializer: some GRPCCore.MessageDeserializer<SwiftProtobuf.Google_Protobuf_Empty>,
             options: GRPCCore.CallOptions,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterDeviceResponse>) async throws -> Result
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -157,7 +158,7 @@ extension SystemAuthApple {
         /// - Parameters:
         ///   - request: A request containing a single `RegisterDeviceRequest` message.
         ///   - serializer: A serializer for `RegisterDeviceRequest` messages.
-        ///   - deserializer: A deserializer for `RegisterDeviceResponse` messages.
+        ///   - deserializer: A deserializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - options: Options to apply to this RPC.
         ///   - handleResponse: A closure which handles the response, the result of which is
         ///       returned to the caller. Returning from the closure will cancel the RPC if it
@@ -166,9 +167,9 @@ extension SystemAuthApple {
         internal func registerDevice<Result>(
             request: GRPCCore.ClientRequest<RegisterDeviceRequest>,
             serializer: some GRPCCore.MessageSerializer<RegisterDeviceRequest>,
-            deserializer: some GRPCCore.MessageDeserializer<RegisterDeviceResponse>,
+            deserializer: some GRPCCore.MessageDeserializer<SwiftProtobuf.Google_Protobuf_Empty>,
             options: GRPCCore.CallOptions = .defaults,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterDeviceResponse>) async throws -> Result = { response in
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result = { response in
                 try response.message
             }
         ) async throws -> Result where Result: Sendable {
@@ -224,14 +225,14 @@ extension SystemAuthApple.ClientProtocol {
     internal func registerDevice<Result>(
         request: GRPCCore.ClientRequest<RegisterDeviceRequest>,
         options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterDeviceResponse>) async throws -> Result = { response in
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result = { response in
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
         try await self.registerDevice(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<RegisterDeviceRequest>(),
-            deserializer: GRPCProtobuf.ProtobufDeserializer<RegisterDeviceResponse>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<SwiftProtobuf.Google_Protobuf_Empty>(),
             options: options,
             onResponse: handleResponse
         )
@@ -284,7 +285,7 @@ extension SystemAuthApple.ClientProtocol {
         _ message: RegisterDeviceRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterDeviceResponse>) async throws -> Result = { response in
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result = { response in
             try response.message
         }
     ) async throws -> Result where Result: Sendable {

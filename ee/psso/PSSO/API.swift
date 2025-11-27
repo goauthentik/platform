@@ -42,11 +42,13 @@ class API {
             let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
                 from: loginManger.key(for: .userSecureEnclaveKey)!)!
             self.logger.debug("registering user with sysd...")
-            try await SysdBridge.shared
+            let registerResult = try await SysdBridge.shared
                 .pssoRegisterUser(
                     enclaveKeyID: EnclaveKeyID,
                     userSecureEnclaveKey: UserSecureEnclaveKey
                 )
+            loginConfig.loginUserName = registerResult
+            try loginManger.saveUserLoginConfiguration(loginConfig)
             return .success
         } catch {
             self.logger.error("failed to register: \(error)")
