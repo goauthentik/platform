@@ -2,6 +2,7 @@ package user
 
 import (
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -48,11 +49,6 @@ func TestGatherDarwin(t *testing.T) {
 		// macOS UIDs are typically numeric
 		if user.Id != "" && !isNumeric(user.Id) {
 			t.Errorf("Expected numeric UID on macOS, got: %s", user.Id)
-		}
-
-		// Home directories should start with /Users/ for regular users
-		if *user.Home != "" && !strings.HasPrefix(*user.Home, "/Users/") && user.Username != api.PtrString("root") {
-			t.Logf("Unexpected home directory format: %s", *user.Home)
 		}
 	}
 }
@@ -114,10 +110,6 @@ func TestGatherWindows(t *testing.T) {
 }
 
 func isNumeric(s string) bool {
-	for _, r := range s {
-		if r < '0' || r > '9' {
-			return false
-		}
-	}
-	return len(s) > 0
+	_, err := strconv.Atoi(s)
+	return err == nil
 }

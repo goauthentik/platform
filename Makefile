@@ -57,7 +57,11 @@ test:
 	go tool cover \
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
-	go tool github.com/jstemmer/go-junit-report/v2 -parser gojson -in ${TEST_OUTPUT} -out ${PWD}/junit.xml
+	go tool github.com/jstemmer/go-junit-report/v2 \
+		-parser gojson \
+		-in ${TEST_OUTPUT} \
+		-out ${PWD}/junit.xml \
+		-set-exit-code
 
 test-agent:
 	go run -v ./cmd/agent_local/
