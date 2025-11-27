@@ -14,10 +14,8 @@
 		B404B2742E0DD88800A12D29 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = B404B2732E0DD88500A12D29 /* API.swift */; };
 		B42B450A2EA24B120046D847 /* Generated.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; };
 		B42B450B2EA24B120046D847 /* Generated.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		B49BA5572E0F445700184992 /* AppAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5562E0F445700184992 /* AppAuth */; };
-		B49BA5592E0F445700184992 /* AppAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA5582E0F445700184992 /* AppAuthCore */; };
 		B49BA55B2E0F447A00184992 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA55A2E0F447A00184992 /* Sentry */; };
-		B49BA55F2E0F466300184992 /* OIDC.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA55E2E0F466100184992 /* OIDC.swift */; };
+		B49BA55F2E0F466300184992 /* InteractiveAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA55E2E0F466100184992 /* InteractiveAuth.swift */; };
 		B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5602E0F73AD00184992 /* Sentry.swift */; };
 		B49BA5632E100E4500184992 /* PlatformSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5622E100E4400184992 /* PlatformSSO.swift */; };
 		B4D2A6402EA25C96000B8E49 /* GRPCCore in Frameworks */ = {isa = PBXBuildFile; productRef = B4D2A63F2EA25C96000B8E49 /* GRPCCore */; };
@@ -60,7 +58,7 @@
 		B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterpriseSSO.swift; sourceTree = "<group>"; };
 		B404B2732E0DD88500A12D29 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		B42B45022EA24AEA0046D847 /* Generated.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Generated.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		B49BA55E2E0F466100184992 /* OIDC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OIDC.swift; sourceTree = "<group>"; };
+		B49BA55E2E0F466100184992 /* InteractiveAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveAuth.swift; sourceTree = "<group>"; };
 		B49BA5602E0F73AD00184992 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B49BA5622E100E4400184992 /* PlatformSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformSSO.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -74,9 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B49BA5572E0F445700184992 /* AppAuth in Frameworks */,
 				609FE38724893242009FD079 /* AuthenticationServices.framework in Frameworks */,
-				B49BA5592E0F445700184992 /* AppAuthCore in Frameworks */,
 				B49BA55B2E0F447A00184992 /* Sentry in Frameworks */,
 				B42B450A2EA24B120046D847 /* Generated.framework in Frameworks */,
 			);
@@ -127,12 +123,12 @@
 			isa = PBXGroup;
 			children = (
 				609FE38924893242009FD079 /* AuthenticationViewController.swift */,
+				609FE38B24893242009FD079 /* AuthenticationViewController.xib */,
 				B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */,
 				B49BA5622E100E4400184992 /* PlatformSSO.swift */,
 				B49BA5602E0F73AD00184992 /* Sentry.swift */,
-				B49BA55E2E0F466100184992 /* OIDC.swift */,
+				B49BA55E2E0F466100184992 /* InteractiveAuth.swift */,
 				B404B2732E0DD88500A12D29 /* API.swift */,
-				609FE38B24893242009FD079 /* AuthenticationViewController.xib */,
 				609FE38E24893242009FD079 /* Info.plist */,
 				609FE38F24893242009FD079 /* PSSO.entitlements */,
 			);
@@ -228,7 +224,6 @@
 			mainGroup = 609FE344248929E6009FD079;
 			packageReferences = (
 				B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
-				B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */,
 				B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */,
 				B4D2A6412EA25CAF000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-nio-transport" */,
 				B4D2A6442EA25CC1000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */,
@@ -268,7 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */,
-				B49BA55F2E0F466300184992 /* OIDC.swift in Sources */,
+				B49BA55F2E0F466300184992 /* InteractiveAuth.swift in Sources */,
 				B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */,
 				B404B2742E0DD88800A12D29 /* API.swift in Sources */,
 				609FE38A24893242009FD079 /* AuthenticationViewController.swift in Sources */,
@@ -626,14 +621,6 @@
 				minimumVersion = 8.53.1;
 			};
 		};
-		B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/openid/AppAuth-iOS";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.0;
-			};
-		};
 		B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/grpc/grpc-swift-2";
@@ -669,16 +656,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B49BA5562E0F445700184992 /* AppAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
-			productName = AppAuth;
-		};
-		B49BA5582E0F445700184992 /* AppAuthCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B49BA5552E0F445700184992 /* XCRemoteSwiftPackageReference "AppAuth-iOS" */;
-			productName = AppAuthCore;
-		};
 		B49BA55A2E0F447A00184992 /* Sentry */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;

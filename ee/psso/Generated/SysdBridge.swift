@@ -38,27 +38,22 @@ final class LogInterceptor: ClientInterceptor {
     }
 }
 
+public struct AKInteractiveAuth {
+    public var URL: String
+    public var DTH: String
+}
+
 public class SysdBridge {
 
     public static let shared: SysdBridge = SysdBridge()
 
     var logger: Logger
-    private var _oauthConfig: OAuthConfig?
     var logInterceptor: LogInterceptor
-
-    public var oauthConfig: OAuthConfig {
-        return _oauthConfig!
-    }
 
     init() {
         self.logger = Logger(
             subsystem: Bundle.main.bundleIdentifier!, category: "GRPC.sysd")
         self.logInterceptor = LogInterceptor(logger: self.logger)
-        do {
-            self._oauthConfig = try sysdOAuthConfig()
-        } catch {
-            self.logger.error("failed to get OAuth Config: \(error)")
-        }
     }
 
     func withClient<Result: Sendable>(
@@ -72,6 +67,28 @@ public class SysdBridge {
             interceptors: [self.logInterceptor],
             handleClient: handleClient,
         )
+    }
+
+    public func authInteractive() async throws -> AKInteractiveAuth {
+        return try await self.withClient { client in
+            let res = SystemAuthInteractive.Client(wrapping: client)
+            let url = try await res.interactiveAuthAsync(
+                request: ClientRequest(message: Google_Protobuf_Empty())
+            )
+            return AKInteractiveAuth(URL: url.url, DTH: url.headerToken)
+        }
+    }
+
+    public func authToken(token: String) async throws -> Bool {
+        return try await self.withClient { client in
+            let c = SystemAuthToken.Client(wrapping: client)
+            let res = try await c.tokenAuth(
+                request: ClientRequest(
+                    message: TokenAuthRequest.with { request in
+                        request.token = token
+                    }))
+            return res.successful
+        }
     }
 
     public func platformSignedEndpointHeader(challenge: String) async throws -> String {
@@ -89,37 +106,4 @@ public class SysdBridge {
             return reply.message
         }
     }
-
-    private func sysdOAuthConfig() throws -> OAuthConfig {
-        let semaphore = DispatchSemaphore(value: 0)
-        var value: OAuthConfig? = nil
-        Task {
-            defer { semaphore.signal() }
-            value = try await sysdOAuthConfigAsync()
-        }
-
-        semaphore.wait()
-        return value!
-    }
-
-    private func sysdOAuthConfigAsync() async throws -> OAuthConfig {
-        return try await self.withClient { client in
-            let agentPlatform = SystemAuthToken.Client(wrapping: client)
-            let reply = try await agentPlatform.oAuthParams(
-                request: ClientRequest(message: Google_Protobuf_Empty())
-            )
-            return OAuthConfig(
-                BaseURL: reply.url,
-                ClientID: reply.clientID,
-                AppSlug: reply.appSlug
-            )
-        }
-    }
-
-}
-
-public struct OAuthConfig {
-    public var BaseURL: String
-    public var ClientID: String
-    public var AppSlug: String
 }

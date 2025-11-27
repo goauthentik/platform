@@ -1,4 +1,3 @@
-import AppAuth
 import AuthenticationServices
 import CryptoKit
 import Foundation
@@ -63,8 +62,7 @@ class API {
         loginConfig: ASAuthorizationProviderExtensionLoginConfiguration,
         loginManager: ASAuthorizationProviderExtensionLoginManager,
         token: String,
-        completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
-    ) {
+    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
             let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
                 from: loginManager.key(for: .currentDeviceSigning)!)!
@@ -73,13 +71,11 @@ class API {
             let deviceSerial = DeviceSerial()
             guard deviceSerial != nil else {
                 self.logger.warning("Failed to get device serial")
-                completion(.failed)
-                return
+                return .failed
             }
-            let config = SysdBridge.shared.oauthConfig
             let request = DeviceRegistrationRequest(
                 DeviceIdentifier: deviceSerial!,
-                ClientID: config.ClientID,
+                ClientID: "",
                 DeviceSigningKey: DeviceSigningKey,
                 DeviceEncryptionKey: DeviceEncryptionKey,
                 EncKeyID: EncKeyID,
@@ -87,42 +83,10 @@ class API {
             )
             self.logger.debug(
                 "registration request: \(String(describing: request))")
-
-            try self.SendRequest(
-                data: request,
-                url: "\(config.BaseURL)/endpoint/apple/sso/register/device/",
-                auth: token,
-            ) {
-                data,
-                res,
-                error in
-                if let err = error {
-                    self.logger.error("failed to send request \(err)")
-                    completion(.failed)
-                    return
-                }
-                if let httpResponse = res as? HTTPURLResponse {
-                    if httpResponse.statusCode >= 400 {
-                        self.logger
-                            .warning(
-                                "failed request: \(String(decoding: data!, as: UTF8.self))"
-                            )
-                        completion(.failed)
-                        return
-                    }
-                }
-                do {
-                    try loginManager.saveLoginConfiguration(loginConfig)
-                    completion(.success)
-                    return
-                } catch {
-                    self.logger.error("failed to save login config \(error)")
-                }
-                completion(.failed)
-            }
+            return .success
         } catch {
             self.logger.error("failed to register: \(error)")
-            completion(.failed)
+            return .failed
         }
     }
 
@@ -130,18 +94,15 @@ class API {
         loginConfig: ASAuthorizationProviderExtensionUserLoginConfiguration,
         loginManger: ASAuthorizationProviderExtensionLoginManager,
         token: String,
-        completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
-    ) {
+    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
             let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
                 from: loginManger.key(for: .userSecureEnclaveKey)!)!
             let deviceSerial = DeviceSerial()
             guard deviceSerial != nil else {
                 self.logger.warning("Failed to get device serial")
-                completion(.failed)
-                return
+                return .failed
             }
-            let config = SysdBridge.shared.oauthConfig
             let request = UserRegistrationRequest(
                 DeviceIdentifier: deviceSerial!,
                 UserSecureEnclaveKey: UserSecureEnclaveKey,
@@ -149,44 +110,10 @@ class API {
             )
             self.logger.debug(
                 "registration request: \(String(describing: request))")
-
-            try self.SendRequest(
-                data: request,
-                url: "\(config.BaseURL)/endpoint/apple/sso/register/user/",
-                auth: token,
-            ) {
-                data,
-                res,
-                error in
-                if let err = error {
-                    self.logger.error("failed to send request \(err)")
-                    completion(.failed)
-                    return
-                }
-                if let httpResponse = res as? HTTPURLResponse {
-                    if httpResponse.statusCode >= 400 {
-                        self.logger
-                            .warning(
-                                "failed request: \(String(decoding: data!, as: UTF8.self))"
-                            )
-                        completion(.failed)
-                        return
-                    }
-                }
-                do {
-                    let body = try JSONDecoder().decode(UserRegistrationResponse.self, from: data!)
-                    loginConfig.loginUserName = body.Username
-                    try loginManger.saveUserLoginConfiguration(loginConfig)
-                } catch {
-                    self.logger.error("failed to parse response \(error)")
-                    completion(.failed)
-                    return
-                }
-                completion(.success)
-            }
+            return .success
         } catch {
             self.logger.error("failed to register: \(error)")
-            completion(.failed)
+            return .failed
         }
     }
 

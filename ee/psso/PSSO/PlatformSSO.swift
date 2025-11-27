@@ -20,43 +20,26 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
     func beginDeviceRegistration(
         loginManager: ASAuthorizationProviderExtensionLoginManager,
         options: ASAuthorizationProviderExtensionRequestOptions = [],
-        completion:
-            @escaping (
-                ASAuthorizationProviderExtensionRegistrationResult
-            ) -> Void
-    ) {
+    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         self.logger.debug("Begin Device Registration")
-        let config = SysdBridge.shared.oauthConfig
-        self.logger.debug("Options: \(String(describing: config))")
+        //        self.logger.debug("Options: \(String(describing: config))")
         let loginConfig = ASAuthorizationProviderExtensionLoginConfiguration(
-            clientID: config.ClientID,
-            issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
-            tokenEndpointURL: URL(string: "\(config.BaseURL)/endpoint/apple/sso/token/")!,
-            jwksEndpointURL: URL(
-                string: "\(config.BaseURL)/application/o/\(config.AppSlug)/jwks/")!,
-            audience: config.ClientID
+            clientID: "",
+            issuer: "",
+            tokenEndpointURL: URL(string: "")!,
+            jwksEndpointURL: URL(string: "")!,
+            audience: ""
         )
 
-        loginConfig.nonceEndpointURL = URL(
-            string: "\(config.BaseURL)/endpoint/apple/sso/nonce/")!
+        loginConfig.nonceEndpointURL = URL(string: "")!
         loginConfig.accountDisplayName = "authentik"
         loginConfig.includePreviousRefreshTokenInLoginRequest = true
 
-        self.logger.debug("clientID: \(loginConfig.clientID)")
-        self.logger.debug("issuer: \(loginConfig.issuer)")
-        self.logger.debug("audience: \(loginConfig.audience)")
-
-        self.cancelFunc = {
-            completion(.failed)
-        }
-
-        API.shared.RegisterDevice(
+        return await API.shared.RegisterDevice(
             loginConfig: loginConfig,
             loginManager: loginManager,
             token: loginManager.registrationToken ?? "",
-        ) { status in
-            completion(status)
-        }
+        )
     }
 
     func beginUserRegistration(
@@ -64,48 +47,33 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         userName: String?,
         method: ASAuthorizationProviderExtensionAuthenticationMethod,
         options: ASAuthorizationProviderExtensionRequestOptions = [],
-        completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
-    ) {
+    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         self.logger.debug(
             "beginUserRegistration \(userName ?? ""), method \(String(describing: method))"
         )
         self.logger.debug("options: \(String.init(describing: options))")
-        let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
-            loginUserName: userName ?? "")
-        let config = SysdBridge.shared.oauthConfig
-        self.cancelFunc = {
-            completion(.failed)
-        }
-        OIDC.shared.startAuthorization(
-            viewController: self,
-            loginConfig: ASAuthorizationProviderExtensionLoginConfiguration(
-                clientID: config.ClientID,
-                issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
-                tokenEndpointURL: URL(
-                    string: "\(config.BaseURL)/application/o/token/"
-                )!,
-                jwksEndpointURL: URL(
-                    string: "\(config.BaseURL)/application/o/\(config.AppSlug)/jwks/")!,
-                audience: config.ClientID,
-            ),
-            loginManager: loginManager
-        )
-        loginManager.presentRegistrationViewController { error in
-            if let err = error {
-                self.logger.error("error presentRegistrationViewController \(err)")
-                completion(.failed)
-            }
-            OIDC.shared.completion = { token in
-                self.logger.debug("got token \(String(describing: token))")
-
-                API.shared.RegisterUser(
-                    loginConfig: loginConfig,
-                    loginManger: loginManager,
-                    token: token.accessToken!,
-                ) { st in
-                    completion(st)
+        InteractiveAuth.shared.completion = { token async in
+            self.logger.trace("got token \(String(describing: token))")
+            do {
+                switch try await SysdBridge.shared.authToken(token: token) {
+                case true:
+                    return .success
+                case false:
+                    return .failed
                 }
+            } catch {
+                self.logger.error("error presentRegistrationViewController \(error)")
+                return .failed
             }
+        }
+        do {
+            return try await InteractiveAuth.shared
+                .startAuth(
+                    viewController: self,
+                    loginManager: loginManager) ?? .failed
+        } catch {
+            self.logger.error("Error starting interactive authentication: \(error)")
+            return .failed
         }
     }
 
