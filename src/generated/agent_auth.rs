@@ -79,6 +79,13 @@ pub struct TokenExchangeResponse {
     pub expires_in: u64,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct DeviceTokenExchangeRequest {
+    #[prost(message, optional, tag = "1")]
+    pub header: ::core::option::Option<super::agent::RequestHeader>,
+    #[prost(string, tag = "2")]
+    pub device_name: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AuthorizeRequest {
     #[prost(message, optional, tag = "1")]
     pub header: ::core::option::Option<super::agent::RequestHeader>,

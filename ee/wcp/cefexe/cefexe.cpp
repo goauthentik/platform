@@ -2,6 +2,7 @@
 #include "cefsimple/simple_app.h"
 
 #include "ak_cred_provider/include/Debug.h"
+#include "spdlog/spdlog.h"
 #include "ak_cred_provider/include/ak_sentry.h"
 #include <Synchapi.h>
 //#pragma comment(lib,"libcef.lib")
@@ -42,14 +43,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	int ret = 0;
 	try
 	{
-		// Debug("cefexe: CefExecuteProcess");
+		Debug("CefExecuteProcess");
 		ret = CefExecuteProcess(main_args, nullptr, nullptr);
-		// Debug("cefexe: CefExecuteProcess... done");
+		Debug("CefExecuteProcess... done");
 	}
 	catch (const std::exception&)
 	{
-		Debug("cefexe: CefExecuteProcess... catch...!");
+		Debug("CefExecuteProcess... catch...!");
 	}
+	// spdlog::shutdown();
 	SentryShutdown();
 	return ret;
 }

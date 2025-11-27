@@ -32,8 +32,6 @@ SimpleHandler::SimpleHandler(bool is_alloy_style, sHookData* pData)
     : is_alloy_style_(is_alloy_style), m_pData(pData) {
   DCHECK(!g_instance);
   g_instance = this;
-  m_strCodeVerifier = GetRandomStr(OAUTH_CHALLENGE_LEN);
-  m_strState = GetRandomStr(OAUTH_STATE_LEN);
   Debug("SimpleHandler");
 }
 

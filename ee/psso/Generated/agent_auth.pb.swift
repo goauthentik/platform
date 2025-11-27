@@ -208,6 +208,29 @@ struct TokenExchangeResponse: Sendable {
   fileprivate var _header: ResponseHeader? = nil
 }
 
+struct DeviceTokenExchangeRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var header: RequestHeader {
+    get {return _header ?? RequestHeader()}
+    set {_header = newValue}
+  }
+  /// Returns true if `header` has been explicitly set.
+  var hasHeader: Bool {return self._header != nil}
+  /// Clears the value of `header`. Subsequent reads from it will return its default value.
+  mutating func clearHeader() {self._header = nil}
+
+  var deviceName: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _header: RequestHeader? = nil
+}
+
 struct AuthorizeRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -501,6 +524,45 @@ extension TokenExchangeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     if lhs._header != rhs._header {return false}
     if lhs.accessToken != rhs.accessToken {return false}
     if lhs.expiresIn != rhs.expiresIn {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension DeviceTokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DeviceTokenExchangeRequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}device_name\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.deviceName) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._header {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.deviceName.isEmpty {
+      try visitor.visitSingularStringField(value: self.deviceName, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: DeviceTokenExchangeRequest, rhs: DeviceTokenExchangeRequest) -> Bool {
+    if lhs._header != rhs._header {return false}
+    if lhs.deviceName != rhs.deviceName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

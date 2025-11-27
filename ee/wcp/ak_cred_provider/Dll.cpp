@@ -4,8 +4,6 @@
 
 #include "Dll.h"
 
-#include "authentik_sys_bridge/ffi.h"
-
 #include "ak_sentry.h"
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
@@ -50,14 +48,6 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
     SetupLogs("ak_cred_provider");
     SentrySetup("ak_cred_provider");
     Debug("DllMain::DLL_PROCESS_ATTACH");
-    try {
-      std::string ping = std::string("");
-      ak_sys_grpc_ping(ping);
-      Debug(std::string("sysd version: ").append(ping).c_str());
-    } catch (const std::exception &ex) {
-      Debug("Exception in ak_grpc_ping");
-      Debug(ex.what());
-    }
 
     DisableThreadLibraryCalls(hinstDll);
     Debug(std::string("DLL hInstance: " + std::to_string((size_t)hinstDll))

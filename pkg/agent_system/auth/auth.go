@@ -67,7 +67,6 @@ func (auth *Server) Start() error {
 	}
 	auth.dom = dom
 	auth.api = ac
-	auth.startFetch()
 	return nil
 }
 

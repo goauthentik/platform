@@ -294,6 +294,7 @@ FetchContent_Declare(jwtcpp
   DOWNLOAD_EXTRACT_TIMESTAMP OFF
 )
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
+set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "disable building examples" FORCE)
 FetchContent_MakeAvailable(jwtcpp)
 
 # --- jwt-cpp and OpenSSL - End

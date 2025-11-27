@@ -5,10 +5,12 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/platform/facts/disk"
+	"goauthentik.io/platform/pkg/platform/facts/group"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
 	"goauthentik.io/platform/pkg/platform/facts/network"
 	"goauthentik.io/platform/pkg/platform/facts/os"
 	"goauthentik.io/platform/pkg/platform/facts/process"
+	"goauthentik.io/platform/pkg/platform/facts/user"
 )
 
 // Gather collects system information from all subsystems
@@ -43,12 +45,26 @@ func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
 		return nil, err
 	}
 
+	log.WithField("area", "user").Debug("Gathering...")
+	users, err := user.Gather()
+	if err != nil {
+		return nil, err
+	}
+
+	log.WithField("area", "group").Debug("Gathering...")
+	groups, err := group.Gather()
+	if err != nil {
+		return nil, err
+	}
+
 	return &api.DeviceFactsRequest{
 		Disks:     disks,
 		Hardware:  *api.NewNullableDeviceFactsRequestHardware(&hw),
 		Network:   *api.NewNullableDeviceFactsRequestNetwork(&net),
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
+		Users:     users,
+		Groups:    groups,
 		Vendor: map[string]any{
 			"goauthentik.io/platform": map[string]string{
 				"agent_version": meta.FullVersion(),

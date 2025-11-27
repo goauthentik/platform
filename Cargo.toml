@@ -1,6 +1,6 @@
 [package]
 name = "authentik_sys"
-version = "0.1.0"
+version = "0.30.0"
 edition = "2024"
 
 [lib]
@@ -29,6 +29,7 @@ serde_json = "1.0.145"
 sentry = "0.46.0"
 cxx = "1.0.189"
 windows-sys = "0.61.2"
+url = "2.5.7"
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.3.0"

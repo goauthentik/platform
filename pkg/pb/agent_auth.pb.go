@@ -398,6 +398,58 @@ func (x *TokenExchangeResponse) GetExpiresIn() uint64 {
 	return 0
 }
 
+type DeviceTokenExchangeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *RequestHeader         `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	DeviceName    string                 `protobuf:"bytes,2,opt,name=device_name,json=deviceName,proto3" json:"device_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeviceTokenExchangeRequest) Reset() {
+	*x = DeviceTokenExchangeRequest{}
+	mi := &file_agent_auth_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeviceTokenExchangeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeviceTokenExchangeRequest) ProtoMessage() {}
+
+func (x *DeviceTokenExchangeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_auth_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeviceTokenExchangeRequest.ProtoReflect.Descriptor instead.
+func (*DeviceTokenExchangeRequest) Descriptor() ([]byte, []int) {
+	return file_agent_auth_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeviceTokenExchangeRequest) GetHeader() *RequestHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *DeviceTokenExchangeRequest) GetDeviceName() string {
+	if x != nil {
+		return x.DeviceName
+	}
+	return ""
+}
+
 type AuthorizeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Header        *RequestHeader         `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
@@ -409,7 +461,7 @@ type AuthorizeRequest struct {
 
 func (x *AuthorizeRequest) Reset() {
 	*x = AuthorizeRequest{}
-	mi := &file_agent_auth_proto_msgTypes[6]
+	mi := &file_agent_auth_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -421,7 +473,7 @@ func (x *AuthorizeRequest) String() string {
 func (*AuthorizeRequest) ProtoMessage() {}
 
 func (x *AuthorizeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_auth_proto_msgTypes[6]
+	mi := &file_agent_auth_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -434,7 +486,7 @@ func (x *AuthorizeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthorizeRequest.ProtoReflect.Descriptor instead.
 func (*AuthorizeRequest) Descriptor() ([]byte, []int) {
-	return file_agent_auth_proto_rawDescGZIP(), []int{6}
+	return file_agent_auth_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AuthorizeRequest) GetHeader() *RequestHeader {
@@ -467,7 +519,7 @@ type AuthorizeResponse struct {
 
 func (x *AuthorizeResponse) Reset() {
 	*x = AuthorizeResponse{}
-	mi := &file_agent_auth_proto_msgTypes[7]
+	mi := &file_agent_auth_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -479,7 +531,7 @@ func (x *AuthorizeResponse) String() string {
 func (*AuthorizeResponse) ProtoMessage() {}
 
 func (x *AuthorizeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_auth_proto_msgTypes[7]
+	mi := &file_agent_auth_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -492,7 +544,7 @@ func (x *AuthorizeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthorizeResponse.ProtoReflect.Descriptor instead.
 func (*AuthorizeResponse) Descriptor() ([]byte, []int) {
-	return file_agent_auth_proto_rawDescGZIP(), []int{7}
+	return file_agent_auth_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AuthorizeResponse) GetHeader() *ResponseHeader {
@@ -533,17 +585,22 @@ const file_agent_auth_proto_rawDesc = "" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12!\n" +
 	"\faccess_token\x18\x02 \x01(\tR\vaccessToken\x12\x1d\n" +
 	"\n" +
-	"expires_in\x18\x03 \x01(\x04R\texpiresIn\"l\n" +
+	"expires_in\x18\x03 \x01(\x04R\texpiresIn\"k\n" +
+	"\x1aDeviceTokenExchangeRequest\x12,\n" +
+	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12\x1f\n" +
+	"\vdevice_name\x18\x02 \x01(\tR\n" +
+	"deviceName\"l\n" +
 	"\x10AuthorizeRequest\x12,\n" +
 	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12\x18\n" +
 	"\aservice\x18\x02 \x01(\tR\aservice\x12\x10\n" +
 	"\x03uid\x18\x03 \x01(\tR\x03uid\"B\n" +
 	"\x11AuthorizeResponse\x12-\n" +
-	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header2\xc8\x02\n" +
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header2\xaa\x03\n" +
 	"\tAgentAuth\x12?\n" +
 	"\x06WhoAmI\x12\x19.agent_auth.WhoAmIRequest\x1a\x1a.agent_auth.WhoAmIResponse\x12T\n" +
 	"\x0fGetCurrentToken\x12\x1f.agent_auth.CurrentTokenRequest\x1a .agent_auth.CurrentTokenResponse\x12Z\n" +
-	"\x13CachedTokenExchange\x12 .agent_auth.TokenExchangeRequest\x1a!.agent_auth.TokenExchangeResponse\x12H\n" +
+	"\x13CachedTokenExchange\x12 .agent_auth.TokenExchangeRequest\x1a!.agent_auth.TokenExchangeResponse\x12`\n" +
+	"\x13DeviceTokenExchange\x12&.agent_auth.DeviceTokenExchangeRequest\x1a!.agent_auth.TokenExchangeResponse\x12H\n" +
 	"\tAuthorize\x12\x1c.agent_auth.AuthorizeRequest\x1a\x1d.agent_auth.AuthorizeResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
@@ -559,45 +616,49 @@ func file_agent_auth_proto_rawDescGZIP() []byte {
 }
 
 var file_agent_auth_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_agent_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_agent_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_agent_auth_proto_goTypes = []any{
-	(CurrentTokenRequest_Type)(0), // 0: agent_auth.CurrentTokenRequest.Type
-	(*WhoAmIRequest)(nil),         // 1: agent_auth.WhoAmIRequest
-	(*WhoAmIResponse)(nil),        // 2: agent_auth.WhoAmIResponse
-	(*CurrentTokenRequest)(nil),   // 3: agent_auth.CurrentTokenRequest
-	(*CurrentTokenResponse)(nil),  // 4: agent_auth.CurrentTokenResponse
-	(*TokenExchangeRequest)(nil),  // 5: agent_auth.TokenExchangeRequest
-	(*TokenExchangeResponse)(nil), // 6: agent_auth.TokenExchangeResponse
-	(*AuthorizeRequest)(nil),      // 7: agent_auth.AuthorizeRequest
-	(*AuthorizeResponse)(nil),     // 8: agent_auth.AuthorizeResponse
-	(*RequestHeader)(nil),         // 9: agent.RequestHeader
-	(*ResponseHeader)(nil),        // 10: agent.ResponseHeader
-	(*Token)(nil),                 // 11: agent.Token
+	(CurrentTokenRequest_Type)(0),      // 0: agent_auth.CurrentTokenRequest.Type
+	(*WhoAmIRequest)(nil),              // 1: agent_auth.WhoAmIRequest
+	(*WhoAmIResponse)(nil),             // 2: agent_auth.WhoAmIResponse
+	(*CurrentTokenRequest)(nil),        // 3: agent_auth.CurrentTokenRequest
+	(*CurrentTokenResponse)(nil),       // 4: agent_auth.CurrentTokenResponse
+	(*TokenExchangeRequest)(nil),       // 5: agent_auth.TokenExchangeRequest
+	(*TokenExchangeResponse)(nil),      // 6: agent_auth.TokenExchangeResponse
+	(*DeviceTokenExchangeRequest)(nil), // 7: agent_auth.DeviceTokenExchangeRequest
+	(*AuthorizeRequest)(nil),           // 8: agent_auth.AuthorizeRequest
+	(*AuthorizeResponse)(nil),          // 9: agent_auth.AuthorizeResponse
+	(*RequestHeader)(nil),              // 10: agent.RequestHeader
+	(*ResponseHeader)(nil),             // 11: agent.ResponseHeader
+	(*Token)(nil),                      // 12: agent.Token
 }
 var file_agent_auth_proto_depIdxs = []int32{
-	9,  // 0: agent_auth.WhoAmIRequest.header:type_name -> agent.RequestHeader
-	10, // 1: agent_auth.WhoAmIResponse.header:type_name -> agent.ResponseHeader
-	9,  // 2: agent_auth.CurrentTokenRequest.header:type_name -> agent.RequestHeader
+	10, // 0: agent_auth.WhoAmIRequest.header:type_name -> agent.RequestHeader
+	11, // 1: agent_auth.WhoAmIResponse.header:type_name -> agent.ResponseHeader
+	10, // 2: agent_auth.CurrentTokenRequest.header:type_name -> agent.RequestHeader
 	0,  // 3: agent_auth.CurrentTokenRequest.type:type_name -> agent_auth.CurrentTokenRequest.Type
-	10, // 4: agent_auth.CurrentTokenResponse.header:type_name -> agent.ResponseHeader
-	11, // 5: agent_auth.CurrentTokenResponse.token:type_name -> agent.Token
-	9,  // 6: agent_auth.TokenExchangeRequest.header:type_name -> agent.RequestHeader
-	10, // 7: agent_auth.TokenExchangeResponse.header:type_name -> agent.ResponseHeader
-	9,  // 8: agent_auth.AuthorizeRequest.header:type_name -> agent.RequestHeader
-	10, // 9: agent_auth.AuthorizeResponse.header:type_name -> agent.ResponseHeader
-	1,  // 10: agent_auth.AgentAuth.WhoAmI:input_type -> agent_auth.WhoAmIRequest
-	3,  // 11: agent_auth.AgentAuth.GetCurrentToken:input_type -> agent_auth.CurrentTokenRequest
-	5,  // 12: agent_auth.AgentAuth.CachedTokenExchange:input_type -> agent_auth.TokenExchangeRequest
-	7,  // 13: agent_auth.AgentAuth.Authorize:input_type -> agent_auth.AuthorizeRequest
-	2,  // 14: agent_auth.AgentAuth.WhoAmI:output_type -> agent_auth.WhoAmIResponse
-	4,  // 15: agent_auth.AgentAuth.GetCurrentToken:output_type -> agent_auth.CurrentTokenResponse
-	6,  // 16: agent_auth.AgentAuth.CachedTokenExchange:output_type -> agent_auth.TokenExchangeResponse
-	8,  // 17: agent_auth.AgentAuth.Authorize:output_type -> agent_auth.AuthorizeResponse
-	14, // [14:18] is the sub-list for method output_type
-	10, // [10:14] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	11, // 4: agent_auth.CurrentTokenResponse.header:type_name -> agent.ResponseHeader
+	12, // 5: agent_auth.CurrentTokenResponse.token:type_name -> agent.Token
+	10, // 6: agent_auth.TokenExchangeRequest.header:type_name -> agent.RequestHeader
+	11, // 7: agent_auth.TokenExchangeResponse.header:type_name -> agent.ResponseHeader
+	10, // 8: agent_auth.DeviceTokenExchangeRequest.header:type_name -> agent.RequestHeader
+	10, // 9: agent_auth.AuthorizeRequest.header:type_name -> agent.RequestHeader
+	11, // 10: agent_auth.AuthorizeResponse.header:type_name -> agent.ResponseHeader
+	1,  // 11: agent_auth.AgentAuth.WhoAmI:input_type -> agent_auth.WhoAmIRequest
+	3,  // 12: agent_auth.AgentAuth.GetCurrentToken:input_type -> agent_auth.CurrentTokenRequest
+	5,  // 13: agent_auth.AgentAuth.CachedTokenExchange:input_type -> agent_auth.TokenExchangeRequest
+	7,  // 14: agent_auth.AgentAuth.DeviceTokenExchange:input_type -> agent_auth.DeviceTokenExchangeRequest
+	8,  // 15: agent_auth.AgentAuth.Authorize:input_type -> agent_auth.AuthorizeRequest
+	2,  // 16: agent_auth.AgentAuth.WhoAmI:output_type -> agent_auth.WhoAmIResponse
+	4,  // 17: agent_auth.AgentAuth.GetCurrentToken:output_type -> agent_auth.CurrentTokenResponse
+	6,  // 18: agent_auth.AgentAuth.CachedTokenExchange:output_type -> agent_auth.TokenExchangeResponse
+	6,  // 19: agent_auth.AgentAuth.DeviceTokenExchange:output_type -> agent_auth.TokenExchangeResponse
+	9,  // 20: agent_auth.AgentAuth.Authorize:output_type -> agent_auth.AuthorizeResponse
+	16, // [16:21] is the sub-list for method output_type
+	11, // [11:16] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_agent_auth_proto_init() }
@@ -612,7 +673,7 @@ func file_agent_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_auth_proto_rawDesc), len(file_agent_auth_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

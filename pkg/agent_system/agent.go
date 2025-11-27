@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
@@ -20,6 +21,8 @@ import (
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ComponentInstance struct {
@@ -54,12 +57,20 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 				logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
 				grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
 					return false
+				}), grpc_sentry.WithRepanicOption(true)),
+				recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
+					l.WithField("p", p).Warning("GRPC method panicd")
+					return status.Errorf(codes.Unknown, "panic triggered")
 				})),
 			),
 			grpc.ChainStreamInterceptor(
 				logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
 				grpc_sentry.StreamServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
 					return false
+				}), grpc_sentry.WithRepanicOption(true)),
+				recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
+					l.WithField("p", p).Warning("GRPC method panicd")
+					return status.Errorf(codes.Unknown, "panic triggered")
 				})),
 			),
 		),

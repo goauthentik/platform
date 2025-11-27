@@ -22,6 +22,7 @@ const (
 	AgentAuth_WhoAmI_FullMethodName              = "/agent_auth.AgentAuth/WhoAmI"
 	AgentAuth_GetCurrentToken_FullMethodName     = "/agent_auth.AgentAuth/GetCurrentToken"
 	AgentAuth_CachedTokenExchange_FullMethodName = "/agent_auth.AgentAuth/CachedTokenExchange"
+	AgentAuth_DeviceTokenExchange_FullMethodName = "/agent_auth.AgentAuth/DeviceTokenExchange"
 	AgentAuth_Authorize_FullMethodName           = "/agent_auth.AgentAuth/Authorize"
 )
 
@@ -32,6 +33,7 @@ type AgentAuthClient interface {
 	WhoAmI(ctx context.Context, in *WhoAmIRequest, opts ...grpc.CallOption) (*WhoAmIResponse, error)
 	GetCurrentToken(ctx context.Context, in *CurrentTokenRequest, opts ...grpc.CallOption) (*CurrentTokenResponse, error)
 	CachedTokenExchange(ctx context.Context, in *TokenExchangeRequest, opts ...grpc.CallOption) (*TokenExchangeResponse, error)
+	DeviceTokenExchange(ctx context.Context, in *DeviceTokenExchangeRequest, opts ...grpc.CallOption) (*TokenExchangeResponse, error)
 	Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*AuthorizeResponse, error)
 }
 
@@ -73,6 +75,16 @@ func (c *agentAuthClient) CachedTokenExchange(ctx context.Context, in *TokenExch
 	return out, nil
 }
 
+func (c *agentAuthClient) DeviceTokenExchange(ctx context.Context, in *DeviceTokenExchangeRequest, opts ...grpc.CallOption) (*TokenExchangeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TokenExchangeResponse)
+	err := c.cc.Invoke(ctx, AgentAuth_DeviceTokenExchange_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentAuthClient) Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*AuthorizeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AuthorizeResponse)
@@ -90,6 +102,7 @@ type AgentAuthServer interface {
 	WhoAmI(context.Context, *WhoAmIRequest) (*WhoAmIResponse, error)
 	GetCurrentToken(context.Context, *CurrentTokenRequest) (*CurrentTokenResponse, error)
 	CachedTokenExchange(context.Context, *TokenExchangeRequest) (*TokenExchangeResponse, error)
+	DeviceTokenExchange(context.Context, *DeviceTokenExchangeRequest) (*TokenExchangeResponse, error)
 	Authorize(context.Context, *AuthorizeRequest) (*AuthorizeResponse, error)
 	mustEmbedUnimplementedAgentAuthServer()
 }
@@ -109,6 +122,9 @@ func (UnimplementedAgentAuthServer) GetCurrentToken(context.Context, *CurrentTok
 }
 func (UnimplementedAgentAuthServer) CachedTokenExchange(context.Context, *TokenExchangeRequest) (*TokenExchangeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CachedTokenExchange not implemented")
+}
+func (UnimplementedAgentAuthServer) DeviceTokenExchange(context.Context, *DeviceTokenExchangeRequest) (*TokenExchangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeviceTokenExchange not implemented")
 }
 func (UnimplementedAgentAuthServer) Authorize(context.Context, *AuthorizeRequest) (*AuthorizeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authorize not implemented")
@@ -188,6 +204,24 @@ func _AgentAuth_CachedTokenExchange_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentAuth_DeviceTokenExchange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeviceTokenExchangeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentAuthServer).DeviceTokenExchange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentAuth_DeviceTokenExchange_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentAuthServer).DeviceTokenExchange(ctx, req.(*DeviceTokenExchangeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AgentAuth_Authorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthorizeRequest)
 	if err := dec(in); err != nil {
@@ -224,6 +258,10 @@ var AgentAuth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CachedTokenExchange",
 			Handler:    _AgentAuth_CachedTokenExchange_Handler,
+		},
+		{
+			MethodName: "DeviceTokenExchange",
+			Handler:    _AgentAuth_DeviceTokenExchange_Handler,
 		},
 		{
 			MethodName: "Authorize",

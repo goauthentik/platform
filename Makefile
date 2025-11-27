@@ -38,10 +38,16 @@ rs-gen-proto:
 	cargo fmt
 
 lint-rs:
-	cargo clippy --fix --allow-dirty
+	cargo clippy --fix --allow-dirty --workspace
 
-lint: lint-rs
+lint-go:
 	golangci-lint run
+
+lint:
+	"$(MAKE)" lint-rs
+	"$(MAKE)" lint-go
+	"$(MAKE)" browser-ext/lint
+	"$(MAKE)" ee/psso/lint
 
 test:
 	go test \
@@ -57,7 +63,11 @@ test:
 	go tool cover \
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
-	go tool github.com/jstemmer/go-junit-report/v2 -parser gojson -in ${TEST_OUTPUT} -out ${PWD}/junit.xml
+	go tool github.com/jstemmer/go-junit-report/v2 \
+		-parser gojson \
+		-in ${TEST_OUTPUT} \
+		-out ${PWD}/junit.xml \
+		-set-exit-code
 
 test-agent:
 	go run -v ./cmd/agent_local/
@@ -75,6 +85,7 @@ test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-dep
 
 bump:
 	sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
+	sed -i 's/version = ".*"/version = ${VERSION}/g' ${TOP}/Cargo.toml
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" agent/bump
 	"$(MAKE)" nss/bump

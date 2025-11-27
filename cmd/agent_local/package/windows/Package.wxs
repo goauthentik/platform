@@ -110,7 +110,7 @@
         <util:EventSource Log="authentik"
                           Name="authentik Credential Provider"
                           EventMessageFile="C:\Windows\System32\mscoree.dll"/>
-        <File Id="wcp_cefexe_exe" Source="$(env.ROOT)/bin/wcp/cefexe.exe" />
+        <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
         <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />
         <File Id="wcp_chrome_elf_dll" Source="$(env.ROOT)/bin/wcp/chrome_elf.dll" />

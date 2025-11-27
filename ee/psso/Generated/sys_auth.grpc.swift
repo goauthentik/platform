@@ -33,22 +33,9 @@ internal enum SystemAuthToken {
                 method: "TokenAuth"
             )
         }
-        /// Namespace for "OAuthParams" metadata.
-        internal enum OAuthParams {
-            /// Request type for "OAuthParams".
-            internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
-            /// Response type for "OAuthParams".
-            internal typealias Output = OAuthParamsResponse
-            /// Descriptor for "OAuthParams".
-            internal static let descriptor = GRPCCore.MethodDescriptor(
-                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth.SystemAuthToken"),
-                method: "OAuthParams"
-            )
-        }
         /// Descriptors for all methods in the "sys_auth.SystemAuthToken" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
-            TokenAuth.descriptor,
-            OAuthParams.descriptor
+            TokenAuth.descriptor
         ]
     }
 }
@@ -85,25 +72,6 @@ extension SystemAuthToken {
             deserializer: some GRPCCore.MessageDeserializer<TokenAuthResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TokenAuthResponse>) async throws -> Result
-        ) async throws -> Result where Result: Sendable
-
-        /// Call the "OAuthParams" method.
-        ///
-        /// - Parameters:
-        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
-        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
-        ///   - deserializer: A deserializer for `OAuthParamsResponse` messages.
-        ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
-        /// - Returns: The result of `handleResponse`.
-        func oAuthParams<Result>(
-            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
-            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
-            deserializer: some GRPCCore.MessageDeserializer<OAuthParamsResponse>,
-            options: GRPCCore.CallOptions,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OAuthParamsResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -152,36 +120,6 @@ extension SystemAuthToken {
                 onResponse: handleResponse
             )
         }
-
-        /// Call the "OAuthParams" method.
-        ///
-        /// - Parameters:
-        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
-        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
-        ///   - deserializer: A deserializer for `OAuthParamsResponse` messages.
-        ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
-        /// - Returns: The result of `handleResponse`.
-        internal func oAuthParams<Result>(
-            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
-            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
-            deserializer: some GRPCCore.MessageDeserializer<OAuthParamsResponse>,
-            options: GRPCCore.CallOptions = .defaults,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OAuthParamsResponse>) async throws -> Result = { response in
-                try response.message
-            }
-        ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
-                request: request,
-                descriptor: SystemAuthToken.Method.OAuthParams.descriptor,
-                serializer: serializer,
-                deserializer: deserializer,
-                options: options,
-                onResponse: handleResponse
-            )
-        }
     }
 }
 
@@ -208,31 +146,6 @@ extension SystemAuthToken.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<TokenAuthRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<TokenAuthResponse>(),
-            options: options,
-            onResponse: handleResponse
-        )
-    }
-
-    /// Call the "OAuthParams" method.
-    ///
-    /// - Parameters:
-    ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
-    ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
-    /// - Returns: The result of `handleResponse`.
-    internal func oAuthParams<Result>(
-        request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
-        options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OAuthParamsResponse>) async throws -> Result = { response in
-            try response.message
-        }
-    ) async throws -> Result where Result: Sendable {
-        try await self.oAuthParams(
-            request: request,
-            serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
-            deserializer: GRPCProtobuf.ProtobufDeserializer<OAuthParamsResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -270,35 +183,6 @@ extension SystemAuthToken.ClientProtocol {
             onResponse: handleResponse
         )
     }
-
-    /// Call the "OAuthParams" method.
-    ///
-    /// - Parameters:
-    ///   - message: request message to send.
-    ///   - metadata: Additional metadata to send, defaults to empty.
-    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
-    /// - Returns: The result of `handleResponse`.
-    internal func oAuthParams<Result>(
-        _ message: SwiftProtobuf.Google_Protobuf_Empty,
-        metadata: GRPCCore.Metadata = [:],
-        options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OAuthParamsResponse>) async throws -> Result = { response in
-            try response.message
-        }
-    ) async throws -> Result where Result: Sendable {
-        let request = GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>(
-            message: message,
-            metadata: metadata
-        )
-        return try await self.oAuthParams(
-            request: request,
-            options: options,
-            onResponse: handleResponse
-        )
-    }
 }
 
 // MARK: - sys_auth.SystemAuthInteractive
@@ -322,9 +206,22 @@ internal enum SystemAuthInteractive {
                 method: "InteractiveAuth"
             )
         }
+        /// Namespace for "InteractiveAuthAsync" metadata.
+        internal enum InteractiveAuthAsync {
+            /// Request type for "InteractiveAuthAsync".
+            internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
+            /// Response type for "InteractiveAuthAsync".
+            internal typealias Output = InteractiveAuthAsyncResponse
+            /// Descriptor for "InteractiveAuthAsync".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth.SystemAuthInteractive"),
+                method: "InteractiveAuthAsync"
+            )
+        }
         /// Descriptors for all methods in the "sys_auth.SystemAuthInteractive" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
-            InteractiveAuth.descriptor
+            InteractiveAuth.descriptor,
+            InteractiveAuthAsync.descriptor
         ]
     }
 }
@@ -346,6 +243,10 @@ extension SystemAuthInteractive {
     internal protocol ClientProtocol: Sendable {
         /// Call the "InteractiveAuth" method.
         ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Interactive auth without a browser (for example, CLI)
+        ///
         /// - Parameters:
         ///   - request: A request containing a single `InteractiveAuthRequest` message.
         ///   - serializer: A serializer for `InteractiveAuthRequest` messages.
@@ -361,6 +262,29 @@ extension SystemAuthInteractive {
             deserializer: some GRPCCore.MessageDeserializer<InteractiveChallenge>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveChallenge>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "InteractiveAuthAsync" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Interactive auth which is handed of to a browser
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `InteractiveAuthAsyncResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func interactiveAuthAsync<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<InteractiveAuthAsyncResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -381,6 +305,10 @@ extension SystemAuthInteractive {
         }
 
         /// Call the "InteractiveAuth" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Interactive auth without a browser (for example, CLI)
         ///
         /// - Parameters:
         ///   - request: A request containing a single `InteractiveAuthRequest` message.
@@ -409,6 +337,40 @@ extension SystemAuthInteractive {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "InteractiveAuthAsync" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Interactive auth which is handed of to a browser
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `InteractiveAuthAsyncResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func interactiveAuthAsync<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<InteractiveAuthAsyncResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SystemAuthInteractive.Method.InteractiveAuthAsync.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -416,6 +378,10 @@ extension SystemAuthInteractive {
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension SystemAuthInteractive.ClientProtocol {
     /// Call the "InteractiveAuth" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Interactive auth without a browser (for example, CLI)
     ///
     /// - Parameters:
     ///   - request: A request containing a single `InteractiveAuthRequest` message.
@@ -439,12 +405,45 @@ extension SystemAuthInteractive.ClientProtocol {
             onResponse: handleResponse
         )
     }
+
+    /// Call the "InteractiveAuthAsync" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Interactive auth which is handed of to a browser
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func interactiveAuthAsync<Result>(
+        request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.interactiveAuthAsync(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<InteractiveAuthAsyncResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
 }
 
 // Helpers providing sugared APIs for 'ClientProtocol' methods.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension SystemAuthInteractive.ClientProtocol {
     /// Call the "InteractiveAuth" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Interactive auth without a browser (for example, CLI)
     ///
     /// - Parameters:
     ///   - message: request message to send.
@@ -467,6 +466,39 @@ extension SystemAuthInteractive.ClientProtocol {
             metadata: metadata
         )
         return try await self.interactiveAuth(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "InteractiveAuthAsync" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Interactive auth which is handed of to a browser
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func interactiveAuthAsync<Result>(
+        _ message: SwiftProtobuf.Google_Protobuf_Empty,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.interactiveAuthAsync(
             request: request,
             options: options,
             onResponse: handleResponse

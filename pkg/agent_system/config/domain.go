@@ -17,12 +17,10 @@ import (
 )
 
 type DomainConfig struct {
-	Enabled            bool   `json:"enabled"`
-	AuthentikURL       string `json:"authentik_url"`
-	AppSlug            string `json:"app_slug"`
-	AuthenticationFlow string `json:"authentication_flow"`
-	Domain             string `json:"domain"`
-	Managed            bool   `json:"managed"`
+	Enabled      bool   `json:"enabled"`
+	AuthentikURL string `json:"authentik_url"`
+	Domain       string `json:"domain"`
+	Managed      bool   `json:"managed"`
 
 	// Saved to keyring
 	Token string `json:"-"`
@@ -139,7 +137,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
-		dc.r.log.Debug("fetched remote config")
+		dc.r.log.WithField("cap", cfg.SystemConfig.Capabilities).Debug("fetched remote config")
 		dc.rc = cfg
 		jc, err := cfg.MarshalJSON()
 		if err != nil {

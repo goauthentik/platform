@@ -55,20 +55,22 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
         self.cancelFunc()
     }
 
-    func webView(
-        _ webView: WKWebView,
-        decidePolicyFor navigationAction: WKNavigationAction,
-        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-    ) {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async
+        -> WKNavigationActionPolicy
+    {
         if let url = navigationAction.request.url,
-            url.scheme == "io.goauthentik.platform"
+            url.absoluteString == InteractiveAuth.targetUrl
         {
             self.logger.debug("Intercepted redirect: \(url.absoluteString)")
-            if OIDC.shared.resumeAuthorizationFlow(with: url) {
-                decisionHandler(.cancel)
+            if await InteractiveAuth.shared.resumeAuthorizationFlow(with: url) {
+                return .cancel
             }
         }
-        decisionHandler(.allow)
+        return await InteractiveAuth.shared
+            .injectDTH(
+                webView,
+                decidePolicyFor: navigationAction,
+            )
     }
 
 }

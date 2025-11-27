@@ -10,11 +10,13 @@ import "agent_auth.proto";
 
 service SystemAuthToken {
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
-  rpc OAuthParams(google.protobuf.Empty) returns (OAuthParamsResponse);
 }
 
 service SystemAuthInteractive {
+  // Interactive auth without a browser (for example, CLI)
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
+  // Interactive auth which is handed of to a browser
+  rpc InteractiveAuthAsync(google.protobuf.Empty) returns (InteractiveAuthAsyncResponse);
 }
 
 service SystemAuthAuthorize {
@@ -32,12 +34,6 @@ message TokenAuthResponse {
   string session_id = 3;
 }
 
-message OAuthParamsResponse {
-  string url = 10;
-  string client_id = 11;
-  string app_slug = 12;
-}
-
 message InteractiveAuthInitRequest {
   string username = 1;
   string password = 2;
@@ -53,6 +49,11 @@ message InteractiveAuthRequest {
     InteractiveAuthInitRequest init = 1;
     InteractiveAuthContinueRequest continue = 2;
   }
+}
+
+message InteractiveAuthAsyncResponse {
+  string url = 1;
+  string header_token = 2;
 }
 
 enum InteractiveAuthResult {

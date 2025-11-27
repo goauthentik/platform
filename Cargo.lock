@@ -231,7 +231,7 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 
 [[package]]
 name = "authentik_nss"
-version = "0.25.0"
+version = "0.30.0"
 dependencies = [
  "authentik_sys",
  "ctor",
@@ -242,7 +242,7 @@ dependencies = [
 
 [[package]]
 name = "authentik_pam"
-version = "0.25.0"
+version = "0.30.0"
 dependencies = [
  "authentik_sys",
  "base64 0.22.1",
@@ -261,7 +261,7 @@ dependencies = [
 
 [[package]]
 name = "authentik_sys"
-version = "0.1.0"
+version = "0.30.0"
 dependencies = [
  "cxx",
  "eventlog",
@@ -276,6 +276,7 @@ dependencies = [
  "tokio",
  "tonic",
  "tower 0.5.2",
+ "url",
  "windows-sys 0.61.2",
 ]
 
@@ -1538,9 +1539,9 @@ dependencies = [
 
 [[package]]
 name = "percent-encoding"
-version = "2.3.1"
+version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
+checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "pin-project"
@@ -2620,9 +2621,9 @@ dependencies = [
 
 [[package]]
 name = "url"
-version = "2.5.4"
+version = "2.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32f8b686cadd1473f4bd0117a5d28d36b1ade384ea9b5069a1c40aefed7fda60"
+checksum = "08bc136a29a3d1758e07a9cca267be308aeebf5cfd5a10f3f67ab2097683ef5b"
 dependencies = [
  "form_urlencoded",
  "idna",
