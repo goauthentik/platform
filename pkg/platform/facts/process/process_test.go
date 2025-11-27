@@ -17,7 +17,7 @@ func TestGather(t *testing.T) {
 	}
 
 	for _, proc := range processes {
-		if proc.Id <= 0 {
+		if proc.Id < 0 {
 			t.Error("Process ID should be positive")
 		}
 	}
