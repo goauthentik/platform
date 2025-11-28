@@ -18,6 +18,9 @@ func gather() (api.DeviceFactsRequestHardware, error) {
 	manufacturer := readDMIValue("sys_vendor")
 	model := readDMIValue("product_name")
 	serial := readDMIValue("product_serial")
+	if serial == "" {
+		serial = readMachineID()
+	}
 
 	return api.DeviceFactsRequestHardware{
 		Manufacturer: manufacturer,
@@ -36,6 +39,14 @@ func readDMIValue(filename string) string {
 		return ""
 	}
 
+	return strings.TrimSpace(string(data))
+}
+
+func readMachineID() string {
+	data, err := os.ReadFile("/etc/machine-id")
+	if err != nil {
+		return ""
+	}
 	return strings.TrimSpace(string(data))
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
 	"goauthentik.io/platform/pkg/platform/facts/network"
 )
@@ -22,12 +23,12 @@ func (dc *DomainConfig) Enroll() error {
 	if err != nil {
 		return err
 	}
-	res, _, err := a.EndpointsApi.EndpointsAgentsConnectorsEnrollCreate(context.Background()).EnrollRequest(api.EnrollRequest{
+	res, hr, err := a.EndpointsApi.EndpointsAgentsConnectorsEnrollCreate(context.Background()).EnrollRequest(api.EnrollRequest{
 		DeviceSerial: hw.Serial,
 		DeviceName:   net.Hostname,
 	}).Execute()
 	if err != nil {
-		return err
+		return ak.HTTPToError(hr, err)
 	}
 	dc.Token = res.Token
 	return nil

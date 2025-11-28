@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/meta"
@@ -168,7 +169,7 @@ func (c *Config) loadDomains() error {
 			continue
 		}
 		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain)
-		if err != nil {
+		if err != nil && !errors.Is(err, keyring.ErrUnsupportedPlatform) {
 			c.log.WithError(err).Warning("failed to load domain token from keyring")
 			token = d.FallbackToken
 		}
