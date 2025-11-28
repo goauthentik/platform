@@ -56,26 +56,6 @@ class API {
         }
     }
 
-    func convertSecKeyToString(_ secKey: SecKey?) -> String? {
-        guard let secKey else {
-            NSLog("secKey error 1")
-            return nil
-        }
-        NSLog("secKey1")
-        // Extract the public key data
-        guard let publicKeyData = SecKeyCopyExternalRepresentation(secKey, nil) else {
-            NSLog("secKey error 2")
-            return nil
-        }
-
-        // Convert the key data to a Base64 encoded string
-        let keyData = publicKeyData as Data
-        NSLog("secKey data1")
-        let base64EncodedKey = keyData.base64EncodedString()
-
-        return base64EncodedKey
-    }
-
     func getPublicKey(from privateKey: SecKey) -> SecKey? {
         // Use SecKeyCopyPublicKey to get the public key from the private key
         guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
