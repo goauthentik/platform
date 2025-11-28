@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-systemctl daemon-reload
+systemctl daemon-reload || true
 case "$1" in
     configure)
     # creating _ak-agent group if he isn't already there
