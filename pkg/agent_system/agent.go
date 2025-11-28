@@ -100,9 +100,15 @@ func (sm *SystemAgent) registerComponents() {
 		l.Info("Registering component")
 		ctx, cancel := context.WithCancel(sm.ctx)
 		ss := sm.st.ForBucket(types.KeyComponent, name)
-		comp, err := constr(component.NewContext(ctx, l, sm, ss))
+		cctx := component.NewContext(ctx, l, sm, ss)
+		comp, err := constr(cctx)
 		if err != nil {
 			panic(err)
+		}
+		err = ss.EnsureBucket()
+		if err != nil {
+			l.WithError(err).Warning("failed to ensure bucket for component")
+			continue
 		}
 		sm.cm[name] = ComponentInstance{
 			comp:   comp,
