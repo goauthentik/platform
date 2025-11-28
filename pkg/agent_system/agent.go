@@ -16,8 +16,8 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/types"
-	"goauthentik.io/platform/pkg/platform/grpc_creds"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
@@ -33,14 +33,22 @@ type ComponentInstance struct {
 	st     *state.ScopedState
 }
 
+type SocketServer struct {
+	ID     string
+	Path   pstr.PlatformString
+	Server *grpc.Server
+	Perm   socket.SocketPermMode
+}
+
 type SystemAgent struct {
-	log    *log.Entry
-	srv    *grpc.Server
+	log *log.Entry
+
+	srv []SocketServer
+
 	cm     map[string]ComponentInstance
 	mtx    sync.Mutex
 	ctx    context.Context
 	cancel context.CancelFunc
-	lis    socket.InfoListener
 	st     *state.State
 	opts   SystemAgentOptions
 }
@@ -51,31 +59,43 @@ type SystemAgentOptions struct {
 
 func New(opts SystemAgentOptions) (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
-
-	sm := &SystemAgent{
-		srv: grpc.NewServer(
-			grpc.Creds(grpc_creds.NewTransportCredentials()),
-			grpc.ChainUnaryInterceptor(
-				logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
-				grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-					return false
-				}), grpc_sentry.WithRepanicOption(true)),
-				recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-					l.WithField("p", p).Warning("GRPC method panicd")
-					return status.Errorf(codes.Unknown, "panic triggered")
-				})),
-			),
-			grpc.ChainStreamInterceptor(
-				logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
-				grpc_sentry.StreamServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-					return false
-				}), grpc_sentry.WithRepanicOption(true)),
-				recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-					l.WithField("p", p).Warning("GRPC method panicd")
-					return status.Errorf(codes.Unknown, "panic triggered")
-				})),
-			),
+	serverOpts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(
+			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
+			grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			}), grpc_sentry.WithRepanicOption(true)),
+			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
+				l.WithField("p", p).Warning("GRPC method panicd")
+				return status.Errorf(codes.Unknown, "panic triggered")
+			})),
 		),
+		grpc.ChainStreamInterceptor(
+			logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
+			grpc_sentry.StreamServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			}), grpc_sentry.WithRepanicOption(true)),
+			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
+				l.WithField("p", p).Warning("GRPC method panicd")
+				return status.Errorf(codes.Unknown, "panic triggered")
+			})),
+		),
+	}
+	sm := &SystemAgent{
+		srv: []SocketServer{
+			SocketServer{
+				ID:     types.SocketIDDefault,
+				Server: grpc.NewServer(serverOpts...),
+				Path:   types.GetSysdSocketPath(),
+				Perm:   socket.SocketEveryone,
+			},
+			SocketServer{
+				ID:     types.SocketIDCtrl,
+				Server: grpc.NewServer(serverOpts...),
+				Path:   types.GetSysdCtrlSocketPath(),
+				Perm:   socket.SocketAdmin,
+			},
+		},
 		log:  l,
 		cm:   map[string]ComponentInstance{},
 		mtx:  sync.Mutex{},
@@ -119,7 +139,9 @@ func (sm *SystemAgent) registerComponents() {
 			cancel: cancel,
 			st:     ss,
 		}
-		comp.Register(sm.srv)
+		for _, srv := range sm.srv {
+			comp.RegisterForID(srv.ID, srv.Server)
+		}
 	}
 }
 
@@ -182,25 +204,27 @@ func (sm *SystemAgent) Start() {
 	}
 	sm.mtx.Unlock()
 
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		<-sigChan
+	for _, srv := range sm.srv {
+		go func(srv SocketServer) {
+			l := sm.log.WithField("srv", srv.ID)
+			lis, err := socket.Listen(srv.Path, srv.Perm)
+			if err != nil {
+				l.WithError(err).Fatal("Failed to listen")
+				return
+			}
 
-		sm.Stop()
-	}()
-
-	lis, err := socket.Listen(types.GetSysdSocketPath(), socket.SocketEveryone)
-	if err != nil {
-		sm.log.WithError(err).Fatal("Failed to listen")
-		return
+			l.WithField("path", lis.Path().ForCurrent()).Info("System agent listening on socket")
+			if err := srv.Server.Serve(lis); err != nil {
+				l.WithError(err).Fatal("Failed to serve")
+			}
+		}(srv)
 	}
-	sm.lis = lis
 
-	sm.log.WithField("path", lis.Path().ForCurrent()).Info("System agent listening on socket")
-	if err := sm.srv.Serve(lis); err != nil {
-		sm.log.WithError(err).Fatal("Failed to serve")
-	}
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
+
+	sm.Stop()
 }
 
 func (sm *SystemAgent) Stop() {
@@ -218,5 +242,7 @@ func (sm *SystemAgent) Stop() {
 	if err != nil {
 		sm.log.WithError(err).Warning("failed to close state")
 	}
-	sm.srv.GracefulStop()
+	for _, srv := range sm.srv {
+		srv.Server.GracefulStop()
+	}
 }

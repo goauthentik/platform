@@ -11,6 +11,7 @@ import (
 	"go.etcd.io/bbolt"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -63,7 +64,10 @@ func (m *Monitor) Stop() error {
 	return nil
 }
 
-func (m *Monitor) Register(s grpc.ServiceRegistrar) {
+func (m *Monitor) RegisterForID(id string, s grpc.ServiceRegistrar) {
+	if id != types.SocketIDDefault {
+		return
+	}
 	pb.RegisterSessionManagerServer(s, m)
 }
 

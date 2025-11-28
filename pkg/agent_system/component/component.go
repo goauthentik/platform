@@ -54,5 +54,5 @@ type Constructor func(Context) (Component, error)
 type Component interface {
 	Start() error
 	Stop() error
-	Register(s grpc.ServiceRegistrar)
+	RegisterForID(id string, s grpc.ServiceRegistrar)
 }

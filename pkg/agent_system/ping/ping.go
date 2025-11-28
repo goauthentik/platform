@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
@@ -33,7 +34,10 @@ func (ds *Server) Stop() error {
 	return nil
 }
 
-func (ds *Server) Register(s grpc.ServiceRegistrar) {
+func (ds *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
+	if id != types.SocketIDDefault {
+		return
+	}
 	pb.RegisterPingServer(s, ds)
 }
 
