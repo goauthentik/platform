@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package sys_config;
+option go_package = "pkg/pb";
+option swift_prefix = "";
+
+import "google/protobuf/empty.proto";
+
+service SystemConfig {
+  rpc DomainList(google.protobuf.Empty) returns (DomainListResponse);
+  rpc DomainEnroll(DomainEnrollRequest) returns (DomainEnrollResponse);
+}
+
+message Domain {
+  string name = 1;
+}
+
+message DomainListResponse {
+  repeated Domain domains = 1;
+}
+
+message DomainEnrollRequest {
+  string authentik_url = 1;
+  string token = 2;
+}
+
+message DomainEnrollResponse {
+  // agent.ResponseHeader header = 1;
+}
