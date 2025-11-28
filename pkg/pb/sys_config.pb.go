@@ -112,8 +112,9 @@ func (x *DomainListResponse) GetDomains() []*Domain {
 
 type DomainEnrollRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AuthentikUrl  string                 `protobuf:"bytes,1,opt,name=authentik_url,json=authentikUrl,proto3" json:"authentik_url,omitempty"`
-	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	AuthentikUrl  string                 `protobuf:"bytes,2,opt,name=authentik_url,json=authentikUrl,proto3" json:"authentik_url,omitempty"`
+	Token         string                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -146,6 +147,13 @@ func (x *DomainEnrollRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use DomainEnrollRequest.ProtoReflect.Descriptor instead.
 func (*DomainEnrollRequest) Descriptor() ([]byte, []int) {
 	return file_sys_config_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *DomainEnrollRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
 }
 
 func (x *DomainEnrollRequest) GetAuthentikUrl() string {
@@ -207,10 +215,11 @@ const file_sys_config_proto_rawDesc = "" +
 	"\x06Domain\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"B\n" +
 	"\x12DomainListResponse\x12,\n" +
-	"\adomains\x18\x01 \x03(\v2\x12.sys_config.DomainR\adomains\"P\n" +
-	"\x13DomainEnrollRequest\x12#\n" +
-	"\rauthentik_url\x18\x01 \x01(\tR\fauthentikUrl\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\"\x16\n" +
+	"\adomains\x18\x01 \x03(\v2\x12.sys_config.DomainR\adomains\"d\n" +
+	"\x13DomainEnrollRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12#\n" +
+	"\rauthentik_url\x18\x02 \x01(\tR\fauthentikUrl\x12\x14\n" +
+	"\x05token\x18\x03 \x01(\tR\x05token\"\x16\n" +
 	"\x14DomainEnrollResponse2\xa7\x01\n" +
 	"\fSystemConfig\x12D\n" +
 	"\n" +

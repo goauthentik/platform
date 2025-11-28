@@ -75,7 +75,7 @@ func (t *Tray) addNoProfiles() {
 }
 
 func (t *Tray) addSysd() {
-	sysc, err := client.New()
+	sysc, err := client.NewDefault()
 	if err != nil {
 		t.log.WithError(err).Warning("failed to ping sysd")
 		return

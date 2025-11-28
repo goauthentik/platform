@@ -49,6 +49,8 @@ struct DomainEnrollRequest: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  var name: String = String()
+
   var authentikURL: String = String()
 
   var token: String = String()
@@ -135,7 +137,7 @@ extension DomainListResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
 extension DomainEnrollRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DomainEnrollRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}authentik_url\0\u{1}token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{3}authentik_url\0\u{1}token\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -143,24 +145,29 @@ extension DomainEnrollRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.authentikURL) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.token) }()
+      case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.authentikURL) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.token) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.name.isEmpty {
+      try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
+    }
     if !self.authentikURL.isEmpty {
-      try visitor.visitSingularStringField(value: self.authentikURL, fieldNumber: 1)
+      try visitor.visitSingularStringField(value: self.authentikURL, fieldNumber: 2)
     }
     if !self.token.isEmpty {
-      try visitor.visitSingularStringField(value: self.token, fieldNumber: 2)
+      try visitor.visitSingularStringField(value: self.token, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: DomainEnrollRequest, rhs: DomainEnrollRequest) -> Bool {
+    if lhs.name != rhs.name {return false}
     if lhs.authentikURL != rhs.authentikURL {return false}
     if lhs.token != rhs.token {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
