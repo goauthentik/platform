@@ -20,7 +20,7 @@ services:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
 
   postgresql:
-    image: docker.io/library/postgres:16-alpine
+    image: docker.io/library/postgres:18-alpine
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
@@ -29,7 +29,7 @@ services:
       retries: 5
       timeout: 5s
     volumes:
-      - database:/var/lib/postgresql/data
+      - database:/var/lib/postgresql
     environment:
       POSTGRES_PASSWORD: ${PG_PASS:?database password required}
       POSTGRES_USER: ${PG_USER:-authentik}
@@ -37,7 +37,7 @@ services:
     env_file:
       - .env
   authentik:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.0-rc3}
+    image: ghcr.io/goauthentik/dev-server:gh-main
     restart: unless-stopped
     command: server
     environment:
@@ -52,7 +52,7 @@ services:
     depends_on:
       - postgresql
   authentik-worker:
-    image: ${AUTHENTIK_IMAGE:-ghcr.io/goauthentik/server}:${AUTHENTIK_TAG:-2025.10.0-rc3}
+    image: ghcr.io/goauthentik/dev-server:gh-main
     restart: unless-stopped
     command: worker
     environment:
@@ -69,6 +69,4 @@ services:
 
 volumes:
   database:
-    driver: local
-  redis:
     driver: local

@@ -18,28 +18,28 @@ func gather() (api.DeviceFactsRequestHardware, error) {
 	manufacturer := readDMIValue("sys_vendor")
 	model := readDMIValue("product_name")
 	serial := readDMIValue("product_serial")
-	if serial == "" {
-		serial = readMachineID()
+	if serial == nil {
+		serial = api.PtrString(readMachineID())
 	}
 
 	return api.DeviceFactsRequestHardware{
 		Manufacturer: manufacturer,
 		Model:        model,
-		Serial:       serial,
+		Serial:       *serial,
 		CpuName:      api.PtrString(getCPUName()),
 		CpuCount:     api.PtrInt32(int32(getCPUCores())),
 		MemoryBytes:  api.PtrInt64(int64(getTotalMemory())),
 	}, nil
 }
 
-func readDMIValue(filename string) string {
+func readDMIValue(filename string) *string {
 	path := "/sys/class/dmi/id/" + filename
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return ""
+		return nil
 	}
 
-	return strings.TrimSpace(string(data))
+	return api.PtrString(strings.TrimSpace(string(data)))
 }
 
 func readMachineID() string {
@@ -51,74 +51,18 @@ func readMachineID() string {
 }
 
 func getCPUName() string {
-	// Try reading from /proc/cpuinfo
-	file, err := os.Open("/proc/cpuinfo")
-	if err == nil {
-		defer func() {
-			_ = file.Close()
-		}()
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "model name") {
-				parts := strings.Split(line, ":")
-				if len(parts) >= 2 {
-					return strings.TrimSpace(parts[1])
-				}
-			}
-		}
-	}
-
-	// Fallback to gopsutil
 	cpuInfo, err := cpu.Info()
 	if err != nil || len(cpuInfo) == 0 {
 		return "Unknown CPU"
 	}
 
+	if cpuInfo[0].ModelName == "" {
+		return "Unknown CPU"
+	}
 	return cpuInfo[0].ModelName
 }
 
 func getCPUCores() int {
-	// Try reading from /proc/cpuinfo
-	file, err := os.Open("/proc/cpuinfo")
-	if err == nil {
-		defer func() {
-			_ = file.Close()
-		}()
-
-		coreCount := 0
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "processor") {
-				coreCount++
-			}
-		}
-
-		if coreCount > 0 {
-			return coreCount
-		}
-	}
-
-	// Try reading from /sys/devices/system/cpu/
-	entries, err := os.ReadDir("/sys/devices/system/cpu/")
-	if err == nil {
-		coreCount := 0
-		for _, entry := range entries {
-			if strings.HasPrefix(entry.Name(), "cpu") &&
-				len(entry.Name()) > 3 &&
-				isNumeric(entry.Name()[3:]) {
-				coreCount++
-			}
-		}
-
-		if coreCount > 0 {
-			return coreCount
-		}
-	}
-
-	// Fallback to runtime
 	return runtime.NumCPU()
 }
 
