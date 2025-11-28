@@ -6,5 +6,18 @@
     "zshrc": "shellscript",
     "*.hcl": "terraform",
     "xstring": "cpp"
-  }
+  },
+  "go.testFlags": ["-count=1", "-failfast", "-shuffle=on", "-v", "-covermode=atomic"],
+  "go.testTimeout": "300s",
+  "go.coverOnSingleTest": true,
+  "go.coverOnSingleTestFile": true,
+  "go.coverOnTestPackage": true,
+  "gitlens.autolinks": [
+      {
+          "alphanumeric": true,
+          "prefix": "#<num>",
+          "url": "https://github.com/goauthentik/platform/issues/<num>",
+          "ignoreCase": false
+      }
+  ],
 }

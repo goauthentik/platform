@@ -24,7 +24,6 @@ type Server struct {
 
 	ctx component.Context
 
-	cfg  *config.Config
 	txns map[string]*InteractiveAuthTransaction
 	m    sync.RWMutex
 	dom  *config.DomainConfig
@@ -36,7 +35,6 @@ type Server struct {
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log:                  ctx.Log(),
-		cfg:                  config.Manager().Get(),
 		ctx:                  ctx,
 		txns:                 map[string]*InteractiveAuthTransaction{},
 		m:                    sync.RWMutex{},
