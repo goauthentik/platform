@@ -74,8 +74,10 @@ func (c *Config) Domains() []*DomainConfig {
 func (c *Config) SaveDomain(dom *DomainConfig) error {
 	path := filepath.Join(c.DomainDir, dom.Domain+".json")
 	err := keyring.Set(keyring.Service("domain_token"), dom.Domain, dom.Token)
-	if err != nil || !errors.Is(err, keyring.ErrUnsupportedPlatform) {
-		c.log.WithError(err).Warning("failed to save domain token in keyring")
+	if err != nil {
+		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
+			c.log.WithError(err).Warning("failed to save domain token in keyring")
+		}
 		dom.FallbackToken = dom.Token
 	}
 	b, err := json.Marshal(dom)
