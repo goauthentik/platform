@@ -64,7 +64,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B42B45032EA24AEA0046D847 /* Generated */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Generated; sourceTree = "<group>"; };
+		B42B45032EA24AEA0046D847 /* Bridge */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Bridge; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,7 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				609FE38824893242009FD079 /* PSSO */,
-				B42B45032EA24AEA0046D847 /* Generated */,
+				B42B45032EA24AEA0046D847 /* Bridge */,
 				609FE38524893242009FD079 /* Frameworks */,
 				609FE34E248929E6009FD079 /* Products */,
 			);
@@ -181,7 +181,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				B42B45032EA24AEA0046D847 /* Generated */,
+				B42B45032EA24AEA0046D847 /* Bridge */,
 			);
 			name = Generated;
 			packageProductDependencies = (
