@@ -20,8 +20,9 @@ message DomainListResponse {
 }
 
 message DomainEnrollRequest {
-  string authentik_url = 1;
-  string token = 2;
+  string name = 1;
+  string authentik_url = 2;
+  string token = 3;
 }
 
 message DomainEnrollResponse {

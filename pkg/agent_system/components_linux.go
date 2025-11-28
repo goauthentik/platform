@@ -5,6 +5,7 @@ package agentsystem
 import (
 	"goauthentik.io/platform/pkg/agent_system/auth"
 	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/ctrl"
 	"goauthentik.io/platform/pkg/agent_system/device"
 	"goauthentik.io/platform/pkg/agent_system/directory"
 	"goauthentik.io/platform/pkg/agent_system/ping"
@@ -18,5 +19,6 @@ func (sm *SystemAgent) RegisterPlatformComponents() map[string]component.Constru
 		directory.ID: directory.NewServer,
 		ping.ID:      ping.NewServer,
 		session.ID:   session.NewMonitor,
+		ctrl.ID:      ctrl.NewServer,
 	}
 }

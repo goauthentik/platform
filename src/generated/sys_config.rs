@@ -13,8 +13,10 @@ pub struct DomainListResponse {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DomainEnrollRequest {
     #[prost(string, tag="1")]
-    pub authentik_url: ::prost::alloc::string::String,
+    pub name: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
+    pub authentik_url: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
     pub token: ::prost::alloc::string::String,
 }
 /// agent.ResponseHeader header = 1;

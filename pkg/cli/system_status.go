@@ -17,7 +17,7 @@ var systemStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status about the current session",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		client, err := client.New()
+		client, err := client.NewDefault()
 		if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ var systemStatusCmd = &cobra.Command{
 }
 
 func init() {
-	if _, err := os.Stat(types.GetSysdSocketPath().ForCurrent()); err == nil {
+	if _, err := os.Stat(types.GetSysdSocketPath(types.SocketIDDefault).ForCurrent()); err == nil {
 		systemCmd.AddCommand(systemStatusCmd)
 	}
 }

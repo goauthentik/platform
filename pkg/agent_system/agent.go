@@ -83,16 +83,16 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 	}
 	sm := &SystemAgent{
 		srv: []SocketServer{
-			SocketServer{
+			{
 				ID:     types.SocketIDDefault,
 				Server: grpc.NewServer(serverOpts...),
-				Path:   types.GetSysdSocketPath(),
+				Path:   types.GetSysdSocketPath(types.SocketIDDefault),
 				Perm:   socket.SocketEveryone,
 			},
-			SocketServer{
+			{
 				ID:     types.SocketIDCtrl,
 				Server: grpc.NewServer(serverOpts...),
-				Path:   types.GetSysdCtrlSocketPath(),
+				Path:   types.GetSysdSocketPath(types.SocketIDCtrl),
 				Perm:   socket.SocketAdmin,
 			},
 		},
