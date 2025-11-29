@@ -13,7 +13,7 @@ import (
 func (sm *SystemAgent) RegisterPlatformComponents() map[string]component.Constructor {
 	return map[string]component.Constructor{
 		agentstarter.ID: agentstarter.NewServer,
-		auth.ID:         auth.NewTokenServer,
+		auth.ID:         auth.NewServer,
 		device.ID:       device.NewServer,
 		ping.ID:         ping.NewServer,
 	}
