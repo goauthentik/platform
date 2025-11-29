@@ -12,7 +12,6 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
         subsystem: Bundle.main.bundleIdentifier!, category: "AuthenticationViewController")
 
     var authorizationRequest: URL?
-    var cancelFunc: () -> Void = {}
     var interactive: InteractiveAuth?
 
     override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
@@ -57,7 +56,7 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     }
 
     @IBAction func clickCancel(_: Any) {
-        self.cancelFunc()
+        self.interactive?.cancelAuth()
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async

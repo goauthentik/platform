@@ -27,6 +27,10 @@ final class InteractiveAuth: Sendable {
         self.loginManager = loginManager
     }
 
+    func cancelAuth() {
+        self.continuation?.resume(returning: .failed)
+    }
+
     func resumeAuthorizationFlow(with url: URL) async -> Bool {
         let token = url.valueOf(InteractiveAuth.tokenQS)
         if let token = token {

@@ -80,9 +80,8 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         for keyType: ASAuthorizationProviderExtensionKeyType,
         newKey _: SecKey,
         loginManager _: ASAuthorizationProviderExtensionLoginManager,
-        completion: @escaping (Bool) -> Void
-    ) {
+    ) async -> Bool {
         self.logger.debug("keyWillRotate \(String(describing: keyType))")
-        completion(false)
+        return false
     }
 }
