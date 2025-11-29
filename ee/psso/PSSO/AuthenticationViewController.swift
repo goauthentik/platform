@@ -62,11 +62,12 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async
         -> WKNavigationActionPolicy
     {
+        self.logger.debug("Navigate \(String(describing: navigationAction.request.url))")
         guard let interactive = self.interactive else {
             return .allow
         }
         if let url = navigationAction.request.url,
-            url.absoluteString == InteractiveAuth.targetUrl
+            interactive.isFinishedURL(url: url)
         {
             self.logger.debug("Intercepted redirect: \(url.absoluteString)")
             if await interactive.resumeAuthorizationFlow(with: url) {

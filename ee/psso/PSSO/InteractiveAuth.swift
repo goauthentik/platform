@@ -11,7 +11,6 @@ extension URL {
 }
 
 final class InteractiveAuth: Sendable {
-    static let targetUrl: String = "goauthentik.io://platform/finished"
     static let tokenQS: String = "ak-auth-ia-token"
     static let dthHeader: String = "X-Authentik-Platform-Auth-DTH"
 
@@ -80,6 +79,12 @@ final class InteractiveAuth: Sendable {
             )
         await webView.load(request)
         return .cancel
+    }
+
+    func isFinishedURL(url: URL) -> Bool {
+        // We're matching for this URL: 'goauthentik.io://platform/finished'
+        return url.scheme == "goauthentik.io" && url.host() == "platform"
+            && url.path() == "/finished"
     }
 
     @MainActor
