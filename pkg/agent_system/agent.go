@@ -108,6 +108,7 @@ func (sm *SystemAgent) registerComponents() {
 		err = ss.EnsureBucket()
 		if err != nil {
 			l.WithError(err).Warning("failed to ensure bucket for component")
+			cancel()
 			continue
 		}
 		sm.cm[name] = ComponentInstance{

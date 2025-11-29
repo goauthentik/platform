@@ -3,6 +3,7 @@
 package hardware
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"runtime"
@@ -19,21 +20,23 @@ func gather() (api.DeviceFactsRequestHardware, error) {
 	manufacturer := common.GetWMICValue("computersystem", "Manufacturer")
 	model := common.GetWMICValue("computersystem", "Model")
 	serial := common.GetWMICValue("bios", "SerialNumber")
-
+	if serial == nil {
+		return api.DeviceFactsRequestHardware{}, errors.New("failed to get serial")
+	}
 	return api.DeviceFactsRequestHardware{
 		Manufacturer: manufacturer,
 		Model:        model,
-		Serial:       serial,
-		CpuName:      api.PtrString(getCPUName()),
+		Serial:       *serial,
+		CpuName:      getCPUName(),
 		CpuCount:     api.PtrInt32(int32(getCPUCores())),
 		MemoryBytes:  api.PtrInt64(int64(getTotalMemory())),
 	}, nil
 }
 
-func getCPUName() string {
+func getCPUName() *string {
 	// Try wmic first
 	cpuName := common.GetWMICValue("cpu", "Name")
-	if cpuName != "" {
+	if cpuName != nil {
 		return cpuName
 	}
 
@@ -42,26 +45,26 @@ func getCPUName() string {
 		"(Get-WmiObject -Class Win32_Processor).Name")
 	output, err := cmd.Output()
 	if err == nil {
-		cpuName = strings.TrimSpace(string(output))
+		cpuName := strings.TrimSpace(string(output))
 		if cpuName != "" {
-			return cpuName
+			return &cpuName
 		}
 	}
 
 	// Fallback to gopsutil
 	cpuInfo, err := cpu.Info()
 	if err != nil || len(cpuInfo) == 0 {
-		return "Unknown CPU"
+		return api.PtrString("Unknown CPU")
 	}
 
-	return cpuInfo[0].ModelName
+	return api.PtrString(cpuInfo[0].ModelName)
 }
 
 func getCPUCores() int {
 	// Try wmic for total cores (logical processors)
 	coresStr := common.GetWMICValue("cpu", "NumberOfLogicalProcessors")
-	if coresStr != "" {
-		if cores, err := strconv.Atoi(coresStr); err == nil {
+	if coresStr != nil {
+		if cores, err := strconv.Atoi(*coresStr); err == nil {
 			return cores
 		}
 	}
@@ -71,7 +74,7 @@ func getCPUCores() int {
 		"(Get-WmiObject -Class Win32_ComputerSystem).NumberOfLogicalProcessors")
 	output, err := cmd.Output()
 	if err == nil {
-		coresStr = strings.TrimSpace(string(output))
+		coresStr := strings.TrimSpace(string(output))
 		if cores, err := strconv.Atoi(coresStr); err == nil {
 			return cores
 		}
@@ -91,8 +94,8 @@ func getCPUCores() int {
 func getTotalMemory() uint64 {
 	// Try wmic first
 	memoryStr := common.GetWMICValue("computersystem", "TotalPhysicalMemory")
-	if memoryStr != "" {
-		if memory, err := strconv.ParseUint(memoryStr, 10, 64); err == nil {
+	if memoryStr != nil {
+		if memory, err := strconv.ParseUint(*memoryStr, 10, 64); err == nil {
 			return memory
 		}
 	}
@@ -102,7 +105,7 @@ func getTotalMemory() uint64 {
 		"(Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory")
 	output, err := cmd.Output()
 	if err == nil {
-		memoryStr = strings.TrimSpace(string(output))
+		memoryStr := strings.TrimSpace(string(output))
 		if memory, err := strconv.ParseUint(memoryStr, 10, 64); err == nil {
 			return memory
 		}

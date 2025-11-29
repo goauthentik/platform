@@ -18,25 +18,25 @@ func gather() (api.DeviceFactsRequestOs, error) {
 	return api.DeviceFactsRequestOs{
 		Arch:    runtime.GOARCH,
 		Family:  api.DEVICEFACTSOSFAMILY_WINDOWS,
-		Name:    api.PtrString(name),
-		Version: api.PtrString(version),
+		Name:    name,
+		Version: version,
 	}, nil
 }
 
-func getWindowsProductName() string {
+func getWindowsProductName() *string {
 	// Try PowerShell first for better results
 	cmd := exec.Command("powershell", "-Command",
 		"(Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion').ProductName")
 	output, err := cmd.Output()
 	if err == nil {
-		return strings.TrimSpace(string(output))
+		return api.PtrString(strings.TrimSpace(string(output)))
 	}
 
 	// Fallback to wmic
 	return common.GetWMICValue("os", "Caption")
 }
 
-func getWindowsVersion() string {
+func getWindowsVersion() *string {
 	// Try PowerShell for version info
 	cmd := exec.Command("powershell", "-Command",
 		"(Get-ItemProperty 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion').ReleaseId")
@@ -50,15 +50,15 @@ func getWindowsVersion() string {
 		buildOutput, buildErr := cmd.Output()
 		if buildErr == nil {
 			build := strings.TrimSpace(string(buildOutput))
-			return releaseId + " (Build " + build + ")"
+			return api.PtrString(releaseId + " (Build " + build + ")")
 		}
 
-		return releaseId
+		return api.PtrString(releaseId)
 	}
 
 	// Fallback to wmic
 	version := common.GetWMICValue("os", "Version")
-	if version == "" {
+	if version == nil {
 		version = common.GetWMICValue("os", "BuildNumber")
 	}
 
