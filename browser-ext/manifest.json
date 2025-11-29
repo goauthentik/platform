@@ -2,7 +2,7 @@
     "$schema": "https://json.schemastore.org/chrome-manifest",
     "manifest_version": 3,
     "name": "authentik Platform SSO Extension",
-    "version": "0.30.0",
+    "version": "0.31.0",
     "description": "authentik Browser extension for seamless SSO and to launch applications.",
     "permissions": ["storage", "activeTab", "nativeMessaging"],
     "background": {
