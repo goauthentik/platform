@@ -31,7 +31,7 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     private func load() {
         self.logger.debug("Load")
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        var systemVersion = ProcessInfo.processInfo.operatingSystemVersion
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersion
         self.webView.customUserAgent =
             "authentik Platform/PSSO@\(appVersion ?? "dev") (OS \(systemVersion))"
         Sentry.setup()
