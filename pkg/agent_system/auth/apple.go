@@ -13,7 +13,7 @@ func (auth *Server) RegisterUser(ctx context.Context, req *pb.RegisterUserReques
 	if err != nil {
 		return nil, err
 	}
-	u, hr, err := ac.EndpointsApi.EndpointsAgentPssoRegisterUserCreate(ctx).AgentPSSOUserRegistrationRequest(api.AgentPSSOUserRegistrationRequest{
+	u, hr, err := ac.EndpointsApi.EndpointsAgentsPssoRegisterUserCreate(ctx).AgentPSSOUserRegistrationRequest(api.AgentPSSOUserRegistrationRequest{
 		UserAuth:             req.UserAuth,
 		EnclaveKeyId:         req.EnclaveKeyId,
 		UserSecureEnclaveKey: req.UserSecureEnclaveKey,
@@ -32,7 +32,7 @@ func (auth *Server) RegisterDevice(ctx context.Context, req *pb.RegisterDeviceRe
 	if err != nil {
 		return nil, err
 	}
-	d, hr, err := ac.EndpointsApi.EndpointsAgentPssoRegisterDeviceCreate(ctx).AgentPSSODeviceRegistrationRequest(api.AgentPSSODeviceRegistrationRequest{
+	d, hr, err := ac.EndpointsApi.EndpointsAgentsPssoRegisterDeviceCreate(ctx).AgentPSSODeviceRegistrationRequest(api.AgentPSSODeviceRegistrationRequest{
 		DeviceSigningKey:    req.DeviceSigningKey,
 		DeviceEncryptionKey: req.DeviceEncryptionKey,
 		EncKeyId:            req.EncKeyId,
