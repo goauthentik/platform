@@ -5,7 +5,6 @@ package hardware
 import (
 	"errors"
 	"os"
-	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -17,9 +16,9 @@ import (
 )
 
 func gather() (api.DeviceFactsRequestHardware, error) {
-	manufacturer := common.GetWMICValue("computersystem", "Manufacturer")
-	model := common.GetWMICValue("computersystem", "Model")
-	serial := common.GetWMICValue("bios", "SerialNumber")
+	manufacturer := common.GetWMIValue("Win32_computersystem", "Manufacturer")
+	model := common.GetWMIValue("Win32_computersystem", "Model")
+	serial := common.GetWMIValue("Win32_BIOS", "SerialNumber")
 	if serial == nil {
 		return api.DeviceFactsRequestHardware{}, errors.New("failed to get serial")
 	}
@@ -34,21 +33,9 @@ func gather() (api.DeviceFactsRequestHardware, error) {
 }
 
 func getCPUName() *string {
-	// Try wmic first
-	cpuName := common.GetWMICValue("cpu", "Name")
+	cpuName := common.GetWMIValue("Win32_Processor", "Name")
 	if cpuName != nil {
 		return cpuName
-	}
-
-	// Try PowerShell
-	cmd := exec.Command("powershell", "-Command",
-		"(Get-WmiObject -Class Win32_Processor).Name")
-	output, err := cmd.Output()
-	if err == nil {
-		cpuName := strings.TrimSpace(string(output))
-		if cpuName != "" {
-			return &cpuName
-		}
 	}
 
 	// Fallback to gopsutil
@@ -61,20 +48,9 @@ func getCPUName() *string {
 }
 
 func getCPUCores() int {
-	// Try wmic for total cores (logical processors)
-	coresStr := common.GetWMICValue("cpu", "NumberOfLogicalProcessors")
-	if coresStr != nil {
-		if cores, err := strconv.Atoi(*coresStr); err == nil {
-			return cores
-		}
-	}
-
-	// Try PowerShell
-	cmd := exec.Command("powershell", "-Command",
-		"(Get-WmiObject -Class Win32_ComputerSystem).NumberOfLogicalProcessors")
-	output, err := cmd.Output()
-	if err == nil {
-		coresStr := strings.TrimSpace(string(output))
+	cpuCount := common.GetWMIValue("Win32_ComputerSystem", "NumberOfLogicalProcessors")
+	if cpuCount != nil {
+		coresStr := strings.TrimSpace(string(*cpuCount))
 		if cores, err := strconv.Atoi(coresStr); err == nil {
 			return cores
 		}
@@ -92,20 +68,9 @@ func getCPUCores() int {
 }
 
 func getTotalMemory() uint64 {
-	// Try wmic first
-	memoryStr := common.GetWMICValue("computersystem", "TotalPhysicalMemory")
-	if memoryStr != nil {
-		if memory, err := strconv.ParseUint(*memoryStr, 10, 64); err == nil {
-			return memory
-		}
-	}
-
-	// Try PowerShell
-	cmd := exec.Command("powershell", "-Command",
-		"(Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory")
-	output, err := cmd.Output()
-	if err == nil {
-		memoryStr := strings.TrimSpace(string(output))
+	memory := common.GetWMIValue("Win32_ComputerSystem", "TotalPhysicalMemory")
+	if memory != nil {
+		memoryStr := strings.TrimSpace(string(*memory))
 		if memory, err := strconv.ParseUint(memoryStr, 10, 64); err == nil {
 			return memory
 		}
