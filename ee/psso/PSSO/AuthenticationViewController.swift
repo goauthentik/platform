@@ -13,6 +13,7 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
 
     var authorizationRequest: URL?
     var cancelFunc: () -> Void = {}
+    var interactive: InteractiveAuth?
 
     override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -62,19 +63,21 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async
         -> WKNavigationActionPolicy
     {
+        guard let interactive = self.interactive else {
+            return .allow
+        }
         if let url = navigationAction.request.url,
             url.absoluteString == InteractiveAuth.targetUrl
         {
             self.logger.debug("Intercepted redirect: \(url.absoluteString)")
-            if await InteractiveAuth.shared.resumeAuthorizationFlow(with: url) {
+            if await interactive.resumeAuthorizationFlow(with: url) {
                 return .cancel
             }
         }
-        return await InteractiveAuth.shared
-            .injectDTH(
-                webView,
-                decidePolicyFor: navigationAction,
-            )
+        return await interactive.injectDTH(
+            webView,
+            decidePolicyFor: navigationAction,
+        )
     }
 
 }

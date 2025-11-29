@@ -48,29 +48,10 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         self.logger.debug(
             "beginUserRegistration \(userName ?? ""), method \(String(describing: method)), options \(String(describing: options))"
         )
-        InteractiveAuth.shared.completion = { token async in
-            self.logger.trace("got token \(String(describing: token))")
-            do {
-                self.logger.debug("Validating auth token")
-                if try await SysdBridge.shared.authToken(token: token) {
-                    self.logger.debug("Successfully validated token, registering user")
-                    return await API.shared
-                        .RegisterUser(
-                            loginManger: loginManager
-                        )
-                } else {
-                    return .failed
-                }
-            } catch {
-                self.logger.error("error presentRegistrationViewController \(error)")
-                return .failed
-            }
-        }
+        let interactive = InteractiveAuth(loginManager: loginManager)
+        self.interactive = interactive
         do {
-            return try await InteractiveAuth.shared
-                .startAuth(
-                    viewController: self,
-                    loginManager: loginManager) ?? .failed
+            return try await interactive.startAuth(viewController: self) ?? .failed
         } catch {
             self.logger.error("Error starting interactive authentication: \(error)")
             return .failed
