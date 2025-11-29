@@ -3,7 +3,6 @@
 package common
 
 import (
-	"fmt"
 	"os/exec"
 	"strings"
 
@@ -16,7 +15,6 @@ func GetWMICValue(class, property string) *string {
 	if err != nil {
 		return nil
 	}
-	fmt.Println(string(output))
 
 	lines := strings.Split(string(output), "\n")
 	for _, line := range lines {
