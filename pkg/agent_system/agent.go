@@ -16,6 +16,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/types"
+	"goauthentik.io/platform/pkg/platform/grpc_creds"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
@@ -53,6 +54,7 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 
 	sm := &SystemAgent{
 		srv: grpc.NewServer(
+			grpc.Creds(grpc_creds.NewTransportCredentials()),
 			grpc.ChainUnaryInterceptor(
 				logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
 				grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
