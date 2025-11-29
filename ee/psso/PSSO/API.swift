@@ -26,6 +26,8 @@ class API {
                 encKeyID: EncKeyID,
                 signKeyID: SignKeyID
             )
+            self.logger
+                .debug("Got device login config from server: \(String(describing: config))")
             return config
         } catch {
             self.logger.error("failed to register: \(error)")
@@ -34,19 +36,19 @@ class API {
     }
 
     func RegisterUser(
-        loginConfig: ASAuthorizationProviderExtensionUserLoginConfiguration,
         loginManger: ASAuthorizationProviderExtensionLoginManager,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
             let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
                 from: loginManger.key(for: .userSecureEnclaveKey)!)!
             self.logger.debug("registering user with sysd...")
-            let registerResult = try await SysdBridge.shared
+            let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
                     enclaveKeyID: EnclaveKeyID,
                     userSecureEnclaveKey: UserSecureEnclaveKey
                 )
-            loginConfig.loginUserName = registerResult
+            self.logger
+                .debug("Got user login config from server: \(String(describing: loginConfig))")
             try loginManger.saveUserLoginConfiguration(loginConfig)
             return .success
         } catch {

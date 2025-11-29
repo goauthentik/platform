@@ -48,9 +48,6 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         self.logger.debug(
             "beginUserRegistration \(userName ?? ""), method \(String(describing: method)), options \(String(describing: options))"
         )
-        let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
-            loginUserName: userName ?? ""
-        )
         InteractiveAuth.shared.completion = { token async in
             self.logger.trace("got token \(String(describing: token))")
             do {
@@ -59,7 +56,6 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
                     self.logger.debug("Successfully validated token, registering user")
                     return await API.shared
                         .RegisterUser(
-                            loginConfig: loginConfig,
                             loginManger: loginManager
                         )
                 } else {
