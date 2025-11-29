@@ -21,7 +21,7 @@ GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 
 define sentry_upload_symbols
-	npx getsentry/sentry-cli debug-files upload \
+	npx @sentry/cli debug-files upload \
 		--auth-token ${SENTRY_AUTH_TOKEN} \
 		--include-sources \
 		--org authentik-security-inc \
