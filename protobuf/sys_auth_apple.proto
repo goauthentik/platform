@@ -8,19 +8,31 @@ import "google/protobuf/empty.proto";
 
 service SystemAuthApple {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
-  rpc RegisterDevice(RegisterDeviceRequest) returns (google.protobuf.Empty);
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
 }
 
 message RegisterUserRequest {
   string user_secure_enclave_key = 1;
   string enclave_key_id = 2;
+  string user_auth = 3;
 }
+
 message RegisterUserResponse {
   string username = 1;
 }
+
 message RegisterDeviceRequest {
   string device_signing_key = 1;
   string device_encryption_key = 2;
   string enc_key_id = 3;
   string sign_key_id = 4;
+}
+
+message RegisterDeviceResponse {
+  string client_id = 1;
+  string issuer = 2;
+  string token_endpoint = 3;
+  string jwks_endpoint = 4;
+  string audience = 5;
+  string nonce_endpoint = 6;
 }

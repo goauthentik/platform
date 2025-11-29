@@ -6,6 +6,8 @@ pub struct RegisterUserRequest {
     pub user_secure_enclave_key: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
     pub enclave_key_id: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub user_auth: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RegisterUserResponse {
@@ -22,6 +24,21 @@ pub struct RegisterDeviceRequest {
     pub enc_key_id: ::prost::alloc::string::String,
     #[prost(string, tag="4")]
     pub sign_key_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RegisterDeviceResponse {
+    #[prost(string, tag="1")]
+    pub client_id: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub issuer: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub token_endpoint: ::prost::alloc::string::String,
+    #[prost(string, tag="4")]
+    pub jwks_endpoint: ::prost::alloc::string::String,
+    #[prost(string, tag="5")]
+    pub audience: ::prost::alloc::string::String,
+    #[prost(string, tag="6")]
+    pub nonce_endpoint: ::prost::alloc::string::String,
 }
 include!("sys_auth_apple.tonic.rs");
 // @@protoc_insertion_point(module)

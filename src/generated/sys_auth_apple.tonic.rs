@@ -119,7 +119,10 @@ pub mod system_auth_apple_client {
         pub async fn register_device(
             &mut self,
             request: impl tonic::IntoRequest<super::RegisterDeviceRequest>,
-        ) -> std::result::Result<tonic::Response<()>, tonic::Status> {
+        ) -> std::result::Result<
+            tonic::Response<super::RegisterDeviceResponse>,
+            tonic::Status,
+        > {
             self.inner
                 .ready()
                 .await

@@ -22,33 +22,21 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         options: ASAuthorizationProviderExtensionRequestOptions = [],
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         self.logger.debug("Begin Device Registration")
-        //        self.logger.debug("Options: \(String(describing: config))")
-        let loginConfig = ASAuthorizationProviderExtensionLoginConfiguration(
-            clientID: "",
-            issuer: "",
-            tokenEndpointURL: URL(string: "")!,
-            jwksEndpointURL: URL(string: "")!,
-            audience: ""
-        )
-
-        loginConfig.nonceEndpointURL = URL(string: "")!
-        loginConfig.accountDisplayName = "authentik"
-        loginConfig.includePreviousRefreshTokenInLoginRequest = true
-
         let registration = await API.shared.RegisterDevice(
-            loginConfig: loginConfig,
             loginManager: loginManager,
         )
-        if registration != .success {
-            return registration
+        if let registration = registration {
+            registration.accountDisplayName = "authentik"
+            registration.includePreviousRefreshTokenInLoginRequest = true
+            do {
+                try loginManager.saveLoginConfiguration(registration)
+                return .success
+            } catch {
+                self.logger.warning("failed to save login configuration: \(error)")
+                return .failed
+            }
         }
-        do {
-            try loginManager.saveLoginConfiguration(loginConfig)
-            return .success
-        } catch {
-            self.logger.warning("failed to save login configuration: \(error)")
-            return .failed
-        }
+        return .failed
     }
 
     func beginUserRegistration(
@@ -58,11 +46,11 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         options: ASAuthorizationProviderExtensionRequestOptions = [],
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         self.logger.debug(
-            "beginUserRegistration \(userName ?? ""), method \(String(describing: method))"
+            "beginUserRegistration \(userName ?? ""), method \(String(describing: method)), options \(String(describing: options))"
         )
-        self.logger.debug("options: \(String.init(describing: options))")
         let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
-            loginUserName: userName ?? "")
+            loginUserName: userName ?? ""
+        )
         InteractiveAuth.shared.completion = { token async in
             self.logger.trace("got token \(String(describing: token))")
             do {

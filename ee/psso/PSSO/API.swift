@@ -11,26 +11,25 @@ class API {
     var logger: Logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!, category: "API")
 
-    func RegisterDevice(
-        loginConfig: ASAuthorizationProviderExtensionLoginConfiguration,
-        loginManager: ASAuthorizationProviderExtensionLoginManager,
-    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
+    func RegisterDevice(loginManager: ASAuthorizationProviderExtensionLoginManager) async
+        -> ASAuthorizationProviderExtensionLoginConfiguration?
+    {
         do {
             let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
                 from: loginManager.key(for: .currentDeviceSigning)!)!
             let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
                 from: loginManager.key(for: .currentDeviceEncryption)!)!
             self.logger.debug("registering device with sysd...")
-            try await SysdBridge.shared.pssoRegisterDevice(
+            let config = try await SysdBridge.shared.pssoRegisterDevice(
                 deviceSigningKey: DeviceSigningKey,
                 deviceEncryptionKey: DeviceEncryptionKey,
                 encKeyID: EncKeyID,
                 signKeyID: SignKeyID
             )
-            return .success
+            return config
         } catch {
             self.logger.error("failed to register: \(error)")
-            return .failed
+            return nil
         }
     }
 
