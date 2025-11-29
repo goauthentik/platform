@@ -139,7 +139,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
-		dc.r.log.WithField("cap", cfg.SystemConfig.Capabilities).Debug("fetched remote config")
+		dc.r.log.WithField("cap", cfg.SystemConfig.Capabilities).WithField("device_id", cfg.DeviceId).Debug("fetched remote config")
 		dc.rc = cfg
 		jc, err := cfg.MarshalJSON()
 		if err != nil {
