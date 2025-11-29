@@ -40,7 +40,7 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
 
     override func viewDidAppear() {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        let systemVersion = ProcessInfo.processInfo.operatingSystemVersion
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersionString
         self.webView.customUserAgent =
             "authentik Platform/PSSO@\(appVersion ?? "dev") (OS \(systemVersion))"
         self.webView.navigationDelegate = self
