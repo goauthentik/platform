@@ -41,7 +41,7 @@ func (as *Server) Stop() error {
 	return nil
 }
 
-func (as *Server) Register(s grpc.ServiceRegistrar) {}
+func (as *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {}
 
 func (as *Server) start() {
 	for {
