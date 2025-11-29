@@ -30,10 +30,6 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
 
     private func load() {
         self.logger.debug("Load")
-        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        let systemVersion = ProcessInfo.processInfo.operatingSystemVersion
-        self.webView.customUserAgent =
-            "authentik Platform/PSSO@\(appVersion ?? "dev") (OS \(systemVersion))"
         Sentry.setup()
     }
 
@@ -43,6 +39,10 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     }
 
     override func viewDidAppear() {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersion
+        self.webView.customUserAgent =
+            "authentik Platform/PSSO@\(appVersion ?? "dev") (OS \(systemVersion))"
         self.webView.navigationDelegate = self
         self.webView.isInspectable = true
         if let url = authorizationRequest {
