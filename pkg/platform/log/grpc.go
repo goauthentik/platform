@@ -25,6 +25,7 @@ func InterceptorLogger(l log.FieldLogger) logging.Logger {
 			if ga, ok := p.AuthInfo.(grpc_creds.AuthInfo); ok && ga.Creds != nil {
 				l = l.WithField("auth.pid", ga.Creds.PID)
 				l.WithFields(log.Fields{
+					"proc":           ga.Creds.Proc,
 					"parent":         ga.Creds.Parent,
 					"parent_exe":     ga.Creds.ParentExe,
 					"parent_cmdline": ga.Creds.ParentCmdline,

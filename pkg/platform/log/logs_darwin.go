@@ -14,7 +14,6 @@ func platformSetup(appName string) error {
 	log.SetFormatter(&log.TextFormatter{
 		DisableTimestamp: true,
 		DisableColors:    true,
-		DisableSorting:   true,
 	})
 	log.Info("Switching to macOS Unified logging...")
 	log.SetOutput(ulog)
