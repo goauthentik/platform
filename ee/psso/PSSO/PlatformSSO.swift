@@ -1,5 +1,5 @@
 import AuthenticationServices
-import Generated
+import Bridge
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistrationHandler {
 

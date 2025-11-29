@@ -30,8 +30,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B42B45012EA24AEA0046D847"
-               BuildableName = "Generated.framework"
-               BlueprintName = "Generated"
+               BuildableName = "Bridge.framework"
+               BlueprintName = "Bridge"
                ReferencedContainer = "container:authentikPlatform.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

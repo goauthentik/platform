@@ -1,7 +1,7 @@
 import AuthenticationServices
 import CryptoKit
 import Foundation
-import Generated
+import Bridge
 import OSLog
 
 class API {

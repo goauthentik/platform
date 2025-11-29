@@ -1,5 +1,5 @@
 import AuthenticationServices
-import Generated
+import Bridge
 import OSLog
 import WebKit
 
