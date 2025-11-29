@@ -51,7 +51,8 @@ final class InteractiveAuth: Sendable {
                 self.logger.debug("Successfully validated token, registering user")
                 return await API.shared
                     .RegisterUser(
-                        loginManger: self.loginManager
+                        loginManger: self.loginManager,
+                        userToken: token,
                     )
             } else {
                 return .failed

@@ -37,6 +37,7 @@ class API {
 
     func RegisterUser(
         loginManger: ASAuthorizationProviderExtensionLoginManager,
+        userToken: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
             let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
@@ -45,7 +46,8 @@ class API {
             let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
                     enclaveKeyID: EnclaveKeyID,
-                    userSecureEnclaveKey: UserSecureEnclaveKey
+                    userSecureEnclaveKey: UserSecureEnclaveKey,
+                    userAuth: userToken,
                 )
             self.logger
                 .debug("Got user login config from server: \(String(describing: loginConfig))")
