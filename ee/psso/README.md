@@ -9,6 +9,8 @@ Check logs:
 ```
 log show --debug --info --predicate 'subsystem contains "io.goauthentik.platform"'
 log stream --debug --info --predicate 'subsystem contains "io.goauthentik.platform"'
+log stream --level debug --predicate '(sender == "PSSO") || (sender == "Bridge")' 2>/dev/null
+
 log show --predicate 'subsystem == "com.apple.AppSSO"'
 log stream --predicate 'subsystem == "com.apple.AppSSO"'
 log stream --info --predicate 'subsystem contains "com.apple.AppSSO" OR process contains "AppSSO"'

@@ -11,6 +11,12 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+func (auth *Server) DeviceTokenHash() string {
+	hh := sha256.Sum256([]byte(auth.dom.Token))
+	h := hex.EncodeToString(hh[:])
+	return h
+}
+
 func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) (*pb.InteractiveAuthAsyncResponse, error) {
 	ac, err := auth.dom.APIClient()
 	if err != nil {
@@ -21,10 +27,8 @@ func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) 
 		auth.log.WithError(ak.HTTPToError(hr, err)).Warning("failed to start interactive auth")
 		return nil, err
 	}
-	hh := sha256.Sum256([]byte(auth.dom.Token))
-	h := hex.EncodeToString(hh[:])
 	return &pb.InteractiveAuthAsyncResponse{
 		Url:         res.Url,
-		HeaderToken: h,
+		HeaderToken: auth.DeviceTokenHash(),
 	}, nil
 }

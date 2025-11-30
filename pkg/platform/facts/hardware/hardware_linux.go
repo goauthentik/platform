@@ -96,8 +96,3 @@ func getTotalMemory() uint64 {
 
 	return vmStat.Total
 }
-
-func isNumeric(s string) bool {
-	_, err := strconv.Atoi(s)
-	return err == nil
-}

@@ -43,7 +43,7 @@ func (ds *Server) Start() error {
 		return err
 	}
 	ds.api = ac
-	ds.checkIn()
+	go ds.checkIn()
 	d := time.Second * time.Duration(dom.Config().RefreshInterval)
 	t := time.NewTimer(d)
 	go func() {

@@ -29,19 +29,21 @@ var troubleshootInspectCmd = &cobra.Command{
 func inspectBucket(name []byte, b *bbolt.Bucket, depth int) {
 	fmt.Printf("%sBucket '%s':\n", strings.Repeat("\t", depth), string(name))
 	depth += 1
-	_ = b.ForEach(func(k, v []byte) error {
-		vv := string(v)
-		if len(vv) > 16 {
-			vv = vv[:16]
-		}
-		fmt.Printf("%sKey '%s' => '%s'\n", strings.Repeat("\t", depth), string(k), vv)
-		return nil
-	})
+	seenKeys := map[string]struct{}{}
 	_ = b.ForEachBucket(func(k []byte) error {
 		bb := b.Bucket(k)
 		if bb != nil {
+			seenKeys[string(k)] = struct{}{}
 			inspectBucket(k, bb, depth)
 		}
+		return nil
+	})
+	_ = b.ForEach(func(k, v []byte) error {
+		vv := string(v)
+		if _, seen := seenKeys[vv]; seen {
+			return nil
+		}
+		fmt.Printf("%sKey '%s' => '%s'\n", strings.Repeat("\t", depth), string(k), vv)
 		return nil
 	})
 }

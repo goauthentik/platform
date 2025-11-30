@@ -40,7 +40,7 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 		password: req.Password,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())
-	fex, err := flow.NewFlowExecutor(txn.ctx, auth.dom.Config().AuthorizationFlow, auth.api.GetConfig(), flow.FlowExecutorOptions{
+	fex, err := flow.NewFlowExecutor(txn.ctx, *auth.dom.Config().AuthorizationFlow.Get(), auth.api.GetConfig(), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
 			auth.log.WithField("logger", "component.pam.flow").WithFields(fields).Info(msg)
 		},

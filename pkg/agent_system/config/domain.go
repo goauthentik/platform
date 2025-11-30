@@ -53,8 +53,9 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 			URL: fmt.Sprintf("%sapi/v3", u.Path),
 		},
 	}
-	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
+	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer+agent %s", dc.Token))
 	apiConfig.AddDefaultHeader("X-AK-Platform-Version", meta.Version)
+	apiConfig.UserAgent = fmt.Sprintf("goauthentik.io/platform/%s", meta.FullVersion())
 
 	c := api.NewAPIClient(apiConfig)
 	dc.c = c
@@ -138,7 +139,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
-		dc.r.log.WithField("cap", cfg.SystemConfig.Capabilities).Debug("fetched remote config")
+		dc.r.log.WithField("cap", cfg.SystemConfig.Capabilities).WithField("device_id", cfg.DeviceId).Debug("fetched remote config")
 		dc.rc = cfg
 		jc, err := cfg.MarshalJSON()
 		if err != nil {

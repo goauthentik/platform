@@ -14,12 +14,7 @@ func gather() ([]api.DeviceUserRequest, error) {
 
 	// Try PowerShell first for better results
 	users = getUsersFromPowerShell()
-	if len(users) > 0 {
-		return users, nil
-	}
-
-	// Fallback to wmic
-	return getUsersFromWMIC()
+	return users, nil
 }
 
 func getUsersFromPowerShell() []api.DeviceUserRequest {
@@ -66,42 +61,4 @@ func getUsersFromPowerShell() []api.DeviceUserRequest {
 	}
 
 	return users
-}
-
-func getUsersFromWMIC() ([]api.DeviceUserRequest, error) {
-	var users []api.DeviceUserRequest
-
-	cmd := exec.Command("wmic", "useraccount", "get", "Name,SID,FullName,Disabled", "/format:csv")
-	output, err := cmd.Output()
-	if err != nil {
-		return users, err
-	}
-
-	lines := strings.Split(string(output), "\n")
-	for i, line := range lines {
-		if i == 0 || strings.TrimSpace(line) == "" {
-			continue // Skip header and empty lines
-		}
-
-		parts := strings.Split(line, ",")
-		if len(parts) < 5 {
-			continue
-		}
-
-		fullName := strings.TrimSpace(parts[2])
-		username := strings.TrimSpace(parts[3])
-		sid := strings.TrimSpace(parts[4])
-
-		userInfo := api.DeviceUserRequest{
-			Id:       sid,
-			Username: api.PtrString(username),
-		}
-		if fullName != "" {
-			userInfo.Name = api.PtrString(fullName)
-		}
-
-		users = append(users, userInfo)
-	}
-
-	return users, nil
 }

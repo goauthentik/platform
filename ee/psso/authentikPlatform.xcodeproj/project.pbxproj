@@ -12,8 +12,8 @@
 		609FE38D24893242009FD079 /* AuthenticationViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 609FE38B24893242009FD079 /* AuthenticationViewController.xib */; };
 		B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */; };
 		B404B2742E0DD88800A12D29 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = B404B2732E0DD88500A12D29 /* API.swift */; };
-		B42B450A2EA24B120046D847 /* Generated.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; };
-		B42B450B2EA24B120046D847 /* Generated.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Generated.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B42B450A2EA24B120046D847 /* Bridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; };
+		B42B450B2EA24B120046D847 /* Bridge.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B49BA55B2E0F447A00184992 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA55A2E0F447A00184992 /* Sentry */; };
 		B49BA55F2E0F466300184992 /* InteractiveAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA55E2E0F466100184992 /* InteractiveAuth.swift */; };
 		B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5602E0F73AD00184992 /* Sentry.swift */; };
@@ -41,7 +41,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B42B450B2EA24B120046D847 /* Generated.framework in Embed Frameworks */,
+				B42B450B2EA24B120046D847 /* Bridge.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -57,7 +57,7 @@
 		609FE38F24893242009FD079 /* PSSO.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PSSO.entitlements; sourceTree = "<group>"; };
 		B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterpriseSSO.swift; sourceTree = "<group>"; };
 		B404B2732E0DD88500A12D29 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
-		B42B45022EA24AEA0046D847 /* Generated.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Generated.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B42B45022EA24AEA0046D847 /* Bridge.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Bridge.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B49BA55E2E0F466100184992 /* InteractiveAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveAuth.swift; sourceTree = "<group>"; };
 		B49BA5602E0F73AD00184992 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B49BA5622E100E4400184992 /* PlatformSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformSSO.swift; sourceTree = "<group>"; };
@@ -74,7 +74,7 @@
 			files = (
 				609FE38724893242009FD079 /* AuthenticationServices.framework in Frameworks */,
 				B49BA55B2E0F447A00184992 /* Sentry in Frameworks */,
-				B42B450A2EA24B120046D847 /* Generated.framework in Frameworks */,
+				B42B450A2EA24B120046D847 /* Bridge.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,7 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				609FE38424893242009FD079 /* PSSO.appex */,
-				B42B45022EA24AEA0046D847 /* Generated.framework */,
+				B42B45022EA24AEA0046D847 /* Bridge.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -167,9 +167,9 @@
 			productReference = 609FE38424893242009FD079 /* PSSO.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		B42B45012EA24AEA0046D847 /* Generated */ = {
+		B42B45012EA24AEA0046D847 /* Bridge */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B42B45062EA24AEA0046D847 /* Build configuration list for PBXNativeTarget "Generated" */;
+			buildConfigurationList = B42B45062EA24AEA0046D847 /* Build configuration list for PBXNativeTarget "Bridge" */;
 			buildPhases = (
 				B42B44FD2EA24AEA0046D847 /* Headers */,
 				B42B44FE2EA24AEA0046D847 /* Sources */,
@@ -183,7 +183,7 @@
 			fileSystemSynchronizedGroups = (
 				B42B45032EA24AEA0046D847 /* Bridge */,
 			);
-			name = Generated;
+			name = Bridge;
 			packageProductDependencies = (
 				B4D2A63F2EA25C96000B8E49 /* GRPCCore */,
 				B4D2A6422EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 */,
@@ -191,7 +191,7 @@
 				B4D2A66E2EA260B8000B8E49 /* Atomics */,
 			);
 			productName = GRPC;
-			productReference = B42B45022EA24AEA0046D847 /* Generated.framework */;
+			productReference = B42B45022EA24AEA0046D847 /* Bridge.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -234,7 +234,7 @@
 			projectRoot = "";
 			targets = (
 				609FE38324893242009FD079 /* PSSO */,
-				B42B45012EA24AEA0046D847 /* Generated */,
+				B42B45012EA24AEA0046D847 /* Bridge */,
 			);
 		};
 /* End PBXProject section */
@@ -283,7 +283,7 @@
 /* Begin PBXTargetDependency section */
 		B42B450D2EA24B120046D847 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B42B45012EA24AEA0046D847 /* Generated */;
+			target = B42B45012EA24AEA0046D847 /* Bridge */;
 			targetProxy = B42B450C2EA24B120046D847 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -354,7 +354,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -413,7 +413,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -511,7 +511,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -563,7 +563,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.4;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
@@ -608,7 +608,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B42B45062EA24AEA0046D847 /* Build configuration list for PBXNativeTarget "Generated" */ = {
+		B42B45062EA24AEA0046D847 /* Build configuration list for PBXNativeTarget "Bridge" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B42B45072EA24AEA0046D847 /* Debug */,

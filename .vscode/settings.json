@@ -20,4 +20,5 @@
           "ignoreCase": false
       }
   ],
+  "cmake.sourceDirectory": "${workspaceFolder}/ee/wcp",
 }

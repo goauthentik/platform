@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak"
@@ -15,6 +16,7 @@ func (dc *DomainConfig) Enroll() error {
 	if err != nil {
 		return err
 	}
+	a.GetConfig().AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
 	hw, err := hardware.Gather()
 	if err != nil {
 		return err

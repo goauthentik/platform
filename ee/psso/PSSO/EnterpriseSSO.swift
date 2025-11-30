@@ -1,5 +1,5 @@
 import AuthenticationServices
-import Generated
+import Bridge
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
@@ -68,7 +68,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
         }
         Task {
             do {
-                let header = try await Generated.SysdBridge.shared.platformSignedEndpointHeader(
+                let header = try await SysdBridge.shared.platformSignedEndpointHeader(
                     challenge: challenge
                 )
                 let url = request.url.appending(
