@@ -105,7 +105,7 @@ func ProcInfoFrom(pid int32) (*ProcInfo, error) {
 }
 
 func (pi *ProcInfo) String() string {
-	return fmt.Sprintf("Process <id=%d, exe=%s, cmdline=%s>", pi.Process.Pid, pi.Exe, pi.Cmdline)
+	return fmt.Sprintf("Process <id=%d, exe=%s, cmdline=%s>", pi.Pid, pi.Exe, pi.Cmdline)
 }
 
 type Creds struct {
