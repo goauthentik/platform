@@ -40,7 +40,7 @@ pub struct RegisterDeviceResponse {
     #[prost(string, tag="6")]
     pub nonce_endpoint: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
-    pub dth: ::prost::alloc::string::String,
+    pub device_token: ::prost::alloc::string::String,
 }
 include!("sys_auth_apple.tonic.rs");
 // @@protoc_insertion_point(module)

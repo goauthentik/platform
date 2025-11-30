@@ -154,7 +154,13 @@ public class SysdBridge {
                 audience: res.audience
             )
             cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
-            try cfg.setCustomLoginRequestBodyClaims(["x-ak-dti": res.dth])
+            cfg.customNonceRequestValues
+                .append(
+                    URLQueryItem(
+                        name: "x-ak-device-token",
+                        value: res.deviceToken
+                    )
+                )
             return cfg
         }
     }

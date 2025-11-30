@@ -202,7 +202,7 @@ type RegisterDeviceResponse struct {
 	JwksEndpoint  string                 `protobuf:"bytes,4,opt,name=jwks_endpoint,json=jwksEndpoint,proto3" json:"jwks_endpoint,omitempty"`
 	Audience      string                 `protobuf:"bytes,5,opt,name=audience,proto3" json:"audience,omitempty"`
 	NonceEndpoint string                 `protobuf:"bytes,6,opt,name=nonce_endpoint,json=nonceEndpoint,proto3" json:"nonce_endpoint,omitempty"`
-	Dth           string                 `protobuf:"bytes,7,opt,name=dth,proto3" json:"dth,omitempty"`
+	DeviceToken   string                 `protobuf:"bytes,7,opt,name=device_token,json=deviceToken,proto3" json:"device_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -279,9 +279,9 @@ func (x *RegisterDeviceResponse) GetNonceEndpoint() string {
 	return ""
 }
 
-func (x *RegisterDeviceResponse) GetDth() string {
+func (x *RegisterDeviceResponse) GetDeviceToken() string {
 	if x != nil {
-		return x.Dth
+		return x.DeviceToken
 	}
 	return ""
 }
@@ -302,15 +302,15 @@ const file_sys_auth_apple_proto_rawDesc = "" +
 	"\x15device_encryption_key\x18\x02 \x01(\tR\x13deviceEncryptionKey\x12\x1c\n" +
 	"\n" +
 	"enc_key_id\x18\x03 \x01(\tR\bencKeyId\x12\x1e\n" +
-	"\vsign_key_id\x18\x04 \x01(\tR\tsignKeyId\"\xee\x01\n" +
+	"\vsign_key_id\x18\x04 \x01(\tR\tsignKeyId\"\xff\x01\n" +
 	"\x16RegisterDeviceResponse\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x16\n" +
 	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12%\n" +
 	"\x0etoken_endpoint\x18\x03 \x01(\tR\rtokenEndpoint\x12#\n" +
 	"\rjwks_endpoint\x18\x04 \x01(\tR\fjwksEndpoint\x12\x1a\n" +
 	"\baudience\x18\x05 \x01(\tR\baudience\x12%\n" +
-	"\x0enonce_endpoint\x18\x06 \x01(\tR\rnonceEndpoint\x12\x10\n" +
-	"\x03dth\x18\a \x01(\tR\x03dth2\xcd\x01\n" +
+	"\x0enonce_endpoint\x18\x06 \x01(\tR\rnonceEndpoint\x12!\n" +
+	"\fdevice_token\x18\a \x01(\tR\vdeviceToken2\xcd\x01\n" +
 	"\x0fSystemAuthApple\x12Y\n" +
 	"\fRegisterUser\x12#.sys_auth_apple.RegisterUserRequest\x1a$.sys_auth_apple.RegisterUserResponse\x12_\n" +
 	"\x0eRegisterDevice\x12%.sys_auth_apple.RegisterDeviceRequest\x1a&.sys_auth_apple.RegisterDeviceResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
