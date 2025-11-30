@@ -158,7 +158,7 @@ public class SysdBridge {
                 .append(
                     URLQueryItem(
                         name: "x-ak-device-token",
-                        value: res.deviceToken
+                        value: res.deviceToken.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
                     )
                 )
             return cfg

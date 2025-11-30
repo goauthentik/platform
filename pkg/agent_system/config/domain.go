@@ -169,7 +169,7 @@ func (c *Config) loadDomains() error {
 			c.log.WithError(err).Warning("failed to load domain")
 			continue
 		}
-		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain)
+		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain, keyring.AccessibleAlways)
 		if err != nil {
 			if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
 				c.log.WithError(err).Warning("failed to load domain token from keyring")
