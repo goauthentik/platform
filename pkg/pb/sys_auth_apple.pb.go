@@ -9,7 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	_ "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -26,6 +26,7 @@ type RegisterUserRequest struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	UserSecureEnclaveKey string                 `protobuf:"bytes,1,opt,name=user_secure_enclave_key,json=userSecureEnclaveKey,proto3" json:"user_secure_enclave_key,omitempty"`
 	EnclaveKeyId         string                 `protobuf:"bytes,2,opt,name=enclave_key_id,json=enclaveKeyId,proto3" json:"enclave_key_id,omitempty"`
+	UserAuth             string                 `protobuf:"bytes,3,opt,name=user_auth,json=userAuth,proto3" json:"user_auth,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -70,6 +71,13 @@ func (x *RegisterUserRequest) GetUserSecureEnclaveKey() string {
 func (x *RegisterUserRequest) GetEnclaveKeyId() string {
 	if x != nil {
 		return x.EnclaveKeyId
+	}
+	return ""
+}
+
+func (x *RegisterUserRequest) GetUserAuth() string {
+	if x != nil {
+		return x.UserAuth
 	}
 	return ""
 }
@@ -186,14 +194,107 @@ func (x *RegisterDeviceRequest) GetSignKeyId() string {
 	return ""
 }
 
+type RegisterDeviceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	Issuer        string                 `protobuf:"bytes,2,opt,name=issuer,proto3" json:"issuer,omitempty"`
+	TokenEndpoint string                 `protobuf:"bytes,3,opt,name=token_endpoint,json=tokenEndpoint,proto3" json:"token_endpoint,omitempty"`
+	JwksEndpoint  string                 `protobuf:"bytes,4,opt,name=jwks_endpoint,json=jwksEndpoint,proto3" json:"jwks_endpoint,omitempty"`
+	Audience      string                 `protobuf:"bytes,5,opt,name=audience,proto3" json:"audience,omitempty"`
+	NonceEndpoint string                 `protobuf:"bytes,6,opt,name=nonce_endpoint,json=nonceEndpoint,proto3" json:"nonce_endpoint,omitempty"`
+	DeviceToken   string                 `protobuf:"bytes,7,opt,name=device_token,json=deviceToken,proto3" json:"device_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterDeviceResponse) Reset() {
+	*x = RegisterDeviceResponse{}
+	mi := &file_sys_auth_apple_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterDeviceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterDeviceResponse) ProtoMessage() {}
+
+func (x *RegisterDeviceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sys_auth_apple_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterDeviceResponse.ProtoReflect.Descriptor instead.
+func (*RegisterDeviceResponse) Descriptor() ([]byte, []int) {
+	return file_sys_auth_apple_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *RegisterDeviceResponse) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *RegisterDeviceResponse) GetIssuer() string {
+	if x != nil {
+		return x.Issuer
+	}
+	return ""
+}
+
+func (x *RegisterDeviceResponse) GetTokenEndpoint() string {
+	if x != nil {
+		return x.TokenEndpoint
+	}
+	return ""
+}
+
+func (x *RegisterDeviceResponse) GetJwksEndpoint() string {
+	if x != nil {
+		return x.JwksEndpoint
+	}
+	return ""
+}
+
+func (x *RegisterDeviceResponse) GetAudience() string {
+	if x != nil {
+		return x.Audience
+	}
+	return ""
+}
+
+func (x *RegisterDeviceResponse) GetNonceEndpoint() string {
+	if x != nil {
+		return x.NonceEndpoint
+	}
+	return ""
+}
+
+func (x *RegisterDeviceResponse) GetDeviceToken() string {
+	if x != nil {
+		return x.DeviceToken
+	}
+	return ""
+}
+
 var File_sys_auth_apple_proto protoreflect.FileDescriptor
 
 const file_sys_auth_apple_proto_rawDesc = "" +
 	"\n" +
-	"\x14sys_auth_apple.proto\x12\x0esys_auth_apple\x1a\x1bgoogle/protobuf/empty.proto\"r\n" +
+	"\x14sys_auth_apple.proto\x12\x0esys_auth_apple\x1a\x1bgoogle/protobuf/empty.proto\"\x8f\x01\n" +
 	"\x13RegisterUserRequest\x125\n" +
 	"\x17user_secure_enclave_key\x18\x01 \x01(\tR\x14userSecureEnclaveKey\x12$\n" +
-	"\x0eenclave_key_id\x18\x02 \x01(\tR\fenclaveKeyId\"2\n" +
+	"\x0eenclave_key_id\x18\x02 \x01(\tR\fenclaveKeyId\x12\x1b\n" +
+	"\tuser_auth\x18\x03 \x01(\tR\buserAuth\"2\n" +
 	"\x14RegisterUserResponse\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\"\xb7\x01\n" +
 	"\x15RegisterDeviceRequest\x12,\n" +
@@ -201,10 +302,18 @@ const file_sys_auth_apple_proto_rawDesc = "" +
 	"\x15device_encryption_key\x18\x02 \x01(\tR\x13deviceEncryptionKey\x12\x1c\n" +
 	"\n" +
 	"enc_key_id\x18\x03 \x01(\tR\bencKeyId\x12\x1e\n" +
-	"\vsign_key_id\x18\x04 \x01(\tR\tsignKeyId2\xbd\x01\n" +
+	"\vsign_key_id\x18\x04 \x01(\tR\tsignKeyId\"\xff\x01\n" +
+	"\x16RegisterDeviceResponse\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x16\n" +
+	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12%\n" +
+	"\x0etoken_endpoint\x18\x03 \x01(\tR\rtokenEndpoint\x12#\n" +
+	"\rjwks_endpoint\x18\x04 \x01(\tR\fjwksEndpoint\x12\x1a\n" +
+	"\baudience\x18\x05 \x01(\tR\baudience\x12%\n" +
+	"\x0enonce_endpoint\x18\x06 \x01(\tR\rnonceEndpoint\x12!\n" +
+	"\fdevice_token\x18\a \x01(\tR\vdeviceToken2\xcd\x01\n" +
 	"\x0fSystemAuthApple\x12Y\n" +
-	"\fRegisterUser\x12#.sys_auth_apple.RegisterUserRequest\x1a$.sys_auth_apple.RegisterUserResponse\x12O\n" +
-	"\x0eRegisterDevice\x12%.sys_auth_apple.RegisterDeviceRequest\x1a\x16.google.protobuf.EmptyB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\fRegisterUser\x12#.sys_auth_apple.RegisterUserRequest\x1a$.sys_auth_apple.RegisterUserResponse\x12_\n" +
+	"\x0eRegisterDevice\x12%.sys_auth_apple.RegisterDeviceRequest\x1a&.sys_auth_apple.RegisterDeviceResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_sys_auth_apple_proto_rawDescOnce sync.Once
@@ -218,18 +327,18 @@ func file_sys_auth_apple_proto_rawDescGZIP() []byte {
 	return file_sys_auth_apple_proto_rawDescData
 }
 
-var file_sys_auth_apple_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_sys_auth_apple_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_sys_auth_apple_proto_goTypes = []any{
-	(*RegisterUserRequest)(nil),   // 0: sys_auth_apple.RegisterUserRequest
-	(*RegisterUserResponse)(nil),  // 1: sys_auth_apple.RegisterUserResponse
-	(*RegisterDeviceRequest)(nil), // 2: sys_auth_apple.RegisterDeviceRequest
-	(*emptypb.Empty)(nil),         // 3: google.protobuf.Empty
+	(*RegisterUserRequest)(nil),    // 0: sys_auth_apple.RegisterUserRequest
+	(*RegisterUserResponse)(nil),   // 1: sys_auth_apple.RegisterUserResponse
+	(*RegisterDeviceRequest)(nil),  // 2: sys_auth_apple.RegisterDeviceRequest
+	(*RegisterDeviceResponse)(nil), // 3: sys_auth_apple.RegisterDeviceResponse
 }
 var file_sys_auth_apple_proto_depIdxs = []int32{
 	0, // 0: sys_auth_apple.SystemAuthApple.RegisterUser:input_type -> sys_auth_apple.RegisterUserRequest
 	2, // 1: sys_auth_apple.SystemAuthApple.RegisterDevice:input_type -> sys_auth_apple.RegisterDeviceRequest
 	1, // 2: sys_auth_apple.SystemAuthApple.RegisterUser:output_type -> sys_auth_apple.RegisterUserResponse
-	3, // 3: sys_auth_apple.SystemAuthApple.RegisterDevice:output_type -> google.protobuf.Empty
+	3, // 3: sys_auth_apple.SystemAuthApple.RegisterDevice:output_type -> sys_auth_apple.RegisterDeviceResponse
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -248,7 +357,7 @@ func file_sys_auth_apple_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sys_auth_apple_proto_rawDesc), len(file_sys_auth_apple_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

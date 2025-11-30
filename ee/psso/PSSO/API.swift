@@ -1,7 +1,7 @@
 import AuthenticationServices
+import Bridge
 import CryptoKit
 import Foundation
-import Generated
 import OSLog
 
 class API {
@@ -11,43 +11,46 @@ class API {
     var logger: Logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!, category: "API")
 
-    func RegisterDevice(
-        loginConfig: ASAuthorizationProviderExtensionLoginConfiguration,
-        loginManager: ASAuthorizationProviderExtensionLoginManager,
-    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
+    func RegisterDevice(loginManager: ASAuthorizationProviderExtensionLoginManager) async
+        -> ASAuthorizationProviderExtensionLoginConfiguration?
+    {
         do {
             let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
                 from: loginManager.key(for: .currentDeviceSigning)!)!
             let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
                 from: loginManager.key(for: .currentDeviceEncryption)!)!
             self.logger.debug("registering device with sysd...")
-            try await SysdBridge.shared.pssoRegisterDevice(
+            let config = try await SysdBridge.shared.pssoRegisterDevice(
                 deviceSigningKey: DeviceSigningKey,
                 deviceEncryptionKey: DeviceEncryptionKey,
                 encKeyID: EncKeyID,
                 signKeyID: SignKeyID
             )
-            return .success
+            self.logger
+                .debug("Got device login config from server: \(String(describing: config))")
+            return config
         } catch {
             self.logger.error("failed to register: \(error)")
-            return .failed
+            return nil
         }
     }
 
     func RegisterUser(
-        loginConfig: ASAuthorizationProviderExtensionUserLoginConfiguration,
         loginManger: ASAuthorizationProviderExtensionLoginManager,
+        userToken: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
             let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
                 from: loginManger.key(for: .userSecureEnclaveKey)!)!
             self.logger.debug("registering user with sysd...")
-            let registerResult = try await SysdBridge.shared
+            let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
                     enclaveKeyID: EnclaveKeyID,
-                    userSecureEnclaveKey: UserSecureEnclaveKey
+                    userSecureEnclaveKey: UserSecureEnclaveKey,
+                    userAuth: userToken,
                 )
-            loginConfig.loginUserName = registerResult
+            self.logger
+                .debug("Got user login config from server: \(String(describing: loginConfig))")
             try loginManger.saveUserLoginConfiguration(loginConfig)
             return .success
         } catch {

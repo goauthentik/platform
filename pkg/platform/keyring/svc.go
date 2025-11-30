@@ -11,3 +11,10 @@ func Service(name string) string {
 }
 
 var ErrUnsupportedPlatform = errors.New("unsupported platform")
+
+type Accessibility string
+
+const (
+	AccessibleAlways Accessibility = "always"
+	AccessibleUser   Accessibility = "user"
+)

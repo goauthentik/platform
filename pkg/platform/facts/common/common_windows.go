@@ -3,27 +3,20 @@
 package common
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 )
 
-func GetWMICValue(class, property string) string {
-	cmd := exec.Command("wmic", class, "get", property, "/value")
+func GetWMIValue(class, property string) *string {
+	cmd := exec.Command("powershell", "-Command", fmt.Sprintf("(Get-WmiObject -Class %s).%s", class, property))
 	output, err := cmd.Output()
 	if err != nil {
-		return ""
+		return nil
 	}
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, property+"=") {
-			parts := strings.SplitN(line, "=", 2)
-			if len(parts) == 2 {
-				return strings.TrimSpace(parts[1])
-			}
-		}
+	out := strings.TrimSpace(string(output))
+	if out != "" {
+		return &out
 	}
-
-	return ""
+	return nil
 }

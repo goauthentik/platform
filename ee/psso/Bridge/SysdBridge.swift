@@ -1,3 +1,4 @@
+import AuthenticationServices
 //
 //  GRPC.swift
 //  PSSO
@@ -110,16 +111,21 @@ public class SysdBridge {
     public func pssoRegisterUser(
         enclaveKeyID: String,
         userSecureEnclaveKey: String,
-    ) async throws -> String {
-        return try await self.withClient {client in
+        userAuth: String,
+    ) async throws -> ASAuthorizationProviderExtensionUserLoginConfiguration {
+        return try await self.withClient { client in
             let c = SystemAuthApple.Client(wrapping: client)
-            let reply = try await c.registerUser(request: ClientRequest(
-                message: RegisterUserRequest.with {
-                    $0.enclaveKeyID = enclaveKeyID
-                    $0.userSecureEnclaveKey = userSecureEnclaveKey
-                }
-            ))
-            return reply.username
+            let reply = try await c.registerUser(
+                request: ClientRequest(
+                    message: RegisterUserRequest.with {
+                        $0.enclaveKeyID = enclaveKeyID
+                        $0.userSecureEnclaveKey = userSecureEnclaveKey
+                        $0.userAuth = userAuth
+                    }
+                ))
+            return ASAuthorizationProviderExtensionUserLoginConfiguration(
+                loginUserName: reply.username
+            )
         }
     }
 
@@ -128,17 +134,34 @@ public class SysdBridge {
         deviceEncryptionKey: String,
         encKeyID: String,
         signKeyID: String,
-    ) async throws {
-        return try await self.withClient {client in
+    ) async throws -> ASAuthorizationProviderExtensionLoginConfiguration {
+        return try await self.withClient { client in
             let c = SystemAuthApple.Client(wrapping: client)
-            let _ = try await c.registerDevice(request: ClientRequest(
-                message: RegisterDeviceRequest.with {
-                    $0.deviceSigningKey = deviceSigningKey
-                    $0.deviceEncryptionKey = deviceEncryptionKey
-                    $0.encKeyID = encKeyID
-                    $0.signKeyID = signKeyID
-                }
-            ))
+            let res = try await c.registerDevice(
+                request: ClientRequest(
+                    message: RegisterDeviceRequest.with {
+                        $0.deviceSigningKey = deviceSigningKey
+                        $0.deviceEncryptionKey = deviceEncryptionKey
+                        $0.encKeyID = encKeyID
+                        $0.signKeyID = signKeyID
+                    }
+                ))
+            let cfg = ASAuthorizationProviderExtensionLoginConfiguration(
+                clientID: res.clientID,
+                issuer: res.issuer,
+                tokenEndpointURL: URL(string: res.tokenEndpoint)!,
+                jwksEndpointURL: URL(string: res.jwksEndpoint)!,
+                audience: res.audience
+            )
+            cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
+            cfg.customNonceRequestValues
+                .append(
+                    URLQueryItem(
+                        name: "x-ak-device-token",
+                        value: res.deviceToken.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+                    )
+                )
+            return cfg
         }
     }
 }

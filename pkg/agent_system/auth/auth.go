@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"runtime"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -18,6 +19,7 @@ type Server struct {
 	pb.UnimplementedSystemAuthTokenServer
 	pb.UnimplementedSystemAuthInteractiveServer
 	pb.UnimplementedSystemAuthAuthorizeServer
+	pb.UnimplementedSystemAuthAppleServer
 
 	api *api.APIClient
 	log *log.Entry
@@ -79,5 +81,8 @@ func (auth *Server) Register(s grpc.ServiceRegistrar) {
 	}
 	if auth.authorizationEnabled {
 		pb.RegisterSystemAuthAuthorizeServer(s, auth)
+	}
+	if runtime.GOOS == "darwin" {
+		pb.RegisterSystemAuthAppleServer(s, auth)
 	}
 }

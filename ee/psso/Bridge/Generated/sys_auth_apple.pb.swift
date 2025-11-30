@@ -29,6 +29,8 @@ struct RegisterUserRequest: Sendable {
 
   var enclaveKeyID: String = String()
 
+  var userAuth: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -64,13 +66,37 @@ struct RegisterDeviceRequest: Sendable {
   init() {}
 }
 
+struct RegisterDeviceResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var clientID: String = String()
+
+  var issuer: String = String()
+
+  var tokenEndpoint: String = String()
+
+  var jwksEndpoint: String = String()
+
+  var audience: String = String()
+
+  var nonceEndpoint: String = String()
+
+  var deviceToken: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "sys_auth_apple"
 
 extension RegisterUserRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterUserRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_secure_enclave_key\0\u{3}enclave_key_id\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_secure_enclave_key\0\u{3}enclave_key_id\0\u{3}user_auth\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -80,6 +106,7 @@ extension RegisterUserRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.userSecureEnclaveKey) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.enclaveKeyID) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.userAuth) }()
       default: break
       }
     }
@@ -92,12 +119,16 @@ extension RegisterUserRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if !self.enclaveKeyID.isEmpty {
       try visitor.visitSingularStringField(value: self.enclaveKeyID, fieldNumber: 2)
     }
+    if !self.userAuth.isEmpty {
+      try visitor.visitSingularStringField(value: self.userAuth, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: RegisterUserRequest, rhs: RegisterUserRequest) -> Bool {
     if lhs.userSecureEnclaveKey != rhs.userSecureEnclaveKey {return false}
     if lhs.enclaveKeyID != rhs.enclaveKeyID {return false}
+    if lhs.userAuth != rhs.userAuth {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -173,6 +204,66 @@ extension RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     if lhs.deviceEncryptionKey != rhs.deviceEncryptionKey {return false}
     if lhs.encKeyID != rhs.encKeyID {return false}
     if lhs.signKeyID != rhs.signKeyID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".RegisterDeviceResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0\u{3}device_token\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.clientID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.issuer) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.tokenEndpoint) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.jwksEndpoint) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.audience) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self.nonceEndpoint) }()
+      case 7: try { try decoder.decodeSingularStringField(value: &self.deviceToken) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.clientID.isEmpty {
+      try visitor.visitSingularStringField(value: self.clientID, fieldNumber: 1)
+    }
+    if !self.issuer.isEmpty {
+      try visitor.visitSingularStringField(value: self.issuer, fieldNumber: 2)
+    }
+    if !self.tokenEndpoint.isEmpty {
+      try visitor.visitSingularStringField(value: self.tokenEndpoint, fieldNumber: 3)
+    }
+    if !self.jwksEndpoint.isEmpty {
+      try visitor.visitSingularStringField(value: self.jwksEndpoint, fieldNumber: 4)
+    }
+    if !self.audience.isEmpty {
+      try visitor.visitSingularStringField(value: self.audience, fieldNumber: 5)
+    }
+    if !self.nonceEndpoint.isEmpty {
+      try visitor.visitSingularStringField(value: self.nonceEndpoint, fieldNumber: 6)
+    }
+    if !self.deviceToken.isEmpty {
+      try visitor.visitSingularStringField(value: self.deviceToken, fieldNumber: 7)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: RegisterDeviceResponse, rhs: RegisterDeviceResponse) -> Bool {
+    if lhs.clientID != rhs.clientID {return false}
+    if lhs.issuer != rhs.issuer {return false}
+    if lhs.tokenEndpoint != rhs.tokenEndpoint {return false}
+    if lhs.jwksEndpoint != rhs.jwksEndpoint {return false}
+    if lhs.audience != rhs.audience {return false}
+    if lhs.nonceEndpoint != rhs.nonceEndpoint {return false}
+    if lhs.deviceToken != rhs.deviceToken {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

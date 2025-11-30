@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -29,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemAuthAppleClient interface {
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
-	RegisterDevice(ctx context.Context, in *RegisterDeviceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RegisterDevice(ctx context.Context, in *RegisterDeviceRequest, opts ...grpc.CallOption) (*RegisterDeviceResponse, error)
 }
 
 type systemAuthAppleClient struct {
@@ -50,9 +49,9 @@ func (c *systemAuthAppleClient) RegisterUser(ctx context.Context, in *RegisterUs
 	return out, nil
 }
 
-func (c *systemAuthAppleClient) RegisterDevice(ctx context.Context, in *RegisterDeviceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *systemAuthAppleClient) RegisterDevice(ctx context.Context, in *RegisterDeviceRequest, opts ...grpc.CallOption) (*RegisterDeviceResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(RegisterDeviceResponse)
 	err := c.cc.Invoke(ctx, SystemAuthApple_RegisterDevice_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -65,7 +64,7 @@ func (c *systemAuthAppleClient) RegisterDevice(ctx context.Context, in *Register
 // for forward compatibility.
 type SystemAuthAppleServer interface {
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
-	RegisterDevice(context.Context, *RegisterDeviceRequest) (*emptypb.Empty, error)
+	RegisterDevice(context.Context, *RegisterDeviceRequest) (*RegisterDeviceResponse, error)
 	mustEmbedUnimplementedSystemAuthAppleServer()
 }
 
@@ -79,7 +78,7 @@ type UnimplementedSystemAuthAppleServer struct{}
 func (UnimplementedSystemAuthAppleServer) RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RegisterUser not implemented")
 }
-func (UnimplementedSystemAuthAppleServer) RegisterDevice(context.Context, *RegisterDeviceRequest) (*emptypb.Empty, error) {
+func (UnimplementedSystemAuthAppleServer) RegisterDevice(context.Context, *RegisterDeviceRequest) (*RegisterDeviceResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RegisterDevice not implemented")
 }
 func (UnimplementedSystemAuthAppleServer) mustEmbedUnimplementedSystemAuthAppleServer() {}
