@@ -1,3 +1,5 @@
+//go:build linux || darwin
+
 package grpc_creds_test
 
 import (
