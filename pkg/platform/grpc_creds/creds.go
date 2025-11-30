@@ -8,7 +8,17 @@ import (
 
 	"github.com/shirou/gopsutil/v4/process"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/peer"
 )
+
+func AuthFromContext(ctx context.Context) *Creds {
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return nil
+	}
+	creds := p.AuthInfo.(AuthInfo).Creds
+	return creds
+}
 
 type transportCredentials struct {
 }
@@ -41,7 +51,7 @@ func (c *transportCredentials) ServerHandshake(conn net.Conn) (net.Conn, credent
 		if err != nil {
 			return nil, nil, err
 		}
-		parent, err := creds.Proc.Process.Parent()
+		parent, err := creds.Proc.Parent()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -95,7 +105,7 @@ func ProcInfoFrom(pid int32) (*ProcInfo, error) {
 }
 
 func (pi *ProcInfo) String() string {
-	return fmt.Sprintf("Process <id=%s, exe=%s, cmdline=%s>", pi.Process.Pid, pi.Exe, pi.Cmdline)
+	return fmt.Sprintf("Process <id=%d, exe=%s, cmdline=%s>", pi.Process.Pid, pi.Exe, pi.Cmdline)
 }
 
 type Creds struct {

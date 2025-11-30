@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"goauthentik.io/platform/pkg/platform/authz"
 	"goauthentik.io/platform/pkg/platform/grpc_creds"
-	"google.golang.org/grpc/peer"
 )
 
 var (
@@ -15,11 +14,10 @@ var (
 )
 
 func (a *Agent) authorizeRequest(ctx context.Context, profile string, action authz.AuthorizeAction) (err error) {
-	p, ok := peer.FromContext(ctx)
-	if !ok {
+	creds := grpc_creds.AuthFromContext(ctx)
+	if creds == nil {
 		return errFailedAuth
 	}
-	creds := p.AuthInfo.(grpc_creds.AuthInfo).Creds
 	auth, err := authz.Prompt(action, profile, creds)
 	if err != nil {
 		return err
