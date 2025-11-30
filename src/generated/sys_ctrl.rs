@@ -23,5 +23,5 @@ pub struct DomainEnrollRequest {
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct DomainEnrollResponse {
 }
-include!("sys_config.tonic.rs");
+include!("sys_ctrl.tonic.rs");
 // @@protoc_insertion_point(module)

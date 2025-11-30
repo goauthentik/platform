@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package agent_config;
+package agent_ctrl;
 option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "agent.proto";
 import "google/protobuf/empty.proto";
 
-service AgentConfig {
+service AgentCtrl {
   rpc ListProfiles(google.protobuf.Empty) returns (ListProfilesResponse);
   rpc Setup(SetupRequest) returns (SetupResponse);
 }

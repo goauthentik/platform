@@ -11,7 +11,7 @@ import (
 const ID = "ctrl"
 
 type Server struct {
-	pb.UnimplementedSystemConfigServer
+	pb.UnimplementedSystemCtrlServer
 
 	log *log.Entry
 	ctx component.Context
@@ -36,5 +36,5 @@ func (ctrl *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 	if id != types.SocketIDCtrl {
 		return
 	}
-	pb.RegisterSystemConfigServer(s, ctrl)
+	pb.RegisterSystemCtrlServer(s, ctrl)
 }

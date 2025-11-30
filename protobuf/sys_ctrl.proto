@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-package sys_config;
+package sys_ctrl;
 option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "google/protobuf/empty.proto";
 
-service SystemConfig {
+service SystemCtrl {
   rpc DomainList(google.protobuf.Empty) returns (DomainListResponse);
   rpc DomainEnroll(DomainEnrollRequest) returns (DomainEnrollResponse);
 }

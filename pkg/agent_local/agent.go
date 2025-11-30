@@ -20,7 +20,7 @@ import (
 type Agent struct {
 	pb.UnimplementedAgentAuthServer
 	pb.UnimplementedAgentCacheServer
-	pb.UnimplementedAgentConfigServer
+	pb.UnimplementedAgentCtrlServer
 
 	grpc *grpc.Server
 	cfg  *cfgmgr.Manager[config.ConfigV1]

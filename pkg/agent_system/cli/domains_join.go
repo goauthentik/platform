@@ -34,7 +34,7 @@ var domainsJoinCmd = &cobra.Command{
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to ctrl")
 		}
-		_, err = sc.SystemConfigClient.DomainEnroll(cmd.Context(), &pb.DomainEnrollRequest{
+		_, err = sc.DomainEnroll(cmd.Context(), &pb.DomainEnrollRequest{
 			Name:         args[0],
 			AuthentikUrl: base,
 			Token:        token,

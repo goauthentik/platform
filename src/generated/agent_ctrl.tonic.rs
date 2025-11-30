@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod system_config_client {
+pub mod agent_ctrl_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod system_config_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct SystemConfigClient<T> {
+    pub struct AgentCtrlClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl SystemConfigClient<tonic::transport::Channel> {
+    impl AgentCtrlClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,7 +25,7 @@ pub mod system_config_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> SystemConfigClient<T>
+    impl<T> AgentCtrlClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -43,7 +43,7 @@ pub mod system_config_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> SystemConfigClient<InterceptedService<T, F>>
+        ) -> AgentCtrlClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -57,7 +57,7 @@ pub mod system_config_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            SystemConfigClient::new(InterceptedService::new(inner, interceptor))
+            AgentCtrlClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,11 +90,11 @@ pub mod system_config_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn domain_list(
+        pub async fn list_profiles(
             &mut self,
             request: impl tonic::IntoRequest<()>,
         ) -> std::result::Result<
-            tonic::Response<super::DomainListResponse>,
+            tonic::Response<super::ListProfilesResponse>,
             tonic::Status,
         > {
             self.inner
@@ -107,20 +107,17 @@ pub mod system_config_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/sys_config.SystemConfig/DomainList",
+                "/agent_ctrl.AgentCtrl/ListProfiles",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("sys_config.SystemConfig", "DomainList"));
+                .insert(GrpcMethod::new("agent_ctrl.AgentCtrl", "ListProfiles"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn domain_enroll(
+        pub async fn setup(
             &mut self,
-            request: impl tonic::IntoRequest<super::DomainEnrollRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::DomainEnrollResponse>,
-            tonic::Status,
-        > {
+            request: impl tonic::IntoRequest<super::SetupRequest>,
+        ) -> std::result::Result<tonic::Response<super::SetupResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -131,11 +128,11 @@ pub mod system_config_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/sys_config.SystemConfig/DomainEnroll",
+                "/agent_ctrl.AgentCtrl/Setup",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("sys_config.SystemConfig", "DomainEnroll"));
+                .insert(GrpcMethod::new("agent_ctrl.AgentCtrl", "Setup"));
             self.inner.unary(req, path, codec).await
         }
     }

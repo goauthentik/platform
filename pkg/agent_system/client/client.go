@@ -19,7 +19,7 @@ type SysdClient struct {
 	pb.SessionManagerClient
 	pb.AgentPlatformClient
 	pb.PingClient
-	pb.SystemConfigClient
+	pb.SystemCtrlClient
 
 	conn *grpc.ClientConn
 }
@@ -60,7 +60,7 @@ func New(id string) (*SysdClient, error) {
 		pb.NewSessionManagerClient(conn),
 		pb.NewAgentPlatformClient(conn),
 		pb.NewPingClient(conn),
-		pb.NewSystemConfigClient(conn),
+		pb.NewSystemCtrlClient(conn),
 		conn,
 	}, nil
 }

@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v6.33.1
-// source: sys_config.proto
+// source: sys_ctrl.proto
 
 package pb
 
@@ -31,7 +31,7 @@ type Domain struct {
 
 func (x *Domain) Reset() {
 	*x = Domain{}
-	mi := &file_sys_config_proto_msgTypes[0]
+	mi := &file_sys_ctrl_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -43,7 +43,7 @@ func (x *Domain) String() string {
 func (*Domain) ProtoMessage() {}
 
 func (x *Domain) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_config_proto_msgTypes[0]
+	mi := &file_sys_ctrl_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -56,7 +56,7 @@ func (x *Domain) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Domain.ProtoReflect.Descriptor instead.
 func (*Domain) Descriptor() ([]byte, []int) {
-	return file_sys_config_proto_rawDescGZIP(), []int{0}
+	return file_sys_ctrl_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Domain) GetName() string {
@@ -75,7 +75,7 @@ type DomainListResponse struct {
 
 func (x *DomainListResponse) Reset() {
 	*x = DomainListResponse{}
-	mi := &file_sys_config_proto_msgTypes[1]
+	mi := &file_sys_ctrl_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -87,7 +87,7 @@ func (x *DomainListResponse) String() string {
 func (*DomainListResponse) ProtoMessage() {}
 
 func (x *DomainListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_config_proto_msgTypes[1]
+	mi := &file_sys_ctrl_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -100,7 +100,7 @@ func (x *DomainListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DomainListResponse.ProtoReflect.Descriptor instead.
 func (*DomainListResponse) Descriptor() ([]byte, []int) {
-	return file_sys_config_proto_rawDescGZIP(), []int{1}
+	return file_sys_ctrl_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *DomainListResponse) GetDomains() []*Domain {
@@ -121,7 +121,7 @@ type DomainEnrollRequest struct {
 
 func (x *DomainEnrollRequest) Reset() {
 	*x = DomainEnrollRequest{}
-	mi := &file_sys_config_proto_msgTypes[2]
+	mi := &file_sys_ctrl_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -133,7 +133,7 @@ func (x *DomainEnrollRequest) String() string {
 func (*DomainEnrollRequest) ProtoMessage() {}
 
 func (x *DomainEnrollRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_config_proto_msgTypes[2]
+	mi := &file_sys_ctrl_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -146,7 +146,7 @@ func (x *DomainEnrollRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DomainEnrollRequest.ProtoReflect.Descriptor instead.
 func (*DomainEnrollRequest) Descriptor() ([]byte, []int) {
-	return file_sys_config_proto_rawDescGZIP(), []int{2}
+	return file_sys_ctrl_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *DomainEnrollRequest) GetName() string {
@@ -178,7 +178,7 @@ type DomainEnrollResponse struct {
 
 func (x *DomainEnrollResponse) Reset() {
 	*x = DomainEnrollResponse{}
-	mi := &file_sys_config_proto_msgTypes[3]
+	mi := &file_sys_ctrl_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -190,7 +190,7 @@ func (x *DomainEnrollResponse) String() string {
 func (*DomainEnrollResponse) ProtoMessage() {}
 
 func (x *DomainEnrollResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_config_proto_msgTypes[3]
+	mi := &file_sys_ctrl_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -203,55 +203,55 @@ func (x *DomainEnrollResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DomainEnrollResponse.ProtoReflect.Descriptor instead.
 func (*DomainEnrollResponse) Descriptor() ([]byte, []int) {
-	return file_sys_config_proto_rawDescGZIP(), []int{3}
+	return file_sys_ctrl_proto_rawDescGZIP(), []int{3}
 }
 
-var File_sys_config_proto protoreflect.FileDescriptor
+var File_sys_ctrl_proto protoreflect.FileDescriptor
 
-const file_sys_config_proto_rawDesc = "" +
+const file_sys_ctrl_proto_rawDesc = "" +
 	"\n" +
-	"\x10sys_config.proto\x12\n" +
-	"sys_config\x1a\x1bgoogle/protobuf/empty.proto\"\x1c\n" +
+	"\x0esys_ctrl.proto\x12\bsys_ctrl\x1a\x1bgoogle/protobuf/empty.proto\"\x1c\n" +
 	"\x06Domain\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"B\n" +
-	"\x12DomainListResponse\x12,\n" +
-	"\adomains\x18\x01 \x03(\v2\x12.sys_config.DomainR\adomains\"d\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"@\n" +
+	"\x12DomainListResponse\x12*\n" +
+	"\adomains\x18\x01 \x03(\v2\x10.sys_ctrl.DomainR\adomains\"d\n" +
 	"\x13DomainEnrollRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12#\n" +
 	"\rauthentik_url\x18\x02 \x01(\tR\fauthentikUrl\x12\x14\n" +
 	"\x05token\x18\x03 \x01(\tR\x05token\"\x16\n" +
-	"\x14DomainEnrollResponse2\xa7\x01\n" +
-	"\fSystemConfig\x12D\n" +
+	"\x14DomainEnrollResponse2\x9f\x01\n" +
 	"\n" +
-	"DomainList\x12\x16.google.protobuf.Empty\x1a\x1e.sys_config.DomainListResponse\x12Q\n" +
-	"\fDomainEnroll\x12\x1f.sys_config.DomainEnrollRequest\x1a .sys_config.DomainEnrollResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"SystemCtrl\x12B\n" +
+	"\n" +
+	"DomainList\x12\x16.google.protobuf.Empty\x1a\x1c.sys_ctrl.DomainListResponse\x12M\n" +
+	"\fDomainEnroll\x12\x1d.sys_ctrl.DomainEnrollRequest\x1a\x1e.sys_ctrl.DomainEnrollResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
-	file_sys_config_proto_rawDescOnce sync.Once
-	file_sys_config_proto_rawDescData []byte
+	file_sys_ctrl_proto_rawDescOnce sync.Once
+	file_sys_ctrl_proto_rawDescData []byte
 )
 
-func file_sys_config_proto_rawDescGZIP() []byte {
-	file_sys_config_proto_rawDescOnce.Do(func() {
-		file_sys_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_sys_config_proto_rawDesc), len(file_sys_config_proto_rawDesc)))
+func file_sys_ctrl_proto_rawDescGZIP() []byte {
+	file_sys_ctrl_proto_rawDescOnce.Do(func() {
+		file_sys_ctrl_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_sys_ctrl_proto_rawDesc), len(file_sys_ctrl_proto_rawDesc)))
 	})
-	return file_sys_config_proto_rawDescData
+	return file_sys_ctrl_proto_rawDescData
 }
 
-var file_sys_config_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_sys_config_proto_goTypes = []any{
-	(*Domain)(nil),               // 0: sys_config.Domain
-	(*DomainListResponse)(nil),   // 1: sys_config.DomainListResponse
-	(*DomainEnrollRequest)(nil),  // 2: sys_config.DomainEnrollRequest
-	(*DomainEnrollResponse)(nil), // 3: sys_config.DomainEnrollResponse
+var file_sys_ctrl_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_sys_ctrl_proto_goTypes = []any{
+	(*Domain)(nil),               // 0: sys_ctrl.Domain
+	(*DomainListResponse)(nil),   // 1: sys_ctrl.DomainListResponse
+	(*DomainEnrollRequest)(nil),  // 2: sys_ctrl.DomainEnrollRequest
+	(*DomainEnrollResponse)(nil), // 3: sys_ctrl.DomainEnrollResponse
 	(*emptypb.Empty)(nil),        // 4: google.protobuf.Empty
 }
-var file_sys_config_proto_depIdxs = []int32{
-	0, // 0: sys_config.DomainListResponse.domains:type_name -> sys_config.Domain
-	4, // 1: sys_config.SystemConfig.DomainList:input_type -> google.protobuf.Empty
-	2, // 2: sys_config.SystemConfig.DomainEnroll:input_type -> sys_config.DomainEnrollRequest
-	1, // 3: sys_config.SystemConfig.DomainList:output_type -> sys_config.DomainListResponse
-	3, // 4: sys_config.SystemConfig.DomainEnroll:output_type -> sys_config.DomainEnrollResponse
+var file_sys_ctrl_proto_depIdxs = []int32{
+	0, // 0: sys_ctrl.DomainListResponse.domains:type_name -> sys_ctrl.Domain
+	4, // 1: sys_ctrl.SystemCtrl.DomainList:input_type -> google.protobuf.Empty
+	2, // 2: sys_ctrl.SystemCtrl.DomainEnroll:input_type -> sys_ctrl.DomainEnrollRequest
+	1, // 3: sys_ctrl.SystemCtrl.DomainList:output_type -> sys_ctrl.DomainListResponse
+	3, // 4: sys_ctrl.SystemCtrl.DomainEnroll:output_type -> sys_ctrl.DomainEnrollResponse
 	3, // [3:5] is the sub-list for method output_type
 	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -259,26 +259,26 @@ var file_sys_config_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_sys_config_proto_init() }
-func file_sys_config_proto_init() {
-	if File_sys_config_proto != nil {
+func init() { file_sys_ctrl_proto_init() }
+func file_sys_ctrl_proto_init() {
+	if File_sys_ctrl_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sys_config_proto_rawDesc), len(file_sys_config_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sys_ctrl_proto_rawDesc), len(file_sys_ctrl_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_sys_config_proto_goTypes,
-		DependencyIndexes: file_sys_config_proto_depIdxs,
-		MessageInfos:      file_sys_config_proto_msgTypes,
+		GoTypes:           file_sys_ctrl_proto_goTypes,
+		DependencyIndexes: file_sys_ctrl_proto_depIdxs,
+		MessageInfos:      file_sys_ctrl_proto_msgTypes,
 	}.Build()
-	File_sys_config_proto = out.File
-	file_sys_config_proto_goTypes = nil
-	file_sys_config_proto_depIdxs = nil
+	File_sys_ctrl_proto = out.File
+	file_sys_ctrl_proto_goTypes = nil
+	file_sys_ctrl_proto_depIdxs = nil
 }
