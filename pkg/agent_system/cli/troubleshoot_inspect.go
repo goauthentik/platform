@@ -14,9 +14,6 @@ import (
 var troubleshootInspectCmd = &cobra.Command{
 	Use:   "inspect",
 	Short: "Inspect state",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return agentPrecheck()
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		sc, err := client.NewCtrl()
 		if err != nil {

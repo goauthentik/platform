@@ -12,9 +12,6 @@ import (
 var troubleshootFactsCmd = &cobra.Command{
 	Use:   "facts",
 	Short: "Inspect facts",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return agentPrecheck()
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		facts, err := facts.Gather(log.WithField("cmd", "facts"))
 		if err != nil {

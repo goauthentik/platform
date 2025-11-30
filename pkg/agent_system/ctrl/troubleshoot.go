@@ -11,7 +11,8 @@ import (
 
 func (ctrl *Server) TroubleshootInspect(ctx context.Context, r *emptypb.Empty) (*pb.TroubleshootInspectResponse, error) {
 	res := &pb.TroubleshootInspectResponse{
-		Bucket: "root",
+		Bucket:   "root",
+		Children: []*pb.TroubleshootInspectResponse{},
 	}
 	err := config.State().View(func(tx *bbolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bbolt.Bucket) error {
@@ -24,7 +25,9 @@ func (ctrl *Server) TroubleshootInspect(ctx context.Context, r *emptypb.Empty) (
 
 func inspectBucket(name []byte, b *bbolt.Bucket) *pb.TroubleshootInspectResponse {
 	res := &pb.TroubleshootInspectResponse{
-		Bucket: string(name),
+		Bucket:   string(name),
+		Children: []*pb.TroubleshootInspectResponse{},
+		Kv:       map[string]string{},
 	}
 	seenKeys := map[string]struct{}{}
 	_ = b.ForEachBucket(func(k []byte) error {
