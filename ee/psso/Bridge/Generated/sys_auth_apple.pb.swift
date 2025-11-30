@@ -83,6 +83,8 @@ struct RegisterDeviceResponse: Sendable {
 
   var nonceEndpoint: String = String()
 
+  var dth: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -209,7 +211,7 @@ extension RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
 
 extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0\u{1}dth\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -223,6 +225,7 @@ extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageI
       case 4: try { try decoder.decodeSingularStringField(value: &self.jwksEndpoint) }()
       case 5: try { try decoder.decodeSingularStringField(value: &self.audience) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.nonceEndpoint) }()
+      case 7: try { try decoder.decodeSingularStringField(value: &self.dth) }()
       default: break
       }
     }
@@ -247,6 +250,9 @@ extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     if !self.nonceEndpoint.isEmpty {
       try visitor.visitSingularStringField(value: self.nonceEndpoint, fieldNumber: 6)
     }
+    if !self.dth.isEmpty {
+      try visitor.visitSingularStringField(value: self.dth, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -257,6 +263,7 @@ extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     if lhs.jwksEndpoint != rhs.jwksEndpoint {return false}
     if lhs.audience != rhs.audience {return false}
     if lhs.nonceEndpoint != rhs.nonceEndpoint {return false}
+    if lhs.dth != rhs.dth {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -35,4 +35,5 @@ message RegisterDeviceResponse {
   string jwks_endpoint = 4;
   string audience = 5;
   string nonce_endpoint = 6;
+  string dth = 7;
 }

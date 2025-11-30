@@ -49,5 +49,6 @@ func (auth *Server) RegisterDevice(ctx context.Context, req *pb.RegisterDeviceRe
 		JwksEndpoint:  d.JwksEndpoint,
 		Audience:      d.Audience,
 		NonceEndpoint: d.NonceEndpoint,
+		Dth:           auth.DeviceTokenHash(),
 	}, nil
 }

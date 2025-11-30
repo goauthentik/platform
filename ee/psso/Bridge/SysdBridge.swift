@@ -154,6 +154,7 @@ public class SysdBridge {
                 audience: res.audience
             )
             cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
+            try cfg.setCustomLoginRequestBodyClaims(["x-ak-dti": res.dth])
             return cfg
         }
     }
