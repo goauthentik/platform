@@ -172,6 +172,7 @@ func (x *DomainEnrollRequest) GetToken() string {
 
 type DomainEnrollResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	DeviceId      string                 `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -206,6 +207,73 @@ func (*DomainEnrollResponse) Descriptor() ([]byte, []int) {
 	return file_sys_ctrl_proto_rawDescGZIP(), []int{3}
 }
 
+func (x *DomainEnrollResponse) GetDeviceId() string {
+	if x != nil {
+		return x.DeviceId
+	}
+	return ""
+}
+
+type TroubleshootInspectResponse struct {
+	state         protoimpl.MessageState         `protogen:"open.v1"`
+	Bucket        string                         `protobuf:"bytes,1,opt,name=bucket,proto3" json:"bucket,omitempty"`
+	Kv            map[string]string              `protobuf:"bytes,2,rep,name=kv,proto3" json:"kv,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Children      []*TroubleshootInspectResponse `protobuf:"bytes,3,rep,name=children,proto3" json:"children,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TroubleshootInspectResponse) Reset() {
+	*x = TroubleshootInspectResponse{}
+	mi := &file_sys_ctrl_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TroubleshootInspectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TroubleshootInspectResponse) ProtoMessage() {}
+
+func (x *TroubleshootInspectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sys_ctrl_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TroubleshootInspectResponse.ProtoReflect.Descriptor instead.
+func (*TroubleshootInspectResponse) Descriptor() ([]byte, []int) {
+	return file_sys_ctrl_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *TroubleshootInspectResponse) GetBucket() string {
+	if x != nil {
+		return x.Bucket
+	}
+	return ""
+}
+
+func (x *TroubleshootInspectResponse) GetKv() map[string]string {
+	if x != nil {
+		return x.Kv
+	}
+	return nil
+}
+
+func (x *TroubleshootInspectResponse) GetChildren() []*TroubleshootInspectResponse {
+	if x != nil {
+		return x.Children
+	}
+	return nil
+}
+
 var File_sys_ctrl_proto protoreflect.FileDescriptor
 
 const file_sys_ctrl_proto_rawDesc = "" +
@@ -218,13 +286,22 @@ const file_sys_ctrl_proto_rawDesc = "" +
 	"\x13DomainEnrollRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12#\n" +
 	"\rauthentik_url\x18\x02 \x01(\tR\fauthentikUrl\x12\x14\n" +
-	"\x05token\x18\x03 \x01(\tR\x05token\"\x16\n" +
-	"\x14DomainEnrollResponse2\x9f\x01\n" +
+	"\x05token\x18\x03 \x01(\tR\x05token\"3\n" +
+	"\x14DomainEnrollResponse\x12\x1b\n" +
+	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\"\xee\x01\n" +
+	"\x1bTroubleshootInspectResponse\x12\x16\n" +
+	"\x06bucket\x18\x01 \x01(\tR\x06bucket\x12=\n" +
+	"\x02kv\x18\x02 \x03(\v2-.sys_ctrl.TroubleshootInspectResponse.KvEntryR\x02kv\x12A\n" +
+	"\bchildren\x18\x03 \x03(\v2%.sys_ctrl.TroubleshootInspectResponseR\bchildren\x1a5\n" +
+	"\aKvEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\xf5\x01\n" +
 	"\n" +
 	"SystemCtrl\x12B\n" +
 	"\n" +
 	"DomainList\x12\x16.google.protobuf.Empty\x1a\x1c.sys_ctrl.DomainListResponse\x12M\n" +
-	"\fDomainEnroll\x12\x1d.sys_ctrl.DomainEnrollRequest\x1a\x1e.sys_ctrl.DomainEnrollResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\fDomainEnroll\x12\x1d.sys_ctrl.DomainEnrollRequest\x1a\x1e.sys_ctrl.DomainEnrollResponse\x12T\n" +
+	"\x13TroubleshootInspect\x12\x16.google.protobuf.Empty\x1a%.sys_ctrl.TroubleshootInspectResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_sys_ctrl_proto_rawDescOnce sync.Once
@@ -238,25 +315,31 @@ func file_sys_ctrl_proto_rawDescGZIP() []byte {
 	return file_sys_ctrl_proto_rawDescData
 }
 
-var file_sys_ctrl_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_sys_ctrl_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_sys_ctrl_proto_goTypes = []any{
-	(*Domain)(nil),               // 0: sys_ctrl.Domain
-	(*DomainListResponse)(nil),   // 1: sys_ctrl.DomainListResponse
-	(*DomainEnrollRequest)(nil),  // 2: sys_ctrl.DomainEnrollRequest
-	(*DomainEnrollResponse)(nil), // 3: sys_ctrl.DomainEnrollResponse
-	(*emptypb.Empty)(nil),        // 4: google.protobuf.Empty
+	(*Domain)(nil),                      // 0: sys_ctrl.Domain
+	(*DomainListResponse)(nil),          // 1: sys_ctrl.DomainListResponse
+	(*DomainEnrollRequest)(nil),         // 2: sys_ctrl.DomainEnrollRequest
+	(*DomainEnrollResponse)(nil),        // 3: sys_ctrl.DomainEnrollResponse
+	(*TroubleshootInspectResponse)(nil), // 4: sys_ctrl.TroubleshootInspectResponse
+	nil,                                 // 5: sys_ctrl.TroubleshootInspectResponse.KvEntry
+	(*emptypb.Empty)(nil),               // 6: google.protobuf.Empty
 }
 var file_sys_ctrl_proto_depIdxs = []int32{
 	0, // 0: sys_ctrl.DomainListResponse.domains:type_name -> sys_ctrl.Domain
-	4, // 1: sys_ctrl.SystemCtrl.DomainList:input_type -> google.protobuf.Empty
-	2, // 2: sys_ctrl.SystemCtrl.DomainEnroll:input_type -> sys_ctrl.DomainEnrollRequest
-	1, // 3: sys_ctrl.SystemCtrl.DomainList:output_type -> sys_ctrl.DomainListResponse
-	3, // 4: sys_ctrl.SystemCtrl.DomainEnroll:output_type -> sys_ctrl.DomainEnrollResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 1: sys_ctrl.TroubleshootInspectResponse.kv:type_name -> sys_ctrl.TroubleshootInspectResponse.KvEntry
+	4, // 2: sys_ctrl.TroubleshootInspectResponse.children:type_name -> sys_ctrl.TroubleshootInspectResponse
+	6, // 3: sys_ctrl.SystemCtrl.DomainList:input_type -> google.protobuf.Empty
+	2, // 4: sys_ctrl.SystemCtrl.DomainEnroll:input_type -> sys_ctrl.DomainEnrollRequest
+	6, // 5: sys_ctrl.SystemCtrl.TroubleshootInspect:input_type -> google.protobuf.Empty
+	1, // 6: sys_ctrl.SystemCtrl.DomainList:output_type -> sys_ctrl.DomainListResponse
+	3, // 7: sys_ctrl.SystemCtrl.DomainEnroll:output_type -> sys_ctrl.DomainEnrollResponse
+	4, // 8: sys_ctrl.SystemCtrl.TroubleshootInspect:output_type -> sys_ctrl.TroubleshootInspectResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_sys_ctrl_proto_init() }
@@ -270,7 +353,7 @@ func file_sys_ctrl_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sys_ctrl_proto_rawDesc), len(file_sys_ctrl_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

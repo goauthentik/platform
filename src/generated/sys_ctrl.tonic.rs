@@ -138,5 +138,29 @@ pub mod system_ctrl_client {
                 .insert(GrpcMethod::new("sys_ctrl.SystemCtrl", "DomainEnroll"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn troubleshoot_inspect(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::TroubleshootInspectResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_ctrl.SystemCtrl/TroubleshootInspect",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sys_ctrl.SystemCtrl", "TroubleshootInspect"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }

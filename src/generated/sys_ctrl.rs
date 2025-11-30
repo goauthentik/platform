@@ -19,9 +19,19 @@ pub struct DomainEnrollRequest {
     #[prost(string, tag="3")]
     pub token: ::prost::alloc::string::String,
 }
-/// agent.ResponseHeader header = 1;
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DomainEnrollResponse {
+    #[prost(string, tag="1")]
+    pub device_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TroubleshootInspectResponse {
+    #[prost(string, tag="1")]
+    pub bucket: ::prost::alloc::string::String,
+    #[prost(map="string, string", tag="2")]
+    pub kv: ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
+    #[prost(message, repeated, tag="3")]
+    pub children: ::prost::alloc::vec::Vec<TroubleshootInspectResponse>,
 }
 include!("sys_ctrl.tonic.rs");
 // @@protoc_insertion_point(module)

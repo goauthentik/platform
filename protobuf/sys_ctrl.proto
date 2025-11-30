@@ -9,6 +9,7 @@ import "google/protobuf/empty.proto";
 service SystemCtrl {
   rpc DomainList(google.protobuf.Empty) returns (DomainListResponse);
   rpc DomainEnroll(DomainEnrollRequest) returns (DomainEnrollResponse);
+  rpc TroubleshootInspect(google.protobuf.Empty) returns (TroubleshootInspectResponse);
 }
 
 message Domain {
@@ -26,5 +27,11 @@ message DomainEnrollRequest {
 }
 
 message DomainEnrollResponse {
-  // agent.ResponseHeader header = 1;
+  string device_id = 1;
+}
+
+message TroubleshootInspectResponse {
+  string bucket = 1;
+  map<string, string> kv = 2;
+  repeated TroubleshootInspectResponse children = 3;
 }
