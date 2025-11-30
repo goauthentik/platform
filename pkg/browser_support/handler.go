@@ -51,7 +51,7 @@ func New() (*BrowserSupport, error) {
 	if err != nil {
 		return nil, err
 	}
-	sc, err := sclient.New()
+	sc, err := sclient.NewDefault()
 	if err != nil {
 		return nil, err
 	}

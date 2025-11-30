@@ -32,5 +32,5 @@ pub struct ListProfilesResponse {
     #[prost(message, repeated, tag="2")]
     pub profiles: ::prost::alloc::vec::Vec<Profile>,
 }
-include!("agent_config.tonic.rs");
+include!("agent_ctrl.tonic.rs");
 // @@protoc_insertion_point(module)

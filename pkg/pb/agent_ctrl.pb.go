@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v6.33.1
-// source: agent_config.proto
+// source: agent_ctrl.proto
 
 package pb
 
@@ -36,7 +36,7 @@ type SetupRequest struct {
 
 func (x *SetupRequest) Reset() {
 	*x = SetupRequest{}
-	mi := &file_agent_config_proto_msgTypes[0]
+	mi := &file_agent_ctrl_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -48,7 +48,7 @@ func (x *SetupRequest) String() string {
 func (*SetupRequest) ProtoMessage() {}
 
 func (x *SetupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_config_proto_msgTypes[0]
+	mi := &file_agent_ctrl_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -61,7 +61,7 @@ func (x *SetupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetupRequest.ProtoReflect.Descriptor instead.
 func (*SetupRequest) Descriptor() ([]byte, []int) {
-	return file_agent_config_proto_rawDescGZIP(), []int{0}
+	return file_agent_ctrl_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *SetupRequest) GetHeader() *RequestHeader {
@@ -115,7 +115,7 @@ type SetupResponse struct {
 
 func (x *SetupResponse) Reset() {
 	*x = SetupResponse{}
-	mi := &file_agent_config_proto_msgTypes[1]
+	mi := &file_agent_ctrl_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -127,7 +127,7 @@ func (x *SetupResponse) String() string {
 func (*SetupResponse) ProtoMessage() {}
 
 func (x *SetupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_config_proto_msgTypes[1]
+	mi := &file_agent_ctrl_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -140,7 +140,7 @@ func (x *SetupResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetupResponse.ProtoReflect.Descriptor instead.
 func (*SetupResponse) Descriptor() ([]byte, []int) {
-	return file_agent_config_proto_rawDescGZIP(), []int{1}
+	return file_agent_ctrl_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *SetupResponse) GetHeader() *ResponseHeader {
@@ -159,7 +159,7 @@ type Profile struct {
 
 func (x *Profile) Reset() {
 	*x = Profile{}
-	mi := &file_agent_config_proto_msgTypes[2]
+	mi := &file_agent_ctrl_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -171,7 +171,7 @@ func (x *Profile) String() string {
 func (*Profile) ProtoMessage() {}
 
 func (x *Profile) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_config_proto_msgTypes[2]
+	mi := &file_agent_ctrl_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -184,7 +184,7 @@ func (x *Profile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Profile.ProtoReflect.Descriptor instead.
 func (*Profile) Descriptor() ([]byte, []int) {
-	return file_agent_config_proto_rawDescGZIP(), []int{2}
+	return file_agent_ctrl_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Profile) GetName() string {
@@ -204,7 +204,7 @@ type ListProfilesResponse struct {
 
 func (x *ListProfilesResponse) Reset() {
 	*x = ListProfilesResponse{}
-	mi := &file_agent_config_proto_msgTypes[3]
+	mi := &file_agent_ctrl_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -216,7 +216,7 @@ func (x *ListProfilesResponse) String() string {
 func (*ListProfilesResponse) ProtoMessage() {}
 
 func (x *ListProfilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_config_proto_msgTypes[3]
+	mi := &file_agent_ctrl_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -229,7 +229,7 @@ func (x *ListProfilesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProfilesResponse.ProtoReflect.Descriptor instead.
 func (*ListProfilesResponse) Descriptor() ([]byte, []int) {
-	return file_agent_config_proto_rawDescGZIP(), []int{3}
+	return file_agent_ctrl_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ListProfilesResponse) GetHeader() *ResponseHeader {
@@ -246,11 +246,12 @@ func (x *ListProfilesResponse) GetProfiles() []*Profile {
 	return nil
 }
 
-var File_agent_config_proto protoreflect.FileDescriptor
+var File_agent_ctrl_proto protoreflect.FileDescriptor
 
-const file_agent_config_proto_rawDesc = "" +
+const file_agent_ctrl_proto_rawDesc = "" +
 	"\n" +
-	"\x12agent_config.proto\x12\fagent_config\x1a\vagent.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xe1\x01\n" +
+	"\x10agent_ctrl.proto\x12\n" +
+	"agent_ctrl\x1a\vagent.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xe1\x01\n" +
 	"\fSetupRequest\x12,\n" +
 	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12#\n" +
 	"\rauthentik_url\x18\x02 \x01(\tR\fauthentikUrl\x12\x19\n" +
@@ -261,45 +262,45 @@ const file_agent_config_proto_rawDesc = "" +
 	"\rSetupResponse\x12-\n" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\"\x1d\n" +
 	"\aProfile\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"x\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"v\n" +
 	"\x14ListProfilesResponse\x12-\n" +
-	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x121\n" +
-	"\bprofiles\x18\x02 \x03(\v2\x15.agent_config.ProfileR\bprofiles2\x9b\x01\n" +
-	"\vAgentConfig\x12J\n" +
-	"\fListProfiles\x12\x16.google.protobuf.Empty\x1a\".agent_config.ListProfilesResponse\x12@\n" +
-	"\x05Setup\x12\x1a.agent_config.SetupRequest\x1a\x1b.agent_config.SetupResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12/\n" +
+	"\bprofiles\x18\x02 \x03(\v2\x13.agent_ctrl.ProfileR\bprofiles2\x93\x01\n" +
+	"\tAgentCtrl\x12H\n" +
+	"\fListProfiles\x12\x16.google.protobuf.Empty\x1a .agent_ctrl.ListProfilesResponse\x12<\n" +
+	"\x05Setup\x12\x18.agent_ctrl.SetupRequest\x1a\x19.agent_ctrl.SetupResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
-	file_agent_config_proto_rawDescOnce sync.Once
-	file_agent_config_proto_rawDescData []byte
+	file_agent_ctrl_proto_rawDescOnce sync.Once
+	file_agent_ctrl_proto_rawDescData []byte
 )
 
-func file_agent_config_proto_rawDescGZIP() []byte {
-	file_agent_config_proto_rawDescOnce.Do(func() {
-		file_agent_config_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_agent_config_proto_rawDesc), len(file_agent_config_proto_rawDesc)))
+func file_agent_ctrl_proto_rawDescGZIP() []byte {
+	file_agent_ctrl_proto_rawDescOnce.Do(func() {
+		file_agent_ctrl_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_agent_ctrl_proto_rawDesc), len(file_agent_ctrl_proto_rawDesc)))
 	})
-	return file_agent_config_proto_rawDescData
+	return file_agent_ctrl_proto_rawDescData
 }
 
-var file_agent_config_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_agent_config_proto_goTypes = []any{
-	(*SetupRequest)(nil),         // 0: agent_config.SetupRequest
-	(*SetupResponse)(nil),        // 1: agent_config.SetupResponse
-	(*Profile)(nil),              // 2: agent_config.Profile
-	(*ListProfilesResponse)(nil), // 3: agent_config.ListProfilesResponse
+var file_agent_ctrl_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_agent_ctrl_proto_goTypes = []any{
+	(*SetupRequest)(nil),         // 0: agent_ctrl.SetupRequest
+	(*SetupResponse)(nil),        // 1: agent_ctrl.SetupResponse
+	(*Profile)(nil),              // 2: agent_ctrl.Profile
+	(*ListProfilesResponse)(nil), // 3: agent_ctrl.ListProfilesResponse
 	(*RequestHeader)(nil),        // 4: agent.RequestHeader
 	(*ResponseHeader)(nil),       // 5: agent.ResponseHeader
 	(*emptypb.Empty)(nil),        // 6: google.protobuf.Empty
 }
-var file_agent_config_proto_depIdxs = []int32{
-	4, // 0: agent_config.SetupRequest.header:type_name -> agent.RequestHeader
-	5, // 1: agent_config.SetupResponse.header:type_name -> agent.ResponseHeader
-	5, // 2: agent_config.ListProfilesResponse.header:type_name -> agent.ResponseHeader
-	2, // 3: agent_config.ListProfilesResponse.profiles:type_name -> agent_config.Profile
-	6, // 4: agent_config.AgentConfig.ListProfiles:input_type -> google.protobuf.Empty
-	0, // 5: agent_config.AgentConfig.Setup:input_type -> agent_config.SetupRequest
-	3, // 6: agent_config.AgentConfig.ListProfiles:output_type -> agent_config.ListProfilesResponse
-	1, // 7: agent_config.AgentConfig.Setup:output_type -> agent_config.SetupResponse
+var file_agent_ctrl_proto_depIdxs = []int32{
+	4, // 0: agent_ctrl.SetupRequest.header:type_name -> agent.RequestHeader
+	5, // 1: agent_ctrl.SetupResponse.header:type_name -> agent.ResponseHeader
+	5, // 2: agent_ctrl.ListProfilesResponse.header:type_name -> agent.ResponseHeader
+	2, // 3: agent_ctrl.ListProfilesResponse.profiles:type_name -> agent_ctrl.Profile
+	6, // 4: agent_ctrl.AgentCtrl.ListProfiles:input_type -> google.protobuf.Empty
+	0, // 5: agent_ctrl.AgentCtrl.Setup:input_type -> agent_ctrl.SetupRequest
+	3, // 6: agent_ctrl.AgentCtrl.ListProfiles:output_type -> agent_ctrl.ListProfilesResponse
+	1, // 7: agent_ctrl.AgentCtrl.Setup:output_type -> agent_ctrl.SetupResponse
 	6, // [6:8] is the sub-list for method output_type
 	4, // [4:6] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
@@ -307,9 +308,9 @@ var file_agent_config_proto_depIdxs = []int32{
 	0, // [0:4] is the sub-list for field type_name
 }
 
-func init() { file_agent_config_proto_init() }
-func file_agent_config_proto_init() {
-	if File_agent_config_proto != nil {
+func init() { file_agent_ctrl_proto_init() }
+func file_agent_ctrl_proto_init() {
+	if File_agent_ctrl_proto != nil {
 		return
 	}
 	file_agent_proto_init()
@@ -317,17 +318,17 @@ func file_agent_config_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_config_proto_rawDesc), len(file_agent_config_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_ctrl_proto_rawDesc), len(file_agent_ctrl_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_agent_config_proto_goTypes,
-		DependencyIndexes: file_agent_config_proto_depIdxs,
-		MessageInfos:      file_agent_config_proto_msgTypes,
+		GoTypes:           file_agent_ctrl_proto_goTypes,
+		DependencyIndexes: file_agent_ctrl_proto_depIdxs,
+		MessageInfos:      file_agent_ctrl_proto_msgTypes,
 	}.Build()
-	File_agent_config_proto = out.File
-	file_agent_config_proto_goTypes = nil
-	file_agent_config_proto_depIdxs = nil
+	File_agent_ctrl_proto = out.File
+	file_agent_ctrl_proto_goTypes = nil
+	file_agent_ctrl_proto_depIdxs = nil
 }

@@ -9,6 +9,7 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
 )
@@ -56,7 +57,10 @@ func (directory *Server) Stop() error {
 	return nil
 }
 
-func (directory *Server) Register(s grpc.ServiceRegistrar) {
+func (directory *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
+	if id != types.SocketIDDefault {
+		return
+	}
 	pb.RegisterSystemDirectoryServer(s, directory)
 }
 

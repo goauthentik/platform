@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod agent_config_client {
+pub mod agent_ctrl_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod agent_config_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct AgentConfigClient<T> {
+    pub struct AgentCtrlClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl AgentConfigClient<tonic::transport::Channel> {
+    impl AgentCtrlClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,7 +25,7 @@ pub mod agent_config_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> AgentConfigClient<T>
+    impl<T> AgentCtrlClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -43,7 +43,7 @@ pub mod agent_config_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> AgentConfigClient<InterceptedService<T, F>>
+        ) -> AgentCtrlClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -57,7 +57,7 @@ pub mod agent_config_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            AgentConfigClient::new(InterceptedService::new(inner, interceptor))
+            AgentCtrlClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -107,11 +107,11 @@ pub mod agent_config_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_config.AgentConfig/ListProfiles",
+                "/agent_ctrl.AgentCtrl/ListProfiles",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_config.AgentConfig", "ListProfiles"));
+                .insert(GrpcMethod::new("agent_ctrl.AgentCtrl", "ListProfiles"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn setup(
@@ -128,11 +128,11 @@ pub mod agent_config_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_config.AgentConfig/Setup",
+                "/agent_ctrl.AgentCtrl/Setup",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_config.AgentConfig", "Setup"));
+                .insert(GrpcMethod::new("agent_ctrl.AgentCtrl", "Setup"));
             self.inner.unary(req, path, codec).await
         }
     }

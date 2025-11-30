@@ -35,9 +35,7 @@ bump:
 
 .PHONY: package-darwin
 package-darwin: clean build
-	"$(MAKE)" -C ${TOP} cli/build
-	"$(MAKE)" -C ${TOP} sysd/build
-	"$(MAKE)" -C ${TOP} browser_support/build
+	"$(MAKE)" -C ${TOP} -j$(nproc) cli/build sysd/build browser_support/build
 	"$(MAKE)" -C ${TOP} ee/psso/build || true
 	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"

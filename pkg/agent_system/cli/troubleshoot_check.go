@@ -8,9 +8,6 @@ import (
 var troubleshootCheckCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check the status of the authentik system agent",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return agentPrecheck()
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return check.RunChecks(cmd.Context())
 	},

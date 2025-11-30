@@ -4,48 +4,39 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.etcd.io/bbolt"
-	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/client"
+	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var troubleshootInspectCmd = &cobra.Command{
 	Use:   "inspect",
 	Short: "Inspect state",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return agentPrecheck()
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		depth := 0
-		return config.State().View(func(tx *bbolt.Tx) error {
-			return tx.ForEach(func(name []byte, b *bbolt.Bucket) error {
-				inspectBucket(name, b, depth)
-				return nil
-			})
-		})
+		sc, err := client.NewCtrl()
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to ctrl")
+		}
+		r, err := sc.TroubleshootInspect(cmd.Context(), &emptypb.Empty{})
+		if err != nil {
+			return err
+		}
+		inspectBucket(r, 0)
+		return nil
 	},
 }
 
-func inspectBucket(name []byte, b *bbolt.Bucket, depth int) {
-	fmt.Printf("%sBucket '%s':\n", strings.Repeat("\t", depth), string(name))
+func inspectBucket(r *pb.TroubleshootInspectResponse, depth int) {
+	fmt.Printf("%sBucket '%s':\n", strings.Repeat("\t", depth), r.Bucket)
 	depth += 1
-	seenKeys := map[string]struct{}{}
-	_ = b.ForEachBucket(func(k []byte) error {
-		bb := b.Bucket(k)
-		if bb != nil {
-			seenKeys[string(k)] = struct{}{}
-			inspectBucket(k, bb, depth)
-		}
-		return nil
-	})
-	_ = b.ForEach(func(k, v []byte) error {
-		vv := string(v)
-		if _, seen := seenKeys[vv]; seen {
-			return nil
-		}
-		fmt.Printf("%sKey '%s' => '%s'\n", strings.Repeat("\t", depth), string(k), vv)
-		return nil
-	})
+	for k, v := range r.Kv {
+		fmt.Printf("%sKey '%s' => '%s'\n", strings.Repeat("\t", depth), k, v)
+	}
+	for _, ch := range r.Children {
+		inspectBucket(ch, depth+1)
+	}
 }
 
 func init() {
