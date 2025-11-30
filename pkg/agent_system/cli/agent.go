@@ -24,7 +24,15 @@ var agentCmd = &cobra.Command{
 		if isDebug {
 			log.SetLevel(log.DebugLevel)
 		}
-		err := agentPrecheck()
+		err := systemlog.Setup(pstr.PlatformString{
+			// Needs to match event log name in Package.wxs
+			Windows: pstr.S("authentik System Service"),
+			Linux:   pstr.S("ak-sysd"),
+		}.ForCurrent())
+		if err != nil {
+			return err
+		}
+		err = agentPrecheck()
 		if err != nil {
 			return err
 		}
@@ -33,14 +41,6 @@ var agentCmd = &cobra.Command{
 		}
 		if _, err := os.Stat(config.Manager().Get().RuntimeDir); err != nil {
 			return errors.Wrap(err, "failed to check runtime directory")
-		}
-		err = systemlog.Setup(pstr.PlatformString{
-			// Needs to match event log name in Package.wxs
-			Windows: pstr.S("authentik System Service"),
-			Linux:   pstr.S("ak-sysd"),
-		}.ForCurrent())
-		if err != nil {
-			return err
 		}
 		return nil
 	},
