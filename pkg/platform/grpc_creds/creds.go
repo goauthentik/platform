@@ -37,19 +37,15 @@ func (c *transportCredentials) ServerHandshake(conn net.Conn) (net.Conn, credent
 		if err != nil {
 			return nil, nil, err
 		}
-		creds.Proc, err = process.NewProcess(int32(creds.PID))
+		creds.Proc, err = ProcInfoFrom(int32(creds.PID))
 		if err != nil {
 			return nil, nil, err
 		}
-		creds.Parent, err = getParent(creds.PID)
+		parent, err := creds.Proc.Process.Parent()
 		if err != nil {
 			return nil, nil, err
 		}
-		creds.ParentExe, err = creds.Parent.Exe()
-		if err != nil {
-			return nil, nil, err
-		}
-		creds.ParentCmdline, err = creds.Parent.Cmdline()
+		creds.Parent, err = ProcInfoFrom(parent.Pid)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -75,29 +71,47 @@ func (c *transportCredentials) OverrideServerName(sn string) error {
 	return nil
 }
 
+type ProcInfo struct {
+	*process.Process
+	Exe     string
+	Cmdline string
+}
+
+func ProcInfoFrom(pid int32) (*ProcInfo, error) {
+	p, err := process.NewProcess(pid)
+	if err != nil {
+		return nil, err
+	}
+	pi := &ProcInfo{Process: p}
+	pi.Exe, err = p.Exe()
+	if err != nil {
+		return pi, err
+	}
+	pi.Cmdline, err = p.Cmdline()
+	if err != nil {
+		return pi, err
+	}
+	return pi, nil
+}
+
+func (pi *ProcInfo) String() string {
+	return fmt.Sprintf("Process <id=%s, exe=%s, cmdline=%s>", pi.Process.Pid, pi.Exe, pi.Cmdline)
+}
+
 type Creds struct {
-	Proc          *process.Process
-	Parent        *process.Process
-	ParentExe     string
-	ParentCmdline string
-	PID           int
-	UID           int
-	GID           int
+	Proc   *ProcInfo
+	Parent *ProcInfo
+
+	PID int
+	UID int
+	GID int
 }
 
 func (c Creds) UniqueProcessID() string {
-	firstExe := strings.SplitN(c.ParentCmdline, " ", 2)
-	return fmt.Sprintf("%s:%s", c.ParentExe, firstExe[0])
+	firstExe := strings.SplitN(c.Parent.Cmdline, " ", 2)
+	return fmt.Sprintf("%s:%s", c.Parent.Exe, firstExe[0])
 }
 
 func GetCreds(conn net.Conn) (*Creds, error) {
 	return getCreds(conn)
-}
-
-func getParent(pid int) (*process.Process, error) {
-	proc, err := process.NewProcess(int32(pid))
-	if err != nil {
-		return nil, err
-	}
-	return proc.Parent()
 }
