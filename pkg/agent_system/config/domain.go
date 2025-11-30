@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -28,9 +29,10 @@ type DomainConfig struct {
 	// Fallback token when keyring is not available
 	FallbackToken string `json:"token"`
 
-	c  *api.APIClient
-	r  *Config
-	rc *api.AgentConfig
+	c                 *api.APIClient
+	r                 *Config
+	configLastUpdated time.Time
+	rc                *api.AgentConfig
 }
 
 func (dc DomainConfig) Config() *api.AgentConfig {
@@ -108,6 +110,14 @@ func (dc *DomainConfig) loaded() {
 		if err != nil {
 			return err
 		}
+		lu := b.Get([]byte("config_last_updated"))
+		if len(lu) > 0 {
+			luu, err := strconv.ParseInt(string(lu), 10, 64)
+			if err != nil {
+				return err
+			}
+			dc.configLastUpdated = time.Unix(luu, 0)
+		}
 		dc.r.log.Info("Loaded domain config")
 		dc.rc = cfg.Get()
 		return nil
@@ -142,6 +152,11 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		dc.r.log.WithField("cap", cfg.SystemConfig.Capabilities).WithField("device_id", cfg.DeviceId).Debug("fetched remote config")
 		dc.rc = cfg
 		jc, err := cfg.MarshalJSON()
+		if err != nil {
+			return err
+		}
+		dc.configLastUpdated = time.Now()
+		err = b.Put([]byte("config_last_updated"), []byte(strconv.FormatInt(dc.configLastUpdated.Unix(), 10)))
 		if err != nil {
 			return err
 		}
