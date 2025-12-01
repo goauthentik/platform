@@ -36,7 +36,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/zalando/go-keyring v0.2.6
 	go.etcd.io/bbolt v1.4.3
-	goauthentik.io/api/v3 v3.2025120.11-0.20251129022050-541622c1b9f5
+	goauthentik.io/api/v3 v3.2025120.11
 	golang.org/x/crypto v0.45.0
 	golang.org/x/sys v0.38.0
 	golang.org/x/term v0.37.0
