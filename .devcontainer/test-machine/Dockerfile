@@ -27,6 +27,4 @@ VOLUME [ "/sys/fs/cgroup" ]
 
 RUN systemctl enable ssh.service rsyslog.service
 
-COPY ./domain.json /etc/authentik/domains/dev.json
-
 ENTRYPOINT [ "/lib/systemd/systemd"]

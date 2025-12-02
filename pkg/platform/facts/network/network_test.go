@@ -4,13 +4,13 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGather(t *testing.T) {
 	info, err := Gather()
-	if err != nil {
-		t.Fatalf("Failed to gather network info: %v", err)
-	}
+	assert.NoError(t, err)
 
 	if info.Hostname == "" {
 		t.Error("Hostname is empty")
@@ -37,9 +37,7 @@ func TestGatherLinux(t *testing.T) {
 	}
 
 	info, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather network info on Linux: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// Linux specific tests
 	for _, iface := range info.Interfaces {
@@ -59,9 +57,7 @@ func TestGatherWindows(t *testing.T) {
 	}
 
 	info, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather network info on Windows: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// Windows specific tests
 	t.Logf("Found %d network interfaces", len(info.Interfaces))

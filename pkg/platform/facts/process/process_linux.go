@@ -21,15 +21,9 @@ func gather() ([]api.ProcessRequest, error) {
 			continue
 		}
 
-		name, err := p.Exe()
-		if err != nil {
-			// Fallback to cmdline
-			cmdline, err := p.Cmdline()
-			if err != nil {
-				name, _ = p.Name()
-			} else {
-				name = cmdline
-			}
+		name := getProcName(p)
+		if name == "" {
+			continue
 		}
 
 		procInfo := api.ProcessRequest{
@@ -46,4 +40,20 @@ func gather() ([]api.ProcessRequest, error) {
 	}
 
 	return processes, nil
+}
+
+func getProcName(p *process.Process) string {
+	n, err := p.Cmdline()
+	if err == nil && n != "" {
+		return n
+	}
+	n, err = p.Exe()
+	if err == nil && n != "" {
+		return n
+	}
+	n, err = p.Name()
+	if err == nil && n != "" {
+		return n
+	}
+	return ""
 }

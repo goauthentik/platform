@@ -4,22 +4,21 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGather(t *testing.T) {
 	processes, err := Gather()
-	if err != nil {
-		t.Fatalf("Failed to gather process info: %v", err)
-	}
+	assert.NoError(t, err)
 
 	if len(processes) == 0 {
 		t.Skip("No processes found, skipping test")
 	}
 
 	for _, proc := range processes {
-		if proc.Id < 0 {
-			t.Error("Process ID should be positive")
-		}
+		assert.NotEqual(t, "", proc.Name, proc.Name)
+		assert.Greater(t, proc.Id, int32(0), "Process ID should be positive")
 	}
 
 	t.Logf("Found %d processes", len(processes))
@@ -31,22 +30,19 @@ func TestGatherLinux(t *testing.T) {
 	}
 
 	processes, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather process info on Linux: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// Linux specific tests
 	foundKernel := false
 	for _, proc := range processes {
+		assert.NotEqual(t, "", proc.Name, proc.Name)
 		if proc.Name == "[kthreadd]" || proc.Name == "systemd" {
 			foundKernel = true
 			break
 		}
 	}
 
-	if !foundKernel {
-		t.Log("Expected to find kernel or system processes")
-	}
+	assert.True(t, foundKernel, "Expected to find kernel or system processes")
 }
 
 func TestGatherWindows(t *testing.T) {
@@ -55,9 +51,7 @@ func TestGatherWindows(t *testing.T) {
 	}
 
 	processes, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather process info on Windows: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// Windows specific tests
 	foundSystem := false
@@ -69,7 +63,5 @@ func TestGatherWindows(t *testing.T) {
 		}
 	}
 
-	if !foundSystem {
-		t.Log("Expected to find system processes")
-	}
+	assert.True(t, foundSystem, "Expected to find system processes")
 }
