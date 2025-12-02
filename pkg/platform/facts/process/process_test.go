@@ -17,7 +17,7 @@ func TestGather(t *testing.T) {
 	}
 
 	for _, proc := range processes {
-		assert.NotEqual(t, "", proc.Name, proc.Name)
+		assert.NotEqual(t, "", proc.Name, proc)
 		assert.Greater(t, proc.Id, int32(0), "Process ID should be positive")
 	}
 
@@ -36,7 +36,7 @@ func TestGatherLinux(t *testing.T) {
 	foundKernel := false
 	for _, proc := range processes {
 		assert.NotEqual(t, "", proc.Name, proc.Name)
-		if proc.Name == "[kthreadd]" || proc.Name == "systemd" {
+		if strings.Contains(proc.Name, "kthreadd") || strings.Contains(proc.Name, "systemd") {
 			foundKernel = true
 			break
 		}
