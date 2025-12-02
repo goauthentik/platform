@@ -10,8 +10,6 @@ import (
 )
 
 func Main() {
-	_ = systemlog.Setup("browser-support")
-
 	bs, err := New()
 	if err != nil {
 		systemlog.Get().WithError(err).Warning("failed to start browser support")

@@ -21,7 +21,7 @@ func Start(name string, debug bool, cb func()) {
 	defer sentry.Flush(2 * time.Second)
 	defer systemlog.Cleanup()
 	if debug {
-		startDebugServer()
+		go startDebugServer()
 		defer func() {
 			if debugServer != nil {
 				debugServer.Close()
