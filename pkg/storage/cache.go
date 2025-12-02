@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	ErrExpired = errors.New("cache expired")
+	ErrExpired  = errors.New("cache expired")
+	ErrNotFound = errors.New("not found")
 )
 
 type CacheData interface {
@@ -51,7 +52,7 @@ func (c *Cache[T]) Get() (T, error) {
 	if err != nil {
 		if keyring.IsNotExist(err) {
 			c.log.WithError(err).Debug("No cache found")
-			return cc, err
+			return cc, ErrNotFound
 		}
 		return cc, err
 	}

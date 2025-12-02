@@ -30,6 +30,14 @@ func (a *Agent) CacheGet(ctx context.Context, req *pb.CacheGetRequest) (*pb.Cach
 			Status: pb.CacheStatus_EXPIRED,
 			Expiry: timestamppb.New(res.Exp),
 		}, nil
+	} else if errors.Is(err, storage.ErrNotFound) {
+		return &pb.CacheGetResponse{
+			Header: &pb.ResponseHeader{
+				Successful: false,
+			},
+			Status: pb.CacheStatus_NOT_FOUND,
+			Expiry: timestamppb.New(res.Exp),
+		}, nil
 	} else if err != nil {
 		return nil, err
 	}
