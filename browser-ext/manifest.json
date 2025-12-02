@@ -2,7 +2,7 @@
     "$schema": "https://json.schemastore.org/chrome-manifest",
     "manifest_version": 3,
     "name": "authentik Platform SSO Extension",
-    "version": "0.32.0",
+    "version": "0.33.0",
     "description": "authentik Browser extension for seamless SSO and to launch applications.",
     "permissions": ["storage", "activeTab", "nativeMessaging"],
     "background": {
@@ -28,7 +28,8 @@
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["dist/content.js"]
+            "js": ["dist/content.js"],
+            "run_at": "document_start"
         }
     ],
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl9UiRfGG+/mQOmPXpqL27d8y7TgHzZyep9xb7JvyYEImDmyVqZqt5co6LBQQJp+aE7BCNTq9vcqOOvQLCXZwpMlduGLxkMKeEaokuj9kBX5bxlOUN60wXuGwMTK1dkm5kQtmIeBczfc9d+AGuWrdijdR6/poXhENKDlmkHtByCMKLpQqGYjaHHTsWYER/bmCFdaKsLK0naQksl1M+UpOUjaiXSS3N4+YapqMK3XeTRKCu5jOTdTCAajlT38LY1wloGS98A6zXnQ4hHyrQ8tCzF6xCWzZHrDz8uLF49XtrRzFMLam5wUgGeJssjrwojwTrr1Vm1GCXvS2iMeyi84p7QIDAQAB"
