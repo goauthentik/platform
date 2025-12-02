@@ -18,7 +18,7 @@ import (
 func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.Token, error) {
 	var st jwkset.Storage
 	jw := jwkset.JWKSMarshal{}
-	err := mapstructure.Decode(auth.dom.Config().Jwks, &jw)
+	err := mapstructure.Decode(auth.dom.Config().JwksAuth, &jw)
 	if err != nil {
 		return nil, err
 	}

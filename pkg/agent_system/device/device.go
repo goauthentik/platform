@@ -20,6 +20,7 @@ const ID = "device"
 type Server struct {
 	pb.UnimplementedAgentPlatformServer
 
+	dom *config.DomainConfig
 	api *api.APIClient
 	log *log.Entry
 
@@ -43,6 +44,7 @@ func (ds *Server) Start() error {
 	if err != nil {
 		return err
 	}
+	ds.dom = dom
 	ds.api = ac
 	go ds.checkIn()
 	d := time.Second * time.Duration(dom.Config().RefreshInterval)
