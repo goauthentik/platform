@@ -14,7 +14,7 @@ func (directory *Server) startFetch() {
 	directory.log.Info("Starting initial user/group fetch")
 	directory.fetch()
 	directory.log.WithField("next", d.String()).Info("Finished initial user/group fetch")
-	t := time.NewTimer(d)
+	t := time.NewTicker(d)
 	go func() {
 		for {
 			select {
