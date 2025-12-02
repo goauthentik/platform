@@ -21,9 +21,9 @@ func gather() ([]api.ProcessRequest, error) {
 			continue
 		}
 
-		name, err := p.Exe()
-		if err != nil {
-			name, _ = p.Name()
+		name := getProcName(p)
+		if name == "" {
+			continue
 		}
 
 		procInfo := api.ProcessRequest{

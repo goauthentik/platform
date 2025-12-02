@@ -41,19 +41,3 @@ func gather() ([]api.ProcessRequest, error) {
 
 	return processes, nil
 }
-
-func getProcName(p *process.Process) string {
-	n, err := p.Cmdline()
-	if err == nil && n != "" {
-		return n
-	}
-	n, err = p.Exe()
-	if err == nil && n != "" {
-		return n
-	}
-	n, err = p.Name()
-	if err == nil && n != "" {
-		return n
-	}
-	return ""
-}

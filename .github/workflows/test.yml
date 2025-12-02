@@ -52,7 +52,7 @@ jobs:
           flags: go-${{ matrix.platform }}
           files: ${{ github.workspace }}/junit.xml
   lint_go:
-    name: Lint
+    name: Lint (go)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v5
@@ -66,7 +66,7 @@ jobs:
         with:
           args: --timeout 5000s
   lint_rs:
-    name: Lint
+    name: Lint (rust)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v5
