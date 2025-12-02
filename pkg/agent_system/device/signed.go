@@ -64,8 +64,8 @@ func (ds *Server) SignedEndpointHeader(ctx context.Context, req *pb.PlatformEndp
 		"iss": hw.Serial,
 		"aud": "goauthentik.io/platform/endpoint",
 		"atc": req.Challenge,
-		"iat": iat,
-		"exp": iat.Add(5 * time.Minute),
+		"iat": iat.Unix(),
+		"exp": iat.Add(5 * time.Minute).Unix(),
 	})
 	s, err := nt.SignedString([]byte(dom.Token))
 	if err != nil {
