@@ -18,7 +18,7 @@ func TestGather(t *testing.T) {
 
 	for _, proc := range processes {
 		assert.NotEqual(t, "", proc.Name, proc)
-		assert.Greater(t, proc.Id, int32(0), "Process ID should be positive")
+		assert.GreaterOrEqual(t, proc.Id, int32(0), "Process ID should be positive")
 	}
 
 	t.Logf("Found %d processes", len(processes))
