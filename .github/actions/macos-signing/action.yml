@@ -25,14 +25,14 @@ runs:
       with:
         p12-file-base64: ${{ inputs.p12-file-base64 }}
         p12-password: ${{ inputs.p12-password }}
-    - uses: apple-actions/download-provisioning-profiles@v4
+    - uses: apple-actions/download-provisioning-profiles@v5
       with:
         bundle-id: 'io.goauthentik.platform.agent'
         profile-type: 'MAC_APP_DIRECT'
         issuer-id: ${{ inputs.ac-issuer }}
         api-key-id: ${{ inputs.ac-kid }}
         api-private-key: ${{ inputs.ac-key }}
-    - uses: apple-actions/download-provisioning-profiles@v4
+    - uses: apple-actions/download-provisioning-profiles@v5
       with:
         bundle-id: 'io.goauthentik.platform.psso'
         profile-type: 'MAC_APP_DIRECT'
