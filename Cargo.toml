@@ -18,7 +18,7 @@ name = "log"
 
 [dependencies]
 libc = "0.2.178"
-log = "0.4.28"
+log = "0.4.29"
 serde = { version = "1.0.228", features = ["derive"] }
 prost = "0.12"
 prost-types = "0.12"
