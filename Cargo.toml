@@ -17,7 +17,7 @@ name = "grpc"
 name = "log"
 
 [dependencies]
-libc = "0.2.177"
+libc = "0.2.178"
 log = "0.4.28"
 serde = { version = "1.0.228", features = ["derive"] }
 prost = "0.12"
