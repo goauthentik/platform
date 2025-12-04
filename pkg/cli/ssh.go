@@ -92,6 +92,9 @@ var sshCmd = &cobra.Command{
 							Profile:    profile,
 							DeviceName: host,
 						})
+						if cc == nil {
+							return []string{}, errors.New("failed to exchange token")
+						}
 						return []string{FormatToken(cc, remoteSocketPath)}, nil
 					}
 					ans := []string{}
