@@ -10,7 +10,7 @@ require (
 	github.com/aletheia7/ul v1.5.0
 	github.com/amenzhinsky/go-polkit v0.0.0-20210519083301-ee6a51849123
 	github.com/avast/retry-go/v4 v4.7.0
-	github.com/aws/aws-sdk-go-v2 v1.40.1
+	github.com/aws/aws-sdk-go-v2 v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.3
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.9.0
