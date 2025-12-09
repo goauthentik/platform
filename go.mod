@@ -38,8 +38,8 @@ require (
 	go.etcd.io/bbolt v1.4.3
 	goauthentik.io/api/v3 v3.2025120.19
 	golang.org/x/crypto v0.45.0
-	golang.org/x/sys v0.38.0
-	golang.org/x/term v0.37.0
+	golang.org/x/sys v0.39.0
+	golang.org/x/term v0.38.0
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
 	k8s.io/apimachinery v0.34.2
