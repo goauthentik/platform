@@ -78,6 +78,12 @@ package-gnu/linux: clean build
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+	VERSION=${VERSION} ARCH=${ARCH} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p rpm \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
 
 .PHONY: package-msys
 package-msys: clean
