@@ -1,0 +1,283 @@
+name: 'Build Package Repository'
+description: 'Creates APT and RPM repositories, ready for deployment'
+
+inputs:
+  package-types:
+    description: 'Space-separated list of package types to build (apt, rpm)'
+    required: false
+    default: 'apt rpm'
+  distribution:
+    description: 'Debian distribution name'
+    required: false
+    default: 'stable'
+  rpm-dist:
+    description: 'RPM distribution name (e.g., el8, el9, fc38)'
+    required: false
+    default: 'el9'
+  architectures:
+    description: 'Space-separated list of architectures'
+    required: false
+    default: 'amd64 arm64'
+  package-path:
+    description: 'Path to packages (.deb and .rpm files)'
+    required: false
+    default: './packages'
+  output-path:
+    description: 'Output path for repositories'
+    required: false
+    default: './package-repo'
+  gpg-private-key:
+    description: 'GPG private key for signing packages (optional)'
+    required: false
+  gpg-passphrase: 
+    description: 'GPG passphrase (optional)'
+    required: false
+  repository-name:
+    description: 'Repository name for display'
+    required: false
+    default: ${{ github.repository }}
+  repository-url:
+    description: 'Repository URL (for package instructions)'
+    required: false
+    default: 'https://pkg.goauthentik.io/'
+  components:
+    description: 'APT repo component'
+    required: false
+    default: main
+
+outputs:
+  repository-path: 
+    description: 'Path to the generated repositories'
+    value: ${{ steps.setup.outputs.absolute-path }}
+  repository-size:
+    description: 'Total size of repositories'
+    value: ${{ steps.stats.outputs.size }}
+  apt-path:
+    description: 'Path to APT repository'
+    value: ${{ steps.setup.outputs.apt-path }}
+  rpm-path: 
+    description: 'Path to RPM repository'
+    value: ${{ steps.setup.outputs.rpm-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup paths and directories
+      id: setup
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        # Convert to absolute path
+        BASE_PATH=$(realpath "${{ inputs.output-path }}")
+        APT_PATH="$BASE_PATH/apt"
+        RPM_PATH="$BASE_PATH/rpm"
+        PACKAGE_PATH=$(realpath "${{ inputs.package-path }}" 2>/dev/null || echo "${{ inputs.package-path }}")
+
+        echo "absolute-path=$BASE_PATH" >> $GITHUB_OUTPUT
+        echo "apt-path=$APT_PATH" >> $GITHUB_OUTPUT
+        echo "rpm-path=$RPM_PATH" >> $GITHUB_OUTPUT
+        echo "package-path=$PACKAGE_PATH" >> $GITHUB_ENV
+        echo "BASE_PATH=$BASE_PATH" >> $GITHUB_ENV
+        echo "APT_PATH=$APT_PATH" >> $GITHUB_ENV
+        echo "RPM_PATH=$RPM_PATH" >> $GITHUB_ENV
+
+        # Create base directory
+        mkdir -p "$BASE_PATH"
+        echo "Created base repository directory: $BASE_PATH"
+
+    - name: Build APT repository
+      if: contains('${{ inputs.package-types }}', 'apt')
+      uses: ./.github/actions/apt
+      with:
+        distribution: ${{ inputs.distribution }}
+        architectures: ${{ inputs.architectures }}
+        package-path: ${{ inputs.package-path }}
+        output-path: ${{ env.APT_PATH }}
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: ${{ inputs.gpg-passphrase }}
+        repository-name: ${{ inputs.repository-name }}
+        repository-url: ${{ inputs.repository-url }}
+        components: ${{ inputs.components }}
+
+    - name: Build RPM repository
+      if: contains('${{ inputs.package-types }}', 'rpm')
+      uses: ./.github/actions/rpm
+      with: 
+        distribution: ${{ inputs.rpm-dist }}
+        architectures: ${{ inputs.architectures }}
+        package-path: ${{ inputs.package-path }}
+        output-path: ${{ env.RPM_PATH }}
+        gpg-private-key: ${{ inputs.gpg-private-key }}
+        gpg-passphrase: ${{ inputs.gpg-passphrase }}
+        repository-name: ${{ inputs.repository-name }}
+        repository-url: ${{ inputs.repository-url }}
+
+    - name: Create main index page
+      shell: bash
+      env:
+        BASE_PATH: ${{ env.BASE_PATH }}
+        REPOSITORY_NAME: ${{ inputs.repository-name }}
+        REPOSITORY_URL: ${{ inputs.repository-url }}
+        REF: ${{ github.ref }}
+        SHA: ${{ github.sha }}
+        PACKAGE_TYPES: ${{ inputs.package-types }}
+      run: |
+        set -xeuo pipefail
+        cat > "$BASE_PATH/index.html" << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>{{ REPOSITORY_NAME }} - Package Repository</title>
+          <style>
+            body { font-family: sans-serif; margin: 40px; }
+            h1 { color: #333; }
+            .section { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+            code { background: #eee; padding: 2px 6px; border-radius: 3px; }
+            pre { background: #f9f9f9; padding: 10px; border-radius: 5px; overflow-x: auto; }
+          </style>
+        </head>
+        <body>
+          <h1>{{ REPOSITORY_NAME }}</h1>
+          <p>Package Repository | <a href="{{ REPOSITORY_URL }}">Main Site</a></p>
+          <hr/>
+
+          <div class="section">
+            <h2>Repository Information</h2>
+            <ul>
+              <li><strong>Repository:</strong> {{ REPOSITORY_NAME }}</li>
+              <li><strong>Build Ref:</strong> {{ REF }}</li>
+              <li><strong>Build SHA:</strong> {{ SHA }}</li>
+              <li><strong>URL:</strong> <a href="{{ REPOSITORY_URL }}">{{ REPOSITORY_URL }}</a></li>
+            </ul>
+          </div>
+
+          {{ APT_SECTION }}{{ RPM_SECTION }}
+
+          <hr/>
+          <p><small>Generated by GitHub Actions</small></p>
+        </body>
+        </html>
+        EOF
+
+        # Build APT section if needed
+        if echo "$PACKAGE_TYPES" | grep -q "apt"; then
+          APT_SECTION=$(cat << 'APTEOFMARKER'
+          <div class="section">
+            <h2>APT Repository</h2>
+            <p>For Debian/Ubuntu systems:</p>
+            <pre>curl {{ REPOSITORY_URL }}apt/keys/gpg-key.asc | sudo apt-key add -
+        echo "deb {{ REPOSITORY_URL }}apt {{ DISTRIBUTION }} {{ COMPONENTS }}" | sudo tee /etc/apt/sources.list.d/goauthentik.list
+        sudo apt-get update
+        sudo apt-get install goauthentik</pre>
+          </div>
+        APTEOFMARKER
+        fi
+
+        # Build RPM section if needed
+        if echo "$PACKAGE_TYPES" | grep -q "rpm"; then
+          RPM_SECTION=$(cat << 'RPMEOFMARKER'
+          <div class="section">
+            <h2>RPM Repository</h2>
+            <p>For RHEL/CentOS/Fedora systems:</p>
+            <pre>sudo rpm --import {{ REPOSITORY_URL }}rpm/keys/gpg-key.asc
+        sudo tee /etc/yum.repos.d/goauthentik.repo << EOF
+        [goauthentik]
+        name=GoAuthentik
+        baseurl={{ REPOSITORY_URL }}rpm/{{ RPM_DIST }}
+        enabled=1
+        gpgcheck=1
+        gpgkey={{ REPOSITORY_URL }}rpm/keys/gpg-key.asc
+        EOF
+        sudo yum install goauthentik</pre>
+          </div>
+        RPMEOFMARKER
+        fi
+
+        # Replace placeholders
+        sed -i "s|{{ REPOSITORY_NAME }}|$REPOSITORY_NAME|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ REPOSITORY_URL }}|$REPOSITORY_URL|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ REF }}|$REF|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ SHA }}|$SHA|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ APT_SECTION }}|${APT_SECTION:-}|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ RPM_SECTION }}|${RPM_SECTION:-}|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ DISTRIBUTION }}|${{ inputs.distribution }}|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ RPM_DIST }}|${{ inputs.rpm-dist }}|g" "$BASE_PATH/index.html"
+        sed -i "s|{{ COMPONENTS }}|${{ inputs.components }}|g" "$BASE_PATH/index.html"
+
+    - name: Create repository headers
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        BASE_PATH=${{ env.BASE_PATH }}
+
+        cat > "$BASE_PATH/_headers" << 'EOF'
+        # Package repositories headers
+        /apt/dists/*
+          Content-Type: text/plain
+          Cache-Control: public, max-age=300
+
+        /apt/dists/*/Release
+          Content-Type: text/plain
+          Cache-Control: no-cache, must-revalidate
+
+        /apt/dists/*/Release.gpg
+          Content-Type: application/pgp-signature
+          Cache-Control: no-cache, must-revalidate
+
+        /apt/dists/*/Packages*
+          Content-Type: text/plain
+          Cache-Control: no-cache, must-revalidate
+
+        /apt/pool/*
+          Content-Type: application/octet-stream
+          Cache-Control: public, max-age=3600
+
+        *.deb
+          Content-Type: application/vnd.debian.binary-package
+          Cache-Control: public, max-age=86400
+
+        # RPM Repository headers
+        /rpm/repodata/*
+          Content-Type: application/octet-stream
+          Cache-Control: no-cache, must-revalidate
+
+        /rpm/Packages/*
+          Content-Type: application/octet-stream
+          Cache-Control: public, max-age=3600
+
+        *.rpm
+          Content-Type: application/x-rpm
+          Cache-Control: public, max-age=86400
+
+        # Security headers
+        /*
+          X-Frame-Options: DENY
+          X-Content-Type-Options: nosniff
+        EOF
+
+    - name: Generate repository statistics
+      id: stats
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        BASE_PATH=${{ env.BASE_PATH }}
+        cd "$BASE_PATH"
+
+        total_size=$(du -sh . | cut -f1)
+        echo "Total repository size: $total_size"
+        echo "size=$total_size" >> $GITHUB_OUTPUT
+
+        # Count APT packages
+        if [ -d "apt/pool" ]; then
+          apt_count=$(find apt/pool -name "*.deb" 2>/dev/null | wc -l)
+          echo "APT packages: $apt_count"
+        fi
+
+        # Count RPM packages
+        if [ -d "rpm" ]; then
+          rpm_count=$(find rpm -name "*.rpm" 2>/dev/null | wc -l)
+          echo "RPM packages: $rpm_count"
+        fi
+
+        echo "Repository structure:"
+        find . -type f -name "index.html" -o -name "Release" -o -name "repomd.xml" | sort
