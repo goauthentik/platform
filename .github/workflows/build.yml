@@ -74,7 +74,7 @@ jobs:
         run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
           path: bin/
@@ -94,7 +94,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: "${{ matrix.target }}/package-lock.json"
       - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: authentik_${{ matrix.target }}
           path: bin/
@@ -121,7 +121,7 @@ jobs:
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
       - run: make ${{ matrix.target }}/build
       - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
           path: bin/
@@ -146,12 +146,12 @@ jobs:
           echo "Component: ${{ steps.apt-repo.outputs.component-name }}"
           echo "Repository size: ${{ steps.apt-repo.outputs.repository-size }}"
       - name: Upload repository
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: apt-repository
           path: ${{ steps.apt-repo.outputs.repository-path }}
       - name: Upload packages
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: all-packages
           path: ./bin
