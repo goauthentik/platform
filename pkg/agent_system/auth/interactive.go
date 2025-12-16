@@ -166,7 +166,7 @@ func (auth *Server) solveChallenge(txn *InteractiveAuthTransaction, req *pb.Inte
 	switch ch.GetComponent() {
 	case string(flow.StageIdentification):
 		freq.IdentificationChallengeResponseRequest = &api.IdentificationChallengeResponseRequest{
-			UidField: req.Value,
+			UidField: *api.NewNullableString(api.PtrString(req.Value)),
 		}
 	case string(flow.StagePassword):
 		freq.PasswordChallengeResponseRequest = &api.PasswordChallengeResponseRequest{
