@@ -4,6 +4,7 @@
     "path": "/usr/bin/ak-browser-support",
     "type": "stdio",
     "allowed_origins": [
-        "chrome-extension://dklfpnaeklldfpmhkbfjbmbnmkfafdma/"
+        "chrome-extension://dklfpnaeklldfpmhkbfjbmbnmkfafdma/",
+        "platform-browser-extension@goauthentik.io"
     ]
 }

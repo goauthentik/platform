@@ -21,5 +21,13 @@
             "js": ["dist/content.js"],
             "run_at": "document_start"
         }
-    ]
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "platform-browser-extension@goauthentik.io",
+            "data_collection_permissions": {
+                "required": ["authenticationInfo"]
+            }
+        }
+    }
 }
