@@ -7,7 +7,8 @@ FILE_NAME_FIREFOX := authentik_firefox.zip
 .PHONY: bump
 bump:
 	npm version ${VERSION} || true
-	yq -i '.version = ${VERSION}' ${PWD}/manifest.json
+	yq -i '.version = ${VERSION}' ${PWD}/manifest-chrome.json
+	yq -i '.version = ${VERSION}' ${PWD}/manifest-firefox.json
 	sed -i 's/VERSION = ".*"/VERSION = ${VERSION}/g' ${PWD}/src/version.ts
 	npm run prettier
 
