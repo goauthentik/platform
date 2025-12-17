@@ -24,9 +24,13 @@ function createRandomString(length: number = 16) {
     return result;
 }
 
+const defaultReconnectDelay = 5;
+
 export class Native {
     #port?: chrome.runtime.Port;
     #promises: Map<string, PromiseWithResolvers<Response>> = new Map();
+    #reconnectDelay = defaultReconnectDelay;
+    #reconnectTimeout = 0;
 
     constructor() {
         this.#connect();
@@ -36,8 +40,14 @@ export class Native {
         this.#port = chrome.runtime.connectNative("io.goauthentik.platform");
         this.#port.onMessage.addListener(this.#listener.bind(this));
         this.#port.onDisconnect.addListener(() => {
-            console.debug("authentik/bext/native: Disconnected, reconnecting");
-            this.#connect();
+            this.#reconnectDelay *= 1.35;
+            this.#reconnectDelay = Math.min(this.#reconnectDelay, 3600);
+            const err = chrome.runtime.lastError || this.#port?.error;
+            console.debug(`authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`, err);
+            clearTimeout(this.#reconnectTimeout);
+            this.#reconnectTimeout = setTimeout(() => {
+                this.#connect();
+            }, this.#reconnectDelay * 1000);
         });
         console.debug("authentik/bext/native: Connected to native");
     }
