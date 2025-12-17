@@ -42,8 +42,12 @@ export class Native {
         this.#port.onDisconnect.addListener(() => {
             this.#reconnectDelay *= 1.35;
             this.#reconnectDelay = Math.min(this.#reconnectDelay, 3600);
+            // @ts-ignore
             const err = chrome.runtime.lastError || this.#port?.error;
-            console.debug(`authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`, err);
+            console.debug(
+                `authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`,
+                err,
+            );
             clearTimeout(this.#reconnectTimeout);
             this.#reconnectTimeout = setTimeout(() => {
                 this.#connect();
