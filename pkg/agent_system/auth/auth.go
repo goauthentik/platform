@@ -27,9 +27,8 @@ type Server struct {
 
 	ctx component.Context
 
-	txns map[string]*InteractiveAuthTransaction
-	m    sync.RWMutex
-	dom  *config.DomainConfig
+	m   sync.RWMutex
+	dom *config.DomainConfig
 
 	interactiveEnabled   bool
 	authorizationEnabled bool
@@ -39,7 +38,6 @@ func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log:                  ctx.Log(),
 		ctx:                  ctx,
-		txns:                 map[string]*InteractiveAuthTransaction{},
 		m:                    sync.RWMutex{},
 		interactiveEnabled:   true,
 		authorizationEnabled: true,
