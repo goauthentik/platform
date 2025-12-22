@@ -2,12 +2,14 @@ include ../common.mk
 
 TARGET := browser-ext
 FILE_NAME_CHROME := authentik_chrome.zip
+FILE_NAME_EDGE := authentik_edge.zip
 FILE_NAME_FIREFOX := authentik_firefox.zip
 
 .PHONY: bump
 bump:
 	npm version ${VERSION} || true
 	yq -i '.version = ${VERSION}' ${PWD}/manifest-chrome.json
+	yq -i '.version = ${VERSION}' ${PWD}/manifest-edge.json
 	yq -i '.version = ${VERSION}' ${PWD}/manifest-firefox.json
 	sed -i 's/VERSION = ".*"/VERSION = ${VERSION}/g' ${PWD}/src/version.ts
 	npm run prettier
@@ -30,6 +32,15 @@ package-chrome: build
 	cp -r "${PWD}/images" "${PWD}/dist" "${PWD}/html" "${TOP}/cache/${TARGET}/chrome"
 	cp "${PWD}/manifest-chrome.json" "${TOP}/cache/${TARGET}/chrome/manifest.json"
 	cd "${TOP}/cache/${TARGET}/chrome"/ && zip "${TOP}/bin/${TARGET}/${FILE_NAME_CHROME}" -r *
+
+.PHONY: package-edge
+package-edge: build
+	rm -f "${TOP}/bin/${TARGET}/${FILE_NAME_EDGE}"
+	rm -rf "${TOP}/cache/${TARGET}/edge"
+	mkdir -p "${TOP}/cache/${TARGET}/edge"
+	cp -r "${PWD}/images" "${PWD}/dist" "${PWD}/html" "${TOP}/cache/${TARGET}/edge"
+	cp "${PWD}/manifest-edge.json" "${TOP}/cache/${TARGET}/edge/manifest.json"
+	cd "${TOP}/cache/${TARGET}/edge"/ && zip "${TOP}/bin/${TARGET}/${FILE_NAME_EDGE}" -r *
 
 .PHONY: package-firefox
 package-firefox: build

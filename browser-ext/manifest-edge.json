@@ -1,0 +1,26 @@
+{
+    "$schema": "https://json.schemastore.org/chrome-manifest",
+    "manifest_version": 3,
+    "name": "authentik Endpoint SSO",
+    "version": "0.35.0",
+    "description": "authentik Browser extension for seamless SSO.",
+    "permissions": ["storage", "activeTab", "nativeMessaging"],
+    "background": {
+        "service_worker": "dist/background.js",
+        "type": "module"
+    },
+    "host_permissions": ["https://*/"],
+    "icons": {
+        "16": "images/icon16.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["dist/content.js"],
+            "run_at": "document_start"
+        }
+    ],
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmUpYxkAvrRK8HWFaZcqEO/XtcRXBGSDWraCbaUz9eBitZ30G98daZmYYLpBok9/GsXhPQTbo01rARvOyWifSOYdnQS7FTykN1EX3XrS3Z44V/sO4BAnDx8hBdEMVQhYlJIEA8+PA/RI33Ext/FGEd1oAmHgIC0mGxG3TIBVe7rkhLl0Fr0rLr+D/5Jegf+6MSSFkOpUaUmbeRgRvcCTw0Yl2USHybcD9zHqLfu5eIT3+QyB5QoT ///GA3AyE4SVaq7pXEkJFZ/ExkZGelvLXzb0cAbR+ssAiBtt8DCN0cCrMziCEIfPHvAm290L9Oi3lAuIKpXqtrKOhniXbfZLhJQIDAQAB"
+}
