@@ -1,8 +1,9 @@
 package events
 
 import (
-	"context"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Bus struct {
@@ -11,25 +12,27 @@ type Bus struct {
 
 	parent *Bus
 	id     string
+
+	log *log.Entry
 }
 
-func New() *Bus {
-	return &Bus{}
+func New(log *log.Entry) *Bus {
+	return &Bus{
+		eventHandlers:  map[string]map[string][]EventHandler{},
+		eventHandlersM: sync.RWMutex{},
+		log:            log,
+	}
 }
 
 func (eb *Bus) Child(id string) *Bus {
-	return &Bus{
-		parent: eb,
-		id:     id,
-	}
+	b := New(eb.log.WithField("id", id))
+	b.parent = eb
+	b.id = id
+	return b
 }
 
 func (eb *Bus) DispatchEvent(topic string, ev *Event) {
-	// l := eb.log
-	// l.Debug("dispatching event", zap.String("topic", topic))
-	if ev.Context == nil {
-		ev.Context = context.TODO()
-	}
+	eb.log.WithField("topic", topic).Debug("dispatching event")
 	if eb.parent != nil {
 		eb.parent.DispatchEvent(topic, ev.WithTopic(topic))
 	}
