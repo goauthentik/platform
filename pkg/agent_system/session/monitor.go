@@ -2,7 +2,6 @@ package session
 
 import (
 	"context"
-	"errors"
 	"os"
 	"strings"
 	"sync"
@@ -10,7 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"go.etcd.io/bbolt"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
@@ -30,7 +28,6 @@ type Monitor struct {
 	log           *log.Entry
 	ctx           component.Context
 
-	dom   *config.DomainConfig
 	timer *time.Ticker
 }
 
@@ -45,12 +42,6 @@ func NewMonitor(ctx component.Context) (component.Component, error) {
 
 func (m *Monitor) Start() error {
 	m.timer = time.NewTicker(m.checkInterval)
-	if len(config.Manager().Get().Domains()) < 1 {
-		return errors.New("no domains")
-	}
-	dom := config.Manager().Get().Domains()[0]
-	m.dom = dom
-
 	go func() {
 		for range m.timer.C {
 			m.checkExpiredSessions()
@@ -169,7 +160,11 @@ func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRe
 		LocalSocket: req.LocalSocket,
 	}
 
-	if m.dom.Config().AuthTerminateSessionOnExpiry {
+	_, dom, err := m.ctx.DomainAPI()
+	if err != nil {
+		return nil, err
+	}
+	if dom.Config().AuthTerminateSessionOnExpiry {
 		session.ExpiresAt = timestamppb.New(time.Unix(-1, 0))
 	}
 
