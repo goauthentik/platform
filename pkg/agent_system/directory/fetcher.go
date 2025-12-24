@@ -3,6 +3,7 @@ package directory
 import (
 	"cmp"
 	"context"
+	"math/rand/v2"
 	"slices"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 )
 
 func (directory *Server) startFetch() {
+	time.Sleep(time.Duration(rand.IntN(30)) * time.Second)
 	api, dom, err := directory.ctx.DomainAPI()
 	if err != nil {
 		directory.log.WithError(err).Warning("failed to start fetch")

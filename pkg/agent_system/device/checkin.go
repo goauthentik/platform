@@ -2,6 +2,8 @@ package device
 
 import (
 	"context"
+	"math/rand/v2"
+	"time"
 
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
@@ -9,6 +11,7 @@ import (
 )
 
 func (ds *Server) checkIn(ctx context.Context, dom *config.DomainConfig) {
+	time.Sleep(time.Duration(rand.IntN(30)) * time.Second)
 	ds.log.Debug("Starting facts gathering...")
 	api, err := dom.APIClient()
 	if err != nil {
