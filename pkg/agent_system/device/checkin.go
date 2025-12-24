@@ -1,12 +1,14 @@
 package device
 
 import (
+	"context"
+
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/platform/facts"
 )
 
-func (ds *Server) checkIn(dom *config.DomainConfig) {
+func (ds *Server) checkIn(ctx context.Context, dom *config.DomainConfig) {
 	ds.log.Debug("Starting facts gathering...")
 	api, err := dom.APIClient()
 	if err != nil {
@@ -19,7 +21,7 @@ func (ds *Server) checkIn(dom *config.DomainConfig) {
 		return
 	}
 	ds.log.Debug("Finished facts gathering")
-	hr, err := api.EndpointsApi.EndpointsAgentsConnectorsCheckInCreate(ds.ctx).DeviceFactsRequest(*req).Execute()
+	hr, err := api.EndpointsApi.EndpointsAgentsConnectorsCheckInCreate(ctx).DeviceFactsRequest(*req).Execute()
 	if err != nil {
 		ds.log.WithError(ak.HTTPToError(hr, err)).Warning("failed to checkin")
 	}
