@@ -30,7 +30,20 @@ func (eb *Bus) DispatchEvent(topic string, ev *Event) {
 	if ev.Context == nil {
 		ev.Context = context.TODO()
 	}
-	eb.parent.DispatchEvent(topic, ev.WithTopic(topic))
+	if eb.parent != nil {
+		eb.parent.DispatchEvent(topic, ev.WithTopic(topic))
+	}
+	eb.eventHandlersM.RLock()
+	handlers, ok := eb.eventHandlers[topic]
+	eb.eventHandlersM.RUnlock()
+	if !ok {
+		return
+	}
+	for _, handlers := range handlers {
+		for _, handler := range handlers {
+			handler(ev)
+		}
+	}
 }
 
 func (eb *Bus) AddEventListener(topic string, handler EventHandler) {
