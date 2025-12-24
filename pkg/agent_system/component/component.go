@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
 )
@@ -18,14 +19,16 @@ type Context struct {
 	log *log.Entry
 	reg ComponentRegistry
 	st  *state.ScopedState
+	bus *events.Bus
 }
 
-func NewContext(ctx context.Context, log *log.Entry, reg ComponentRegistry, st *state.ScopedState) Context {
+func NewContext(ctx context.Context, log *log.Entry, reg ComponentRegistry, st *state.ScopedState, bus *events.Bus) Context {
 	return Context{
 		ctx: ctx,
 		log: log,
 		reg: reg,
 		st:  st,
+		bus: bus,
 	}
 }
 
@@ -43,6 +46,10 @@ func (c Context) Log() *log.Entry {
 
 func (c Context) State() *state.ScopedState {
 	return c.st
+}
+
+func (c Context) Bus() *events.Bus {
+	return c.bus
 }
 
 func (c Context) StateForDomain(dom *config.DomainConfig) *state.ScopedState {

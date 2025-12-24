@@ -8,8 +8,10 @@ import (
 
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	ctypes "goauthentik.io/platform/pkg/agent_system/ctrl/types"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/events"
 	"google.golang.org/grpc"
 )
 
@@ -20,18 +22,33 @@ type Server struct {
 
 	log *log.Entry
 
-	ctx context.Context
+	ctx component.Context
+
+	cancel context.CancelFunc
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log: ctx.Log(),
-		ctx: ctx.Context(),
+		ctx: ctx,
 	}
 	return srv, nil
 }
 
 func (ds *Server) Start() error {
+	ds.ctx.Bus().AddEventListener(ctypes.TopicCtrlDomainEnrolled, func(ev *events.Event) {
+		if ds.cancel != nil {
+			ds.cancel()
+		}
+		ds.runCheckins()
+	})
+	ds.runCheckins()
+	return nil
+}
+
+func (ds *Server) runCheckins() {
+	ctx, cancel := context.WithCancel(ds.ctx.Context())
+	ds.cancel = cancel
 	for _, dom := range config.Manager().Get().Domains() {
 		go ds.checkIn(dom)
 		d := time.Second * time.Duration(dom.Config().RefreshInterval)
@@ -43,16 +60,19 @@ func (ds *Server) Start() error {
 					ds.log.WithField("domain", dom.Domain).Info("Starting checkin")
 					ds.checkIn(dom)
 					ds.log.WithField("domain", dom.Domain).WithField("next", d.String()).Info("Finished checkin")
-				case <-ds.ctx.Done():
+				case <-ctx.Done():
 					return
 				}
 			}
 		}()
 	}
-	return nil
+
 }
 
 func (ds *Server) Stop() error {
+	if ds.cancel != nil {
+		ds.cancel()
+	}
 	return nil
 }
 

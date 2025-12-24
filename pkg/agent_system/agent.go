@@ -19,6 +19,7 @@ import (
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
@@ -51,6 +52,7 @@ type SystemAgent struct {
 	cancel context.CancelFunc
 	st     *state.State
 	opts   SystemAgentOptions
+	b      *events.Bus
 }
 
 type SystemAgentOptions struct {
@@ -101,6 +103,7 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 		mtx:  sync.Mutex{},
 		opts: opts,
 		st:   config.State(),
+		b:    events.New(),
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	sm.registerComponents()
@@ -122,7 +125,7 @@ func (sm *SystemAgent) registerComponents() {
 		l.Info("Registering component")
 		ctx, cancel := context.WithCancel(sm.ctx)
 		ss := sm.st.ForBucket(types.KeyComponent, name)
-		cctx := component.NewContext(ctx, l, sm, ss)
+		cctx := component.NewContext(ctx, l, sm, ss, sm.b.Child(name))
 		comp, err := constr(cctx)
 		if err != nil {
 			panic(err)
