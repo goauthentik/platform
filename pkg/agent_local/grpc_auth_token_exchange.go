@@ -29,9 +29,8 @@ func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRe
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("%s:%s", req.ClientId, creds.UniqueProcessID()), nil
 		},
-		Timeout: func() time.Duration {
-			return time.Minute * 30
-		},
+		TimeoutSuccessful: time.Minute * 30,
+		TimeoutDenied:     time.Second,
 	}); err != nil {
 		return nil, err
 	}

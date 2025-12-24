@@ -30,9 +30,8 @@ func (a *Agent) DeviceTokenExchange(ctx context.Context, req *pb.DeviceTokenExch
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("%s:%s", req.DeviceName, creds.UniqueProcessID()), nil
 		},
-		Timeout: func() time.Duration {
-			return time.Minute * 30
-		},
+		TimeoutSuccessful: time.Minute * 30,
+		TimeoutDenied:     time.Minute * 5,
 	}); err != nil {
 		return nil, err
 	}

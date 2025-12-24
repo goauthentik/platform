@@ -10,13 +10,14 @@ import (
 type authorizeAction interface {
 	message(auth *grpc_creds.Creds) (pstr.PlatformString, error)
 	uid(parent *grpc_creds.Creds) (string, error)
-	timeout() time.Duration
+	timeout(status bool) time.Duration
 }
 
 type AuthorizeAction struct {
-	Message func(parent *grpc_creds.Creds) (pstr.PlatformString, error)
-	UID     func(parent *grpc_creds.Creds) (string, error)
-	Timeout func() time.Duration
+	Message           func(parent *grpc_creds.Creds) (pstr.PlatformString, error)
+	UID               func(parent *grpc_creds.Creds) (string, error)
+	TimeoutSuccessful time.Duration
+	TimeoutDenied     time.Duration
 }
 
 func (aa AuthorizeAction) message(parent *grpc_creds.Creds) (pstr.PlatformString, error) {
@@ -25,6 +26,9 @@ func (aa AuthorizeAction) message(parent *grpc_creds.Creds) (pstr.PlatformString
 func (aa AuthorizeAction) uid(parent *grpc_creds.Creds) (string, error) {
 	return aa.UID(parent)
 }
-func (aa AuthorizeAction) timeout() time.Duration {
-	return aa.Timeout()
+func (aa AuthorizeAction) timeout(status bool) time.Duration {
+	if status {
+		return aa.TimeoutSuccessful
+	}
+	return aa.TimeoutDenied
 }

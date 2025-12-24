@@ -26,9 +26,8 @@ func (a *Agent) GetCurrentToken(ctx context.Context, req *pb.CurrentTokenRequest
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return fmt.Sprintf("%s:%s", creds.UniqueProcessID(), req.Type), nil
 		},
-		Timeout: func() time.Duration {
-			return time.Hour * 2
-		},
+		TimeoutSuccessful: time.Hour * 2,
+		TimeoutDenied:     time.Minute * 5,
 	}); err != nil {
 		return nil, err
 	}
@@ -75,9 +74,8 @@ func (a *Agent) Authorize(ctx context.Context, req *pb.AuthorizeRequest) (*pb.Au
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return req.Uid, nil
 		},
-		Timeout: func() time.Duration {
-			return 3600 * time.Second
-		},
+		TimeoutSuccessful: time.Hour,
+		TimeoutDenied:     time.Minute * 5,
 	}); err != nil {
 		return nil, err
 	}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
@@ -27,9 +26,8 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 		UID: func(creds *grpc_creds.Creds) (string, error) {
 			return creds.UniqueProcessID(), nil
 		},
-		Timeout: func() time.Duration {
-			return 0
-		},
+		TimeoutSuccessful: 0,
+		TimeoutDenied:     0,
 	}); err != nil {
 		return nil, err
 	}
