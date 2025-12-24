@@ -38,8 +38,11 @@ func readDMIValue(filename string) *string {
 	if err != nil {
 		return nil
 	}
-
-	return api.PtrString(strings.TrimSpace(string(data)))
+	val := strings.TrimSpace(string(data))
+	if val == "" {
+		return nil
+	}
+	return api.PtrString(val)
 }
 
 func readMachineID() string {
