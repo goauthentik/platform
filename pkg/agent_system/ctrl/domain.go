@@ -5,7 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/ctrl/types"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/events"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -37,5 +39,6 @@ func (ctrl *Server) DomainEnroll(ctx context.Context, req *pb.DomainEnrollReques
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to save domain")
 	}
+	ctrl.ctx.Bus().DispatchEvent(types.TopicCtrlDomainEnrolled, events.NewEvent(ctx, map[string]any{}))
 	return &pb.DomainEnrollResponse{}, nil
 }
