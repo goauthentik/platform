@@ -2,13 +2,17 @@ package component
 
 import (
 	"context"
+	"errors"
 
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
 )
+
+var ErrNoDomain = errors.New("no domains")
 
 type ComponentRegistry interface {
 	GetComponent(id string) Component
@@ -54,6 +58,18 @@ func (c Context) Bus() *events.Bus {
 
 func (c Context) StateForDomain(dom *config.DomainConfig) *state.ScopedState {
 	return c.st.ForBucket(dom.Domain)
+}
+
+func (c Context) DomainAPI() (*api.APIClient, *config.DomainConfig, error) {
+	dom := config.Manager().Get().Domains()
+	if len(dom) < 1 {
+		return nil, nil, ErrNoDomain
+	}
+	ac, err := dom[0].APIClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	return ac, dom[0], nil
 }
 
 type Constructor func(Context) (Component, error)

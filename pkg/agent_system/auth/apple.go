@@ -9,7 +9,7 @@ import (
 )
 
 func (auth *Server) RegisterUser(ctx context.Context, req *pb.RegisterUserRequest) (*pb.RegisterUserResponse, error) {
-	ac, err := auth.dom.APIClient()
+	ac, _, err := auth.ctx.DomainAPI()
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (auth *Server) RegisterUser(ctx context.Context, req *pb.RegisterUserReques
 }
 
 func (auth *Server) RegisterDevice(ctx context.Context, req *pb.RegisterDeviceRequest) (*pb.RegisterDeviceResponse, error) {
-	ac, err := auth.dom.APIClient()
+	ac, dom, err := auth.ctx.DomainAPI()
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +49,6 @@ func (auth *Server) RegisterDevice(ctx context.Context, req *pb.RegisterDeviceRe
 		JwksEndpoint:  d.JwksEndpoint,
 		Audience:      d.Audience,
 		NonceEndpoint: d.NonceEndpoint,
-		DeviceToken:   auth.dom.Token,
+		DeviceToken:   dom.Token,
 	}, nil
 }

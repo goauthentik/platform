@@ -1,14 +1,11 @@
 package auth
 
 import (
-	"errors"
 	"runtime"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
@@ -22,13 +19,11 @@ type Server struct {
 	pb.UnimplementedSystemAuthAuthorizeServer
 	pb.UnimplementedSystemAuthAppleServer
 
-	api *api.APIClient
 	log *log.Entry
 
 	ctx component.Context
 
-	m   sync.RWMutex
-	dom *config.DomainConfig
+	m sync.RWMutex
 
 	interactiveEnabled   bool
 	authorizationEnabled bool
@@ -56,16 +51,6 @@ func NewTokenServer(ctx component.Context) (component.Component, error) {
 }
 
 func (auth *Server) Start() error {
-	if len(config.Manager().Get().Domains()) < 1 {
-		return errors.New("no domains")
-	}
-	dom := config.Manager().Get().Domains()[0]
-	ac, err := dom.APIClient()
-	if err != nil {
-		return err
-	}
-	auth.dom = dom
-	auth.api = ac
 	return nil
 }
 
