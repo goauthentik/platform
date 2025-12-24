@@ -8,7 +8,7 @@ entries:
     identifiers:
       slug: device-code
     attrs:
-      designation: authentication
+      designation: stage_configuration
       name: Device code
       title: Device code
   - model: authentik_brands.brand
