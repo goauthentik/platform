@@ -103,7 +103,7 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 		mtx:  sync.Mutex{},
 		opts: opts,
 		st:   config.State(),
-		b:    events.New(),
+		b:    events.New(l),
 	}
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	sm.registerComponents()

@@ -10,7 +10,7 @@ import (
 )
 
 func Test_listGroups(t *testing.T) {
-	nss := testNSS()
+	nss, _ := testNSS()
 	g := &pb.Group{
 		Gid:     1000,
 		Name:    "test-user",
@@ -23,7 +23,7 @@ func Test_listGroups(t *testing.T) {
 }
 
 func Test_getGroup(t *testing.T) {
-	nss := testNSS()
+	nss, _ := testNSS()
 	g := &pb.Group{
 		Gid:  1000,
 		Name: "test-user",

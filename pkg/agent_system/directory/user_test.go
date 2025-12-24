@@ -10,7 +10,7 @@ import (
 )
 
 func Test_listUsers(t *testing.T) {
-	nss := testNSS()
+	nss, _ := testNSS()
 	u := &pb.User{
 		Uid:  1000,
 		Gid:  1000,
@@ -23,7 +23,7 @@ func Test_listUsers(t *testing.T) {
 }
 
 func Test_getUser(t *testing.T) {
-	nss := testNSS()
+	nss, _ := testNSS()
 	u := &pb.User{
 		Uid:  1000,
 		Gid:  1000,
