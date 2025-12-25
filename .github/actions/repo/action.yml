@@ -1,0 +1,55 @@
+name: 'Build APT Repository'
+description: 'Creates an APT repository, ready for deployment'
+
+inputs:
+  package-path:
+    description: 'Path to .deb packages'
+    required: false
+    default: './packages'
+  output-path:
+    description: 'Output path for APT repository'
+    required: false
+    default: './repo'
+  gpg-private-key:
+    description: 'GPG private key for signing packages (optional)'
+    required: false
+  repository-url:
+    description: 'Repository URL (for APT instructions)'
+    required: false
+    default: 'https://pkg.goauthentik.io'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Create APT Repo
+      uses: ./.github/actions/apt
+      with:
+        distribution: stable
+        architectures: amd64 arm64
+        components: main
+        package-path: "${{ inputs.package-path }}"
+        output-path: "${{ inputs.output-path }}"
+        gpg-private-key: "${{ inputs.gpg-private-key }}"
+        repository-name: authentik-platform
+    - name: Create RPM Repo
+      uses: ./.github/actions/rpm
+      with:
+        package-path: "${{ inputs.package-path }}"
+        output-path: "${{ inputs.output-path }}"
+        gpg-private-key: "${{ inputs.gpg-private-key }}"
+        repository-name: authentik-platform
+    - name: Create repository index page
+      shell: bash
+      env:
+        REF: ${{ github.ref }}
+        SHA: ${{ github.sha }}
+        ARCHITECTURES: ${{ inputs.architectures }}
+        COMPONENTS: ${{ inputs.components }}
+        DISTRIBUTION: ${{ inputs.distribution }}
+        REPOSITORY_NAME: ${{ inputs.repository-name }}
+        REPOSITORY_URL: ${{ inputs.repository-url }}
+      run: |
+        set -xeuo pipefail
+        # Determine if GPG is being used
+        SIGNED=${{ inputs.gpg-private-key != '' && 'true' || 'false' }}
+        envsubst < "${{ github.action_path }}/index.html" > "$REPO_PATH/index.html"

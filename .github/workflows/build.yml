@@ -136,20 +136,18 @@ jobs:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
         with:
           path: ./bin
-      - uses: ./.github/actions/apt
-        id: apt-repo
+      - run: |
+          sudo apt-get remove --purge man-db
+      - uses: ./.github/actions/repo
+        id: repo
         with:
           package-path: bin/
           gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
-      - name: Show repository info
-        run: |
-          echo "Component: ${{ steps.apt-repo.outputs.component-name }}"
-          echo "Repository size: ${{ steps.apt-repo.outputs.repository-size }}"
       - name: Upload repository
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
-          name: apt-repository
-          path: ${{ steps.apt-repo.outputs.repository-path }}
+          name: repo
+          path: ./repo
       - name: Upload packages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
@@ -173,7 +171,7 @@ jobs:
       - name: Download repository
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
         with:
-          name: apt-repository
+          name: repo
           path: ./deploy
       - name: Download packages
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
@@ -186,7 +184,7 @@ jobs:
           publish-dir: './deploy'
           production-branch: main
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "APT repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
+          deploy-message: "Repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
           alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}

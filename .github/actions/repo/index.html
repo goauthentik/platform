@@ -26,12 +26,11 @@
         </ul>
     </div>
     <div class="repo-info">
-        <h2>🚀 Debian/Ubuntu Setup</h2>
+        <h2>🚀 Debian-based distribution Setup</h2>
         <div class="step">
             <h3>Step 1: Add GPG Key</h3>
             <pre class="command">curl -fsSL ${REPOSITORY_URL}/keys/gpg-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg</pre>
         </div>
-
         <div class="step">
             <h3>Step 2: Add Repository</h3>
             <pre class="command">echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] ${REPOSITORY_URL}/ ${DISTRIBUTION} ${COMPONENTS}" | sudo tee /etc/apt/sources.list.d/authentik.list</pre>
@@ -43,23 +42,29 @@ sudo apt install authentik-cli</pre>
         </div>
     </div>
     <div class="setup-section">
-        <h2>Repository Information</h2>
-        <p><strong>Repository:</strong> ${REPOSITORY_NAME}</p>
-        <p><strong>Component:</strong> <span class="component">${COMPONENTS}</span></p>
-        <p><strong>Distribution:</strong> ${DISTRIBUTION}</p>
-        <p><strong>Architectures:</strong> ${ARCHITECTURES}</p>
-        <p><strong>Built from:</strong> ${REF} (<a href="https://github.com/goauthentik/platform/commit/${SHA}">${SHA}</a>)</p>
-        <p><strong>Signing:</strong> <span class="signed">✅ Packages are GPG signed</span></p>
+        <h2>🚀 Red Hat-based distribution Setup</h2>
+        <div class="step">
+            <h3>Step 1: Add GPG Key</h3>
+            <pre class="command"># This overwrites any existing configuration in /etc/yum.repos.d/authentik.repo
+cat &lt;&lt;EOF | sudo tee /etc/yum.repos.d/authentik.repo
+[authentik]
+name=authentik
+baseurl=${REPOSITORY_URL}
+enabled=1
+gpgcheck=1
+gpgkey=${REPOSITORY_URL}/keys/gpg-key.asc
+EOF
+            </pre>
+        </div>
+        <div class="step">
+            <h3>Step 2: Install</h3>
+            <pre class="command">sudo yum install -y authentik-cli</pre>
+        </div>
     </div>
     <div class="repo-info">
-        <h2>Browse Repository</h2>
-        <ul>
-            <li><a href="dists/">dists/</a> - Distribution metadata and package lists</li>
-            <li><a href="pool/">pool/</a> - Package files (.deb)</li>
-            <li><a href="dists/${DISTRIBUTION}/Release">Release</a> - Repository metadata</li>
-            <li><a href="dists/${DISTRIBUTION}/${COMPONENTS}/binary-amd64/Packages">Packages (amd64)</a> - Package index</li>
-            <li><a href="dists/${DISTRIBUTION}/${COMPONENTS}/binary-arm64/Packages">Packages (arm64)</a> - Package index</li>
-        </ul>
+        <h2>Repository Information</h2>
+        <p><strong>Built from:</strong> ${REF} (<a href="https://github.com/goauthentik/platform/commit/${SHA}">${SHA}</a>)</p>
+        <p><strong>Signing:</strong> <span class="signed">✅ Packages are GPG signed</span></p>
     </div>
 </body>
 </html>
