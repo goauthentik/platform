@@ -72,7 +72,6 @@ runs:
           expect \
           python3-rpm \
           python3-dnf \
-          yum-utils \
           deltarpm
 
         # Verify installations
