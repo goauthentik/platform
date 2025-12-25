@@ -47,12 +47,6 @@ outputs:
   repository_path:
     description: 'Path to the created repository directory'
     value: ${{ steps.create-repo.outputs.repository_path }}
-  packages_added:
-    description: 'Number of packages added to the repository'
-    value: ${{ steps.create-repo.outputs.packages_added }}
-  repository_size:
-    description: 'Total size of the repository in bytes'
-    value: ${{ steps.create-repo.outputs.repository_size }}
   gpg_key_fingerprint:
     description: 'Fingerprint of the GPG key used for signing'
     value: ${{ steps.setup-gpg.outputs.key_fingerprint }}
@@ -139,13 +133,8 @@ runs:
       run: |
         echo "Processing RPM packages..."
 
-        PACKAGES_ADDED=0
-        TOTAL_SIZE=0
-
         if [ ! -d "${{ inputs.package-path }}" ]; then
           echo "Warning: Packages directory '${{ inputs.package-path }}' not found"
-          echo "packages_added=0" >> $GITHUB_OUTPUT
-          echo "total_size=0" >> $GITHUB_OUTPUT
           exit 0
         fi
 
@@ -156,20 +145,6 @@ runs:
           # Get package architecture
           ARCH=$(rpm -qp --queryformat '%{ARCH}' "$rpm_file" 2>/dev/null || echo "noarch")
           echo "Package architecture: $ARCH"
-
-          # Check if architecture is supported
-          ARCH_SUPPORTED=false
-          echo "${{ inputs.supported_architectures }}" | while IFS= read -r supported_arch; do
-            if [ "$ARCH" = "$supported_arch" ]; then
-              ARCH_SUPPORTED=true
-              break
-            fi
-          done
-
-          if [ "$ARCH_SUPPORTED" = "false" ] && [ "$ARCH" != "noarch" ]; then
-            echo "Warning: Architecture $ARCH is not in supported list, skipping package"
-            continue
-          fi
 
           # Create architecture directory if it doesn't exist
           mkdir -p "${{ inputs.output-path }}/${ARCH}"
@@ -198,10 +173,6 @@ runs:
           FILE_SIZE=$(stat -f%z "$rpm_file" 2>/dev/null || stat -c%s "$rpm_file" 2>/dev/null || echo 0)
           TOTAL_SIZE=$((TOTAL_SIZE + FILE_SIZE))
         done
-
-        echo "packages_added=${PACKAGES_ADDED}" >> $GITHUB_OUTPUT
-        echo "total_size=${TOTAL_SIZE}" >> $GITHUB_OUTPUT
-
     - name: Create repository metadata
       id: create-repo
       shell: bash
@@ -272,24 +243,13 @@ runs:
           echo "gpgkey=file://${{ inputs.output-path }}/RPM-GPG-KEY" >> "${{ inputs.output-path }}/${{ inputs.repository-name }}.repo"
         fi
 
-        # Calculate total repository size
-        REPO_SIZE=$(du -sb "${{ inputs.output-path }}" | cut -f1)
-
         echo "repository_path=${{ inputs.output-path }}" >> $GITHUB_OUTPUT
-        echo "repository_size=${REPO_SIZE}" >> $GITHUB_OUTPUT
-
-        echo "Repository creation completed successfully!"
-        echo "Repository location: ${{ inputs.output-path }}"
-        echo "Repository size: ${REPO_SIZE} bytes"
-
     - name: Generate repository summary
       shell: bash
       run: |
         echo "## RPM Repository Summary" >> $GITHUB_STEP_SUMMARY
         echo "- **Repository Name:** ${{ inputs.repository-name }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Repository Path:** ${{ inputs.output-path }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Packages Added:** ${{ steps.process-packages.outputs.packages_added }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Total Size:** ${{ steps.create-repo.outputs.repository_size }} bytes" >> $GITHUB_STEP_SUMMARY
         echo "- **Supported Architectures:** ${{ inputs.supported_architectures }}" >> $GITHUB_STEP_SUMMARY
         echo "- **GPG Signing:** $( [ -n "${{ inputs.gpg-private-key }}" ] && echo "Enabled" || echo "Disabled" )" >> $GITHUB_STEP_SUMMARY
 
