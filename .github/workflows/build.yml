@@ -145,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
           name: repo
-          path: ${{ steps.repo.outputs.repository-path }}
+          path: ./repo
       - name: Upload packages
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:

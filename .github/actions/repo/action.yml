@@ -37,14 +37,6 @@ inputs:
     required: false
     default: main
 
-outputs:
-  repository-path:
-    description: 'Path to the generated repository'
-    value: ${{ steps.setup.outputs.absolute-path }}
-  repository-size:
-    description: 'Size of the generated repository'
-    value: ${{ steps.stats.outputs.size }}
-
 runs:
   using: 'composite'
   steps:

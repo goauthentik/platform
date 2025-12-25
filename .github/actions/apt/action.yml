@@ -21,7 +21,7 @@ inputs:
   output-path:
     description: 'Output path for APT repository'
     required: false
-    default: './apt-repo'
+    default: './repo'
   gpg-private-key:
     description: 'GPG private key for signing packages (optional)'
     required: false
@@ -32,14 +32,6 @@ inputs:
     description: 'Repository name for display'
     required: false
     default: ${{ github.repository }}
-
-outputs:
-  repository-path:
-    description: 'Path to the generated repository'
-    value: ${{ steps.setup.outputs.absolute-path }}
-  repository-size:
-    description: 'Size of the generated repository'
-    value: ${{ steps.stats.outputs.size }}
 
 runs:
   using: 'composite'
