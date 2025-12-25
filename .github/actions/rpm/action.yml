@@ -157,16 +157,7 @@ runs:
             echo "Signing package: $(basename "$rpm_file")"
             DEST_FILE="${{ inputs.output-path }}/${ARCH}/$(basename "$rpm_file")"
 
-            if [ -n "${{ inputs.gpg-passphrase }}" ]; then
-              expect << EOF
-              spawn rpm --addsign "$DEST_FILE"
-              expect "Enter pass phrase:"
-              send "${{ inputs.gpg-passphrase }}\r"
-              expect eof
-        EOF
-            else
-              rpm --addsign "$DEST_FILE"
-            fi
+            rpm --addsign "$DEST_FILE"
           fi
 
           PACKAGES_ADDED=$((PACKAGES_ADDED + 1))
