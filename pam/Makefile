@@ -20,11 +20,18 @@ test:
 	cargo test --verbose
 
 package: build
-	cargo install cargo-deb
-	CARGO_TARGET_DIR="${TOP}/cache/${TARGET}" cargo deb \
-		--output ${TOP}/bin/${TARGET} \
-		--verbose \
-		--deb-version ${VERSION}
+	VERSION=${VERSION} ARCH=${ARCH} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p deb \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/${TARGET}/nfpm.yaml
+	VERSION=${VERSION} ARCH=${ARCH} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p rpm \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/${TARGET}/nfpm.yaml
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/libpam-authentik_${VERSION}_${ARCH}.deb

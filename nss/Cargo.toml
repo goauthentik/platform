@@ -3,7 +3,6 @@ name = "authentik_nss"
 version = "0.35.2"
 edition = "2024"
 license = "MIT"
-description = "NSS module for authentik"
 
 [lib]
 name = "authentik_nss"
@@ -15,26 +14,3 @@ ctor = "0.6.3"
 libc = "0.2.178"
 libnss = "0.9.0"
 log = "0.4.29"
-
-[package.metadata.deb]
-name = "libnss-authentik"
-maintainer = "Authentik Security Inc."
-license-file = ["../LICENSE", "4"]
-depends = [
-    "libc6",
-	"libssl3 | libssl3t64",
-    "authentik-sysd",
-]
-section = "security"
-priority = "optional"
-maintainer-scripts = "debian"
-
-[package.metadata.deb.variants.arm64]
-assets = [
-    { source = "target/release/libauthentik_nss.so", dest = "usr/lib/aarch64-linux-gnu/libnss_authentik.so.2", mode = "644"},
-]
-
-[package.metadata.deb.variants.amd64]
-assets = [
-    { source = "target/release/libauthentik_nss.so", dest = "usr/lib/x86_64-linux-gnu/libnss_authentik.so.2", mode = "644"},
-]
