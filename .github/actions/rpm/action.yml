@@ -64,7 +64,7 @@ runs:
           createrepo-c \
           rpm \
           gpg \
-          expect \
+          gnupg2 \
           python3-rpm \
           python3-dnf \
           deltarpm
