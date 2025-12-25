@@ -22,10 +22,10 @@ jobs:
           # Browser support is always included in the agent bundle
           # - browser_support
         platform:
-          # - macos-15
+          - macos-15
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          # - windows-2025
+          - windows-2025
         exclude:
           # CLI and sysd are included in the agent bundle
           - target: sysd
@@ -129,7 +129,7 @@ jobs:
     needs:
       - build_go
       - build_js
-      # - build_rs
+      - build_rs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
