@@ -99,7 +99,6 @@ runs:
         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
 
         # Create RPM macros for signing
-        mkdir -p ~/.rpmmacros
         GPG_KEY_ID="${KEY_FINGERPRINT}"
 
         cat > ~/.rpmmacros << EOF
