@@ -200,41 +200,4 @@ runs:
 
           gpg --batch --yes --detach-sign --armor "${{ inputs.output-path }}/repodata/repomd.xml"
         fi
-
-        # Create repository configuration file
-        cat > "${{ inputs.output-path }}/${{ inputs.repository-name }}.repo" << EOF
-        [${{ inputs.repository-name }}]
-        name=${{ inputs.repo_description }}
-        baseurl=file://${{ inputs.output-path }}
-        enabled=1
-        gpgcheck=$( [ -n "${{ inputs.gpg-private-key }}" ] && echo "1" || echo "0" )
-        EOF
-
-        if [ -n "${{ inputs.gpg-private-key }}" ]; then
-          # Export public key
-          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d':' -f5 | head -1)
-
-          gpg --export --armor "$GPG_KEY_ID" > "${{ inputs.output-path }}/RPM-GPG-KEY"
-          echo "gpgkey=file://${{ inputs.output-path }}/RPM-GPG-KEY" >> "${{ inputs.output-path }}/${{ inputs.repository-name }}.repo"
-        fi
-
         echo "repository_path=${{ inputs.output-path }}" >> $GITHUB_OUTPUT
-    - name: Generate repository summary
-      shell: bash
-      run: |
-        set -xeuo pipefail
-        echo "## RPM Repository Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- **Repository Name:** ${{ inputs.repository-name }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Repository Path:** ${{ inputs.output-path }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Supported Architectures:** ${{ inputs.supported_architectures }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **GPG Signing:** $( [ -n "${{ inputs.gpg-private-key }}" ] && echo "Enabled" || echo "Disabled" )" >> $GITHUB_STEP_SUMMARY
-
-        if [ -n "${{ inputs.gpg-private-key }}" ]; then
-          echo "- **GPG Key Fingerprint:** ${{ steps.setup-gpg.outputs.key_fingerprint }}" >> $GITHUB_STEP_SUMMARY
-        fi
-
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Repository Configuration" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`ini" >> $GITHUB_STEP_SUMMARY
-        cat "${{ inputs.output-path }}/${{ inputs.repository-name }}.repo" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
