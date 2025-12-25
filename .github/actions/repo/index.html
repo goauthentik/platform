@@ -41,7 +41,7 @@
 sudo apt install authentik-cli</pre>
         </div>
     </div>
-    <div class="repo-info">
+    <div class="setup-section">
         <h2>🚀 Red Hat-based distribution Setup</h2>
         <div class="step">
             <h3>Step 1: Add GPG Key</h3>
@@ -61,24 +61,10 @@ EOF
             <pre class="command">sudo yum install -y authentik-cli</pre>
         </div>
     </div>
-    <div class="setup-section">
+    <div class="repo-info">
         <h2>Repository Information</h2>
-        <p><strong>Repository:</strong> ${REPOSITORY_NAME}</p>
-        <p><strong>Component:</strong> <span class="component">${COMPONENTS}</span></p>
-        <p><strong>Distribution:</strong> ${DISTRIBUTION}</p>
-        <p><strong>Architectures:</strong> ${ARCHITECTURES}</p>
         <p><strong>Built from:</strong> ${REF} (<a href="https://github.com/goauthentik/platform/commit/${SHA}">${SHA}</a>)</p>
         <p><strong>Signing:</strong> <span class="signed">✅ Packages are GPG signed</span></p>
-    </div>
-    <div class="repo-info">
-        <h2>Browse Repository</h2>
-        <ul>
-            <li><a href="dists/">dists/</a> - Distribution metadata and package lists</li>
-            <li><a href="pool/">pool/</a> - Package files (.deb)</li>
-            <li><a href="dists/${DISTRIBUTION}/Release">Release</a> - Repository metadata</li>
-            <li><a href="dists/${DISTRIBUTION}/${COMPONENTS}/binary-amd64/Packages">Packages (amd64)</a> - Package index</li>
-            <li><a href="dists/${DISTRIBUTION}/${COMPONENTS}/binary-arm64/Packages">Packages (arm64)</a> - Package index</li>
-        </ul>
     </div>
 </body>
 </html>
