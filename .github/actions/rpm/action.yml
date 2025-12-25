@@ -102,7 +102,6 @@ runs:
         %__gpg_sign_cmd %{__gpg} \\
             gpg --force-v3-sigs --batch --verbose --no-armor \\
             --no-secmem-warning --pinentry-mode loopback \\
-            --passphrase-fd 3 \\
             -u "%{_gpg_name}" -sbo %{__signature_filename} \\
             --digest-algo sha256 %{__plaintext_filename}
         EOF
