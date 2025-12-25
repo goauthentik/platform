@@ -1,0 +1,76 @@
+name: 'Build APT Repository'
+description: 'Creates an APT repository, ready for deployment'
+
+inputs:
+  distribution:
+    description: 'Debian distribution name'
+    required: false
+    default: 'stable'
+  architectures:
+    description: 'Space-separated list of architectures'
+    required: false
+    default: 'amd64 arm64'
+  package-path:
+    description: 'Path to .deb packages'
+    required: false
+    default: './packages'
+  output-path:
+    description: 'Output path for APT repository'
+    required: false
+    default: './apt-repo'
+  gpg-private-key:
+    description: 'GPG private key for signing packages (optional)'
+    required: false
+  gpg-passphrase:
+    description: 'GPG passphrase (optional)'
+    required: false
+  repository-name:
+    description: 'Repository name for display'
+    required: false
+    default: ${{ github.repository }}
+  repository-url:
+    description: 'Repository URL (for APT instructions)'
+    required: false
+    default: 'https://pkg.goauthentik.io/'
+  components:
+    description: "Repo component"
+    required: false
+    default: main
+
+outputs:
+  repository-path:
+    description: 'Path to the generated repository'
+    value: ${{ steps.setup.outputs.absolute-path }}
+  repository-size:
+    description: 'Size of the generated repository'
+    value: ${{ steps.stats.outputs.size }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Create APT Repo
+      uses: ${{ github.action_path }}/../apt
+      with:
+        distribution: "${{ inputs.distribution }}"
+        architectures: "${{ inputs.architectures }}"
+        components: "${{ inputs.components }}"
+        package-path: "${{ inputs.package-path }}"
+        output-path: "${{ inputs.output-path }}"
+        gpg-private-key: "${{ inputs.gpg-private-key }}"
+        gpg-passphrase: "${{ inputs.gpg-passphrase }}"
+        repository-name: "${{ inputs.repository-name }}"
+    - name: Create repository index page
+      shell: bash
+      env:
+        REF: ${{ github.ref }}
+        SHA: ${{ github.sha }}
+        ARCHITECTURES: ${{ inputs.architectures }}
+        COMPONENTS: ${{ inputs.components }}
+        DISTRIBUTION: ${{ inputs.distribution }}
+        REPOSITORY_NAME: ${{ inputs.repository-name }}
+        REPOSITORY_URL: ${{ inputs.repository-url }}
+      run: |
+        set -xeuo pipefail
+        # Determine if GPG is being used
+        SIGNED=${{ inputs.gpg-private-key != '' && 'true' || 'false' }}
+        envsubst < "${{ github.action_path }}/index.html" > "$REPO_PATH/index.html"
