@@ -92,14 +92,6 @@ runs:
         # Set up GPG agent configuration
         mkdir -p ~/.gnupg
         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        # Setup GPG agent for non-interactive signing
-        echo "allow-preset-passphrase" > "$GNUPGHOME/gpg-agent.conf"
-        gpg-connect-agent reloadagent /bye
-
-        # Preset the passphrase
-        GPG_KEYGRIP=$(gpg --list-secret-keys --with-keygrip | grep -A1 "sec " | tail -1 | sed 's/.*Keygrip = //')
-        echo "${{ inputs.gpg-passphrase }}" | gpg-preset-passphrase --preset "$GPG_KEYGRIP"
-        echo "GPG agent configured for signing"
 
         # Create RPM macros for signing
         GPG_KEY_ID="${KEY_FINGERPRINT}"

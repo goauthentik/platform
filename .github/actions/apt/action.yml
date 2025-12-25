@@ -119,20 +119,6 @@ runs:
         echo "Distributions file content:"
         cat "$REPO_PATH/conf/distributions"
 
-    - name: Setup GPG agent for signing
-      if: ${{ inputs.gpg-private-key != '' && inputs.gpg-passphrase != '' }}
-      shell: bash
-      run: |
-        set -xeuo pipefail
-        # Setup GPG agent for non-interactive signing
-        echo "allow-preset-passphrase" > "$GNUPGHOME/gpg-agent.conf"
-        gpg-connect-agent reloadagent /bye
-
-        # Preset the passphrase
-        GPG_KEYGRIP=$(gpg --list-secret-keys --with-keygrip | grep -A1 "sec " | tail -1 | sed 's/.*Keygrip = //')
-        echo "${{ inputs.gpg-passphrase }}" | gpg-preset-passphrase --preset "$GPG_KEYGRIP"
-        echo "GPG agent configured for signing"
-
     - name: Initialize repository
       shell: bash
       run: |
