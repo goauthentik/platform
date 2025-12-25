@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "libpam-authentik"
+arch: "${ARCH}"
+platform: "linux"
+version: "${VERSION}"
+description: |
+  libpam-authentik authenticates users through authentik.
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+section: security
+depends:
+  - "libc6"
+  - "libssl3 | libssl3t64"
+  - "authentik-sysd"
+  - "libpam0g"
+contents:
+  - src: "../cache/pam/release/libauthentik_nss.so"
+    dst: "/usr/lib/security/pam_authentik.so"
+    file_info:
+      mode: 0644
+    packager: deb
+  - src: "../pam/debian/pam_config"
+    dst: "/usr/share/pam-configs/authentik"
+    file_info:
+      mode: 0644
+    packager: deb
+    type: config
+  - src: "../cache/pam/release/libauthentik_nss.so"
+    dst: "/usr/lib64/security/pam_authentik.so"
+    file_info:
+      mode: 0644
+    packager: rpm
+overrides:
+  deb:
+    scripts:
+      postinstall: ./debian/postinst.sh
+      preremove: ./debian/prerm.sh

@@ -3,7 +3,6 @@ name = "authentik_pam"
 version = "0.35.2"
 edition = "2024"
 license = "MIT"
-description = "libpam-authentik authenticates users through authentik."
 
 [lib]
 name = "authentik_pam"
@@ -23,21 +22,3 @@ serde = "1.0.228"
 serde_json = "1.0.147"
 sha2 = "0.10.9"
 whoami = "1.6.1"
-
-[package.metadata.deb]
-name = "libpam-authentik"
-maintainer = "Authentik Security Inc."
-license-file = ["../LICENSE", "4"]
-depends = [
-    "libc6",
-	"libssl3 | libssl3t64",
-    "authentik-sysd",
-    "libpam0g",
-]
-section = "security"
-priority = "optional"
-assets = [
-    { source = "target/release/libauthentik_pam.so", dest = "usr/lib/security/pam_authentik.so", mode = "644"},
-    { source = "debian/pam_config", dest = "usr/share/pam-configs/authentik", mode = "644"},
-]
-maintainer-scripts = "debian"
