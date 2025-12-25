@@ -22,10 +22,10 @@ jobs:
           # Browser support is always included in the agent bundle
           # - browser_support
         platform:
-          - macos-15
+          # - macos-15
           - ubuntu-24.04
           - ubuntu-24.04-arm
-          - windows-2025
+          # - windows-2025
         exclude:
           # CLI and sysd are included in the agent bundle
           - target: sysd
