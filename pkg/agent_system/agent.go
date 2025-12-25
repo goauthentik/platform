@@ -3,13 +3,11 @@ package agentsystem
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"os"
 	"os/signal"
 	"slices"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -62,8 +60,6 @@ type SystemAgentOptions struct {
 }
 
 func New(opts SystemAgentOptions) (*SystemAgent, error) {
-	rand.Seed(time.Now().UnixNano())
-
 	l := systemlog.Get().WithField("logger", "sysd")
 	serverOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
