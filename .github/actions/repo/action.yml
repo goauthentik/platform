@@ -49,7 +49,7 @@ runs:
   using: 'composite'
   steps:
     - name: Create APT Repo
-      uses: ${{ github.action_path }}/../apt
+      uses: ./.github/actions/apt
       with:
         distribution: "${{ inputs.distribution }}"
         architectures: "${{ inputs.architectures }}"
