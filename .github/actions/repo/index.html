@@ -49,10 +49,10 @@ sudo apt install authentik-cli</pre>
 cat &lt;&lt;EOF | sudo tee /etc/yum.repos.d/authentik.repo
 [authentik]
 name=authentik
-baseurl=https://${REPOSITORY_URL}
+baseurl=${REPOSITORY_URL}
 enabled=1
 gpgcheck=1
-gpgkey=https://${REPOSITORY_URL}/keys/gpg-key.asc
+gpgkey=${REPOSITORY_URL}/keys/gpg-key.asc
 EOF
             </pre>
         </div>
