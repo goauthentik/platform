@@ -30,10 +30,6 @@ inputs:
   gpg-passphrase:
     description: 'Passphrase for the GPG private key'
     required: false
-  compression:
-    description: 'Compression type for repository metadata (gzip, bz2, xz)'
-    required: false
-    default: 'gzip'
   createrepo_options:
     description: 'Additional options to pass to createrepo_c command'
     required: false
@@ -173,9 +169,7 @@ runs:
         CREATEREPO_CMD="createrepo_c"
 
         # Add compression option
-        if [ -n "${{ inputs.compression }}" ]; then
-          CREATEREPO_CMD="${CREATEREPO_CMD} --compress-type ${{ inputs.compression }}"
-        fi
+        CREATEREPO_CMD="${CREATEREPO_CMD} --compress-type gz"
 
         # Add additional options
         if [ -n "${{ inputs.createrepo_options }}" ]; then
