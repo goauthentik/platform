@@ -16,7 +16,7 @@ depends:
   - "authentik-sysd"
   - "libpam0g"
 contents:
-  - src: "../cache/pam/release/libauthentik_nss.so"
+  - src: "../cache/pam/release/libauthentik_pam.so"
     dst: "/usr/lib/security/pam_authentik.so"
     file_info:
       mode: 0644
@@ -27,7 +27,7 @@ contents:
       mode: 0644
     packager: deb
     type: config
-  - src: "../cache/pam/release/libauthentik_nss.so"
+  - src: "../cache/pam/release/libauthentik_pam.so"
     dst: "/usr/lib64/security/pam_authentik.so"
     file_info:
       mode: 0644
