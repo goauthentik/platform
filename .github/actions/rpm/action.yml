@@ -12,8 +12,7 @@ inputs:
     default: './repo'
   repository-name:
     description: 'Repository name for display'
-    required: false
-    default: ${{ github.repository }}
+    required: true
   repo_description:
     description: 'Description of the RPM repository'
     required: false
@@ -26,9 +25,6 @@ inputs:
       aarch64
   gpg-private-key:
     description: 'GPG private key (ASCII-armored) for signing RPM packages and repository metadata'
-    required: false
-  gpg-passphrase:
-    description: 'Passphrase for the GPG private key'
     required: false
   createrepo_options:
     description: 'Additional options to pass to createrepo_c command'
@@ -202,12 +198,7 @@ runs:
         if [ -n "${{ inputs.gpg-private-key }}" ]; then
           echo "Signing repository metadata..."
 
-          if [ -n "${{ inputs.gpg-passphrase }}" ]; then
-            echo "${{ inputs.gpg-passphrase }}" | gpg --batch --yes --passphrase-fd 0 \
-              --detach-sign --armor "${{ inputs.output-path }}/repodata/repomd.xml"
-          else
-            gpg --batch --yes --detach-sign --armor "${{ inputs.output-path }}/repodata/repomd.xml"
-          fi
+          gpg --batch --yes --detach-sign --armor "${{ inputs.output-path }}/repodata/repomd.xml"
         fi
 
         # Create repository configuration file

@@ -25,13 +25,9 @@ inputs:
   gpg-private-key:
     description: 'GPG private key for signing packages (optional)'
     required: false
-  gpg-passphrase:
-    description: 'GPG passphrase (optional)'
-    required: false
   repository-name:
     description: 'Repository name for display'
-    required: false
-    default: ${{ github.repository }}
+    required: true
 
 runs:
   using: 'composite'
@@ -40,7 +36,6 @@ runs:
       shell: bash
       run: |
         set -xeuo pipefail
-        sudo apt-get remove --purge man-db
         sudo apt-get update -qq
         sudo apt-get install -y reprepro gnupg2
 

@@ -9,12 +9,9 @@ inputs:
   output-path:
     description: 'Output path for APT repository'
     required: false
-    default: './apt-repo'
+    default: './repo'
   gpg-private-key:
     description: 'GPG private key for signing packages (optional)'
-    required: false
-  gpg-passphrase:
-    description: 'GPG passphrase (optional)'
     required: false
   repository-url:
     description: 'Repository URL (for APT instructions)'
@@ -33,16 +30,14 @@ runs:
         package-path: "${{ inputs.package-path }}"
         output-path: "${{ inputs.output-path }}"
         gpg-private-key: "${{ inputs.gpg-private-key }}"
-        gpg-passphrase: "${{ inputs.gpg-passphrase }}"
-        repository-name: ${{ github.repository }}
+        repository-name: authentik-platform
     - name: Create RPM Repo
       uses: ./.github/actions/rpm
       with:
         package-path: "${{ inputs.package-path }}"
         output-path: "${{ inputs.output-path }}"
         gpg-private-key: "${{ inputs.gpg-private-key }}"
-        gpg-passphrase: "${{ inputs.gpg-passphrase }}"
-        repository-name: ${{ github.repository }}
+        repository-name: authentik-platform
     - name: Create repository index page
       shell: bash
       env:

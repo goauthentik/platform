@@ -136,6 +136,8 @@ jobs:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
         with:
           path: ./bin
+      - run: |
+          sudo apt-get remove --purge man-db
       - uses: ./.github/actions/repo
         id: repo
         with:
