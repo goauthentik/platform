@@ -161,10 +161,6 @@ runs:
 
             rpm --addsign "$DEST_FILE"
           fi
-
-          PACKAGES_ADDED=$((PACKAGES_ADDED + 1))
-          FILE_SIZE=$(stat -f%z "$rpm_file" 2>/dev/null || stat -c%s "$rpm_file" 2>/dev/null || echo 0)
-          TOTAL_SIZE=$((TOTAL_SIZE + FILE_SIZE))
         done
     - name: Create repository metadata
       id: create-repo
