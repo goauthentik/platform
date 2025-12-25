@@ -16,7 +16,7 @@ inputs:
   repository-url:
     description: 'Repository URL (for APT instructions)'
     required: false
-    default: 'https://pkg.goauthentik.io/'
+    default: 'https://pkg.goauthentik.io'
 
 runs:
   using: 'composite'
