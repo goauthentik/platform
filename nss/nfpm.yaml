@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "libnss-authentik"
+arch: "${ARCH}"
+platform: "linux"
+version: "${VERSION}"
+description: |
+  NSS module for authentik
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+section: security
+depends:
+  - "libc6"
+  - "libssl3 | libssl3t64"
+  - "authentik-sysd"
+contents:
+  - src: ../cache/nss/release/libauthentik_nss.so
+    dst: "/usr/lib/${ARCH}-linux-gnu/libnss_authentik.so.2"
+    file_info:
+      mode: 0644
+    packager: deb
+  - src: ../cache/nss/release/libauthentik_nss.so
+    dst: "/usr/lib64/libnss_authentik.so.2"
+    file_info:
+      mode: 0644
+    packager: rpm
+overrides:
+  deb:
+    scripts:
+      postinstall: ./debian/postinst.sh
