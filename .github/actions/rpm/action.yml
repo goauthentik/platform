@@ -1,0 +1,306 @@
+name: 'Create RPM Repository'
+description: 'Create and maintain an RPM repository with automatic package signing and metadata generation'
+
+inputs:
+  package-path:
+    description: 'Directory containing RPM packages to add to the repository'
+    required: true
+    default: './packages'
+  output-path:
+    description: 'Directory where the RPM repository will be created/maintained'
+    required: true
+    default: './repo'
+  repository-name:
+    description: 'Repository name for display'
+    required: false
+    default: ${{ github.repository }}
+  repo_description:
+    description: 'Description of the RPM repository'
+    required: false
+    default: 'Custom RPM Repository'
+  supported_architectures:
+    description: 'Newline-separated list of supported architectures (x86_64, i386, aarch64, etc.)'
+    required: false
+    default: |
+      x86_64
+      aarch64
+  gpg-private-key:
+    description: 'GPG private key (ASCII-armored) for signing RPM packages and repository metadata'
+    required: false
+  gpg-passphrase:
+    description: 'Passphrase for the GPG private key'
+    required: false
+  compression:
+    description: 'Compression type for repository metadata (gzip, bz2, xz)'
+    required: false
+    default: 'gzip'
+  createrepo_options:
+    description: 'Additional options to pass to createrepo_c command'
+    required: false
+    default: '--update --checksum sha256'
+  enable_delta:
+    description: 'Enable delta RPM creation for smaller updates'
+    required: false
+    default: 'false'
+
+outputs:
+  repository_path:
+    description: 'Path to the created repository directory'
+    value: ${{ steps.create-repo.outputs.repository_path }}
+  packages_added:
+    description: 'Number of packages added to the repository'
+    value: ${{ steps.create-repo.outputs.packages_added }}
+  repository_size:
+    description: 'Total size of the repository in bytes'
+    value: ${{ steps.create-repo.outputs.repository_size }}
+  gpg_key_fingerprint:
+    description: 'Fingerprint of the GPG key used for signing'
+    value: ${{ steps.setup-gpg.outputs.key_fingerprint }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        echo "Installing RPM repository tools..."
+        sudo apt-get update
+        sudo apt-get install -y \
+          createrepo-c \
+          rpm \
+          gpg \
+          expect \
+          python3-rpm \
+          python3-dnf \
+          yum-utils \
+          deltarpm
+
+        # Verify installations
+        createrepo_c --version
+        rpm --version
+        gpg --version
+
+    - name: Setup GPG signing
+      id: setup-gpg
+      if: inputs.gpg-private-key != ''
+      shell: bash
+      run: |
+        echo "Setting up GPG for package signing..."
+
+        # Import GPG key
+        echo "${{ inputs.gpg-private-key }}" | gpg --batch --import
+
+        # Get key fingerprint
+        KEY_FINGERPRINT=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d':' -f5 | head -1)
+        echo "key_fingerprint=${KEY_FINGERPRINT}" >> $GITHUB_OUTPUT
+
+        # Set up GPG agent configuration
+        mkdir -p ~/.gnupg
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+
+        # Create RPM macros for signing
+        mkdir -p ~/.rpmmacros
+        GPG_KEY_ID="${KEY_FINGERPRINT}"
+
+        cat > ~/.rpmmacros << EOF
+        %_gpg_name ${GPG_KEY_ID}
+        %_signature gpg
+        %__gpg_sign_cmd %{__gpg} \\
+            gpg --force-v3-sigs --batch --verbose --no-armor \\
+            --no-secmem-warning --pinentry-mode loopback \\
+            --passphrase-fd 3 \\
+            -u "%{_gpg_name}" -sbo %{__signature_filename} \\
+            --digest-algo sha256 %{__plaintext_filename}
+        EOF
+
+        echo "GPG setup completed with key: ${GPG_KEY_ID}"
+
+    - name: Prepare repository structure
+      shell: bash
+      run: |
+        echo "Preparing repository structure..."
+
+        # Create repository directory structure
+        mkdir -p "${{ inputs.output-path }}"
+
+        # Parse supported architectures
+        echo "${{ inputs.supported_architectures }}" | while IFS= read -r arch; do
+          if [ -n "$arch" ]; then
+            mkdir -p "${{ inputs.output-path }}/${arch}"
+            echo "Created directory for architecture: ${arch}"
+          fi
+        done
+
+        # Create repodata directory
+        mkdir -p "${{ inputs.output-path }}/repodata"
+
+    - name: Process and copy packages
+      id: process-packages
+      shell: bash
+      run: |
+        echo "Processing RPM packages..."
+
+        PACKAGES_ADDED=0
+        TOTAL_SIZE=0
+
+        if [ ! -d "${{ inputs.package-path }}" ]; then
+          echo "Warning: Packages directory '${{ inputs.package-path }}' not found"
+          echo "packages_added=0" >> $GITHUB_OUTPUT
+          echo "total_size=0" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Find all RPM files
+        find "${{ inputs.package-path }}" -name "*.rpm" -type f | while read -r rpm_file; do
+          echo "Processing: $(basename "$rpm_file")"
+
+          # Get package architecture
+          ARCH=$(rpm -qp --queryformat '%{ARCH}' "$rpm_file" 2>/dev/null || echo "noarch")
+          echo "Package architecture: $ARCH"
+
+          # Check if architecture is supported
+          ARCH_SUPPORTED=false
+          echo "${{ inputs.supported_architectures }}" | while IFS= read -r supported_arch; do
+            if [ "$ARCH" = "$supported_arch" ]; then
+              ARCH_SUPPORTED=true
+              break
+            fi
+          done
+
+          if [ "$ARCH_SUPPORTED" = "false" ] && [ "$ARCH" != "noarch" ]; then
+            echo "Warning: Architecture $ARCH is not in supported list, skipping package"
+            continue
+          fi
+
+          # Create architecture directory if it doesn't exist
+          mkdir -p "${{ inputs.output-path }}/${ARCH}"
+
+          # Copy package to repository
+          cp "$rpm_file" "${{ inputs.output-path }}/${ARCH}/"
+
+          # Sign package if GPG key is provided
+          if [ -n "${{ inputs.gpg-private-key }}" ]; then
+            echo "Signing package: $(basename "$rpm_file")"
+            DEST_FILE="${{ inputs.output-path }}/${ARCH}/$(basename "$rpm_file")"
+
+            if [ -n "${{ inputs.gpg-passphrase }}" ]; then
+              expect << EOF
+              spawn rpm --addsign "$DEST_FILE"
+              expect "Enter pass phrase:"
+              send "${{ inputs.gpg-passphrase }}\r"
+              expect eof
+        EOF
+            else
+              rpm --addsign "$DEST_FILE"
+            fi
+          fi
+
+          PACKAGES_ADDED=$((PACKAGES_ADDED + 1))
+          FILE_SIZE=$(stat -f%z "$rpm_file" 2>/dev/null || stat -c%s "$rpm_file" 2>/dev/null || echo 0)
+          TOTAL_SIZE=$((TOTAL_SIZE + FILE_SIZE))
+        done
+
+        echo "packages_added=${PACKAGES_ADDED}" >> $GITHUB_OUTPUT
+        echo "total_size=${TOTAL_SIZE}" >> $GITHUB_OUTPUT
+
+    - name: Create repository metadata
+      id: create-repo
+      shell: bash
+      run: |
+        echo "Creating repository metadata..."
+
+        # Build createrepo_c command
+        CREATEREPO_CMD="createrepo_c"
+
+        # Add compression option
+        if [ -n "${{ inputs.compression }}" ]; then
+          CREATEREPO_CMD="${CREATEREPO_CMD} --compress-type ${{ inputs.compression }}"
+        fi
+
+        # Add additional options
+        if [ -n "${{ inputs.createrepo_options }}" ]; then
+          CREATEREPO_CMD="${CREATEREPO_CMD} ${{ inputs.createrepo_options }}"
+        fi
+
+        # Add delta RPM support if enabled
+        if [ "${{ inputs.enable_delta }}" = "true" ]; then
+          CREATEREPO_CMD="${CREATEREPO_CMD} --deltas"
+        fi
+
+        # Create repository metadata for each architecture
+        echo "${{ inputs.supported_architectures }}" | while IFS= read -r arch; do
+          if [ -n "$arch" ] && [ -d "${{ inputs.output-path }}/${arch}" ]; then
+            echo "Creating metadata for architecture: $arch"
+
+            if [ "$(find "${{ inputs.output-path }}/${arch}" -name "*.rpm" | wc -l)" -gt 0 ]; then
+              ${CREATEREPO_CMD} "${{ inputs.output-path }}/${arch}"
+            else
+              echo "No RPM packages found for architecture: $arch"
+            fi
+          fi
+        done
+
+        # Create main repository metadata
+        echo "Creating main repository metadata..."
+        ${CREATEREPO_CMD} "${{ inputs.output-path }}"
+
+        # Sign repository metadata if GPG key is provided
+        if [ -n "${{ inputs.gpg-private-key }}" ]; then
+          echo "Signing repository metadata..."
+
+          if [ -n "${{ inputs.gpg-passphrase }}" ]; then
+            echo "${{ inputs.gpg-passphrase }}" | gpg --batch --yes --passphrase-fd 0 \
+              --detach-sign --armor "${{ inputs.output-path }}/repodata/repomd.xml"
+          else
+            gpg --batch --yes --detach-sign --armor "${{ inputs.output-path }}/repodata/repomd.xml"
+          fi
+        fi
+
+        # Create repository configuration file
+        cat > "${{ inputs.output-path }}/${{ inputs.repository-name }}.repo" << EOF
+        [${{ inputs.repository-name }}]
+        name=${{ inputs.repo_description }}
+        baseurl=file://${{ inputs.output-path }}
+        enabled=1
+        gpgcheck=$( [ -n "${{ inputs.gpg-private-key }}" ] && echo "1" || echo "0" )
+        EOF
+
+        if [ -n "${{ inputs.gpg-private-key }}" ]; then
+          # Export public key
+          GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d':' -f5 | head -1)
+
+          gpg --export --armor "$GPG_KEY_ID" > "${{ inputs.output-path }}/RPM-GPG-KEY"
+          echo "gpgkey=file://${{ inputs.output-path }}/RPM-GPG-KEY" >> "${{ inputs.output-path }}/${{ inputs.repository-name }}.repo"
+        fi
+
+        # Calculate total repository size
+        REPO_SIZE=$(du -sb "${{ inputs.output-path }}" | cut -f1)
+
+        echo "repository_path=${{ inputs.output-path }}" >> $GITHUB_OUTPUT
+        echo "repository_size=${REPO_SIZE}" >> $GITHUB_OUTPUT
+
+        echo "Repository creation completed successfully!"
+        echo "Repository location: ${{ inputs.output-path }}"
+        echo "Repository size: ${REPO_SIZE} bytes"
+
+    - name: Generate repository summary
+      shell: bash
+      run: |
+        echo "## RPM Repository Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Repository Name:** ${{ inputs.repository-name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Repository Path:** ${{ inputs.output-path }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Packages Added:** ${{ steps.process-packages.outputs.packages_added }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total Size:** ${{ steps.create-repo.outputs.repository_size }} bytes" >> $GITHUB_STEP_SUMMARY
+        echo "- **Supported Architectures:** ${{ inputs.supported_architectures }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **GPG Signing:** $( [ -n "${{ inputs.gpg-private-key }}" ] && echo "Enabled" || echo "Disabled" )" >> $GITHUB_STEP_SUMMARY
+
+        if [ -n "${{ inputs.gpg-private-key }}" ]; then
+          echo "- **GPG Key Fingerprint:** ${{ steps.setup-gpg.outputs.key_fingerprint }}" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Repository Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`ini" >> $GITHUB_STEP_SUMMARY
+        cat "${{ inputs.output-path }}/${{ inputs.repository-name }}.repo" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

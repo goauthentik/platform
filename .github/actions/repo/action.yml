@@ -2,14 +2,6 @@ name: 'Build APT Repository'
 description: 'Creates an APT repository, ready for deployment'
 
 inputs:
-  distribution:
-    description: 'Debian distribution name'
-    required: false
-    default: 'stable'
-  architectures:
-    description: 'Space-separated list of architectures'
-    required: false
-    default: 'amd64 arm64'
   package-path:
     description: 'Path to .deb packages'
     required: false
@@ -24,18 +16,10 @@ inputs:
   gpg-passphrase:
     description: 'GPG passphrase (optional)'
     required: false
-  repository-name:
-    description: 'Repository name for display'
-    required: false
-    default: ${{ github.repository }}
   repository-url:
     description: 'Repository URL (for APT instructions)'
     required: false
     default: 'https://pkg.goauthentik.io/'
-  components:
-    description: "Repo component"
-    required: false
-    default: main
 
 runs:
   using: 'composite'
@@ -43,14 +27,22 @@ runs:
     - name: Create APT Repo
       uses: ./.github/actions/apt
       with:
-        distribution: "${{ inputs.distribution }}"
-        architectures: "${{ inputs.architectures }}"
-        components: "${{ inputs.components }}"
+        distribution: stable
+        architectures: amd64 arm64
+        components: main
         package-path: "${{ inputs.package-path }}"
         output-path: "${{ inputs.output-path }}"
         gpg-private-key: "${{ inputs.gpg-private-key }}"
         gpg-passphrase: "${{ inputs.gpg-passphrase }}"
-        repository-name: "${{ inputs.repository-name }}"
+        repository-name: ${{ github.repository }}
+    - name: Create RPM Repo
+      uses: ./.github/actions/rpm
+      with:
+        package-path: "${{ inputs.package-path }}"
+        output-path: "${{ inputs.output-path }}"
+        gpg-private-key: "${{ inputs.gpg-private-key }}"
+        gpg-passphrase: "${{ inputs.gpg-passphrase }}"
+        repository-name: ${{ github.repository }}
     - name: Create repository index page
       shell: bash
       env:
