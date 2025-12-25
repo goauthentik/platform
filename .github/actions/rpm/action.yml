@@ -57,6 +57,7 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "Installing RPM repository tools..."
         sudo apt-get update
         sudo apt-get install -y \
@@ -78,6 +79,7 @@ runs:
       if: inputs.gpg-private-key != ''
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "Setting up GPG for package signing..."
 
         # Import GPG key
@@ -90,7 +92,14 @@ runs:
         # Set up GPG agent configuration
         mkdir -p ~/.gnupg
         echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-        echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+        # Setup GPG agent for non-interactive signing
+        echo "allow-preset-passphrase" > "$GNUPGHOME/gpg-agent.conf"
+        gpg-connect-agent reloadagent /bye
+
+        # Preset the passphrase
+        GPG_KEYGRIP=$(gpg --list-secret-keys --with-keygrip | grep -A1 "sec " | tail -1 | sed 's/.*Keygrip = //')
+        echo "${{ inputs.gpg-passphrase }}" | gpg-preset-passphrase --preset "$GPG_KEYGRIP"
+        echo "GPG agent configured for signing"
 
         # Create RPM macros for signing
         GPG_KEY_ID="${KEY_FINGERPRINT}"
@@ -111,6 +120,7 @@ runs:
     - name: Prepare repository structure
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "Preparing repository structure..."
 
         # Create repository directory structure
@@ -131,6 +141,7 @@ runs:
       id: process-packages
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "Processing RPM packages..."
 
         if [ ! -d "${{ inputs.package-path }}" ]; then
@@ -168,6 +179,7 @@ runs:
       id: create-repo
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "Creating repository metadata..."
 
         # Build createrepo_c command
@@ -238,6 +250,7 @@ runs:
     - name: Generate repository summary
       shell: bash
       run: |
+        set -xeuo pipefail
         echo "## RPM Repository Summary" >> $GITHUB_STEP_SUMMARY
         echo "- **Repository Name:** ${{ inputs.repository-name }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Repository Path:** ${{ inputs.output-path }}" >> $GITHUB_STEP_SUMMARY
