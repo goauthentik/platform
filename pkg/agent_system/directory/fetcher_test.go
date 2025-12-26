@@ -44,7 +44,7 @@ func TestFetcher(t *testing.T) {
 	dc := config.TestDomain(&api.AgentConfig{
 		NssUidOffset: 1000,
 		NssGidOffset: 1000,
-	}, ac)
+	}, ac.APIClient)
 
 	nss.fetch(t.Context(), dc, ac.APIClient)
 	assert.Equal(t, []*pb.User{
