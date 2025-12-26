@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
@@ -23,7 +24,9 @@ type Server struct {
 
 	ctx component.Context
 
-	m sync.RWMutex
+	txns map[string]*InteractiveAuthTransaction
+	m    sync.RWMutex
+	dom  *config.DomainConfig
 
 	interactiveEnabled   bool
 	authorizationEnabled bool
@@ -33,6 +36,7 @@ func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log:                  ctx.Log(),
 		ctx:                  ctx,
+		txns:                 map[string]*InteractiveAuthTransaction{},
 		m:                    sync.RWMutex{},
 		interactiveEnabled:   true,
 		authorizationEnabled: true,
