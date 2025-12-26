@@ -11,6 +11,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/agent_local/tray/icon"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
 
@@ -47,13 +48,10 @@ func (t *Tray) onClick(item *systray.MenuItem, fn func()) {
 
 func (t *Tray) Start() {
 	t.log.Debug("starting systray")
-	go func() {
-		t.log.Debug("Starting config file watch")
-		for range t.cfg.Watch() {
-			t.log.Debug("Updating systray due to config change")
-			t.systrayConfigUpdate()
-		}
-	}()
+	t.cfg.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
+		t.log.Debug("Updating systray due to config change")
+		t.systrayConfigUpdate()
+	})
 	go func() {
 		for range time.NewTicker(30 * time.Second).C {
 			t.log.Debug("Updating systray")
