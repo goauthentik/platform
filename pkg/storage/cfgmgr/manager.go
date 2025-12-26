@@ -2,7 +2,6 @@ package cfgmgr
 
 import (
 	"encoding/json"
-	"io"
 	"os"
 
 	"github.com/pkg/errors"
@@ -51,9 +50,6 @@ func (cfg *Manager[T]) Load() error {
 	}()
 	err = json.NewDecoder(f).Decode(&cfg.loaded)
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
 		return err
 	}
 	return cfg.loaded.PostLoad()
