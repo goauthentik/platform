@@ -10,7 +10,7 @@ import (
 
 var debugServer *httptest.Server
 
-func startDebugServer() {
+func startDebugServer(l *log.Entry) {
 	h := &http.ServeMux{}
 	h.HandleFunc("/debug/pprof/", pprof.Index)
 	h.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -18,5 +18,5 @@ func startDebugServer() {
 	h.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	h.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	debugServer = httptest.NewServer(h)
-	log.WithField("on", debugServer.URL).Debug("Started debug server")
+	l.WithField("on", debugServer.URL).Debug("Started debug server")
 }
