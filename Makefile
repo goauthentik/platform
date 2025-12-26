@@ -69,6 +69,9 @@ test:
 		-out ${PWD}/junit.xml \
 		-set-exit-code
 
+test-integration:
+	$(MAKE) test TEST_FLAGS=-tags=integration
+
 test-agent:
 	go run -v ./cmd/agent_local/
 
