@@ -10,7 +10,7 @@ import (
 func TestBusDispatch(t *testing.T) {
 	b := New(logrus.WithField("root", "foo"))
 	called := false
-	b.Child("child").AddEventListener("foo", func(ev *Event) {
+	b.AddEventListener("foo", func(ev *Event) {
 		called = true
 	})
 	b.DispatchEvent("foo", NewEvent(t.Context(), map[string]any{}))
@@ -19,11 +19,22 @@ func TestBusDispatch(t *testing.T) {
 
 func TestBusDispatchChild(t *testing.T) {
 	b := New(logrus.WithField("root", "foo"))
-	called := false
+	called_child := false
+	called_root := false
+	b.AddEventListener("foo", func(ev *Event) {
+		assert.Equal(t, "foo", ev.String())
+		called_root = true
+	})
 	b.Child("child_a").AddEventListener("foo", func(ev *Event) {
 		assert.Equal(t, "foo", ev.String())
-		called = true
+		called_child = true
 	})
 	b.Child("child_b").DispatchEvent("foo", NewEvent(t.Context(), map[string]any{}))
-	assert.True(t, called)
+	assert.True(t, called_child)
+	assert.True(t, called_root)
+}
+
+func TestBusDispatch_Unknown(t *testing.T) {
+	b := New(logrus.WithField("root", "foo"))
+	b.DispatchEvent("foo", NewEvent(t.Context(), map[string]any{}))
 }

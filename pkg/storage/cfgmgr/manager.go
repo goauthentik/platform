@@ -60,7 +60,7 @@ func (cfg *Manager[T]) SetBus(b *events.Bus) {
 }
 
 func (cfg *Manager[T]) Bus() *events.Bus {
-	return cfg.bus.Child("")
+	return cfg.bus
 }
 
 func (cfg *Manager[T]) Get() T {

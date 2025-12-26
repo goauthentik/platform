@@ -35,6 +35,7 @@ func (eb *Bus) DispatchEvent(topic string, ev *Event) {
 	eb.log.WithField("topic", topic).Debug("dispatching event")
 	if eb.parent != nil {
 		eb.parent.DispatchEvent(topic, ev.WithTopic(topic))
+		return
 	}
 	eb.eventHandlersM.RLock()
 	handlers, ok := eb.eventHandlers[topic]
@@ -50,9 +51,13 @@ func (eb *Bus) DispatchEvent(topic string, ev *Event) {
 }
 
 func (eb *Bus) AddEventListener(topic string, handler EventHandler) {
-	eb.parent.eventHandlersM.RLock()
-	topicHandlers, ok := eb.parent.eventHandlers[topic]
-	eb.parent.eventHandlersM.RUnlock()
+	if eb.parent != nil {
+		eb.parent.AddEventListener(topic, handler)
+		return
+	}
+	eb.eventHandlersM.RLock()
+	topicHandlers, ok := eb.eventHandlers[topic]
+	eb.eventHandlersM.RUnlock()
 	if !ok {
 		topicHandlers = make(map[string][]EventHandler)
 	}
@@ -62,7 +67,7 @@ func (eb *Bus) AddEventListener(topic string, handler EventHandler) {
 	}
 	roleHandlers = append(roleHandlers, handler)
 	topicHandlers[eb.id] = roleHandlers
-	eb.parent.eventHandlersM.Lock()
-	defer eb.parent.eventHandlersM.Unlock()
-	eb.parent.eventHandlers[topic] = topicHandlers
+	eb.eventHandlersM.Lock()
+	defer eb.eventHandlersM.Unlock()
+	eb.eventHandlers[topic] = topicHandlers
 }
