@@ -182,14 +182,20 @@ jobs:
         with:
           name: all-packages
           path: ./deploy/packages
+      - id: app-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654 # v3.0
         with:
           publish-dir: './deploy'
           production-branch: main
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.app-token.outputs.token }}
           deploy-message: "Repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
           alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
+          github-deployment-environment: pkg
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: authentik-pkg.netlify.app
