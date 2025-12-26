@@ -13,6 +13,7 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc"
 )
@@ -29,15 +30,20 @@ type Agent struct {
 	tray *tray.Tray
 	lock lockfile.Lockfile
 	lis  socket.InfoListener
+	bus  *events.Bus
 }
 
 func New() (*Agent, error) {
 	mgr := config.Manager()
+	l := systemlog.Get().WithField("logger", "agent")
+	b := events.New(l)
+	config.Manager().SetBus(b)
 	return &Agent{
 		cfg:  mgr,
-		log:  systemlog.Get().WithField("logger", "agent"),
+		log:  l,
 		tr:   token.NewGlobal(),
 		tray: tray.New(mgr),
+		bus:  b,
 	}, nil
 }
 

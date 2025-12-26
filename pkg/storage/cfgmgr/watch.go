@@ -1,20 +1,12 @@
 package cfgmgr
 
 import (
+	"context"
 	"path"
 
 	"github.com/fsnotify/fsnotify"
+	"goauthentik.io/platform/pkg/shared/events"
 )
-
-func (cfg *Manager[T]) Watch() chan ConfigChangedEvent[T] {
-	ch := make(chan ConfigChangedEvent[T])
-	cfg.changed = append(cfg.changed, ch)
-	defer func() {
-		// Trigger config changed just after this function is called
-		ch <- ConfigChangedEvent[T]{}
-	}()
-	return ch
-}
 
 func (cfg *Manager[T]) watch() error {
 	watcher, err := fsnotify.NewWatcher()
@@ -45,13 +37,14 @@ func (cfg *Manager[T]) watch() error {
 				cfg.log.WithField("event", event).Debug("config file update")
 				previousConfig := &cfg.loaded
 				reloadConfig()
-				evt := ConfigChangedEvent[T]{
-					Type:           cfg.loaded.PostUpdate(*previousConfig, event),
-					Path:           event.Name,
-					PreviousConfig: *previousConfig,
-				}
-				for _, ch := range cfg.changed {
-					ch <- evt
+				if cfg.bus != nil {
+					cfg.bus.DispatchEvent(TopicConfigChanged, events.NewEvent(
+						context.Background(), map[string]any{
+							"type":            cfg.loaded.PostUpdate(*previousConfig, event),
+							"path":            event.Name,
+							"previous_config": *previousConfig,
+						},
+					))
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {

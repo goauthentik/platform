@@ -105,11 +105,31 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 		st:   config.State(),
 		b:    events.New(l),
 	}
+	config.Manager().SetBus(sm.b.Child("config"))
 	sm.ctx, sm.cancel = context.WithCancel(context.Background())
 	sm.registerComponents()
 	sm.DomainCheck()
 
-	go sm.watchConfig()
+	sm.b.AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
+		sm.log.WithField("ev", ev).Debug("Handling config event")
+		et := ev.Payload.Data["type"].(cfgmgr.ConfigChangedType)
+		if et == cfgmgr.ConfigChangedAdded || et == cfgmgr.ConfigChangedRemoved {
+			sm.mtx.Lock()
+			for n, component := range sm.cm {
+				err := component.comp.Stop()
+				if err != nil {
+					sm.log.WithError(err).WithField("component", n).Warning("failed to stop componnet")
+					continue
+				}
+				err = component.comp.Start()
+				if err != nil {
+					sm.log.WithError(err).WithField("component", n).Info("Failed to start component")
+					continue
+				}
+			}
+			sm.mtx.Unlock()
+		}
+	})
 	return sm, nil
 }
 
@@ -169,29 +189,6 @@ func (sm *SystemAgent) DomainCheck() {
 			continue
 		}
 		sm.log.WithField("domain", dom.Domain).Info("Tested domain connectivity")
-	}
-}
-
-func (sm *SystemAgent) watchConfig() {
-	sm.log.Debug("Starting config file watch")
-	for evt := range config.Manager().Watch() {
-		sm.log.WithField("evt", evt).Debug("Handling config event")
-		if evt.Type == cfgmgr.ConfigChangedAdded || evt.Type == cfgmgr.ConfigChangedRemoved {
-			sm.mtx.Lock()
-			for n, component := range sm.cm {
-				err := component.comp.Stop()
-				if err != nil {
-					sm.log.WithError(err).WithField("component", n).Warning("failed to stop componnet")
-					continue
-				}
-				err = component.comp.Start()
-				if err != nil {
-					sm.log.WithError(err).WithField("component", n).Info("Failed to start component")
-					continue
-				}
-			}
-			sm.mtx.Unlock()
-		}
 	}
 }
 
