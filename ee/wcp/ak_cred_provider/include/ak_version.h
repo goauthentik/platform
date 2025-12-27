@@ -1,3 +1,3 @@
 #pragma once
 
-#define AK_WCP_VERSION "0.35.2"
+#define AK_WCP_VERSION "0.35.3"
