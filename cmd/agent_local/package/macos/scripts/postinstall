@@ -96,9 +96,9 @@ if [ ! -d "$firefoxSystemWidePath" ]; then
 fi
 
 # Copy the manifest file to the system-wide directory
-cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$chromeSystemWidePath/io.goauthentik.platform.json"
-cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$chromiumSystemWidePath/io.goauthentik.platform.json"
-cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$edgeSystemWidePath/io.goauthentik.platform.json"
-cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$firefoxSystemWidePath/io.goauthentik.platform.json"
+cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host-chrome.json" "$chromeSystemWidePath/io.goauthentik.platform.json"
+cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host-chrome.json" "$chromiumSystemWidePath/io.goauthentik.platform.json"
+cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host-chrome.json" "$edgeSystemWidePath/io.goauthentik.platform.json"
+cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host-firefox.json" "$firefoxSystemWidePath/io.goauthentik.platform.json"
 
 echo "Finished running postinstall script."

@@ -14,7 +14,7 @@ scripts:
 contents:
   - src: ../../bin/agent_system/ak-sysd
     dst: /usr/bin/ak-sysd
-  - src: ./package/linux/ak-sysd.service
+  - src: ./package/linux/usr/lib/systemd/system/ak-sysd.service
     dst: /usr/lib/systemd/system/ak-sysd.service
   - src: ./package/linux/config.json
     dst: /etc/authentik/config.json
@@ -25,3 +25,13 @@ contents:
     type: dir
   - dst: /var/lib/authentik
     type: dir
+  - src: ../../bin/browser_support/ak-browser-support
+    dst: /usr/bin/ak-browser-support
+  - src: ./package/linux/browser-host-chrome.json
+    dst: /etc/opt/chrome/native-messaging-hosts/io.goauthentik.platform.json
+  - src: ./package/linux/browser-host-chrome.json
+    dst: /etc/chromium/native-messaging-hosts/io.goauthentik.platform.json
+  - src: ./package/linux/browser-host-chrome.json
+    dst: /etc/opt/edge/native-messaging-hosts/io.goauthentik.platform.json
+  - src: ./package/linux/browser-host-firefox.json
+    dst: /usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json

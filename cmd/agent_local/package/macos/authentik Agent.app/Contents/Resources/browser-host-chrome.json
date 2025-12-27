@@ -5,7 +5,6 @@
     "type": "stdio",
     "allowed_origins": [
         "chrome-extension://dklfpnaeklldfpmhkbfjbmbnmkfafdma/",
-        "chrome-extension://mcmjmlcifgadhpeggocghbiainhedbgn/",
-        "platform-browser-extension@goauthentik.io"
+        "chrome-extension://mcmjmlcifgadhpeggocghbiainhedbgn/"
     ]
 }
