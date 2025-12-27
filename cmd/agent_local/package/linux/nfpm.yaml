@@ -23,6 +23,8 @@ contents:
   - src: ./package/linux/browser-host.json
     dst: /etc/opt/chrome/native-messaging-hosts/io.goauthentik.platform.json
   - src: ./package/linux/browser-host.json
+    dst: /etc/chromium/native-messaging-hosts/io.goauthentik.platform.json
+  - src: ./package/linux/browser-host.json
     dst: /etc/opt/edge/native-messaging-hosts/io.goauthentik.platform.json
   - src: ./package/linux/browser-host.json
     dst: /usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json

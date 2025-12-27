@@ -70,6 +70,7 @@ ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak-vault" /usr/local/bin
 echo "Installing browser native messaging host"
 
 chromeSystemWidePath="/Library/Google/Chrome/NativeMessagingHosts"
+chromiumSystemWidePath="/Library/Application Support/Chromium/NativeMessagingHosts"
 edgeSystemWidePath="/Library/Microsoft/Edge/NativeMessagingHosts"
 firefoxSystemWidePath="/Library/Application Support/Mozilla/NativeMessagingHosts"
 
@@ -77,6 +78,11 @@ firefoxSystemWidePath="/Library/Application Support/Mozilla/NativeMessagingHosts
 if [ ! -d "$chromeSystemWidePath" ]; then
     echo "$chromeSystemWidePath doesn't exist, creating directory"
     mkdir -p "$chromeSystemWidePath"
+fi
+
+if [ ! -d "$chromiumSystemWidePath" ]; then
+    echo "$chromiumSystemWidePath doesn't exist, creating directory"
+    mkdir -p "$chromiumSystemWidePath"
 fi
 
 if [ ! -d "$edgeSystemWidePath" ]; then
@@ -91,6 +97,7 @@ fi
 
 # Copy the manifest file to the system-wide directory
 cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$chromeSystemWidePath/io.goauthentik.platform.json"
+cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$chromiumSystemWidePath/io.goauthentik.platform.json"
 cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$edgeSystemWidePath/io.goauthentik.platform.json"
 cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host.json" "$firefoxSystemWidePath/io.goauthentik.platform.json"
 
