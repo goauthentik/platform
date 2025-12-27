@@ -26,9 +26,15 @@ var domainsJoinCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		base := mustFlag(cmd.Flags().GetString("authentik-url"))
-		token, err := readPassword("Enter authentik enrollment token: ")
-		if err != nil {
-			return err
+		token := ""
+		if et := os.Getenv("AK_SYS_INSECURE_ENV_TOKEN"); et != "" {
+			token = et
+		} else {
+			itoken, err := readPassword("Enter authentik enrollment token: ")
+			if err != nil {
+				return err
+			}
+			token = itoken
 		}
 		sc, err := client.NewCtrl()
 		if err != nil {
