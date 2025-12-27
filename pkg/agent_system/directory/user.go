@@ -40,7 +40,7 @@ func cleanName(name string) string {
 	return strings.ToLower(userNameSubst.ReplaceAllString(name, "-"))
 }
 
-func (directory *Server) convertUser(cfg *api.AgentConfig, u api.User) *pb.User {
+func (directory *Server) convertUser(cfg api.AgentConfig, u api.User) *pb.User {
 	// https://sources.debian.org/src/adduser/3.134/adduser.conf/#L75
 	un := cleanName(u.Username)
 	return &pb.User{
@@ -53,7 +53,7 @@ func (directory *Server) convertUser(cfg *api.AgentConfig, u api.User) *pb.User 
 	}
 }
 
-func (directory *Server) convertUserToGroup(cfg *api.AgentConfig, u api.User) *pb.Group {
+func (directory *Server) convertUserToGroup(cfg api.AgentConfig, u api.User) *pb.Group {
 	return &pb.Group{
 		Name: cleanName(u.Username),
 		Gid:  directory.GetUserGidNumber(cfg, u),

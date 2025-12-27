@@ -9,12 +9,12 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 )
 
-func testNSS() (Server, *api.AgentConfig) {
+func testNSS() (Server, api.AgentConfig) {
 	return Server{
 			log:    log.WithField("component", "test"),
 			users:  []*pb.User{},
 			groups: []*pb.Group{},
-		}, &api.AgentConfig{
+		}, api.AgentConfig{
 			NssUidOffset: 1000,
 			NssGidOffset: 1000,
 		}

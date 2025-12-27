@@ -21,9 +21,6 @@ func (directory *Server) startFetch() {
 		return
 	}
 	dcfg := dom.Config()
-	if dcfg == nil {
-		return
-	}
 	ctx, cancel := context.WithCancel(directory.ctx.Context())
 	directory.cancel = cancel
 	d := time.Second * time.Duration(dcfg.RefreshInterval)
@@ -47,10 +44,6 @@ func (directory *Server) startFetch() {
 
 func (directory *Server) fetch(ctx context.Context, dom *config.DomainConfig, api *api.APIClient) {
 	dcfg := dom.Config()
-	if dcfg == nil {
-		directory.log.Warning("empty domain AgentConfig")
-		return
-	}
 	users, err := ak.Paginator(api.CoreApi.CoreUsersList(ctx).IncludeGroups(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   directory.log,

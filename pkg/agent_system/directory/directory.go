@@ -58,7 +58,7 @@ func (directory *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 	pb.RegisterSystemDirectoryServer(s, directory)
 }
 
-func (directory *Server) GetUserUidNumber(cfg *api.AgentConfig, user api.User) uint32 {
+func (directory *Server) GetUserUidNumber(cfg api.AgentConfig, user api.User) uint32 {
 	uidNumber, ok := user.GetAttributes()["uidNumber"].(string)
 	def := uint32(cfg.NssUidOffset + user.Pk)
 	if ok {
@@ -72,7 +72,7 @@ func (directory *Server) GetUserUidNumber(cfg *api.AgentConfig, user api.User) u
 	return def
 }
 
-func (directory *Server) GetUserGidNumber(cfg *api.AgentConfig, user api.User) uint32 {
+func (directory *Server) GetUserGidNumber(cfg api.AgentConfig, user api.User) uint32 {
 	gidNumber, ok := user.GetAttributes()["gidNumber"].(string)
 	def := directory.GetUserUidNumber(cfg, user)
 	if ok {
@@ -86,7 +86,7 @@ func (directory *Server) GetUserGidNumber(cfg *api.AgentConfig, user api.User) u
 	return def
 }
 
-func (directory *Server) GetGroupGidNumber(cfg *api.AgentConfig, group api.Group) uint32 {
+func (directory *Server) GetGroupGidNumber(cfg api.AgentConfig, group api.Group) uint32 {
 	gidNumber, ok := group.GetAttributes()["gidNumber"].(string)
 	def := uint32(cfg.NssGidOffset + group.NumPk)
 	if ok {
