@@ -88,7 +88,7 @@ func (c *Config) SaveDomain(dom *DomainConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to save domain config")
 	}
-	return nil
+	return c.PostLoad()
 }
 
 func (c *Config) DeleteDomain(dom *DomainConfig) error {
@@ -104,5 +104,5 @@ func (c *Config) DeleteDomain(dom *DomainConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to delete domain config")
 	}
-	return nil
+	return c.PostLoad()
 }

@@ -172,7 +172,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 }
 
 func (c *Config) loadDomains() error {
-	c.log.Debug("Loading domains...")
+	c.log.Info("Loading domains...")
 	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
 	if err != nil {
 		c.log.WithError(err).Warning("failed to load domains")

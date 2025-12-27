@@ -7,10 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	ctypes "goauthentik.io/platform/pkg/agent_system/ctrl/types"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/shared/events"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc"
 )
 
@@ -37,7 +37,7 @@ func NewServer(ctx component.Context) (component.Component, error) {
 }
 
 func (directory *Server) Start() error {
-	directory.ctx.Bus().AddEventListener(ctypes.TopicCtrlDomainChanged, func(ev *events.Event) {
+	directory.ctx.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
 		if directory.cancel != nil {
 			directory.cancel()
 		}
