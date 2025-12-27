@@ -163,6 +163,8 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     permissions:
       pull-requests: write
+    outputs:
+      deploy-url: ${{ steps.netlify.outputs.deploy-url }}
     steps:
       - name: Determine component name
         id: component
@@ -187,15 +189,51 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654 # v3.0
+      - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654 # v3.0
+        id: netlify
         with:
           publish-dir: './deploy'
           production-branch: main
           github-token: ${{ steps.app-token.outputs.token }}
           deploy-message: "Repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
           alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
-          github-deployment-environment: pkg
+          github-deployment-environment: ${{ github.event_name == 'pull_request' && '' || 'pkg' }}
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: authentik-pkg.netlify.app
+  build-container:
+    needs: deploy-to-netlify
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - selenium
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        env:
+          AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
+          AK_TAG_SUFFIX: ${{ github.event_name == 'pull_request' && github.event.number || '' }}
+        run: |
+          cd ${{ matrix.target }}
+          echo "tag=$(make ci-container-tag)" >> $GITHUB_OUTPUT
+          echo "build-args=$(make ci-build-args)" >> $GITHUB_OUTPUT
+      - uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        id: push
+        with:
+          context: ${{ matrix.target }}
+          file: ${{ matrix.target }}/Dockerfile
+          push: true
+          build-args: ${{ steps.meta.outputs.build-args }}
+          tags: ${{ steps.meta.outputs.tag }}
+          platforms: linux/amd64,linux/arm64
