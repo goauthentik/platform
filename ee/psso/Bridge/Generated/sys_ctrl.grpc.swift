@@ -16,13 +16,13 @@ internal import SwiftProtobuf
 
 /// Namespace containing generated types for the "sys_ctrl.SystemCtrl" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum SystemCtrl {
+internal enum SystemCtrl: Sendable {
     /// Service descriptor for the "sys_ctrl.SystemCtrl" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_ctrl.SystemCtrl")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "DomainList" metadata.
-        internal enum DomainList {
+        internal enum DomainList: Sendable {
             /// Request type for "DomainList".
             internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
             /// Response type for "DomainList".
@@ -34,7 +34,7 @@ internal enum SystemCtrl {
             )
         }
         /// Namespace for "DomainEnroll" metadata.
-        internal enum DomainEnroll {
+        internal enum DomainEnroll: Sendable {
             /// Request type for "DomainEnroll".
             internal typealias Input = DomainEnrollRequest
             /// Response type for "DomainEnroll".
@@ -45,8 +45,20 @@ internal enum SystemCtrl {
                 method: "DomainEnroll"
             )
         }
+        /// Namespace for "DomainUnenroll" metadata.
+        internal enum DomainUnenroll: Sendable {
+            /// Request type for "DomainUnenroll".
+            internal typealias Input = Domain
+            /// Response type for "DomainUnenroll".
+            internal typealias Output = SwiftProtobuf.Google_Protobuf_Empty
+            /// Descriptor for "DomainUnenroll".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_ctrl.SystemCtrl"),
+                method: "DomainUnenroll"
+            )
+        }
         /// Namespace for "TroubleshootInspect" metadata.
-        internal enum TroubleshootInspect {
+        internal enum TroubleshootInspect: Sendable {
             /// Request type for "TroubleshootInspect".
             internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
             /// Response type for "TroubleshootInspect".
@@ -61,6 +73,7 @@ internal enum SystemCtrl {
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             DomainList.descriptor,
             DomainEnroll.descriptor,
+            DomainUnenroll.descriptor,
             TroubleshootInspect.descriptor
         ]
     }
@@ -117,6 +130,25 @@ extension SystemCtrl {
             deserializer: some GRPCCore.MessageDeserializer<DomainEnrollResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<DomainEnrollResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "DomainUnenroll" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `Domain` message.
+        ///   - serializer: A serializer for `Domain` messages.
+        ///   - deserializer: A deserializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func domainUnenroll<Result>(
+            request: GRPCCore.ClientRequest<Domain>,
+            serializer: some GRPCCore.MessageSerializer<Domain>,
+            deserializer: some GRPCCore.MessageDeserializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result
         ) async throws -> Result where Result: Sendable
 
         /// Call the "TroubleshootInspect" method.
@@ -215,6 +247,36 @@ extension SystemCtrl {
             )
         }
 
+        /// Call the "DomainUnenroll" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `Domain` message.
+        ///   - serializer: A serializer for `Domain` messages.
+        ///   - deserializer: A deserializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func domainUnenroll<Result>(
+            request: GRPCCore.ClientRequest<Domain>,
+            serializer: some GRPCCore.MessageSerializer<Domain>,
+            deserializer: some GRPCCore.MessageDeserializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SystemCtrl.Method.DomainUnenroll.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
         /// Call the "TroubleshootInspect" method.
         ///
         /// - Parameters:
@@ -295,6 +357,31 @@ extension SystemCtrl.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<DomainEnrollRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<DomainEnrollResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "DomainUnenroll" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `Domain` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func domainUnenroll<Result>(
+        request: GRPCCore.ClientRequest<Domain>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.domainUnenroll(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<Domain>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<SwiftProtobuf.Google_Protobuf_Empty>(),
             options: options,
             onResponse: handleResponse
         )
@@ -381,6 +468,35 @@ extension SystemCtrl.ClientProtocol {
             metadata: metadata
         )
         return try await self.domainEnroll(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "DomainUnenroll" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func domainUnenroll<Result>(
+        _ message: Domain,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SwiftProtobuf.Google_Protobuf_Empty>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<Domain>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.domainUnenroll(
             request: request,
             options: options,
             onResponse: handleResponse

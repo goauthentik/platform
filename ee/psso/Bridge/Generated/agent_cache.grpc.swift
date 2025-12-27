@@ -15,13 +15,13 @@ internal import GRPCProtobuf
 
 /// Namespace containing generated types for the "agent_cache.AgentCache" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum AgentCache {
+internal enum AgentCache: Sendable {
     /// Service descriptor for the "agent_cache.AgentCache" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_cache.AgentCache")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "CacheGet" metadata.
-        internal enum CacheGet {
+        internal enum CacheGet: Sendable {
             /// Request type for "CacheGet".
             internal typealias Input = CacheGetRequest
             /// Response type for "CacheGet".
@@ -33,7 +33,7 @@ internal enum AgentCache {
             )
         }
         /// Namespace for "CacheSet" metadata.
-        internal enum CacheSet {
+        internal enum CacheSet: Sendable {
             /// Request type for "CacheSet".
             internal typealias Input = CacheSetRequest
             /// Response type for "CacheSet".

@@ -1,4 +1,4 @@
-use authentik_sys::generated::{grpc_request, ping::ping_client::PingClient};
+use authentik_sys::{generated::ping::ping_client::PingClient, grpc::grpc_request};
 
 fn main() {
     let resp: String = grpc_request(async |ch| {

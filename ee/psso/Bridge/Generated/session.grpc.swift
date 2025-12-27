@@ -15,13 +15,13 @@ internal import GRPCProtobuf
 
 /// Namespace containing generated types for the "session.SessionManager" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum SessionManager {
+internal enum SessionManager: Sendable {
     /// Service descriptor for the "session.SessionManager" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "RegisterSession" metadata.
-        internal enum RegisterSession {
+        internal enum RegisterSession: Sendable {
             /// Request type for "RegisterSession".
             internal typealias Input = RegisterSessionRequest
             /// Response type for "RegisterSession".
@@ -33,7 +33,7 @@ internal enum SessionManager {
             )
         }
         /// Namespace for "SessionStatus" metadata.
-        internal enum SessionStatus {
+        internal enum SessionStatus: Sendable {
             /// Request type for "SessionStatus".
             internal typealias Input = SessionStatusRequest
             /// Response type for "SessionStatus".
@@ -45,7 +45,7 @@ internal enum SessionManager {
             )
         }
         /// Namespace for "CloseSession" metadata.
-        internal enum CloseSession {
+        internal enum CloseSession: Sendable {
             /// Request type for "CloseSession".
             internal typealias Input = CloseSessionRequest
             /// Response type for "CloseSession".

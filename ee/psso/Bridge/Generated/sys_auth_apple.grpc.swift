@@ -15,13 +15,13 @@ internal import GRPCProtobuf
 
 /// Namespace containing generated types for the "sys_auth_apple.SystemAuthApple" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum SystemAuthApple {
+internal enum SystemAuthApple: Sendable {
     /// Service descriptor for the "sys_auth_apple.SystemAuthApple" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth_apple.SystemAuthApple")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "RegisterUser" metadata.
-        internal enum RegisterUser {
+        internal enum RegisterUser: Sendable {
             /// Request type for "RegisterUser".
             internal typealias Input = RegisterUserRequest
             /// Response type for "RegisterUser".
@@ -33,7 +33,7 @@ internal enum SystemAuthApple {
             )
         }
         /// Namespace for "RegisterDevice" metadata.
-        internal enum RegisterDevice {
+        internal enum RegisterDevice: Sendable {
             /// Request type for "RegisterDevice".
             internal typealias Input = RegisterDeviceRequest
             /// Response type for "RegisterDevice".

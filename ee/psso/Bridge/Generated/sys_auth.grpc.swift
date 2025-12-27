@@ -16,13 +16,13 @@ internal import SwiftProtobuf
 
 /// Namespace containing generated types for the "sys_auth.SystemAuthToken" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum SystemAuthToken {
+internal enum SystemAuthToken: Sendable {
     /// Service descriptor for the "sys_auth.SystemAuthToken" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth.SystemAuthToken")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "TokenAuth" metadata.
-        internal enum TokenAuth {
+        internal enum TokenAuth: Sendable {
             /// Request type for "TokenAuth".
             internal typealias Input = TokenAuthRequest
             /// Response type for "TokenAuth".
@@ -189,13 +189,13 @@ extension SystemAuthToken.ClientProtocol {
 
 /// Namespace containing generated types for the "sys_auth.SystemAuthInteractive" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum SystemAuthInteractive {
+internal enum SystemAuthInteractive: Sendable {
     /// Service descriptor for the "sys_auth.SystemAuthInteractive" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth.SystemAuthInteractive")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "InteractiveAuth" metadata.
-        internal enum InteractiveAuth {
+        internal enum InteractiveAuth: Sendable {
             /// Request type for "InteractiveAuth".
             internal typealias Input = InteractiveAuthRequest
             /// Response type for "InteractiveAuth".
@@ -207,7 +207,7 @@ internal enum SystemAuthInteractive {
             )
         }
         /// Namespace for "InteractiveAuthAsync" metadata.
-        internal enum InteractiveAuthAsync {
+        internal enum InteractiveAuthAsync: Sendable {
             /// Request type for "InteractiveAuthAsync".
             internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
             /// Response type for "InteractiveAuthAsync".
@@ -510,13 +510,13 @@ extension SystemAuthInteractive.ClientProtocol {
 
 /// Namespace containing generated types for the "sys_auth.SystemAuthAuthorize" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum SystemAuthAuthorize {
+internal enum SystemAuthAuthorize: Sendable {
     /// Service descriptor for the "sys_auth.SystemAuthAuthorize" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth.SystemAuthAuthorize")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "Authorize" metadata.
-        internal enum Authorize {
+        internal enum Authorize: Sendable {
             /// Request type for "Authorize".
             internal typealias Input = SystemAuthorizeRequest
             /// Response type for "Authorize".

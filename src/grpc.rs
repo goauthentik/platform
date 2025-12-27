@@ -1,16 +1,10 @@
-pub mod agent;
-pub mod agent_auth;
-pub mod ping;
-pub mod session;
-pub mod ssh;
-pub mod sys_auth;
-pub mod sys_directory;
 use std::error::Error;
 
 use tokio::runtime::Builder;
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
 use tower::service_fn;
+use hyper_util::rt::TokioIo;
 
 use crate::config::Config;
 
@@ -27,7 +21,7 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
                     return Err(e);
                 }
             };
-            Ok(client)
+            Ok(TokioIo::new(client))
         }))
         .await;
 }
@@ -54,7 +48,7 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
                 time::sleep(Duration::from_millis(50)).await;
             };
 
-            Ok(client)
+            Ok(TokioIo::new(client))
         }))
         .await;
 }

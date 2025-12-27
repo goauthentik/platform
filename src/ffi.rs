@@ -4,11 +4,11 @@ use std::error::Error;
 use std::pin::Pin;
 use url::Url;
 
-use crate::generated::grpc_request;
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
 use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
+use crate::grpc::grpc_request;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 

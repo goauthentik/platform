@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod agent_auth_client {
+pub mod system_directory_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod agent_auth_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct AgentAuthClient<T> {
+    pub struct SystemDirectoryClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl AgentAuthClient<tonic::transport::Channel> {
+    impl SystemDirectoryClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,9 +25,9 @@ pub mod agent_auth_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> AgentAuthClient<T>
+    impl<T> SystemDirectoryClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -43,21 +43,21 @@ pub mod agent_auth_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> AgentAuthClient<InterceptedService<T, F>>
+        ) -> SystemDirectoryClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            AgentAuthClient::new(InterceptedService::new(inner, interceptor))
+            SystemDirectoryClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,10 +90,10 @@ pub mod agent_auth_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn who_am_i(
+        pub async fn list_users(
             &mut self,
-            request: impl tonic::IntoRequest<super::WhoAmIRequest>,
-        ) -> std::result::Result<tonic::Response<super::WhoAmIResponse>, tonic::Status> {
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<tonic::Response<super::Users>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -102,22 +102,19 @@ pub mod agent_auth_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_auth.AgentAuth/WhoAmI",
+                "/sys_directory.SystemDirectory/ListUsers",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_auth.AgentAuth", "WhoAmI"));
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "ListUsers"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn get_current_token(
+        pub async fn get_user(
             &mut self,
-            request: impl tonic::IntoRequest<super::CurrentTokenRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::CurrentTokenResponse>,
-            tonic::Status,
-        > {
+            request: impl tonic::IntoRequest<super::GetRequest>,
+        ) -> std::result::Result<tonic::Response<super::User>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -126,22 +123,19 @@ pub mod agent_auth_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_auth.AgentAuth/GetCurrentToken",
+                "/sys_directory.SystemDirectory/GetUser",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_auth.AgentAuth", "GetCurrentToken"));
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "GetUser"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn cached_token_exchange(
+        pub async fn list_groups(
             &mut self,
-            request: impl tonic::IntoRequest<super::TokenExchangeRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::TokenExchangeResponse>,
-            tonic::Status,
-        > {
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<tonic::Response<super::Groups>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -150,22 +144,19 @@ pub mod agent_auth_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_auth.AgentAuth/CachedTokenExchange",
+                "/sys_directory.SystemDirectory/ListGroups",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_auth.AgentAuth", "CachedTokenExchange"));
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "ListGroups"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn device_token_exchange(
+        pub async fn get_group(
             &mut self,
-            request: impl tonic::IntoRequest<super::DeviceTokenExchangeRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::TokenExchangeResponse>,
-            tonic::Status,
-        > {
+            request: impl tonic::IntoRequest<super::GetRequest>,
+        ) -> std::result::Result<tonic::Response<super::Group>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -174,37 +165,13 @@ pub mod agent_auth_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_auth.AgentAuth/DeviceTokenExchange",
+                "/sys_directory.SystemDirectory/GetGroup",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_auth.AgentAuth", "DeviceTokenExchange"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn authorize(
-            &mut self,
-            request: impl tonic::IntoRequest<super::AuthorizeRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::AuthorizeResponse>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/agent_auth.AgentAuth/Authorize",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("agent_auth.AgentAuth", "Authorize"));
+                .insert(GrpcMethod::new("sys_directory.SystemDirectory", "GetGroup"));
             self.inner.unary(req, path, codec).await
         }
     }

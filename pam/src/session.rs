@@ -3,7 +3,7 @@ extern crate pam;
 use crate::pam_env::pam_get_env;
 use crate::session_data::{_delete_session_data, _read_session_data};
 use crate::{ENV_SESSION_ID, pam_try_log};
-use authentik_sys::generated::grpc_request;
+use authentik_sys::grpc::grpc_request;
 use authentik_sys::generated::session::session_manager_client::SessionManagerClient;
 use authentik_sys::generated::session::{CloseSessionRequest, RegisterSessionRequest};
 use pam::constants::PamFlag;
