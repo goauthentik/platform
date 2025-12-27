@@ -12,8 +12,7 @@ RUN curl -fsSL "${AK_DEPLOY_URL}/keys/gpg-key.asc" | sudo gpg --dearmor -o /usr/
     mkdir /var/run/authentik  && \
     sed -i 's#/usr/bin/fbsetbg -u Esetroot -c /usr/share/images/fluxbox/ubuntu-light.png#/usr/bin/fbsetbg -u Esetroot /usr/share/images/fluxbox/ubuntu-light.png#g' /opt/bin/start-vnc.sh && \
     sed -i 's#  "debug": false,#  "debug": true,#g' /etc/authentik/config.json && \
-    apt-get clean && \
-    rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/
+    apt-get clean
 
 COPY ./authentik.png /usr/share/images/fluxbox/ubuntu-light.png
 COPY ./ak-sysd.conf /etc/supervisor/conf.d/ak-sysd.conf
