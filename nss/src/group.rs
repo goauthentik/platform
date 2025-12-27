@@ -1,6 +1,6 @@
-use authentik_sys::grpc::grpc_request;
 use authentik_sys::generated::sys_directory::system_directory_client::SystemDirectoryClient;
 use authentik_sys::generated::sys_directory::{GetRequest, Group as AKGroup};
+use authentik_sys::grpc::grpc_request;
 use authentik_sys::logger::log_hook;
 use libc::gid_t;
 use libnss::group::{Group, GroupHooks};

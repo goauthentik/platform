@@ -36,7 +36,7 @@ func NewServer(ctx component.Context) (component.Component, error) {
 }
 
 func (ds *Server) Start() error {
-	ds.ctx.Bus().AddEventListener(ctypes.TopicCtrlDomainEnrolled, func(ev *events.Event) {
+	ds.ctx.Bus().AddEventListener(ctypes.TopicCtrlDomainChanged, func(ev *events.Event) {
 		if ds.cancel != nil {
 			ds.cancel()
 		}

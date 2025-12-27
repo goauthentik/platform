@@ -1,10 +1,10 @@
 use std::error::Error;
 
+use hyper_util::rt::TokioIo;
 use tokio::runtime::Builder;
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
 use tower::service_fn;
-use hyper_util::rt::TokioIo;
 
 use crate::config::Config;
 

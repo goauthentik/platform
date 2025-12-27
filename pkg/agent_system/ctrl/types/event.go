@@ -1,5 +1,5 @@
 package types
 
 const (
-	TopicCtrlDomainEnrolled = "sysd.ctrl.domain.enrolled"
+	TopicCtrlDomainChanged = "sysd.ctrl.domain.enrolled"
 )

@@ -37,7 +37,7 @@ func NewServer(ctx component.Context) (component.Component, error) {
 }
 
 func (directory *Server) Start() error {
-	directory.ctx.Bus().AddEventListener(ctypes.TopicCtrlDomainEnrolled, func(ev *events.Event) {
+	directory.ctx.Bus().AddEventListener(ctypes.TopicCtrlDomainChanged, func(ev *events.Event) {
 		if directory.cancel != nil {
 			directory.cancel()
 		}
