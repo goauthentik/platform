@@ -91,19 +91,21 @@
         <File Id="ak_browser_support"
               Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe"
               KeyPath="true" />
-        <File Id="browser_support_json"
-              Source="$(env.PWD)/package/windows/browser-host.json" />
+        <File Id="browser_support_json_chrome"
+              Source="$(env.PWD)/package/windows/browser-host-chrome.json" />
+        <File Id="browser_support_json_firefox"
+              Source="$(env.PWD)/package/windows/browser-host-firefox.json" />
         <RegistryKey Root="HKLM"
                     Key="SOFTWARE\Google\Chrome\NativeMessagingHosts\io.goauthentik.platform">
-          <RegistryValue Type="string" Value="[browser_support]browser-host.json"/>
+          <RegistryValue Type="string" Value="[browser_support]browser-host-chrome.json"/>
         </RegistryKey>
         <RegistryKey Root="HKLM"
                     Key="SOFTWARE\Microsoft\Edge\NativeMessagingHosts\io.goauthentik.platform">
-          <RegistryValue Type="string" Value="[browser_support]browser-host.json"/>
+          <RegistryValue Type="string" Value="[browser_support]browser-host-chrome.json"/>
         </RegistryKey>
         <RegistryKey Root="HKLM"
                     Key="Software\Mozilla\NativeMessagingHosts\io.goauthentik.platform">
-          <RegistryValue Type="string" Value="[browser_support]browser-host.json"/>
+          <RegistryValue Type="string" Value="[browser_support]browser-host-firefox.json"/>
         </RegistryKey>
       </Component>
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
