@@ -223,6 +223,7 @@ jobs:
       - id: meta
         env:
           AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
+          AK_TAG_SUFFIX: ${{ github.event_name == 'pull_request' && github.event.number || '' }}
         run: |
           cd ${{ matrix.target }}
           echo "tag=$(make ci-container-tag)" >> $GITHUB_OUTPUT
