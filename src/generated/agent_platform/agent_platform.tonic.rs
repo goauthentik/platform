@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod agent_cache_client {
+pub mod agent_platform_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod agent_cache_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct AgentCacheClient<T> {
+    pub struct AgentPlatformClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl AgentCacheClient<tonic::transport::Channel> {
+    impl AgentPlatformClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,9 +25,9 @@ pub mod agent_cache_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> AgentCacheClient<T>
+    impl<T> AgentPlatformClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -43,21 +43,21 @@ pub mod agent_cache_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> AgentCacheClient<InterceptedService<T, F>>
+        ) -> AgentPlatformClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            AgentCacheClient::new(InterceptedService::new(inner, interceptor))
+            AgentPlatformClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,11 +90,11 @@ pub mod agent_cache_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn cache_get(
+        pub async fn signed_endpoint_header(
             &mut self,
-            request: impl tonic::IntoRequest<super::CacheGetRequest>,
+            request: impl tonic::IntoRequest<super::PlatformEndpointRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::CacheGetResponse>,
+            tonic::Response<super::PlatformEndpointResponse>,
             tonic::Status,
         > {
             self.inner
@@ -105,37 +105,18 @@ pub mod agent_cache_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_cache.AgentCache/CacheGet",
+                "/agent_platform.AgentPlatform/SignedEndpointHeader",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("agent_cache.AgentCache", "CacheGet"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn cache_set(
-            &mut self,
-            request: impl tonic::IntoRequest<super::CacheSetRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::CacheSetResponse>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/agent_cache.AgentCache/CacheSet",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("agent_cache.AgentCache", "CacheSet"));
+                .insert(
+                    GrpcMethod::new(
+                        "agent_platform.AgentPlatform",
+                        "SignedEndpointHeader",
+                    ),
+                );
             self.inner.unary(req, path, codec).await
         }
     }

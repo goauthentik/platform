@@ -16,13 +16,13 @@ internal import SwiftProtobuf
 
 /// Namespace containing generated types for the "sys_directory.SystemDirectory" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum SystemDirectory {
+internal enum SystemDirectory: Sendable {
     /// Service descriptor for the "sys_directory.SystemDirectory" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_directory.SystemDirectory")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "ListUsers" metadata.
-        internal enum ListUsers {
+        internal enum ListUsers: Sendable {
             /// Request type for "ListUsers".
             internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
             /// Response type for "ListUsers".
@@ -34,7 +34,7 @@ internal enum SystemDirectory {
             )
         }
         /// Namespace for "GetUser" metadata.
-        internal enum GetUser {
+        internal enum GetUser: Sendable {
             /// Request type for "GetUser".
             internal typealias Input = GetRequest
             /// Response type for "GetUser".
@@ -46,7 +46,7 @@ internal enum SystemDirectory {
             )
         }
         /// Namespace for "ListGroups" metadata.
-        internal enum ListGroups {
+        internal enum ListGroups: Sendable {
             /// Request type for "ListGroups".
             internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
             /// Response type for "ListGroups".
@@ -58,7 +58,7 @@ internal enum SystemDirectory {
             )
         }
         /// Namespace for "GetGroup" metadata.
-        internal enum GetGroup {
+        internal enum GetGroup: Sendable {
             /// Request type for "GetGroup".
             internal typealias Input = GetRequest
             /// Response type for "GetGroup".

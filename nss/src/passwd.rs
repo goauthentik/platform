@@ -1,4 +1,4 @@
-use authentik_sys::generated::grpc_request;
+use authentik_sys::grpc::grpc_request;
 use authentik_sys::generated::sys_directory::system_directory_client::SystemDirectoryClient;
 use authentik_sys::generated::sys_directory::{GetRequest, User};
 use authentik_sys::logger::log_hook;

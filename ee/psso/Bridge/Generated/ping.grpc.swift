@@ -16,13 +16,13 @@ internal import SwiftProtobuf
 
 /// Namespace containing generated types for the "ping.Ping" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum Ping {
+internal enum Ping: Sendable {
     /// Service descriptor for the "ping.Ping" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "ping.Ping")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "Ping" metadata.
-        internal enum Ping {
+        internal enum Ping: Sendable {
             /// Request type for "Ping".
             internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
             /// Response type for "Ping".

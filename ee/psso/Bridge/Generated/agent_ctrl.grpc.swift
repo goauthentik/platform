@@ -16,13 +16,13 @@ internal import SwiftProtobuf
 
 /// Namespace containing generated types for the "agent_ctrl.AgentCtrl" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum AgentCtrl {
+internal enum AgentCtrl: Sendable {
     /// Service descriptor for the "agent_ctrl.AgentCtrl" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_ctrl.AgentCtrl")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "ListProfiles" metadata.
-        internal enum ListProfiles {
+        internal enum ListProfiles: Sendable {
             /// Request type for "ListProfiles".
             internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
             /// Response type for "ListProfiles".
@@ -34,7 +34,7 @@ internal enum AgentCtrl {
             )
         }
         /// Namespace for "Setup" metadata.
-        internal enum Setup {
+        internal enum Setup: Sendable {
             /// Request type for "Setup".
             internal typealias Input = SetupRequest
             /// Response type for "Setup".

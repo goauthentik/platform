@@ -1,12 +1,9 @@
-use authentik_sys::generated::{
-    grpc_request,
-    sys_auth::{
-        InteractiveAuthContinueRequest, InteractiveAuthInitRequest, InteractiveAuthRequest,
-        InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
-        interactive_challenge::PromptMeta,
-        system_auth_interactive_client::SystemAuthInteractiveClient,
-    },
+use authentik_sys::generated::sys_auth::{
+    InteractiveAuthContinueRequest, InteractiveAuthInitRequest, InteractiveAuthRequest,
+    InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
+    interactive_challenge::PromptMeta, system_auth_interactive_client::SystemAuthInteractiveClient,
 };
+use authentik_sys::grpc::grpc_request;
 use pam::{
     constants::{
         PAM_BINARY_PROMPT, PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,

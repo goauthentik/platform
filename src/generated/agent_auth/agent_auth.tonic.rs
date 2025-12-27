@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod session_manager_client {
+pub mod agent_auth_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod session_manager_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct SessionManagerClient<T> {
+    pub struct AgentAuthClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl SessionManagerClient<tonic::transport::Channel> {
+    impl AgentAuthClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,9 +25,9 @@ pub mod session_manager_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> SessionManagerClient<T>
+    impl<T> AgentAuthClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -43,21 +43,21 @@ pub mod session_manager_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> SessionManagerClient<InterceptedService<T, F>>
+        ) -> AgentAuthClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            SessionManagerClient::new(InterceptedService::new(inner, interceptor))
+            AgentAuthClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,13 +90,10 @@ pub mod session_manager_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn register_session(
+        pub async fn who_am_i(
             &mut self,
-            request: impl tonic::IntoRequest<super::RegisterSessionRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::RegisterSessionResponse>,
-            tonic::Status,
-        > {
+            request: impl tonic::IntoRequest<super::WhoAmIRequest>,
+        ) -> std::result::Result<tonic::Response<super::WhoAmIResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -105,20 +102,20 @@ pub mod session_manager_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/session.SessionManager/RegisterSession",
+                "/agent_auth.AgentAuth/WhoAmI",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("session.SessionManager", "RegisterSession"));
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "WhoAmI"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn session_status(
+        pub async fn get_current_token(
             &mut self,
-            request: impl tonic::IntoRequest<super::SessionStatusRequest>,
+            request: impl tonic::IntoRequest<super::CurrentTokenRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::SessionStatusResponse>,
+            tonic::Response<super::CurrentTokenResponse>,
             tonic::Status,
         > {
             self.inner
@@ -129,20 +126,20 @@ pub mod session_manager_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/session.SessionManager/SessionStatus",
+                "/agent_auth.AgentAuth/GetCurrentToken",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("session.SessionManager", "SessionStatus"));
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "GetCurrentToken"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn close_session(
+        pub async fn cached_token_exchange(
             &mut self,
-            request: impl tonic::IntoRequest<super::CloseSessionRequest>,
+            request: impl tonic::IntoRequest<super::TokenExchangeRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::CloseSessionResponse>,
+            tonic::Response<super::TokenExchangeResponse>,
             tonic::Status,
         > {
             self.inner
@@ -153,13 +150,61 @@ pub mod session_manager_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/session.SessionManager/CloseSession",
+                "/agent_auth.AgentAuth/CachedTokenExchange",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("session.SessionManager", "CloseSession"));
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "CachedTokenExchange"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn device_token_exchange(
+            &mut self,
+            request: impl tonic::IntoRequest<super::DeviceTokenExchangeRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::TokenExchangeResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_auth.AgentAuth/DeviceTokenExchange",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "DeviceTokenExchange"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn authorize(
+            &mut self,
+            request: impl tonic::IntoRequest<super::AuthorizeRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::AuthorizeResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_auth.AgentAuth/Authorize",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "Authorize"));
             self.inner.unary(req, path, codec).await
         }
     }

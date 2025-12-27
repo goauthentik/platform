@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod system_auth_apple_client {
+pub mod session_manager_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod system_auth_apple_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct SystemAuthAppleClient<T> {
+    pub struct SessionManagerClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl SystemAuthAppleClient<tonic::transport::Channel> {
+    impl SessionManagerClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,9 +25,9 @@ pub mod system_auth_apple_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> SystemAuthAppleClient<T>
+    impl<T> SessionManagerClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -43,21 +43,21 @@ pub mod system_auth_apple_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> SystemAuthAppleClient<InterceptedService<T, F>>
+        ) -> SessionManagerClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
                 Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
                 >,
             >,
             <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
+                http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            SystemAuthAppleClient::new(InterceptedService::new(inner, interceptor))
+            SessionManagerClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -90,11 +90,11 @@ pub mod system_auth_apple_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn register_user(
+        pub async fn register_session(
             &mut self,
-            request: impl tonic::IntoRequest<super::RegisterUserRequest>,
+            request: impl tonic::IntoRequest<super::RegisterSessionRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::RegisterUserResponse>,
+            tonic::Response<super::RegisterSessionResponse>,
             tonic::Status,
         > {
             self.inner
@@ -105,22 +105,20 @@ pub mod system_auth_apple_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/sys_auth_apple.SystemAuthApple/RegisterUser",
+                "/session.SessionManager/RegisterSession",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("sys_auth_apple.SystemAuthApple", "RegisterUser"),
-                );
+                .insert(GrpcMethod::new("session.SessionManager", "RegisterSession"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn register_device(
+        pub async fn session_status(
             &mut self,
-            request: impl tonic::IntoRequest<super::RegisterDeviceRequest>,
+            request: impl tonic::IntoRequest<super::SessionStatusRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::RegisterDeviceResponse>,
+            tonic::Response<super::SessionStatusResponse>,
             tonic::Status,
         > {
             self.inner
@@ -131,15 +129,37 @@ pub mod system_auth_apple_client {
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
-            let codec = tonic::codec::ProstCodec::default();
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/sys_auth_apple.SystemAuthApple/RegisterDevice",
+                "/session.SessionManager/SessionStatus",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("sys_auth_apple.SystemAuthApple", "RegisterDevice"),
-                );
+                .insert(GrpcMethod::new("session.SessionManager", "SessionStatus"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn close_session(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CloseSessionRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::CloseSessionResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/session.SessionManager/CloseSession",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("session.SessionManager", "CloseSession"));
             self.inner.unary(req, path, codec).await
         }
     }
