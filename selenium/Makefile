@@ -10,6 +10,7 @@ ci-container-tag:
 .PHONY: ci-build-args
 ci-build-args:
 	@echo AK_PLATFORM_VER=${VERSION}
+	@echo AK_DEPLOY_URL=${AK_DEPLOY_URL}
 
 .PHONY: local-build
 local-build:

@@ -1,11 +1,12 @@
 FROM selenium/standalone-chromium:143.0
 
 ARG AK_PLATFORM_VER
+ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
 
 USER root
 
-RUN curl -fsSL https://pkg.goauthentik.io/keys/gpg-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] https://pkg.goauthentik.io/ stable main" | sudo tee /etc/apt/sources.list.d/authentik.list && \
+RUN curl -fsSL ${AK_DEPLOY_URL}/keys/gpg-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] ${AK_DEPLOY_URL} stable main" | sudo tee /etc/apt/sources.list.d/authentik.list && \
     sudo apt update && \
     sudo apt install authentik-sysd=${AK_PLATFORM_VER} authentik-agent=${AK_PLATFORM_VER} authentik-cli=${AK_PLATFORM_VER} -y && \
     mkdir /var/run/authentik  && \
