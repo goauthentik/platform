@@ -77,7 +77,7 @@ func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Config
 		log:       l,
 		sp:        rsp,
 		cip:       "",
-		transport: http.DefaultTransport,
+		transport: refConfig.HTTPClient.Transport,
 		opts:      opts,
 	}
 	fe.solvers = map[StageComponent]SolverFunction{

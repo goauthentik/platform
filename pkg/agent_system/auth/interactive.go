@@ -25,7 +25,7 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 	id := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
 	api, err := auth.dom.APIClient()
 	if err != nil {
-		auth.log.WithError(err).Warning("failed to get API client for doamin")
+		auth.log.WithError(err).Warning("failed to get API client for domain")
 		return nil, err
 	}
 	txn := &InteractiveAuthTransaction{
@@ -37,9 +37,9 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 		dom:      auth.dom,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())
-	fex, err := flow.NewFlowExecutor(txn.ctx, *auth.dom.Config().AuthorizationFlow.Get(), txn.api.GetConfig(), flow.FlowExecutorOptions{
+	fex, err := flow.NewFlowExecutor(txn.ctx, *txn.dom.Config().AuthorizationFlow.Get(), txn.api.GetConfig(), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
-			auth.log.WithField("logger", "component.pam.flow").WithFields(fields).Info(msg)
+			txn.log.WithField("logger", "component.auth.flow").WithFields(fields).Info(msg)
 		},
 	})
 	if err != nil {
