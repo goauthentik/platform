@@ -35,8 +35,15 @@ type DomainConfig struct {
 	rc                *api.AgentConfig
 }
 
-func (dc DomainConfig) Config() *api.AgentConfig {
-	return dc.rc
+func DefaultAgentConfig() api.AgentConfig {
+	return api.AgentConfig{}
+}
+
+func (dc DomainConfig) Config() api.AgentConfig {
+	if dc.rc != nil {
+		return *dc.rc
+	}
+	return DefaultAgentConfig()
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
@@ -165,7 +172,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 }
 
 func (c *Config) loadDomains() error {
-	c.log.Debug("Loading domains...")
+	c.log.Info("Loading domains...")
 	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
 	if err != nil {
 		c.log.WithError(err).Warning("failed to load domains")

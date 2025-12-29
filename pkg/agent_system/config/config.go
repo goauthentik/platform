@@ -88,5 +88,21 @@ func (c *Config) SaveDomain(dom *DomainConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to save domain config")
 	}
-	return nil
+	return c.PostLoad()
+}
+
+func (c *Config) DeleteDomain(dom *DomainConfig) error {
+	path := filepath.Join(c.DomainDir, dom.Domain+".json")
+	err := keyring.Delete(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways)
+	if err != nil {
+		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
+			c.log.WithError(err).Warning("failed to delete domain token in keyring")
+		}
+		dom.FallbackToken = dom.Token
+	}
+	err = os.Remove(path)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete domain config")
+	}
+	return c.PostLoad()
 }

@@ -15,13 +15,13 @@ internal import GRPCProtobuf
 
 /// Namespace containing generated types for the "agent_auth.AgentAuth" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum AgentAuth {
+internal enum AgentAuth: Sendable {
     /// Service descriptor for the "agent_auth.AgentAuth" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "WhoAmI" metadata.
-        internal enum WhoAmI {
+        internal enum WhoAmI: Sendable {
             /// Request type for "WhoAmI".
             internal typealias Input = WhoAmIRequest
             /// Response type for "WhoAmI".
@@ -33,7 +33,7 @@ internal enum AgentAuth {
             )
         }
         /// Namespace for "GetCurrentToken" metadata.
-        internal enum GetCurrentToken {
+        internal enum GetCurrentToken: Sendable {
             /// Request type for "GetCurrentToken".
             internal typealias Input = CurrentTokenRequest
             /// Response type for "GetCurrentToken".
@@ -45,7 +45,7 @@ internal enum AgentAuth {
             )
         }
         /// Namespace for "CachedTokenExchange" metadata.
-        internal enum CachedTokenExchange {
+        internal enum CachedTokenExchange: Sendable {
             /// Request type for "CachedTokenExchange".
             internal typealias Input = TokenExchangeRequest
             /// Response type for "CachedTokenExchange".
@@ -57,7 +57,7 @@ internal enum AgentAuth {
             )
         }
         /// Namespace for "DeviceTokenExchange" metadata.
-        internal enum DeviceTokenExchange {
+        internal enum DeviceTokenExchange: Sendable {
             /// Request type for "DeviceTokenExchange".
             internal typealias Input = DeviceTokenExchangeRequest
             /// Response type for "DeviceTokenExchange".
@@ -69,7 +69,7 @@ internal enum AgentAuth {
             )
         }
         /// Namespace for "Authorize" metadata.
-        internal enum Authorize {
+        internal enum Authorize: Sendable {
             /// Request type for "Authorize".
             internal typealias Input = AuthorizeRequest
             /// Response type for "Authorize".

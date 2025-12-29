@@ -24,6 +24,7 @@ endif
 
 .PHONY: package-gnu/linux
 package-gnu/linux: build
+	"$(MAKE)" -C ${TOP} browser_support/build
 	mkdir -p "${TOP}/bin/${TARGET}/completions"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/cmd/${TARGET}" \

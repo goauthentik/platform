@@ -27,7 +27,7 @@ func (directory *Server) GetGroup(ctx context.Context, req *pb.GetRequest) (*pb.
 	return nil, status.Error(codes.NotFound, "Group not found")
 }
 
-func (directory *Server) convertGroup(cfg *api.AgentConfig, g api.Group) *pb.Group {
+func (directory *Server) convertGroup(cfg api.AgentConfig, g api.Group) *pb.Group {
 	gg := &pb.Group{
 		Name:    g.Name,
 		Gid:     directory.GetGroupGidNumber(cfg, g),

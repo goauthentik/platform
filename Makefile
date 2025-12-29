@@ -28,9 +28,12 @@ go-gen-proto:
 rs-gen-proto:
 	cargo install protoc-gen-prost
 	cargo install protoc-gen-tonic
+	cargo install protoc-gen-prost-crate
 	mkdir -p $(PROTO_OUT)
 	protoc \
 		--prost_out=$(PROTO_OUT) \
+		--prost-crate_out=$(PROTO_OUT) \
+		--prost-crate_opt=no_features \
 		--tonic_out=$(PROTO_OUT) \
 		--tonic_opt=no_server \
 		-I $(PROTO_DIR) \
@@ -38,6 +41,7 @@ rs-gen-proto:
 	cargo fmt
 
 lint-rs:
+	cargo fmt --all
 	cargo clippy --fix --allow-dirty --workspace
 
 lint-go:
@@ -122,3 +126,6 @@ ee/psso/%:
 
 ee/wcp/%:
 	"$(MAKE)" -C "${TOP}/ee/wcp/" $*
+
+selenium/%:
+	"$(MAKE)" -C "${TOP}/selenium" $*

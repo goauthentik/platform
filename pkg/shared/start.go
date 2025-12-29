@@ -19,8 +19,6 @@ func Start(name string, debug bool, cb func()) {
 	})
 	if err != nil {
 		l.WithError(err).Warn("failed to init sentry")
-	} else {
-		l.Info("Sentry initialised")
 	}
 	defer sentry.Flush(2 * time.Second)
 	defer systemlog.Cleanup()

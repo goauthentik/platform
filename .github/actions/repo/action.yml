@@ -44,8 +44,6 @@ runs:
         REF: ${{ github.ref }}
         SHA: ${{ github.sha }}
         ARCHITECTURES: ${{ inputs.architectures }}
-        COMPONENTS: ${{ inputs.components }}
-        DISTRIBUTION: ${{ inputs.distribution }}
         REPOSITORY_NAME: ${{ inputs.repository-name }}
         REPOSITORY_URL: ${{ inputs.repository-url }}
       run: |

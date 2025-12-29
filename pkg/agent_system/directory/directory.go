@@ -7,10 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	ctypes "goauthentik.io/platform/pkg/agent_system/ctrl/types"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/shared/events"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc"
 )
 
@@ -37,7 +37,7 @@ func NewServer(ctx component.Context) (component.Component, error) {
 }
 
 func (directory *Server) Start() error {
-	directory.ctx.Bus().AddEventListener(ctypes.TopicCtrlDomainEnrolled, func(ev *events.Event) {
+	directory.ctx.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
 		if directory.cancel != nil {
 			directory.cancel()
 		}
@@ -58,7 +58,7 @@ func (directory *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 	pb.RegisterSystemDirectoryServer(s, directory)
 }
 
-func (directory *Server) GetUserUidNumber(cfg *api.AgentConfig, user api.User) uint32 {
+func (directory *Server) GetUserUidNumber(cfg api.AgentConfig, user api.User) uint32 {
 	uidNumber, ok := user.GetAttributes()["uidNumber"].(string)
 	def := uint32(cfg.NssUidOffset + user.Pk)
 	if ok {
@@ -72,7 +72,7 @@ func (directory *Server) GetUserUidNumber(cfg *api.AgentConfig, user api.User) u
 	return def
 }
 
-func (directory *Server) GetUserGidNumber(cfg *api.AgentConfig, user api.User) uint32 {
+func (directory *Server) GetUserGidNumber(cfg api.AgentConfig, user api.User) uint32 {
 	gidNumber, ok := user.GetAttributes()["gidNumber"].(string)
 	def := directory.GetUserUidNumber(cfg, user)
 	if ok {
@@ -86,7 +86,7 @@ func (directory *Server) GetUserGidNumber(cfg *api.AgentConfig, user api.User) u
 	return def
 }
 
-func (directory *Server) GetGroupGidNumber(cfg *api.AgentConfig, group api.Group) uint32 {
+func (directory *Server) GetGroupGidNumber(cfg api.AgentConfig, group api.Group) uint32 {
 	gidNumber, ok := group.GetAttributes()["gidNumber"].(string)
 	def := uint32(cfg.NssGidOffset + group.NumPk)
 	if ok {

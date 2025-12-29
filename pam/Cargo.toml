@@ -1,6 +1,6 @@
 [package]
 name = "authentik_pam"
-version = "0.35.2"
+version = "0.35.4"
 edition = "2024"
 license = "MIT"
 
@@ -17,7 +17,7 @@ hex = "0.4.3"
 libc = "0.2.178"
 log = "0.4.29"
 pam-bindings = "0.1.1"
-prost = "0.12"
+prost = "0.14.1"
 serde = "1.0.228"
 serde_json = "1.0.147"
 sha2 = "0.10.9"

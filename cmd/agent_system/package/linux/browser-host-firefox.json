@@ -1,0 +1,9 @@
+{
+    "name": "io.goauthentik.platform",
+    "description": "authentik Platform",
+    "path": "/usr/bin/ak-browser-support",
+    "type": "stdio",
+    "allowed_origins": [
+        "platform-browser-extension@goauthentik.io"
+    ]
+}

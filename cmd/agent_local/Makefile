@@ -71,7 +71,6 @@ package-darwin: clean build
 
 .PHONY: package-gnu/linux
 package-gnu/linux: clean build
-	"$(MAKE)" -C ${TOP} browser_support/build
 	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \

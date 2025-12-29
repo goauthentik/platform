@@ -15,13 +15,13 @@ internal import GRPCProtobuf
 
 /// Namespace containing generated types for the "agent_platform.AgentPlatform" service.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-internal enum AgentPlatform {
+internal enum AgentPlatform: Sendable {
     /// Service descriptor for the "agent_platform.AgentPlatform" service.
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_platform.AgentPlatform")
     /// Namespace for method metadata.
-    internal enum Method {
+    internal enum Method: Sendable {
         /// Namespace for "SignedEndpointHeader" metadata.
-        internal enum SignedEndpointHeader {
+        internal enum SignedEndpointHeader: Sendable {
             /// Request type for "SignedEndpointHeader".
             internal typealias Input = PlatformEndpointRequest
             /// Response type for "SignedEndpointHeader".
