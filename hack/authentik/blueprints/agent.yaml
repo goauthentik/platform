@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://next.goauthentik.io/blueprints/schema.json
+---
+version: 1
+metadata:
+  name: Endpoints - authentik Agent
+entries:
+  - id: agent
+    model: authentik_endpoints_connectors_agent.agentconnector
+    identifiers:
+      name: agent
+    attrs:
+      challenge_key: !Find [
+          authentik_crypto.certificatekeypair,
+          [name, "authentik Self-signed Certificate"],
+        ]
+
+  - id: grp-workstation-prod
+    model: authentik_endpoints.deviceaccessgroup
+    identifiers:
+      name: workstation-prod
+  - model: authentik_endpoints_connectors_agent.enrollmenttoken
+    identifiers:
+      name: workstation-prod
+    attrs:
+      device_group: !KeyOf grp-workstation-prod
+      expiring: false
+      connector: !KeyOf agent
+      key: "test-enroll-key"
+
+  # - model: authentik_endpoints.endpointstage
+  #   identifiers:
+  #     name: endpoint-validate
+  #   attrs:
+  #     connector: !KeyOf agent
+  #     mode: optional
