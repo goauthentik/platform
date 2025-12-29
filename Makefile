@@ -123,3 +123,6 @@ ee/psso/%:
 
 ee/wcp/%:
 	"$(MAKE)" -C "${TOP}/ee/wcp/" $*
+
+selenium/%:
+	"$(MAKE)" -C "${TOP}/selenium" $*
