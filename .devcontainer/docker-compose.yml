@@ -63,7 +63,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ../hack/authentik/blueprints/:/blueprints/ak-cli
+      - ../hack/authentik/blueprints/:/blueprints/ak-platform
     depends_on:
       - postgresql
 

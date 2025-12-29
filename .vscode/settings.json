@@ -7,7 +7,13 @@
     "*.hcl": "terraform",
     "xstring": "cpp"
   },
+  "gopls": {
+    "build.buildFlags": [
+        "-tags=integration",
+    ]
+  },
   "go.testFlags": ["-count=1", "-failfast", "-shuffle=on", "-v", "-covermode=atomic"],
+  "go.testTags": "integration",
   "go.testTimeout": "300s",
   "go.coverOnSingleTest": true,
   "go.coverOnSingleTestFile": true,
