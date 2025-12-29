@@ -5,7 +5,8 @@ container_ver := ${base_ver}-ak-${VERSION}
 
 .PHONY: ci-container-tag
 ci-container-tag:
-	@echo ghcr.io/goauthentik/selenium:${container_ver}${AK_TAG_SUFFIX}
+	$(eval suffix := $(if $(strip $(AK_TAG_SUFFIX)),-pr-${AK_TAG_SUFFIX},))
+	@echo ghcr.io/goauthentik/selenium:${container_ver}${suffix}
 
 .PHONY: ci-build-args
 ci-build-args:
