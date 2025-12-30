@@ -252,9 +252,6 @@ jobs:
       - name: Show deployment structure
         shell: bash
         run: |
-          echo "Deployment structure:"
-          find ./deploy -type f | head -50
-          echo "---"
           echo "APT repo size: $(du -sh ./deploy/dists 2>/dev/null | cut -f1 || echo 'N/A')"
           echo "Nix cache size: $(du -sh ./deploy/nix 2>/dev/null | cut -f1 || echo 'N/A')"
       - id: app-token
