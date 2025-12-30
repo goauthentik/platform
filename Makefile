@@ -91,8 +91,12 @@ test-shell:
 test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
 bump:
-	sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
-	sed -i 's/^version = ".*"/version = "${version}"/g' ${TOP}/Cargo.toml
+	sed -i '' 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk 2>/dev/null || \
+		sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
+	sed -i '' 's/^version = ".*"/version = "${version}"/g' ${TOP}/Cargo.toml 2>/dev/null || \
+		sed -i 's/^version = ".*"/version = "${version}"/g' ${TOP}/Cargo.toml
+	sed -i '' 's/version = "[0-9]*\.[0-9]*\.[0-9]*";/version = "${version}";/' ${TOP}/flake.nix 2>/dev/null || \
+		sed -i 's/version = "[0-9]*\.[0-9]*\.[0-9]*";/version = "${version}";/' ${TOP}/flake.nix
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" agent/bump
 	"$(MAKE)" nss/bump
@@ -129,3 +133,67 @@ ee/wcp/%:
 
 selenium/%:
 	"$(MAKE)" -C "${TOP}/selenium" $*
+
+# Nix targets
+.PHONY: nix-build
+nix-build:
+	nix build .#ak-cli
+	nix build .#ak-agent
+	nix build .#ak-browser-support
+ifeq ($(shell uname -s),Linux)
+	nix build .#ak-sysd
+	nix build .#libpam-authentik
+	nix build .#libnss-authentik
+endif
+
+.PHONY: nix-build-go
+nix-build-go:
+	nix build .#ak-cli
+	nix build .#ak-agent
+	nix build .#ak-browser-support
+ifeq ($(shell uname -s),Linux)
+	nix build .#ak-sysd
+endif
+
+.PHONY: nix-develop
+nix-develop:
+	nix develop
+
+.PHONY: nix-check
+nix-check:
+	nix flake check
+
+.PHONY: nix-update
+nix-update:
+	nix flake update
+
+.PHONY: nix-update-vendor-hash
+nix-update-vendor-hash:
+	@echo "Updating Go vendor hash in flake.nix..."
+	@# Set vendorHash to empty string to trigger hash computation
+	sed -i '' 's/vendorHash = "sha256-.*";/vendorHash = "";/' ${TOP}/flake.nix 2>/dev/null || \
+		sed -i 's/vendorHash = "sha256-.*";/vendorHash = "";/' ${TOP}/flake.nix
+	@# Build and capture the expected hash from the error message
+	@NEW_HASH=$$(nix build .#ak-cli 2>&1 | grep -o 'got:[[:space:]]*sha256-[A-Za-z0-9+/=]*' | sed 's/got:[[:space:]]*//' | head -1) && \
+	if [ -n "$$NEW_HASH" ]; then \
+		sed -i '' "s/vendorHash = \"\";/vendorHash = \"$$NEW_HASH\";/" ${TOP}/flake.nix 2>/dev/null || \
+			sed -i "s/vendorHash = \"\";/vendorHash = \"$$NEW_HASH\";/" ${TOP}/flake.nix; \
+		echo "Updated vendorHash to: $$NEW_HASH"; \
+	else \
+		echo "Failed to extract hash. Check nix build output manually."; \
+		exit 1; \
+	fi
+
+.PHONY: nix-cache
+nix-cache:
+	mkdir -p ${TOP}/bin/nix-cache/nar
+	nix copy --to "file://${TOP}/bin/nix-cache" .#ak-cli
+	nix copy --to "file://${TOP}/bin/nix-cache" .#ak-agent
+	nix copy --to "file://${TOP}/bin/nix-cache" .#ak-browser-support
+ifeq ($(shell uname -s),Linux)
+	nix copy --to "file://${TOP}/bin/nix-cache" .#ak-sysd
+	nix copy --to "file://${TOP}/bin/nix-cache" .#libpam-authentik
+	nix copy --to "file://${TOP}/bin/nix-cache" .#libnss-authentik
+endif
+	echo "StoreDir: /nix/store" > ${TOP}/bin/nix-cache/nix-cache-info
+	echo "WantMassQuery: 1" >> ${TOP}/bin/nix-cache/nix-cache-info
