@@ -1,9 +1,7 @@
 package setup
 
 import (
-	"errors"
 	"fmt"
-	"os/exec"
 
 	"github.com/cli/browser"
 	log "github.com/sirupsen/logrus"
@@ -35,16 +33,14 @@ func Setup(opts Options) (*config.ConfigV1Profile, error) {
 		ClientID: opts.ClientID,
 		Scopes:   []string{"openid", "profile", "email", "offline_access", "goauthentik.io/api"},
 		BrowseURL: func(s string) error {
-			err := browser.OpenURL(s)
-			if err != nil && errors.Is(err, exec.ErrNotFound) {
+			if err := browser.OpenURL(s); err != nil {
 				fmt.Println("------------------------------------------------------------")
 				fmt.Println("")
-				fmt.Printf("      Open this URL in your browser: '%s'\n", s)
+				fmt.Printf("      Open this URL in your browser: %s\n", s)
 				fmt.Println("")
 				fmt.Println("------------------------------------------------------------")
-				return nil
 			}
-			return err
+			return nil
 		},
 	}
 
