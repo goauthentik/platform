@@ -27,6 +27,11 @@ jobs:
           version: beta
           sentry_env: goauthentik-platform-ci
           blueprints_path: ./hack/authentik/blueprints
+      - env:
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
+        run: |
+          ./hack/authentik/wait.sh
       - run: |
           make test-integration
       - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
