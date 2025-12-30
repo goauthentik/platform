@@ -1,5 +1,5 @@
 #!/bin/bash
-set -xeuo pipefail
+set -euo pipefail
 
 function checkConnector {
     output=$(curl "${AK_URL}/api/v3/endpoints/connectors/?search=agent" \
@@ -11,7 +11,10 @@ function checkConnector {
     return 0
 }
 
+counter=0
 echo "Waiting for authentik to be up"
 while checkConnector; do
+    counter=$((counter+1))
+    echo "Attempt $counter..."
     sleep 5
 done

@@ -11,7 +11,6 @@ import (
 )
 
 func TestCheckin(t *testing.T) {
-	t.Skip()
 	ds, err := NewServer(component.TestContext(t))
 	assert.NoError(t, err)
 
