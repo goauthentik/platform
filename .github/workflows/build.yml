@@ -129,11 +129,41 @@ jobs:
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
           path: bin/
+  build_nix:
+    name: Build (Nix)
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - macos-15
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
+      - uses: DeterminateSystems/nix-installer-action@v21
+      - uses: DeterminateSystems/magic-nix-cache-action@v13
+      - uses: ./.github/actions/nix
+        id: nix-build
+        with:
+          signing-key: ${{ secrets.NIX_SIGNING_KEY }}
+          output-path: ./nix-cache
+      - name: Show build info
+        shell: bash
+        run: |
+          echo "Cache size: $NIX_CACHE_SIZE"
+        env:
+          NIX_CACHE_SIZE: ${{ steps.nix-build.outputs.cache-size }}
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
+        with:
+          name: nix-cache-${{ matrix.platform }}
+          path: ./nix-cache/
   deploy:
     needs:
       - build_go
       - build_js
       - build_rs
+      - build_nix
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
@@ -147,6 +177,37 @@ jobs:
         with:
           package-path: bin/
           gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
+      - name: Merge Nix caches
+        shell: bash
+        run: |
+          set -xeuo pipefail
+          mkdir -p ./repo/nix/nar
+
+          # Merge all platform caches
+          for cache_dir in ./bin/nix-cache-*/; do
+            if [ -d "$cache_dir" ]; then
+              echo "Merging cache from: $cache_dir"
+              # Copy narinfo files (don't overwrite existing)
+              find "$cache_dir" -maxdepth 1 -name "*.narinfo" -exec cp -n {} ./repo/nix/ \; 2>/dev/null || true
+              # Copy nar archives
+              if [ -d "$cache_dir/nar" ]; then
+                find "$cache_dir/nar" -name "*.nar*" -exec cp -n {} ./repo/nix/nar/ \; 2>/dev/null || true
+              fi
+            fi
+          done
+
+          # Create unified nix-cache-info
+          cat > ./repo/nix/nix-cache-info << EOF
+          StoreDir: /nix/store
+          WantMassQuery: 1
+          Priority: 40
+          EOF
+
+          # Show cache stats
+          echo "Merged Nix cache:"
+          du -sh ./repo/nix
+          echo "NAR info files: $(find ./repo/nix -maxdepth 1 -name '*.narinfo' | wc -l)"
+          echo "NAR archives: $(find ./repo/nix/nar -name '*.nar*' 2>/dev/null | wc -l)"
       - name: Upload repository
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
         with:
@@ -168,12 +229,16 @@ jobs:
     steps:
       - name: Determine component name
         id: component
+        shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "component=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "component=pr-$EVENT_NUMBER" >> $GITHUB_OUTPUT
           else
             echo "component=main" >> $GITHUB_OUTPUT
           fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_NUMBER: ${{ github.event.number }}
       - name: Download repository
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v6
         with:
@@ -184,6 +249,14 @@ jobs:
         with:
           name: all-packages
           path: ./deploy/packages
+      - name: Show deployment structure
+        shell: bash
+        run: |
+          echo "Deployment structure:"
+          find ./deploy -type f | head -50
+          echo "---"
+          echo "APT repo size: $(du -sh ./deploy/dists 2>/dev/null | cut -f1 || echo 'N/A')"
+          echo "Nix cache size: $(du -sh ./deploy/nix 2>/dev/null | cut -f1 || echo 'N/A')"
       - id: app-token
         uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
         with:
