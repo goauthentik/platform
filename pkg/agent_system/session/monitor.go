@@ -2,14 +2,19 @@ package session
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"os"
 	"strings"
 	"sync"
 
+	"github.com/gorilla/securecookie"
 	log "github.com/sirupsen/logrus"
 	"go.etcd.io/bbolt"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/types"
+	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -146,6 +151,47 @@ func (m *Monitor) Delete(id string) {
 	if err != nil {
 		m.log.WithError(err).Warning("failed to delete session")
 	}
+}
+
+type SessionRequest struct {
+	Username string
+	RawToken string
+	Token    *token.Token
+}
+
+func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.RegisterSessionResponse, error) {
+	nid := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
+	bth := sha256.Sum256([]byte(req.RawToken))
+	th := hex.EncodeToString(bth[:])
+	session := &pb.StateSession{
+		ID:        nid,
+		Username:  req.Username,
+		TokenHash: th,
+		ExpiresAt: timestamppb.New(req.Token.Expiry),
+		CreatedAt: timestamppb.Now(),
+	}
+
+	_, dom, err := m.ctx.DomainAPI()
+	if err != nil {
+		return nil, err
+	}
+	if dom.Config().AuthTerminateSessionOnExpiry {
+		session.ExpiresAt = timestamppb.New(time.Unix(-1, 0))
+	}
+
+	m.AddSession(session)
+
+	m.log.Infof(
+		"Registered session %s for user %s (exp: %s)",
+		session.ID[:4],
+		session.Username,
+		time.Until(session.ExpiresAt.AsTime()).String(),
+	)
+
+	return &pb.RegisterSessionResponse{
+		Success:   true,
+		SessionId: session.ID,
+	}, nil
 }
 
 func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {

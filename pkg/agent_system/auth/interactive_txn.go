@@ -2,11 +2,9 @@ package auth
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/securecookie"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
@@ -156,7 +154,7 @@ func (txn *InteractiveAuthTransaction) finishSuccess() (*pb.InteractiveChallenge
 		return nil, err
 	}
 
-	_, err = txn.tv(txn.ctx, &pb.TokenAuthRequest{
+	tres, err := txn.tv(txn.ctx, &pb.TokenAuthRequest{
 		Username: txn.username,
 		Token:    token,
 	})
@@ -169,6 +167,6 @@ func (txn *InteractiveAuthTransaction) finishSuccess() (*pb.InteractiveChallenge
 		Txid:      txn.ID,
 		Finished:  true,
 		Result:    pb.InteractiveAuthResult_PAM_SUCCESS,
-		SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
+		SessionId: tres.SessionId,
 	}, nil
 }

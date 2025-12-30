@@ -2,16 +2,17 @@ package auth
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/MicahParks/jwkset"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/gorilla/securecookie"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -54,6 +55,20 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 		return nil, err
 	}
 
+	sm := auth.ctx.GetComponent(session.ID).(*session.Monitor)
+	if sm == nil {
+		return nil, status.Error(codes.Internal, "cant find session component")
+	}
+
+	sess, err := sm.NewSession(ctx, session.SessionRequest{
+		Username: req.Username,
+		RawToken: req.Token,
+		Token:    token,
+	})
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "unable to create session")
+	}
+
 	return &pb.TokenAuthResponse{
 		Successful: true,
 		Token: &pb.Token{
@@ -65,6 +80,6 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
-		SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
+		SessionId: sess.SessionId,
 	}, nil
 }
