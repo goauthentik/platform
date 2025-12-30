@@ -27,7 +27,7 @@ import (
 
 const ID = "session"
 
-type Monitor struct {
+type Server struct {
 	pb.UnimplementedSessionManagerServer
 
 	mtx           sync.RWMutex
@@ -39,7 +39,7 @@ type Monitor struct {
 }
 
 func NewMonitor(ctx component.Context) (component.Component, error) {
-	return &Monitor{
+	return &Server{
 		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
 		log:           ctx.Log(),
@@ -47,34 +47,34 @@ func NewMonitor(ctx component.Context) (component.Component, error) {
 	}, nil
 }
 
-func (m *Monitor) Start() error {
-	m.timer = time.NewTicker(m.checkInterval)
+func (ss *Server) Start() error {
+	ss.timer = time.NewTicker(ss.checkInterval)
 	go func() {
-		for range m.timer.C {
-			m.checkExpiredSessions()
+		for range ss.timer.C {
+			ss.checkExpiredSessions()
 		}
 	}()
 	return nil
 }
 
-func (m *Monitor) Stop() error {
-	m.timer.Stop()
+func (ss *Server) Stop() error {
+	ss.timer.Stop()
 	return nil
 }
 
-func (m *Monitor) RegisterForID(id string, s grpc.ServiceRegistrar) {
+func (ss *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 	if id != types.SocketIDDefault {
 		return
 	}
-	pb.RegisterSessionManagerServer(s, m)
+	pb.RegisterSessionManagerServer(s, ss)
 }
 
-func (m *Monitor) checkExpiredSessions() {
+func (ss *Server) checkExpiredSessions() {
 	now := time.Now()
 
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-	err := m.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+	ss.mtx.Lock()
+	defer ss.mtx.Unlock()
+	err := ss.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			sessionID := string(k)
 			var session pb.StateSession
@@ -89,25 +89,25 @@ func (m *Monitor) checkExpiredSessions() {
 				log.Infof("Session %s expired for user %s, terminating PID %d",
 					sessionID, session.Username, session.PID)
 
-				err := m.terminateSession(&session)
+				err := ss.terminateSession(&session)
 				if err != nil && !strings.Contains(err.Error(), "no such process") {
 					log.WithError(err).Infof("Failed to terminate session %s", sessionID)
 				} else {
-					m.Delete(sessionID)
+					ss.Delete(sessionID)
 				}
 			}
 			return nil
 		})
 	})
 	if err != nil {
-		m.log.WithError(err).Warning("failed to check expired sessions")
+		ss.log.WithError(err).Warning("failed to check expired sessions")
 	}
 }
 
-func (m *Monitor) AddSession(session *pb.StateSession) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-	err := m.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+func (ss *Server) AddSession(session *pb.StateSession) {
+	ss.mtx.Lock()
+	defer ss.mtx.Unlock()
+	err := ss.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		d, err := proto.Marshal(session)
 		if err != nil {
 			return err
@@ -115,16 +115,16 @@ func (m *Monitor) AddSession(session *pb.StateSession) {
 		return b.Put([]byte(session.ID), d)
 	})
 	if err != nil {
-		m.log.WithError(err).Warning("failed to add session")
+		ss.log.WithError(err).Warning("failed to add session")
 	}
 }
 
-func (m *Monitor) GetSession(id string) (*pb.StateSession, bool) {
-	m.mtx.RLock()
-	defer m.mtx.RUnlock()
+func (ss *Server) GetSession(id string) (*pb.StateSession, bool) {
+	ss.mtx.RLock()
+	defer ss.mtx.RUnlock()
 	session := pb.StateSession{}
 	var exists bool
-	err := m.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+	err := ss.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		d := b.Get([]byte(id))
 		if d == nil {
 			exists = false
@@ -138,20 +138,20 @@ func (m *Monitor) GetSession(id string) (*pb.StateSession, bool) {
 		return nil
 	})
 	if err != nil {
-		m.log.WithError(err).Warning("failed to get session")
+		ss.log.WithError(err).Warning("failed to get session")
 		return nil, false
 	}
 	return &session, exists
 }
 
-func (m *Monitor) Delete(id string) {
-	m.mtx.Lock()
-	defer m.mtx.Unlock()
-	err := m.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+func (ss *Server) Delete(id string) {
+	ss.mtx.Lock()
+	defer ss.mtx.Unlock()
+	err := ss.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		return b.Delete([]byte(id))
 	})
 	if err != nil {
-		m.log.WithError(err).Warning("failed to delete session")
+		ss.log.WithError(err).Warning("failed to delete session")
 	}
 }
 
@@ -161,7 +161,7 @@ type SessionRequest struct {
 	Token    *token.Token
 }
 
-func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.StateSession, error) {
+func (ss *Server) NewSession(ctx context.Context, req SessionRequest) (*pb.StateSession, error) {
 	nid := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
 	bth := sha256.Sum256([]byte(req.RawToken))
 	th := hex.EncodeToString(bth[:])
@@ -173,7 +173,7 @@ func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.State
 		CreatedAt: timestamppb.Now(),
 	}
 
-	_, dom, err := m.ctx.DomainAPI()
+	_, dom, err := ss.ctx.DomainAPI()
 	if err != nil {
 		return nil, err
 	}
@@ -181,9 +181,9 @@ func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.State
 		session.ExpiresAt = timestamppb.New(time.Unix(-1, 0))
 	}
 
-	m.AddSession(session)
+	ss.AddSession(session)
 
-	m.log.Infof(
+	ss.log.Infof(
 		"Registered session %s for user %s (exp: %s)",
 		session.ID[:4],
 		session.Username,
@@ -193,36 +193,36 @@ func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.State
 	return session, nil
 }
 
-func (m *Monitor) SessionStatus(ctx context.Context, req *pb.SessionStatusRequest) (*pb.SessionStatusResponse, error) {
-	sess, ok := m.GetSession(req.SessionId)
+func (ss *Server) SessionStatus(ctx context.Context, req *pb.SessionStatusRequest) (*pb.SessionStatusResponse, error) {
+	sess, ok := ss.GetSession(req.SessionId)
 	if !ok {
 		return &pb.SessionStatusResponse{Success: false}, nil
 	}
 	return &pb.SessionStatusResponse{Success: true, Expiry: sess.ExpiresAt}, nil
 }
 
-func (m *Monitor) OpenSession(ctx context.Context, req *pb.OpenSessionRequest) (*pb.OpenSessionResponse, error) {
-	sess, ok := m.GetSession(req.SessionId)
+func (ss *Server) OpenSession(ctx context.Context, req *pb.OpenSessionRequest) (*pb.OpenSessionResponse, error) {
+	sess, ok := ss.GetSession(req.SessionId)
 	if !ok {
 		return &pb.OpenSessionResponse{Success: false}, status.Error(codes.NotFound, "Session not found")
 	}
 	sess.PID = req.Pid
 	sess.PPID = req.Ppid
 	sess.LocalSocket = req.LocalSocket
-	m.AddSession(sess)
+	ss.AddSession(sess)
 	return &pb.OpenSessionResponse{
 		Success:   true,
 		SessionId: sess.ID,
 	}, nil
 }
 
-func (m *Monitor) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {
-	sess, ok := m.GetSession(req.SessionId)
+func (ss *Server) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {
+	sess, ok := ss.GetSession(req.SessionId)
 	if !ok {
 		return &pb.CloseSessionResponse{Success: false}, nil
 	}
 	_ = os.Remove(sess.LocalSocket)
-	m.log.Infof("Removing session %s for user '%s'", sess.ID, sess.Username)
-	m.Delete(req.SessionId)
+	ss.log.Infof("Removing session %s for user '%s'", sess.ID, sess.Username)
+	ss.Delete(req.SessionId)
 	return &pb.CloseSessionResponse{Success: true}, nil
 }

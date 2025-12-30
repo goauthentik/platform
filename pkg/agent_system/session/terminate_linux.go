@@ -10,7 +10,7 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 )
 
-func (m *Monitor) terminateSession(session *pb.StateSession) error {
+func (ss *Server) terminateSession(session *pb.StateSession) error {
 	_ = os.Remove(session.LocalSocket)
 
 	// Try graceful termination first

@@ -55,7 +55,7 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 		return nil, err
 	}
 
-	sm := auth.ctx.GetComponent(session.ID).(*session.Monitor)
+	sm := auth.ctx.GetComponent(session.ID).(*session.Server)
 	if sm == nil {
 		return nil, status.Error(codes.Internal, "cant find session component")
 	}

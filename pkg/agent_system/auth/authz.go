@@ -11,7 +11,7 @@ import (
 )
 
 func (auth *Server) Authorize(ctx context.Context, req *pb.SystemAuthorizeRequest) (*pb.SystemAuthorizeResponse, error) {
-	sm := auth.ctx.GetComponent(session.ID).(*session.Monitor)
+	sm := auth.ctx.GetComponent(session.ID).(*session.Server)
 	if sm == nil {
 		return nil, status.Error(codes.Internal, "cant find session component")
 	}
