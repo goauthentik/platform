@@ -17,6 +17,8 @@ import (
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -159,7 +161,7 @@ type SessionRequest struct {
 	Token    *token.Token
 }
 
-func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.RegisterSessionResponse, error) {
+func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.StateSession, error) {
 	nid := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
 	bth := sha256.Sum256([]byte(req.RawToken))
 	th := hex.EncodeToString(bth[:])
@@ -188,46 +190,7 @@ func (m *Monitor) NewSession(ctx context.Context, req SessionRequest) (*pb.Regis
 		time.Until(session.ExpiresAt.AsTime()).String(),
 	)
 
-	return &pb.RegisterSessionResponse{
-		Success:   true,
-		SessionId: session.ID,
-	}, nil
-}
-
-func (m *Monitor) RegisterSession(ctx context.Context, req *pb.RegisterSessionRequest) (*pb.RegisterSessionResponse, error) {
-	session := &pb.StateSession{
-		ID:          req.SessionId,
-		Username:    req.Username,
-		TokenHash:   req.TokenHash,
-		ExpiresAt:   timestamppb.New(time.Unix(int64(req.ExpiresAt), 0)),
-		PID:         req.Pid,
-		PPID:        req.Ppid,
-		CreatedAt:   timestamppb.New(time.Now()),
-		LocalSocket: req.LocalSocket,
-	}
-
-	_, dom, err := m.ctx.DomainAPI()
-	if err != nil {
-		return nil, err
-	}
-	if dom.Config().AuthTerminateSessionOnExpiry {
-		session.ExpiresAt = timestamppb.New(time.Unix(-1, 0))
-	}
-
-	m.AddSession(session)
-
-	m.log.Infof(
-		"Registered session %s for user %s (PID: %d, exp: %s)",
-		session.ID[:4],
-		session.Username,
-		req.Pid,
-		time.Until(session.ExpiresAt.AsTime()).String(),
-	)
-
-	return &pb.RegisterSessionResponse{
-		Success:   true,
-		SessionId: req.SessionId,
-	}, nil
+	return session, nil
 }
 
 func (m *Monitor) SessionStatus(ctx context.Context, req *pb.SessionStatusRequest) (*pb.SessionStatusResponse, error) {
@@ -236,6 +199,21 @@ func (m *Monitor) SessionStatus(ctx context.Context, req *pb.SessionStatusReques
 		return &pb.SessionStatusResponse{Success: false}, nil
 	}
 	return &pb.SessionStatusResponse{Success: true, Expiry: sess.ExpiresAt}, nil
+}
+
+func (m *Monitor) OpenSession(ctx context.Context, req *pb.OpenSessionRequest) (*pb.OpenSessionResponse, error) {
+	sess, ok := m.GetSession(req.SessionId)
+	if !ok {
+		return &pb.OpenSessionResponse{Success: false}, status.Error(codes.NotFound, "Session not found")
+	}
+	sess.PID = req.Pid
+	sess.PPID = req.Ppid
+	sess.LocalSocket = req.LocalSocket
+	m.AddSession(sess)
+	return &pb.OpenSessionResponse{
+		Success:   true,
+		SessionId: sess.ID,
+	}, nil
 }
 
 func (m *Monitor) CloseSession(ctx context.Context, req *pb.CloseSessionRequest) (*pb.CloseSessionResponse, error) {

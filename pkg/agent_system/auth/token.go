@@ -80,6 +80,6 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
-		SessionId: sess.SessionId,
+		SessionId: sess.ID,
 	}, nil
 }

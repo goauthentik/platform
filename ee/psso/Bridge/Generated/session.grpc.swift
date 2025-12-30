@@ -20,18 +20,6 @@ internal enum SessionManager: Sendable {
     internal static let descriptor = GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager")
     /// Namespace for method metadata.
     internal enum Method: Sendable {
-        /// Namespace for "RegisterSession" metadata.
-        internal enum RegisterSession: Sendable {
-            /// Request type for "RegisterSession".
-            internal typealias Input = RegisterSessionRequest
-            /// Response type for "RegisterSession".
-            internal typealias Output = RegisterSessionResponse
-            /// Descriptor for "RegisterSession".
-            internal static let descriptor = GRPCCore.MethodDescriptor(
-                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager"),
-                method: "RegisterSession"
-            )
-        }
         /// Namespace for "SessionStatus" metadata.
         internal enum SessionStatus: Sendable {
             /// Request type for "SessionStatus".
@@ -42,6 +30,18 @@ internal enum SessionManager: Sendable {
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager"),
                 method: "SessionStatus"
+            )
+        }
+        /// Namespace for "OpenSession" metadata.
+        internal enum OpenSession: Sendable {
+            /// Request type for "OpenSession".
+            internal typealias Input = OpenSessionRequest
+            /// Response type for "OpenSession".
+            internal typealias Output = OpenSessionResponse
+            /// Descriptor for "OpenSession".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager"),
+                method: "OpenSession"
             )
         }
         /// Namespace for "CloseSession" metadata.
@@ -58,8 +58,8 @@ internal enum SessionManager: Sendable {
         }
         /// Descriptors for all methods in the "session.SessionManager" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
-            RegisterSession.descriptor,
             SessionStatus.descriptor,
+            OpenSession.descriptor,
             CloseSession.descriptor
         ]
     }
@@ -79,26 +79,11 @@ extension SessionManager {
     ///
     /// You don't need to implement this protocol directly, use the generated
     /// implementation, ``Client``.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > SessionManager for opening/closing sessions
     internal protocol ClientProtocol: Sendable {
-        /// Call the "RegisterSession" method.
-        ///
-        /// - Parameters:
-        ///   - request: A request containing a single `RegisterSessionRequest` message.
-        ///   - serializer: A serializer for `RegisterSessionRequest` messages.
-        ///   - deserializer: A deserializer for `RegisterSessionResponse` messages.
-        ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
-        /// - Returns: The result of `handleResponse`.
-        func registerSession<Result>(
-            request: GRPCCore.ClientRequest<RegisterSessionRequest>,
-            serializer: some GRPCCore.MessageSerializer<RegisterSessionRequest>,
-            deserializer: some GRPCCore.MessageDeserializer<RegisterSessionResponse>,
-            options: GRPCCore.CallOptions,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterSessionResponse>) async throws -> Result
-        ) async throws -> Result where Result: Sendable
-
         /// Call the "SessionStatus" method.
         ///
         /// - Parameters:
@@ -116,6 +101,25 @@ extension SessionManager {
             deserializer: some GRPCCore.MessageDeserializer<SessionStatusResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SessionStatusResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "OpenSession" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `OpenSessionRequest` message.
+        ///   - serializer: A serializer for `OpenSessionRequest` messages.
+        ///   - deserializer: A deserializer for `OpenSessionResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func openSession<Result>(
+            request: GRPCCore.ClientRequest<OpenSessionRequest>,
+            serializer: some GRPCCore.MessageSerializer<OpenSessionRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<OpenSessionResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OpenSessionResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
 
         /// Call the "CloseSession" method.
@@ -143,6 +147,10 @@ extension SessionManager {
     /// The ``Client`` provides an implementation of ``ClientProtocol`` which wraps
     /// a `GRPCCore.GRPCCClient`. The underlying `GRPCClient` provides the long-lived
     /// means of communication with the remote peer.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > SessionManager for opening/closing sessions
     internal struct Client<Transport>: ClientProtocol where Transport: GRPCCore.ClientTransport {
         private let client: GRPCCore.GRPCClient<Transport>
 
@@ -152,36 +160,6 @@ extension SessionManager {
         ///   - client: A `GRPCCore.GRPCClient` providing a communication channel to the service.
         internal init(wrapping client: GRPCCore.GRPCClient<Transport>) {
             self.client = client
-        }
-
-        /// Call the "RegisterSession" method.
-        ///
-        /// - Parameters:
-        ///   - request: A request containing a single `RegisterSessionRequest` message.
-        ///   - serializer: A serializer for `RegisterSessionRequest` messages.
-        ///   - deserializer: A deserializer for `RegisterSessionResponse` messages.
-        ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
-        /// - Returns: The result of `handleResponse`.
-        internal func registerSession<Result>(
-            request: GRPCCore.ClientRequest<RegisterSessionRequest>,
-            serializer: some GRPCCore.MessageSerializer<RegisterSessionRequest>,
-            deserializer: some GRPCCore.MessageDeserializer<RegisterSessionResponse>,
-            options: GRPCCore.CallOptions = .defaults,
-            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterSessionResponse>) async throws -> Result = { response in
-                try response.message
-            }
-        ) async throws -> Result where Result: Sendable {
-            try await self.client.unary(
-                request: request,
-                descriptor: SessionManager.Method.RegisterSession.descriptor,
-                serializer: serializer,
-                deserializer: deserializer,
-                options: options,
-                onResponse: handleResponse
-            )
         }
 
         /// Call the "SessionStatus" method.
@@ -207,6 +185,36 @@ extension SessionManager {
             try await self.client.unary(
                 request: request,
                 descriptor: SessionManager.Method.SessionStatus.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
+        /// Call the "OpenSession" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `OpenSessionRequest` message.
+        ///   - serializer: A serializer for `OpenSessionRequest` messages.
+        ///   - deserializer: A deserializer for `OpenSessionResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func openSession<Result>(
+            request: GRPCCore.ClientRequest<OpenSessionRequest>,
+            serializer: some GRPCCore.MessageSerializer<OpenSessionRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<OpenSessionResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OpenSessionResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SessionManager.Method.OpenSession.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -249,31 +257,6 @@ extension SessionManager {
 // Helpers providing default arguments to 'ClientProtocol' methods.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension SessionManager.ClientProtocol {
-    /// Call the "RegisterSession" method.
-    ///
-    /// - Parameters:
-    ///   - request: A request containing a single `RegisterSessionRequest` message.
-    ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
-    /// - Returns: The result of `handleResponse`.
-    internal func registerSession<Result>(
-        request: GRPCCore.ClientRequest<RegisterSessionRequest>,
-        options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterSessionResponse>) async throws -> Result = { response in
-            try response.message
-        }
-    ) async throws -> Result where Result: Sendable {
-        try await self.registerSession(
-            request: request,
-            serializer: GRPCProtobuf.ProtobufSerializer<RegisterSessionRequest>(),
-            deserializer: GRPCProtobuf.ProtobufDeserializer<RegisterSessionResponse>(),
-            options: options,
-            onResponse: handleResponse
-        )
-    }
-
     /// Call the "SessionStatus" method.
     ///
     /// - Parameters:
@@ -294,6 +277,31 @@ extension SessionManager.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<SessionStatusRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<SessionStatusResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "OpenSession" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `OpenSessionRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func openSession<Result>(
+        request: GRPCCore.ClientRequest<OpenSessionRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OpenSessionResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.openSession(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<OpenSessionRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<OpenSessionResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -328,35 +336,6 @@ extension SessionManager.ClientProtocol {
 // Helpers providing sugared APIs for 'ClientProtocol' methods.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension SessionManager.ClientProtocol {
-    /// Call the "RegisterSession" method.
-    ///
-    /// - Parameters:
-    ///   - message: request message to send.
-    ///   - metadata: Additional metadata to send, defaults to empty.
-    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
-    /// - Returns: The result of `handleResponse`.
-    internal func registerSession<Result>(
-        _ message: RegisterSessionRequest,
-        metadata: GRPCCore.Metadata = [:],
-        options: GRPCCore.CallOptions = .defaults,
-        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterSessionResponse>) async throws -> Result = { response in
-            try response.message
-        }
-    ) async throws -> Result where Result: Sendable {
-        let request = GRPCCore.ClientRequest<RegisterSessionRequest>(
-            message: message,
-            metadata: metadata
-        )
-        return try await self.registerSession(
-            request: request,
-            options: options,
-            onResponse: handleResponse
-        )
-    }
-
     /// Call the "SessionStatus" method.
     ///
     /// - Parameters:
@@ -380,6 +359,35 @@ extension SessionManager.ClientProtocol {
             metadata: metadata
         )
         return try await self.sessionStatus(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "OpenSession" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func openSession<Result>(
+        _ message: OpenSessionRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<OpenSessionResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<OpenSessionRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.openSession(
             request: request,
             options: options,
             onResponse: handleResponse

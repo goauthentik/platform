@@ -90,30 +90,6 @@ pub mod session_manager_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn register_session(
-            &mut self,
-            request: impl tonic::IntoRequest<super::RegisterSessionRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::RegisterSessionResponse>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/session.SessionManager/RegisterSession",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("session.SessionManager", "RegisterSession"));
-            self.inner.unary(req, path, codec).await
-        }
         pub async fn session_status(
             &mut self,
             request: impl tonic::IntoRequest<super::SessionStatusRequest>,
@@ -136,6 +112,30 @@ pub mod session_manager_client {
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("session.SessionManager", "SessionStatus"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn open_session(
+            &mut self,
+            request: impl tonic::IntoRequest<super::OpenSessionRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::OpenSessionResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/session.SessionManager/OpenSession",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("session.SessionManager", "OpenSession"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn close_session(

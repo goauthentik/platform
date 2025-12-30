@@ -20,31 +20,25 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-struct RegisterSessionRequest: Sendable {
+struct OpenSessionRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   var sessionID: String = String()
 
-  var username: String = String()
-
-  var tokenHash: String = String()
-
-  var localSocket: String = String()
-
-  var expiresAt: Int64 = 0
-
   var pid: UInt32 = 0
 
   var ppid: UInt32 = 0
+
+  var localSocket: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
-struct RegisterSessionResponse: Sendable {
+struct OpenSessionResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -52,8 +46,6 @@ struct RegisterSessionResponse: Sendable {
   var success: Bool = false
 
   var sessionID: String = String()
-
-  var error: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -127,9 +119,9 @@ struct CloseSessionResponse: Sendable {
 
 fileprivate let _protobuf_package = "session"
 
-extension RegisterSessionRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".RegisterSessionRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}session_id\0\u{1}username\0\u{3}token_hash\0\u{3}local_socket\0\u{3}expires_at\0\u{1}pid\0\u{1}ppid\0")
+extension OpenSessionRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".OpenSessionRequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}session_id\0\u{1}pid\0\u{1}ppid\0\u{3}local_socket\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -138,12 +130,9 @@ extension RegisterSessionRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageI
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.sessionID) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.username) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.tokenHash) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.pid) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.ppid) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self.localSocket) }()
-      case 5: try { try decoder.decodeSingularInt64Field(value: &self.expiresAt) }()
-      case 6: try { try decoder.decodeSingularUInt32Field(value: &self.pid) }()
-      case 7: try { try decoder.decodeSingularUInt32Field(value: &self.ppid) }()
       default: break
       }
     }
@@ -153,43 +142,31 @@ extension RegisterSessionRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     if !self.sessionID.isEmpty {
       try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 1)
     }
-    if !self.username.isEmpty {
-      try visitor.visitSingularStringField(value: self.username, fieldNumber: 2)
+    if self.pid != 0 {
+      try visitor.visitSingularUInt32Field(value: self.pid, fieldNumber: 2)
     }
-    if !self.tokenHash.isEmpty {
-      try visitor.visitSingularStringField(value: self.tokenHash, fieldNumber: 3)
+    if self.ppid != 0 {
+      try visitor.visitSingularUInt32Field(value: self.ppid, fieldNumber: 3)
     }
     if !self.localSocket.isEmpty {
       try visitor.visitSingularStringField(value: self.localSocket, fieldNumber: 4)
     }
-    if self.expiresAt != 0 {
-      try visitor.visitSingularInt64Field(value: self.expiresAt, fieldNumber: 5)
-    }
-    if self.pid != 0 {
-      try visitor.visitSingularUInt32Field(value: self.pid, fieldNumber: 6)
-    }
-    if self.ppid != 0 {
-      try visitor.visitSingularUInt32Field(value: self.ppid, fieldNumber: 7)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: RegisterSessionRequest, rhs: RegisterSessionRequest) -> Bool {
+  static func ==(lhs: OpenSessionRequest, rhs: OpenSessionRequest) -> Bool {
     if lhs.sessionID != rhs.sessionID {return false}
-    if lhs.username != rhs.username {return false}
-    if lhs.tokenHash != rhs.tokenHash {return false}
-    if lhs.localSocket != rhs.localSocket {return false}
-    if lhs.expiresAt != rhs.expiresAt {return false}
     if lhs.pid != rhs.pid {return false}
     if lhs.ppid != rhs.ppid {return false}
+    if lhs.localSocket != rhs.localSocket {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension RegisterSessionResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".RegisterSessionResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}success\0\u{3}session_id\0\u{1}error\0")
+extension OpenSessionResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".OpenSessionResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}success\0\u{3}session_id\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -199,7 +176,6 @@ extension RegisterSessionResponse: SwiftProtobuf.Message, SwiftProtobuf._Message
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBoolField(value: &self.success) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.sessionID) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.error) }()
       default: break
       }
     }
@@ -212,16 +188,12 @@ extension RegisterSessionResponse: SwiftProtobuf.Message, SwiftProtobuf._Message
     if !self.sessionID.isEmpty {
       try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 2)
     }
-    if !self.error.isEmpty {
-      try visitor.visitSingularStringField(value: self.error, fieldNumber: 3)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: RegisterSessionResponse, rhs: RegisterSessionResponse) -> Bool {
+  static func ==(lhs: OpenSessionResponse, rhs: OpenSessionResponse) -> Bool {
     if lhs.success != rhs.success {return false}
     if lhs.sessionID != rhs.sessionID {return false}
-    if lhs.error != rhs.error {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

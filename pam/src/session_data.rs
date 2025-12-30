@@ -2,8 +2,6 @@ use pam::constants::PamResultCode;
 
 use serde::{Deserialize, Serialize};
 
-use sha2::{Digest, Sha256};
-
 use std::fs::{File, Permissions, remove_file};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
@@ -70,10 +68,4 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
             Err(PamResultCode::PAM_AUTH_ERR)
         }
     }
-}
-
-pub fn hash_token(token: String) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(token.as_bytes());
-    hex::encode(hasher.finalize())
 }

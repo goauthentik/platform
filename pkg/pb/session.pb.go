@@ -22,33 +22,30 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type RegisterSessionRequest struct {
+type OpenSessionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	TokenHash     string                 `protobuf:"bytes,3,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
+	Pid           uint32                 `protobuf:"varint,2,opt,name=pid,proto3" json:"pid,omitempty"`
+	Ppid          uint32                 `protobuf:"varint,3,opt,name=ppid,proto3" json:"ppid,omitempty"`
 	LocalSocket   string                 `protobuf:"bytes,4,opt,name=local_socket,json=localSocket,proto3" json:"local_socket,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	Pid           uint32                 `protobuf:"varint,6,opt,name=pid,proto3" json:"pid,omitempty"`
-	Ppid          uint32                 `protobuf:"varint,7,opt,name=ppid,proto3" json:"ppid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RegisterSessionRequest) Reset() {
-	*x = RegisterSessionRequest{}
+func (x *OpenSessionRequest) Reset() {
+	*x = OpenSessionRequest{}
 	mi := &file_session_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RegisterSessionRequest) String() string {
+func (x *OpenSessionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RegisterSessionRequest) ProtoMessage() {}
+func (*OpenSessionRequest) ProtoMessage() {}
 
-func (x *RegisterSessionRequest) ProtoReflect() protoreflect.Message {
+func (x *OpenSessionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_session_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -60,83 +57,61 @@ func (x *RegisterSessionRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RegisterSessionRequest.ProtoReflect.Descriptor instead.
-func (*RegisterSessionRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use OpenSessionRequest.ProtoReflect.Descriptor instead.
+func (*OpenSessionRequest) Descriptor() ([]byte, []int) {
 	return file_session_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *RegisterSessionRequest) GetSessionId() string {
+func (x *OpenSessionRequest) GetSessionId() string {
 	if x != nil {
 		return x.SessionId
 	}
 	return ""
 }
 
-func (x *RegisterSessionRequest) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *RegisterSessionRequest) GetTokenHash() string {
-	if x != nil {
-		return x.TokenHash
-	}
-	return ""
-}
-
-func (x *RegisterSessionRequest) GetLocalSocket() string {
-	if x != nil {
-		return x.LocalSocket
-	}
-	return ""
-}
-
-func (x *RegisterSessionRequest) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
-}
-
-func (x *RegisterSessionRequest) GetPid() uint32 {
+func (x *OpenSessionRequest) GetPid() uint32 {
 	if x != nil {
 		return x.Pid
 	}
 	return 0
 }
 
-func (x *RegisterSessionRequest) GetPpid() uint32 {
+func (x *OpenSessionRequest) GetPpid() uint32 {
 	if x != nil {
 		return x.Ppid
 	}
 	return 0
 }
 
-type RegisterSessionResponse struct {
+func (x *OpenSessionRequest) GetLocalSocket() string {
+	if x != nil {
+		return x.LocalSocket
+	}
+	return ""
+}
+
+type OpenSessionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	SessionId     string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RegisterSessionResponse) Reset() {
-	*x = RegisterSessionResponse{}
+func (x *OpenSessionResponse) Reset() {
+	*x = OpenSessionResponse{}
 	mi := &file_session_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RegisterSessionResponse) String() string {
+func (x *OpenSessionResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RegisterSessionResponse) ProtoMessage() {}
+func (*OpenSessionResponse) ProtoMessage() {}
 
-func (x *RegisterSessionResponse) ProtoReflect() protoreflect.Message {
+func (x *OpenSessionResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_session_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -148,28 +123,21 @@ func (x *RegisterSessionResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RegisterSessionResponse.ProtoReflect.Descriptor instead.
-func (*RegisterSessionResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use OpenSessionResponse.ProtoReflect.Descriptor instead.
+func (*OpenSessionResponse) Descriptor() ([]byte, []int) {
 	return file_session_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *RegisterSessionResponse) GetSuccess() bool {
+func (x *OpenSessionResponse) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
 	return false
 }
 
-func (x *RegisterSessionResponse) GetSessionId() string {
+func (x *OpenSessionResponse) GetSessionId() string {
 	if x != nil {
 		return x.SessionId
-	}
-	return ""
-}
-
-func (x *RegisterSessionResponse) GetError() string {
-	if x != nil {
-		return x.Error
 	}
 	return ""
 }
@@ -378,23 +346,17 @@ var File_session_proto protoreflect.FileDescriptor
 
 const file_session_proto_rawDesc = "" +
 	"\n" +
-	"\rsession.proto\x12\asession\x1a\x1fgoogle/protobuf/timestamp.proto\"\xda\x01\n" +
-	"\x16RegisterSessionRequest\x12\x1d\n" +
+	"\rsession.proto\x12\asession\x1a\x1fgoogle/protobuf/timestamp.proto\"|\n" +
+	"\x12OpenSessionRequest\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
-	"\n" +
-	"token_hash\x18\x03 \x01(\tR\ttokenHash\x12!\n" +
-	"\flocal_socket\x18\x04 \x01(\tR\vlocalSocket\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x05 \x01(\x03R\texpiresAt\x12\x10\n" +
-	"\x03pid\x18\x06 \x01(\rR\x03pid\x12\x12\n" +
-	"\x04ppid\x18\a \x01(\rR\x04ppid\"h\n" +
-	"\x17RegisterSessionResponse\x12\x18\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
+	"\x03pid\x18\x02 \x01(\rR\x03pid\x12\x12\n" +
+	"\x04ppid\x18\x03 \x01(\rR\x04ppid\x12!\n" +
+	"\flocal_socket\x18\x04 \x01(\tR\vlocalSocket\"N\n" +
+	"\x13OpenSessionResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\"5\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\"5\n" +
 	"\x14SessionStatusRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\"{\n" +
@@ -407,10 +369,10 @@ const file_session_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
 	"\x03pid\x18\x02 \x01(\rR\x03pid\"0\n" +
 	"\x14CloseSessionResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess2\x83\x02\n" +
-	"\x0eSessionManager\x12T\n" +
-	"\x0fRegisterSession\x12\x1f.session.RegisterSessionRequest\x1a .session.RegisterSessionResponse\x12N\n" +
-	"\rSessionStatus\x12\x1d.session.SessionStatusRequest\x1a\x1e.session.SessionStatusResponse\x12K\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess2\xf7\x01\n" +
+	"\x0eSessionManager\x12N\n" +
+	"\rSessionStatus\x12\x1d.session.SessionStatusRequest\x1a\x1e.session.SessionStatusResponse\x12H\n" +
+	"\vOpenSession\x12\x1b.session.OpenSessionRequest\x1a\x1c.session.OpenSessionResponse\x12K\n" +
 	"\fCloseSession\x12\x1c.session.CloseSessionRequest\x1a\x1d.session.CloseSessionResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
@@ -427,21 +389,21 @@ func file_session_proto_rawDescGZIP() []byte {
 
 var file_session_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_session_proto_goTypes = []any{
-	(*RegisterSessionRequest)(nil),  // 0: session.RegisterSessionRequest
-	(*RegisterSessionResponse)(nil), // 1: session.RegisterSessionResponse
-	(*SessionStatusRequest)(nil),    // 2: session.SessionStatusRequest
-	(*SessionStatusResponse)(nil),   // 3: session.SessionStatusResponse
-	(*CloseSessionRequest)(nil),     // 4: session.CloseSessionRequest
-	(*CloseSessionResponse)(nil),    // 5: session.CloseSessionResponse
-	(*timestamppb.Timestamp)(nil),   // 6: google.protobuf.Timestamp
+	(*OpenSessionRequest)(nil),    // 0: session.OpenSessionRequest
+	(*OpenSessionResponse)(nil),   // 1: session.OpenSessionResponse
+	(*SessionStatusRequest)(nil),  // 2: session.SessionStatusRequest
+	(*SessionStatusResponse)(nil), // 3: session.SessionStatusResponse
+	(*CloseSessionRequest)(nil),   // 4: session.CloseSessionRequest
+	(*CloseSessionResponse)(nil),  // 5: session.CloseSessionResponse
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
 }
 var file_session_proto_depIdxs = []int32{
 	6, // 0: session.SessionStatusResponse.expiry:type_name -> google.protobuf.Timestamp
-	0, // 1: session.SessionManager.RegisterSession:input_type -> session.RegisterSessionRequest
-	2, // 2: session.SessionManager.SessionStatus:input_type -> session.SessionStatusRequest
+	2, // 1: session.SessionManager.SessionStatus:input_type -> session.SessionStatusRequest
+	0, // 2: session.SessionManager.OpenSession:input_type -> session.OpenSessionRequest
 	4, // 3: session.SessionManager.CloseSession:input_type -> session.CloseSessionRequest
-	1, // 4: session.SessionManager.RegisterSession:output_type -> session.RegisterSessionResponse
-	3, // 5: session.SessionManager.SessionStatus:output_type -> session.SessionStatusResponse
+	3, // 4: session.SessionManager.SessionStatus:output_type -> session.SessionStatusResponse
+	1, // 5: session.SessionManager.OpenSession:output_type -> session.OpenSessionResponse
 	5, // 6: session.SessionManager.CloseSession:output_type -> session.CloseSessionResponse
 	4, // [4:7] is the sub-list for method output_type
 	1, // [1:4] is the sub-list for method input_type

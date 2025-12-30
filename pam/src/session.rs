@@ -4,7 +4,7 @@ use crate::pam_env::pam_get_env;
 use crate::session_data::{_delete_session_data, _read_session_data};
 use crate::{ENV_SESSION_ID, pam_try_log};
 use authentik_sys::generated::session::session_manager_client::SessionManagerClient;
-use authentik_sys::generated::session::{CloseSessionRequest, RegisterSessionRequest};
+use authentik_sys::generated::session::{CloseSessionRequest, OpenSessionRequest};
 use authentik_sys::grpc::grpc_request;
 use pam::constants::PamFlag;
 use pam::constants::PamResultCode;
@@ -34,11 +34,8 @@ pub fn open_session_impl(
 
     let session_info = match grpc_request(async |ch| {
         return Ok(SessionManagerClient::new(ch)
-            .register_session(RegisterSessionRequest {
+            .open_session(OpenSessionRequest {
                 session_id: sid.clone(),
-                username: sd.username.to_owned(),
-                token_hash: sd.token.clone(),
-                expires_at: sd.expiry,
                 pid: std::process::id(),
                 ppid: std::os::unix::process::parent_id(),
                 local_socket: sd.local_socket.clone(),
@@ -53,7 +50,7 @@ pub fn open_session_impl(
     };
 
     if !session_info.success {
-        log::warn!("failed to add session: {}", session_info.error);
+        log::warn!("failed to add session");
         return PamResultCode::PAM_SESSION_ERR;
     }
 
