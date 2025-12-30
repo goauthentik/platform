@@ -29,7 +29,7 @@
           inherit system overlays;
         };
 
-        version = "0.35.3";
+        version = "0.35.4";
         vendorHash = "sha256-qoObvQs5Pk7CYci6PNRzzt797v94ZLTEZpTRRV6QKZM=";
 
         # Common Go build settings
