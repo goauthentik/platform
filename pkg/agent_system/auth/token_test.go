@@ -17,7 +17,6 @@ import (
 
 func TestToken(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
-	auth := testAuth(t)
 
 	jwksKey, jwksCert := testutils.GenerateCertificate(t, "localhost")
 
@@ -28,7 +27,7 @@ func TestToken(t *testing.T) {
 		JwksAuth:     testutils.JWKS(t, jwksCert),
 		DeviceId:     "foo",
 	}, ac.APIClient)
-	auth.dom = dc
+	auth := testAuth(t, dc)
 
 	now := time.Now()
 

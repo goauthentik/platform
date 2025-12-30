@@ -13,22 +13,27 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/testutils"
 )
 
-func testAuth(t *testing.T) Server {
+func testAuth(t *testing.T, dc *config.DomainConfig) Server {
 	t.Helper()
+	ctx := component.TestContext(t, dc)
+	sm, err := session.NewMonitor(ctx)
+	assert.NoError(t, err)
+	ctx.Registry().(component.TestRegistry).Comp[session.ID] = sm
 	return Server{
 		log:  log.WithField("component", "test"),
-		ctx:  component.TestContext(t),
+		ctx:  ctx,
 		txns: map[string]*InteractiveAuthTransaction{},
+		dom:  dc,
 	}
 }
 
 func TestInteractive_Success(t *testing.T) {
-	auth := testAuth(t)
 	jwksKey, jwksCert := testutils.GenerateCertificate(t, "localhost")
 	ac := ak.TestAPI().
 		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
@@ -74,7 +79,7 @@ func TestInteractive_Success(t *testing.T) {
 		JwksAuth:          testutils.JWKS(t, jwksCert),
 		DeviceId:          "foo",
 	}, ac.APIClient)
-	auth.dom = dc
+	auth := testAuth(t, dc)
 
 	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
 		InteractiveAuth: &pb.InteractiveAuthRequest_Init{
@@ -91,11 +96,13 @@ func TestInteractive_Success(t *testing.T) {
 		SessionId: res.SessionId,
 		Result:    pb.InteractiveAuthResult_PAM_SUCCESS,
 	}, res)
+	sess, found := auth.ctx.GetComponent(session.ID).(*session.Server).GetSession(res.SessionId)
+	assert.True(t, found)
+	assert.Equal(t, res.SessionId, sess.ID)
 }
 
 func TestInteractive_NoPassword(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
-	auth := testAuth(t)
 	ac := ak.TestAPI().
 		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
@@ -117,7 +124,7 @@ func TestInteractive_NoPassword(t *testing.T) {
 	dc := config.TestDomain(&api.AgentConfig{
 		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
 	}, ac.APIClient)
-	auth.dom = dc
+	auth := testAuth(t, dc)
 
 	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
 		InteractiveAuth: &pb.InteractiveAuthRequest_Init{
@@ -137,7 +144,6 @@ func TestInteractive_NoPassword(t *testing.T) {
 
 func TestInteractive_Auth_Denied(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
-	auth := testAuth(t)
 	ac := ak.TestAPI().
 		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
@@ -159,7 +165,7 @@ func TestInteractive_Auth_Denied(t *testing.T) {
 	dc := config.TestDomain(&api.AgentConfig{
 		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
 	}, ac.APIClient)
-	auth.dom = dc
+	auth := testAuth(t, dc)
 
 	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
 		InteractiveAuth: &pb.InteractiveAuthRequest_Init{

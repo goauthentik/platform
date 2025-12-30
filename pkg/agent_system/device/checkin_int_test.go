@@ -11,9 +11,10 @@ import (
 )
 
 func TestCheckin(t *testing.T) {
-	ds, err := NewServer(component.TestContext(t))
+	dc := config.IntegrationDomain(t)
+	ds, err := NewServer(component.TestContext(t, dc))
 	assert.NoError(t, err)
 
 	dds := ds.(*Server)
-	assert.NoError(t, dds.checkIn(t.Context(), config.IntegrationDomain(t)))
+	assert.NoError(t, dds.checkIn(t.Context(), dc))
 }
