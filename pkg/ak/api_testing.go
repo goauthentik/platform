@@ -31,6 +31,9 @@ func (tac *TestAPIClient) RoundTrip(req *http.Request) (*http.Response, error) {
 			break
 		}
 	}
+	if r, ok := rres.(*http.Response); ok {
+		return r, nil
+	}
 	s, err := json.Marshal(rres)
 	if err != nil {
 		return nil, err

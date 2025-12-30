@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -22,6 +23,7 @@ func testAuth(t *testing.T) Server {
 }
 
 func TestInteractive(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
 	auth := testAuth(t)
 	n := -1
 	ac := ak.TestAPI().
@@ -42,6 +44,19 @@ func TestInteractive(t *testing.T) {
 				}, 200
 			}
 			panic("")
+		}).
+		Handle("/api/v3/endpoints/agents/connectors/auth_ia/", func(req *http.Request) (any, int) {
+			return api.AgentAuthenticationResponse{
+				Url: "/test-url",
+			}, 200
+		}).
+		Handle("/test-url", func(req *http.Request) (any, int) {
+			url, _ := url.Parse("goauthentik.io://platform/finished?ak-auth-ia-token=foo")
+			return &http.Response{
+				Request: &http.Request{
+					URL: url,
+				},
+			}, 200
 		})
 	dc := config.TestDomain(&api.AgentConfig{
 		NssUidOffset:      1000,
@@ -50,7 +65,7 @@ func TestInteractive(t *testing.T) {
 	}, ac.APIClient)
 	auth.dom = dc
 
-	_, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
+	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
 		InteractiveAuth: &pb.InteractiveAuthRequest_Init{
 			Init: &pb.InteractiveAuthInitRequest{
 				Username: "akadmin",
@@ -59,5 +74,5 @@ func TestInteractive(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	// assert.NotNil(t, res)
+	assert.NotNil(t, res)
 }

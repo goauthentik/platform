@@ -124,6 +124,8 @@ func (txn *InteractiveAuthTransaction) solveChallenge(req *pb.InteractiveAuthCon
 	return nil, nil
 }
 
+const QSToken = "ak-auth-ia-token"
+
 func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (any, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -135,17 +137,19 @@ func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (any, error
 		return nil, err
 	}
 	if res.Request.URL.Scheme == "goauthentik.io" && res.Request.URL.Host == "platform" && res.Request.URL.Path == "/finished" {
-		return "foo", nil
+		return res.Request.URL.Query().Get(QSToken), nil
 	}
 	return nil, fmt.Errorf("idk")
 }
 
 func (txn *InteractiveAuthTransaction) finishSuccess() (*pb.InteractiveChallenge, error) {
+	txn.log.Debug("Interactively authorizing device")
 	res, hr, err := txn.api.EndpointsApi.EndpointsAgentsConnectorsAuthIaCreate(txn.ctx).Execute()
 	if err != nil {
 		return nil, ak.HTTPToError(hr, err)
 	}
 
+	txn.log.Debug("Executing interactive auth")
 	code, err := txn.doInteractiveAuth(res.Url)
 	if err != nil {
 		return nil, err
