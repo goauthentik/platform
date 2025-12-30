@@ -139,7 +139,7 @@ func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (any, error
 	if res.Request.URL.Scheme == "goauthentik.io" && res.Request.URL.Host == "platform" && res.Request.URL.Path == "/finished" {
 		return res.Request.URL.Query().Get(QSToken), nil
 	}
-	return nil, fmt.Errorf("idk")
+	return nil, fmt.Errorf("failed to extract code from final URL: %s", res.Request.URL.String())
 }
 
 func (txn *InteractiveAuthTransaction) finishSuccess() (*pb.InteractiveChallenge, error) {
