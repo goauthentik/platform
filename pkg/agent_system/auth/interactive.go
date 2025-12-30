@@ -35,6 +35,7 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 		api:      api,
 		log:      auth.log.WithField("txn", id),
 		dom:      auth.dom,
+		tv:       auth.TokenAuth,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())
 	fex, err := flow.NewFlowExecutor(txn.ctx, *txn.dom.Config().AuthorizationFlow.Get(), txn.api.GetConfig(), flow.FlowExecutorOptions{

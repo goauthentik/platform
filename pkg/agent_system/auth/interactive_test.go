@@ -1,10 +1,13 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/api/v3"
@@ -12,6 +15,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/testutils"
 )
 
 func testAuth(t *testing.T) Server {
@@ -25,6 +29,7 @@ func testAuth(t *testing.T) Server {
 
 func TestInteractive_Success(t *testing.T) {
 	auth := testAuth(t)
+	jwksKey, jwksCert := testutils.GenerateCertificate(t, "localhost")
 	ac := ak.TestAPI().
 		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
@@ -47,15 +52,27 @@ func TestInteractive_Success(t *testing.T) {
 			}, 200
 		}).
 		Handle("/test-url", func(req *http.Request) (any, int) {
-			url, _ := url.Parse("goauthentik.io://platform/finished?ak-auth-ia-token=foo")
+			now := time.Now()
+
+			_token := jwt.New(jwt.SigningMethodRS256)
+			_token.Claims.(jwt.MapClaims)["aud"] = "foo"
+			_token.Claims.(jwt.MapClaims)["exp"] = now.Add(5 * time.Minute).Unix()
+			_token.Claims.(jwt.MapClaims)["iat"] = now.Unix()
+
+			token, err := _token.SignedString(jwksKey)
+			assert.NoError(t, err)
+			url, _ := url.Parse(fmt.Sprintf("goauthentik.io://platform/finished?ak-auth-ia-token=%s", token))
 			return &http.Response{
 				Request: &http.Request{
 					URL: url,
 				},
 			}, 200
 		})
+
 	dc := config.TestDomain(&api.AgentConfig{
 		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+		JwksAuth:          testutils.JWKS(t, jwksCert),
+		DeviceId:          "foo",
 	}, ac.APIClient)
 	auth.dom = dc
 

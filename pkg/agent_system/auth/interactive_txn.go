@@ -16,6 +16,8 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 )
 
+const QSToken = "ak-auth-ia-token"
+
 type InteractiveAuthTransaction struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
@@ -27,6 +29,7 @@ type InteractiveAuthTransaction struct {
 	api      *api.APIClient
 	log      *log.Entry
 	dom      *config.DomainConfig
+	tv       func(ctx context.Context, req *pb.TokenAuthRequest) (*pb.TokenAuthResponse, error)
 }
 
 func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChallenge, error) {
@@ -124,22 +127,20 @@ func (txn *InteractiveAuthTransaction) solveChallenge(req *pb.InteractiveAuthCon
 	return nil, nil
 }
 
-const QSToken = "ak-auth-ia-token"
-
-func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (any, error) {
+func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer+agent %s", txn.dom.Token))
 	res, err := txn.api.GetConfig().HTTPClient.Do(req)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if res.Request.URL.Scheme == "goauthentik.io" && res.Request.URL.Host == "platform" && res.Request.URL.Path == "/finished" {
 		return res.Request.URL.Query().Get(QSToken), nil
 	}
-	return nil, fmt.Errorf("failed to extract code from final URL: %s", res.Request.URL.String())
+	return "", fmt.Errorf("failed to extract code from final URL: %s", res.Request.URL.String())
 }
 
 func (txn *InteractiveAuthTransaction) finishSuccess() (*pb.InteractiveChallenge, error) {
@@ -150,11 +151,18 @@ func (txn *InteractiveAuthTransaction) finishSuccess() (*pb.InteractiveChallenge
 	}
 
 	txn.log.Debug("Executing interactive auth")
-	code, err := txn.doInteractiveAuth(res.Url)
+	token, err := txn.doInteractiveAuth(res.Url)
 	if err != nil {
 		return nil, err
 	}
-	txn.log.Debug(code)
+
+	_, err = txn.tv(txn.ctx, &pb.TokenAuthRequest{
+		Username: txn.username,
+		Token:    token,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to validate token for device")
+	}
 
 	txn.result = pb.InteractiveAuthResult_PAM_SUCCESS.Enum()
 	return &pb.InteractiveChallenge{
