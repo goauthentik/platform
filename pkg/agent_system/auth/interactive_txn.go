@@ -49,7 +49,7 @@ func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChalle
 			Txid:       txn.ID,
 			Finished:   true,
 			Result:     pb.InteractiveAuthResult_PAM_PERM_DENIED,
-			Prompt:     *nc.AccessDeniedChallenge.ErrorMessage,
+			Prompt:     nc.AccessDeniedChallenge.GetErrorMessage(),
 			PromptMeta: pb.InteractiveChallenge_PAM_ERROR_MSG,
 		}, nil
 	case string(flow.StageIdentification):
