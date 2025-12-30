@@ -9,9 +9,7 @@ services:
     network_mode: service:test-machine
     command: sleep infinity
   test-machine:
-    build:
-      context: ../containers/test
-      dockerfile: Dockerfile
+    image: xghcr.io/goauthentik/platform-test:local
     privileged: true
     user: root
     cgroup: host

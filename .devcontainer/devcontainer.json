@@ -4,6 +4,7 @@
   "service": "devcontainer",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "shutdownAction": "stopCompose",
+  "initializeCommand": "make dev--initialize",
   "customizations": {
     "vscode": {
       "extensions": [

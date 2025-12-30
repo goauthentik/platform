@@ -17,6 +17,7 @@ ci-build-args:
 local-build:
 	docker build \
 		-t ghcr.io/goauthentik/platform-test:${container_ver} \
+		-t xghcr.io/goauthentik/platform-test:local \
 		--no-cache \
 		--build-arg="AK_PLATFORM_VER=${VERSION}" \
 		.
