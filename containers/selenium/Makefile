@@ -1,4 +1,4 @@
-include ../common.mk
+include ../../common.mk
 
 base_ver := $(shell cat Dockerfile | grep FROM | awk '{print $$2}' | awk -F: '{print $$2}')
 container_ver := ${base_ver}-ak-${VERSION}

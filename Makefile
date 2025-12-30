@@ -127,5 +127,8 @@ ee/psso/%:
 ee/wcp/%:
 	"$(MAKE)" -C "${TOP}/ee/wcp/" $*
 
-selenium/%:
-	"$(MAKE)" -C "${TOP}/selenium" $*
+containers/selenium/%:
+	"$(MAKE)" -C "${TOP}/containers/selenium" $*
+
+containers/test/%:
+	"$(MAKE)" -C "${TOP}/containers/test" $*

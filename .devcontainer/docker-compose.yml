@@ -10,7 +10,7 @@ services:
     command: sleep infinity
   test-machine:
     build:
-      context: ./test-machine
+      context: ../containers/test
       dockerfile: Dockerfile
     privileged: true
     user: root

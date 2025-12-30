@@ -1,5 +1,8 @@
 FROM ubuntu:24.04
 
+ARG AK_PLATFORM_VER
+ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
+
 ENV DEBIAN_FRONTEND="noninteractive"
 
 RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-server nano htop libpam0g-dev yq curl gpg ca-certificates' && \
@@ -10,10 +13,10 @@ RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-serv
     sed -i 's/KbdInteractiveAuthentication no/KbdInteractiveAuthentication yes/g' /etc/ssh/sshd_config && \
     mkdir /run/sshd
 
-RUN curl -fsSL https://pkg.goauthentik.io//keys/gpg-key.asc | gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] https://pkg.goauthentik.io// stable main" | tee /etc/apt/sources.list.d/authentik.list && \
-    apt-get update && \
-    apt-get install authentik-sysd libpam-authentik libnss-authentik
+RUN curl -fsSL "${AK_DEPLOY_URL}/keys/gpg-key.asc" | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] ${AK_DEPLOY_URL} stable main" | sudo tee /etc/apt/sources.list.d/authentik.list && \
+    sudo apt-get update && \
+    sudo apt-get install authentik-sysd=${AK_PLATFORM_VER} authentik-agent=${AK_PLATFORM_VER} authentik-cli=${AK_PLATFORM_VER} libpam-authentik=${AK_PLATFORM_VER} libnss-authentik=${AK_PLATFORM_VER} -y
 
 RUN find /etc/systemd/system \
     /lib/systemd/system \
