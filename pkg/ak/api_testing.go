@@ -10,10 +10,12 @@ import (
 	"goauthentik.io/api/v3"
 )
 
+type Handler func(req *http.Request) (any, int)
+
 type TestAPIClient struct {
 	*api.APIClient
 
-	responses map[string][]func(req *http.Request) (any, int)
+	responses map[string][]Handler
 }
 
 func (tac *TestAPIClient) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -24,6 +26,9 @@ func (tac *TestAPIClient) RoundTrip(req *http.Request) (*http.Response, error) {
 	var rres any
 	var rst int
 	for _, h := range handlers {
+		if h == nil {
+			continue
+		}
 		res, st := h(req)
 		if res != nil {
 			rres = res
@@ -48,19 +53,34 @@ func (tac *TestAPIClient) RoundTrip(req *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-func (tac *TestAPIClient) Handle(path string, h func(req *http.Request) (any, int)) *TestAPIClient {
+func (tac *TestAPIClient) Handle(path string, h Handler) *TestAPIClient {
 	hm, ok := tac.responses[path]
 	if !ok {
-		hm = []func(req *http.Request) (any, int){}
+		hm = []Handler{}
 	}
 	hm = append(hm, h)
 	tac.responses[path] = hm
 	return tac
 }
 
+func (tac *TestAPIClient) HandleOnce(path string, h Handler) *TestAPIClient {
+	hm, ok := tac.responses[path]
+	if !ok {
+		hm = []Handler{}
+	}
+	idx := len(hm)
+	hm = append(hm, func(req *http.Request) (any, int) {
+		res, code := h(req)
+		tac.responses[path][idx] = nil
+		return res, code
+	})
+	tac.responses[path] = hm
+	return tac
+}
+
 func TestAPI() *TestAPIClient {
 	tc := &TestAPIClient{
-		responses: map[string][]func(req *http.Request) (any, int){},
+		responses: map[string][]Handler{},
 	}
 	config := api.NewConfiguration()
 	config.HTTPClient = &http.Client{

@@ -15,6 +15,7 @@ import (
 )
 
 func testAuth(t *testing.T) Server {
+	t.Helper()
 	return Server{
 		log:  log.WithField("component", "test"),
 		ctx:  component.TestContext(t),
@@ -23,27 +24,22 @@ func testAuth(t *testing.T) Server {
 }
 
 func TestInteractive(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
 	auth := testAuth(t)
-	n := -1
 	ac := ak.TestAPI().
-		Handle("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
-			n += 1
-			switch n {
-			case 0:
-				return api.ChallengeTypes{
-					IdentificationChallenge: api.NewIdentificationChallenge([]string{}, false, api.FLOWDESIGNATIONENUM_AUTHENTICATION, "", false),
-				}, 200
-			case 1:
-				return api.ChallengeTypes{
-					PasswordChallenge: api.NewPasswordChallenge("", ""),
-				}, 200
-			case 2:
-				return api.ChallengeTypes{
-					RedirectChallenge: api.NewRedirectChallenge(""),
-				}, 200
-			}
-			panic("")
+		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+			return api.ChallengeTypes{
+				IdentificationChallenge: api.NewIdentificationChallenge([]string{}, false, api.FLOWDESIGNATIONENUM_AUTHENTICATION, "", false),
+			}, 200
+		}).
+		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+			return api.ChallengeTypes{
+				PasswordChallenge: api.NewPasswordChallenge("", ""),
+			}, 200
+		}).
+		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+			return api.ChallengeTypes{
+				RedirectChallenge: api.NewRedirectChallenge(""),
+			}, 200
 		}).
 		Handle("/api/v3/endpoints/agents/connectors/auth_ia/", func(req *http.Request) (any, int) {
 			return api.AgentAuthenticationResponse{

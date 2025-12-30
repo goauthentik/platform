@@ -15,6 +15,7 @@ func (r reg) GetComponent(string) Component {
 }
 
 func TestContext(t *testing.T) Context {
+	t.Helper()
 	l := log.WithField("component", "test")
 	ctx := NewContext(
 		t.Context(),
