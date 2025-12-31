@@ -21,17 +21,18 @@ contents:
     file_info:
       mode: 0644
     packager: deb
-  - src: "../pam/debian/pam_config"
-    dst: "/usr/share/pam-configs/authentik"
-    file_info:
-      mode: 0644
-    packager: deb
-    type: config
   - src: "../cache/pam/release/libauthentik_pam.so"
     dst: "/usr/lib64/security/pam_authentik.so"
     file_info:
       mode: 0644
     packager: rpm
+  # Config
+  - src: "./_deb/pam_config"
+    dst: "/usr/share/pam-configs/authentik"
+    file_info:
+      mode: 0644
+    packager: deb
+    type: config
   - src: "./_rpm/authselect"
     dst: /usr/share/authselect/vendor/authentik
     packager: rpm
