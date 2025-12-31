@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -euo pipefail
 
 function sshd_notice {
     if ! grep -q '^KbdInteractiveAuthentication.*yes' /etc/ssh/sshd_config; then
