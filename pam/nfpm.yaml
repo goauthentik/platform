@@ -32,6 +32,9 @@ contents:
     file_info:
       mode: 0644
     packager: rpm
+  - src: "./_rpm/authselect"
+    dst: /usr/share/authselect/vendor/authentik
+    packager: rpm
 overrides:
   deb:
     scripts:

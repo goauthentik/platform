@@ -1,3 +1,4 @@
+auth        [success=2 default=ignore]                   pam_authentik.so
 auth        required                                     pam_env.so
 auth        required                                     pam_faildelay.so delay=2000000
 auth        required                                     pam_faillock.so preauth silent                         {include if "with-faillock"}
@@ -22,6 +23,7 @@ password    requisite                                    pam_pwhistory.so use_au
 password    sufficient                                   pam_unix.so yescrypt shadow {if not "without-nullok":nullok} use_authtok
 password    required                                     pam_deny.so
 
+session     required                                     pam_authentik.so
 session     optional                                     pam_keyinit.so revoke
 session     required                                     pam_limits.so
 session     optional                                     pam_ecryptfs.so unwrap                                {include if "with-ecryptfs"}
