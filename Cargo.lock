@@ -238,7 +238,6 @@ dependencies = [
  "prost",
  "serde",
  "serde_json",
- "sha2",
  "whoami",
 ]
 

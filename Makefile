@@ -90,6 +90,8 @@ test-shell:
 
 test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
+dev--initialize: containers/test/local-build
+
 bump:
 	sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
 	sed -i 's/^version = ".*"/version = "${version}"/g' ${TOP}/Cargo.toml
@@ -127,5 +129,8 @@ ee/psso/%:
 ee/wcp/%:
 	"$(MAKE)" -C "${TOP}/ee/wcp/" $*
 
-selenium/%:
-	"$(MAKE)" -C "${TOP}/selenium" $*
+containers/selenium/%:
+	"$(MAKE)" -C "${TOP}/containers/selenium" $*
+
+containers/test/%:
+	"$(MAKE)" -C "${TOP}/containers/test" $*

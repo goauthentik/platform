@@ -1,7 +1,7 @@
 package component
 
 import (
-	"context"
+	ctx "context"
 	"errors"
 
 	log "github.com/sirupsen/logrus"
@@ -18,16 +18,27 @@ type ComponentRegistry interface {
 	GetComponent(id string) Component
 }
 
-type Context struct {
-	ctx context.Context
+type Context interface {
+	Registry() ComponentRegistry
+	GetComponent(id string) Component
+	Context() ctx.Context
+	Log() *log.Entry
+	State() *state.ScopedState
+	Bus() *events.Bus
+	StateForDomain(dom *config.DomainConfig) *state.ScopedState
+	DomainAPI() (*api.APIClient, *config.DomainConfig, error)
+}
+
+type context struct {
+	ctx ctx.Context
 	log *log.Entry
 	reg ComponentRegistry
 	st  *state.ScopedState
 	bus *events.Bus
 }
 
-func NewContext(ctx context.Context, log *log.Entry, reg ComponentRegistry, st *state.ScopedState, bus *events.Bus) Context {
-	return Context{
+func NewContext(ctx ctx.Context, log *log.Entry, reg ComponentRegistry, st *state.ScopedState, bus *events.Bus) Context {
+	return context{
 		ctx: ctx,
 		log: log,
 		reg: reg,
@@ -36,31 +47,35 @@ func NewContext(ctx context.Context, log *log.Entry, reg ComponentRegistry, st *
 	}
 }
 
-func (c Context) GetComponent(id string) Component {
+func (c context) Registry() ComponentRegistry {
+	return c.reg
+}
+
+func (c context) GetComponent(id string) Component {
 	return c.reg.GetComponent(id)
 }
 
-func (c Context) Context() context.Context {
+func (c context) Context() ctx.Context {
 	return c.ctx
 }
 
-func (c Context) Log() *log.Entry {
+func (c context) Log() *log.Entry {
 	return c.log
 }
 
-func (c Context) State() *state.ScopedState {
+func (c context) State() *state.ScopedState {
 	return c.st
 }
 
-func (c Context) Bus() *events.Bus {
+func (c context) Bus() *events.Bus {
 	return c.bus
 }
 
-func (c Context) StateForDomain(dom *config.DomainConfig) *state.ScopedState {
+func (c context) StateForDomain(dom *config.DomainConfig) *state.ScopedState {
 	return c.st.ForBucket(dom.Domain)
 }
 
-func (c Context) DomainAPI() (*api.APIClient, *config.DomainConfig, error) {
+func (c context) DomainAPI() (*api.APIClient, *config.DomainConfig, error) {
 	dom := config.Manager().Get().Domains()
 	if len(dom) < 1 {
 		return nil, nil, ErrNoDomain

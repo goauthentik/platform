@@ -1,4 +1,4 @@
-include ../common.mk
+include ../../common.mk
 
 base_ver := $(shell cat Dockerfile | grep FROM | awk '{print $$2}' | awk -F: '{print $$2}')
 container_ver := ${base_ver}-ak-${VERSION}
@@ -6,7 +6,7 @@ container_ver := ${base_ver}-ak-${VERSION}
 .PHONY: ci-container-tag
 ci-container-tag:
 	$(eval suffix := $(if $(strip $(AK_TAG_SUFFIX)),-pr-${AK_TAG_SUFFIX},))
-	@echo ghcr.io/goauthentik/selenium:${container_ver}${suffix}
+	@echo ghcr.io/goauthentik/platform-test:${container_ver}${suffix}
 
 .PHONY: ci-build-args
 ci-build-args:
@@ -16,7 +16,8 @@ ci-build-args:
 .PHONY: local-build
 local-build:
 	docker build \
-		-t ghcr.io/goauthentik/selenium:${container_ver} \
+		-t ghcr.io/goauthentik/platform-test:${container_ver} \
+		-t xghcr.io/goauthentik/platform-test:local \
 		--no-cache \
 		--build-arg="AK_PLATFORM_VER=${VERSION}" \
 		.

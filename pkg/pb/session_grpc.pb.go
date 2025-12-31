@@ -19,17 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SessionManager_RegisterSession_FullMethodName = "/session.SessionManager/RegisterSession"
-	SessionManager_SessionStatus_FullMethodName   = "/session.SessionManager/SessionStatus"
-	SessionManager_CloseSession_FullMethodName    = "/session.SessionManager/CloseSession"
+	SessionManager_SessionStatus_FullMethodName = "/session.SessionManager/SessionStatus"
+	SessionManager_OpenSession_FullMethodName   = "/session.SessionManager/OpenSession"
+	SessionManager_CloseSession_FullMethodName  = "/session.SessionManager/CloseSession"
 )
 
 // SessionManagerClient is the client API for SessionManager service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// SessionManager for opening/closing sessions
 type SessionManagerClient interface {
-	RegisterSession(ctx context.Context, in *RegisterSessionRequest, opts ...grpc.CallOption) (*RegisterSessionResponse, error)
 	SessionStatus(ctx context.Context, in *SessionStatusRequest, opts ...grpc.CallOption) (*SessionStatusResponse, error)
+	OpenSession(ctx context.Context, in *OpenSessionRequest, opts ...grpc.CallOption) (*OpenSessionResponse, error)
 	CloseSession(ctx context.Context, in *CloseSessionRequest, opts ...grpc.CallOption) (*CloseSessionResponse, error)
 }
 
@@ -41,20 +43,20 @@ func NewSessionManagerClient(cc grpc.ClientConnInterface) SessionManagerClient {
 	return &sessionManagerClient{cc}
 }
 
-func (c *sessionManagerClient) RegisterSession(ctx context.Context, in *RegisterSessionRequest, opts ...grpc.CallOption) (*RegisterSessionResponse, error) {
+func (c *sessionManagerClient) SessionStatus(ctx context.Context, in *SessionStatusRequest, opts ...grpc.CallOption) (*SessionStatusResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterSessionResponse)
-	err := c.cc.Invoke(ctx, SessionManager_RegisterSession_FullMethodName, in, out, cOpts...)
+	out := new(SessionStatusResponse)
+	err := c.cc.Invoke(ctx, SessionManager_SessionStatus_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sessionManagerClient) SessionStatus(ctx context.Context, in *SessionStatusRequest, opts ...grpc.CallOption) (*SessionStatusResponse, error) {
+func (c *sessionManagerClient) OpenSession(ctx context.Context, in *OpenSessionRequest, opts ...grpc.CallOption) (*OpenSessionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SessionStatusResponse)
-	err := c.cc.Invoke(ctx, SessionManager_SessionStatus_FullMethodName, in, out, cOpts...)
+	out := new(OpenSessionResponse)
+	err := c.cc.Invoke(ctx, SessionManager_OpenSession_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +76,11 @@ func (c *sessionManagerClient) CloseSession(ctx context.Context, in *CloseSessio
 // SessionManagerServer is the server API for SessionManager service.
 // All implementations must embed UnimplementedSessionManagerServer
 // for forward compatibility.
+//
+// SessionManager for opening/closing sessions
 type SessionManagerServer interface {
-	RegisterSession(context.Context, *RegisterSessionRequest) (*RegisterSessionResponse, error)
 	SessionStatus(context.Context, *SessionStatusRequest) (*SessionStatusResponse, error)
+	OpenSession(context.Context, *OpenSessionRequest) (*OpenSessionResponse, error)
 	CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error)
 	mustEmbedUnimplementedSessionManagerServer()
 }
@@ -88,11 +92,11 @@ type SessionManagerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSessionManagerServer struct{}
 
-func (UnimplementedSessionManagerServer) RegisterSession(context.Context, *RegisterSessionRequest) (*RegisterSessionResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RegisterSession not implemented")
-}
 func (UnimplementedSessionManagerServer) SessionStatus(context.Context, *SessionStatusRequest) (*SessionStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SessionStatus not implemented")
+}
+func (UnimplementedSessionManagerServer) OpenSession(context.Context, *OpenSessionRequest) (*OpenSessionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method OpenSession not implemented")
 }
 func (UnimplementedSessionManagerServer) CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CloseSession not implemented")
@@ -118,24 +122,6 @@ func RegisterSessionManagerServer(s grpc.ServiceRegistrar, srv SessionManagerSer
 	s.RegisterService(&SessionManager_ServiceDesc, srv)
 }
 
-func _SessionManager_RegisterSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegisterSessionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SessionManagerServer).RegisterSession(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SessionManager_RegisterSession_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SessionManagerServer).RegisterSession(ctx, req.(*RegisterSessionRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SessionManager_SessionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SessionStatusRequest)
 	if err := dec(in); err != nil {
@@ -150,6 +136,24 @@ func _SessionManager_SessionStatus_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SessionManagerServer).SessionStatus(ctx, req.(*SessionStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SessionManager_OpenSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OpenSessionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SessionManagerServer).OpenSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SessionManager_OpenSession_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SessionManagerServer).OpenSession(ctx, req.(*OpenSessionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -180,12 +184,12 @@ var SessionManager_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*SessionManagerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RegisterSession",
-			Handler:    _SessionManager_RegisterSession_Handler,
-		},
-		{
 			MethodName: "SessionStatus",
 			Handler:    _SessionManager_SessionStatus_Handler,
+		},
+		{
+			MethodName: "OpenSession",
+			Handler:    _SessionManager_OpenSession_Handler,
 		},
 		{
 			MethodName: "CloseSession",

@@ -2,27 +2,24 @@ package auth
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/MicahParks/jwkset"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/gorilla/securecookie"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.Token, error) {
-	_, dom, err := auth.ctx.DomainAPI()
-	if err != nil {
-		return nil, err
-	}
 	var st jwkset.Storage
 	jw := jwkset.JWKSMarshal{}
-	err = mapstructure.Decode(dom.Config().JwksAuth, &jw)
+	err := mapstructure.Decode(auth.dom.Config().JwksAuth, &jw)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +42,7 @@ func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.
 		AccessToken:    t,
 		RawAccessToken: rawToken,
 	}
-	if token.Claims().Audience[0] != dom.Config().DeviceId {
+	if token.Claims().Audience[0] != auth.dom.Config().DeviceId {
 		return nil, errors.New("token not for device")
 	}
 	return &token, nil
@@ -56,6 +53,20 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 	if err != nil {
 		auth.log.WithError(err).Warning("failed to validate token")
 		return nil, err
+	}
+
+	sm := auth.ctx.GetComponent(session.ID).(*session.Server)
+	if sm == nil {
+		return nil, status.Error(codes.Internal, "cant find session component")
+	}
+
+	sess, err := sm.NewSession(ctx, session.SessionRequest{
+		Username: req.Username,
+		RawToken: req.Token,
+		Token:    token,
+	})
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "unable to create session")
 	}
 
 	return &pb.TokenAuthResponse{
@@ -69,6 +80,6 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
-		SessionId: base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64)),
+		SessionId: sess.ID,
 	}, nil
 }

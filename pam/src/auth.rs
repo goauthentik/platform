@@ -14,7 +14,7 @@ use crate::{
     },
     pam_env::pam_put_env,
     pam_try_log,
-    session_data::{_write_session_data, SessionData, hash_token},
+    session_data::{_write_session_data, SessionData},
 };
 
 pub mod authorize;
@@ -93,7 +93,6 @@ pub fn authenticate_impl(
             Ok(t) => t,
             Err(e) => return e,
         };
-        session_data.token = decoded.token;
         session_data.expiry = token_res.token.unwrap().exp.unwrap().seconds;
         session_data.local_socket = decoded.local_socket;
         session_id = token_res.session_id;
@@ -103,7 +102,6 @@ pub fn authenticate_impl(
             Ok(ss) => ss,
             Err(code) => return code,
         };
-        session_data.token = hash_token(password.to_owned());
         session_id = int_res.session_id;
     }
     if !session_data.local_socket.is_empty() {
