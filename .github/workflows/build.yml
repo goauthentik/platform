@@ -209,7 +209,7 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - conatiners/selenium
+          - containers/selenium
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
