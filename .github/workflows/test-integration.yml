@@ -21,7 +21,7 @@ jobs:
           go-version-file: go.mod
           cache: true
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
-      - uses: goauthentik/action-setup-authentik@ad91a1d1d548230812c828a56794b79772e14c3f # v1.4
+      - uses: goauthentik/action-setup-authentik@91dfb5366c466a7c758459c6fee380ee3366a2e7 # v1.4
         id: setup
         with:
           version: beta
