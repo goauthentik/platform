@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #DEBHELPER#
-set -eu
+set -euo pipefail
 
 mkdir -p /var/log/authentik
 

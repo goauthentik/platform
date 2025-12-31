@@ -28,4 +28,7 @@ contents:
 overrides:
   deb:
     scripts:
-      postinstall: ./debian/postinst.sh
+      postinstall: ./_deb/postinst.sh
+  rpm:
+    scripts:
+      postinstall: ./_rpm/post.sh
