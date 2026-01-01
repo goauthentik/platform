@@ -2,6 +2,8 @@ package agentstarter
 
 import (
 	"context"
+	"errors"
+	"os"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -44,6 +46,9 @@ func (as *Server) Stop() error {
 func (as *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {}
 
 func (as *Server) start() {
+	if _, err := os.Stat(as.agentExec().ForCurrent()); errors.Is(err, os.ErrNotExist) {
+		return
+	}
 	for {
 		select {
 		case <-as.ctx.Done():
