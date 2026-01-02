@@ -5,12 +5,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func Test_listGroups(t *testing.T) {
-	nss := testNSS()
+	nss := testNSS(t, config.TestDomain(&api.AgentConfig{
+		NssUidOffset: 1000,
+		NssGidOffset: 1000,
+	}, nil))
 	g := &pb.Group{
 		Gid:     1000,
 		Name:    "test-user",
@@ -23,7 +27,10 @@ func Test_listGroups(t *testing.T) {
 }
 
 func Test_getGroup(t *testing.T) {
-	nss := testNSS()
+	nss := testNSS(t, config.TestDomain(&api.AgentConfig{
+		NssUidOffset: 1000,
+		NssGidOffset: 1000,
+	}, nil))
 	g := &pb.Group{
 		Gid:  1000,
 		Name: "test-user",

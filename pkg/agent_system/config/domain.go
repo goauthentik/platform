@@ -36,7 +36,9 @@ type DomainConfig struct {
 }
 
 func DefaultAgentConfig() api.AgentConfig {
-	return api.AgentConfig{}
+	return api.AgentConfig{
+		RefreshInterval: int32((time.Duration(30) * time.Minute).Seconds()),
+	}
 }
 
 func (dc DomainConfig) Config() api.AgentConfig {

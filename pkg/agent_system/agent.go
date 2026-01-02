@@ -57,10 +57,18 @@ type SystemAgent struct {
 
 type SystemAgentOptions struct {
 	DisabledComponents []string
+	SocketPath         func(id string) pstr.PlatformString
+}
+
+func (sao *SystemAgentOptions) setDefaults() {
+	if sao.SocketPath == nil {
+		sao.SocketPath = types.GetSysdSocketPath
+	}
 }
 
 func New(opts SystemAgentOptions) (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
+	opts.setDefaults()
 	serverOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
 			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
@@ -88,13 +96,13 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 			{
 				ID:     types.SocketIDDefault,
 				Server: grpc.NewServer(serverOpts...),
-				Path:   types.GetSysdSocketPath(types.SocketIDDefault),
+				Path:   opts.SocketPath(types.SocketIDDefault),
 				Perm:   socket.SocketEveryone,
 			},
 			{
 				ID:     types.SocketIDCtrl,
 				Server: grpc.NewServer(serverOpts...),
-				Path:   types.GetSysdSocketPath(types.SocketIDCtrl),
+				Path:   opts.SocketPath(types.SocketIDCtrl),
 				Perm:   socket.SocketAdmin,
 			},
 		},
@@ -204,7 +212,9 @@ func (sm *SystemAgent) Start() {
 	}
 	sm.mtx.Unlock()
 
+	wg := sync.WaitGroup{}
 	for _, srv := range sm.srv {
+		wg.Add(1)
 		go func(srv SocketServer) {
 			l := sm.log.WithField("srv", srv.ID)
 			lis, err := socket.Listen(srv.Path, srv.Perm)
@@ -214,11 +224,15 @@ func (sm *SystemAgent) Start() {
 			}
 
 			l.WithField("path", lis.Path().ForCurrent()).Info("System agent listening on socket")
+			wg.Done()
 			if err := srv.Server.Serve(lis); err != nil {
 				l.WithError(err).Fatal("Failed to serve")
 			}
 		}(srv)
 	}
+	wg.Wait()
+
+	sm.b.DispatchEvent(types.TopicAgentStarted, events.NewEvent(context.Background(), map[string]any{}))
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -245,4 +259,8 @@ func (sm *SystemAgent) Stop() {
 	for _, srv := range sm.srv {
 		srv.Server.GracefulStop()
 	}
+}
+
+func (sm *SystemAgent) Bus() *events.Bus {
+	return sm.b
 }
