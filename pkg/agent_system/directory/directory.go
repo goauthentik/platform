@@ -41,9 +41,9 @@ func (directory *Server) Start() error {
 		if directory.cancel != nil {
 			directory.cancel()
 		}
-		directory.startFetch()
+		go directory.startFetch()
 	})
-	directory.startFetch()
+	go directory.startFetch()
 	return nil
 }
 
