@@ -260,3 +260,7 @@ func (sm *SystemAgent) Stop() {
 		srv.Server.GracefulStop()
 	}
 }
+
+func (sm *SystemAgent) Bus() *events.Bus {
+	return sm.b
+}

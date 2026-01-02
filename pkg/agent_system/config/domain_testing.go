@@ -18,16 +18,19 @@ func TestDomain(config *api.AgentConfig, ac *api.APIClient) *DomainConfig {
 	return dc
 }
 
-func IntegrationDomain(t *testing.T) *DomainConfig {
-	ak := "http://authentik:9000"
+func TestAuthentikURL() string {
 	if os.Getenv("CI") == "true" {
-		ak = "http://localhost:9000"
+		return "http://localhost:9000"
 	}
+	return "http://authentik:9000"
+}
+
+func IntegrationDomain(t *testing.T) *DomainConfig {
 	rc := &Config{}
 
 	dc := &DomainConfig{
 		Enabled:      true,
-		AuthentikURL: ak,
+		AuthentikURL: TestAuthentikURL(),
 		Domain:       "ak",
 		Token:        "test-enroll-key",
 		r:            rc.Default().(*Config),

@@ -54,6 +54,7 @@ func (ds *Server) runCheckins() {
 			_ = ds.checkIn(ctx, dom)
 		}()
 		d := time.Second * time.Duration(dom.Config().RefreshInterval)
+		ds.log.WithField("interval_s", d.Seconds).Debug("starting checkin")
 		t := time.NewTicker(d)
 		go func() {
 			for {

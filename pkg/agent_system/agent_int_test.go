@@ -1,21 +1,22 @@
 //go:build integration
 
-package agentsystem
+package agentsystem_test
 
 import (
 	"fmt"
 	"os"
 	"path"
-	"sync"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	agentsystem "goauthentik.io/platform/pkg/agent_system"
 	agentstarter "goauthentik.io/platform/pkg/agent_system/agent_starter"
+	"goauthentik.io/platform/pkg/agent_system/client"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/types"
+	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/platform/pstr"
-	"goauthentik.io/platform/pkg/shared/events"
 )
 
 const testConfig = `{
@@ -24,7 +25,7 @@ const testConfig = `{
   "runtime": "%[1]s"
 }`
 
-func initConfig(t *testing.T) {
+func initConfig(t *testing.T) string {
 	t.Helper()
 	td := t.TempDir()
 
@@ -46,12 +47,13 @@ func initConfig(t *testing.T) {
 	assert.NoError(t, cfg.Close())
 	assert.NoError(t, state.Close())
 	assert.NoError(t, config.Init(cfg.Name(), state.Name()))
+	return td
 }
 
 func TestAgent(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
 	initConfig(t)
-	agent, err := New(SystemAgentOptions{
+	agent, err := agentsystem.New(agentsystem.SystemAgentOptions{
 		DisabledComponents: []string{agentstarter.ID},
 		SocketPath: func(id string) pstr.PlatformString {
 			return pstr.PlatformString{
@@ -60,12 +62,35 @@ func TestAgent(t *testing.T) {
 		},
 	})
 	assert.NoError(t, err)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	agent.b.AddEventListener(types.TopicAgentStarted, func(ev *events.Event) {
-		wg.Done()
-		agent.Stop()
-	})
 	go agent.Start()
-	wg.Wait()
+	agent.Bus().WaitForEvent(types.TopicAgentStarted)
+	agent.Stop()
+}
+
+func TestAgent_Join(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
+	td := initConfig(t)
+	agent, err := agentsystem.New(agentsystem.SystemAgentOptions{
+		DisabledComponents: []string{agentstarter.ID},
+		SocketPath: func(id string) pstr.PlatformString {
+			return pstr.PlatformString{
+				Fallback: path.Join(td, id+".sock"),
+			}
+		},
+	})
+	assert.NoError(t, err)
+	go agent.Start()
+	defer agent.Stop()
+	agent.Bus().WaitForEvent(types.TopicAgentStarted)
+
+	sc, err := client.New(pstr.PlatformString{
+		Fallback: path.Join(td, "ctrl.sock"),
+	})
+	assert.NoError(t, err)
+	_, err = sc.DomainEnroll(t.Context(), &pb.DomainEnrollRequest{
+		Name:         "ak",
+		AuthentikUrl: config.TestAuthentikURL(),
+		Token:        "test-enroll-key",
+	})
+	assert.NoError(t, err)
 }
