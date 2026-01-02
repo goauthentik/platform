@@ -11,6 +11,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/events"
 )
 
 func (directory *Server) startFetch() {
@@ -81,4 +82,7 @@ func (directory *Server) fetch(ctx context.Context, dom *config.DomainConfig, ap
 
 	directory.users = nusers
 	directory.groups = ngroups
+	directory.ctx.Bus().DispatchEvent(TopicDirectoryFetched, events.NewEvent(ctx, map[string]any{
+		"domain": dom,
+	}))
 }

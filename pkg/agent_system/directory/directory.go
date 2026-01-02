@@ -16,6 +16,10 @@ import (
 
 const ID = "directory"
 
+const (
+	TopicDirectoryFetched = "sysd.directory.fetched"
+)
+
 type Server struct {
 	pb.UnimplementedSystemDirectoryServer
 

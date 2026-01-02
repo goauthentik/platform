@@ -14,6 +14,7 @@ import (
 	agentstarter "goauthentik.io/platform/pkg/agent_system/agent_starter"
 	"goauthentik.io/platform/pkg/agent_system/client"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/directory"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/platform/pstr"
@@ -93,4 +94,5 @@ func TestAgent_Join(t *testing.T) {
 		Token:        "test-enroll-key",
 	})
 	assert.NoError(t, err)
+	agent.Bus().WaitForEvent(directory.TopicDirectoryFetched)
 }
