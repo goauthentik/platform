@@ -1,7 +1,7 @@
 include ../common.mk
 
 TARGET = nss
-ARCH_TYPE := $(shell DEB_BUILD_GNU_TYPE)
+ARCH_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
 clean:
 	cargo clean
