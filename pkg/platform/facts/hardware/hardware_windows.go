@@ -14,15 +14,15 @@ import (
 )
 
 func gather() (*api.DeviceFactsRequestHardware, error) {
-	computerSystem, err := common.GetWMIValue("Win32_computersystem", cimv2.NewWin32_ComputerSystemEx1)
+	computerSystem, err := common.GetWMIValue(cimv2.NewWin32_ComputerSystemEx1, "Win32_computersystem")
 	if err != nil {
 		return nil, err
 	}
-	bios, err := common.GetWMIValue("Win32_BIOS", cimv2.NewWin32_BIOSEx1)
+	bios, err := common.GetWMIValue(cimv2.NewWin32_BIOSEx1, "Win32_BIOS")
 	if err != nil {
 		return nil, err
 	}
-	memory, err := common.GetWMIValue("Win32_PhysicalMemory", cimv2.NewWin32_PhysicalMemoryEx1)
+	memory, err := common.GetWMIValue(cimv2.NewWin32_PhysicalMemoryEx1, "Win32_PhysicalMemory")
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func gather() (*api.DeviceFactsRequestHardware, error) {
 }
 
 func getCPUName() (string, error) {
-	processor, err := common.GetWMIValue("Win32_Processor", cimv2.NewWin32_ProcessorEx1)
+	processor, err := common.GetWMIValue(cimv2.NewWin32_ProcessorEx1, "Win32_Processor")
 	if err != nil {
 		return "", err
 	}

@@ -40,8 +40,8 @@ func gather() ([]api.DiskRequest, error) {
 }
 
 func isEncrypted(mountpoint string) bool {
-	vol, err := common.GetWMIValueNamespace("Win32_EncryptableVolume", `root\CIMV2\Security\MicrosoftVolumeEncryption`, microsoftvolumeencryption.
-		NewWin32_EncryptableVolumeEx1)
+	vol, err := common.GetWMIValueNamespace(microsoftvolumeencryption.
+		NewWin32_EncryptableVolumeEx1, "Win32_EncryptableVolume", `root\CIMV2\Security\MicrosoftVolumeEncryption`)
 	if err != nil {
 		return false
 	}

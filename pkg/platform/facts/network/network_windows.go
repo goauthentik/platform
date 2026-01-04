@@ -29,7 +29,7 @@ func gather() (api.DeviceFactsRequestNetwork, error) {
 }
 
 func isFirewallEnabled() bool {
-	fw, err := common.GetWMIValueNamespace("MSFT_NetFirewallProfile", `root\StandardCimv2`, standardcimv2.NewMSFT_NetFirewallProfileEx1)
+	fw, err := common.GetWMIValueNamespace(standardcimv2.NewMSFT_NetFirewallProfileEx1, "MSFT_NetFirewallProfile", `root\StandardCimv2`)
 	if err != nil {
 		return false
 	}
@@ -92,7 +92,7 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 func getDNSServers(interfaceName string) []string {
 	var dnsServers []string
 
-	adapterConf, err := common.GetWMIValue("Win32_NetworkAdapterConfiguration", cimv2.NewWin32_NetworkAdapterConfigurationEx1)
+	adapterConf, err := common.GetWMIValue(cimv2.NewWin32_NetworkAdapterConfigurationEx1, "Win32_NetworkAdapterConfiguration")
 	if err != nil {
 		return dnsServers
 	}

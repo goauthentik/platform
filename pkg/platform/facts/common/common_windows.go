@@ -9,11 +9,11 @@ import (
 	cim "github.com/microsoft/wmi/pkg/wmiinstance"
 )
 
-func GetWMIValue[T any](class string, constructor func(*cim.WmiInstance) (T, error)) ([]T, error) {
-	return GetWMIValueNamespace(class, "", constructor)
+func GetWMIValue[T any](constructor func(*cim.WmiInstance) (T, error), class string, q ...string) ([]T, error) {
+	return GetWMIValueNamespace(constructor, class, "", q...)
 }
 
-func GetWMIValueNamespace[T any](class string, namespace string, constructor func(*cim.WmiInstance) (T, error)) ([]T, error) {
+func GetWMIValueNamespace[T any](constructor func(*cim.WmiInstance) (T, error), class string, namespace string, q ...string) ([]T, error) {
 	sessionManager := cim.NewWmiSessionManager()
 	defer sessionManager.Dispose()
 
@@ -27,7 +27,7 @@ func GetWMIValueNamespace[T any](class string, namespace string, constructor fun
 		return []T{}, fmt.Errorf("failed to connect to WMI. error: %w", err)
 	}
 
-	res, err := session.QueryInstances(query.NewWmiQuery(class).String())
+	res, err := session.QueryInstances(query.NewWmiQuery(class, q...).String())
 	if err != nil {
 		return []T{}, err
 	}
