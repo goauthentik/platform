@@ -11,7 +11,8 @@ import (
 )
 
 func (dc *DomainConfig) Enroll() error {
-	dc.r.log.WithField("domain", dc.Domain).Info("Enrolling...")
+	dlog := dc.r.log.WithField("domain", dc.Domain)
+	dlog.Info("Enrolling...")
 	a, err := dc.APIClient()
 	if err != nil {
 		return err
@@ -21,7 +22,7 @@ func (dc *DomainConfig) Enroll() error {
 	if err != nil {
 		return err
 	}
-	net, err := network.Gather()
+	net, err := network.Gather(dlog)
 	if err != nil {
 		return err
 	}
