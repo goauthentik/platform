@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"strings"
+
+	"goauthentik.io/platform/pkg/agent_system/client"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func checkNSSPasswd(context.Context) CheckResult {
@@ -37,4 +40,19 @@ func checkNSSGroup(context.Context) CheckResult {
 		return ResultFromError("NSS", errors.New("nsswitch group not configured to use authentik"))
 	}
 	return CheckResult{"NSS", "nsswitch uses authentik for group lookups", true}
+}
+
+func checkNSSDirect(ctx context.Context) CheckResult {
+	c, err := client.NewDefault()
+	if err != nil {
+		return ResultFromError("NSS", err)
+	}
+	users, err := c.ListUsers(ctx, &emptypb.Empty{})
+	if err != nil {
+		return ResultFromError("NSS", err)
+	}
+	if len(users.Users) < 1 {
+		return CheckResult{"NSS", "Failed to list authentik users", false}
+	}
+	return CheckResult{"NSS", "Successfully able to list authentik users", true}
 }

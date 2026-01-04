@@ -21,6 +21,7 @@ type SysdClient struct {
 	pb.AgentPlatformClient
 	pb.PingClient
 	pb.SystemCtrlClient
+	pb.SystemDirectoryClient
 
 	conn *grpc.ClientConn
 }
@@ -62,6 +63,7 @@ func New(path pstr.PlatformString) (*SysdClient, error) {
 		pb.NewAgentPlatformClient(conn),
 		pb.NewPingClient(conn),
 		pb.NewSystemCtrlClient(conn),
+		pb.NewSystemDirectoryClient(conn),
 		conn,
 	}, nil
 }

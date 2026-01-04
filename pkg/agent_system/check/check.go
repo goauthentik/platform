@@ -10,6 +10,7 @@ func RunChecks(ctx context.Context) error {
 		checkNSSPasswd,
 		checkNSSShadow,
 		checkNSSGroup,
+		checkNSSDirect,
 		checkPAMAuth,
 		checkPAMSession,
 		checkAgentConnectivity,
