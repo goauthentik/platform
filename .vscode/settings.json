@@ -9,11 +9,11 @@
   },
   "gopls": {
     "build.buildFlags": [
-        "-tags=integration",
+        "-tags=integration,e2e",
     ]
   },
   "go.testFlags": ["-count=1", "-failfast", "-shuffle=on", "-v", "-covermode=atomic"],
-  "go.testTags": "integration",
+  "go.testTags": "integration,e2e",
   "go.testTimeout": "300s",
   "go.coverOnSingleTest": true,
   "go.coverOnSingleTestFile": true,

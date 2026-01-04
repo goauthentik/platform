@@ -17,6 +17,7 @@ PROTO_DIR := "${TOP}/protobuf"
 
 _LD_FLAGS = ${LD_FLAGS} -X goauthentik.io/platform/pkg/meta.Version=${VERSION} -X goauthentik.io/platform/pkg/meta.BuildHash=dev-${VERSION_HASH}
 GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v
+RUST_BUILD_FLAGS =
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 

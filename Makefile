@@ -1,7 +1,7 @@
 include common.mk
 
 TEST_COUNT = 1
-TEST_FLAGS =
+GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
@@ -61,7 +61,7 @@ test:
 		-covermode=atomic \
 		-count=${TEST_COUNT} \
 		-json \
-		${TEST_FLAGS} \
+		${GO_TEST_FLAGS} \
 		$(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb) \
 			2>&1 | tee ${TEST_OUTPUT}
 	go tool cover \
@@ -74,7 +74,10 @@ test:
 		-set-exit-code
 
 test-integration:
-	$(MAKE) test TEST_FLAGS=-tags=integration
+	$(MAKE) test GO_TEST_FLAGS=-tags=integration
+
+test-e2e:
+	$(MAKE) test GO_TEST_FLAGS=-tags=e2e
 
 test-agent:
 	go run -v ./cmd/agent_local/

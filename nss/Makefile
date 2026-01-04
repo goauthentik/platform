@@ -12,10 +12,13 @@ bump:
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
-	cargo build \
+	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
 		--target-dir ${TOP}/cache/${TARGET} \
 		--verbose \
 		--release
+
+build-coverage:
+	$(MAKE) -C "${PWD}" build RUST_BUILD_FLAGS="-C instrument-coverage"
 
 test:
 	cargo test --verbose

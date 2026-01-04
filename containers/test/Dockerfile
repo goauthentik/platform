@@ -24,6 +24,7 @@ RUN find /etc/systemd/system \
     -not -name '*journald*' \
     -not -name '*systemd-tmpfiles*' \
     -not -name '*systemd-user-sessions*' \
+    -not -name '*ak-*' \
     -print0 | xargs -0 rm -vf
 
 VOLUME [ "/sys/fs/cgroup" ]
