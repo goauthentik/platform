@@ -1,6 +1,8 @@
 include ../common.mk
 
 TARGET = pam
+DEB_BUILD_ARCH := $(shell dpkg-architecture -q DEB_BUILD_ARCH)
+DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
 clean:
 	cargo clean
@@ -20,13 +22,13 @@ test:
 	cargo test --verbose
 
 package: build
-	VERSION=${VERSION} ARCH=${ARCH} \
+	VERSION=${VERSION} ARCH=${DEB_BUILD_ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/${TARGET}/nfpm.yaml
-	VERSION=${VERSION} ARCH=${ARCH} \
+	VERSION=${VERSION} ARCH=${DEB_BUILD_ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \
