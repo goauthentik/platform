@@ -42,3 +42,18 @@ define go_generate_resources
 		-product-name="$(1)" \
 		-skip-versioninfo
 endef
+
+define nfpm_package
+	VERSION=${VERSION} ARCH=$(shell dpkg-architecture -q DEB_BUILD_ARCH) \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p deb \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+	VERSION=${VERSION} ARCH=$(shell dpkg-architecture -q DEB_BUILD_ARCH) \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p rpm \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+endef
