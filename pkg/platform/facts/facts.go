@@ -65,6 +65,8 @@ func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
 		Processes: procs,
 		Users:     users,
 		Groups:    groups,
-		Vendor:    vendor.Gather(),
+		Vendor: map[string]any{
+			"goauthentik.io/platform": vendor.Gather(),
+		},
 	}, nil
 }

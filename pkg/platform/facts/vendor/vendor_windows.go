@@ -12,7 +12,7 @@ func gatherRDPCert() string {
 	if err != nil {
 		return ""
 	}
-	hash, err := tsgeneral.GetPropertySSLCertificateSHA1Hash()
+	hash, err := tsgeneral[0].GetPropertySSLCertificateSHA1Hash()
 	if err != nil {
 		return ""
 	}

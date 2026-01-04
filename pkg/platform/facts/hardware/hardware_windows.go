@@ -22,23 +22,35 @@ func gather() (*api.DeviceFactsRequestHardware, error) {
 	if err != nil {
 		return nil, err
 	}
+	memory, err := common.GetWMIValue("Win32_PhysicalMemory", cimv2.NewWin32_PhysicalMemoryEx1)
+	if err != nil {
+		return nil, err
+	}
 
-	manufacturer, err := computerSystem.GetPropertyManufacturer()
+	manufacturer, err := computerSystem[0].GetPropertyManufacturer()
 	if err != nil {
 		return nil, err
 	}
-	model, err := computerSystem.GetPropertyModel()
+	model, err := computerSystem[0].GetPropertyModel()
 	if err != nil {
 		return nil, err
 	}
-	serial, err := bios.GetPropertySerialNumber()
+	serial, err := bios[0].GetPropertySerialNumber()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get serial")
 	}
 
-	memory, err := computerSystem.GetPropertyTotalPhysicalMemory()
-	if err != nil {
-		return nil, err
+	totalMemory := uint64(0)
+	for _, mem := range memory {
+		memsz, err := mem.GetProperty("Capacity")
+		if err != nil {
+			return nil, err
+		}
+		memsize, err := strconv.ParseUint(memsz.(string), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		totalMemory += memsize
 	}
 
 	cpu, err := getCPUName()
@@ -51,8 +63,8 @@ func gather() (*api.DeviceFactsRequestHardware, error) {
 		Model:        &model,
 		Serial:       serial,
 		CpuName:      &cpu,
-		CpuCount:     api.PtrInt32(int32(getCPUCores(computerSystem))),
-		MemoryBytes:  api.PtrInt64(int64(memory)),
+		CpuCount:     api.PtrInt32(int32(getCPUCores(computerSystem[0]))),
+		MemoryBytes:  api.PtrInt64(int64(totalMemory)),
 	}, nil
 }
 
@@ -62,7 +74,7 @@ func getCPUName() (string, error) {
 		return "", err
 	}
 
-	name, err := processor.GetPropertyName()
+	name, err := processor[0].GetPropertyName()
 	if err != nil {
 		return "", err
 	}

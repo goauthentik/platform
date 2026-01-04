@@ -26,11 +26,9 @@ func gatherSSHHostKeys() []string {
 
 func Gather() map[string]any {
 	def := map[string]any{
-		"goauthentik.io/platform": map[string]any{
-			"agent_version":        meta.FullVersion(),
-			"ssh_host_keys":        gatherSSHHostKeys(),
-			"rdp_cert_fingerprint": gatherRDPCert(),
-		},
+		"agent_version":        meta.FullVersion(),
+		"ssh_host_keys":        gatherSSHHostKeys(),
+		"rdp_cert_fingerprint": gatherRDPCert(),
 	}
 	return def
 }
