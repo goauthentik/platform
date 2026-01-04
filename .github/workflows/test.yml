@@ -143,6 +143,9 @@ jobs:
           go-version-file: go.mod
           cache: true
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev
       - uses: goauthentik/action-setup-authentik@6e72730de9cf3b3c710d93a21c0e485daa5dfa65 # v1.4
         id: setup
         with:
