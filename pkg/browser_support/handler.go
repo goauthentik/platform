@@ -4,12 +4,12 @@ import (
 	"context"
 
 	log "github.com/sirupsen/logrus"
-	aclient "goauthentik.io/platform/pkg/agent_local/client"
-	"goauthentik.io/platform/pkg/agent_local/types"
-	sclient "goauthentik.io/platform/pkg/agent_system/client"
+	aclient "goauthentik.io/platform/pkg/agent/client"
+	"goauthentik.io/platform/pkg/agent/types"
 	"goauthentik.io/platform/pkg/browser_support/native_messaging"
 	"goauthentik.io/platform/pkg/pb"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
+	sclient "goauthentik.io/platform/pkg/sysd/client"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

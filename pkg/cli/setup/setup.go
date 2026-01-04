@@ -6,7 +6,7 @@ import (
 	"github.com/cli/browser"
 	log "github.com/sirupsen/logrus"
 
-	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/agent/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/vnd/oauth"
 )

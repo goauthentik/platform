@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?define Name = "authentik Agent" ?>
+<?define Manufacturer = "Authentik Security Inc" ?>
+<?define Version = "$(env.VERSION)" ?>
+<?define UpgradeCode = "3200363b-996e-4fd7-ae14-e3a425132b63" ?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Id="authentik.Agent"
+           Name="$(var.Name)"
+           Manufacturer="$(var.Manufacturer)"
+           Version="$(var.Version)"
+           UpgradeCode="$(var.UpgradeCode)"
+           Compressed="true">
+    <ui:WixUI Id="AK_WixUI_FeatureTree"
+              InstallDirectory="INSTALLFOLDER" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(env.PWD)/package/windows/resources/WixUIDialogBmp.png" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(env.PWD)/package/windows/resources/WixUIBannerBmp.png" />
+
+    <MediaTemplate EmbedCab="yes" />
+    <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Name="$(var.Manufacturer)">
+        <Directory Id="sysd" Name="sysd" />
+        <Directory Id="browser_support" Name="browser_support" />
+        <Directory Id="wcp" Name="wcp">
+          <Directory Id="wcp_locale" Name="locales" />
+        </Directory>
+        <Directory Id="cli" Name="cli" />
+        <Directory Id="agent" Name="agent" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="CommonAppDataFolder" />
+    <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64" Directory="sysd">
+        <CreateFolder Directory="sysd" Subdirectory="domains" />
+        <CreateFolder Directory="sysd" Subdirectory="runtime" />
+        <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)" />
+        <File Id="ak_sysd"
+              Source="$(env.ROOT)/bin/sysd/ak-sysd.exe"
+              KeyPath="true" />
+        <File Id="ak_sysd_config"
+              Source="$(env.ROOT)/cmd/sysd/package/windows/config.json" />
+
+        <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\authentik" />
+        <util:EventSource Log="authentik"
+                          Name="authentik System Service"
+                          EventMessageFile="[System64Folder]EventCreate.exe"/>
+
+        <ServiceInstall Id="ServiceInstaller"
+                        Type="ownProcess"
+                        Name="ak_sysd"
+                        DisplayName="$(Name)"
+                        Description="authentik System Agent."
+                        Start="auto"
+                        ErrorControl="normal"
+                        Arguments="agent" />
+
+        <ServiceControl Id="StartService"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Name="ak_sysd"
+                        Wait="true" />
+      </Component>
+      <Component Id="agent" Bitness="always64" Directory="agent">
+        <util:EventSource Log="authentik"
+                          Name="authentik User Service"
+                          EventMessageFile="[System64Folder]EventCreate.exe"/>
+        <File Id="ak_agent"
+              Source="$(env.ROOT)/bin/agent/ak-agent.exe"
+              KeyPath="true" />
+      </Component>
+      <Component Id="cli" Bitness="always64" Directory="cli">
+        <File Id="ak_cli"
+              Source="$(env.ROOT)/bin/cli/ak.exe" />
+      </Component>
+      <Component Id="cli_path" Bitness="always64" Guid="b7367ded-3915-4c37-a468-5a58618e37fd">
+        <Environment Id="PATH"
+                     Name="PATH"
+                     Value="[cli]"
+                     Permanent="yes"
+                     Part="last"
+                     Action="set"
+                     System="yes" />
+      </Component>
+      <Component Id="browser_support" Guid="e027d360-a9e1-4bd6-b168-1f56d1fcaf8f" Bitness="always64" Directory="browser_support">
+        <File Id="ak_browser_support"
+              Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe"
+              KeyPath="true" />
+        <File Id="browser_support_json_chrome"
+              Source="$(env.PWD)/package/windows/browser-host-chrome.json" />
+        <File Id="browser_support_json_firefox"
+              Source="$(env.PWD)/package/windows/browser-host-firefox.json" />
+        <RegistryKey Root="HKLM"
+                    Key="SOFTWARE\Google\Chrome\NativeMessagingHosts\io.goauthentik.platform">
+          <RegistryValue Type="string" Value="[browser_support]browser-host-chrome.json"/>
+        </RegistryKey>
+        <RegistryKey Root="HKLM"
+                    Key="SOFTWARE\Microsoft\Edge\NativeMessagingHosts\io.goauthentik.platform">
+          <RegistryValue Type="string" Value="[browser_support]browser-host-chrome.json"/>
+        </RegistryKey>
+        <RegistryKey Root="HKLM"
+                    Key="Software\Mozilla\NativeMessagingHosts\io.goauthentik.platform">
+          <RegistryValue Type="string" Value="[browser_support]browser-host-firefox.json"/>
+        </RegistryKey>
+      </Component>
+      <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
+        <util:EventSource Log="authentik"
+                          Name="authentik Credential Provider"
+                          EventMessageFile="C:\Windows\System32\mscoree.dll"/>
+        <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
+        <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
+        <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />
+        <File Id="wcp_chrome_elf_dll" Source="$(env.ROOT)/bin/wcp/chrome_elf.dll" />
+        <File Id="wcp_d3dcompiler_47_dll" Source="$(env.ROOT)/bin/wcp/d3dcompiler_47.dll" />
+        <File Id="wcp_dxcompiler_dll" Source="$(env.ROOT)/bin/wcp/dxcompiler.dll" />
+        <File Id="wcp_dxil_dll" Source="$(env.ROOT)/bin/wcp/dxil.dll" />
+        <File Id="wcp_icudtl_dat" Source="$(env.ROOT)/bin/wcp/icudtl.dat" />
+        <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" />
+        <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />
+        <File Id="wcp_ak_cred_provider_exp" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.exp" />
+        <File Id="wcp_ak_cred_provider_lib" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.lib" />
+        <File Id="wcp_ak_cred_provider_pdb" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.pdb" />
+        <File Id="wcp_libcrypto_3_x64_dll" Source="$(env.ROOT)/bin/wcp/libcrypto-3-x64.dll" />
+        <File Id="wcp_libEGL_dll" Source="$(env.ROOT)/bin/wcp/libEGL.dll" />
+        <File Id="wcp_libGLESv2_dll" Source="$(env.ROOT)/bin/wcp/libGLESv2.dll" />
+        <File Id="wcp_resources_pak" Source="$(env.ROOT)/bin/wcp/resources.pak" />
+        <File Id="wcp_v8_context_snapshot_bin" Source="$(env.ROOT)/bin/wcp/v8_context_snapshot.bin" />
+        <File Id="wcp_vk_swiftshader_dll" Source="$(env.ROOT)/bin/wcp/vk_swiftshader.dll" />
+        <File Id="wcp_vk_swiftshader_icd_json" Source="$(env.ROOT)/bin/wcp/vk_swiftshader_icd.json" />
+        <File Id="wcp_vulkan_1_dll" Source="$(env.ROOT)/bin/wcp/vulkan-1.dll" />
+        <RegistryKey Root="HKLM"
+                    Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
+          <RegistryValue Type="string" Value="authentik Credential Provider" />
+        </RegistryKey>
+        <RegistryKey Root="HKCR"
+                    Key="CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
+          <RegistryValue Type="string" Value="authentik Credential Provider" />
+          <RegistryValue Key="InprocServer32" Type="string" Value="[wcp]ak_cred_provider.dll" />
+          <RegistryValue Key="InprocServer32" Type="string" Name="ThreadingModel" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="credential_provider_locales" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e2" Bitness="always64" Directory="wcp_locale">
+        <File Id="wcp_locales_af_pak" Source="$(env.ROOT)/bin/wcp/locales/af.pak" />
+        <File Id="wcp_locales_am_pak" Source="$(env.ROOT)/bin/wcp/locales/am.pak" />
+        <File Id="wcp_locales_ar_pak" Source="$(env.ROOT)/bin/wcp/locales/ar.pak" />
+        <File Id="wcp_locales_bg_pak" Source="$(env.ROOT)/bin/wcp/locales/bg.pak" />
+        <File Id="wcp_locales_bn_pak" Source="$(env.ROOT)/bin/wcp/locales/bn.pak" />
+        <File Id="wcp_locales_ca_pak" Source="$(env.ROOT)/bin/wcp/locales/ca.pak" />
+        <File Id="wcp_locales_cs_pak" Source="$(env.ROOT)/bin/wcp/locales/cs.pak" />
+        <File Id="wcp_locales_da_pak" Source="$(env.ROOT)/bin/wcp/locales/da.pak" />
+        <File Id="wcp_locales_de_pak" Source="$(env.ROOT)/bin/wcp/locales/de.pak" />
+        <File Id="wcp_locales_el_pak" Source="$(env.ROOT)/bin/wcp/locales/el.pak" />
+        <File Id="wcp_locales_en_GB_pak" Source="$(env.ROOT)/bin/wcp/locales/en-GB.pak" />
+        <File Id="wcp_locales_en_US_pak" Source="$(env.ROOT)/bin/wcp/locales/en-US.pak" />
+        <File Id="wcp_locales_es_419_pak" Source="$(env.ROOT)/bin/wcp/locales/es-419.pak" />
+        <File Id="wcp_locales_es_pak" Source="$(env.ROOT)/bin/wcp/locales/es.pak" />
+        <File Id="wcp_locales_et_pak" Source="$(env.ROOT)/bin/wcp/locales/et.pak" />
+        <File Id="wcp_locales_fa_pak" Source="$(env.ROOT)/bin/wcp/locales/fa.pak" />
+        <File Id="wcp_locales_fi_pak" Source="$(env.ROOT)/bin/wcp/locales/fi.pak" />
+        <File Id="wcp_locales_fil_pak" Source="$(env.ROOT)/bin/wcp/locales/fil.pak" />
+        <File Id="wcp_locales_fr_pak" Source="$(env.ROOT)/bin/wcp/locales/fr.pak" />
+        <File Id="wcp_locales_gu_pak" Source="$(env.ROOT)/bin/wcp/locales/gu.pak" />
+        <File Id="wcp_locales_he_pak" Source="$(env.ROOT)/bin/wcp/locales/he.pak" />
+        <File Id="wcp_locales_hi_pak" Source="$(env.ROOT)/bin/wcp/locales/hi.pak" />
+        <File Id="wcp_locales_hr_pak" Source="$(env.ROOT)/bin/wcp/locales/hr.pak" />
+        <File Id="wcp_locales_hu_pak" Source="$(env.ROOT)/bin/wcp/locales/hu.pak" />
+        <File Id="wcp_locales_id_pak" Source="$(env.ROOT)/bin/wcp/locales/id.pak" />
+        <File Id="wcp_locales_it_pak" Source="$(env.ROOT)/bin/wcp/locales/it.pak" />
+        <File Id="wcp_locales_ja_pak" Source="$(env.ROOT)/bin/wcp/locales/ja.pak" />
+        <File Id="wcp_locales_kn_pak" Source="$(env.ROOT)/bin/wcp/locales/kn.pak" />
+        <File Id="wcp_locales_ko_pak" Source="$(env.ROOT)/bin/wcp/locales/ko.pak" />
+        <File Id="wcp_locales_lt_pak" Source="$(env.ROOT)/bin/wcp/locales/lt.pak" />
+        <File Id="wcp_locales_lv_pak" Source="$(env.ROOT)/bin/wcp/locales/lv.pak" />
+        <File Id="wcp_locales_ml_pak" Source="$(env.ROOT)/bin/wcp/locales/ml.pak" />
+        <File Id="wcp_locales_mr_pak" Source="$(env.ROOT)/bin/wcp/locales/mr.pak" />
+        <File Id="wcp_locales_ms_pak" Source="$(env.ROOT)/bin/wcp/locales/ms.pak" />
+        <File Id="wcp_locales_nb_pak" Source="$(env.ROOT)/bin/wcp/locales/nb.pak" />
+        <File Id="wcp_locales_nl_pak" Source="$(env.ROOT)/bin/wcp/locales/nl.pak" />
+        <File Id="wcp_locales_pl_pak" Source="$(env.ROOT)/bin/wcp/locales/pl.pak" />
+        <File Id="wcp_locales_pt_BR_pak" Source="$(env.ROOT)/bin/wcp/locales/pt-BR.pak" />
+        <File Id="wcp_locales_pt_PT_pak" Source="$(env.ROOT)/bin/wcp/locales/pt-PT.pak" />
+        <File Id="wcp_locales_ro_pak" Source="$(env.ROOT)/bin/wcp/locales/ro.pak" />
+        <File Id="wcp_locales_ru_pak" Source="$(env.ROOT)/bin/wcp/locales/ru.pak" />
+        <File Id="wcp_locales_sk_pak" Source="$(env.ROOT)/bin/wcp/locales/sk.pak" />
+        <File Id="wcp_locales_sl_pak" Source="$(env.ROOT)/bin/wcp/locales/sl.pak" />
+        <File Id="wcp_locales_sr_pak" Source="$(env.ROOT)/bin/wcp/locales/sr.pak" />
+        <File Id="wcp_locales_sv_pak" Source="$(env.ROOT)/bin/wcp/locales/sv.pak" />
+        <File Id="wcp_locales_sw_pak" Source="$(env.ROOT)/bin/wcp/locales/sw.pak" />
+        <File Id="wcp_locales_ta_pak" Source="$(env.ROOT)/bin/wcp/locales/ta.pak" />
+        <File Id="wcp_locales_te_pak" Source="$(env.ROOT)/bin/wcp/locales/te.pak" />
+        <File Id="wcp_locales_th_pak" Source="$(env.ROOT)/bin/wcp/locales/th.pak" />
+        <File Id="wcp_locales_tr_pak" Source="$(env.ROOT)/bin/wcp/locales/tr.pak" />
+        <File Id="wcp_locales_uk_pak" Source="$(env.ROOT)/bin/wcp/locales/uk.pak" />
+        <File Id="wcp_locales_ur_pak" Source="$(env.ROOT)/bin/wcp/locales/ur.pak" />
+        <File Id="wcp_locales_vi_pak" Source="$(env.ROOT)/bin/wcp/locales/vi.pak" />
+        <File Id="wcp_locales_zh_CN_pak" Source="$(env.ROOT)/bin/wcp/locales/zh-CN.pak" />
+        <File Id="wcp_locales_zh_TW_pak" Source="$(env.ROOT)/bin/wcp/locales/zh-TW.pak" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="root"
+             Title="authentik Platform Agent"
+             Level="1"
+             Display="expand"
+             Description="authentik Platform Agent">
+      <Feature Id="agents"
+               Title="System &amp; User agents"
+               Level="1"
+               AllowAbsent="no"
+               Description="System and User agents, required.">
+        <ComponentRef Id="sysd" />
+        <ComponentRef Id="agent" />
+      </Feature>
+      <Feature Id="cli"
+               Title="authentik CLI"
+               Level="1"
+               AllowAbsent="yes"
+               Description="CLI to access applications and services.">
+        <ComponentRef Id="cli" />
+      </Feature>
+      <Feature Id="cli_path"
+               Title="Include CLI in PATH"
+               Level="1"
+               AllowAbsent="yes"
+               Description="Update the system's PATH variable to enable easier access to the ak CLI.">
+        <ComponentRef Id="cli_path" />
+      </Feature>
+      <Feature Id="browser_support"
+               Title="Browser support"
+               Level="1"
+               AllowAbsent="yes"
+               Description="Helper for use with the browser extension.">
+        <ComponentRef Id="browser_support" />
+      </Feature>
+      <Feature Id="credential_provider"
+               Title="Credential provider"
+               Level="2"
+               AllowAbsent="yes"
+               Description="Log into Windows using authentik.">
+        <ComponentRef Id="credential_provider" />
+        <ComponentRef Id="credential_provider_locales" />
+      </Feature>
+    </Feature>
+  </Package>
+</Wix>

@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/agent/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/meta"
 )

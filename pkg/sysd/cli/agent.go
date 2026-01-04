@@ -1,0 +1,56 @@
+package cli
+
+import (
+	"os"
+
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/sysd/config"
+)
+
+var (
+	isDebug            = false
+	disabledComponents = []string{}
+)
+
+var agentCmd = &cobra.Command{
+	Use:          "agent",
+	Short:        "Run the authentik system agent",
+	SilenceUsage: true,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if isDebug {
+			log.SetLevel(log.DebugLevel)
+		}
+		err := systemlog.Setup(pstr.PlatformString{
+			// Needs to match event log name in Package.wxs
+			Windows: pstr.S("authentik System Service"),
+			Linux:   pstr.S("ak-sysd"),
+		}.ForCurrent())
+		if err != nil {
+			return err
+		}
+		err = agentPrecheck()
+		if err != nil {
+			return err
+		}
+		if config.Manager().Get().Debug {
+			log.SetLevel(log.DebugLevel)
+		}
+		if _, err := os.Stat(config.Manager().Get().RuntimeDir); err != nil {
+			return errors.Wrap(err, "failed to check runtime directory")
+		}
+		return nil
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runAgentPlatform(cmd, args)
+	},
+}
+
+func init() {
+	agentCmd.Flags().BoolVarP(&isDebug, "debug", "d", false, "Run in debug mode.")
+	agentCmd.Flags().StringArrayVar(&disabledComponents, "disable-component", []string{}, "ID component to disable")
+	rootCmd.AddCommand(agentCmd)
+}

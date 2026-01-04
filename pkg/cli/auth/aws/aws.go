@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_local/client"
+	"goauthentik.io/platform/pkg/agent/client"
 	"goauthentik.io/platform/pkg/pb"
 )
 

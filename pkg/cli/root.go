@@ -7,7 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"goauthentik.io/platform/pkg/agent_local/types"
+	"goauthentik.io/platform/pkg/agent/types"
 	"goauthentik.io/platform/pkg/meta"
 )
 

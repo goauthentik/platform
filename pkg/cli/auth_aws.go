@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"goauthentik.io/platform/pkg/agent_local/client"
+	"goauthentik.io/platform/pkg/agent/client"
 	"goauthentik.io/platform/pkg/cli/auth/aws"
 )
 

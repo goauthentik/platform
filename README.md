@@ -18,7 +18,7 @@ The primary supported development environment is devcontainers included with thi
 
 To build all the packages and install them on the dev container, run `make test-full`
 
-The local agent is required for most testing; create a new terminal and run `./bin/agent_local/ak-agent`.
+The local agent is required for most testing; create a new terminal and run `./bin/agent/ak-agent`.
 
 ### macOS Dependencies
 

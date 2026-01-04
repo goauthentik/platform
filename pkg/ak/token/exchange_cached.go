@@ -3,7 +3,7 @@ package token
 import (
 	"time"
 
-	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/agent/config"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/storage"
 )

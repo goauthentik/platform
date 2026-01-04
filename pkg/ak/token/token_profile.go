@@ -10,7 +10,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/golang-jwt/jwt/v5"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/agent/config"
 	"goauthentik.io/platform/pkg/ak"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 )

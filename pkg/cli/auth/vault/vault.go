@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_local/client"
+	"goauthentik.io/platform/pkg/agent/client"
 	"goauthentik.io/platform/pkg/pb"
 )
 
