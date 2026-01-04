@@ -19,7 +19,11 @@ func gatherSSHHostKeys() []string {
 		if strings.HasPrefix(ln, "# ") {
 			continue
 		}
-		keys = append(keys, strings.TrimSpace(ln))
+		ln = strings.TrimSpace(ln)
+		if ln == "" {
+			continue
+		}
+		keys = append(keys, ln)
 	}
 	return keys
 }

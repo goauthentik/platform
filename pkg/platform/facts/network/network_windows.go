@@ -5,6 +5,7 @@ package network
 import (
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/microsoft/wmi/server2019/root/cimv2"
 	"github.com/microsoft/wmi/server2019/root/standardcimv2"
@@ -63,6 +64,7 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 		if iface.HardwareAddr.String() == "" {
 			continue
 		}
+		validAddresses := []string{}
 		for _, addr := range addrs {
 			ipnet, ok := addr.(*net.IPNet)
 			if !ok {
@@ -72,35 +74,37 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			if ipnet.IP.IsLoopback() {
 				continue
 			}
-
-			dnsServers := getDNSServers(iface.Name)
-
-			netInterface := api.NetworkInterfaceRequest{
-				DnsServers:      dnsServers,
-				HardwareAddress: iface.HardwareAddr.String(),
-				IpAddresses:     []string{ipnet.String()},
-				Name:            iface.Name,
-			}
-
-			interfaces = append(interfaces, netInterface)
+			validAddresses = append(validAddresses, ipnet.String())
 		}
+
+		dnsServers := getDNSServers(iface.Index)
+
+		netInterface := api.NetworkInterfaceRequest{
+			DnsServers:      dnsServers,
+			HardwareAddress: iface.HardwareAddr.String(),
+			IpAddresses:     validAddresses,
+			Name:            iface.Name,
+		}
+
+		interfaces = append(interfaces, netInterface)
 	}
 
 	return interfaces, nil
 }
 
-func getDNSServers(interfaceName string) []string {
+func getDNSServers(index int) []string {
 	var dnsServers []string
 
-	adapterConf, err := common.GetWMIValue(cimv2.NewWin32_NetworkAdapterConfigurationEx1, "Win32_NetworkAdapterConfiguration")
+	adapterConf, err := common.GetWMIValue(
+		cimv2.NewWin32_NetworkAdapterConfigurationEx1,
+		"Win32_NetworkAdapterConfiguration",
+		"InterfaceIndex", strconv.Itoa(index),
+	)
 	if err != nil {
 		return dnsServers
 	}
 
 	for _, adp := range adapterConf {
-		if sn, err := adp.GetPropertyServiceName(); err != nil || sn != interfaceName {
-			continue
-		}
 		interfaceServers, err := adp.GetPropertyDNSServerSearchOrder()
 		if err != nil {
 			return dnsServers

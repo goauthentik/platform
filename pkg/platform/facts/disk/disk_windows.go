@@ -49,13 +49,13 @@ func isEncrypted(mountpoint string) bool {
 		if dl, err := vol.GetPropertyDriveLetter(); err != nil || dl != mountpoint {
 			continue
 		}
-		encMethod, err := vol.GetPropertyEncryptionMethod()
+		encMethod, err := vol.GetProperty("EncryptionMethod")
 		if err != nil {
 			continue
 		}
 		// https://learn.microsoft.com/en-us/windows/win32/secprov/win32-encryptablevolume#properties
 		// 0 meaning `NOT ENCRYPTED`, `The volume is not encrypted, nor has encryption begun.`
-		if encMethod == 0 {
+		if encMethod.(int32) == 0 {
 			return false
 		}
 		protectionStatus, err := vol.GetPropertyProtectionStatus()

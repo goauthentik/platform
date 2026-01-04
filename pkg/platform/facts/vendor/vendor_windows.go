@@ -8,7 +8,7 @@ import (
 )
 
 func gatherRDPCert() string {
-	tsgeneral, err := common.GetWMIValueNamespace("Win32_TSGeneralSetting", `root\cimv2\terminalservices`, terminalservices.NewWin32_TSGeneralSettingEx1)
+	tsgeneral, err := common.GetWMIValueNamespace(terminalservices.NewWin32_TSGeneralSettingEx1, "Win32_TSGeneralSetting", `root\cimv2\terminalservices`)
 	if err != nil {
 		return ""
 	}
