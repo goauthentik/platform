@@ -7,7 +7,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() ([]api.DeviceUserRequest, error) {
+func gather(ctx *common.GatherContext) ([]api.DeviceUserRequest, error) {
 	var users []api.DeviceUserRequest
 
 	users = getUsersFromPowerShell()

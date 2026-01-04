@@ -3,12 +3,12 @@ package facts
 import (
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func TestGather(t *testing.T) {
-	sysInfo, err := Gather(log.WithField("foo", "bar"))
+	sysInfo, err := Gather(common.TestingContext(t))
 	assert.NoError(t, err)
 	assert.NotNil(t, sysInfo)
 
@@ -19,7 +19,7 @@ func TestGather(t *testing.T) {
 }
 
 func TestSystemInfoStructure(t *testing.T) {
-	sysInfo, err := Gather(log.WithField("foo", "bar"))
+	sysInfo, err := Gather(common.TestingContext(t))
 	assert.NoError(t, err)
 
 	// Test that all major sections are present

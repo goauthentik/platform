@@ -7,10 +7,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func TestGather(t *testing.T) {
-	info, err := Gather()
+	info, err := Gather(common.TestingContext(t))
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, info.Arch, "")
@@ -24,7 +25,7 @@ func TestGatherLinux(t *testing.T) {
 		t.Skip("Skipping Linux-specific test")
 	}
 
-	info, err := gather()
+	info, err := gather(common.TestingContext(t))
 	assert.NoError(t, err)
 
 	assert.Equal(t, info.Family, api.DEVICEFACTSOSFAMILY_LINUX)
@@ -36,7 +37,7 @@ func TestGatherWindows(t *testing.T) {
 		t.Skip("Skipping Windows-specific test")
 	}
 
-	info, err := gather()
+	info, err := gather(common.TestingContext(t))
 	assert.NoError(t, err)
 
 	assert.Equal(t, info.Family, api.DEVICEFACTSOSFAMILY_WINDOWS)

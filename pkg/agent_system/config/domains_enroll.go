@@ -6,6 +6,7 @@ import (
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
 	"goauthentik.io/platform/pkg/platform/facts/network"
 )
@@ -18,11 +19,12 @@ func (dc *DomainConfig) Enroll() error {
 		return err
 	}
 	a.GetConfig().AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
+	ctx := common.New(dlog, context.Background())
 	hw, err := hardware.Gather()
 	if err != nil {
 		return err
 	}
-	net, err := network.Gather(dlog)
+	net, err := network.Gather(ctx)
 	if err != nil {
 		return err
 	}

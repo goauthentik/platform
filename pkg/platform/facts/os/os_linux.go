@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (api.DeviceFactsRequestOs, error) {
+func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	name, version := getLinuxDistribution()
 
 	return api.DeviceFactsRequestOs{

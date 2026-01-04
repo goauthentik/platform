@@ -1,12 +1,12 @@
 package network
 
 import (
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 // Gather collects network information for the current platform
-func Gather(log *log.Entry) (*api.DeviceFactsRequestNetwork, error) {
-	log.Debug("Gathering...")
-	return gather(log)
+func Gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
+	ctx.Log().Debug("Gathering...")
+	return gather(ctx)
 }

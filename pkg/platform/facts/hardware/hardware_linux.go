@@ -15,7 +15,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (*api.DeviceFactsRequestHardware, error) {
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
 	manufacturer := common.ReadDMIValue("sys_vendor")
 	model := common.ReadDMIValue("product_name")
 	serial := common.ReadDMIValue("product_serial")

@@ -9,9 +9,10 @@ import (
 
 	"github.com/shirou/gopsutil/v4/disk"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() ([]api.DiskRequest, error) {
+func gather(ctx *common.GatherContext) ([]api.DiskRequest, error) {
 	var disks []api.DiskRequest
 
 	partitions, err := disk.Partitions(false)

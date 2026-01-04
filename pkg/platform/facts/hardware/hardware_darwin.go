@@ -22,7 +22,7 @@ type ProfilerSPHardwareDataType struct {
 	} `json:"SPHardwareDataType"`
 }
 
-func gather() (*api.DeviceFactsRequestHardware, error) {
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
 	hardware, err := common.ExecJSON[ProfilerSPHardwareDataType]("system_profiler", "-json", "SPHardwareDataType")
 	if err != nil {
 		return nil, err

@@ -13,7 +13,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (*api.DeviceFactsRequestNetwork, error) {
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, err

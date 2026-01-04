@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"goauthentik.io/platform/pkg/meta"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gatherSSHHostKeys() []string {
@@ -28,7 +29,8 @@ func gatherSSHHostKeys() []string {
 	return keys
 }
 
-func Gather() map[string]any {
+func Gather(ctx *common.GatherContext) map[string]any {
+	ctx.Log().Debug("Gathering...")
 	def := map[string]any{
 		"agent_version":        meta.FullVersion(),
 		"ssh_host_keys":        gatherSSHHostKeys(),

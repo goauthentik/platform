@@ -8,11 +8,11 @@ import (
 	"os/exec"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather(log *log.Entry) (*api.DeviceFactsRequestNetwork, error) {
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, err

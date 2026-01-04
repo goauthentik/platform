@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() ([]api.DeviceUserRequest, error) {
+func gather(ctx *common.GatherContext) ([]api.DeviceUserRequest, error) {
 	return getUsersFromPasswd()
 }
 

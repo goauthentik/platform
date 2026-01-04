@@ -7,10 +7,11 @@ import (
 	"strings"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 	"golang.org/x/sys/windows/registry"
 )
 
-func gather() (api.DeviceFactsRequestOs, error) {
+func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion`, registry.READ)
 	if err != nil {
 		return api.DeviceFactsRequestOs{}, err

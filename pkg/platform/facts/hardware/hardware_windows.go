@@ -13,7 +13,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (*api.DeviceFactsRequestHardware, error) {
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
 	computerSystem, err := common.GetWMIValue(cimv2.NewWin32_ComputerSystemEx1, "Win32_computersystem")
 	if err != nil {
 		return nil, err

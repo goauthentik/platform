@@ -3,11 +3,13 @@ package process
 import (
 	"github.com/shirou/gopsutil/v4/process"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 // Gather collects process information for the current platform
-func Gather() ([]api.ProcessRequest, error) {
-	return gather()
+func Gather(ctx *common.GatherContext) ([]api.ProcessRequest, error) {
+	ctx.Log().Debug("Gathering...")
+	return gather(ctx)
 }
 
 func getProcName(p *process.Process) string {

@@ -4,12 +4,12 @@ import (
 	"runtime"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func TestGather(t *testing.T) {
-	info, err := Gather(log.WithField("foo", "bar"))
+	info, err := Gather(common.TestingContext(t))
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, info.Hostname, "")
@@ -26,7 +26,7 @@ func TestGatherLinux(t *testing.T) {
 		t.Skip("Skipping Linux-specific test")
 	}
 
-	info, err := gather(log.WithField("foo", "bar"))
+	info, err := gather(common.TestingContext(t))
 	assert.NoError(t, err)
 	assert.NotNil(t, info)
 }
@@ -36,7 +36,7 @@ func TestGatherWindows(t *testing.T) {
 		t.Skip("Skipping Windows-specific test")
 	}
 
-	info, err := gather(log.WithField("foo", "bar"))
+	info, err := gather(common.TestingContext(t))
 	assert.NoError(t, err)
 	assert.NotNil(t, info)
 }

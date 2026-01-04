@@ -10,7 +10,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() ([]api.DeviceGroupRequest, error) {
+func gather(ctx *common.GatherContext) ([]api.DeviceGroupRequest, error) {
 	var groups []api.DeviceGroupRequest
 
 	cmd := exec.Command("dscl", ".", "list", "/Groups")
