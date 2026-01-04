@@ -112,6 +112,9 @@ func getDNSServers(index int) ([]string, error) {
 	if err != nil {
 		return dnsServers, err
 	}
+	if len(adapterConf) < 1 {
+		return dnsServers, nil
+	}
 
 	interfaceServers, err := adapterConf[0].GetPropertyDNSServerSearchOrder()
 	if err != nil {
