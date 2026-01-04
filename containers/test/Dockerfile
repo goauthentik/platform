@@ -17,13 +17,7 @@ RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-serv
 RUN curl -fsSL "${AK_DEPLOY_URL}/keys/gpg-key.asc" | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] ${AK_DEPLOY_URL} stable main" | sudo tee /etc/apt/sources.list.d/authentik.list && \
     sudo apt-get update && \
-    sudo apt-get install authentik-sysd=${AK_PLATFORM_VER} authentik-agent=${AK_PLATFORM_VER} authentik-cli=${AK_PLATFORM_VER} libpam-authentik=${AK_PLATFORM_VER} libnss-authentik=${AK_PLATFORM_VER} -y && \
-    mkdir -p etc/systemd/system/ak-sysd.service.d && \
-    echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-sysd"' > /etc/systemd/system/ak-sysd.service.d/coverage.conf
-
-RUN --mount=type=bind,target=/build/bin,src=./bin \
-    --mount=type=bind,target=/build/install.sh,src=./containers/test/install-dev.sh \
-    /bin/bash -c "AK_PLATFORM_ARCH=${AK_PLATFORM_ARCH} /build/install.sh"
+    sudo apt-get install authentik-sysd=${AK_PLATFORM_VER} authentik-agent=${AK_PLATFORM_VER} authentik-cli=${AK_PLATFORM_VER} libpam-authentik=${AK_PLATFORM_VER} libnss-authentik=${AK_PLATFORM_VER} -y
 
 RUN find /etc/systemd/system \
     /lib/systemd/system \
