@@ -54,7 +54,7 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest {
 	return testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
-			Image: "xghcr.io/goauthentik/platform-test:local",
+			Image: "xghcr.io/goauthentik/platform-e2e:local",
 			ConfigModifier: func(c *container.Config) {
 				c.User = "root"
 			},

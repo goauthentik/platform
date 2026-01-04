@@ -5,10 +5,10 @@ base := $(shell $(MAKE) -C ${TOP} containers/test/ci-container-tag)
 .PHONY: local-build
 local-build:
 	$(MAKE) -C ${TOP} containers/test/local-build
-	$(MAKE) -C ${TOP} containers/coverage/build-packages
+	$(MAKE) -C ${TOP} containers/e2e/build-packages
 	mkdir -p ${TOP}/bin
 	docker build \
-		-t xghcr.io/goauthentik/platform-coverage:local \
+		-t xghcr.io/goauthentik/platform-e2e:local \
 		--no-cache \
 		--build-arg="AK_PLATFORM_VER=${VERSION}" \
 		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \

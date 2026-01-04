@@ -76,7 +76,7 @@ test:
 test-integration:
 	$(MAKE) test GO_TEST_FLAGS=-tags=integration
 
-test-e2e: containers/coverage/local-build
+test-e2e: containers/e2e/local-build
 	$(MAKE) test GO_TEST_FLAGS=-tags=e2e
 
 test-agent:
@@ -138,5 +138,5 @@ containers/selenium/%:
 containers/test/%:
 	"$(MAKE)" -C "${TOP}/containers/test" $*
 
-containers/coverage/%:
-	"$(MAKE)" -C "${TOP}/containers/coverage" $*
+containers/e2e/%:
+	"$(MAKE)" -C "${TOP}/containers/e2e" $*
