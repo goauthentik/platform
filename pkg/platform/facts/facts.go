@@ -1,9 +1,8 @@
 package facts
 
 import (
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
-	"goauthentik.io/platform/pkg/meta"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 	"goauthentik.io/platform/pkg/platform/facts/disk"
 	"goauthentik.io/platform/pkg/platform/facts/group"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
@@ -11,64 +10,56 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/os"
 	"goauthentik.io/platform/pkg/platform/facts/process"
 	"goauthentik.io/platform/pkg/platform/facts/user"
+	"goauthentik.io/platform/pkg/platform/facts/vendor"
 )
 
 // Gather collects system information from all subsystems
-func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
-	log.WithField("area", "disk").Debug("Gathering...")
-	disks, err := disk.Gather()
+func Gather(ctx *common.GatherContext) (*api.DeviceFactsRequest, error) {
+	disks, err := disk.Gather(ctx.Child("disk"))
 	if err != nil {
 		return nil, err
 	}
 
-	log.WithField("area", "hardware").Debug("Gathering...")
-	hw, err := hardware.Gather()
+	hw, err := hardware.Gather(ctx.Child("hardware"))
 	if err != nil {
 		return nil, err
 	}
 
-	log.WithField("area", "network").Debug("Gathering...")
-	net, err := network.Gather()
+	net, err := network.Gather(ctx.Child("network"))
 	if err != nil {
 		return nil, err
 	}
 
-	log.WithField("area", "os").Debug("Gathering...")
-	osInfo, err := os.Gather()
+	osInfo, err := os.Gather(ctx.Child("os"))
 	if err != nil {
 		return nil, err
 	}
 
-	log.WithField("area", "process").Debug("Gathering...")
-	procs, err := process.Gather()
+	procs, err := process.Gather(ctx.Child("process"))
 	if err != nil {
 		return nil, err
 	}
 
-	log.WithField("area", "user").Debug("Gathering...")
-	users, err := user.Gather()
+	users, err := user.Gather(ctx.Child("user"))
 	if err != nil {
 		return nil, err
 	}
 
-	log.WithField("area", "group").Debug("Gathering...")
-	groups, err := group.Gather()
+	groups, err := group.Gather(ctx.Child("group"))
 	if err != nil {
 		return nil, err
 	}
 
 	return &api.DeviceFactsRequest{
 		Disks:     disks,
-		Hardware:  *api.NewNullableDeviceFactsRequestHardware(&hw),
-		Network:   *api.NewNullableDeviceFactsRequestNetwork(&net),
+		Hardware:  *api.NewNullableDeviceFactsRequestHardware(hw),
+		Network:   *api.NewNullableDeviceFactsRequestNetwork(net),
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
 		Users:     users,
 		Groups:    groups,
 		Vendor: map[string]any{
-			"goauthentik.io/platform": map[string]string{
-				"agent_version": meta.FullVersion(),
-			},
+			"goauthentik.io/platform": vendor.Gather(ctx.Child("vendor")),
 		},
 	}, nil
 }

@@ -3,7 +3,6 @@
 package hardware
 
 import (
-	"encoding/json"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -11,23 +10,8 @@ import (
 
 	"github.com/shirou/gopsutil/v4/mem"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
-
-func gather() (api.DeviceFactsRequestHardware, error) {
-	hardware, err := getSystemProfilerValue()
-	if err != nil {
-		return api.DeviceFactsRequestHardware{}, err
-	}
-	memoryBytes := getTotalMemory(hardware)
-	return api.DeviceFactsRequestHardware{
-		Manufacturer: api.PtrString("Apple Inc."),
-		Model:        api.PtrString(hardware.SPHardwareDataType[0].Model),
-		Serial:       hardware.SPHardwareDataType[0].SerialNumber,
-		CpuName:      api.PtrString(hardware.SPHardwareDataType[0].ChipType),
-		CpuCount:     api.PtrInt32(int32(getCPUCores())),
-		MemoryBytes:  api.PtrInt64(int64(memoryBytes)),
-	}, nil
-}
 
 type ProfilerSPHardwareDataType struct {
 	SPHardwareDataType []struct {
@@ -38,18 +22,20 @@ type ProfilerSPHardwareDataType struct {
 	} `json:"SPHardwareDataType"`
 }
 
-func getSystemProfilerValue() (ProfilerSPHardwareDataType, error) {
-	d := ProfilerSPHardwareDataType{}
-	cmd := exec.Command("system_profiler", "-json", "SPHardwareDataType")
-	output, err := cmd.Output()
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
+	hardware, err := common.ExecJSON[ProfilerSPHardwareDataType]("system_profiler", "-json", "SPHardwareDataType")
 	if err != nil {
-		return d, err
+		return nil, err
 	}
-	err = json.Unmarshal(output, &d)
-	if err != nil {
-		return d, err
-	}
-	return d, nil
+	memoryBytes := getTotalMemory(hardware)
+	return &api.DeviceFactsRequestHardware{
+		Manufacturer: api.PtrString("Apple Inc."),
+		Model:        api.PtrString(hardware.SPHardwareDataType[0].Model),
+		Serial:       hardware.SPHardwareDataType[0].SerialNumber,
+		CpuName:      api.PtrString(hardware.SPHardwareDataType[0].ChipType),
+		CpuCount:     api.PtrInt32(int32(getCPUCores())),
+		MemoryBytes:  api.PtrInt64(int64(memoryBytes)),
+	}, nil
 }
 
 func getCPUCores() int {

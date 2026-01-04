@@ -6,22 +6,25 @@ import (
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
 	"goauthentik.io/platform/pkg/platform/facts/network"
 )
 
 func (dc *DomainConfig) Enroll() error {
-	dc.r.log.WithField("domain", dc.Domain).Info("Enrolling...")
+	dlog := dc.r.log.WithField("domain", dc.Domain)
+	dlog.Info("Enrolling...")
 	a, err := dc.APIClient()
 	if err != nil {
 		return err
 	}
 	a.GetConfig().AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
-	hw, err := hardware.Gather()
+	ctx := common.New(dlog, context.Background())
+	hw, err := hardware.Gather(ctx)
 	if err != nil {
 		return err
 	}
-	net, err := network.Gather()
+	net, err := network.Gather(ctx)
 	if err != nil {
 		return err
 	}

@@ -9,6 +9,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/platform/facts"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func (ds *Server) checkIn(ctx context.Context, dom *config.DomainConfig) error {
@@ -18,7 +19,8 @@ func (ds *Server) checkIn(ctx context.Context, dom *config.DomainConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get domain API Client")
 	}
-	req, err := facts.Gather(ds.log)
+	fctx := common.New(ds.log, ctx)
+	req, err := facts.Gather(fctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to gather device info")
 	}

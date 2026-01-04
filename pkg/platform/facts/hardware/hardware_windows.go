@@ -3,57 +3,88 @@
 package hardware
 
 import (
-	"errors"
 	"os"
 	"runtime"
 	"strconv"
-	"strings"
 
-	"github.com/shirou/gopsutil/v4/cpu"
-	"github.com/shirou/gopsutil/v4/mem"
+	"github.com/microsoft/wmi/pkg/errors"
+	"github.com/microsoft/wmi/server2019/root/cimv2"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (api.DeviceFactsRequestHardware, error) {
-	manufacturer := common.GetWMIValue("Win32_computersystem", "Manufacturer")
-	model := common.GetWMIValue("Win32_computersystem", "Model")
-	serial := common.GetWMIValue("Win32_BIOS", "SerialNumber")
-	if serial == nil {
-		return api.DeviceFactsRequestHardware{}, errors.New("failed to get serial")
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
+	computerSystem, err := common.GetWMIValue(cimv2.NewWin32_ComputerSystemEx1, "Win32_computersystem")
+	if err != nil {
+		return nil, err
 	}
-	return api.DeviceFactsRequestHardware{
-		Manufacturer: manufacturer,
-		Model:        model,
-		Serial:       *serial,
-		CpuName:      getCPUName(),
-		CpuCount:     api.PtrInt32(int32(getCPUCores())),
-		MemoryBytes:  api.PtrInt64(int64(getTotalMemory())),
+	bios, err := common.GetWMIValue(cimv2.NewWin32_BIOSEx1, "Win32_BIOS")
+	if err != nil {
+		return nil, err
+	}
+	memory, err := common.GetWMIValue(cimv2.NewWin32_PhysicalMemoryEx1, "Win32_PhysicalMemory")
+	if err != nil {
+		return nil, err
+	}
+
+	manufacturer, err := computerSystem[0].GetPropertyManufacturer()
+	if err != nil {
+		return nil, err
+	}
+	model, err := computerSystem[0].GetPropertyModel()
+	if err != nil {
+		return nil, err
+	}
+	serial, err := bios[0].GetPropertySerialNumber()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get serial")
+	}
+
+	totalMemory := uint64(0)
+	for _, mem := range memory {
+		memsz, err := mem.GetProperty("Capacity")
+		if err != nil {
+			return nil, err
+		}
+		memsize, err := strconv.ParseUint(memsz.(string), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		totalMemory += memsize
+	}
+
+	cpu, err := getCPUName()
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.DeviceFactsRequestHardware{
+		Manufacturer: &manufacturer,
+		Model:        &model,
+		Serial:       serial,
+		CpuName:      &cpu,
+		CpuCount:     api.PtrInt32(int32(getCPUCores(computerSystem[0]))),
+		MemoryBytes:  api.PtrInt64(int64(totalMemory)),
 	}, nil
 }
 
-func getCPUName() *string {
-	cpuName := common.GetWMIValue("Win32_Processor", "Name")
-	if cpuName != nil {
-		return cpuName
+func getCPUName() (string, error) {
+	processor, err := common.GetWMIValue(cimv2.NewWin32_ProcessorEx1, "Win32_Processor")
+	if err != nil {
+		return "", err
 	}
 
-	// Fallback to gopsutil
-	cpuInfo, err := cpu.Info()
-	if err != nil || len(cpuInfo) == 0 {
-		return api.PtrString("Unknown CPU")
+	name, err := processor[0].GetPropertyName()
+	if err != nil {
+		return "", err
 	}
-
-	return api.PtrString(cpuInfo[0].ModelName)
+	return name, nil
 }
 
-func getCPUCores() int {
-	cpuCount := common.GetWMIValue("Win32_ComputerSystem", "NumberOfLogicalProcessors")
-	if cpuCount != nil {
-		coresStr := strings.TrimSpace(string(*cpuCount))
-		if cores, err := strconv.Atoi(coresStr); err == nil {
-			return cores
-		}
+func getCPUCores(computerSystem *cimv2.Win32_ComputerSystem) int {
+	cpuCount, err := computerSystem.GetPropertyNumberOfLogicalProcessors()
+	if err == nil {
+		return int(cpuCount)
 	}
 
 	// Try environment variable
@@ -65,22 +96,4 @@ func getCPUCores() int {
 
 	// Fallback to runtime
 	return runtime.NumCPU()
-}
-
-func getTotalMemory() uint64 {
-	memory := common.GetWMIValue("Win32_ComputerSystem", "TotalPhysicalMemory")
-	if memory != nil {
-		memoryStr := strings.TrimSpace(string(*memory))
-		if memory, err := strconv.ParseUint(memoryStr, 10, 64); err == nil {
-			return memory
-		}
-	}
-
-	// Fallback to gopsutil
-	vmStat, err := mem.VirtualMemory()
-	if err != nil {
-		return 0
-	}
-
-	return vmStat.Total
 }

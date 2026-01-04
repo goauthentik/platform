@@ -12,17 +12,18 @@ import (
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (api.DeviceFactsRequestHardware, error) {
-	manufacturer := readDMIValue("sys_vendor")
-	model := readDMIValue("product_name")
-	serial := readDMIValue("product_serial")
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
+	manufacturer := common.ReadDMIValue("sys_vendor")
+	model := common.ReadDMIValue("product_name")
+	serial := common.ReadDMIValue("product_serial")
 	if serial == nil {
 		serial = api.PtrString(readMachineID())
 	}
 
-	return api.DeviceFactsRequestHardware{
+	return &api.DeviceFactsRequestHardware{
 		Manufacturer: manufacturer,
 		Model:        model,
 		Serial:       *serial,
@@ -30,19 +31,6 @@ func gather() (api.DeviceFactsRequestHardware, error) {
 		CpuCount:     api.PtrInt32(int32(getCPUCores())),
 		MemoryBytes:  api.PtrInt64(int64(getTotalMemory())),
 	}, nil
-}
-
-func readDMIValue(filename string) *string {
-	path := "/sys/class/dmi/id/" + filename
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil
-	}
-	val := strings.TrimSpace(string(data))
-	if val == "" {
-		return nil
-	}
-	return api.PtrString(val)
 }
 
 func readMachineID() string {
