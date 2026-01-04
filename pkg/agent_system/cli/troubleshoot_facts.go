@@ -7,13 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/platform/facts"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 var troubleshootFactsCmd = &cobra.Command{
 	Use:   "facts",
 	Short: "Inspect facts",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		facts, err := facts.Gather(log.WithField("cmd", "facts"))
+		facts, err := facts.Gather(common.New(log.WithField("cmd", "facts"), cmd.Context()))
 		if err != nil {
 			return err
 		}

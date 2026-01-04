@@ -20,7 +20,7 @@ func (dc *DomainConfig) Enroll() error {
 	}
 	a.GetConfig().AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
 	ctx := common.New(dlog, context.Background())
-	hw, err := hardware.Gather()
+	hw, err := hardware.Gather(ctx)
 	if err != nil {
 		return err
 	}
