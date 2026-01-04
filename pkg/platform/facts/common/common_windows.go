@@ -10,10 +10,13 @@ import (
 )
 
 func GetWMIValue[T any](class string, constructor func(*cim.WmiInstance) (T, error)) (T, error) {
+	return GetWMIValueNamespace(class, "", constructor)
+}
+
+func GetWMIValueNamespace[T any](class string, namespace string, constructor func(*cim.WmiInstance) (T, error)) (T, error) {
 	var rt T
 	sessionManager := cim.NewWmiSessionManager()
 	defer sessionManager.Dispose()
-	namespace := ""
 
 	session, err := sessionManager.GetLocalSession(namespace)
 	if err != nil {
