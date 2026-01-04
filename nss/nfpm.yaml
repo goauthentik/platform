@@ -20,6 +20,7 @@ contents:
     file_info:
       mode: 0644
     packager: deb
+    expand: true
   - src: ../cache/nss/release/libauthentik_nss.so
     dst: "/usr/lib64/libnss_authentik.so.2"
     file_info:
