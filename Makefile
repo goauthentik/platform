@@ -77,7 +77,7 @@ test-integration:
 	$(MAKE) test TEST_FLAGS=-tags=integration
 
 test-agent:
-	go run -v ./cmd/agent_local/
+	go run -v ./cmd/agent/
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
@@ -115,10 +115,10 @@ cli/%:
 	"$(MAKE)" -C "${TOP}/cmd/cli" $*
 
 sysd/%:
-	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*
+	"$(MAKE)" -C "${TOP}/cmd/sysd" $*
 
 agent/%:
-	"$(MAKE)" -C "${TOP}/cmd/agent_local" $*
+	"$(MAKE)" -C "${TOP}/cmd/agent" $*
 
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*

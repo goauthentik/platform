@@ -12,7 +12,7 @@ license: "MIT"
 scripts:
   postinstall: ./package/linux/postinst.sh
 contents:
-  - src: ../../bin/agent_local/ak-agent
+  - src: ../../bin/agent/ak-agent
     dst: /usr/bin/ak-agent
   - src: ./package/linux/etc/systemd/user/ak-agent.service
     dst: /etc/systemd/user/ak-agent.service

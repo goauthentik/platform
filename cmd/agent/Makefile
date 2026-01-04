@@ -1,6 +1,6 @@
 include ../../common.mk
 
-TARGET := agent_local
+TARGET := agent
 ifeq ($(OS),Windows_NT)
 BINARY_NAME := ak-agent.exe
 else
@@ -43,7 +43,7 @@ package-darwin: clean build
 	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
 	cp "${TOP}/bin/${TARGET}/${BINARY_NAME}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${TOP}/bin/sysd/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
 	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex" || true

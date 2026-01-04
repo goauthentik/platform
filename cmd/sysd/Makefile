@@ -1,6 +1,6 @@
 include ../../common.mk
 
-TARGET := agent_system
+TARGET := sysd
 ifeq ($(OS),Windows_NT)
 BINARY_NAME := ak-sysd.exe
 else

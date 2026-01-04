@@ -31,7 +31,7 @@ endef
 
 define go_generate_resources
 	go tool goversioninfo \
-		-icon="${TOP}/cmd/agent_local/package/windows/resources/icon.ico" \
+		-icon="${TOP}/cmd/agent/package/windows/resources/icon.ico" \
 		-company="Authentik Security Inc." \
 		-copyright="2025 Authentik Security Inc." \
 		-file-version=${VERSION} \

@@ -40,10 +40,10 @@
         <CreateFolder Directory="sysd" Subdirectory="runtime" />
         <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)" />
         <File Id="ak_sysd"
-              Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
+              Source="$(env.ROOT)/bin/sysd/ak-sysd.exe"
               KeyPath="true" />
         <File Id="ak_sysd_config"
-              Source="$(env.ROOT)/cmd/agent_system/package/windows/config.json" />
+              Source="$(env.ROOT)/cmd/sysd/package/windows/config.json" />
 
         <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\authentik" />
         <util:EventSource Log="authentik"
@@ -71,7 +71,7 @@
                           Name="authentik User Service"
                           EventMessageFile="[System64Folder]EventCreate.exe"/>
         <File Id="ak_agent"
-              Source="$(env.ROOT)/bin/agent_local/ak-agent.exe"
+              Source="$(env.ROOT)/bin/agent/ak-agent.exe"
               KeyPath="true" />
       </Component>
       <Component Id="cli" Bitness="always64" Directory="cli">
