@@ -20,8 +20,6 @@ func TestGather(t *testing.T) {
 		assert.NotEqual(t, "", proc.Name, proc)
 		assert.GreaterOrEqual(t, proc.Id, int32(0), "Process ID should be positive")
 	}
-
-	t.Logf("Found %d processes", len(processes))
 }
 
 func TestGatherLinux(t *testing.T) {

@@ -13,8 +13,8 @@ func TestVendor_Windows(t *testing.T) {
 	}
 
 	v := Gather()
-	assert.NotEqual(t, "", v["rdp_cert_fingerprint"])
-	assert.NotEqual(t, "", v["ssh_host_keys"])
+	assert.NotEqual(t, v["rdp_cert_fingerprint"], "")
+	assert.NotEqual(t, v["ssh_host_keys"], "")
 }
 
 func TestVendor_Linux(t *testing.T) {
@@ -23,6 +23,6 @@ func TestVendor_Linux(t *testing.T) {
 	}
 
 	v := Gather()
-	assert.Equal(t, "", v["rdp_cert_fingerprint"])
-	assert.NotEqual(t, "", v["ssh_host_keys"])
+	assert.Equal(t, v["rdp_cert_fingerprint"], "")
+	assert.NotEqual(t, v["ssh_host_keys"], "")
 }

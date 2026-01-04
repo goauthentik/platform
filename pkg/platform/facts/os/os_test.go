@@ -5,30 +5,18 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"goauthentik.io/api/v3"
 )
 
 func TestGather(t *testing.T) {
 	info, err := Gather()
-	if err != nil {
-		t.Fatalf("Failed to gather OS info: %v", err)
-	}
+	assert.NoError(t, err)
 
-	if info.Arch == "" {
-		t.Error("Architecture is empty")
-	}
-
-	if info.Family == "" {
-		t.Error("OS family is empty")
-	}
-
-	if !slices.Contains(api.AllowedDeviceFactsOSFamilyEnumValues, info.Family) {
-		t.Errorf("Invalid OS Family %s", info.Family)
-	}
-
-	if info.Arch != runtime.GOARCH {
-		t.Errorf("Expected arch %s, got %s", runtime.GOARCH, info.Arch)
-	}
+	assert.NotEqual(t, info.Arch, "")
+	assert.NotEqual(t, info.Family, "")
+	assert.True(t, slices.Contains(api.AllowedDeviceFactsOSFamilyEnumValues, info.Family))
+	assert.Equal(t, info.Arch, runtime.GOARCH)
 }
 
 func TestGatherLinux(t *testing.T) {
@@ -37,17 +25,10 @@ func TestGatherLinux(t *testing.T) {
 	}
 
 	info, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather OS info on Linux: %v", err)
-	}
+	assert.NoError(t, err)
 
-	if info.Family != "linux" {
-		t.Errorf("Expected family 'linux', got '%s'", info.Family)
-	}
-
-	if *info.Name == "" {
-		t.Error("OS name should not be empty on Linux")
-	}
+	assert.Equal(t, info.Family, api.DEVICEFACTSOSFAMILY_LINUX)
+	assert.NotEqual(t, info.GetName(), "")
 }
 
 func TestGatherWindows(t *testing.T) {
@@ -56,15 +37,8 @@ func TestGatherWindows(t *testing.T) {
 	}
 
 	info, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather OS info on Windows: %v", err)
-	}
+	assert.NoError(t, err)
 
-	if info.Family != "windows" {
-		t.Errorf("Expected family 'windows', got '%s'", info.Family)
-	}
-
-	if *info.Name == "" {
-		t.Error("OS name should not be empty on Windows")
-	}
+	assert.Equal(t, info.Family, api.DEVICEFACTSOSFAMILY_WINDOWS)
+	assert.NotEqual(t, info.GetName(), "")
 }
