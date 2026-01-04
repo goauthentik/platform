@@ -3,11 +3,10 @@
 package disk
 
 import (
-	"os/exec"
-	"strings"
-
+	"github.com/microsoft/wmi/server23h2/root/cimv2/security/microsoftvolumeencryption"
 	"github.com/shirou/gopsutil/v4/disk"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gather() ([]api.DiskRequest, error) {
@@ -41,13 +40,31 @@ func gather() ([]api.DiskRequest, error) {
 }
 
 func isEncrypted(mountpoint string) bool {
-	// Use manage-bde to check BitLocker status
-	cmd := exec.Command("manage-bde", "-status", mountpoint)
-	output, err := cmd.Output()
+	vol, err := common.GetWMIValueNamespace("Win32_EncryptableVolume", `root\CIMV2\Security\MicrosoftVolumeEncryption`, microsoftvolumeencryption.
+		NewWin32_EncryptableVolumeEx1)
 	if err != nil {
 		return false
 	}
-
-	return strings.Contains(string(output), "Protection On") ||
-		strings.Contains(string(output), "Fully Encrypted")
+	for _, vol := range vol {
+		if dl, err := vol.GetPropertyDriveLetter(); err != nil || dl != mountpoint {
+			continue
+		}
+		encMethod, err := vol.GetPropertyEncryptionMethod()
+		if err != nil {
+			continue
+		}
+		// https://learn.microsoft.com/en-us/windows/win32/secprov/win32-encryptablevolume#properties
+		// 0 meaning `NOT ENCRYPTED`, `The volume is not encrypted, nor has encryption begun.`
+		if encMethod == 0 {
+			return false
+		}
+		protectionStatus, err := vol.GetPropertyProtectionStatus()
+		if err != nil {
+			continue
+		}
+		if protectionStatus != 1 {
+			return false
+		}
+	}
+	return true
 }

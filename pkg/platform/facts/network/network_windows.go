@@ -5,10 +5,11 @@ package network
 import (
 	"net"
 	"os"
-	"os/exec"
-	"strings"
 
+	"github.com/microsoft/wmi/server2019/root/cimv2"
+	"github.com/microsoft/wmi/server2019/root/standardcimv2"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gather() (api.DeviceFactsRequestNetwork, error) {
@@ -28,13 +29,17 @@ func gather() (api.DeviceFactsRequestNetwork, error) {
 }
 
 func isFirewallEnabled() bool {
-	cmd := exec.Command("netsh", "advfirewall", "show", "allprofiles", "state")
-	output, err := cmd.Output()
+	fw, err := common.GetWMIValueNamespace("MSFT_NetFirewallProfile", `root\StandardCimv2`, standardcimv2.NewMSFT_NetFirewallProfileEx1)
 	if err != nil {
 		return false
 	}
+	for _, prof := range fw {
+		if en, err := prof.GetPropertyEnabled(); err != nil || en != 1 {
+			return false
+		}
+	}
 
-	return strings.Contains(string(output), "State                                 ON")
+	return true
 }
 
 func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
@@ -87,29 +92,21 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 func getDNSServers(interfaceName string) []string {
 	var dnsServers []string
 
-	cmd := exec.Command("netsh", "interface", "ip", "show", "dns", interfaceName)
-	output, err := cmd.Output()
+	adapterConf, err := common.GetWMIValue("Win32_NetworkAdapterConfiguration", cimv2.NewWin32_NetworkAdapterConfigurationEx1)
 	if err != nil {
-		// Fallback to global DNS servers
-		cmd = exec.Command("nslookup", ".")
-		output, err = cmd.Output()
+		return dnsServers
+	}
+
+	for _, adp := range adapterConf {
+		if sn, err := adp.GetPropertyServiceName(); err != nil || sn != interfaceName {
+			continue
+		}
+		interfaceServers, err := adp.GetPropertyDNSServerSearchOrder()
 		if err != nil {
 			return dnsServers
 		}
+
+		return interfaceServers
 	}
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.Contains(line, "DNS Servers") || strings.Contains(line, "Server:") {
-			continue
-		}
-
-		// Look for IP addresses
-		if net.ParseIP(strings.TrimSpace(line)) != nil {
-			dnsServers = append(dnsServers, strings.TrimSpace(line))
-		}
-	}
-
 	return dnsServers
 }
