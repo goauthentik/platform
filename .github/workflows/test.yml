@@ -91,3 +91,87 @@ jobs:
           cache: "npm"
           cache-dependency-path: "${{ matrix.target }}/package-lock.json"
       - run: make ${{ matrix.target }}/lint
+  test_go_int:
+    name: Test (integration)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+      - uses: goauthentik/action-setup-authentik@6e72730de9cf3b3c710d93a21c0e485daa5dfa65 # v1.4
+        id: setup
+        with:
+          version: beta
+          sentry_env: goauthentik-platform-ci
+          blueprints_path: ./hack/authentik/blueprints
+          wait: true
+      - env:
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
+        run: |
+          ./hack/authentik/wait.sh
+      - run: |
+          make test-integration
+      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        if: ${{ always() }}
+        with:
+          paths: ${{ github.workspace }}/junit.xml
+          show: "fail"
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-integration
+          files: ${{ github.workspace }}/coverage.txt
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-integration
+          files: ${{ github.workspace }}/junit.xml
+          report_type: test_results
+  test_go_e2e:
+    name: Test (e2e)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+      - uses: goauthentik/action-setup-authentik@6e72730de9cf3b3c710d93a21c0e485daa5dfa65 # v1.4
+        id: setup
+        with:
+          version: beta
+          sentry_env: goauthentik-platform-ci
+          blueprints_path: ./hack/authentik/blueprints
+          wait: true
+      - env:
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
+        run: |
+          ./hack/authentik/wait.sh
+      - run: |
+          make test-e2e
+      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        if: ${{ always() }}
+        with:
+          paths: ${{ github.workspace }}/junit.xml
+          show: "fail"
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-e2e
+          files: ${{ github.workspace }}/coverage.txt
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-e2e
+          files: ${{ github.workspace }}/junit.xml
+          report_type: test_results
