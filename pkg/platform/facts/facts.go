@@ -3,7 +3,6 @@ package facts
 import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
-	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/platform/facts/disk"
 	"goauthentik.io/platform/pkg/platform/facts/group"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
@@ -11,6 +10,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/os"
 	"goauthentik.io/platform/pkg/platform/facts/process"
 	"goauthentik.io/platform/pkg/platform/facts/user"
+	"goauthentik.io/platform/pkg/platform/facts/vendor"
 )
 
 // Gather collects system information from all subsystems
@@ -59,16 +59,14 @@ func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
 
 	return &api.DeviceFactsRequest{
 		Disks:     disks,
-		Hardware:  *api.NewNullableDeviceFactsRequestHardware(&hw),
+		Hardware:  *api.NewNullableDeviceFactsRequestHardware(hw),
 		Network:   *api.NewNullableDeviceFactsRequestNetwork(&net),
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
 		Users:     users,
 		Groups:    groups,
 		Vendor: map[string]any{
-			"goauthentik.io/platform": map[string]string{
-				"agent_version": meta.FullVersion(),
-			},
+			"goauthentik.io/platform": vendor.Gather(),
 		},
 	}, nil
 }

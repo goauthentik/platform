@@ -13,13 +13,13 @@ import (
 	"goauthentik.io/api/v3"
 )
 
-func gather() (api.DeviceFactsRequestHardware, error) {
+func gather() (*api.DeviceFactsRequestHardware, error) {
 	hardware, err := getSystemProfilerValue()
 	if err != nil {
-		return api.DeviceFactsRequestHardware{}, err
+		return nil, err
 	}
 	memoryBytes := getTotalMemory(hardware)
-	return api.DeviceFactsRequestHardware{
+	return &api.DeviceFactsRequestHardware{
 		Manufacturer: api.PtrString("Apple Inc."),
 		Model:        api.PtrString(hardware.SPHardwareDataType[0].Model),
 		Serial:       hardware.SPHardwareDataType[0].SerialNumber,

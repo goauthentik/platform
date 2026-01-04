@@ -5,25 +5,19 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGather(t *testing.T) {
 	groups, err := Gather()
-	if err != nil {
-		t.Fatalf("Failed to gather group info: %v", err)
-	}
+	assert.NoError(t, err)
 
-	if len(groups) == 0 {
-		t.Skip("No groups found, skipping test")
-	}
+	assert.Greater(t, len(groups), 0)
 
 	for _, group := range groups {
-		if *group.Name == "" {
-			t.Error("Group name should not be empty")
-		}
+		assert.NotEqual(t, group.GetName(), "")
 	}
-
-	t.Logf("Found %d groups", len(groups))
 }
 
 func TestGatherDarwin(t *testing.T) {
@@ -32,19 +26,15 @@ func TestGatherDarwin(t *testing.T) {
 	}
 
 	groups, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather group info on macOS: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// macOS specific tests
 	expectedGroups := []string{"admin", "staff", "wheel"}
 	foundExpected := make(map[string]bool)
 
 	for _, group := range groups {
-		// macOS GIDs are typically numeric
-		if group.Id != "" && !isNumeric(group.Id) {
-			t.Errorf("Expected numeric GID on macOS, got: %s for %s", group.Id, *group.Name)
-		}
+		assert.NotEqual(t, group.GetId(), "")
+		assert.True(t, isNumeric(group.Id))
 
 		// Check for common macOS groups
 		for _, expected := range expectedGroups {
@@ -67,9 +57,7 @@ func TestGatherLinux(t *testing.T) {
 	}
 
 	groups, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather group info on Linux: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// Linux specific tests
 	expectedGroups := []string{"root", "users", "sudo"}
@@ -79,15 +67,11 @@ func TestGatherLinux(t *testing.T) {
 	for _, group := range groups {
 		if *group.Name == "root" {
 			foundRoot = true
-			if group.Id != "0" {
-				t.Errorf("Expected root GID to be 0, got: %s", group.Id)
-			}
+			assert.Equal(t, group.GetId(), "0")
 		}
 
-		// Linux GIDs should be numeric
-		if group.Id != "" && !isNumeric(group.Id) {
-			t.Errorf("Expected numeric GID on Linux, got: %s", group.Id)
-		}
+		assert.NotEqual(t, group.GetId(), "")
+		assert.True(t, isNumeric(group.Id))
 
 		// Check for common Linux groups
 		for _, expected := range expectedGroups {
@@ -97,9 +81,7 @@ func TestGatherLinux(t *testing.T) {
 		}
 	}
 
-	if !foundRoot {
-		t.Error("Expected to find root group on Linux")
-	}
+	assert.True(t, foundRoot)
 }
 
 func TestGatherWindows(t *testing.T) {
@@ -108,19 +90,15 @@ func TestGatherWindows(t *testing.T) {
 	}
 
 	groups, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather group info on Windows: %v", err)
-	}
+	assert.NoError(t, err)
 
 	// Windows specific tests
 	expectedGroups := []string{"Administrators", "Users"}
 	foundExpected := make(map[string]bool)
 
 	for _, group := range groups {
-		// Windows SIDs should start with S- (if ID is provided)
-		if group.Id != "" && !strings.HasPrefix(group.Id, "S-") {
-			t.Logf("Windows group SID doesn't start with 'S-': %s", group.Id)
-		}
+		assert.NotEqual(t, group.GetId(), "")
+		assert.True(t, strings.HasPrefix(group.Id, "S-"))
 
 		// Check for common Windows groups
 		for _, expected := range expectedGroups {
