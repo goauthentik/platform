@@ -14,7 +14,8 @@ ci-build-args:
 	@echo AK_DEPLOY_URL=${AK_DEPLOY_URL}
 
 .PHONY: local-build
-local-build: build-packages
+local-build:
+	mkdir -p ${TOP}/bin
 	docker build \
 		-t ghcr.io/goauthentik/platform-test:${container_ver} \
 		-t xghcr.io/goauthentik/platform-test:local \
