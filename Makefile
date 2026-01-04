@@ -76,7 +76,7 @@ test:
 test-integration:
 	$(MAKE) test GO_TEST_FLAGS=-tags=integration
 
-test-e2e:
+test-e2e: containers/test/local-build
 	$(MAKE) test GO_TEST_FLAGS=-tags=e2e
 
 test-agent:
