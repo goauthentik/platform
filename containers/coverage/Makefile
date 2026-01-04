@@ -22,7 +22,10 @@ local-build:
 .PHONY: build-packages
 build-packages:
 	$(MAKE) -C "${TOP}" agent/package-gnu/linux AK_GO_BUILD_FLAGS=-cover
-	$(MAKE) -C "${TOP}" sysd/package-gnu/linux AK_GO_BUILD_FLAGS=-cover
-	$(MAKE) -C "${TOP}" cli/package-gnu/linux AK_GO_BUILD_FLAGS=-cover
-	$(MAKE) -C "${TOP}" nss/package RUST_BUILD_FLAGS="-C instrument-coverage"
-	$(MAKE) -C "${TOP}" pam/package RUST_BUILD_FLAGS="-C instrument-coverage"
+	$(MAKE) -C "${TOP}" -j$(shell nproc) \
+		sysd/package-gnu/linux \
+		cli/package-gnu/linux \
+		nss/package \
+		pam/package \
+		AK_GO_BUILD_FLAGS=-cover \
+		RUST_BUILD_FLAGS="-C instrument-coverage"
