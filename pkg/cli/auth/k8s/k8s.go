@@ -5,7 +5,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_local/client"
+	"goauthentik.io/platform/pkg/agent/client"
 	"goauthentik.io/platform/pkg/pb"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientauthenticationv1 "k8s.io/client-go/pkg/apis/clientauthentication/v1"

@@ -1,12 +1,12 @@
 package main
 
 import (
-	agentsystem "goauthentik.io/platform/pkg/agent_system/cli"
 	"goauthentik.io/platform/pkg/shared"
+	"goauthentik.io/platform/pkg/sysd/cli"
 )
 
 func main() {
 	shared.Start("ak-platform-agent-system", false, func() {
-		agentsystem.Execute()
+		cli.Execute()
 	})
 }
