@@ -3,62 +3,45 @@
 package user
 
 import (
-	"os/exec"
-	"strings"
-
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gather() ([]api.DeviceUserRequest, error) {
 	var users []api.DeviceUserRequest
 
-	// Try PowerShell first for better results
 	users = getUsersFromPowerShell()
 	return users, nil
+}
+
+type rawUser struct {
+	Name string `json:"Name"`
+	SID  struct {
+		BinaryLength     int    `json:"BinaryLength"`
+		AccountDomainSid string `json:"AccountDomainSid"`
+		Value            string `json:"Value"`
+	} `json:"SID"`
+	FullName string `json:"FullName"`
+	Enabled  bool   `json:"Enabled"`
 }
 
 func getUsersFromPowerShell() []api.DeviceUserRequest {
 	var users []api.DeviceUserRequest
 
-	cmd := exec.Command("powershell", "-Command",
-		"Get-LocalUser | Select-Object Name,SID,FullName,Enabled | ConvertTo-Json")
-	output, err := cmd.Output()
+	rusers, err := common.ExecJSON[[]rawUser]("powershell", "-Command", `Get-LocalUser | Select-Object Name,SID,FullName,Enabled | ConvertTo-Json`)
 	if err != nil {
 		return users
 	}
 
-	// Parse JSON output would be ideal, but for simplicity, let's parse text
-	cmd = exec.Command("powershell", "-Command",
-		"Get-LocalUser | ForEach-Object { \"$($_.Name)|$($_.SID)|$($_.FullName)|$($_.Enabled)\" }")
-	output, err = cmd.Output()
-	if err != nil {
-		return users
-	}
-
-	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
+	for _, rawUser := range rusers {
+		devUser := api.DeviceUserRequest{
+			Id:       rawUser.SID.Value,
+			Username: &rawUser.Name,
 		}
-
-		parts := strings.Split(line, "|")
-		if len(parts) >= 4 {
-			username := strings.TrimSpace(parts[0])
-			sid := strings.TrimSpace(parts[1])
-			fullName := strings.TrimSpace(parts[2])
-
-			userInfo := api.DeviceUserRequest{
-				Id:       sid,
-				Username: api.PtrString(username),
-			}
-			if fullName != "" {
-				userInfo.Name = api.PtrString(fullName)
-			}
-
-			users = append(users, userInfo)
+		if rawUser.FullName != "" {
+			devUser.Name = &rawUser.FullName
 		}
+		users = append(users, devUser)
 	}
-
 	return users
 }

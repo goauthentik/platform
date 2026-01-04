@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/micromdm/plist"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gather() ([]api.DeviceGroupRequest, error) {
@@ -48,14 +48,7 @@ type dscGroupInfo struct {
 func getGroupInfoFromDscl(groupName string) api.DeviceGroupRequest {
 	groupInfo := api.DeviceGroupRequest{Name: api.PtrString(groupName)}
 
-	cmd := exec.Command("dscl", "-plist", ".", "read", "/Groups/"+groupName, "PrimaryGroupID")
-
-	output, err := cmd.Output()
-	if err != nil {
-		return groupInfo
-	}
-	dp := dscGroupInfo{}
-	err = plist.Unmarshal(output, &dp)
+	dp, err := common.ExecPlist[dscGroupInfo]("dscl", "-plist", ".", "read", "/Groups/"+groupName, "PrimaryGroupID")
 	if err != nil {
 		return groupInfo
 	}

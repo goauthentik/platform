@@ -3,7 +3,6 @@
 package hardware
 
 import (
-	"encoding/json"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -11,10 +10,20 @@ import (
 
 	"github.com/shirou/gopsutil/v4/mem"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
+type ProfilerSPHardwareDataType struct {
+	SPHardwareDataType []struct {
+		SerialNumber   string `json:"serial_number"`
+		Model          string `json:"machine_model"`
+		ChipType       string `json:"chip_type"`
+		PhysicalMemory string `json:"physical_memory"`
+	} `json:"SPHardwareDataType"`
+}
+
 func gather() (*api.DeviceFactsRequestHardware, error) {
-	hardware, err := getSystemProfilerValue()
+	hardware, err := common.ExecJSON[ProfilerSPHardwareDataType]("system_profiler", "-json", "SPHardwareDataType")
 	if err != nil {
 		return nil, err
 	}
@@ -27,29 +36,6 @@ func gather() (*api.DeviceFactsRequestHardware, error) {
 		CpuCount:     api.PtrInt32(int32(getCPUCores())),
 		MemoryBytes:  api.PtrInt64(int64(memoryBytes)),
 	}, nil
-}
-
-type ProfilerSPHardwareDataType struct {
-	SPHardwareDataType []struct {
-		SerialNumber   string `json:"serial_number"`
-		Model          string `json:"machine_model"`
-		ChipType       string `json:"chip_type"`
-		PhysicalMemory string `json:"physical_memory"`
-	} `json:"SPHardwareDataType"`
-}
-
-func getSystemProfilerValue() (ProfilerSPHardwareDataType, error) {
-	d := ProfilerSPHardwareDataType{}
-	cmd := exec.Command("system_profiler", "-json", "SPHardwareDataType")
-	output, err := cmd.Output()
-	if err != nil {
-		return d, err
-	}
-	err = json.Unmarshal(output, &d)
-	if err != nil {
-		return d, err
-	}
-	return d, nil
 }
 
 func getCPUCores() int {

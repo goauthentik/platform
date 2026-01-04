@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/micromdm/plist"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func gather() ([]api.DeviceUserRequest, error) {
@@ -41,13 +41,7 @@ type dsclUserInfo struct {
 func getUserInfoFromDscl(username string) api.DeviceUserRequest {
 	userInfo := api.DeviceUserRequest{Username: api.PtrString(username)}
 
-	cmd := exec.Command("dscl", "-plist", ".", "read", "/Users/"+username)
-	output, err := cmd.Output()
-	if err != nil {
-		return userInfo
-	}
-	dp := dsclUserInfo{}
-	err = plist.Unmarshal(output, &dp)
+	dp, err := common.ExecPlist[dsclUserInfo]("dscl", "-plist", ".", "read", "/Users/"+username)
 	if err != nil {
 		return userInfo
 	}
