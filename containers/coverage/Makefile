@@ -1,7 +1,5 @@
 include ../../common.mk
 
-base_ver := $(shell cat Dockerfile | grep FROM | awk '{print $$2}' | awk -F: '{print $$2}')
-container_ver := ${base_ver}-ak-${VERSION}
 base := $(shell $(MAKE) -C ${TOP} containers/test/ci-container-tag)
 
 .PHONY: local-build
@@ -10,7 +8,6 @@ local-build:
 	$(MAKE) -C ${TOP} containers/coverage/build-packages
 	mkdir -p ${TOP}/bin
 	docker build \
-		-t ghcr.io/goauthentik/platform-coverage:${container_ver} \
 		-t xghcr.io/goauthentik/platform-coverage:local \
 		--no-cache \
 		--build-arg="AK_PLATFORM_VER=${VERSION}" \
