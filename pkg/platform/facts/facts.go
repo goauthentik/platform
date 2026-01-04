@@ -27,8 +27,7 @@ func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
 		return nil, err
 	}
 
-	log.WithField("area", "network").Debug("Gathering...")
-	net, err := network.Gather()
+	net, err := network.Gather(log.WithField("area", "network"))
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +59,7 @@ func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
 	return &api.DeviceFactsRequest{
 		Disks:     disks,
 		Hardware:  *api.NewNullableDeviceFactsRequestHardware(hw),
-		Network:   *api.NewNullableDeviceFactsRequestNetwork(&net),
+		Network:   *api.NewNullableDeviceFactsRequestNetwork(net),
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
 		Users:     users,

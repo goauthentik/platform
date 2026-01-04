@@ -8,19 +8,23 @@ import (
 	"os/exec"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
 )
 
-func gather() (api.DeviceFactsRequestNetwork, error) {
-	hostname, _ := os.Hostname()
+func gather(log *log.Entry) (*api.DeviceFactsRequestNetwork, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
 	firewallEnabled := isFirewallEnabled()
 
 	interfaces, err := getNetworkInterfaces()
 	if err != nil {
-		return api.DeviceFactsRequestNetwork{}, err
+		return nil, err
 	}
 
-	return api.DeviceFactsRequestNetwork{
+	return &api.DeviceFactsRequestNetwork{
 		Hostname:        hostname,
 		Interfaces:      interfaces,
 		FirewallEnabled: api.PtrBool(firewallEnabled),

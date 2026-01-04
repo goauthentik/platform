@@ -4,11 +4,12 @@ import (
 	"runtime"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGather(t *testing.T) {
-	info, err := Gather()
+	info, err := Gather(log.WithField("foo", "bar"))
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, info.Hostname, "")
@@ -25,7 +26,7 @@ func TestGatherLinux(t *testing.T) {
 		t.Skip("Skipping Linux-specific test")
 	}
 
-	info, err := gather()
+	info, err := gather(log.WithField("foo", "bar"))
 	assert.NoError(t, err)
 	assert.NotNil(t, info)
 }
@@ -35,7 +36,7 @@ func TestGatherWindows(t *testing.T) {
 		t.Skip("Skipping Windows-specific test")
 	}
 
-	info, err := gather()
+	info, err := gather(log.WithField("foo", "bar"))
 	assert.NoError(t, err)
 	assert.NotNil(t, info)
 }

@@ -13,16 +13,19 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (api.DeviceFactsRequestNetwork, error) {
-	hostname, _ := os.Hostname()
+func gather() (*api.DeviceFactsRequestNetwork, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
 	firewallEnabled := isFirewallEnabled()
 
 	interfaces, err := getNetworkInterfaces()
 	if err != nil {
-		return api.DeviceFactsRequestNetwork{}, err
+		return nil, err
 	}
 
-	return api.DeviceFactsRequestNetwork{
+	return &api.DeviceFactsRequestNetwork{
 		FirewallEnabled: api.PtrBool(firewallEnabled),
 		Hostname:        hostname,
 		Interfaces:      interfaces,
@@ -77,7 +80,10 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			validAddresses = append(validAddresses, ipnet.String())
 		}
 
-		dnsServers := getDNSServers(iface.Index)
+		dnsServers, err := getDNSServers(iface.Index)
+		if err != nil {
+
+		}
 
 		netInterface := api.NetworkInterfaceRequest{
 			DnsServers:      dnsServers,
@@ -92,7 +98,7 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 	return interfaces, nil
 }
 
-func getDNSServers(index int) []string {
+func getDNSServers(index int) ([]string, error) {
 	var dnsServers []string
 
 	adapterConf, err := common.GetWMIValue(
@@ -101,13 +107,13 @@ func getDNSServers(index int) []string {
 		"InterfaceIndex", strconv.Itoa(index),
 	)
 	if err != nil {
-		return dnsServers
+		return dnsServers, err
 	}
 
 	interfaceServers, err := adapterConf[0].GetPropertyDNSServerSearchOrder()
 	if err != nil {
-		return dnsServers
+		return dnsServers, err
 	}
 
-	return interfaceServers
+	return interfaceServers, nil
 }
