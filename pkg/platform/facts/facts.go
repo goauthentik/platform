@@ -59,7 +59,7 @@ func Gather(log *log.Entry) (*api.DeviceFactsRequest, error) {
 
 	return &api.DeviceFactsRequest{
 		Disks:     disks,
-		Hardware:  *api.NewNullableDeviceFactsRequestHardware(&hw),
+		Hardware:  *api.NewNullableDeviceFactsRequestHardware(hw),
 		Network:   *api.NewNullableDeviceFactsRequestNetwork(&net),
 		Os:        *api.NewNullableDeviceFactsRequestOs(&osInfo),
 		Processes: procs,
