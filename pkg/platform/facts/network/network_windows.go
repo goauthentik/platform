@@ -104,13 +104,10 @@ func getDNSServers(index int) []string {
 		return dnsServers
 	}
 
-	for _, adp := range adapterConf {
-		interfaceServers, err := adp.GetPropertyDNSServerSearchOrder()
-		if err != nil {
-			return dnsServers
-		}
-
-		return interfaceServers
+	interfaceServers, err := adapterConf[0].GetPropertyDNSServerSearchOrder()
+	if err != nil {
+		return dnsServers
 	}
-	return dnsServers
+
+	return interfaceServers
 }

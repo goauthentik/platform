@@ -58,6 +58,7 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 		if iface.HardwareAddr.String() == "" {
 			continue
 		}
+		validAddresses := []string{}
 		for _, addr := range addrs {
 			ipnet, ok := addr.(*net.IPNet)
 			if !ok {
@@ -67,18 +68,18 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			if ipnet.IP.IsLoopback() {
 				continue
 			}
-
-			dnsServers := getDNSServers(iface.Name)
-
-			netInterface := api.NetworkInterfaceRequest{
-				DnsServers:      dnsServers,
-				HardwareAddress: iface.HardwareAddr.String(),
-				IpAddresses:     []string{ipnet.String()},
-				Name:            iface.Name,
-			}
-
-			interfaces = append(interfaces, netInterface)
+			validAddresses = append(validAddresses, ipnet.String())
 		}
+		dnsServers := getDNSServers(iface.Name)
+
+		netInterface := api.NetworkInterfaceRequest{
+			DnsServers:      dnsServers,
+			HardwareAddress: iface.HardwareAddr.String(),
+			IpAddresses:     validAddresses,
+			Name:            iface.Name,
+		}
+
+		interfaces = append(interfaces, netInterface)
 	}
 
 	return interfaces, nil
