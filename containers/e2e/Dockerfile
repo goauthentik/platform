@@ -1,5 +1,4 @@
-ARG BASE
-FROM ${BASE}
+FROM xghcr.io/goauthentik/platform-test:local
 
 RUN --mount=type=bind,target=/build/bin,src=./bin \
     dpkg -i /build/bin/agent_system/authentik-sysd_${AK_PLATFORM_VER}_${AK_PLATFORM_ARCH}.deb && \

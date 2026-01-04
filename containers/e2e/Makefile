@@ -1,7 +1,5 @@
 include ../../common.mk
 
-base := $(shell $(MAKE) -C ${TOP} containers/test/ci-container-tag)
-
 .PHONY: local-build
 local-build:
 	$(MAKE) -C ${TOP} containers/test/local-build
@@ -12,7 +10,6 @@ local-build:
 		--no-cache \
 		--build-arg="AK_PLATFORM_VER=${VERSION}" \
 		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \
-		--build-arg="BASE=${base}" \
 		-f "${PWD}/Dockerfile" \
 		${TOP}
 
