@@ -16,6 +16,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/events"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,6 +27,10 @@ import (
 )
 
 const ID = "session"
+
+const (
+	TopicSessionOpened = "sysd.session.opened"
+)
 
 type Server struct {
 	pb.UnimplementedSessionManagerServer
@@ -210,6 +215,9 @@ func (ss *Server) OpenSession(ctx context.Context, req *pb.OpenSessionRequest) (
 	sess.PPID = req.Ppid
 	sess.LocalSocket = req.LocalSocket
 	ss.AddSession(sess)
+	ss.ctx.Bus().DispatchEvent(TopicSessionOpened, events.NewEvent(ctx, map[string]any{
+		"pid": sess.PID,
+	}))
 	return &pb.OpenSessionResponse{
 		Success:   true,
 		SessionId: sess.ID,

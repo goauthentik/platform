@@ -1,7 +1,6 @@
 package agentstarter
 
 import (
-	"context"
 	"errors"
 	"os"
 	"time"
@@ -10,7 +9,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/vnd/fleet/orbit/pkg/execuser"
 	userpkg "goauthentik.io/platform/vnd/fleet/orbit/pkg/user"
 	"google.golang.org/grpc"
@@ -21,20 +22,23 @@ const ID = "agent_starter"
 type Server struct {
 	log *log.Entry
 
-	ctx     context.Context
+	ctx     component.Context
 	started bool
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log:     ctx.Log(),
-		ctx:     ctx.Context(),
+		ctx:     ctx,
 		started: false,
 	}
 	return srv, nil
 }
 
 func (as *Server) Start() error {
+	as.ctx.Bus().AddEventListener(session.TopicSessionOpened, func(ev *events.Event) {
+		go as.start()
+	})
 	go as.start()
 	return nil
 }
@@ -51,12 +55,12 @@ func (as *Server) start() {
 	}
 	for {
 		select {
-		case <-as.ctx.Done():
+		case <-as.ctx.Context().Done():
 			return
 		default:
 			_ = retry.Do(
 				as.startSingle,
-				retry.Context(as.ctx),
+				retry.Context(as.ctx.Context()),
 				retry.DelayType(retry.FixedDelay),
 				retry.Delay(3*time.Second),
 				retry.OnRetry(func(attempt uint, err error) {
@@ -79,14 +83,17 @@ func (as *Server) agentExec() pstr.PlatformString {
 	}
 }
 
-func (as *Server) startSingle() error {
+func (as *Server) agentExecOpts() []execuser.Option {
 	opts := []execuser.Option{
 		execuser.WithEnv("AK_AGENT_SUPERVISED", "true"),
 	}
 	if config.Manager().Get().Debug {
 		opts = append(opts, execuser.WithEnv("AK_AGENT_DEBUG", "true"))
 	}
+	return opts
+}
 
+func (as *Server) startSingle() error {
 	loggedInUser, err := userpkg.UserLoggedInViaGui()
 	if err != nil {
 		as.log.WithError(err).Debug("desktop.IsUserLoggedInGui")
@@ -96,6 +103,7 @@ func (as *Server) startSingle() error {
 		as.log.Debug("No GUI user found, skipping ak-agent start")
 		return nil
 	}
+	opts := as.agentExecOpts()
 	if *loggedInUser != "" {
 		as.log.WithField("user", *loggedInUser).Debug("Found GUI user, attempting ak-agent start")
 		opts = append(opts, execuser.WithUser(*loggedInUser))
