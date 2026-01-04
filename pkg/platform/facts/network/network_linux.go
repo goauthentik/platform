@@ -95,6 +95,9 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			}
 			validAddresses = append(validAddresses, ipnet.String())
 		}
+		if len(validAddresses) < 1 {
+			continue
+		}
 		dnsServers := getDNSServers()
 
 		netInterface := api.NetworkInterfaceRequest{

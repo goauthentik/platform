@@ -79,10 +79,13 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			}
 			validAddresses = append(validAddresses, ipnet.String())
 		}
+		if len(validAddresses) < 1 {
+			continue
+		}
 
 		dnsServers, err := getDNSServers(iface.Index)
 		if err != nil {
-
+			dnsServers = []string{}
 		}
 
 		netInterface := api.NetworkInterfaceRequest{
