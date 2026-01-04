@@ -3,53 +3,33 @@
 package os
 
 import (
-	"os/exec"
 	"runtime"
 	"strings"
 
 	"goauthentik.io/api/v3"
+	"golang.org/x/sys/windows/registry"
 )
 
 func gather() (api.DeviceFactsRequestOs, error) {
-	name := getWindowsProductName()
-	version := getWindowsVersion()
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion`, registry.READ)
+	if err != nil {
+		return api.DeviceFactsRequestOs{}, err
+	}
+
+	productName, _, err := k.GetStringValue("ProductName")
+	if err != nil {
+		return api.DeviceFactsRequestOs{}, err
+	}
+	productName = strings.Replace(productName, "Windows", "", 1)
+	version, _, err := k.GetStringValue("LCUVer")
+	if err != nil {
+		return api.DeviceFactsRequestOs{}, err
+	}
 
 	return api.DeviceFactsRequestOs{
 		Arch:    runtime.GOARCH,
 		Family:  api.DEVICEFACTSOSFAMILY_WINDOWS,
-		Name:    name,
-		Version: version,
+		Name:    api.PtrString(strings.TrimSpace(productName)),
+		Version: api.PtrString(strings.TrimSpace(version)),
 	}, nil
-}
-
-func getWindowsProductName() *string {
-	cmd := exec.Command("powershell", "-Command",
-		`(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').ProductName`)
-	output, err := cmd.Output()
-	if err != nil {
-		return nil
-	}
-	return api.PtrString(strings.TrimSpace(string(output)))
-}
-
-func getWindowsVersion() *string {
-	// Try PowerShell for version info
-	cmd := exec.Command("powershell", "-Command",
-		`(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').ReleaseId`)
-	output, err := cmd.Output()
-	if err == nil && strings.TrimSpace(string(output)) != "" {
-		releaseId := strings.TrimSpace(string(output))
-
-		// Get build number
-		cmd = exec.Command("powershell", "-Command",
-			`(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').CurrentBuild`)
-		buildOutput, buildErr := cmd.Output()
-		if buildErr == nil {
-			build := strings.TrimSpace(string(buildOutput))
-			return api.PtrString(releaseId + " (Build " + build + ")")
-		}
-
-		return api.PtrString(releaseId)
-	}
-	return nil
 }
