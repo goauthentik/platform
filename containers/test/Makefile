@@ -20,4 +20,14 @@ local-build:
 		-t xghcr.io/goauthentik/platform-test:local \
 		--no-cache \
 		--build-arg="AK_PLATFORM_VER=${VERSION}" \
-		.
+		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \
+		-f "${PWD}/Dockerfile" \
+		${TOP}
+
+.PHONY: build-packages
+build-packages:
+	$(MAKE) -C "${TOP}" agent/package-gnu/linux AK_GO_BUILD_FLAGS=-cover
+	$(MAKE) -C "${TOP}" sysd/package-gnu/linux AK_GO_BUILD_FLAGS=-cover
+	$(MAKE) -C "${TOP}" cli/package-gnu/linux AK_GO_BUILD_FLAGS=-cover
+	$(MAKE) -C "${TOP}" nss/package RUST_BUILD_FLAGS="-C instrument-coverage"
+	$(MAKE) -C "${TOP}" pam/package RUST_BUILD_FLAGS="-C instrument-coverage"

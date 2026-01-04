@@ -17,9 +17,6 @@ build:
 		--verbose \
 		--release
 
-build-coverage:
-	$(MAKE) -C "${PWD}" build RUST_BUILD_FLAGS="-C instrument-coverage"
-
 test:
 	cargo test --verbose
 
