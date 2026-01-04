@@ -1,3 +1,5 @@
+//go:build e2e
+
 package e2e
 
 import (
@@ -7,9 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/docker/docker/api/types/container"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/exec"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 func join(t *testing.T, tc testcontainers.Container) string {
@@ -45,6 +49,31 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 	rc, b := ExecCommand(t, co, []string{"bash", "-c", cmd}, options...)
 	assert.Equal(t, 0, rc, b)
 	return b
+}
+
+func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest {
+	return testcontainers.GenericContainerRequest{
+		ContainerRequest: testcontainers.ContainerRequest{
+			Image: "xghcr.io/goauthentik/platform-test:local",
+			ConfigModifier: func(c *container.Config) {
+				c.User = "root"
+			},
+			HostConfigModifier: func(hc *container.HostConfig) {
+				hc.Privileged = true
+				hc.CgroupnsMode = container.CgroupnsModeHost
+				hc.Binds = []string{
+					"/sys/fs/cgroup:/sys/fs/cgroup:rw",
+				}
+			},
+			LogConsumerCfg: &testcontainers.LogConsumerConfig{
+				Consumers: []testcontainers.LogConsumer{
+					&StdoutLogConsumer{T: t},
+				},
+			},
+			WaitingFor: wait.ForExec([]string{"systemctl", "status"}),
+		},
+		Started: true,
+	}
 }
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout

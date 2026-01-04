@@ -13,19 +13,12 @@ import (
 func Test_Auth(t *testing.T) {
 	t.Skip()
 	net, err := network.New(t.Context(), network.WithAttachable())
+	defer testcontainers.CleanupNetwork(t, net)
 	assert.NoError(t, err)
-	testcontainers.CleanupNetwork(t, net)
 
-	req := testcontainers.ContainerRequest{
-		Image:      "xghcr.io/goauthentik/platform-test:local",
-		Entrypoint: []string{"/bin/bash", "-c", "sleep infinity"},
-	}
-	tc, err := testcontainers.GenericContainer(t.Context(), testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
+	tc, err := testcontainers.GenericContainer(t.Context(), endpointTestContainer(t))
+	defer testcontainers.CleanupContainer(t, tc)
 	assert.NoError(t, err)
-	testcontainers.CleanupContainer(t, tc)
 
 	assert.NoError(t, tc.Start(t.Context()))
 
