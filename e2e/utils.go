@@ -55,6 +55,11 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest {
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
+	localCoverageDir := filepath.Join(cwd, "/coverage")
+	err = os.MkdirAll(filepath.Join(localCoverageDir, "cli"), 0o700)
+	assert.NoError(t, err)
+	err = os.MkdirAll(filepath.Join(localCoverageDir, "ak-sysd"), 0o700)
+	assert.NoError(t, err)
 
 	return testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
@@ -62,12 +67,15 @@ func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest 
 			ConfigModifier: func(c *container.Config) {
 				c.User = "root"
 			},
+			Env: map[string]string{
+				"GOCOVERDIR": "/tmp/ak-coverage/cli",
+			},
 			HostConfigModifier: func(hc *container.HostConfig) {
 				hc.Privileged = true
 				hc.CgroupnsMode = container.CgroupnsModeHost
 				hc.Binds = []string{
 					"/sys/fs/cgroup:/sys/fs/cgroup:rw",
-					fmt.Sprintf("%s:/tmp/ak-coverage", filepath.Join(cwd, "/coverage")),
+					fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir),
 				}
 			},
 			LogConsumerCfg: &testcontainers.LogConsumerConfig{
