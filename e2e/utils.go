@@ -54,9 +54,12 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 }
 
 func testMachine(t *testing.T) testcontainers.Container {
-	cwd, err := os.Getwd()
-	assert.NoError(t, err)
-	localCoverageDir := filepath.Join(cwd, "/coverage")
+	localCoverageDir := filepath.Join(os.Getenv("AK_PLATFORM_DEV_CONTAINER"), "/coverage")
+	if _, set := os.LookupEnv("LOCAL_WORKSPACE"); !set {
+		cwd, err := os.Getwd()
+		assert.NoError(t, err)
+		localCoverageDir = filepath.Join(cwd, "/coverage")
+	}
 
 	req := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
@@ -90,28 +93,17 @@ func testMachine(t *testing.T) testcontainers.Container {
 
 	// Subdirectories we save coverage in
 	coverageSub := []string{"cli", "ak-sysd", "rs"}
-	// If we're in a devcontainer we can't use a bind mount for coverage data, hence use a tmpfs mount
-	_, inDevContainer := os.LookupEnv("AK_PLATFORM_DEV_CONTAINER")
-	if inDevContainer {
-		req.Tmpfs = map[string]string{}
-		for _, sub := range coverageSub {
-			req.Tmpfs[fmt.Sprintf("/tmp/ak-coverage/%s", sub)] = "size=100m"
-		}
-	} else {
-		fmt.Println("foob")
-		fmt.Printf("'%+v'\n", localCoverageDir)
-		for _, sub := range coverageSub {
-			err = os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o700)
-			assert.NoError(t, err)
-		}
+	for _, sub := range coverageSub {
+		err := os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o700)
+		assert.NoError(t, err)
+	}
 
-		cfm := req.HostConfigModifier
-		req.HostConfigModifier = func(hc *container.HostConfig) {
-			fmt.Printf("'%+v'\n", hc)
-			cfm(hc)
-			hc.Binds = append(hc.Binds, fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir))
-			fmt.Printf("'%+v'\n", hc)
-		}
+	cfm := req.HostConfigModifier
+	req.HostConfigModifier = func(hc *container.HostConfig) {
+		fmt.Printf("'%+v'\n", hc)
+		cfm(hc)
+		hc.Binds = append(hc.Binds, fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir))
+		fmt.Printf("'%+v'\n", hc)
 	}
 
 	tc, err := testcontainers.GenericContainer(t.Context(), req)

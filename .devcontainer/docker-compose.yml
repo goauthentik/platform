@@ -8,8 +8,6 @@ services:
       - ../..:/workspaces:cached
     network_mode: service:test-machine
     command: sleep infinity
-    environment:
-      AK_PLATFORM_DEV_CONTAINER: "true"
   test-machine:
     image: xghcr.io/goauthentik/platform-test:local
     privileged: true
