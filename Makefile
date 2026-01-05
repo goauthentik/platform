@@ -78,6 +78,10 @@ test-integration:
 
 test-e2e: containers/e2e/local-build
 	$(MAKE) test GO_TEST_FLAGS=-tags=e2e
+	go tool covdata textfmt \
+		-i ${PWD}/e2e/coverage/ \
+		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
+		-o ${PWD}/coverage_in_container.txt
 
 test-agent:
 	go run -v ./cmd/agent_local/
