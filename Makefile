@@ -78,6 +78,9 @@ test-integration:
 
 test-e2e: containers/e2e/local-build
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+	"$(MAKE)" test-e2e-convert
+
+test-e2e-convert:
 	go tool covdata textfmt \
 		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
