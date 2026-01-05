@@ -24,5 +24,7 @@ func Test_Directory_List(t *testing.T) {
 	output := MustExec(t, tc, "getent passwd")
 	t.Log(output)
 
-	MustExec(t, tc, "journalctl -u ak-sysd")
+	passwd := MustExec(t, tc, "getent passwd")
+	assert.Contains(t, passwd, "akadmin")
+	assert.Contains(t, passwd, "authentik Default Admin")
 }

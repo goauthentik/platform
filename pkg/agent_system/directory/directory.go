@@ -37,16 +37,16 @@ func NewServer(ctx component.Context) (component.Component, error) {
 		log: ctx.Log(),
 		ctx: ctx,
 	}
+	srv.ctx.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
+		if srv.cancel != nil {
+			srv.cancel()
+		}
+		srv.startFetch()
+	})
 	return srv, nil
 }
 
 func (directory *Server) Start() error {
-	directory.ctx.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
-		if directory.cancel != nil {
-			directory.cancel()
-		}
-		go directory.startFetch()
-	})
 	go directory.startFetch()
 	return nil
 }

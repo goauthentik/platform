@@ -6,6 +6,8 @@ import (
 	"github.com/pkg/errors"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/events"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -39,6 +41,9 @@ func (ctrl *Server) DomainEnroll(ctx context.Context, req *pb.DomainEnrollReques
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to save domain")
 	}
+	ctrl.ctx.Bus().DispatchEvent(cfgmgr.TopicConfigChanged, events.NewEvent(ctx, map[string]any{
+		"type": cfgmgr.ConfigChangedAdded,
+	}))
 	return &pb.DomainEnrollResponse{}, nil
 }
 
