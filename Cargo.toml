@@ -19,7 +19,7 @@ name = "log"
 [dependencies]
 cxx = "1.0.192"
 hyper-util = "0.1.19"
-libc = "0.2.178"
+libc = "0.2.179"
 log = "0.4.29"
 prost = "0.14"
 prost-types = "0.14"
