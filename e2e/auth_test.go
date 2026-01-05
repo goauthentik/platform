@@ -16,9 +16,7 @@ func Test_Auth(t *testing.T) {
 	defer testcontainers.CleanupNetwork(t, net)
 	assert.NoError(t, err)
 
-	tc, err := testcontainers.GenericContainer(t.Context(), endpointTestContainer(t))
-	defer testcontainers.CleanupContainer(t, tc)
-	assert.NoError(t, err)
+	tc := testMachine(t)
 
 	assert.NoError(t, tc.Start(t.Context()))
 

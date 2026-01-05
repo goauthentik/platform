@@ -52,7 +52,7 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 	return b
 }
 
-func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest {
+func testMachine(t *testing.T) testcontainers.Container {
 	req := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image: "xghcr.io/goauthentik/platform-e2e:local",
@@ -74,7 +74,7 @@ func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest 
 			},
 			LogConsumerCfg: &testcontainers.LogConsumerConfig{
 				Consumers: []testcontainers.LogConsumer{
-					&StdoutLogConsumer{T: t},
+					&StdoutLogConsumer{T: t, Prefix: "testMachine"},
 				},
 			},
 			WaitingFor: wait.ForExec([]string{"systemctl", "status"}),
@@ -105,7 +105,14 @@ func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest 
 			hc.Binds = append(hc.Binds, fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir))
 		}
 	}
-	return req
+
+	tc, err := testcontainers.GenericContainer(t.Context(), req)
+	t.Cleanup(func() {
+		testcontainers.CleanupContainer(t, tc)
+	})
+	assert.NoError(t, err)
+
+	return tc
 }
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
