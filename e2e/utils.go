@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -117,35 +116,7 @@ func testMachine(t *testing.T) testcontainers.Container {
 		testcontainers.CleanupContainer(t, tc)
 	})
 	assert.NoError(t, err)
-
-	if inDevContainer {
-		t.Cleanup(func() {
-			copyDirFromContainer(t, tc, "/tmp/ak-coverage", localCoverageDir)
-		})
-	}
-
 	return tc
-}
-
-func copyDirFromContainer(t *testing.T, tc testcontainers.Container, dir string, localBase string) {
-	files := MustExec(t, tc, fmt.Sprintf("cd %s && find . -type f -mindepth 1", dir))
-	err := os.MkdirAll(localBase, 0o700)
-	assert.NoError(t, err)
-	for _, file := range strings.Split(files, "\n") {
-		t.Logf("Copying %s...", file)
-		fileDir := path.Join(localBase, path.Base(file))
-		err := os.MkdirAll(fileDir, 0o700)
-		assert.NoError(t, err)
-
-		rc, err := tc.CopyFileFromContainer(context.Background(), path.Join(dir, file))
-		assert.NoError(t, err)
-
-		outFile, err := os.Create(path.Join(localBase, file))
-		assert.NoError(t, err)
-		defer outFile.Close()
-		_, err = io.Copy(outFile, rc)
-		assert.NoError(t, err)
-	}
 }
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
