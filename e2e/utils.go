@@ -98,6 +98,8 @@ func testMachine(t *testing.T) testcontainers.Container {
 			req.Tmpfs[fmt.Sprintf("/tmp/ak-coverage/%s", sub)] = "size=100m"
 		}
 	} else {
+		fmt.Println("foob")
+		fmt.Printf("'%+v'\n", localCoverageDir)
 		for _, sub := range coverageSub {
 			err = os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o700)
 			assert.NoError(t, err)
@@ -105,8 +107,10 @@ func testMachine(t *testing.T) testcontainers.Container {
 
 		cfm := req.HostConfigModifier
 		req.HostConfigModifier = func(hc *container.HostConfig) {
+			fmt.Printf("'%+v'\n", hc)
 			cfm(hc)
 			hc.Binds = append(hc.Binds, fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir))
+			fmt.Printf("'%+v'\n", hc)
 		}
 	}
 
