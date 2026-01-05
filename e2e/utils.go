@@ -18,9 +18,9 @@ import (
 )
 
 func join(t *testing.T, tc testcontainers.Container) string {
-	ak := "http://authentik:9000"
+	ak := "http://host.docker.internal:9123"
 	if os.Getenv("CI") == "true" {
-		ak = "http://localhost:9000"
+		ak = "http://host.docker.internal:9000"
 	}
 	args := []string{
 		"ak-sysd",
@@ -53,15 +53,7 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 }
 
 func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest {
-	cwd, err := os.Getwd()
-	assert.NoError(t, err)
-	localCoverageDir := filepath.Join(cwd, "/coverage")
-	err = os.MkdirAll(filepath.Join(localCoverageDir, "cli"), 0o700)
-	assert.NoError(t, err)
-	err = os.MkdirAll(filepath.Join(localCoverageDir, "ak-sysd"), 0o700)
-	assert.NoError(t, err)
-
-	return testcontainers.GenericContainerRequest{
+	req := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image: "xghcr.io/goauthentik/platform-e2e:local",
 			ConfigModifier: func(c *container.Config) {
@@ -75,7 +67,9 @@ func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest 
 				hc.CgroupnsMode = container.CgroupnsModeHost
 				hc.Binds = []string{
 					"/sys/fs/cgroup:/sys/fs/cgroup:rw",
-					fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir),
+				}
+				hc.ExtraHosts = []string{
+					"host.docker.internal:host-gateway",
 				}
 			},
 			LogConsumerCfg: &testcontainers.LogConsumerConfig{
@@ -87,6 +81,31 @@ func endpointTestContainer(t *testing.T) testcontainers.GenericContainerRequest 
 		},
 		Started: true,
 	}
+
+	// Subdirectories we save coverage in
+	coverageSub := []string{"cli", "ak-sysd"}
+	// If we're in a devcontainer we can't use a bind mount for coverage data, hence use a tmpfs mount
+	if _, set := os.LookupEnv("AK_PLATFORM_DEV_CONTAINER"); set {
+		req.Tmpfs = map[string]string{}
+		for _, sub := range coverageSub {
+			req.Tmpfs[fmt.Sprintf("/tmp/ak-coverage/%s", sub)] = "size=100m"
+		}
+	} else {
+		cwd, err := os.Getwd()
+		assert.NoError(t, err)
+		localCoverageDir := filepath.Join(cwd, "/coverage")
+		for _, sub := range coverageSub {
+			err = os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o700)
+			assert.NoError(t, err)
+		}
+
+		cfm := req.HostConfigModifier
+		req.HostConfigModifier = func(hc *container.HostConfig) {
+			cfm(hc)
+			hc.Binds = append(hc.Binds, fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir))
+		}
+	}
+	return req
 }
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
