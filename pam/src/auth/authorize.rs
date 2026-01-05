@@ -24,7 +24,13 @@ pub fn authenticate_authorize_impl(
             return PamResultCode::PAM_IGNORE;
         }
     };
-    let user = username();
+    let user = match username() {
+        Ok(u) => u,
+        Err(e) => {
+            log::warn!("Couldn't get username: {}", e);
+            return PamResultCode::PAM_IGNORE;
+        }
+    };
     let ak = std::env::vars().find(|k| k.0 == ENV_SESSION_ID);
     let session_id = match ak {
         Some(s) => s.1,
