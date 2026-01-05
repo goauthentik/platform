@@ -11,7 +11,6 @@ import (
 )
 
 func Test_Auth(t *testing.T) {
-	t.Skip()
 	net, err := network.New(t.Context(), network.WithAttachable())
 	defer testcontainers.CleanupNetwork(t, net)
 	assert.NoError(t, err)
@@ -21,4 +20,7 @@ func Test_Auth(t *testing.T) {
 	assert.NoError(t, tc.Start(t.Context()))
 
 	JoinDomain(t, tc)
+
+	client := AuthenticatedSession(t)
+	assert.NotNil(t, client)
 }

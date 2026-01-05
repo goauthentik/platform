@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,21 +17,64 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/exec"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/ak/flow"
 )
+
+func AuthentikURL() string {
+	if os.Getenv("CI") == "true" {
+		return "http://host.docker.internal:9000"
+	}
+	return "http://host.docker.internal:9123"
+}
+
+func AuthentikCreds() (string, string) {
+	username := "akadmin"
+	if os.Getenv("CI") == "true" {
+		return username, os.Getenv("AK_TOKEN")
+	}
+	return username, "this-password-is-for-testing-dont-use"
+}
+
+func AuthenticatedSession(t testing.TB) *http.Client {
+	exec, err := flow.NewFlowExecutor(t.Context(), "default-authentication-flow", ak.APIConfig(&config.ConfigV1Profile{
+		AuthentikURL: AuthentikURL(),
+	}), flow.FlowExecutorOptions{
+		Logger: func(msg string, fields map[string]any) {
+			t.Log(msg)
+		},
+	})
+	assert.NoError(t, err)
+	exec.Answers[flow.StageIdentification], exec.Answers[flow.StagePassword] = AuthentikCreds()
+	ok, err := exec.Execute()
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	return &http.Client{
+		Transport: cookieTransport{
+			cookie: exec.GetSession(),
+		},
+	}
+}
+
+type cookieTransport struct {
+	cookie *http.Cookie
+}
+
+func (ct cookieTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.AddCookie(ct.cookie)
+	return http.DefaultTransport.RoundTrip(req)
+}
 
 func JoinDomain(t testing.TB, tc testcontainers.Container) {
 	t.Helper()
-	ak := "http://host.docker.internal:9123"
-	if os.Getenv("CI") == "true" {
-		ak = "http://host.docker.internal:9000"
-	}
 	args := []string{
 		"ak-sysd",
 		"domains",
 		"join",
 		"ak",
 		"-a",
-		ak,
+		AuthentikURL(),
 	}
 	testToken := "test-enroll-key"
 	_ = MustExec(t, tc,
@@ -71,7 +115,12 @@ func testMachine(t testing.TB) testcontainers.Container {
 	}
 
 	// Subdirectories we save coverage in
-	coverageSub := []string{"cli", "ak-sysd", "rs"}
+	coverageSub := []string{
+		"cli",
+		"ak-sysd",
+		"ak-agent",
+		"rs",
+	}
 	for _, sub := range coverageSub {
 		err := os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o777)
 		assert.NoError(t, err)

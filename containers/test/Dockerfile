@@ -30,6 +30,7 @@ RUN find /etc/systemd/system \
 
 VOLUME [ "/sys/fs/cgroup" ]
 
-RUN systemctl enable ssh.service rsyslog.service
+RUN systemctl enable ssh.service rsyslog.service && \
+    systemctl enable --user ak-agent.service
 
 ENTRYPOINT [ "/lib/systemd/systemd"]
