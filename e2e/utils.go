@@ -54,11 +54,20 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 }
 
 func testMachine(t *testing.T) testcontainers.Container {
-	localCoverageDir := filepath.Join(os.Getenv("AK_PLATFORM_DEV_CONTAINER"), "/coverage")
-	if _, set := os.LookupEnv("LOCAL_WORKSPACE"); !set {
-		cwd, err := os.Getwd()
+	cwd, err := os.Getwd()
+	assert.NoError(t, err)
+	localCoverageDir := filepath.Join(cwd, "..", "/e2e/coverage")
+	hostCoverageDir := localCoverageDir
+	if lw, set := os.LookupEnv("LOCAL_WORKSPACE"); set {
+		hostCoverageDir = filepath.Join(lw, "/e2e/coverage")
+		t.Logf("Host coverage dir: '%s'", hostCoverageDir)
+	}
+
+	// Subdirectories we save coverage in
+	coverageSub := []string{"cli", "ak-sysd", "rs"}
+	for _, sub := range coverageSub {
+		err := os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o777)
 		assert.NoError(t, err)
-		localCoverageDir = filepath.Join(cwd, "/coverage")
 	}
 
 	req := testcontainers.GenericContainerRequest{
@@ -68,14 +77,15 @@ func testMachine(t *testing.T) testcontainers.Container {
 				c.User = "root"
 			},
 			Env: map[string]string{
-				"GOCOVERDIR":        "/tmp/ak-coverage/cli",
-				"LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
+				"GOCOVERDIR": "/tmp/ak-coverage/cli",
+				// "LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
 			},
 			HostConfigModifier: func(hc *container.HostConfig) {
 				hc.Privileged = true
 				hc.CgroupnsMode = container.CgroupnsModeHost
 				hc.Binds = []string{
 					"/sys/fs/cgroup:/sys/fs/cgroup:rw",
+					fmt.Sprintf("%s:/tmp/ak-coverage", hostCoverageDir),
 				}
 				hc.ExtraHosts = []string{
 					"host.docker.internal:host-gateway",
@@ -89,21 +99,6 @@ func testMachine(t *testing.T) testcontainers.Container {
 			WaitingFor: wait.ForExec([]string{"systemctl", "status"}),
 		},
 		Started: true,
-	}
-
-	// Subdirectories we save coverage in
-	coverageSub := []string{"cli", "ak-sysd", "rs"}
-	for _, sub := range coverageSub {
-		err := os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o700)
-		assert.NoError(t, err)
-	}
-
-	cfm := req.HostConfigModifier
-	req.HostConfigModifier = func(hc *container.HostConfig) {
-		fmt.Printf("'%+v'\n", hc)
-		cfm(hc)
-		hc.Binds = append(hc.Binds, fmt.Sprintf("%s:/tmp/ak-coverage", localCoverageDir))
-		fmt.Printf("'%+v'\n", hc)
 	}
 
 	tc, err := testcontainers.GenericContainer(t.Context(), req)
