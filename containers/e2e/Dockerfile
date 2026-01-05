@@ -1,5 +1,8 @@
 FROM xghcr.io/goauthentik/platform-test:local
 
+ARG AK_PLATFORM_VER
+ARG AK_PLATFORM_ARCH
+
 RUN --mount=type=bind,target=/build/bin,src=./bin \
     dpkg -i /build/bin/agent_system/authentik-sysd_${AK_PLATFORM_VER}_${AK_PLATFORM_ARCH}.deb && \
     dpkg -i /build/bin/cli/authentik-cli_${AK_PLATFORM_VER}_${AK_PLATFORM_ARCH}.deb && \
