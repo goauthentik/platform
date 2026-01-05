@@ -8,7 +8,7 @@ VERSION_HASH = $(shell git rev-parse HEAD)
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)
 else
-ARCH := $(shell uname -m)
+ARCH := $(shell dpkg-architecture -q DEB_BUILD_ARCH)
 endif
 PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 
@@ -44,13 +44,13 @@ define go_generate_resources
 endef
 
 define nfpm_package
-	VERSION=${VERSION} ARCH=$(shell dpkg-architecture -q DEB_BUILD_ARCH) \
+	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
-	VERSION=${VERSION} ARCH=$(shell dpkg-architecture -q DEB_BUILD_ARCH) \
+	VERSION=${VERSION} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \
