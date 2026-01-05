@@ -20,6 +20,5 @@ func Test_Auth(t *testing.T) {
 
 	assert.NoError(t, tc.Start(t.Context()))
 
-	o := join(t, tc)
-	t.Log(o)
+	JoinDomain(t, tc)
 }

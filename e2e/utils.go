@@ -18,7 +18,8 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func join(t *testing.T, tc testcontainers.Container) string {
+func JoinDomain(t testing.TB, tc testcontainers.Container) {
+	t.Helper()
 	ak := "http://host.docker.internal:9123"
 	if os.Getenv("CI") == "true" {
 		ak = "http://host.docker.internal:9000"
@@ -32,10 +33,14 @@ func join(t *testing.T, tc testcontainers.Container) string {
 		ak,
 	}
 	testToken := "test-enroll-key"
-	return MustExec(t, tc, strings.Join(args, " "), exec.WithEnv([]string{fmt.Sprintf("AK_SYS_INSECURE_ENV_TOKEN=%s", testToken)}))
+	_ = MustExec(t, tc,
+		strings.Join(args, " "),
+		exec.WithEnv([]string{fmt.Sprintf("AK_SYS_INSECURE_ENV_TOKEN=%s", testToken)}),
+	)
 }
 
-func ExecCommand(t *testing.T, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {
+func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {
+	t.Helper()
 	options = append(options, exec.Multiplexed())
 	t.Logf("Running command '%s'...", strings.Join(cmd, " "))
 	c, out, err := co.Exec(context.Background(), cmd, options...)
@@ -47,13 +52,15 @@ func ExecCommand(t *testing.T, co testcontainers.Container, cmd []string, option
 	return c, string(body)
 }
 
-func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...exec.ProcessOption) string {
+func MustExec(t testing.TB, co testcontainers.Container, cmd string, options ...exec.ProcessOption) string {
+	t.Helper()
 	rc, b := ExecCommand(t, co, []string{"bash", "-c", cmd}, options...)
 	assert.Equal(t, 0, rc, b)
 	return b
 }
 
-func testMachine(t *testing.T) testcontainers.Container {
+func testMachine(t testing.TB) testcontainers.Container {
+	t.Helper()
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
 	localCoverageDir := filepath.Join(cwd, "..", "/e2e/coverage")
@@ -113,7 +120,7 @@ func testMachine(t *testing.T) testcontainers.Container {
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
 type StdoutLogConsumer struct {
-	T      *testing.T
+	T      testing.TB
 	Prefix string
 }
 
