@@ -104,6 +104,7 @@ func testMachine(t *testing.T) testcontainers.Container {
 	tc, err := testcontainers.GenericContainer(t.Context(), req)
 	t.Cleanup(func() {
 		MustExec(t, tc, "journalctl -u ak-sysd")
+		MustExec(t, tc, "systemctl stop ak-sysd")
 		testcontainers.CleanupContainer(t, tc)
 	})
 	assert.NoError(t, err)

@@ -85,6 +85,9 @@ test-e2e-convert:
 		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
 		-o ${PWD}/coverage_in_container.txt
+	go tool cover \
+		-html ${PWD}/coverage_in_container.txt \
+		-o ${PWD}/coverage_in_container.html
 
 test-agent:
 	go run -v ./cmd/agent_local/
