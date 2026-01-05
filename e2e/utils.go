@@ -3,9 +3,11 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -37,7 +39,7 @@ func join(t *testing.T, tc testcontainers.Container) string {
 func ExecCommand(t *testing.T, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {
 	options = append(options, exec.Multiplexed())
 	t.Logf("Running command '%s'...", strings.Join(cmd, " "))
-	c, out, err := co.Exec(t.Context(), cmd, options...)
+	c, out, err := co.Exec(context.Background(), cmd, options...)
 	assert.NoError(t, err)
 	t.Logf("Error code: %d", c)
 	body, err := io.ReadAll(out)
@@ -53,6 +55,10 @@ func MustExec(t *testing.T, co testcontainers.Container, cmd string, options ...
 }
 
 func testMachine(t *testing.T) testcontainers.Container {
+	cwd, err := os.Getwd()
+	assert.NoError(t, err)
+	localCoverageDir := filepath.Join(cwd, "/coverage")
+
 	req := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image: "xghcr.io/goauthentik/platform-e2e:local",
@@ -60,7 +66,8 @@ func testMachine(t *testing.T) testcontainers.Container {
 				c.User = "root"
 			},
 			Env: map[string]string{
-				"GOCOVERDIR": "/tmp/ak-coverage/cli",
+				"GOCOVERDIR":        "/tmp/ak-coverage/cli",
+				"LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
 			},
 			HostConfigModifier: func(hc *container.HostConfig) {
 				hc.Privileged = true
@@ -83,17 +90,15 @@ func testMachine(t *testing.T) testcontainers.Container {
 	}
 
 	// Subdirectories we save coverage in
-	coverageSub := []string{"cli", "ak-sysd"}
+	coverageSub := []string{"cli", "ak-sysd", "rs"}
 	// If we're in a devcontainer we can't use a bind mount for coverage data, hence use a tmpfs mount
-	if _, set := os.LookupEnv("AK_PLATFORM_DEV_CONTAINER"); set {
+	_, inDevContainer := os.LookupEnv("AK_PLATFORM_DEV_CONTAINER")
+	if inDevContainer {
 		req.Tmpfs = map[string]string{}
 		for _, sub := range coverageSub {
 			req.Tmpfs[fmt.Sprintf("/tmp/ak-coverage/%s", sub)] = "size=100m"
 		}
 	} else {
-		cwd, err := os.Getwd()
-		assert.NoError(t, err)
-		localCoverageDir := filepath.Join(cwd, "/coverage")
 		for _, sub := range coverageSub {
 			err = os.MkdirAll(filepath.Join(localCoverageDir, sub), 0o700)
 			assert.NoError(t, err)
@@ -108,11 +113,39 @@ func testMachine(t *testing.T) testcontainers.Container {
 
 	tc, err := testcontainers.GenericContainer(t.Context(), req)
 	t.Cleanup(func() {
+		MustExec(t, tc, "journalctl -u ak-sysd")
 		testcontainers.CleanupContainer(t, tc)
 	})
 	assert.NoError(t, err)
 
+	if inDevContainer {
+		t.Cleanup(func() {
+			copyDirFromContainer(t, tc, "/tmp/ak-coverage", localCoverageDir)
+		})
+	}
+
 	return tc
+}
+
+func copyDirFromContainer(t *testing.T, tc testcontainers.Container, dir string, localBase string) {
+	files := MustExec(t, tc, fmt.Sprintf("cd %s && find . -type f -mindepth 1", dir))
+	err := os.MkdirAll(localBase, 0o700)
+	assert.NoError(t, err)
+	for _, file := range strings.Split(files, "\n") {
+		t.Logf("Copying %s...", file)
+		fileDir := path.Join(localBase, path.Base(file))
+		err := os.MkdirAll(fileDir, 0o700)
+		assert.NoError(t, err)
+
+		rc, err := tc.CopyFileFromContainer(context.Background(), path.Join(dir, file))
+		assert.NoError(t, err)
+
+		outFile, err := os.Create(path.Join(localBase, file))
+		assert.NoError(t, err)
+		defer outFile.Close()
+		_, err = io.Copy(outFile, rc)
+		assert.NoError(t, err)
+	}
 }
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
