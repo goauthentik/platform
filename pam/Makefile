@@ -1,6 +1,7 @@
 include ../common.mk
 
 TARGET = pam
+DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
 clean:
 	cargo clean
@@ -11,7 +12,7 @@ bump:
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
-	cargo build \
+	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
 		--target-dir ${TOP}/cache/${TARGET} \
 		--verbose \
 		--release

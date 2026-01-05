@@ -62,7 +62,13 @@ func (c *Config) PostLoad() error {
 }
 
 func (c *Config) PreSave() error { return nil }
-func (c *Config) PostUpdate(cfgmgr.Configer, fsnotify.Event) cfgmgr.ConfigChangedType {
+func (c *Config) PostUpdate(prev cfgmgr.Configer, evt fsnotify.Event) cfgmgr.ConfigChangedType {
+	previousConfig := prev.(*Config)
+	if len(previousConfig.domains) < len(c.domains) {
+		return cfgmgr.ConfigChangedAdded
+	} else if len(previousConfig.domains) > len(c.domains) {
+		return cfgmgr.ConfigChangedRemoved
+	}
 	return cfgmgr.ConfigChangedGeneric
 }
 

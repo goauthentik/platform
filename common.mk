@@ -16,7 +16,8 @@ TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
 
 _LD_FLAGS = ${LD_FLAGS} -X goauthentik.io/platform/pkg/meta.Version=${VERSION} -X goauthentik.io/platform/pkg/meta.BuildHash=dev-${VERSION_HASH}
-GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v
+GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
+RUST_BUILD_FLAGS =
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 
@@ -40,4 +41,19 @@ define go_generate_resources
 		-description="$(1)" \
 		-product-name="$(1)" \
 		-skip-versioninfo
+endef
+
+define nfpm_package
+	VERSION=${VERSION} ARCH=${ARCH} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p deb \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+	VERSION=${VERSION} ARCH=${ARCH} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p rpm \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
 endef

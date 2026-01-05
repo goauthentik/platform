@@ -15,9 +15,11 @@ ci-build-args:
 
 .PHONY: local-build
 local-build:
+	mkdir -p ${TOP}/bin
 	docker build \
 		-t ghcr.io/goauthentik/platform-test:${container_ver} \
 		-t xghcr.io/goauthentik/platform-test:local \
-		--no-cache \
 		--build-arg="AK_PLATFORM_VER=${VERSION}" \
+		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \
+		-f "${PWD}/Dockerfile" \
 		.

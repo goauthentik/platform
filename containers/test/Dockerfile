@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 
 ARG AK_PLATFORM_VER
+ARG AK_PLATFORM_ARCH
 ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
 
 ENV DEBIAN_FRONTEND="noninteractive"
@@ -24,6 +25,7 @@ RUN find /etc/systemd/system \
     -not -name '*journald*' \
     -not -name '*systemd-tmpfiles*' \
     -not -name '*systemd-user-sessions*' \
+    -not -name '*ak-*' \
     -print0 | xargs -0 rm -vf
 
 VOLUME [ "/sys/fs/cgroup" ]

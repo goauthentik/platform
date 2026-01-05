@@ -1,7 +1,7 @@
 include common.mk
 
 TEST_COUNT = 1
-TEST_FLAGS =
+GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
@@ -61,8 +61,8 @@ test:
 		-covermode=atomic \
 		-count=${TEST_COUNT} \
 		-json \
-		${TEST_FLAGS} \
-		$(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb) \
+		${GO_TEST_FLAGS} \
+		$(shell go list ${GO_TEST_FLAGS} ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb) \
 			2>&1 | tee ${TEST_OUTPUT}
 	go tool cover \
 		-html ${PWD}/coverage.txt \
@@ -74,7 +74,20 @@ test:
 		-set-exit-code
 
 test-integration:
-	$(MAKE) test TEST_FLAGS=-tags=integration
+	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
+
+test-e2e: containers/e2e/local-build
+	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+	"$(MAKE)" test-e2e-convert
+
+test-e2e-convert:
+	go tool covdata textfmt \
+		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
+		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
+		-o ${PWD}/coverage_in_container.txt
+	go tool cover \
+		-html ${PWD}/coverage_in_container.txt \
+		-o ${PWD}/coverage_in_container.html
 
 test-agent:
 	go run -v ./cmd/agent_local/
@@ -134,3 +147,6 @@ containers/selenium/%:
 
 containers/test/%:
 	"$(MAKE)" -C "${TOP}/containers/test" $*
+
+containers/e2e/%:
+	"$(MAKE)" -C "${TOP}/containers/e2e" $*

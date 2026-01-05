@@ -16,7 +16,7 @@ depends:
   - "authentik-sysd"
 contents:
   - src: ../cache/nss/release/libauthentik_nss.so
-    dst: "/usr/lib/${ARCH_TYPE}/libnss_authentik.so.2"
+    dst: "/usr/lib/${DEB_BUILD_GNU_TYPE}/libnss_authentik.so.2"
     file_info:
       mode: 0644
     packager: deb

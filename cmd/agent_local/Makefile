@@ -71,18 +71,7 @@ package-darwin: clean build
 
 .PHONY: package-gnu/linux
 package-gnu/linux: clean build
-	VERSION=${VERSION} ARCH=${ARCH} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p deb \
-			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
-	VERSION=${VERSION} ARCH=${ARCH} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p rpm \
-			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+	$(call nfpm_package)
 
 .PHONY: package-msys
 package-msys: clean

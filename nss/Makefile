@@ -1,7 +1,7 @@
 include ../common.mk
 
 TARGET = nss
-ARCH_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
+DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
 clean:
 	cargo clean
@@ -12,7 +12,7 @@ bump:
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
-	cargo build \
+	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
 		--target-dir ${TOP}/cache/${TARGET} \
 		--verbose \
 		--release
@@ -21,13 +21,13 @@ test:
 	cargo test --verbose
 
 package: build
-	VERSION=${VERSION} ARCH=${ARCH} ARCH_TYPE=${ARCH_TYPE} \
+	VERSION=${VERSION} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/${TARGET}/nfpm.yaml
-	VERSION=${VERSION} ARCH=${ARCH} ARCH_TYPE=${ARCH_TYPE} \
+	VERSION=${VERSION} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \

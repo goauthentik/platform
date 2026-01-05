@@ -5,6 +5,9 @@
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "shutdownAction": "stopCompose",
   "initializeCommand": "make dev--initialize",
+  "remoteEnv": {
+    "LOCAL_WORKSPACE": "${localWorkspaceFolder}"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
