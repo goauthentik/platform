@@ -211,6 +211,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 	t.Cleanup(func() {
 		MustExec(t, tc, "journalctl -u ak-sysd")
 		MustExec(t, tc, "journalctl -u ak-agent")
+		MustExec(t, tc, "journalctl -u ssh")
 		MustExec(t, tc, "systemctl stop ak-sysd")
 		MustExec(t, tc, "systemctl stop ak-agent")
 		testcontainers.CleanupContainer(t, tc)

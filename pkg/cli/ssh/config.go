@@ -13,34 +13,36 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+func (c *SSHClient) auth(name, instruction string, questions []string, echos []bool) ([]string, error) {
+	c.log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
+	if len(questions) > 0 && questions[0] == "authentik Password: " {
+		fmt.Printf("Getting token to access '%s'...\n", c.host)
+		cc := device.GetCredentials(c.AgentClient, context.Background(), device.CredentialsOpts{
+			Profile:    c.AgentProfile,
+			DeviceName: c.host,
+		})
+		if cc == nil {
+			return []string{}, errors.New("failed to exchange token")
+		}
+		return []string{FormatToken(cc, c.remoteSocketPath)}, nil
+	}
+	ans := []string{}
+	for _, q := range questions {
+		l, err := c.ReadPassword(q)
+		fmt.Println("")
+		if err != nil {
+			return ans, err
+		}
+		ans = append(ans, l)
+	}
+	return ans, nil
+}
+
 func (c *SSHClient) getConfig() *ssh.ClientConfig {
 	config := &ssh.ClientConfig{
 		User: c.user,
 		Auth: []ssh.AuthMethod{
-			ssh.KeyboardInteractive(func(name, instruction string, questions []string, echos []bool) ([]string, error) {
-				c.log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
-				if len(questions) > 0 && questions[0] == "authentik Password: " {
-					fmt.Printf("Getting token to access '%s'...\n", c.host)
-					cc := device.GetCredentials(c.AgentClient, context.Background(), device.CredentialsOpts{
-						Profile:    c.AgentProfile,
-						DeviceName: c.host,
-					})
-					if cc == nil {
-						return []string{}, errors.New("failed to exchange token")
-					}
-					return []string{FormatToken(cc, c.remoteSocketPath)}, nil
-				}
-				ans := []string{}
-				for _, q := range questions {
-					l, err := c.ReadPassword(q)
-					fmt.Println("")
-					if err != nil {
-						return ans, err
-					}
-					ans = append(ans, l)
-				}
-				return ans, nil
-			}),
+			ssh.KeyboardInteractive(c.auth),
 		},
 		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			innerCallback := c.knownHosts.HostKeyCallback()
@@ -59,12 +61,11 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 					}()
 					ferr = knownhosts.WriteKnownHost(f, hostname, remote, key)
 				}
-				if ferr == nil {
-					c.log.Infof("Added host %s to known_hosts\n", hostname)
-				} else {
+				if ferr != nil {
 					c.log.Infof("Failed to add host %s to known_hosts: %v\n", hostname, ferr)
+					return ferr
 				}
-				return nil // permit previously-unknown hosts (warning: may be insecure)
+				c.log.Infof("Added host %s to known_hosts\n", hostname)
 			}
 			return err
 		}),
