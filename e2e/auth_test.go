@@ -16,10 +16,27 @@ func Test_Auth(t *testing.T) {
 	assert.NoError(t, err)
 
 	tc := testMachine(t)
+	// tcip, err := tc.Host(t.Context())
+	// assert.NoError(t, err)
+	// tcport, err := tc.MappedPort(t.Context(), "22")
+	// assert.NoError(t, err)
+	// port, _ := strconv.Atoi(tcport.Port())
 
 	assert.NoError(t, tc.Start(t.Context()))
-
 	JoinDomain(t, tc)
-
 	AgentSetup(t)
+
+	MustExec(t, tc, "ak ssh -i akadmin@localhost w")
+
+	// agentClient, err := client.New(types.GetAgentSocketPath().ForCurrent())
+	// assert.NoError(t, err)
+
+	// c, err := ssh.New(tcip, port, "akadmin")
+	// assert.NoError(t, err)
+	// c.Insecure = true
+	// c.AgentClient = agentClient
+	// c.AgentProfile = "ak"
+	// c.Command = "w"
+
+	// assert.NoError(t, c.Connect())
 }
