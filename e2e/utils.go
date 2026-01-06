@@ -144,7 +144,7 @@ func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, option
 
 func MustExec(t testing.TB, co testcontainers.Container, cmd string, options ...exec.ProcessOption) string {
 	t.Helper()
-	rc, b := ExecCommand(t, co, []string{"bash", "-c", cmd}, options...)
+	rc, b := ExecCommand(t, co, []string{"sh", "-c", cmd}, options...)
 	assert.Equal(t, 0, rc, b)
 	return b
 }
