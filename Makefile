@@ -96,10 +96,17 @@ test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
 
 test-ssh:
-	go run -v ./cmd/cli ssh akadmin@authentik-platform_devcontainer-test-machine-1
+	go run -v ./cmd/cli ssh -i akadmin@ak-platform-test-machine
 
 test-shell:
 	docker exec -it authentik-platform_devcontainer-test-machine-1 bash
+
+test-join:
+	docker exec \
+		-it \
+		--env AK_SYS_INSECURE_ENV_TOKEN=test-enroll-key \
+		authentik-platform_devcontainer-test-machine-1 \
+		ak-sysd domains join ak -a http://authentik:9000
 
 test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
