@@ -39,4 +39,8 @@ type ConfigV1Profile struct {
 	// Not saved to JSON, loaded from keychain
 	AccessToken  string `json:"-"`
 	RefreshToken string `json:"-"`
+
+	// Fallback if keyring isn't available
+	FallbackAccessToken  string `json:"access_token"`
+	FallbackRefreshToken string `json:"refresh_token"`
 }
