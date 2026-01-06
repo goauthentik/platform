@@ -28,6 +28,7 @@ var rootCmd = &cobra.Command{
 	Version: meta.FullVersion(),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		verbose := mustFlag(cmd.Flags().GetBool("verbose"))
+		log.SetLevel(log.WarnLevel)
 		if verbose {
 			log.SetLevel(log.DebugLevel)
 		}
