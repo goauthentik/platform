@@ -3,8 +3,8 @@ package tray
 import (
 	"fmt"
 
+	"fyne.io/systray"
 	"github.com/cli/browser"
-	"github.com/kolide/systray"
 	"github.com/mergestat/timediff"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/agent_system/client"

@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/kolide/systray"
+	"fyne.io/systray"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/agent_local/tray/icon"
@@ -60,12 +60,6 @@ func (t *Tray) Start() {
 	}()
 	systray.Run(t.systrayReady, func() {
 		t.Exit <- struct{}{}
-	}, func(b bool) {
-		if b {
-			systray.SetIcon(icon.IconLight)
-		} else {
-			systray.SetIcon(icon.IconDark)
-		}
 	})
 }
 
