@@ -21,5 +21,5 @@ func Test_Auth(t *testing.T) {
 	JoinDomain(t, tc)
 	AgentSetup(t, tc)
 
-	MustExec(t, tc, "ak ssh -i akadmin@localhost w")
+	MustExec(t, tc, "ak ssh -i akadmin@$(hostname) w")
 }
