@@ -179,6 +179,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 			Image: "xghcr.io/goauthentik/platform-e2e:local",
 			ConfigModifier: func(c *container.Config) {
 				c.User = "root"
+				c.Hostname = "test-machine"
 			},
 			ExposedPorts: []string{"22"},
 			Env: map[string]string{
