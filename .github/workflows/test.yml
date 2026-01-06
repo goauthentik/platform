@@ -159,7 +159,7 @@ jobs:
         run: |
           ./hack/authentik/wait.sh
       - env:
-          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
         run: |
           make test-e2e
       - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2

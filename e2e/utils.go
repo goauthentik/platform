@@ -39,7 +39,7 @@ func ContianerAuthentikURL() string {
 func AuthentikCreds() (string, string) {
 	username := "akadmin"
 	if os.Getenv("CI") == "true" {
-		return username, os.Getenv("AK_TOKEN")
+		return username, os.Getenv("AK_PASSWORD")
 	}
 	return username, "this-password-is-for-testing-dont-use"
 }
