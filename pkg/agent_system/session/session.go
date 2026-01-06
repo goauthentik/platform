@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/gorilla/securecookie"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +34,6 @@ const (
 type Server struct {
 	pb.UnimplementedSessionManagerServer
 
-	mtx           sync.RWMutex
 	checkInterval time.Duration
 	log           *log.Entry
 	ctx           component.Context
@@ -45,7 +43,6 @@ type Server struct {
 
 func NewMonitor(ctx component.Context) (component.Component, error) {
 	return &Server{
-		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
 		log:           ctx.Log(),
 		ctx:           ctx,
@@ -76,9 +73,6 @@ func (ss *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 
 func (ss *Server) checkExpiredSessions() {
 	now := time.Now()
-
-	ss.mtx.Lock()
-	defer ss.mtx.Unlock()
 	err := ss.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			sessionID := string(k)
@@ -113,8 +107,6 @@ func (ss *Server) checkExpiredSessions() {
 }
 
 func (ss *Server) AddSession(session *pb.StateSession) {
-	ss.mtx.Lock()
-	defer ss.mtx.Unlock()
 	err := ss.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		d, err := proto.Marshal(session)
 		if err != nil {
@@ -128,8 +120,6 @@ func (ss *Server) AddSession(session *pb.StateSession) {
 }
 
 func (ss *Server) GetSession(id string) (*pb.StateSession, bool) {
-	ss.mtx.RLock()
-	defer ss.mtx.RUnlock()
 	session := pb.StateSession{}
 	var exists bool
 	err := ss.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
@@ -153,8 +143,6 @@ func (ss *Server) GetSession(id string) (*pb.StateSession, bool) {
 }
 
 func (ss *Server) Delete(id string) {
-	ss.mtx.Lock()
-	defer ss.mtx.Unlock()
 	err := ss.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		return b.Delete([]byte(id))
 	})

@@ -96,7 +96,7 @@ test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
 
 test-ssh:
-	go run -v ./cmd/cli ssh -i akadmin@ak-platform-test-machine
+	go run -v ./cmd/cli ssh -i -v akadmin@ak-platform-test-machine
 
 test-shell:
 	docker exec -it authentik-platform_devcontainer-test-machine-1 bash
