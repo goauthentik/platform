@@ -23,9 +23,8 @@ func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuth
 
 func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAuthInitRequest) (*pb.InteractiveChallenge, error) {
 	id := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
-	api, err := auth.dom.APIClient()
+	api, dom, err := auth.ctx.DomainAPI()
 	if err != nil {
-		auth.log.WithError(err).Warning("failed to get API client for domain")
 		return nil, err
 	}
 	txn := &InteractiveAuthTransaction{
@@ -34,7 +33,7 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 		password: req.Password,
 		api:      api,
 		log:      auth.log.WithField("txn", id),
-		dom:      auth.dom,
+		dom:      dom,
 		tv:       auth.TokenAuth,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())

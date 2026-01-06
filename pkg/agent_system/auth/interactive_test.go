@@ -29,7 +29,6 @@ func testAuth(t *testing.T, dc *config.DomainConfig) Server {
 		log:  log.WithField("component", "test"),
 		ctx:  ctx,
 		txns: map[string]*InteractiveAuthTransaction{},
-		dom:  dc,
 	}
 }
 
