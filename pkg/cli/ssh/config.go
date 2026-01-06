@@ -10,6 +10,7 @@ import (
 
 	"github.com/skeema/knownhosts"
 	"goauthentik.io/platform/pkg/cli/auth/device"
+	"goauthentik.io/platform/pkg/meta"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -70,6 +71,7 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 			return err
 		}),
 		HostKeyAlgorithms: c.knownHosts.HostKeyAlgorithms(c.host),
+		ClientVersion:     fmt.Sprintf("SSH-2.0-authentik-cli/%s", meta.FullVersion()),
 	}
 	if c.Insecure {
 		config.HostKeyCallback = ssh.InsecureIgnoreHostKey()
