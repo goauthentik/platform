@@ -32,7 +32,7 @@ type StateSession struct {
 	Ppid          uint32                 `protobuf:"varint,6,opt,name=ppid,proto3" json:"ppid,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	LocalSocket   string                 `protobuf:"bytes,8,opt,name=local_socket,json=localSocket,proto3" json:"local_socket,omitempty"`
-	Started       bool                   `protobuf:"varint,9,opt,name=started,proto3" json:"started,omitempty"`
+	Opened        bool                   `protobuf:"varint,9,opt,name=opened,proto3" json:"opened,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -123,9 +123,9 @@ func (x *StateSession) GetLocalSocket() string {
 	return ""
 }
 
-func (x *StateSession) GetStarted() bool {
+func (x *StateSession) GetOpened() bool {
 	if x != nil {
-		return x.Started
+		return x.Opened
 	}
 	return false
 }
@@ -134,7 +134,7 @@ var File_state_sysd_session_proto protoreflect.FileDescriptor
 
 const file_state_sysd_session_proto_rawDesc = "" +
 	"\n" +
-	"\x18state_sysd_session.proto\x12\x12state_sysd_session\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb2\x02\n" +
+	"\x18state_sysd_session.proto\x12\x12state_sysd_session\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb0\x02\n" +
 	"\fStateSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
@@ -146,8 +146,8 @@ const file_state_sysd_session_proto_rawDesc = "" +
 	"\x04ppid\x18\x06 \x01(\rR\x04ppid\x129\n" +
 	"\n" +
 	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12!\n" +
-	"\flocal_socket\x18\b \x01(\tR\vlocalSocket\x12\x18\n" +
-	"\astarted\x18\t \x01(\bR\astartedB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\flocal_socket\x18\b \x01(\tR\vlocalSocket\x12\x16\n" +
+	"\x06opened\x18\t \x01(\bR\x06openedB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_state_sysd_session_proto_rawDescOnce sync.Once

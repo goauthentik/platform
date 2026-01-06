@@ -19,6 +19,6 @@ pub struct StateSession {
     #[prost(string, tag="8")]
     pub local_socket: ::prost::alloc::string::String,
     #[prost(bool, tag="9")]
-    pub started: bool,
+    pub opened: bool,
 }
 // @@protoc_insertion_point(module)

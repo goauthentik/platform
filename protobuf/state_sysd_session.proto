@@ -15,5 +15,5 @@ message StateSession {
   uint32 ppid = 6;
   google.protobuf.Timestamp created_at = 7;
   string local_socket = 8;
-  bool started = 9;
+  bool opened = 9;
 }
