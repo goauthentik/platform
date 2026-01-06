@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/agent_local/tray"
+	"goauthentik.io/platform/pkg/agent_local/tray/available"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
@@ -55,12 +56,16 @@ func (a *Agent) Start() {
 		return
 	}
 	go a.startGRPC()
-	go a.signalHandler()
-	go func() {
-		<-a.tray.Exit
-		a.Stop()
-	}()
-	a.tray.Start()
+	if available.SystrayAvailable() {
+		go a.signalHandler()
+		go func() {
+			<-a.tray.Exit
+			a.Stop()
+		}()
+		a.tray.Start()
+	} else {
+		a.signalHandler()
+	}
 }
 
 func (a *Agent) signalHandler() {
@@ -69,7 +74,9 @@ func (a *Agent) signalHandler() {
 	<-sigChan
 
 	log.Info("Shutting down...")
-	a.tray.Quit()
+	if available.SystrayAvailable() {
+		a.tray.Quit()
+	}
 }
 
 func (a *Agent) Stop() {

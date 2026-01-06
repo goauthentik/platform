@@ -159,7 +159,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 
 	tc, err := testcontainers.GenericContainer(t.Context(), req)
 	t.Cleanup(func() {
-		MustExec(t, tc, "pkill -SIGHUP ak-agent")
+		MustExec(t, tc, "pkill -SIGTERM ak-agent")
 		MustExec(t, tc, "journalctl -u ak-sysd")
 		MustExec(t, tc, "systemctl stop ak-sysd")
 		testcontainers.CleanupContainer(t, tc)
@@ -167,7 +167,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 	assert.NoError(t, err)
 
 	go func() {
-		MustExec(t, tc, "ak-agent", exec.WithEnv([]string{
+		tc.Exec(context.Background(), []string{"ak-agent"}, exec.WithEnv([]string{
 			"GOCOVERDIR=/tmp/ak-coverage/ak-agent",
 		}))
 	}()
