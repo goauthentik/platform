@@ -22,7 +22,14 @@ import (
 	"goauthentik.io/platform/pkg/ak/flow"
 )
 
-func AuthentikURL() string {
+func LocalAuthentikURL() string {
+	if os.Getenv("CI") == "true" {
+		return "http://localhost:9000"
+	}
+	return "http://host.docker.internal:9123"
+}
+
+func ContianerAuthentikURL() string {
 	if os.Getenv("CI") == "true" {
 		return "http://host.docker.internal:9000"
 	}
@@ -39,7 +46,7 @@ func AuthentikCreds() (string, string) {
 
 func AuthenticatedSession(t testing.TB) *http.Client {
 	exec, err := flow.NewFlowExecutor(t.Context(), "default-authentication-flow", ak.APIConfig(&config.ConfigV1Profile{
-		AuthentikURL: AuthentikURL(),
+		AuthentikURL: LocalAuthentikURL(),
 	}), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
 			t.Log(msg)
@@ -74,7 +81,7 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 		"join",
 		"ak",
 		"-a",
-		AuthentikURL(),
+		ContianerAuthentikURL(),
 	}
 	testToken := "test-enroll-key"
 	_ = MustExec(t, tc,
