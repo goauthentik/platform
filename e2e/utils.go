@@ -65,15 +65,15 @@ func AuthenticatedSession(t testing.TB) *http.Client {
 	}
 }
 
-func AgentSetup(t testing.TB) {
+func AgentSetup(t testing.TB, tc testcontainers.Container) {
 	authClient := AuthenticatedSession(t)
 	assert.NotNil(t, authClient)
 
-	setup.Setup(setup.Options{
-		ProfileName:  "ak",
+	cfg, err := setup.Setup(setup.Options{
+		ProfileName:  "default",
 		AuthentikURL: LocalAuthentikURL(),
-		AppSlug:      "authentik-cli",
-		ClientID:     "authentik-cli",
+		AppSlug:      setup.DefaultAppSlug,
+		ClientID:     setup.DefaultClientID,
 		URLCallback: func(url string) error {
 			_, err := authClient.Get(url)
 			assert.NoError(t, err)
@@ -95,6 +95,12 @@ func AgentSetup(t testing.TB) {
 			return nil
 		},
 	})
+	assert.NoError(t, err)
+
+	MustExec(t, tc, fmt.Sprintf("ak config setup -a %s", LocalAuthentikURL()), exec.WithEnv([]string{
+		fmt.Sprintf("AK_CLI_ACCESS_TOKEN=%s", cfg.AccessToken),
+		fmt.Sprintf("AK_CLI_REFRESH_TOKEN=%s", cfg.RefreshToken),
+	}))
 }
 
 type cookieTransport struct {
@@ -201,8 +207,8 @@ func testMachine(t testing.TB) testcontainers.Container {
 	tc, err := testcontainers.GenericContainer(t.Context(), req)
 	t.Cleanup(func() {
 		MustExec(t, tc, "journalctl -u ak-sysd")
-		MustExec(t, tc, "systemctl stop ak-sysd")
 		MustExec(t, tc, "journalctl -u ak-agent")
+		MustExec(t, tc, "systemctl stop ak-sysd")
 		MustExec(t, tc, "systemctl stop ak-agent")
 		testcontainers.CleanupContainer(t, tc)
 	})

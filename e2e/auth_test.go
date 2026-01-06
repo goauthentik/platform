@@ -19,7 +19,7 @@ func Test_Auth(t *testing.T) {
 
 	assert.NoError(t, tc.Start(t.Context()))
 	JoinDomain(t, tc)
-	AgentSetup(t)
+	AgentSetup(t, tc)
 
 	MustExec(t, tc, "ak ssh -i akadmin@localhost w")
 }
