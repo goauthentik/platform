@@ -13,6 +13,7 @@ services:
     privileged: true
     user: root
     cgroup: host
+    hostname: ak-platform-test-machine
     volumes:
       - ..:/workspaces:cached
       - /sys/fs/cgroup:/sys/fs/cgroup:rw

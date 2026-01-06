@@ -55,6 +55,8 @@ struct StateSession: Sendable {
 
   var localSocket: String = String()
 
+  var started: Bool = false
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -69,7 +71,7 @@ fileprivate let _protobuf_package = "state_sysd_session"
 
 extension StateSession: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".StateSession"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}ID\0\u{1}Username\0\u{1}TokenHash\0\u{1}ExpiresAt\0\u{1}PID\0\u{1}PPID\0\u{1}CreatedAt\0\u{1}LocalSocket\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}username\0\u{3}token_hash\0\u{3}expires_at\0\u{1}pid\0\u{1}ppid\0\u{3}created_at\0\u{3}local_socket\0\u{1}started\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -85,6 +87,7 @@ extension StateSession: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
       case 6: try { try decoder.decodeSingularUInt32Field(value: &self.ppid) }()
       case 7: try { try decoder.decodeSingularMessageField(value: &self._createdAt) }()
       case 8: try { try decoder.decodeSingularStringField(value: &self.localSocket) }()
+      case 9: try { try decoder.decodeSingularBoolField(value: &self.started) }()
       default: break
       }
     }
@@ -119,6 +122,9 @@ extension StateSession: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     if !self.localSocket.isEmpty {
       try visitor.visitSingularStringField(value: self.localSocket, fieldNumber: 8)
     }
+    if self.started != false {
+      try visitor.visitSingularBoolField(value: self.started, fieldNumber: 9)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -131,6 +137,7 @@ extension StateSession: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     if lhs.ppid != rhs.ppid {return false}
     if lhs._createdAt != rhs._createdAt {return false}
     if lhs.localSocket != rhs.localSocket {return false}
+    if lhs.started != rhs.started {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

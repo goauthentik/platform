@@ -24,14 +24,15 @@ const (
 
 type StateSession struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ID            string                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=Username,proto3" json:"Username,omitempty"`
-	TokenHash     string                 `protobuf:"bytes,3,opt,name=TokenHash,proto3" json:"TokenHash,omitempty"`
-	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=ExpiresAt,proto3" json:"ExpiresAt,omitempty"`
-	PID           uint32                 `protobuf:"varint,5,opt,name=PID,proto3" json:"PID,omitempty"`
-	PPID          uint32                 `protobuf:"varint,6,opt,name=PPID,proto3" json:"PPID,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`
-	LocalSocket   string                 `protobuf:"bytes,8,opt,name=LocalSocket,proto3" json:"LocalSocket,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	TokenHash     string                 `protobuf:"bytes,3,opt,name=token_hash,json=tokenHash,proto3" json:"token_hash,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	Pid           uint32                 `protobuf:"varint,5,opt,name=pid,proto3" json:"pid,omitempty"`
+	Ppid          uint32                 `protobuf:"varint,6,opt,name=ppid,proto3" json:"ppid,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	LocalSocket   string                 `protobuf:"bytes,8,opt,name=local_socket,json=localSocket,proto3" json:"local_socket,omitempty"`
+	Started       bool                   `protobuf:"varint,9,opt,name=started,proto3" json:"started,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -66,9 +67,9 @@ func (*StateSession) Descriptor() ([]byte, []int) {
 	return file_state_sysd_session_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *StateSession) GetID() string {
+func (x *StateSession) GetId() string {
 	if x != nil {
-		return x.ID
+		return x.Id
 	}
 	return ""
 }
@@ -94,16 +95,16 @@ func (x *StateSession) GetExpiresAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *StateSession) GetPID() uint32 {
+func (x *StateSession) GetPid() uint32 {
 	if x != nil {
-		return x.PID
+		return x.Pid
 	}
 	return 0
 }
 
-func (x *StateSession) GetPPID() uint32 {
+func (x *StateSession) GetPpid() uint32 {
 	if x != nil {
-		return x.PPID
+		return x.Ppid
 	}
 	return 0
 }
@@ -122,20 +123,31 @@ func (x *StateSession) GetLocalSocket() string {
 	return ""
 }
 
+func (x *StateSession) GetStarted() bool {
+	if x != nil {
+		return x.Started
+	}
+	return false
+}
+
 var File_state_sysd_session_proto protoreflect.FileDescriptor
 
 const file_state_sysd_session_proto_rawDesc = "" +
 	"\n" +
-	"\x18state_sysd_session.proto\x12\x12state_sysd_session\x1a\x1fgoogle/protobuf/timestamp.proto\"\x94\x02\n" +
+	"\x18state_sysd_session.proto\x12\x12state_sysd_session\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb2\x02\n" +
 	"\fStateSession\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x1a\n" +
-	"\bUsername\x18\x02 \x01(\tR\bUsername\x12\x1c\n" +
-	"\tTokenHash\x18\x03 \x01(\tR\tTokenHash\x128\n" +
-	"\tExpiresAt\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tExpiresAt\x12\x10\n" +
-	"\x03PID\x18\x05 \x01(\rR\x03PID\x12\x12\n" +
-	"\x04PPID\x18\x06 \x01(\rR\x04PPID\x128\n" +
-	"\tCreatedAt\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tCreatedAt\x12 \n" +
-	"\vLocalSocket\x18\b \x01(\tR\vLocalSocketB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x1d\n" +
+	"\n" +
+	"token_hash\x18\x03 \x01(\tR\ttokenHash\x129\n" +
+	"\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x10\n" +
+	"\x03pid\x18\x05 \x01(\rR\x03pid\x12\x12\n" +
+	"\x04ppid\x18\x06 \x01(\rR\x04ppid\x129\n" +
+	"\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12!\n" +
+	"\flocal_socket\x18\b \x01(\tR\vlocalSocket\x12\x18\n" +
+	"\astarted\x18\t \x01(\bR\astartedB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_state_sysd_session_proto_rawDescOnce sync.Once
@@ -155,8 +167,8 @@ var file_state_sysd_session_proto_goTypes = []any{
 	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
 }
 var file_state_sysd_session_proto_depIdxs = []int32{
-	1, // 0: state_sysd_session.StateSession.ExpiresAt:type_name -> google.protobuf.Timestamp
-	1, // 1: state_sysd_session.StateSession.CreatedAt:type_name -> google.protobuf.Timestamp
+	1, // 0: state_sysd_session.StateSession.expires_at:type_name -> google.protobuf.Timestamp
+	1, // 1: state_sysd_session.StateSession.created_at:type_name -> google.protobuf.Timestamp
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

@@ -7,12 +7,13 @@ option swift_prefix = "";
 import "google/protobuf/timestamp.proto";
 
 message StateSession {
-  string ID = 1;
-  string Username = 2;
-  string TokenHash = 3;
-  google.protobuf.Timestamp ExpiresAt = 4;
-  uint32 PID = 5;
-  uint32 PPID = 6;
-  google.protobuf.Timestamp CreatedAt = 7;
-  string LocalSocket = 8;
+  string id = 1;
+  string username = 2;
+  string token_hash = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  uint32 pid = 5;
+  uint32 ppid = 6;
+  google.protobuf.Timestamp created_at = 7;
+  string local_socket = 8;
+  bool started = 9;
 }

@@ -8,6 +8,8 @@ import (
 	"github.com/gorilla/securecookie"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
@@ -27,6 +29,10 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 	if err != nil {
 		return nil, err
 	}
+	domConfig := dom.Config()
+	if !domConfig.AuthorizationFlow.IsSet() {
+		return nil, status.Error(codes.InvalidArgument, "authorization flow not configured")
+	}
 	txn := &InteractiveAuthTransaction{
 		ID:       id,
 		username: req.Username,
@@ -37,7 +43,7 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 		tv:       auth.TokenAuth,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())
-	fex, err := flow.NewFlowExecutor(txn.ctx, *txn.dom.Config().AuthorizationFlow.Get(), txn.api.GetConfig(), flow.FlowExecutorOptions{
+	fex, err := flow.NewFlowExecutor(txn.ctx, domConfig.GetAuthorizationFlow(), txn.api.GetConfig(), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
 			txn.log.WithField("logger", "component.auth.flow").WithFields(fields).Info(msg)
 		},

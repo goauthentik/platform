@@ -69,6 +69,7 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 			}
 			return err
 		}),
+		HostKeyAlgorithms: c.knownHosts.HostKeyAlgorithms(c.host),
 	}
 	if c.Insecure {
 		config.HostKeyCallback = ssh.InsecureIgnoreHostKey()
