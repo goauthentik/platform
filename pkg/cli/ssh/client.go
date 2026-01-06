@@ -21,6 +21,7 @@ type SSHClient struct {
 	port int
 	user string
 
+	Command      string
 	Insecure     bool
 	AgentClient  *client.AgentClient
 	AgentProfile string
@@ -68,7 +69,9 @@ func ParseArgs(args []string) (*SSHClient, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if len(args) < 1 {
+		return nil, errors.New("missing host")
+	}
 	host := args[0]
 	user := u.Username
 	port := "22"
@@ -86,8 +89,16 @@ func ParseArgs(args []string) (*SSHClient, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return New(host, nport, user)
+	cmd := ""
+	if len(args) > 1 {
+		cmd = args[1]
+	}
+	c, err := New(host, nport, user)
+	if err != nil {
+		return nil, err
+	}
+	c.Command = cmd
+	return c, nil
 }
 
 func (c *SSHClient) Connect() error {
@@ -108,5 +119,8 @@ func (c *SSHClient) Connect() error {
 			fmt.Printf("Warning: %v\n", err.Error())
 		}
 	}()
-	return c.Shell(client)
+	if c.Command != "" {
+		return c.command(client)
+	}
+	return c.shell(client)
 }

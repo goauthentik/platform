@@ -50,7 +50,7 @@ func AuthenticatedSession(t testing.TB) *http.Client {
 		AuthentikURL: LocalAuthentikURL(),
 	}), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
-			t.Log(msg)
+			t.Logf(msg+": %+v", fields)
 		},
 	})
 	assert.NoError(t, err)
@@ -85,7 +85,7 @@ func AgentSetup(t testing.TB) {
 			conf.HTTPClient = authClient
 			exec, err := flow.NewFlowExecutor(t.Context(), "default-provider-authorization-implicit-consent", conf, flow.FlowExecutorOptions{
 				Logger: func(msg string, fields map[string]any) {
-					t.Log(msg)
+					t.Logf(msg+": %+v", fields)
 				},
 			})
 			assert.NoError(t, err)
@@ -172,6 +172,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 			ConfigModifier: func(c *container.Config) {
 				c.User = "root"
 			},
+			ExposedPorts: []string{"22"},
 			Env: map[string]string{
 				"GOCOVERDIR": "/tmp/ak-coverage/cli",
 				// "LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
@@ -199,18 +200,14 @@ func testMachine(t testing.TB) testcontainers.Container {
 
 	tc, err := testcontainers.GenericContainer(t.Context(), req)
 	t.Cleanup(func() {
-		MustExec(t, tc, "pkill -SIGTERM ak-agent")
 		MustExec(t, tc, "journalctl -u ak-sysd")
 		MustExec(t, tc, "systemctl stop ak-sysd")
+		MustExec(t, tc, "journalctl -u ak-agent")
+		MustExec(t, tc, "systemctl stop ak-agent")
 		testcontainers.CleanupContainer(t, tc)
 	})
 	assert.NoError(t, err)
 
-	go func() {
-		tc.Exec(context.Background(), []string{"ak-agent"}, exec.WithEnv([]string{
-			"GOCOVERDIR=/tmp/ak-coverage/ak-agent",
-		}))
-	}()
 	return tc
 }
 

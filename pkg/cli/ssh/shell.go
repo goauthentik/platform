@@ -12,7 +12,7 @@ import (
 	"golang.org/x/term"
 )
 
-func (c *SSHClient) Shell(client *ssh.Client) error {
+func (c *SSHClient) shell(client *ssh.Client) error {
 	// Create a session for interactive shell
 	session, err := client.NewSession()
 	if err != nil {
