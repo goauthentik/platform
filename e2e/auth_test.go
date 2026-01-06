@@ -21,6 +21,5 @@ func Test_Auth(t *testing.T) {
 
 	JoinDomain(t, tc)
 
-	client := AuthenticatedSession(t)
-	assert.NotNil(t, client)
+	AgentSetup(t)
 }

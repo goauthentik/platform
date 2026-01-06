@@ -247,6 +247,8 @@ func (fe *FlowExecutor) SolveFlowChallenge(a *api.FlowChallengeResponseRequest) 
 			return false, nil
 		case string(StageRedirect):
 			return true, nil
+		case string(ProviderOAuth2DeviceCodeFinish):
+			return true, nil
 		default:
 			solver, ok := fe.solvers[StageComponent(ch.GetComponent())]
 			if !ok {

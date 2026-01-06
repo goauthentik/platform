@@ -20,6 +20,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/ak/flow"
+	"goauthentik.io/platform/pkg/cli/setup"
 )
 
 func LocalAuthentikURL() string {
@@ -62,6 +63,38 @@ func AuthenticatedSession(t testing.TB) *http.Client {
 			cookie: exec.GetSession(),
 		},
 	}
+}
+
+func AgentSetup(t testing.TB) {
+	authClient := AuthenticatedSession(t)
+	assert.NotNil(t, authClient)
+
+	setup.Setup(setup.Options{
+		ProfileName:  "ak",
+		AuthentikURL: LocalAuthentikURL(),
+		AppSlug:      "authentik-cli",
+		ClientID:     "authentik-cli",
+		URLCallback: func(url string) error {
+			_, err := authClient.Get(url)
+			assert.NoError(t, err)
+
+			// Use flow executor to finish OAuth authorization
+			conf := ak.APIConfig(&config.ConfigV1Profile{
+				AuthentikURL: LocalAuthentikURL(),
+			})
+			conf.HTTPClient = authClient
+			exec, err := flow.NewFlowExecutor(t.Context(), "default-provider-authorization-implicit-consent", conf, flow.FlowExecutorOptions{
+				Logger: func(msg string, fields map[string]any) {
+					t.Log(msg)
+				},
+			})
+			assert.NoError(t, err)
+			ok, err := exec.Execute()
+			assert.NoError(t, err)
+			assert.True(t, ok)
+			return nil
+		},
+	})
 }
 
 type cookieTransport struct {
