@@ -28,6 +28,16 @@ entries:
     model: authentik_endpoints.deviceaccessgroup
     identifiers:
       name: workstation-prod
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !KeyOf grp-workstation-prod
+      group: !Find [
+        authentik_core.Group,
+        [name, "authentik Admins"]
+      ]
+    attrs:
+      order: 0
+
   - model: authentik_endpoints_connectors_agent.enrollmenttoken
     identifiers:
       name: workstation-prod
