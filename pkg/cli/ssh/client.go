@@ -26,6 +26,8 @@ type SSHClient struct {
 	AgentClient  *client.AgentClient
 	AgentProfile string
 
+	agentToken string
+
 	knownHosts       *knownhosts.HostKeyDB
 	knownHostsFile   string
 	remoteSocketPath string

@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path"
+	"time"
 
 	"github.com/skeema/knownhosts"
 	"goauthentik.io/platform/pkg/cli/auth/device"
@@ -14,18 +15,30 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+func (c *SSHClient) getTokenIfNeeded() (string, error) {
+	fmt.Printf("Getting token to access '%s'...\n", c.host)
+	cc := device.GetCredentials(c.AgentClient, context.Background(), device.CredentialsOpts{
+		Profile:    c.AgentProfile,
+		DeviceName: c.host,
+	})
+	if cc == nil {
+		return "", errors.New("failed to exchange token")
+	}
+	ft := FormatToken(cc, c.remoteSocketPath)
+	return ft, nil
+}
+
 func (c *SSHClient) auth(name, instruction string, questions []string, echos []bool) ([]string, error) {
 	c.log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
 	if len(questions) > 0 && questions[0] == "authentik Password: " {
-		fmt.Printf("Getting token to access '%s'...\n", c.host)
-		cc := device.GetCredentials(c.AgentClient, context.Background(), device.CredentialsOpts{
-			Profile:    c.AgentProfile,
-			DeviceName: c.host,
-		})
-		if cc == nil {
-			return []string{}, errors.New("failed to exchange token")
+		if c.agentToken == "" {
+			token, err := c.getTokenIfNeeded()
+			if err != nil {
+				return []string{}, err
+			}
+			c.agentToken = token
 		}
-		return []string{FormatToken(cc, c.remoteSocketPath)}, nil
+		return []string{c.agentToken}, nil
 	}
 	ans := []string{}
 	for _, q := range questions {
@@ -43,7 +56,7 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 	config := &ssh.ClientConfig{
 		User: c.user,
 		Auth: []ssh.AuthMethod{
-			ssh.KeyboardInteractive(c.auth),
+			ssh.RetryableAuthMethod(ssh.KeyboardInteractive(c.auth), 5),
 		},
 		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			innerCallback := c.knownHosts.HostKeyCallback()
@@ -72,6 +85,7 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 		}),
 		HostKeyAlgorithms: c.knownHosts.HostKeyAlgorithms(c.host),
 		ClientVersion:     fmt.Sprintf("SSH-2.0-authentik-cli/%s", meta.FullVersion()),
+		Timeout:           5 * time.Second,
 	}
 	if c.Insecure {
 		config.HostKeyCallback = ssh.InsecureIgnoreHostKey()
