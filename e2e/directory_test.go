@@ -37,10 +37,7 @@ func Test_Directory_User(t *testing.T) {
 
 	uid := getentLookup(t, tc, "getent passwd akadmin", "akadmin")
 
-	for _, testCase := range []struct {
-		cmd     string
-		expects []string
-	}{
+	for _, testCase := range []cmdTestCase{
 		{
 			cmd:     "getent passwd",
 			expects: []string{"akadmin", "authentik Default Admin", uid},
@@ -76,10 +73,7 @@ func Test_Directory_Group(t *testing.T) {
 
 	uid := getentLookup(t, tc, "getent group akadmin", "akadmin")
 
-	for _, testCase := range []struct {
-		cmd     string
-		expects []string
-	}{
+	for _, testCase := range []cmdTestCase{
 		{
 			cmd:     "getent group",
 			expects: []string{"akadmin", uid},

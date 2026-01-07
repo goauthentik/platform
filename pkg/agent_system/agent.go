@@ -76,7 +76,11 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 				return false
 			}), grpc_sentry.WithRepanicOption(true)),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-				l.WithField("p", p).Warning("GRPC method panicd")
+				if e, ok := p.(error); ok {
+					l.WithError(e).Warning("GRPC method panicd")
+				} else {
+					l.WithField("p", p).Warning("GRPC method panicd")
+				}
 				return status.Errorf(codes.Unknown, "panic triggered")
 			})),
 		),
@@ -86,7 +90,11 @@ func New(opts SystemAgentOptions) (*SystemAgent, error) {
 				return false
 			}), grpc_sentry.WithRepanicOption(true)),
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-				l.WithField("p", p).Warning("GRPC method panicd")
+				if e, ok := p.(error); ok {
+					l.WithError(e).Warning("GRPC method panicd")
+				} else {
+					l.WithField("p", p).Warning("GRPC method panicd")
+				}
 				return status.Errorf(codes.Unknown, "panic triggered")
 			})),
 		),

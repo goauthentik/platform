@@ -10,6 +10,10 @@ RUN --mount=type=bind,target=/build/bin,src=./bin \
     dpkg -i /build/bin/nss/libnss-authentik_${AK_PLATFORM_VER}_${AK_PLATFORM_ARCH}.deb && \
     dpkg -i /build/bin/pam/libpam-authentik_${AK_PLATFORM_VER}_${AK_PLATFORM_ARCH}.deb && \
     mkdir -p /etc/systemd/system/ak-sysd.service.d && \
+    mkdir -p /etc/systemd/system/ak-agent.service.d && \
     mkdir -p /tmp/ak-coverage && \
     echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-sysd"' > /etc/systemd/system/ak-sysd.service.d/coverage.conf && \
-    sed -i 's/false/true/g' /etc/authentik/config.json
+    cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system && \
+    echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-agent"\nEnvironment="HOME=/root"\' > /etc/systemd/system/ak-agent.service.d/coverage.conf && \
+    sed -i 's/false/true/g' /etc/authentik/config.json && \
+    systemctl enable ak-agent

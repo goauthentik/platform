@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"os"
 
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_local/client"
@@ -19,15 +20,24 @@ var setupCmd = &cobra.Command{
 		appSlug := mustFlag(cmd.Flags().GetString("app"))
 		clientId := mustFlag(cmd.Flags().GetString("client-id"))
 
-		cfg, err := setup.Setup(setup.Options{
-			AuthentikURL: base,
-			AppSlug:      appSlug,
-			ClientID:     clientId,
-			ProfileName:  profileName,
-		})
-		if err != nil {
-			return err
+		accessToken, refreshToken := "", ""
+		if at, aset := os.LookupEnv("AK_CLI_ACCESS_TOKEN"); aset {
+			accessToken = at
+			refreshToken = os.Getenv("AK_CLI_REFRESH_TOKEN")
+		} else {
+			cfg, err := setup.Setup(setup.Options{
+				AuthentikURL: base,
+				AppSlug:      appSlug,
+				ClientID:     clientId,
+				ProfileName:  profileName,
+			})
+			if err != nil {
+				return err
+			}
+			accessToken = cfg.AccessToken
+			refreshToken = cfg.RefreshToken
 		}
+
 		c, err := client.New(socketPath)
 		if err != nil {
 			return err
@@ -36,11 +46,11 @@ var setupCmd = &cobra.Command{
 			Header: &pb.RequestHeader{
 				Profile: profileName,
 			},
-			AuthentikUrl: cfg.AuthentikURL,
-			AppSlug:      cfg.AppSlug,
-			ClientId:     cfg.ClientID,
-			AccessToken:  cfg.AccessToken,
-			RefreshToken: cfg.RefreshToken,
+			AuthentikUrl: base,
+			AppSlug:      appSlug,
+			ClientId:     clientId,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
 		})
 		if err != nil {
 			return err

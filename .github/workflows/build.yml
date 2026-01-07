@@ -198,6 +198,7 @@ jobs:
           deploy-message: "Repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
           alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
           github-deployment-environment: ${{ github.event_name == 'pull_request' && '' || 'pkg' }}
+          enable-commit-comment: false
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: authentik-pkg.netlify.app

@@ -7,6 +7,14 @@
             "command": "make",
             "args": ["gen"],
             "problemMatcher": []
+        },
+        {
+            "label": "Start local agent",
+            "type": "process",
+            "command": "make",
+            "args": ["test-agent"],
+            "problemMatcher": [],
+            "isBackground": true
         }
     ]
 }

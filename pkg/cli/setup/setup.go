@@ -16,6 +16,7 @@ type Options struct {
 	AuthentikURL string
 	AppSlug      string
 	ClientID     string
+	URLCallback  func(url string) error
 }
 
 func Setup(opts Options) (*config.ConfigV1Profile, error) {
@@ -23,16 +24,8 @@ func Setup(opts Options) (*config.ConfigV1Profile, error) {
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 	})
-
-	flow := &oauth.Flow{
-		Host: &oauth.Host{
-			AuthorizeURL:  urls.AuthorizeURL,
-			DeviceCodeURL: urls.DeviceCodeURL,
-			TokenURL:      urls.TokenURL,
-		},
-		ClientID: opts.ClientID,
-		Scopes:   []string{"openid", "profile", "email", "offline_access", "goauthentik.io/api"},
-		BrowseURL: func(s string) error {
+	if opts.URLCallback == nil {
+		opts.URLCallback = func(s string) error {
 			if err := browser.OpenURL(s); err != nil {
 				fmt.Println("------------------------------------------------------------")
 				fmt.Println("")
@@ -41,7 +34,18 @@ func Setup(opts Options) (*config.ConfigV1Profile, error) {
 				fmt.Println("------------------------------------------------------------")
 			}
 			return nil
+		}
+	}
+
+	flow := &oauth.Flow{
+		Host: &oauth.Host{
+			AuthorizeURL:  urls.AuthorizeURL,
+			DeviceCodeURL: urls.DeviceCodeURL,
+			TokenURL:      urls.TokenURL,
 		},
+		ClientID:  opts.ClientID,
+		Scopes:    []string{"openid", "profile", "email", "offline_access", "goauthentik.io/api"},
+		BrowseURL: opts.URLCallback,
 	}
 
 	accessToken, err := flow.DetectFlow()

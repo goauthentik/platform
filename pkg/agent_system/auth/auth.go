@@ -6,7 +6,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
@@ -26,7 +25,6 @@ type Server struct {
 
 	txns map[string]*InteractiveAuthTransaction
 	m    sync.RWMutex
-	dom  *config.DomainConfig
 
 	interactiveEnabled   bool
 	authorizationEnabled bool

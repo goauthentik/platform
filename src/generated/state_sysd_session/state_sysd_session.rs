@@ -18,5 +18,7 @@ pub struct StateSession {
     pub created_at: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(string, tag="8")]
     pub local_socket: ::prost::alloc::string::String,
+    #[prost(bool, tag="9")]
+    pub opened: bool,
 }
 // @@protoc_insertion_point(module)

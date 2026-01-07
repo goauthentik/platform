@@ -19,7 +19,11 @@ import (
 func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.Token, error) {
 	var st jwkset.Storage
 	jw := jwkset.JWKSMarshal{}
-	err := mapstructure.Decode(auth.dom.Config().JwksAuth, &jw)
+	_, dom, err := auth.ctx.DomainAPI()
+	if err != nil {
+		return nil, err
+	}
+	err = mapstructure.Decode(dom.Config().JwksAuth, &jw)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +46,7 @@ func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.
 		AccessToken:    t,
 		RawAccessToken: rawToken,
 	}
-	if token.Claims().Audience[0] != auth.dom.Config().DeviceId {
+	if token.Claims().Audience[0] != dom.Config().DeviceId {
 		return nil, errors.New("token not for device")
 	}
 	return &token, nil
@@ -80,6 +84,6 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
-		SessionId: sess.ID,
+		SessionId: sess.Id,
 	}, nil
 }

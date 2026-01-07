@@ -8,6 +8,8 @@ import (
 	"github.com/gorilla/securecookie"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
@@ -23,10 +25,13 @@ func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuth
 
 func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAuthInitRequest) (*pb.InteractiveChallenge, error) {
 	id := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
-	api, err := auth.dom.APIClient()
+	api, dom, err := auth.ctx.DomainAPI()
 	if err != nil {
-		auth.log.WithError(err).Warning("failed to get API client for domain")
 		return nil, err
+	}
+	domConfig := dom.Config()
+	if !domConfig.AuthorizationFlow.IsSet() {
+		return nil, status.Error(codes.InvalidArgument, "authorization flow not configured")
 	}
 	txn := &InteractiveAuthTransaction{
 		ID:       id,
@@ -34,11 +39,11 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 		password: req.Password,
 		api:      api,
 		log:      auth.log.WithField("txn", id),
-		dom:      auth.dom,
+		dom:      dom,
 		tv:       auth.TokenAuth,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())
-	fex, err := flow.NewFlowExecutor(txn.ctx, *txn.dom.Config().AuthorizationFlow.Get(), txn.api.GetConfig(), flow.FlowExecutorOptions{
+	fex, err := flow.NewFlowExecutor(txn.ctx, domConfig.GetAuthorizationFlow(), txn.api.GetConfig(), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
 			txn.log.WithField("logger", "component.auth.flow").WithFields(fields).Info(msg)
 		},

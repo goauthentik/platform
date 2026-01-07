@@ -29,7 +29,6 @@ func testAuth(t *testing.T, dc *config.DomainConfig) Server {
 		log:  log.WithField("component", "test"),
 		ctx:  ctx,
 		txns: map[string]*InteractiveAuthTransaction{},
-		dom:  dc,
 	}
 }
 
@@ -98,7 +97,7 @@ func TestInteractive_Success(t *testing.T) {
 	}, res)
 	sess, found := auth.ctx.GetComponent(session.ID).(*session.Server).GetSession(res.SessionId)
 	assert.True(t, found)
-	assert.Equal(t, res.SessionId, sess.ID)
+	assert.Equal(t, res.SessionId, sess.Id)
 }
 
 func TestInteractive_NoPassword(t *testing.T) {

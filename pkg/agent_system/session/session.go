@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/gorilla/securecookie"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +34,6 @@ const (
 type Server struct {
 	pb.UnimplementedSessionManagerServer
 
-	mtx           sync.RWMutex
 	checkInterval time.Duration
 	log           *log.Entry
 	ctx           component.Context
@@ -45,7 +43,6 @@ type Server struct {
 
 func NewMonitor(ctx component.Context) (component.Component, error) {
 	return &Server{
-		mtx:           sync.RWMutex{},
 		checkInterval: 30 * time.Second,
 		log:           ctx.Log(),
 		ctx:           ctx,
@@ -76,9 +73,6 @@ func (ss *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 
 func (ss *Server) checkExpiredSessions() {
 	now := time.Now()
-
-	ss.mtx.Lock()
-	defer ss.mtx.Unlock()
 	err := ss.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			sessionID := string(k)
@@ -87,12 +81,15 @@ func (ss *Server) checkExpiredSessions() {
 			if err != nil {
 				return err
 			}
+			if !session.Opened {
+				return nil
+			}
 			if session.ExpiresAt.AsTime().Unix() == -1 {
 				return nil
 			}
 			if now.After(session.ExpiresAt.AsTime()) {
 				log.Infof("Session %s expired for user %s, terminating PID %d",
-					sessionID, session.Username, session.PID)
+					sessionID, session.Username, session.Pid)
 
 				err := ss.terminateSession(&session)
 				if err != nil && !strings.Contains(err.Error(), "no such process") {
@@ -110,14 +107,12 @@ func (ss *Server) checkExpiredSessions() {
 }
 
 func (ss *Server) AddSession(session *pb.StateSession) {
-	ss.mtx.Lock()
-	defer ss.mtx.Unlock()
 	err := ss.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		d, err := proto.Marshal(session)
 		if err != nil {
 			return err
 		}
-		return b.Put([]byte(session.ID), d)
+		return b.Put([]byte(session.Id), d)
 	})
 	if err != nil {
 		ss.log.WithError(err).Warning("failed to add session")
@@ -125,8 +120,6 @@ func (ss *Server) AddSession(session *pb.StateSession) {
 }
 
 func (ss *Server) GetSession(id string) (*pb.StateSession, bool) {
-	ss.mtx.RLock()
-	defer ss.mtx.RUnlock()
 	session := pb.StateSession{}
 	var exists bool
 	err := ss.ctx.State().View(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
@@ -150,8 +143,6 @@ func (ss *Server) GetSession(id string) (*pb.StateSession, bool) {
 }
 
 func (ss *Server) Delete(id string) {
-	ss.mtx.Lock()
-	defer ss.mtx.Unlock()
 	err := ss.ctx.State().Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
 		return b.Delete([]byte(id))
 	})
@@ -167,11 +158,11 @@ type SessionRequest struct {
 }
 
 func (ss *Server) NewSession(ctx context.Context, req SessionRequest) (*pb.StateSession, error) {
-	nid := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
+	nid := base64.URLEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
 	bth := sha256.Sum256([]byte(req.RawToken))
 	th := hex.EncodeToString(bth[:])
 	session := &pb.StateSession{
-		ID:        nid,
+		Id:        nid,
 		Username:  req.Username,
 		TokenHash: th,
 		ExpiresAt: timestamppb.New(req.Token.Expiry),
@@ -190,7 +181,7 @@ func (ss *Server) NewSession(ctx context.Context, req SessionRequest) (*pb.State
 
 	ss.log.Infof(
 		"Registered session %s for user %s (exp: %s)",
-		session.ID[:4],
+		session.Id[:4],
 		session.Username,
 		time.Until(session.ExpiresAt.AsTime()).String(),
 	)
@@ -211,16 +202,17 @@ func (ss *Server) OpenSession(ctx context.Context, req *pb.OpenSessionRequest) (
 	if !ok {
 		return &pb.OpenSessionResponse{Success: false}, status.Error(codes.NotFound, "Session not found")
 	}
-	sess.PID = req.Pid
-	sess.PPID = req.Ppid
+	sess.Opened = true
+	sess.Pid = req.Pid
+	sess.Ppid = req.Ppid
 	sess.LocalSocket = req.LocalSocket
 	ss.AddSession(sess)
 	ss.ctx.Bus().DispatchEvent(TopicSessionOpened, events.NewEvent(ctx, map[string]any{
-		"pid": sess.PID,
+		"pid": sess.Pid,
 	}))
 	return &pb.OpenSessionResponse{
 		Success:   true,
-		SessionId: sess.ID,
+		SessionId: sess.Id,
 	}, nil
 }
 
@@ -230,7 +222,7 @@ func (ss *Server) CloseSession(ctx context.Context, req *pb.CloseSessionRequest)
 		return &pb.CloseSessionResponse{Success: false}, nil
 	}
 	_ = os.Remove(sess.LocalSocket)
-	ss.log.Infof("Removing session %s for user '%s'", sess.ID, sess.Username)
+	ss.log.Infof("Removing session %s for user '%s'", sess.Id, sess.Username)
 	ss.Delete(req.SessionId)
 	return &pb.CloseSessionResponse{Success: true}, nil
 }

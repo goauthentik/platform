@@ -32,7 +32,7 @@ var whoamiCmd = &cobra.Command{
 			log.Warning("received status code")
 			return nil
 		}
-		var m interface{}
+		var m any
 		err = json.Unmarshal([]byte(res.Body), &m)
 		if err != nil {
 			log.WithError(err).Warning("failed to parse JSON")

@@ -158,7 +158,9 @@ jobs:
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
           ./hack/authentik/wait.sh
-      - run: |
+      - env:
+          AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
+        run: |
           make test-e2e
       - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
         if: ${{ always() }}
