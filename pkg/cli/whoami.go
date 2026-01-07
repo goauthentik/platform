@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_local/client"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/tui"
 )
 
 // whoamiCmd represents the whoami command
@@ -32,18 +33,17 @@ var whoamiCmd = &cobra.Command{
 			log.Warning("received status code")
 			return nil
 		}
-		var m any
+		var m map[string]any
 		err = json.Unmarshal([]byte(res.Body), &m)
 		if err != nil {
 			log.WithError(err).Warning("failed to parse JSON")
 			return err
 		}
-		b, err := json.MarshalIndent(m, "", "\t")
-		if err != nil {
-			log.WithError(err).Warning("failed to render JSON")
-			return err
+		if jsonMode {
+			return tui.JSON(m)
+		} else {
+			fmt.Print(tui.RenderMapAsTree(m, "User Information:"))
 		}
-		fmt.Println(string(b))
 		return nil
 	},
 }

@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/cli/browser"
-	log "github.com/sirupsen/logrus"
 
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/shared/tui"
 	"goauthentik.io/platform/vnd/oauth"
 )
 
@@ -27,11 +27,7 @@ func Setup(opts Options) (*config.ConfigV1Profile, error) {
 	if opts.URLCallback == nil {
 		opts.URLCallback = func(s string) error {
 			if err := browser.OpenURL(s); err != nil {
-				fmt.Println("------------------------------------------------------------")
-				fmt.Println("")
-				fmt.Printf("      Open this URL in your browser: %s\n", s)
-				fmt.Println("")
-				fmt.Println("------------------------------------------------------------")
+				fmt.Println(tui.BoxStyle().Render(fmt.Sprintf("Open this URL in your browser: %s", s)))
 			}
 			return nil
 		}
@@ -50,7 +46,6 @@ func Setup(opts Options) (*config.ConfigV1Profile, error) {
 
 	accessToken, err := flow.DetectFlow()
 	if err != nil {
-		log.WithError(err).Fatal("failed to start device flow")
 		return nil, err
 	}
 

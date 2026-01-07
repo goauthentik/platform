@@ -3,6 +3,8 @@ package check
 import (
 	"context"
 	"fmt"
+
+	"github.com/charmbracelet/lipgloss/tree"
 )
 
 func RunChecks(ctx context.Context) error {
@@ -15,14 +17,24 @@ func RunChecks(ctx context.Context) error {
 		checkPAMSession,
 		checkAgentConnectivity,
 	}
+	t := tree.New().Enumerator(tree.RoundedEnumerator)
+	catMap := map[string]*tree.Tree{}
 	for _, chk := range checks {
 		res := chk(ctx)
+		_, ok := catMap[res.Category]
+		if !ok {
+			catMap[res.Category] = tree.Root(res.Category)
+		}
 		if res.Success {
-			fmt.Printf("✅ [%s]: %s\n", res.Category, res.Message)
+			catMap[res.Category].Child(fmt.Sprintf("✅ %s", res.Message))
 		} else {
-			fmt.Printf("❌ [%s]: %s\n", res.Category, res.Message)
+			catMap[res.Category].Child(fmt.Sprintf("❌ %s", res.Message))
 		}
 	}
+	for _, c := range catMap {
+		t.Child(c)
+	}
+	fmt.Println(t.String())
 	return nil
 }
 

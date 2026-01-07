@@ -118,7 +118,7 @@ func (c *SSHClient) Connect() error {
 	go func() {
 		err := c.ForwardAgentSocket(c.remoteSocketPath, client)
 		if err != nil {
-			fmt.Printf("Warning: %v\n", err.Error())
+			c.log.WithError(err).Warning("failed to forward local agent")
 		}
 	}()
 	if c.Command != "" {

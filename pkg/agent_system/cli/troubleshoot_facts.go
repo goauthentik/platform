@@ -1,13 +1,13 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/platform/facts"
 	"goauthentik.io/platform/pkg/platform/facts/common"
+	"goauthentik.io/platform/pkg/shared/tui"
 )
 
 var troubleshootFactsCmd = &cobra.Command{
@@ -18,12 +18,11 @@ var troubleshootFactsCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		b, err := json.MarshalIndent(facts, "", "\t")
+		m, err := tui.AnyToMap(facts)
 		if err != nil {
-			log.WithError(err).Warning("failed to render JSON")
 			return err
 		}
-		fmt.Println(string(b))
+		fmt.Print(tui.RenderMapAsTree(m, "Facts:"))
 		return nil
 	},
 }
