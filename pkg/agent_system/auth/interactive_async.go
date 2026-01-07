@@ -9,6 +9,8 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -19,6 +21,9 @@ func (auth *Server) DeviceTokenHash(dom *config.DomainConfig) string {
 }
 
 func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) (*pb.InteractiveAuthAsyncResponse, error) {
+	if !auth.interactiveSupported() {
+		return nil, status.Error(codes.Unavailable, "Interactive authentication not available")
+	}
 	ac, dom, err := auth.ctx.DomainAPI()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get domain API client")
