@@ -17,6 +17,8 @@ import (
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/testutils"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func testAuth(t *testing.T, dc *config.DomainConfig) Server {
@@ -123,6 +125,7 @@ func TestInteractive_NoPassword(t *testing.T) {
 		})
 	dc := config.TestDomain(&api.AgentConfig{
 		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
 	}, ac.APIClient)
 	auth := testAuth(t, dc)
 
@@ -164,6 +167,7 @@ func TestInteractive_Auth_Denied(t *testing.T) {
 		})
 	dc := config.TestDomain(&api.AgentConfig{
 		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
 	}, ac.APIClient)
 	auth := testAuth(t, dc)
 
@@ -234,7 +238,7 @@ func TestInteractive_NoLicense(t *testing.T) {
 	}, ac.APIClient)
 	auth := testAuth(t, dc)
 
-	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
+	_, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
 		InteractiveAuth: &pb.InteractiveAuthRequest_Init{
 			Init: &pb.InteractiveAuthInitRequest{
 				Username: "akadmin",
@@ -242,14 +246,5 @@ func TestInteractive_NoLicense(t *testing.T) {
 			},
 		},
 	})
-	assert.NoError(t, err)
-	assert.Equal(t, &pb.InteractiveChallenge{
-		Txid:      res.Txid,
-		Finished:  true,
-		SessionId: res.SessionId,
-		Result:    pb.InteractiveAuthResult_PAM_SUCCESS,
-	}, res)
-	sess, found := auth.ctx.GetComponent(session.ID).(*session.Server).GetSession(res.SessionId)
-	assert.True(t, found)
-	assert.Equal(t, res.SessionId, sess.Id)
+	assert.ErrorIs(t, err, status.Error(codes.Unavailable, "Interactive authentication not available"))
 }
