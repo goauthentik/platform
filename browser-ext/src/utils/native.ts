@@ -69,9 +69,13 @@ export class Native {
     postMessage(msg: Partial<Message>): Promise<Response> {
         msg.id = createRandomString();
         const promise = Promise.withResolvers<Response>();
-        this.#promises.set(msg.id, promise);
-        console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
-        this.#port?.postMessage(msg);
+        try {
+            this.#promises.set(msg.id, promise);
+            this.#port?.postMessage(msg);
+            console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
+        } catch (exc) {
+            this.#promises.get(msg.id)?.reject(exc);
+        }
         return promise.promise;
     }
 
