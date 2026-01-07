@@ -681,6 +681,50 @@ func (x *SystemAuthorizeResponse) GetCode() InteractiveAuthResult {
 	return InteractiveAuthResult_PAM_SUCCESS
 }
 
+type SupportedResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Supported     bool                   `protobuf:"varint,1,opt,name=supported,proto3" json:"supported,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SupportedResponse) Reset() {
+	*x = SupportedResponse{}
+	mi := &file_sys_auth_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SupportedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SupportedResponse) ProtoMessage() {}
+
+func (x *SupportedResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sys_auth_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SupportedResponse.ProtoReflect.Descriptor instead.
+func (*SupportedResponse) Descriptor() ([]byte, []int) {
+	return file_sys_auth_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *SupportedResponse) GetSupported() bool {
+	if x != nil {
+		return x.Supported
+	}
+	return false
+}
+
 var File_sys_auth_proto protoreflect.FileDescriptor
 
 const file_sys_auth_proto_rawDesc = "" +
@@ -736,16 +780,19 @@ const file_sys_auth_proto_rawDesc = "" +
 	"\x05authz\x18\x02 \x01(\v2\x1c.agent_auth.AuthorizeRequestR\x05authz\"\x89\x01\n" +
 	"\x17SystemAuthorizeResponse\x129\n" +
 	"\bresponse\x18\x01 \x01(\v2\x1d.agent_auth.AuthorizeResponseR\bresponse\x123\n" +
-	"\x04code\x18\x02 \x01(\x0e2\x1f.sys_auth.InteractiveAuthResultR\x04code*O\n" +
+	"\x04code\x18\x02 \x01(\x0e2\x1f.sys_auth.InteractiveAuthResultR\x04code\"1\n" +
+	"\x11SupportedResponse\x12\x1c\n" +
+	"\tsupported\x18\x01 \x01(\bR\tsupported*O\n" +
 	"\x15InteractiveAuthResult\x12\x0f\n" +
 	"\vPAM_SUCCESS\x10\x00\x12\x13\n" +
 	"\x0fPAM_PERM_DENIED\x10\x06\x12\x10\n" +
 	"\fPAM_AUTH_ERR\x10\a2W\n" +
 	"\x0fSystemAuthToken\x12D\n" +
-	"\tTokenAuth\x12\x1a.sys_auth.TokenAuthRequest\x1a\x1b.sys_auth.TokenAuthResponse2\xc4\x01\n" +
+	"\tTokenAuth\x12\x1a.sys_auth.TokenAuthRequest\x1a\x1b.sys_auth.TokenAuthResponse2\x91\x02\n" +
 	"\x15SystemAuthInteractive\x12S\n" +
 	"\x0fInteractiveAuth\x12 .sys_auth.InteractiveAuthRequest\x1a\x1e.sys_auth.InteractiveChallenge\x12V\n" +
-	"\x14InteractiveAuthAsync\x12\x16.google.protobuf.Empty\x1a&.sys_auth.InteractiveAuthAsyncResponse2g\n" +
+	"\x14InteractiveAuthAsync\x12\x16.google.protobuf.Empty\x1a&.sys_auth.InteractiveAuthAsyncResponse\x12K\n" +
+	"\x14InteractiveSupported\x12\x16.google.protobuf.Empty\x1a\x1b.sys_auth.SupportedResponse2g\n" +
 	"\x13SystemAuthAuthorize\x12P\n" +
 	"\tAuthorize\x12 .sys_auth.SystemAuthorizeRequest\x1a!.sys_auth.SystemAuthorizeResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
@@ -762,7 +809,7 @@ func file_sys_auth_proto_rawDescGZIP() []byte {
 }
 
 var file_sys_auth_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_sys_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_sys_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_sys_auth_proto_goTypes = []any{
 	(InteractiveAuthResult)(0),             // 0: sys_auth.InteractiveAuthResult
 	(InteractiveChallenge_PromptMeta)(0),   // 1: sys_auth.InteractiveChallenge.PromptMeta
@@ -775,30 +822,33 @@ var file_sys_auth_proto_goTypes = []any{
 	(*InteractiveChallenge)(nil),           // 8: sys_auth.InteractiveChallenge
 	(*SystemAuthorizeRequest)(nil),         // 9: sys_auth.SystemAuthorizeRequest
 	(*SystemAuthorizeResponse)(nil),        // 10: sys_auth.SystemAuthorizeResponse
-	(*Token)(nil),                          // 11: agent.Token
-	(*AuthorizeRequest)(nil),               // 12: agent_auth.AuthorizeRequest
-	(*AuthorizeResponse)(nil),              // 13: agent_auth.AuthorizeResponse
-	(*emptypb.Empty)(nil),                  // 14: google.protobuf.Empty
+	(*SupportedResponse)(nil),              // 11: sys_auth.SupportedResponse
+	(*Token)(nil),                          // 12: agent.Token
+	(*AuthorizeRequest)(nil),               // 13: agent_auth.AuthorizeRequest
+	(*AuthorizeResponse)(nil),              // 14: agent_auth.AuthorizeResponse
+	(*emptypb.Empty)(nil),                  // 15: google.protobuf.Empty
 }
 var file_sys_auth_proto_depIdxs = []int32{
-	11, // 0: sys_auth.TokenAuthResponse.token:type_name -> agent.Token
+	12, // 0: sys_auth.TokenAuthResponse.token:type_name -> agent.Token
 	4,  // 1: sys_auth.InteractiveAuthRequest.init:type_name -> sys_auth.InteractiveAuthInitRequest
 	5,  // 2: sys_auth.InteractiveAuthRequest.continue:type_name -> sys_auth.InteractiveAuthContinueRequest
 	0,  // 3: sys_auth.InteractiveChallenge.result:type_name -> sys_auth.InteractiveAuthResult
 	1,  // 4: sys_auth.InteractiveChallenge.prompt_meta:type_name -> sys_auth.InteractiveChallenge.PromptMeta
-	12, // 5: sys_auth.SystemAuthorizeRequest.authz:type_name -> agent_auth.AuthorizeRequest
-	13, // 6: sys_auth.SystemAuthorizeResponse.response:type_name -> agent_auth.AuthorizeResponse
+	13, // 5: sys_auth.SystemAuthorizeRequest.authz:type_name -> agent_auth.AuthorizeRequest
+	14, // 6: sys_auth.SystemAuthorizeResponse.response:type_name -> agent_auth.AuthorizeResponse
 	0,  // 7: sys_auth.SystemAuthorizeResponse.code:type_name -> sys_auth.InteractiveAuthResult
 	2,  // 8: sys_auth.SystemAuthToken.TokenAuth:input_type -> sys_auth.TokenAuthRequest
 	6,  // 9: sys_auth.SystemAuthInteractive.InteractiveAuth:input_type -> sys_auth.InteractiveAuthRequest
-	14, // 10: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:input_type -> google.protobuf.Empty
-	9,  // 11: sys_auth.SystemAuthAuthorize.Authorize:input_type -> sys_auth.SystemAuthorizeRequest
-	3,  // 12: sys_auth.SystemAuthToken.TokenAuth:output_type -> sys_auth.TokenAuthResponse
-	8,  // 13: sys_auth.SystemAuthInteractive.InteractiveAuth:output_type -> sys_auth.InteractiveChallenge
-	7,  // 14: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:output_type -> sys_auth.InteractiveAuthAsyncResponse
-	10, // 15: sys_auth.SystemAuthAuthorize.Authorize:output_type -> sys_auth.SystemAuthorizeResponse
-	12, // [12:16] is the sub-list for method output_type
-	8,  // [8:12] is the sub-list for method input_type
+	15, // 10: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:input_type -> google.protobuf.Empty
+	15, // 11: sys_auth.SystemAuthInteractive.InteractiveSupported:input_type -> google.protobuf.Empty
+	9,  // 12: sys_auth.SystemAuthAuthorize.Authorize:input_type -> sys_auth.SystemAuthorizeRequest
+	3,  // 13: sys_auth.SystemAuthToken.TokenAuth:output_type -> sys_auth.TokenAuthResponse
+	8,  // 14: sys_auth.SystemAuthInteractive.InteractiveAuth:output_type -> sys_auth.InteractiveChallenge
+	7,  // 15: sys_auth.SystemAuthInteractive.InteractiveAuthAsync:output_type -> sys_auth.InteractiveAuthAsyncResponse
+	11, // 16: sys_auth.SystemAuthInteractive.InteractiveSupported:output_type -> sys_auth.SupportedResponse
+	10, // 17: sys_auth.SystemAuthAuthorize.Authorize:output_type -> sys_auth.SystemAuthorizeResponse
+	13, // [13:18] is the sub-list for method output_type
+	8,  // [8:13] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
 	8,  // [8:8] is the sub-list for extension extendee
 	0,  // [0:8] is the sub-list for field type_name
@@ -821,7 +871,7 @@ func file_sys_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sys_auth_proto_rawDesc), len(file_sys_auth_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   9,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

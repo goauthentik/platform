@@ -6,11 +6,29 @@ import (
 	"errors"
 
 	"github.com/gorilla/securecookie"
+	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+func (auth *Server) InteractiveSupported(ctx context.Context, _ *emptypb.Empty) (*pb.SupportedResponse, error) {
+	_, dom, err := auth.ctx.DomainAPI()
+	if err != nil {
+		return nil, err
+	}
+	lic := dom.Config().LicenseStatus
+	if !lic.IsSet() {
+		return &pb.SupportedResponse{
+			Supported: false,
+		}, nil
+	}
+	return &pb.SupportedResponse{
+		Supported: *lic.Get() != api.LICENSESTATUSENUM_UNLICENSED,
+	}, nil
+}
 
 func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
 	var ch *pb.InteractiveChallenge
