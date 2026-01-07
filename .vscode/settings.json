@@ -27,4 +27,5 @@
       }
   ],
   "cmake.sourceDirectory": "${workspaceFolder}/ee/wcp",
+  "cmake.buildDirectory": "${workspaceFolder}/cache/wcp"
 }

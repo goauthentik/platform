@@ -3,6 +3,7 @@
 #include "Debug.h"
 #include "Provider.h"
 #include "ak_version.h"
+#include "authentik_sys_bridge/ffi.h"
 
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
@@ -208,6 +209,12 @@ IFACEMETHODIMP
 Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
                            DWORD dwFlags) {
   HRESULT hr;
+
+  if (!ak_sys_auth_interactive_available()) {
+    Debug("Interactive authentication not available");
+    hr = E_NOTIMPL;
+    return hr;
+  }
 
   // Decide which scenarios to support here. Returning E_NOTIMPL simply tells
   // the caller that we're not designed for that scenario.
