@@ -9,16 +9,20 @@ import (
 	"path"
 	"time"
 
+	progress "github.com/ankddev/conemu-progressbar-go"
 	"github.com/skeema/knownhosts"
 	"goauthentik.io/platform/pkg/cli/auth/device"
 	"goauthentik.io/platform/pkg/meta"
+	"goauthentik.io/platform/pkg/shared/tui"
 	"golang.org/x/crypto/ssh"
 )
 
 const PAMPrompt = "authentik Password: "
 
 func (c *SSHClient) getTokenIfNeeded() (string, error) {
-	fmt.Printf("Getting token to access '%s'...\n", c.host)
+	progress.SetIndeterminateProgress()
+	defer progress.ClearProgress()
+	fmt.Println(tui.InlineStyle().Render(fmt.Sprintf("authentik: Getting token to access '%s'...", c.host)))
 	cc := device.GetCredentials(c.AgentClient, context.Background(), device.CredentialsOpts{
 		Profile:    c.AgentProfile,
 		DeviceName: c.host,
