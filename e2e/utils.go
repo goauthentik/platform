@@ -23,6 +23,11 @@ import (
 	"goauthentik.io/platform/pkg/cli/setup"
 )
 
+type cmdTestCase struct {
+	cmd     string
+	expects []string
+}
+
 func LocalAuthentikURL() string {
 	if os.Getenv("CI") == "true" {
 		return "http://localhost:9000"
