@@ -8,6 +8,11 @@ license = "MIT"
 name = "authentik_nss"
 crate-type = ["cdylib"]
 
+[lints.clippy]
+panic = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+
 [dependencies]
 authentik_sys = { path = ".." }
 ctor = "0.6.3"

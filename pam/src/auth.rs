@@ -80,7 +80,6 @@ pub fn authenticate_impl(
     let mut session_data = SessionData {
         username: username.to_string(),
         token: password.to_owned(),
-        expiry: -1,
         local_socket: "".to_owned(),
     };
     let session_id: String;
@@ -93,7 +92,6 @@ pub fn authenticate_impl(
             Ok(t) => t,
             Err(e) => return e,
         };
-        session_data.expiry = token_res.token.unwrap().exp.unwrap().seconds;
         session_data.local_socket = decoded.local_socket;
         session_id = token_res.session_id;
     } else {

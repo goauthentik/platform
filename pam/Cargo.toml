@@ -8,6 +8,11 @@ license = "MIT"
 name = "authentik_pam"
 crate-type = ["cdylib"]
 
+[lints.clippy]
+panic = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+
 [dependencies]
 authentik_sys = { path = ".." }
 base64 = "0.22.1"

@@ -19,7 +19,7 @@ pub fn init_log(name: &str) {
     };
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
         .map(|()| log::set_max_level(LevelFilter::Trace))
-        .expect("Failed to setup logger");
+        .unwrap_or(());
 }
 
 pub fn set_log_level(level: LevelFilter) {

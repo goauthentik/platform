@@ -46,10 +46,15 @@ pub fn auth_token(username: String, token: String) -> Result<TokenAuthResponse, 
     }
 
     log::debug!("Got valid token: {response:#?}");
-    if username != response.token.clone().unwrap().preferred_username {
+    let token_username = response
+        .token
+        .clone()
+        .ok_or(PamResultCode::PAM_AUTH_ERR)?
+        .preferred_username;
+    if username != token_username {
         log::warn!(
             "User mismatch: token={:#?}, expected={:#?}",
-            response.token.unwrap(),
+            token_username,
             username
         );
         return Err(PamResultCode::PAM_USER_UNKNOWN);
