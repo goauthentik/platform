@@ -104,7 +104,7 @@ func AgentSetup(t testing.TB, tc testcontainers.Container) {
 	assert.NotEqual(t, cfg.AccessToken, "")
 	assert.NotEqual(t, cfg.RefreshToken, "")
 
-	MustExec(t, tc, fmt.Sprintf("ak config setup -a %s", LocalAuthentikURL()), exec.WithEnv([]string{
+	MustExec(t, tc, fmt.Sprintf("ak config setup -a %s", ContianerAuthentikURL()), exec.WithEnv([]string{
 		fmt.Sprintf("AK_CLI_ACCESS_TOKEN=%s", cfg.AccessToken),
 		fmt.Sprintf("AK_CLI_REFRESH_TOKEN=%s", cfg.RefreshToken),
 	}))
