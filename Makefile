@@ -91,14 +91,14 @@ test-e2e-convert:
 		-html "${PWD}/coverage_in_container.txt" \
 		-o "${PWD}/coverage_in_container.html"
 	@echo "Converting rust coverage"
-	xcrun llvm-profdata merge \
+	llvm-profdata merge \
 		-sparse \
 		-o "${PWD}/rust.profdata" \
 		$(shell find ${PWD}/e2e/coverage/rs/ -type f -name '*.profraw')
-	xcrun llvm-cov show \
+	llvm-cov show \
 		-Xdemangler="rustfilt ${PWD}/cache/nss/release/libauthentik_nss.so" \
 		-instr-profile="${PWD}/rust.profdata" > coverage_nss.txt
-	xcrun llvm-cov show \
+	llvm-cov show \
 		-Xdemangler="rustfilt ${PWD}/cache/pam/release/libauthentik_pam.so" \
 		-instr-profile="${PWD}/rust.profdata" > coverage_pam.txt
 
