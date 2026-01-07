@@ -15,6 +15,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const PAMPrompt = "authentik Password: "
+
 func (c *SSHClient) getTokenIfNeeded() (string, error) {
 	fmt.Printf("Getting token to access '%s'...\n", c.host)
 	cc := device.GetCredentials(c.AgentClient, context.Background(), device.CredentialsOpts{
@@ -30,7 +32,7 @@ func (c *SSHClient) getTokenIfNeeded() (string, error) {
 
 func (c *SSHClient) auth(name, instruction string, questions []string, echos []bool) ([]string, error) {
 	c.log.Debugf("name '%s' instruction '%s' questions '%+v' echos '%+v'\n", name, instruction, questions, echos)
-	if len(questions) > 0 && questions[0] == "authentik Password: " {
+	if len(questions) > 0 && questions[0] == PAMPrompt {
 		if c.agentToken == "" {
 			token, err := c.getTokenIfNeeded()
 			if err != nil {
@@ -56,7 +58,7 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 	config := &ssh.ClientConfig{
 		User: c.user,
 		Auth: []ssh.AuthMethod{
-			ssh.RetryableAuthMethod(ssh.KeyboardInteractive(c.auth), 5),
+			ssh.KeyboardInteractive(c.auth),
 		},
 		HostKeyCallback: ssh.HostKeyCallback(func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			innerCallback := c.knownHosts.HostKeyCallback()
