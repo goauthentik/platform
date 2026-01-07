@@ -14,7 +14,10 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
         .connect_with_connector(service_fn(async move |p: Uri| {
             use tokio::net::UnixStream;
 
-            let path = p.query().unwrap().to_string();
+            let path = p
+                .query()
+                .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?
+                .to_string();
             let client = match UnixStream::connect(path).await {
                 Ok(c) => c,
                 Err(e) => {

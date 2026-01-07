@@ -6,6 +6,14 @@ edition = "2024"
 [lib]
 crate-type = ["staticlib", "lib"]
 
+[workspace.lints.clippy]
+panic = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+
+[lints]
+workspace = true
+
 [workspace]
 resolver = "3"
 members = ["nss", "pam"]
