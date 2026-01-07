@@ -82,13 +82,25 @@ test-e2e: containers/e2e/local-build
 	"$(MAKE)" test-e2e-convert
 
 test-e2e-convert:
+	@echo "Converting go coverage"
 	go tool covdata textfmt \
-		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
+		-i $(shell find ${PWD}/e2e/coverage/go/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
-		-o ${PWD}/coverage_in_container.txt
+		-o "${PWD}/coverage_in_container.txt"
 	go tool cover \
-		-html ${PWD}/coverage_in_container.txt \
-		-o ${PWD}/coverage_in_container.html
+		-html "${PWD}/coverage_in_container.txt" \
+		-o "${PWD}/coverage_in_container.html"
+	@echo "Converting rust coverage"
+	xcrun llvm-profdata merge \
+		-sparse \
+		-o "${PWD}/rust.profdata" \
+		$(shell find ${PWD}/e2e/coverage/rs/ -type f -name '*.profraw')
+	xcrun llvm-cov show \
+		-Xdemangler="rustfilt ${PWD}/cache/nss/release/libauthentik_nss.so" \
+		-instr-profile="${PWD}/rust.profdata" > coverage_nss.txt
+	xcrun llvm-cov show \
+		-Xdemangler="rustfilt ${PWD}/cache/pam/release/libauthentik_pam.so" \
+		-instr-profile="${PWD}/rust.profdata" > coverage_pam.txt
 
 test-agent:
 	go run -v ./cmd/agent_local/
