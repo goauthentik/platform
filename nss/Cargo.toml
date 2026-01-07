@@ -8,10 +8,8 @@ license = "MIT"
 name = "authentik_nss"
 crate-type = ["cdylib"]
 
-[lints.clippy]
-panic = "warn"
-unwrap_used = "warn"
-expect_used = "warn"
+[lints]
+workspace = true
 
 [dependencies]
 authentik_sys = { path = ".." }

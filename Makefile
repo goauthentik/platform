@@ -42,6 +42,7 @@ rs-gen-proto:
 
 lint-rs:
 	cargo fmt --all
+	cargo clippy --workspace
 	cargo clippy --fix --allow-dirty --workspace
 
 lint-go:
