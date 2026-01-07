@@ -158,7 +158,7 @@ type SessionRequest struct {
 }
 
 func (ss *Server) NewSession(ctx context.Context, req SessionRequest) (*pb.StateSession, error) {
-	nid := base64.StdEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
+	nid := base64.URLEncoding.EncodeToString(securecookie.GenerateRandomKey(64))
 	bth := sha256.Sum256([]byte(req.RawToken))
 	th := hex.EncodeToString(bth[:])
 	session := &pb.StateSession{

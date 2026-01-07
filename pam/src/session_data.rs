@@ -51,7 +51,13 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
         }
     };
     let path = _session_file(id);
-    let mut file = File::create(path).expect("Could not create file!");
+    let mut file = match File::create(path) {
+        Ok(f) => f,
+        Err(e) => {
+            log::warn!("failed to create file: {e}");
+            return Err(PamResultCode::PAM_SESSION_ERR)
+        },
+    };
 
     match file.set_permissions(Permissions::from_mode(0o400)) {
         Ok(_) => {}
