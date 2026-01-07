@@ -17,6 +17,8 @@ service SystemAuthInteractive {
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
   // Interactive auth which is handed of to a browser
   rpc InteractiveAuthAsync(google.protobuf.Empty) returns (InteractiveAuthAsyncResponse);
+  // Check if interactive authentication is supported
+  rpc InteractiveSupported(google.protobuf.Empty) returns (SupportedResponse);
 }
 
 service SystemAuthAuthorize {
@@ -92,4 +94,8 @@ message SystemAuthorizeRequest {
 message SystemAuthorizeResponse {
   agent_auth.AuthorizeResponse response = 1;
   InteractiveAuthResult code = 2;
+}
+
+message SupportedResponse {
+  bool supported = 1;
 }

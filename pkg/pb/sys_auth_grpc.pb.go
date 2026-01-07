@@ -124,6 +124,7 @@ var SystemAuthToken_ServiceDesc = grpc.ServiceDesc{
 const (
 	SystemAuthInteractive_InteractiveAuth_FullMethodName      = "/sys_auth.SystemAuthInteractive/InteractiveAuth"
 	SystemAuthInteractive_InteractiveAuthAsync_FullMethodName = "/sys_auth.SystemAuthInteractive/InteractiveAuthAsync"
+	SystemAuthInteractive_InteractiveSupported_FullMethodName = "/sys_auth.SystemAuthInteractive/InteractiveSupported"
 )
 
 // SystemAuthInteractiveClient is the client API for SystemAuthInteractive service.
@@ -134,6 +135,8 @@ type SystemAuthInteractiveClient interface {
 	InteractiveAuth(ctx context.Context, in *InteractiveAuthRequest, opts ...grpc.CallOption) (*InteractiveChallenge, error)
 	// Interactive auth which is handed of to a browser
 	InteractiveAuthAsync(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InteractiveAuthAsyncResponse, error)
+	// Check if interactive authentication is supported
+	InteractiveSupported(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SupportedResponse, error)
 }
 
 type systemAuthInteractiveClient struct {
@@ -164,6 +167,16 @@ func (c *systemAuthInteractiveClient) InteractiveAuthAsync(ctx context.Context, 
 	return out, nil
 }
 
+func (c *systemAuthInteractiveClient) InteractiveSupported(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SupportedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SupportedResponse)
+	err := c.cc.Invoke(ctx, SystemAuthInteractive_InteractiveSupported_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SystemAuthInteractiveServer is the server API for SystemAuthInteractive service.
 // All implementations must embed UnimplementedSystemAuthInteractiveServer
 // for forward compatibility.
@@ -172,6 +185,8 @@ type SystemAuthInteractiveServer interface {
 	InteractiveAuth(context.Context, *InteractiveAuthRequest) (*InteractiveChallenge, error)
 	// Interactive auth which is handed of to a browser
 	InteractiveAuthAsync(context.Context, *emptypb.Empty) (*InteractiveAuthAsyncResponse, error)
+	// Check if interactive authentication is supported
+	InteractiveSupported(context.Context, *emptypb.Empty) (*SupportedResponse, error)
 	mustEmbedUnimplementedSystemAuthInteractiveServer()
 }
 
@@ -187,6 +202,9 @@ func (UnimplementedSystemAuthInteractiveServer) InteractiveAuth(context.Context,
 }
 func (UnimplementedSystemAuthInteractiveServer) InteractiveAuthAsync(context.Context, *emptypb.Empty) (*InteractiveAuthAsyncResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method InteractiveAuthAsync not implemented")
+}
+func (UnimplementedSystemAuthInteractiveServer) InteractiveSupported(context.Context, *emptypb.Empty) (*SupportedResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method InteractiveSupported not implemented")
 }
 func (UnimplementedSystemAuthInteractiveServer) mustEmbedUnimplementedSystemAuthInteractiveServer() {}
 func (UnimplementedSystemAuthInteractiveServer) testEmbeddedByValue()                               {}
@@ -245,6 +263,24 @@ func _SystemAuthInteractive_InteractiveAuthAsync_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SystemAuthInteractive_InteractiveSupported_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemAuthInteractiveServer).InteractiveSupported(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SystemAuthInteractive_InteractiveSupported_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemAuthInteractiveServer).InteractiveSupported(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SystemAuthInteractive_ServiceDesc is the grpc.ServiceDesc for SystemAuthInteractive service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -259,6 +295,10 @@ var SystemAuthInteractive_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InteractiveAuthAsync",
 			Handler:    _SystemAuthInteractive_InteractiveAuthAsync_Handler,
+		},
+		{
+			MethodName: "InteractiveSupported",
+			Handler:    _SystemAuthInteractive_InteractiveSupported_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -130,6 +130,11 @@ pub struct SystemAuthorizeResponse {
     #[prost(enumeration="InteractiveAuthResult", tag="2")]
     pub code: i32,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SupportedResponse {
+    #[prost(bool, tag="1")]
+    pub supported: bool,
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum InteractiveAuthResult {

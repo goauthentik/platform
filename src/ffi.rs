@@ -28,6 +28,7 @@ mod ffi {
     extern "Rust" {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
+        fn ak_sys_auth_interactive_available() -> Result<bool>;
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
         fn ak_sys_auth_token_validate(
             raw_token: &CxxString,
@@ -92,4 +93,14 @@ fn ak_sys_auth_start_async(res: &mut ffi::WCPAuthStartAsync) -> Result<bool, Box
     res.url = response.url;
     res.header_token = response.header_token;
     Ok(true)
+}
+
+fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
+    let response = grpc_request(async |ch| {
+        return Ok(SystemAuthInteractiveClient::new(ch)
+            .interactive_supported(())
+            .await?);
+    })?
+    .into_inner();
+    Ok(response.supported)
 }

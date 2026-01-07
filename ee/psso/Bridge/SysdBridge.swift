@@ -108,6 +108,16 @@ public class SysdBridge {
         }
     }
 
+    public func interactiveAuthSupported() async throws -> Bool {
+        return try await self.withClient { client in
+            let c = SystemAuthInteractive.Client(wrapping: client)
+            let reply = try await c.interactiveSupported(
+                request: ClientRequest(message: Google_Protobuf_Empty())
+            )
+            return reply.supported
+        }
+    }
+
     public func pssoRegisterUser(
         enclaveKeyID: String,
         userSecureEnclaveKey: String,
@@ -158,7 +168,8 @@ public class SysdBridge {
                 .append(
                     URLQueryItem(
                         name: "x-ak-device-token",
-                        value: res.deviceToken.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+                        value: res.deviceToken.addingPercentEncoding(
+                            withAllowedCharacters: .alphanumerics)
                     )
                 )
             return cfg
