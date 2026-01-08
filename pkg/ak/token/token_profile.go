@@ -28,8 +28,12 @@ type ProfileManagerOpt func(ptm *ProfileTokenManager) error
 
 func WithVerified() ProfileManagerOpt {
 	return func(ptm *ProfileTokenManager) error {
+		prof := config.Manager().Get().Profiles[ptm.profileName]
+		if prof == nil {
+			return config.ErrProfileNotFound
+		}
 		k, err := keyfunc.NewDefaultCtx(ptm.ctx, []string{
-			ak.URLsForProfile(config.Manager().Get().Profiles[ptm.profileName]).JWKS,
+			ak.URLsForProfile(*prof).JWKS,
 		})
 		if err != nil {
 			ptm.log.WithError(err).Warning("failed to get JWKS for profile")

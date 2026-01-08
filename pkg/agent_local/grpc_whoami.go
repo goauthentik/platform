@@ -11,10 +11,15 @@ import (
 	"goauthentik.io/platform/pkg/platform/authz"
 	"goauthentik.io/platform/pkg/platform/grpc_creds"
 	"goauthentik.io/platform/pkg/platform/pstr"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIResponse, error) {
 	prof := a.cfg.Get().Profiles[req.Header.Profile]
+	if prof == nil {
+		return nil, status.Error(codes.NotFound, "Profile not found")
+	}
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
 			return pstr.PlatformString{
@@ -31,25 +36,25 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 	}); err != nil {
 		return nil, err
 	}
-	rreq, err := http.NewRequest("GET", ak.URLsForProfile(prof).UserInfo, nil)
+	rreq, err := http.NewRequest("GET", ak.URLsForProfile(*prof).UserInfo, nil)
 	if err != nil {
 		a.log.WithError(err).Warn("failed to create request")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
+		return nil, err
 	}
 	rreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
 	res, err := http.DefaultClient.Do(rreq)
 	if err != nil {
 		a.log.WithError(err).Warn("failed to send request")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
+		return nil, err
 	}
 	if res.StatusCode > 200 {
 		a.log.WithField("status", res.StatusCode).Warning("received status code")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
+		return nil, err
 	}
 	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		a.log.WithError(err).Warn("failed to read body")
-		return &pb.WhoAmIResponse{Header: &pb.ResponseHeader{Successful: false}}, err
+		return nil, err
 	}
 	return &pb.WhoAmIResponse{
 		Header: &pb.ResponseHeader{
