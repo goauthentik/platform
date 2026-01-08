@@ -51,7 +51,7 @@ func AuthentikCreds() (string, string) {
 }
 
 func AuthenticatedSession(t testing.TB) *http.Client {
-	exec, err := flow.NewFlowExecutor(t.Context(), "default-authentication-flow", ak.APIConfig(&config.ConfigV1Profile{
+	exec, err := flow.NewFlowExecutor(t.Context(), "default-authentication-flow", ak.APIConfig(config.ConfigV1Profile{
 		AuthentikURL: LocalAuthentikURL(),
 	}), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
@@ -84,7 +84,7 @@ func AgentSetup(t testing.TB, tc testcontainers.Container) {
 			assert.NoError(t, err)
 
 			// Use flow executor to finish OAuth authorization
-			conf := ak.APIConfig(&config.ConfigV1Profile{
+			conf := ak.APIConfig(config.ConfigV1Profile{
 				AuthentikURL: LocalAuthentikURL(),
 			})
 			conf.HTTPClient = authClient
