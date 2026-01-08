@@ -210,8 +210,15 @@ Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
                            DWORD dwFlags) {
   HRESULT hr;
 
-  if (!ak_sys_auth_interactive_available()) {
-    Debug("Interactive authentication not available");
+  try {
+    if (!ak_sys_auth_interactive_available()) {
+      Debug("Interactive authentication not available");
+      hr = E_NOTIMPL;
+      return hr;
+    }
+  } catch (const rust::Error &ex) {
+    Debug("Exception in ak_sys_auth_interactive_available");
+    Debug(ex.what());
     hr = E_NOTIMPL;
     return hr;
   }
