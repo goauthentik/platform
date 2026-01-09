@@ -13,6 +13,7 @@
     },
     "type": "module",
     "devDependencies": {
+        "@codecov/rollup-plugin": "^1.9.1",
         "@goauthentik/api": "^2025.6.3-1751754396",
         "@goauthentik/eslint-config": "^1.2.0",
         "@goauthentik/prettier-config": "^3.3.1",
