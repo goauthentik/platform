@@ -1,6 +1,7 @@
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
+import { codecovRollupPlugin } from "@codecov/rollup-plugin";
 
 export default {
     input: {
@@ -19,6 +20,13 @@ export default {
         }),
         resolve(),
         commonjs(),
+        codecovRollupPlugin({
+            enableBundleAnalysis: process.env.CI === "true",
+            bundleName: "browser-ext",
+            oidc: {
+                useGitHubOIDC: true,
+            },
+        }),
     ],
     onwarn: function (warning, warn) {
         if (warning.code === "UNRESOLVED_IMPORT") {
