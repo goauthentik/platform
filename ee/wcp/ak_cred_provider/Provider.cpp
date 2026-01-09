@@ -210,19 +210,6 @@ Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
                            DWORD dwFlags) {
   HRESULT hr;
 
-  try {
-    if (!ak_sys_auth_interactive_available()) {
-      Debug("Interactive authentication not available");
-      hr = E_NOTIMPL;
-      return hr;
-    }
-  } catch (const rust::Error &ex) {
-    Debug("Exception in ak_sys_auth_interactive_available");
-    Debug(ex.what());
-    hr = E_NOTIMPL;
-    return hr;
-  }
-
   // Decide which scenarios to support here. Returning E_NOTIMPL simply tells
   // the caller that we're not designed for that scenario.
   switch (cpus) {
