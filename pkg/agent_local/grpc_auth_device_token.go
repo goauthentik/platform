@@ -5,19 +5,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/platform/authz"
 	"goauthentik.io/platform/pkg/platform/grpc_creds"
 	"goauthentik.io/platform/pkg/platform/pstr"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (a *Agent) DeviceTokenExchange(ctx context.Context, req *pb.DeviceTokenExchangeRequest) (*pb.TokenExchangeResponse, error) {
-	prof, ok := a.cfg.Get().Profiles[req.Header.Profile]
-	if !ok {
-		return nil, errors.New("profile not found")
+	prof := a.cfg.Get().Profiles[req.Header.Profile]
+	if prof == nil {
+		return nil, status.Error(codes.NotFound, "Profile not found")
 	}
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
@@ -35,7 +36,7 @@ func (a *Agent) DeviceTokenExchange(ctx context.Context, req *pb.DeviceTokenExch
 	}); err != nil {
 		return nil, err
 	}
-	acfg := ak.APIConfig(prof)
+	acfg := ak.APIConfig(*prof)
 	acfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
 	ac := api.NewAPIClient(acfg)
 	dt, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAuthFedCreate(ctx).Device(req.DeviceName).Execute()

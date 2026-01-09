@@ -19,11 +19,14 @@ func (ptm *ProfileTokenManager) renew() error {
 		ptm.mutex.Unlock()
 	}()
 	profile := config.Manager().Get().Profiles[ptm.profileName]
+	if profile == nil {
+		return config.ErrProfileNotFound
+	}
 
 	v := url.Values{}
 	v.Set("grant_type", "refresh_token")
 	v.Set("refresh_token", profile.RefreshToken)
-	req, err := http.NewRequest("POST", ak.URLsForProfile(profile).TokenURL, strings.NewReader(v.Encode()))
+	req, err := http.NewRequest("POST", ak.URLsForProfile(*profile).TokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return err
 	}

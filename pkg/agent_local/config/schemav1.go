@@ -1,9 +1,15 @@
 package config
 
 import (
+	"errors"
+
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
+)
+
+var (
+	ErrProfileNotFound = errors.New("profile not found")
 )
 
 type ConfigV1 struct {
