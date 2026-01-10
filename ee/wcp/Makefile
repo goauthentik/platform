@@ -4,6 +4,8 @@ include ../../common.mk
 
 TARGET := wcp
 
+CLANG_FORMAT := "C:\Program Files\LLVM\bin\clang-format.exe"
+
 .PHONY: bump
 bump:
 	sed -i 's/#define AK_WCP_VERSION ".*"/#define AK_WCP_VERSION ${VERSION}/g' ${PWD}/ak_cred_provider/include/ak_version.h
@@ -14,15 +16,15 @@ clean:
 
 .PHONY: lint
 lint:
-	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --dry-run --Werror --verbose -i
-	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --dry-run --Werror --verbose -i
-	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --dry-run --Werror --verbose -i
+	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
+	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
+	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
 
 .PHONY: lint-fix
 lint-fix:
-	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
-	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
-	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
+	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --verbose -i
+	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --verbose -i
+	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --verbose -i
 
 .PHONY: build
 build:
