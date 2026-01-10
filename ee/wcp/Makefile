@@ -14,6 +14,12 @@ clean:
 
 .PHONY: lint
 lint:
+	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --dry-run --Werror --verbose -i
+	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --dry-run --Werror --verbose -i
+	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --dry-run --Werror --verbose -i
+
+.PHONY: lint-fix
+lint-fix:
 	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
 	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
 	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i

@@ -91,6 +91,17 @@ jobs:
           cache: "npm"
           cache-dependency-path: "${{ matrix.target }}/package-lock.json"
       - run: make ${{ matrix.target }}/lint
+  lint_cpp:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - ee/wcp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
+      - run: make ${{ matrix.target }}/lint
   test_go_int:
     name: Test (integration)
     runs-on: ubuntu-24.04
