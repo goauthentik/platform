@@ -4,6 +4,8 @@
 #include "Provider.h"
 #include "ak_version.h"
 #include "authentik_sys_bridge/ffi.h"
+#include "rust/cxx.h"
+#include <spdlog/spdlog.h>
 
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
@@ -24,14 +26,14 @@ Provider::Provider() : m_cRef(1) {
 }
 
 void Provider::SetCefApp(sHookData *pData) {
-  Debug("SetCefApp");
+  SPDLOG_DEBUG("SetCefApp");
   if (m_pCefApp == nullptr) {
     int exit_code;
 
     std::string str =
         "SetCefApp ProcessID: " + std::to_string(GetCurrentProcessId()) +
         ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    Debug(str.c_str());
+    SPDLOG_DEBUG(str.c_str());
 
 #if defined(ARCH_CPU_32_BITS) //- todo: remove?
     // Run the main thread on 32-bit Windows using a fiber with the preferred
@@ -58,26 +60,26 @@ void Provider::SetCefApp(sHookData *pData) {
     CefScopedSandboxInfo scoped_sandbox;
     sandbox_info = scoped_sandbox.sandbox_info();
 #endif
-    Debug("CefScopedSandboxInfo");
+    SPDLOG_DEBUG("CefScopedSandboxInfo");
     // Provide CEF with command-line arguments.
     CefMainArgs main_args((HINSTANCE)GetModuleHandle(NULL));
 
     exit_code = 0;
 
-    Debug("CefMainArgs");
+    SPDLOG_DEBUG("CefMainArgs");
     // CEF applications have multiple sub-processes (render, GPU, etc) that
     // share the same executable. This function checks the command-line and, if
     // this is a sub-process, executes the appropriate logic.
 
     // exit_code = CefExecuteProcess(main_args, nullptr, sandbox_info);
-    // Debug("CefExecuteProcess");
+    // SPDLOG_DEBUG("CefExecuteProcess");
     // if (exit_code >= 0) {
-    //     Debug("Cef: exit_code");
+    //     SPDLOG_DEBUG("Cef: exit_code");
     //   // The sub-process has completed so return here.
     //   return exit_code;
     // }
 
-    Debug("CefCommandLine::CreateCommandLine");
+    SPDLOG_DEBUG("CefCommandLine::CreateCommandLine");
     // Parse command-line arguments for use in this method.
     CefRefPtr<CefCommandLine> command_line =
         CefCommandLine::CreateCommandLine();
@@ -94,8 +96,8 @@ void Provider::SetCefApp(sHookData *pData) {
     // CefString(&settings.cache_path).FromASCII(std::string(strRPath +
     // "\\CPath" + GetRandomStr(5)).c_str());
 
-    strPath = g_strPath + "\\ceflog.txt";
-    CefString(&settings.log_file).FromASCII(strPath.c_str());
+    CefString(&settings.log_file).FromASCII(std::string(AK_PROGRAM_DATA).
+              append("\\logs\\cef.log").c_str());
     settings.log_severity = LOGSEVERITY_INFO;
 
     std::string strUserAgent = std::string("authentik Platform/WCP/CredProvider@")
@@ -111,53 +113,53 @@ void Provider::SetCefApp(sHookData *pData) {
 
     settings.multi_threaded_message_loop = false;
 
-    Debug("CefSettings");
+    SPDLOG_DEBUG("CefSettings");
     // SimpleApp implements application-level callbacks for the browser process.
     // It will create the first browser instance in OnContextInitialized() after
     // CEF has initialized.
     // CefRefPtr<SimpleApp> app(new SimpleApp());
     m_pCefApp = new SimpleApp(pData);
-    Debug("Cef: new SimpleApp");
+    SPDLOG_DEBUG("Cef: new SimpleApp");
 
-    Debug(std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get())))
+    SPDLOG_DEBUG(std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get())))
               .c_str());
     // Initialize the CEF browser process. May return false if initialization
     // fails or if early exit is desired (for example, due to process singleton
     // relaunch behavior).
     if (!CefInitialize(main_args, settings, m_pCefApp.get(), sandbox_info)) {
-      Debug("CefGetExitCode");
+      SPDLOG_DEBUG("CefGetExitCode");
       // return CefGetExitCode();
       m_pCefApp = nullptr;
     }
-    Debug("CefInitialize");
+    SPDLOG_DEBUG("CefInitialize");
     // Run the CEF message loop. This will block until CefQuitMessageLoop() is
     // called.
     // CefRunMessageLoop();
 
-    // Debug("CefRunMessageLoop");
+    // SPDLOG_DEBUG("CefRunMessageLoop");
 
     // // Shut down CEF.
     // CefShutdown();
-    // Debug("CefShutdown");
+    // SPDLOG_DEBUG("CefShutdown");
     Credential::m_oCefAppData.pCefApp = m_pCefApp;
   }
 }
 
 void Provider::ShutCefApp() {
-  Debug("ShutCefApp");
+  SPDLOG_DEBUG("ShutCefApp");
   if (m_pCefApp) {
-    Debug("CefShutdown");
+    SPDLOG_DEBUG("CefShutdown");
     Credential::m_oCefAppData.SetInit(false);
     Credential::m_oCefAppData.pCefApp = nullptr;
     // Shut down CEF.
     CefShutdown();
     m_pCefApp = nullptr;
-    Debug("CefShutdown end");
+    SPDLOG_DEBUG("CefShutdown end");
   }
 }
 
 Provider::~Provider() {
-  Debug("~Provider");
+  SPDLOG_DEBUG("~Provider");
   ReleaseEnumeratedCredentials();
   if (m_pCredProviderUserArray != nullptr) {
     m_pCredProviderUserArray->Release();
@@ -210,6 +212,17 @@ Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
                            DWORD dwFlags) {
   HRESULT hr;
 
+  try {
+    if (!ak_sys_auth_interactive_available()) {
+      SPDLOG_INFO("Interactive authentication not available, not showing cred UI");
+      hr = E_NOTIMPL;
+      return hr;
+    }
+  } catch (const rust::Error &ex) {
+    SPDLOG_WARN("Exception in ak_sys_auth_interactive_available", ex.what());
+    hr = E_NOTIMPL;
+    return hr;
+  }
   // Decide which scenarios to support here. Returning E_NOTIMPL simply tells
   // the caller that we're not designed for that scenario.
   switch (cpus) {
