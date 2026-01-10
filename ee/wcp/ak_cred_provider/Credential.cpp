@@ -308,9 +308,10 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
       // m_mapThreads[pData->UserSid] = std::thread([&]
       // {CEFLaunch(pData->hInstance, 0);});
 
-      SPDLOG_DEBUG(std::string("(m_oCefAppData.pCefApp) before: " +
-                        std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
-                .c_str());
+      SPDLOG_DEBUG(
+          std::string("(m_oCefAppData.pCefApp) before: " +
+                      std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
+              .c_str());
       if (!(m_oCefAppData.pCefApp)) {
         if (m_pProvCallSet) {
           m_oCefAppData.SetInit(false);
@@ -324,9 +325,10 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
                        L"Error", 0);
         }
       }
-      SPDLOG_DEBUG(std::string("(m_oCefAppData.pCefApp) after:  " +
-                        std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
-                .c_str());
+      SPDLOG_DEBUG(
+          std::string("(m_oCefAppData.pCefApp) after:  " +
+                      std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
+              .c_str());
       if ((m_oCefAppData.pCefApp)) {
         SPDLOG_DEBUG("WndProc:: CEFLaunch");
         pData->strUsername = "";
@@ -335,7 +337,8 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
         } catch (const std::exception &e) {
           SPDLOG_WARN("Failed to CEFLaunch", e.what());
         }
-        SPDLOG_DEBUG(std::string("User logged in: " + pData->strUsername).c_str());
+        SPDLOG_DEBUG(
+            std::string("User logged in: " + pData->strUsername).c_str());
         SPDLOG_DEBUG("WndProc:: CEFLaunched");
       } else {
         ::MessageBox(hWnd,

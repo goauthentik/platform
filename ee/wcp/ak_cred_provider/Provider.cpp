@@ -96,15 +96,17 @@ void Provider::SetCefApp(sHookData *pData) {
     // CefString(&settings.cache_path).FromASCII(std::string(strRPath +
     // "\\CPath" + GetRandomStr(5)).c_str());
 
-    CefString(&settings.log_file).FromASCII(std::string(AK_PROGRAM_DATA).
-              append("\\logs\\cef.log").c_str());
+    CefString(&settings.log_file)
+        .FromASCII(
+            std::string(AK_PROGRAM_DATA).append("\\logs\\cef.log").c_str());
     settings.log_severity = LOGSEVERITY_INFO;
 
-    std::string strUserAgent = std::string("authentik Platform/WCP/CredProvider@")
-        .append(AK_WCP_VERSION)
-        .append(" (CEF ")
-        .append(CEF_VERSION)
-        .append(")");
+    std::string strUserAgent =
+        std::string("authentik Platform/WCP/CredProvider@")
+            .append(AK_WCP_VERSION)
+            .append(" (CEF ")
+            .append(CEF_VERSION)
+            .append(")");
     CefString(&settings.user_agent).FromString(strUserAgent);
 
 #if !defined(CEF_USE_SANDBOX)
@@ -121,8 +123,9 @@ void Provider::SetCefApp(sHookData *pData) {
     m_pCefApp = new SimpleApp(pData);
     SPDLOG_DEBUG("Cef: new SimpleApp");
 
-    SPDLOG_DEBUG(std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get())))
-              .c_str());
+    SPDLOG_DEBUG(
+        std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get())))
+            .c_str());
     // Initialize the CEF browser process. May return false if initialization
     // fails or if early exit is desired (for example, due to process singleton
     // relaunch behavior).
@@ -214,7 +217,8 @@ Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 
   try {
     if (!ak_sys_auth_interactive_available()) {
-      SPDLOG_INFO("Interactive authentication not available, not showing cred UI");
+      SPDLOG_INFO(
+          "Interactive authentication not available, not showing cred UI");
       hr = E_NOTIMPL;
       return hr;
     }

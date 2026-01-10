@@ -7,7 +7,8 @@
 
 bool g_sentrySetup;
 
-static void ak_sentry_log_callback(sentry_level_t level, const char *message, va_list args, void *userdata) {
+static void ak_sentry_log_callback(sentry_level_t level, const char *message,
+                                   va_list args, void *userdata) {
   (void)level;
   (void)userdata;
   char formatted_message[1024];
@@ -17,7 +18,8 @@ static void ak_sentry_log_callback(sentry_level_t level, const char *message, va
 }
 
 void SentrySetup(const char *component) {
-  if (g_sentrySetup) return;
+  if (g_sentrySetup)
+    return;
   spdlog::register_logger(spdlog::default_logger()->clone("sentry"));
 
   std::string release = std::string("ak-platform-wcp-")
@@ -25,7 +27,8 @@ void SentrySetup(const char *component) {
                             .append("@")
                             .append(AK_WCP_VERSION);
   sentry_options_t *options = sentry_options_new();
-  sentry_options_set_database_path(options, std::string(AK_PROGRAM_DATA).append("\\wcp-sentry\\").c_str());
+  sentry_options_set_database_path(
+      options, std::string(AK_PROGRAM_DATA).append("\\wcp-sentry\\").c_str());
   sentry_options_set_debug(options, 1);
   sentry_options_set_logger(options, ak_sentry_log_callback, NULL);
   sentry_options_set_dsn(options,

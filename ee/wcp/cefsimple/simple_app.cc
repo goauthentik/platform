@@ -40,7 +40,7 @@ namespace {
     {
       std::string url = "";
       try {
-        WCPAuthStartAsync start;
+        AuthStartAsync start;
         if (!ak_sys_auth_start_async(start)) {
           SPDLOG_DEBUG("Failed to start auth async");
           return;

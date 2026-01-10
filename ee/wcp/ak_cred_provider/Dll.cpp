@@ -50,8 +50,9 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
     SPDLOG_INFO("DllMain::DLL_PROCESS_ATTACH");
 
     DisableThreadLibraryCalls(hinstDll);
-    SPDLOG_INFO(std::string("DLL hInstance: " + std::to_string((size_t)hinstDll))
-              .c_str());
+    SPDLOG_INFO(
+        std::string("DLL hInstance: " + std::to_string((size_t)hinstDll))
+            .c_str());
     std::string strID =
         "DLL ProcessID: " + std::to_string(GetCurrentProcessId()) +
         ", ThreadID: " + std::to_string(GetCurrentThreadId());
