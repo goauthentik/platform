@@ -271,7 +271,6 @@ find_package(OpenSSL REQUIRED)
 
 # Display the set and detected paths
 message(INFO " > OPENSSL_ROOT_DIR:         ${OPENSSL_ROOT_DIR}")
-message(INFO "")
 message(INFO " > OPENSSL_CRYPTO_LIBRARY:   ${OPENSSL_CRYPTO_LIBRARY}")
 message(INFO " > OPENSSL_CRYPTO_LIBRARIES: ${OPENSSL_CRYPTO_LIBRARIES}")
 message(INFO " > OPENSSL_SSL_LIBRARY:      ${OPENSSL_SSL_LIBRARY}")
@@ -376,6 +375,7 @@ endif()
 # Set the project output directory for subprojects, such as `cefexe`, to copy their binaries to
 set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 add_subdirectory(cefexe)
+add_subdirectory(ak_lsa)
 # Copy cefexe executable and OpenSSL library file to the common build directory
 file(COPY "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll" DESTINATION "${PROJECT_INSALL_DIR}")
 
