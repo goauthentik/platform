@@ -86,9 +86,9 @@ class SimpleHandler : public CefClient,
     CefRefPtr<CefResponse> response
   ) override {
     std::string strURL = "URL: " + request->GetURL().ToString() + " " + request->GetMethod().ToString();
-    Debug(strURL.c_str());
+    SPDLOG_DEBUG(strURL.c_str());
     std::string str = "OnResourceResponse ProcessID: " + std::to_string(GetCurrentProcessId()) + ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    Debug(str.c_str());
+    SPDLOG_DEBUG(str.c_str());
     return false;
   }
 
@@ -100,7 +100,7 @@ class SimpleHandler : public CefClient,
   ) override {
     const std::string strKey = "goauthentik.io://";
     std::string strURL = request->GetURL().ToString();
-    Debug(strURL.c_str());
+    SPDLOG_DEBUG(strURL.c_str());
 
     CefString headerKey;
     headerKey.FromString("X-Authentik-Platform-Auth-DTH");

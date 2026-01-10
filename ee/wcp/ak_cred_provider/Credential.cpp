@@ -39,7 +39,7 @@ Credential::Credential() : m_cRef(1) {
 }
 
 Credential::~Credential() {
-  Debug("~Credential");
+  SPDLOG_DEBUG("~Credential");
   if (m_oCefAppData.pCefApp) {
     SendMessage(m_hWndOwner, WM_NULL, 200, (LPARAM)(NULL));
     for (size_t i = 0; i < 100; ++i) {
@@ -48,7 +48,7 @@ Credential::~Credential() {
       }
       Sleep(100);
     }
-    Debug("Shutdown exit");
+    SPDLOG_DEBUG("Shutdown exit");
   }
   m_hWndOwner = NULL;
 
@@ -228,7 +228,7 @@ Credential::Advise(_In_ ICredentialProviderCredentialEvents *pcpce) {
         "Advise:: m_hWndOwner: " + std::to_string((uint64_t)m_hWndOwner) + " ";
     str = str + "Advise:: ProcessID: " + std::to_string(GetCurrentProcessId()) +
           ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    Debug(str.c_str());
+    SPDLOG_DEBUG(str.c_str());
     // Two approaches are tested to subclass the window procedure of the window
     // returned by OnCreatingWindow() in order to launch the CEF UI in the same
     // UI thread as that window:
@@ -238,7 +238,7 @@ Credential::Advise(_In_ ICredentialProviderCredentialEvents *pcpce) {
     // thread as the target UI thread.
     if (m_hWndOwner) {
       if (hWndProcOrig == NULL) {
-        Debug("Hook:: SetWindowLongPtr");
+        SPDLOG_DEBUG("Hook:: SetWindowLongPtr");
         // Both the following work
         hWndProcOrig = SetWindowLongPtr(m_hWndOwner, GWLP_WNDPROC,
                                         (LONG_PTR)Credential::WndProc);
@@ -261,7 +261,7 @@ Credential::Advise(_In_ ICredentialProviderCredentialEvents *pcpce) {
         std::string strHookInfo =
             "Hook:: Process ID: " + std::to_string(dwProcessID) +
             ", Thread ID: " + std::to_string(dwThreadID);
-        Debug(strHookInfo.c_str());
+        SPDLOG_DEBUG(strHookInfo.c_str());
         if (dwThreadID != 0) {
           // hHook = SetWindowsHookEx(WH_CALLWNDPROC, Credential::CallWndProc,
           // NULL, dwThreadID);
@@ -270,14 +270,14 @@ Credential::Advise(_In_ ICredentialProviderCredentialEvents *pcpce) {
           // dwThreadID); if (! hHook)
           // {
           //     std::string strHook = "Hook:: Hook failed. Code: " +
-          //     std::to_string(GetLastError()); Debug(strHook.c_str());
+          //     std::to_string(GetLastError()); SPDLOG_DEBUG(strHook.c_str());
           // }
           // else
           // {
-          //     Debug("Hook:: hooked..");
+          //     SPDLOG_DEBUG("Hook:: hooked..");
           // }
         } else {
-          Debug("Hook:: Invalid thread ID");
+          SPDLOG_DEBUG("Hook:: Invalid thread ID");
         }
       }
     }
@@ -298,17 +298,17 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
       strLog += "Code: " + std::to_string(uMsg) +
                 ", wParam: " + std::to_string(wParam) +
                 ", lParam: " + std::to_string(lParam);
-      Debug(strLog.c_str());
+      SPDLOG_DEBUG(strLog.c_str());
       sHookData *pData = (sHookData *)lParam;
       // if (m_mapThreads.find(pData->UserSid) != m_mapThreads.end())
       // {
       //     m_mapThreads[pData->UserSid].join(); //- todo: force quit
       // }
-      Debug("UI...");
+      SPDLOG_DEBUG("UI...");
       // m_mapThreads[pData->UserSid] = std::thread([&]
       // {CEFLaunch(pData->hInstance, 0);});
 
-      Debug(std::string("(m_oCefAppData.pCefApp) before: " +
+      SPDLOG_DEBUG(std::string("(m_oCefAppData.pCefApp) before: " +
                         std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
                 .c_str());
       if (!(m_oCefAppData.pCefApp)) {
@@ -324,19 +324,19 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
                        L"Error", 0);
         }
       }
-      Debug(std::string("(m_oCefAppData.pCefApp) after:  " +
+      SPDLOG_DEBUG(std::string("(m_oCefAppData.pCefApp) after:  " +
                         std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
                 .c_str());
       if ((m_oCefAppData.pCefApp)) {
-        Debug("WndProc:: CEFLaunch");
+        SPDLOG_DEBUG("WndProc:: CEFLaunch");
         pData->strUsername = "";
         try {
           CEFLaunch(pData, m_oCefAppData.pCefApp);
         } catch (const std::exception &e) {
-          Debug(std::string("Exc: " + std::string(e.what())).c_str());
+          SPDLOG_WARN("Failed to CEFLaunch", e.what());
         }
-        Debug(std::string("User logged in: " + pData->strUsername).c_str());
-        Debug("WndProc:: CEFLaunched");
+        SPDLOG_DEBUG(std::string("User logged in: " + pData->strUsername).c_str());
+        SPDLOG_DEBUG("WndProc:: CEFLaunched");
       } else {
         ::MessageBox(hWnd,
                      L"Failure: CEF app is not set up. The authentik UI cannot "
@@ -344,9 +344,9 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
                      L"Error", 0);
       }
       pData->SetComplete(true);
-      Debug("UI... end");
+      SPDLOG_DEBUG("UI... end");
     } else if (wParam == 200) {
-      Debug("WndProc:: Shut");
+      SPDLOG_DEBUG("WndProc:: Shut");
       if (m_oCefAppData.pCefApp) {
         if (m_pProvCallShut) {
           m_pProvCallShut();
@@ -357,7 +357,7 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg,
                        L"Error", 0);
         }
       }
-      Debug("WndProc:: Shut exit");
+      SPDLOG_DEBUG("WndProc:: Shut exit");
     }
   } break;
   }
@@ -372,13 +372,13 @@ LRESULT CALLBACK Credential::CallWndProc(
   // std::to_string(GetCurrentProcessId()) + ", ThreadID: " +
   // std::to_string(GetCurrentThreadId()) + "\t"; strLog1 += "Code: " +
   // std::to_string(nCode) + ", wParam: " + std::to_string(wParam) + ", lParam:
-  // " + std::to_string(lParam); Debug(strLog1.c_str());
+  // " + std::to_string(lParam); SPDLOG_DEBUG(strLog1.c_str());
   if (nCode < 0)
     return CallNextHookEx(Credential::hHook, nCode, wParam, lParam);
 
   switch (nCode) {
   case WM_NULL: {
-    Debug("WM_NULL");
+    SPDLOG_DEBUG("WM_NULL");
     if (InSendMessage()) {
       std::string strLog =
           "___ ProcessID: " + std::to_string(GetCurrentProcessId()) +
@@ -386,7 +386,7 @@ LRESULT CALLBACK Credential::CallWndProc(
       strLog += "Code: " + std::to_string(nCode) +
                 ", wParam: " + std::to_string(wParam) +
                 ", lParam: " + std::to_string(lParam);
-      Debug(strLog.c_str());
+      SPDLOG_DEBUG(strLog.c_str());
       ReplyMessage(TRUE);
     }
     // sHookData* pData = (sHookData*)lParam;
@@ -397,15 +397,15 @@ LRESULT CALLBACK Credential::CallWndProc(
       strLog += "Code: " + std::to_string(nCode) +
                 ", wParam: " + std::to_string(wParam) +
                 ", lParam: " + std::to_string(lParam);
-      Debug(strLog.c_str());
+      SPDLOG_DEBUG(strLog.c_str());
       // if (m_mapThreads.find(pData->UserSid) != m_mapThreads.end())
       // {
       //     m_mapThreads[pData->UserSid].join(); //- todo: force quit
       // }
-      // Debug("UI...");
+      // SPDLOG_DEBUG("UI...");
       // m_mapThreads[pData->UserSid] = std::thread([&]
       // {CEFLaunch(pData->hInstance, 0);});
-      Debug("UI... end");
+      SPDLOG_DEBUG("UI... end");
     }
   } break;
   }
@@ -416,10 +416,10 @@ LRESULT CALLBACK Credential::CallWndProc(
 
 // LogonUI calls this to tell us to release the callback.
 IFACEMETHODIMP Credential::UnAdvise() {
-  Debug("UnAdvise");
+  SPDLOG_DEBUG("UnAdvise");
   if (hHook) {
     if (UnhookWindowsHookEx(hHook)) {
-      Debug("Unhook successful");
+      SPDLOG_DEBUG("Unhook successful");
     }
   }
   if (m_pCredProvCredentialEvents) {
@@ -698,7 +698,7 @@ int FindTarget(const char *procname) {
 IFACEMETHODIMP Credential::Disconnect() { return S_OK; }
 
 IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
-  Debug("::Connect");
+  SPDLOG_DEBUG("::Connect");
   HRESULT hr = S_OK;
   if (m_pCredProvCredentialEvents) {
     HWND hwndOwner = nullptr;
@@ -713,7 +713,7 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
     DWORD dwThreadID = GetWindowThreadProcessId(hwndOwner, &dwProcessID);
     str += "Submit:: HWND:: Process ID: " + std::to_string(dwProcessID) +
            ", Thread ID: " + std::to_string(dwThreadID);
-    Debug(str.c_str());
+    SPDLOG_DEBUG(str.c_str());
     // Pop a messagebox indicating the click.
     // ::MessageBox(hwndOwner, L"Command link clicked", L"Click!", 0);
     HINSTANCE hInstance =
@@ -721,7 +721,7 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
     {
       std::string strInst =
           "GetWindowLong:: hInstance: " + std::to_string((uint64_t)hInstance);
-      Debug(strInst.c_str());
+      SPDLOG_DEBUG(strInst.c_str());
     }
 
     // HINSTANCE
@@ -729,24 +729,24 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
     {
       std::string strInst =
           "GetModuleHandle:: hInstance: " + std::to_string((uint64_t)hInstance);
-      Debug(strInst.c_str());
+      SPDLOG_DEBUG(strInst.c_str());
     }
-    // Debug(std::hash<std::thread::id>{}(std::thread::get_id));
+    // SPDLOG_DEBUG(std::hash<std::thread::id>{}(std::thread::get_id));
     std::string strID =
         "Submit:: ProcessID: " + std::to_string(GetCurrentProcessId()) +
         ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    Debug(strID.c_str());
+    SPDLOG_DEBUG(strID.c_str());
 
     m_oHookData.Update(m_pszUserSid,
                        hInstance); //- todo: Move it to Initialize(...) or
                                    // Advise(...)(?) may be
     std::string strLog =
         "Sending message... " + std::to_string((uint64_t)(&m_oHookData));
-    Debug(strLog.c_str());
+    SPDLOG_DEBUG(strLog.c_str());
     {
       std::string strErr =
           " LastError: " + std::to_string((uint64_t)(GetLastError()));
-      Debug(strErr.c_str());
+      SPDLOG_DEBUG(strErr.c_str());
     }
     SetLastError(0);
     pqcws->SetStatusMessage(L"Please sign in to your authentik account...");
@@ -772,14 +772,14 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
     {
       std::string strErr =
           "_LastError: " + std::to_string((uint64_t)(GetLastError()));
-      Debug(strErr.c_str());
+      SPDLOG_DEBUG(strErr.c_str());
     }
     // SendMessage(hwndOwner, WM_NULL, 100, (LPARAM)(&oData));
     // SendNotifyMessage(hwndOwner, WM_NULL, 100, (LPARAM)(&oData));
     // PostMessage(hwndOwner, WM_NULL, 100, (LPARAM)(&oData));
     std::string strRet =
         "Message sent. LResult: " + std::to_string((uint64_t)hRet);
-    Debug(strRet.c_str());
+    SPDLOG_DEBUG(strRet.c_str());
 
     std::wstring strCredUser = L"";
     if (m_fIsLocalUser) {
@@ -820,7 +820,7 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
   } else {
     hr = E_POINTER;
   }
-  Debug("Connect end");
+  SPDLOG_DEBUG("Connect end");
 
   // do not return S_OK to avoid displaying the Disconnect button in the
   // credential provider UI
@@ -829,7 +829,7 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus *pqcws) {
 
 // Called when the user clicks a command link.
 IFACEMETHODIMP Credential::CommandLinkClicked(DWORD dwFieldID) {
-  Debug("CommandLinkClicked");
+  SPDLOG_DEBUG("CommandLinkClicked");
   HRESULT hr = S_OK;
 
   CREDENTIAL_PROVIDER_FIELD_STATE cpfsShow = CPFS_HIDDEN;
@@ -845,7 +845,7 @@ IFACEMETHODIMP Credential::CommandLinkClicked(DWORD dwFieldID) {
           if (m_pCredProvCredentialEvents) {
             m_pCredProvCredentialEvents->OnCreatingWindow(&hwndOwner);
           }
-          Debug("CommandLinkClicked: FI_LAUNCHWINDOW_LINK");
+          SPDLOG_DEBUG("CommandLinkClicked: FI_LAUNCHWINDOW_LINK");
           // Pop a messagebox indicating the click.
           ::MessageBox(hwndOwner, L"Command link clicked", L"Click!", 0);
         } break;
@@ -1032,7 +1032,7 @@ HRESULT Credential::ReportResult(
     NTSTATUS ntsStatus, NTSTATUS ntsSubstatus,
     _Outptr_result_maybenull_ PWSTR *ppwszOptionalStatusText,
     _Out_ CREDENTIAL_PROVIDER_STATUS_ICON *pcpsiOptionalStatusIcon) {
-  Debug("ReportResult");
+  SPDLOG_DEBUG("ReportResult");
   *ppwszOptionalStatusText = nullptr;
   *pcpsiOptionalStatusIcon = CPSI_NONE;
 

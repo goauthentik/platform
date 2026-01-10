@@ -24,7 +24,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
 	SetupLogs("cefexe");
 	SentrySetup("cefexe");
-	Debug("wWinMain");
+	SPDLOG_DEBUG("wWinMain");
 
 	// printf("> %d\n", argc);
 	// for (int i = 0; i < argc; ++i)
@@ -34,8 +34,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	// 	printf("%s\n", argv[i]);
 	// 	const char str1[100] = { i, '\0' };
 	// 	const char txt1[1000] = { *argv[i], '\0' };
-	// 	// Debug(str1);
-	// 	// Debug(txt1);
+	// 	// SPDLOG_DEBUG(str1);
+	// 	// SPDLOG_DEBUG(txt1);
 	// }
 
 	//Sleep(3000);
@@ -43,13 +43,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 	int ret = 0;
 	try
 	{
-		Debug("CefExecuteProcess");
+		SPDLOG_DEBUG("CefExecuteProcess");
 		ret = CefExecuteProcess(main_args, nullptr, nullptr);
-		Debug("CefExecuteProcess... done");
+		SPDLOG_DEBUG("CefExecuteProcess... done");
 	}
 	catch (const std::exception&)
 	{
-		Debug("CefExecuteProcess... catch...!");
+		SPDLOG_DEBUG("CefExecuteProcess... catch...!");
 	}
 	// spdlog::shutdown();
 	SentryShutdown();

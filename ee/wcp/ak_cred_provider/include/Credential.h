@@ -2,6 +2,8 @@
 
 #include "pch.h"
 #include "Common.h"
+#include "spdlog/spdlog.h"
+
 #include "resource.h"
 //#include "Dll.h"
 #include "Helpers.h"
@@ -36,7 +38,7 @@ struct sHookData
     }
     void SetExit(const bool bVal)
     {
-        Debug(std::string("SetExit: " + std::to_string((size_t)bVal)).c_str());
+        SPDLOG_DEBUG(std::string("SetExit: " + std::to_string((size_t)bVal)).c_str());
         oMutex.lock();
         bExit = bVal;
         oMutex.unlock();
@@ -51,7 +53,7 @@ struct sHookData
     }
     void SetCancel(const bool bVal)
     {
-        Debug(std::string("SetCancel: " + std::to_string((size_t)bVal)).c_str());
+        SPDLOG_DEBUG(std::string("SetCancel: " + std::to_string((size_t)bVal)).c_str());
         oMutex.lock();
         bCancel = bVal;
         oMutex.unlock();
@@ -66,7 +68,7 @@ struct sHookData
     }
     void SetComplete(const bool bVal)
     {
-        Debug(std::string("SetComplete: " + std::to_string((size_t)bVal)).c_str());
+        SPDLOG_DEBUG(std::string("SetComplete: " + std::to_string((size_t)bVal)).c_str());
         oMutex.lock();
         bComplete = bVal;
         oMutex.unlock();
@@ -207,7 +209,7 @@ public:
         std::mutex oMutex;
         void SetInit(const bool bVal)
         {
-            Debug(std::string("sCefAppData::SetInit: " + std::to_string((size_t)bVal)).c_str());
+            SPDLOG_DEBUG(std::string("sCefAppData::SetInit: " + std::to_string((size_t)bVal)).c_str());
             oMutex.lock();
             bInit = bVal;
             oMutex.unlock();
