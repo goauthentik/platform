@@ -5,7 +5,7 @@
 #include "cefsimple/simple_app.h"
 
 #include <string>
-#include "Debug.h"
+#include "ak_log.h"
 #include "Credential.h"
 
 #include "include/cef_browser.h"

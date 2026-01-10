@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "Debug.h"
+#include "ak_log.h"
 // The indexes of each of the fields in the credential provider's tiles.
 enum FIELD_ID {
   FI_TILEIMAGE = 0,

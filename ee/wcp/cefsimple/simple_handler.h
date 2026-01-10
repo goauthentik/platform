@@ -24,7 +24,7 @@
 
 #include "include/cef_client.h"
 #include "include/cef_command_ids.h"
-#include "Debug.h"
+#include "ak_log.h"
 
 #include "Credential.h"
 

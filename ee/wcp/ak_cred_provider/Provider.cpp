@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "Debug.h"
+#include "ak_log.h"
 #include "Provider.h"
 #include "ak_version.h"
 #include "authentik_sys_bridge/ffi.h"

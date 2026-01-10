@@ -1,7 +1,7 @@
 #include "cefsimple/simple_app.h"
 #include "include/cef_app.h"
 
-#include "ak_cred_provider/include/Debug.h"
+#include "ak_cred_provider/include/ak_log.h"
 #include "ak_cred_provider/include/ak_sentry.h"
 #include "spdlog/spdlog.h"
 #include <Synchapi.h>
