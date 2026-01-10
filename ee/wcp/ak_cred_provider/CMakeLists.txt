@@ -12,7 +12,7 @@ project(
 
 # TODO: Add tests and install targets if needed.
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 
 # Add source to this project's executable.
 set(SRCS
@@ -42,20 +42,17 @@ include_directories(
   ../
 )
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
-	set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
-endif()
 if (MSVC)
-	target_compile_definitions(${PROJECT_NAME} PUBLIC UNICODE _UNICODE)
-	target_sources(${PROJECT_NAME} PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.def
+  target_compile_definitions(${PROJECT_NAME} PUBLIC UNICODE _UNICODE)
+  target_sources(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.def
     )
 endif()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-	${CREDUI_LIB_PATH}
-	${SECUR32_LIB_PATH}
-	${SHLWAPI_LIB_PATH}
+  ${CREDUI_LIB_PATH}
+  ${SECUR32_LIB_PATH}
+  ${SHLWAPI_LIB_PATH}
   cefsimple
   authentik_sys_bridge
   spdlog

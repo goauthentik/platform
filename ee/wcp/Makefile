@@ -5,6 +5,7 @@ include ../../common.mk
 TARGET := wcp
 
 CLANG_FORMAT := "C:\Program Files\LLVM\bin\clang-format.exe"
+FORMAT_FIND_ARGS := -iname '*.h' -o -iname '*.cpp' -o -iname '*.hpp'
 
 .PHONY: bump
 bump:
@@ -16,15 +17,17 @@ clean:
 
 .PHONY: lint
 lint:
-	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
-	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
-	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
+	find "${PWD}/ak_cred_provider" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
+	find "${PWD}/ak_lsa" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
+	find "${PWD}/cefexe" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
+	find "${PWD}/cefsimple" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --dry-run --Werror --verbose -i
 
 .PHONY: lint-fix
 lint-fix:
-	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --verbose -i
-	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --verbose -i
-	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs ${CLANG_FORMAT} --verbose -i
+	find "${PWD}/ak_cred_provider" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --verbose -i
+	find "${PWD}/ak_lsa" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --verbose -i
+	find "${PWD}/cefexe" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --verbose -i
+	find "${PWD}/cefsimple" ${FORMAT_FIND_ARGS} | xargs ${CLANG_FORMAT} --verbose -i
 
 .PHONY: build
 build:
