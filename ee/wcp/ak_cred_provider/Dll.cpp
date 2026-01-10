@@ -9,8 +9,8 @@
 #include "include/cef_sandbox_win.h"
 #include "spdlog/spdlog.h"
 
-static LONG g_cRef = 0;   // global dll reference count
-HINSTANCE g_hinst = NULL; // global dll hinstance
+static LONG g_cRef = 0;    // global dll reference count
+HINSTANCE g_hinst = NULL;  // global dll hinstance
 
 TCHAR g_path[MAX_PATH];
 
@@ -43,39 +43,35 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
   g_hinst = hinstDll;
 
   switch (dwReason) {
-  case DLL_PROCESS_ATTACH: {
-    SetPaths();
-    SetupLogs("ak_cred_provider");
-    SentrySetup("ak_cred_provider");
-    SPDLOG_INFO("DllMain::DLL_PROCESS_ATTACH");
+    case DLL_PROCESS_ATTACH: {
+      SetPaths();
+      SetupLogs("ak_cred_provider");
+      SentrySetup("ak_cred_provider");
+      SPDLOG_INFO("DllMain::DLL_PROCESS_ATTACH");
 
-    DisableThreadLibraryCalls(hinstDll);
-    SPDLOG_INFO(
-        std::string("DLL hInstance: " + std::to_string((size_t)hinstDll))
-            .c_str());
-    std::string strID =
-        "DLL ProcessID: " + std::to_string(GetCurrentProcessId()) +
-        ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    SPDLOG_INFO(strID.c_str());
-  } break;
-  case DLL_THREAD_ATTACH:
-  case DLL_THREAD_DETACH:
-    break;
-  case DLL_PROCESS_DETACH:
-    SPDLOG_INFO("DllMain::DLL_PROCESS_DETACH");
-    SentryShutdown();
-    spdlog::shutdown();
-    break;
+      DisableThreadLibraryCalls(hinstDll);
+      SPDLOG_INFO(std::string("DLL hInstance: " + std::to_string((size_t)hinstDll)).c_str());
+      std::string strID = "DLL ProcessID: " + std::to_string(GetCurrentProcessId()) +
+                          ", ThreadID: " + std::to_string(GetCurrentThreadId());
+      SPDLOG_INFO(strID.c_str());
+    } break;
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+      break;
+    case DLL_PROCESS_DETACH:
+      SPDLOG_INFO("DllMain::DLL_PROCESS_DETACH");
+      SentryShutdown();
+      spdlog::shutdown();
+      break;
   }
   return TRUE;
 }
 
-STDAPI DllGetClassObject(__in REFCLSID rclsid, __in REFIID riid,
-                         __deref_out void **ppv) {
+STDAPI DllGetClassObject(__in REFCLSID rclsid, __in REFIID riid, __deref_out void** ppv) {
   *ppv = NULL;
   HRESULT hr;
   if (rclsid == CLSID_CredentialProvider) {
-    ClassFactory *pcf = new ClassFactory();
+    ClassFactory* pcf = new ClassFactory();
     if (pcf) {
       hr = pcf->QueryInterface(riid, ppv);
       pcf->Release();

@@ -10,8 +10,8 @@
 // int main(int argc, char* argv[])
 // {
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                      LPTSTR lpCmdLine, int nCmdShow) {
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine,
+                      int nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -42,7 +42,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     SPDLOG_DEBUG("CefExecuteProcess");
     ret = CefExecuteProcess(main_args, nullptr, nullptr);
     SPDLOG_DEBUG("CefExecuteProcess... done");
-  } catch (const std::exception &) {
+  } catch (const std::exception&) {
     SPDLOG_DEBUG("CefExecuteProcess... catch...!");
   }
   // spdlog::shutdown();

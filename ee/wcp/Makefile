@@ -14,7 +14,9 @@ clean:
 
 .PHONY: lint
 lint:
-	find "${PWD}" -iname '*.h' -o -iname '*.cpp' | xargs clang-format -i
+	find "${PWD}/ak_cred_provider" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
+	find "${PWD}/cefexe" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
+	find "${PWD}/cefsimple" -iname '*.h' -o -iname '*.cpp' | xargs clang-format.exe --verbose -i
 
 .PHONY: build
 build:
