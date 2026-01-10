@@ -98,7 +98,7 @@ jobs:
       matrix:
         target:
           - ee/wcp
-    runs-on: ubuntu-latest
+    runs-on: windows-2025
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5
       - run: make ${{ matrix.target }}/lint
