@@ -9,7 +9,7 @@
 // #include "cefsimple/simple_app.h"
 #include "cefsimple/simple_handler.h"
 #include "cefsimple/cefsimple_win.h"
-#include "ak_cred_provider/include/Debug.h"
+#include "ak_cred_provider/include/ak_log.h"
 #include "crypt.h"
 #include "Credential.h"
 #include <ak_sentry.h>
@@ -29,8 +29,8 @@ extern std::string g_strPath;
 #endif
 
 int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
-  Debug("CEFLaunch(...)");
-  Debug(std::string("CEFLaunch(...):  " + std::to_string((size_t)(Credential::m_oCefAppData.IsInit()))).c_str());
+  SPDLOG_DEBUG("CEFLaunch(...)");
+  SPDLOG_DEBUG(std::string("CEFLaunch(...):  " + std::to_string((size_t)(Credential::m_oCefAppData.IsInit()))).c_str());
   MSG msg;
   // wait for CefApp initialization (call to CefBrowserProcessHandler::OnContextInitialized())
   while (! (Credential::m_oCefAppData.IsInit()))
@@ -46,7 +46,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
     }
     Sleep(1);
   }
-  Debug("CEFLaunch first loop end");
+  SPDLOG_DEBUG("CEFLaunch first loop end");
 
   CefRefPtr<CefCommandLine> command_line =
       CefCommandLine::GetGlobalCommandLine();
@@ -55,7 +55,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
   CefRefPtr<SimpleHandler> pHandler(new SimpleHandler(use_alloy_style, pData));
   if (! (pCefApp->LaunchBrowser(pHandler, use_alloy_style)))
   {
-    Debug("CEFLaunch: LaunchBrowser failed. Exit.");
+    SPDLOG_DEBUG("CEFLaunch: LaunchBrowser failed. Exit.");
     pHandler = nullptr;
     // perform (at max) 10 precautionary loops even though 1 `CefDoMessageLoopWork()`
     // seems to be sufficient
@@ -66,7 +66,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
       }
-      Debug(std::string("Sub-loop failed exit: " + std::to_string(i)).c_str());
+      SPDLOG_DEBUG(std::string("Sub-loop failed exit: " + std::to_string(i)).c_str());
       // pHandler (SimpleHandler) destructor called
       if (pData->IsExit())
       {
@@ -77,7 +77,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
     return -1;
   }
 
-  Debug("CefRunMessageLoop");
+  SPDLOG_DEBUG("CefRunMessageLoop");
 
   // Run custom message loop inside the WndProc and process the main window
   // as well as the CEF messages
@@ -85,7 +85,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
   {
     if (pData->pqcws->QueryContinue() != S_OK) // Cancel button clicked
     {
-      Debug("Sub-loop");
+      SPDLOG_DEBUG("Sub-loop");
       pHandler->CloseAllBrowsers(true);
       pData->UpdateUser("");
       // pData->SetCancel(true);
@@ -103,7 +103,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
       //   {
       //     break;
       //   }
-      //   Debug(std::string("Sub-loop: " + std::to_string(i)).c_str());
+      //   SPDLOG_DEBUG(std::string("Sub-loop: " + std::to_string(i)).c_str());
       //   Sleep(3);
       // }
       break;
@@ -131,7 +131,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
       DispatchMessage(&msg);
     }
     CefDoMessageLoopWork();
-    Debug(std::string("Sub-loop: " + std::to_string(i)).c_str());
+    SPDLOG_DEBUG(std::string("Sub-loop: " + std::to_string(i)).c_str());
     // pHandler (SimpleHandler) destructor called
     if (pData->IsExit())
     {
@@ -140,6 +140,6 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
     Sleep(3);
   }
 
-  Debug("CefRunMessageLoop end");
+  SPDLOG_DEBUG("CefRunMessageLoop end");
   return 0;
 }

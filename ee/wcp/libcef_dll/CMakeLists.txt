@@ -902,7 +902,7 @@ set(WCP_SRCS
   "${WCP_PATH}/ClassFactory.cpp"
   "${WCP_PATH}/Credential.cpp"
   "${WCP_PATH}/ak_sentry.cpp"
-  "${WCP_PATH}/Debug.cpp"
+  "${WCP_PATH}/ak_log.cpp"
   "${WCP_PATH}/Dll.cpp"
   "${WCP_PATH}/GUIDs.cpp"
   "${WCP_PATH}/Helpers.cpp"

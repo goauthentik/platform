@@ -15,7 +15,7 @@ const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 #[cxx::bridge]
 #[allow(clippy::module_inception)]
 mod ffi {
-    struct WCPAuthStartAsync {
+    struct AuthStartAsync {
         pub url: String,
         pub header_token: String,
     }
@@ -34,7 +34,7 @@ mod ffi {
             raw_token: &CxxString,
             token: &mut TokenResponse,
         ) -> Result<bool>;
-        fn ak_sys_auth_start_async(res: &mut WCPAuthStartAsync) -> Result<bool>;
+        fn ak_sys_auth_start_async(res: &mut AuthStartAsync) -> Result<bool>;
     }
 }
 
@@ -83,7 +83,7 @@ fn ak_sys_auth_token_validate(
     Ok(response.successful)
 }
 
-fn ak_sys_auth_start_async(res: &mut ffi::WCPAuthStartAsync) -> Result<bool, Box<dyn Error>> {
+fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dyn Error>> {
     let response = grpc_request(async |ch| {
         return Ok(SystemAuthInteractiveClient::new(ch)
             .interactive_auth_async(())

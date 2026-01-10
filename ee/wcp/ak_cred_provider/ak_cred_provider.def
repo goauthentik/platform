@@ -9,7 +9,6 @@ EXPORTS
     DllCanUnloadNow                                 PRIVATE
     DllGetClassObject                               PRIVATE
     CefExecuteProcess
-    Debug
     SetupLogs
     SentrySetup
     SentryShutdown

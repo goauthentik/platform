@@ -19,7 +19,7 @@ set(SRCS
   "ak_sentry.cpp"
   "ClassFactory.cpp"
   "Credential.cpp"
-  "Debug.cpp"
+  "ak_log.cpp"
   "Dll.cpp"
   "GUIDs.cpp"
   "Helpers.cpp"
