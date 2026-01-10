@@ -112,6 +112,9 @@
         <util:EventSource Log="authentik"
                           Name="authentik Credential Provider"
                           EventMessageFile="C:\Windows\System32\mscoree.dll"/>
+        <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)\logs" />
+        <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)\wcp-sentry" />
+
         <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
         <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />
