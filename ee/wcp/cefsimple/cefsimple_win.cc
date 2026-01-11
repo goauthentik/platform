@@ -9,10 +9,10 @@
 // #include "cefsimple/simple_app.h"
 #include "cefsimple/simple_handler.h"
 #include "cefsimple/cefsimple_win.h"
-#include "ak_cred_provider/include/ak_log.h"
+#include "ak_common/include/ak_log.h"
+#include <ak_common/include/ak_sentry.h>
 #include "crypt.h"
 #include "Credential.h"
-#include <ak_sentry.h>
 
 extern std::string g_strPath;
 

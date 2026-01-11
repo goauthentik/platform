@@ -901,8 +901,6 @@ set(WCP_PATH "../${WCP}")
 set(WCP_SRCS
   "${WCP_PATH}/ClassFactory.cpp"
   "${WCP_PATH}/Credential.cpp"
-  "${WCP_PATH}/ak_sentry.cpp"
-  "${WCP_PATH}/ak_log.cpp"
   "${WCP_PATH}/Dll.cpp"
   "${WCP_PATH}/GUIDs.cpp"
   "${WCP_PATH}/Helpers.cpp"
@@ -984,6 +982,7 @@ target_link_libraries(${CEF_TARGET}
   ${CRYPT32_LIB_PATH}
   ${NETAPI32_LIB_PATH}
   jwt-cpp
+  ak_common
   authentik_sys_bridge
   spdlog
   sentry

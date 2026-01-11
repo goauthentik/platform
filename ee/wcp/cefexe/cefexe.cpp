@@ -1,8 +1,8 @@
 #include "cefsimple/simple_app.h"
 #include "include/cef_app.h"
 
-#include "ak_cred_provider/include/ak_log.h"
-#include "ak_cred_provider/include/ak_sentry.h"
+#include "ak_common/include/ak_log.h"
+#include "ak_common/include/ak_sentry.h"
 #include "spdlog/spdlog.h"
 #include <Synchapi.h>
 // #pragma comment(lib,"libcef.lib")
@@ -19,8 +19,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 
   CefMainArgs main_args(hInst);
 
-  SetupLogs("cefexe");
-  SentrySetup("cefexe");
+  ak_setup_logs("cefexe");
+  ak_setup_sentry("cefexe");
   SPDLOG_DEBUG("wWinMain");
 
   // printf("> %d\n", argc);
@@ -45,7 +45,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
   } catch (const std::exception&) {
     SPDLOG_DEBUG("CefExecuteProcess... catch...!");
   }
-  // spdlog::shutdown();
-  SentryShutdown();
+  ak_teardown_sentry();
+  ak_teardown_logs();
   return ret;
 }

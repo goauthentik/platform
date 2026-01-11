@@ -4,24 +4,11 @@
 #include <wincred.h>
 #include "authentik_sys_bridge/ffi.h"
 #include "rust/cxx.h"
+#include "ak_common/include/ak_log.h"
+#include "ak_common/include/strings.h"
+#include "spdlog/spdlog.h"
 
 extern LSA_SECPKG_FUNCTION_TABLE FunctionTable;
-
-inline void LogMessage(const char* message, ...) {
-  // append to log file
-  FILE* file = nullptr;
-  fopen_s(&file, "C:\\ak_lsa.txt", "a+");
-  if (!file) return;
-  {
-    // print variadic message
-    va_list args;
-    va_start(args, message);
-    _vfprintf_l(file, message, NULL, args);
-    va_end(args);
-  }
-  fprintf(file, "\n");
-  fclose(file);
-}
 
 /** Allocate and create a new LSA_STRING object.
     Assumes that "FunctionTable" is initialized. */
@@ -68,27 +55,17 @@ inline void AssignLsaUnicodeString(const LSA_UNICODE_STRING& source, LSA_UNICODE
   dest.MaximumLength = source.Length;
 }
 
-// Convert a wide Unicode string to an UTF8 string
-inline std::string utf8_encode(const std::wstring& wstr) {
-  if (wstr.empty()) return std::string();
-  int size_needed =
-      WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-  std::string strTo(size_needed, 0);
-  WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-  return strTo;
-}
-
 inline PWSTR decryptPassword(MSV1_0_INTERACTIVE_LOGON* pkil) {
   CRED_PROTECTION_TYPE ProtectionType;
   ULONG Length = pkil->Password.Length;
 
-  LogMessage("  decryptPassword: Fixing pointers...");
+  spdlog::debug("  decryptPassword: Fixing pointers...");
   PWSTR pszCredentials = (PWSTR)FunctionTable.AllocateLsaHeap(Length + sizeof(WCHAR));
   memcpy(pszCredentials, pkil->Password.Buffer, pkil->Password.MaximumLength);
 
-  LogMessage("  decryptPassword: Checking if password is encrypted...");
+  spdlog::debug("  decryptPassword: Checking if password is encrypted...");
   if (!CredIsProtectedW(pszCredentials, &ProtectionType)) {
-    LogMessage("  decryptPassword: Password is not encrypted");
+    spdlog::debug("  decryptPassword: Password is not encrypted");
     return pszCredentials;
   }
 
@@ -99,9 +76,9 @@ inline PWSTR decryptPassword(MSV1_0_INTERACTIVE_LOGON* pkil) {
   HRESULT status;
 
   if (ProtectionType != CredUnprotected) {
-    LogMessage("  decryptPassword: Password is protected");
+    spdlog::debug("  decryptPassword: Password is protected");
     while (true) {
-      LogMessage("  decryptPassword: CredUnprotectW call");
+      spdlog::debug("  decryptPassword: CredUnprotectW call");
       if (CredUnprotectW(FALSE, pszCredentials, cchCredentials, pszPin, &cchPin)) {
         break;
       }
@@ -110,32 +87,30 @@ inline PWSTR decryptPassword(MSV1_0_INTERACTIVE_LOGON* pkil) {
       }
       auto err = GetLastError();
       if (err == ERROR_INSUFFICIENT_BUFFER) {
-        LogMessage("  decryptPassword: ERROR_INSUFFICIENT_BUFFER, %d", cchPin);
+        spdlog::debug("  decryptPassword: ERROR_INSUFFICIENT_BUFFER, %d", cchPin);
         // pszPin = (PWSTR)FunctionTable.AllocatePrivateHeap(cchPin * sizeof(WCHAR));
         pszPin = (PWSTR)alloca(cchPin * sizeof(WCHAR));
       }
     }
   } else {
-    LogMessage("  decryptPassword: PW was not encrypted");
+    spdlog::debug("  decryptPassword: PW was not encrypted");
     pszPin = pszCredentials;
     cchPin = cchCredentials;
   }
-  LogMessage("  decryptPassword: result: %ls", pszPin);
   return pszPin;
 }
 
 inline bool ValidateToken(MSV1_0_INTERACTIVE_LOGON* pkil) {
   try {
-    LogMessage("  ak_sys_auth_token_validate: Decrypting password");
+    spdlog::debug("  ak_sys_auth_token_validate: Decrypting password");
     auto pw = decryptPassword(pkil);
     TokenResponse validatedToken;
-    LogMessage("  ak_sys_auth_token_validate Token: '%ls'", pw);
     if (ak_sys_auth_token_validate(utf8_encode(pw), validatedToken)) {
-      LogMessage("  ak_sys_auth_token_validate Succeeded");
+      spdlog::debug("  ak_sys_auth_token_validate Succeeded");
       return true;
     }
   } catch (const rust::Error& ex) {
-    LogMessage("  ak_sys_auth_token_validate Error: %s", ex.what());
+    spdlog::debug("  ak_sys_auth_token_validate Error: %s", ex.what());
     return false;
   }
   return false;

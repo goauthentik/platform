@@ -1,6 +1,7 @@
 #include "PrepareToken.hpp"
 #include <Lm.h>
 #include "Utils.hpp"
+#include "spdlog/spdlog.h"
 
 #pragma comment(lib, "Netapi32.lib")
 
@@ -18,7 +19,7 @@ static bool NameToSid(const wchar_t* username, PSID* userSid) {
                            &referencedDomainNameLen, &Use);
   if (!res) {
     DWORD err = GetLastError();
-    LogMessage("  LookupAccountNameW failed (err %u)", err);
+    spdlog::debug("  LookupAccountNameW failed (err %u)", err);
     return false;
   }
 
@@ -45,7 +46,7 @@ static bool GetGroups(const wchar_t* UserName, GROUP_USERS_INFO_1** lpGroupInfo,
   DWORD status = NetUserGetGroups(NULL, UserName, 1, (BYTE**)lpGroupInfo, MAX_PREFERRED_LENGTH,
                                   &NumberOfEntries, pTotalEntries);
   if (status != NERR_Success) {
-    LogMessage("ERROR: NetUserGetGroups failed with error %u", status);
+    spdlog::debug("ERROR: NetUserGetGroups failed with error %u", status);
     return false;
   }
   return true;
@@ -57,7 +58,7 @@ static bool GetLocalGroups(const wchar_t* UserName, GROUP_USERS_INFO_0** lpGroup
   DWORD status = NetUserGetLocalGroups(NULL, UserName, 0, 0, (BYTE**)lpGroupInfo,
                                        MAX_PREFERRED_LENGTH, &NumberOfEntries, pTotalEntries);
   if (status != NERR_Success) {
-    LogMessage("ERROR: NetUserGetLocalGroups failed with error %u", status);
+    spdlog::debug("ERROR: NetUserGetLocalGroups failed with error %u", status);
     return false;
   }
   return true;
@@ -79,11 +80,11 @@ NTSTATUS UserNameToToken(__in LSA_UNICODE_STRING* AccountName,
   token->ExpirationTime = Forever;
 
   PSID userSid = nullptr;
+  const wchar_t* user = username.c_str();
   {
     // configure "User"
     if (!NameToSid(username.c_str(), &userSid)) return STATUS_FAIL_FAST_EXCEPTION;
-
-    LogMessage("  User.User: %ls", username.c_str());
+    spdlog::debug("  User.User: {}", utf8_encode(username));
     token->User.User = {
         .Sid = userSid,
         .Attributes = 0,
@@ -94,17 +95,17 @@ NTSTATUS UserNameToToken(__in LSA_UNICODE_STRING* AccountName,
     // configure "Groups"
     DWORD NumberOfGroups = 0;
     GROUP_USERS_INFO_1* pGroupInfo = nullptr;
-    if (!GetGroups(username.c_str(), &pGroupInfo, &NumberOfGroups)) {
+    if (!GetGroups(user, &pGroupInfo, &NumberOfGroups)) {
       return STATUS_FAIL_FAST_EXCEPTION;
     }
-    LogMessage("  NumberOfGroups: %u", NumberOfGroups);
+    spdlog::debug("  NumberOfGroups: %u", NumberOfGroups);
 
     DWORD NumberOfLocalGroups = 0;
     GROUP_USERS_INFO_0* pLocalGroupInfo = nullptr;
-    if (!GetLocalGroups(username.c_str(), &pLocalGroupInfo, &NumberOfLocalGroups)) {
+    if (!GetLocalGroups(user, &pLocalGroupInfo, &NumberOfLocalGroups)) {
       return STATUS_FAIL_FAST_EXCEPTION;
     }
-    LogMessage("  NumberOfLocalGroups: %u", NumberOfLocalGroups);
+    spdlog::debug("  NumberOfLocalGroups: %u", NumberOfLocalGroups);
 
     TOKEN_GROUPS* tokenGroups = (TOKEN_GROUPS*)FunctionTable.AllocateLsaHeap(
         FIELD_OFFSET(TOKEN_GROUPS, Groups[NumberOfGroups + NumberOfLocalGroups]));

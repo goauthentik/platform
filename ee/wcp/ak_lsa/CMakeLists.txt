@@ -26,6 +26,7 @@ target_link_libraries(${PROJECT_NAME}
   ${SECUR32_LIB_PATH}
   ${SHLWAPI_LIB_PATH}
   authentik_sys_bridge
+  ak_common
   spdlog
 )
 set_property(TARGET ak_lsa PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)

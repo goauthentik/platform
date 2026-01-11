@@ -1,4 +1,4 @@
-#include "ak_version.h"
+#include "include/ak_version.h"
 #include <string>
 
 #define SENTRY_BUILD_STATIC 1
@@ -17,12 +17,12 @@ static void ak_sentry_log_callback(sentry_level_t level, const char* message, va
   spdlog::get("sentry")->debug(formatted_message);
 }
 
-void SentrySetup(const char* component) {
+void ak_setup_sentry(const char* component) {
   if (g_sentrySetup) return;
   spdlog::register_logger(spdlog::default_logger()->clone("sentry"));
 
   std::string release =
-      std::string("ak-platform-wcp-").append(component).append("@").append(AK_WCP_VERSION);
+      std::string("ak-platform-wcp-").append(component).append("@").append(AK_VERSION);
   sentry_options_t* options = sentry_options_new();
   sentry_options_set_database_path(options,
                                    std::string(AK_PROGRAM_DATA).append("\\wcp-sentry\\").c_str());
@@ -38,4 +38,4 @@ void SentrySetup(const char* component) {
   g_sentrySetup = true;
 }
 
-void SentryShutdown() { sentry_shutdown(); }
+void ak_teardown_sentry() { sentry_shutdown(); }

@@ -1,6 +1,10 @@
 #include "PrepareToken.hpp"
 #include "PrepareProfile.hpp"
 #include "Utils.hpp"
+#include "ak_common/include/ak_log.h"
+#include "ak_common/include/ak_sentry.h"
+#include "ak_common/include/strings.h"
+#include "spdlog/spdlog.h"
 
 // exported symbols
 #pragma comment(linker, "/export:SpLsaModeInitialize")
@@ -9,39 +13,42 @@ LSA_SECPKG_FUNCTION_TABLE FunctionTable;
 
 NTSTATUS NTAPI SpInitialize(_In_ ULONG_PTR PackageId, _In_ SECPKG_PARAMETERS* Parameters,
                             _In_ LSA_SECPKG_FUNCTION_TABLE* functionTable) {
-  LogMessage("SpInitialize");
+  ak_setup_logs("lsa");
+  ak_setup_sentry("lsa");
 
-  LogMessage("  PackageId: %u", PackageId);
-  LogMessage("  Version: %u", Parameters->Version);
+  spdlog::debug("SpInitialize");
+
+  spdlog::debug("  PackageId: %u", PackageId);
+  spdlog::debug("  Version: %u", Parameters->Version);
   {
     ULONG state = Parameters->MachineState;
-    LogMessage("  MachineState:");
+    spdlog::debug("  MachineState:");
     if (state & SECPKG_STATE_ENCRYPTION_PERMITTED) {
       state &= ~SECPKG_STATE_ENCRYPTION_PERMITTED;
-      LogMessage("  - ENCRYPTION_PERMITTED");
+      spdlog::debug("  - ENCRYPTION_PERMITTED");
     }
     if (state & SECPKG_STATE_STRONG_ENCRYPTION_PERMITTED) {
       state &= ~SECPKG_STATE_STRONG_ENCRYPTION_PERMITTED;
-      LogMessage("  - STRONG_ENCRYPTION_PERMITTED");
+      spdlog::debug("  - STRONG_ENCRYPTION_PERMITTED");
     }
     if (state & SECPKG_STATE_DOMAIN_CONTROLLER) {
       state &= ~SECPKG_STATE_DOMAIN_CONTROLLER;
-      LogMessage("  - DOMAIN_CONTROLLER");
+      spdlog::debug("  - DOMAIN_CONTROLLER");
     }
     if (state & SECPKG_STATE_WORKSTATION) {
       state &= ~SECPKG_STATE_WORKSTATION;
-      LogMessage("  - WORKSTATION");
+      spdlog::debug("  - WORKSTATION");
     }
     if (state & SECPKG_STATE_STANDALONE) {
       state &= ~SECPKG_STATE_STANDALONE;
-      LogMessage("  - STANDALONE");
+      spdlog::debug("  - STANDALONE");
     }
     if (state) {
       // print resudual flags not already covered
-      LogMessage("  * Unknown flags: 0x%X", state);
+      spdlog::debug("  * Unknown flags: 0x%X", state);
     }
   }
-  LogMessage("  SetupMode: %u", Parameters->SetupMode);
+  spdlog::debug("  SetupMode: %u", Parameters->SetupMode);
   // parameters not logged
   Parameters->DomainSid;
   Parameters->DomainName;
@@ -50,18 +57,20 @@ NTSTATUS NTAPI SpInitialize(_In_ ULONG_PTR PackageId, _In_ SECPKG_PARAMETERS* Pa
 
   FunctionTable = *functionTable;  // copy function pointer table
 
-  LogMessage("  return STATUS_SUCCESS");
+  spdlog::debug("  return STATUS_SUCCESS");
   return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI SpShutDown() {
-  LogMessage("SpShutDown");
-  LogMessage("  return STATUS_SUCCESS");
+  ak_teardown_sentry();
+  spdlog::debug("SpShutDown");
+  spdlog::debug("  return STATUS_SUCCESS");
+  ak_teardown_logs();
   return STATUS_SUCCESS;
 }
 
 NTSTATUS NTAPI SpGetInfo(_Out_ SecPkgInfoW* PackageInfo) {
-  LogMessage("SpGetInfo");
+  spdlog::debug("SpGetInfo");
 
   // return security package metadata
   PackageInfo->fCapabilities = SECPKG_FLAG_LOGON           //  supports LsaLogonUser
@@ -72,7 +81,7 @@ NTSTATUS NTAPI SpGetInfo(_Out_ SecPkgInfoW* PackageInfo) {
   PackageInfo->Name = (wchar_t*)L"ak_lsa";
   PackageInfo->Comment = (wchar_t*)L"authentik Token Authentication";
 
-  LogMessage("  return STATUS_SUCCESS");
+  spdlog::debug("  return STATUS_SUCCESS");
   return STATUS_SUCCESS;
 }
 
@@ -87,7 +96,7 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
                         _Out_ LSA_TOKEN_INFORMATION_TYPE* TokenInformationType,
                         _Outptr_ VOID** TokenInformation, _Out_ LSA_UNICODE_STRING** AccountName,
                         _Out_ LSA_UNICODE_STRING** AuthenticatingAuthority) {
-  LogMessage("LsaApLogonUser");
+  spdlog::debug("LsaApLogonUser");
 
   {
     // clear output arguments first in case of failure
@@ -102,13 +111,13 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
   }
 
   // input arguments
-  LogMessage("  LogonType: %i", LogonType);  // Interactive=2, RemoteInteractive=10
+  spdlog::debug("  LogonType: {}", (int)LogonType);  // Interactive=2, RemoteInteractive=10
   ClientBufferBase;
-  LogMessage("  ProtocolSubmitBuffer size: %i", SubmitBufferSize);
+  spdlog::debug("  ProtocolSubmitBuffer size: {}", (int)SubmitBufferSize);
 
   // deliberately restrict supported logontypes
   if ((LogonType != Interactive) && (LogonType != RemoteInteractive)) {
-    LogMessage("  return STATUS_NOT_IMPLEMENTED (unsupported LogonType)");
+    spdlog::debug("  return STATUS_NOT_IMPLEMENTED (unsupported LogonType)");
     return STATUS_NOT_IMPLEMENTED;
   }
 
@@ -116,7 +125,7 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
   auto* logonInfo = (MSV1_0_INTERACTIVE_LOGON*)ProtocolSubmitBuffer;
   {
     if (SubmitBufferSize < sizeof(MSV1_0_INTERACTIVE_LOGON)) {
-      LogMessage("  ERROR: SubmitBufferSize too small");
+      spdlog::debug("  ERROR: SubmitBufferSize too small");
       return STATUS_INVALID_PARAMETER;
     }
 
@@ -127,9 +136,8 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
     logonInfo->Password.Buffer = (wchar_t*)((BYTE*)logonInfo + (size_t)logonInfo->Password.Buffer);
   }
 
-  LogMessage("  ak_sys_auth_token_validate UserName: '%ls'", ToWstring(logonInfo->UserName).c_str());
   if (!ValidateToken(logonInfo)) {
-    LogMessage("  ValidateToken: failed");
+    spdlog::debug("  ValidateToken: failed");
     return STATUS_ACCOUNT_RESTRICTION;
   }
   // assign output arguments
@@ -138,7 +146,7 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
     wchar_t computerName[MAX_COMPUTERNAME_LENGTH + 1] = {};
     DWORD computerNameSize = ARRAYSIZE(computerName);
     if (!GetComputerNameW(computerName, &computerNameSize)) {
-      LogMessage("  return STATUS_INTERNAL_ERROR (GetComputerNameW failed)");
+      spdlog::debug("  return STATUS_INTERNAL_ERROR (GetComputerNameW failed)");
       return STATUS_INTERNAL_ERROR;
     }
 
@@ -156,16 +164,16 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
   {
     // assign "LogonId" output argument
     if (!AllocateLocallyUniqueId(LogonId)) {
-      LogMessage("  ERROR: AllocateLocallyUniqueId failed");
+      spdlog::debug("  ERROR: AllocateLocallyUniqueId failed");
       return STATUS_FAIL_FAST_EXCEPTION;
     }
     NTSTATUS status = FunctionTable.CreateLogonSession(LogonId);
     if (status != STATUS_SUCCESS) {
-      LogMessage("  ERROR: CreateLogonSession failed with err: 0x%x", status);
+      spdlog::debug("  ERROR: CreateLogonSession failed with err: 0x%x", status);
       return status;
     }
 
-    LogMessage("  LogonId: High=0x%x , Low=0x%x", LogonId->HighPart, LogonId->LowPart);
+    spdlog::debug("  LogonId: High=0x%x , Low=0x%x", LogonId->HighPart, LogonId->LowPart);
   }
 
   *SubStatus = STATUS_SUCCESS;  // reason for error
@@ -176,7 +184,7 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
     NTSTATUS subStatus = 0;
     NTSTATUS status = UserNameToToken(&logonInfo->UserName, &tokenInfo, &subStatus);
     if (status != STATUS_SUCCESS) {
-      LogMessage("ERROR: UserNameToToken failed with err: 0x%x", status);
+      spdlog::debug("ERROR: UserNameToToken failed with err: 0x%x", status);
       *SubStatus = subStatus;
       return status;
     }
@@ -187,7 +195,8 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
 
   {
     // assign "AccountName" output argument
-    LogMessage("  AccountName: %ls", ToWstring(logonInfo->UserName).c_str());
+    std::wstring username = ToWstring(logonInfo->UserName).c_str();
+    spdlog::debug("  AccountName: {}", utf8_encode(username));
     *AccountName = CreateLsaUnicodeString(logonInfo->UserName.Buffer,
                                           logonInfo->UserName.Length);  // mandatory
   }
@@ -198,11 +207,12 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
         (LSA_UNICODE_STRING*)FunctionTable.AllocateLsaHeap(sizeof(LSA_UNICODE_STRING));
 
     if (logonInfo->LogonDomainName.Length > 0) {
-      LogMessage("  AuthenticatingAuthority: %ls", ToWstring(logonInfo->LogonDomainName).c_str());
+      std::wstring authority = ToWstring(logonInfo->LogonDomainName).c_str();
+      spdlog::debug("  AuthenticatingAuthority: {}", utf8_encode(authority));
       *AuthenticatingAuthority = CreateLsaUnicodeString(logonInfo->LogonDomainName.Buffer,
                                                         logonInfo->LogonDomainName.Length);
     } else {
-      LogMessage("  AuthenticatingAuthority: <empty>");
+      spdlog::debug("  AuthenticatingAuthority: <empty>");
       **AuthenticatingAuthority = {
           .Length = 0,
           .MaximumLength = 0,
@@ -211,14 +221,14 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
     }
   }
 
-  LogMessage("  return STATUS_SUCCESS");
+  spdlog::debug("  return STATUS_SUCCESS");
   return STATUS_SUCCESS;
 }
 
 void LsaApLogonTerminated(_In_ LUID* LogonId) {
-  LogMessage("LsaApLogonTerminated");
-  LogMessage("  LogonId: High=0x%x , Low=0x%x", LogonId->HighPart, LogonId->LowPart);
-  LogMessage("  return");
+  spdlog::debug("LsaApLogonTerminated");
+  spdlog::debug("  LogonId: High=0x%x , Low=0x%x", LogonId->HighPart, LogonId->LowPart);
+  spdlog::debug("  return");
 }
 
 SECPKG_FUNCTION_TABLE SecurityPackageFunctionTable = {
@@ -271,13 +281,13 @@ SECPKG_FUNCTION_TABLE SecurityPackageFunctionTable = {
 extern "C" NTSTATUS NTAPI SpLsaModeInitialize(_In_ ULONG LsaVersion, _Out_ ULONG* PackageVersion,
                                               _Out_ SECPKG_FUNCTION_TABLE** ppTables,
                                               _Out_ ULONG* pcTables) {
-  LogMessage("SpLsaModeInitialize");
-  LogMessage("  LsaVersion %u", LsaVersion);
+  spdlog::debug("SpLsaModeInitialize");
+  spdlog::debug("  LsaVersion %u", LsaVersion);
 
   *PackageVersion = SECPKG_INTERFACE_VERSION;
   *ppTables = &SecurityPackageFunctionTable;
   *pcTables = 1;
 
-  LogMessage("  return STATUS_SUCCESS");
+  spdlog::debug("  return STATUS_SUCCESS");
   return STATUS_SUCCESS;
 }

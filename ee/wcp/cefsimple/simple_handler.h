@@ -98,7 +98,7 @@ class SimpleHandler : public CefClient,
       if (strURL.substr(0, strKey.length()) == strKey) {
         spdlog::debug("URL inhibited: ", strURL.c_str());
         spdlog::debug("OnBeforeResourceLoad ProcessID: ", std::to_string(GetCurrentProcessId()),
-                     ", ThreadID: ", std::to_string(GetCurrentThreadId()));
+                      ", ThreadID: ", std::to_string(GetCurrentThreadId()));
         Hide();
         m_pData->UpdateStatus(L"Authenticating, please wait...");
         std::string validatedToken;

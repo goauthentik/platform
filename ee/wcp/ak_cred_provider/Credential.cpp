@@ -287,8 +287,8 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM
         // {CEFLaunch(pData->hInstance, 0);});
 
         spdlog::debug(std::string("(m_oCefAppData.pCefApp) before: " +
-                                 std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
-                         .c_str());
+                                  std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
+                          .c_str());
         if (!(m_oCefAppData.pCefApp)) {
           if (m_pProvCallSet) {
             m_oCefAppData.SetInit(false);
@@ -303,8 +303,8 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM
           }
         }
         spdlog::debug(std::string("(m_oCefAppData.pCefApp) after:  " +
-                                 std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
-                         .c_str());
+                                  std::to_string((size_t)((m_oCefAppData.pCefApp).get())))
+                          .c_str());
         if ((m_oCefAppData.pCefApp)) {
           spdlog::debug("WndProc:: CEFLaunch");
           pData->strUserToken = "";

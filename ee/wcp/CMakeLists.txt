@@ -358,6 +358,9 @@ set_property(TARGET sentry PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 # Define CEF-based targets.
 #
 
+add_subdirectory(ak_common)
+set_property(TARGET ak_common PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+
 # Include the ak_cred_provider target.
 # Comes from the libcef_dll/CMakeLists.txt file in the binary distribution
 # directory.
@@ -375,6 +378,8 @@ endif()
 # Set the project output directory for subprojects, such as `cefexe`, to copy their binaries to
 set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 add_subdirectory(cefexe)
+set_property(TARGET ak_cef PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+
 add_subdirectory(ak_lsa)
 # Copy cefexe executable and OpenSSL library file to the common build directory
 file(COPY "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll" DESTINATION "${PROJECT_INSALL_DIR}")
