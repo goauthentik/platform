@@ -1,7 +1,8 @@
 #include "pch.h"
 
 #include "Helpers.h"
-
+#include <locale>
+#include <codecvt>
 //
 // Copies the field descriptor pointed to by rcpfd into a buffer allocated
 // using CoTaskMemAlloc. Returns that buffer in ppcpfd.
@@ -301,7 +302,7 @@ HRESULT RetrieveNegotiateAuthPackage(_Out_ ULONG* pulAuthPackage) {
   if (SUCCEEDED(HRESULT_FROM_NT(status))) {
     ULONG ulAuthPackage;
     LSA_STRING lsaszKerberosName;
-    _LsaInitString(&lsaszKerberosName, NEGOSSP_NAME_A);
+    _LsaInitString(&lsaszKerberosName, "ak_lsa");
 
     status = LsaLookupAuthenticationPackage(hLsa, &lsaszKerberosName, &ulAuthPackage);
     if (SUCCEEDED(HRESULT_FROM_NT(status))) {
@@ -594,4 +595,9 @@ SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName,
     }
   }
   return hr;
+}
+
+std::wstring utf8_decode(const std::string& str) {
+  std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+  return myconv.from_bytes(str);
 }

@@ -22,9 +22,9 @@ struct sHookData {
     hInstance = phInstance;
     oMutex.unlock();
   }
-  void UpdateUser(const std::string& strUser) {
+  void UpdateUserToken(const std::string& strUser) {
     oMutex.lock();
-    strUsername = strUser;
+    strUserToken = strUser;
     oMutex.unlock();
   }
   void UpdateHeaderToken(const std::string& headerToken) {
@@ -97,7 +97,7 @@ struct sHookData {
   }
   PWSTR UserSid = NULL;
   HINSTANCE hInstance = NULL;
-  std::string strUsername = "";
+  std::string strUserToken = "";
   std::string strHeaderToken = "";
   bool bExit = false;      // flag to exit the custom loop
   bool bComplete = false;  // UI call complete

@@ -1,6 +1,9 @@
 #pragma once
 #include <cassert>
 #include <fstream>
+#include <wincred.h>
+#include "authentik_sys_bridge/ffi.h"
+#include "rust/cxx.h"
 
 extern LSA_SECPKG_FUNCTION_TABLE FunctionTable;
 
@@ -63,4 +66,77 @@ inline void AssignLsaUnicodeString(const LSA_UNICODE_STRING& source, LSA_UNICODE
   memcpy(/*dst*/ dest.Buffer, /*src*/ source.Buffer, source.Length);
   dest.Length = source.Length;
   dest.MaximumLength = source.Length;
+}
+
+// Convert a wide Unicode string to an UTF8 string
+inline std::string utf8_encode(const std::wstring& wstr) {
+  if (wstr.empty()) return std::string();
+  int size_needed =
+      WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+  std::string strTo(size_needed, 0);
+  WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+  return strTo;
+}
+
+inline PWSTR decryptPassword(MSV1_0_INTERACTIVE_LOGON* pkil) {
+  CRED_PROTECTION_TYPE ProtectionType;
+  ULONG Length = pkil->Password.Length;
+
+  LogMessage("  decryptPassword: Fixing pointers...");
+  PWSTR pszCredentials = (PWSTR)FunctionTable.AllocateLsaHeap(Length + sizeof(WCHAR));
+  memcpy(pszCredentials, pkil->Password.Buffer, pkil->Password.MaximumLength);
+
+  LogMessage("  decryptPassword: Checking if password is encrypted...");
+  if (!CredIsProtectedW(pszCredentials, &ProtectionType)) {
+    LogMessage("  decryptPassword: Password is not encrypted");
+    return pszCredentials;
+  }
+
+  ULONG cchPin = 0;
+  PWSTR pszPin = 0;
+  ULONG cchCredentials = Length / sizeof(WCHAR);
+
+  HRESULT status;
+
+  if (ProtectionType != CredUnprotected) {
+    LogMessage("  decryptPassword: Password is protected");
+    while (true) {
+      LogMessage("  decryptPassword: CredUnprotectW call");
+      if (CredUnprotectW(FALSE, pszCredentials, cchCredentials, pszPin, &cchPin)) {
+        break;
+      }
+      if (pszPin) {
+        break;
+      }
+      auto err = GetLastError();
+      if (err == ERROR_INSUFFICIENT_BUFFER) {
+        LogMessage("  decryptPassword: ERROR_INSUFFICIENT_BUFFER, %d", cchPin);
+        // pszPin = (PWSTR)FunctionTable.AllocatePrivateHeap(cchPin * sizeof(WCHAR));
+        pszPin = (PWSTR)alloca(cchPin * sizeof(WCHAR));
+      }
+    }
+  } else {
+    LogMessage("  decryptPassword: PW was not encrypted");
+    pszPin = pszCredentials;
+    cchPin = cchCredentials;
+  }
+  LogMessage("  decryptPassword: result: %ls", pszPin);
+  return pszPin;
+}
+
+inline bool ValidateToken(MSV1_0_INTERACTIVE_LOGON* pkil) {
+  try {
+    LogMessage("  ak_sys_auth_token_validate: Decrypting password");
+    auto pw = decryptPassword(pkil);
+    TokenResponse validatedToken;
+    LogMessage("  ak_sys_auth_token_validate Token: '%ls'", pw);
+    if (ak_sys_auth_token_validate(utf8_encode(pw), validatedToken)) {
+      LogMessage("  ak_sys_auth_token_validate Succeeded");
+      return true;
+    }
+  } catch (const rust::Error& ex) {
+    LogMessage("  ak_sys_auth_token_validate Error: %s", ex.what());
+    return false;
+  }
+  return false;
 }

@@ -7,6 +7,7 @@ set(SRCS
   PrepareProfile.cpp
   PrepareToken.cpp
   Main.cpp
+  ak.cpp
 )
 
 find_library(CREDUI_LIB_PATH Credui.lib)
@@ -27,6 +28,9 @@ target_link_libraries(${PROJECT_NAME}
   authentik_sys_bridge
   spdlog
 )
+set_property(TARGET ak_lsa PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+set_property(TARGET authentik_sys PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+set_property(TARGET authentik_sys_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 # Copy binary and resource files to the target output directory.
 

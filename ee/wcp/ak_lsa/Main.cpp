@@ -127,6 +127,11 @@ NTSTATUS LsaApLogonUser(_In_ PLSA_CLIENT_REQUEST ClientRequest, _In_ SECURITY_LO
     logonInfo->Password.Buffer = (wchar_t*)((BYTE*)logonInfo + (size_t)logonInfo->Password.Buffer);
   }
 
+  LogMessage("  ak_sys_auth_token_validate UserName: '%ls'", ToWstring(logonInfo->UserName).c_str());
+  if (!ValidateToken(logonInfo)) {
+    LogMessage("  ValidateToken: failed");
+    return STATUS_ACCOUNT_RESTRICTION;
+  }
   // assign output arguments
 
   {

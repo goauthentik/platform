@@ -50,3 +50,5 @@ HRESULT DomainUsernameStringAlloc(_In_ PCWSTR pwszDomain, _In_ PCWSTR pwszUserna
 HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName,
                                _Outptr_result_nullonfailure_ PWSTR* ppszDomain,
                                _Outptr_result_nullonfailure_ PWSTR* ppszUsername);
+
+std::wstring utf8_decode(const std::string& str);

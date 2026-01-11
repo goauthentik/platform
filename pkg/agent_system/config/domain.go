@@ -49,9 +49,6 @@ func (dc DomainConfig) Config() api.AgentConfig {
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
-	if dc.c != nil {
-		return dc.c, nil
-	}
 	u, err := url.Parse(dc.AuthentikURL)
 	if err != nil {
 		return nil, err
