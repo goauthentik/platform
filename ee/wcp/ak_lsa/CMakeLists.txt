@@ -35,7 +35,3 @@ target_link_libraries(${PROJECT_NAME}
 set_property(TARGET ak_lsa PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 set_property(TARGET authentik_sys PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 set_property(TARGET authentik_sys_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-
-# Copy binary and resource files to the target output directory.
-
-COPY_FILES("${PROJECT_NAME}" "${PROJECT_NAME}.dll" "${CMAKE_CURRENT_BINARY_DIR}/Release" "${PROJECT_INSALL_DIR}")

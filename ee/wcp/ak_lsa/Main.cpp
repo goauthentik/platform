@@ -3,7 +3,6 @@
 #include "Utils.hpp"
 #include "ak_common/include/ak_log.h"
 #include "ak_common/include/ak_sentry.h"
-#include "ak_common/include/strings.h"
 #include "spdlog/spdlog.h"
 
 // exported symbols

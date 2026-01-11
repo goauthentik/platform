@@ -5,7 +5,6 @@
 #include "authentik_sys_bridge/ffi.h"
 #include "rust/cxx.h"
 #include "ak_common/include/ak_log.h"
-#include "ak_common/include/strings.h"
 #include "spdlog/spdlog.h"
 
 extern LSA_SECPKG_FUNCTION_TABLE FunctionTable;
@@ -55,6 +54,16 @@ inline void AssignLsaUnicodeString(const LSA_UNICODE_STRING& source, LSA_UNICODE
   dest.MaximumLength = source.Length;
 }
 
+// Convert a wide Unicode string to an UTF8 string
+inline std::string utf8_encode(const std::wstring& wstr) {
+  if (wstr.empty()) return std::string();
+  int size_needed =
+      WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+  std::string strTo(size_needed, 0);
+  WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+  return strTo;
+}
+
 inline PWSTR decryptPassword(MSV1_0_INTERACTIVE_LOGON* pkil) {
   CRED_PROTECTION_TYPE ProtectionType;
   ULONG Length = pkil->Password.Length;
@@ -69,8 +78,8 @@ inline PWSTR decryptPassword(MSV1_0_INTERACTIVE_LOGON* pkil) {
     return pszCredentials;
   }
 
-  ULONG cchPin = 0;
-  PWSTR pszPin = 0;
+  ULONG cchToken = 0;
+  PWSTR pszToken = 0;
   ULONG cchCredentials = Length / sizeof(WCHAR);
 
   HRESULT status;
@@ -79,38 +88,40 @@ inline PWSTR decryptPassword(MSV1_0_INTERACTIVE_LOGON* pkil) {
     spdlog::debug("  decryptPassword: Password is protected");
     while (true) {
       spdlog::debug("  decryptPassword: CredUnprotectW call");
-      if (CredUnprotectW(FALSE, pszCredentials, cchCredentials, pszPin, &cchPin)) {
+      if (CredUnprotectW(FALSE, pszCredentials, cchCredentials, pszToken, &cchToken)) {
         break;
       }
-      if (pszPin) {
+      if (pszToken) {
         break;
       }
       auto err = GetLastError();
       if (err == ERROR_INSUFFICIENT_BUFFER) {
-        spdlog::debug("  decryptPassword: ERROR_INSUFFICIENT_BUFFER, %d", cchPin);
-        // pszPin = (PWSTR)FunctionTable.AllocatePrivateHeap(cchPin * sizeof(WCHAR));
-        pszPin = (PWSTR)alloca(cchPin * sizeof(WCHAR));
+        spdlog::debug("  decryptPassword: ERROR_INSUFFICIENT_BUFFER, {}", cchToken);
+        pszToken = (PWSTR)FunctionTable.AllocatePrivateHeap(cchToken * sizeof(WCHAR));
+        // pszToken = (PWSTR)alloca(cchToken * sizeof(WCHAR));
       }
     }
   } else {
     spdlog::debug("  decryptPassword: PW was not encrypted");
-    pszPin = pszCredentials;
-    cchPin = cchCredentials;
+    pszToken = pszCredentials;
+    cchToken = cchCredentials;
   }
-  return pszPin;
+  return pszToken;
 }
 
 inline bool ValidateToken(MSV1_0_INTERACTIVE_LOGON* pkil) {
   try {
     spdlog::debug("  ak_sys_auth_token_validate: Decrypting password");
-    auto pw = decryptPassword(pkil);
+    std::wstring pwW = decryptPassword(pkil);
+    std::string pw = utf8_encode(pwW);
     TokenResponse validatedToken;
-    if (ak_sys_auth_token_validate(utf8_encode(pw), validatedToken)) {
+    spdlog::debug("  ak_sys_auth_token_validate: {:d}, {}", pw.length(), pw);
+    if (ak_sys_auth_token_validate(pw, validatedToken)) {
       spdlog::debug("  ak_sys_auth_token_validate Succeeded");
       return true;
     }
   } catch (const rust::Error& ex) {
-    spdlog::debug("  ak_sys_auth_token_validate Error: %s", ex.what());
+    spdlog::debug("  ak_sys_auth_token_validate Error: {}", ex.what());
     return false;
   }
   return false;

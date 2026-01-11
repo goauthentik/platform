@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(SRCS
   ak_log.cpp
   ak_sentry.cpp
-  strings.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC
