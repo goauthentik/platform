@@ -49,6 +49,9 @@ func (dc DomainConfig) Config() api.AgentConfig {
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
+	if dc.c != nil {
+		return dc.c, nil
+	}
 	u, err := url.Parse(dc.AuthentikURL)
 	if err != nil {
 		return nil, err
@@ -66,8 +69,7 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 	apiConfig.UserAgent = fmt.Sprintf("goauthentik.io/platform/%s", meta.FullVersion())
 
 	c := api.NewAPIClient(apiConfig)
-	dc.c = c
-	return dc.c, nil
+	return c, nil
 }
 
 func (dc DomainConfig) Test() error {
