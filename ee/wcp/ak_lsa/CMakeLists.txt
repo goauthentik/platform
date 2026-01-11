@@ -7,7 +7,6 @@ set(SRCS
   PrepareProfile.cpp
   PrepareToken.cpp
   Main.cpp
-  ak.cpp
 )
 
 find_library(CREDUI_LIB_PATH Credui.lib)
@@ -18,6 +17,10 @@ add_library(${PROJECT_NAME} SHARED
 	${SRCS}
 )
 target_compile_definitions(${PROJECT_NAME} PUBLIC UNICODE _UNICODE SECURITY_WIN32)
+
+include_directories(
+	include
+)
 
 include_directories(${PROJECT_NAME} PUBLIC ..)
 
