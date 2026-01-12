@@ -11,7 +11,7 @@ require (
 	github.com/amenzhinsky/go-polkit v0.0.0-20210519083301-ee6a51849123
 	github.com/ankddev/conemu-progressbar-go v1.0.0
 	github.com/avast/retry-go/v4 v4.7.0
-	github.com/aws/aws-sdk-go-v2 v1.41.0
+	github.com/aws/aws-sdk-go-v2 v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.5
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/cli/browser v1.3.0
