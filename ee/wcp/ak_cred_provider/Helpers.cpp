@@ -303,7 +303,7 @@ HRESULT RetrieveNegotiateAuthPackage(_Out_ ULONG* pulAuthPackage) {
   if (SUCCEEDED(HRESULT_FROM_NT(status))) {
     ULONG ulAuthPackage;
     LSA_STRING lsaszKerberosName;
-    _LsaInitString(&lsaszKerberosName, "ak_lsa");
+    _LsaInitString(&lsaszKerberosName, NEGOSSP_NAME_A);
 
     status = LsaLookupAuthenticationPackage(hLsa, &lsaszKerberosName, &ulAuthPackage);
     if (SUCCEEDED(HRESULT_FROM_NT(status))) {

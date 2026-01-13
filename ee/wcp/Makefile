@@ -4,7 +4,7 @@ include ../../common.mk
 
 OUT_TARGET := wcp
 
-TARGETS := ak_cred_provider ak_lsa ak_common cefexe cefsimple
+TARGETS := ak_cred_provider ak_common cefexe cefsimple
 
 CLANG_FORMAT := "C:\Program Files\LLVM\bin\clang-format.exe"
 FORMAT_FIND_ARGS := -iname '*.h' -o -iname '*.cpp' -o -iname '*.hpp'
