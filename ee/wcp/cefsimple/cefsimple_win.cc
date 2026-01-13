@@ -87,7 +87,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
     {
       SPDLOG_DEBUG("Sub-loop");
       pHandler->CloseAllBrowsers(true);
-      pData->UpdateUserToken("");
+      pData->UpdateUser("");
       // pData->SetCancel(true);
       // // perform (at max) 10 precautionary loops even though 1 `CefDoMessageLoopWork()`
       // // seems to be sufficient
@@ -117,7 +117,7 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
     Sleep(5); // as precaution to relieve the CPU (though unlikely that its needed)
   }
   pHandler = nullptr; // Release for the destructor to be called subsequently
-  if (pData->strUserToken == "")  // User clicked the close button or cancel
+  if (pData->strUsername == "")  // User clicked the close button or cancel
   {
     spdlog::debug("Token empty");
     pData->SetCancel(true);

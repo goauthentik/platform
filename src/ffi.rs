@@ -1,4 +1,4 @@
-use cxx::CxxString;
+use cxx::{CxxString, let_cxx_string};
 use std::collections::HashMap;
 use std::error::Error;
 use std::pin::Pin;
@@ -29,7 +29,7 @@ mod ffi {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
         fn ak_sys_auth_interactive_available() -> Result<bool>;
-        fn ak_sys_auth_url(url: &CxxString, token: Pin<&mut CxxString>) -> Result<()>;
+        fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
         fn ak_sys_auth_token_validate(
             raw_token: &CxxString,
             token: &mut TokenResponse,
@@ -50,15 +50,15 @@ fn ak_sys_ping(res: Pin<&mut CxxString>) {
 
 fn ak_sys_auth_url(
     url: &CxxString,
-    token: Pin<&mut CxxString>,
-) -> Result<(), Box<dyn Error>> {
+    token: &mut ffi::TokenResponse,
+) -> Result<bool, Box<dyn Error>> {
     let p = Url::parse(url.to_str()?)?;
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
     let raw_token = qm
         .get(TOKEN_QUERY_PARAM)
         .ok_or("failed to get token from URL")?;
-    token.push_str(&raw_token);
-    Ok(())
+    let_cxx_string!(crt = raw_token);
+    ak_sys_auth_token_validate(&crt, token)
 }
 
 fn ak_sys_auth_token_validate(
