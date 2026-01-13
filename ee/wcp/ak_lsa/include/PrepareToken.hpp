@@ -1,5 +1,7 @@
 #pragma once
+#pragma warning(disable : 4005)
 #include <ntstatus.h>
+#pragma warning(default : 4005)
 #include <windows.h>
 #include <Lmcons.h>
 #include <sspi.h>
