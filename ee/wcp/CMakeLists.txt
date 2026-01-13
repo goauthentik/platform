@@ -236,10 +236,9 @@ add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>")
 
 include(FetchContent)
 
-FetchContent_Declare(
-    Corrosion
+FetchContent_Declare(Corrosion
     GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-    GIT_TAG v0.5 # Optionally specify a commit hash, version tag or branch here
+    GIT_TAG v0.6
 )
 # Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
 FetchContent_MakeAvailable(Corrosion)
@@ -274,15 +273,14 @@ endif()
 
 FetchContent_Declare(spdlog
   GIT_REPOSITORY https://github.com/gabime/spdlog.git
-  GIT_TAG v1.16.0
+  GIT_TAG v1.17.0
 )
 FetchContent_MakeAvailable(spdlog)
 set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 FetchContent_Declare(sentry
   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
-  GIT_TAG 0.12.0
-  DOWNLOAD_EXTRACT_TIMESTAMP OFF
+  GIT_TAG 0.12.3
 )
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 set(SENTRY_BUILD_SHARED_LIBS OFF)
