@@ -30,8 +30,6 @@ build:
 	${TOP}/hack/windows/setup.sh
 	mkdir -p ${TOP}/bin/${OUT_TARGET}
 	mkdir -p ${TOP}/cache/${OUT_TARGET}
-	# To avoid the OpenSSL build using linux `link.exe`
-	mv /usr/bin/link.exe /usr/bin/link_bak || true
 	powershell.exe -noprofile -executionpolicy bypass -file ./build.ps1 ${PWD} ${TOP} ${OUT_TARGET}
 	cp -r ${TOP}/cache/${OUT_TARGET}/ak_cred_provider/Release/* ${TOP}/bin/${OUT_TARGET}/
 ifdef SENTRY_AUTH_TOKEN

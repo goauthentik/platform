@@ -2,52 +2,24 @@
 
 ## Build tools and test environment
 
-Visual Studio 17 2022
-
-Strawberry Perl (to build OpenSSL for jwt-cpp)
-    (`winget install StrawberryPerl.StrawberryPerl`)
-
-Windows 10 x64
-
-Rust
-    `winget install -e --id Rustlang.Rustup`
+- Visual Studio 17 2022
+- Windows 10/11 x64
+- Rust (`winget install -e --id Rustlang.Rustup`)
+- Make
 
 ### Build steps
 
 #### Development
 
 ```
-mkdir build
-cd build
-cmake -G "Visual Studio 17" ..
-cmake --build . --config Release
+make ee/wcp/build
 ```
 
-Alternatively, instead of the last step, open the Visual Studio solution file `cef.sln` inside the *build* directory and build the solution (F7) inside the Visual Studio.
-
-The credential provider files are generated inside the `build/ak_cred_provider/Release` subdirectory.
-
-#### Installer package
-
-**Update:** With the python patch script `addsetup.py` in the `.utils` directory, manually performing this step can be avoided. The following information is provided as an alternate method but should not be necessary anymore.
-
-Inside the *build* directory, open the Visual Studio solution file `cef.sln`.
-
-Right click the `cef` solution in the *Solution Explorer* sub-window and click `Add->Existing Project...`.
-
-Select the Setup project file inside the **build** directory in path `build/Setup/Setup.vdproj`.
-
-`Do not` select the Setup file inside the project source under the *Setup* subdirectory.
-
-Build solution (F7) (again), or right-click the `Setup` project in the *Solution Explorer* sub-window and click `Build`.
-
-The setup package files are available in `build/Release` subdirectory.
+The credential provider files are generated inside the `cache/wcp/ak_cred_provider/Release` subdirectory.
 
 #### Testing
 
-During development, the registry setup files inside the `ak_cred_provider/Setup` path could be used to register the credential provide inside the `build` directory for testing.
-
-The setup file/ installer registers the credential provider similarly, so **take note** that either the credential provider inside the build directory or the credential provider installed via the Setup file could be displayed at the logon prompt UI at a time and not both simultaneously.
+Use the authentk Agent from https://pkg.goauthentik.io to install the current stable build of the Agent, and enable the credential provider in the setup wizard. Afterwards, copy the files from `cache/wcp/ak_cred_provider/Release` into the `C:\Program Files\Authentik Security Inc.\wcp\` folder on the target machine, overwriting all files.
 
 ## Important points
 

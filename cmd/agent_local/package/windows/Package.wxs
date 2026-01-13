@@ -20,7 +20,7 @@
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Name="$(var.Manufacturer)">
+      <Directory Id="INSTALLFOLDER" Name="$(var.Manufacturer)">
         <Directory Id="sysd" Name="sysd" />
         <Directory Id="browser_support" Name="browser_support" />
         <Directory Id="wcp" Name="wcp">
@@ -30,15 +30,17 @@
         <Directory Id="agent" Name="agent" />
       </Directory>
     </StandardDirectory>
-    <StandardDirectory Id="CommonAppDataFolder" />
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="ak_ProgramDataRoot" Name="$(var.Manufacturer)">
+      </Directory>
+    </StandardDirectory>
     <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64" Directory="sysd">
-        <CreateFolder Directory="sysd" Subdirectory="domains" />
-        <CreateFolder Directory="sysd" Subdirectory="runtime" />
-        <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)" />
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="domains" />
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="runtime" />
         <File Id="ak_sysd"
               Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
               KeyPath="true" />
@@ -112,8 +114,8 @@
         <util:EventSource Log="authentik"
                           Name="authentik Credential Provider"
                           EventMessageFile="C:\Windows\System32\mscoree.dll"/>
-        <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)\logs" />
-        <CreateFolder Directory="CommonAppDataFolder" Subdirectory="$(var.Manufacturer)\wcp-sentry" />
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-sentry" />
 
         <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
@@ -125,10 +127,8 @@
         <File Id="wcp_icudtl_dat" Source="$(env.ROOT)/bin/wcp/icudtl.dat" />
         <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" />
         <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />
-        <File Id="wcp_ak_cred_provider_exp" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.exp" />
         <File Id="wcp_ak_cred_provider_lib" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.lib" />
         <File Id="wcp_ak_cred_provider_pdb" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.pdb" />
-        <File Id="wcp_libcrypto_3_x64_dll" Source="$(env.ROOT)/bin/wcp/libcrypto-3-x64.dll" />
         <File Id="wcp_libEGL_dll" Source="$(env.ROOT)/bin/wcp/libEGL.dll" />
         <File Id="wcp_libGLESv2_dll" Source="$(env.ROOT)/bin/wcp/libGLESv2.dll" />
         <File Id="wcp_resources_pak" Source="$(env.ROOT)/bin/wcp/resources.pak" />

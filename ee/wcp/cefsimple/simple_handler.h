@@ -5,11 +5,6 @@
 #ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 #define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 
-#pragma warning(push)
-#pragma warning(disable : 4005)
-#include <jwt-cpp/jwt.h>
-#pragma warning(pop)
-#include <openssl/rand.h>
 #include "rust/cxx.h"
 #include "authentik_sys_bridge/ffi.h"
 #include <spdlog/spdlog.h>
@@ -24,7 +19,7 @@
 
 #include "include/cef_client.h"
 #include "include/cef_command_ids.h"
-#include "ak_log.h"
+#include "ak_common/include/ak_log.h"
 
 #include "Credential.h"
 

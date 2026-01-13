@@ -12,7 +12,7 @@
 #include <WinUser.h>
 
 #define WIN_PASS_LEN 50
-#include "cefsimple/crypt.h"
+#include "ak_common/include/crypt.h"
 
 extern HINSTANCE g_hinst;
 #define HINST_THISDLL g_hinst
