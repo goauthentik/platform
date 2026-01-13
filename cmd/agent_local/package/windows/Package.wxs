@@ -20,7 +20,7 @@
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Name="$(var.Manufacturer)">
+      <Directory Id="INSTALLFOLDER" Name="$(var.Manufacturer)">
         <Directory Id="sysd" Name="sysd" />
         <Directory Id="browser_support" Name="browser_support" />
         <Directory Id="wcp" Name="wcp">
