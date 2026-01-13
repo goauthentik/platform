@@ -125,10 +125,8 @@
         <File Id="wcp_icudtl_dat" Source="$(env.ROOT)/bin/wcp/icudtl.dat" />
         <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" />
         <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />
-        <File Id="wcp_ak_cred_provider_exp" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.exp" />
         <File Id="wcp_ak_cred_provider_lib" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.lib" />
         <File Id="wcp_ak_cred_provider_pdb" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.pdb" />
-        <File Id="wcp_libcrypto_3_x64_dll" Source="$(env.ROOT)/bin/wcp/libcrypto-3-x64.dll" />
         <File Id="wcp_libEGL_dll" Source="$(env.ROOT)/bin/wcp/libEGL.dll" />
         <File Id="wcp_libGLESv2_dll" Source="$(env.ROOT)/bin/wcp/libGLESv2.dll" />
         <File Id="wcp_resources_pak" Source="$(env.ROOT)/bin/wcp/resources.pak" />
