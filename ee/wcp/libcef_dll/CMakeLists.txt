@@ -811,8 +811,6 @@ set(CEFSIMPLE_SRCS
   ${CEFSIMPLE_PATH}/simple_app.h
   ${CEFSIMPLE_PATH}/simple_handler.cc
   ${CEFSIMPLE_PATH}/simple_handler.h
-  ${CEFSIMPLE_PATH}/crypt.cc
-  ${CEFSIMPLE_PATH}/crypt.h
   )
 set(CEFSIMPLE_SRCS_LINUX
   ${CEFSIMPLE_PATH}/cefsimple_linux.cc

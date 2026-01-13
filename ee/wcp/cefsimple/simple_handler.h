@@ -19,7 +19,7 @@
 
 #include "include/cef_client.h"
 #include "include/cef_command_ids.h"
-#include "ak_log.h"
+#include "ak_common/include/ak_log.h"
 
 #include "Credential.h"
 
