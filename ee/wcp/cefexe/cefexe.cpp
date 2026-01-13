@@ -5,10 +5,6 @@
 #include "ak_common/include/ak_sentry.h"
 #include "spdlog/spdlog.h"
 #include <Synchapi.h>
-// #pragma comment(lib,"libcef.lib")
-
-// int main(int argc, char* argv[])
-// {
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine,
                       int nCmdShow) {
@@ -22,20 +18,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
   ak_setup_logs("cefexe");
   ak_setup_sentry("cefexe");
   SPDLOG_DEBUG("wWinMain");
-
-  // printf("> %d\n", argc);
-  // for (int i = 0; i < argc; ++i)
-  // {
-  // 	const wchar_t str[100] = { i, '\0' };
-  // 	const wchar_t txt[1000] = { *argv[i], '\0'};
-  // 	printf("%s\n", argv[i]);
-  // 	const char str1[100] = { i, '\0' };
-  // 	const char txt1[1000] = { *argv[i], '\0' };
-  // 	// SPDLOG_DEBUG(str1);
-  // 	// SPDLOG_DEBUG(txt1);
-  // }
-
-  // Sleep(3000);
 
   int ret = 0;
   try {
