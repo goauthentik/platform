@@ -981,11 +981,8 @@ target_link_libraries(${CEF_TARGET}
 	${SHLWAPI_LIB_PATH}
   ${CRYPT32_LIB_PATH}
   ${NETAPI32_LIB_PATH}
-  jwt-cpp
   ak_common
   authentik_sys_bridge
-  spdlog
-  sentry
 )
 
 # Copy binary and resource files to the target output directory.
