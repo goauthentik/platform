@@ -1,6 +1,8 @@
 #include "pch.h"
 
 #include "Helpers.h"
+#include <locale>
+#include <codecvt>
 
 //
 // Copies the field descriptor pointed to by rcpfd into a buffer allocated
@@ -594,4 +596,9 @@ SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName,
     }
   }
   return hr;
+}
+
+std::wstring utf8_decode(const std::string& str) {
+  std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+  return myconv.from_bytes(str);
 }

@@ -9,10 +9,10 @@
 // #include "cefsimple/simple_app.h"
 #include "cefsimple/simple_handler.h"
 #include "cefsimple/cefsimple_win.h"
-#include "ak_cred_provider/include/ak_log.h"
-#include "crypt.h"
+#include "ak_common/include/ak_log.h"
+#include "ak_common/include/ak_sentry.h"
+#include "ak_common/include/crypt.h"
 #include "Credential.h"
-#include <ak_sentry.h>
 
 extern std::string g_strPath;
 
@@ -117,8 +117,9 @@ int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp) {
     Sleep(5); // as precaution to relieve the CPU (though unlikely that its needed)
   }
   pHandler = nullptr; // Release for the destructor to be called subsequently
-  if (pData->strUsername == "") // User clicked the close button or cancel
+  if (pData->strUsername == "")  // User clicked the close button or cancel
   {
+    spdlog::debug("Token empty");
     pData->SetCancel(true);
   }
   // perform (at max) 10 precautionary loops even though 1 `CefDoMessageLoopWork()`

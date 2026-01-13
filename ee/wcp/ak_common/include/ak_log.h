@@ -4,4 +4,5 @@
 #include <string>
 #include <thread>
 
-void SetupLogs(const char* logger_name);
+void ak_setup_logs(const char* logger_name);
+void ak_teardown_logs();

@@ -19,7 +19,9 @@
 
 // Credential provider
 #include <credentialprovider.h>
+#pragma warning(disable : 4005)
 #include <ntstatus.h>
+#pragma warning(default : 4005)
 #include <propkey.h>
 
 // std

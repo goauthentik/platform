@@ -9,8 +9,4 @@ EXPORTS
     DllCanUnloadNow                                 PRIVATE
     DllGetClassObject                               PRIVATE
     CefExecuteProcess
-    SetupLogs
-    SentrySetup
-    SentryShutdown
-
     CEFLaunch   ; //- todo: remove

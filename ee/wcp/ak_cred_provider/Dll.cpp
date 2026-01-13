@@ -4,7 +4,8 @@
 
 #include "Dll.h"
 
-#include "ak_sentry.h"
+#include "ak_common/include/ak_sentry.h"
+#include "ak_common/include/ak_log.h"
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
 #include "spdlog/spdlog.h"
@@ -45,8 +46,8 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
   switch (dwReason) {
     case DLL_PROCESS_ATTACH: {
       SetPaths();
-      SetupLogs("ak_cred_provider");
-      SentrySetup("ak_cred_provider");
+      ak_setup_logs("ak_cred_provider");
+      ak_setup_sentry("ak_cred_provider");
       SPDLOG_INFO("DllMain::DLL_PROCESS_ATTACH");
 
       DisableThreadLibraryCalls(hinstDll);
@@ -60,8 +61,8 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
       break;
     case DLL_PROCESS_DETACH:
       SPDLOG_INFO("DllMain::DLL_PROCESS_DETACH");
-      SentryShutdown();
-      spdlog::shutdown();
+      ak_teardown_sentry();
+      ak_teardown_logs();
       break;
   }
   return TRUE;

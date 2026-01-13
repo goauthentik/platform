@@ -5,11 +5,6 @@
 #ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 #define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 
-#pragma warning(push)
-#pragma warning(disable : 4005)
-#include <jwt-cpp/jwt.h>
-#pragma warning(pop)
-#include <openssl/rand.h>
 #include "rust/cxx.h"
 #include "authentik_sys_bridge/ffi.h"
 #include <spdlog/spdlog.h>
@@ -24,7 +19,7 @@
 
 #include "include/cef_client.h"
 #include "include/cef_command_ids.h"
-#include "ak_log.h"
+#include "ak_common/include/ak_log.h"
 
 #include "Credential.h"
 
@@ -74,10 +69,10 @@ class SimpleHandler : public CefClient,
                           CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response) override {
     std::string strURL =
         "URL: " + request->GetURL().ToString() + " " + request->GetMethod().ToString();
-    SPDLOG_DEBUG(strURL.c_str());
+    spdlog::debug(strURL.c_str());
     std::string str = "OnResourceResponse ProcessID: " + std::to_string(GetCurrentProcessId()) +
                       ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    SPDLOG_DEBUG(str.c_str());
+    spdlog::debug(str.c_str());
     return false;
   }
 
@@ -86,7 +81,7 @@ class SimpleHandler : public CefClient,
                                    CefRefPtr<CefCallback> callback) override {
     const std::string strKey = "goauthentik.io://";
     std::string strURL = request->GetURL().ToString();
-    SPDLOG_DEBUG(strURL.c_str());
+    spdlog::debug(strURL.c_str());
 
     CefString headerKey;
     headerKey.FromString("X-Authentik-Platform-Auth-DTH");
@@ -96,9 +91,9 @@ class SimpleHandler : public CefClient,
     request->SetHeaderByName(headerKey, headerValue, true);
     if (strURL.length() >= strKey.length()) {
       if (strURL.substr(0, strKey.length()) == strKey) {
-        SPDLOG_DEBUG("URL inhibited: ", strURL.c_str());
-        SPDLOG_DEBUG("OnBeforeResourceLoad ProcessID: ", std::to_string(GetCurrentProcessId()),
-                     ", ThreadID: ", std::to_string(GetCurrentThreadId()));
+        spdlog::debug("URL inhibited: ", strURL.c_str());
+        spdlog::debug("OnBeforeResourceLoad ProcessID: ", std::to_string(GetCurrentProcessId()),
+                      ", ThreadID: ", std::to_string(GetCurrentThreadId()));
         Hide();
         m_pData->UpdateStatus(L"Authenticating, please wait...");
         TokenResponse validatedToken;

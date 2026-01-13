@@ -811,8 +811,6 @@ set(CEFSIMPLE_SRCS
   ${CEFSIMPLE_PATH}/simple_app.h
   ${CEFSIMPLE_PATH}/simple_handler.cc
   ${CEFSIMPLE_PATH}/simple_handler.h
-  ${CEFSIMPLE_PATH}/crypt.cc
-  ${CEFSIMPLE_PATH}/crypt.h
   )
 set(CEFSIMPLE_SRCS_LINUX
   ${CEFSIMPLE_PATH}/cefsimple_linux.cc
@@ -901,8 +899,6 @@ set(WCP_PATH "../${WCP}")
 set(WCP_SRCS
   "${WCP_PATH}/ClassFactory.cpp"
   "${WCP_PATH}/Credential.cpp"
-  "${WCP_PATH}/ak_sentry.cpp"
-  "${WCP_PATH}/ak_log.cpp"
   "${WCP_PATH}/Dll.cpp"
   "${WCP_PATH}/GUIDs.cpp"
   "${WCP_PATH}/Helpers.cpp"
@@ -983,10 +979,8 @@ target_link_libraries(${CEF_TARGET}
 	${SHLWAPI_LIB_PATH}
   ${CRYPT32_LIB_PATH}
   ${NETAPI32_LIB_PATH}
-  jwt-cpp
+  ak_common
   authentik_sys_bridge
-  spdlog
-  sentry
 )
 
 # Copy binary and resource files to the target output directory.

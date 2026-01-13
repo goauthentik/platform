@@ -27,6 +27,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ..)
 
 target_link_libraries(${PROJECT_NAME}
   # ${LIBCEF_LIB_PATH}  #//- todo: revise if really needed
+  ak_common
   ak_cred_provider
   # ${LIBCEF_DLL_WRAPPER_LIB_PATH} #-
   # ${CEF_STANDARD_LIBS}

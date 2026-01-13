@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include "ak_log.h"
+#include "ak_common/include/ak_log.h"
+#include "ak_common/include/ak_version.h"
 #include "Provider.h"
-#include "ak_version.h"
 #include "authentik_sys_bridge/ffi.h"
 #include "rust/cxx.h"
 #include <spdlog/spdlog.h>
@@ -97,7 +97,7 @@ void Provider::SetCefApp(sHookData* pData) {
     settings.log_severity = LOGSEVERITY_INFO;
 
     std::string strUserAgent = std::string("authentik Platform/WCP/CredProvider@")
-                                   .append(AK_WCP_VERSION)
+                                   .append(AK_VERSION)
                                    .append(" (CEF ")
                                    .append(CEF_VERSION)
                                    .append(")");
