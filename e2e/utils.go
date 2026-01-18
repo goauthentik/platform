@@ -169,9 +169,9 @@ func testMachine(t testing.TB) testcontainers.Container {
 
 	// Subdirectories we save coverage in
 	coverageSub := []string{
-		"cli",
-		"ak-sysd",
-		"ak-agent",
+		"go/cli",
+		"go/ak-sysd",
+		"go/ak-agent",
 		"rs",
 	}
 	for _, sub := range coverageSub {
@@ -188,8 +188,8 @@ func testMachine(t testing.TB) testcontainers.Container {
 			},
 			ExposedPorts: []string{"22"},
 			Env: map[string]string{
-				"GOCOVERDIR": "/tmp/ak-coverage/cli",
-				// "LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
+				"GOCOVERDIR":        "/tmp/ak-coverage/go/cli",
+				"LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
 			},
 			HostConfigModifier: func(hc *container.HostConfig) {
 				hc.Privileged = true
