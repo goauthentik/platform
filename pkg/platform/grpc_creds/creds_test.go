@@ -93,9 +93,12 @@ func TestCreds(t *testing.T) {
 	r, err := c.Ping(t.Context(), &emptypb.Empty{})
 	assert.NoError(t, err)
 	assert.Equal(t, r.Component, "test")
+	t.Logf("Process ID: %d", creds.PID)
 	assert.Equal(t, pid, creds.PID)
+	t.Logf("User ID: %s", creds.UID)
+	assert.NotEqual(t, "", creds.UID)
+	t.Logf("Group ID: %s", creds.GID)
 	if runtime.GOOS != "windows" {
-		assert.NotEqual(t, 0, creds.UID)
 		assert.NotEqual(t, 0, creds.GID)
 	}
 }

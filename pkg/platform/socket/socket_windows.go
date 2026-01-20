@@ -3,6 +3,7 @@
 package socket
 
 import (
+	"context"
 	"net"
 
 	"github.com/Microsoft/go-winio"
@@ -32,5 +33,11 @@ func listen(name pstr.PlatformString, perm SocketPermMode) (InfoListener, error)
 }
 
 func connect(path pstr.PlatformString) (net.Conn, error) {
-	return winio.DialPipe(path.ForWindows(), nil)
+	return winio.DialPipeAccessImpLevel(
+		context.Background(),
+		path.ForWindows(),
+		uint32(0x8000_0000|0x4000_0000),
+		// uint32(fs.GENERIC_READ|fs.GENERIC_WRITE),
+		winio.PipeImpLevelIdentification,
+	)
 }

@@ -34,6 +34,7 @@ func (c *transportCredentials) ClientHandshake(ctx context.Context, authority st
 func (c *transportCredentials) ServerHandshake(conn net.Conn) (net.Conn, credentials.AuthInfo, error) {
 	creds, err := getCreds(conn)
 	if err != nil {
+		c.log.WithError(err).Warning("getCreds")
 		return nil, nil, err
 	}
 	creds.Proc, err = ProcInfoFrom(int32(creds.PID))
