@@ -3,7 +3,6 @@
 package log
 
 import (
-	"encoding/json"
 	"io"
 
 	log "github.com/sirupsen/logrus"
@@ -38,14 +37,9 @@ func (e *eventLogHook) Levels() []log.Level {
 const windowsEventID = 1000
 
 func (e *eventLogHook) Fire(entry *log.Entry) error {
-	msg := entry.Message
-	if len(entry.Data) > 0 {
-		msg += "\n\n\n"
-		v, err := json.Marshal(entry.Data)
-		if err != nil {
-			return err
-		}
-		msg += string(v)
+	msg, err := entry.String()
+	if err != nil {
+		return err
 	}
 	switch entry.Level {
 	case log.InfoLevel:

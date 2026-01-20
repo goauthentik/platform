@@ -49,6 +49,10 @@ func New() (*Agent, error) {
 }
 
 func (a *Agent) Start() {
+	if !available.SystrayAvailable() {
+		a.StartForeground()
+		return
+	}
 	err := a.AcquireLock()
 	if err != nil {
 		a.log.Error("failed to acquire Lock. Authentik agent is already running.")
@@ -56,16 +60,23 @@ func (a *Agent) Start() {
 		return
 	}
 	go a.startGRPC()
-	if available.SystrayAvailable() {
-		go a.signalHandler()
-		go func() {
-			<-a.tray.Exit
-			a.Stop()
-		}()
-		a.tray.Start()
-	} else {
-		a.signalHandler()
+	go a.signalHandler()
+	go func() {
+		<-a.tray.Exit
+		a.Stop()
+	}()
+	a.tray.Start()
+}
+
+func (a *Agent) StartForeground() {
+	err := a.AcquireLock()
+	if err != nil {
+		a.log.Error("failed to acquire Lock. Authentik agent is already running.")
+		os.Exit(1)
+		return
 	}
+	go a.startGRPC()
+	a.signalHandler()
 }
 
 func (a *Agent) signalHandler() {
