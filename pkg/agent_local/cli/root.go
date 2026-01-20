@@ -10,6 +10,7 @@ import (
 	"goauthentik.io/platform/pkg/meta"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
+	"goauthentik.io/platform/pkg/shared"
 )
 
 var (
@@ -42,6 +43,7 @@ var rootCmd = &cobra.Command{
 		if isDebug {
 			a.StartForeground()
 		} else {
+			shared.HideConsole()
 			a.Start()
 		}
 		return nil
