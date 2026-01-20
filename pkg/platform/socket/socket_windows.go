@@ -36,8 +36,9 @@ func connect(path pstr.PlatformString) (net.Conn, error) {
 	return winio.DialPipeAccessImpLevel(
 		context.Background(),
 		path.ForWindows(),
+		// fs in this case is a Microsoft winio internal package
+		// fs.GENERIC_READ|fs.GENERIC_WRITE
 		uint32(0x8000_0000|0x4000_0000),
-		// uint32(fs.GENERIC_READ|fs.GENERIC_WRITE),
 		winio.PipeImpLevelIdentification,
 	)
 }
