@@ -20,25 +20,23 @@ func getCreds(conn net.Conn) (*Creds, error) {
 	}
 
 	var (
-		ucred *unix.Ucred
+		ucred   *unix.Ucred
+		ctrlErr error
 	)
 	err = rawConn.Control(func(fd uintptr) {
 		// On Linux, we can just call Getsockopt for LOCAL_PEERCRED and we
 		// get back a single ucred struct which contains all the info we need.
-		ucred, err = unix.GetsockoptUcred(
+		ucred, ctrlErr = unix.GetsockoptUcred(
 			int(fd),
 			unix.SOL_SOCKET,
 			unix.SO_PEERCRED,
 		)
-		if err != nil {
-			return
-		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
+	if ctrlErr != nil {
+		return nil, ctrlErr
 	}
 	return &Creds{
 		PID: int(ucred.Pid),

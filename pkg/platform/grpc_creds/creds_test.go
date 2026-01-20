@@ -1,13 +1,18 @@
-//go:build linux || darwin
+//go:build linux || darwin || windows
 
 package grpc_creds_test
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"net"
 	"os"
+	"runtime"
 	"testing"
 
+	"github.com/gorilla/securecookie"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/platform/grpc_creds"
@@ -34,21 +39,25 @@ func (ts testServer) Ping(ctx context.Context, r *emptypb.Empty) (*pb.PingRespon
 
 func (ts testServer) Start(t *testing.T) string {
 	srv := grpc.NewServer(
-		grpc.Creds(grpc_creds.NewTransportCredentials()),
+		grpc.Creds(grpc_creds.NewTransportCredentials(log.WithField("logger", "agent.grpc.auth"))),
 	)
 	pb.RegisterPingServer(srv, ts)
 
-	path, err := os.CreateTemp(t.TempDir(), "")
-	assert.NoError(t, err)
-	ts.path = path.Name()
-	assert.NoError(t, path.Close())
+	lp := pstr.PlatformString{}
+	if runtime.GOOS == "windows" {
+		lp.Windows = pstr.S(fmt.Sprintf(`\\.\pipe\authentik-testing\%s`, base64.URLEncoding.EncodeToString(securecookie.GenerateRandomKey(4))))
+	} else {
+		path, err := os.CreateTemp(t.TempDir(), "")
+		assert.NoError(t, err)
+		ts.path = path.Name()
+		assert.NoError(t, path.Close())
+		lp.Fallback = ts.path
+	}
 
-	lis, err := socket.Listen(pstr.PlatformString{
-		Fallback: ts.path,
-	}, socket.SocketEveryone)
+	lis, err := socket.Listen(lp, socket.SocketEveryone)
 	assert.NoError(t, err)
 
-	t.Logf("Listening on %s", ts.path)
+	t.Logf("Listening on %s", lp.ForCurrent())
 
 	t.Cleanup(func() {
 		srv.GracefulStop()
@@ -57,15 +66,15 @@ func (ts testServer) Start(t *testing.T) string {
 		err := srv.Serve(lis)
 		assert.NoError(t, err)
 	}()
-	return ts.path
+	return lp.ForCurrent()
 }
 
 func TestCreds(t *testing.T) {
 	pid := os.Getpid()
-	credPid := 0
+	var creds *grpc_creds.Creds
 	ts := testServer{
 		callback: func(c *grpc_creds.Creds) {
-			credPid = c.PID
+			creds = c
 		},
 	}
 	l := ts.Start(t)
@@ -84,5 +93,9 @@ func TestCreds(t *testing.T) {
 	r, err := c.Ping(t.Context(), &emptypb.Empty{})
 	assert.NoError(t, err)
 	assert.Equal(t, r.Component, "test")
-	assert.Equal(t, pid, credPid)
+	assert.Equal(t, pid, creds.PID)
+	if runtime.GOOS != "windows" {
+		assert.NotEqual(t, 0, creds.UID)
+		assert.NotEqual(t, 0, creds.GID)
+	}
 }
