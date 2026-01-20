@@ -41,11 +41,10 @@ func getCreds(conn net.Conn) (*Creds, error) {
 	creds := &Creds{}
 
 	pid, ctrlErr = GetNamedPipeClientProcessId(syscall.Handle(pipeConn.Fd()))
-	creds.PID = int(pid)
-
 	if ctrlErr != nil {
 		return nil, ctrlErr
 	}
+	creds.PID = int(pid)
 
 	return creds, nil
 }

@@ -71,10 +71,10 @@ func (ts testServer) Start(t *testing.T) string {
 
 func TestCreds(t *testing.T) {
 	pid := os.Getpid()
-	credPid := 0
+	var creds *grpc_creds.Creds
 	ts := testServer{
 		callback: func(c *grpc_creds.Creds) {
-			credPid = c.PID
+			creds = c
 		},
 	}
 	l := ts.Start(t)
@@ -93,5 +93,9 @@ func TestCreds(t *testing.T) {
 	r, err := c.Ping(t.Context(), &emptypb.Empty{})
 	assert.NoError(t, err)
 	assert.Equal(t, r.Component, "test")
-	assert.Equal(t, pid, credPid)
+	assert.Equal(t, pid, creds.PID)
+	if runtime.GOOS != "windows" {
+		assert.NotEqual(t, 0, creds.UID)
+		assert.NotEqual(t, 0, creds.GID)
+	}
 }
