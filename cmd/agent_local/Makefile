@@ -75,7 +75,8 @@ package-gnu/linux: clean build
 
 .PHONY: package-msys
 package-msys: clean
-	"$(MAKE)" -C ${TOP} agent/build
+# build with -H=windowsgui to run as a true systray application
+	"$(MAKE)" -C ${TOP} agent/build LD_FLAGS=-H=windowsgui
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
 	"$(MAKE)" -C ${TOP} browser_support/build
