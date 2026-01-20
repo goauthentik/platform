@@ -1,13 +1,17 @@
-//go:build linux || darwin
+//go:build linux || darwin || windows
 
 package grpc_creds_test
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"net"
 	"os"
+	"runtime"
 	"testing"
 
+	"github.com/gorilla/securecookie"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/platform/pkg/pb"
@@ -39,17 +43,21 @@ func (ts testServer) Start(t *testing.T) string {
 	)
 	pb.RegisterPingServer(srv, ts)
 
-	path, err := os.CreateTemp(t.TempDir(), "")
-	assert.NoError(t, err)
-	ts.path = path.Name()
-	assert.NoError(t, path.Close())
+	lp := pstr.PlatformString{}
+	if runtime.GOOS == "windows" {
+		lp.Windows = pstr.S(fmt.Sprintf(`\\.\pipe\authentik-testing\%s`, base64.URLEncoding.EncodeToString(securecookie.GenerateRandomKey(4))))
+	} else {
+		path, err := os.CreateTemp(t.TempDir(), "")
+		assert.NoError(t, err)
+		ts.path = path.Name()
+		assert.NoError(t, path.Close())
+		lp.Fallback = ts.path
+	}
 
-	lis, err := socket.Listen(pstr.PlatformString{
-		Fallback: ts.path,
-	}, socket.SocketEveryone)
+	lis, err := socket.Listen(lp, socket.SocketEveryone)
 	assert.NoError(t, err)
 
-	t.Logf("Listening on %s", ts.path)
+	t.Logf("Listening on %s", lp.ForCurrent())
 
 	t.Cleanup(func() {
 		srv.GracefulStop()
@@ -58,7 +66,7 @@ func (ts testServer) Start(t *testing.T) string {
 		err := srv.Serve(lis)
 		assert.NoError(t, err)
 	}()
-	return ts.path
+	return lp.ForCurrent()
 }
 
 func TestCreds(t *testing.T) {
