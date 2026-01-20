@@ -20,7 +20,7 @@ func (a *Agent) startGRPC() {
 	}
 	a.lis = lis
 	a.grpc = grpc.NewServer(
-		grpc.Creds(grpc_creds.NewTransportCredentials()),
+		grpc.Creds(grpc_creds.NewTransportCredentials(l.WithField("logger", "agent.grpc.auth"))),
 		grpc.ChainUnaryInterceptor(
 			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
 			grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {

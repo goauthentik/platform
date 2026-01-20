@@ -22,6 +22,8 @@ build:
 	mkdir -p "${TOP}/bin/${TARGET}"
 ifeq ($(OS),Windows_NT)
 	$(call go_generate_resources,authentik Platform Agent)
+	# build with -H=windowsgui to run as a true systray application
+	$(eval LD_FLAGS := -H=windowsgui)
 endif
 	go build \
 		${GO_BUILD_FLAGS} \
@@ -75,8 +77,7 @@ package-gnu/linux: clean build
 
 .PHONY: package-msys
 package-msys: clean
-# build with -H=windowsgui to run as a true systray application
-	"$(MAKE)" -C ${TOP} agent/build LD_FLAGS=-H=windowsgui
+	"$(MAKE)" -C ${TOP} agent/build
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
 	"$(MAKE)" -C ${TOP} browser_support/build
