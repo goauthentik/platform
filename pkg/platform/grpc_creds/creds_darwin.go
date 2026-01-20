@@ -5,6 +5,7 @@ package grpc_creds
 import (
 	"fmt"
 	"net"
+	"strconv"
 
 	"golang.org/x/sys/unix"
 )
@@ -53,12 +54,12 @@ func getCreds(conn net.Conn) (*Creds, error) {
 
 	creds := &Creds{
 		PID: pid,
-		UID: int(xucred.Uid),
+		UID: strconv.Itoa(int(xucred.Uid)),
 	}
 	if xucred.Ngroups > 0 {
 		// Return just the first group ID. This is for consistency with Linux
 		// where Getsockopt LOCAL_PEERCRED only returns the first group ID.
-		creds.GID = int(xucred.Groups[0])
+		creds.GID = strconv.Itoa(int(xucred.Groups[0]))
 	}
 
 	return creds, nil

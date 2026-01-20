@@ -5,6 +5,7 @@ package grpc_creds
 import (
 	"fmt"
 	"net"
+	"strconv"
 
 	"golang.org/x/sys/unix"
 )
@@ -40,7 +41,7 @@ func getCreds(conn net.Conn) (*Creds, error) {
 	}
 	return &Creds{
 		PID: int(ucred.Pid),
-		UID: int(ucred.Uid),
-		GID: int(ucred.Gid),
+		UID: strconv.Itoa(int(ucred.Uid)),
+		GID: strconv.Itoa(int(ucred.Gid)),
 	}, nil
 }
