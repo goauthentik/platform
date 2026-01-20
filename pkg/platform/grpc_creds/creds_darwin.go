@@ -20,36 +20,35 @@ func getCreds(conn net.Conn) (*Creds, error) {
 	}
 
 	var (
-		xucred *unix.Xucred
-		pid    int
+		xucred     *unix.Xucred
+		pid        int
+		ctrlErrX   error
+		ctrlErrInt error
 	)
 	err = rawConn.Control(func(fd uintptr) {
 		// On MacOS, we need to call Getsockopt twice, once for LOCAL_PEERCRED
 		// and once for LOCAL_PEERPID. Unfortunately, the syscall differs from
 		// the Linux version which offers all this information in a single
 		// syscall.
-		xucred, err = unix.GetsockoptXucred(
+		xucred, ctrlErrX = unix.GetsockoptXucred(
 			int(fd),
 			unix.SOL_LOCAL,
 			unix.LOCAL_PEERCRED,
 		)
-		if err != nil {
-			return
-		}
-		pid, err = unix.GetsockoptInt(
+		pid, ctrlErrInt = unix.GetsockoptInt(
 			int(fd),
 			unix.SOL_LOCAL,
 			unix.LOCAL_PEERPID,
 		)
-		if err != nil {
-			return
-		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
+	if ctrlErrX != nil {
+		return nil, ctrlErrX
+	}
+	if ctrlErrInt != nil {
+		return nil, ctrlErrInt
 	}
 
 	creds := &Creds{

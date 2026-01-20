@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/platform/grpc_creds"
@@ -34,7 +35,7 @@ func (ts testServer) Ping(ctx context.Context, r *emptypb.Empty) (*pb.PingRespon
 
 func (ts testServer) Start(t *testing.T) string {
 	srv := grpc.NewServer(
-		grpc.Creds(grpc_creds.NewTransportCredentials()),
+		grpc.Creds(grpc_creds.NewTransportCredentials(log.WithField("logger", "agent.grpc.auth"))),
 	)
 	pb.RegisterPingServer(srv, ts)
 
