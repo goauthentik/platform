@@ -12,6 +12,7 @@ bool g_logSetup;
 const auto _ak_log_max_size = 1024 * 1024 * 50;
 const auto _ak_log_max_files = 3;
 
+// `logger_name` needs to be defined in Package.wxs to register them in Windows
 void ak_setup_logs(const char* logger_name) {
   const auto dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
 
