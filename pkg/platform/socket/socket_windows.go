@@ -3,10 +3,12 @@
 package socket
 
 import (
+	"context"
 	"net"
 
 	"github.com/Microsoft/go-winio"
 	"goauthentik.io/platform/pkg/platform/pstr"
+	"golang.org/x/sys/windows"
 )
 
 func listen(name pstr.PlatformString, perm SocketPermMode) (InfoListener, error) {
@@ -32,5 +34,10 @@ func listen(name pstr.PlatformString, perm SocketPermMode) (InfoListener, error)
 }
 
 func connect(path pstr.PlatformString) (net.Conn, error) {
-	return winio.DialPipe(path.ForWindows(), nil)
+	return winio.DialPipeAccessImpLevel(
+		context.Background(),
+		path.ForWindows(),
+		uint32(windows.GENERIC_READ|windows.GENERIC_WRITE),
+		winio.PipeImpLevelIdentification,
+	)
 }
