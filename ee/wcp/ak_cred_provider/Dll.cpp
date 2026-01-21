@@ -48,19 +48,19 @@ DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in LPVOID lpReserved) {
       SetPaths();
       ak_setup_logs("ak_cred_provider");
       ak_setup_sentry("ak_cred_provider");
-      SPDLOG_INFO("DllMain::DLL_PROCESS_ATTACH");
+      spdlog::trace("DllMain::DLL_PROCESS_ATTACH");
 
       DisableThreadLibraryCalls(hinstDll);
-      SPDLOG_INFO(std::string("DLL hInstance: " + std::to_string((size_t)hinstDll)).c_str());
+      spdlog::trace(std::string("DLL hInstance: " + std::to_string((size_t)hinstDll)).c_str());
       std::string strID = "DLL ProcessID: " + std::to_string(GetCurrentProcessId()) +
                           ", ThreadID: " + std::to_string(GetCurrentThreadId());
-      SPDLOG_INFO(strID.c_str());
+      spdlog::trace(strID.c_str());
     } break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
       break;
     case DLL_PROCESS_DETACH:
-      SPDLOG_INFO("DllMain::DLL_PROCESS_DETACH");
+      spdlog::trace("DllMain::DLL_PROCESS_DETACH");
       ak_teardown_sentry();
       ak_teardown_logs();
       break;

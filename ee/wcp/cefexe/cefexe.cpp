@@ -15,7 +15,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 
   CefMainArgs main_args(hInst);
 
-  ak_setup_logs("cefexe");
+  ak_setup_logs("ak_cefexe");
   ak_setup_sentry("cefexe");
   SPDLOG_DEBUG("wWinMain");
 
