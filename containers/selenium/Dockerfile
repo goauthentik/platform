@@ -1,4 +1,4 @@
-FROM selenium/standalone-chromium:143.0
+FROM docker.io/selenium/standalone-chromium:143.0
 
 ARG AK_PLATFORM_VER
 ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
