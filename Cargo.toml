@@ -25,7 +25,7 @@ name = "grpc"
 name = "log"
 
 [dependencies]
-cxx = "1.0.192"
+cxx = "1.0.194"
 hyper-util = "0.1.19"
 libc = "0.2.180"
 log = "0.4.29"
