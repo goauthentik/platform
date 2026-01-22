@@ -41,7 +41,8 @@ updates:
       - BeryJu
   - package-ecosystem: "docker"
     directories:
-      - /selenium
+      - /containers/selenium
+      - /containers/test
     schedule:
       interval: daily
       time: "04:00"
