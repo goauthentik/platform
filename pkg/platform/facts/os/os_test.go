@@ -18,6 +18,32 @@ func TestGather(t *testing.T) {
 	assert.NotEqual(t, info.Family, "")
 	assert.True(t, slices.Contains(api.AllowedDeviceFactsOSFamilyEnumValues, info.Family))
 	assert.Equal(t, info.Arch, runtime.GOARCH)
+	assert.Regexp(t, `(\d+\.(?:\d+\.?)+)`, *info.Version, "Version must only contain numbers: '%s'", *info.Version)
+}
+
+func TestExtract(t *testing.T) {
+	for _, tc := range []struct {
+		raw     string
+		name    string
+		version string
+	}{
+		{
+			raw:     "Ubuntu 24.04.3 LTS",
+			name:    "Ubuntu",
+			version: "24.04.3 LTS",
+		},
+		{
+			raw:     "Fedora Linux 43 (Workstation Edition)",
+			name:    "Fedora Linux",
+			version: "43 (Workstation Edition)",
+		},
+	} {
+		t.Run(tc.raw, func(t *testing.T) {
+			name, version := extractVersion(tc.raw)
+			assert.Equal(t, tc.name, name)
+			assert.Equal(t, tc.version, version)
+		})
+	}
 }
 
 func TestGatherLinux(t *testing.T) {

@@ -21,7 +21,12 @@ func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	if err != nil {
 		return api.DeviceFactsRequestOs{}, err
 	}
-	productName = strings.Replace(productName, "Windows", "", 1)
+	build, _, err := k.GetStringValue("DisplayVersion")
+	if err != nil {
+		return api.DeviceFactsRequestOs{}, err
+	}
+	productName = productName + " " + build
+
 	version, _, err := k.GetStringValue("LCUVer")
 	if err != nil {
 		return api.DeviceFactsRequestOs{}, err

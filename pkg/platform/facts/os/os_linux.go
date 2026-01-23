@@ -25,13 +25,13 @@ func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 
 func getLinuxDistribution() (string, string) {
 	// Try /etc/os-release first (systemd standard)
-	if name, version := parseOSRelease("/etc/os-release"); name != "" {
-		return name, version
+	if fullVersion := parseOSRelease("/etc/os-release"); fullVersion != "" {
+		return extractVersion(fullVersion)
 	}
 
 	// Try /usr/lib/os-release as fallback
-	if name, version := parseOSRelease("/usr/lib/os-release"); name != "" {
-		return name, version
+	if fullVersion := parseOSRelease("/usr/lib/os-release"); fullVersion != "" {
+		return extractVersion(fullVersion)
 	}
 
 	// Try /etc/lsb-release (Ubuntu/Debian)
@@ -57,28 +57,25 @@ func getLinuxDistribution() (string, string) {
 	return "Linux", getKernelVersion()
 }
 
-func parseOSRelease(filename string) (string, string) {
+func parseOSRelease(filename string) string {
 	file, err := os.Open(filename)
 	if err != nil {
-		return "", ""
+		return ""
 	}
 	defer func() {
 		_ = file.Close()
 	}()
 
-	var name, version string
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "NAME=") {
-			name = strings.Trim(strings.TrimPrefix(line, "NAME="), "\"")
-		} else if strings.HasPrefix(line, "VERSION=") {
-			version = strings.Trim(strings.TrimPrefix(line, "VERSION="), "\"")
+		if strings.HasPrefix(line, "PRETTY_NAME=") {
+			return strings.Trim(strings.TrimPrefix(line, "PRETTY_NAME="), "\"")
 		}
 	}
 
-	return name, version
+	return ""
 }
 
 func parseLSBRelease() (string, string) {
