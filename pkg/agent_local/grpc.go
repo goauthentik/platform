@@ -37,6 +37,7 @@ func (a *Agent) startGRPC() {
 	pb.RegisterAgentAuthServer(a.grpc, a)
 	pb.RegisterAgentCacheServer(a.grpc, a)
 	pb.RegisterAgentCtrlServer(a.grpc, a)
+	pb.RegisterPingServer(a.grpc, a)
 	a.log.WithField("socket", lis.Path().ForCurrent()).Info("Starting GRPC server")
 	if err := a.grpc.Serve(lis); err != nil {
 		a.log.WithError(err).Fatal("Failed to serve")
