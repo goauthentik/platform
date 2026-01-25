@@ -36,6 +36,9 @@
     </StandardDirectory>
     <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
+    <util:CloseApplication Id="ak_agent_close"
+                            Target="ak-agent.exe"
+                            TerminateProcess="1" />
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64" Directory="sysd">
@@ -75,9 +78,6 @@
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe"
               KeyPath="true" />
-        <util:CloseApplication Id="ak_agent_close"
-                               Target="ak-agent.exe"
-                               TerminateProcess="1" />
       </Component>
       <Component Id="cli" Bitness="always64" Directory="cli">
         <File Id="ak_cli"
