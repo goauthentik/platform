@@ -75,6 +75,9 @@
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent_local/ak-agent.exe"
               KeyPath="true" />
+        <util:CloseApplication Id="ak_agent_close"
+                               Target="ak-agent.exe"
+                               TerminateProcess="1" />
       </Component>
       <Component Id="cli" Bitness="always64" Directory="cli">
         <File Id="ak_cli"
