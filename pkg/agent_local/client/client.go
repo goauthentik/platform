@@ -19,6 +19,7 @@ type AgentClient struct {
 	pb.AgentAuthClient
 	pb.AgentCacheClient
 	pb.AgentCtrlClient
+	pb.PingClient
 
 	conn *grpc.ClientConn
 }
@@ -53,6 +54,7 @@ func New(socketPath string) (*AgentClient, error) {
 		pb.NewAgentAuthClient(conn),
 		pb.NewAgentCacheClient(conn),
 		pb.NewAgentCtrlClient(conn),
+		pb.NewPingClient(conn),
 		conn,
 	}, nil
 }
