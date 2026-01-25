@@ -26,7 +26,7 @@ func FullVersion() string {
 }
 
 func BuildURL() string {
-	return fmt.Sprintf("https://github.com/goauthentik/platform/commit/%s", strings.ReplaceAll(BuildHash, "dev-", ""))
+	return fmt.Sprintf("https://github.com/goauthentik/platform/commit/%s", BuildHash)
 }
 
 func init() {
