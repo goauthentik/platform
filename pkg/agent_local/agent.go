@@ -23,6 +23,7 @@ type Agent struct {
 	pb.UnimplementedAgentAuthServer
 	pb.UnimplementedAgentCacheServer
 	pb.UnimplementedAgentCtrlServer
+	pb.UnimplementedPingServer
 
 	grpc *grpc.Server
 	cfg  *cfgmgr.Manager[config.ConfigV1]
