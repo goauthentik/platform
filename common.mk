@@ -3,7 +3,7 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = "0.35.8"
+VERSION = "0.35.9"
 VERSION_HASH = $(shell git rev-parse HEAD)
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)
@@ -20,6 +20,10 @@ GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
 RUST_BUILD_FLAGS =
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
+
+define lint_shellcheck
+	find $(1) -type f -name '*.sh'  -exec "shellcheck" "--format=gcc" {} \;
+endef
 
 define sentry_upload_symbols
 	npx @sentry/cli debug-files upload \
@@ -56,4 +60,10 @@ define nfpm_package
 			-p rpm \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+endef
+
+define _target_template
+.PHONY: $(1)/%
+$(1)/%:
+	"$(MAKE)" -C "${TOP}/$(1)" $$*
 endef

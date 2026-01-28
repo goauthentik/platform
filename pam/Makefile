@@ -3,8 +3,9 @@ include ../common.mk
 TARGET = pam
 DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
-clean:
-	cargo clean
+lint:
+	$(call lint_shellcheck,"_deb")
+	$(call lint_shellcheck,"_rpm")
 
 bump:
 	sed -i 's/^version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml

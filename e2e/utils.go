@@ -156,16 +156,27 @@ func MustExec(t testing.TB, co testcontainers.Container, cmd string, options ...
 	return b
 }
 
-func testMachine(t testing.TB) testcontainers.Container {
+func lookupRepoDir(t testing.TB, rel string) string {
 	t.Helper()
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	localCoverageDir := filepath.Join(cwd, "..", "/e2e/coverage")
-	hostCoverageDir := localCoverageDir
+	localDir := filepath.Join(cwd, "..", rel)
+	hostDir := localDir
 	if lw, set := os.LookupEnv("LOCAL_WORKSPACE"); set {
-		hostCoverageDir = filepath.Join(lw, "/e2e/coverage")
-		t.Logf("Host coverage dir: '%s'", hostCoverageDir)
+		hostDir = filepath.Join(lw, rel)
+		t.Logf("Host Dir: '%s'", hostDir)
 	}
+	return hostDir
+}
+
+func testMachine(t testing.TB) testcontainers.Container {
+	t.Helper()
+
+	hostCoverageDir := lookupRepoDir(t, "/e2e/coverage")
+
+	cwd, err := os.Getwd()
+	assert.NoError(t, err)
+	localCoverageDir := filepath.Join(cwd, "..", "/e2e/coverage")
 
 	// Subdirectories we save coverage in
 	coverageSub := []string{

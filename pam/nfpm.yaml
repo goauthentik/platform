@@ -10,18 +10,13 @@ homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
 section: security
-depends:
-  - "libc6"
-  - "libssl3 | libssl3t64"
-  - "authentik-sysd"
-  - "libpam0g"
 contents:
   - src: "../cache/pam/release/libauthentik_pam.so"
     dst: "/usr/lib/security/pam_authentik.so"
     file_info:
       mode: 0644
     packager: deb
-  - src: "../pam/debian/pam_config"
+  - src: "../pam/_deb/pam_config"
     dst: "/usr/share/pam-configs/authentik"
     file_info:
       mode: 0644
@@ -34,6 +29,19 @@ contents:
     packager: rpm
 overrides:
   deb:
+    depends:
+      - "authentik-sysd"
+      - "libc6"
+      - "libssl3 | libssl3t64"
+      - "libpam0g"
     scripts:
-      postinstall: ./debian/postinst.sh
-      preremove: ./debian/prerm.sh
+      postinstall: ./_deb/postinst.sh
+      preremove: ./_deb/prerm.sh
+  rpm:
+    depends:
+      - "authentik-sysd"
+      - "glibc"
+      - "openssl-libs"
+      - "pam-libs"
+    scripts:
+      postinstall: ./_rpm/post.sh
