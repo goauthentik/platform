@@ -5,13 +5,13 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
-TARGETS := pam nss cmd/browser_support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp selenium
+TARGETS := pam nss cmd/browser_support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
 
 .PHONY: clean
-clean: nss/clean pam/clean
+clean:
 	rm -rf ${PWD}/bin/*
 
 .PHONY: gen
