@@ -21,7 +21,7 @@ contents:
     file_info:
       mode: 0644
     packager: deb
-  - src: "../pam/debian/pam_config"
+  - src: "../pam/_deb/pam_config"
     dst: "/usr/share/pam-configs/authentik"
     file_info:
       mode: 0644
@@ -35,5 +35,8 @@ contents:
 overrides:
   deb:
     scripts:
-      postinstall: ./debian/postinst.sh
-      preremove: ./debian/prerm.sh
+      postinstall: ./_deb/postinst.sh
+      preremove: ./_deb/prerm.sh
+  rpm:
+    scripts:
+      postinstall: ./_rpm/post.sh

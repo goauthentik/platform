@@ -10,6 +10,11 @@ endif
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
 
+lint:
+	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/linux/_deb")
+	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/linux/_rpm")
+	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/macos/scripts")
+
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 	"$(MAKE)" -C ${TOP} cli/clean

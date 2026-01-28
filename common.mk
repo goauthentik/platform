@@ -21,6 +21,10 @@ RUST_BUILD_FLAGS =
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 
+define lint_shellcheck
+	find $(1) -type f -name '*.sh'  -exec "shellcheck" "--format=gcc" {} \;
+endef
+
 define sentry_upload_symbols
 	npx @sentry/cli debug-files upload \
 		--auth-token ${SENTRY_AUTH_TOKEN} \
@@ -56,4 +60,10 @@ define nfpm_package
 			-p rpm \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+endef
+
+define _target_template
+.PHONY: $(1)/%
+$(1)/%:
+	"$(MAKE)" -C "${TOP}/$(1)" $$*
 endef
