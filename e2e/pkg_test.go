@@ -41,11 +41,11 @@ func TestPackaging_DEB(t *testing.T) {
 			testcontainers.CleanupContainer(t, tc)
 
 			for _, pkg := range []string{
-				"/tmp/ak-bin/cli/authentik-cli*.deb",
-				"/tmp/ak-bin/agent_local/authentik-agent*.deb",
-				"/tmp/ak-bin/agent_system/authentik-sysd*.deb",
-				"/tmp/ak-bin/pam/libpam-authentik*.deb",
-				"/tmp/ak-bin/nss/libnss-authentik*.deb",
+				"/tmp/ak-bin/cli/*.deb",
+				"/tmp/ak-bin/agent_local/*.deb",
+				"/tmp/ak-bin/agent_system/*.deb",
+				"/tmp/ak-bin/pam/*.deb",
+				"/tmp/ak-bin/nss/*.deb",
 			} {
 				t.Run(pkg, func(t *testing.T) {
 					MustExec(t, tc, fmt.Sprintf("dpkg -i %s", pkg))
@@ -85,9 +85,11 @@ func TestPackaging_RPM(t *testing.T) {
 			testcontainers.CleanupContainer(t, tc)
 
 			for _, pkg := range []string{
-				"/tmp/ak-bin/cli/authentik-cli*.rpm",
-				"/tmp/ak-bin/agent_local/authentik-agent*.rpm",
-				"/tmp/ak-bin/agent_system/authentik-sysd*.rpm",
+				"/tmp/ak-bin/cli/*.rpm",
+				"/tmp/ak-bin/agent_local/*.rpm",
+				"/tmp/ak-bin/agent_system/*.rpm",
+				"/tmp/ak-bin/pam/*.rpm",
+				"/tmp/ak-bin/nss/*.rpm",
 			} {
 				t.Run(pkg, func(t *testing.T) {
 					MustExec(t, tc, fmt.Sprintf("yum install -y %s", pkg))
