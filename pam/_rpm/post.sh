@@ -2,6 +2,9 @@
 set -euo pipefail
 
 function sshd_notice {
+    if [ ! -f /etc/ssh/sshd_config ]; then
+        return
+    fi
     if ! grep -q '^KbdInteractiveAuthentication.*yes' /etc/ssh/sshd_config; then
             cat <<EOF
 Because of design limitations of sshd, you need to set the following in your sshd

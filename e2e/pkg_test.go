@@ -44,6 +44,8 @@ func TestPackaging_DEB(t *testing.T) {
 				"/tmp/ak-bin/cli/authentik-cli*.deb",
 				"/tmp/ak-bin/agent_local/authentik-agent*.deb",
 				"/tmp/ak-bin/agent_system/authentik-sysd*.deb",
+				"/tmp/ak-bin/pam/libpam-authentik*.deb",
+				"/tmp/ak-bin/nss/libnss-authentik*.deb",
 			} {
 				t.Run(pkg, func(t *testing.T) {
 					MustExec(t, tc, fmt.Sprintf("dpkg -i %s", pkg))
