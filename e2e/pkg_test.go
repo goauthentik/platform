@@ -4,8 +4,6 @@ package e2e
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/docker/docker/api/types/container"
@@ -14,9 +12,7 @@ import (
 )
 
 func TestPackaging_DEB(t *testing.T) {
-	cwd, err := os.Getwd()
-	assert.NoError(t, err)
-	binDir := filepath.Join(cwd, "..", "/bin")
+	binDir := lookupRepoDir(t, "/bin")
 	for _, img := range []string{
 		"docker.io/library/ubuntu:24.04",
 		"docker.io/library/debian:13",
@@ -58,9 +54,7 @@ func TestPackaging_DEB(t *testing.T) {
 }
 
 func TestPackaging_RPM(t *testing.T) {
-	cwd, err := os.Getwd()
-	assert.NoError(t, err)
-	binDir := filepath.Join(cwd, "..", "/bin")
+	binDir := lookupRepoDir(t, "/bin")
 	for _, img := range []string{
 		"docker.io/redhat/ubi10",
 		"docker.io/library/almalinux:10",
