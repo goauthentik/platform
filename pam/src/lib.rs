@@ -13,7 +13,9 @@ use authentik_sys::logger::exit_log;
 use authentik_sys::logger::init_log;
 use authentik_sys::logger::log_hook;
 use ctor::{ctor, dtor};
+use pam::constants::PAM_TEXT_INFO;
 use pam::constants::{PamFlag, PamResultCode};
+use pam::conv::Conv;
 use pam::items::Service;
 use pam::module::{PamHandle, PamHooks};
 use std::ffi::CStr;
@@ -127,4 +129,13 @@ macro_rules! pam_try_log {
             }
         }
     };
+}
+
+pub fn pam_print_user(conv: &Conv<'_>, text: &str) {
+    match conv.send(PAM_TEXT_INFO, text) {
+        Ok(_) => {}
+        Err(e) => {
+            log::warn!("Failed to print text to user: {:?}", e);
+        }
+    }
 }
