@@ -75,10 +75,9 @@ pub fn auth_interactive(
         session_id: "".to_owned(),
         component: "".to_owned(),
     };
-    let mut iter = 0;
+    let mut iter = -1;
     while iter <= MAX_ITER {
-        let debug_msg = format!("Debug: challenge {}", challenge.component).clone();
-        let _ = conv.send(PAM_TEXT_INFO, &debug_msg);
+        iter += 1;
         log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
             match conv.send(
@@ -116,7 +115,7 @@ pub fn auth_interactive(
                     }
                     Err(e) => {
                         log::warn!("Failed to Fido2 authenticate: {}", e);
-                        return Err(PamResultCode::PAM_ABORT);
+                        continue;
                     }
                 };
             }
@@ -171,7 +170,6 @@ pub fn auth_interactive(
                 return Err(PamResultCode::PAM_AUTH_ERR);
             }
         };
-        iter += 1;
     }
     log::warn!("Exceeded maximum iterations");
     Err(PamResultCode::PAM_ABORT)

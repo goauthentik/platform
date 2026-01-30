@@ -12,19 +12,19 @@ import (
 )
 
 type webauthnChallenge struct {
-	Challenge          string `json:"challenge"`
-	Timeout            int    `json:"timeout,omitempty"`
-	RelyingPartyID     string `json:"rpId,omitempty"`
+	Challenge          string `mapstructure:"challenge"`
+	Timeout            int    `mapstructure:"timeout"`
+	RelyingPartyID     string `mapstructure:"rpId"`
 	AllowedCredentials []struct {
-		CredentialID string `json:"id"`
-	} `json:"allowCredentials,omitempty"`
+		CredentialID string `mapstructure:"id"`
+	} `mapstructure:"allowCredentials"`
 }
 
 func encodeChallenge(challenge string, origin string) ([]byte, error) {
 	clientDataJSON := map[string]any{
 		"type":      "webauthn.get",
 		"challenge": challenge,
-		"origin":    "https://" + origin,
+		"origin":    origin,
 	}
 
 	clientDataJSONBytes, err := json.Marshal(clientDataJSON)
@@ -35,11 +35,13 @@ func encodeChallenge(challenge string, origin string) ([]byte, error) {
 }
 
 func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallenge) (*pb.InteractiveChallenge, error) {
+	txn.log.Debugf("ch %+v\n", dc.Challenge)
 	vv := webauthnChallenge{}
 	err := mapstructure.Decode(dc.Challenge, &vv)
 	if err != nil {
 		return nil, err
 	}
+	txn.log.Debugf("ch %+v\n", vv)
 
 	challenge, err := encodeChallenge(vv.Challenge, txn.dom.AuthentikURL)
 	if err != nil {
