@@ -3,7 +3,7 @@ use authentik_sys::generated::sys_auth::{
     InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
     interactive_challenge::PromptMeta, system_auth_interactive_client::SystemAuthInteractiveClient,
 };
-use authentik_sys::grpc::grpc_request;
+use authentik_sys::grpc::SysdBridge;
 use pam::{
     constants::{
         PAM_BINARY_PROMPT, PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,
@@ -42,9 +42,10 @@ pub fn auth_interactive(
     username: String,
     password: String,
     conv: &Conv<'_>,
+    bridge: impl SysdBridge,
 ) -> Result<InteractiveChallenge, PamResultCode> {
     // Init transaction
-    let mut challenge = match grpc_request(async |ch| {
+    let mut challenge = match bridge.grpc_request(async |ch| {
         return Ok(SystemAuthInteractiveClient::new(ch)
             .interactive_auth(InteractiveAuthRequest {
                 interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
@@ -136,7 +137,7 @@ pub fn auth_interactive(
         }
         prev_challenge = challenge;
         // Send the response
-        challenge = match grpc_request(async |ch| {
+        challenge = match bridge.grpc_request(async |ch| {
             return Ok(SystemAuthInteractiveClient::new(ch)
                 .interactive_auth(InteractiveAuthRequest {
                     interactive_auth: Some(InteractiveAuth::Continue(req_inner.to_owned())),

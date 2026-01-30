@@ -25,6 +25,7 @@ name = "grpc"
 name = "log"
 
 [dependencies]
+base64 = "0.22.1"
 cxx = "1.0.194"
 hyper-util = "0.1.19"
 libc = "0.2.180"

@@ -1,7 +1,8 @@
 use std::error::Error;
 
+use base64::{Engine, prelude::BASE64_STANDARD};
 use hyper_util::rt::TokioIo;
-use tokio::runtime::Builder;
+use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
 use tower::service_fn;
@@ -82,4 +83,63 @@ pub fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
             Err(e) => Err(e),
         }
     })
+}
+
+pub trait SysdBridge {
+    fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+        &self,
+        future: impl Fn(Channel) -> F,
+    ) -> Result<T, Box<dyn Error>>;
+    fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+        &self,
+        path: String,
+        future: impl Fn(Channel) -> F,
+    ) -> Result<T, Box<dyn Error>>;
+}
+
+pub struct Bridge {
+    rt: Runtime,
+}
+
+impl Bridge {
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        let rt = Builder::new_current_thread().enable_all().build()?;
+        Ok(Self { rt })
+    }
+}
+
+impl SysdBridge for Bridge {
+    fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+        &self,
+        future: impl Fn(Channel) -> F,
+    ) -> Result<T, Box<dyn Error>> {
+        let config = Config::get();
+
+        self.grpc_request_path(config.socket.to_owned(), future)
+    }
+
+    fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+        &self,
+        path: String,
+        future: impl Fn(Channel) -> F,
+    ) -> Result<T, Box<dyn Error>> {
+        self.rt.block_on(async {
+            log::debug!("creating grpc client");
+            let ep = match Endpoint::try_from(format!("http://:123/?{}", path)) {
+                Ok(e) => e,
+                Err(e) => return Err(Box::from(e)),
+            };
+            let channel = grpc_endpoint(ep).await?;
+            match future(channel).await {
+                Ok(t) => Ok(t),
+                Err(e) => Err(e),
+            }
+        })
+    }
+}
+
+pub fn decode_token<T: ::prost::Message + Default>(token: String) -> Result<T, Box<dyn Error>> {
+    let raw = BASE64_STANDARD.decode(token)?;
+    let msg = T::decode(&*raw)?;
+    Ok(msg)
 }
