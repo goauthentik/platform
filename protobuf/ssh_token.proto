@@ -17,6 +17,7 @@ message FIDORequest {
 }
 
 message FIDOResponse {
-  bytes signature = 1;
-  bytes authenticator_data = 2;
+  bytes credential_id = 1;
+  bytes signature = 2;
+  bytes authenticator_data = 3;
 }

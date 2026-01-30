@@ -104,7 +104,7 @@ pub fn auth_interactive(
                 return Err(PamResultCode::PAM_ABORT);
             }
             Ok(PromptMeta::PamBinaryPrompt) => {
-                match fido2(challenge.prompt.clone()) {
+                match fido2(challenge.prompt.clone(), conv) {
                     Ok(r) => {
                         req_inner.value = encode_pb(r).unwrap();
                     }

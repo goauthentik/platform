@@ -31,6 +31,7 @@ type InteractiveAuthTransaction struct {
 }
 
 func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChallenge, error) {
+	txn.log.Trace("txn *InteractiveAuthTransaction getNextChallenge")
 	c := &pb.InteractiveChallenge{
 		Txid: txn.ID,
 	}

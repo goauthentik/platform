@@ -40,10 +40,9 @@ impl PamHooks for PAMAuthentik {
         prelude("sm_authenticate", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
-            "sshd" => authenticate_impl(pamh, args, flags),
             "sudo" => authenticate_authorize_impl(pamh, args, "sudo"),
             "sudo-i" => authenticate_authorize_impl(pamh, args, "sudo-i"),
-            _ => PamResultCode::PAM_IGNORE,
+            _ => authenticate_impl(pamh, args, flags),
         }
     }
 
@@ -51,8 +50,7 @@ impl PamHooks for PAMAuthentik {
         prelude("sm_open_session", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
-            "sshd" => open_session_impl(pamh, args, flags),
-            _ => PamResultCode::PAM_IGNORE,
+            _ => open_session_impl(pamh, args, flags),
         }
     }
 

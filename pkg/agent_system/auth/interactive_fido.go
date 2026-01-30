@@ -23,13 +23,17 @@ type webauthnChallenge struct {
 func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallenge) (*pb.InteractiveChallenge, error) {
 	v, err := json.Marshal(dc.Challenge)
 	if err != nil {
+		txn.log.WithError(err).Warning("failed to marshall challenge")
 		return nil, err
 	}
 	vv := webauthnChallenge{}
 	json.Unmarshal(v, &vv)
 
-	challenge, err := base64.URLEncoding.DecodeString(vv.Challenge)
+	txn.log.Debugf("ch %+v\n", vv)
+
+	challenge, err := base64.RawURLEncoding.DecodeString(vv.Challenge)
 	if err != nil {
+		txn.log.WithError(err).Warning("failed to decode challenge")
 		return nil, err
 	}
 
@@ -39,20 +43,23 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallen
 		CredentialIds: [][]byte{},
 	}
 	for _, dev := range vv.AllowedCredentials {
-		credId, err := base64.URLEncoding.DecodeString(dev.CredentialID)
+		credId, err := base64.RawURLEncoding.DecodeString(dev.CredentialID)
 		if err != nil {
+			txn.log.WithError(err).Warning("failed to decode device ID")
 			return nil, err
 		}
 		bc.CredentialIds = append(bc.CredentialIds, credId)
 	}
 	qer, err := proto.Marshal(bc)
 	if err != nil {
+		txn.log.WithError(err).Warning("failed to marshall proto message")
 		return nil, err
 	}
 	return &pb.InteractiveChallenge{
 		Txid:       txn.ID,
 		Prompt:     base64.StdEncoding.EncodeToString(qer),
 		PromptMeta: pb.InteractiveChallenge_PAM_BINARY_PROMPT,
+		Component:  string(flow.StageAuthenticatorValidate),
 	}, nil
 }
 
@@ -66,6 +73,7 @@ type webauthnResponseResponse struct {
 type webauthnResponse struct {
 	ID       string                   `mapstructure:"id"`
 	RawID    string                   `mapstructure:"rawId"`
+	Type     string                   `mapstructure:"type"`
 	Response webauthnResponseResponse `mapstructure:"response"`
 }
 
@@ -81,9 +89,12 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string) (*api.A
 	}
 	webauthn := map[string]any{}
 	mapstructure.Decode(webauthnResponse{
+		ID:    base64.RawURLEncoding.EncodeToString(m.CredentialId),
+		RawID: base64.RawURLEncoding.EncodeToString(m.CredentialId),
+		Type:  "public-key",
 		Response: webauthnResponseResponse{
-			Signature:         base64.URLEncoding.EncodeToString(m.Signature),
-			AuthenticatorData: base64.URLEncoding.EncodeToString(m.AuthenticatorData),
+			Signature:         base64.RawURLEncoding.EncodeToString(m.Signature),
+			AuthenticatorData: base64.RawURLEncoding.EncodeToString(m.AuthenticatorData),
 		},
 	}, webauthn)
 	res := &api.AuthenticatorValidationChallengeResponseRequest{
