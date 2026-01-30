@@ -138,8 +138,13 @@ impl SysdBridge for Bridge {
     }
 }
 
-pub fn decode_token<T: ::prost::Message + Default>(token: String) -> Result<T, Box<dyn Error>> {
+pub fn decode_pb<T: ::prost::Message + Default>(token: String) -> Result<T, Box<dyn Error>> {
     let raw = BASE64_STANDARD.decode(token)?;
     let msg = T::decode(&*raw)?;
     Ok(msg)
+}
+
+pub fn encode_pb<T: ::prost::Message>(msg: T) -> Result<String, Box<dyn Error>> {
+    let raw = msg.encode_to_vec();
+    Ok(BASE64_STANDARD.encode(raw))
 }

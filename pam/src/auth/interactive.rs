@@ -3,7 +3,7 @@ use authentik_sys::generated::sys_auth::{
     InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
     interactive_challenge::PromptMeta, system_auth_interactive_client::SystemAuthInteractiveClient,
 };
-use authentik_sys::grpc::SysdBridge;
+use authentik_sys::grpc::{SysdBridge, encode_pb};
 use pam::{
     constants::{
         PAM_BINARY_PROMPT, PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,
@@ -13,6 +13,7 @@ use pam::{
 };
 
 use crate::auth::PW_PROMPT;
+use crate::auth::fido::fido2;
 
 const MAX_ITER: i8 = 30;
 
@@ -98,6 +99,17 @@ pub fn auth_interactive(
             Ok(PromptMeta::Unspecified) => {
                 log::warn!("Unspecified prompt meta");
                 return Err(PamResultCode::PAM_ABORT);
+            }
+            Ok(PromptMeta::PamBinaryPrompt) => {
+                match fido2(challenge.prompt.clone()) {
+                    Ok(r) => {
+                        req_inner.value = encode_pb(r).unwrap();
+                    }
+                    Err(e) => {
+                        log::warn!("Failed to Fido2 authenticate: {}", e);
+                        return Err(PamResultCode::PAM_ABORT);
+                    }
+                };
             }
             Ok(_) => {
                 log::debug!("Prompt meta generic, prompt user");

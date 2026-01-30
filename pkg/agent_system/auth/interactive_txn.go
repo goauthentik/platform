@@ -87,6 +87,16 @@ func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChalle
 			Prompt:     "authentik Password: ",
 			PromptMeta: pb.InteractiveChallenge_PAM_PROMPT_ECHO_OFF,
 		}, nil
+	case string(flow.StageAuthenticatorValidate):
+		for _, dc := range nc.AuthenticatorValidationChallenge.DeviceChallenges {
+			if dc.DeviceClass == api.DEVICECLASSESENUM_WEBAUTHN {
+				pch, err := txn.parseWebAuthNRequest(dc)
+				if err != nil {
+					return nil, err
+				}
+				return pch, nil
+			}
+		}
 	default:
 		txn.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
@@ -111,6 +121,12 @@ func (txn *InteractiveAuthTransaction) solveChallenge(req *pb.InteractiveAuthCon
 		freq.PasswordChallengeResponseRequest = &api.PasswordChallengeResponseRequest{
 			Password: req.Value,
 		}
+	case string(flow.StageAuthenticatorValidate):
+		res, err := txn.parseWebAuthNResponse(req.Value)
+		if err != nil {
+			return nil, err
+		}
+		freq.AuthenticatorValidationChallengeResponseRequest = res
 	default:
 		txn.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}

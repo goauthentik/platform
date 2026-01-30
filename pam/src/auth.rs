@@ -1,6 +1,6 @@
 use authentik_sys::{
     generated::ssh::SshTokenAuthentication,
-    grpc::{Bridge, decode_token},
+    grpc::{Bridge, decode_pb},
 };
 use pam::{
     constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
@@ -97,7 +97,7 @@ pub fn authenticate_impl(
     if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
-        let decoded = match decode_token::<SshTokenAuthentication>(raw_token) {
+        let decoded = match decode_pb::<SshTokenAuthentication>(raw_token) {
             Ok(t) => t,
             Err(e) => {
                 log::warn!("failed to decode token: {}", e);

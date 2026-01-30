@@ -74,6 +74,118 @@ func (x *SSHTokenAuthentication) GetLocalSocket() string {
 	return ""
 }
 
+type FIDORequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RpId          string                 `protobuf:"bytes,1,opt,name=rp_id,json=rpId,proto3" json:"rp_id,omitempty"`
+	Challenge     []byte                 `protobuf:"bytes,2,opt,name=challenge,proto3" json:"challenge,omitempty"`
+	CredentialIds [][]byte               `protobuf:"bytes,3,rep,name=credential_ids,json=credentialIds,proto3" json:"credential_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FIDORequest) Reset() {
+	*x = FIDORequest{}
+	mi := &file_ssh_token_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FIDORequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FIDORequest) ProtoMessage() {}
+
+func (x *FIDORequest) ProtoReflect() protoreflect.Message {
+	mi := &file_ssh_token_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FIDORequest.ProtoReflect.Descriptor instead.
+func (*FIDORequest) Descriptor() ([]byte, []int) {
+	return file_ssh_token_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *FIDORequest) GetRpId() string {
+	if x != nil {
+		return x.RpId
+	}
+	return ""
+}
+
+func (x *FIDORequest) GetChallenge() []byte {
+	if x != nil {
+		return x.Challenge
+	}
+	return nil
+}
+
+func (x *FIDORequest) GetCredentialIds() [][]byte {
+	if x != nil {
+		return x.CredentialIds
+	}
+	return nil
+}
+
+type FIDOResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Signature         []byte                 `protobuf:"bytes,1,opt,name=signature,proto3" json:"signature,omitempty"`
+	AuthenticatorData []byte                 `protobuf:"bytes,2,opt,name=authenticator_data,json=authenticatorData,proto3" json:"authenticator_data,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *FIDOResponse) Reset() {
+	*x = FIDOResponse{}
+	mi := &file_ssh_token_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FIDOResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FIDOResponse) ProtoMessage() {}
+
+func (x *FIDOResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ssh_token_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FIDOResponse.ProtoReflect.Descriptor instead.
+func (*FIDOResponse) Descriptor() ([]byte, []int) {
+	return file_ssh_token_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *FIDOResponse) GetSignature() []byte {
+	if x != nil {
+		return x.Signature
+	}
+	return nil
+}
+
+func (x *FIDOResponse) GetAuthenticatorData() []byte {
+	if x != nil {
+		return x.AuthenticatorData
+	}
+	return nil
+}
+
 var File_ssh_token_proto protoreflect.FileDescriptor
 
 const file_ssh_token_proto_rawDesc = "" +
@@ -81,7 +193,14 @@ const file_ssh_token_proto_rawDesc = "" +
 	"\x0fssh_token.proto\x12\x03ssh\"Q\n" +
 	"\x16SSHTokenAuthentication\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12!\n" +
-	"\flocal_socket\x18\x02 \x01(\tR\vlocalSocketB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\flocal_socket\x18\x02 \x01(\tR\vlocalSocket\"g\n" +
+	"\vFIDORequest\x12\x13\n" +
+	"\x05rp_id\x18\x01 \x01(\tR\x04rpId\x12\x1c\n" +
+	"\tchallenge\x18\x02 \x01(\fR\tchallenge\x12%\n" +
+	"\x0ecredential_ids\x18\x03 \x03(\fR\rcredentialIds\"[\n" +
+	"\fFIDOResponse\x12\x1c\n" +
+	"\tsignature\x18\x01 \x01(\fR\tsignature\x12-\n" +
+	"\x12authenticator_data\x18\x02 \x01(\fR\x11authenticatorDataB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_ssh_token_proto_rawDescOnce sync.Once
@@ -95,9 +214,11 @@ func file_ssh_token_proto_rawDescGZIP() []byte {
 	return file_ssh_token_proto_rawDescData
 }
 
-var file_ssh_token_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ssh_token_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_ssh_token_proto_goTypes = []any{
 	(*SSHTokenAuthentication)(nil), // 0: ssh.SSHTokenAuthentication
+	(*FIDORequest)(nil),            // 1: ssh.FIDORequest
+	(*FIDOResponse)(nil),           // 2: ssh.FIDOResponse
 }
 var file_ssh_token_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -118,7 +239,7 @@ func file_ssh_token_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ssh_token_proto_rawDesc), len(file_ssh_token_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

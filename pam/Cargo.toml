@@ -13,6 +13,7 @@ workspace = true
 
 [dependencies]
 authentik_sys = { path = ".." }
+ctap-hid-fido2 = "3.5.8"
 ctor = "0.6.3"
 gethostname = "1.1.0"
 hex = "0.4.3"
