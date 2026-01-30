@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -151,8 +150,12 @@ func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (string, er
 		return "", err
 	}
 	req.Header.Add("X-Authentik-Platform-Auth-DTH", DeviceTokenHash(txn.dom))
-	res, err := txn.fex.ApiClient().GetConfig().HTTPClient.Do(req)
-	if err != nil && strings.Contains("unsupported protocol scheme", err.Error()) {
+	c := &http.Client{
+		Transport: platformRoundTripper{},
+		Jar:       txn.fex.ApiClient().GetConfig().HTTPClient.Jar,
+	}
+	res, err := c.Do(req)
+	if err != nil {
 		return "", err
 	}
 	if res.Request.URL.Scheme == "goauthentik.io" && res.Request.URL.Host == "platform" && res.Request.URL.Path == "/finished" {
