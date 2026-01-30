@@ -42,7 +42,7 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse, Box<dyn Error
     let _ = conv.send(PAM_TEXT_INFO, "Touch your security key");
 
     let assertions = device.get_assertion_with_args(&assertion_args)?;
-    log::debug!("- Authenticate Success");
+    log::debug!("FIDO2: Authenticate Success");
 
     Ok(FidoResponse {
         credential_id: assertions[0].credential_id.clone(),

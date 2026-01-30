@@ -35,13 +35,11 @@ func encodeChallenge(challenge string, origin string) ([]byte, error) {
 }
 
 func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallenge) (*pb.InteractiveChallenge, error) {
-	txn.log.Debugf("ch %+v\n", dc.Challenge)
 	vv := webauthnChallenge{}
 	err := mapstructure.Decode(dc.Challenge, &vv)
 	if err != nil {
 		return nil, err
 	}
-	txn.log.Debugf("ch %+v\n", vv)
 
 	challenge, err := encodeChallenge(vv.Challenge, txn.dom.AuthentikURL)
 	if err != nil {

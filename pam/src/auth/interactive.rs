@@ -80,16 +80,18 @@ pub fn auth_interactive(
         iter += 1;
         log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
-            match conv.send(
-                prompt_meta_to_pam_message_style(&challenge),
-                &challenge.prompt,
-            ) {
-                Ok(_) => {}
-                Err(e) => {
-                    log::warn!("failed to send prompt");
-                    return Err(e);
-                }
-            };
+            if !challenge.prompt.is_empty() {
+                match conv.send(
+                    prompt_meta_to_pam_message_style(&challenge),
+                    &challenge.prompt,
+                ) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        log::warn!("failed to send prompt");
+                        return Err(e);
+                    }
+                };
+            }
             return Ok(challenge);
         }
         let mut req_inner = InteractiveAuthContinueRequest {
