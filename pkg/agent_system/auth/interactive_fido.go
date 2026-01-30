@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	"github.com/mitchellh/mapstructure"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/pb"
@@ -63,20 +62,6 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallen
 	}, nil
 }
 
-type webauthnResponseResponse struct {
-	ClientDataJSON    string  `mapstructure:"clientDataJSON"`
-	Signature         string  `mapstructure:"signature"`
-	AuthenticatorData string  `mapstructure:"authenticatorData"`
-	UserHandle        *string `mapstructure:"userHandle"`
-}
-
-type webauthnResponse struct {
-	ID       string                   `mapstructure:"id"`
-	RawID    string                   `mapstructure:"rawId"`
-	Type     string                   `mapstructure:"type"`
-	Response webauthnResponseResponse `mapstructure:"response"`
-}
-
 func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string) (*api.AuthenticatorValidationChallengeResponseRequest, error) {
 	d, err := base64.StdEncoding.DecodeString(raw)
 	if err != nil {
@@ -87,19 +72,21 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string) (*api.A
 	if err != nil {
 		return nil, err
 	}
-	webauthn := map[string]any{}
-	mapstructure.Decode(webauthnResponse{
-		ID:    base64.RawURLEncoding.EncodeToString(m.CredentialId),
-		RawID: base64.RawURLEncoding.EncodeToString(m.CredentialId),
-		Type:  "public-key",
-		Response: webauthnResponseResponse{
-			Signature:         base64.RawURLEncoding.EncodeToString(m.Signature),
-			AuthenticatorData: base64.RawURLEncoding.EncodeToString(m.AuthenticatorData),
-		},
-	}, webauthn)
+
 	res := &api.AuthenticatorValidationChallengeResponseRequest{
 		Component: api.PtrString(string(flow.StageAuthenticatorValidate)),
-		Webauthn:  webauthn,
+		Webauthn: map[string]any{
+			"id":    base64.RawURLEncoding.EncodeToString(m.CredentialId),
+			"rawId": base64.RawURLEncoding.EncodeToString(m.CredentialId),
+			"type":  "public-key",
+			"response": map[string]any{
+				"clientDataJSON":    "{}",
+				"signature":         base64.RawURLEncoding.EncodeToString(m.Signature),
+				"authenticatorData": base64.RawURLEncoding.EncodeToString(m.AuthenticatorData),
+				"userHandle":        nil,
+			},
+		},
 	}
+	txn.log.Debugf("res %+v\n", res.Webauthn)
 	return res, nil
 }
