@@ -125,7 +125,7 @@ func (txn *InteractiveAuthTransaction) solveChallenge(req *pb.InteractiveAuthCon
 			Password: req.Value,
 		}
 	case string(flow.StageAuthenticatorValidate):
-		res, err := txn.parseWebAuthNResponse(req.Value)
+		res, err := txn.parseWebAuthNResponse(req.Value, nc.AuthenticatorValidationChallenge.DeviceChallenges[0])
 		if err != nil {
 			return nil, err
 		}

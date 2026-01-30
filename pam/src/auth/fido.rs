@@ -43,7 +43,6 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse, Box<dyn Error
     let assertions = device.get_assertion_with_args(&assertion_args)?;
     log::debug!("- Authenticate Success");
 
-    // assertions[0].flags
     Ok(FidoResponse {
         credential_id: assertions[0].credential_id.clone(),
         signature: assertions[0].signature.clone(),

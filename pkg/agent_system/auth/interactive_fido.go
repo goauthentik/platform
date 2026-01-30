@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
+	"github.com/mitchellh/mapstructure"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/pb"
@@ -19,20 +20,30 @@ type webauthnChallenge struct {
 	} `json:"allowCredentials,omitempty"`
 }
 
-func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallenge) (*pb.InteractiveChallenge, error) {
-	v, err := json.Marshal(dc.Challenge)
+func encodeChallenge(challenge string, origin string) ([]byte, error) {
+	clientDataJSON := map[string]any{
+		"type":      "webauthn.get",
+		"challenge": challenge,
+		"origin":    "https://" + origin,
+	}
+
+	clientDataJSONBytes, err := json.Marshal(clientDataJSON)
 	if err != nil {
-		txn.log.WithError(err).Warning("failed to marshall challenge")
 		return nil, err
 	}
+	return clientDataJSONBytes, nil
+}
+
+func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallenge) (*pb.InteractiveChallenge, error) {
 	vv := webauthnChallenge{}
-	json.Unmarshal(v, &vv)
-
-	txn.log.Debugf("ch %+v\n", vv)
-
-	challenge, err := base64.RawURLEncoding.DecodeString(vv.Challenge)
+	err := mapstructure.Decode(dc.Challenge, &vv)
 	if err != nil {
-		txn.log.WithError(err).Warning("failed to decode challenge")
+		return nil, err
+	}
+
+	challenge, err := encodeChallenge(vv.Challenge, txn.dom.AuthentikURL)
+	if err != nil {
+		txn.log.WithError(err).Warning("failed to encode challenge")
 		return nil, err
 	}
 
@@ -62,7 +73,7 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallen
 	}, nil
 }
 
-func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string) (*api.AuthenticatorValidationChallengeResponseRequest, error) {
+func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string, dc api.DeviceChallenge) (*api.AuthenticatorValidationChallengeResponseRequest, error) {
 	d, err := base64.StdEncoding.DecodeString(raw)
 	if err != nil {
 		return nil, err
@@ -73,6 +84,18 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string) (*api.A
 		return nil, err
 	}
 
+	vv := webauthnChallenge{}
+	err = mapstructure.Decode(dc.Challenge, &vv)
+	if err != nil {
+		return nil, err
+	}
+
+	challenge, err := encodeChallenge(vv.Challenge, txn.dom.AuthentikURL)
+	if err != nil {
+		txn.log.WithError(err).Warning("failed to encode challenge")
+		return nil, err
+	}
+
 	res := &api.AuthenticatorValidationChallengeResponseRequest{
 		Component: api.PtrString(string(flow.StageAuthenticatorValidate)),
 		Webauthn: map[string]any{
@@ -80,7 +103,7 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string) (*api.A
 			"rawId": base64.RawURLEncoding.EncodeToString(m.CredentialId),
 			"type":  "public-key",
 			"response": map[string]any{
-				"clientDataJSON":    "{}",
+				"clientDataJSON":    base64.RawURLEncoding.EncodeToString(challenge),
 				"signature":         base64.RawURLEncoding.EncodeToString(m.Signature),
 				"authenticatorData": base64.RawURLEncoding.EncodeToString(m.AuthenticatorData),
 				"userHandle":        nil,
