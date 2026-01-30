@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (auth *Server) DeviceTokenHash(dom *config.DomainConfig) string {
+func DeviceTokenHash(dom *config.DomainConfig) string {
 	hh := sha256.Sum256([]byte(dom.Token))
 	h := hex.EncodeToString(hh[:])
 	return h
@@ -35,6 +35,6 @@ func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) 
 	}
 	return &pb.InteractiveAuthAsyncResponse{
 		Url:         res.Url,
-		HeaderToken: auth.DeviceTokenHash(dom),
+		HeaderToken: DeviceTokenHash(dom),
 	}, nil
 }
