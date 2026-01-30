@@ -106,7 +106,13 @@ pub fn auth_interactive(
             Ok(PromptMeta::PamBinaryPrompt) => {
                 match fido2(challenge.prompt.clone(), conv) {
                     Ok(r) => {
-                        req_inner.value = encode_pb(r).unwrap();
+                        req_inner.value = match encode_pb(r) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                log::warn!("Failed to reply to WebAuthn: {}", e);
+                                return Err(PamResultCode::PAM_ABORT);
+                            }
+                        };
                     }
                     Err(e) => {
                         log::warn!("Failed to Fido2 authenticate: {}", e);
