@@ -50,7 +50,7 @@ jobs:
         run: |
           platform=$(uname -o | tr '[:upper:]' '[:lower:]')
           echo "platform=${platform}" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v4
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v4
         with:
           path: cache/
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
@@ -122,7 +122,7 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install -y libpam0g-dev
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v4
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v4
         with:
           path: cache/
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
