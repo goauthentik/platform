@@ -84,6 +84,7 @@ message InteractiveChallenge {
   PromptMeta prompt_meta = 5;
   string debug_info = 6;
   string session_id = 7;
+  string component = 8;
 }
 
 message SystemAuthorizeRequest {

@@ -52,6 +52,7 @@ func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChalle
 			Result:     pb.InteractiveAuthResult_PAM_PERM_DENIED,
 			Prompt:     nc.AccessDeniedChallenge.GetErrorMessage(),
 			PromptMeta: pb.InteractiveChallenge_PAM_ERROR_MSG,
+			Component:  ch.GetComponent(),
 		}, nil
 	case string(flow.StageIdentification):
 		cc := nc.IdentificationChallenge
@@ -86,6 +87,7 @@ func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChalle
 			Txid:       txn.ID,
 			Prompt:     "authentik Password: ",
 			PromptMeta: pb.InteractiveChallenge_PAM_PROMPT_ECHO_OFF,
+			Component:  ch.GetComponent(),
 		}, nil
 	case string(flow.StageAuthenticatorValidate):
 		for _, dc := range nc.AuthenticatorValidationChallenge.DeviceChallenges {

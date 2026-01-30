@@ -73,9 +73,12 @@ pub fn auth_interactive(
         prompt_meta: PAM_PROMPT_ECHO_OFF,
         debug_info: "".to_owned(),
         session_id: "".to_owned(),
+        component: "".to_owned(),
     };
     let mut iter = 0;
     while iter <= MAX_ITER {
+        let debug_msg = format!("Debug: challenge {}", challenge.component).clone();
+        let _ = conv.send(PAM_TEXT_INFO, &debug_msg);
         log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
             match conv.send(

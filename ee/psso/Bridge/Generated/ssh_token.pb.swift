@@ -8,6 +8,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+internal import Foundation
 internal import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -29,6 +30,36 @@ struct SSHTokenAuthentication: Sendable {
   var token: String = String()
 
   var localSocket: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct FIDORequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var rpID: String = String()
+
+  var challenge: Data = Data()
+
+  var credentialIds: [Data] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct FIDOResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var signature: Data = Data()
+
+  var authenticatorData: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -69,6 +100,81 @@ extension SSHTokenAuthentication: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   static func ==(lhs: SSHTokenAuthentication, rhs: SSHTokenAuthentication) -> Bool {
     if lhs.token != rhs.token {return false}
     if lhs.localSocket != rhs.localSocket {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension FIDORequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".FIDORequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}rp_id\0\u{1}challenge\0\u{3}credential_ids\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.rpID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.challenge) }()
+      case 3: try { try decoder.decodeRepeatedBytesField(value: &self.credentialIds) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.rpID.isEmpty {
+      try visitor.visitSingularStringField(value: self.rpID, fieldNumber: 1)
+    }
+    if !self.challenge.isEmpty {
+      try visitor.visitSingularBytesField(value: self.challenge, fieldNumber: 2)
+    }
+    if !self.credentialIds.isEmpty {
+      try visitor.visitRepeatedBytesField(value: self.credentialIds, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: FIDORequest, rhs: FIDORequest) -> Bool {
+    if lhs.rpID != rhs.rpID {return false}
+    if lhs.challenge != rhs.challenge {return false}
+    if lhs.credentialIds != rhs.credentialIds {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension FIDOResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".FIDOResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}signature\0\u{3}authenticator_data\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.signature) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.authenticatorData) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.signature.isEmpty {
+      try visitor.visitSingularBytesField(value: self.signature, fieldNumber: 1)
+    }
+    if !self.authenticatorData.isEmpty {
+      try visitor.visitSingularBytesField(value: self.authenticatorData, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: FIDOResponse, rhs: FIDOResponse) -> Bool {
+    if lhs.signature != rhs.signature {return false}
+    if lhs.authenticatorData != rhs.authenticatorData {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
