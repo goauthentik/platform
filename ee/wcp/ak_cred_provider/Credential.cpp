@@ -307,13 +307,13 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM
                           .c_str());
         if ((m_oCefAppData.pCefApp)) {
           spdlog::debug("WndProc:: CEFLaunch");
-          pData->strUsername = "";
+          pData->strUserToken = "";
           try {
             CEFLaunch(pData, m_oCefAppData.pCefApp);
           } catch (const std::exception& e) {
             SPDLOG_WARN("Failed to CEFLaunch", e.what());
           }
-          spdlog::debug(std::string("User logged in: " + pData->strUsername).c_str());
+          spdlog::debug(std::string("User logged in: " + pData->strUserToken).c_str());
           spdlog::debug("WndProc:: CEFLaunched");
         } else {
           ::MessageBox(hWnd,
@@ -751,25 +751,7 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws) {
     } else {
       strCredUser = std::wstring(m_pszQualifiedUserName);
     }
-    std::wstring strAuthUser =
-        std::wstring(m_oHookData.strUsername.begin(), m_oHookData.strUsername.end());
-    if ((strAuthUser == strCredUser) && (strCredUser != L"")) {
-      // Reset password
-      USER_INFO_1003 oUserInfo1003;
-      DWORD dwParamErr = 0;
-      m_strPass = GetRandomWStr(WIN_PASS_LEN);
-      oUserInfo1003.usri1003_password = (LPWSTR)(m_strPass.c_str());
-      if (NetUserSetInfo(NULL, strCredUser.c_str(), 1003, (LPBYTE)(&oUserInfo1003), &dwParamErr) !=
-          NERR_Success) {
-        hr = E_FAIL;
-      }
-    } else {
-      if (strAuthUser != L"") {
-        MessageBox(hwndOwner, std::wstring(L"Username mismatch.").c_str(),
-                   (LPCWSTR)L"Login Failure", MB_OK | MB_TASKMODAL);
-      }
-      hr = E_FAIL;
-    }
+    m_strPass = utf8_decode(m_oHookData.strUserToken);
   } else {
     hr = E_POINTER;
   }
