@@ -31,6 +31,7 @@ type InteractiveAuthTransaction struct {
 }
 
 func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChallenge, error) {
+	txn.log.Trace("txn *InteractiveAuthTransaction getNextChallenge")
 	c := &pb.InteractiveChallenge{
 		Txid: txn.ID,
 	}
@@ -52,6 +53,7 @@ func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChalle
 			Result:     pb.InteractiveAuthResult_PAM_PERM_DENIED,
 			Prompt:     nc.AccessDeniedChallenge.GetErrorMessage(),
 			PromptMeta: pb.InteractiveChallenge_PAM_ERROR_MSG,
+			Component:  ch.GetComponent(),
 		}, nil
 	case string(flow.StageIdentification):
 		cc := nc.IdentificationChallenge
@@ -86,7 +88,18 @@ func (txn *InteractiveAuthTransaction) getNextChallenge() (*pb.InteractiveChalle
 			Txid:       txn.ID,
 			Prompt:     "authentik Password: ",
 			PromptMeta: pb.InteractiveChallenge_PAM_PROMPT_ECHO_OFF,
+			Component:  ch.GetComponent(),
 		}, nil
+	case string(flow.StageAuthenticatorValidate):
+		for _, dc := range nc.AuthenticatorValidationChallenge.DeviceChallenges {
+			if dc.DeviceClass == api.DEVICECLASSESENUM_WEBAUTHN {
+				pch, err := txn.parseWebAuthNRequest(dc)
+				if err != nil {
+					return nil, err
+				}
+				return pch, nil
+			}
+		}
 	default:
 		txn.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
@@ -111,6 +124,12 @@ func (txn *InteractiveAuthTransaction) solveChallenge(req *pb.InteractiveAuthCon
 		freq.PasswordChallengeResponseRequest = &api.PasswordChallengeResponseRequest{
 			Password: req.Value,
 		}
+	case string(flow.StageAuthenticatorValidate):
+		res, err := txn.parseWebAuthNResponse(req.Value, nc.AuthenticatorValidationChallenge.DeviceChallenges[0])
+		if err != nil {
+			return nil, err
+		}
+		freq.AuthenticatorValidationChallengeResponseRequest = res
 	default:
 		txn.log.WithField("component", ch.GetComponent()).Warning("unsupported stage type")
 	}
@@ -130,8 +149,14 @@ func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (string, er
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer+agent %s", txn.dom.Token))
-	res, err := txn.api.GetConfig().HTTPClient.Do(req)
+	req.Header.Add("X-Authentik-Platform-Auth-DTH", DeviceTokenHash(txn.dom))
+	c := &http.Client{
+		Transport: platformRoundTripper{
+			parent: txn.fex.ApiClient().GetConfig().HTTPClient.Transport,
+		},
+		Jar: txn.fex.ApiClient().GetConfig().HTTPClient.Jar,
+	}
+	res, err := c.Do(req)
 	if err != nil {
 		return "", err
 	}

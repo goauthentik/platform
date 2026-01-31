@@ -4,7 +4,8 @@ set -euo pipefail
 case "$1" in
     configure)
         systemctl --system daemon-reload >/dev/null || true
-        systemctl enable --now 'ak-sysd.service' >/dev/null || true
+        systemctl enable 'ak-sysd.service' >/dev/null || true
+        systemctl restart 'ak-sysd.service' >/dev/null || true
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

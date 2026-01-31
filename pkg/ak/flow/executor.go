@@ -93,6 +93,7 @@ func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Config
 	config := api.NewConfiguration()
 	config.Host = refConfig.Host
 	config.Scheme = refConfig.Scheme
+	config.UserAgent = refConfig.UserAgent
 	config.HTTPClient = &http.Client{
 		Jar:       jar,
 		Transport: fe,

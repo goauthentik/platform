@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu
 RUN apt-get update && \
     apt-get install -y \
         # Required for PAM development
-        libpam0g-dev pamtester \
+        libpam0g-dev libudev-dev pamtester \
         # Required for keyring
         dbus dbus-x11 gnome-keyring && \
     echo 'eval $(echo -n "$" | gnome-keyring-daemon --unlock | sed -e "s/^/export /")' >> /home/vscode/.bashrc && \

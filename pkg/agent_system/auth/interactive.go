@@ -53,9 +53,9 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 	if err != nil {
 		return nil, err
 	}
-	domConfig := dom.Config()
-	if !domConfig.AuthorizationFlow.IsSet() {
-		return nil, status.Error(codes.InvalidArgument, "authorization flow not configured")
+	brand := dom.Brand()
+	if brand == nil {
+		return nil, status.Error(codes.Internal, "no brand")
 	}
 	txn := &InteractiveAuthTransaction{
 		ID:       id,
@@ -67,7 +67,7 @@ func (auth *Server) interactiveAuthInit(_ context.Context, req *pb.InteractiveAu
 		tv:       auth.TokenAuth,
 	}
 	txn.ctx, txn.cancel = context.WithCancel(auth.ctx.Context())
-	fex, err := flow.NewFlowExecutor(txn.ctx, domConfig.GetAuthorizationFlow(), txn.api.GetConfig(), flow.FlowExecutorOptions{
+	fex, err := flow.NewFlowExecutor(txn.ctx, brand.GetFlowAuthentication(), txn.api.GetConfig(), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
 			txn.log.WithField("logger", "component.auth.flow").WithFields(fields).Info(msg)
 		},

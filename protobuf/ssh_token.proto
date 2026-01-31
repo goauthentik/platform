@@ -9,3 +9,15 @@ message SSHTokenAuthentication {
   string token = 1;
   string local_socket = 2;
 }
+
+message FIDORequest {
+  string rp_id = 1;
+  bytes challenge = 2;
+  repeated bytes credential_ids = 3;
+}
+
+message FIDOResponse {
+  bytes credential_id = 1;
+  bytes signature = 2;
+  bytes authenticator_data = 3;
+}

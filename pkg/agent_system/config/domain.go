@@ -33,6 +33,9 @@ type DomainConfig struct {
 	r                 *Config
 	configLastUpdated time.Time
 	rc                *api.AgentConfig
+
+	// TODO: Remove after 2026.5
+	brand *api.CurrentBrand
 }
 
 func DefaultAgentConfig() api.AgentConfig {
@@ -46,6 +49,10 @@ func (dc DomainConfig) Config() api.AgentConfig {
 		return *dc.rc
 	}
 	return DefaultAgentConfig()
+}
+
+func (dc DomainConfig) Brand() *api.CurrentBrand {
+	return dc.brand
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
@@ -118,6 +125,11 @@ func (dc *DomainConfig) loaded() {
 		if err != nil {
 			return err
 		}
+		br := api.NullableCurrentBrand{}
+		err = br.UnmarshalJSON(b.Get([]byte("brand")))
+		if err != nil {
+			return err
+		}
 		lu := b.Get([]byte("config_last_updated"))
 		if len(lu) > 0 {
 			luu, err := strconv.ParseInt(string(lu), 10, 64)
@@ -128,6 +140,7 @@ func (dc *DomainConfig) loaded() {
 		}
 		dc.r.log.Info("Loaded domain config")
 		dc.rc = cfg.Get()
+		dc.brand = br.Get()
 		return nil
 	})
 	if err != nil {
@@ -153,6 +166,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
+
 		cfg, _, err := api.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 		if err != nil {
 			return err
@@ -163,12 +177,31 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
+		err = b.Put([]byte("config"), jc)
+		if err != nil {
+			return err
+		}
+
+		brand, _, err := api.CoreApi.CoreBrandsCurrentRetrieve(context.Background()).Execute()
+		if err != nil {
+			return err
+		}
+		dc.brand = brand
+		jc, err = brand.MarshalJSON()
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte("brand"), jc)
+		if err != nil {
+			return err
+		}
+
 		dc.configLastUpdated = time.Now()
 		err = b.Put([]byte("config_last_updated"), []byte(strconv.FormatInt(dc.configLastUpdated.Unix(), 10)))
 		if err != nil {
 			return err
 		}
-		return b.Put([]byte("config"), jc)
+		return nil
 	})
 }
 
