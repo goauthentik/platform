@@ -12,8 +12,8 @@ RUN --mount=type=bind,target=/build/bin,src=./bin \
     mkdir -p /etc/systemd/system/ak-sysd.service.d && \
     mkdir -p /etc/systemd/system/ak-agent.service.d && \
     mkdir -p /tmp/ak-coverage && \
-    echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-sysd"' > /etc/systemd/system/ak-sysd.service.d/coverage.conf && \
+    echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/go/ak-sysd"' > /etc/systemd/system/ak-sysd.service.d/coverage.conf && \
     cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system && \
-    echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-agent"\nEnvironment="HOME=/root"\' > /etc/systemd/system/ak-agent.service.d/coverage.conf && \
+    echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/go/ak-agent"\nEnvironment="HOME=/root"\' > /etc/systemd/system/ak-agent.service.d/coverage.conf && \
     sed -i 's/false/true/g' /etc/authentik/config.json && \
     systemctl enable ak-agent
