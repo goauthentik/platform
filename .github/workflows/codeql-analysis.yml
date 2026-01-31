@@ -46,7 +46,7 @@ jobs:
           languages: ${{ matrix.language-platform.language }}
       - name: Install libraries
         if: ${{ matrix.language-platform.language == 'ubuntu-24.04' }}
-        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev
+        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
       - name: Perform CodeQL Analysis
