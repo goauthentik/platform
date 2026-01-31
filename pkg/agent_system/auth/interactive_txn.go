@@ -151,8 +151,10 @@ func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (string, er
 	}
 	req.Header.Add("X-Authentik-Platform-Auth-DTH", DeviceTokenHash(txn.dom))
 	c := &http.Client{
-		Transport: platformRoundTripper{},
-		Jar:       txn.fex.ApiClient().GetConfig().HTTPClient.Jar,
+		Transport: platformRoundTripper{
+			parent: txn.fex.ApiClient().GetConfig().HTTPClient.Transport,
+		},
+		Jar: txn.fex.ApiClient().GetConfig().HTTPClient.Jar,
 	}
 	res, err := c.Do(req)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 )
 
 type platformRoundTripper struct {
+	parent http.RoundTripper
 }
 
 func (prt platformRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -13,5 +14,5 @@ func (prt platformRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 			Request: req,
 		}, nil
 	}
-	return http.DefaultTransport.RoundTrip(req)
+	return prt.parent.RoundTrip(req)
 }

@@ -18,6 +18,12 @@ func TestDomain(config *api.AgentConfig, ac *api.APIClient) *DomainConfig {
 	return dc
 }
 
+func TestDomainWithBrand(config *api.AgentConfig, ac *api.APIClient, brand *api.CurrentBrand) *DomainConfig {
+	dc := TestDomain(config, ac)
+	dc.brand = brand
+	return dc
+}
+
 func TestAuthentikURL() string {
 	if os.Getenv("CI") == "true" {
 		return "http://localhost:9000"

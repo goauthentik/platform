@@ -37,24 +37,24 @@ func testAuth(t *testing.T, dc *config.DomainConfig) Server {
 func TestInteractive_Success(t *testing.T) {
 	jwksKey, jwksCert := testutils.GenerateCertificate(t, "localhost")
 	ac := ak.TestAPI().
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				IdentificationChallenge: api.NewIdentificationChallenge([]string{}, false, api.FLOWDESIGNATIONENUM_AUTHENTICATION, "", false),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				PasswordChallenge: api.NewPasswordChallenge("", ""),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				RedirectChallenge: api.NewRedirectChallenge(""),
 			}, 200
 		}).
 		Handle("/api/v3/endpoints/agents/connectors/auth_ia/", func(req *http.Request) (any, int) {
 			return api.AgentAuthenticationResponse{
-				Url: "/test-url",
+				Url: "http://localhost/test-url",
 			}, 200
 		}).
 		Handle("/test-url", func(req *http.Request) (any, int) {
@@ -75,12 +75,14 @@ func TestInteractive_Success(t *testing.T) {
 			}, 200
 		})
 
-	dc := config.TestDomain(&api.AgentConfig{
+	dc := config.TestDomainWithBrand(&api.AgentConfig{
 		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
 		JwksAuth:          testutils.JWKS(t, jwksCert),
 		DeviceId:          "foo",
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
-	}, ac.APIClient)
+	}, ac.APIClient, &api.CurrentBrand{
+		FlowAuthentication: api.PtrString("authn-flow"),
+	})
 	auth := testAuth(t, dc)
 
 	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
