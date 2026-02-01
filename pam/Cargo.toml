@@ -1,6 +1,6 @@
 [package]
 name = "authentik_pam"
-version = "0.35.9"
+version = "0.40.0"
 edition = "2024"
 license = "MIT"
 
@@ -13,14 +13,13 @@ workspace = true
 
 [dependencies]
 authentik_sys = { path = ".." }
-base64 = "0.22.1"
+ctap-hid-fido2 = "3.5.8"
 ctor = "0.6.3"
 gethostname = "1.1.0"
 hex = "0.4.3"
 libc = "0.2.180"
 log = "0.4.29"
 pam-bindings = "0.1.1"
-prost = "0.14.3"
 serde = "1.0.228"
 serde_json = "1.0.149"
 whoami = "2.1.0"

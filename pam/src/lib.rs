@@ -13,7 +13,9 @@ use authentik_sys::logger::exit_log;
 use authentik_sys::logger::init_log;
 use authentik_sys::logger::log_hook;
 use ctor::{ctor, dtor};
+use pam::constants::PAM_TEXT_INFO;
 use pam::constants::{PamFlag, PamResultCode};
+use pam::conv::Conv;
 use pam::items::Service;
 use pam::module::{PamHandle, PamHooks};
 use std::ffi::CStr;
@@ -40,10 +42,9 @@ impl PamHooks for PAMAuthentik {
         prelude("sm_authenticate", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
-            "sshd" => authenticate_impl(pamh, args, flags),
             "sudo" => authenticate_authorize_impl(pamh, args, "sudo"),
             "sudo-i" => authenticate_authorize_impl(pamh, args, "sudo-i"),
-            _ => PamResultCode::PAM_IGNORE,
+            _ => authenticate_impl(pamh, args, flags),
         }
     }
 
@@ -51,8 +52,7 @@ impl PamHooks for PAMAuthentik {
         prelude("sm_open_session", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
-            "sshd" => open_session_impl(pamh, args, flags),
-            _ => PamResultCode::PAM_IGNORE,
+            _ => open_session_impl(pamh, args, flags),
         }
     }
 
@@ -129,4 +129,13 @@ macro_rules! pam_try_log {
             }
         }
     };
+}
+
+pub fn pam_print_user(conv: &Conv<'_>, text: &str) {
+    match conv.send(PAM_TEXT_INFO, text) {
+        Ok(_) => {}
+        Err(e) => {
+            log::warn!("Failed to print text to user: {:?}", e);
+        }
+    }
 }

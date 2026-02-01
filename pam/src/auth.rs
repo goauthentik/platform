@@ -1,3 +1,7 @@
+use authentik_sys::{
+    generated::ssh::SshTokenAuthentication,
+    grpc::{Bridge, decode_pb},
+};
 use pam::{
     constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
     conv::Conv,
@@ -8,16 +12,14 @@ use std::ffi::CStr;
 
 use crate::{
     ENV_SESSION_ID,
-    auth::{
-        interactive::auth_interactive,
-        token::{auth_token, decode_token},
-    },
+    auth::{interactive::auth_interactive, token::auth_token},
     pam_env::pam_put_env,
     pam_try_log,
     session_data::{_write_session_data, SessionData},
 };
 
 pub mod authorize;
+pub mod fido;
 pub mod interactive;
 pub mod token;
 
@@ -84,11 +86,25 @@ pub fn authenticate_impl(
     };
     let session_id: String;
 
+    let bridge = match Bridge::new() {
+        Ok(b) => b,
+        Err(e) => {
+            log::warn!("Failed to get runtime {}", e);
+            return PamResultCode::PAM_ABORT;
+        }
+    };
+
     if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
         let raw_token = password.replace(PW_PREFIX, "");
-        let decoded = pam_try_log!(decode_token(raw_token), "failed to decode token");
-        let token_res = match auth_token(username, decoded.token.to_owned()) {
+        let decoded = match decode_pb::<SshTokenAuthentication>(raw_token) {
+            Ok(t) => t,
+            Err(e) => {
+                log::warn!("failed to decode token: {}", e);
+                return PamResultCode::PAM_ABORT;
+            }
+        };
+        let token_res = match auth_token(username, decoded.token.to_owned(), bridge) {
             Ok(t) => t,
             Err(e) => return e,
         };
@@ -96,7 +112,7 @@ pub fn authenticate_impl(
         session_id = token_res.session_id;
     } else {
         log::debug!("Interactive authentication");
-        let int_res = match auth_interactive(username, password.to_owned(), &conv) {
+        let int_res = match auth_interactive(username, password.to_owned(), &conv, bridge) {
             Ok(ss) => ss,
             Err(code) => return code,
         };

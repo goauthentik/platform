@@ -6,7 +6,7 @@ import AuthenticationServices
 //  Created by Jens Langhammer on 17.10.25.
 //  Copyright © 2025 Authentik Security Inc. All rights reserved.
 //
-import Foundation
+internal import Foundation
 internal import GRPCCore
 internal import GRPCNIOTransportHTTP2
 internal import GRPCProtobuf
