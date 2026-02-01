@@ -7,6 +7,10 @@ else
 BINARY_NAME := ak-sysd
 endif
 
+.PHONY: lint
+lint:
+	$(call lint_shellcheck,"${PWD}/package")
+
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"

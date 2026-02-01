@@ -4,8 +4,8 @@ TARGET = pam
 DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
 lint:
-	$(call lint_shellcheck,"_deb")
-	$(call lint_shellcheck,"_rpm")
+	$(call lint_shellcheck,"${PWD}/_deb")
+	$(call lint_shellcheck,"${PWD}/_rpm")
 
 bump:
 	sed -i 's/^version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml
