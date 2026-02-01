@@ -47,6 +47,8 @@ struct FIDORequest: Sendable {
 
   var credentialIds: [Data] = []
 
+  var uv: Bool = false
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -56,6 +58,8 @@ struct FIDOResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
+
+  var credentialID: Data = Data()
 
   var signature: Data = Data()
 
@@ -107,7 +111,7 @@ extension SSHTokenAuthentication: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension FIDORequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".FIDORequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}rp_id\0\u{1}challenge\0\u{3}credential_ids\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}rp_id\0\u{1}challenge\0\u{3}credential_ids\0\u{1}uv\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -118,6 +122,7 @@ extension FIDORequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
       case 1: try { try decoder.decodeSingularStringField(value: &self.rpID) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.challenge) }()
       case 3: try { try decoder.decodeRepeatedBytesField(value: &self.credentialIds) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.uv) }()
       default: break
       }
     }
@@ -133,6 +138,9 @@ extension FIDORequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
     if !self.credentialIds.isEmpty {
       try visitor.visitRepeatedBytesField(value: self.credentialIds, fieldNumber: 3)
     }
+    if self.uv != false {
+      try visitor.visitSingularBoolField(value: self.uv, fieldNumber: 4)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -140,6 +148,7 @@ extension FIDORequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
     if lhs.rpID != rhs.rpID {return false}
     if lhs.challenge != rhs.challenge {return false}
     if lhs.credentialIds != rhs.credentialIds {return false}
+    if lhs.uv != rhs.uv {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -147,7 +156,7 @@ extension FIDORequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
 
 extension FIDOResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".FIDOResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}signature\0\u{3}authenticator_data\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}credential_id\0\u{1}signature\0\u{3}authenticator_data\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -155,24 +164,29 @@ extension FIDOResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.signature) }()
-      case 2: try { try decoder.decodeSingularBytesField(value: &self.authenticatorData) }()
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.credentialID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.signature) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.authenticatorData) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.credentialID.isEmpty {
+      try visitor.visitSingularBytesField(value: self.credentialID, fieldNumber: 1)
+    }
     if !self.signature.isEmpty {
-      try visitor.visitSingularBytesField(value: self.signature, fieldNumber: 1)
+      try visitor.visitSingularBytesField(value: self.signature, fieldNumber: 2)
     }
     if !self.authenticatorData.isEmpty {
-      try visitor.visitSingularBytesField(value: self.authenticatorData, fieldNumber: 2)
+      try visitor.visitSingularBytesField(value: self.authenticatorData, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: FIDOResponse, rhs: FIDOResponse) -> Bool {
+    if lhs.credentialID != rhs.credentialID {return false}
     if lhs.signature != rhs.signature {return false}
     if lhs.authenticatorData != rhs.authenticatorData {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
