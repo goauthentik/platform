@@ -18,7 +18,14 @@ type webauthnChallenge struct {
 	AllowedCredentials []struct {
 		CredentialID string `mapstructure:"id"`
 	} `mapstructure:"allowCredentials"`
+	UserVerification string `mapstructure:"userVerification"`
 }
+
+const (
+	uvPreferred   = "preferred"
+	uvRequired    = "required"
+	uvDiscouraged = "discouraged"
+)
 
 func encodeChallenge(challenge string, origin string) ([]byte, error) {
 	clientDataJSON := map[string]any{
@@ -51,6 +58,9 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNRequest(dc api.DeviceChallen
 		RpId:          vv.RelyingPartyID,
 		Challenge:     challenge,
 		CredentialIds: [][]byte{},
+	}
+	if vv.UserVerification == uvPreferred || vv.UserVerification == uvRequired {
+		bc.Uv = true
 	}
 	for _, dev := range vv.AllowedCredentials {
 		credId, err := base64.RawURLEncoding.DecodeString(dev.CredentialID)

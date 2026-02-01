@@ -3,27 +3,29 @@
 /// Message to encode token for SSH authenticaiton with CLI
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SshTokenAuthentication {
-    #[prost(string, tag = "1")]
+    #[prost(string, tag="1")]
     pub token: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
+    #[prost(string, tag="2")]
     pub local_socket: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct FidoRequest {
-    #[prost(string, tag = "1")]
+    #[prost(string, tag="1")]
     pub rp_id: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "2")]
+    #[prost(bytes="vec", tag="2")]
     pub challenge: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", repeated, tag = "3")]
+    #[prost(bytes="vec", repeated, tag="3")]
     pub credential_ids: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+    #[prost(bool, tag="4")]
+    pub uv: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct FidoResponse {
-    #[prost(bytes = "vec", tag = "1")]
+    #[prost(bytes="vec", tag="1")]
     pub credential_id: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "2")]
+    #[prost(bytes="vec", tag="2")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "3")]
+    #[prost(bytes="vec", tag="3")]
     pub authenticator_data: ::prost::alloc::vec::Vec<u8>,
 }
 // @@protoc_insertion_point(module)
