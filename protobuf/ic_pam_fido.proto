@@ -1,14 +1,8 @@
 syntax = "proto3";
 
-package ssh;
+package ic_pam_fido;
 option go_package = "pkg/pb";
 option swift_prefix = "";
-
-// Message to encode token for SSH authenticaiton with CLI
-message SSHTokenAuthentication {
-  string token = 1;
-  string local_socket = 2;
-}
 
 message FIDORequest {
   string rp_id = 1;

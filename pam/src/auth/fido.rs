@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use authentik_sys::{
-    generated::ssh::{FidoRequest, FidoResponse},
+    generated::ic_pam_fido::{FidoRequest, FidoResponse},
     grpc::decode_pb,
 };
 use ctap_hid_fido2::{

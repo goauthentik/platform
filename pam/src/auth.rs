@@ -1,5 +1,5 @@
 use authentik_sys::{
-    generated::ssh::SshTokenAuthentication,
+    generated::ic_ssh::SshTokenAuthentication,
     grpc::{Bridge, decode_pb},
 };
 use pam::{
