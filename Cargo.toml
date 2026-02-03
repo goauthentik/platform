@@ -27,7 +27,7 @@ name = "log"
 [dependencies]
 base64 = "0.22.1"
 cxx = "1.0.194"
-hyper-util = "0.1.19"
+hyper-util = "0.1.20"
 libc = "0.2.180"
 log = "0.4.29"
 prost = "0.14"
