@@ -85,7 +85,7 @@ void Provider::SetCefApp(sHookData* pData) {
     CefSettings settings;
 
     // Specify the path for the sub-process executable.
-    spdlog::debug("g_strPath: %s", g_strPath);
+    spdlog::debug("g_strPath: '{}'", g_strPath);
     std::string strPath = g_strPath + "\\ak_cef.exe";
     CefString(&settings.browser_subprocess_path).FromASCII(strPath.c_str());
     // std::string strRPath = g_strPath + "\\" + GetRandomStr(5);
