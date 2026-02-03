@@ -19,7 +19,7 @@ func (auth *Server) Authorize(ctx context.Context, req *pb.SystemAuthorizeReques
 	if !found {
 		return nil, status.Error(codes.NotFound, "session not found")
 	}
-	c, err := client.New(sess.LocalSocket)
+	c, err := client.New(sess.LocalSocket, client.WithLogging())
 	if err != nil {
 		return nil, err
 	}

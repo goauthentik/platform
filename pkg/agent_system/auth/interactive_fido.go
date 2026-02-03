@@ -120,6 +120,5 @@ func (txn *InteractiveAuthTransaction) parseWebAuthNResponse(raw string, dc api.
 			},
 		},
 	}
-	txn.log.Debugf("res %+v\n", res.Webauthn)
 	return res, nil
 }

@@ -22,10 +22,41 @@ type AgentClient struct {
 	pb.PingClient
 
 	conn *grpc.ClientConn
+	log  *log.Entry
 }
 
-func New(socketPath string) (*AgentClient, error) {
+type opt func(ac *AgentClient) (grpc.UnaryClientInterceptor, grpc.StreamClientInterceptor)
+
+func sentryOpt() opt {
+	return func(ac *AgentClient) (grpc.UnaryClientInterceptor, grpc.StreamClientInterceptor) {
+		return grpc_sentry.UnaryClientInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			})), grpc_sentry.StreamClientInterceptor(grpc_sentry.WithReportOn(func(error) bool {
+				return false
+			}))
+	}
+}
+
+func WithLogging() opt {
+	return func(ac *AgentClient) (grpc.UnaryClientInterceptor, grpc.StreamClientInterceptor) {
+		return logging.UnaryClientInterceptor(systemlog.InterceptorLogger(ac.log)),
+			logging.StreamClientInterceptor(systemlog.InterceptorLogger(ac.log))
+	}
+}
+
+func New(socketPath string, opts ...opt) (*AgentClient, error) {
 	l := log.WithField("logger", "cli.grpc")
+	ag := &AgentClient{
+		log: l,
+	}
+	clientInterceptors := []grpc.UnaryClientInterceptor{}
+	streamInterceptors := []grpc.StreamClientInterceptor{}
+	opts = append(opts, sentryOpt())
+	for _, opt := range opts {
+		c, s := opt(ag)
+		clientInterceptors = append(clientInterceptors, c)
+		streamInterceptors = append(streamInterceptors, s)
+	}
 	conn, err := grpc.NewClient(
 		"localhost",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -34,29 +65,18 @@ func New(socketPath string) (*AgentClient, error) {
 				Fallback: socketPath,
 			})
 		}),
-		grpc.WithChainUnaryInterceptor(
-			logging.UnaryClientInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.UnaryClientInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			})),
-		),
-		grpc.WithChainStreamInterceptor(
-			logging.StreamClientInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.StreamClientInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			})),
-		),
+		grpc.WithChainUnaryInterceptor(clientInterceptors...),
+		grpc.WithChainStreamInterceptor(streamInterceptors...),
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &AgentClient{
-		pb.NewAgentAuthClient(conn),
-		pb.NewAgentCacheClient(conn),
-		pb.NewAgentCtrlClient(conn),
-		pb.NewPingClient(conn),
-		conn,
-	}, nil
+	ag.conn = conn
+	ag.AgentAuthClient = pb.NewAgentAuthClient(conn)
+	ag.AgentCacheClient = pb.NewAgentCacheClient(conn)
+	ag.AgentCtrlClient = pb.NewAgentCtrlClient(conn)
+	ag.PingClient = pb.NewPingClient(conn)
+	return ag, nil
 }
 
 func (c *AgentClient) Close() error {
