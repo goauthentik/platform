@@ -32,7 +32,7 @@ libc = "0.2.180"
 log = "0.4.29"
 prost = "0.14"
 prost-types = "0.14"
-sentry = "0.46.1"
+sentry = "0.46.2"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 tokio = { version = "1.49.0", features = ["rt-multi-thread"] }
