@@ -316,6 +316,8 @@ set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 add_subdirectory(cefexe)
 set_property(TARGET ak_cef PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
+add_subdirectory(ak_lsa)
+
 # Display configuration settings.
 PRINT_CEF_CONFIG()
 
