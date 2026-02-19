@@ -118,7 +118,7 @@ func (txn *InteractiveAuthTransaction) solveChallenge(req *pb.InteractiveAuthCon
 	switch ch.GetComponent() {
 	case string(flow.StageIdentification):
 		freq.IdentificationChallengeResponseRequest = &api.IdentificationChallengeResponseRequest{
-			UidField: *api.NewNullableString(api.PtrString(req.Value)),
+			UidField: *api.NewNullableString(new(req.Value)),
 		}
 	case string(flow.StagePassword):
 		freq.PasswordChallengeResponseRequest = &api.PasswordChallengeResponseRequest{

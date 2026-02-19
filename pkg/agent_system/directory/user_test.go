@@ -50,7 +50,7 @@ func Test_getUser(t *testing.T) {
 	assert.EqualExportedValues(t, u, r)
 
 	r, err = nss.GetUser(t.Context(), &pb.GetRequest{
-		Name: api.PtrString("foo"),
+		Name: new("foo"),
 	})
 	assert.Error(t, err)
 	assert.Nil(t, r)

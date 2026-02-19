@@ -70,7 +70,7 @@ func TestDarwin(t *testing.T) {
 	}
 
 	p, err := Get[Config](pstr.PlatformString{
-		Darwin: pstr.S("io.goauthentik.platform"),
+		Darwin: new("io.goauthentik.platform"),
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &Config{

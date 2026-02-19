@@ -1,6 +1,6 @@
 module goauthentik.io/platform
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/MicahParks/jwkset v0.11.0

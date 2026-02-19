@@ -45,7 +45,7 @@ func (ts testServer) Start(t *testing.T) string {
 
 	lp := pstr.PlatformString{}
 	if runtime.GOOS == "windows" {
-		lp.Windows = pstr.S(fmt.Sprintf(`\\.\pipe\authentik-testing\%s`, base64.URLEncoding.EncodeToString(securecookie.GenerateRandomKey(4))))
+		lp.Windows = new(fmt.Sprintf(`\\.\pipe\authentik-testing\%s`, base64.URLEncoding.EncodeToString(securecookie.GenerateRandomKey(4))))
 	} else {
 		path, err := os.CreateTemp(t.TempDir(), "")
 		assert.NoError(t, err)

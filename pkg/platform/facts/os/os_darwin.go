@@ -18,8 +18,8 @@ func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	return api.DeviceFactsRequestOs{
 		Arch:    runtime.GOARCH,
 		Family:  api.DEVICEFACTSOSFAMILY_MAC_OS,
-		Name:    api.PtrString(name),
-		Version: api.PtrString(version),
+		Name:    new(name),
+		Version: new(version),
 	}, nil
 }
 

@@ -76,12 +76,12 @@ func TestInteractive_Success(t *testing.T) {
 		})
 
 	dc := config.TestDomainWithBrand(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		JwksAuth:          testutils.JWKS(t, jwksCert),
 		DeviceId:          "foo",
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
 	}, ac.APIClient, &api.CurrentBrand{
-		FlowAuthentication: api.PtrString("authn-flow"),
+		FlowAuthentication: new("authn-flow"),
 	})
 	auth := testAuth(t, dc)
 
@@ -126,10 +126,10 @@ func TestInteractive_NoPassword(t *testing.T) {
 			}, 200
 		})
 	dc := config.TestDomainWithBrand(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
 	}, ac.APIClient, &api.CurrentBrand{
-		FlowAuthentication: api.PtrString("authn-flow"),
+		FlowAuthentication: new("authn-flow"),
 	})
 	auth := testAuth(t, dc)
 
@@ -171,10 +171,10 @@ func TestInteractive_Auth_Denied(t *testing.T) {
 			}, 200
 		})
 	dc := config.TestDomainWithBrand(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
 	}, ac.APIClient, &api.CurrentBrand{
-		FlowAuthentication: api.PtrString("authn-flow"),
+		FlowAuthentication: new("authn-flow"),
 	})
 	auth := testAuth(t, dc)
 
@@ -239,12 +239,12 @@ func TestInteractive_NoLicense(t *testing.T) {
 		})
 
 	dc := config.TestDomainWithBrand(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		JwksAuth:          testutils.JWKS(t, jwksCert),
 		DeviceId:          "foo",
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_UNLICENSED.Ptr()),
 	}, ac.APIClient, &api.CurrentBrand{
-		FlowAuthentication: api.PtrString("flow-authn"),
+		FlowAuthentication: new("flow-authn"),
 	})
 	auth := testAuth(t, dc)
 
