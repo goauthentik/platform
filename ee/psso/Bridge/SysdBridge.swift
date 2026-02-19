@@ -25,7 +25,8 @@ final class LogInterceptor: ClientInterceptor {
             GRPCCore.StreamingClientResponse<Output>
     ) async throws -> GRPCCore.StreamingClientResponse<Output>
     where Input: Sendable, Output: Sendable {
-        self.logger.info("GRPC Method: '\(context.descriptor)'")
+        self.logger
+            .info("GRPC Method: '\(context.descriptor, privacy: .public)'")
         let response = try await next(request, context)
 
         switch response.accepted {
