@@ -44,7 +44,8 @@ define go_generate_resources
 		-comment="$(1)" \
 		-description="$(1)" \
 		-product-name="$(1)" \
-		-skip-versioninfo
+		-skip-versioninfo \
+		-64
 endef
 
 define nfpm_package

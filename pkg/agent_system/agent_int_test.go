@@ -58,7 +58,7 @@ func TestAgent(t *testing.T) {
 		DisabledComponents: []string{agentstarter.ID},
 		SocketPath: func(id string) pstr.PlatformString {
 			return pstr.PlatformString{
-				Linux: pstr.S(path.Join(t.TempDir(), id+".sock")),
+				Linux: new(path.Join(t.TempDir(), id+".sock")),
 			}
 		},
 	})

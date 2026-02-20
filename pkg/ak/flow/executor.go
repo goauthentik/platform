@@ -209,7 +209,7 @@ func (fe *FlowExecutor) GetInitialChallenge() (*api.ChallengeTypes, error) {
 		return nil, errors.New("response instance was null")
 	}
 	ch := i.(ChallengeCommon)
-	fe.opts.Logger("Got challenge", map[string]interface{}{
+	fe.opts.Logger("Got challenge", map[string]any{
 		"component": ch.GetComponent(),
 	})
 	gcsp.SetTag("authentik.flow.component", ch.GetComponent())
@@ -272,7 +272,7 @@ func (fe *FlowExecutor) SolveFlowChallenge(a *api.FlowChallengeResponseRequest) 
 		return false, errors.New("response instance was null")
 	}
 	ch := i.(ChallengeCommon)
-	fe.opts.Logger("Got response", map[string]interface{}{
+	fe.opts.Logger("Got response", map[string]any{
 		"component": ch.GetComponent(),
 	})
 	scsp.SetTag("authentik.flow.component", ch.GetComponent())

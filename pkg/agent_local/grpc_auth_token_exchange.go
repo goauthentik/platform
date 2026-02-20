@@ -22,9 +22,9 @@ func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRe
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
 			return pstr.PlatformString{
-				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account '%s' in '%s'", req.ClientId, creds.Parent.Cmdline)),
-				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account in '%s'", req.ClientId, creds.Parent.Cmdline)),
-				Linux:   pstr.S(fmt.Sprintf("'%s' is attempting to access your account in '%s'", req.ClientId, creds.Parent.Cmdline)),
+				Darwin:  new(fmt.Sprintf("authorize access to your account '%s' in '%s'", req.ClientId, creds.Parent.Cmdline)),
+				Windows: new(fmt.Sprintf("'%s' is attempting to access your account in '%s'", req.ClientId, creds.Parent.Cmdline)),
+				Linux:   new(fmt.Sprintf("'%s' is attempting to access your account in '%s'", req.ClientId, creds.Parent.Cmdline)),
 			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {

@@ -42,8 +42,8 @@ func GenerateCertificate(t *testing.T, host string) (*rsa.PrivateKey, *x509.Cert
 		DNSNames:              strings.Split(host, ","),
 	}
 
-	hosts := strings.Split(host, ",")
-	for _, h := range hosts {
+	hosts := strings.SplitSeq(host, ",")
+	for h := range hosts {
 		if ip := net.ParseIP(h); ip != nil {
 			template.IPAddresses = append(template.IPAddresses, ip)
 		} else {

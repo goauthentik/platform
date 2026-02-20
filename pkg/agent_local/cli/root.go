@@ -26,8 +26,8 @@ var rootCmd = &cobra.Command{
 		}
 		err := systemlog.Setup(pstr.PlatformString{
 			// Needs to match event log name in Package.wxs
-			Windows: pstr.S("authentik User Service"),
-			Linux:   pstr.S("ak-agent"),
+			Windows: new("authentik User Service"),
+			Linux:   new("ak-agent"),
 		}.ForCurrent())
 		if err != nil {
 			return err
