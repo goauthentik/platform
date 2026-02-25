@@ -1,6 +1,6 @@
 [package]
 name = "authentik_sys"
-version = "0.40.0"
+version = "0.40.1"
 edition = "2024"
 
 [lib]
