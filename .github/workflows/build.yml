@@ -74,7 +74,7 @@ jobs:
         run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
           path: bin/
@@ -97,7 +97,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: "${{ matrix.target }}/package-lock.json"
       - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
         with:
           name: authentik_${{ matrix.target }}
           path: bin/
@@ -128,7 +128,7 @@ jobs:
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
       - run: make ${{ matrix.target }}/build
       - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}
           path: bin/
@@ -151,12 +151,12 @@ jobs:
           package-path: bin/
           gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
       - name: Upload repository
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
         with:
           name: repo
           path: ./repo
       - name: Upload packages
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v5
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
         with:
           name: all-packages
           path: ./bin
