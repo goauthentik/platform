@@ -10,7 +10,7 @@ func JSON(input any) error {
 }
 
 func AnyToMap(input any) (map[string]any, error) {
-	b, err := json.MarshalIndent(input, "", "\t")
+	b, err := json.Marshal(input)
 	if err != nil {
 		return nil, err
 	}

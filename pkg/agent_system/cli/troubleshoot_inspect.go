@@ -2,12 +2,14 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/tree"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_system/client"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/tui"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -23,20 +25,29 @@ var troubleshootInspectCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		inspectBucket(r, 0)
+
+		t := tree.New().Root(r.Bucket).Enumerator(tree.RoundedEnumerator)
+		fmt.Println(renderInspectAsTree(r, t))
 		return nil
 	},
 }
 
-func inspectBucket(r *pb.TroubleshootInspectResponse, depth int) {
-	fmt.Printf("%sBucket '%s':\n", strings.Repeat("\t", depth), r.Bucket)
-	depth += 1
+func renderInspectAsTree(r *pb.TroubleshootInspectResponse, t *tree.Tree) string {
+	// Create styles for different types
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
+	valueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+
+	// Add each key-value pair to the tree
 	for k, v := range r.Kv {
-		fmt.Printf("%sKey '%s' => '%s'\n", strings.Repeat("\t", depth), k, v)
+		tui.AddNodeToTree(t, keyStyle.Render(k), v, keyStyle, valueStyle)
 	}
 	for _, ch := range r.Children {
-		inspectBucket(ch, depth+1)
+		cht := tree.New().Root(ch.Bucket)
+		renderInspectAsTree(ch, cht)
+		t.Child(cht)
 	}
+
+	return t.String()
 }
 
 func init() {
