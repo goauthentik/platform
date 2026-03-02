@@ -863,9 +863,9 @@ dependencies = [
 
 [[package]]
 name = "eventlog"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b8d0c0a0726a8c965c1a66ed1abcb542390fa276800f455b667a26c193a2e0f"
+checksum = "a8f1130957c8c96406f8c850fa3aef8616883c7e411a60bc483f9948eb31b029"
 dependencies = [
  "log",
  "regex",
