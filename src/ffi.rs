@@ -25,8 +25,13 @@ mod ffi {
         pub session_id: String,
     }
 
+    struct AgentConfig {
+        pub debug: bool,
+    }
+
     extern "Rust" {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
+        fn ak_sys_config(config: &mut AgentConfig) -> Result<bool>;
 
         fn ak_sys_auth_interactive_available() -> Result<bool>;
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
@@ -46,6 +51,10 @@ fn ak_sys_ping(res: Pin<&mut CxxString>) {
         Err(e) => e.to_string(),
     };
     res.push_str(&resp);
+}
+
+fn ak_sys_config(config: &mut ffi::AgentConfig) -> Result<bool, Box<dyn Error>> {
+    Ok(true)
 }
 
 fn ak_sys_auth_url(

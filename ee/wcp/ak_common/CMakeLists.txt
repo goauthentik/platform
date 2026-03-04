@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(SRCS
   ak_log.cpp
   ak_sentry.cpp
+  ak_sysd_config.cpp
   crypt.cc
 )
 

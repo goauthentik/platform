@@ -1,10 +1,14 @@
 #include "include/ak_log.h"
 #include "include/ak_version.h"
+#include "include/ak_sysd_config.h"
 #include "spdlog/async.h"
 #include "spdlog/sinks/dist_sink.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/win_eventlog_sink.h"
 #include "spdlog/spdlog.h"
+#include "authentik_sys_bridge/ffi.h"
+#include "rust/cxx.h"
+
 #include <string>
 
 bool g_logSetup;
@@ -27,10 +31,16 @@ void ak_setup_logs(const char* logger_name) {
 
   const auto logger = std::make_shared<spdlog::logger>(logger_name, dist_sink);
 
-  spdlog::set_level(spdlog::level::debug);
+  auto config = ak_get_config();
+  if (config.debug) {
+    spdlog::set_level(spdlog::level::debug);
+  } else {
+    spdlog::set_level(spdlog::level::warn);
+  }
+
   spdlog::flush_every(std::chrono::seconds(5));
   spdlog::set_default_logger(logger);
-  SPDLOG_INFO("authentik Platform {} Version {}", logger_name, AK_VERSION);
+  SPDLOG_DEBUG("authentik Platform {} Version {}", logger_name, AK_VERSION);
   g_logSetup = true;
 }
 
