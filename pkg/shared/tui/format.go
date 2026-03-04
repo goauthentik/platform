@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -78,6 +79,16 @@ func AddNodeToTree(parent *tree.Tree, label string, value any, keyStyle, valueSt
 		parent.Child(child)
 
 	default:
+		str := fmt.Sprintf("%s", v)
+		if json.Valid([]byte(str)) {
+			out := map[string]any{}
+			err := json.Unmarshal([]byte(str), &out)
+			if err != nil {
+				return
+			}
+			AddNodeToTree(parent, label, out, keyStyle, valueStyle)
+			return
+		}
 		// Leaf node - render key: value
 		nodeLabel := fmt.Sprintf("%s: %s", label, valueStyle.Render(fmt.Sprintf("%v", v)))
 		parent.Child(nodeLabel)
