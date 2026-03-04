@@ -19,9 +19,9 @@ func platformSetup(appName string) error {
 		DisableTimestamp: true,
 		DisableColors:    true,
 	})
-	log.Info("Switching to macOS Unified logging...")
 	log.StandardLogger().Hooks.Add(hook)
-	log.SetOutput(io.Discard)
+	log.StandardLogger().SetOutput(io.Discard)
+	log.Info("Switching to macOS Unified logging...")
 	return nil
 }
 
