@@ -60,21 +60,7 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 		return nil, err
 	}
 
-	sm, err := component.GetComponent[*session.Server](auth.ctx, session.ID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	sess, err := sm.NewSession(ctx, session.SessionRequest{
-		Username: req.Username,
-		RawToken: req.Token,
-		Token:    token,
-	})
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "unable to create session")
-	}
-
-	return &pb.TokenAuthResponse{
+	res := &pb.TokenAuthResponse{
 		Successful: true,
 		Token: &pb.Token{
 			PreferredUsername: token.Claims().Username,
@@ -85,6 +71,21 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
-		SessionId: sess.Id,
-	}, nil
+	}
+
+	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
+	if err == nil {
+		sess, err := sm.NewSession(ctx, session.SessionRequest{
+			Username: req.Username,
+			RawToken: req.Token,
+			Token:    token,
+		})
+		if err != nil {
+			return nil, status.Error(codes.NotFound, "unable to create session")
+		}
+		res.SessionId = sess.Id
+	} else {
+		auth.log.WithError(err).Debug("No session component, not issuing session")
+	}
+	return res, nil
 }

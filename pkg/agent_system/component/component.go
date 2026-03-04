@@ -97,7 +97,7 @@ var (
 
 // Generic function to get component, not on the main struct due to generic
 // Returns nil if component is not available or a different type than given
-func GetComponent[T Component](ctx Context, id string) (T, error) {
+func Get[T Component](ctx Context, id string) (T, error) {
 	comp := ctx.Registry().GetComponent(id)
 	var empty T
 	if comp == nil {

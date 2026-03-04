@@ -12,7 +12,7 @@ import (
 )
 
 func (auth *Server) Authorize(ctx context.Context, req *pb.SystemAuthorizeRequest) (*pb.SystemAuthorizeResponse, error) {
-	sm, err := component.GetComponent[*session.Server](auth.ctx, session.ID)
+	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

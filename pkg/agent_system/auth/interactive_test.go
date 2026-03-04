@@ -100,7 +100,7 @@ func TestInteractive_Success(t *testing.T) {
 		SessionId: res.SessionId,
 		Result:    pb.InteractiveAuthResult_PAM_SUCCESS,
 	}, res)
-	sm, err := component.GetComponent[*session.Server](auth.ctx, session.ID)
+	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
 	assert.NoError(t, err)
 	sess, found := sm.GetSession(res.SessionId)
 	assert.True(t, found)
