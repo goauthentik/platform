@@ -19,9 +19,9 @@ func CommonGRPCServerOpts(l *log.Entry, extra ...grpc.ServerOption) []grpc.Serve
 			grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithRepanicOption(true)),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
 				if e, ok := p.(error); ok {
-					l.WithError(e).Warning("GRPC method panicd")
+					l.WithError(e).Warning("GRPC method panic'd")
 				} else {
-					l.WithField("p", p).Warning("GRPC method panicd")
+					l.WithField("p", p).Warning("GRPC method panic'd")
 				}
 				return status.Errorf(codes.Unknown, "panic triggered")
 			})),
@@ -31,9 +31,9 @@ func CommonGRPCServerOpts(l *log.Entry, extra ...grpc.ServerOption) []grpc.Serve
 			grpc_sentry.StreamServerInterceptor(grpc_sentry.WithRepanicOption(true)),
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
 				if e, ok := p.(error); ok {
-					l.WithError(e).Warning("GRPC method panicd")
+					l.WithError(e).Warning("GRPC method panic'd")
 				} else {
-					l.WithField("p", p).Warning("GRPC method panicd")
+					l.WithField("p", p).Warning("GRPC method panic'd")
 				}
 				return status.Errorf(codes.Unknown, "panic triggered")
 			})),

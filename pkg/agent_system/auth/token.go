@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
@@ -59,9 +60,9 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 		return nil, err
 	}
 
-	sm := auth.ctx.GetComponent(session.ID).(*session.Server)
-	if sm == nil {
-		return nil, status.Error(codes.Internal, "cant find session component")
+	sm, err := component.GetComponent[*session.Server](auth.ctx, session.ID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	sess, err := sm.NewSession(ctx, session.SessionRequest{

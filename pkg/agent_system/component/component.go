@@ -2,8 +2,8 @@ package component
 
 import (
 	ctx "context"
-	"errors"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/config"
@@ -20,7 +20,6 @@ type ComponentRegistry interface {
 
 type Context interface {
 	Registry() ComponentRegistry
-	GetComponent(id string) Component
 	Context() ctx.Context
 	Log() *log.Entry
 	State() *state.ScopedState
@@ -49,10 +48,6 @@ func NewContext(ctx ctx.Context, log *log.Entry, reg ComponentRegistry, st *stat
 
 func (c context) Registry() ComponentRegistry {
 	return c.reg
-}
-
-func (c context) GetComponent(id string) Component {
-	return c.reg.GetComponent(id)
 }
 
 func (c context) Context() ctx.Context {
@@ -93,4 +88,24 @@ type Component interface {
 	Start() error
 	Stop() error
 	RegisterForID(id string, s grpc.ServiceRegistrar)
+}
+
+var (
+	ErrComponentNotFound         = errors.New("component not found")
+	ErrComponentIncompatibleType = errors.New("component has incompatible type")
+)
+
+// Generic function to get component, not on the main struct due to generic
+// Returns nil if component is not available or a different type than given
+func GetComponent[T Component](ctx Context, id string) (T, error) {
+	comp := ctx.Registry().GetComponent(id)
+	var empty T
+	if comp == nil {
+		return empty, ErrComponentNotFound
+	}
+	ccomp, ok := comp.(T)
+	if !ok {
+		return empty, errors.Wrapf(ErrComponentIncompatibleType, "expected %T, got %T", empty, comp)
+	}
+	return ccomp, nil
 }
