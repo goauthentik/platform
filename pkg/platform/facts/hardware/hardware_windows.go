@@ -37,7 +37,7 @@ func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) 
 		return nil, err
 	}
 	serial, err := bios[0].GetPropertySerialNumber()
-	if err != nil {
+	if err != nil || serial == "" {
 		guid, err := serialNumberFallback()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get serial")
