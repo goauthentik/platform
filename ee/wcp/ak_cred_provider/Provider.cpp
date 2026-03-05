@@ -88,10 +88,12 @@ void Provider::SetCefApp(sHookData* pData) {
     spdlog::debug("g_strPath: '{}'", g_strPath);
     std::string strPath = g_strPath + "\\ak_cef.exe";
     CefString(&settings.browser_subprocess_path).FromASCII(strPath.c_str());
-    // std::string strRPath = g_strPath + "\\" + GetRandomStr(5);
-    // CefString(&settings.root_cache_path).FromASCII(strRPath.c_str());
-    // CefString(&settings.cache_path).FromASCII(std::string(strRPath +
-    // "\\CPath" + GetRandomStr(5)).c_str());
+
+    // Root cache path must be set as otherwise it'll end up in system32\config\systemprofile
+    CefString(&settings.root_cache_path)
+        .FromASCII(std::string(AK_PROGRAM_DATA).append("\\wcp-cache").c_str());
+    // Not setting the cache path to force an incognito session every time
+    // CefString(&settings.cache_path).FromASCII();
 
     CefString(&settings.log_file)
         .FromASCII(std::string(AK_PROGRAM_DATA).append("\\logs\\cef.log").c_str());

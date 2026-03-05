@@ -124,6 +124,7 @@
 
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-sentry" />
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache" />
 
         <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
