@@ -88,5 +88,9 @@ func HTTPToError(r *http.Response, err error) error {
 	if er != nil {
 		log.Printf("[DEBUG] authentik: failed to read response: %s", er.Error())
 	}
-	return fmt.Errorf("HTTP Error '%s' during request '%s %s': \"%s\"", err.Error(), r.Request.Method, r.Request.URL.Path, buff.String())
+	msg := fmt.Sprintf("HTTP Error '%s' during request '%s %s': \"%s\"", err.Error(), r.Request.Method, r.Request.URL.Path, buff.String())
+	if rid := r.Header.Get("x-authentik-id"); rid != "" {
+		msg = fmt.Sprintf("%s (Request ID '%s')", msg, rid)
+	}
+	return errors.New(msg)
 }
