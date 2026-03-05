@@ -11,6 +11,7 @@ import (
 	"github.com/microsoft/wmi/server2019/root/cimv2"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/facts/common"
+	"golang.org/x/sys/windows/registry"
 )
 
 func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
@@ -37,7 +38,11 @@ func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) 
 	}
 	serial, err := bios[0].GetPropertySerialNumber()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get serial")
+		guid, err := serialNumberFallback()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get serial")
+		}
+		serial = guid
 	}
 
 	totalMemory := uint64(0)
@@ -66,6 +71,19 @@ func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) 
 		CpuCount:     api.PtrInt32(int32(getCPUCores(computerSystem[0]))),
 		MemoryBytes:  api.PtrInt64(int64(totalMemory)),
 	}, nil
+}
+
+func serialNumberFallback() (string, error) {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Cryptography`, registry.READ)
+	if err != nil {
+		return "", err
+	}
+
+	machineGuid, _, err := k.GetStringValue("MachineGuid")
+	if err != nil {
+		return "", err
+	}
+	return machineGuid, nil
 }
 
 func getCPUName() (string, error) {
