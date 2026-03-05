@@ -207,12 +207,12 @@ Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 
   try {
     if (!ak_sys_auth_interactive_available()) {
-      SPDLOG_INFO("Interactive authentication not available, not showing cred UI");
+      spdlog::info("Interactive authentication not available, not showing cred UI");
       hr = E_NOTIMPL;
       return hr;
     }
   } catch (const rust::Error& ex) {
-    SPDLOG_WARN("Exception in ak_sys_auth_interactive_available", ex.what());
+    spdlog::warn("Exception in ak_sys_auth_interactive_available: {}", ex.what());
     hr = E_NOTIMPL;
     return hr;
   }

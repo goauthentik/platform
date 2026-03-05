@@ -311,7 +311,7 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM
           try {
             CEFLaunch(pData, m_oCefAppData.pCefApp);
           } catch (const std::exception& e) {
-            SPDLOG_WARN("Failed to CEFLaunch", e.what());
+            spdlog::warn("Failed to CEFLaunch", e.what());
           }
           spdlog::debug(std::string("User logged in: " + pData->strUsername).c_str());
           spdlog::debug("WndProc:: CEFLaunched");

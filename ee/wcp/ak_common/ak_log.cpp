@@ -20,11 +20,7 @@ void ak_setup_logs(const char* logger_name) {
   const auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
       std::string(AK_PROGRAM_DATA).append("\\logs\\").append(logger_name).append(".log").c_str(),
       _ak_log_max_size, _ak_log_max_files);
-  // const auto event_log_sink = std::make_shared<spdlog::sinks::win_eventlog_sink_mt>(logger_name);
-  // event_log_sink->set_pattern("[%n] [proc=%P, thread=%t] [%s:%!:%#] %v");
-
   dist_sink->add_sink(file_sink);
-  // dist_sink->add_sink(event_log_sink);
 
   const auto logger = std::make_shared<spdlog::logger>(logger_name, dist_sink);
 
@@ -32,6 +28,9 @@ void ak_setup_logs(const char* logger_name) {
   spdlog::flush_on(_ak_log_level);
   spdlog::set_default_logger(logger);
   SPDLOG_INFO("authentik Platform {} Version {}", logger_name, AK_VERSION);
+  spdlog::info("non macro info");
+  spdlog::trace("non macro trace");
+
   g_logSetup = true;
 }
 
