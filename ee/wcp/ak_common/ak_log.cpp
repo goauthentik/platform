@@ -11,6 +11,7 @@ bool g_logSetup;
 
 const auto _ak_log_max_size = 1024 * 1024 * 50;
 const auto _ak_log_max_files = 3;
+const auto _ak_log_level = spdlog::level::debug;
 
 // `logger_name` needs to be defined in Package.wxs to register them in Windows
 void ak_setup_logs(const char* logger_name) {
@@ -27,8 +28,8 @@ void ak_setup_logs(const char* logger_name) {
 
   const auto logger = std::make_shared<spdlog::logger>(logger_name, dist_sink);
 
-  spdlog::set_level(spdlog::level::debug);
-  spdlog::flush_every(std::chrono::seconds(5));
+  spdlog::set_level(_ak_log_level);
+  spdlog::flush_on(_ak_log_level);
   spdlog::set_default_logger(logger);
   SPDLOG_INFO("authentik Platform {} Version {}", logger_name, AK_VERSION);
   g_logSetup = true;

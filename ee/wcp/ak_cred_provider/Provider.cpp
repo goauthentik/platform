@@ -24,13 +24,13 @@ Provider::Provider() : m_cRef(1) {
 }
 
 void Provider::SetCefApp(sHookData* pData) {
-  SPDLOG_DEBUG("SetCefApp");
+  spdlog::debug("SetCefApp");
   if (m_pCefApp == nullptr) {
     int exit_code;
 
     std::string str = "SetCefApp ProcessID: " + std::to_string(GetCurrentProcessId()) +
                       ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    SPDLOG_DEBUG(str.c_str());
+    spdlog::debug(str.c_str());
 
 #if defined(ARCH_CPU_32_BITS)  //- todo: remove?
     // Run the main thread on 32-bit Windows using a fiber with the preferred
@@ -57,26 +57,26 @@ void Provider::SetCefApp(sHookData* pData) {
     CefScopedSandboxInfo scoped_sandbox;
     sandbox_info = scoped_sandbox.sandbox_info();
 #endif
-    SPDLOG_DEBUG("CefScopedSandboxInfo");
+    spdlog::debug("CefScopedSandboxInfo");
     // Provide CEF with command-line arguments.
     CefMainArgs main_args((HINSTANCE)GetModuleHandle(NULL));
 
     exit_code = 0;
 
-    SPDLOG_DEBUG("CefMainArgs");
+    spdlog::debug("CefMainArgs");
     // CEF applications have multiple sub-processes (render, GPU, etc) that
     // share the same executable. This function checks the command-line and, if
     // this is a sub-process, executes the appropriate logic.
 
     // exit_code = CefExecuteProcess(main_args, nullptr, sandbox_info);
-    // SPDLOG_DEBUG("CefExecuteProcess");
+    // spdlog::debug("CefExecuteProcess");
     // if (exit_code >= 0) {
-    //     SPDLOG_DEBUG("Cef: exit_code");
+    //     spdlog::debug("Cef: exit_code");
     //   // The sub-process has completed so return here.
     //   return exit_code;
     // }
 
-    SPDLOG_DEBUG("CefCommandLine::CreateCommandLine");
+    spdlog::debug("CefCommandLine::CreateCommandLine");
     // Parse command-line arguments for use in this method.
     CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
     command_line->InitFromString(::GetCommandLineW());
@@ -85,6 +85,7 @@ void Provider::SetCefApp(sHookData* pData) {
     CefSettings settings;
 
     // Specify the path for the sub-process executable.
+    spdlog::debug("g_strPath: '{}'", g_strPath);
     std::string strPath = g_strPath + "\\ak_cef.exe";
     CefString(&settings.browser_subprocess_path).FromASCII(strPath.c_str());
     // std::string strRPath = g_strPath + "\\" + GetRandomStr(5);
@@ -109,52 +110,52 @@ void Provider::SetCefApp(sHookData* pData) {
 
     settings.multi_threaded_message_loop = false;
 
-    SPDLOG_DEBUG("CefSettings");
+    spdlog::debug("CefSettings");
     // SimpleApp implements application-level callbacks for the browser process.
     // It will create the first browser instance in OnContextInitialized() after
     // CEF has initialized.
     // CefRefPtr<SimpleApp> app(new SimpleApp());
     m_pCefApp = new SimpleApp(pData);
-    SPDLOG_DEBUG("Cef: new SimpleApp");
+    spdlog::debug("Cef: new SimpleApp");
 
-    SPDLOG_DEBUG(std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get()))).c_str());
+    spdlog::debug(std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get()))).c_str());
     // Initialize the CEF browser process. May return false if initialization
     // fails or if early exit is desired (for example, due to process singleton
     // relaunch behavior).
     if (!CefInitialize(main_args, settings, m_pCefApp.get(), sandbox_info)) {
-      SPDLOG_DEBUG("CefGetExitCode");
+      spdlog::debug("CefGetExitCode");
       // return CefGetExitCode();
       m_pCefApp = nullptr;
     }
-    SPDLOG_DEBUG("CefInitialize");
+    spdlog::debug("CefInitialize");
     // Run the CEF message loop. This will block until CefQuitMessageLoop() is
     // called.
     // CefRunMessageLoop();
 
-    // SPDLOG_DEBUG("CefRunMessageLoop");
+    // spdlog::debug("CefRunMessageLoop");
 
     // // Shut down CEF.
     // CefShutdown();
-    // SPDLOG_DEBUG("CefShutdown");
+    // spdlog::debug("CefShutdown");
     Credential::m_oCefAppData.pCefApp = m_pCefApp;
   }
 }
 
 void Provider::ShutCefApp() {
-  SPDLOG_DEBUG("ShutCefApp");
+  spdlog::debug("ShutCefApp");
   if (m_pCefApp) {
-    SPDLOG_DEBUG("CefShutdown");
+    spdlog::debug("CefShutdown");
     Credential::m_oCefAppData.SetInit(false);
     Credential::m_oCefAppData.pCefApp = nullptr;
     // Shut down CEF.
     CefShutdown();
     m_pCefApp = nullptr;
-    SPDLOG_DEBUG("CefShutdown end");
+    spdlog::debug("CefShutdown end");
   }
 }
 
 Provider::~Provider() {
-  SPDLOG_DEBUG("~Provider");
+  spdlog::debug("~Provider");
   ReleaseEnumeratedCredentials();
   if (m_pCredProviderUserArray != nullptr) {
     m_pCredProviderUserArray->Release();
