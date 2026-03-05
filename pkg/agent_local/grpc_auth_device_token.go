@@ -37,6 +37,7 @@ func (a *Agent) DeviceTokenExchange(ctx context.Context, req *pb.DeviceTokenExch
 		return nil, err
 	}
 	acfg := ak.APIConfig(*prof)
+	acfg.HTTPClient = prof.HTTPClient()
 	acfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
 	ac := api.NewAPIClient(acfg)
 	dt, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAuthFedCreate(ctx).Device(req.DeviceName).Execute()

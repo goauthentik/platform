@@ -42,7 +42,7 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 		return nil, err
 	}
 	rreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
-	res, err := http.DefaultClient.Do(rreq)
+	res, err := prof.HTTPClient().Do(rreq)
 	if err != nil {
 		a.log.WithError(err).Warn("failed to send request")
 		return nil, err

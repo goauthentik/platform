@@ -40,7 +40,7 @@ func ExchangeToken(profile config.ConfigV1Profile, opts ExchangeOpts) (*Token, e
 	systemlog.Get().WithField("logger", "token-exchanger").WithField("url", req.URL.String()).Debug("sending request")
 	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", meta.FullVersion()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	res, err := http.DefaultClient.Do(req)
+	res, err := profile.HTTPClient().Do(req)
 	if err != nil {
 		return nil, err
 	}

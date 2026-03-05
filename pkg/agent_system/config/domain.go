@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	"goauthentik.io/api/v3"
@@ -64,6 +65,11 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 		return nil, err
 	}
 	apiConfig := api.NewConfiguration()
+	apiConfig.HTTPClient = &http.Client{
+		Transport: sentryhttpclient.NewSentryRoundTripper(
+			nil, sentryhttpclient.WithTracePropagationTargets([]string{u.Host}),
+		),
+	}
 	apiConfig.Host = u.Host
 	apiConfig.Scheme = u.Scheme
 	apiConfig.Servers = api.ServerConfigurations{

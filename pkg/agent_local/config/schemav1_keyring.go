@@ -2,7 +2,9 @@ package config
 
 import (
 	"errors"
+	"net/http"
 
+	sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
 	"goauthentik.io/platform/pkg/platform/keyring"
 )
 
@@ -20,6 +22,13 @@ func getKeyringDefault(svc string, name string, def string) (string, error) {
 func (c ConfigV1) PostLoad() error {
 	for name, profile := range c.Profiles {
 		l := c.log.WithField("profile", name)
+
+		profile.httpClient = &http.Client{
+			Transport: sentryhttpclient.NewSentryRoundTripper(
+				nil, sentryhttpclient.WithTracePropagationTargets([]string{profile.AuthentikURL}),
+			),
+		}
+
 		l.Debug("Getting access token from keyring")
 		v, err := getKeyringDefault("access_token", name, profile.FallbackAccessToken)
 		if err != nil {
