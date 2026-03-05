@@ -43,7 +43,7 @@ url = "2.5.8"
 windows-sys = "0.61.2"
 
 [target.'cfg(windows)'.dependencies]
-eventlog = "0.3.1"
+eventlog = "0.4.0"
 
 [target.'cfg(unix)'.dependencies]
 syslog = "7.0.0"
