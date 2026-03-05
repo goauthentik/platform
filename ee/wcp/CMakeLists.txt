@@ -209,7 +209,7 @@ find_package(CEF REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CEF_BINARY_NAME, "cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64")
-set(CEF_BINARY_URL, "https://cef-builds.spotifycdn.com/${CEF_BINARY_NAME}.tar.bz2")
+set(CEF_BINARY_URL, "https://cef-builds.spotifycdn.com/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2")
 set(CEF_BINARY_HASH, "856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265")
 
 # Download CEF binaries
