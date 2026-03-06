@@ -97,7 +97,7 @@ void Provider::SetCefApp(sHookData* pData) {
 
     CefString(&settings.log_file)
         .FromASCII(std::string(AK_PROGRAM_DATA).append("\\logs\\cef.log").c_str());
-    settings.log_severity = LOGSEVERITY_INFO;
+    settings.log_severity = LOGSEVERITY_DEBUG;
 
     std::string strUserAgent = std::string("authentik Platform/WCP/CredProvider@")
                                    .append(AK_VERSION)
