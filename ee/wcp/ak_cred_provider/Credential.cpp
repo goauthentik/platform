@@ -516,13 +516,6 @@ IFACEMETHODIMP Credential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz) {
   return hr;
 }
 
-#include <psapi.h>
-#include <stdio.h>
-#include <windows.h>
-#include <wtsapi32.h>
-
-#pragma comment(lib, "Wtsapi32.lib")
-
 IFACEMETHODIMP Credential::Disconnect() { return S_OK; }
 
 IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws) {
