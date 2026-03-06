@@ -32,15 +32,15 @@ SimpleHandler::SimpleHandler(bool is_alloy_style, sHookData* pData)
     : is_alloy_style_(is_alloy_style), m_pData(pData) {
   DCHECK(!g_instance);
   g_instance = this;
-  SPDLOG_DEBUG("SimpleHandler");
+  spdlog::debug("SimpleHandler");
 }
 
 SimpleHandler::~SimpleHandler() {
   g_instance = nullptr;
-  SPDLOG_DEBUG("~SimpleHandler");
+  spdlog::debug("~SimpleHandler");
   if (m_pData)
   {
-    SPDLOG_DEBUG("~SimpleHandler SetExit");
+    spdlog::debug("~SimpleHandler SetExit");
     m_pData->SetExit(true);
     m_pData = nullptr;
   }
@@ -80,7 +80,7 @@ void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
 
 bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
   CEF_REQUIRE_UI_THREAD();
-  SPDLOG_DEBUG("DoClose");
+  spdlog::debug("DoClose");
 
   // Closing the main window requires special handling. See the DoClose()
   // documentation in the CEF header for a detailed destription of this
@@ -96,14 +96,14 @@ bool SimpleHandler::DoClose(CefRefPtr<CefBrowser> browser) {
 }
 
 void SimpleHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
-  SPDLOG_DEBUG("OnBeforeClose any");
+  spdlog::debug("OnBeforeClose any");
   CEF_REQUIRE_UI_THREAD();
 
   // wait for CefDeleteCookiesCallback::OnComplete() to complete
   if (! IsWindowInitialized())
   {
-    SPDLOG_DEBUG(std::string("window_initialized_count_: " + std::to_string(window_initialized_count_)).c_str());
-    SPDLOG_DEBUG(std::string("handler: " + std::to_string((size_t)(this))).c_str());
+    spdlog::debug(std::string("window_initialized_count_: " + std::to_string(window_initialized_count_)).c_str());
+    spdlog::debug(std::string("handler: " + std::to_string((size_t)(this))).c_str());
     if (window_initialized_count_ > 0) // timeout
     {
       --window_initialized_count_;
@@ -184,7 +184,7 @@ void SimpleHandler::CloseAllBrowsers(bool force_close) {
                                        force_close));
     return;
   }
-  SPDLOG_DEBUG("CloseAllBrowsers");
+  spdlog::debug("CloseAllBrowsers");
   close_called_ = true;
 
   if (browser_list_.empty()) {
