@@ -205,28 +205,42 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CEF_ROOT}/cmake")
 #
 
 # Execute FindCEF.cmake which must exist in CMAKE_MODULE_PATH.
-find_package(CEF REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CEF_BINARY_URL "https://cef-builds.spotifycdn.com/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2")
+set(CEF_BINARY_HASH "SHA256=856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265")
+set(CEF_BINARY_VER "cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64")
+
 # Download CEF binaries
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
-  message(INFO " > CEF binary `Release` directory is missing.")
-  message(INFO " > Downloading CEF binary package...")
-  file(DOWNLOAD "https://cef-builds.spotifycdn.com/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2" "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2"
-    EXPECTED_HASH SHA256=856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265
-    SHOW_PROGRESS
-  )
-  message(INFO " > Extracting CEF binary package...")
-  file(ARCHIVE_EXTRACT INPUT "cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2")
-  message(INFO " > Copying CEF binary `Release` directory...")
-  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
-  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
-    message(INFO " > CEF binary `Release` directory setup completed.")
-  else()
-    message(FATAL_ERROR " > CEF binary `Release` directory could not be setup.")
+  message(INFO " > CEF binary directories are missing.")
+  if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2")
+    message(INFO " > Downloading CEF binary package...")
+    file(DOWNLOAD
+      "${CEF_BINARY_URL}"
+      "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2"
+      EXPECTED_HASH "${CEF_BINARY_HASH}"
+      SHOW_PROGRESS
+    )
   endif()
+  if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}")
+    message(INFO " > Extracting CEF binary package...")
+    file(ARCHIVE_EXTRACT
+      INPUT "cef_bin.tar.bz2"
+      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+      VERBOSE
+    )
+  endif()
+  message(INFO " > Copying CEF binary directories...")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Resources" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/include" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/cmake" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  message(INFO " > CEF binary directories setup completed.")
 endif()
+
+find_package(CEF REQUIRED)
 
 # Always generate debug symbols
 add_compile_options("$<$<NOT:$<CONFIG:Debug>>:/Zi>")
@@ -238,7 +252,7 @@ include(FetchContent)
 
 FetchContent_Declare(Corrosion
     GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-    GIT_TAG v0.6
+    GIT_TAG v0.6.1
 )
 # Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
 FetchContent_MakeAvailable(Corrosion)

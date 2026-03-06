@@ -99,13 +99,13 @@ class SimpleHandler : public CefClient,
         TokenResponse validatedToken;
         try {
           if (!ak_sys_auth_url(strURL, validatedToken)) {
-            SPDLOG_WARN("failed to validate token");
+            spdlog::warn("failed to validate token");
           } else {
-            SPDLOG_DEBUG("successfully validated token");
+            spdlog::debug("successfully validated token");
             m_pData->UpdateUser(validatedToken.username.c_str());
           }
         } catch (const rust::Error& ex) {
-          SPDLOG_WARN("Exception in ak_sys_auth_url: ", ex.what());
+          spdlog::warn("Exception in ak_sys_auth_url: {}", ex.what());
         }
         CloseAllBrowsers(false);
 

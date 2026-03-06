@@ -405,3 +405,8 @@ FodyWeavers.xsd
 _deps
 CMakeCache.txt
 CMakeFiles/**
+
+# CEF Copies files
+/include/**
+/Resources/**
+/cmake/**
