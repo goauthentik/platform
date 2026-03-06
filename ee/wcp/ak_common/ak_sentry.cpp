@@ -18,6 +18,7 @@ static void ak_sentry_log_callback(sentry_level_t level, const char* message, va
 }
 
 void ak_setup_sentry(const char* component) {
+  return;
   if (g_sentrySetup) return;
   spdlog::register_logger(spdlog::default_logger()->clone("sentry"));
 
@@ -38,4 +39,7 @@ void ak_setup_sentry(const char* component) {
   g_sentrySetup = true;
 }
 
-void ak_teardown_sentry() { sentry_shutdown(); }
+void ak_teardown_sentry() {
+  return;
+  sentry_shutdown();
+}
