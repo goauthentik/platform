@@ -10,8 +10,6 @@ enum FIELD_ID {
   FI_LARGE_TEXT = 2,
   FI_PASSWORD = 3,
   FI_SUBMIT_BUTTON = 4,
-  FI_LAUNCHWINDOW_LINK = 5,
-  FI_HIDECONTROLS_LINK = 6,
   FI_FULLNAME_TEXT = 7,
   FI_DISPLAYNAME_TEXT = 8,
   FI_LOGONSTATUS_TEXT = 9,
@@ -40,8 +38,6 @@ static const FIELD_STATE_PAIR s_rgFieldStatePairs[] = {
     {CPFS_DISPLAY_IN_BOTH, CPFIS_NONE},           // FI_LARGE_TEXT
     {CPFS_HIDDEN, CPFIS_NONE},                    // FI_PASSWORD
     {CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},  // FI_SUBMIT_BUTTON
-    {CPFS_HIDDEN, CPFIS_NONE},                    // FI_LAUNCHWINDOW_LINK
-    {CPFS_HIDDEN, CPFIS_NONE},                    // FI_HIDECONTROLS_LINK
     {CPFS_HIDDEN, CPFIS_READONLY},                // FI_FULLNAME_TEXT
     {CPFS_HIDDEN, CPFIS_FOCUSED},                 // FI_DISPLAYNAME_TEXT
     {CPFS_HIDDEN, CPFIS_FOCUSED},                 // FI_LOGONSTATUS_TEXT
@@ -59,8 +55,6 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
     {FI_PASSWORD, CPFT_PASSWORD_TEXT, const_cast<LPWSTR>(L"Password text")},
     {FI_SUBMIT_BUTTON, CPFT_SUBMIT_BUTTON, const_cast<LPWSTR>(L"Submit"),
      CPFG_STANDALONE_SUBMIT_BUTTON},
-    {FI_LAUNCHWINDOW_LINK, CPFT_COMMAND_LINK, const_cast<LPWSTR>(L"Launch helper window2")},
-    {FI_HIDECONTROLS_LINK, CPFT_COMMAND_LINK, const_cast<LPWSTR>(L"Hide additional controls")},
     {FI_FULLNAME_TEXT, CPFT_SMALL_TEXT, const_cast<LPWSTR>(L"Full name: ")},
     {FI_DISPLAYNAME_TEXT, CPFT_SMALL_TEXT, const_cast<LPWSTR>(L"Display name: ")},
     {FI_LOGONSTATUS_TEXT, CPFT_SMALL_TEXT, const_cast<LPWSTR>(L"Logon status: ")},

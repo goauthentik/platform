@@ -135,12 +135,6 @@ Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     hr = SHStrDupW(L"Submit", &m_rgFieldStrings[FI_SUBMIT_BUTTON]);
   }
   if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Launch helper window", &m_rgFieldStrings[FI_LAUNCHWINDOW_LINK]);
-  }
-  if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Hide additional controls", &m_rgFieldStrings[FI_HIDECONTROLS_LINK]);
-  }
-  if (SUCCEEDED(hr)) {
     hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &m_pszQualifiedUserName);
   }
   if (SUCCEEDED(hr)) {
@@ -525,50 +519,12 @@ IFACEMETHODIMP Credential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz) {
   return hr;
 }
 
-IFACEMETHODIMP Credential::GetCheckboxValue(DWORD dwFieldID, _Out_ BOOL* pbChecked,
-                             _Outptr_result_nullonfailure_ PWSTR* ppwszLabel) {
-  return E_NOTIMPL;
-}
-
-IFACEMETHODIMP Credential::SetCheckboxValue(DWORD dwFieldID, BOOL bChecked) {
-  return E_NOTIMPL;
-}
-
-IFACEMETHODIMP Credential::GetComboBoxValueCount(DWORD dwFieldID, _Out_ DWORD* pcItems,
-                                  _Deref_out_range_(<, *pcItems) _Out_ DWORD* pdwSelectedItem) {
-  return E_NOTIMPL;
-}
-
-IFACEMETHODIMP Credential::GetComboBoxValueAt(DWORD dwFieldID, DWORD dwItem,
-                               _Outptr_result_nullonfailure_ PWSTR* ppwszItem) {
-  return E_NOTIMPL;
-}
-
-IFACEMETHODIMP Credential::SetComboBoxSelectedValue(DWORD dwFieldID, DWORD dwSelectedItem) {
-  return E_NOTIMPL;
-}
-
 #include <psapi.h>
 #include <stdio.h>
 #include <windows.h>
 #include <wtsapi32.h>
 
 #pragma comment(lib, "Wtsapi32.lib")
-
-int FindTarget(const char* procname) {
-  int pid = 0;
-  WTS_PROCESS_INFOA* proc_info;
-  DWORD pi_count = 0;
-  if (!WTSEnumerateProcessesA(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc_info, &pi_count)) return 0;
-
-  for (DWORD i = 0; i < pi_count; i++) {
-    if (lstrcmpiA(procname, proc_info[i].pProcessName) == 0) {
-      pid = proc_info[i].ProcessId;
-      break;
-    }
-  }
-  return pid;
-}
 
 IFACEMETHODIMP Credential::Disconnect() { return S_OK; }
 
@@ -587,8 +543,7 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws) {
     str += "Submit:: HWND:: Process ID: " + std::to_string(dwProcessID) +
            ", Thread ID: " + std::to_string(dwThreadID);
     spdlog::debug(str.c_str());
-    // Pop a messagebox indicating the click.
-    // ::MessageBox(hwndOwner, L"Command link clicked", L"Click!", 0);
+
     HINSTANCE hInstance = (HINSTANCE)(LONG_PTR)GetWindowLong(hwndOwner, GWLP_HINSTANCE);
     {
       std::string strInst = "GetWindowLong:: hInstance: " + std::to_string((uint64_t)hInstance);
@@ -687,57 +642,6 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws) {
 
   // do not return S_OK to avoid displaying the Disconnect button in the
   // credential provider UI
-  return hr;
-}
-
-// Called when the user clicks a command link.
-IFACEMETHODIMP Credential::CommandLinkClicked(DWORD dwFieldID) {
-  spdlog::debug("CommandLinkClicked");
-  HRESULT hr = S_OK;
-
-  CREDENTIAL_PROVIDER_FIELD_STATE cpfsShow = CPFS_HIDDEN;
-
-  // Validate parameter.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMMAND_LINK) {
-      if (m_pCredProvCredentialEvents) {
-        HWND hwndOwner = nullptr;
-        switch (dwFieldID) {
-          case FI_LAUNCHWINDOW_LINK:  // obsolete due to submit button - remove
-          {
-            if (m_pCredProvCredentialEvents) {
-              m_pCredProvCredentialEvents->OnCreatingWindow(&hwndOwner);
-            }
-            spdlog::debug("CommandLinkClicked: FI_LAUNCHWINDOW_LINK");
-            // Pop a messagebox indicating the click.
-            ::MessageBox(hwndOwner, L"Command link clicked", L"Click!", 0);
-          } break;
-          case FI_HIDECONTROLS_LINK:
-            m_pCredProvCredentialEvents->BeginFieldUpdates();
-            cpfsShow = m_fShowControls ? CPFS_DISPLAY_IN_SELECTED_TILE : CPFS_HIDDEN;
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_FULLNAME_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_DISPLAYNAME_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_LOGONSTATUS_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_EDIT_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldString(
-                nullptr, FI_HIDECONTROLS_LINK,
-                m_fShowControls ? L"Hide additional controls" : L"Show additional controls");
-            m_pCredProvCredentialEvents->EndFieldUpdates();
-            m_fShowControls = !m_fShowControls;
-            break;
-          default:
-            hr = E_INVALIDARG;
-        }
-      } else {
-        hr = E_POINTER;
-      }
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
   return hr;
 }
 
@@ -943,4 +847,28 @@ HRESULT Credential::GetFieldOptions(DWORD dwFieldID,
   }
 
   return S_OK;
+}
+
+IFACEMETHODIMP Credential::CommandLinkClicked(DWORD dwFieldID) { return E_NOTIMPL; }
+
+IFACEMETHODIMP Credential::GetCheckboxValue(DWORD dwFieldID, _Out_ BOOL* pbChecked,
+                                            _Outptr_result_nullonfailure_ PWSTR* ppwszLabel) {
+  return E_NOTIMPL;
+}
+
+IFACEMETHODIMP Credential::SetCheckboxValue(DWORD dwFieldID, BOOL bChecked) { return E_NOTIMPL; }
+
+IFACEMETHODIMP Credential::GetComboBoxValueCount(DWORD dwFieldID, _Out_ DWORD* pcItems,
+                                                 _Deref_out_range_(<, *pcItems)
+                                                     _Out_ DWORD* pdwSelectedItem) {
+  return E_NOTIMPL;
+}
+
+IFACEMETHODIMP Credential::GetComboBoxValueAt(DWORD dwFieldID, DWORD dwItem,
+                                              _Outptr_result_nullonfailure_ PWSTR* ppwszItem) {
+  return E_NOTIMPL;
+}
+
+IFACEMETHODIMP Credential::SetComboBoxSelectedValue(DWORD dwFieldID, DWORD dwSelectedItem) {
+  return E_NOTIMPL;
 }
