@@ -213,14 +213,25 @@ set(CMAKE_CXX_STANDARD 17)
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
   message(INFO " > CEF binary `Release` directory is missing.")
   message(INFO " > Downloading CEF binary package...")
-  file(DOWNLOAD "https://cef-builds.spotifycdn.com/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2" "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2"
-    EXPECTED_HASH SHA256=856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265
+  file(DOWNLOAD "https://cef-builds.spotifycdn.com/cef_binary_145.0.27%2Bg4ddda2e%2Bchromium-145.0.7632.117_windows64.tar.bz2" "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2"
+    EXPECTED_HASH SHA256=8817ca8d04cfa0d819aa09a59fcf0bc2506d60955925b4316553b1b687787676
     SHOW_PROGRESS
   )
   message(INFO " > Extracting CEF binary package...")
-  file(ARCHIVE_EXTRACT INPUT "cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2")
+  file(ARCHIVE_EXTRACT
+    INPUT "cef_bin.tar.bz2"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/cef_bin"
+    VERBOSE
+  )
   message(INFO " > Copying CEF binary `Release` directory...")
-  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY
+    "${CMAKE_CURRENT_BINARY_DIR}/cef_bin/cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_windows64/Release"
+    DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+  file(COPY
+    "${CMAKE_CURRENT_BINARY_DIR}/cef_bin/cef_binary_145.0.27+g4ddda2e+chromium-145.0.7632.117_windows64/Resources"
+    DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}"
+  )
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
     message(INFO " > CEF binary `Release` directory setup completed.")
   else()
