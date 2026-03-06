@@ -28,9 +28,9 @@ void ak_setup_logs(const char* logger_name) {
 
   const auto logger = std::make_shared<spdlog::logger>(logger_name, dist_sink);
 
+  spdlog::set_default_logger(logger);
   spdlog::set_level(_ak_log_level);
   spdlog::flush_on(_ak_log_level);
-  spdlog::set_default_logger(logger);
   SPDLOG_INFO("authentik Platform {} Version {}", logger_name, AK_VERSION);
   spdlog::info("non macro info");
   spdlog::trace("non macro trace");
