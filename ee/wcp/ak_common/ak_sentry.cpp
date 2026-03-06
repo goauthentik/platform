@@ -41,7 +41,7 @@ void ak_setup_sentry(const char* component) {
                          "ingest.us.sentry.io/4509208005312512");
   sentry_options_set_release(options, release.c_str());
   sentry_init(options);
-  spdlog::debug("Sentry initialized");
+  SPDLOG_DEBUG("Sentry initialized");
   g_sentrySetup = true;
 }
 

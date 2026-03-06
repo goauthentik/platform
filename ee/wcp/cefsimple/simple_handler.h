@@ -69,10 +69,10 @@ class SimpleHandler : public CefClient,
                           CefRefPtr<CefRequest> request, CefRefPtr<CefResponse> response) override {
     std::string strURL =
         "URL: " + request->GetURL().ToString() + " " + request->GetMethod().ToString();
-    spdlog::debug(strURL.c_str());
+    SPDLOG_DEBUG(strURL.c_str());
     std::string str = "OnResourceResponse ProcessID: " + std::to_string(GetCurrentProcessId()) +
                       ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    spdlog::debug(str.c_str());
+    SPDLOG_DEBUG(str.c_str());
     return false;
   }
 
@@ -81,7 +81,7 @@ class SimpleHandler : public CefClient,
                                    CefRefPtr<CefCallback> callback) override {
     const std::string strKey = "goauthentik.io://";
     std::string strURL = request->GetURL().ToString();
-    spdlog::debug(strURL.c_str());
+    SPDLOG_DEBUG(strURL.c_str());
 
     CefString headerKey;
     headerKey.FromString("X-Authentik-Platform-Auth-DTH");
@@ -91,21 +91,21 @@ class SimpleHandler : public CefClient,
     request->SetHeaderByName(headerKey, headerValue, true);
     if (strURL.length() >= strKey.length()) {
       if (strURL.substr(0, strKey.length()) == strKey) {
-        spdlog::debug("URL inhibited: ", strURL.c_str());
-        spdlog::debug("OnBeforeResourceLoad ProcessID: ", std::to_string(GetCurrentProcessId()),
+        SPDLOG_DEBUG("URL inhibited: ", strURL.c_str());
+        SPDLOG_DEBUG("OnBeforeResourceLoad ProcessID: ", std::to_string(GetCurrentProcessId()),
                       ", ThreadID: ", std::to_string(GetCurrentThreadId()));
         Hide();
         m_pData->UpdateStatus(L"Authenticating, please wait...");
         TokenResponse validatedToken;
         try {
           if (!ak_sys_auth_url(strURL, validatedToken)) {
-            spdlog::warn("failed to validate token");
+            SPDLOG_WARN("failed to validate token");
           } else {
-            spdlog::debug("successfully validated token");
+            SPDLOG_DEBUG("successfully validated token");
             m_pData->UpdateUser(validatedToken.username.c_str());
           }
         } catch (const rust::Error& ex) {
-          spdlog::warn("Exception in ak_sys_auth_url: {}", ex.what());
+          SPDLOG_WARN("Exception in ak_sys_auth_url: {}", ex.what());
         }
         CloseAllBrowsers(false);
 

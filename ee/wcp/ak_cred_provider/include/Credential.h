@@ -33,7 +33,7 @@ struct sHookData {
     oMutex.unlock();
   }
   void SetExit(const bool bVal) {
-    spdlog::debug(std::string("SetExit: " + std::to_string((size_t)bVal)).c_str());
+    SPDLOG_DEBUG(std::string("SetExit: " + std::to_string((size_t)bVal)).c_str());
     oMutex.lock();
     bExit = bVal;
     oMutex.unlock();
@@ -46,7 +46,7 @@ struct sHookData {
     return bVal;
   }
   void SetCancel(const bool bVal) {
-    spdlog::debug(std::string("SetCancel: " + std::to_string((size_t)bVal)).c_str());
+    SPDLOG_DEBUG(std::string("SetCancel: " + std::to_string((size_t)bVal)).c_str());
     oMutex.lock();
     bCancel = bVal;
     oMutex.unlock();
@@ -59,7 +59,7 @@ struct sHookData {
     return bVal;
   }
   void SetComplete(const bool bVal) {
-    spdlog::debug(std::string("SetComplete: " + std::to_string((size_t)bVal)).c_str());
+    SPDLOG_DEBUG(std::string("SetComplete: " + std::to_string((size_t)bVal)).c_str());
     oMutex.lock();
     bComplete = bVal;
     oMutex.unlock();
@@ -184,7 +184,7 @@ class Credential : public ICredentialProviderCredential2,
     bool bInit = false;  // whether CefApp has initialized (OnContextInitialized())
     std::mutex oMutex;
     void SetInit(const bool bVal) {
-      spdlog::debug(std::string("sCefAppData::SetInit: " + std::to_string((size_t)bVal)).c_str());
+      SPDLOG_DEBUG(std::string("sCefAppData::SetInit: " + std::to_string((size_t)bVal)).c_str());
       oMutex.lock();
       bInit = bVal;
       oMutex.unlock();

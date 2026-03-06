@@ -17,15 +17,15 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmd
 
   ak_setup_logs("ak_cefexe");
   ak_setup_sentry("cefexe");
-  spdlog::debug("wWinMain");
+  SPDLOG_DEBUG("wWinMain");
 
   int ret = 0;
   try {
-    spdlog::debug("CefExecuteProcess");
+    SPDLOG_DEBUG("CefExecuteProcess");
     ret = CefExecuteProcess(main_args, nullptr, nullptr);
-    spdlog::debug("CefExecuteProcess... done");
+    SPDLOG_DEBUG("CefExecuteProcess... done");
   } catch (const std::exception&) {
-    spdlog::debug("CefExecuteProcess... catch...!");
+    SPDLOG_DEBUG("CefExecuteProcess... catch...!");
   }
   ak_teardown_sentry();
   ak_teardown_logs();

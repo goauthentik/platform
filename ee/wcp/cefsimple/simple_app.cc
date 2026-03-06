@@ -35,30 +35,30 @@ namespace {
   ~SimpleDeleteCookiesCallback() {}
   void OnComplete(int num_deleted) override
   {
-    spdlog::debug(std::string("DeleteCookiesCallback: " + std::to_string(num_deleted) + " cookies deleted").c_str());
+    SPDLOG_DEBUG(std::string("DeleteCookiesCallback: " + std::to_string(num_deleted) + " cookies deleted").c_str());
     if (!(m_pHandler->CloseCalled()))
     {
       std::string url = "";
       try {
         AuthStartAsync start;
         if (!ak_sys_auth_start_async(start)) {
-          spdlog::debug("Failed to start auth async");
+          SPDLOG_DEBUG("Failed to start auth async");
           return;
         }
         url = start.url.c_str();
         m_pData->UpdateHeaderToken(start.header_token.c_str());
       } catch (const rust::Error &ex) {
-        spdlog::warn("Exception in ak_sys_auth_start_async: {}", ex.what());
+        SPDLOG_WARN("Exception in ak_sys_auth_start_async: {}", ex.what());
       }
-      spdlog::debug(std::string("m_pBrowserView: " + std::to_string((size_t)(m_pBrowserView.get()))).c_str());
-      spdlog::debug(std::string("m_pBrowserView->GetBrowser(): " + std::to_string((size_t)(m_pBrowserView->GetBrowser().get()))).c_str());
-      spdlog::debug(std::string("m_pBrowserView->GetBrowser()->GetMainFrame(): " + std::to_string((size_t)(m_pBrowserView->GetBrowser()->GetMainFrame().get()))).c_str());
+      SPDLOG_DEBUG(std::string("m_pBrowserView: " + std::to_string((size_t)(m_pBrowserView.get()))).c_str());
+      SPDLOG_DEBUG(std::string("m_pBrowserView->GetBrowser(): " + std::to_string((size_t)(m_pBrowserView->GetBrowser().get()))).c_str());
+      SPDLOG_DEBUG(std::string("m_pBrowserView->GetBrowser()->GetMainFrame(): " + std::to_string((size_t)(m_pBrowserView->GetBrowser()->GetMainFrame().get()))).c_str());
       m_pBrowserView->GetBrowser()->GetMainFrame()->LoadURL(url);
     }
 
     if (m_pWindow)
     {
-      spdlog::debug("Show window");
+      SPDLOG_DEBUG("Show window");
       m_pWindow->Show();
     }
     // Notify SimpleHandler
@@ -82,17 +82,17 @@ class SimpleCookieManagerCallback : public CefCompletionCallback
   ~SimpleCookieManagerCallback() {}
   void OnComplete() override
   {
-    spdlog::debug("CookieManagerCallback");
+    SPDLOG_DEBUG("CookieManagerCallback");
     if (! (CefRequestContext::GetGlobalContext()))
     {
-      spdlog::debug("Error: CefRequestContext::GetGlobalContext is nullptr");
+      SPDLOG_DEBUG("Error: CefRequestContext::GetGlobalContext is nullptr");
     }
     else
     {
       auto pCookieManager = CefRequestContext::GetGlobalContext()->GetCookieManager(nullptr);
       if (pCookieManager)
       {
-        spdlog::debug("CookieManager");
+        SPDLOG_DEBUG("CookieManager");
         pCookieManager->DeleteCookies("", "", m_pDeleteCookiesCallback);
       }
     }
@@ -124,7 +124,7 @@ class SimpleWindowDelegate : public CefWindowDelegate {
   }
 
   void OnWindowCreated(CefRefPtr<CefWindow> window) override {
-    spdlog::debug("OnWindowCreated");
+    SPDLOG_DEBUG("OnWindowCreated");
     m_pCookieManagerCallback = new SimpleCookieManagerCallback(browser_view_, window, m_pHandler, m_pData);
     CefCookieManager::GetGlobalManager(m_pCookieManagerCallback);
 
@@ -289,7 +289,7 @@ SimpleApp::SimpleApp() = default;
 
 void SimpleApp::OnContextInitialized() {
   CEF_REQUIRE_UI_THREAD();
-  spdlog::debug("OnContextInitialized");
+  SPDLOG_DEBUG("OnContextInitialized");
   if (m_pData)
   {
     Credential::m_oCefAppData.SetInit(true);
@@ -297,9 +297,9 @@ void SimpleApp::OnContextInitialized() {
 }
 
 bool SimpleApp::LaunchBrowser(CefRefPtr<SimpleHandler> handler, const bool use_alloy_style) {
-  spdlog::debug("LaunchBrowser");
+  SPDLOG_DEBUG("LaunchBrowser");
   CEF_REQUIRE_UI_THREAD();
-  spdlog::debug("LaunchBrowser UI thread");
+  SPDLOG_DEBUG("LaunchBrowser UI thread");
 
   CefRefPtr<CefCommandLine> command_line =
       CefCommandLine::GetGlobalCommandLine();
@@ -353,7 +353,7 @@ bool SimpleApp::LaunchBrowser(CefRefPtr<SimpleHandler> handler, const bool use_a
     // Information used when creating the native window.
     CefWindowInfo window_info;
 
-    spdlog::debug("SetAsPopup");
+    SPDLOG_DEBUG("SetAsPopup");
 #if defined(OS_WIN)
     // On Windows we need to specify certain flags that will be passed to
     // CreateWindowEx().
@@ -362,7 +362,7 @@ bool SimpleApp::LaunchBrowser(CefRefPtr<SimpleHandler> handler, const bool use_a
     // GetClientRect(m_hWnd, &rect);
     // window_info.SetAsChild(m_hWnd, CefRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top));
 #endif
-    spdlog::debug("SetAsPopup end");
+    SPDLOG_DEBUG("SetAsPopup end");
 
     // Alloy style will create a basic native window. Chrome style will create a
     // fully styled Chrome UI window.
@@ -371,7 +371,7 @@ bool SimpleApp::LaunchBrowser(CefRefPtr<SimpleHandler> handler, const bool use_a
     // Create the first browser window. Todo: Add cookie delete code.
     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings,
                                   nullptr, nullptr);
-    spdlog::debug("CreateBrowser");
+    SPDLOG_DEBUG("CreateBrowser");
   }
   return true;
 }
