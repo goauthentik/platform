@@ -8,9 +8,8 @@ enum FIELD_ID {
   FI_TILEIMAGE = 0,
   FI_LABEL = 1,
   FI_LARGE_TEXT = 2,
-  FI_PASSWORD = 3,
-  FI_SUBMIT_BUTTON = 4,
-  FI_NUM_FIELDS = 5,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a
+  FI_SUBMIT_BUTTON = 3,
+  FI_NUM_FIELDS = 4,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a
                       // count of the number of fields
 };
 
@@ -32,7 +31,6 @@ static const FIELD_STATE_PAIR s_rgFieldStatePairs[] = {
     {CPFS_DISPLAY_IN_BOTH, CPFIS_NONE},           // FI_TILEIMAGE
     {CPFS_HIDDEN, CPFIS_NONE},                    // FI_LABEL
     {CPFS_DISPLAY_IN_BOTH, CPFIS_NONE},           // FI_LARGE_TEXT
-    {CPFS_HIDDEN, CPFIS_NONE},                    // FI_PASSWORD
     {CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},  // FI_SUBMIT_BUTTON
 };
 
@@ -44,7 +42,6 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
     {FI_TILEIMAGE, CPFT_TILE_IMAGE, const_cast<LPWSTR>(L"Image"), CPFG_CREDENTIAL_PROVIDER_LOGO},
     {FI_LABEL, CPFT_SMALL_TEXT, const_cast<LPWSTR>(L"authentik"), CPFG_CREDENTIAL_PROVIDER_LABEL},
     {FI_LARGE_TEXT, CPFT_LARGE_TEXT, const_cast<LPWSTR>(L"Sign in with authentik")},
-    {FI_PASSWORD, CPFT_PASSWORD_TEXT, const_cast<LPWSTR>(L"Password text")},
     {FI_SUBMIT_BUTTON, CPFT_SUBMIT_BUTTON, const_cast<LPWSTR>(L"Submit"),
      CPFG_STANDALONE_SUBMIT_BUTTON},
 };

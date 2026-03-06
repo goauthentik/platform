@@ -55,11 +55,6 @@ Credential::~Credential() {
     it.join();
   }
 
-  if (m_rgFieldStrings[FI_PASSWORD]) {
-    size_t lenPassword = wcslen(m_rgFieldStrings[FI_PASSWORD]);
-    SecureZeroMemory(m_rgFieldStrings[FI_PASSWORD],
-                     lenPassword * sizeof(*m_rgFieldStrings[FI_PASSWORD]));
-  }
   for (int i = 0; i < ARRAYSIZE(m_rgFieldStrings); i++) {
     CoTaskMemFree(m_rgFieldStrings[i]);
     CoTaskMemFree(m_rgCredProvFieldDescriptors[i].pszLabel);
@@ -123,9 +118,6 @@ Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
   }
   if (SUCCEEDED(hr)) {
     hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LARGE_TEXT]);
-  }
-  if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"", &m_rgFieldStrings[FI_PASSWORD]);
   }
   if (SUCCEEDED(hr)) {
     hr = SHStrDupW(L"Submit", &m_rgFieldStrings[FI_SUBMIT_BUTTON]);
@@ -364,23 +356,7 @@ IFACEMETHODIMP Credential::SetSelected(_Out_ BOOL* pbAutoLogon) {
 // and now no longer is. The most common thing to do here (which we do below)
 // is to clear out the password field.
 IFACEMETHODIMP Credential::SetDeselected() {
-  HRESULT hr = S_OK;
-  if (m_rgFieldStrings[FI_PASSWORD]) {
-    size_t lenPassword = wcslen(m_rgFieldStrings[FI_PASSWORD]);
-    SecureZeroMemory(m_rgFieldStrings[FI_PASSWORD],
-                     lenPassword * sizeof(*m_rgFieldStrings[FI_PASSWORD]));
-
-    CoTaskMemFree(m_rgFieldStrings[FI_PASSWORD]);
-    hr = SHStrDupW(L"", &m_rgFieldStrings[FI_PASSWORD]);
-
-    if (SUCCEEDED(hr) && m_pCredProvCredentialEvents) {
-      m_pCredProvCredentialEvents->SetFieldString(
-          reinterpret_cast<ICredentialProviderCredential*>(this), FI_PASSWORD,
-          m_rgFieldStrings[FI_PASSWORD]);
-    }
-  }
-
-  return hr;
+  return S_OK;
 }
 
 // Get info for a particular field of a tile. Called by logonUI to get
@@ -449,7 +425,7 @@ IFACEMETHODIMP Credential::GetSubmitButtonValue(DWORD dwFieldID, _Out_ DWORD* pd
   if (FI_SUBMIT_BUTTON == dwFieldID) {
     // pdwAdjacentTo is a pointer to the fieldID you want the submit button to
     // appear next to.
-    *pdwAdjacentTo = FI_SUBMIT_BUTTON;  // FI_PASSWORD;
+    *pdwAdjacentTo = FI_SUBMIT_BUTTON;
     hr = S_OK;
   } else {
     hr = E_INVALIDARG;
@@ -612,6 +588,14 @@ IFACEMETHODIMP Credential::GetSerialization(
   *pcpsiOptionalStatusIcon = CPSI_NONE;
   ZeroMemory(pcpcs, sizeof(*pcpcs));
 
+  PWSTR pwzProtectedPassword;
+  hr = ProtectIfNecessaryAndCopyPassword(m_strPass.c_str(), m_cpus, &pwzProtectedPassword);
+  m_strPass = GetRandomWStr(WIN_PASS_LEN);  // overwrite for safety
+  if (FAILED(hr)) {
+    CoTaskMemFree(pwzProtectedPassword);
+    return hr;
+  }
+
   // For local user, the domain and user name can be split from
   // _pszQualifiedUserName (domain\username). CredPackAuthenticationBuffer()
   // cannot be used because it won't work with unlock scenario.
@@ -622,58 +606,51 @@ IFACEMETHODIMP Credential::GetSerialization(
       *pcpsiOptionalStatusIcon = CPSI_WARNING;
       SHStrDupW(L"Login attempt cancelled", ppwszOptionalStatusText);
     } else {
-      PWSTR pwzProtectedPassword;
-      // hr = ProtectIfNecessaryAndCopyPassword(m_rgFieldStrings[FI_PASSWORD],
-      // m_cpus, &pwzProtectedPassword);
       spdlog::debug("GetSerialization->Protect");
-      hr = ProtectIfNecessaryAndCopyPassword(m_strPass.c_str(), m_cpus, &pwzProtectedPassword);
-      m_strPass = GetRandomWStr(WIN_PASS_LEN);  // overwrite for safety
+      PWSTR pszDomain;
+      PWSTR pszUsername;
+      hr = SplitDomainAndUsername(m_pszQualifiedUserName, &pszDomain, &pszUsername);
+      spdlog::debug("GetSerialization->SplitDomainAndUsername");
       if (SUCCEEDED(hr)) {
-        PWSTR pszDomain;
-        PWSTR pszUsername;
-        hr = SplitDomainAndUsername(m_pszQualifiedUserName, &pszDomain, &pszUsername);
-        spdlog::debug("GetSerialization->SplitDomainAndUsername");
+        KERB_INTERACTIVE_UNLOCK_LOGON kiul;
+        spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonInit");
+        hr = KerbInteractiveUnlockLogonInit(pszDomain, pszUsername, pwzProtectedPassword, m_cpus,
+                                            &kiul);
         if (SUCCEEDED(hr)) {
-          KERB_INTERACTIVE_UNLOCK_LOGON kiul;
-          spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonInit");
-          hr = KerbInteractiveUnlockLogonInit(pszDomain, pszUsername, pwzProtectedPassword, m_cpus,
-                                              &kiul);
+          // We use KERB_INTERACTIVE_UNLOCK_LOGON in both unlock and logon
+          // scenarios.  It contains a KERB_INTERACTIVE_LOGON to hold the
+          // creds plus a LUID that is filled in for us by Winlogon as
+          // necessary.
+          spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonPack");
+          hr = KerbInteractiveUnlockLogonPack(kiul, &pcpcs->rgbSerialization,
+                                              &pcpcs->cbSerialization);
           if (SUCCEEDED(hr)) {
-            // We use KERB_INTERACTIVE_UNLOCK_LOGON in both unlock and logon
-            // scenarios.  It contains a KERB_INTERACTIVE_LOGON to hold the
-            // creds plus a LUID that is filled in for us by Winlogon as
-            // necessary.
-            spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonPack");
-            hr = KerbInteractiveUnlockLogonPack(kiul, &pcpcs->rgbSerialization,
-                                                &pcpcs->cbSerialization);
+            ULONG ulAuthPackage;
+            spdlog::debug("GetSerialization->RetrieveNegotiateAuthPackage");
+            hr = RetrieveNegotiateAuthPackage(&ulAuthPackage);
             if (SUCCEEDED(hr)) {
-              ULONG ulAuthPackage;
-              spdlog::debug("GetSerialization->RetrieveNegotiateAuthPackage");
-              hr = RetrieveNegotiateAuthPackage(&ulAuthPackage);
-              if (SUCCEEDED(hr)) {
-                pcpcs->ulAuthenticationPackage = ulAuthPackage;
-                pcpcs->clsidCredentialProvider = CLSID_CredentialProvider;
-                // At this point the credential has created the serialized
-                // credential used for logon By setting this to
-                // CPGSR_RETURN_CREDENTIAL_FINISHED we are letting logonUI know
-                // that we have all the information we need and it should
-                // attempt to submit the serialized credential.
-                *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
-              }
+              pcpcs->ulAuthenticationPackage = ulAuthPackage;
+              pcpcs->clsidCredentialProvider = CLSID_CredentialProvider;
+              // At this point the credential has created the serialized
+              // credential used for logon By setting this to
+              // CPGSR_RETURN_CREDENTIAL_FINISHED we are letting logonUI know
+              // that we have all the information we need and it should
+              // attempt to submit the serialized credential.
+              *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
             }
           }
-          CoTaskMemFree(pszDomain);
-          CoTaskMemFree(pszUsername);
         }
-        CoTaskMemFree(pwzProtectedPassword);
+        CoTaskMemFree(pszDomain);
+        CoTaskMemFree(pszUsername);
       }
+      CoTaskMemFree(pwzProtectedPassword);
     }
   } else {
     DWORD dwAuthFlags = CRED_PACK_PROTECTED_CREDENTIALS | CRED_PACK_ID_PROVIDER_CREDENTIALS;
 
     // First get the size of the authentication buffer to allocate
     if (!CredPackAuthenticationBuffer(dwAuthFlags, m_pszQualifiedUserName,
-                                      const_cast<PWSTR>(m_rgFieldStrings[FI_PASSWORD]), nullptr,
+                                      pwzProtectedPassword, nullptr,
                                       &pcpcs->cbSerialization) &&
         (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
       pcpcs->rgbSerialization = static_cast<byte*>(CoTaskMemAlloc(pcpcs->cbSerialization));
@@ -682,7 +659,7 @@ IFACEMETHODIMP Credential::GetSerialization(
 
         // Retrieve the authentication buffer
         if (CredPackAuthenticationBuffer(dwAuthFlags, m_pszQualifiedUserName,
-                                         const_cast<PWSTR>(m_rgFieldStrings[FI_PASSWORD]),
+                                         pwzProtectedPassword,
                                          pcpcs->rgbSerialization, &pcpcs->cbSerialization)) {
           ULONG ulAuthPackage;
           hr = RetrieveNegotiateAuthPackage(&ulAuthPackage);
@@ -762,14 +739,6 @@ HRESULT Credential::ReportResult(NTSTATUS ntsStatus, NTSTATUS ntsSubstatus,
     }
   }
 
-  // If we failed the logon, try to erase the password field.
-  if (FAILED(HRESULT_FROM_NT(ntsStatus))) {
-    if (m_pCredProvCredentialEvents) {
-      m_pCredProvCredentialEvents->SetFieldString(
-          reinterpret_cast<ICredentialProviderCredential*>(this), FI_PASSWORD, L"");
-    }
-  }
-
   // Since nullptr is a valid value for *ppwszOptionalStatusText and
   // *pcpsiOptionalStatusIcon this function can't fail.
   return S_OK;
@@ -793,9 +762,7 @@ HRESULT Credential::GetUserSid(_Outptr_result_nullonfailure_ PWSTR* ppszSid) {
 HRESULT Credential::GetFieldOptions(DWORD dwFieldID,
                                     _Out_ CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS* pcpcfo) {
   *pcpcfo = CPCFO_NONE;
-  if (dwFieldID == FI_PASSWORD) {
-    *pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL;
-  } else if (dwFieldID == FI_TILEIMAGE) {
+  if (dwFieldID == FI_TILEIMAGE) {
     *pcpcfo = CPCFO_ENABLE_TOUCH_KEYBOARD_AUTO_INVOKE;
   }
 
