@@ -289,7 +289,7 @@ set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 FetchContent_Declare(sentry
   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
-  GIT_TAG 0.13.1
+  GIT_TAG 0.12.3
 )
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 set(SENTRY_BUILD_SHARED_LIBS OFF)
