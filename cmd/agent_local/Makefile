@@ -91,7 +91,7 @@ package-msys: clean
 	dotnet restore \
 		--packages "${TOP}/cache/${TARGET}" \
 		"$(shell pwd)/package/windows/"
-	ROOT=${TOP} VERSION=${VERSION} VERSION_HASH=${VERSION_HASH} dotnet build \
+	ROOT=${TOP} VERSION=${VERSION} dotnet build \
 		--packages "${TOP}/cache/${TARGET}" \
 		--artifacts-path "${TOP}/cache/${TARGET}" \
 		--output "${TOP}/bin/${TARGET}/" \

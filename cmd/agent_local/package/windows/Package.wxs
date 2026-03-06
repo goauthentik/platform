@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?define Name = "authentik Agent" ?>
 <?define Manufacturer = "Authentik Security Inc" ?>
-<?define Version = "$(env.VERSION)" ?>
+<?define Version="$(fun.AutoVersion($(env.VERSION))"?>
 <?define UpgradeCode = "3200363b-996e-4fd7-ae14-e3a425132b63" ?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
   xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
@@ -9,7 +9,7 @@
   <Package Id="authentik.Agent"
            Name="$(var.Name)"
            Manufacturer="$(var.Manufacturer)"
-           Version="$(var.Version)-$(env.VERSION_HASH)"
+           Version="$(var.Version)"
            UpgradeCode="$(var.UpgradeCode)"
            Compressed="true">
     <ui:WixUI Id="AK_WixUI_FeatureTree"
