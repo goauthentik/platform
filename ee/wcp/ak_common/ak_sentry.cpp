@@ -5,6 +5,10 @@
 #include <sentry.h>
 #include <spdlog/spdlog.h>
 
+#ifndef AK_SENTRY_ENABLED
+#define AK_SENTRY_ENABLED 0
+#endif
+
 bool g_sentrySetup;
 
 static void ak_sentry_log_callback(sentry_level_t level, const char* message, va_list args,
@@ -18,7 +22,9 @@ static void ak_sentry_log_callback(sentry_level_t level, const char* message, va
 }
 
 void ak_setup_sentry(const char* component) {
+#if AK_SENTRY_ENABLED == 0
   return;
+#endif
   if (g_sentrySetup) return;
   spdlog::register_logger(spdlog::default_logger()->clone("sentry"));
 
@@ -40,6 +46,8 @@ void ak_setup_sentry(const char* component) {
 }
 
 void ak_teardown_sentry() {
+#if AK_SENTRY_ENABLED == 0
   return;
+#endif
   sentry_shutdown();
 }
