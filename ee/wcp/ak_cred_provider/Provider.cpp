@@ -244,18 +244,11 @@ Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
   return hr;
 }
 
-// Not implemented, even though its required as per MS docs... //-
 IFACEMETHODIMP Provider::SetSerialization(
     _In_ CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION const* /*pcpcs*/) {
   return E_NOTIMPL;
 }
 
-// Called by LogonUI to determine the number of fields in your tiles.  This
-// does mean that all your tiles must have the same number of fields.
-// This number must include both visible and invisible fields. If you want a
-// tile to have different fields from the other tiles you enumerate for a given
-// usage scenario you must include them all in this count and then hide/show
-// them as desired using the field descriptors.
 IFACEMETHODIMP Provider::GetFieldDescriptorCount(_Out_ DWORD* pdwCount) {
   *pdwCount = FI_NUM_FIELDS;
   return S_OK;

@@ -10,12 +10,12 @@ enum FIELD_ID {
   FI_LARGE_TEXT = 2,
   FI_PASSWORD = 3,
   FI_SUBMIT_BUTTON = 4,
-  FI_FULLNAME_TEXT = 7,
-  FI_DISPLAYNAME_TEXT = 8,
-  FI_LOGONSTATUS_TEXT = 9,
-  FI_EDIT_TEXT = 10,
-  FI_NUM_FIELDS = 11,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a
-                       // count of the number of fields
+  FI_FULLNAME_TEXT = 5,
+  FI_DISPLAYNAME_TEXT = 6,
+  FI_LOGONSTATUS_TEXT = 7,
+  FI_EDIT_TEXT = 8,
+  FI_NUM_FIELDS = 9,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a
+                      // count of the number of fields
 };
 
 // The first value indicates when the tile is displayed (selected, not selected)
