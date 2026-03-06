@@ -126,9 +126,6 @@ Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LARGE_TEXT]);
   }
   if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Edit Text...", &m_rgFieldStrings[FI_EDIT_TEXT]);
-  }
-  if (SUCCEEDED(hr)) {
     hr = SHStrDupW(L"", &m_rgFieldStrings[FI_PASSWORD]);
   }
   if (SUCCEEDED(hr)) {
