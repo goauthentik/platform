@@ -134,42 +134,6 @@ Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
   if (SUCCEEDED(hr)) {
     hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &m_pszQualifiedUserName);
   }
-  if (SUCCEEDED(hr)) {
-    PWSTR pszUserName;
-    pcpUser->GetStringValue(PKEY_Identity_UserName, &pszUserName);
-    if (pszUserName != nullptr) {
-      wchar_t szString[256];
-      StringCchPrintf(szString, ARRAYSIZE(szString), L"User Name: %s", pszUserName);
-      hr = SHStrDupW(szString, &m_rgFieldStrings[FI_FULLNAME_TEXT]);
-      CoTaskMemFree(pszUserName);
-    } else {
-      hr = SHStrDupW(L"User Name is NULL", &m_rgFieldStrings[FI_FULLNAME_TEXT]);
-    }
-  }
-  if (SUCCEEDED(hr)) {
-    PWSTR pszDisplayName;
-    pcpUser->GetStringValue(PKEY_Identity_DisplayName, &pszDisplayName);
-    if (pszDisplayName != nullptr) {
-      wchar_t szString[256];
-      StringCchPrintf(szString, ARRAYSIZE(szString), L"Display Name: %s", pszDisplayName);
-      hr = SHStrDupW(szString, &m_rgFieldStrings[FI_DISPLAYNAME_TEXT]);
-      CoTaskMemFree(pszDisplayName);
-    } else {
-      hr = SHStrDupW(L"Display Name is NULL", &m_rgFieldStrings[FI_DISPLAYNAME_TEXT]);
-    }
-  }
-  if (SUCCEEDED(hr)) {
-    PWSTR pszLogonStatus;
-    pcpUser->GetStringValue(PKEY_Identity_LogonStatusString, &pszLogonStatus);
-    if (pszLogonStatus != nullptr) {
-      wchar_t szString[256];
-      StringCchPrintf(szString, ARRAYSIZE(szString), L"Logon Status: %s", pszLogonStatus);
-      hr = SHStrDupW(szString, &m_rgFieldStrings[FI_LOGONSTATUS_TEXT]);
-      CoTaskMemFree(pszLogonStatus);
-    } else {
-      hr = SHStrDupW(L"Logon Status is NULL", &m_rgFieldStrings[FI_LOGONSTATUS_TEXT]);
-    }
-  }
 
   if (SUCCEEDED(hr)) {
     hr = pcpUser->GetSid(&m_pszUserSid);

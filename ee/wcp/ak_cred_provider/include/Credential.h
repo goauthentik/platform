@@ -219,9 +219,6 @@ class Credential : public ICredentialProviderCredential2,
   ICredentialProviderCredentialEvents2* m_pCredProvCredentialEvents =
       nullptr;  // Used to update fields.
   //// CredentialEvents2 for Begin and EndFieldUpdates.
-  BOOL m_fChecked = false;       // Tracks the state of our checkbox.
-  DWORD m_dwComboIndex = 0;      // Tracks the current index of our combobox.
-  bool m_fShowControls = false;  // Tracks the state of our show/hide controls link.
   bool m_fIsLocalUser = false;   // If the cred prov is assosiating with a local user tile
   std::vector<std::thread> m_vecThreads;
   static std::map<PWSTR, std::thread> m_mapThreads;
