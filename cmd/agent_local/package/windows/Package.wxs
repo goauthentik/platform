@@ -9,7 +9,7 @@
   <Package Id="authentik.Agent"
            Name="$(var.Name)"
            Manufacturer="$(var.Manufacturer)"
-           Version="$(var.Version)"
+           Version="$(var.Version)-$(env.VERSION_HASH)"
            UpgradeCode="$(var.UpgradeCode)"
            Compressed="true">
     <ui:WixUI Id="AK_WixUI_FeatureTree"
