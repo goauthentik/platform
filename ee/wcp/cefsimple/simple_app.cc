@@ -108,18 +108,15 @@ class SimpleCookieManagerCallback : public CefCompletionCallback
 // implementation for the CefWindow that hosts the Views-based browser.
 class SimpleWindowDelegate : public CefWindowDelegate {
  public:
-  SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view,
-                       cef_runtime_style_t runtime_style,
-                       cef_show_state_t initial_show_state,
-                       CefRefPtr<SimpleHandler> handler,
-                       sHookData* pData
-                      )
+  SimpleWindowDelegate(CefRefPtr<CefBrowserView> browser_view, cef_runtime_style_t runtime_style,
+                       cef_show_state_t initial_show_state, CefRefPtr<SimpleHandler> handler,
+                       sHookData* pData)
       : browser_view_(browser_view),
         runtime_style_(runtime_style),
         initial_show_state_(initial_show_state),
         m_pHandler(handler),
         m_pData(pData),
-        size_(CefSize(600, 700)) {}
+        size_(CefSize(583, 670)) {}
   ~SimpleWindowDelegate() {}
 
   void OnWindowClosing(CefRefPtr<CefWindow> window) override {
