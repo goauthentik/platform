@@ -116,7 +116,7 @@ class SimpleWindowDelegate : public CefWindowDelegate {
         initial_show_state_(initial_show_state),
         m_pHandler(handler),
         m_pData(pData),
-        size_(CefSize(583, 670)) {}
+        size_(CefSize(560, 670)) {}
   ~SimpleWindowDelegate() {}
 
   void OnWindowClosing(CefRefPtr<CefWindow> window) override {
