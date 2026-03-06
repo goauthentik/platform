@@ -247,7 +247,7 @@ include(FetchContent)
 
 FetchContent_Declare(Corrosion
     GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-    GIT_TAG v0.6
+    GIT_TAG v0.6.1
 )
 # Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
 FetchContent_MakeAvailable(Corrosion)
@@ -289,7 +289,7 @@ set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 FetchContent_Declare(sentry
   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
-  GIT_TAG 0.12.3
+  GIT_TAG 0.13.1
 )
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 set(SENTRY_BUILD_SHARED_LIBS OFF)
