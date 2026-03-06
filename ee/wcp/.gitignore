@@ -23,7 +23,6 @@ mono_crash.*
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
-[Rr]esources/
 [Rr]eleases/
 x64/
 x86/
@@ -406,4 +405,8 @@ FodyWeavers.xsd
 _deps
 CMakeCache.txt
 CMakeFiles/**
+
+# CEF Copies files
 /include/**
+/Resources/**
+/cmake/**

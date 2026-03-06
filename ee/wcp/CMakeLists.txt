@@ -205,7 +205,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CEF_ROOT}/cmake")
 #
 
 # Execute FindCEF.cmake which must exist in CMAKE_MODULE_PATH.
-find_package(CEF REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -225,14 +224,23 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
       SHOW_PROGRESS
     )
   endif()
-  message(INFO " > Extracting CEF binary package...")
-  file(ARCHIVE_EXTRACT INPUT "cef_bin.tar.bz2" VERBOSE)
+  if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}")
+    message(INFO " > Extracting CEF binary package...")
+    file(ARCHIVE_EXTRACT
+      INPUT "cef_bin.tar.bz2"
+      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+      VERBOSE
+    )
+  endif()
   message(INFO " > Copying CEF binary directories...")
   file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
   file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Resources" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
   file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/include" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/cmake" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
   message(INFO " > CEF binary directories setup completed.")
 endif()
+
+find_package(CEF REQUIRED)
 
 # Always generate debug symbols
 add_compile_options("$<$<NOT:$<CONFIG:Debug>>:/Zi>")
