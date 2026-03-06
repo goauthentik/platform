@@ -135,12 +135,6 @@ Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     hr = SHStrDupW(L"Submit", &m_rgFieldStrings[FI_SUBMIT_BUTTON]);
   }
   if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Checkbox", &m_rgFieldStrings[FI_CHECKBOX]);
-  }
-  if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Combobox", &m_rgFieldStrings[FI_COMBOBOX]);
-  }
-  if (SUCCEEDED(hr)) {
     hr = SHStrDupW(L"Launch helper window", &m_rgFieldStrings[FI_LAUNCHWINDOW_LINK]);
   }
   if (SUCCEEDED(hr)) {
@@ -531,111 +525,27 @@ IFACEMETHODIMP Credential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz) {
   return hr;
 }
 
-// Returns whether a checkbox is checked or not as well as its label.
-IFACEMETHODIMP
-Credential::GetCheckboxValue(DWORD dwFieldID, _Out_ BOOL* pbChecked,
+IFACEMETHODIMP Credential::GetCheckboxValue(DWORD dwFieldID, _Out_ BOOL* pbChecked,
                              _Outptr_result_nullonfailure_ PWSTR* ppwszLabel) {
-  HRESULT hr;
-  *ppwszLabel = nullptr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_CHECKBOX) {
-      *pbChecked = m_fChecked;
-      hr = SHStrDupW(m_rgFieldStrings[FI_CHECKBOX], ppwszLabel);
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
+  return E_NOTIMPL;
 }
 
-// Sets whether the specified checkbox is checked or not.
 IFACEMETHODIMP Credential::SetCheckboxValue(DWORD dwFieldID, BOOL bChecked) {
-  HRESULT hr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_CHECKBOX) {
-      m_fChecked = bChecked;
-      hr = S_OK;
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
+  return E_NOTIMPL;
 }
 
-// Returns the number of items to be included in the combobox (pcItems), as well
-// as the currently selected item (pdwSelectedItem).
-IFACEMETHODIMP
-Credential::GetComboBoxValueCount(DWORD dwFieldID, _Out_ DWORD* pcItems,
+IFACEMETHODIMP Credential::GetComboBoxValueCount(DWORD dwFieldID, _Out_ DWORD* pcItems,
                                   _Deref_out_range_(<, *pcItems) _Out_ DWORD* pdwSelectedItem) {
-  HRESULT hr;
-  *pcItems = 0;
-  *pdwSelectedItem = 0;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMBOBOX) {
-      *pcItems = ARRAYSIZE(s_rgComboBoxStrings);
-      *pdwSelectedItem = 0;
-      hr = S_OK;
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
+  return E_NOTIMPL;
 }
 
-// Called iteratively to fill the combobox with the string (ppwszItem) at index
-// dwItem.
-IFACEMETHODIMP
-Credential::GetComboBoxValueAt(DWORD dwFieldID, DWORD dwItem,
+IFACEMETHODIMP Credential::GetComboBoxValueAt(DWORD dwFieldID, DWORD dwItem,
                                _Outptr_result_nullonfailure_ PWSTR* ppwszItem) {
-  HRESULT hr;
-  *ppwszItem = nullptr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMBOBOX) {
-      hr = SHStrDupW(s_rgComboBoxStrings[dwItem], ppwszItem);
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
+  return E_NOTIMPL;
 }
 
-// Called when the user changes the selected item in the combobox.
 IFACEMETHODIMP Credential::SetComboBoxSelectedValue(DWORD dwFieldID, DWORD dwSelectedItem) {
-  HRESULT hr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMBOBOX) {
-      m_dwComboIndex = dwSelectedItem;
-      hr = S_OK;
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
+  return E_NOTIMPL;
 }
 
 #include <psapi.h>
@@ -808,9 +718,7 @@ IFACEMETHODIMP Credential::CommandLinkClicked(DWORD dwFieldID) {
             m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_FULLNAME_TEXT, cpfsShow);
             m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_DISPLAYNAME_TEXT, cpfsShow);
             m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_LOGONSTATUS_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_CHECKBOX, cpfsShow);
             m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_EDIT_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_COMBOBOX, cpfsShow);
             m_pCredProvCredentialEvents->SetFieldString(
                 nullptr, FI_HIDECONTROLS_LINK,
                 m_fShowControls ? L"Hide additional controls" : L"Show additional controls");

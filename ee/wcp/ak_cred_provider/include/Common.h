@@ -15,10 +15,8 @@ enum FIELD_ID {
   FI_FULLNAME_TEXT = 7,
   FI_DISPLAYNAME_TEXT = 8,
   FI_LOGONSTATUS_TEXT = 9,
-  FI_CHECKBOX = 10,
-  FI_EDIT_TEXT = 11,
-  FI_COMBOBOX = 12,
-  FI_NUM_FIELDS = 13,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a
+  FI_EDIT_TEXT = 10,
+  FI_NUM_FIELDS = 11,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a
                        // count of the number of fields
 };
 
@@ -47,9 +45,7 @@ static const FIELD_STATE_PAIR s_rgFieldStatePairs[] = {
     {CPFS_HIDDEN, CPFIS_READONLY},                // FI_FULLNAME_TEXT
     {CPFS_HIDDEN, CPFIS_FOCUSED},                 // FI_DISPLAYNAME_TEXT
     {CPFS_HIDDEN, CPFIS_FOCUSED},                 // FI_LOGONSTATUS_TEXT
-    {CPFS_HIDDEN, CPFIS_FOCUSED},                 // FI_CHECKBOX
     {CPFS_HIDDEN, CPFIS_NONE},                    // FI_EDIT_TEXT
-    {CPFS_HIDDEN, CPFIS_NONE},                    // FI_COMBOBOX
 };
 
 // Field descriptors for unlock and logon.
@@ -68,9 +64,7 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
     {FI_FULLNAME_TEXT, CPFT_SMALL_TEXT, const_cast<LPWSTR>(L"Full name: ")},
     {FI_DISPLAYNAME_TEXT, CPFT_SMALL_TEXT, const_cast<LPWSTR>(L"Display name: ")},
     {FI_LOGONSTATUS_TEXT, CPFT_SMALL_TEXT, const_cast<LPWSTR>(L"Logon status: ")},
-    {FI_CHECKBOX, CPFT_CHECKBOX, const_cast<LPWSTR>(L"Checkbox")},
     {FI_EDIT_TEXT, CPFT_EDIT_TEXT, const_cast<LPWSTR>(L"Edit text")},
-    {FI_COMBOBOX, CPFT_COMBOBOX, const_cast<LPWSTR>(L"Combobox")},
 };
 
 static const PWSTR s_rgComboBoxStrings[] = {
