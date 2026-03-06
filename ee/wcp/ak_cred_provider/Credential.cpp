@@ -98,7 +98,6 @@ IFACEMETHODIMP_(ULONG) Credential::Release() {
 }
 
 // Initializes one credential with the field information passed in.
-// Set the value of the FI_LARGE_TEXT field to pwzUsername.
 IFACEMETHODIMP
 Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
                        _In_ CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR const* rgcpfd,
@@ -120,7 +119,7 @@ Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 
   // Initialize the String value of all the fields.
   if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LABEL]);
+    hr = SHStrDupW(L"authentik", &m_rgFieldStrings[FI_LABEL]);
   }
   if (SUCCEEDED(hr)) {
     hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LARGE_TEXT]);
