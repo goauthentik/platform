@@ -215,26 +215,23 @@ set(CEF_BINARY_VER "cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64
 
 # Download CEF binaries
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
-  message(INFO " > CEF binary `Release` directory is missing.")
-  message(INFO " > Downloading CEF binary package...")
-  file(DOWNLOAD
-    "${CEF_BINARY_URL}"
-    "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2"
-    EXPECTED_HASH "${CEF_BINARY_HASH}"
-    SHOW_PROGRESS
-  )
+  message(INFO " > CEF binary directories are missing.")
+  if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2")
+    message(INFO " > Downloading CEF binary package...")
+    file(DOWNLOAD
+      "${CEF_BINARY_URL}"
+      "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2"
+      EXPECTED_HASH "${CEF_BINARY_HASH}"
+      SHOW_PROGRESS
+    )
+  endif()
   message(INFO " > Extracting CEF binary package...")
-  file(ARCHIVE_EXTRACT INPUT "cef_bin.tar.bz2")
-  message(INFO " > Copying CEF binary `Release` directory...")
+  file(ARCHIVE_EXTRACT INPUT "cef_bin.tar.bz2" VERBOSE)
+  message(INFO " > Copying CEF binary directories...")
   file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
   file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Resources" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
-  if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
-    message(FATAL_ERROR " > CEF binary `Release` directory could not be setup.")
-  endif()
-  if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Resources")
-    message(FATAL_ERROR " > CEF binary `Resources` directory could not be setup.")
-  endif()
-  message(INFO " > CEF binary `Release` directory setup completed.")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/include" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  message(INFO " > CEF binary directories setup completed.")
 endif()
 
 # Always generate debug symbols
