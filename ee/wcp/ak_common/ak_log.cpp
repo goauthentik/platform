@@ -26,14 +26,16 @@ void ak_setup_logs(const char* logger_name) {
   const auto msvc_sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
   dist_sink->add_sink(msvc_sink);
 
+  const auto event_log_sink = std::make_shared<spdlog::sinks::win_eventlog_sink_mt>(logger_name);
+  event_log_sink->set_pattern("[%n] [proc=%P, thread=%t] [%s:%!:%#] %v");
+  dist_sink->add_sink(event_log_sink);
+
   const auto logger = std::make_shared<spdlog::logger>(logger_name, dist_sink);
 
   spdlog::set_default_logger(logger);
   spdlog::set_level(_ak_log_level);
   spdlog::flush_on(_ak_log_level);
   SPDLOG_INFO("authentik Platform {} Version {}", logger_name, AK_VERSION);
-  spdlog::info("non macro info");
-  spdlog::trace("non macro trace");
 
   g_logSetup = true;
 }
