@@ -115,7 +115,7 @@ test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-dep
 dev--initialize: containers/test/local-build
 
 bump:
-	sed -i 's/VERSION = ".*"/VERSION = "${version}"/g' common.mk
+	sed -i 's/VERSION = .*/VERSION = ${version}/g' common.mk
 	sed -i 's/^version = ".*"/version = "${version}"/g' ${TOP}/Cargo.toml
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" agent/bump
