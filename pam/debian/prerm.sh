@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-set -eu
-
-if [ "$1" = remove ]; then
-    pam-auth-update --package --remove authentik
-fi
-
-#DEBHELPER#

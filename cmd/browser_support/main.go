@@ -9,8 +9,8 @@ import (
 
 func main() {
 	_ = systemlog.Setup(pstr.PlatformString{
-		Windows: pstr.S("authentik Browser Support"),
-		Linux:   pstr.S("ak-browser-support"),
+		Windows: new("authentik Browser Support"),
+		Linux:   new("ak-browser-support"),
 	}.ForCurrent())
 	shared.Start("ak-platform-browser-support", false, func() {
 		browsersupport.Main()

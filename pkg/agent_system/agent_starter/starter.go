@@ -77,9 +77,9 @@ func (as *Server) start() {
 
 func (as *Server) agentExec() pstr.PlatformString {
 	return pstr.PlatformString{
-		Darwin:  pstr.S("/Applications/authentik Agent.app"),
-		Linux:   pstr.S("/usr/bin/ak-agent"),
-		Windows: pstr.S(`C:\Program Files\Authentik Security Inc\agent\ak-agent.exe`),
+		Darwin:  new("/Applications/authentik Agent.app"),
+		Linux:   new("/usr/bin/ak-agent"),
+		Windows: new(`C:\Program Files\Authentik Security Inc\agent\ak-agent.exe`),
 	}
 }
 

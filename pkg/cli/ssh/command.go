@@ -1,26 +1,12 @@
 package ssh
 
 import (
-	"io"
 	"os"
 
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
-func (c *SSHClient) command(client *ssh.Client) error {
-	// Create a session for interactive shell
-	session, err := client.NewSession()
-	if err != nil {
-		c.log.WithError(err).Fatal("Failed to create session")
-	}
-	defer func() {
-		err := session.Close()
-		if err != nil && !errors.Is(err, io.EOF) {
-			c.log.WithError(err).Warning("Failed to close session")
-		}
-	}()
-
+func (c *SSHClient) command(session *ssh.Session) error {
 	// Set up terminal
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr

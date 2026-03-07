@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"goauthentik.io/platform/pkg/agent_local/client"
+	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
@@ -11,15 +12,15 @@ import (
 )
 
 func (auth *Server) Authorize(ctx context.Context, req *pb.SystemAuthorizeRequest) (*pb.SystemAuthorizeResponse, error) {
-	sm := auth.ctx.GetComponent(session.ID).(*session.Server)
-	if sm == nil {
-		return nil, status.Error(codes.Internal, "cant find session component")
+	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	sess, found := sm.GetSession(req.SessionId)
 	if !found {
 		return nil, status.Error(codes.NotFound, "session not found")
 	}
-	c, err := client.New(sess.LocalSocket)
+	c, err := client.New(sess.LocalSocket, client.WithLogging())
 	if err != nil {
 		return nil, err
 	}

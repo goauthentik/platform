@@ -1,9 +1,11 @@
 package token
 
 import (
+	"errors"
 	"time"
 
 	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/platform/keyring"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/storage"
 )
@@ -49,7 +51,7 @@ func CachedExchangeToken(profileName string, profile config.ConfigV1Profile, opt
 	}
 	systemlog.Get().Debug("Setting cache")
 	err = c.Set(ct)
-	if err != nil {
+	if err != nil && !errors.Is(err, keyring.ErrUnsupportedPlatform) {
 		return nil, err
 	}
 	return ct.Token(), nil

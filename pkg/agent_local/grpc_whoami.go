@@ -23,9 +23,9 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 	if err := a.authorizeRequest(ctx, req.Header.Profile, authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
 			return pstr.PlatformString{
-				Darwin:  pstr.S(fmt.Sprintf("authorize access to your account info in '%s'", creds.Parent.Cmdline)),
-				Windows: pstr.S(fmt.Sprintf("'%s' is attempting to access your account info", creds.Parent.Cmdline)),
-				Linux:   pstr.S(fmt.Sprintf("'%s' is attempting to access your account info", creds.Parent.Cmdline)),
+				Darwin:  new(fmt.Sprintf("authorize access to your account info in '%s'", creds.Parent.Cmdline)),
+				Windows: new(fmt.Sprintf("'%s' is attempting to access your account info", creds.Parent.Cmdline)),
+				Linux:   new(fmt.Sprintf("'%s' is attempting to access your account info", creds.Parent.Cmdline)),
 			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
@@ -42,7 +42,7 @@ func (a *Agent) WhoAmI(ctx context.Context, req *pb.WhoAmIRequest) (*pb.WhoAmIRe
 		return nil, err
 	}
 	rreq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
-	res, err := http.DefaultClient.Do(rreq)
+	res, err := prof.HTTPClient().Do(rreq)
 	if err != nil {
 		a.log.WithError(err).Warn("failed to send request")
 		return nil, err

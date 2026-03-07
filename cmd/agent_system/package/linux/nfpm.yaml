@@ -9,8 +9,6 @@ vendor: "Authentik Security Inc."
 homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
-scripts:
-  postinstall: ./package/linux/postinst.sh
 contents:
   - src: ../../bin/agent_system/ak-sysd
     dst: /usr/bin/ak-sysd
@@ -35,3 +33,10 @@ contents:
     dst: /etc/opt/edge/native-messaging-hosts/io.goauthentik.platform.json
   - src: ./package/linux/browser-host-firefox.json
     dst: /usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json
+overrides:
+  deb:
+    scripts:
+      postinstall: ./package/linux/_deb/postinst.sh
+  rpm:
+    scripts:
+      postinstall: ./package/linux/_rpm/postinst.sh

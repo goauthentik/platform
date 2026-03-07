@@ -3,8 +3,9 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = "0.35.6"
+VERSION = 0.40.4
 VERSION_HASH = $(shell git rev-parse HEAD)
+VERSION_TS = $(shell date +%s)
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)
 else
@@ -15,11 +16,15 @@ PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
 
-_LD_FLAGS = ${LD_FLAGS} -X goauthentik.io/platform/pkg/meta.Version=${VERSION} -X goauthentik.io/platform/pkg/meta.BuildHash=dev-${VERSION_HASH}
+_LD_FLAGS = ${LD_FLAGS} -X goauthentik.io/platform/pkg/meta.Version=${VERSION} -X goauthentik.io/platform/pkg/meta.BuildHash=${VERSION_HASH}
 GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
 RUST_BUILD_FLAGS =
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
+
+define lint_shellcheck
+	find $(1) -type f -name '*.sh'  -exec "shellcheck" "--format=gcc" {} \;
+endef
 
 define sentry_upload_symbols
 	npx @sentry/cli debug-files upload \
@@ -40,7 +45,8 @@ define go_generate_resources
 		-comment="$(1)" \
 		-description="$(1)" \
 		-product-name="$(1)" \
-		-skip-versioninfo
+		-skip-versioninfo \
+		-64
 endef
 
 define nfpm_package
@@ -56,4 +62,10 @@ define nfpm_package
 			-p rpm \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+endef
+
+define _target_template
+.PHONY: $(1)/%
+$(1)/%:
+	"$(MAKE)" -C "${TOP}/$(1)" $$*
 endef

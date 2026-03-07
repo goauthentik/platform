@@ -33,7 +33,7 @@ struct sHookData {
     oMutex.unlock();
   }
   void SetExit(const bool bVal) {
-    SPDLOG_DEBUG(std::string("SetExit: " + std::to_string((size_t)bVal)).c_str());
+    spdlog::debug(std::string("SetExit: " + std::to_string((size_t)bVal)).c_str());
     oMutex.lock();
     bExit = bVal;
     oMutex.unlock();
@@ -46,7 +46,7 @@ struct sHookData {
     return bVal;
   }
   void SetCancel(const bool bVal) {
-    SPDLOG_DEBUG(std::string("SetCancel: " + std::to_string((size_t)bVal)).c_str());
+    spdlog::debug(std::string("SetCancel: " + std::to_string((size_t)bVal)).c_str());
     oMutex.lock();
     bCancel = bVal;
     oMutex.unlock();
@@ -59,7 +59,7 @@ struct sHookData {
     return bVal;
   }
   void SetComplete(const bool bVal) {
-    SPDLOG_DEBUG(std::string("SetComplete: " + std::to_string((size_t)bVal)).c_str());
+    spdlog::debug(std::string("SetComplete: " + std::to_string((size_t)bVal)).c_str());
     oMutex.lock();
     bComplete = bVal;
     oMutex.unlock();
@@ -147,8 +147,6 @@ class Credential : public ICredentialProviderCredential2,
   IFACEMETHOD(SetCheckboxValue)(DWORD dwFieldID, BOOL bChecked);
   IFACEMETHOD(SetComboBoxSelectedValue)(DWORD dwFieldID, DWORD dwSelectedItem);
   IFACEMETHOD(CommandLinkClicked)(DWORD dwFieldID);
-  IFACEMETHOD(Connect)(IQueryContinueWithStatus* pqcws);
-  IFACEMETHOD(Disconnect)();
 
   IFACEMETHOD(GetSerialization)(_Out_ CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE* pcpgsr,
                                 _Out_ CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION* pcpcs,
@@ -157,6 +155,10 @@ class Credential : public ICredentialProviderCredential2,
   IFACEMETHOD(ReportResult)(NTSTATUS ntsStatus, NTSTATUS ntsSubstatus,
                             _Outptr_result_maybenull_ PWSTR* ppwszOptionalStatusText,
                             _Out_ CREDENTIAL_PROVIDER_STATUS_ICON* pcpsiOptionalStatusIcon);
+
+  // IConnectableCredentialProviderCredential
+  IFACEMETHOD(Connect)(IQueryContinueWithStatus* pqcws);
+  IFACEMETHOD(Disconnect)();
 
   // ICredentialProviderCredential2
   IFACEMETHOD(GetUserSid)(_Outptr_result_nullonfailure_ PWSTR* ppszSid);
@@ -169,6 +171,7 @@ class Credential : public ICredentialProviderCredential2,
                           _In_ CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR const* rgcpfd,
                           _In_ FIELD_STATE_PAIR const* rgfsp,
                           _In_ ICredentialProviderUser* pcpUser);
+
   static LRESULT CALLBACK Credential::CallWndProc(_In_ int nCode, _In_ WPARAM wParam,
                                                   _In_ LPARAM lParam);
   static LRESULT CALLBACK Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam,
@@ -184,7 +187,7 @@ class Credential : public ICredentialProviderCredential2,
     bool bInit = false;  // whether CefApp has initialized (OnContextInitialized())
     std::mutex oMutex;
     void SetInit(const bool bVal) {
-      SPDLOG_DEBUG(std::string("sCefAppData::SetInit: " + std::to_string((size_t)bVal)).c_str());
+      spdlog::debug(std::string("sCefAppData::SetInit: " + std::to_string((size_t)bVal)).c_str());
       oMutex.lock();
       bInit = bVal;
       oMutex.unlock();
@@ -219,9 +222,6 @@ class Credential : public ICredentialProviderCredential2,
   ICredentialProviderCredentialEvents2* m_pCredProvCredentialEvents =
       nullptr;  // Used to update fields.
   //// CredentialEvents2 for Begin and EndFieldUpdates.
-  BOOL m_fChecked = false;       // Tracks the state of our checkbox.
-  DWORD m_dwComboIndex = 0;      // Tracks the current index of our combobox.
-  bool m_fShowControls = false;  // Tracks the state of our show/hide controls link.
   bool m_fIsLocalUser = false;   // If the cred prov is assosiating with a local user tile
   std::vector<std::thread> m_vecThreads;
   static std::map<PWSTR, std::thread> m_mapThreads;

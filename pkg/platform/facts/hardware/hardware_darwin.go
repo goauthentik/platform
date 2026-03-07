@@ -29,12 +29,12 @@ func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) 
 	}
 	memoryBytes := getTotalMemory(hardware)
 	return &api.DeviceFactsRequestHardware{
-		Manufacturer: api.PtrString("Apple Inc."),
-		Model:        api.PtrString(hardware.SPHardwareDataType[0].Model),
+		Manufacturer: new("Apple Inc."),
+		Model:        new(hardware.SPHardwareDataType[0].Model),
 		Serial:       hardware.SPHardwareDataType[0].SerialNumber,
-		CpuName:      api.PtrString(hardware.SPHardwareDataType[0].ChipType),
-		CpuCount:     api.PtrInt32(int32(getCPUCores())),
-		MemoryBytes:  api.PtrInt64(int64(memoryBytes)),
+		CpuName:      new(hardware.SPHardwareDataType[0].ChipType),
+		CpuCount:     new(int32(getCPUCores())),
+		MemoryBytes:  new(int64(memoryBytes)),
 	}, nil
 }
 

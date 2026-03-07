@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
@@ -59,21 +60,7 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 		return nil, err
 	}
 
-	sm := auth.ctx.GetComponent(session.ID).(*session.Server)
-	if sm == nil {
-		return nil, status.Error(codes.Internal, "cant find session component")
-	}
-
-	sess, err := sm.NewSession(ctx, session.SessionRequest{
-		Username: req.Username,
-		RawToken: req.Token,
-		Token:    token,
-	})
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "unable to create session")
-	}
-
-	return &pb.TokenAuthResponse{
+	res := &pb.TokenAuthResponse{
 		Successful: true,
 		Token: &pb.Token{
 			PreferredUsername: token.Claims().Username,
@@ -84,6 +71,21 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
-		SessionId: sess.Id,
-	}, nil
+	}
+
+	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
+	if err == nil {
+		sess, err := sm.NewSession(ctx, session.SessionRequest{
+			Username: req.Username,
+			RawToken: req.Token,
+			Token:    token,
+		})
+		if err != nil {
+			return nil, status.Error(codes.NotFound, "unable to create session")
+		}
+		res.SessionId = sess.Id
+	} else {
+		auth.log.WithError(err).Debug("No session component, not issuing session")
+	}
+	return res, nil
 }

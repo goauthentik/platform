@@ -29,7 +29,7 @@ func TestWindows(t *testing.T) {
 	}
 
 	p, err := Get[Config](pstr.PlatformString{
-		Windows: pstr.S(rk),
+		Windows: &rk,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, "some value", p.Foo)

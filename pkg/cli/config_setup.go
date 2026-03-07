@@ -10,7 +10,6 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 )
 
-// setupCmd represents the setup command
 var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Configure authentik CLI",

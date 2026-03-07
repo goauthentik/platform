@@ -37,24 +37,24 @@ func testAuth(t *testing.T, dc *config.DomainConfig) Server {
 func TestInteractive_Success(t *testing.T) {
 	jwksKey, jwksCert := testutils.GenerateCertificate(t, "localhost")
 	ac := ak.TestAPI().
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				IdentificationChallenge: api.NewIdentificationChallenge([]string{}, false, api.FLOWDESIGNATIONENUM_AUTHENTICATION, "", false),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				PasswordChallenge: api.NewPasswordChallenge("", ""),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				RedirectChallenge: api.NewRedirectChallenge(""),
 			}, 200
 		}).
 		Handle("/api/v3/endpoints/agents/connectors/auth_ia/", func(req *http.Request) (any, int) {
 			return api.AgentAuthenticationResponse{
-				Url: "/test-url",
+				Url: "http://localhost/test-url",
 			}, 200
 		}).
 		Handle("/test-url", func(req *http.Request) (any, int) {
@@ -75,12 +75,14 @@ func TestInteractive_Success(t *testing.T) {
 			}, 200
 		})
 
-	dc := config.TestDomain(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+	dc := config.TestDomainWithBrand(&api.AgentConfig{
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		JwksAuth:          testutils.JWKS(t, jwksCert),
 		DeviceId:          "foo",
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
-	}, ac.APIClient)
+	}, ac.APIClient, &api.CurrentBrand{
+		FlowAuthentication: new("authn-flow"),
+	})
 	auth := testAuth(t, dc)
 
 	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
@@ -98,7 +100,9 @@ func TestInteractive_Success(t *testing.T) {
 		SessionId: res.SessionId,
 		Result:    pb.InteractiveAuthResult_PAM_SUCCESS,
 	}, res)
-	sess, found := auth.ctx.GetComponent(session.ID).(*session.Server).GetSession(res.SessionId)
+	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
+	assert.NoError(t, err)
+	sess, found := sm.GetSession(res.SessionId)
 	assert.True(t, found)
 	assert.Equal(t, res.SessionId, sess.Id)
 }
@@ -106,27 +110,29 @@ func TestInteractive_Success(t *testing.T) {
 func TestInteractive_NoPassword(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
 	ac := ak.TestAPI().
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				IdentificationChallenge: api.NewIdentificationChallenge([]string{}, false, api.FLOWDESIGNATIONENUM_AUTHENTICATION, "", false),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				PasswordChallenge: api.NewPasswordChallenge("", ""),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			ch := api.NewAccessDeniedChallenge("", "")
 			ch.SetErrorMessage("no access")
 			return api.ChallengeTypes{
 				AccessDeniedChallenge: ch,
 			}, 200
 		})
-	dc := config.TestDomain(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+	dc := config.TestDomainWithBrand(&api.AgentConfig{
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
-	}, ac.APIClient)
+	}, ac.APIClient, &api.CurrentBrand{
+		FlowAuthentication: new("authn-flow"),
+	})
 	auth := testAuth(t, dc)
 
 	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
@@ -142,33 +148,36 @@ func TestInteractive_NoPassword(t *testing.T) {
 		Finished:   false,
 		Prompt:     "authentik Password: ",
 		PromptMeta: pb.InteractiveChallenge_PAM_PROMPT_ECHO_OFF,
+		Component:  "ak-stage-password",
 	}, res)
 }
 
 func TestInteractive_Auth_Denied(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
 	ac := ak.TestAPI().
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				IdentificationChallenge: api.NewIdentificationChallenge([]string{}, false, api.FLOWDESIGNATIONENUM_AUTHENTICATION, "", false),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				PasswordChallenge: api.NewPasswordChallenge("", ""),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			ch := api.NewAccessDeniedChallenge("", "")
 			ch.SetErrorMessage("no access")
 			return api.ChallengeTypes{
 				AccessDeniedChallenge: ch,
 			}, 200
 		})
-	dc := config.TestDomain(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+	dc := config.TestDomainWithBrand(&api.AgentConfig{
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_VALID.Ptr()),
-	}, ac.APIClient)
+	}, ac.APIClient, &api.CurrentBrand{
+		FlowAuthentication: new("authn-flow"),
+	})
 	auth := testAuth(t, dc)
 
 	res, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{
@@ -186,23 +195,24 @@ func TestInteractive_Auth_Denied(t *testing.T) {
 		Result:     pb.InteractiveAuthResult_PAM_PERM_DENIED,
 		Prompt:     "no access",
 		PromptMeta: pb.InteractiveChallenge_PAM_ERROR_MSG,
+		Component:  "ak-stage-access-denied",
 	}, res)
 }
 
 func TestInteractive_NoLicense(t *testing.T) {
 	jwksKey, jwksCert := testutils.GenerateCertificate(t, "localhost")
 	ac := ak.TestAPI().
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				IdentificationChallenge: api.NewIdentificationChallenge([]string{}, false, api.FLOWDESIGNATIONENUM_AUTHENTICATION, "", false),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				PasswordChallenge: api.NewPasswordChallenge("", ""),
 			}, 200
 		}).
-		HandleOnce("/api/v3/flows/executor/authz-flow/", func(req *http.Request) (any, int) {
+		HandleOnce("/api/v3/flows/executor/authn-flow/", func(req *http.Request) (any, int) {
 			return api.ChallengeTypes{
 				RedirectChallenge: api.NewRedirectChallenge(""),
 			}, 200
@@ -230,12 +240,14 @@ func TestInteractive_NoLicense(t *testing.T) {
 			}, 200
 		})
 
-	dc := config.TestDomain(&api.AgentConfig{
-		AuthorizationFlow: *api.NewNullableString(api.PtrString("authz-flow")),
+	dc := config.TestDomainWithBrand(&api.AgentConfig{
+		AuthorizationFlow: *api.NewNullableString(new("authz-flow")),
 		JwksAuth:          testutils.JWKS(t, jwksCert),
 		DeviceId:          "foo",
 		LicenseStatus:     *api.NewNullableLicenseStatusEnum(api.LICENSESTATUSENUM_UNLICENSED.Ptr()),
-	}, ac.APIClient)
+	}, ac.APIClient, &api.CurrentBrand{
+		FlowAuthentication: new("flow-authn"),
+	})
 	auth := testAuth(t, dc)
 
 	_, err := auth.InteractiveAuth(t.Context(), &pb.InteractiveAuthRequest{

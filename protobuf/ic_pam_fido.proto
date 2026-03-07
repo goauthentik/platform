@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package ic_pam_fido;
+option go_package = "pkg/pb";
+option swift_prefix = "";
+
+message FIDORequest {
+  string rp_id = 1;
+  bytes challenge = 2;
+  repeated bytes credential_ids = 3;
+  bool uv = 4;
+}
+
+message FIDOResponse {
+  bytes credential_id = 1;
+  bytes signature = 2;
+  bytes authenticator_data = 3;
+}

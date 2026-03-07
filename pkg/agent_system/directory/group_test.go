@@ -49,7 +49,7 @@ func Test_getGroup(t *testing.T) {
 	assert.EqualExportedValues(t, g, r)
 
 	r, err = nss.GetGroup(t.Context(), &pb.GetRequest{
-		Name: api.PtrString("foo"),
+		Name: new("foo"),
 	})
 	assert.Error(t, err)
 	assert.Nil(t, r)

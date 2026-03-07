@@ -68,6 +68,8 @@ pub struct InteractiveChallenge {
     pub debug_info: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub session_id: ::prost::alloc::string::String,
+    #[prost(string, tag="8")]
+    pub component: ::prost::alloc::string::String,
 }
 /// Nested message and enum types in `InteractiveChallenge`.
 pub mod interactive_challenge {

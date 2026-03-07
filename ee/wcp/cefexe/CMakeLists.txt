@@ -36,3 +36,4 @@ target_link_libraries(${PROJECT_NAME}
 # Copy binary and resource files to the target output directory.
 
 COPY_FILES("${PROJECT_NAME}" "${PROJECT_NAME}.exe" "${CMAKE_CURRENT_BINARY_DIR}/Release" "${PROJECT_INSALL_DIR}")
+COPY_FILES("${PROJECT_NAME}" "${PROJECT_NAME}.pdb" "${CMAKE_CURRENT_BINARY_DIR}/Release" "${PROJECT_INSALL_DIR}")

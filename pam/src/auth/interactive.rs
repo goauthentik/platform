@@ -3,7 +3,7 @@ use authentik_sys::generated::sys_auth::{
     InteractiveAuthResult, InteractiveChallenge, interactive_auth_request::InteractiveAuth,
     interactive_challenge::PromptMeta, system_auth_interactive_client::SystemAuthInteractiveClient,
 };
-use authentik_sys::grpc::grpc_request;
+use authentik_sys::grpc::{SysdBridge, encode_pb};
 use pam::{
     constants::{
         PAM_BINARY_PROMPT, PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,
@@ -13,6 +13,7 @@ use pam::{
 };
 
 use crate::auth::PW_PROMPT;
+use crate::auth::fido::fido2;
 
 const MAX_ITER: i8 = 30;
 
@@ -42,9 +43,10 @@ pub fn auth_interactive(
     username: String,
     password: String,
     conv: &Conv<'_>,
+    bridge: impl SysdBridge,
 ) -> Result<InteractiveChallenge, PamResultCode> {
     // Init transaction
-    let mut challenge = match grpc_request(async |ch| {
+    let mut challenge = match bridge.grpc_request(async |ch| {
         return Ok(SystemAuthInteractiveClient::new(ch)
             .interactive_auth(InteractiveAuthRequest {
                 interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
@@ -71,21 +73,25 @@ pub fn auth_interactive(
         prompt_meta: PAM_PROMPT_ECHO_OFF,
         debug_info: "".to_owned(),
         session_id: "".to_owned(),
+        component: "".to_owned(),
     };
-    let mut iter = 0;
+    let mut iter = -1;
     while iter <= MAX_ITER {
+        iter += 1;
         log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
-            match conv.send(
-                prompt_meta_to_pam_message_style(&challenge),
-                &challenge.prompt,
-            ) {
-                Ok(_) => {}
-                Err(e) => {
-                    log::warn!("failed to send prompt");
-                    return Err(e);
-                }
-            };
+            if !challenge.prompt.is_empty() {
+                match conv.send(
+                    prompt_meta_to_pam_message_style(&challenge),
+                    &challenge.prompt,
+                ) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        log::warn!("failed to send prompt");
+                        return Err(e);
+                    }
+                };
+            }
             return Ok(challenge);
         }
         let mut req_inner = InteractiveAuthContinueRequest {
@@ -97,6 +103,23 @@ pub fn auth_interactive(
             Ok(PromptMeta::Unspecified) => {
                 log::warn!("Unspecified prompt meta");
                 return Err(PamResultCode::PAM_ABORT);
+            }
+            Ok(PromptMeta::PamBinaryPrompt) => {
+                match fido2(challenge.prompt.clone(), conv) {
+                    Ok(r) => {
+                        req_inner.value = match encode_pb(r) {
+                            Ok(v) => v,
+                            Err(e) => {
+                                log::warn!("Failed to reply to WebAuthn: {}", e);
+                                return Err(PamResultCode::PAM_ABORT);
+                            }
+                        };
+                    }
+                    Err(e) => {
+                        log::warn!("Failed to Fido2 authenticate: {}", e);
+                        continue;
+                    }
+                };
             }
             Ok(_) => {
                 log::debug!("Prompt meta generic, prompt user");
@@ -136,7 +159,7 @@ pub fn auth_interactive(
         }
         prev_challenge = challenge;
         // Send the response
-        challenge = match grpc_request(async |ch| {
+        challenge = match bridge.grpc_request(async |ch| {
             return Ok(SystemAuthInteractiveClient::new(ch)
                 .interactive_auth(InteractiveAuthRequest {
                     interactive_auth: Some(InteractiveAuth::Continue(req_inner.to_owned())),
@@ -149,7 +172,6 @@ pub fn auth_interactive(
                 return Err(PamResultCode::PAM_AUTH_ERR);
             }
         };
-        iter += 1;
     }
     log::warn!("Exceeded maximum iterations");
     Err(PamResultCode::PAM_ABORT)

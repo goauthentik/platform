@@ -55,11 +55,6 @@ Credential::~Credential() {
     it.join();
   }
 
-  if (m_rgFieldStrings[FI_PASSWORD]) {
-    size_t lenPassword = wcslen(m_rgFieldStrings[FI_PASSWORD]);
-    SecureZeroMemory(m_rgFieldStrings[FI_PASSWORD],
-                     lenPassword * sizeof(*m_rgFieldStrings[FI_PASSWORD]));
-  }
   for (int i = 0; i < ARRAYSIZE(m_rgFieldStrings); i++) {
     CoTaskMemFree(m_rgFieldStrings[i]);
     CoTaskMemFree(m_rgCredProvFieldDescriptors[i].pszLabel);
@@ -98,7 +93,6 @@ IFACEMETHODIMP_(ULONG) Credential::Release() {
 }
 
 // Initializes one credential with the field information passed in.
-// Set the value of the FI_LARGE_TEXT field to pwzUsername.
 IFACEMETHODIMP
 Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
                        _In_ CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR const* rgcpfd,
@@ -120,70 +114,16 @@ Credential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 
   // Initialize the String value of all the fields.
   if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LABEL]);
+    hr = SHStrDupW(L"authentik", &m_rgFieldStrings[FI_LABEL]);
   }
   if (SUCCEEDED(hr)) {
     hr = SHStrDupW(L"Sign in with authentik", &m_rgFieldStrings[FI_LARGE_TEXT]);
   }
   if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Edit Text...", &m_rgFieldStrings[FI_EDIT_TEXT]);
-  }
-  if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"", &m_rgFieldStrings[FI_PASSWORD]);
-  }
-  if (SUCCEEDED(hr)) {
     hr = SHStrDupW(L"Submit", &m_rgFieldStrings[FI_SUBMIT_BUTTON]);
   }
   if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Checkbox", &m_rgFieldStrings[FI_CHECKBOX]);
-  }
-  if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Combobox", &m_rgFieldStrings[FI_COMBOBOX]);
-  }
-  if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Launch helper window", &m_rgFieldStrings[FI_LAUNCHWINDOW_LINK]);
-  }
-  if (SUCCEEDED(hr)) {
-    hr = SHStrDupW(L"Hide additional controls", &m_rgFieldStrings[FI_HIDECONTROLS_LINK]);
-  }
-  if (SUCCEEDED(hr)) {
     hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &m_pszQualifiedUserName);
-  }
-  if (SUCCEEDED(hr)) {
-    PWSTR pszUserName;
-    pcpUser->GetStringValue(PKEY_Identity_UserName, &pszUserName);
-    if (pszUserName != nullptr) {
-      wchar_t szString[256];
-      StringCchPrintf(szString, ARRAYSIZE(szString), L"User Name: %s", pszUserName);
-      hr = SHStrDupW(szString, &m_rgFieldStrings[FI_FULLNAME_TEXT]);
-      CoTaskMemFree(pszUserName);
-    } else {
-      hr = SHStrDupW(L"User Name is NULL", &m_rgFieldStrings[FI_FULLNAME_TEXT]);
-    }
-  }
-  if (SUCCEEDED(hr)) {
-    PWSTR pszDisplayName;
-    pcpUser->GetStringValue(PKEY_Identity_DisplayName, &pszDisplayName);
-    if (pszDisplayName != nullptr) {
-      wchar_t szString[256];
-      StringCchPrintf(szString, ARRAYSIZE(szString), L"Display Name: %s", pszDisplayName);
-      hr = SHStrDupW(szString, &m_rgFieldStrings[FI_DISPLAYNAME_TEXT]);
-      CoTaskMemFree(pszDisplayName);
-    } else {
-      hr = SHStrDupW(L"Display Name is NULL", &m_rgFieldStrings[FI_DISPLAYNAME_TEXT]);
-    }
-  }
-  if (SUCCEEDED(hr)) {
-    PWSTR pszLogonStatus;
-    pcpUser->GetStringValue(PKEY_Identity_LogonStatusString, &pszLogonStatus);
-    if (pszLogonStatus != nullptr) {
-      wchar_t szString[256];
-      StringCchPrintf(szString, ARRAYSIZE(szString), L"Logon Status: %s", pszLogonStatus);
-      hr = SHStrDupW(szString, &m_rgFieldStrings[FI_LOGONSTATUS_TEXT]);
-      CoTaskMemFree(pszLogonStatus);
-    } else {
-      hr = SHStrDupW(L"Logon Status is NULL", &m_rgFieldStrings[FI_LOGONSTATUS_TEXT]);
-    }
   }
 
   if (SUCCEEDED(hr)) {
@@ -311,7 +251,7 @@ LRESULT APIENTRY Credential::WndProc(_In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM
           try {
             CEFLaunch(pData, m_oCefAppData.pCefApp);
           } catch (const std::exception& e) {
-            SPDLOG_WARN("Failed to CEFLaunch", e.what());
+            spdlog::warn("Failed to CEFLaunch", e.what());
           }
           spdlog::debug(std::string("User logged in: " + pData->strUserToken).c_str());
           spdlog::debug("WndProc:: CEFLaunched");
@@ -416,23 +356,7 @@ IFACEMETHODIMP Credential::SetSelected(_Out_ BOOL* pbAutoLogon) {
 // and now no longer is. The most common thing to do here (which we do below)
 // is to clear out the password field.
 IFACEMETHODIMP Credential::SetDeselected() {
-  HRESULT hr = S_OK;
-  if (m_rgFieldStrings[FI_PASSWORD]) {
-    size_t lenPassword = wcslen(m_rgFieldStrings[FI_PASSWORD]);
-    SecureZeroMemory(m_rgFieldStrings[FI_PASSWORD],
-                     lenPassword * sizeof(*m_rgFieldStrings[FI_PASSWORD]));
-
-    CoTaskMemFree(m_rgFieldStrings[FI_PASSWORD]);
-    hr = SHStrDupW(L"", &m_rgFieldStrings[FI_PASSWORD]);
-
-    if (SUCCEEDED(hr) && m_pCredProvCredentialEvents) {
-      m_pCredProvCredentialEvents->SetFieldString(
-          reinterpret_cast<ICredentialProviderCredential*>(this), FI_PASSWORD,
-          m_rgFieldStrings[FI_PASSWORD]);
-    }
-  }
-
-  return hr;
+  return S_OK;
 }
 
 // Get info for a particular field of a tile. Called by logonUI to get
@@ -501,7 +425,7 @@ IFACEMETHODIMP Credential::GetSubmitButtonValue(DWORD dwFieldID, _Out_ DWORD* pd
   if (FI_SUBMIT_BUTTON == dwFieldID) {
     // pdwAdjacentTo is a pointer to the fieldID you want the submit button to
     // appear next to.
-    *pdwAdjacentTo = FI_SUBMIT_BUTTON;  // FI_PASSWORD;
+    *pdwAdjacentTo = FI_SUBMIT_BUTTON;
     hr = S_OK;
   } else {
     hr = E_INVALIDARG;
@@ -531,135 +455,6 @@ IFACEMETHODIMP Credential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz) {
   return hr;
 }
 
-// Returns whether a checkbox is checked or not as well as its label.
-IFACEMETHODIMP
-Credential::GetCheckboxValue(DWORD dwFieldID, _Out_ BOOL* pbChecked,
-                             _Outptr_result_nullonfailure_ PWSTR* ppwszLabel) {
-  HRESULT hr;
-  *ppwszLabel = nullptr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_CHECKBOX) {
-      *pbChecked = m_fChecked;
-      hr = SHStrDupW(m_rgFieldStrings[FI_CHECKBOX], ppwszLabel);
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
-}
-
-// Sets whether the specified checkbox is checked or not.
-IFACEMETHODIMP Credential::SetCheckboxValue(DWORD dwFieldID, BOOL bChecked) {
-  HRESULT hr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_CHECKBOX) {
-      m_fChecked = bChecked;
-      hr = S_OK;
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
-}
-
-// Returns the number of items to be included in the combobox (pcItems), as well
-// as the currently selected item (pdwSelectedItem).
-IFACEMETHODIMP
-Credential::GetComboBoxValueCount(DWORD dwFieldID, _Out_ DWORD* pcItems,
-                                  _Deref_out_range_(<, *pcItems) _Out_ DWORD* pdwSelectedItem) {
-  HRESULT hr;
-  *pcItems = 0;
-  *pdwSelectedItem = 0;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMBOBOX) {
-      *pcItems = ARRAYSIZE(s_rgComboBoxStrings);
-      *pdwSelectedItem = 0;
-      hr = S_OK;
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
-}
-
-// Called iteratively to fill the combobox with the string (ppwszItem) at index
-// dwItem.
-IFACEMETHODIMP
-Credential::GetComboBoxValueAt(DWORD dwFieldID, DWORD dwItem,
-                               _Outptr_result_nullonfailure_ PWSTR* ppwszItem) {
-  HRESULT hr;
-  *ppwszItem = nullptr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMBOBOX) {
-      hr = SHStrDupW(s_rgComboBoxStrings[dwItem], ppwszItem);
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
-}
-
-// Called when the user changes the selected item in the combobox.
-IFACEMETHODIMP Credential::SetComboBoxSelectedValue(DWORD dwFieldID, DWORD dwSelectedItem) {
-  HRESULT hr;
-
-  // Validate parameters.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMBOBOX) {
-      m_dwComboIndex = dwSelectedItem;
-      hr = S_OK;
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
-}
-
-#include <psapi.h>
-#include <stdio.h>
-#include <windows.h>
-#include <wtsapi32.h>
-
-#pragma comment(lib, "Wtsapi32.lib")
-
-int FindTarget(const char* procname) {
-  int pid = 0;
-  WTS_PROCESS_INFOA* proc_info;
-  DWORD pi_count = 0;
-  if (!WTSEnumerateProcessesA(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc_info, &pi_count)) return 0;
-
-  for (DWORD i = 0; i < pi_count; i++) {
-    if (lstrcmpiA(procname, proc_info[i].pProcessName) == 0) {
-      pid = proc_info[i].ProcessId;
-      break;
-    }
-  }
-  return pid;
-}
-
 IFACEMETHODIMP Credential::Disconnect() { return S_OK; }
 
 IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws) {
@@ -677,8 +472,7 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws) {
     str += "Submit:: HWND:: Process ID: " + std::to_string(dwProcessID) +
            ", Thread ID: " + std::to_string(dwThreadID);
     spdlog::debug(str.c_str());
-    // Pop a messagebox indicating the click.
-    // ::MessageBox(hwndOwner, L"Command link clicked", L"Click!", 0);
+
     HINSTANCE hInstance = (HINSTANCE)(LONG_PTR)GetWindowLong(hwndOwner, GWLP_HINSTANCE);
     {
       std::string strInst = "GetWindowLong:: hInstance: " + std::to_string((uint64_t)hInstance);
@@ -762,59 +556,6 @@ IFACEMETHODIMP Credential::Connect(IQueryContinueWithStatus* pqcws) {
   return hr;
 }
 
-// Called when the user clicks a command link.
-IFACEMETHODIMP Credential::CommandLinkClicked(DWORD dwFieldID) {
-  spdlog::debug("CommandLinkClicked");
-  HRESULT hr = S_OK;
-
-  CREDENTIAL_PROVIDER_FIELD_STATE cpfsShow = CPFS_HIDDEN;
-
-  // Validate parameter.
-  if (dwFieldID < ARRAYSIZE(m_rgCredProvFieldDescriptors)) {
-    if (m_rgCredProvFieldDescriptors[dwFieldID].cpft == CPFT_COMMAND_LINK) {
-      if (m_pCredProvCredentialEvents) {
-        HWND hwndOwner = nullptr;
-        switch (dwFieldID) {
-          case FI_LAUNCHWINDOW_LINK:  // obsolete due to submit button - remove
-          {
-            if (m_pCredProvCredentialEvents) {
-              m_pCredProvCredentialEvents->OnCreatingWindow(&hwndOwner);
-            }
-            spdlog::debug("CommandLinkClicked: FI_LAUNCHWINDOW_LINK");
-            // Pop a messagebox indicating the click.
-            ::MessageBox(hwndOwner, L"Command link clicked", L"Click!", 0);
-          } break;
-          case FI_HIDECONTROLS_LINK:
-            m_pCredProvCredentialEvents->BeginFieldUpdates();
-            cpfsShow = m_fShowControls ? CPFS_DISPLAY_IN_SELECTED_TILE : CPFS_HIDDEN;
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_FULLNAME_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_DISPLAYNAME_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_LOGONSTATUS_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_CHECKBOX, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_EDIT_TEXT, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldState(nullptr, FI_COMBOBOX, cpfsShow);
-            m_pCredProvCredentialEvents->SetFieldString(
-                nullptr, FI_HIDECONTROLS_LINK,
-                m_fShowControls ? L"Hide additional controls" : L"Show additional controls");
-            m_pCredProvCredentialEvents->EndFieldUpdates();
-            m_fShowControls = !m_fShowControls;
-            break;
-          default:
-            hr = E_INVALIDARG;
-        }
-      } else {
-        hr = E_POINTER;
-      }
-    } else {
-      hr = E_INVALIDARG;
-    }
-  } else {
-    hr = E_INVALIDARG;
-  }
-
-  return hr;
-}
-
 // Collect the username and password into a serialized credential for the
 // correct usage scenario (logon/unlock is what's demonstrated in this sample).
 // LogonUI then passes these credentials back to the system to log on.
@@ -829,6 +570,14 @@ IFACEMETHODIMP Credential::GetSerialization(
   *pcpsiOptionalStatusIcon = CPSI_NONE;
   ZeroMemory(pcpcs, sizeof(*pcpcs));
 
+  PWSTR pwzProtectedPassword;
+  hr = ProtectIfNecessaryAndCopyPassword(m_strPass.c_str(), m_cpus, &pwzProtectedPassword);
+  m_strPass = GetRandomWStr(WIN_PASS_LEN);  // overwrite for safety
+  if (FAILED(hr)) {
+    CoTaskMemFree(pwzProtectedPassword);
+    return hr;
+  }
+
   // For local user, the domain and user name can be split from
   // _pszQualifiedUserName (domain\username). CredPackAuthenticationBuffer()
   // cannot be used because it won't work with unlock scenario.
@@ -839,58 +588,51 @@ IFACEMETHODIMP Credential::GetSerialization(
       *pcpsiOptionalStatusIcon = CPSI_WARNING;
       SHStrDupW(L"Login attempt cancelled", ppwszOptionalStatusText);
     } else {
-      PWSTR pwzProtectedPassword;
-      // hr = ProtectIfNecessaryAndCopyPassword(m_rgFieldStrings[FI_PASSWORD],
-      // m_cpus, &pwzProtectedPassword);
       spdlog::debug("GetSerialization->Protect");
-      hr = ProtectIfNecessaryAndCopyPassword(m_strPass.c_str(), m_cpus, &pwzProtectedPassword);
-      m_strPass = GetRandomWStr(WIN_PASS_LEN);  // overwrite for safety
+      PWSTR pszDomain;
+      PWSTR pszUsername;
+      hr = SplitDomainAndUsername(m_pszQualifiedUserName, &pszDomain, &pszUsername);
+      spdlog::debug("GetSerialization->SplitDomainAndUsername");
       if (SUCCEEDED(hr)) {
-        PWSTR pszDomain;
-        PWSTR pszUsername;
-        hr = SplitDomainAndUsername(m_pszQualifiedUserName, &pszDomain, &pszUsername);
-        spdlog::debug("GetSerialization->SplitDomainAndUsername");
+        KERB_INTERACTIVE_UNLOCK_LOGON kiul;
+        spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonInit");
+        hr = KerbInteractiveUnlockLogonInit(pszDomain, pszUsername, pwzProtectedPassword, m_cpus,
+                                            &kiul);
         if (SUCCEEDED(hr)) {
-          KERB_INTERACTIVE_UNLOCK_LOGON kiul;
-          spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonInit");
-          hr = KerbInteractiveUnlockLogonInit(pszDomain, pszUsername, pwzProtectedPassword, m_cpus,
-                                              &kiul);
+          // We use KERB_INTERACTIVE_UNLOCK_LOGON in both unlock and logon
+          // scenarios.  It contains a KERB_INTERACTIVE_LOGON to hold the
+          // creds plus a LUID that is filled in for us by Winlogon as
+          // necessary.
+          spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonPack");
+          hr = KerbInteractiveUnlockLogonPack(kiul, &pcpcs->rgbSerialization,
+                                              &pcpcs->cbSerialization);
           if (SUCCEEDED(hr)) {
-            // We use KERB_INTERACTIVE_UNLOCK_LOGON in both unlock and logon
-            // scenarios.  It contains a KERB_INTERACTIVE_LOGON to hold the
-            // creds plus a LUID that is filled in for us by Winlogon as
-            // necessary.
-            spdlog::debug("GetSerialization->KerbInteractiveUnlockLogonPack");
-            hr = KerbInteractiveUnlockLogonPack(kiul, &pcpcs->rgbSerialization,
-                                                &pcpcs->cbSerialization);
+            ULONG ulAuthPackage;
+            spdlog::debug("GetSerialization->RetrieveNegotiateAuthPackage");
+            hr = RetrieveNegotiateAuthPackage(&ulAuthPackage);
             if (SUCCEEDED(hr)) {
-              ULONG ulAuthPackage;
-              spdlog::debug("GetSerialization->RetrieveNegotiateAuthPackage");
-              hr = RetrieveNegotiateAuthPackage(&ulAuthPackage);
-              if (SUCCEEDED(hr)) {
-                pcpcs->ulAuthenticationPackage = ulAuthPackage;
-                pcpcs->clsidCredentialProvider = CLSID_CredentialProvider;
-                // At this point the credential has created the serialized
-                // credential used for logon By setting this to
-                // CPGSR_RETURN_CREDENTIAL_FINISHED we are letting logonUI know
-                // that we have all the information we need and it should
-                // attempt to submit the serialized credential.
-                *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
-              }
+              pcpcs->ulAuthenticationPackage = ulAuthPackage;
+              pcpcs->clsidCredentialProvider = CLSID_CredentialProvider;
+              // At this point the credential has created the serialized
+              // credential used for logon By setting this to
+              // CPGSR_RETURN_CREDENTIAL_FINISHED we are letting logonUI know
+              // that we have all the information we need and it should
+              // attempt to submit the serialized credential.
+              *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
             }
           }
-          CoTaskMemFree(pszDomain);
-          CoTaskMemFree(pszUsername);
         }
-        CoTaskMemFree(pwzProtectedPassword);
+        CoTaskMemFree(pszDomain);
+        CoTaskMemFree(pszUsername);
       }
+      CoTaskMemFree(pwzProtectedPassword);
     }
   } else {
     DWORD dwAuthFlags = CRED_PACK_PROTECTED_CREDENTIALS | CRED_PACK_ID_PROVIDER_CREDENTIALS;
 
     // First get the size of the authentication buffer to allocate
     if (!CredPackAuthenticationBuffer(dwAuthFlags, m_pszQualifiedUserName,
-                                      const_cast<PWSTR>(m_rgFieldStrings[FI_PASSWORD]), nullptr,
+                                      pwzProtectedPassword, nullptr,
                                       &pcpcs->cbSerialization) &&
         (GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
       pcpcs->rgbSerialization = static_cast<byte*>(CoTaskMemAlloc(pcpcs->cbSerialization));
@@ -899,7 +641,7 @@ IFACEMETHODIMP Credential::GetSerialization(
 
         // Retrieve the authentication buffer
         if (CredPackAuthenticationBuffer(dwAuthFlags, m_pszQualifiedUserName,
-                                         const_cast<PWSTR>(m_rgFieldStrings[FI_PASSWORD]),
+                                         pwzProtectedPassword,
                                          pcpcs->rgbSerialization, &pcpcs->cbSerialization)) {
           ULONG ulAuthPackage;
           hr = RetrieveNegotiateAuthPackage(&ulAuthPackage);
@@ -979,14 +721,6 @@ HRESULT Credential::ReportResult(NTSTATUS ntsStatus, NTSTATUS ntsSubstatus,
     }
   }
 
-  // If we failed the logon, try to erase the password field.
-  if (FAILED(HRESULT_FROM_NT(ntsStatus))) {
-    if (m_pCredProvCredentialEvents) {
-      m_pCredProvCredentialEvents->SetFieldString(
-          reinterpret_cast<ICredentialProviderCredential*>(this), FI_PASSWORD, L"");
-    }
-  }
-
   // Since nullptr is a valid value for *ppwszOptionalStatusText and
   // *pcpsiOptionalStatusIcon this function can't fail.
   return S_OK;
@@ -1010,11 +744,33 @@ HRESULT Credential::GetUserSid(_Outptr_result_nullonfailure_ PWSTR* ppszSid) {
 HRESULT Credential::GetFieldOptions(DWORD dwFieldID,
                                     _Out_ CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS* pcpcfo) {
   *pcpcfo = CPCFO_NONE;
-  if (dwFieldID == FI_PASSWORD) {
-    *pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL;
-  } else if (dwFieldID == FI_TILEIMAGE) {
+  if (dwFieldID == FI_TILEIMAGE) {
     *pcpcfo = CPCFO_ENABLE_TOUCH_KEYBOARD_AUTO_INVOKE;
   }
 
   return S_OK;
+}
+
+IFACEMETHODIMP Credential::CommandLinkClicked(DWORD dwFieldID) { return E_NOTIMPL; }
+
+IFACEMETHODIMP Credential::GetCheckboxValue(DWORD dwFieldID, _Out_ BOOL* pbChecked,
+                                            _Outptr_result_nullonfailure_ PWSTR* ppwszLabel) {
+  return E_NOTIMPL;
+}
+
+IFACEMETHODIMP Credential::SetCheckboxValue(DWORD dwFieldID, BOOL bChecked) { return E_NOTIMPL; }
+
+IFACEMETHODIMP Credential::GetComboBoxValueCount(DWORD dwFieldID, _Out_ DWORD* pcItems,
+                                                 _Deref_out_range_(<, *pcItems)
+                                                     _Out_ DWORD* pdwSelectedItem) {
+  return E_NOTIMPL;
+}
+
+IFACEMETHODIMP Credential::GetComboBoxValueAt(DWORD dwFieldID, DWORD dwItem,
+                                              _Outptr_result_nullonfailure_ PWSTR* ppwszItem) {
+  return E_NOTIMPL;
+}
+
+IFACEMETHODIMP Credential::SetComboBoxSelectedValue(DWORD dwFieldID, DWORD dwSelectedItem) {
+  return E_NOTIMPL;
 }

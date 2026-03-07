@@ -11,7 +11,6 @@ import (
 	"goauthentik.io/platform/pkg/shared/tui"
 )
 
-// whoamiCmd represents the whoami command
 var whoamiCmd = &cobra.Command{
 	Use:   "whoami",
 	Short: "Check user account details for a given profile",

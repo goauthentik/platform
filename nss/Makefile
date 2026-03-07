@@ -3,11 +3,11 @@ include ../common.mk
 TARGET = nss
 DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
-clean:
-	cargo clean
+lint:
+	$(call lint_shellcheck,"${PWD}/_deb")
 
 bump:
-	sed -i 's/^version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml
+	sed -i 's/^version = ".*"/version = "${VERSION}"/g' ${PWD}/Cargo.toml
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}

@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
@@ -49,4 +50,10 @@ type ConfigV1Profile struct {
 	// Fallback if keyring isn't available
 	FallbackAccessToken  string `json:"access_token"`
 	FallbackRefreshToken string `json:"refresh_token"`
+
+	httpClient *http.Client
+}
+
+func (cv ConfigV1Profile) HTTPClient() *http.Client {
+	return cv.httpClient
 }

@@ -9,9 +9,6 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
@@ -19,12 +16,11 @@ import (
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/shared"
 	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type ComponentInstance struct {
@@ -69,36 +65,7 @@ func (sao *SystemAgentOptions) setDefaults() {
 func New(opts SystemAgentOptions) (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
 	opts.setDefaults()
-	serverOpts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(
-			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			}), grpc_sentry.WithRepanicOption(true)),
-			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-				if e, ok := p.(error); ok {
-					l.WithError(e).Warning("GRPC method panicd")
-				} else {
-					l.WithField("p", p).Warning("GRPC method panicd")
-				}
-				return status.Errorf(codes.Unknown, "panic triggered")
-			})),
-		),
-		grpc.ChainStreamInterceptor(
-			logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.StreamServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			}), grpc_sentry.WithRepanicOption(true)),
-			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-				if e, ok := p.(error); ok {
-					l.WithError(e).Warning("GRPC method panicd")
-				} else {
-					l.WithField("p", p).Warning("GRPC method panicd")
-				}
-				return status.Errorf(codes.Unknown, "panic triggered")
-			})),
-		),
-	}
+	serverOpts := shared.CommonGRPCServerOpts(l)
 	sm := &SystemAgent{
 		srv: []SocketServer{
 			{

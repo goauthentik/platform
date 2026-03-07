@@ -36,6 +36,10 @@
     </StandardDirectory>
     <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
+    <util:CloseApplication Id="ak_agent_close"
+                            Target="ak-agent.exe"
+                            TerminateProcess="1"
+                            RebootPrompt="no" />
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="sysd" Guid="bf7159f6-802c-42ed-8cc7-1866bf844e29" Bitness="always64" Directory="sysd">
@@ -112,10 +116,15 @@
       </Component>
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
         <util:EventSource Log="authentik"
-                          Name="authentik Credential Provider"
+                          Name="ak_cred_provider"
                           EventMessageFile="C:\Windows\System32\mscoree.dll"/>
+        <util:EventSource Log="authentik"
+                          Name="ak_cefexe"
+                          EventMessageFile="C:\Windows\System32\mscoree.dll"/>
+
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-sentry" />
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache" />
 
         <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />

@@ -1,14 +1,12 @@
 package agentlocal
 
 import (
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_local/types"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/platform/grpc_creds"
-	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/shared"
 	"google.golang.org/grpc"
 )
 
@@ -20,23 +18,12 @@ func (a *Agent) startGRPC() {
 	}
 	a.lis = lis
 	a.grpc = grpc.NewServer(
-		grpc.Creds(grpc_creds.NewTransportCredentials()),
-		grpc.ChainUnaryInterceptor(
-			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			})),
-		),
-		grpc.ChainStreamInterceptor(
-			logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.StreamServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			})),
-		),
+		shared.CommonGRPCServerOpts(l, grpc.Creds(grpc_creds.NewTransportCredentials(l.WithField("logger", "agent.grpc.auth"))))...,
 	)
 	pb.RegisterAgentAuthServer(a.grpc, a)
 	pb.RegisterAgentCacheServer(a.grpc, a)
 	pb.RegisterAgentCtrlServer(a.grpc, a)
+	pb.RegisterPingServer(a.grpc, a)
 	a.log.WithField("socket", lis.Path().ForCurrent()).Info("Starting GRPC server")
 	if err := a.grpc.Serve(lis); err != nil {
 		a.log.WithError(err).Fatal("Failed to serve")

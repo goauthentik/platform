@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"go.etcd.io/bbolt"
-	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -13,8 +12,9 @@ func (ctrl *Server) TroubleshootInspect(ctx context.Context, r *emptypb.Empty) (
 	res := &pb.TroubleshootInspectResponse{
 		Bucket:   "root",
 		Children: []*pb.TroubleshootInspectResponse{},
+		Kv:       map[string]string{},
 	}
-	err := config.State().View(func(tx *bbolt.Tx) error {
+	err := ctrl.rst.View(func(tx *bbolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bbolt.Bucket) error {
 			res.Children = append(res.Children, inspectBucket(name, b))
 			return nil
@@ -39,11 +39,11 @@ func inspectBucket(name []byte, b *bbolt.Bucket) *pb.TroubleshootInspectResponse
 		return nil
 	})
 	_ = b.ForEach(func(k, v []byte) error {
-		vv := string(v)
-		if _, seen := seenKeys[vv]; seen {
+		kk := string(k)
+		if _, seen := seenKeys[kk]; seen {
 			return nil
 		}
-		res.Kv[string(k)] = vv
+		res.Kv[kk] = string(v)
 		return nil
 	})
 	return res

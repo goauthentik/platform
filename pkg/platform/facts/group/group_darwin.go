@@ -19,9 +19,9 @@ func gather(ctx *common.GatherContext) ([]api.DeviceGroupRequest, error) {
 		return groups, err
 	}
 
-	groupNames := strings.Split(strings.TrimSpace(string(output)), "\n")
+	groupNames := strings.SplitSeq(strings.TrimSpace(string(output)), "\n")
 
-	for _, groupName := range groupNames {
+	for groupName := range groupNames {
 		groupName = strings.TrimSpace(groupName)
 		if groupName == "" {
 			continue
@@ -46,7 +46,7 @@ type dscGroupInfo struct {
 }
 
 func getGroupInfoFromDscl(groupName string) api.DeviceGroupRequest {
-	groupInfo := api.DeviceGroupRequest{Name: api.PtrString(groupName)}
+	groupInfo := api.DeviceGroupRequest{Name: new(groupName)}
 
 	dp, err := common.ExecPlist[dscGroupInfo]("dscl", "-plist", ".", "read", "/Groups/"+groupName, "PrimaryGroupID")
 	if err != nil {

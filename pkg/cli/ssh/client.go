@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/user"
@@ -121,8 +122,20 @@ func (c *SSHClient) Connect() error {
 			c.log.WithError(err).Warning("failed to forward local agent")
 		}
 	}()
-	if c.Command != "" {
-		return c.command(client)
+
+	session, err := client.NewSession()
+	if err != nil {
+		return err
 	}
-	return c.shell(client)
+	defer func() {
+		err := session.Close()
+		if err != nil && !errors.Is(err, io.EOF) {
+			c.log.WithError(err).Warning("Failed to close session")
+		}
+	}()
+
+	if c.Command != "" {
+		return c.command(session)
+	}
+	return c.shell(session)
 }

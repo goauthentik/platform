@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -42,13 +43,13 @@ func RenderMapAsTree(data map[string]any, rootTitle string) string {
 
 	// Add each key-value pair to the tree
 	for _, key := range keys {
-		addNodeToTree(t, keyStyle.Render(key), data[key], keyStyle, valueStyle)
+		AddNodeToTree(t, keyStyle.Render(key), data[key], keyStyle, valueStyle)
 	}
 
 	return t.String()
 }
 
-func addNodeToTree(parent *tree.Tree, label string, value any, keyStyle, valueStyle lipgloss.Style) {
+func AddNodeToTree(parent *tree.Tree, label string, value any, keyStyle, valueStyle lipgloss.Style) {
 	switch v := value.(type) {
 	case map[string]any:
 		// Create a child tree for nested maps
@@ -63,7 +64,7 @@ func addNodeToTree(parent *tree.Tree, label string, value any, keyStyle, valueSt
 
 		// Recursively add children
 		for _, key := range keys {
-			addNodeToTree(child, keyStyle.Render(key), v[key], keyStyle, valueStyle)
+			AddNodeToTree(child, keyStyle.Render(key), v[key], keyStyle, valueStyle)
 		}
 
 		parent.Child(child)
@@ -73,11 +74,21 @@ func addNodeToTree(parent *tree.Tree, label string, value any, keyStyle, valueSt
 		child := tree.New().Root(label)
 		for i, item := range v {
 			indexLabel := keyStyle.Render(fmt.Sprintf("[%d]", i))
-			addNodeToTree(child, indexLabel, item, keyStyle, valueStyle)
+			AddNodeToTree(child, indexLabel, item, keyStyle, valueStyle)
 		}
 		parent.Child(child)
 
 	default:
+		str := fmt.Sprintf("%s", v)
+		if json.Valid([]byte(str)) {
+			out := map[string]any{}
+			err := json.Unmarshal([]byte(str), &out)
+			if err != nil {
+				return
+			}
+			AddNodeToTree(parent, label, out, keyStyle, valueStyle)
+			return
+		}
 		// Leaf node - render key: value
 		nodeLabel := fmt.Sprintf("%s: %s", label, valueStyle.Render(fmt.Sprintf("%v", v)))
 		parent.Child(nodeLabel)

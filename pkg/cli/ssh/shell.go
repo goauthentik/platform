@@ -1,9 +1,7 @@
 package ssh
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,19 +10,7 @@ import (
 	"golang.org/x/term"
 )
 
-func (c *SSHClient) shell(client *ssh.Client) error {
-	// Create a session for interactive shell
-	session, err := client.NewSession()
-	if err != nil {
-		c.log.WithError(err).Fatal("Failed to create session")
-	}
-	defer func() {
-		err := session.Close()
-		if err != nil && !errors.Is(err, io.EOF) {
-			c.log.WithError(err).Warning("Failed to close session")
-		}
-	}()
-
+func (c *SSHClient) shell(session *ssh.Session) error {
 	// Set up terminal
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr

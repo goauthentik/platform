@@ -3,7 +3,6 @@ package ping
 import (
 	"context"
 
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/meta"
@@ -16,32 +15,29 @@ const ID = "ping"
 
 type Server struct {
 	pb.UnimplementedPingServer
-	log *log.Entry
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
-	srv := &Server{
-		log: ctx.Log(),
-	}
+	srv := &Server{}
 	return srv, nil
 }
 
-func (ds *Server) Start() error {
+func (ps *Server) Start() error {
 	return nil
 }
 
-func (ds *Server) Stop() error {
+func (ps *Server) Stop() error {
 	return nil
 }
 
-func (ds *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
+func (ps *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 	if id != types.SocketIDDefault {
 		return
 	}
-	pb.RegisterPingServer(s, ds)
+	pb.RegisterPingServer(s, ps)
 }
 
-func (ds *Server) Ping(context.Context, *emptypb.Empty) (*pb.PingResponse, error) {
+func (ps *Server) Ping(context.Context, *emptypb.Empty) (*pb.PingResponse, error) {
 	return &pb.PingResponse{
 		Component: "sysd",
 		Version:   meta.FullVersion(),

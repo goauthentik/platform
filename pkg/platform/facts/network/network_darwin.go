@@ -27,7 +27,7 @@ func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
 	return &api.DeviceFactsRequestNetwork{
 		Hostname:        hostname,
 		Interfaces:      interfaces,
-		FirewallEnabled: api.PtrBool(firewallEnabled),
+		FirewallEnabled: new(firewallEnabled),
 	}, nil
 }
 

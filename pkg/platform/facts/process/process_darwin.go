@@ -34,7 +34,7 @@ func gather(ctx *common.GatherContext) ([]api.ProcessRequest, error) {
 
 		username, err := p.Username()
 		if err == nil {
-			procInfo.User = api.PtrString(username)
+			procInfo.User = new(username)
 		}
 
 		processes = append(processes, procInfo)

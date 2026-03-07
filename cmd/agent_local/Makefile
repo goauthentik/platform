@@ -10,6 +10,11 @@ endif
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
 
+lint:
+	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/linux/_deb")
+	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/linux/_rpm")
+	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/macos/scripts")
+
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 	"$(MAKE)" -C ${TOP} cli/clean
@@ -22,6 +27,8 @@ build:
 	mkdir -p "${TOP}/bin/${TARGET}"
 ifeq ($(OS),Windows_NT)
 	$(call go_generate_resources,authentik Platform Agent)
+	# build with -H=windowsgui to run as a true systray application
+	$(eval LD_FLAGS := -H=windowsgui)
 endif
 	go build \
 		${GO_BUILD_FLAGS} \
@@ -75,8 +82,7 @@ package-gnu/linux: clean build
 
 .PHONY: package-msys
 package-msys: clean
-# build with -H=windowsgui to run as a true systray application
-	"$(MAKE)" -C ${TOP} agent/build LD_FLAGS=-H=windowsgui
+	"$(MAKE)" -C ${TOP} agent/build
 	"$(MAKE)" -C ${TOP} cli/build
 	"$(MAKE)" -C ${TOP} sysd/build
 	"$(MAKE)" -C ${TOP} browser_support/build
@@ -85,7 +91,7 @@ package-msys: clean
 	dotnet restore \
 		--packages "${TOP}/cache/${TARGET}" \
 		"$(shell pwd)/package/windows/"
-	ROOT=${TOP} VERSION=${VERSION} dotnet build \
+	ROOT=${TOP} VERSION=${VERSION}.${VERSION_TS} dotnet build \
 		--packages "${TOP}/cache/${TARGET}" \
 		--artifacts-path "${TOP}/cache/${TARGET}" \
 		--output "${TOP}/bin/${TARGET}/" \
