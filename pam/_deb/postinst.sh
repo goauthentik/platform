@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -euo pipefail
 
 function sshd_notice {
     if [ ! -f /etc/ssh/sshd_config ]; then
@@ -21,7 +21,6 @@ EOF
 
 case "$1" in
     configure)
-        mkdir -p /var/log/authentik
         pam-auth-update --package --enable authentik
         sshd_notice
     ;;

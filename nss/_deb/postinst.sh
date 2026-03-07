@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 #DEBHELPER#
-set -eu
-
-mkdir -p /var/log/authentik
+set -euo pipefail
 
 # This code was taken from authd, which got it from libnss-sss, which got it from libnss-myhostname, which got it from nss-mdns:
 

@@ -20,7 +20,6 @@ EOF
 }
 
 if [ "$1" == 1 ]; then
-    mkdir -p /var/log/authentik
     # pam-auth-update --package --enable authentik
     sshd_notice
 fi
