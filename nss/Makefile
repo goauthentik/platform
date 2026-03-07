@@ -7,7 +7,7 @@ lint:
 	$(call lint_shellcheck,"${PWD}/_deb")
 
 bump:
-	sed -i 's/^version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml
+	sed -i 's/^version = ".*"/version = "${VERSION}"/g' ${PWD}/Cargo.toml
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}

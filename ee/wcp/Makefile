@@ -11,7 +11,7 @@ FORMAT_FIND_ARGS := -iname '*.h' -o -iname '*.cpp' -o -iname '*.hpp'
 
 .PHONY: bump
 bump:
-	sed -i 's/#define AK_VERSION ".*"/#define AK_VERSION ${VERSION}/g' ${PWD}/ak_common/include/ak_version.h
+	sed -i 's/#define AK_VERSION ".*"/#define AK_VERSION "${VERSION}"/g' ${PWD}/ak_common/include/ak_version.h
 
 .PHONY: clean
 clean:

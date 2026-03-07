@@ -3,7 +3,7 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = 0.40.3
+VERSION = 0.40.4
 VERSION_HASH = $(shell git rev-parse HEAD)
 VERSION_TS = $(shell date +%s)
 ifeq ($(OS),Windows_NT)
