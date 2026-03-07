@@ -50,3 +50,5 @@ overrides:
       - "glibc"
       - "openssl-libs"
       - "pam-libs"
+      # Dependency on NSS due to authselect configuring both
+      - "libnss-authentik"
