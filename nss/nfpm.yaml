@@ -10,16 +10,13 @@ homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
 section: security
-depends:
-  - "libc6"
-  - "libssl3 | libssl3t64"
-  - "authentik-sysd"
 contents:
   - src: ../cache/nss/release/libauthentik_nss.so
-    dst: "/usr/lib/${ARCH}-linux-gnu/libnss_authentik.so.2"
+    dst: "/usr/lib/${DEB_BUILD_GNU_TYPE}/libnss_authentik.so.2"
     file_info:
       mode: 0644
     packager: deb
+    expand: true
   - src: ../cache/nss/release/libauthentik_nss.so
     dst: "/usr/lib64/libnss_authentik.so.2"
     file_info:
@@ -27,8 +24,16 @@ contents:
     packager: rpm
 overrides:
   deb:
+    depends:
+      - "authentik-sysd"
+      - "libc6"
+      - "libssl3 | libssl3t64"
     scripts:
       postinstall: ./_deb/postinst.sh
   rpm:
     scripts:
       postinstall: ./_rpm/post.sh
+    depends:
+      - "authentik-sysd"
+      - "glibc"
+      - "openssl-libs"

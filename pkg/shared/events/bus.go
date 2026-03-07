@@ -71,3 +71,12 @@ func (eb *Bus) AddEventListener(topic string, handler EventHandler) {
 	defer eb.eventHandlersM.Unlock()
 	eb.eventHandlers[topic] = topicHandlers
 }
+
+func (eb *Bus) WaitForEvent(topic string) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	eb.AddEventListener(topic, func(ev *Event) {
+		wg.Done()
+	})
+	wg.Wait()
+}

@@ -4,6 +4,11 @@ version: 1
 metadata:
   name: Endpoints - authentik Agent
 entries:
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: authentik CLI
+      required: true
   - id: agent
     model: authentik_endpoints_connectors_agent.agentconnector
     identifiers:
@@ -13,11 +18,26 @@ entries:
           authentik_crypto.certificatekeypair,
           [name, "authentik Self-signed Certificate"],
         ]
+      jwt_federation_providers:
+        - !Find [
+            authentik_providers_oauth2.oauth2provider,
+            [name, authentik-cli],
+          ]
 
   - id: grp-workstation-prod
     model: authentik_endpoints.deviceaccessgroup
     identifiers:
       name: workstation-prod
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !KeyOf grp-workstation-prod
+      group: !Find [
+        authentik_core.Group,
+        [name, "authentik Admins"]
+      ]
+    attrs:
+      order: 0
+
   - model: authentik_endpoints_connectors_agent.enrollmenttoken
     identifiers:
       name: workstation-prod

@@ -4,8 +4,7 @@
 
 ClassFactory::ClassFactory() : m_cRef(1) {}
 
-IFACEMETHODIMP ClassFactory::QueryInterface(__in REFIID riid,
-                                            __deref_out void **ppv) {
+IFACEMETHODIMP ClassFactory::QueryInterface(__in REFIID riid, __deref_out void** ppv) {
   static const QITAB qit[] = {
       QITABENT(ClassFactory, IClassFactory),
       {0},
@@ -13,9 +12,7 @@ IFACEMETHODIMP ClassFactory::QueryInterface(__in REFIID riid,
   return QISearch(this, qit, riid, ppv);
 }
 
-IFACEMETHODIMP_(ULONG) ClassFactory::AddRef() {
-  return InterlockedIncrement(&m_cRef);
-}
+IFACEMETHODIMP_(ULONG) ClassFactory::AddRef() { return InterlockedIncrement(&m_cRef); }
 
 IFACEMETHODIMP_(ULONG) ClassFactory::Release() {
   if (InterlockedDecrement(&m_cRef) == 0) {
@@ -25,12 +22,11 @@ IFACEMETHODIMP_(ULONG) ClassFactory::Release() {
   return m_cRef;
 }
 
-IFACEMETHODIMP ClassFactory::CreateInstance(__in IUnknown *pUnkOuter,
-                                            __in REFIID riid,
-                                            __deref_out void **ppv) {
+IFACEMETHODIMP ClassFactory::CreateInstance(__in IUnknown* pUnkOuter, __in REFIID riid,
+                                            __deref_out void** ppv) {
   HRESULT hr;
   if (!pUnkOuter) {
-    Provider *pProvider = new (std::nothrow) Provider();
+    Provider* pProvider = new (std::nothrow) Provider();
     if (pProvider) {
       hr = pProvider->QueryInterface(riid, ppv);
       pProvider->Release();

@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() ([]api.DeviceGroupRequest, error) {
+func gather(ctx *common.GatherContext) ([]api.DeviceGroupRequest, error) {
 	var groups []api.DeviceGroupRequest
 
-	cmd := exec.Command("powershell", "-Command",
-		"Get-LocalGroup | ForEach-Object { \"$($_.Name)|$($_.SID)\" }")
+	cmd := exec.Command("powershell", "-Command", `Get-LocalGroup | ForEach-Object { "$($_.Name)|$($_.SID)" }`)
 	output, err := cmd.Output()
 	if err != nil {
 		return groups, err

@@ -9,9 +9,6 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
@@ -19,12 +16,11 @@ import (
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/shared"
 	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type ComponentInstance struct {
@@ -57,44 +53,31 @@ type SystemAgent struct {
 
 type SystemAgentOptions struct {
 	DisabledComponents []string
+	SocketPath         func(id string) pstr.PlatformString
+}
+
+func (sao *SystemAgentOptions) setDefaults() {
+	if sao.SocketPath == nil {
+		sao.SocketPath = types.GetSysdSocketPath
+	}
 }
 
 func New(opts SystemAgentOptions) (*SystemAgent, error) {
 	l := systemlog.Get().WithField("logger", "sysd")
-	serverOpts := []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(
-			logging.UnaryServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.UnaryServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			}), grpc_sentry.WithRepanicOption(true)),
-			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-				l.WithField("p", p).Warning("GRPC method panicd")
-				return status.Errorf(codes.Unknown, "panic triggered")
-			})),
-		),
-		grpc.ChainStreamInterceptor(
-			logging.StreamServerInterceptor(systemlog.InterceptorLogger(l)),
-			grpc_sentry.StreamServerInterceptor(grpc_sentry.WithReportOn(func(error) bool {
-				return false
-			}), grpc_sentry.WithRepanicOption(true)),
-			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(func(p any) (err error) {
-				l.WithField("p", p).Warning("GRPC method panicd")
-				return status.Errorf(codes.Unknown, "panic triggered")
-			})),
-		),
-	}
+	opts.setDefaults()
+	serverOpts := shared.CommonGRPCServerOpts(l)
 	sm := &SystemAgent{
 		srv: []SocketServer{
 			{
 				ID:     types.SocketIDDefault,
 				Server: grpc.NewServer(serverOpts...),
-				Path:   types.GetSysdSocketPath(types.SocketIDDefault),
+				Path:   opts.SocketPath(types.SocketIDDefault),
 				Perm:   socket.SocketEveryone,
 			},
 			{
 				ID:     types.SocketIDCtrl,
 				Server: grpc.NewServer(serverOpts...),
-				Path:   types.GetSysdSocketPath(types.SocketIDCtrl),
+				Path:   opts.SocketPath(types.SocketIDCtrl),
 				Perm:   socket.SocketAdmin,
 			},
 		},
@@ -204,7 +187,9 @@ func (sm *SystemAgent) Start() {
 	}
 	sm.mtx.Unlock()
 
+	wg := sync.WaitGroup{}
 	for _, srv := range sm.srv {
+		wg.Add(1)
 		go func(srv SocketServer) {
 			l := sm.log.WithField("srv", srv.ID)
 			lis, err := socket.Listen(srv.Path, srv.Perm)
@@ -214,11 +199,15 @@ func (sm *SystemAgent) Start() {
 			}
 
 			l.WithField("path", lis.Path().ForCurrent()).Info("System agent listening on socket")
+			wg.Done()
 			if err := srv.Server.Serve(lis); err != nil {
 				l.WithError(err).Fatal("Failed to serve")
 			}
 		}(srv)
 	}
+	wg.Wait()
+
+	sm.b.DispatchEvent(types.TopicAgentStarted, events.NewEvent(context.Background(), map[string]any{}))
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -245,4 +234,8 @@ func (sm *SystemAgent) Stop() {
 	for _, srv := range sm.srv {
 		srv.Server.GracefulStop()
 	}
+}
+
+func (sm *SystemAgent) Bus() *events.Bus {
+	return sm.b
 }

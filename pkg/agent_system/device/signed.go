@@ -12,6 +12,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
 )
 
@@ -55,7 +56,7 @@ func (ds *Server) SignedEndpointHeader(ctx context.Context, req *pb.PlatformEndp
 	if err != nil {
 		return nil, err
 	}
-	hw, err := hardware.Gather()
+	hw, err := hardware.Gather(common.New(ds.log, ctx))
 	if err != nil {
 		return nil, err
 	}

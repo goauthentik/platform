@@ -32,16 +32,16 @@ func NewServer(ctx component.Context) (component.Component, error) {
 		log: ctx.Log(),
 		ctx: ctx,
 	}
+	srv.ctx.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
+		if srv.cancel != nil {
+			srv.cancel()
+		}
+		srv.runCheckins()
+	})
 	return srv, nil
 }
 
 func (ds *Server) Start() error {
-	ds.ctx.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
-		if ds.cancel != nil {
-			ds.cancel()
-		}
-		ds.runCheckins()
-	})
 	ds.runCheckins()
 	return nil
 }
@@ -54,6 +54,7 @@ func (ds *Server) runCheckins() {
 			_ = ds.checkIn(ctx, dom)
 		}()
 		d := time.Second * time.Duration(dom.Config().RefreshInterval)
+		ds.log.WithField("interval_s", d.Seconds).Debug("starting checkin")
 		t := time.NewTicker(d)
 		go func() {
 			for {

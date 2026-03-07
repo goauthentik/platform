@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
@@ -19,7 +20,11 @@ import (
 func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.Token, error) {
 	var st jwkset.Storage
 	jw := jwkset.JWKSMarshal{}
-	err := mapstructure.Decode(auth.dom.Config().JwksAuth, &jw)
+	_, dom, err := auth.ctx.DomainAPI()
+	if err != nil {
+		return nil, err
+	}
+	err = mapstructure.Decode(dom.Config().JwksAuth, &jw)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +47,7 @@ func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.
 		AccessToken:    t,
 		RawAccessToken: rawToken,
 	}
-	if token.Claims().Audience[0] != auth.dom.Config().DeviceId {
+	if token.Claims().Audience[0] != dom.Config().DeviceId {
 		return nil, errors.New("token not for device")
 	}
 	return &token, nil
@@ -55,21 +60,7 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 		return nil, err
 	}
 
-	sm := auth.ctx.GetComponent(session.ID).(*session.Server)
-	if sm == nil {
-		return nil, status.Error(codes.Internal, "cant find session component")
-	}
-
-	sess, err := sm.NewSession(ctx, session.SessionRequest{
-		Username: req.Username,
-		RawToken: req.Token,
-		Token:    token,
-	})
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "unable to create session")
-	}
-
-	return &pb.TokenAuthResponse{
+	res := &pb.TokenAuthResponse{
 		Successful: true,
 		Token: &pb.Token{
 			PreferredUsername: token.Claims().Username,
@@ -80,6 +71,21 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 			Iat:               timestamppb.New(token.Claims().IssuedAt.Time),
 			Jti:               token.Claims().ID,
 		},
-		SessionId: sess.ID,
-	}, nil
+	}
+
+	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
+	if err == nil {
+		sess, err := sm.NewSession(ctx, session.SessionRequest{
+			Username: req.Username,
+			RawToken: req.Token,
+			Token:    token,
+		})
+		if err != nil {
+			return nil, status.Error(codes.NotFound, "unable to create session")
+		}
+		res.SessionId = sess.Id
+	} else {
+		auth.log.WithError(err).Debug("No session component, not issuing session")
+	}
+	return res, nil
 }

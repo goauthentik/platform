@@ -3,7 +3,7 @@
     "description": "authentik Platform",
     "path": "/usr/bin/ak-browser-support",
     "type": "stdio",
-    "allowed_origins": [
+    "allowed_extensions": [
         "platform-browser-extension@goauthentik.io"
     ]
 }

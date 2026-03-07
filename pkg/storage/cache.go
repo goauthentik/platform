@@ -50,7 +50,7 @@ func (c *Cache[T]) Get() (T, error) {
 	c.log.Debug("Checking cache")
 	v, err := keyring.Get(keyring.Service(c.uid), c.profileName, keyring.AccessibleUser)
 	if err != nil {
-		if keyring.IsNotExist(err) {
+		if keyring.IsNotExist(err) || errors.Is(err, keyring.ErrUnsupportedPlatform) {
 			c.log.WithError(err).Debug("No cache found")
 			return cc, ErrNotFound
 		}

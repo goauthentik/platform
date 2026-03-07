@@ -77,8 +77,11 @@ func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Config
 		log:       l,
 		sp:        rsp,
 		cip:       "",
-		transport: refConfig.HTTPClient.Transport,
+		transport: http.DefaultTransport,
 		opts:      opts,
+	}
+	if refConfig.HTTPClient != nil && refConfig.HTTPClient.Transport != nil {
+		fe.transport = refConfig.HTTPClient.Transport
 	}
 	fe.solvers = map[StageComponent]SolverFunction{
 		StageIdentification:        fe.solveChallenge_Identification,
@@ -90,6 +93,7 @@ func NewFlowExecutor(ctx context.Context, flowSlug string, refConfig *api.Config
 	config := api.NewConfiguration()
 	config.Host = refConfig.Host
 	config.Scheme = refConfig.Scheme
+	config.UserAgent = refConfig.UserAgent
 	config.HTTPClient = &http.Client{
 		Jar:       jar,
 		Transport: fe,
@@ -205,7 +209,7 @@ func (fe *FlowExecutor) GetInitialChallenge() (*api.ChallengeTypes, error) {
 		return nil, errors.New("response instance was null")
 	}
 	ch := i.(ChallengeCommon)
-	fe.opts.Logger("Got challenge", map[string]interface{}{
+	fe.opts.Logger("Got challenge", map[string]any{
 		"component": ch.GetComponent(),
 	})
 	gcsp.SetTag("authentik.flow.component", ch.GetComponent())
@@ -244,6 +248,8 @@ func (fe *FlowExecutor) SolveFlowChallenge(a *api.FlowChallengeResponseRequest) 
 			return false, nil
 		case string(StageRedirect):
 			return true, nil
+		case string(ProviderOAuth2DeviceCodeFinish):
+			return true, nil
 		default:
 			solver, ok := fe.solvers[StageComponent(ch.GetComponent())]
 			if !ok {
@@ -266,7 +272,7 @@ func (fe *FlowExecutor) SolveFlowChallenge(a *api.FlowChallengeResponseRequest) 
 		return false, errors.New("response instance was null")
 	}
 	ch := i.(ChallengeCommon)
-	fe.opts.Logger("Got response", map[string]interface{}{
+	fe.opts.Logger("Got response", map[string]any{
 		"component": ch.GetComponent(),
 	})
 	scsp.SetTag("authentik.flow.component", ch.GetComponent())

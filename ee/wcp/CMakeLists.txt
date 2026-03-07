@@ -205,56 +205,42 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CEF_ROOT}/cmake")
 #
 
 # Execute FindCEF.cmake which must exist in CMAKE_MODULE_PATH.
-find_package(CEF REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CEF_BINARY_URL "https://cef-builds.spotifycdn.com/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2")
+set(CEF_BINARY_HASH "SHA256=856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265")
+set(CEF_BINARY_VER "cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64")
+
 # Download CEF binaries
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
-  message(INFO " > CEF binary `Release` directory is missing.")
-  message(INFO " > Downloading CEF binary package...")
-  file(DOWNLOAD "https://cef-builds.spotifycdn.com/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2" "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2"
-    EXPECTED_HASH SHA256=856cccd8f8b7ebd4cabad7a7ce1bd7596c18bba641bb0f2eae4d3ee51b3c7265
-    SHOW_PROGRESS
-  )
-  message(INFO " > Extracting CEF binary package...")
-  file(ARCHIVE_EXTRACT INPUT "cef_binary_134.3.2%2Bg615db2f%2Bchromium-134.0.6998.89_windows64.tar.bz2.tar.bz2")
-  message(INFO " > Copying CEF binary `Release` directory...")
-  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/cef_binary_134.3.2+g615db2f+chromium-134.0.6998.89_windows64/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
-  if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
-    message(INFO " > CEF binary `Release` directory setup completed.")
-  else()
-    message(FATAL_ERROR " > CEF binary `Release` directory could not be setup.")
+  message(INFO " > CEF binary directories are missing.")
+  if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2")
+    message(INFO " > Downloading CEF binary package...")
+    file(DOWNLOAD
+      "${CEF_BINARY_URL}"
+      "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2"
+      EXPECTED_HASH "${CEF_BINARY_HASH}"
+      SHOW_PROGRESS
+    )
   endif()
+  if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}")
+    message(INFO " > Extracting CEF binary package...")
+    file(ARCHIVE_EXTRACT
+      INPUT "cef_bin.tar.bz2"
+      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+      VERBOSE
+    )
+  endif()
+  message(INFO " > Copying CEF binary directories...")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Release" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/Resources" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/include" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  file(COPY "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}/cmake" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}")
+  message(INFO " > CEF binary directories setup completed.")
 endif()
 
-# --- jwt-cpp and OpenSSL - Begin
-find_package(Perl REQUIRED)       # Needed to build OpenSSL
-set(PERL "C:\\Strawberry\\perl\\bin\\perl.exe")
-set(PERL_EXECUTABLE "C:\\Strawberry\\perl\\bin\\perl.exe")
-message(INFO " > Perl Path: ${PERL_EXECUTABLE}")
-message(INFO " > Perl Version: ${PERL_VERSION_STRING}")
-
-include(FetchContent)
-
-FetchContent_Declare(OpenSSL
-  URL https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz
-  URL_HASH SHA256=344d0a79f1a9b08029b0744e2cc401a43f9c90acd1044d09a530b4885a8e9fc0
-  DOWNLOAD_EXTRACT_TIMESTAMP OFF
-  # OVERRIDE_FIND_PACKAGE
-)
-set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(OpenSSL)
-
-if (NOT EXISTS "${openssl_SOURCE_DIR}/libssl.lib")
-  execute_process(COMMAND ${PERL_EXECUTABLE} Configure WORKING_DIRECTORY ${openssl_SOURCE_DIR})
-  execute_process(COMMAND nmake WORKING_DIRECTORY ${openssl_SOURCE_DIR})
-endif()
-if (NOT EXISTS "${openssl_SOURCE_DIR}/libssl.lib")
-  message(FATAL_ERROR "OpenSSL library files not found in build. OpenSSL build must succeed first.")
-endif()
-
-set(CMAKE_FIND_DEBUG_MODE OFF)
+find_package(CEF REQUIRED)
 
 # Always generate debug symbols
 add_compile_options("$<$<NOT:$<CONFIG:Debug>>:/Zi>")
@@ -262,47 +248,11 @@ add_link_options("$<$<NOT:$<CONFIG:Debug>>:/DEBUG>")
 add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:REF>")
 add_link_options("$<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>")
 
-# Set path to OpenSSL library directory for search
-set(OPENSSL_ROOT_DIR "${openssl_SOURCE_DIR}")
+include(FetchContent)
 
-# Test if the just built OpenSSL package can be found, so that the `jwt-cpp` would also
-# find the same package with find_package() call
-find_package(OpenSSL REQUIRED)
-
-# Display the set and detected paths
-message(INFO " > OPENSSL_ROOT_DIR:         ${OPENSSL_ROOT_DIR}")
-message(INFO "")
-message(INFO " > OPENSSL_CRYPTO_LIBRARY:   ${OPENSSL_CRYPTO_LIBRARY}")
-message(INFO " > OPENSSL_CRYPTO_LIBRARIES: ${OPENSSL_CRYPTO_LIBRARIES}")
-message(INFO " > OPENSSL_SSL_LIBRARY:      ${OPENSSL_SSL_LIBRARY}")
-message(INFO " > OPENSSL_SSL_LIBRARIES:    ${OPENSSL_SSL_LIBRARIES}")
-
-# Test if the detected OpenSSL package is indeed the one just built and not from another installation such as Strawberry Perl
-cmake_path(IS_PREFIX OPENSSL_ROOT_DIR ${OPENSSL_CRYPTO_LIBRARIES} isprefix)
-if (NOT isprefix)
-  message(FATAL_ERROR "CMake must reference the OpenSSL Crypto library in the project build directory (${OPENSSL_ROOT_DIR}) but it is instead referencing the path (${OPENSSL_CRYPTO_LIBRARIES}).")
-endif()
-cmake_path(IS_PREFIX OPENSSL_ROOT_DIR ${OPENSSL_SSL_LIBRARIES} isprefix)
-if (NOT isprefix)
-  message(FATAL_ERROR "CMake must reference the OpenSSL SSL library in the project build directory (${OPENSSL_ROOT_DIR}) but it is instead referencing the path (${OPENSSL_SSL_LIBRARIES}).")
-endif()
-
-# If OpenSSL is sorted, fetch and build jwt-cpp that relies on it
-FetchContent_Declare(jwtcpp
-  GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
-  GIT_TAG v0.7.1
-  DOWNLOAD_EXTRACT_TIMESTAMP OFF
-)
-set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
-set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "disable building examples" FORCE)
-FetchContent_MakeAvailable(jwtcpp)
-
-# --- jwt-cpp and OpenSSL - End
-
-FetchContent_Declare(
-    Corrosion
+FetchContent_Declare(Corrosion
     GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
-    GIT_TAG v0.5 # Optionally specify a commit hash, version tag or branch here
+    GIT_TAG v0.6.1
 )
 # Set any global configuration variables such as `Rust_TOOLCHAIN` before this line!
 FetchContent_MakeAvailable(Corrosion)
@@ -337,15 +287,14 @@ endif()
 
 FetchContent_Declare(spdlog
   GIT_REPOSITORY https://github.com/gabime/spdlog.git
-  GIT_TAG v1.16.0
+  GIT_TAG v1.17.0
 )
 FetchContent_MakeAvailable(spdlog)
 set_property(TARGET spdlog PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 FetchContent_Declare(sentry
   GIT_REPOSITORY https://github.com/getsentry/sentry-native.git
-  GIT_TAG 0.12.0
-  DOWNLOAD_EXTRACT_TIMESTAMP OFF
+  GIT_TAG 0.12.3
 )
 set(FETCHCONTENT_QUIET OFF CACHE BOOL "" FORCE)
 set(SENTRY_BUILD_SHARED_LIBS OFF)
@@ -358,6 +307,9 @@ set_property(TARGET sentry PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 #
 # Define CEF-based targets.
 #
+
+add_subdirectory(ak_common)
+set_property(TARGET ak_common PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 # Include the ak_cred_provider target.
 # Comes from the libcef_dll/CMakeLists.txt file in the binary distribution
@@ -376,8 +328,7 @@ endif()
 # Set the project output directory for subprojects, such as `cefexe`, to copy their binaries to
 set(PROJECT_INSALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/ak_cred_provider/Release")
 add_subdirectory(cefexe)
-# Copy cefexe executable and OpenSSL library file to the common build directory
-file(COPY "${OPENSSL_ROOT_DIR}/libcrypto-3-x64.dll" DESTINATION "${PROJECT_INSALL_DIR}")
+set_property(TARGET ak_cef PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
 
 # Display configuration settings.
 PRINT_CEF_CONFIG()

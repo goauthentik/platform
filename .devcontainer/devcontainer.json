@@ -1,10 +1,13 @@
 {
   "name": "authentik Platform",
-  "dockerComposeFile": "docker-compose.yml",
+  "dockerComposeFile": "compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "shutdownAction": "stopCompose",
   "initializeCommand": "make dev--initialize",
+  "remoteEnv": {
+    "LOCAL_WORKSPACE": "${localWorkspaceFolder}"
+  },
   "customizations": {
     "vscode": {
       "extensions": [

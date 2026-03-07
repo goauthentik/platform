@@ -6,7 +6,7 @@ import AuthenticationServices
 //  Created by Jens Langhammer on 17.10.25.
 //  Copyright © 2025 Authentik Security Inc. All rights reserved.
 //
-import Foundation
+internal import Foundation
 internal import GRPCCore
 internal import GRPCNIOTransportHTTP2
 internal import GRPCProtobuf
@@ -25,7 +25,8 @@ final class LogInterceptor: ClientInterceptor {
             GRPCCore.StreamingClientResponse<Output>
     ) async throws -> GRPCCore.StreamingClientResponse<Output>
     where Input: Sendable, Output: Sendable {
-        self.logger.info("GRPC Method: '\(context.descriptor)'")
+        self.logger
+            .info("GRPC Method: '\(context.descriptor, privacy: .public)'")
         let response = try await next(request, context)
 
         switch response.accepted {
@@ -108,6 +109,16 @@ public class SysdBridge {
         }
     }
 
+    public func interactiveAuthSupported() async throws -> Bool {
+        return try await self.withClient { client in
+            let c = SystemAuthInteractive.Client(wrapping: client)
+            let reply = try await c.interactiveSupported(
+                request: ClientRequest(message: Google_Protobuf_Empty())
+            )
+            return reply.supported
+        }
+    }
+
     public func pssoRegisterUser(
         enclaveKeyID: String,
         userSecureEnclaveKey: String,
@@ -158,7 +169,8 @@ public class SysdBridge {
                 .append(
                     URLQueryItem(
                         name: "x-ak-device-token",
-                        value: res.deviceToken.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+                        value: res.deviceToken.addingPercentEncoding(
+                            withAllowedCharacters: .alphanumerics)
                     )
                 )
             return cfg

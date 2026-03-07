@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/agent_local/tray"
+	"goauthentik.io/platform/pkg/agent_local/tray/available"
 	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/pb"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
@@ -22,6 +23,7 @@ type Agent struct {
 	pb.UnimplementedAgentAuthServer
 	pb.UnimplementedAgentCacheServer
 	pb.UnimplementedAgentCtrlServer
+	pb.UnimplementedPingServer
 
 	grpc *grpc.Server
 	cfg  *cfgmgr.Manager[config.ConfigV1]
@@ -48,6 +50,10 @@ func New() (*Agent, error) {
 }
 
 func (a *Agent) Start() {
+	if !available.SystrayAvailable() {
+		a.StartForeground()
+		return
+	}
 	err := a.AcquireLock()
 	if err != nil {
 		a.log.Error("failed to acquire Lock. Authentik agent is already running.")
@@ -63,13 +69,26 @@ func (a *Agent) Start() {
 	a.tray.Start()
 }
 
+func (a *Agent) StartForeground() {
+	err := a.AcquireLock()
+	if err != nil {
+		a.log.Error("failed to acquire Lock. Authentik agent is already running.")
+		os.Exit(1)
+		return
+	}
+	go a.startGRPC()
+	a.signalHandler()
+}
+
 func (a *Agent) signalHandler() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
 	log.Info("Shutting down...")
-	a.tray.Quit()
+	if available.SystrayAvailable() {
+		a.tray.Quit()
+	}
 }
 
 func (a *Agent) Stop() {

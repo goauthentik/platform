@@ -68,6 +68,8 @@ pub struct InteractiveChallenge {
     pub debug_info: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub session_id: ::prost::alloc::string::String,
+    #[prost(string, tag="8")]
+    pub component: ::prost::alloc::string::String,
 }
 /// Nested message and enum types in `InteractiveChallenge`.
 pub mod interactive_challenge {
@@ -129,6 +131,11 @@ pub struct SystemAuthorizeResponse {
     pub response: ::core::option::Option<super::agent_auth::AuthorizeResponse>,
     #[prost(enumeration="InteractiveAuthResult", tag="2")]
     pub code: i32,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SupportedResponse {
+    #[prost(bool, tag="1")]
+    pub supported: bool,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

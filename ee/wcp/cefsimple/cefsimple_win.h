@@ -13,7 +13,7 @@ struct sHookData;
 
 // extern "C"
 // {
-    int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp);
+int CEFLaunch(sHookData* pData, CefRefPtr<SimpleApp> pCefApp);
 // }
 
 #endif  // CEF_TESTS_CEFSIMPLE_CEFSIMPLE_WIN_H_

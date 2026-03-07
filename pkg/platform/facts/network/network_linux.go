@@ -10,18 +10,22 @@ import (
 	"strings"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (api.DeviceFactsRequestNetwork, error) {
-	hostname, _ := os.Hostname()
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
 	firewallEnabled := isFirewallEnabled()
 
 	interfaces, err := getNetworkInterfaces()
 	if err != nil {
-		return api.DeviceFactsRequestNetwork{}, err
+		return nil, err
 	}
 
-	return api.DeviceFactsRequestNetwork{
+	return &api.DeviceFactsRequestNetwork{
 		FirewallEnabled: api.PtrBool(firewallEnabled),
 		Hostname:        hostname,
 		Interfaces:      interfaces,
@@ -79,6 +83,7 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 		if iface.HardwareAddr.String() == "" {
 			continue
 		}
+		validAddresses := []string{}
 		for _, addr := range addrs {
 			ipnet, ok := addr.(*net.IPNet)
 			if !ok {
@@ -88,18 +93,21 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			if ipnet.IP.IsLoopback() {
 				continue
 			}
-
-			dnsServers := getDNSServers()
-
-			netInterface := api.NetworkInterfaceRequest{
-				DnsServers:      dnsServers,
-				HardwareAddress: iface.HardwareAddr.String(),
-				IpAddresses:     []string{ipnet.String()},
-				Name:            iface.Name,
-			}
-
-			interfaces = append(interfaces, netInterface)
+			validAddresses = append(validAddresses, ipnet.String())
 		}
+		if len(validAddresses) < 1 {
+			continue
+		}
+		dnsServers := getDNSServers()
+
+		netInterface := api.NetworkInterfaceRequest{
+			DnsServers:      dnsServers,
+			HardwareAddress: iface.HardwareAddr.String(),
+			IpAddresses:     validAddresses,
+			Name:            iface.Name,
+		}
+
+		interfaces = append(interfaces, netInterface)
 	}
 
 	return interfaces, nil

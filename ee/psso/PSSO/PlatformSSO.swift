@@ -48,6 +48,16 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         self.logger.debug(
             "beginUserRegistration \(userName ?? ""), method \(String(describing: method)), options \(String(describing: options))"
         )
+        do {
+            let supported = try await SysdBridge.shared.interactiveAuthSupported()
+            if !supported {
+                self.logger.warning("Interactive authentication not supported")
+                return .failedNoRetry
+            }
+        } catch {
+            self.logger.error("Failed to check if interactive auth is available: \(error)")
+            return .failed
+        }
         let interactive = InteractiveAuth(loginManager: loginManager)
         self.interactive = interactive
         do {
@@ -73,7 +83,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
 
     func supportedGrantTypes() -> ASAuthorizationProviderExtensionSupportedGrantTypes {
         self.logger.debug("supportedGrantTypes")
-        return [.password, .jwtBearer]
+        return [.jwtBearer]
     }
 
     func keyWillRotate(

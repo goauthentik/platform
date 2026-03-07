@@ -1,28 +1,28 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/platform/facts"
+	"goauthentik.io/platform/pkg/platform/facts/common"
+	"goauthentik.io/platform/pkg/shared/tui"
 )
 
 var troubleshootFactsCmd = &cobra.Command{
 	Use:   "facts",
 	Short: "Inspect facts",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		facts, err := facts.Gather(log.WithField("cmd", "facts"))
+		facts, err := facts.Gather(common.New(log.WithField("cmd", "facts"), cmd.Context()))
 		if err != nil {
 			return err
 		}
-		b, err := json.MarshalIndent(facts, "", "\t")
+		m, err := tui.AnyToMap(facts)
 		if err != nil {
-			log.WithError(err).Warning("failed to render JSON")
 			return err
 		}
-		fmt.Println(string(b))
+		fmt.Print(tui.RenderMapAsTree(m, "Facts:"))
 		return nil
 	},
 }

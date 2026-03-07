@@ -14,15 +14,12 @@ class SimpleHandler;
 class SimpleApp : public CefApp, public CefBrowserProcessHandler {
  public:
   SimpleApp();
-  SimpleApp(sHookData* pData)
-    : m_pData(pData) {}
+  SimpleApp(sHookData* pData) : m_pData(pData) {}
 
   sHookData* m_pData = nullptr;
 
   // CefApp methods:
-  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override {
-    return this;
-  }
+  CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
 
   // CefBrowserProcessHandler methods:
   void OnContextInitialized() override;

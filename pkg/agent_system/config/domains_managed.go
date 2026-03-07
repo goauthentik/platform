@@ -17,8 +17,8 @@ const managedDomainName = "ak-mdm-managed"
 
 func (c *Config) loadDomainsManaged() error {
 	mc, err := managedconfig.Get[SysdManagedConfig](pstr.PlatformString{
-		Darwin:  pstr.S("io.goauthentik.platform"),
-		Windows: pstr.S(`SOFTWARE\authentik Security Inc.\Platform\ManagedConfig`),
+		Darwin:  new("io.goauthentik.platform"),
+		Windows: new(`SOFTWARE\authentik Security Inc.\Platform\ManagedConfig`),
 	})
 	if err != nil {
 		if errors.Is(err, managedconfig.ErrNotFound) || errors.Is(err, managedconfig.ErrNotSupported) {

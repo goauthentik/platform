@@ -5,22 +5,27 @@ package network
 import (
 	"net"
 	"os"
-	"os/exec"
-	"strings"
+	"strconv"
 
+	"github.com/microsoft/wmi/server2019/root/cimv2"
+	"github.com/microsoft/wmi/server2019/root/standardcimv2"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() (api.DeviceFactsRequestNetwork, error) {
-	hostname, _ := os.Hostname()
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
 	firewallEnabled := isFirewallEnabled()
 
 	interfaces, err := getNetworkInterfaces()
 	if err != nil {
-		return api.DeviceFactsRequestNetwork{}, err
+		return nil, err
 	}
 
-	return api.DeviceFactsRequestNetwork{
+	return &api.DeviceFactsRequestNetwork{
 		FirewallEnabled: api.PtrBool(firewallEnabled),
 		Hostname:        hostname,
 		Interfaces:      interfaces,
@@ -28,13 +33,17 @@ func gather() (api.DeviceFactsRequestNetwork, error) {
 }
 
 func isFirewallEnabled() bool {
-	cmd := exec.Command("netsh", "advfirewall", "show", "allprofiles", "state")
-	output, err := cmd.Output()
+	fw, err := common.GetWMIValueNamespace(standardcimv2.NewMSFT_NetFirewallProfileEx1, "MSFT_NetFirewallProfile", `root\StandardCimv2`)
 	if err != nil {
 		return false
 	}
+	for _, prof := range fw {
+		if en, err := prof.GetPropertyEnabled(); err != nil || en != 1 {
+			return false
+		}
+	}
 
-	return strings.Contains(string(output), "State                                 ON")
+	return true
 }
 
 func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
@@ -58,6 +67,7 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 		if iface.HardwareAddr.String() == "" {
 			continue
 		}
+		validAddresses := []string{}
 		for _, addr := range addrs {
 			ipnet, ok := addr.(*net.IPNet)
 			if !ok {
@@ -67,49 +77,49 @@ func getNetworkInterfaces() ([]api.NetworkInterfaceRequest, error) {
 			if ipnet.IP.IsLoopback() {
 				continue
 			}
-
-			dnsServers := getDNSServers(iface.Name)
-
-			netInterface := api.NetworkInterfaceRequest{
-				DnsServers:      dnsServers,
-				HardwareAddress: iface.HardwareAddr.String(),
-				IpAddresses:     []string{ipnet.String()},
-				Name:            iface.Name,
-			}
-
-			interfaces = append(interfaces, netInterface)
+			validAddresses = append(validAddresses, ipnet.String())
 		}
+		if len(validAddresses) < 1 {
+			continue
+		}
+
+		dnsServers, err := getDNSServers(iface.Index)
+		if err != nil {
+			dnsServers = []string{}
+		}
+
+		netInterface := api.NetworkInterfaceRequest{
+			DnsServers:      dnsServers,
+			HardwareAddress: iface.HardwareAddr.String(),
+			IpAddresses:     validAddresses,
+			Name:            iface.Name,
+		}
+
+		interfaces = append(interfaces, netInterface)
 	}
 
 	return interfaces, nil
 }
 
-func getDNSServers(interfaceName string) []string {
+func getDNSServers(index int) ([]string, error) {
 	var dnsServers []string
 
-	cmd := exec.Command("netsh", "interface", "ip", "show", "dns", interfaceName)
-	output, err := cmd.Output()
+	adapterConf, err := common.GetWMIValue(
+		cimv2.NewWin32_NetworkAdapterConfigurationEx1,
+		"Win32_NetworkAdapterConfiguration",
+		"InterfaceIndex", strconv.Itoa(index),
+	)
 	if err != nil {
-		// Fallback to global DNS servers
-		cmd = exec.Command("nslookup", ".")
-		output, err = cmd.Output()
-		if err != nil {
-			return dnsServers
-		}
+		return dnsServers, err
+	}
+	if len(adapterConf) < 1 {
+		return dnsServers, nil
 	}
 
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.Contains(line, "DNS Servers") || strings.Contains(line, "Server:") {
-			continue
-		}
-
-		// Look for IP addresses
-		if net.ParseIP(strings.TrimSpace(line)) != nil {
-			dnsServers = append(dnsServers, strings.TrimSpace(line))
-		}
+	interfaceServers, err := adapterConf[0].GetPropertyDNSServerSearchOrder()
+	if err != nil {
+		return dnsServers, err
 	}
 
-	return dnsServers
+	return interfaceServers, nil
 }

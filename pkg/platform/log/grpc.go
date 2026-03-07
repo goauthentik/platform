@@ -24,13 +24,18 @@ func InterceptorLogger(l log.FieldLogger) logging.Logger {
 		if ok && p.AuthInfo != nil {
 			if ga, ok := p.AuthInfo.(grpc_creds.AuthInfo); ok && ga.Creds != nil {
 				cl = l.WithField("auth.pid", ga.Creds.PID)
-				l.WithFields(log.Fields{
-					"proc":   ga.Creds.Proc.String(),
-					"parent": ga.Creds.Parent.String(),
-					"pid":    ga.Creds.PID,
-					"uid":    ga.Creds.UID,
-					"gid":    ga.Creds.GID,
-				}).Debug("GRPC auth info debug")
+				fields := map[string]any{
+					"pid": ga.Creds.PID,
+					"uid": ga.Creds.UID,
+					"gid": ga.Creds.GID,
+				}
+				if ga.Creds.Proc != nil {
+					fields["proc"] = ga.Creds.Proc.String()
+				}
+				if ga.Creds.Parent != nil {
+					fields["parent"] = ga.Creds.Parent.String()
+				}
+				l.WithFields(fields).Debug("GRPC auth info debug")
 			}
 		}
 

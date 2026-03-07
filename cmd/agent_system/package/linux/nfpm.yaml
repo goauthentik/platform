@@ -39,4 +39,4 @@ overrides:
       postinstall: ./package/linux/_deb/postinst.sh
   rpm:
     scripts:
-      postinstall: ./package/linux/_rpm/post.sh
+      postinstall: ./package/linux/_rpm/postinst.sh

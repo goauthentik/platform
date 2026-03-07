@@ -6,30 +6,20 @@ import (
 	"strings"
 	"testing"
 
-	"goauthentik.io/api/v3"
+	"github.com/stretchr/testify/assert"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func TestGather(t *testing.T) {
-	users, err := Gather()
-	if err != nil {
-		t.Fatalf("Failed to gather user info: %v", err)
-	}
+	users, err := Gather(common.TestingContext(t))
+	assert.NoError(t, err)
 
-	if len(users) == 0 {
-		t.Skip("No users found, skipping test")
-	}
+	assert.Greater(t, len(users), 0)
 
 	for _, user := range users {
-		if user.Id == "" {
-			t.Error("User ID should not be empty")
-		}
-
-		if user.Username == api.PtrString("") {
-			t.Error("Username should not be empty")
-		}
+		assert.NotEqual(t, user.Id, "")
+		assert.NotEqual(t, user.GetUsername(), "")
 	}
-
-	t.Logf("Found %d users", len(users))
 }
 
 func TestGatherDarwin(t *testing.T) {
@@ -37,17 +27,13 @@ func TestGatherDarwin(t *testing.T) {
 		t.Skip("Skipping macOS-specific test")
 	}
 
-	users, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather user info on macOS: %v", err)
-	}
+	users, err := gather(common.TestingContext(t))
+	assert.NoError(t, err)
 
 	// macOS specific tests
 	for _, user := range users {
-		// macOS UIDs are typically numeric
-		if user.Id != "" && !isNumeric(user.Id) {
-			t.Errorf("Expected numeric UID on macOS, got: %s", user.Id)
-		}
+		assert.NotEqual(t, user.GetId(), "")
+		assert.True(t, isNumeric(user.Id))
 	}
 }
 
@@ -56,30 +42,22 @@ func TestGatherLinux(t *testing.T) {
 		t.Skip("Skipping Linux-specific test")
 	}
 
-	users, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather user info on Linux: %v", err)
-	}
+	users, err := gather(common.TestingContext(t))
+	assert.NoError(t, err)
 
 	// Linux specific tests
 	foundRoot := false
 	for _, user := range users {
 		if user.Username != nil && *user.Username == "root" {
 			foundRoot = true
-			if user.Id != "0" {
-				t.Errorf("Expected root UID to be 0, got: %s", user.Id)
-			}
+			assert.Equal(t, user.GetId(), "0")
 		}
 
-		// Linux UIDs should be numeric
-		if user.Id != "" && !isNumeric(user.Id) {
-			t.Errorf("Expected numeric UID on Linux, got: %s", user.Id)
-		}
+		assert.NotEqual(t, user.GetId(), "")
+		assert.True(t, isNumeric(user.Id))
 	}
 
-	if !foundRoot {
-		t.Error("Expected to find root user on Linux")
-	}
+	assert.True(t, foundRoot)
 }
 
 func TestGatherWindows(t *testing.T) {
@@ -87,17 +65,13 @@ func TestGatherWindows(t *testing.T) {
 		t.Skip("Skipping Windows-specific test")
 	}
 
-	users, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather user info on Windows: %v", err)
-	}
+	users, err := gather(common.TestingContext(t))
+	assert.NoError(t, err)
 
 	// Windows specific tests
 	for _, user := range users {
-		// Windows SIDs should start with S-
-		if user.Id != "" && !strings.HasPrefix(user.Id, "S-") {
-			t.Errorf("Expected Windows SID to start with 'S-', got: %s", user.Id)
-		}
+		assert.NotEqual(t, user.GetId(), "")
+		assert.True(t, strings.HasPrefix(user.Id, "S-"))
 	}
 }
 

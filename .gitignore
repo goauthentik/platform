@@ -1,6 +1,5 @@
 .DS_Store
 .idea
-terraform-provider-hashicups
 bin
 
 # Created by https://www.toptal.com/developers/gitignore/api/go,terraform
@@ -65,6 +64,7 @@ terraform.rc
 terraform
 examples_local
 coverage.*
+coverage_in_container.*
 junit.xml
 authentik_main
 

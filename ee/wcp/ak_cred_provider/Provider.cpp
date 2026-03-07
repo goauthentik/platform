@@ -1,8 +1,11 @@
 #include "pch.h"
 
-#include "Debug.h"
+#include "ak_common/include/ak_log.h"
+#include "ak_common/include/ak_version.h"
 #include "Provider.h"
-#include "ak_version.h"
+#include "authentik_sys_bridge/ffi.h"
+#include "rust/cxx.h"
+#include <spdlog/spdlog.h>
 
 #include "include/cef_command_line.h"
 #include "include/cef_sandbox_win.h"
@@ -14,25 +17,22 @@ extern std::string g_strPath;
 
 Provider::Provider() : m_cRef(1) {
   // Setup callbacks
-  Credential::m_pProvCallSet = [this](sHookData *pData) {
-    this->SetCefApp(pData);
-  };
+  Credential::m_pProvCallSet = [this](sHookData* pData) { this->SetCefApp(pData); };
   Credential::m_pProvCallShut = [this]() { this->ShutCefApp(); };
 
   DllAddRef();
 }
 
-void Provider::SetCefApp(sHookData *pData) {
-  Debug("SetCefApp");
+void Provider::SetCefApp(sHookData* pData) {
+  spdlog::debug("SetCefApp");
   if (m_pCefApp == nullptr) {
     int exit_code;
 
-    std::string str =
-        "SetCefApp ProcessID: " + std::to_string(GetCurrentProcessId()) +
-        ", ThreadID: " + std::to_string(GetCurrentThreadId());
-    Debug(str.c_str());
+    std::string str = "SetCefApp ProcessID: " + std::to_string(GetCurrentProcessId()) +
+                      ", ThreadID: " + std::to_string(GetCurrentThreadId());
+    spdlog::debug(str.c_str());
 
-#if defined(ARCH_CPU_32_BITS) //- todo: remove?
+#if defined(ARCH_CPU_32_BITS)  //- todo: remove?
     // Run the main thread on 32-bit Windows using a fiber with the preferred
     // 4MiB stack size. This function must be called at the top of the
     // executable entry point function (`main()` or `wWinMain()`). It is used in
@@ -40,15 +40,15 @@ void Provider::SetCefApp(sHookData *pData) {
     // `/STACK:0x80000` linker flag on executable targets. This saves
     // significant memory on threads (like those in the Windows thread pool, and
     // others) whose stack size can only be controlled via the linker flag.
-    exit_code = CefRunWinMainWithPreferredStackSize(
-        wWinMain, hInstance, lpCmdLine, SW_NORMAL); // nCmdShow: SW_NORMAL
-                                                    // if (exit_code >= 0) {
+    exit_code = CefRunWinMainWithPreferredStackSize(wWinMain, hInstance, lpCmdLine,
+                                                    SW_NORMAL);  // nCmdShow: SW_NORMAL
+                                                                 // if (exit_code >= 0) {
     //   // The fiber has completed so return here.
     //   return exit_code;
     // }
 #endif
 
-    void *sandbox_info = nullptr;
+    void* sandbox_info = nullptr;
 
 #if defined(CEF_USE_SANDBOX)
     // Manage the life span of the sandbox information object. This is necessary
@@ -57,51 +57,53 @@ void Provider::SetCefApp(sHookData *pData) {
     CefScopedSandboxInfo scoped_sandbox;
     sandbox_info = scoped_sandbox.sandbox_info();
 #endif
-    Debug("CefScopedSandboxInfo");
+    spdlog::debug("CefScopedSandboxInfo");
     // Provide CEF with command-line arguments.
     CefMainArgs main_args((HINSTANCE)GetModuleHandle(NULL));
 
     exit_code = 0;
 
-    Debug("CefMainArgs");
+    spdlog::debug("CefMainArgs");
     // CEF applications have multiple sub-processes (render, GPU, etc) that
     // share the same executable. This function checks the command-line and, if
     // this is a sub-process, executes the appropriate logic.
 
     // exit_code = CefExecuteProcess(main_args, nullptr, sandbox_info);
-    // Debug("CefExecuteProcess");
+    // spdlog::debug("CefExecuteProcess");
     // if (exit_code >= 0) {
-    //     Debug("Cef: exit_code");
+    //     spdlog::debug("Cef: exit_code");
     //   // The sub-process has completed so return here.
     //   return exit_code;
     // }
 
-    Debug("CefCommandLine::CreateCommandLine");
+    spdlog::debug("CefCommandLine::CreateCommandLine");
     // Parse command-line arguments for use in this method.
-    CefRefPtr<CefCommandLine> command_line =
-        CefCommandLine::CreateCommandLine();
+    CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
     command_line->InitFromString(::GetCommandLineW());
 
     // Specify CEF global settings here.
     CefSettings settings;
 
     // Specify the path for the sub-process executable.
+    spdlog::debug("g_strPath: '{}'", g_strPath);
     std::string strPath = g_strPath + "\\ak_cef.exe";
     CefString(&settings.browser_subprocess_path).FromASCII(strPath.c_str());
-    // std::string strRPath = g_strPath + "\\" + GetRandomStr(5);
-    // CefString(&settings.root_cache_path).FromASCII(strRPath.c_str());
-    // CefString(&settings.cache_path).FromASCII(std::string(strRPath +
-    // "\\CPath" + GetRandomStr(5)).c_str());
 
-    strPath = g_strPath + "\\ceflog.txt";
-    CefString(&settings.log_file).FromASCII(strPath.c_str());
-    settings.log_severity = LOGSEVERITY_INFO;
+    // Root cache path must be set as otherwise it'll end up in system32\config\systemprofile
+    CefString(&settings.root_cache_path)
+        .FromASCII(std::string(AK_PROGRAM_DATA).append("\\wcp-cache").c_str());
+    // Not setting the cache path to force an incognito session every time
+    // CefString(&settings.cache_path).FromASCII();
+
+    CefString(&settings.log_file)
+        .FromASCII(std::string(AK_PROGRAM_DATA).append("\\logs\\cef.log").c_str());
+    settings.log_severity = LOGSEVERITY_DEBUG;
 
     std::string strUserAgent = std::string("authentik Platform/WCP/CredProvider@")
-        .append(AK_WCP_VERSION)
-        .append(" (CEF ")
-        .append(CEF_VERSION)
-        .append(")");
+                                   .append(AK_VERSION)
+                                   .append(" (CEF ")
+                                   .append(CEF_VERSION)
+                                   .append(")");
     CefString(&settings.user_agent).FromString(strUserAgent);
 
 #if !defined(CEF_USE_SANDBOX)
@@ -110,53 +112,52 @@ void Provider::SetCefApp(sHookData *pData) {
 
     settings.multi_threaded_message_loop = false;
 
-    Debug("CefSettings");
+    spdlog::debug("CefSettings");
     // SimpleApp implements application-level callbacks for the browser process.
     // It will create the first browser instance in OnContextInitialized() after
     // CEF has initialized.
     // CefRefPtr<SimpleApp> app(new SimpleApp());
     m_pCefApp = new SimpleApp(pData);
-    Debug("Cef: new SimpleApp");
+    spdlog::debug("Cef: new SimpleApp");
 
-    Debug(std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get())))
-              .c_str());
+    spdlog::debug(std::string("app.get:::" + std::to_string((size_t)(m_pCefApp.get()))).c_str());
     // Initialize the CEF browser process. May return false if initialization
     // fails or if early exit is desired (for example, due to process singleton
     // relaunch behavior).
     if (!CefInitialize(main_args, settings, m_pCefApp.get(), sandbox_info)) {
-      Debug("CefGetExitCode");
+      spdlog::debug("CefGetExitCode");
       // return CefGetExitCode();
       m_pCefApp = nullptr;
     }
-    Debug("CefInitialize");
+    spdlog::debug("CefInitialize");
     // Run the CEF message loop. This will block until CefQuitMessageLoop() is
     // called.
     // CefRunMessageLoop();
 
-    // Debug("CefRunMessageLoop");
+    // spdlog::debug("CefRunMessageLoop");
 
     // // Shut down CEF.
     // CefShutdown();
-    // Debug("CefShutdown");
+    // spdlog::debug("CefShutdown");
     Credential::m_oCefAppData.pCefApp = m_pCefApp;
   }
 }
 
 void Provider::ShutCefApp() {
-  Debug("ShutCefApp");
+  spdlog::debug("ShutCefApp");
   if (m_pCefApp) {
-    Debug("CefShutdown");
+    spdlog::debug("CefShutdown");
     Credential::m_oCefAppData.SetInit(false);
     Credential::m_oCefAppData.pCefApp = nullptr;
     // Shut down CEF.
     CefShutdown();
     m_pCefApp = nullptr;
-    Debug("CefShutdown end");
+    spdlog::debug("CefShutdown end");
   }
 }
 
 Provider::~Provider() {
-  Debug("~Provider");
+  spdlog::debug("~Provider");
   ReleaseEnumeratedCredentials();
   if (m_pCredProviderUserArray != nullptr) {
     m_pCredProviderUserArray->Release();
@@ -166,21 +167,17 @@ Provider::~Provider() {
   DllRelease();
 }
 
-IFACEMETHODIMP Provider::QueryInterface(__in REFIID riid,
-                                        __deref_out void **ppv) {
+IFACEMETHODIMP Provider::QueryInterface(__in REFIID riid, __deref_out void** ppv) {
   static const QITAB qit[] = {
-      QITABENT(Provider, ICredentialProvider), // IID_ICredentialProvider
-      QITABENT(
-          Provider,
-          ICredentialProviderSetUserArray), // IID_ICredentialProviderSetUserArray
+      QITABENT(Provider, ICredentialProvider),  // IID_ICredentialProvider
+      QITABENT(Provider,
+               ICredentialProviderSetUserArray),  // IID_ICredentialProviderSetUserArray
       {0},
   };
   return QISearch(this, qit, riid, ppv);
 }
 
-IFACEMETHODIMP_(ULONG) Provider::AddRef() {
-  return InterlockedIncrement(&m_cRef);
-}
+IFACEMETHODIMP_(ULONG) Provider::AddRef() { return InterlockedIncrement(&m_cRef); }
 
 IFACEMETHODIMP_(ULONG) Provider::Release() {
   if (InterlockedDecrement(&m_cRef) == 0) {
@@ -193,7 +190,7 @@ IFACEMETHODIMP_(ULONG) Provider::Release() {
 // Called by LogonUI to give you a callback.  Providers often use the callback
 // if they some event would cause them to need to change the set of tiles that
 // they enumerated.
-IFACEMETHODIMP Provider::Advise(_In_ ICredentialProviderEvents * /*pcpe*/,
+IFACEMETHODIMP Provider::Advise(_In_ ICredentialProviderEvents* /*pcpe*/,
                                 _In_ UINT_PTR /*upAdviseContext*/) {
   return E_NOTIMPL;
 }
@@ -205,68 +202,67 @@ IFACEMETHODIMP Provider::UnAdvise() { return E_NOTIMPL; }
 // SetUsageScenario is the provider's cue that it's going to be asked for tiles
 // in a subsequent call.
 IFACEMETHODIMP
-Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
-                           DWORD dwFlags) {
+Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlags) {
   HRESULT hr;
 
+  try {
+    if (!ak_sys_auth_interactive_available()) {
+      spdlog::info("Interactive authentication not available, not showing cred UI");
+      hr = E_NOTIMPL;
+      return hr;
+    }
+  } catch (const rust::Error& ex) {
+    spdlog::warn("Exception in ak_sys_auth_interactive_available: {}", ex.what());
+    hr = E_NOTIMPL;
+    return hr;
+  }
   // Decide which scenarios to support here. Returning E_NOTIMPL simply tells
   // the caller that we're not designed for that scenario.
   switch (cpus) {
-  case CPUS_LOGON:
-  case CPUS_UNLOCK_WORKSTATION:
-    //// The reason why we need _fRecreateEnumeratedCredentials is because
-    /// ICredentialProviderSetUserArray::SetUserArray() is called after
-    /// ICredentialProvider::SetUsageScenario(), / while we need the
-    /// ICredentialProviderUserArray during enumeration in
-    /// ICredentialProvider::GetCredentialCount()
-    m_cpus = cpus; // Save usage scenario
-    m_fRecreateEnumeratedCredentials =
-        true; // Recreate credentials anyways (in all cases)...
-    hr = S_OK;
-    break;
+    case CPUS_LOGON:
+    case CPUS_UNLOCK_WORKSTATION:
+      //// The reason why we need _fRecreateEnumeratedCredentials is because
+      /// ICredentialProviderSetUserArray::SetUserArray() is called after
+      /// ICredentialProvider::SetUsageScenario(), / while we need the
+      /// ICredentialProviderUserArray during enumeration in
+      /// ICredentialProvider::GetCredentialCount()
+      m_cpus = cpus;                            // Save usage scenario
+      m_fRecreateEnumeratedCredentials = true;  // Recreate credentials anyways (in all cases)...
+      hr = S_OK;
+      break;
 
-  case CPUS_CHANGE_PASSWORD:
-  case CPUS_CREDUI:
-    hr = E_NOTIMPL;
-    break;
+    case CPUS_CHANGE_PASSWORD:
+    case CPUS_CREDUI:
+      hr = E_NOTIMPL;
+      break;
 
-  default:
-    hr = E_INVALIDARG;
-    break;
+    default:
+      hr = E_INVALIDARG;
+      break;
   }
 
   return hr;
 }
 
-// Not implemented, even though its required as per MS docs... //-
 IFACEMETHODIMP Provider::SetSerialization(
-    _In_ CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION const * /*pcpcs*/) {
+    _In_ CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION const* /*pcpcs*/) {
   return E_NOTIMPL;
 }
 
-// Called by LogonUI to determine the number of fields in your tiles.  This
-// does mean that all your tiles must have the same number of fields.
-// This number must include both visible and invisible fields. If you want a
-// tile to have different fields from the other tiles you enumerate for a given
-// usage scenario you must include them all in this count and then hide/show
-// them as desired using the field descriptors.
-IFACEMETHODIMP Provider::GetFieldDescriptorCount(_Out_ DWORD *pdwCount) {
+IFACEMETHODIMP Provider::GetFieldDescriptorCount(_Out_ DWORD* pdwCount) {
   *pdwCount = FI_NUM_FIELDS;
   return S_OK;
 }
 
 // Gets the field descriptor for a particular field.
 IFACEMETHODIMP Provider::GetFieldDescriptorAt(
-    DWORD dwIndex,
-    _Outptr_result_nullonfailure_ CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR *
-        *ppcpfd) {
+    DWORD dwIndex, _Outptr_result_nullonfailure_ CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR** ppcpfd) {
   HRESULT hr = E_INVALIDARG;
   *ppcpfd = nullptr;
 
   // Verify dwIndex is a valid field.
   if ((dwIndex < FI_NUM_FIELDS) && ppcpfd) {
-    hr = FieldDescriptorCoAllocCopy(s_rgCredProvFieldDescriptors[dwIndex],
-                                    ppcpfd);
+    hr = FieldDescriptorCoAllocCopy(s_rgCredProvFieldDescriptors[dwIndex], ppcpfd);
   } else {
     hr = E_INVALIDARG;
   }
@@ -283,8 +279,8 @@ IFACEMETHODIMP Provider::GetFieldDescriptorAt(
 // the default and will submit that credential for authentication without
 // showing any further UI.
 IFACEMETHODIMP
-Provider::GetCredentialCount(_Out_ DWORD *pdwCount, _Out_ DWORD *pdwDefault,
-                             _Out_ BOOL *pbAutoLogonWithDefault) {
+Provider::GetCredentialCount(_Out_ DWORD* pdwCount, _Out_ DWORD* pdwDefault,
+                             _Out_ BOOL* pbAutoLogonWithDefault) {
   *pdwDefault = CREDENTIAL_PROVIDER_NO_DEFAULT;
   *pbAutoLogonWithDefault = FALSE;
 
@@ -300,15 +296,13 @@ Provider::GetCredentialCount(_Out_ DWORD *pdwCount, _Out_ DWORD *pdwDefault,
 // Returns the credential at the index specified by dwIndex. This function is
 // called by logonUI to enumerate the tiles.
 IFACEMETHODIMP Provider::GetCredentialAt(
-    DWORD dwIndex,
-    _Outptr_result_nullonfailure_ ICredentialProviderCredential **ppcpc) {
+    DWORD dwIndex, _Outptr_result_nullonfailure_ ICredentialProviderCredential** ppcpc) {
   HRESULT hr = E_INVALIDARG;
   *ppcpc = nullptr;
 
   if ((dwIndex < m_oCredentials.dwCredentialsCount) && ppcpc) {
     hr = (m_oCredentials.parrCredentials[dwIndex])
-             ? m_oCredentials.parrCredentials[dwIndex]->QueryInterface(
-                   IID_PPV_ARGS(ppcpc))
+             ? m_oCredentials.parrCredentials[dwIndex]->QueryInterface(IID_PPV_ARGS(ppcpc))
              : E_POINTER;
   }
 
@@ -319,7 +313,7 @@ IFACEMETHODIMP Provider::GetCredentialAt(
 // Sets the User Array with the list of users to be enumerated on the logon
 // screen.
 IFACEMETHODIMP
-Provider::SetUserArray(_In_ ICredentialProviderUserArray *users) {
+Provider::SetUserArray(_In_ ICredentialProviderUserArray* users) {
   if (m_pCredProviderUserArray) {
     m_pCredProviderUserArray->Release();
     m_pCredProviderUserArray = nullptr;
@@ -331,19 +325,18 @@ Provider::SetUserArray(_In_ ICredentialProviderUserArray *users) {
 
 void Provider::CreateEnumeratedCredentials() {
   switch (m_cpus) {
-  case CPUS_LOGON:
-  case CPUS_UNLOCK_WORKSTATION: {
-    EnumerateCredentials();
-    break;
-  }
-  default:
-    break;
+    case CPUS_LOGON:
+    case CPUS_UNLOCK_WORKSTATION: {
+      EnumerateCredentials();
+      break;
+    }
+    default:
+      break;
   }
 }
 
 void Provider::ReleaseEnumeratedCredentials() {
-  for (DWORD dwIndex = 0; dwIndex < m_oCredentials.dwCredentialsCount;
-       ++dwIndex) {
+  for (DWORD dwIndex = 0; dwIndex < m_oCredentials.dwCredentialsCount; ++dwIndex) {
     if (m_oCredentials.parrCredentials[dwIndex] != nullptr) {
       m_oCredentials.parrCredentials[dwIndex]->Release();
       m_oCredentials.parrCredentials[dwIndex] = nullptr;
@@ -360,22 +353,19 @@ IFACEMETHODIMP Provider::EnumerateCredentials() {
     DWORD dwUserCount;
     hr = m_pCredProviderUserArray->GetCount(&dwUserCount);
     if (SUCCEEDED(hr)) {
-      m_oCredentials.parrCredentials =
-          new (std::nothrow) Credential *[dwUserCount];
+      m_oCredentials.parrCredentials = new (std::nothrow) Credential*[dwUserCount];
       if (m_oCredentials.parrCredentials != nullptr) {
-        m_oCredentials.dwCredentialsCount = 0; // Update count
+        m_oCredentials.dwCredentialsCount = 0;  // Update count
         for (DWORD dwIndex = 0; dwIndex < dwUserCount; ++dwIndex) {
-          ICredentialProviderUser *pCredUser;
+          ICredentialProviderUser* pCredUser;
           hr = m_pCredProviderUserArray->GetAt(dwIndex, &pCredUser);
           if (SUCCEEDED(hr)) {
-            m_oCredentials.parrCredentials[dwIndex] =
-                new (std::nothrow) Credential();
+            m_oCredentials.parrCredentials[dwIndex] = new (std::nothrow) Credential();
             if (m_oCredentials.parrCredentials[dwIndex] != nullptr) {
               hr = m_oCredentials.parrCredentials[dwIndex]->Initialize(
-                  m_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs,
-                  pCredUser);
+                  m_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, pCredUser);
               if (SUCCEEDED(hr)) {
-                ++(m_oCredentials.dwCredentialsCount); // Update count
+                ++(m_oCredentials.dwCredentialsCount);  // Update count
               } else {
                 m_oCredentials.parrCredentials[dwIndex]->Release();
                 m_oCredentials.parrCredentials[dwIndex] = nullptr;

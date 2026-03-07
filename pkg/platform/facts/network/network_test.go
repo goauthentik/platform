@@ -2,32 +2,22 @@ package network
 
 import (
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func TestGather(t *testing.T) {
-	info, err := Gather()
+	info, err := Gather(common.TestingContext(t))
 	assert.NoError(t, err)
 
-	if info.Hostname == "" {
-		t.Error("Hostname is empty")
-	}
-
-	if len(info.Interfaces) == 0 {
-		t.Skip("No network interfaces found, skipping test")
-	}
+	assert.NotEqual(t, info.Hostname, "")
+	assert.Greater(t, len(info.GetInterfaces()), 0)
 
 	for _, iface := range info.Interfaces {
-		if iface.Name == "" {
-			t.Error("Interface name is empty")
-		}
-
-		if len(iface.IpAddresses) == 0 {
-			t.Error("Interface IP address is empty")
-		}
+		assert.NotEqual(t, iface.Name, "")
+		assert.Greater(t, len(iface.IpAddresses), 0)
 	}
 }
 
@@ -36,19 +26,9 @@ func TestGatherLinux(t *testing.T) {
 		t.Skip("Skipping Linux-specific test")
 	}
 
-	info, err := gather()
+	info, err := gather(common.TestingContext(t))
 	assert.NoError(t, err)
-
-	// Linux specific tests
-	for _, iface := range info.Interfaces {
-		if strings.HasPrefix(iface.Name, "eth") ||
-			strings.HasPrefix(iface.Name, "wlan") ||
-			strings.HasPrefix(iface.Name, "enp") {
-			// Valid Linux interface naming
-		} else {
-			t.Logf("Unexpected interface name format: %s", iface.Name)
-		}
-	}
+	assert.NotNil(t, info)
 }
 
 func TestGatherWindows(t *testing.T) {
@@ -56,10 +36,7 @@ func TestGatherWindows(t *testing.T) {
 		t.Skip("Skipping Windows-specific test")
 	}
 
-	info, err := gather()
+	info, err := gather(common.TestingContext(t))
 	assert.NoError(t, err)
-
-	// Windows specific tests
-	t.Logf("Found %d network interfaces", len(info.Interfaces))
-	t.Logf("Firewall enabled: %v", info.FirewallEnabled)
+	assert.NotNil(t, info)
 }

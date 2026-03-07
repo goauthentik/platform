@@ -1,5 +1,5 @@
 {
   "debug": false,
-  "domains": "C:\\Program Files\\Authentik Security Inc\\sysd\\domains",
-  "runtime": "C:\\Program Files\\Authentik Security Inc\\sysd\\runtime"
+  "domains": "C:\\ProgramData\\Authentik Security Inc\\domains",
+  "runtime": "C:\\ProgramData\\Authentik Security Inc\\runtime"
 }

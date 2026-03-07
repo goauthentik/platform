@@ -1,6 +1,6 @@
 [package]
 name = "authentik_nss"
-version = "0.35.4"
+version = "0.40.4"
 edition = "2024"
 license = "MIT"
 
@@ -8,9 +8,12 @@ license = "MIT"
 name = "authentik_nss"
 crate-type = ["cdylib"]
 
+[lints]
+workspace = true
+
 [dependencies]
 authentik_sys = { path = ".." }
 ctor = "0.6.3"
-libc = "0.2.178"
+libc = "0.2.182"
 libnss = "0.9.0"
 log = "0.4.29"

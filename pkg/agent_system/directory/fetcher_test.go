@@ -12,7 +12,6 @@ import (
 )
 
 func TestFetcher(t *testing.T) {
-	nss := testNSS()
 	ac := ak.TestAPI().
 		Handle("/api/v3/core/users/", func(req *http.Request) (any, int) {
 			return api.PaginatedUserList{
@@ -45,6 +44,7 @@ func TestFetcher(t *testing.T) {
 		NssUidOffset: 1000,
 		NssGidOffset: 1000,
 	}, ac.APIClient)
+	nss := testNSS(t, dc)
 
 	nss.fetch(t.Context(), dc, ac.APIClient)
 	assert.Equal(t, []*pb.User{

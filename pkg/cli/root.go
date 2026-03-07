@@ -13,6 +13,7 @@ import (
 
 var (
 	socketPath string
+	jsonMode   bool
 )
 
 func mustFlag[T any](res T, err error) T {
@@ -28,6 +29,7 @@ var rootCmd = &cobra.Command{
 	Version: meta.FullVersion(),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		verbose := mustFlag(cmd.Flags().GetBool("verbose"))
+		log.SetLevel(log.WarnLevel)
 		if verbose {
 			log.SetLevel(log.DebugLevel)
 		}
@@ -53,6 +55,7 @@ func Execute() {
 func init() {
 	defaultSocketPath := types.GetAgentSocketPath()
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable debug logging")
+	rootCmd.PersistentFlags().BoolVarP(&jsonMode, "json", "j", false, "Output JSON data")
 	rootCmd.PersistentFlags().StringP("profile", "n", "default", "A name for the profile")
 	rootCmd.PersistentFlags().StringVarP(&socketPath, "socket", "s", defaultSocketPath.ForCurrent(), "Socket the agent is listening on")
 }

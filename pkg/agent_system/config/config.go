@@ -8,7 +8,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/platform/keyring"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
@@ -17,8 +16,8 @@ import (
 var manager *cfgmgr.Manager[*Config]
 var st *state.State
 
-func Init(path string) error {
-	sst, err := state.Open(types.StatePath().ForCurrent(), nil)
+func Init(path string, statePath string) error {
+	sst, err := state.Open(statePath, nil)
 	if err != nil {
 		return err
 	}
@@ -63,7 +62,13 @@ func (c *Config) PostLoad() error {
 }
 
 func (c *Config) PreSave() error { return nil }
-func (c *Config) PostUpdate(cfgmgr.Configer, fsnotify.Event) cfgmgr.ConfigChangedType {
+func (c *Config) PostUpdate(prev cfgmgr.Configer, evt fsnotify.Event) cfgmgr.ConfigChangedType {
+	previousConfig := prev.(*Config)
+	if len(previousConfig.domains) < len(c.domains) {
+		return cfgmgr.ConfigChangedAdded
+	} else if len(previousConfig.domains) > len(c.domains) {
+		return cfgmgr.ConfigChangedRemoved
+	}
 	return cfgmgr.ConfigChangedGeneric
 }
 

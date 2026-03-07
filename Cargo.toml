@@ -1,10 +1,18 @@
 [package]
 name = "authentik_sys"
-version = "0.35.4"
+version = "0.40.4"
 edition = "2024"
 
 [lib]
 crate-type = ["staticlib", "lib"]
+
+[workspace.lints.clippy]
+panic = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+
+[lints]
+workspace = true
 
 [workspace]
 resolver = "3"
@@ -17,24 +25,25 @@ name = "grpc"
 name = "log"
 
 [dependencies]
-cxx = "1.0.192"
-hyper-util = "0.1.19"
-libc = "0.2.178"
+base64 = "0.22.1"
+cxx = "1.0.194"
+hyper-util = "0.1.20"
+libc = "0.2.182"
 log = "0.4.29"
 prost = "0.14"
 prost-types = "0.14"
-sentry = "0.46.0"
+sentry = "0.46.2"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.147"
-tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
+serde_json = "1.0.149"
+tokio = { version = "1.50.0", features = ["rt-multi-thread"] }
 tonic = "0.14"
 tonic-prost = "0.14"
-tower = { version = "0.5.2", features = ["util" ]}
-url = "2.5.7"
+tower = { version = "0.5.3", features = ["util" ]}
+url = "2.5.8"
 windows-sys = "0.61.2"
 
 [target.'cfg(windows)'.dependencies]
-eventlog = "0.3.0"
+eventlog = "0.4.0"
 
 [target.'cfg(unix)'.dependencies]
 syslog = "7.0.0"

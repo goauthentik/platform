@@ -218,10 +218,23 @@ internal enum SystemAuthInteractive: Sendable {
                 method: "InteractiveAuthAsync"
             )
         }
+        /// Namespace for "InteractiveSupported" metadata.
+        internal enum InteractiveSupported: Sendable {
+            /// Request type for "InteractiveSupported".
+            internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
+            /// Response type for "InteractiveSupported".
+            internal typealias Output = SupportedResponse
+            /// Descriptor for "InteractiveSupported".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth.SystemAuthInteractive"),
+                method: "InteractiveSupported"
+            )
+        }
         /// Descriptors for all methods in the "sys_auth.SystemAuthInteractive" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             InteractiveAuth.descriptor,
-            InteractiveAuthAsync.descriptor
+            InteractiveAuthAsync.descriptor,
+            InteractiveSupported.descriptor
         ]
     }
 }
@@ -285,6 +298,29 @@ extension SystemAuthInteractive {
             deserializer: some GRPCCore.MessageDeserializer<InteractiveAuthAsyncResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "InteractiveSupported" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Check if interactive authentication is supported
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `SupportedResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func interactiveSupported<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<SupportedResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SupportedResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -371,6 +407,40 @@ extension SystemAuthInteractive {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "InteractiveSupported" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Check if interactive authentication is supported
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `SupportedResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func interactiveSupported<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<SupportedResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SupportedResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SystemAuthInteractive.Method.InteractiveSupported.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -430,6 +500,35 @@ extension SystemAuthInteractive.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<InteractiveAuthAsyncResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "InteractiveSupported" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Check if interactive authentication is supported
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func interactiveSupported<Result>(
+        request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SupportedResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.interactiveSupported(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<SupportedResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -499,6 +598,39 @@ extension SystemAuthInteractive.ClientProtocol {
             metadata: metadata
         )
         return try await self.interactiveAuthAsync(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "InteractiveSupported" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Check if interactive authentication is supported
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func interactiveSupported<Result>(
+        _ message: SwiftProtobuf.Google_Protobuf_Empty,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SupportedResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.interactiveSupported(
             request: request,
             options: options,
             onResponse: handleResponse

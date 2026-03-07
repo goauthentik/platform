@@ -192,6 +192,8 @@ struct InteractiveChallenge: Sendable {
 
   var sessionID: String = String()
 
+  var component: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   enum PromptMeta: SwiftProtobuf.Enum, Swift.CaseIterable {
@@ -299,6 +301,18 @@ struct SystemAuthorizeResponse: Sendable {
   init() {}
 
   fileprivate var _response: AuthorizeResponse? = nil
+}
+
+struct SupportedResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var supported: Bool = false
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -562,7 +576,7 @@ extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._Me
 
 extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveChallenge"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}txid\0\u{1}finished\0\u{1}result\0\u{1}prompt\0\u{3}prompt_meta\0\u{3}debug_info\0\u{3}session_id\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}txid\0\u{1}finished\0\u{1}result\0\u{1}prompt\0\u{3}prompt_meta\0\u{3}debug_info\0\u{3}session_id\0\u{1}component\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -577,6 +591,7 @@ extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       case 5: try { try decoder.decodeSingularEnumField(value: &self.promptMeta) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.debugInfo) }()
       case 7: try { try decoder.decodeSingularStringField(value: &self.sessionID) }()
+      case 8: try { try decoder.decodeSingularStringField(value: &self.component) }()
       default: break
       }
     }
@@ -604,6 +619,9 @@ extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if !self.sessionID.isEmpty {
       try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 7)
     }
+    if !self.component.isEmpty {
+      try visitor.visitSingularStringField(value: self.component, fieldNumber: 8)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -615,6 +633,7 @@ extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if lhs.promptMeta != rhs.promptMeta {return false}
     if lhs.debugInfo != rhs.debugInfo {return false}
     if lhs.sessionID != rhs.sessionID {return false}
+    if lhs.component != rhs.component {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -697,6 +716,36 @@ extension SystemAuthorizeResponse: SwiftProtobuf.Message, SwiftProtobuf._Message
   static func ==(lhs: SystemAuthorizeResponse, rhs: SystemAuthorizeResponse) -> Bool {
     if lhs._response != rhs._response {return false}
     if lhs.code != rhs.code {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension SupportedResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".SupportedResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}supported\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBoolField(value: &self.supported) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.supported != false {
+      try visitor.visitSingularBoolField(value: self.supported, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: SupportedResponse, rhs: SupportedResponse) -> Bool {
+    if lhs.supported != rhs.supported {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
