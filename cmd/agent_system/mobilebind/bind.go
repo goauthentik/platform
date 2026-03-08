@@ -21,7 +21,7 @@ func init() {
 
 func InitSystemlog() bool {
 	err := systemlog.MustSetup(pstr.PlatformString{
-		Darwin: new("authentik"),
+		Darwin: new("io.goauthentik.platform.app"),
 	}.ForCurrent())
 	if err != nil {
 		log.WithError(err).Warning("failed to setup system log")
