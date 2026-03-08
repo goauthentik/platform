@@ -17,6 +17,7 @@ window.addEventListener(
             event.data._ak_ext === "authentik-platform-sso" &&
             event.data.challenge
         ) {
+            console.debug("authentik/bext: received endpoint challenge");
             try {
                 if (event.source !== window) {
                     return;
@@ -37,10 +38,19 @@ window.addEventListener(
                             return;
                         }
                         if (signed) {
+                            console.debug(
+                                "authentik/bext: posting signed endpoint response back to page",
+                                {
+                                    responseLength:
+                                        typeof signed === "string" ? signed.length : null,
+                                },
+                            );
                             window.postMessage({
                                 _ak_ext: "authentik-platform-sso",
                                 response: signed,
-                            });
+                            }, window.location.origin);
+                        } else {
+                            console.warn("authentik/bext: background returned empty response");
                         }
                     });
             } catch (exc) {
