@@ -39,6 +39,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: "io.goauthentik.platform.app.sysd_refresh", using: nil
         ) { task in
+            self.logger.debug("Task start io.goauthentik.platform.app.sysd_refresh")
             task.expirationHandler = {
                 task.setTaskCompleted(success: false)
                 Sysd.MobilebindCancelPeriodical()
@@ -46,6 +47,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
             Sysd.MobilebindHandlePeriodical()
             task.setTaskCompleted(success: true)
+            self.scheduleSysdPeriodical()
+        }
+
+        NotificationCenter.default.addObserver(forName:UIApplication.didEnterBackgroundNotification, object: nil, queue: nil) { (_) in
+            self.logger.debug("didEnterBackgroundNotification")
             self.scheduleSysdPeriodical()
         }
 
@@ -61,11 +67,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         } catch {
             print("Unable to submit task: \(error.localizedDescription)")
         }
-    }
-
-    func applicationDidEnterBackground(_ application: UIApplication) {
-        self.logger.debug("applicationDidEnterBackground")
-        (application.delegate as! AppDelegate).scheduleSysdPeriodical()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
