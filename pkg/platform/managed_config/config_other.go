@@ -1,4 +1,4 @@
-//go:build !darwin && !windows
+//go:build (!darwin || mobile) && !windows
 
 package managedconfig
 

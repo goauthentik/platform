@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>io.goauthentik.platform.app</string>
+		<string>io.goauthentik.platform.app.sysd_refresh</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
