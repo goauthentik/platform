@@ -8,6 +8,50 @@ function stringifyError(value: unknown): string | null {
     return null;
 }
 
+const browserApi = (globalThis as typeof globalThis & { browser?: typeof chrome }).browser;
+const runtimeApi = browserApi?.runtime ?? chrome.runtime;
+
+function sendRuntimeMessage(message: {
+    action: string;
+    profile: string;
+    challenge: string;
+}): Promise<unknown> {
+    return new Promise((resolve, reject) => {
+        let settled = false;
+        const finish = (fn: (value: unknown) => void, value: unknown) => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            fn(value);
+        };
+        try {
+            const maybePromise = runtimeApi.sendMessage(message, (response: unknown) => {
+                const lastError =
+                    typeof chrome !== "undefined" ? chrome.runtime?.lastError : undefined;
+                if (lastError) {
+                    finish(reject, new Error(lastError.message));
+                    return;
+                }
+                finish(resolve, response);
+            }) as unknown;
+            if (
+                maybePromise &&
+                typeof maybePromise === "object" &&
+                "then" in maybePromise &&
+                typeof maybePromise.then === "function"
+            ) {
+                maybePromise.then(
+                    (response: unknown) => finish(resolve, response),
+                    (error: unknown) => finish(reject, error),
+                );
+            }
+        } catch (exc) {
+            finish(reject, exc);
+        }
+    });
+}
+
 window.addEventListener(
     "message",
     (event) => {
@@ -22,8 +66,8 @@ window.addEventListener(
                 if (event.source !== window) {
                     return;
                 }
-                chrome.runtime
-                    .sendMessage({
+                console.debug("authentik/bext: sending challenge to background");
+                sendRuntimeMessage({
                         action: "platform_sign_endpoint_header",
                         profile: "default",
                         challenge: event.data.challenge,

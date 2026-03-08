@@ -14,6 +14,9 @@ export interface Response {
     error?: string;
 }
 
+const browserApi = (globalThis as typeof globalThis & { browser?: typeof chrome }).browser;
+const runtimeApi = browserApi?.runtime ?? chrome.runtime;
+
 function createRandomString(length: number = 16) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let result = "";
@@ -39,16 +42,18 @@ export class Native {
     }
 
     #connect() {
-        this.#port = chrome.runtime.connectNative("io.goauthentik.platform");
+        const port = runtimeApi.connectNative("io.goauthentik.platform");
+        this.#port = port;
         this.#isConnected = true;
         this.#reconnectDelay = defaultReconnectDelay;
-        this.#port.onMessage.addListener(this.#listener.bind(this));
-        this.#port.onDisconnect.addListener(() => {
+        port.onMessage.addListener(this.#listener.bind(this));
+        port.onDisconnect.addListener(() => {
             this.#isConnected = false;
             this.#reconnectDelay *= 1.35;
             this.#reconnectDelay = Math.min(this.#reconnectDelay, 3600);
-            // @ts-ignore
-            const err = chrome.runtime.lastError || this.#port?.error;
+            const err =
+                (typeof chrome !== "undefined" ? chrome.runtime?.lastError : undefined) ||
+                (port as chrome.runtime.Port & { error?: unknown }).error;
             console.debug(
                 `authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`,
                 err,
