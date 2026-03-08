@@ -11,6 +11,7 @@ export interface Message {
 export interface Response {
     response_to: string;
     data: { [key: string]: unknown };
+    error?: string;
 }
 
 function createRandomString(length: number = 16) {
@@ -31,6 +32,7 @@ export class Native {
     #promises: Map<string, PromiseWithResolvers<Response>> = new Map();
     #reconnectDelay = defaultReconnectDelay;
     #reconnectTimeout = 0;
+    #isConnected = false;
 
     constructor() {
         this.#connect();
@@ -38,8 +40,11 @@ export class Native {
 
     #connect() {
         this.#port = chrome.runtime.connectNative("io.goauthentik.platform");
+        this.#isConnected = true;
+        this.#reconnectDelay = defaultReconnectDelay;
         this.#port.onMessage.addListener(this.#listener.bind(this));
         this.#port.onDisconnect.addListener(() => {
+            this.#isConnected = false;
             this.#reconnectDelay *= 1.35;
             this.#reconnectDelay = Math.min(this.#reconnectDelay, 3600);
             // @ts-ignore
@@ -48,6 +53,7 @@ export class Native {
                 `authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`,
                 err,
             );
+            this.#port = undefined;
             clearTimeout(this.#reconnectTimeout);
             this.#reconnectTimeout = setTimeout(() => {
                 this.#connect();
@@ -63,7 +69,35 @@ export class Native {
             console.debug(`authentik/bext/native[${msg.response_to}]: No promise to resolve`);
             return;
         }
+        if (msg.error) {
+            prom.reject(new Error(msg.error));
+            this.#promises.delete(msg.response_to);
+            return;
+        }
         prom.resolve(msg);
+        this.#promises.delete(msg.response_to);
+    }
+
+    #postMessage(msg: Message, retry: boolean) {
+        if (!this.#port || !this.#isConnected) {
+            this.#connect();
+        }
+        if (!this.#port) {
+            throw new Error("native host is not connected");
+        }
+        try {
+            this.#port.postMessage(msg);
+        } catch (exc) {
+            const err = exc instanceof Error ? exc.message : String(exc);
+            if (retry && err.includes("disconnected port")) {
+                this.#isConnected = false;
+                this.#port = undefined;
+                this.#connect();
+                this.#postMessage(msg, false);
+                return;
+            }
+            throw exc;
+        }
     }
 
     postMessage(msg: Partial<Message>): Promise<Response> {
@@ -71,7 +105,7 @@ export class Native {
         const promise = Promise.withResolvers<Response>();
         try {
             this.#promises.set(msg.id, promise);
-            this.#port?.postMessage(msg);
+            this.#postMessage(msg as Message, true);
             console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
         } catch (exc) {
             this.#promises.get(msg.id)?.reject(exc);

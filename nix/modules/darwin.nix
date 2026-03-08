@@ -4,6 +4,11 @@ with lib;
 
 let
   cfg = config.services.authentik;
+  appPath = "/Applications/authentik Agent.app";
+  packageAppPath = "${cfg.package}/Applications/authentik Agent.app";
+  defaultConfigPath = "/opt/authentik/config/config.json";
+  targetConfigPath = if cfg.configFile != null then toString cfg.configFile else defaultConfigPath;
+  defaultSysdConfig = ../../cmd/agent_local/package/macos/scripts/sysd-config.json;
 in
 {
   options.services.authentik = {
@@ -39,28 +44,47 @@ in
     # Install the package (makes binaries available in PATH)
     environment.systemPackages = [ cfg.package ];
 
-    # Copy .app bundle to /Applications and install browser native messaging hosts
+    # Expose the .app bundle at the upstream path and install browser native messaging hosts.
     system.activationScripts.authentik-agent.text = ''
       echo "Installing authentik Agent.app..."
-      rm -rf "/Applications/authentik Agent.app"
-      cp -R "${cfg.package}/Applications/authentik Agent.app" "/Applications/"
-      chmod -R 755 "/Applications/authentik Agent.app"
+      rm -rf "${appPath}"
+      ln -sfn "${packageAppPath}" "${appPath}"
       mkdir -p /Library/Logs/io.goauthentik
+      chmod 755 /Library/Logs/io.goauthentik
+
+      echo "Preparing authentik runtime directories..."
+      mkdir -p /opt/authentik/config
+      mkdir -p /opt/authentik/domains
+      mkdir -p /opt/authentik/runtime
+      chmod 700 /opt/authentik
+      chmod 700 /opt/authentik/config
+      chmod 700 /opt/authentik/domains
+      chmod 700 /opt/authentik/runtime
+
+      if [ ! -e "${targetConfigPath}" ]; then
+        echo "Seeding default authentik sysd config..."
+        mkdir -p "$(dirname "${targetConfigPath}")"
+        install -m 600 "${defaultSysdConfig}" "${targetConfigPath}"
+      fi
 
       echo "Installing browser native messaging hosts..."
       # Chrome/Chromium (system-wide)
       mkdir -p "/Library/Google/Chrome/NativeMessagingHosts"
-      cp "/Applications/authentik Agent.app/Contents/Resources/browser-host-chrome.json" \
+      cp "${appPath}/Contents/Resources/browser-host-chrome.json" \
          "/Library/Google/Chrome/NativeMessagingHosts/io.goauthentik.platform.json"
+
+      mkdir -p "/Library/Application Support/Chromium/NativeMessagingHosts"
+      cp "${appPath}/Contents/Resources/browser-host-chrome.json" \
+         "/Library/Application Support/Chromium/NativeMessagingHosts/io.goauthentik.platform.json"
 
       # Edge (system-wide)
       mkdir -p "/Library/Microsoft/Edge/NativeMessagingHosts"
-      cp "/Applications/authentik Agent.app/Contents/Resources/browser-host-chrome.json" \
+      cp "${appPath}/Contents/Resources/browser-host-chrome.json" \
          "/Library/Microsoft/Edge/NativeMessagingHosts/io.goauthentik.platform.json"
 
       # Firefox (system-wide)
       mkdir -p "/Library/Application Support/Mozilla/NativeMessagingHosts"
-      cp "/Applications/authentik Agent.app/Contents/Resources/browser-host-firefox.json" \
+      cp "${appPath}/Contents/Resources/browser-host-firefox.json" \
          "/Library/Application Support/Mozilla/NativeMessagingHosts/io.goauthentik.platform.json"
     '';
 
@@ -69,7 +93,7 @@ in
       serviceConfig = {
         Label = "io.goauthentik.platform.sysd";
         ProgramArguments = [
-          "${cfg.package}/Applications/authentik Agent.app/Contents/MacOS/ak-sysd"
+          "${packageAppPath}/Contents/MacOS/ak-sysd"
           "agent"
         ] ++ lib.optionals (cfg.configFile != null) [
           "--config-file"

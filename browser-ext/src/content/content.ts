@@ -1,3 +1,13 @@
+function stringifyError(value: unknown): string | null {
+    if (value && typeof value === "object" && "error" in value) {
+        const err = (value as { error?: unknown }).error;
+        if (typeof err === "string") {
+            return err;
+        }
+    }
+    return null;
+}
+
 window.addEventListener(
     "message",
     (event) => {
@@ -18,6 +28,14 @@ window.addEventListener(
                         challenge: event.data.challenge,
                     })
                     .then((signed) => {
+                        const error = stringifyError(signed);
+                        if (error) {
+                            console.warn(
+                                "authentik/bext: failed to sign endpoint challenge",
+                                error,
+                            );
+                            return;
+                        }
                         if (signed) {
                             window.postMessage({
                                 _ak_ext: "authentik-platform-sso",

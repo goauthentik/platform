@@ -1,6 +1,13 @@
 {
   description = "authentik platform";
 
+  nixConfig = {
+    extra-substituters = [ "https://pr-525--authentik-pkg.netlify.app/nix" ];
+    extra-trusted-public-keys = [
+      "authentik-pkg:ZZHUD/9SkS8T1BVVoksE/+QjIo0s3F8/AM/h0J3ckaw="
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
