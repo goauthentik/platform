@@ -2,7 +2,6 @@ package mobilebind
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"path"
 
@@ -33,16 +32,13 @@ func InitConfig(configRoot string, temp string) bool {
 	tempRoot = temp
 
 	configPath := path.Join(cfgRoot, "config.json")
-	if _, err := os.Stat(configPath); err != nil && errors.Is(err, os.ErrNotExist) {
-		logger.Info("Config doesn't exist, creating default")
-		if err := createDefaultConfig(config.Config{
-			Debug:      false,
-			DomainDir:  domainsDir,
-			RuntimeDir: path.Join(tempRoot, "runtime"),
-		}, configPath); err != nil {
-			logger.WithError(err).Warning("failed to create default config")
-			return false
-		}
+	if err := createDefaultConfig(config.Config{
+		Debug:      false,
+		DomainDir:  domainsDir,
+		RuntimeDir: path.Join(tempRoot, "runtime"),
+	}, configPath); err != nil {
+		logger.WithError(err).Warning("failed to create default config")
+		return false
 	}
 
 	err := config.Init(configPath, path.Join(cfgRoot, "state.db"))
