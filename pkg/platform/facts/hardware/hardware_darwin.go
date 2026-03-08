@@ -23,19 +23,24 @@ type ProfilerSPHardwareDataType struct {
 }
 
 func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
+	req := &api.DeviceFactsRequestHardware{
+		Manufacturer: new("Apple Inc."),
+		CpuCount:     new(int32(getCPUCores())),
+		MemoryBytes:  new(int64(getTotalMemory(nil))),
+	}
+	if StaticHardware != nil {
+		req.Serial = StaticHardware.Serial
+		return req, nil
+	}
 	hardware, err := common.ExecJSON[ProfilerSPHardwareDataType]("system_profiler", "-json", "SPHardwareDataType")
 	if err != nil {
 		return nil, err
 	}
-	memoryBytes := getTotalMemory(hardware)
-	return &api.DeviceFactsRequestHardware{
-		Manufacturer: new("Apple Inc."),
-		Model:        new(hardware.SPHardwareDataType[0].Model),
-		Serial:       hardware.SPHardwareDataType[0].SerialNumber,
-		CpuName:      new(hardware.SPHardwareDataType[0].ChipType),
-		CpuCount:     new(int32(getCPUCores())),
-		MemoryBytes:  new(int64(memoryBytes)),
-	}, nil
+	req.Model = new(hardware.SPHardwareDataType[0].Model)
+	req.Serial = hardware.SPHardwareDataType[0].SerialNumber
+	req.CpuName = new(hardware.SPHardwareDataType[0].ChipType)
+	req.MemoryBytes = new(int64(getTotalMemory(&hardware)))
+	return req, nil
 }
 
 func getCPUCores() int {
@@ -52,22 +57,24 @@ func getCPUCores() int {
 	return runtime.NumCPU()
 }
 
-func getTotalMemory(hd ProfilerSPHardwareDataType) uint64 {
+func getTotalMemory(hd *ProfilerSPHardwareDataType) uint64 {
 	// Try system_profiler first
-	memoryStr := hd.SPHardwareDataType[0].PhysicalMemory
-	if memoryStr != "" {
-		// Parse memory string like "16 GB" or "8 GB"
-		parts := strings.Fields(memoryStr)
-		if len(parts) >= 2 {
-			if value, err := strconv.ParseFloat(parts[0], 64); err == nil {
-				unit := strings.ToUpper(parts[1])
-				switch unit {
-				case "GB":
-					return uint64(value * 1024 * 1024 * 1024)
-				case "MB":
-					return uint64(value * 1024 * 1024)
-				case "KB":
-					return uint64(value * 1024)
+	if hd != nil {
+		memoryStr := hd.SPHardwareDataType[0].PhysicalMemory
+		if memoryStr != "" {
+			// Parse memory string like "16 GB" or "8 GB"
+			parts := strings.Fields(memoryStr)
+			if len(parts) >= 2 {
+				if value, err := strconv.ParseFloat(parts[0], 64); err == nil {
+					unit := strings.ToUpper(parts[1])
+					switch unit {
+					case "GB":
+						return uint64(value * 1024 * 1024 * 1024)
+					case "MB":
+						return uint64(value * 1024 * 1024)
+					case "KB":
+						return uint64(value * 1024)
+					}
 				}
 			}
 		}

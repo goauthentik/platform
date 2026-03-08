@@ -1,11 +1,5 @@
 import AuthenticationServices
-//
-//  GRPC.swift
-//  PSSO
-//
-//  Created by Jens Langhammer on 17.10.25.
-//  Copyright © 2025 Authentik Security Inc. All rights reserved.
-//
+
 internal import Foundation
 internal import GRPCCore
 internal import GRPCNIOTransportHTTP2
@@ -58,12 +52,25 @@ public class SysdBridge {
         self.logInterceptor = LogInterceptor(logger: self.logger)
     }
 
+    func getSocketPath(id: String) -> String {
+        #if os(macOS)
+        if id == "default" {
+            return "/var/run/authentik-sysd.sock"
+        } else {
+            return "/var/run/authentik-sysd-\(id).sock"
+        }
+        #elseif os(iOS)
+        return URL.temporaryDirectory.relativePath + "/\(id).sock"
+        #endif
+    }
+
     func withClient<Result: Sendable>(
+        id: String = "default",
         handleClient: (GRPCClient<HTTP2ClientTransport.Posix>) async throws -> Result
     ) async throws -> Result {
         return try await withGRPCClient(
             transport: .http2NIOPosix(
-                target: .unixDomainSocket(path: "/var/run/authentik-sysd.sock"),
+                target: .unixDomainSocket(path: self.getSocketPath(id: id)),
                 transportSecurity: .plaintext
             ),
             interceptors: [self.logInterceptor],
@@ -119,6 +126,30 @@ public class SysdBridge {
         }
     }
 
+    public func ping() async throws -> String {
+        return try await self.withClient { client in
+            let c = Ping.Client(wrapping: client)
+            let reply = try await c.ping(
+                request: ClientRequest(message: Google_Protobuf_Empty())
+            )
+            return reply.version
+        }
+    }
+
+    public func domainsEnroll(name: String, authentikURL: String, token: String) async throws {
+        return try await self.withClient(id: "ctrl") { client in
+            let c = SystemCtrl.Client(wrapping: client)
+            try await c.domainEnroll(request: ClientRequest(
+                message: DomainEnrollRequest.with {
+                    $0.authentikURL = authentikURL
+                    $0.name = name
+                    $0.token = token
+                })
+            )
+        }
+    }
+
+    #if os(macOS)
     public func pssoRegisterUser(
         enclaveKeyID: String,
         userSecureEnclaveKey: String,
@@ -176,4 +207,5 @@ public class SysdBridge {
             return cfg
         }
     }
+    #endif
 }

@@ -80,11 +80,11 @@ struct TokenAuthResponse: Sendable {
   var successful: Bool = false
 
   var token: Token {
-    get {return _token ?? Token()}
+    get {_token ?? Token()}
     set {_token = newValue}
   }
   /// Returns true if `token` has been explicitly set.
-  var hasToken: Bool {return self._token != nil}
+  var hasToken: Bool {self._token != nil}
   /// Clears the value of `token`. Subsequent reads from it will return its default value.
   mutating func clearToken() {self._token = nil}
 
@@ -265,11 +265,11 @@ struct SystemAuthorizeRequest: Sendable {
   var sessionID: String = String()
 
   var authz: AuthorizeRequest {
-    get {return _authz ?? AuthorizeRequest()}
+    get {_authz ?? AuthorizeRequest()}
     set {_authz = newValue}
   }
   /// Returns true if `authz` has been explicitly set.
-  var hasAuthz: Bool {return self._authz != nil}
+  var hasAuthz: Bool {self._authz != nil}
   /// Clears the value of `authz`. Subsequent reads from it will return its default value.
   mutating func clearAuthz() {self._authz = nil}
 
@@ -286,11 +286,11 @@ struct SystemAuthorizeResponse: Sendable {
   // methods supported on all messages.
 
   var response: AuthorizeResponse {
-    get {return _response ?? AuthorizeResponse()}
+    get {_response ?? AuthorizeResponse()}
     set {_response = newValue}
   }
   /// Returns true if `response` has been explicitly set.
-  var hasResponse: Bool {return self._response != nil}
+  var hasResponse: Bool {self._response != nil}
   /// Clears the value of `response`. Subsequent reads from it will return its default value.
   mutating func clearResponse() {self._response = nil}
 

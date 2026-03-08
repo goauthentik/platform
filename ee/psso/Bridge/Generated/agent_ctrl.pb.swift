@@ -26,11 +26,11 @@ struct SetupRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -57,11 +57,11 @@ struct SetupResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -90,11 +90,11 @@ struct ListProfilesResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 

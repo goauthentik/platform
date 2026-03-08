@@ -26,11 +26,11 @@ struct WhoAmIRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -47,11 +47,11 @@ struct WhoAmIResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -70,11 +70,11 @@ struct CurrentTokenRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -131,20 +131,20 @@ struct CurrentTokenResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
   var token: Token {
-    get {return _token ?? Token()}
+    get {_token ?? Token()}
     set {_token = newValue}
   }
   /// Returns true if `token` has been explicitly set.
-  var hasToken: Bool {return self._token != nil}
+  var hasToken: Bool {self._token != nil}
   /// Clears the value of `token`. Subsequent reads from it will return its default value.
   mutating func clearToken() {self._token = nil}
 
@@ -166,11 +166,11 @@ struct TokenExchangeRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -189,11 +189,11 @@ struct TokenExchangeResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -214,11 +214,11 @@ struct DeviceTokenExchangeRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -237,11 +237,11 @@ struct AuthorizeRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -262,11 +262,11 @@ struct AuthorizeResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 

@@ -208,7 +208,9 @@ func (sm *SystemAgent) Start() {
 	wg.Wait()
 
 	sm.b.DispatchEvent(types.TopicAgentStarted, events.NewEvent(context.Background(), map[string]any{}))
+}
 
+func (sm *SystemAgent) Wait() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan

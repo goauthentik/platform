@@ -15,5 +15,6 @@ func runAgentPlatform(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	agent.Start()
+	agent.Wait()
 	return nil
 }

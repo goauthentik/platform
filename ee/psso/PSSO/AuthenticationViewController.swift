@@ -1,8 +1,8 @@
 import AuthenticationServices
 import Cocoa
 import OSLog
-import Sentry
 import WebKit
+import Bridge
 
 class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     @IBOutlet var webView: WKWebView!
