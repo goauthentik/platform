@@ -10,6 +10,99 @@ function stringifyError(value: unknown): string | null {
 
 const browserApi = (globalThis as typeof globalThis & { browser?: typeof chrome }).browser;
 const runtimeApi = browserApi?.runtime ?? chrome.runtime;
+const debugScriptId = "authentik-platform-sso-debug";
+
+function injectPageDebugScript() {
+    if (document.getElementById(debugScriptId)) {
+        return;
+    }
+    const script = document.createElement("script");
+    script.id = debugScriptId;
+    script.textContent = `
+(() => {
+    if (window.__akPlatformDebugInstalled) {
+        return;
+    }
+    window.__akPlatformDebugInstalled = true;
+    const summarizeBody = (init) => {
+        const body = init?.body;
+        if (!body || typeof body !== "string") {
+            return null;
+        }
+        try {
+            const parsed = JSON.parse(body);
+            return {
+                component: parsed?.component ?? null,
+                hasResponse: typeof parsed?.response === "string",
+                hasSelectedChallenge: Boolean(parsed?.selectedChallenge),
+                selectedDeviceClass: parsed?.selectedChallenge?.deviceClass ?? null,
+                selectedDeviceUid: parsed?.selectedChallenge?.deviceUid ?? null,
+                hasWebauthn: Boolean(parsed?.webauthn),
+                hasDuo: typeof parsed?.duo !== "undefined",
+                hasCode: typeof parsed?.code !== "undefined",
+            };
+        } catch {
+            return { rawLength: body.length };
+        }
+    };
+    const origFetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+        const input = args[0];
+        const init = args[1];
+        const url = typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
+        const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+        const isFlowExecutor = url.includes("/api/v3/flows/executor/");
+        if (!isFlowExecutor) {
+            return origFetch(...args);
+        }
+        const started = performance.now();
+        console.debug("authentik/bext/page: fetch start", {
+            url,
+            method,
+            request: summarizeBody(init),
+        });
+        try {
+            const response = await origFetch(...args);
+            const clone = response.clone();
+            let body = null;
+            try {
+                body = await clone.json();
+            } catch {
+                body = null;
+            }
+            console.debug("authentik/bext/page: fetch done", {
+                url,
+                method,
+                status: response.status,
+                ok: response.ok,
+                elapsedMs: Math.round(performance.now() - started),
+                component: body?.component ?? null,
+                responseErrors: body?.responseErrors ?? null,
+                flowInfoTitle: body?.flowInfo?.title ?? null,
+                hasChallenge: Boolean(body?.challenge),
+                deviceClasses: Array.isArray(body?.deviceChallenges)
+                    ? body.deviceChallenges.map((challenge) => challenge?.deviceClass ?? null)
+                    : null,
+                deviceUids: Array.isArray(body?.deviceChallenges)
+                    ? body.deviceChallenges.map((challenge) => challenge?.deviceUid ?? null)
+                    : null,
+            });
+            return response;
+        } catch (error) {
+            console.warn("authentik/bext/page: fetch failed", {
+                url,
+                method,
+                elapsedMs: Math.round(performance.now() - started),
+                error: error instanceof Error ? error.message : String(error),
+            });
+            throw error;
+        }
+    };
+})();
+`;
+    (document.documentElement || document.head || document.body).appendChild(script);
+    script.remove();
+}
 
 function sendRuntimeMessage(message: {
     action: string;
@@ -51,6 +144,8 @@ function sendRuntimeMessage(message: {
         }
     });
 }
+
+injectPageDebugScript();
 
 window.addEventListener(
     "message",
