@@ -9,12 +9,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
     static let queryResponse = "xak-agent-response"
 
     private func shouldSkip(request: ASAuthorizationProviderExtensionAuthorizationRequest) -> Bool {
-        //        if !(request.loginManager?.isDeviceRegistered ?? false)
-        //            || !(request.loginManager?.isUserRegistered ?? false)
-        //        {
-        //            self.logger.info("SSOE: Skipping due to unregistered user or device")
-        //            return true
-        //        }
+        // We specifically don't check for PSSO registration status as this functionality doesn't require PSSO
         let callerBundle = request.callerBundleIdentifier
         if let exclusions = request.extensionData["ExcludedApps"] as? [String],
             exclusions.contains(callerBundle)
@@ -26,21 +21,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             self.logger.info("SSOE: No login manager, skipping")
             return true
         }
-        //        guard let base = URL(string: config.BaseURL) else {
-        //            self.logger.info("SSOE: Unable to parse base URL")
-        //            return true
-        //        }
-        //        if request.url.scheme != base.scheme
-        //            || request.url
-        //                .host()
-        //                != base
-        //                .host()
-        //            || !request.url.path().starts(with: base.path())
-        //        {
-        //            self.logger.info("SSOE: Skipping due to mismatching base URL")
-        //            return true
-        //        }
-        if request.url.valueOf(AuthenticationViewController.queryResponse) == nil {
+        if request.url.valueOf(AuthenticationViewController.queryResponse) != nil {
             self.logger.info("SSOE: Skipping due to existing response")
             return true
         }
@@ -91,26 +72,5 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
                 return
             }
         }
-    }
-
-    private func injectSession(
-        with request: ASAuthorizationProviderExtensionAuthorizationRequest
-    ) -> Bool {
-        let sessionKey = request.loginManager?.ssoTokens?["session_key"]
-        if let sk = sessionKey as? String {
-            self.logger.debug("SSOE: Injecting session \(sk)")
-            let url = request.url.appending(queryItems: [URLQueryItem(name: "ak-ssoe", value: "1")])
-            let headers: [String: String] = [
-                "Location": url.absoluteString,
-                "Set-Cookie": "authentik_session=\(sk); Path=/; Secure; HttpOnly",
-            ]
-            if let response = HTTPURLResponse.init(
-                url: request.url, statusCode: 302, httpVersion: nil, headerFields: headers)
-            {
-                request.complete(httpResponse: response, httpBody: nil)
-                return true
-            }
-        }
-        return false
     }
 }
