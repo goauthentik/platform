@@ -3,6 +3,8 @@ package agentstarter
 import (
 	"errors"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -10,7 +12,6 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/agent_system/session"
-	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/vnd/fleet/orbit/pkg/execuser"
 	userpkg "goauthentik.io/platform/vnd/fleet/orbit/pkg/user"
@@ -50,7 +51,12 @@ func (as *Server) Stop() error {
 func (as *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {}
 
 func (as *Server) start() {
-	if _, err := os.Stat(as.agentExec().ForCurrent()); errors.Is(err, os.ErrNotExist) {
+	agentExec := as.agentExec()
+	if agentExec == "" {
+		return
+	}
+	if _, err := os.Stat(agentExec); errors.Is(err, os.ErrNotExist) {
+		as.log.WithField("path", agentExec).Debug("agent executable path not found, skipping")
 		return
 	}
 	for {
@@ -75,11 +81,16 @@ func (as *Server) start() {
 	}
 }
 
-func (as *Server) agentExec() pstr.PlatformString {
-	return pstr.PlatformString{
-		Darwin:  new("/Applications/authentik Agent.app"),
-		Linux:   new("/usr/bin/ak-agent"),
-		Windows: new(`C:\Program Files\Authentik Security Inc\agent\ak-agent.exe`),
+func (as *Server) agentExec() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return darwinAgentExec()
+	case "linux":
+		return "/usr/bin/ak-agent"
+	case "windows":
+		return `C:\Program Files\Authentik Security Inc\agent\ak-agent.exe`
+	default:
+		return ""
 	}
 }
 
@@ -113,10 +124,63 @@ func (as *Server) startSingle() error {
 	// To be able to run the desktop application (mostly to register the icon in the system tray)
 	// we need to run the application as the login user.
 	// Package execuser provides multi-platform support for this.
-	lastLogs, err := execuser.Run(as.agentExec().ForCurrent(), opts...)
+	lastLogs, err := execuser.Run(as.agentExec(), opts...)
 	if err != nil {
 		as.log.WithField("logs", lastLogs).WithError(err).Debug("execuser.Run")
 		return err
 	}
 	return nil
+}
+
+func darwinAgentExec() string {
+	if override := os.Getenv("AUTHENTIK_AGENT_APP_PATH"); override != "" {
+		return override
+	}
+	executablePath, err := os.Executable()
+	if err != nil {
+		executablePath = ""
+	}
+	return firstExistingPath(darwinAgentExecCandidates(executablePath), func(path string) bool {
+		_, err := os.Stat(path)
+		return err == nil
+	})
+}
+
+func darwinAgentExecCandidates(executablePath string) []string {
+	candidates := []string{
+		"/Applications/authentik Agent.app",
+		"/Applications/Nix Apps/authentik Agent.app",
+	}
+	if executablePath != "" {
+		candidates = append(candidates, filepath.Clean(filepath.Join(executablePath, "..", "..", "..")))
+	}
+	return uniqueStrings(candidates)
+}
+
+func firstExistingPath(candidates []string, exists func(string) bool) string {
+	for _, candidate := range candidates {
+		if candidate != "" && exists(candidate) {
+			return candidate
+		}
+	}
+	if len(candidates) == 0 {
+		return ""
+	}
+	return candidates[0]
+}
+
+func uniqueStrings(values []string) []string {
+	seen := map[string]struct{}{}
+	unique := make([]string, 0, len(values))
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		unique = append(unique, value)
+	}
+	return unique
 }

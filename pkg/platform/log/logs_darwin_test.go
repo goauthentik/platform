@@ -9,7 +9,9 @@ import (
 )
 
 func TestDarwin(t *testing.T) {
-	MustSetup("test")
+	if err := MustSetup("test"); err != nil {
+		t.Fatal(err)
+	}
 	logrus.SetLevel(logrus.DebugLevel)
 	logrus.WithField("logger", "foo").Trace("foob 1")
 	logrus.WithField("logger", "foo.bar").Debug("foob 2")

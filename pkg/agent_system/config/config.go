@@ -15,6 +15,9 @@ import (
 
 var manager *cfgmgr.Manager[*Config]
 var st *state.State
+var keyringGet = keyring.Get
+var keyringSet = keyring.Set
+var keyringDelete = keyring.Delete
 
 func Init(path string, statePath string) error {
 	sst, err := state.Open(statePath, nil)
@@ -78,7 +81,7 @@ func (c *Config) Domains() []*DomainConfig {
 
 func (c *Config) SaveDomain(dom *DomainConfig) error {
 	path := filepath.Join(c.DomainDir, dom.Domain+".json")
-	err := keyring.Set(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways, dom.Token)
+	err := keyringSet(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways, dom.Token)
 	if err != nil {
 		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
 			c.log.WithError(err).Warning("failed to save domain token in keyring")
@@ -98,12 +101,11 @@ func (c *Config) SaveDomain(dom *DomainConfig) error {
 
 func (c *Config) DeleteDomain(dom *DomainConfig) error {
 	path := filepath.Join(c.DomainDir, dom.Domain+".json")
-	err := keyring.Delete(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways)
+	err := keyringDelete(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways)
 	if err != nil {
 		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
 			c.log.WithError(err).Warning("failed to delete domain token in keyring")
 		}
-		dom.FallbackToken = dom.Token
 	}
 	err = os.Remove(path)
 	if err != nil {
