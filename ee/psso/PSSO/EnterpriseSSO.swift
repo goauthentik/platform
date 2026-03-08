@@ -47,6 +47,12 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             request.doNotHandle()
             return
         }
+#if os(macOS)
+        return getSignedResponseMac(challenge: challenge, request: request)
+#endif
+    }
+
+    public func getSignedResponseMac(challenge: String, request: ASAuthorizationProviderExtensionAuthorizationRequest) {
         Task {
             do {
                 let header = try await SysdBridge.shared.platformSignedEndpointHeader(
