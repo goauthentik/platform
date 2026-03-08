@@ -4,9 +4,9 @@ import Bridge
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
 
-    static let ssoExtURLPath = "/endpoint/agent/apple_ssoext/"
-    static let queryChallenge = "challenge"
-    static let queryResponse = "response"
+    static let ssoExtURLPath = "/endpoints/agent/browser-backchannel/"
+    static let queryChallenge = "xak-agent-challenge"
+    static let queryResponse = "xak-agent-response"
 
     private func shouldSkip(request: ASAuthorizationProviderExtensionAuthorizationRequest) -> Bool {
         //        if !(request.loginManager?.isDeviceRegistered ?? false)
