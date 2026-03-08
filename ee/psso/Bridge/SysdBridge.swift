@@ -138,7 +138,7 @@ public class SysdBridge {
     public func domainsEnroll(name: String, authentikURL: String, token: String) async throws {
         return try await self.withClient(id: "ctrl") { client in
             let c = SystemCtrl.Client(wrapping: client)
-            try await c.domainEnroll(
+            let _ = try await c.domainEnroll(
                 request: ClientRequest(
                     message: DomainEnrollRequest.with {
                         $0.authentikURL = authentikURL
@@ -146,6 +146,16 @@ public class SysdBridge {
                         $0.token = token
                     })
             )
+        }
+    }
+
+    public func domainsList(name: String, authentikURL: String, token: String) async throws {
+        return try await self.withClient(id: "ctrl") { client in
+            let c = SystemCtrl.Client(wrapping: client)
+            let reply = try await c.domainList(
+                request: ClientRequest(message: Google_Protobuf_Empty())
+            )
+//            return reply.domains[0].
         }
     }
 

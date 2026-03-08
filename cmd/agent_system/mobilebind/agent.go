@@ -33,3 +33,11 @@ func Start() {
 func Stop() {
 	agent.Stop()
 }
+
+func HandlePeriodical() {
+
+}
+
+func CancelPeriodical() {
+
+}
