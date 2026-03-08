@@ -64,24 +64,17 @@ export class Native {
                     `native host disconnected${err ? `: ${String(err)}` : ""}`,
                 ),
             );
-            console.debug(
-                `authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`,
-                err,
-            );
             this.#port = undefined;
             clearTimeout(this.#reconnectTimeout);
             this.#reconnectTimeout = setTimeout(() => {
                 this.#connect();
             }, this.#reconnectDelay * 1000);
         });
-        console.debug("authentik/bext/native: Connected to native");
     }
 
     #listener(msg: Response) {
         const prom = this.#promises.get(msg.response_to);
-        console.debug(`authentik/bext/native[${msg.response_to}]: Got response`);
         if (!prom) {
-            console.debug(`authentik/bext/native[${msg.response_to}]: No promise to resolve`);
             return;
         }
         if (msg.error) {
@@ -134,7 +127,6 @@ export class Native {
             }, requestTimeoutMs);
             this.#promises.set(msg.id, pending);
             this.#postMessage(msg as Message, true);
-            console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
         } catch (exc) {
             const pending = this.#promises.get(msg.id);
             if (pending?.timeout) {

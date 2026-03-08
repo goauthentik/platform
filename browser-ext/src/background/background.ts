@@ -13,16 +13,11 @@ function stringifyError(exc: unknown): string {
     return String(exc);
 }
 
-chrome.runtime.onInstalled.addListener(() => {
-    console.debug("authentik Extension Installed");
-});
-
 const native = new Native();
 
 async function handleMessage(msg: { action?: string; profile?: string; challenge?: string }) {
     switch (msg.action) {
         case "platform_sign_endpoint_header":
-            console.debug("authentik/bext/background: signing endpoint challenge");
             try {
                 return await native.platformSignEndpointHeader(msg.profile ?? "default", msg.challenge ?? "");
             } catch (exc) {

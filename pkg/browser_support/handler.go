@@ -75,7 +75,6 @@ func (bs *BrowserSupport) setup() {
 		}, nil
 	})
 	bs.l.Handle("get_token", func(in message) (*response, error) {
-		bs.log.Debugf("Browser host message: '%+v'\n", in)
 		curr, err := bs.agentClient.GetCurrentToken(bs.ctx, &pb.CurrentTokenRequest{
 			Header: &pb.RequestHeader{
 				Profile: in.Profile,
