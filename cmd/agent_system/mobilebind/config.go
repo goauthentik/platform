@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 
-	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_system/config"
 )
 
@@ -23,8 +22,10 @@ func createDefaultConfig(config config.Config, path string) error {
 
 func InitConfig(configRoot string, temp string) bool {
 	cfgRoot := path.Join(configRoot, "sysd/")
-	if err := os.MkdirAll(path.Join(cfgRoot, "domains"), 0o700); err != nil {
-		log.WithError(err).Warning("failed to create domain dir")
+	domainsDir := path.Join(cfgRoot, "domains")
+	logger.WithField("path", domainsDir).Debug("creating domains dir")
+	if err := os.MkdirAll(domainsDir, 0o700); err != nil {
+		logger.WithError(err).Warning("failed to create domain dir")
 		return false
 	}
 
@@ -33,20 +34,20 @@ func InitConfig(configRoot string, temp string) bool {
 
 	configPath := path.Join(cfgRoot, "config.json")
 	if _, err := os.Stat(configPath); err != nil && errors.Is(err, os.ErrNotExist) {
-		log.Info("Config doesn't exist, creating default")
+		logger.Info("Config doesn't exist, creating default")
 		if err := createDefaultConfig(config.Config{
 			Debug:      false,
-			DomainDir:  path.Join(cfgRoot, "domains"),
+			DomainDir:  domainsDir,
 			RuntimeDir: path.Join(tempRoot, "runtime"),
 		}, configPath); err != nil {
-			log.WithError(err).Warning("failed to create default config")
+			logger.WithError(err).Warning("failed to create default config")
 			return false
 		}
 	}
 
 	err := config.Init(configPath, path.Join(cfgRoot, "state.db"))
 	if err != nil {
-		log.WithError(err).Warning("failed to init config")
+		logger.WithError(err).Warning("failed to init config")
 		return false
 	}
 	return true
