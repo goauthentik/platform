@@ -16,21 +16,19 @@ chrome.runtime.onInstalled.addListener(() => {
 
 const native = new Native();
 
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg) => {
     switch (msg.action) {
         case "platform_sign_endpoint_header":
-            native
+            return native
                 .platformSignEndpointHeader(msg.profile, msg.challenge)
-                .then((r) => {
-                    sendResponse(r);
-                })
+                .then((r) => r)
                 .catch((exc) => {
                     console.warn("Failed to send request for platform sign", exc);
-                    sendResponse({
+                    return {
                         error: stringifyError(exc),
-                    });
+                    };
                 });
-            break;
+        default:
+            return false;
     }
-    return true;
 });
