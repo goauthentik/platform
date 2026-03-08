@@ -4,7 +4,8 @@ with lib;
 
 let
   cfg = config.services.authentik;
-in {
+in
+{
   options.services.authentik = {
     enable = mkEnableOption "authentik platform agent";
 
@@ -21,6 +22,12 @@ in {
       description = "The authentik server domain to connect to.";
     };
 
+    configFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "Path to the authentik configuration file.";
+    };
+
     extraArgs = mkOption {
       type = types.listOf types.str;
       default = [ ];
@@ -33,10 +40,10 @@ in {
     environment.systemPackages = [ cfg.package ];
 
     # Copy .app bundle to /Applications and install browser native messaging hosts
-    system.activationScripts.postActivation.text = ''
+    system.activationScripts.authentik-agent.text = ''
       echo "Installing authentik Agent.app..."
       rm -rf "/Applications/authentik Agent.app"
-      cp -r "${cfg.package}/Applications/authentik Agent.app" "/Applications/"
+      cp -R "${cfg.package}/Applications/authentik Agent.app" "/Applications/"
       chmod -R 755 "/Applications/authentik Agent.app"
       mkdir -p /Library/Logs/io.goauthentik
 
@@ -62,9 +69,15 @@ in {
       serviceConfig = {
         Label = "io.goauthentik.platform.sysd";
         ProgramArguments = [
-          "/Applications/authentik Agent.app/Contents/MacOS/ak-sysd"
+          "${cfg.package}/Applications/authentik Agent.app/Contents/MacOS/ak-sysd"
           "agent"
+        ] ++ lib.optionals (cfg.configFile != null) [
+          "--config-file"
+          (toString cfg.configFile)
         ] ++ cfg.extraArgs;
+        EnvironmentVariables = mkIf (cfg.domain != null) {
+          AUTHENTIK_DOMAIN = cfg.domain;
+        };
         UserName = "root";
         RunAtLoad = true;
         KeepAlive = true;

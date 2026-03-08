@@ -21,9 +21,8 @@ buildGoModule {
   postInstall = ''
     mv $out/bin/cli $out/bin/ak
 
-    # Create symlinks for subcommands
+    # Match the packaged CLI entrypoint aliases.
     ln -s $out/bin/ak $out/bin/ak-vault
-    ln -s $out/bin/ak $out/bin/ak-browser-support
   '';
 
   meta = with lib; {
