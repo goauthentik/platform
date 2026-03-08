@@ -1,8 +1,8 @@
 import AuthenticationServices
+import Bridge
 import Cocoa
 import OSLog
 import WebKit
-import Bridge
 
 class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     @IBOutlet var webView: WKWebView!

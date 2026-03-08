@@ -1,5 +1,4 @@
 import AuthenticationServices
-
 internal import Foundation
 internal import GRPCCore
 internal import GRPCNIOTransportHTTP2
@@ -54,13 +53,13 @@ public class SysdBridge {
 
     func getSocketPath(id: String) -> String {
         #if os(macOS)
-        if id == "default" {
-            return "/var/run/authentik-sysd.sock"
-        } else {
-            return "/var/run/authentik-sysd-\(id).sock"
-        }
+            if id == "default" {
+                return "/var/run/authentik-sysd.sock"
+            } else {
+                return "/var/run/authentik-sysd-\(id).sock"
+            }
         #elseif os(iOS)
-        return URL.temporaryDirectory.relativePath + "/\(id).sock"
+            return URL.temporaryDirectory.relativePath + "/\(id).sock"
         #endif
     }
 
@@ -139,73 +138,74 @@ public class SysdBridge {
     public func domainsEnroll(name: String, authentikURL: String, token: String) async throws {
         return try await self.withClient(id: "ctrl") { client in
             let c = SystemCtrl.Client(wrapping: client)
-            try await c.domainEnroll(request: ClientRequest(
-                message: DomainEnrollRequest.with {
-                    $0.authentikURL = authentikURL
-                    $0.name = name
-                    $0.token = token
-                })
+            try await c.domainEnroll(
+                request: ClientRequest(
+                    message: DomainEnrollRequest.with {
+                        $0.authentikURL = authentikURL
+                        $0.name = name
+                        $0.token = token
+                    })
             )
         }
     }
 
     #if os(macOS)
-    public func pssoRegisterUser(
-        enclaveKeyID: String,
-        userSecureEnclaveKey: String,
-        userAuth: String,
-    ) async throws -> ASAuthorizationProviderExtensionUserLoginConfiguration {
-        return try await self.withClient { client in
-            let c = SystemAuthApple.Client(wrapping: client)
-            let reply = try await c.registerUser(
-                request: ClientRequest(
-                    message: RegisterUserRequest.with {
-                        $0.enclaveKeyID = enclaveKeyID
-                        $0.userSecureEnclaveKey = userSecureEnclaveKey
-                        $0.userAuth = userAuth
-                    }
-                ))
-            return ASAuthorizationProviderExtensionUserLoginConfiguration(
-                loginUserName: reply.username
-            )
-        }
-    }
-
-    public func pssoRegisterDevice(
-        deviceSigningKey: String,
-        deviceEncryptionKey: String,
-        encKeyID: String,
-        signKeyID: String,
-    ) async throws -> ASAuthorizationProviderExtensionLoginConfiguration {
-        return try await self.withClient { client in
-            let c = SystemAuthApple.Client(wrapping: client)
-            let res = try await c.registerDevice(
-                request: ClientRequest(
-                    message: RegisterDeviceRequest.with {
-                        $0.deviceSigningKey = deviceSigningKey
-                        $0.deviceEncryptionKey = deviceEncryptionKey
-                        $0.encKeyID = encKeyID
-                        $0.signKeyID = signKeyID
-                    }
-                ))
-            let cfg = ASAuthorizationProviderExtensionLoginConfiguration(
-                clientID: res.clientID,
-                issuer: res.issuer,
-                tokenEndpointURL: URL(string: res.tokenEndpoint)!,
-                jwksEndpointURL: URL(string: res.jwksEndpoint)!,
-                audience: res.audience
-            )
-            cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
-            cfg.customNonceRequestValues
-                .append(
-                    URLQueryItem(
-                        name: "x-ak-device-token",
-                        value: res.deviceToken.addingPercentEncoding(
-                            withAllowedCharacters: .alphanumerics)
-                    )
+        public func pssoRegisterUser(
+            enclaveKeyID: String,
+            userSecureEnclaveKey: String,
+            userAuth: String,
+        ) async throws -> ASAuthorizationProviderExtensionUserLoginConfiguration {
+            return try await self.withClient { client in
+                let c = SystemAuthApple.Client(wrapping: client)
+                let reply = try await c.registerUser(
+                    request: ClientRequest(
+                        message: RegisterUserRequest.with {
+                            $0.enclaveKeyID = enclaveKeyID
+                            $0.userSecureEnclaveKey = userSecureEnclaveKey
+                            $0.userAuth = userAuth
+                        }
+                    ))
+                return ASAuthorizationProviderExtensionUserLoginConfiguration(
+                    loginUserName: reply.username
                 )
-            return cfg
+            }
         }
-    }
+
+        public func pssoRegisterDevice(
+            deviceSigningKey: String,
+            deviceEncryptionKey: String,
+            encKeyID: String,
+            signKeyID: String,
+        ) async throws -> ASAuthorizationProviderExtensionLoginConfiguration {
+            return try await self.withClient { client in
+                let c = SystemAuthApple.Client(wrapping: client)
+                let res = try await c.registerDevice(
+                    request: ClientRequest(
+                        message: RegisterDeviceRequest.with {
+                            $0.deviceSigningKey = deviceSigningKey
+                            $0.deviceEncryptionKey = deviceEncryptionKey
+                            $0.encKeyID = encKeyID
+                            $0.signKeyID = signKeyID
+                        }
+                    ))
+                let cfg = ASAuthorizationProviderExtensionLoginConfiguration(
+                    clientID: res.clientID,
+                    issuer: res.issuer,
+                    tokenEndpointURL: URL(string: res.tokenEndpoint)!,
+                    jwksEndpointURL: URL(string: res.jwksEndpoint)!,
+                    audience: res.audience
+                )
+                cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
+                cfg.customNonceRequestValues
+                    .append(
+                        URLQueryItem(
+                            name: "x-ak-device-token",
+                            value: res.deviceToken.addingPercentEncoding(
+                                withAllowedCharacters: .alphanumerics)
+                        )
+                    )
+                return cfg
+            }
+        }
     #endif
 }

@@ -10,10 +10,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         Sentry.setup()
 
-        Sysd
-            .MobilebindFactsSetSerial(
-                UIDevice.current.identifierForVendor?.uuidString
-            )
+        Sysd.MobilebindFactsSetSerial(
+            UIDevice.current.identifierForVendor?.uuidString
+        )
 
         Sysd.MobilebindInitSystemlog()
         Sysd.MobilebindInitConfig(
