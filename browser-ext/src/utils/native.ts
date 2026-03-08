@@ -29,10 +29,15 @@ function createRandomString(length: number = 16) {
 }
 
 const defaultReconnectDelay = 5;
+const requestTimeoutMs = 2500;
+
+type PendingRequest = PromiseWithResolvers<Response> & {
+    timeout?: ReturnType<typeof setTimeout>;
+};
 
 export class Native {
     #port?: chrome.runtime.Port;
-    #promises: Map<string, PromiseWithResolvers<Response>> = new Map();
+    #promises: Map<string, PendingRequest> = new Map();
     #reconnectDelay = defaultReconnectDelay;
     #reconnectTimeout = 0;
     #isConnected = false;
@@ -54,6 +59,11 @@ export class Native {
             const err =
                 (typeof chrome !== "undefined" ? chrome.runtime?.lastError : undefined) ||
                 (port as chrome.runtime.Port & { error?: unknown }).error;
+            this.#rejectPending(
+                new Error(
+                    `native host disconnected${err ? `: ${String(err)}` : ""}`,
+                ),
+            );
             console.debug(
                 `authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`,
                 err,
@@ -75,9 +85,15 @@ export class Native {
             return;
         }
         if (msg.error) {
+            if (prom.timeout) {
+                clearTimeout(prom.timeout);
+            }
             prom.reject(new Error(msg.error));
             this.#promises.delete(msg.response_to);
             return;
+        }
+        if (prom.timeout) {
+            clearTimeout(prom.timeout);
         }
         prom.resolve(msg);
         this.#promises.delete(msg.response_to);
@@ -109,13 +125,35 @@ export class Native {
         msg.id = createRandomString();
         const promise = Promise.withResolvers<Response>();
         try {
-            this.#promises.set(msg.id, promise);
+            const pending = promise as PendingRequest;
+            pending.timeout = setTimeout(() => {
+                this.#promises.delete(msg.id as string);
+                pending.reject(
+                    new Error(`native host timed out after ${requestTimeoutMs}ms`),
+                );
+            }, requestTimeoutMs);
+            this.#promises.set(msg.id, pending);
             this.#postMessage(msg as Message, true);
             console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
         } catch (exc) {
-            this.#promises.get(msg.id)?.reject(exc);
+            const pending = this.#promises.get(msg.id);
+            if (pending?.timeout) {
+                clearTimeout(pending.timeout);
+            }
+            pending?.reject(exc);
+            this.#promises.delete(msg.id);
         }
         return promise.promise;
+    }
+
+    #rejectPending(error: Error) {
+        for (const [id, pending] of this.#promises) {
+            if (pending.timeout) {
+                clearTimeout(pending.timeout);
+            }
+            pending.reject(error);
+            this.#promises.delete(id);
+        }
     }
 
     async ping(): Promise<Response> {

@@ -96,6 +96,9 @@ window.addEventListener(
                         } else {
                             console.warn("authentik/bext: background returned empty response");
                         }
+                    })
+                    .catch((exc) => {
+                        console.warn("authentik/bext: background request failed", exc);
                     });
             } catch (exc) {
                 console.warn(`authentik/bext: ${exc}`);
