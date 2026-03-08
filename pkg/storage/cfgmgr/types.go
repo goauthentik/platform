@@ -3,6 +3,13 @@ package cfgmgr
 import (
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
+	"goauthentik.io/platform/pkg/shared/events"
+)
+
+const (
+	TopicConfigPostLoad = "config.load.post"
+	TopicConfigChanged  = "config.changed"
+	TopicConfigPreSave  = "config.save.pre"
 )
 
 type Configer interface {
@@ -13,10 +20,10 @@ type Configer interface {
 }
 
 type Manager[T Configer] struct {
-	path    string
-	loaded  T
-	log     *log.Entry
-	changed []chan ConfigChangedEvent[T]
+	path   string
+	loaded T
+	log    *log.Entry
+	bus    *events.Bus
 
 	FilterWatchEvent func(fsnotify.Event) bool
 }
@@ -28,9 +35,3 @@ const (
 	ConfigChangedAdded
 	ConfigChangedRemoved
 )
-
-type ConfigChangedEvent[T Configer] struct {
-	Type           ConfigChangedType
-	Path           string
-	PreviousConfig T
-}

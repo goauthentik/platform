@@ -3,6 +3,8 @@ name: "authentik-cli"
 arch: "${ARCH}"
 platform: "linux"
 version: "${VERSION}"
+description: |
+  authentik CLI
 vendor: "Authentik Security Inc."
 homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."

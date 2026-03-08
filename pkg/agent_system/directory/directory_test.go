@@ -6,23 +6,26 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/pb"
 )
 
-func testNSS() Server {
+func testNSS(t *testing.T, dc *config.DomainConfig) Server {
 	return Server{
-		cfg: &api.AgentConfig{
-			NssUidOffset: 1000,
-			NssGidOffset: 1000,
-		},
 		log:    log.WithField("component", "test"),
 		users:  []*pb.User{},
 		groups: []*pb.Group{},
+		ctx:    component.TestContext(t, dc),
 	}
 }
 
 func Test_convertUser(t *testing.T) {
-	nss := testNSS()
+	dc := config.TestDomain(&api.AgentConfig{
+		NssUidOffset: 1000,
+		NssGidOffset: 1000,
+	}, nil)
+	nss := testNSS(t, dc)
 	for _, tc := range []struct {
 		name   string
 		input  api.User
@@ -75,13 +78,17 @@ func Test_convertUser(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.output, nss.convertUser(tc.input))
+			assert.Equal(t, tc.output, nss.convertUser(dc.Config(), tc.input))
 		})
 	}
 }
 
 func Test_convertGroup(t *testing.T) {
-	nss := testNSS()
+	dc := config.TestDomain(&api.AgentConfig{
+		NssUidOffset: 1000,
+		NssGidOffset: 1000,
+	}, nil)
+	nss := testNSS(t, dc)
 	for _, tc := range []struct {
 		name   string
 		input  api.Group
@@ -119,7 +126,7 @@ func Test_convertGroup(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.output, nss.convertGroup(tc.input))
+			assert.Equal(t, tc.output, nss.convertGroup(dc.Config(), tc.input))
 		})
 	}
 }

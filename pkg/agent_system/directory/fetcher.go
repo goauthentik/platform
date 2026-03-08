@@ -2,35 +2,50 @@ package directory
 
 import (
 	"cmp"
+	"context"
+	"math/rand/v2"
 	"slices"
 	"time"
 
+	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/events"
 )
 
 func (directory *Server) startFetch() {
-	d := time.Second * time.Duration(directory.cfg.RefreshInterval)
+	time.Sleep(time.Duration(rand.IntN(30)) * time.Second)
+	api, dom, err := directory.ctx.DomainAPI()
+	if err != nil {
+		directory.log.WithError(err).Warning("failed to start fetch")
+		return
+	}
+	dcfg := dom.Config()
+	ctx, cancel := context.WithCancel(directory.ctx.Context())
+	directory.cancel = cancel
+	d := time.Second * time.Duration(dcfg.RefreshInterval)
 	directory.log.Info("Starting initial user/group fetch")
-	directory.fetch()
+	directory.fetch(ctx, dom, api)
 	directory.log.WithField("next", d.String()).Info("Finished initial user/group fetch")
-	t := time.NewTimer(d)
+	t := time.NewTicker(d)
 	go func() {
 		for {
 			select {
 			case <-t.C:
 				directory.log.Info("Starting user/group fetch")
-				directory.fetch()
+				directory.fetch(ctx, dom, api)
 				directory.log.WithField("next", d.String()).Info("Finished user/group fetch")
-			case <-directory.ctx.Done():
+			case <-ctx.Done():
 				return
 			}
 		}
 	}()
 }
 
-func (directory *Server) fetch() {
-	users, err := ak.Paginator(directory.api.CoreApi.CoreUsersList(directory.ctx).IncludeGroups(true), ak.PaginatorOptions{
+func (directory *Server) fetch(ctx context.Context, dom *config.DomainConfig, api *api.APIClient) {
+	dcfg := dom.Config()
+	users, err := ak.Paginator(api.CoreApi.CoreUsersList(ctx).IncludeGroups(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   directory.log,
 	})
@@ -38,7 +53,7 @@ func (directory *Server) fetch() {
 		directory.log.WithError(err).Warning("failed to fetch users")
 		return
 	}
-	groups, err := ak.Paginator(directory.api.CoreApi.CoreGroupsList(directory.ctx).IncludeUsers(true), ak.PaginatorOptions{
+	groups, err := ak.Paginator(api.CoreApi.CoreGroupsList(ctx).IncludeUsers(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   directory.log,
 	})
@@ -50,12 +65,12 @@ func (directory *Server) fetch() {
 	nusers := make([]*pb.User, len(users))
 	ngroups := make([]*pb.Group, len(users)+len(groups))
 	for i, u := range users {
-		nusers[i] = directory.convertUser(u)
-		ngroups[i] = directory.convertUserToGroup(u)
+		nusers[i] = directory.convertUser(dcfg, u)
+		ngroups[i] = directory.convertUserToGroup(dcfg, u)
 	}
 	o := len(users)
 	for i, g := range groups {
-		ngroups[i+o] = directory.convertGroup(g)
+		ngroups[i+o] = directory.convertGroup(dcfg, g)
 	}
 
 	slices.SortFunc(nusers, func(a, b *pb.User) int {
@@ -67,4 +82,7 @@ func (directory *Server) fetch() {
 
 	directory.users = nusers
 	directory.groups = ngroups
+	directory.ctx.Bus().DispatchEvent(TopicDirectoryFetched, events.NewEvent(ctx, map[string]any{
+		"domain": dom,
+	}))
 }

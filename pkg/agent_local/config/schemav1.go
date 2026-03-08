@@ -1,9 +1,16 @@
 package config
 
 import (
+	"errors"
+	"net/http"
+
 	"github.com/fsnotify/fsnotify"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
+)
+
+var (
+	ErrProfileNotFound = errors.New("profile not found")
 )
 
 type ConfigV1 struct {
@@ -39,4 +46,14 @@ type ConfigV1Profile struct {
 	// Not saved to JSON, loaded from keychain
 	AccessToken  string `json:"-"`
 	RefreshToken string `json:"-"`
+
+	// Fallback if keyring isn't available
+	FallbackAccessToken  string `json:"access_token"`
+	FallbackRefreshToken string `json:"refresh_token"`
+
+	httpClient *http.Client
+}
+
+func (cv ConfigV1Profile) HTTPClient() *http.Client {
+	return cv.httpClient
 }

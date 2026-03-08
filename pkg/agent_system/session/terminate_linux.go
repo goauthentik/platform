@@ -10,11 +10,11 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 )
 
-func (m *Monitor) terminateSession(session *pb.StateSession) error {
+func (ss *Server) terminateSession(session *pb.StateSession) error {
 	_ = os.Remove(session.LocalSocket)
 
 	// Try graceful termination first
-	if err := syscall.Kill(int(session.PID), syscall.SIGTERM); err != nil {
+	if err := syscall.Kill(int(session.Pid), syscall.SIGTERM); err != nil {
 		return err
 	}
 
@@ -22,9 +22,9 @@ func (m *Monitor) terminateSession(session *pb.StateSession) error {
 	time.Sleep(5 * time.Second)
 
 	// Check if process still exists
-	if err := syscall.Kill(int(session.PID), 0); err == nil {
+	if err := syscall.Kill(int(session.Pid), 0); err == nil {
 		// Process still exists, force kill
-		return syscall.Kill(int(session.PID), syscall.SIGKILL)
+		return syscall.Kill(int(session.Pid), syscall.SIGKILL)
 	}
 
 	return nil

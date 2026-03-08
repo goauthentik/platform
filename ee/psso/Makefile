@@ -34,17 +34,17 @@ lint:
 		-i \
 		--configuration "${TOP}/.github/swift-format.json" \
 		--recursive \
-		${PWD}/Generated \
+		${PWD}/Bridge \
 		${PWD}/PSSO
 
 .PHONY: gen
 gen:
 	protoc \
-		--grpc-swift-2_out=${PWD}/Generated \
+		--grpc-swift-2_out=${PWD}/Bridge/Generated \
 		--grpc-swift-2_opt=Server=False \
 		--grpc-swift-2_opt=UseAccessLevelOnImports=True \
-		--swift_out=${PWD}/Generated \
+		--swift_out=${PWD}/Bridge/Generated \
 		--swift_opt=ImplementationOnlyImports=true \
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
-	sed -i 's/@_implementationOnly import/internal import/g' ${PWD}/Generated/*
+	sed -i 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*

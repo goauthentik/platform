@@ -12,7 +12,7 @@ func _readNSSWitch() (map[string]string, error) {
 		return nil, err
 	}
 	dbs := map[string]string{}
-	for _, line := range strings.Split(string(nss), "\n") {
+	for line := range strings.SplitSeq(string(nss), "\n") {
 		if strings.HasPrefix(line, "#") {
 			continue
 		}

@@ -1,0 +1,203 @@
+name: 'Create RPM Repository'
+description: 'Create and maintain an RPM repository with automatic package signing and metadata generation'
+
+inputs:
+  package-path:
+    description: 'Directory containing RPM packages to add to the repository'
+    required: true
+    default: './packages'
+  output-path:
+    description: 'Directory where the RPM repository will be created/maintained'
+    required: true
+    default: './repo'
+  repository-name:
+    description: 'Repository name for display'
+    required: true
+  repo_description:
+    description: 'Description of the RPM repository'
+    required: false
+    default: 'Custom RPM Repository'
+  supported_architectures:
+    description: 'Newline-separated list of supported architectures (x86_64, i386, aarch64, etc.)'
+    required: false
+    default: |
+      x86_64
+      aarch64
+  gpg-private-key:
+    description: 'GPG private key (ASCII-armored) for signing RPM packages and repository metadata'
+    required: false
+  createrepo_options:
+    description: 'Additional options to pass to createrepo_c command'
+    required: false
+    default: '--update --checksum sha256'
+  enable_delta:
+    description: 'Enable delta RPM creation for smaller updates'
+    required: false
+    default: 'false'
+
+outputs:
+  repository_path:
+    description: 'Path to the created repository directory'
+    value: ${{ steps.create-repo.outputs.repository_path }}
+  gpg_key_fingerprint:
+    description: 'Fingerprint of the GPG key used for signing'
+    value: ${{ steps.setup-gpg.outputs.key_fingerprint }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        echo "Installing RPM repository tools..."
+        sudo apt-get update
+        sudo apt-get install -y \
+          createrepo-c \
+          rpm \
+          gpg \
+          gnupg2 \
+          python3-rpm \
+          python3-dnf \
+          deltarpm
+
+        # Verify installations
+        createrepo_c --version
+        rpm --version
+        gpg --version
+
+    - name: Setup GPG signing
+      id: setup-gpg
+      if: inputs.gpg-private-key != ''
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        echo "Setting up GPG for package signing..."
+
+        # Import GPG key
+        echo "${{ inputs.gpg-private-key }}" | gpg --batch --import
+
+        # Get key fingerprint
+        KEY_FINGERPRINT=$(gpg --list-secret-keys --with-colons | grep '^sec:' | cut -d':' -f5 | head -1)
+        echo "key_fingerprint=${KEY_FINGERPRINT}" >> $GITHUB_OUTPUT
+
+        # Set up GPG agent configuration
+        mkdir -p ~/.gnupg
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+
+        # Create RPM macros for signing
+        GPG_KEY_ID="${KEY_FINGERPRINT}"
+
+        cat > ~/.rpmmacros << EOF
+        %_gpg_name ${GPG_KEY_ID}
+        %_signature gpg
+        %__gpg_sign_cmd %{__gpg} \\
+            gpg --force-v3-sigs --batch --verbose --no-armor \\
+            --no-secmem-warning --pinentry-mode loopback \\
+            -u "%{_gpg_name}" -sbo %{__signature_filename} \\
+            --digest-algo sha256 %{__plaintext_filename}
+        EOF
+
+        echo "GPG setup completed with key: ${GPG_KEY_ID}"
+
+    - name: Prepare repository structure
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        echo "Preparing repository structure..."
+
+        # Create repository directory structure
+        mkdir -p "${{ inputs.output-path }}"
+
+        # Parse supported architectures
+        echo "${{ inputs.supported_architectures }}" | while IFS= read -r arch; do
+          if [ -n "$arch" ]; then
+            mkdir -p "${{ inputs.output-path }}/${arch}"
+            echo "Created directory for architecture: ${arch}"
+          fi
+        done
+
+        # Create repodata directory
+        mkdir -p "${{ inputs.output-path }}/repodata"
+
+    - name: Process and copy packages
+      id: process-packages
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        echo "Processing RPM packages..."
+
+        if [ ! -d "${{ inputs.package-path }}" ]; then
+          echo "Warning: Packages directory '${{ inputs.package-path }}' not found"
+          exit 0
+        fi
+
+        # Find all RPM files
+        find "${{ inputs.package-path }}" -name "*.rpm" -type f | while read -r rpm_file; do
+          echo "Processing: $(basename "$rpm_file")"
+
+          # Get package architecture
+          ARCH=$(rpm -qp --queryformat '%{ARCH}' "$rpm_file" 2>/dev/null || echo "noarch")
+          echo "Package architecture: $ARCH"
+
+          # Create architecture directory if it doesn't exist
+          mkdir -p "${{ inputs.output-path }}/${ARCH}"
+
+          # Copy package to repository
+          cp "$rpm_file" "${{ inputs.output-path }}/${ARCH}/"
+
+          # Sign package if GPG key is provided
+          if [ -n "${{ inputs.gpg-private-key }}" ]; then
+            echo "Signing package: $(basename "$rpm_file")"
+            DEST_FILE="${{ inputs.output-path }}/${ARCH}/$(basename "$rpm_file")"
+
+            rpm --addsign "$DEST_FILE"
+          fi
+        done
+    - name: Create repository metadata
+      id: create-repo
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        echo "Creating repository metadata..."
+
+        # Build createrepo_c command
+        CREATEREPO_CMD="createrepo_c"
+
+        # Add compression option
+        CREATEREPO_CMD="${CREATEREPO_CMD} --compress-type gz"
+
+        # Add additional options
+        if [ -n "${{ inputs.createrepo_options }}" ]; then
+          CREATEREPO_CMD="${CREATEREPO_CMD} ${{ inputs.createrepo_options }}"
+        fi
+
+        # Add delta RPM support if enabled
+        if [ "${{ inputs.enable_delta }}" = "true" ]; then
+          CREATEREPO_CMD="${CREATEREPO_CMD} --deltas"
+        fi
+
+        # Create repository metadata for each architecture
+        echo "${{ inputs.supported_architectures }}" | while IFS= read -r arch; do
+          if [ -n "$arch" ] && [ -d "${{ inputs.output-path }}/${arch}" ]; then
+            echo "Creating metadata for architecture: $arch"
+
+            if [ "$(find "${{ inputs.output-path }}/${arch}" -name "*.rpm" | wc -l)" -gt 0 ]; then
+              ${CREATEREPO_CMD} "${{ inputs.output-path }}/${arch}"
+            else
+              echo "No RPM packages found for architecture: $arch"
+            fi
+          fi
+        done
+
+        # Create main repository metadata
+        echo "Creating main repository metadata..."
+        ${CREATEREPO_CMD} "${{ inputs.output-path }}"
+
+        # Sign repository metadata if GPG key is provided
+        if [ -n "${{ inputs.gpg-private-key }}" ]; then
+          echo "Signing repository metadata..."
+
+          gpg --batch --yes --detach-sign --armor "${{ inputs.output-path }}/repodata/repomd.xml"
+        fi
+        echo "repository_path=${{ inputs.output-path }}" >> $GITHUB_OUTPUT

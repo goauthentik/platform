@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>authentik Platform packages</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .section-a { background: #e8f4fd; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .section-b { background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        code { background: #e0e0e0; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+        pre { background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .command { background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .step { margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <h1>authentik Platform packages</h1>
+    <div class="section-a">
+        <h2>Desktop packages</h2>
+        <ul>
+            <li><a href="packages/authentik_macos-15_agent/agent_local/authentik agent installer.pkg">macOS</a></li>
+            <li><a href="packages/authentik_windows-2025_agent/agent_local/agent.msi">Windows</a></li>
+        </ul>
+    </div>
+    <div class="section-b">
+        <h2>🚀 Debian-based distribution Setup</h2>
+        <div class="step">
+            <h3>Step 1: Add GPG Key</h3>
+            <pre class="command">curl -fsSL ${REPOSITORY_URL}/keys/gpg-key.asc | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg</pre>
+        </div>
+        <div class="step">
+            <h3>Step 2: Add Repository</h3>
+            <pre class="command">echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] ${REPOSITORY_URL} stable main" | sudo tee /etc/apt/sources.list.d/authentik.list</pre>
+        </div>
+        <div class="step">
+            <h3>Step 3: Update and Install</h3>
+            <pre class="command">sudo apt update
+sudo apt install authentik-cli</pre>
+        </div>
+    </div>
+    <div class="section-a">
+        <h2>🚀 Red Hat-based distribution Setup</h2>
+        <div class="step">
+            <h3>Step 1: Add GPG Key</h3>
+            <pre class="command"># This overwrites any existing configuration in /etc/yum.repos.d/authentik.repo
+cat &lt;&lt;EOF | sudo tee /etc/yum.repos.d/authentik.repo
+[authentik]
+name=authentik
+baseurl=${REPOSITORY_URL}
+enabled=1
+gpgcheck=1
+gpgkey=${REPOSITORY_URL}/keys/gpg-key.asc
+EOF</pre>
+        </div>
+        <div class="step">
+            <h3>Step 2: Install</h3>
+            <pre class="command">sudo yum install -y authentik-cli</pre>
+        </div>
+    </div>
+    <div class="section-b">
+        <h2>Repository Information</h2>
+        <p><strong>Built from:</strong> ${REF} (<a href="https://github.com/goauthentik/platform/commit/${SHA}">${SHA}</a>)</p>
+        <p><strong>GPG Key fingerprint:</strong> <code>82EE AAD5 531A 856A 9C72 6132 2217 2AF2 AAE3 A237</code></p>
+    </div>
+</body>
+</html>

@@ -18,10 +18,12 @@ window.addEventListener(
                         challenge: event.data.challenge,
                     })
                     .then((signed) => {
-                        window.postMessage({
-                            _ak_ext: "authentik-platform-sso",
-                            response: signed,
-                        });
+                        if (signed) {
+                            window.postMessage({
+                                _ak_ext: "authentik-platform-sso",
+                                response: signed,
+                            });
+                        }
                     });
             } catch (exc) {
                 console.warn(`authentik/bext: ${exc}`);

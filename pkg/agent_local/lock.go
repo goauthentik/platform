@@ -10,6 +10,7 @@ func (a *Agent) AcquireLock() error {
 	if err != nil {
 		return err
 	}
+	a.log.WithField("path", file).Info("Acquiring lock...")
 	lock, err := lockfile.New(file)
 	if err != nil {
 		return err

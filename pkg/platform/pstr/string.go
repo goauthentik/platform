@@ -2,10 +2,6 @@ package pstr
 
 import "runtime"
 
-func S(raw string) *string {
-	return &raw
-}
-
 type PlatformString struct {
 	Windows  *string
 	Darwin   *string

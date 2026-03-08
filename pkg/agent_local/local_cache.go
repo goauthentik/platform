@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/platform/keyring"
 	"goauthentik.io/platform/pkg/storage"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -30,6 +31,14 @@ func (a *Agent) CacheGet(ctx context.Context, req *pb.CacheGetRequest) (*pb.Cach
 			Status: pb.CacheStatus_EXPIRED,
 			Expiry: timestamppb.New(res.Exp),
 		}, nil
+	} else if errors.Is(err, storage.ErrNotFound) {
+		return &pb.CacheGetResponse{
+			Header: &pb.ResponseHeader{
+				Successful: false,
+			},
+			Status: pb.CacheStatus_NOT_FOUND,
+			Expiry: timestamppb.New(res.Exp),
+		}, nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -49,7 +58,7 @@ func (a *Agent) CacheSet(ctx context.Context, req *pb.CacheSetRequest) (*pb.Cach
 		Body: req.Value,
 		Exp:  req.Expiry.AsTime(),
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, keyring.ErrUnsupportedPlatform) {
 		return nil, err
 	}
 	return &pb.CacheSetResponse{

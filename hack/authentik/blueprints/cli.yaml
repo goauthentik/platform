@@ -3,6 +3,21 @@ version: 1
 metadata:
   name: authentik CLI
 entries:
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: System - OAuth2 Provider - Scopes
+      required: true
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: Default - Provider authorization flow (implicit consent)
+      required: true
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: Default - Provider invalidation flow
+      required: true
   - model: authentik_providers_oauth2.oauth2provider
     id: provider
     identifiers:

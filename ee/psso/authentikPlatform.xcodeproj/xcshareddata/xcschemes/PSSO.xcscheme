@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1640"
+   LastUpgradeVersion = "2610"
    version = "2.0">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -30,8 +30,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B42B45012EA24AEA0046D847"
-               BuildableName = "Generated.framework"
-               BlueprintName = "Generated"
+               BuildableName = "Bridge.framework"
+               BlueprintName = "Bridge"
                ReferencedContainer = "container:authentikPlatform.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

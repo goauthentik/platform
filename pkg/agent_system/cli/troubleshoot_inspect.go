@@ -2,48 +2,52 @@ package cli
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/tree"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"go.etcd.io/bbolt"
-	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/client"
+	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/tui"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var troubleshootInspectCmd = &cobra.Command{
 	Use:   "inspect",
 	Short: "Inspect state",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return agentPrecheck()
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		depth := 0
-		return config.State().View(func(tx *bbolt.Tx) error {
-			return tx.ForEach(func(name []byte, b *bbolt.Bucket) error {
-				inspectBucket(name, b, depth)
-				return nil
-			})
-		})
+		sc, err := client.NewCtrl()
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to ctrl")
+		}
+		r, err := sc.TroubleshootInspect(cmd.Context(), &emptypb.Empty{})
+		if err != nil {
+			return err
+		}
+
+		t := tree.New().Root(r.Bucket).Enumerator(tree.RoundedEnumerator)
+		fmt.Println(renderInspectAsTree(r, t))
+		return nil
 	},
 }
 
-func inspectBucket(name []byte, b *bbolt.Bucket, depth int) {
-	fmt.Printf("%sBucket '%s':\n", strings.Repeat("\t", depth), string(name))
-	depth += 1
-	_ = b.ForEach(func(k, v []byte) error {
-		vv := string(v)
-		if len(vv) > 16 {
-			vv = vv[:16]
-		}
-		fmt.Printf("%sKey '%s' => '%s'\n", strings.Repeat("\t", depth), string(k), vv)
-		return nil
-	})
-	_ = b.ForEachBucket(func(k []byte) error {
-		bb := b.Bucket(k)
-		if bb != nil {
-			inspectBucket(k, bb, depth)
-		}
-		return nil
-	})
+func renderInspectAsTree(r *pb.TroubleshootInspectResponse, t *tree.Tree) string {
+	// Create styles for different types
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
+	valueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+
+	// Add each key-value pair to the tree
+	for k, v := range r.Kv {
+		tui.AddNodeToTree(t, keyStyle.Render(k), v, keyStyle, valueStyle)
+	}
+	for _, ch := range r.Children {
+		cht := tree.New().Root(ch.Bucket)
+		renderInspectAsTree(ch, cht)
+		t.Child(cht)
+	}
+
+	return t.String()
 }
 
 func init() {

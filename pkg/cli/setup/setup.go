@@ -1,15 +1,13 @@
 package setup
 
 import (
-	"errors"
 	"fmt"
-	"os/exec"
 
 	"github.com/cli/browser"
-	log "github.com/sirupsen/logrus"
 
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/shared/tui"
 	"goauthentik.io/platform/vnd/oauth"
 )
 
@@ -18,13 +16,22 @@ type Options struct {
 	AuthentikURL string
 	AppSlug      string
 	ClientID     string
+	URLCallback  func(url string) error
 }
 
 func Setup(opts Options) (*config.ConfigV1Profile, error) {
-	urls := ak.URLsForProfile(&config.ConfigV1Profile{
+	urls := ak.URLsForProfile(config.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 	})
+	if opts.URLCallback == nil {
+		opts.URLCallback = func(s string) error {
+			if err := browser.OpenURL(s); err != nil {
+				fmt.Println(tui.BoxStyle().Render(fmt.Sprintf("Open this URL in your browser: %s", s)))
+			}
+			return nil
+		}
+	}
 
 	flow := &oauth.Flow{
 		Host: &oauth.Host{
@@ -32,25 +39,13 @@ func Setup(opts Options) (*config.ConfigV1Profile, error) {
 			DeviceCodeURL: urls.DeviceCodeURL,
 			TokenURL:      urls.TokenURL,
 		},
-		ClientID: opts.ClientID,
-		Scopes:   []string{"openid", "profile", "email", "offline_access", "goauthentik.io/api"},
-		BrowseURL: func(s string) error {
-			err := browser.OpenURL(s)
-			if err != nil && errors.Is(err, exec.ErrNotFound) {
-				fmt.Println("------------------------------------------------------------")
-				fmt.Println("")
-				fmt.Printf("      Open this URL in your browser: '%s'\n", s)
-				fmt.Println("")
-				fmt.Println("------------------------------------------------------------")
-				return nil
-			}
-			return err
-		},
+		ClientID:  opts.ClientID,
+		Scopes:    []string{"openid", "profile", "email", "offline_access", "goauthentik.io/api"},
+		BrowseURL: opts.URLCallback,
 	}
 
 	accessToken, err := flow.DetectFlow()
 	if err != nil {
-		log.WithError(err).Fatal("failed to start device flow")
 		return nil, err
 	}
 

@@ -2,30 +2,47 @@ package os
 
 import (
 	"runtime"
+	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
 func TestGather(t *testing.T) {
-	info, err := Gather()
-	if err != nil {
-		t.Fatalf("Failed to gather OS info: %v", err)
-	}
+	info, err := Gather(common.TestingContext(t))
+	assert.NoError(t, err)
 
-	if info.Arch == "" {
-		t.Error("Architecture is empty")
-	}
+	assert.NotEqual(t, info.Arch, "")
+	assert.NotEqual(t, info.Family, "")
+	assert.True(t, slices.Contains(api.AllowedDeviceFactsOSFamilyEnumValues, info.Family))
+	assert.Equal(t, info.Arch, runtime.GOARCH)
+	assert.Regexp(t, `(\d+\.(?:\d+\.?)+)`, *info.Version, "Version must only contain numbers: '%s'", *info.Version)
+}
 
-	if info.Family == "" {
-		t.Error("OS family is empty")
-	}
-
-	expectedFamily := runtime.GOOS
-	if string(info.Family) != expectedFamily {
-		t.Errorf("Expected family %s, got %s", expectedFamily, info.Family)
-	}
-
-	if info.Arch != runtime.GOARCH {
-		t.Errorf("Expected arch %s, got %s", runtime.GOARCH, info.Arch)
+func TestExtract(t *testing.T) {
+	for _, tc := range []struct {
+		raw     string
+		name    string
+		version string
+	}{
+		{
+			raw:     "Ubuntu 24.04.3 LTS",
+			name:    "Ubuntu",
+			version: "24.04.3 LTS",
+		},
+		{
+			raw:     "Fedora Linux 43 (Workstation Edition)",
+			name:    "Fedora Linux",
+			version: "43 (Workstation Edition)",
+		},
+	} {
+		t.Run(tc.raw, func(t *testing.T) {
+			name, version := extractVersion(tc.raw)
+			assert.Equal(t, tc.name, name)
+			assert.Equal(t, tc.version, version)
+		})
 	}
 }
 
@@ -34,18 +51,11 @@ func TestGatherLinux(t *testing.T) {
 		t.Skip("Skipping Linux-specific test")
 	}
 
-	info, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather OS info on Linux: %v", err)
-	}
+	info, err := gather(common.TestingContext(t))
+	assert.NoError(t, err)
 
-	if info.Family != "linux" {
-		t.Errorf("Expected family 'linux', got '%s'", info.Family)
-	}
-
-	if *info.Name == "" {
-		t.Error("OS name should not be empty on Linux")
-	}
+	assert.Equal(t, info.Family, api.DEVICEFACTSOSFAMILY_LINUX)
+	assert.NotEqual(t, info.GetName(), "")
 }
 
 func TestGatherWindows(t *testing.T) {
@@ -53,16 +63,9 @@ func TestGatherWindows(t *testing.T) {
 		t.Skip("Skipping Windows-specific test")
 	}
 
-	info, err := gather()
-	if err != nil {
-		t.Fatalf("Failed to gather OS info on Windows: %v", err)
-	}
+	info, err := gather(common.TestingContext(t))
+	assert.NoError(t, err)
 
-	if info.Family != "windows" {
-		t.Errorf("Expected family 'windows', got '%s'", info.Family)
-	}
-
-	if *info.Name == "" {
-		t.Error("OS name should not be empty on Windows")
-	}
+	assert.Equal(t, info.Family, api.DEVICEFACTSOSFAMILY_WINDOWS)
+	assert.NotEqual(t, info.GetName(), "")
 }

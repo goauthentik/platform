@@ -6,14 +6,15 @@ import (
 
 	"github.com/pkg/errors"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/shared/events"
 )
 
 func NewManager[T Configer](file string) (*Manager[T], error) {
 	cfg := &Manager[T]{
-		path:    file,
-		log:     systemlog.Get().WithField("logger", "storage.config"),
-		changed: make([]chan ConfigChangedEvent[T], 0),
+		path: file,
+		log:  systemlog.Get().WithField("logger", "storage.config"),
 	}
+	cfg.bus = events.New(cfg.log)
 	var tc T
 	cfg.loaded = tc.Default().(T)
 	cfg.log.WithField("path", file).Debug("Config file path")
@@ -52,6 +53,14 @@ func (cfg *Manager[T]) Load() error {
 		return err
 	}
 	return cfg.loaded.PostLoad()
+}
+
+func (cfg *Manager[T]) SetBus(b *events.Bus) {
+	cfg.bus = b
+}
+
+func (cfg *Manager[T]) Bus() *events.Bus {
+	return cfg.bus
 }
 
 func (cfg *Manager[T]) Get() T {

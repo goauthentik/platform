@@ -2,8 +2,6 @@ use pam::constants::PamResultCode;
 
 use serde::{Deserialize, Serialize};
 
-use sha2::{Digest, Sha256};
-
 use std::fs::{File, Permissions, remove_file};
 use std::io::Write;
 use std::os::unix::fs::PermissionsExt;
@@ -12,7 +10,6 @@ use std::os::unix::fs::PermissionsExt;
 pub struct SessionData {
     pub username: String,
     pub token: String,
-    pub expiry: i64,
     pub local_socket: String,
 }
 
@@ -22,7 +19,13 @@ pub fn _session_file(id: String) -> String {
 
 pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
     let path = _session_file(id);
-    let file = File::open(path).expect("Could not create file!");
+    let file = match File::open(path) {
+        Ok(f) => f,
+        Err(e) => {
+            log::warn!("failed to open file: {e}");
+            return Err(PamResultCode::PAM_SESSION_ERR);
+        }
+    };
 
     match serde_json::from_reader(file) {
         Ok(t) => Ok(t),
@@ -53,7 +56,13 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
         }
     };
     let path = _session_file(id);
-    let mut file = File::create(path).expect("Could not create file!");
+    let mut file = match File::create(path) {
+        Ok(f) => f,
+        Err(e) => {
+            log::warn!("failed to create file: {e}");
+            return Err(PamResultCode::PAM_SESSION_ERR);
+        }
+    };
 
     match file.set_permissions(Permissions::from_mode(0o400)) {
         Ok(_) => {}
@@ -70,10 +79,4 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
             Err(PamResultCode::PAM_AUTH_ERR)
         }
     }
-}
-
-pub fn hash_token(token: String) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(token.as_bytes());
-    hex::encode(hasher.finalize())
 }

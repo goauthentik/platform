@@ -3,27 +3,41 @@
 package common
 
 import (
-	"os/exec"
-	"strings"
+	"fmt"
+
+	"github.com/microsoft/wmi/pkg/base/query"
+	cim "github.com/microsoft/wmi/pkg/wmiinstance"
 )
 
-func GetWMICValue(class, property string) string {
-	cmd := exec.Command("wmic", class, "get", property, "/value")
-	output, err := cmd.Output()
+func GetWMIValue[T any](constructor func(*cim.WmiInstance) (T, error), class string, q ...string) ([]T, error) {
+	return GetWMIValueNamespace(constructor, class, "", q...)
+}
+
+func GetWMIValueNamespace[T any](constructor func(*cim.WmiInstance) (T, error), class string, namespace string, q ...string) ([]T, error) {
+	sessionManager := cim.NewWmiSessionManager()
+	defer sessionManager.Dispose()
+
+	session, err := sessionManager.GetLocalSession(namespace)
 	if err != nil {
-		return ""
+		return []T{}, fmt.Errorf("failed to get local WMI session for namespace %s. error: %w", namespace, err)
 	}
 
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, property+"=") {
-			parts := strings.SplitN(line, "=", 2)
-			if len(parts) == 2 {
-				return strings.TrimSpace(parts[1])
-			}
+	connected, err := session.Connect()
+	if !connected || err != nil {
+		return []T{}, fmt.Errorf("failed to connect to WMI. error: %w", err)
+	}
+
+	res, err := session.QueryInstances(query.NewWmiQuery(class, q...).String())
+	if err != nil {
+		return []T{}, err
+	}
+	results := []T{}
+	for _, raw := range res {
+		parsed, err := constructor(raw)
+		if err != nil {
+			return []T{}, err
 		}
+		results = append(results, parsed)
 	}
-
-	return ""
+	return results, nil
 }

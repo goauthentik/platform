@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	ErrExpired = errors.New("cache expired")
+	ErrExpired  = errors.New("cache expired")
+	ErrNotFound = errors.New("not found")
 )
 
 type CacheData interface {
@@ -41,17 +42,17 @@ func (c *Cache[T]) Set(val T) error {
 	if err != nil {
 		return err
 	}
-	return keyring.Set(keyring.Service(c.uid), c.profileName, string(j))
+	return keyring.Set(keyring.Service(c.uid), c.profileName, keyring.AccessibleUser, string(j))
 }
 
 func (c *Cache[T]) Get() (T, error) {
 	var cc T
 	c.log.Debug("Checking cache")
-	v, err := keyring.Get(keyring.Service(c.uid), c.profileName)
+	v, err := keyring.Get(keyring.Service(c.uid), c.profileName, keyring.AccessibleUser)
 	if err != nil {
-		if keyring.IsNotExist(err) {
+		if keyring.IsNotExist(err) || errors.Is(err, keyring.ErrUnsupportedPlatform) {
 			c.log.WithError(err).Debug("No cache found")
-			return cc, err
+			return cc, ErrNotFound
 		}
 		return cc, err
 	}
@@ -60,7 +61,7 @@ func (c *Cache[T]) Get() (T, error) {
 		return cc, err
 	}
 	if cc.Expiry().Before(time.Now()) {
-		err := keyring.Delete(keyring.Service(c.uid), c.profileName)
+		err := keyring.Delete(keyring.Service(c.uid), c.profileName, keyring.AccessibleUser)
 		if err != nil {
 			c.log.WithError(err).Warning("failed to delete expired cache entry")
 		}

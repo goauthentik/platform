@@ -8,8 +8,11 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
+	sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
+	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/meta"
@@ -17,25 +20,40 @@ import (
 )
 
 type DomainConfig struct {
-	Enabled            bool   `json:"enabled"`
-	AuthentikURL       string `json:"authentik_url"`
-	AppSlug            string `json:"app_slug"`
-	AuthenticationFlow string `json:"authentication_flow"`
-	Domain             string `json:"domain"`
-	Managed            bool   `json:"managed"`
+	Enabled      bool   `json:"enabled"`
+	AuthentikURL string `json:"authentik_url"`
+	Domain       string `json:"domain"`
+	Managed      bool   `json:"managed"`
 
 	// Saved to keyring
 	Token string `json:"-"`
 	// Fallback token when keyring is not available
 	FallbackToken string `json:"token"`
 
-	c  *api.APIClient
-	r  *Config
-	rc *api.AgentConfig
+	c                 *api.APIClient
+	r                 *Config
+	configLastUpdated time.Time
+	rc                *api.AgentConfig
+
+	// TODO: Remove after 2026.5
+	brand *api.CurrentBrand
 }
 
-func (dc DomainConfig) Config() *api.AgentConfig {
-	return dc.rc
+func DefaultAgentConfig() api.AgentConfig {
+	return api.AgentConfig{
+		RefreshInterval: int32((time.Duration(30) * time.Minute).Seconds()),
+	}
+}
+
+func (dc DomainConfig) Config() api.AgentConfig {
+	if dc.rc != nil {
+		return *dc.rc
+	}
+	return DefaultAgentConfig()
+}
+
+func (dc DomainConfig) Brand() *api.CurrentBrand {
+	return dc.brand
 }
 
 func (dc DomainConfig) APIClient() (*api.APIClient, error) {
@@ -47,6 +65,11 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 		return nil, err
 	}
 	apiConfig := api.NewConfiguration()
+	apiConfig.HTTPClient = &http.Client{
+		Transport: sentryhttpclient.NewSentryRoundTripper(
+			nil, sentryhttpclient.WithTracePropagationTargets([]string{u.Host}),
+		),
+	}
 	apiConfig.Host = u.Host
 	apiConfig.Scheme = u.Scheme
 	apiConfig.Servers = api.ServerConfigurations{
@@ -54,12 +77,12 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 			URL: fmt.Sprintf("%sapi/v3", u.Path),
 		},
 	}
-	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", dc.Token))
+	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer+agent %s", dc.Token))
 	apiConfig.AddDefaultHeader("X-AK-Platform-Version", meta.Version)
+	apiConfig.UserAgent = fmt.Sprintf("goauthentik.io/platform/%s", meta.FullVersion())
 
 	c := api.NewAPIClient(apiConfig)
-	dc.c = c
-	return dc.c, nil
+	return c, nil
 }
 
 func (dc DomainConfig) Test() error {
@@ -69,7 +92,7 @@ func (dc DomainConfig) Test() error {
 	}
 	_, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 	if err != nil {
-		if hr.StatusCode == http.StatusForbidden && dc.Managed {
+		if hr != nil && hr.StatusCode == http.StatusForbidden && dc.Managed {
 			err := dc.Delete()
 			if err != nil {
 				dc.r.log.WithError(err).Warning("failed to delete domain")
@@ -108,8 +131,22 @@ func (dc *DomainConfig) loaded() {
 		if err != nil {
 			return err
 		}
+		br := api.NullableCurrentBrand{}
+		err = br.UnmarshalJSON(b.Get([]byte("brand")))
+		if err != nil {
+			return err
+		}
+		lu := b.Get([]byte("config_last_updated"))
+		if len(lu) > 0 {
+			luu, err := strconv.ParseInt(string(lu), 10, 64)
+			if err != nil {
+				return err
+			}
+			dc.configLastUpdated = time.Unix(luu, 0)
+		}
 		dc.r.log.Info("Loaded domain config")
 		dc.rc = cfg.Get()
+		dc.brand = br.Get()
 		return nil
 	})
 	if err != nil {
@@ -135,22 +172,47 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 		if err != nil {
 			return err
 		}
+
 		cfg, _, err := api.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 		if err != nil {
 			return err
 		}
-		dc.r.log.Debug("fetched remote config")
+		dc.r.log.WithField("cap", cfg.SystemConfig.Capabilities).WithField("device_id", cfg.DeviceId).Debug("fetched remote config")
 		dc.rc = cfg
 		jc, err := cfg.MarshalJSON()
 		if err != nil {
 			return err
 		}
-		return b.Put([]byte("config"), jc)
+		err = b.Put([]byte("config"), jc)
+		if err != nil {
+			return err
+		}
+
+		brand, _, err := api.CoreApi.CoreBrandsCurrentRetrieve(context.Background()).Execute()
+		if err != nil {
+			return err
+		}
+		dc.brand = brand
+		jc, err = brand.MarshalJSON()
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte("brand"), jc)
+		if err != nil {
+			return err
+		}
+
+		dc.configLastUpdated = time.Now()
+		err = b.Put([]byte("config_last_updated"), []byte(strconv.FormatInt(dc.configLastUpdated.Unix(), 10)))
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 }
 
 func (c *Config) loadDomains() error {
-	c.log.Debug("Loading domains...")
+	c.log.Info("Loading domains...")
 	m, err := filepath.Glob(filepath.Join(c.DomainDir, "*.json"))
 	if err != nil {
 		c.log.WithError(err).Warning("failed to load domains")
@@ -169,9 +231,11 @@ func (c *Config) loadDomains() error {
 			c.log.WithError(err).Warning("failed to load domain")
 			continue
 		}
-		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain)
+		token, err := keyring.Get(keyring.Service("domain_token"), d.Domain, keyring.AccessibleAlways)
 		if err != nil {
-			c.log.WithError(err).Warning("failed to load domain token from keyring")
+			if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
+				c.log.WithError(err).Warning("failed to load domain token from keyring")
+			}
 			token = d.FallbackToken
 		}
 		d.Token = token

@@ -8,7 +8,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/platform/keyring"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
@@ -17,8 +16,8 @@ import (
 var manager *cfgmgr.Manager[*Config]
 var st *state.State
 
-func Init(path string) error {
-	sst, err := state.Open(types.StatePath().ForCurrent(), nil)
+func Init(path string, statePath string) error {
+	sst, err := state.Open(statePath, nil)
 	if err != nil {
 		return err
 	}
@@ -63,7 +62,13 @@ func (c *Config) PostLoad() error {
 }
 
 func (c *Config) PreSave() error { return nil }
-func (c *Config) PostUpdate(cfgmgr.Configer, fsnotify.Event) cfgmgr.ConfigChangedType {
+func (c *Config) PostUpdate(prev cfgmgr.Configer, evt fsnotify.Event) cfgmgr.ConfigChangedType {
+	previousConfig := prev.(*Config)
+	if len(previousConfig.domains) < len(c.domains) {
+		return cfgmgr.ConfigChangedAdded
+	} else if len(previousConfig.domains) > len(c.domains) {
+		return cfgmgr.ConfigChangedRemoved
+	}
 	return cfgmgr.ConfigChangedGeneric
 }
 
@@ -73,9 +78,11 @@ func (c *Config) Domains() []*DomainConfig {
 
 func (c *Config) SaveDomain(dom *DomainConfig) error {
 	path := filepath.Join(c.DomainDir, dom.Domain+".json")
-	err := keyring.Set(keyring.Service("domain_token"), dom.Domain, dom.Token)
+	err := keyring.Set(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways, dom.Token)
 	if err != nil {
-		c.log.WithError(err).Warning("failed to save domain token in keyring")
+		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
+			c.log.WithError(err).Warning("failed to save domain token in keyring")
+		}
 		dom.FallbackToken = dom.Token
 	}
 	b, err := json.Marshal(dom)
@@ -86,5 +93,21 @@ func (c *Config) SaveDomain(dom *DomainConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to save domain config")
 	}
-	return nil
+	return c.PostLoad()
+}
+
+func (c *Config) DeleteDomain(dom *DomainConfig) error {
+	path := filepath.Join(c.DomainDir, dom.Domain+".json")
+	err := keyring.Delete(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways)
+	if err != nil {
+		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
+			c.log.WithError(err).Warning("failed to delete domain token in keyring")
+		}
+		dom.FallbackToken = dom.Token
+	}
+	err = os.Remove(path)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete domain config")
+	}
+	return c.PostLoad()
 }

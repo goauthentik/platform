@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  CARGO_TERM_COLOR: always
+
 permissions:
   contents: read
   id-token: write
@@ -23,25 +26,168 @@ jobs:
           - windows-2025
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v5
-      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
         with:
           go-version-file: go.mod
           cache: true
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
       - run: |
           make test
       - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        if: ${{ always() }}
         with:
           paths: ${{ github.workspace }}/junit.xml
           show: "fail"
-      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
         with:
           use_oidc: true
           flags: go-${{ matrix.platform }}
           files: ${{ github.workspace }}/coverage.txt
-      - uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
         with:
           use_oidc: true
           flags: go-${{ matrix.platform }}
           files: ${{ github.workspace }}/junit.xml
+          report_type: test_results
+  lint_go:
+    name: Lint (go)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install libraries
+        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev
+      - uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v8
+        with:
+          args: --timeout 5000s
+  lint_rs:
+    name: Lint (rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev libudev-dev
+      - run: make lint-rs
+  lint_js:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - browser-ext
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version-file: "${{ matrix.target }}/package.json"
+          cache: "npm"
+          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+      - run: make ${{ matrix.target }}/lint
+  lint_cpp:
+    name: Lint
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - ee/wcp
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - run: make ${{ matrix.target }}/lint
+  test_go_int:
+    name: Test (integration)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
+        id: setup
+        with:
+          version: beta
+          sentry_env: goauthentik-platform-ci
+          blueprints_path: ./hack/authentik/blueprints
+          wait: true
+      - env:
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
+        run: |
+          ./hack/authentik/wait.sh
+      - run: |
+          make test-integration
+      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        if: ${{ always() }}
+        with:
+          paths: ${{ github.workspace }}/junit.xml
+          show: "fail"
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-integration
+          files: ${{ github.workspace }}/coverage.txt
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-integration
+          files: ${{ github.workspace }}/junit.xml
+          report_type: test_results
+  test_go_e2e:
+    name: Test (e2e)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev libudev-dev
+      - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
+        id: setup
+        with:
+          version: beta
+          sentry_env: goauthentik-platform-ci
+          blueprints_path: ./hack/authentik/blueprints
+          wait: true
+      - env:
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
+        run: |
+          ./hack/authentik/wait.sh
+      - env:
+          AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
+        run: |
+          make test-e2e
+      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        if: ${{ always() }}
+        with:
+          paths: ${{ github.workspace }}/junit.xml
+          show: "fail"
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-e2e
+          files: ${{ github.workspace }}/coverage.txt
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-e2e
+          files: ${{ github.workspace }}/junit.xml
+          report_type: test_results

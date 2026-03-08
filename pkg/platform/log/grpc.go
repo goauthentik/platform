@@ -18,24 +18,36 @@ func InterceptorLogger(l log.FieldLogger) logging.Logger {
 			k, v := i.At()
 			f[k] = v
 		}
-		l := l.WithFields(f)
+		cl := l.WithFields(f)
 
 		p, ok := peer.FromContext(ctx)
 		if ok && p.AuthInfo != nil {
 			if ga, ok := p.AuthInfo.(grpc_creds.AuthInfo); ok && ga.Creds != nil {
-				l = l.WithField("auth.pid", ga.Creds.PID)
+				cl = l.WithField("auth.pid", ga.Creds.PID)
+				fields := map[string]any{
+					"pid": ga.Creds.PID,
+					"uid": ga.Creds.UID,
+					"gid": ga.Creds.GID,
+				}
+				if ga.Creds.Proc != nil {
+					fields["proc"] = ga.Creds.Proc.String()
+				}
+				if ga.Creds.Parent != nil {
+					fields["parent"] = ga.Creds.Parent.String()
+				}
+				l.WithFields(fields).Debug("GRPC auth info debug")
 			}
 		}
 
 		switch lvl {
 		case logging.LevelDebug:
-			l.Debug(msg)
+			cl.Debug(msg)
 		case logging.LevelInfo:
-			l.Info(msg)
+			cl.Info(msg)
 		case logging.LevelWarn:
-			l.Warn(msg)
+			cl.Warn(msg)
 		case logging.LevelError:
-			l.Error(msg)
+			cl.Error(msg)
 		default:
 			panic(fmt.Sprintf("unknown level %v", lvl))
 		}

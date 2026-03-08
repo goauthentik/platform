@@ -8,6 +8,6 @@ import (
 	"goauthentik.io/platform/pkg/pb"
 )
 
-func (m *Monitor) terminateSession(session *pb.StateSession) error {
+func (ss *Server) terminateSession(session *pb.StateSession) error {
 	return errors.New("not supported on this platform")
 }

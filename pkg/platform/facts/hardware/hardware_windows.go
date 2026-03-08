@@ -4,77 +4,105 @@ package hardware
 
 import (
 	"os"
-	"os/exec"
 	"runtime"
 	"strconv"
-	"strings"
 
-	"github.com/shirou/gopsutil/v4/cpu"
-	"github.com/shirou/gopsutil/v4/mem"
+	"github.com/microsoft/wmi/pkg/errors"
+	"github.com/microsoft/wmi/server2019/root/cimv2"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/facts/common"
+	"golang.org/x/sys/windows/registry"
 )
 
-func gather() (api.DeviceFactsRequestHardware, error) {
-	manufacturer := common.GetWMICValue("computersystem", "Manufacturer")
-	model := common.GetWMICValue("computersystem", "Model")
-	serial := common.GetWMICValue("bios", "SerialNumber")
+func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
+	computerSystem, err := common.GetWMIValue(cimv2.NewWin32_ComputerSystemEx1, "Win32_computersystem")
+	if err != nil {
+		return nil, err
+	}
+	bios, err := common.GetWMIValue(cimv2.NewWin32_BIOSEx1, "Win32_BIOS")
+	if err != nil {
+		return nil, err
+	}
+	memory, err := common.GetWMIValue(cimv2.NewWin32_PhysicalMemoryEx1, "Win32_PhysicalMemory")
+	if err != nil {
+		return nil, err
+	}
 
-	return api.DeviceFactsRequestHardware{
-		Manufacturer: manufacturer,
-		Model:        model,
+	manufacturer, err := computerSystem[0].GetPropertyManufacturer()
+	if err != nil {
+		return nil, err
+	}
+	model, err := computerSystem[0].GetPropertyModel()
+	if err != nil {
+		return nil, err
+	}
+	serial, err := bios[0].GetPropertySerialNumber()
+	if err != nil || serial == "" {
+		guid, err := serialNumberFallback()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get serial")
+		}
+		serial = guid
+	}
+
+	totalMemory := uint64(0)
+	for _, mem := range memory {
+		memsz, err := mem.GetProperty("Capacity")
+		if err != nil {
+			return nil, err
+		}
+		memsize, err := strconv.ParseUint(memsz.(string), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		totalMemory += memsize
+	}
+
+	cpu, err := getCPUName()
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.DeviceFactsRequestHardware{
+		Manufacturer: &manufacturer,
+		Model:        &model,
 		Serial:       serial,
-		CpuName:      api.PtrString(getCPUName()),
-		CpuCount:     api.PtrInt32(int32(getCPUCores())),
-		MemoryBytes:  api.PtrInt64(int64(getTotalMemory())),
+		CpuName:      &cpu,
+		CpuCount:     api.PtrInt32(int32(getCPUCores(computerSystem[0]))),
+		MemoryBytes:  api.PtrInt64(int64(totalMemory)),
 	}, nil
 }
 
-func getCPUName() string {
-	// Try wmic first
-	cpuName := common.GetWMICValue("cpu", "Name")
-	if cpuName != "" {
-		return cpuName
+func serialNumberFallback() (string, error) {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Cryptography`, registry.READ)
+	if err != nil {
+		return "", err
 	}
 
-	// Try PowerShell
-	cmd := exec.Command("powershell", "-Command",
-		"(Get-WmiObject -Class Win32_Processor).Name")
-	output, err := cmd.Output()
-	if err == nil {
-		cpuName = strings.TrimSpace(string(output))
-		if cpuName != "" {
-			return cpuName
-		}
+	machineGuid, _, err := k.GetStringValue("MachineGuid")
+	if err != nil {
+		return "", err
 	}
-
-	// Fallback to gopsutil
-	cpuInfo, err := cpu.Info()
-	if err != nil || len(cpuInfo) == 0 {
-		return "Unknown CPU"
-	}
-
-	return cpuInfo[0].ModelName
+	return machineGuid, nil
 }
 
-func getCPUCores() int {
-	// Try wmic for total cores (logical processors)
-	coresStr := common.GetWMICValue("cpu", "NumberOfLogicalProcessors")
-	if coresStr != "" {
-		if cores, err := strconv.Atoi(coresStr); err == nil {
-			return cores
-		}
+func getCPUName() (string, error) {
+	processor, err := common.GetWMIValue(cimv2.NewWin32_ProcessorEx1, "Win32_Processor")
+	if err != nil {
+		return "", err
 	}
 
-	// Try PowerShell
-	cmd := exec.Command("powershell", "-Command",
-		"(Get-WmiObject -Class Win32_ComputerSystem).NumberOfLogicalProcessors")
-	output, err := cmd.Output()
+	name, err := processor[0].GetPropertyName()
+	if err != nil {
+		return "", err
+	}
+	return name, nil
+}
+
+func getCPUCores(computerSystem *cimv2.Win32_ComputerSystem) int {
+	cpuCount, err := computerSystem.GetPropertyNumberOfLogicalProcessors()
 	if err == nil {
-		coresStr = strings.TrimSpace(string(output))
-		if cores, err := strconv.Atoi(coresStr); err == nil {
-			return cores
-		}
+		return int(cpuCount)
 	}
 
 	// Try environment variable
@@ -86,33 +114,4 @@ func getCPUCores() int {
 
 	// Fallback to runtime
 	return runtime.NumCPU()
-}
-
-func getTotalMemory() uint64 {
-	// Try wmic first
-	memoryStr := common.GetWMICValue("computersystem", "TotalPhysicalMemory")
-	if memoryStr != "" {
-		if memory, err := strconv.ParseUint(memoryStr, 10, 64); err == nil {
-			return memory
-		}
-	}
-
-	// Try PowerShell
-	cmd := exec.Command("powershell", "-Command",
-		"(Get-WmiObject -Class Win32_ComputerSystem).TotalPhysicalMemory")
-	output, err := cmd.Output()
-	if err == nil {
-		memoryStr = strings.TrimSpace(string(output))
-		if memory, err := strconv.ParseUint(memoryStr, 10, 64); err == nil {
-			return memory
-		}
-	}
-
-	// Fallback to gopsutil
-	vmStat, err := mem.VirtualMemory()
-	if err != nil {
-		return 0
-	}
-
-	return vmStat.Total
 }

@@ -5,9 +5,10 @@ package process
 import (
 	"github.com/shirou/gopsutil/v4/process"
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather() ([]api.ProcessRequest, error) {
+func gather(ctx *common.GatherContext) ([]api.ProcessRequest, error) {
 	var processes []api.ProcessRequest
 
 	pids, err := process.Pids()
@@ -21,15 +22,9 @@ func gather() ([]api.ProcessRequest, error) {
 			continue
 		}
 
-		name, err := p.Exe()
-		if err != nil {
-			// Fallback to cmdline
-			cmdline, err := p.Cmdline()
-			if err != nil {
-				name, _ = p.Name()
-			} else {
-				name = cmdline
-			}
+		name := getProcName(p)
+		if name == "" {
+			continue
 		}
 
 		procInfo := api.ProcessRequest{

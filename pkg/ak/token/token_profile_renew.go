@@ -19,11 +19,14 @@ func (ptm *ProfileTokenManager) renew() error {
 		ptm.mutex.Unlock()
 	}()
 	profile := config.Manager().Get().Profiles[ptm.profileName]
+	if profile == nil {
+		return config.ErrProfileNotFound
+	}
 
 	v := url.Values{}
 	v.Set("grant_type", "refresh_token")
 	v.Set("refresh_token", profile.RefreshToken)
-	req, err := http.NewRequest("POST", ak.URLsForProfile(profile).TokenURL, strings.NewReader(v.Encode()))
+	req, err := http.NewRequest("POST", ak.URLsForProfile(*profile).TokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return err
 	}
@@ -32,7 +35,7 @@ func (ptm *ProfileTokenManager) renew() error {
 	req.SetBasicAuth(profile.ClientID, "")
 	req.Header.Set("User-Agent", fmt.Sprintf("authentik-cli v%s", meta.FullVersion()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	res, err := http.DefaultClient.Do(req)
+	res, err := profile.HTTPClient().Do(req)
 	if err != nil {
 		return err
 	}

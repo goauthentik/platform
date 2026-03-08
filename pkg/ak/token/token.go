@@ -17,7 +17,7 @@ type Token struct {
 	RawAccessToken  string    `json:"access_token"`
 	TokenType       string    `json:"token_type,omitempty"`
 	RawRefreshToken string    `json:"refresh_token,omitempty"`
-	Expiry          time.Time `json:"expiry,omitempty"`
+	Expiry          time.Time `json:"expiry"`
 	ExpiresIn       int64     `json:"expires_in,omitempty"`
 }
 

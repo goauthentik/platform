@@ -40,6 +40,12 @@ func (sst *ScopedState) ensureBucket(tx *bbolt.Tx, write bool) (*bbolt.Bucket, e
 	return b, nil
 }
 
+func (sst *ScopedState) EnsureBucket() error {
+	return sst.Update(func(tx *bbolt.Tx, b *bbolt.Bucket) error {
+		return nil
+	})
+}
+
 func (sst *ScopedState) Update(fn func(*bbolt.Tx, *bbolt.Bucket) error) error {
 	return sst.root.b.Update(func(tx *bbolt.Tx) error {
 		b, err := sst.ensureBucket(tx, true)

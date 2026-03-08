@@ -10,7 +10,7 @@ import (
 )
 
 type authState struct {
-	time    time.Time
+	exp     time.Time
 	success bool
 }
 
@@ -27,7 +27,7 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 	uid = fmt.Sprintf("%s:%s", profile, uid)
 	systemlog.Get().WithField("uid", uid).Debug("Checking if we need to authorize")
 	if last, ok := lastAuthMap[uid]; ok {
-		if last.time.Add(action.timeout()).After(time.Now()) {
+		if last.exp.After(time.Now()) {
 			systemlog.Get().WithField("success", last.success).WithField("uid", uid).Debug("Valid last result in cache")
 			return last.success, nil
 		}
@@ -45,7 +45,7 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 		return false, err
 	}
 	lastAuthMap[uid] = authState{
-		time:    time.Now().Add(action.timeout()),
+		exp:     time.Now().Add(action.timeout(success)),
 		success: success,
 	}
 	return success, nil

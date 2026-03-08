@@ -10,6 +10,7 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -19,17 +20,27 @@ type SysdClient struct {
 	pb.SessionManagerClient
 	pb.AgentPlatformClient
 	pb.PingClient
+	pb.SystemCtrlClient
+	pb.SystemDirectoryClient
 
 	conn *grpc.ClientConn
 }
 
-func New() (*SysdClient, error) {
+func NewDefault() (*SysdClient, error) {
+	return New(types.GetSysdSocketPath(types.SocketIDDefault))
+}
+
+func NewCtrl() (*SysdClient, error) {
+	return New(types.GetSysdSocketPath(types.SocketIDCtrl))
+}
+
+func New(path pstr.PlatformString) (*SysdClient, error) {
 	l := log.WithField("logger", "cli.system_grpc")
 	conn, err := grpc.NewClient(
 		"localhost",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
-			return socket.Connect(types.GetSysdSocketPath())
+			return socket.Connect(path)
 		}),
 		grpc.WithChainUnaryInterceptor(
 			logging.UnaryClientInterceptor(systemlog.InterceptorLogger(l)),
@@ -51,6 +62,8 @@ func New() (*SysdClient, error) {
 		pb.NewSessionManagerClient(conn),
 		pb.NewAgentPlatformClient(conn),
 		pb.NewPingClient(conn),
+		pb.NewSystemCtrlClient(conn),
+		pb.NewSystemDirectoryClient(conn),
 		conn,
 	}, nil
 }

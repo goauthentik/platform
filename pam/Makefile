@@ -1,17 +1,19 @@
 include ../common.mk
 
 TARGET = pam
+DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -q DEB_BUILD_GNU_TYPE)
 
-clean:
-	cargo clean
+lint:
+	$(call lint_shellcheck,"${PWD}/_deb")
+	$(call lint_shellcheck,"${PWD}/_rpm")
 
 bump:
-	sed -i 's/version = ".*"/version = ${VERSION}/g' ${PWD}/Cargo.toml
+	sed -i 's/^version = ".*"/version = "${VERSION}"/g' ${PWD}/Cargo.toml
 
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
-	cargo build \
+	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
 		--target-dir ${TOP}/cache/${TARGET} \
 		--verbose \
 		--release
@@ -20,11 +22,18 @@ test:
 	cargo test --verbose
 
 package: build
-	cargo install cargo-deb
-	CARGO_TARGET_DIR="${TOP}/cache/${TARGET}" cargo deb \
-		--output ${TOP}/bin/${TARGET} \
-		--verbose \
-		--deb-version ${VERSION}
+	VERSION=${VERSION} ARCH=${ARCH} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p deb \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/${TARGET}/nfpm.yaml
+	VERSION=${VERSION} ARCH=${ARCH} \
+		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+			package \
+			-p rpm \
+			-t ${TOP}/bin/${TARGET} \
+			-f ${TOP}/${TARGET}/nfpm.yaml
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/libpam-authentik_${VERSION}_${ARCH}.deb

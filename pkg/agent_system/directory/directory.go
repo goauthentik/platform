@@ -2,53 +2,52 @@ package directory
 
 import (
 	"context"
-	"errors"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/shared/events"
+	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc"
 )
 
 const ID = "directory"
 
+const (
+	TopicDirectoryFetched = "sysd.directory.fetched"
+)
+
 type Server struct {
 	pb.UnimplementedSystemDirectoryServer
 
-	api *api.APIClient
 	log *log.Entry
 
 	users  []*pb.User
 	groups []*pb.Group
 
-	ctx context.Context
-
-	cfg *api.AgentConfig
+	ctx    component.Context
+	cancel context.CancelFunc
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log: ctx.Log(),
-		ctx: ctx.Context(),
+		ctx: ctx,
 	}
+	srv.ctx.Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
+		if srv.cancel != nil {
+			srv.cancel()
+		}
+		srv.startFetch()
+	})
 	return srv, nil
 }
 
 func (directory *Server) Start() error {
-	if len(config.Manager().Get().Domains()) < 1 {
-		return errors.New("no domains")
-	}
-	dom := config.Manager().Get().Domains()[0]
-	ac, err := dom.APIClient()
-	if err != nil {
-		return err
-	}
-	directory.api = ac
-	directory.cfg = dom.Config()
-	directory.startFetch()
+	go directory.startFetch()
 	return nil
 }
 
@@ -56,13 +55,16 @@ func (directory *Server) Stop() error {
 	return nil
 }
 
-func (directory *Server) Register(s grpc.ServiceRegistrar) {
+func (directory *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
+	if id != types.SocketIDDefault {
+		return
+	}
 	pb.RegisterSystemDirectoryServer(s, directory)
 }
 
-func (directory *Server) GetUserUidNumber(user api.User) uint32 {
+func (directory *Server) GetUserUidNumber(cfg api.AgentConfig, user api.User) uint32 {
 	uidNumber, ok := user.GetAttributes()["uidNumber"].(string)
-	def := uint32(directory.cfg.NssUidOffset + user.Pk)
+	def := uint32(cfg.NssUidOffset + user.Pk)
 	if ok {
 		id, err := strconv.ParseUint(uidNumber, 10, 32)
 		if err != nil {
@@ -74,9 +76,9 @@ func (directory *Server) GetUserUidNumber(user api.User) uint32 {
 	return def
 }
 
-func (directory *Server) GetUserGidNumber(user api.User) uint32 {
+func (directory *Server) GetUserGidNumber(cfg api.AgentConfig, user api.User) uint32 {
 	gidNumber, ok := user.GetAttributes()["gidNumber"].(string)
-	def := directory.GetUserUidNumber(user)
+	def := directory.GetUserUidNumber(cfg, user)
 	if ok {
 		id, err := strconv.ParseUint(gidNumber, 10, 32)
 		if err != nil {
@@ -88,9 +90,9 @@ func (directory *Server) GetUserGidNumber(user api.User) uint32 {
 	return def
 }
 
-func (directory *Server) GetGroupGidNumber(group api.Group) uint32 {
+func (directory *Server) GetGroupGidNumber(cfg api.AgentConfig, group api.Group) uint32 {
 	gidNumber, ok := group.GetAttributes()["gidNumber"].(string)
-	def := uint32(directory.cfg.NssGidOffset + group.NumPk)
+	def := uint32(cfg.NssGidOffset + group.NumPk)
 	if ok {
 		id, err := strconv.ParseUint(gidNumber, 10, 32)
 		if err != nil {

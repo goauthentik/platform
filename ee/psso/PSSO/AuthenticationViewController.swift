@@ -12,7 +12,7 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
         subsystem: Bundle.main.bundleIdentifier!, category: "AuthenticationViewController")
 
     var authorizationRequest: URL?
-    var cancelFunc: () -> Void = {}
+    var interactive: InteractiveAuth?
 
     override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -39,6 +39,10 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     }
 
     override func viewDidAppear() {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        self.webView.customUserAgent =
+            "authentik Platform/PSSO@\(appVersion ?? "dev") (OS \(systemVersion))"
         self.webView.navigationDelegate = self
         self.webView.isInspectable = true
         if let url = authorizationRequest {
@@ -52,23 +56,28 @@ class AuthenticationViewController: NSViewController, WKNavigationDelegate {
     }
 
     @IBAction func clickCancel(_: Any) {
-        self.cancelFunc()
+        self.interactive?.cancelAuth()
     }
 
-    func webView(
-        _ webView: WKWebView,
-        decidePolicyFor navigationAction: WKNavigationAction,
-        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-    ) {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async
+        -> WKNavigationActionPolicy
+    {
+        self.logger.debug("Navigate \(String(describing: navigationAction.request.url))")
+        guard let interactive = self.interactive else {
+            return .allow
+        }
         if let url = navigationAction.request.url,
-            url.scheme == "io.goauthentik.platform"
+            interactive.isFinishedURL(url: url)
         {
             self.logger.debug("Intercepted redirect: \(url.absoluteString)")
-            if OIDC.shared.resumeAuthorizationFlow(with: url) {
-                decisionHandler(.cancel)
+            if await interactive.resumeAuthorizationFlow(with: url) {
+                return .cancel
             }
         }
-        decisionHandler(.allow)
+        return await interactive.injectDTH(
+            webView,
+            decidePolicyFor: navigationAction,
+        )
     }
 
 }

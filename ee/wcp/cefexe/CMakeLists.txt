@@ -2,7 +2,7 @@
 # reserved. Use of this source code is governed by a BSD-style license that
 # can be found in the LICENSE file.
 
-project(cefexe)
+project(ak_cef)
 
 #
 # Source files.
@@ -27,6 +27,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ..)
 
 target_link_libraries(${PROJECT_NAME}
   # ${LIBCEF_LIB_PATH}  #//- todo: revise if really needed
+  ak_common
   ak_cred_provider
   # ${LIBCEF_DLL_WRAPPER_LIB_PATH} #-
   # ${CEF_STANDARD_LIBS}
@@ -35,3 +36,4 @@ target_link_libraries(${PROJECT_NAME}
 # Copy binary and resource files to the target output directory.
 
 COPY_FILES("${PROJECT_NAME}" "${PROJECT_NAME}.exe" "${CMAKE_CURRENT_BINARY_DIR}/Release" "${PROJECT_INSALL_DIR}")
+COPY_FILES("${PROJECT_NAME}" "${PROJECT_NAME}.pdb" "${CMAKE_CURRENT_BINARY_DIR}/Release" "${PROJECT_INSALL_DIR}")

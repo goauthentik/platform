@@ -87,7 +87,7 @@ func PostForm(c httpClient, u string, params url.Values) (*FormResponse, error) 
 			return r, err
 		}
 	case "application/json":
-		var values map[string]interface{}
+		var values map[string]any
 		if err := json.NewDecoder(resp.Body).Decode(&values); err != nil {
 			return r, err
 		}

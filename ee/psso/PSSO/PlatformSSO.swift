@@ -1,5 +1,5 @@
 import AuthenticationServices
-import Generated
+import Bridge
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistrationHandler {
 
@@ -20,43 +20,23 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
     func beginDeviceRegistration(
         loginManager: ASAuthorizationProviderExtensionLoginManager,
         options: ASAuthorizationProviderExtensionRequestOptions = [],
-        completion:
-            @escaping (
-                ASAuthorizationProviderExtensionRegistrationResult
-            ) -> Void
-    ) {
+    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         self.logger.debug("Begin Device Registration")
-        let config = SysdBridge.shared.oauthConfig
-        self.logger.debug("Options: \(String(describing: config))")
-        let loginConfig = ASAuthorizationProviderExtensionLoginConfiguration(
-            clientID: config.ClientID,
-            issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
-            tokenEndpointURL: URL(string: "\(config.BaseURL)/endpoint/apple/sso/token/")!,
-            jwksEndpointURL: URL(
-                string: "\(config.BaseURL)/application/o/\(config.AppSlug)/jwks/")!,
-            audience: config.ClientID
-        )
-
-        loginConfig.nonceEndpointURL = URL(
-            string: "\(config.BaseURL)/endpoint/apple/sso/nonce/")!
-        loginConfig.accountDisplayName = "authentik"
-        loginConfig.includePreviousRefreshTokenInLoginRequest = true
-
-        self.logger.debug("clientID: \(loginConfig.clientID)")
-        self.logger.debug("issuer: \(loginConfig.issuer)")
-        self.logger.debug("audience: \(loginConfig.audience)")
-
-        self.cancelFunc = {
-            completion(.failed)
-        }
-
-        API.shared.RegisterDevice(
-            loginConfig: loginConfig,
+        let registration = await API.shared.RegisterDevice(
             loginManager: loginManager,
-            token: loginManager.registrationToken ?? "",
-        ) { status in
-            completion(status)
+        )
+        if let registration = registration {
+            registration.accountDisplayName = "authentik"
+            registration.includePreviousRefreshTokenInLoginRequest = true
+            do {
+                try loginManager.saveLoginConfiguration(registration)
+                return .success
+            } catch {
+                self.logger.warning("failed to save login configuration: \(error)")
+                return .failed
+            }
         }
+        return .failed
     }
 
     func beginUserRegistration(
@@ -64,48 +44,27 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         userName: String?,
         method: ASAuthorizationProviderExtensionAuthenticationMethod,
         options: ASAuthorizationProviderExtensionRequestOptions = [],
-        completion: @escaping (ASAuthorizationProviderExtensionRegistrationResult) -> Void
-    ) {
+    ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         self.logger.debug(
-            "beginUserRegistration \(userName ?? ""), method \(String(describing: method))"
+            "beginUserRegistration \(userName ?? ""), method \(String(describing: method)), options \(String(describing: options))"
         )
-        self.logger.debug("options: \(String.init(describing: options))")
-        let loginConfig = ASAuthorizationProviderExtensionUserLoginConfiguration(
-            loginUserName: userName ?? "")
-        let config = SysdBridge.shared.oauthConfig
-        self.cancelFunc = {
-            completion(.failed)
+        do {
+            let supported = try await SysdBridge.shared.interactiveAuthSupported()
+            if !supported {
+                self.logger.warning("Interactive authentication not supported")
+                return .failedNoRetry
+            }
+        } catch {
+            self.logger.error("Failed to check if interactive auth is available: \(error)")
+            return .failed
         }
-        OIDC.shared.startAuthorization(
-            viewController: self,
-            loginConfig: ASAuthorizationProviderExtensionLoginConfiguration(
-                clientID: config.ClientID,
-                issuer: "\(config.BaseURL)/application/o/\(config.AppSlug)/",
-                tokenEndpointURL: URL(
-                    string: "\(config.BaseURL)/application/o/token/"
-                )!,
-                jwksEndpointURL: URL(
-                    string: "\(config.BaseURL)/application/o/\(config.AppSlug)/jwks/")!,
-                audience: config.ClientID,
-            ),
-            loginManager: loginManager
-        )
-        loginManager.presentRegistrationViewController { error in
-            if let err = error {
-                self.logger.error("error presentRegistrationViewController \(err)")
-                completion(.failed)
-            }
-            OIDC.shared.completion = { token in
-                self.logger.debug("got token \(String(describing: token))")
-
-                API.shared.RegisterUser(
-                    loginConfig: loginConfig,
-                    loginManger: loginManager,
-                    token: token.accessToken!,
-                ) { st in
-                    completion(st)
-                }
-            }
+        let interactive = InteractiveAuth(loginManager: loginManager)
+        self.interactive = interactive
+        do {
+            return try await interactive.startAuth(viewController: self) ?? .failed
+        } catch {
+            self.logger.error("Error starting interactive authentication: \(error)")
+            return .failed
         }
     }
 
@@ -124,16 +83,15 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
 
     func supportedGrantTypes() -> ASAuthorizationProviderExtensionSupportedGrantTypes {
         self.logger.debug("supportedGrantTypes")
-        return [.password, .jwtBearer]
+        return [.jwtBearer]
     }
 
     func keyWillRotate(
         for keyType: ASAuthorizationProviderExtensionKeyType,
         newKey _: SecKey,
         loginManager _: ASAuthorizationProviderExtensionLoginManager,
-        completion: @escaping (Bool) -> Void
-    ) {
+    ) async -> Bool {
         self.logger.debug("keyWillRotate \(String(describing: keyType))")
-        completion(false)
+        return false
     }
 }

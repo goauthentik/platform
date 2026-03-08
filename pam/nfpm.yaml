@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "libpam-authentik"
+arch: "${ARCH}"
+platform: "linux"
+version: "${VERSION}"
+description: |
+  libpam-authentik authenticates users through authentik.
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+section: security
+contents:
+  - src: "../cache/pam/release/libauthentik_pam.so"
+    dst: "/usr/lib/security/pam_authentik.so"
+    file_info:
+      mode: 0644
+    packager: deb
+  - src: "../cache/pam/release/libauthentik_pam.so"
+    dst: "/usr/lib64/security/pam_authentik.so"
+    file_info:
+      mode: 0644
+    packager: rpm
+  # Config
+  - src: "./_deb/pam_config"
+    dst: "/usr/share/pam-configs/authentik"
+    file_info:
+      mode: 0644
+    packager: deb
+    type: config
+  - src: "./_rpm/authselect"
+    dst: /usr/share/authselect/vendor/authentik
+    packager: rpm
+    type: config
+overrides:
+  deb:
+    depends:
+      - "authentik-sysd"
+      - "libc6"
+      - "libssl3 | libssl3t64"
+      - "libpam0g"
+    scripts:
+      postinstall: ./_deb/postinst.sh
+      preremove: ./_deb/prerm.sh
+  rpm:
+    scripts:
+      postinstall: ./_rpm/post.sh
+      preremove: ./_rpm/preun.sh
+    depends:
+      - "authentik-sysd"
+      - "glibc"
+      - "openssl-libs"
+      - "pam-libs"
+      # Dependency on NSS due to authselect configuring both
+      - "libnss-authentik"

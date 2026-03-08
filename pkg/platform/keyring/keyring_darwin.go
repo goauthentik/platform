@@ -21,18 +21,23 @@ func init() {
 	})
 }
 
-func baseItem(service string, user string) keychain.Item {
+func baseItem(service string, user string, access Accessibility) keychain.Item {
 	item := keychain.NewItem()
 	item.SetSecClass(keychain.SecClassGenericPassword)
 	item.SetService(service)
 	item.SetAccount(user)
 	item.SetAccessGroup(accessGroup)
-	item.SetAccessible(keychain.AccessibleAfterFirstUnlock)
+	switch access {
+	case AccessibleUser:
+		item.SetAccessible(keychain.AccessibleAfterFirstUnlock)
+	case AccessibleAlways:
+		item.SetAccessible(keychain.AccessibleAlways)
+	}
 	return item
 }
 
-func saveItem(service, user, data string) keychain.Item {
-	item := baseItem(service, user)
+func saveItem(service, user, data string, access Accessibility) keychain.Item {
+	item := baseItem(service, user, access)
 
 	_ = item.SetAuthenticationContext(ctx)
 	item.SetLabel(fmt.Sprintf("authentik Platform SSO: %s", service))
@@ -40,18 +45,18 @@ func saveItem(service, user, data string) keychain.Item {
 	return item
 }
 
-func queryItem(service, user string) keychain.Item {
-	item := baseItem(service, user)
+func queryItem(service, user string, access Accessibility) keychain.Item {
+	item := baseItem(service, user, access)
 
 	item.SetMatchLimit(keychain.MatchLimitOne)
 	item.SetReturnData(true)
 	return item
 }
 
-func Get(service string, user string) (string, error) {
+func Get(service string, user string, access Accessibility) (string, error) {
 	mtx.Lock()
 	defer mtx.Unlock()
-	results, err := keychain.QueryItem(queryItem(service, user))
+	results, err := keychain.QueryItem(queryItem(service, user, access))
 	if err != nil {
 		return "", err
 	}
@@ -64,14 +69,14 @@ func Get(service string, user string) (string, error) {
 	return "", keychain.ErrorItemNotFound
 }
 
-func Set(service string, user string, data string) error {
+func Set(service string, user string, access Accessibility, data string) error {
 	mtx.Lock()
 	defer mtx.Unlock()
-	item := saveItem(service, user, data)
+	item := saveItem(service, user, data, access)
 	err := keychain.AddItem(item)
 	if err != nil {
 		if errors.Is(err, keychain.ErrorDuplicateItem) {
-			err = keychain.UpdateItem(queryItem(service, user), item)
+			err = keychain.UpdateItem(queryItem(service, user, access), item)
 			if err != nil {
 				return errors.Wrap(err, "failed to update item")
 			}
@@ -83,10 +88,10 @@ func Set(service string, user string, data string) error {
 	return nil
 }
 
-func Delete(service string, user string) error {
+func Delete(service string, user string, access Accessibility) error {
 	mtx.Lock()
 	defer mtx.Unlock()
-	item := queryItem(service, user)
+	item := queryItem(service, user, access)
 	err := keychain.DeleteItem(item)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete item")

@@ -7,6 +7,10 @@ else
 BINARY_NAME := ak-sysd
 endif
 
+.PHONY: lint
+lint:
+	$(call lint_shellcheck,"${PWD}/package")
+
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
@@ -24,17 +28,13 @@ endif
 
 .PHONY: package-gnu/linux
 package-gnu/linux: build
+	"$(MAKE)" -C ${TOP} browser_support/build
 	mkdir -p "${TOP}/bin/${TARGET}/completions"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/cmd/${TARGET}" \
 		"${TOP}/bin/${TARGET}/completions" \
 		"${TARGET}"
-	VERSION=${VERSION} ARCH=${ARCH} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p deb \
-			-t "${TOP}/bin/${TARGET}" \
-			-f "${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml"
+	$(call nfpm_package)
 
 test-deploy: package-gnu/linux
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}_${ARCH}.deb

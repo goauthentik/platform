@@ -16,7 +16,7 @@ type URLSet struct {
 	JWKS          string
 }
 
-func URLsForProfile(profile *config.ConfigV1Profile) URLSet {
+func URLsForProfile(profile config.ConfigV1Profile) URLSet {
 	return URLSet{
 		AuthorizeURL:  fmt.Sprintf("%s/application/o/authorize/", profile.AuthentikURL),
 		DeviceCodeURL: fmt.Sprintf("%s/application/o/device/", profile.AuthentikURL),
@@ -26,7 +26,7 @@ func URLsForProfile(profile *config.ConfigV1Profile) URLSet {
 	}
 }
 
-func APIConfig(profile *config.ConfigV1Profile) *api.Configuration {
+func APIConfig(profile config.ConfigV1Profile) *api.Configuration {
 	u, err := url.Parse(profile.AuthentikURL)
 	c := api.NewConfiguration()
 	if err != nil {

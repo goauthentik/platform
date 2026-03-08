@@ -1,12 +1,5 @@
 import AuthenticationServices
-import Generated
-
-extension URL {
-    func valueOf(_ queryParameterName: String) -> String? {
-        guard let url = URLComponents(string: self.absoluteString) else { return nil }
-        return url.queryItems?.first(where: { $0.name == queryParameterName })?.value
-    }
-}
+import Bridge
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthorizationRequestHandler
 {
@@ -33,21 +26,20 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
             self.logger.info("SSOE: No login manager, skipping")
             return true
         }
-        let config = Generated.SysdBridge.shared.oauthConfig
-        guard let base = URL(string: config.BaseURL) else {
-            self.logger.info("SSOE: Unable to parse base URL")
-            return true
-        }
-        if request.url.scheme != base.scheme
-            || request.url
-                .host()
-                != base
-                .host()
-            || !request.url.path().starts(with: base.path())
-        {
-            self.logger.info("SSOE: Skipping due to mismatching base URL")
-            return true
-        }
+        //        guard let base = URL(string: config.BaseURL) else {
+        //            self.logger.info("SSOE: Unable to parse base URL")
+        //            return true
+        //        }
+        //        if request.url.scheme != base.scheme
+        //            || request.url
+        //                .host()
+        //                != base
+        //                .host()
+        //            || !request.url.path().starts(with: base.path())
+        //        {
+        //            self.logger.info("SSOE: Skipping due to mismatching base URL")
+        //            return true
+        //        }
         if request.url.valueOf(AuthenticationViewController.queryResponse) == nil {
             self.logger.info("SSOE: Skipping due to existing response")
             return true
@@ -76,7 +68,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
         }
         Task {
             do {
-                let header = try await Generated.SysdBridge.shared.platformSignedEndpointHeader(
+                let header = try await SysdBridge.shared.platformSignedEndpointHeader(
                     challenge: challenge
                 )
                 let url = request.url.appending(

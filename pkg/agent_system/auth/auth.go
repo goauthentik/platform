@@ -1,13 +1,12 @@
 package auth
 
 import (
-	"errors"
+	"runtime"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
-	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/types"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc"
 )
@@ -18,16 +17,14 @@ type Server struct {
 	pb.UnimplementedSystemAuthTokenServer
 	pb.UnimplementedSystemAuthInteractiveServer
 	pb.UnimplementedSystemAuthAuthorizeServer
+	pb.UnimplementedSystemAuthAppleServer
 
-	api *api.APIClient
 	log *log.Entry
 
 	ctx component.Context
 
-	cfg  *config.Config
 	txns map[string]*InteractiveAuthTransaction
 	m    sync.RWMutex
-	dom  *config.DomainConfig
 
 	interactiveEnabled   bool
 	authorizationEnabled bool
@@ -36,7 +33,6 @@ type Server struct {
 func NewServer(ctx component.Context) (component.Component, error) {
 	srv := &Server{
 		log:                  ctx.Log(),
-		cfg:                  config.Manager().Get(),
 		ctx:                  ctx,
 		txns:                 map[string]*InteractiveAuthTransaction{},
 		m:                    sync.RWMutex{},
@@ -57,17 +53,6 @@ func NewTokenServer(ctx component.Context) (component.Component, error) {
 }
 
 func (auth *Server) Start() error {
-	if len(config.Manager().Get().Domains()) < 1 {
-		return errors.New("no domains")
-	}
-	dom := config.Manager().Get().Domains()[0]
-	ac, err := dom.APIClient()
-	if err != nil {
-		return err
-	}
-	auth.dom = dom
-	auth.api = ac
-	auth.startFetch()
 	return nil
 }
 
@@ -75,12 +60,18 @@ func (auth *Server) Stop() error {
 	return nil
 }
 
-func (auth *Server) Register(s grpc.ServiceRegistrar) {
+func (auth *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
+	if id != types.SocketIDDefault {
+		return
+	}
 	pb.RegisterSystemAuthTokenServer(s, auth)
 	if auth.interactiveEnabled {
 		pb.RegisterSystemAuthInteractiveServer(s, auth)
 	}
 	if auth.authorizationEnabled {
 		pb.RegisterSystemAuthAuthorizeServer(s, auth)
+	}
+	if runtime.GOOS == "darwin" {
+		pb.RegisterSystemAuthAppleServer(s, auth)
 	}
 }

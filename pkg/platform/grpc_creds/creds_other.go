@@ -1,4 +1,4 @@
-//go:build !(linux || darwin)
+//go:build !(linux || darwin || windows)
 
 package grpc_creds
 
@@ -8,5 +8,5 @@ import (
 )
 
 func getCreds(conn net.Conn) (*Creds, error) {
-	return nil, errors.New("not implemented")
+	return nil, errors.ErrUnsupported
 }

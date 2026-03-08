@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
+	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
 
@@ -42,11 +43,9 @@ func (gtm *GlobalTokenManager) start() {
 		gtm.managers[n] = m
 	}
 	gtm.mlock.Unlock()
-	go func() {
-		for evt := range config.Manager().Watch() {
-			gtm.eventHandler(evt)
-		}
-	}()
+	config.Manager().Bus().AddEventListener(cfgmgr.TopicConfigChanged, func(ev *events.Event) {
+		gtm.eventHandler(ev)
+	})
 }
 
 func delta(a config.ConfigV1, b config.ConfigV1) []string {
@@ -65,11 +64,13 @@ func delta(a config.ConfigV1, b config.ConfigV1) []string {
 	return delta
 }
 
-func (gtm *GlobalTokenManager) eventHandler(evt cfgmgr.ConfigChangedEvent[config.ConfigV1]) {
+func (gtm *GlobalTokenManager) eventHandler(ev *events.Event) {
 	gtm.mlock.Lock()
 	defer gtm.mlock.Unlock()
-	if evt.Type == cfgmgr.ConfigChangedAdded {
-		d := delta(evt.PreviousConfig, config.Manager().Get())
+	typ := ev.Payload.Data["type"].(cfgmgr.ConfigChangedType)
+	prev := ev.Payload.Data["previous_config"].(config.ConfigV1)
+	if typ == cfgmgr.ConfigChangedAdded {
+		d := delta(prev, config.Manager().Get())
 		for _, dd := range d {
 			m, err := NewProfileVerified(dd)
 			if err != nil {
@@ -78,8 +79,8 @@ func (gtm *GlobalTokenManager) eventHandler(evt cfgmgr.ConfigChangedEvent[config
 			}
 			gtm.managers[dd] = m
 		}
-	} else if evt.Type == cfgmgr.ConfigChangedRemoved {
-		d := delta(config.Manager().Get(), evt.PreviousConfig)
+	} else if typ == cfgmgr.ConfigChangedRemoved {
+		d := delta(config.Manager().Get(), prev)
 		for _, dd := range d {
 			mgr := gtm.managers[dd]
 			mgr.Stop()

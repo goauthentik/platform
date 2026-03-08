@@ -4,6 +4,6 @@
         "ms-azuretools.vscode-docker",
         "redhat.vscode-yaml",
         "rust-lang.rust-analyzer",
-        "zxh404.vscode-proto3"
+        "DrBlury.protobuf-vsc"
     ]
 }

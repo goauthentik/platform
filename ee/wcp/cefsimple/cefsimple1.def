@@ -1,10 +1,10 @@
-;cefsimple.def 
+;cefsimple.def
 ; cefsimple module-definition file
-; LIBRARY cefsimple.dll 
+; LIBRARY cefsimple.dll
 ; LIBRARY
-LIBRARY cefsimple.dll 
+LIBRARY cefsimple.dll
 
 EXPORTS
-    CEFLaunch                                       
+    CEFLaunch
     CEFTest
-    
+
