@@ -6,6 +6,7 @@ let
   cfg = config.services.authentik;
   appPath = "/Applications/authentik Agent.app";
   packageAppPath = "${cfg.package}/Applications/authentik Agent.app";
+  packageResourcesPath = "${packageAppPath}/Contents/Resources";
   browserSupportPath = "${packageAppPath}/Contents/MacOS/ak-browser-support";
   defaultConfigPath = "/opt/authentik/config/config.json";
   targetConfigPath = if cfg.configFile != null then toString cfg.configFile else defaultConfigPath;
@@ -72,25 +73,29 @@ in
       # Chrome/Chromium (system-wide)
       mkdir -p "/Library/Google/Chrome/NativeMessagingHosts"
       sed "s|/Applications/authentik Agent.app/Contents/MacOS/ak-browser-support|${browserSupportPath}|g" \
-         "${appPath}/Contents/Resources/browser-host-chrome.json" \
+         "${packageResourcesPath}/browser-host-chrome.json" \
          > "/Library/Google/Chrome/NativeMessagingHosts/io.goauthentik.platform.json"
+      chmod 644 "/Library/Google/Chrome/NativeMessagingHosts/io.goauthentik.platform.json"
 
       mkdir -p "/Library/Application Support/Chromium/NativeMessagingHosts"
       sed "s|/Applications/authentik Agent.app/Contents/MacOS/ak-browser-support|${browserSupportPath}|g" \
-         "${appPath}/Contents/Resources/browser-host-chrome.json" \
+         "${packageResourcesPath}/browser-host-chrome.json" \
          > "/Library/Application Support/Chromium/NativeMessagingHosts/io.goauthentik.platform.json"
+      chmod 644 "/Library/Application Support/Chromium/NativeMessagingHosts/io.goauthentik.platform.json"
 
       # Edge (system-wide)
       mkdir -p "/Library/Microsoft/Edge/NativeMessagingHosts"
       sed "s|/Applications/authentik Agent.app/Contents/MacOS/ak-browser-support|${browserSupportPath}|g" \
-         "${appPath}/Contents/Resources/browser-host-chrome.json" \
+         "${packageResourcesPath}/browser-host-chrome.json" \
          > "/Library/Microsoft/Edge/NativeMessagingHosts/io.goauthentik.platform.json"
+      chmod 644 "/Library/Microsoft/Edge/NativeMessagingHosts/io.goauthentik.platform.json"
 
       # Firefox (system-wide)
       mkdir -p "/Library/Application Support/Mozilla/NativeMessagingHosts"
       sed "s|/Applications/authentik Agent.app/Contents/MacOS/ak-browser-support|${browserSupportPath}|g" \
-         "${appPath}/Contents/Resources/browser-host-firefox.json" \
+         "${packageResourcesPath}/browser-host-firefox.json" \
          > "/Library/Application Support/Mozilla/NativeMessagingHosts/io.goauthentik.platform.json"
+      chmod 644 "/Library/Application Support/Mozilla/NativeMessagingHosts/io.goauthentik.platform.json"
     '';
 
     # Launchd daemon for ak-sysd (runs as root)
