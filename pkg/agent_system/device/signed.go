@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/MicahParks/jwkset"
-	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/mitchellh/mapstructure"
 	"goauthentik.io/platform/pkg/agent_system/config"
@@ -16,28 +15,48 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/hardware"
 )
 
-func (ds *Server) validateChallenge(ctx context.Context, rawToken string) (*token.Token, *config.DomainConfig, error) {
-	for _, dom := range config.Manager().Get().Domains() {
-		var st jwkset.Storage
-		jw := jwkset.JWKSMarshal{}
-		err := mapstructure.Decode(dom.Config().JwksChallenge, &jw)
-		if err != nil {
-			ds.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to load config")
-			continue
+func parseChallengeToken(rawToken string, rawJWKS map[string]any) (*jwt.Token, error) {
+	jw := jwkset.JWKSMarshal{}
+	err := mapstructure.Decode(rawJWKS, &jw)
+	if err != nil {
+		return nil, err
+	}
+	keys, err := jw.JWKSlice()
+	if err != nil {
+		return nil, err
+	}
+	headerOnly := &token.AuthentikClaims{}
+	parser := jwt.NewParser()
+	unverified, _, err := parser.ParseUnverified(rawToken, headerOnly)
+	if err != nil {
+		return nil, err
+	}
+	targetKID, _ := unverified.Header["kid"].(string)
+	var lastErr error
+	for _, key := range keys {
+		if targetKID != "" {
+			marshaled := key.Marshal()
+			if marshaled.KID != "" && marshaled.KID != targetKID {
+				continue
+			}
 		}
-		sst, err := jw.ToStorage()
-		if err != nil {
-			ds.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to parse jwks")
-			continue
+		parsed, err := jwt.ParseWithClaims(rawToken, &token.AuthentikClaims{}, func(*jwt.Token) (any, error) {
+			return key.Key(), nil
+		})
+		if err == nil {
+			return parsed, nil
 		}
-		st = sst
+		lastErr = err
+	}
+	if lastErr != nil {
+		return nil, lastErr
+	}
+	return nil, errors.New("no matching jwk found for challenge")
+}
 
-		k, err := keyfunc.New(keyfunc.Options{Storage: st, Ctx: ctx})
-		if err != nil {
-			ds.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to create keyfunc")
-			continue
-		}
-		t, err := jwt.ParseWithClaims(rawToken, &token.AuthentikClaims{}, k.Keyfunc)
+func (ds *Server) validateChallenge(_ context.Context, rawToken string) (*token.Token, *config.DomainConfig, error) {
+	for _, dom := range config.Manager().Get().Domains() {
+		t, err := parseChallengeToken(rawToken, dom.Config().JwksChallenge)
 		if err != nil {
 			ds.log.WithField("domain", dom.Domain).WithError(err).Warning("failed to validate token")
 			continue
