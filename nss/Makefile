@@ -21,13 +21,13 @@ test:
 	cargo test --verbose
 
 package: build
-	VERSION=${VERSION} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
+	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
 			-f ${TOP}/${TARGET}/nfpm.yaml
-	VERSION=${VERSION} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
+	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \
