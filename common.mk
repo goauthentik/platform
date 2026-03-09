@@ -5,6 +5,7 @@ UID = $(shell id -u)
 GID = $(shell id -g)
 VERSION = 0.40.5
 VERSION_HASH = $(shell git rev-parse HEAD)
+VERSION_HASH_SHORT = $(shell git rev-parse HEAD | head -c 12)
 VERSION_TS = $(shell date +%s)
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)
