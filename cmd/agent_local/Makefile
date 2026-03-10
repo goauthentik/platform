@@ -64,7 +64,7 @@ package-darwin: clean build
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
 		--identifier "io.goauthentik.agent" \
-		--version "${VERSION}" \
+		--version "${VERSION}.${VERSION_HASH_SHORT}" \
 		--scripts "${PWD}/package/macos/scripts" \
 		--install-location /Applications \
 		"${TOP}/bin/${TARGET}/agent.pkg"
@@ -91,7 +91,7 @@ package-msys: clean
 	dotnet restore \
 		--packages "${TOP}/cache/${TARGET}" \
 		"$(shell pwd)/package/windows/"
-	ROOT=${TOP} VERSION=${VERSION}.${VERSION_TS} dotnet build \
+	ROOT=${TOP} VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} dotnet build \
 		--packages "${TOP}/cache/${TARGET}" \
 		--artifacts-path "${TOP}/cache/${TARGET}" \
 		--output "${TOP}/bin/${TARGET}/" \

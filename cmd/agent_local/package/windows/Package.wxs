@@ -8,7 +8,7 @@
   xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package Id="authentik.Agent"
            Name="$(var.Name)"
-           Manufacturer="$(var.Manufacturer)"
+           Manufacturer="$(var.Manufacturer) ($(env.VERSION_HASH_SHORT))"
            Version="$(var.Version)"
            UpgradeCode="$(var.UpgradeCode)"
            Compressed="true">

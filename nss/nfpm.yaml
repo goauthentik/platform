@@ -2,7 +2,7 @@
 name: "libnss-authentik"
 arch: "${ARCH}"
 platform: "linux"
-version: "${VERSION}"
+version: "${VERSION}+ak-${VERSION_HASH_SHORT}"
 description: |
   NSS module for authentik
 vendor: "Authentik Security Inc."
