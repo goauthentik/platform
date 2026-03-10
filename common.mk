@@ -56,13 +56,13 @@ define nfpm_package
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+			-f $(1)
 	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \
 			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+			-f $(1)
 endef
 
 define _target_template

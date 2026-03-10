@@ -78,7 +78,7 @@ package-darwin: clean build
 
 .PHONY: package-gnu/linux
 package-gnu/linux: clean build
-	$(call nfpm_package)
+	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
 
 .PHONY: package-msys
 package-msys: clean

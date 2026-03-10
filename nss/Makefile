@@ -21,18 +21,7 @@ test:
 	cargo test --verbose
 
 package: build
-	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p deb \
-			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/${TARGET}/nfpm.yaml
-	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
-			package \
-			-p rpm \
-			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/${TARGET}/nfpm.yaml
+	DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} $(call nfpm_package,${TOP}/${TARGET}/nfpm.yaml)
 
 test-deploy: package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/libnss-authentik_${VERSION}_${ARCH}.deb
