@@ -96,15 +96,13 @@ class SimpleHandler : public CefClient,
                       ", ThreadID: ", std::to_string(GetCurrentThreadId()));
         Hide();
         m_pData->UpdateStatus(L"Authenticating, please wait...");
-        TokenResponse validatedToken;
+        std::string validatedToken;
         try {
-          if (!ak_sys_auth_url(strURL, validatedToken)) {
-            spdlog::warn("failed to validate token");
-          } else {
-            spdlog::debug("successfully validated token");
-            m_pData->UpdateUser(validatedToken.username.c_str());
-          }
+          ak_sys_auth_url(strURL, validatedToken);
+          spdlog::debug("successfully validated token");
+          m_pData->UpdateUserToken(validatedToken);
         } catch (const rust::Error& ex) {
+          spdlog::warn("failed to validate token");
           spdlog::warn("Exception in ak_sys_auth_url: {}", ex.what());
         }
         CloseAllBrowsers(false);
