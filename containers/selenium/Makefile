@@ -10,9 +10,7 @@ ci-container-tag:
 
 .PHONY: ci-build-args
 ci-build-args:
-# Only set version constraint when _not_ building a PR build
-# as on a PR build, we won't have published the correct package versions
-	@echo AK_PLATFORM_VER_CONSTRAINT=$(if $(strip $(AK_TAG_SUFFIX)),,=${VERSION}+ak-${VERSION_HASH_SHORT})
+	@echo AK_PLATFORM_VER=${VERSION}+ak-${VERSION_HASH_SHORT}
 	@echo AK_DEPLOY_URL=${AK_DEPLOY_URL}
 
 .PHONY: local-build

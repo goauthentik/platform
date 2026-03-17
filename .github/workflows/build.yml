@@ -230,8 +230,13 @@ jobs:
           AK_TAG_SUFFIX: ${{ github.event_name == 'pull_request' && github.event.number || '' }}
         run: |
           cd ${{ matrix.target }}
-          echo "tag=$(make ci-container-tag)" >> $GITHUB_OUTPUT
-          echo "build-args=$(make ci-build-args)" >> $GITHUB_OUTPUT
+          echo "tag<<EOF" >> $GITHUB_OUTPUT
+          make ci-container-tag >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "build-args<<EOF" >> $GITHUB_OUTPUT
+          make ci-build-args >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         id: push
         with:
