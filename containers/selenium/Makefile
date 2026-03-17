@@ -10,7 +10,7 @@ ci-container-tag:
 
 .PHONY: ci-build-args
 ci-build-args:
-	@echo AK_PLATFORM_VER=${VERSION}
+	@echo AK_PLATFORM_VER=${VERSION}+ak-${VERSION_HASH_SHORT}
 	@echo AK_DEPLOY_URL=${AK_DEPLOY_URL}
 
 .PHONY: local-build
@@ -18,5 +18,4 @@ local-build:
 	docker build \
 		-t ghcr.io/goauthentik/selenium:${container_ver} \
 		--no-cache \
-		--build-arg="AK_PLATFORM_VER=${VERSION}" \
 		.

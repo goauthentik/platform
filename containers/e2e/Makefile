@@ -8,7 +8,7 @@ local-build:
 	docker build \
 		-t xghcr.io/goauthentik/platform-e2e:local \
 		--no-cache \
-		--build-arg="AK_PLATFORM_VER=${VERSION}" \
+		--build-arg="AK_PLATFORM_VER=${VERSION}+ak-${VERSION_HASH_SHORT}" \
 		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \
 		-f "${PWD}/Dockerfile" \
 		${TOP}
