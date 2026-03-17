@@ -2,7 +2,7 @@
 name: "authentik-cli"
 arch: "${ARCH}"
 platform: "linux"
-version: "${VERSION}"
+version: "${VERSION}+ak-${VERSION_HASH_SHORT}"
 description: |
   authentik CLI
 vendor: "Authentik Security Inc."
