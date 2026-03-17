@@ -1,6 +1,5 @@
 FROM ubuntu:24.04
 
-ARG AK_PLATFORM_VER
 ARG AK_PLATFORM_ARCH
 ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
 
@@ -17,12 +16,7 @@ RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-serv
 RUN curl -fsSL "${AK_DEPLOY_URL}/keys/gpg-key.asc" | sudo gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/authentik-keyring.gpg] ${AK_DEPLOY_URL} stable main" | sudo tee /etc/apt/sources.list.d/authentik.list && \
     sudo apt-get update && \
-    sudo apt-get install \
-        "authentik-sysd=${AK_PLATFORM_VER}" \
-        "authentik-agent=${AK_PLATFORM_VER}" \
-        "authentik-cli=${AK_PLATFORM_VER}" \
-        "libpam-authentik=${AK_PLATFORM_VER}" \
-        "libnss-authentik=${AK_PLATFORM_VER}" -y
+    sudo apt-get install authentik-sysd authentik-agent authentik-cli libpam-authentik libnss-authentik -y
 
 RUN find /etc/systemd/system \
     /lib/systemd/system \
