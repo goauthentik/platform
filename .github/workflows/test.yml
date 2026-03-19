@@ -39,13 +39,13 @@ jobs:
         with:
           paths: ${{ github.workspace }}/junit.xml
           show: "fail"
-      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: go-${{ matrix.platform }}
           files: ${{ github.workspace }}/coverage.txt
-      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -131,13 +131,13 @@ jobs:
         with:
           paths: ${{ github.workspace }}/junit.xml
           show: "fail"
-      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: go-integration
           files: ${{ github.workspace }}/coverage.txt
-      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -178,13 +178,13 @@ jobs:
         with:
           paths: ${{ github.workspace }}/junit.xml
           show: "fail"
-      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: go-e2e
           files: ${{ github.workspace }}/coverage.txt
-      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
         if: ${{ always() }}
         with:
           use_oidc: true
