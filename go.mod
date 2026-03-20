@@ -71,7 +71,7 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb // indirect
-	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/caarlos0/go-version v0.2.0 // indirect
 	github.com/cavaliergopher/cpio v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
