@@ -82,8 +82,8 @@ test-rs:
 		--no-report nextest \
 		--workspace
 	cargo llvm-cov report \
-		--cobertura \
-		--output-path "${PWD}/coverage-rs.xml"
+		--codecov \
+		--output-path "${PWD}/coverage-rs.txt"
 	cargo llvm-cov report \
 		--html \
 		--output-dir "${PWD}/cache/utils_rs/coverage"
