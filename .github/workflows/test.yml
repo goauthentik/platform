@@ -33,7 +33,7 @@ jobs:
           cache: true
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
       - run: |
-          make test
+          make test-go
       - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
         if: ${{ always() }}
         with:
