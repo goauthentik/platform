@@ -31,6 +31,7 @@ func (m message) MessageID() string {
 
 type response struct {
 	Data       map[string]any `json:"data"`
+	Error      string         `json:"error,omitempty"`
 	ResponseTo string         `json:"response_to"`
 }
 
@@ -74,7 +75,6 @@ func (bs *BrowserSupport) setup() {
 		}, nil
 	})
 	bs.l.Handle("get_token", func(in message) (*response, error) {
-		bs.log.Debugf("Browser host message: '%+v'\n", in)
 		curr, err := bs.agentClient.GetCurrentToken(bs.ctx, &pb.CurrentTokenRequest{
 			Header: &pb.RequestHeader{
 				Profile: in.Profile,
@@ -83,7 +83,9 @@ func (bs *BrowserSupport) setup() {
 		})
 		if err != nil {
 			bs.log.WithError(err).Warning("failed to get current token")
-			return nil, err
+			return &response{
+				Error: err.Error(),
+			}, nil
 		}
 		return &response{
 			Data: map[string]any{
@@ -96,7 +98,9 @@ func (bs *BrowserSupport) setup() {
 		res, err := bs.agentClient.ListProfiles(bs.ctx, &emptypb.Empty{})
 		if err != nil {
 			bs.log.WithError(err).Warning("failed to list profiles")
-			return nil, err
+			return &response{
+				Error: err.Error(),
+			}, nil
 		}
 		return &response{
 			Data: map[string]any{
@@ -113,7 +117,9 @@ func (bs *BrowserSupport) setup() {
 		})
 		if err != nil {
 			bs.log.WithError(err).Warning("failed to get endpoint header")
-			return nil, err
+			return &response{
+				Error: err.Error(),
+			}, nil
 		}
 		return &response{
 			Data: map[string]any{
