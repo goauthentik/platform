@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   test_go:
-    name: Test
+    name: Test (go)
     strategy:
       fail-fast: false
       matrix:
@@ -66,6 +66,40 @@ jobs:
       - uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v8
         with:
           args: --timeout 5000s
+  test_rs:
+    name: Test (rs)
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libpam0g-dev libudev-dev
+      - run: make test-rs
+      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+        if: ${{ always() }}
+        with:
+          paths: ${{ github.workspace }}/coverage-rs.xml
+          show: "fail"
+      - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-${{ matrix.platform }}
+          files: ${{ github.workspace }}/coverage-rs.xml
+      - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: go-${{ matrix.platform }}
+          files: ${{ github.workspace }}/coverage-rs.xml
+          report_type: test_results
   lint_rs:
     name: Lint (rust)
     runs-on: ubuntu-latest
