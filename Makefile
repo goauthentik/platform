@@ -79,9 +79,14 @@ test-go:
 
 test-rs:
 	cargo llvm-cov \
-		--workspace \
+		--no-report nextest \
+		--workspace
+	cargo llvm-cov report \
 		--cobertura \
 		--output-path "${PWD}/coverage-rs.xml"
+	cargo llvm-cov report \
+		--html \
+		--output-dir "${PWD}/cache/utils_rs/coverage"
 
 test-integration:
 	"$(MAKE)" test-go GO_TEST_FLAGS=-tags=integration
