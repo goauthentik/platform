@@ -16,7 +16,8 @@ local-build:
 .PHONY: build-packages
 build-packages:
 	$(MAKE) -C "${TOP}" agent/package-gnu/linux AK_GO_BUILD_FLAGS=-cover
-	$(MAKE) -C "${TOP}" -j$(shell nproc) \
+	mkdir -p ${TOP}/e2e/coverage/rs
+	LLVM_PROFILE_FILE="${TOP}/e2e/coverage/rs/default_%m_%p.profraw" $(MAKE) -C "${TOP}" -j$(shell nproc) \
 		sysd/package-gnu/linux \
 		cli/package-gnu/linux \
 		nss/package \
