@@ -57,6 +57,67 @@ EOF</pre>
         </div>
     </div>
     <div class="section-b">
+        <h2>Nix/NixOS Setup</h2>
+        <div class="step">
+            <h3>Option 1: Direct Installation</h3>
+            <pre class="command"># Install with binary cache
+nix profile install github:goauthentik/platform#ak-cli \
+  --extra-substituters "${REPOSITORY_URL}nix" \
+  --extra-trusted-public-keys "authentik-pkg:ZZHUD/9SkS8T1BVVoksE/+QjIo0s3F8/AM/h0J3ckaw="
+
+# Available packages: ak-cli, ak-sysd, ak-agent, ak-browser-support
+# Linux only: libpam-authentik, libnss-authentik</pre>
+        </div>
+        <div class="step">
+            <h3>Option 2: Permanent Cache Configuration</h3>
+            <p>Add to <code>/etc/nix/nix.conf</code> or <code>~/.config/nix/nix.conf</code>:</p>
+            <pre class="command">extra-substituters = ${REPOSITORY_URL}nix
+extra-trusted-public-keys = authentik-pkg:ZZHUD/9SkS8T1BVVoksE/+QjIo0s3F8/AM/h0J3ckaw=</pre>
+            <p>Then install normally:</p>
+            <pre class="command">nix profile install github:goauthentik/platform#ak-cli</pre>
+        </div>
+        <div class="step">
+            <h3>Option 3: NixOS Configuration</h3>
+            <pre class="command"># In your flake.nix inputs:
+authentik.url = "github:goauthentik/platform";
+
+# In your NixOS configuration:
+{ authentik, ... }: {
+  imports = [ authentik.nixosModules.default ];
+  services.authentik = {
+    enable = true;
+    enablePAM = true;
+    enableNSS = true;
+  };
+}</pre>
+        </div>
+        <div class="step">
+            <h3>Option 4: nix-darwin Configuration (macOS)</h3>
+            <pre class="command"># In your flake.nix inputs:
+authentik.url = "github:goauthentik/platform";
+
+# In your darwin configuration:
+{ authentik, ... }: {
+  imports = [ authentik.darwinModules.default ];
+  nixpkgs.overlays = [ authentik.overlays.default ];
+  services.authentik.enable = true;
+}</pre>
+            <p>This installs the .app bundle to <code>/Applications/</code> and configures launchd to run ak-sysd.</p>
+        </div>
+        <div class="step">
+            <h3>Available Nix Packages</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: #e0e0e0;"><th style="padding: 8px; text-align: left;">Package</th><th style="padding: 8px; text-align: left;">Description</th><th style="padding: 8px; text-align: left;">Platforms</th></tr>
+                <tr><td style="padding: 8px;"><code>ak-cli</code></td><td style="padding: 8px;">Command-line interface</td><td style="padding: 8px;">Linux, macOS</td></tr>
+                <tr><td style="padding: 8px;"><code>ak-sysd</code></td><td style="padding: 8px;">System daemon</td><td style="padding: 8px;">Linux, macOS</td></tr>
+                <tr><td style="padding: 8px;"><code>ak-agent</code></td><td style="padding: 8px;">Local agent (includes all binaries on macOS)</td><td style="padding: 8px;">Linux, macOS</td></tr>
+                <tr><td style="padding: 8px;"><code>ak-browser-support</code></td><td style="padding: 8px;">Browser extension support</td><td style="padding: 8px;">Linux, macOS</td></tr>
+                <tr><td style="padding: 8px;"><code>libpam-authentik</code></td><td style="padding: 8px;">PAM authentication module</td><td style="padding: 8px;">Linux</td></tr>
+                <tr><td style="padding: 8px;"><code>libnss-authentik</code></td><td style="padding: 8px;">NSS name resolution module</td><td style="padding: 8px;">Linux</td></tr>
+            </table>
+        </div>
+    </div>
+    <div class="section-a">
         <h2>Repository Information</h2>
         <p><strong>Built from:</strong> ${REF} (<a href="https://github.com/goauthentik/platform/commit/${SHA}">${SHA}</a>)</p>
         <p><strong>GPG Key fingerprint:</strong> <code>82EE AAD5 531A 856A 9C72 6132 2217 2AF2 AAE3 A237</code></p>

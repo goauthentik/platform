@@ -11,7 +11,11 @@ export interface Message {
 export interface Response {
     response_to: string;
     data: { [key: string]: unknown };
+    error?: string;
 }
+
+const browserApi = (globalThis as typeof globalThis & { browser?: typeof chrome }).browser;
+const runtimeApi = browserApi?.runtime ?? chrome.runtime;
 
 function createRandomString(length: number = 16) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -25,58 +29,123 @@ function createRandomString(length: number = 16) {
 }
 
 const defaultReconnectDelay = 5;
+const requestTimeoutMs = 2500;
+
+type PendingRequest = PromiseWithResolvers<Response> & {
+    timeout?: ReturnType<typeof setTimeout>;
+};
 
 export class Native {
     #port?: chrome.runtime.Port;
-    #promises: Map<string, PromiseWithResolvers<Response>> = new Map();
+    #promises: Map<string, PendingRequest> = new Map();
     #reconnectDelay = defaultReconnectDelay;
     #reconnectTimeout = 0;
+    #isConnected = false;
 
     constructor() {
         this.#connect();
     }
 
     #connect() {
-        this.#port = chrome.runtime.connectNative("io.goauthentik.platform");
-        this.#port.onMessage.addListener(this.#listener.bind(this));
-        this.#port.onDisconnect.addListener(() => {
+        const port = runtimeApi.connectNative("io.goauthentik.platform");
+        this.#port = port;
+        this.#isConnected = true;
+        this.#reconnectDelay = defaultReconnectDelay;
+        port.onMessage.addListener(this.#listener.bind(this));
+        port.onDisconnect.addListener(() => {
+            this.#isConnected = false;
             this.#reconnectDelay *= 1.35;
             this.#reconnectDelay = Math.min(this.#reconnectDelay, 3600);
-            // @ts-ignore
-            const err = chrome.runtime.lastError || this.#port?.error;
-            console.debug(
-                `authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`,
-                err,
+            const err =
+                (typeof chrome !== "undefined" ? chrome.runtime?.lastError : undefined) ||
+                (port as chrome.runtime.Port & { error?: unknown }).error;
+            this.#rejectPending(
+                new Error(
+                    `native host disconnected${err ? `: ${String(err)}` : ""}`,
+                ),
             );
+            this.#port = undefined;
             clearTimeout(this.#reconnectTimeout);
             this.#reconnectTimeout = setTimeout(() => {
                 this.#connect();
             }, this.#reconnectDelay * 1000);
         });
-        console.debug("authentik/bext/native: Connected to native");
     }
 
     #listener(msg: Response) {
         const prom = this.#promises.get(msg.response_to);
-        console.debug(`authentik/bext/native[${msg.response_to}]: Got response`);
         if (!prom) {
-            console.debug(`authentik/bext/native[${msg.response_to}]: No promise to resolve`);
             return;
         }
+        if (msg.error) {
+            if (prom.timeout) {
+                clearTimeout(prom.timeout);
+            }
+            prom.reject(new Error(msg.error));
+            this.#promises.delete(msg.response_to);
+            return;
+        }
+        if (prom.timeout) {
+            clearTimeout(prom.timeout);
+        }
         prom.resolve(msg);
+        this.#promises.delete(msg.response_to);
+    }
+
+    #postMessage(msg: Message, retry: boolean) {
+        if (!this.#port || !this.#isConnected) {
+            this.#connect();
+        }
+        if (!this.#port) {
+            throw new Error("native host is not connected");
+        }
+        try {
+            this.#port.postMessage(msg);
+        } catch (exc) {
+            const err = exc instanceof Error ? exc.message : String(exc);
+            if (retry && err.includes("disconnected port")) {
+                this.#isConnected = false;
+                this.#port = undefined;
+                this.#connect();
+                this.#postMessage(msg, false);
+                return;
+            }
+            throw exc;
+        }
     }
 
     postMessage(msg: Partial<Message>): Promise<Response> {
         msg.id = createRandomString();
         const promise = Promise.withResolvers<Response>();
         try {
-            this.#promises.set(msg.id, promise);
-            this.#port?.postMessage(msg);
-            console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
+            const pending = promise as PendingRequest;
+            pending.timeout = setTimeout(() => {
+                this.#promises.delete(msg.id as string);
+                pending.reject(
+                    new Error(`native host timed out after ${requestTimeoutMs}ms`),
+                );
+            }, requestTimeoutMs);
+            this.#promises.set(msg.id, pending);
+            this.#postMessage(msg as Message, true);
         } catch (exc) {
-            this.#promises.get(msg.id)?.reject(exc);
+            const pending = this.#promises.get(msg.id);
+            if (pending?.timeout) {
+                clearTimeout(pending.timeout);
+            }
+            pending?.reject(exc);
+            this.#promises.delete(msg.id);
         }
         return promise.promise;
+    }
+
+    #rejectPending(error: Error) {
+        for (const [id, pending] of this.#promises) {
+            if (pending.timeout) {
+                clearTimeout(pending.timeout);
+            }
+            pending.reject(error);
+            this.#promises.delete(id);
+        }
     }
 
     async ping(): Promise<Response> {
