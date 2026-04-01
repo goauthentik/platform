@@ -8,6 +8,8 @@ use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
 use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
+use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
+use crate::generated::sys_ctrl::capabilities_response::Capability;
 use crate::grpc::grpc_request;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
@@ -95,12 +97,23 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
+#[cfg(windows)]
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
+    use windows_registry::{LOCAL_MACHINE};
+
+    let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
+    let ia = key.get_u32("auth_interactive")?;
+    if ia > 0 {
+        return Ok(true)
+    }
     let response = grpc_request(async |ch| {
-        return Ok(SystemAuthInteractiveClient::new(ch)
-            .interactive_supported(())
+        return Ok(SystemCtrlClient::new(ch)
+            .capabilities(())
             .await?);
     })?
     .into_inner();
-    Ok(response.supported)
+    let authia = Capability::AuthInteractive as i32;
+    let supported = response.capabilities.contains(&authia);
+    key.set_u32("auth_interactive", supported as u32)?;
+    Ok(supported)
 }
