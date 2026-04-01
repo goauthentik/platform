@@ -68,11 +68,11 @@ struct CacheGetRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
@@ -91,22 +91,22 @@ struct CacheGetResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
   var status: CacheStatus = .unspecified
 
   var expiry: SwiftProtobuf.Google_Protobuf_Timestamp {
-    get {return _expiry ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    get {_expiry ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
     set {_expiry = newValue}
   }
   /// Returns true if `expiry` has been explicitly set.
-  var hasExpiry: Bool {return self._expiry != nil}
+  var hasExpiry: Bool {self._expiry != nil}
   /// Clears the value of `expiry`. Subsequent reads from it will return its default value.
   mutating func clearExpiry() {self._expiry = nil}
 
@@ -126,22 +126,22 @@ struct CacheSetRequest: Sendable {
   // methods supported on all messages.
 
   var header: RequestHeader {
-    get {return _header ?? RequestHeader()}
+    get {_header ?? RequestHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
   var keys: [String] = []
 
   var expiry: SwiftProtobuf.Google_Protobuf_Timestamp {
-    get {return _expiry ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    get {_expiry ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
     set {_expiry = newValue}
   }
   /// Returns true if `expiry` has been explicitly set.
-  var hasExpiry: Bool {return self._expiry != nil}
+  var hasExpiry: Bool {self._expiry != nil}
   /// Clears the value of `expiry`. Subsequent reads from it will return its default value.
   mutating func clearExpiry() {self._expiry = nil}
 
@@ -161,11 +161,11 @@ struct CacheSetResponse: Sendable {
   // methods supported on all messages.
 
   var header: ResponseHeader {
-    get {return _header ?? ResponseHeader()}
+    get {_header ?? ResponseHeader()}
     set {_header = newValue}
   }
   /// Returns true if `header` has been explicitly set.
-  var hasHeader: Bool {return self._header != nil}
+  var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
