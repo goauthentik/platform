@@ -115,6 +115,8 @@ fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
     .into_inner();
     let authia = Capability::AuthInteractive as i32;
     let supported = response.capabilities.contains(&authia);
-    key.set_u32(REG_CAP_AUTH_INTERACTIVE, supported as u32)?;
+    if supported {
+        key.set_u32(REG_CAP_AUTH_INTERACTIVE, supported as u32)?;
+    }
     Ok(supported)
 }
