@@ -183,5 +183,29 @@ pub mod system_ctrl_client {
                 .insert(GrpcMethod::new("sys_ctrl.SystemCtrl", "TroubleshootInspect"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn capabilities(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::CapabilitiesResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_ctrl.SystemCtrl/Capabilities",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("sys_ctrl.SystemCtrl", "Capabilities"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }

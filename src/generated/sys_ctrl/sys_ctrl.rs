@@ -33,5 +33,42 @@ pub struct TroubleshootInspectResponse {
     #[prost(message, repeated, tag="3")]
     pub children: ::prost::alloc::vec::Vec<TroubleshootInspectResponse>,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CapabilitiesResponse {
+    #[prost(enumeration="capabilities_response::Capability", repeated, tag="1")]
+    pub capabilities: ::prost::alloc::vec::Vec<i32>,
+}
+/// Nested message and enum types in `CapabilitiesResponse`.
+pub mod capabilities_response {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[repr(i32)]
+    pub enum Capability {
+        Unspecified = 0,
+        AuthInteractive = 1,
+        AuthAuthz = 2,
+    }
+    impl Capability {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "UNSPECIFIED",
+                Self::AuthInteractive => "AUTH_INTERACTIVE",
+                Self::AuthAuthz => "AUTH_AUTHZ",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "UNSPECIFIED" => Some(Self::Unspecified),
+                "AUTH_INTERACTIVE" => Some(Self::AuthInteractive),
+                "AUTH_AUTHZ" => Some(Self::AuthAuthz),
+                _ => None,
+            }
+        }
+    }
+}
 include!("sys_ctrl.tonic.rs");
 // @@protoc_insertion_point(module)

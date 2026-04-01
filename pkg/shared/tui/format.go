@@ -9,6 +9,11 @@ import (
 	"github.com/charmbracelet/lipgloss/tree"
 )
 
+var (
+	KeyStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
+	ValueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+)
+
 func BoxStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Bold(true).
@@ -27,10 +32,6 @@ func InlineStyle() lipgloss.Style {
 }
 
 func RenderMapAsTree(data map[string]any, rootTitle string) string {
-	// Create styles for different types
-	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-	valueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-
 	// Create the root tree
 	t := tree.New().Root(rootTitle).Enumerator(tree.RoundedEnumerator)
 
@@ -43,7 +44,7 @@ func RenderMapAsTree(data map[string]any, rootTitle string) string {
 
 	// Add each key-value pair to the tree
 	for _, key := range keys {
-		AddNodeToTree(t, keyStyle.Render(key), data[key], keyStyle, valueStyle)
+		AddNodeToTree(t, KeyStyle.Render(key), data[key], KeyStyle, ValueStyle)
 	}
 
 	return t.String()

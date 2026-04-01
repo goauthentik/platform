@@ -74,11 +74,11 @@ struct SessionStatusResponse: Sendable {
   var error: String = String()
 
   var expiry: SwiftProtobuf.Google_Protobuf_Timestamp {
-    get {return _expiry ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    get {_expiry ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
     set {_expiry = newValue}
   }
   /// Returns true if `expiry` has been explicitly set.
-  var hasExpiry: Bool {return self._expiry != nil}
+  var hasExpiry: Bool {self._expiry != nil}
   /// Clears the value of `expiry`. Subsequent reads from it will return its default value.
   mutating func clearExpiry() {self._expiry = nil}
 

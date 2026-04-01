@@ -11,6 +11,7 @@ use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use crate::grpc::grpc_request;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
+const REG_CAP_AUTH_INTERACTIVE: &str = "auth_interactive";
 
 #[cxx::bridge]
 #[allow(clippy::module_inception)]
@@ -28,7 +29,9 @@ mod ffi {
     extern "Rust" {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
+        #[cfg(windows)]
         fn ak_sys_auth_interactive_available() -> Result<bool>;
+
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
         fn ak_sys_auth_token_validate(
             raw_token: &CxxString,
@@ -95,12 +98,25 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
+#[cfg(windows)]
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
+    use crate::generated::sys_ctrl::capabilities_response::Capability;
+    use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
+    use windows_registry::LOCAL_MACHINE;
+
+    let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
+    let ia = key.get_u32(REG_CAP_AUTH_INTERACTIVE)?;
+    if ia > 0 {
+        return Ok(true);
+    }
     let response = grpc_request(async |ch| {
-        return Ok(SystemAuthInteractiveClient::new(ch)
-            .interactive_supported(())
-            .await?);
+        return Ok(SystemCtrlClient::new(ch).capabilities(()).await?);
     })?
     .into_inner();
-    Ok(response.supported)
+    let authia = Capability::AuthInteractive as i32;
+    let supported = response.capabilities.contains(&authia);
+    if supported {
+        key.set_u32(REG_CAP_AUTH_INTERACTIVE, supported as u32)?;
+    }
+    Ok(supported)
 }
