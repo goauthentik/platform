@@ -120,6 +120,7 @@ public class SysdBridge {
         }
     }
 
+#if os(macOS)
     public func pssoRegisterUser(
         enclaveKeyID: String,
         userSecureEnclaveKey: String,
@@ -177,4 +178,5 @@ public class SysdBridge {
             return cfg
         }
     }
+#endif
 }
