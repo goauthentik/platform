@@ -39,6 +39,10 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
     }
 }
 
+#[cfg(test)]
+#[path = "interactive_tests.rs"]
+mod tests;
+
 pub fn auth_interactive(
     username: String,
     password: String,
