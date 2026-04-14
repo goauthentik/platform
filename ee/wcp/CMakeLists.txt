@@ -271,6 +271,7 @@ endif()
 corrosion_import_crate(
   MANIFEST_PATH ../../Cargo.toml
   CRATES authentik_sys
+  FLAGS "--cfg windows=true"
 )
 corrosion_add_cxxbridge(
   authentik_sys_bridge
