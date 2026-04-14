@@ -30,7 +30,8 @@ internal enum SystemCtrl: Sendable {
             /// Descriptor for "DomainList".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_ctrl.SystemCtrl"),
-                method: "DomainList"
+                method: "DomainList",
+                type: .unary
             )
         }
         /// Namespace for "DomainEnroll" metadata.
@@ -42,7 +43,8 @@ internal enum SystemCtrl: Sendable {
             /// Descriptor for "DomainEnroll".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_ctrl.SystemCtrl"),
-                method: "DomainEnroll"
+                method: "DomainEnroll",
+                type: .unary
             )
         }
         /// Namespace for "DomainUnenroll" metadata.
@@ -54,7 +56,8 @@ internal enum SystemCtrl: Sendable {
             /// Descriptor for "DomainUnenroll".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_ctrl.SystemCtrl"),
-                method: "DomainUnenroll"
+                method: "DomainUnenroll",
+                type: .unary
             )
         }
         /// Namespace for "TroubleshootInspect" metadata.
@@ -66,7 +69,21 @@ internal enum SystemCtrl: Sendable {
             /// Descriptor for "TroubleshootInspect".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_ctrl.SystemCtrl"),
-                method: "TroubleshootInspect"
+                method: "TroubleshootInspect",
+                type: .unary
+            )
+        }
+        /// Namespace for "Capabilities" metadata.
+        internal enum Capabilities: Sendable {
+            /// Request type for "Capabilities".
+            internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
+            /// Response type for "Capabilities".
+            internal typealias Output = CapabilitiesResponse
+            /// Descriptor for "Capabilities".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_ctrl.SystemCtrl"),
+                method: "Capabilities",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "sys_ctrl.SystemCtrl" service.
@@ -74,7 +91,8 @@ internal enum SystemCtrl: Sendable {
             DomainList.descriptor,
             DomainEnroll.descriptor,
             DomainUnenroll.descriptor,
-            TroubleshootInspect.descriptor
+            TroubleshootInspect.descriptor,
+            Capabilities.descriptor
         ]
     }
 }
@@ -168,6 +186,25 @@ extension SystemCtrl {
             deserializer: some GRPCCore.MessageDeserializer<TroubleshootInspectResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TroubleshootInspectResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "Capabilities" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `CapabilitiesResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func capabilities<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<CapabilitiesResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CapabilitiesResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -306,6 +343,36 @@ extension SystemCtrl {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "Capabilities" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `CapabilitiesResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func capabilities<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<CapabilitiesResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CapabilitiesResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SystemCtrl.Method.Capabilities.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -407,6 +474,31 @@ extension SystemCtrl.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<TroubleshootInspectResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "Capabilities" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func capabilities<Result>(
+        request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CapabilitiesResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.capabilities(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<CapabilitiesResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -526,6 +618,35 @@ extension SystemCtrl.ClientProtocol {
             metadata: metadata
         )
         return try await self.troubleshootInspect(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "Capabilities" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func capabilities<Result>(
+        _ message: SwiftProtobuf.Google_Protobuf_Empty,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CapabilitiesResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.capabilities(
             request: request,
             options: options,
             onResponse: handleResponse

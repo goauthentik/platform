@@ -111,14 +111,16 @@ public class SysdBridge {
 
     public func interactiveAuthSupported() async throws -> Bool {
         return try await self.withClient { client in
-            let c = SystemAuthInteractive.Client(wrapping: client)
-            let reply = try await c.interactiveSupported(
+            let c = SystemCtrl.Client(wrapping: client)
+            let reply = try await c.capabilities(
                 request: ClientRequest(message: Google_Protobuf_Empty())
             )
-            return reply.supported
+            return reply.capabilities
+                .contains(CapabilitiesResponse.Capability.authInteractive)
         }
     }
 
+#if os(macOS)
     public func pssoRegisterUser(
         enclaveKeyID: String,
         userSecureEnclaveKey: String,
@@ -176,4 +178,5 @@ public class SysdBridge {
             return cfg
         }
     }
+#endif
 }

@@ -1,0 +1,4 @@
+ee/psso/Bridge/Generated/** linguist-generated
+pkg/pb/** linguist-generated
+src/generated/** linguist-generated
+vnd/** linguist-vendored

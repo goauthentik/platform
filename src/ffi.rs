@@ -3,14 +3,18 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::pin::Pin;
 use url::Url;
+use windows_registry::LOCAL_MACHINE;
 
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
 use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use crate::grpc::grpc_request;
+use crate::generated::sys_ctrl::capabilities_response::Capability;
+use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
+const REG_CAP_AUTH_INTERACTIVE: &str = "auth_interactive";
 
 #[cxx::bridge]
 #[allow(clippy::module_inception)]
@@ -29,6 +33,7 @@ mod ffi {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
         fn ak_sys_auth_interactive_available() -> Result<bool>;
+        fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>) -> Result<()>;
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
         fn ak_sys_auth_token_validate(
             raw_token: &CxxString,
@@ -46,6 +51,19 @@ fn ak_sys_ping(res: Pin<&mut CxxString>) {
         Err(e) => e.to_string(),
     };
     res.push_str(&resp);
+}
+
+fn ak_sys_auth_url_extract_token(
+    url: &CxxString,
+    token: Pin<&mut CxxString>,
+) -> Result<(), Box<dyn Error>> {
+    let p = Url::parse(url.to_str()?)?;
+    let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
+    let raw_token = qm
+        .get(TOKEN_QUERY_PARAM)
+        .ok_or("failed to get token from URL")?;
+    token.push_str(&raw_token);
+    Ok(())
 }
 
 fn ak_sys_auth_url(
@@ -95,12 +113,21 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
+// #[cfg(target_os = "windows")]
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
+    let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
+    let ia = key.get_u32(REG_CAP_AUTH_INTERACTIVE)?;
+    if ia > 0 {
+        return Ok(true);
+    }
     let response = grpc_request(async |ch| {
-        return Ok(SystemAuthInteractiveClient::new(ch)
-            .interactive_supported(())
-            .await?);
+        return Ok(SystemCtrlClient::new(ch).capabilities(()).await?);
     })?
     .into_inner();
-    Ok(response.supported)
+    let authia = Capability::AuthInteractive as i32;
+    let supported = response.capabilities.contains(&authia);
+    if supported {
+        key.set_u32(REG_CAP_AUTH_INTERACTIVE, supported as u32)?;
+    }
+    Ok(supported)
 }

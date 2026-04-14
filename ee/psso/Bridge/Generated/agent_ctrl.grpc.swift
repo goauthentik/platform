@@ -30,7 +30,8 @@ internal enum AgentCtrl: Sendable {
             /// Descriptor for "ListProfiles".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_ctrl.AgentCtrl"),
-                method: "ListProfiles"
+                method: "ListProfiles",
+                type: .unary
             )
         }
         /// Namespace for "Setup" metadata.
@@ -42,7 +43,8 @@ internal enum AgentCtrl: Sendable {
             /// Descriptor for "Setup".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_ctrl.AgentCtrl"),
-                method: "Setup"
+                method: "Setup",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "agent_ctrl.AgentCtrl" service.

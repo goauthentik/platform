@@ -30,7 +30,8 @@ internal enum Ping: Sendable {
             /// Descriptor for "Ping".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "ping.Ping"),
-                method: "Ping"
+                method: "Ping",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "ping.Ping" service.
