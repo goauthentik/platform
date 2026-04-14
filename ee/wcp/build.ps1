@@ -5,6 +5,13 @@ if ($env:CI -ne "true") {
     . "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1" -arch amd64
 }
 
+function Invoke-Native {
+    & $args
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
+}
+
 $pwd = $args[0]
 $top = $args[1]
 $target = $args[2]
@@ -18,5 +25,5 @@ pwd
 cd "$top/cache/$target"
 pwd
 $env:VERBOSE = "true"
-cmake -B"$top/cache/$target" -G "Visual Studio 17" "$top/ee/wcp" || exit $LASTEXITCODE
-cmake --build . --config Release || exit $LASTEXITCODE
+Invoke-Native cmake -B"$top/cache/$target" -G "Visual Studio 17" "$top/ee/wcp"
+Invoke-Native cmake --build . --config Release
