@@ -18,5 +18,5 @@ pwd
 cd "$top/cache/$target"
 pwd
 $env:VERBOSE = "true"
-cmake -B"$top/cache/$target" -G "Visual Studio 17" "$top/ee/wcp"
-cmake --build . --config Release
+cmake -B"$top/cache/$target" -G "Visual Studio 17" "$top/ee/wcp" || exit $LASTEXITCODE
+cmake --build . --config Release || exit $LASTEXITCODE
