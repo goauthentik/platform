@@ -227,7 +227,7 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Release")
   if (NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${CEF_BINARY_VER}")
     message(INFO " > Extracting CEF binary package...")
     file(ARCHIVE_EXTRACT
-      INPUT "cef_bin.tar.bz2"
+      INPUT "${CMAKE_CURRENT_BINARY_DIR}/cef_bin.tar.bz2"
       DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
       VERBOSE
     )
