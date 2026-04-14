@@ -29,7 +29,7 @@ mod ffi {
     extern "Rust" {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
-        #[cfg(windows)]
+        #[cfg(target_os = "windows")]
         fn ak_sys_auth_interactive_available() -> Result<bool>;
 
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
@@ -98,7 +98,7 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
     use crate::generated::sys_ctrl::capabilities_response::Capability;
     use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
