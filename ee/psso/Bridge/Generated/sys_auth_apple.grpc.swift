@@ -29,7 +29,8 @@ internal enum SystemAuthApple: Sendable {
             /// Descriptor for "RegisterUser".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth_apple.SystemAuthApple"),
-                method: "RegisterUser"
+                method: "RegisterUser",
+                type: .unary
             )
         }
         /// Namespace for "RegisterDevice" metadata.
@@ -41,7 +42,8 @@ internal enum SystemAuthApple: Sendable {
             /// Descriptor for "RegisterDevice".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth_apple.SystemAuthApple"),
-                method: "RegisterDevice"
+                method: "RegisterDevice",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "sys_auth_apple.SystemAuthApple" service.

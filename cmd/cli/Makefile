@@ -22,14 +22,14 @@ endif
 
 .PHONY: package-gnu/linux
 package-gnu/linux: build
-	ln -s ak "${TOP}/bin/${TARGET}/ak-vault"
-	ln -s ak "${TOP}/bin/${TARGET}/ak-browser-support"
+	ln -s ak "${TOP}/bin/${TARGET}/ak-vault" || true
+	ln -s ak "${TOP}/bin/${TARGET}/ak-browser-support" || true
 	mkdir -p "${TOP}/bin/${TARGET}/completions"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/cmd/${TARGET}" \
 		"${TOP}/bin/${TARGET}/completions" \
 		"${TARGET}"
-	$(call nfpm_package)
+	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
 
 test-deploy: package-gnu/linux
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb

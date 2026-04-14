@@ -3,8 +3,9 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = 0.40.4
+VERSION = 0.40.5
 VERSION_HASH = $(shell git rev-parse HEAD)
+VERSION_HASH_SHORT = $(shell git rev-parse HEAD | head -c 8)
 VERSION_TS = $(shell date +%s)
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)
@@ -50,18 +51,18 @@ define go_generate_resources
 endef
 
 define nfpm_package
-	VERSION=${VERSION} ARCH=${ARCH} \
+	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
 			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
-	VERSION=${VERSION} ARCH=${ARCH} \
+			-f $(1)
+	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \
 			-t ${TOP}/bin/${TARGET} \
-			-f ${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml
+			-f $(1)
 endef
 
 define _target_template

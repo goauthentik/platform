@@ -58,29 +58,29 @@ struct Token: Sendable {
   var aud: [String] = []
 
   var exp: SwiftProtobuf.Google_Protobuf_Timestamp {
-    get {return _exp ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    get {_exp ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
     set {_exp = newValue}
   }
   /// Returns true if `exp` has been explicitly set.
-  var hasExp: Bool {return self._exp != nil}
+  var hasExp: Bool {self._exp != nil}
   /// Clears the value of `exp`. Subsequent reads from it will return its default value.
   mutating func clearExp() {self._exp = nil}
 
   var nbf: SwiftProtobuf.Google_Protobuf_Timestamp {
-    get {return _nbf ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    get {_nbf ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
     set {_nbf = newValue}
   }
   /// Returns true if `nbf` has been explicitly set.
-  var hasNbf: Bool {return self._nbf != nil}
+  var hasNbf: Bool {self._nbf != nil}
   /// Clears the value of `nbf`. Subsequent reads from it will return its default value.
   mutating func clearNbf() {self._nbf = nil}
 
   var iat: SwiftProtobuf.Google_Protobuf_Timestamp {
-    get {return _iat ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    get {_iat ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
     set {_iat = newValue}
   }
   /// Returns true if `iat` has been explicitly set.
-  var hasIat: Bool {return self._iat != nil}
+  var hasIat: Bool {self._iat != nil}
   /// Clears the value of `iat`. Subsequent reads from it will return its default value.
   mutating func clearIat() {self._iat = nil}
 

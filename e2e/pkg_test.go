@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/docker/docker/api/types/container"
+	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 )
@@ -88,8 +88,8 @@ func TestPackaging_RPM(t *testing.T) {
 				"/tmp/ak-bin/cli/*.rpm",
 				"/tmp/ak-bin/agent_local/*.rpm",
 				"/tmp/ak-bin/agent_system/*.rpm",
-				"/tmp/ak-bin/pam/*.rpm",
 				"/tmp/ak-bin/nss/*.rpm",
+				"/tmp/ak-bin/pam/*.rpm",
 			} {
 				t.Run(pkg, func(t *testing.T) {
 					MustExec(t, tc, fmt.Sprintf("yum install -y %s", pkg))

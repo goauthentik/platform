@@ -2,7 +2,7 @@
 name: "authentik-sysd"
 arch: "${ARCH}"
 platform: "linux"
-version: "${VERSION}"
+version: "${VERSION}+ak-${VERSION_HASH_SHORT}"
 description: |
   authentik System Agent
 vendor: "Authentik Security Inc."

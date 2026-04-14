@@ -1,0 +1,5 @@
+Enable authentik for system authentication
+================
+
+Selecting this profile will enable authentik as the source for
+identity and authentication, with a fallback to local files.

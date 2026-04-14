@@ -29,7 +29,8 @@ internal enum AgentAuth: Sendable {
             /// Descriptor for "WhoAmI".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth"),
-                method: "WhoAmI"
+                method: "WhoAmI",
+                type: .unary
             )
         }
         /// Namespace for "GetCurrentToken" metadata.
@@ -41,7 +42,8 @@ internal enum AgentAuth: Sendable {
             /// Descriptor for "GetCurrentToken".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth"),
-                method: "GetCurrentToken"
+                method: "GetCurrentToken",
+                type: .unary
             )
         }
         /// Namespace for "CachedTokenExchange" metadata.
@@ -53,7 +55,8 @@ internal enum AgentAuth: Sendable {
             /// Descriptor for "CachedTokenExchange".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth"),
-                method: "CachedTokenExchange"
+                method: "CachedTokenExchange",
+                type: .unary
             )
         }
         /// Namespace for "DeviceTokenExchange" metadata.
@@ -65,7 +68,8 @@ internal enum AgentAuth: Sendable {
             /// Descriptor for "DeviceTokenExchange".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth"),
-                method: "DeviceTokenExchange"
+                method: "DeviceTokenExchange",
+                type: .unary
             )
         }
         /// Namespace for "Authorize" metadata.
@@ -77,7 +81,8 @@ internal enum AgentAuth: Sendable {
             /// Descriptor for "Authorize".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth"),
-                method: "Authorize"
+                method: "Authorize",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "agent_auth.AgentAuth" service.

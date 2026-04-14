@@ -30,7 +30,8 @@ internal enum SystemDirectory: Sendable {
             /// Descriptor for "ListUsers".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_directory.SystemDirectory"),
-                method: "ListUsers"
+                method: "ListUsers",
+                type: .unary
             )
         }
         /// Namespace for "GetUser" metadata.
@@ -42,7 +43,8 @@ internal enum SystemDirectory: Sendable {
             /// Descriptor for "GetUser".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_directory.SystemDirectory"),
-                method: "GetUser"
+                method: "GetUser",
+                type: .unary
             )
         }
         /// Namespace for "ListGroups" metadata.
@@ -54,7 +56,8 @@ internal enum SystemDirectory: Sendable {
             /// Descriptor for "ListGroups".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_directory.SystemDirectory"),
-                method: "ListGroups"
+                method: "ListGroups",
+                type: .unary
             )
         }
         /// Namespace for "GetGroup" metadata.
@@ -66,7 +69,8 @@ internal enum SystemDirectory: Sendable {
             /// Descriptor for "GetGroup".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_directory.SystemDirectory"),
-                method: "GetGroup"
+                method: "GetGroup",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "sys_directory.SystemDirectory" service.

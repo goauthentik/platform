@@ -29,7 +29,8 @@ internal enum AgentCache: Sendable {
             /// Descriptor for "CacheGet".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_cache.AgentCache"),
-                method: "CacheGet"
+                method: "CacheGet",
+                type: .unary
             )
         }
         /// Namespace for "CacheSet" metadata.
@@ -41,7 +42,8 @@ internal enum AgentCache: Sendable {
             /// Descriptor for "CacheSet".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_cache.AgentCache"),
-                method: "CacheSet"
+                method: "CacheSet",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "agent_cache.AgentCache" service.
