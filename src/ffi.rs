@@ -33,7 +33,7 @@ mod ffi {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
         fn ak_sys_auth_interactive_available() -> Result<bool>;
-
+        fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>) -> Result<()>;
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
         fn ak_sys_auth_token_validate(
             raw_token: &CxxString,
@@ -51,6 +51,19 @@ fn ak_sys_ping(res: Pin<&mut CxxString>) {
         Err(e) => e.to_string(),
     };
     res.push_str(&resp);
+}
+
+fn ak_sys_auth_url_extract_token(
+    url: &CxxString,
+    token: Pin<&mut CxxString>,
+) -> Result<(), Box<dyn Error>> {
+    let p = Url::parse(url.to_str()?)?;
+    let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
+    let raw_token = qm
+        .get(TOKEN_QUERY_PARAM)
+        .ok_or("failed to get token from URL")?;
+    token.push_str(&raw_token);
+    Ok(())
 }
 
 fn ak_sys_auth_url(
