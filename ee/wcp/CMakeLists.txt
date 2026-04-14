@@ -272,10 +272,10 @@ corrosion_import_crate(
   MANIFEST_PATH ../../Cargo.toml
   CRATES authentik_sys
 )
-corrosion_add_target_rustflags(
-  authentik_sys
-  --cfg target_os="windows"
-)
+# corrosion_add_target_rustflags(
+#   authentik_sys
+#   --cfg target_os="windows"
+# )
 corrosion_add_cxxbridge(
   authentik_sys_bridge
   CRATE authentik_sys

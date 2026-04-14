@@ -3,12 +3,15 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::pin::Pin;
 use url::Url;
+use windows_registry::LOCAL_MACHINE;
 
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
 use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use crate::grpc::grpc_request;
+use crate::generated::sys_ctrl::capabilities_response::Capability;
+use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 const REG_CAP_AUTH_INTERACTIVE: &str = "auth_interactive";
@@ -29,7 +32,6 @@ mod ffi {
     extern "Rust" {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
-        #[cfg(target_os = "windows")]
         fn ak_sys_auth_interactive_available() -> Result<bool>;
 
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
@@ -98,12 +100,8 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
-#[cfg(target_os = "windows")]
+// #[cfg(target_os = "windows")]
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
-    use crate::generated::sys_ctrl::capabilities_response::Capability;
-    use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
-    use windows_registry::LOCAL_MACHINE;
-
     let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
     let ia = key.get_u32(REG_CAP_AUTH_INTERACTIVE)?;
     if ia > 0 {
