@@ -116,8 +116,10 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
 // #[cfg(target_os = "windows")]
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
     let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
-    let ia = key.get_u32(REG_CAP_AUTH_INTERACTIVE)?;
-    if ia > 0 {
+    let iak = key.get_u32(REG_CAP_AUTH_INTERACTIVE);
+    if let Some(iak) = ia
+        && ia > 0
+    {
         return Ok(true);
     }
     let response = grpc_request(async |ch| {
