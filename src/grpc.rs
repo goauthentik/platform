@@ -62,7 +62,7 @@ pub fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
 ) -> Result<T, Box<dyn Error>> {
     let config = Config::get();
 
-    grpc_request_path(config.socket.to_owned(), future)
+    grpc_request_path(config.socket_default.to_owned(), future)
 }
 
 pub fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
@@ -115,7 +115,7 @@ impl SysdBridge for Bridge {
     ) -> Result<T, Box<dyn Error>> {
         let config = Config::get();
 
-        self.grpc_request_path(config.socket.to_owned(), future)
+        self.grpc_request_path(config.socket_default.to_owned(), future)
     }
 
     fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(

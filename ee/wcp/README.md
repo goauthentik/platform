@@ -43,6 +43,4 @@ Recheck character encoding (char vs wide char, Unicode vs ASCII etc)
 
 Specify architecture (32/64)-bit in build commands to build for each architecture
 
-Specify architecture (32/64)-bit in build commands for OpenSSL through Perl configure
-
 Clean up and overwrite JWT objects etc for (memory) security

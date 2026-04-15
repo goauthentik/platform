@@ -5,13 +5,14 @@ use std::pin::Pin;
 use url::Url;
 use windows_registry::LOCAL_MACHINE;
 
+use crate::config::Config;
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
 use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
-use crate::grpc::grpc_request;
 use crate::generated::sys_ctrl::capabilities_response::Capability;
 use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
+use crate::grpc::{grpc_request, grpc_request_path};
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 const REG_CAP_AUTH_INTERACTIVE: &str = "auth_interactive";
@@ -33,7 +34,8 @@ mod ffi {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
         fn ak_sys_auth_interactive_available() -> Result<bool>;
-        fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>) -> Result<()>;
+        fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>)
+        -> Result<()>;
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
         fn ak_sys_auth_token_validate(
             raw_token: &CxxString,
@@ -113,14 +115,16 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
-// #[cfg(target_os = "windows")]
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
     let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
-    let ia = key.get_u32(REG_CAP_AUTH_INTERACTIVE)?;
-    if ia > 0 {
+    let iak = key.get_u32(REG_CAP_AUTH_INTERACTIVE);
+    if let Ok(ia) = iak
+        && ia > 0
+    {
         return Ok(true);
     }
-    let response = grpc_request(async |ch| {
+    let config = Config::get();
+    let response = grpc_request_path(config.socket_ctrl.to_owned(), async |ch| {
         return Ok(SystemCtrlClient::new(ch).capabilities(()).await?);
     })?
     .into_inner();
