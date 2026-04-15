@@ -1,0 +1,161 @@
+name: 'Build Nix Packages'
+description: 'Builds Nix packages and creates a binary cache'
+
+inputs:
+  signing-key:
+    description: 'Nix signing private key (plain text)'
+    required: false
+  output-path:
+    description: 'Output path for binary cache'
+    required: false
+    default: './nix-cache'
+  packages:
+    description: 'Space-separated list of cross-platform packages to build'
+    required: false
+    default: 'ak-cli ak-agent ak-browser-support'
+  linux-only-packages:
+    description: 'Space-separated list of Linux-only packages to build'
+    required: false
+    default: 'ak-sysd libpam-authentik libnss-authentik'
+
+outputs:
+  cache-path:
+    description: 'Path to generated binary cache'
+    value: ${{ steps.build.outputs.cache-path }}
+  cache-size:
+    description: 'Size of the generated cache'
+    value: ${{ steps.stats.outputs.size }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup output directory
+      id: setup
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        mkdir -p "${{ inputs.output-path }}/nar"
+        CACHE_PATH=$(realpath "${{ inputs.output-path }}")
+        echo "cache-path=$CACHE_PATH" >> $GITHUB_OUTPUT
+        echo "CACHE_PATH=$CACHE_PATH" >> $GITHUB_ENV
+
+    - name: Setup signing key
+      if: ${{ inputs.signing-key != '' }}
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        SIGNING_KEY_FILE="${{ runner.temp }}/nix-signing-key.pem"
+        echo "${{ inputs.signing-key }}" > "$SIGNING_KEY_FILE"
+        chmod 600 "$SIGNING_KEY_FILE"
+        echo "SIGNING_KEY_FILE=$SIGNING_KEY_FILE" >> $GITHUB_ENV
+
+    - name: Detect platform
+      id: platform
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        case "$(uname -s)" in
+          Linux)  PLATFORM="linux" ;;
+          Darwin) PLATFORM="darwin" ;;
+          *)      PLATFORM="unknown" ;;
+        esac
+        echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
+
+    - name: Build packages
+      id: build
+      shell: bash
+      run: |
+        set -xeuo pipefail
+
+        PACKAGES="${{ inputs.packages }}"
+        LINUX_ONLY_PACKAGES="${{ inputs.linux-only-packages }}"
+
+        # Build cross-platform packages
+        for pkg in $PACKAGES; do
+          echo "Building $pkg..."
+          nix build ".#$pkg" --no-link --print-out-paths
+        done
+
+        # Build Linux-only packages
+        if [ "${{ steps.platform.outputs.platform }}" = "linux" ]; then
+          for pkg in $LINUX_ONLY_PACKAGES; do
+            echo "Building $pkg..."
+            nix build ".#$pkg" --no-link --print-out-paths
+          done
+        fi
+
+        echo "cache-path=$CACHE_PATH" >> $GITHUB_OUTPUT
+
+    - name: Copy to binary cache
+      shell: bash
+      run: |
+        set -xeuo pipefail
+
+        PACKAGES="${{ inputs.packages }}"
+        LINUX_ONLY_PACKAGES="${{ inputs.linux-only-packages }}"
+
+        # Determine signing args
+        SIGN_ARGS=""
+        if [ -n "${SIGNING_KEY_FILE:-}" ]; then
+          SIGN_ARGS="--secret-key-files $SIGNING_KEY_FILE"
+        fi
+
+        # Copy cross-platform packages
+        for pkg in $PACKAGES; do
+          echo "Copying $pkg to cache..."
+          nix copy --to "file://$CACHE_PATH" ".#$pkg" $SIGN_ARGS
+        done
+
+        # Copy Linux-only packages
+        if [ "${{ steps.platform.outputs.platform }}" = "linux" ]; then
+          for pkg in $LINUX_ONLY_PACKAGES; do
+            echo "Copying $pkg to cache..."
+            nix copy --to "file://$CACHE_PATH" ".#$pkg" $SIGN_ARGS
+          done
+        fi
+
+    - name: Create cache metadata
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        cat > "$CACHE_PATH/nix-cache-info" << EOF
+        StoreDir: /nix/store
+        WantMassQuery: 1
+        Priority: 40
+        EOF
+
+    - name: Generate cache statistics
+      id: stats
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        cd "$CACHE_PATH"
+
+        size=$(du -sh . | cut -f1)
+        echo "Cache size: $size"
+        echo "size=$size" >> $GITHUB_OUTPUT
+
+        # Count files
+        narinfo_count=$(find . -name "*.narinfo" 2>/dev/null | wc -l | tr -d ' ')
+        nar_count=$(find ./nar -name "*.nar*" 2>/dev/null | wc -l | tr -d ' ')
+        echo "NAR info files: $narinfo_count"
+        echo "NAR archives: $nar_count"
+        echo "narinfo-count=$narinfo_count" >> $GITHUB_OUTPUT
+        echo "nar-count=$nar_count" >> $GITHUB_OUTPUT
+
+        echo "Cache structure:"
+        find . -type f | head -20
+
+    - name: Validate cache structure
+      shell: bash
+      run: |
+        set -xeuo pipefail
+        cd "$CACHE_PATH"
+
+        # Check required files exist
+        if [ ! -f "nix-cache-info" ]; then
+          echo "Error: nix-cache-info missing"
+          exit 1
+        fi
+
+        echo "Cache validation passed"

@@ -191,6 +191,19 @@ runs:
           Content-Type: application/vnd.debian.binary-package
           Cache-Control: public, max-age=86400
 
+        # Nix binary cache headers
+        /nix/nix-cache-info
+          Content-Type: text/plain
+          Cache-Control: public, max-age=300
+
+        /nix/*.narinfo
+          Content-Type: text/x-nix-narinfo
+          Cache-Control: public, max-age=3600
+
+        /nix/nar/*
+          Content-Type: application/x-nix-archive
+          Cache-Control: public, max-age=604800
+
         # Security headers
         /*
           X-Frame-Options: DENY
