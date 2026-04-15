@@ -122,7 +122,8 @@ fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
     {
         return Ok(true);
     }
-    let response = grpc_request(async |ch| {
+    let config = Config::get();
+    let response = grpc_request_path(config.socket_ctrl.to_owned(), async |ch| {
         return Ok(SystemCtrlClient::new(ch).capabilities(()).await?);
     })?
     .into_inner();
