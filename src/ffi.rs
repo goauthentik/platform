@@ -117,7 +117,7 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
 fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
     let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
     let iak = key.get_u32(REG_CAP_AUTH_INTERACTIVE);
-    if let Some(iak) = ia
+    if let Ok(ia) = iak
         && ia > 0
     {
         return Ok(true);
