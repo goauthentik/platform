@@ -2,9 +2,9 @@ name: build-ee-wcp
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
           path: cache/
-          key: ee-wcp-deps-${{ runner.os }}
+          key: target-cache-agent-windows-2025
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
