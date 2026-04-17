@@ -2,9 +2,9 @@ name: build-ee-psso
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -14,6 +14,6 @@ jobs:
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
           path: cache/
-          key: target-cache-sysd-macos-15
+          key: target-cache-agent-macos-15
       - run: |
           make ee/psso/build XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
