@@ -57,3 +57,11 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+    groups:
+      grpc:
+        patterns:
+          - github.com/grpc/*
+          - github.com/apple/swift-nio-*
+      apple:
+        patterns:
+          - github.com/apple/*
