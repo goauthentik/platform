@@ -64,7 +64,7 @@ func (t *Tray) addProfile(name string, profile *config.ConfigV1Profile) {
 		iat.String(),
 	), "").Disable()
 	i.AddSubMenuItem(fmt.Sprintf(
-		"Renewing token in %s (%s)",
+		"Renewing token %s (%s)",
 		timediff.TimeDiff(exp.Time),
 		exp.String(),
 	), "").Disable()
