@@ -7,12 +7,14 @@ VERSION = 0.40.6
 VERSION_HASH = $(shell git rev-parse HEAD)
 VERSION_HASH_SHORT = $(shell git rev-parse HEAD | head -c 8)
 VERSION_TS = $(shell date +%s)
+PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)
-else
+else ifeq ($(PLATFORM),gnu/linux)
 ARCH := $(shell dpkg-architecture -q DEB_BUILD_ARCH)
+else
+ARCH := $(shell uname -p)
 endif
-PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 
 TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
