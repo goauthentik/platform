@@ -30,7 +30,7 @@ require (
 	github.com/micromdm/plist v0.2.2
 	github.com/microsoft/wmi v0.40.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/moby/moby/api v1.54.1
+	github.com/moby/moby/api v1.54.2
 	github.com/nightlyone/lockfile v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
