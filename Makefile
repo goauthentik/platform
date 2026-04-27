@@ -55,7 +55,9 @@ lint: $(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-rs
 	"$(MAKE)" lint-go
 
-test:
+test: test-go test-rs
+
+test-go:
 	go test \
 		-p 1 \
 		-v \
@@ -75,14 +77,25 @@ test:
 		-out ${PWD}/junit.xml \
 		-set-exit-code
 
+test-rs:
+	cargo llvm-cov \
+		--no-report nextest \
+		--workspace
+	cargo llvm-cov report \
+		--codecov \
+		--output-path "${PWD}/coverage-rs.txt"
+	cargo llvm-cov report \
+		--html \
+		--output-dir "${PWD}/cache/utils_rs/coverage"
+
 test-integration:
-	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
+	"$(MAKE)" test-go GO_TEST_FLAGS=-tags=integration
 
 test-e2e: containers/e2e/local-build
-	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
-	"$(MAKE)" test-e2e-convert
+	"$(MAKE)" test-go GO_TEST_FLAGS=-tags=e2e
+	"$(MAKE)" test-e2e-go-convert
 
-test-e2e-convert:
+test-e2e-go-convert:
 	go tool covdata textfmt \
 		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \

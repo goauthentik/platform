@@ -26,6 +26,22 @@ pub mod token;
 pub const PW_PREFIX: &str = "\u{200b}";
 pub const PW_PROMPT: &str = "authentik Password: ";
 
+#[derive(Debug, PartialEq, Eq)]
+enum AuthenticationAttempt {
+    Interactive,
+    Token(String),
+}
+
+fn parse_authentication_attempt(password: &str) -> AuthenticationAttempt {
+    match password.strip_prefix(PW_PREFIX) {
+        Some(raw_token) => AuthenticationAttempt::Token(raw_token.to_owned()),
+        None => AuthenticationAttempt::Interactive,
+    }
+}
+
+#[cfg(test)]
+mod tests;
+
 pub fn authenticate_impl(
     pamh: &mut PamHandle,
     _args: Vec<&CStr>,
@@ -94,29 +110,31 @@ pub fn authenticate_impl(
         }
     };
 
-    if password.starts_with(PW_PREFIX) {
-        log::debug!("Token authentication");
-        let raw_token = password.replace(PW_PREFIX, "");
-        let decoded = match decode_pb::<SshTokenAuthentication>(raw_token) {
-            Ok(t) => t,
-            Err(e) => {
-                log::warn!("failed to decode token: {}", e);
-                return PamResultCode::PAM_ABORT;
-            }
-        };
-        let token_res = match auth_token(username, decoded.token.to_owned(), bridge) {
-            Ok(t) => t,
-            Err(e) => return e,
-        };
-        session_data.local_socket = decoded.local_socket;
-        session_id = token_res.session_id;
-    } else {
-        log::debug!("Interactive authentication");
-        let int_res = match auth_interactive(username, password.to_owned(), &conv, bridge) {
-            Ok(ss) => ss,
-            Err(code) => return code,
-        };
-        session_id = int_res.session_id;
+    match parse_authentication_attempt(password) {
+        AuthenticationAttempt::Token(raw_token) => {
+            log::debug!("Token authentication");
+            let decoded = match decode_pb::<SshTokenAuthentication>(raw_token) {
+                Ok(t) => t,
+                Err(e) => {
+                    log::warn!("failed to decode token: {}", e);
+                    return PamResultCode::PAM_ABORT;
+                }
+            };
+            let token_res = match auth_token(username, decoded.token.to_owned(), bridge) {
+                Ok(t) => t,
+                Err(e) => return e,
+            };
+            session_data.local_socket = decoded.local_socket;
+            session_id = token_res.session_id;
+        }
+        AuthenticationAttempt::Interactive => {
+            log::debug!("Interactive authentication");
+            let int_res = match auth_interactive(username, password.to_owned(), &conv, bridge) {
+                Ok(ss) => ss,
+                Err(code) => return code,
+            };
+            session_id = int_res.session_id;
+        }
     }
     if !session_data.local_socket.is_empty() {
         pam_try_log!(

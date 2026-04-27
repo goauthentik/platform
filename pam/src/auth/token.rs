@@ -3,6 +3,36 @@ use authentik_sys::generated::sys_auth::{TokenAuthRequest, TokenAuthResponse};
 use authentik_sys::grpc::SysdBridge;
 use pam::constants::PamResultCode;
 
+fn validate_token_auth_response(
+    username: &str,
+    response: &TokenAuthResponse,
+) -> Result<(), PamResultCode> {
+    if !response.successful {
+        return Err(PamResultCode::PAM_AUTH_ERR);
+    }
+
+    let token_username = response
+        .token
+        .as_ref()
+        .ok_or(PamResultCode::PAM_AUTH_ERR)?
+        .preferred_username
+        .as_str();
+    if username != token_username {
+        log::warn!(
+            "User mismatch: token={:#?}, expected={:#?}",
+            token_username,
+            username
+        );
+        return Err(PamResultCode::PAM_USER_UNKNOWN);
+    }
+
+    Ok(())
+}
+
+#[cfg(test)]
+#[path = "token_tests.rs"]
+mod tests;
+
 pub fn auth_token(
     username: String,
     token: String,
@@ -23,23 +53,7 @@ pub fn auth_token(
         }
     };
 
-    if !response.successful {
-        return Err(PamResultCode::PAM_AUTH_ERR);
-    }
-
+    validate_token_auth_response(&username, &response)?;
     log::debug!("Got valid token: {response:#?}");
-    let token_username = response
-        .token
-        .clone()
-        .ok_or(PamResultCode::PAM_AUTH_ERR)?
-        .preferred_username;
-    if username != token_username {
-        log::warn!(
-            "User mismatch: token={:#?}, expected={:#?}",
-            token_username,
-            username
-        );
-        return Err(PamResultCode::PAM_USER_UNKNOWN);
-    }
     Ok(response)
 }
