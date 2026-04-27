@@ -1,8 +1,11 @@
 package os
 
 import (
+	stdos "os"
+	"path/filepath"
 	"runtime"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +21,9 @@ func TestGather(t *testing.T) {
 	assert.NotEqual(t, info.Family, "")
 	assert.True(t, slices.Contains(api.AllowedDeviceFactsOSFamilyEnumValues, info.Family))
 	assert.Equal(t, info.Arch, runtime.GOARCH)
-	assert.Regexp(t, `(\d+\.(?:\d+\.?)+)`, *info.Version, "Version must only contain numbers: '%s'", *info.Version)
+	if info.Version != nil {
+		assert.NotEqual(t, strings.TrimSpace(*info.Version), "")
+	}
 }
 
 func TestExtract(t *testing.T) {
@@ -41,6 +46,54 @@ func TestExtract(t *testing.T) {
 		t.Run(tc.raw, func(t *testing.T) {
 			name, version := extractVersion(tc.raw)
 			assert.Equal(t, tc.name, name)
+			assert.Equal(t, tc.version, version)
+		})
+	}
+}
+
+func TestParseOSRelease(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		content string
+		osName  string
+		version string
+	}{
+		{
+			name: "pretty name with embedded version",
+			content: `NAME="Ubuntu"
+PRETTY_NAME="Ubuntu 24.04.3 LTS"
+`,
+			osName:  "Ubuntu",
+			version: "24.04.3 LTS",
+		},
+		{
+			name: "fallback to version id",
+			content: `NAME="TestOS"
+PRETTY_NAME="TestOS"
+VERSION_ID="1.2"
+VERSION="rolling"
+BUILD_ID="2025.03.19"
+`,
+			osName:  "TestOS",
+			version: "1.2",
+		},
+		{
+			name: "fallback to build id",
+			content: `NAME="EndeavourOS"
+PRETTY_NAME="EndeavourOS"
+BUILD_ID="2025.03.19"
+`,
+			osName:  "EndeavourOS",
+			version: "2025.03.19",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "os-release")
+			err := stdos.WriteFile(path, []byte(tc.content), 0o600)
+			assert.NoError(t, err)
+
+			name, version := parseOSRelease(path)
+			assert.Equal(t, tc.osName, name)
 			assert.Equal(t, tc.version, version)
 		})
 	}

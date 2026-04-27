@@ -15,23 +15,27 @@ import (
 func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	name, version := getLinuxDistribution()
 
-	return api.DeviceFactsRequestOs{
-		Arch:    runtime.GOARCH,
-		Family:  api.DEVICEFACTSOSFAMILY_LINUX,
-		Name:    api.PtrString(name),
-		Version: api.PtrString(version),
-	}, nil
+	info := api.DeviceFactsRequestOs{
+		Arch:   runtime.GOARCH,
+		Family: api.DEVICEFACTSOSFAMILY_LINUX,
+		Name:   api.PtrString(name),
+	}
+	if version != "" {
+		info.Version = api.PtrString(version)
+	}
+
+	return info, nil
 }
 
 func getLinuxDistribution() (string, string) {
 	// Try /etc/os-release first (systemd standard)
-	if fullVersion := parseOSRelease("/etc/os-release"); fullVersion != "" {
-		return extractVersion(fullVersion)
+	if name, version := parseOSRelease("/etc/os-release"); name != "" {
+		return name, version
 	}
 
 	// Try /usr/lib/os-release as fallback
-	if fullVersion := parseOSRelease("/usr/lib/os-release"); fullVersion != "" {
-		return extractVersion(fullVersion)
+	if name, version := parseOSRelease("/usr/lib/os-release"); name != "" {
+		return name, version
 	}
 
 	// Try /etc/lsb-release (Ubuntu/Debian)
@@ -57,25 +61,62 @@ func getLinuxDistribution() (string, string) {
 	return "Linux", getKernelVersion()
 }
 
-func parseOSRelease(filename string) string {
+func parseOSRelease(filename string) (string, string) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return ""
+		return "", ""
 	}
 	defer func() {
 		_ = file.Close()
 	}()
 
 	scanner := bufio.NewScanner(file)
+	var name, prettyName, versionID, version, buildID string
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "PRETTY_NAME=") {
-			return strings.Trim(strings.TrimPrefix(line, "PRETTY_NAME="), "\"")
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		value = strings.Trim(value, "\"'")
+		switch key {
+		case "NAME":
+			name = value
+		case "PRETTY_NAME":
+			prettyName = value
+		case "VERSION_ID":
+			versionID = value
+		case "VERSION":
+			version = value
+		case "BUILD_ID":
+			buildID = value
 		}
 	}
 
-	return ""
+	fullName := prettyName
+	if fullName == "" {
+		fullName = name
+	}
+	if fullName == "" {
+		return "", ""
+	}
+
+	parsedName, parsedVersion := extractVersion(fullName)
+	if parsedVersion != "" {
+		return parsedName, parsedVersion
+	}
+	if versionID != "" {
+		return parsedName, versionID
+	}
+	if version != "" {
+		return parsedName, version
+	}
+	if buildID != "" {
+		return parsedName, buildID
+	}
+
+	return parsedName, ""
 }
 
 func parseLSBRelease() (string, string) {
