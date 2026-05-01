@@ -28,7 +28,7 @@ require (
 	github.com/kolide/systray v1.10.4
 	github.com/mergestat/timediff v0.0.4
 	github.com/micromdm/plist v0.2.2
-	github.com/microsoft/wmi v0.40.0
+	github.com/microsoft/wmi v0.41.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moby/moby/api v1.54.2
 	github.com/nightlyone/lockfile v1.0.0
