@@ -11,8 +11,8 @@ updates:
   - package-ecosystem: cargo
     directories:
       - /
-      - /pam
-      - /nss
+      - pam
+      - nss
     schedule:
       interval: daily
       time: "04:00"
