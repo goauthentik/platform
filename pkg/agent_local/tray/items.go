@@ -80,6 +80,9 @@ func (t *Tray) addSysd() {
 		t.log.WithError(err).Warning("failed to ping sysd")
 		return
 	}
+	defer func() {
+		_ = sysc.Close()
+	}()
 	pr, err := sysc.Ping(t.ctx, &emptypb.Empty{})
 	if err != nil {
 		t.log.WithError(err).Warning("failed to ping sysd")
