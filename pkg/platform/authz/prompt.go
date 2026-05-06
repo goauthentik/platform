@@ -31,8 +31,6 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 			systemlog.Get().WithField("success", last.success).WithField("uid", uid).Debug("Valid last result in cache")
 			return last.success, nil
 		}
-		systemlog.Get().WithField("uid", uid).Debug("Deleting expired cached result")
-		delete(lastAuthMap, uid)
 	}
 
 	msg, err := action.message(creds)
@@ -49,4 +47,21 @@ func Prompt(action authorizeAction, profile string, creds *grpc_creds.Creds) (bo
 		success: success,
 	}
 	return success, nil
+}
+
+func init() {
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			serialLock.Lock()
+			systemlog.Get().Debug("Deleting expired cached results")
+			for uid, state := range lastAuthMap {
+				if state.exp.Before(time.Now()) {
+					delete(lastAuthMap, uid)
+				}
+			}
+			serialLock.Unlock()
+		}
+	}()
 }
