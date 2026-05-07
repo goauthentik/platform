@@ -2,8 +2,10 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
@@ -12,6 +14,22 @@ import (
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"goauthentik.io/platform/pkg/storage/state"
 )
+
+// ensurePathWithinDir returns an error if fullPath resolves outside baseDir.
+func ensurePathWithinDir(baseDir, fullPath string) error {
+	absBase, err := filepath.Abs(baseDir)
+	if err != nil {
+		return err
+	}
+	absPath, err := filepath.Abs(fullPath)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(absPath, absBase+string(filepath.Separator)) {
+		return fmt.Errorf("path escapes domain directory")
+	}
+	return nil
+}
 
 var manager *cfgmgr.Manager[*Config]
 var st *state.State
@@ -78,6 +96,9 @@ func (c *Config) Domains() []*DomainConfig {
 
 func (c *Config) SaveDomain(dom *DomainConfig) error {
 	path := filepath.Join(c.DomainDir, dom.Domain+".json")
+	if err := ensurePathWithinDir(c.DomainDir, path); err != nil {
+		return errors.Wrap(err, "invalid domain path")
+	}
 	err := keyring.Set(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways, dom.Token)
 	if err != nil {
 		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
@@ -89,7 +110,7 @@ func (c *Config) SaveDomain(dom *DomainConfig) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(path, b, 0o700)
+	err = os.WriteFile(path, b, 0o600)
 	if err != nil {
 		return errors.Wrap(err, "failed to save domain config")
 	}
@@ -98,6 +119,9 @@ func (c *Config) SaveDomain(dom *DomainConfig) error {
 
 func (c *Config) DeleteDomain(dom *DomainConfig) error {
 	path := filepath.Join(c.DomainDir, dom.Domain+".json")
+	if err := ensurePathWithinDir(c.DomainDir, path); err != nil {
+		return errors.Wrap(err, "invalid domain path")
+	}
 	err := keyring.Delete(keyring.Service("domain_token"), dom.Domain, keyring.AccessibleAlways)
 	if err != nil {
 		if !errors.Is(err, keyring.ErrUnsupportedPlatform) {
