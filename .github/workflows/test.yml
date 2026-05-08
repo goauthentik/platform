@@ -34,7 +34,7 @@ jobs:
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       - run: |
           make test
-      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+      - uses: test-summary/action@001f872f7d3bfc266130826cdd8c4b9ca30b15c3 # v2
         if: ${{ always() }}
         with:
           paths: ${{ github.workspace }}/junit.xml
@@ -126,7 +126,7 @@ jobs:
           ./hack/authentik/wait.sh
       - run: |
           make test-integration
-      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+      - uses: test-summary/action@001f872f7d3bfc266130826cdd8c4b9ca30b15c3 # v2
         if: ${{ always() }}
         with:
           paths: ${{ github.workspace }}/junit.xml
@@ -173,7 +173,7 @@ jobs:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
         run: |
           make test-e2e
-      - uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86 # v2
+      - uses: test-summary/action@001f872f7d3bfc266130826cdd8c4b9ca30b15c3 # v2
         if: ${{ always() }}
         with:
           paths: ${{ github.workspace }}/junit.xml
