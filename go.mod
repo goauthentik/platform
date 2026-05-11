@@ -45,7 +45,7 @@ require (
 	goauthentik.io/api/v3 v3.2026020.16
 	golang.org/x/crypto v0.50.0
 	golang.org/x/sys v0.44.0
-	golang.org/x/term v0.42.0
+	golang.org/x/term v0.43.0
 	google.golang.org/grpc v1.81.0
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	k8s.io/apimachinery v0.36.0
