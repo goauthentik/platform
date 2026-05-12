@@ -22,9 +22,12 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse, Box<dyn Error
         rpid: req.rp_id,
         challenge: req.challenge,
         pin: None,
-        uv: None,
         credential_ids: req.credential_ids,
         extensions: None,
+        // User verification
+        uv: None,
+        // User presence
+        up: true,
     };
 
     if req.uv {

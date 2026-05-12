@@ -2,21 +2,18 @@ name: build-ee-psso
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
-      - uses: ./.github/actions/macos-signing
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
-          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
-          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
-          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
-          ac-kid: ${{ secrets.APPLE_AC_KID }}
-          ac-key: ${{ secrets.APPLE_AC_KEY }}
+          path: cache/
+          key: target-cache-agent-macos-15
       - run: |
-          make ee/psso/build
+          make ee/psso/build XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'

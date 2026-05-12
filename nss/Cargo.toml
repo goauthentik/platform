@@ -1,6 +1,6 @@
 [package]
 name = "authentik_nss"
-version = "0.40.5"
+version = "0.40.7"
 edition = "2024"
 license = "MIT"
 
@@ -13,7 +13,8 @@ workspace = true
 
 [dependencies]
 authentik_sys = { path = ".." }
-ctor = "0.6.3"
-libc = "0.2.182"
+ctor = "1.0.5"
+dtor = "1.0.2"
+libc = "0.2.186"
 libnss = "0.9.0"
 log = "0.4.29"

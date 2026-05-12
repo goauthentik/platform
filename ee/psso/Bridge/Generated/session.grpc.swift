@@ -29,7 +29,8 @@ internal enum SessionManager: Sendable {
             /// Descriptor for "SessionStatus".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager"),
-                method: "SessionStatus"
+                method: "SessionStatus",
+                type: .unary
             )
         }
         /// Namespace for "OpenSession" metadata.
@@ -41,7 +42,8 @@ internal enum SessionManager: Sendable {
             /// Descriptor for "OpenSession".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager"),
-                method: "OpenSession"
+                method: "OpenSession",
+                type: .unary
             )
         }
         /// Namespace for "CloseSession" metadata.
@@ -53,7 +55,8 @@ internal enum SessionManager: Sendable {
             /// Descriptor for "CloseSession".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager"),
-                method: "CloseSession"
+                method: "CloseSession",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "session.SessionManager" service.

@@ -2,6 +2,7 @@ package ctrl
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/pkg/errors"
 	"goauthentik.io/platform/pkg/agent_system/config"
@@ -12,6 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+// domainNameRe enforces slug-compatible names for newly enrolled domains.
+var domainNameRe = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]*$`)
 
 func (ctrl *Server) DomainList(context.Context, *emptypb.Empty) (*pb.DomainListResponse, error) {
 	l := &pb.DomainListResponse{
@@ -26,6 +30,9 @@ func (ctrl *Server) DomainList(context.Context, *emptypb.Empty) (*pb.DomainListR
 }
 
 func (ctrl *Server) DomainEnroll(ctx context.Context, req *pb.DomainEnrollRequest) (*pb.DomainEnrollResponse, error) {
+	if !domainNameRe.MatchString(req.Name) {
+		return nil, status.Error(codes.InvalidArgument, "domain name must contain only letters, digits, and hyphens")
+	}
 	d := config.Manager().Get().NewDomain()
 	d.Domain = req.Name
 	d.AuthentikURL = req.AuthentikUrl

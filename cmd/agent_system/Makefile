@@ -34,7 +34,7 @@ package-gnu/linux: build
 		"${TOP}/cmd/${TARGET}" \
 		"${TOP}/bin/${TARGET}/completions" \
 		"${TARGET}"
-	$(call nfpm_package)
+	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
 
 test-deploy: package-gnu/linux
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}_${ARCH}.deb

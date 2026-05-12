@@ -1,12 +1,14 @@
 package ssh
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	progress "github.com/ankddev/conemu-progressbar-go"
@@ -15,6 +17,7 @@ import (
 	"goauthentik.io/platform/pkg/meta"
 	"goauthentik.io/platform/pkg/shared/tui"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/term"
 )
 
 const PAMPrompt = "authentik Password: "
@@ -68,9 +71,22 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 			innerCallback := c.knownHosts.HostKeyCallback()
 			err := innerCallback(hostname, remote, key)
 			if knownhosts.IsHostKeyChanged(err) {
-				fmt.Printf("REMOTE HOST IDENTIFICATION HAS CHANGED for host %s! This may indicate a MitM attack.", hostname)
+				fmt.Printf("REMOTE HOST IDENTIFICATION HAS CHANGED for host %s! This may indicate a MitM attack.\n", hostname)
 				return errors.New("hostkey changed")
 			} else if knownhosts.IsHostUnknown(err) {
+				if !term.IsTerminal(int(os.Stdin.Fd())) {
+					return errors.New("host key verification failed: unknown host and stdin is not a terminal")
+				}
+				fmt.Printf("The authenticity of host '%s (%s)' can't be established.\n", hostname, remote.String())
+				fmt.Printf("%s key fingerprint is %s.\n", key.Type(), ssh.FingerprintSHA256(key))
+				fmt.Print("Are you sure you want to continue connecting (yes/no)? ")
+				answer, rerr := bufio.NewReader(os.Stdin).ReadString('\n')
+				if rerr != nil {
+					return fmt.Errorf("failed to read user input: %w", rerr)
+				}
+				if strings.TrimSpace(strings.ToLower(answer)) != "yes" {
+					return errors.New("host key verification rejected by user")
+				}
 				f, ferr := os.OpenFile(c.knownHostsFile, os.O_APPEND|os.O_WRONLY, 0600)
 				if ferr == nil {
 					defer func() {
@@ -85,7 +101,9 @@ func (c *SSHClient) getConfig() *ssh.ClientConfig {
 					c.log.Infof("Failed to add host %s to known_hosts: %v\n", hostname, ferr)
 					return ferr
 				}
+				fmt.Printf("Warning: Permanently added '%s' (%s) to the list of known hosts.\n", hostname, key.Type())
 				c.log.Infof("Added host %s to known_hosts\n", hostname)
+				return nil
 			}
 			return err
 		}),

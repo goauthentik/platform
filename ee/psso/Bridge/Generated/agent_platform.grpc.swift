@@ -29,7 +29,8 @@ internal enum AgentPlatform: Sendable {
             /// Descriptor for "SignedEndpointHeader".
             internal static let descriptor = GRPCCore.MethodDescriptor(
                 service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_platform.AgentPlatform"),
-                method: "SignedEndpointHeader"
+                method: "SignedEndpointHeader",
+                type: .unary
             )
         }
         /// Descriptors for all methods in the "agent_platform.AgentPlatform" service.

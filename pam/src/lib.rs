@@ -12,7 +12,8 @@ use crate::session::open_session_impl;
 use authentik_sys::logger::exit_log;
 use authentik_sys::logger::init_log;
 use authentik_sys::logger::log_hook;
-use ctor::{ctor, dtor};
+use ctor::ctor;
+use dtor::dtor;
 use pam::constants::PAM_TEXT_INFO;
 use pam::constants::{PamFlag, PamResultCode};
 use pam::conv::Conv;
@@ -25,13 +26,13 @@ pub const ENV_SESSION_ID: &str = "AUTHENTIK_SESSION_ID";
 struct PAMAuthentik;
 pam::pam_hooks!(PAMAuthentik);
 
-#[ctor]
+#[ctor(unsafe)]
 fn ctor() {
     init_log("libpam-authentik");
     log_hook("ctor");
 }
 
-#[dtor]
+#[dtor(unsafe)]
 fn dtor() {
     log_hook("dtor");
     exit_log();

@@ -2,7 +2,7 @@
 name: "libpam-authentik"
 arch: "${ARCH}"
 platform: "linux"
-version: "${VERSION}"
+version: "${VERSION}+ak-${VERSION_HASH_SHORT}"
 description: |
   libpam-authentik authenticates users through authentik.
 vendor: "Authentik Security Inc."

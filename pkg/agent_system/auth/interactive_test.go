@@ -13,6 +13,7 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/ctrl"
 	"goauthentik.io/platform/pkg/agent_system/session"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
@@ -24,9 +25,15 @@ import (
 func testAuth(t *testing.T, dc *config.DomainConfig) Server {
 	t.Helper()
 	ctx := component.TestContext(t, dc)
+
 	sm, err := session.NewMonitor(ctx)
 	assert.NoError(t, err)
 	ctx.Registry().(component.TestRegistry).Comp[session.ID] = sm
+
+	cm, err := ctrl.NewServer(ctx)
+	assert.NoError(t, err)
+	ctx.Registry().(component.TestRegistry).Comp[ctrl.ID] = cm
+
 	return Server{
 		log:  log.WithField("component", "test"),
 		ctx:  ctx,

@@ -6,39 +6,23 @@ import (
 	"errors"
 
 	"github.com/gorilla/securecookie"
-	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/agent_system/component"
+	"goauthentik.io/platform/pkg/agent_system/ctrl"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (auth *Server) interactiveSupported() bool {
-	_, dom, err := auth.ctx.DomainAPI()
-	if err != nil {
-		auth.log.WithError(err).Warning("failed to get domain API")
-		return false
-	}
-	lic := dom.Config().LicenseStatus
-	if !lic.IsSet() {
-		return false
-	}
-	return *lic.Get() != api.LICENSESTATUSENUM_UNLICENSED
-}
-
-func (auth *Server) InteractiveSupported(ctx context.Context, _ *emptypb.Empty) (*pb.SupportedResponse, error) {
-	return &pb.SupportedResponse{
-		Supported: auth.interactiveSupported(),
-	}, nil
-}
-
 func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
-	var ch *pb.InteractiveChallenge
-	var err error
-	if !auth.interactiveSupported() {
+	ctrl, err := component.Get[*ctrl.Server](auth.ctx, ctrl.ID)
+	if err != nil {
+		return nil, err
+	}
+	if !ctrl.InteractiveSupported() {
 		return nil, status.Error(codes.Unavailable, "Interactive authentication not available")
 	}
+	var ch *pb.InteractiveChallenge
 	if i := req.GetInit(); i != nil {
 		ch, err = auth.interactiveAuthInit(ctx, i)
 	} else if i := req.GetContinue(); i != nil {

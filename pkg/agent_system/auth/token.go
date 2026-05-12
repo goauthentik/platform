@@ -47,7 +47,14 @@ func (auth *Server) validateToken(ctx context.Context, rawToken string) (*token.
 		AccessToken:    t,
 		RawAccessToken: rawToken,
 	}
-	if token.Claims().Audience[0] != dom.Config().DeviceId {
+	audMatch := false
+	for _, aud := range token.Claims().Audience {
+		if aud == dom.Config().DeviceId {
+			audMatch = true
+			break
+		}
+	}
+	if !audMatch {
 		return nil, errors.New("token not for device")
 	}
 	return &token, nil
@@ -75,8 +82,12 @@ func (auth *Server) TokenAuth(ctx context.Context, req *pb.TokenAuthRequest) (*p
 
 	sm, err := component.Get[*session.Server](auth.ctx, session.ID)
 	if err == nil {
+		tokenUsername := token.Claims().Username
+		if req.Username != "" && req.Username != tokenUsername {
+			return nil, status.Error(codes.PermissionDenied, "username does not match token identity")
+		}
 		sess, err := sm.NewSession(ctx, session.SessionRequest{
-			Username: req.Username,
+			Username: tokenUsername,
 			RawToken: req.Token,
 			Token:    token,
 		})

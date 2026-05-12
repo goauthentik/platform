@@ -11,8 +11,8 @@ updates:
   - package-ecosystem: cargo
     directories:
       - /
-      - /pam
-      - /nss
+      - pam
+      - nss
     schedule:
       interval: daily
       time: "04:00"
@@ -49,3 +49,20 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+  - package-ecosystem: "swift"
+    directory: "/ee/psso/authentikPlatform.xcodeproj"
+    schedule:
+      interval: daily
+      time: "04:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - BeryJu
+    groups:
+      grpc:
+        patterns:
+          - github.com/grpc/*
+          - github.com/apple/swift-nio-*
+          - github.com/apple/swift-protobuf
+      apple:
+        patterns:
+          - github.com/apple/*

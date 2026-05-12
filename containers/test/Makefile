@@ -10,7 +10,6 @@ ci-container-tag:
 
 .PHONY: ci-build-args
 ci-build-args:
-	@echo AK_PLATFORM_VER=${VERSION}
 	@echo AK_DEPLOY_URL=${AK_DEPLOY_URL}
 
 .PHONY: local-build
@@ -19,7 +18,6 @@ local-build:
 	docker build \
 		-t ghcr.io/goauthentik/platform-test:${container_ver} \
 		-t xghcr.io/goauthentik/platform-test:local \
-		--build-arg="AK_PLATFORM_VER=${VERSION}" \
 		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \
 		-f "${PWD}/Dockerfile" \
 		.

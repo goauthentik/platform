@@ -6,7 +6,9 @@ import (
 	"encoding/hex"
 
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/ctrl"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
@@ -21,9 +23,14 @@ func DeviceTokenHash(dom *config.DomainConfig) string {
 }
 
 func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) (*pb.InteractiveAuthAsyncResponse, error) {
-	if !auth.interactiveSupported() {
+	ctrl, err := component.Get[*ctrl.Server](auth.ctx, ctrl.ID)
+	if err != nil {
+		return nil, err
+	}
+	if !ctrl.InteractiveSupported() {
 		return nil, status.Error(codes.Unavailable, "Interactive authentication not available")
 	}
+
 	ac, dom, err := auth.ctx.DomainAPI()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get domain API client")

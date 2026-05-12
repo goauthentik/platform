@@ -53,9 +53,16 @@ func (t *Tray) Start() {
 		t.systrayConfigUpdate()
 	})
 	go func() {
-		for range time.NewTicker(30 * time.Second).C {
-			t.log.Debug("Updating systray")
-			t.systrayConfigUpdate()
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				t.log.Debug("Updating systray")
+				t.systrayConfigUpdate()
+			case <-t.Exit:
+				return
+			}
 		}
 	}()
 	systray.Run(t.systrayReady, func() {

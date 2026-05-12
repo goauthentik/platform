@@ -2,7 +2,7 @@
 name: "authentik-agent"
 arch: "${ARCH}"
 platform: "linux"
-version: "${VERSION}"
+version: "${VERSION}+ak-${VERSION_HASH_SHORT}"
 description: |
   authentik Agent
 vendor: "Authentik Security Inc."

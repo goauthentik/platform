@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/aletheia7/ul"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -54,7 +53,7 @@ func (dlh *darwinLogHook) Release() {
 	}
 }
 
-func (dlh *darwinLogHook) Fire(e *logrus.Entry) error {
+func (dlh *darwinLogHook) Fire(e *log.Entry) error {
 	logger := dlh.def
 
 	// Attempt to get logger instance for specified `logger` field

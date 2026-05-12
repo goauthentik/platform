@@ -2,9 +2,9 @@ use pam::constants::PamResultCode;
 
 use serde::{Deserialize, Serialize};
 
-use std::fs::{File, Permissions, remove_file};
+use std::fs::{File, OpenOptions, remove_file};
 use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::OpenOptionsExt;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SessionData {
@@ -56,18 +56,16 @@ pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResul
         }
     };
     let path = _session_file(id);
-    let mut file = match File::create(path) {
+    // create_new(true) sets O_EXCL, preventing symlink attacks on the predictable path.
+    let mut file = match OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o400)
+        .open(&path)
+    {
         Ok(f) => f,
         Err(e) => {
             log::warn!("failed to create file: {e}");
-            return Err(PamResultCode::PAM_SESSION_ERR);
-        }
-    };
-
-    match file.set_permissions(Permissions::from_mode(0o400)) {
-        Ok(_) => {}
-        Err(e) => {
-            log::warn!("failed to get file permissions: {e}");
             return Err(PamResultCode::PAM_SESSION_ERR);
         }
     };
