@@ -35,6 +35,7 @@ func TestToken(t *testing.T) {
 	_token.Claims.(jwt.MapClaims)["aud"] = "foo"
 	_token.Claims.(jwt.MapClaims)["exp"] = now.Add(5 * time.Minute).Unix()
 	_token.Claims.(jwt.MapClaims)["iat"] = now.Unix()
+	_token.Claims.(jwt.MapClaims)["preferred_username"] = "akadmin"
 
 	token, err := _token.SignedString(jwksKey)
 	assert.NoError(t, err)
