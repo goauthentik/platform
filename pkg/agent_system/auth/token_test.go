@@ -35,6 +35,7 @@ func TestToken(t *testing.T) {
 	_token.Claims.(jwt.MapClaims)["aud"] = "foo"
 	_token.Claims.(jwt.MapClaims)["exp"] = now.Add(5 * time.Minute).Unix()
 	_token.Claims.(jwt.MapClaims)["iat"] = now.Unix()
+	_token.Claims.(jwt.MapClaims)["preferred_username"] = "foo"
 
 	token, err := _token.SignedString(jwksKey)
 	assert.NoError(t, err)
@@ -47,9 +48,10 @@ func TestToken(t *testing.T) {
 	assert.Equal(t, res, &pb.TokenAuthResponse{
 		Successful: true,
 		Token: &pb.Token{
-			Aud: []string{"foo"},
-			Iat: timestamppb.New(now.Truncate(time.Second)),
-			Exp: timestamppb.New(now.Add(5 * time.Minute).Truncate(time.Second)),
+			Aud:               []string{"foo"},
+			Iat:               timestamppb.New(now.Truncate(time.Second)),
+			Exp:               timestamppb.New(now.Add(5 * time.Minute).Truncate(time.Second)),
+			PreferredUsername: "foo",
 		},
 		SessionId: res.SessionId,
 	})
