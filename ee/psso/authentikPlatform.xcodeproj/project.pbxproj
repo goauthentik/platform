@@ -851,6 +851,8 @@
 				kind = exactVersion;
 				version = 8.53.1;
 			};
+			traits = (
+			);
 		};
 		B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */ = {
 			isa = XCRemoteSwiftPackageReference;
