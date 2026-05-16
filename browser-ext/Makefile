@@ -12,7 +12,6 @@ bump:
 	yq -i '.version = "${VERSION}"' ${PWD}/manifest-edge.json
 	yq -i '.version = "${VERSION}"' ${PWD}/manifest-firefox.json
 	sed -i 's/VERSION = ".*"/VERSION = "${VERSION}"/g' ${PWD}/src/version.ts
-	npm run prettier
 
 .PHONY: build
 build:
