@@ -72,11 +72,18 @@ jobs:
         if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
         with:
           arch: amd64
+      - name: Setup Software Trust Manager
+        if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
+        uses: digicert/code-signing-software-trust-action@v1
+        env:
+          SM_HOST: ${{ secrets.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
 
       - shell: bash
         run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:

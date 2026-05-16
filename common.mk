@@ -38,6 +38,13 @@ define sentry_upload_symbols
 		$(1)
 endef
 
+define sign_binary
+	smctl sign key_1504090127 \
+		--input="$(1)" \
+		--simple \
+		--verbose
+endef
+
 define go_generate_resources
 	go tool goversioninfo \
 		-icon="${TOP}/cmd/agent_local/package/windows/resources/icon.ico" \
