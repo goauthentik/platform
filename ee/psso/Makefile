@@ -14,8 +14,8 @@ clean:
 
 .PHONY: bump
 bump:
-	"${ROOT}/hack/plist.py" "${PWD}/PSSO/Info.plist" "CFBundleVersion" "${VERSION}"
-	"${ROOT}/hack/plist.py" "${PWD}/PSSO/Info.plist" "CFBundleShortVersionString" "${VERSION}"
+	"${TOP}/hack/plist.py" "${PWD}/PSSO/Info.plist" "CFBundleVersion" "${VERSION}"
+	"${TOP}/hack/plist.py" "${PWD}/PSSO/Info.plist" "CFBundleShortVersionString" "${VERSION}"
 
 .PHONY: build
 build:

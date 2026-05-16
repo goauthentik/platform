@@ -37,8 +37,8 @@ endif
 
 .PHONY: bump
 bump:
-	"${ROOT}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleVersion" "${VERSION}"
-	"${ROOT}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleShortVersionString" "${VERSION}"
+	"${TOP}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleVersion" "${VERSION}"
+	"${TOP}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleShortVersionString" "${VERSION}"
 
 .PHONY: package-darwin
 package-darwin: clean build
