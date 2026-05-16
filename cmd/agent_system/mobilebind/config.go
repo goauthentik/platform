@@ -8,7 +8,6 @@ import (
 	"goauthentik.io/platform/pkg/agent_system/config"
 )
 
-var dataRoot = ""
 var tempRoot = ""
 
 func createDefaultConfig(config config.Config, path string) error {

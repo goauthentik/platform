@@ -208,4 +208,4 @@ tool (
 	google.golang.org/protobuf/cmd/protoc-gen-go
 )
 
-replace github.com/keybase/go-keychain => github.com/beryju/go-keychain v0.0.0-20260308223356-cf464edfd87b
+ignore ./browser-ext/node_modules
