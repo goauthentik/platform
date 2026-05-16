@@ -27,7 +27,6 @@ func InitConfig(configRoot string, temp string) bool {
 		return false
 	}
 
-	dataRoot = cfgRoot
 	tempRoot = temp
 
 	configPath := path.Join(cfgRoot, "config.json")
