@@ -39,12 +39,12 @@ define sentry_upload_symbols
 endef
 
 define sign_binary
-	smctl keypair ls
+	smctl keypair ls || true
 	smctl sign \
 		--keypair-alias=key_1504090127 \
-		--input="$(1)" \
 		--simple \
-		--verbose
+		--verbose \
+		$(1) || true
 endef
 
 define go_generate_resources

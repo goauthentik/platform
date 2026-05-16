@@ -34,9 +34,6 @@ endif
 		${GO_BUILD_FLAGS} \
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
-ifeq ($(OS),Windows_NT)
-	$(call sign_binary,"${TOP}/bin/${TARGET}/${BINARY_NAME}")
-endif
 
 .PHONY: bump
 bump:
@@ -91,6 +88,11 @@ package-msys: clean
 	"$(MAKE)" -C ${TOP} browser_support/build
 	"$(MAKE)" -C ${TOP} ee/wcp/build || true
 	mkdir -p "${TOP}/cache/${TARGET}"
+	$(call sign_binary, \
+		--input "${TOP}/bin/agent_system/ak-sysd.exe" \
+		--input "${TOP}/bin/agent_local/ak-agent.exe" \
+		--input "${TOP}/bin/cli/ak.exe" \
+		--input "${TOP}/bin/browser_support/ak-browser-support.exe")
 	dotnet restore \
 		--packages "${TOP}/cache/${TARGET}" \
 		"$(shell pwd)/package/windows/"
@@ -100,7 +102,8 @@ package-msys: clean
 		--output "${TOP}/bin/${TARGET}/" \
 		--no-restore \
 		"$(shell pwd)/package/windows/"
-	$(call sign_binary,"${TOP}/bin/${TARGET}/agent.msi")
+	$(call sign_binary, \
+		--input "${TOP}/bin/${TARGET}/agent.msi")
 
 test-deploy: package
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb
