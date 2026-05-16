@@ -1,0 +1,45 @@
+name: release-publish
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  call-build-go:
+    uses: ./.github/workflows/_build-go.yml
+    secrets: inherit
+  call-build-js:
+    uses: ./.github/workflows/_build-js.yml
+    secrets: inherit
+  call-build-rs:
+    uses: ./.github/workflows/_build-rs.yml
+    secrets: inherit
+  call-deploy:
+    needs:
+      - call-build-go
+      - call-build-js
+      - call-build-rs
+    uses: ./.github/workflows/_deploy.yml
+    secrets: inherit
+    with:
+      upload-repo-artifact: false
+
+  attach-and-publish:
+    name: Attach artifacts and publish
+    needs: call-deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: all-packages
+          path: ./packages
+      - name: Upload artifacts to release
+        run: |
+          find ./packages -type f -print0 | \
+            xargs -0 gh release upload ${{ github.event.release.tag_name }} --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
