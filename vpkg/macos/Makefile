@@ -1,14 +1,13 @@
 include ../../common.mk
 
 TARGET := vpkg/macos
-AGENT_PKG := ${TOP}/cmd/agent_local/package
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
 
 .PHONY: package
 package:
 	mkdir -p "${TOP}/bin/${TARGET}"
-	cp -R "${AGENT_PKG}/macos/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
+	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
 	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
@@ -22,19 +21,19 @@ package:
 		--force \
 		--verify \
 		--verbose \
-		--entitlements "${AGENT_PKG}/macos/authentikEndpoint.entitlements" \
+		--entitlements "${PWD}/authentikEndpoint.entitlements" \
 		--sign ${MACOS_SIGN_CERT} \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
 		--identifier "io.goauthentik.agent" \
 		--version "${VERSION}.${VERSION_HASH_SHORT}" \
-		--scripts "${AGENT_PKG}/macos/scripts" \
+		--scripts "${PWD}/scripts" \
 		--install-location /Applications \
 		"${TOP}/bin/${TARGET}/agent.pkg"
 	productbuild \
-		--distribution "${AGENT_PKG}/macos/distribution.xml" \
+		--distribution "${PWD}/distribution.xml" \
 		--package-path "${TOP}/bin/${TARGET}" \
-		--resources "${AGENT_PKG}/macos/resources" \
+		--resources "${PWD}/resources" \
 		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
 	cd "${TOP}/bin/${TARGET}" && rm "agent.pkg" && rm -rf "${MACOS_APP_NAME}"
