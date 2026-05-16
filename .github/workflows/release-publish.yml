@@ -22,7 +22,37 @@ jobs:
     uses: ./.github/workflows/_deploy.yml
     secrets: inherit
     with:
-      upload-repo-artifact: false
+      upload-repo-artifact: true
+
+  deploy-to-netlify:
+    needs: call-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: repo
+          path: ./deploy
+      - name: Download packages
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: all-packages
+          path: ./deploy/packages
+      - id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v2
+        with:
+          client-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIV_KEY }}
+      - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654 # v3.0
+        with:
+          publish-dir: "./deploy"
+          production-deploy: true
+          github-token: ${{ steps.app-token.outputs.token }}
+          deploy-message: "Release: ${{ github.event.release.tag_name }}"
+          enable-commit-comment: false
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: authentik-pkg.netlify.app
 
   attach-and-publish:
     name: Attach artifacts and publish

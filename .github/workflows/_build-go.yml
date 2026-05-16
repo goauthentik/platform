@@ -35,6 +35,8 @@ jobs:
           - target: cli
             platform: windows-2025
     runs-on: ${{ matrix.platform }}
+    env:
+      CARGO_TERM_COLOR: always
     permissions:
       contents: read
     outputs:
