@@ -61,15 +61,21 @@ jobs:
     permissions:
       contents: write
     steps:
+      - id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v2
+        with:
+          client-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIV_KEY }}
       - name: Download packages
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: all-packages
           path: ./packages
-      - name: Upload artifacts to release
-        run: |
-          find ./packages -type f -print0 | \
-            xargs -0 gh release upload ${{ github.event.release.tag_name }} --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
+      - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          files: |
+            ./packages/authentik_browser-ext/browser-ext/authentik_chrome.zip
+            ./packages/authentik_browser-ext/browser-ext/authentik_firefox.zip
+            ./packages/authentik_macos-15_agent/agent_local/authentik Agent Installer.pkg
+            ./packages/authentik_windows-2025_agent/agent_local/agent.msi
