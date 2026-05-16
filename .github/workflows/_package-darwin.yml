@@ -14,13 +14,6 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - uses: ./.github/actions/macos-signing
-        with:
-          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
-          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
-          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
-          ac-kid: ${{ secrets.APPLE_AC_KID }}
-          ac-key: ${{ secrets.APPLE_AC_KEY }}
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: authentik_macos-15_agent
@@ -41,8 +34,17 @@ jobs:
         with:
           name: authentik_macos-15_psso
           path: bin/
+
+      - uses: ./.github/actions/macos-signing
+        with:
+          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
+          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
+          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
+          ac-kid: ${{ secrets.APPLE_AC_KID }}
+          ac-key: ${{ secrets.APPLE_AC_KEY }}
       - shell: bash
         run: make vpkg/macos/package
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: authentik_package-macos

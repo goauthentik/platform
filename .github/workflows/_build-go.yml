@@ -2,6 +2,10 @@ name: _build-go
 
 on:
   workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
     outputs:
       artifact:
         value: ${{ jobs.build.outputs.artifact-id }}
@@ -61,6 +65,8 @@ jobs:
           fi
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          AK_IS_RELEASE: ${{ inputs.is_release }}
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:

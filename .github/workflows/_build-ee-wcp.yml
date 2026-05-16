@@ -1,7 +1,11 @@
 name: _build-ee-wcp
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
 
 jobs:
   build:

@@ -8,18 +8,28 @@ jobs:
   call-build-go:
     uses: ./.github/workflows/_build-go.yml
     secrets: inherit
+    with:
+      is_release: true
   call-build-js:
     uses: ./.github/workflows/_build-js.yml
     secrets: inherit
+    with:
+      is_release: true
   call-build-rs:
     uses: ./.github/workflows/_build-rs.yml
     secrets: inherit
+    with:
+      is_release: true
   call-build-ee-wcp:
     uses: ./.github/workflows/_build-ee-wcp.yml
     secrets: inherit
+    with:
+      is_release: true
   call-build-ee-psso:
     uses: ./.github/workflows/_build-ee-psso.yml
     secrets: inherit
+    with:
+      is_release: true
 
   call-package-darwin:
     needs:
