@@ -6,162 +6,29 @@ on:
   pull_request:
     branches: ["main"]
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
-  build_go:
-    name: Build
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - cli
-          - agent
-          - sysd
-          # Browser support is always included in the agent bundle
-          # - browser_support
-        platform:
-          - macos-15
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - windows-2025
-        exclude:
-          # CLI and sysd are included in the agent bundle
-          - target: sysd
-            platform: macos-15
-          - target: cli
-            platform: macos-15
-          # CLI and sysd are included in the agent bundle
-          - target: sysd
-            platform: windows-2025
-          - target: cli
-            platform: windows-2025
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-      - id: platform_pure
-        shell: bash
-        run: |
-          platform=$(uname -o | tr '[:upper:]' '[:lower:]')
-          echo "platform=${platform}" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
-        with:
-          path: cache/
-          key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
+  call-build-go:
+    uses: ./.github/workflows/_build-go.yml
+    secrets: inherit
+  call-build-js:
+    uses: ./.github/workflows/_build-js.yml
+    secrets: inherit
+  call-build-rs:
+    uses: ./.github/workflows/_build-rs.yml
+    secrets: inherit
 
-      # macOS Specific
-      - uses: ./.github/actions/macos-signing
-        if: ${{ steps.platform_pure.outputs.platform == 'darwin' }}
-        with:
-          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
-          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
-          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
-          ac-kid: ${{ secrets.APPLE_AC_KID }}
-          ac-key: ${{ secrets.APPLE_AC_KEY }}
-      # Windows Specific
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
-        with:
-          arch: amd64
-
-      - shell: bash
-        run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
-        with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.target }}
-          path: bin/
-  build_js:
-    name: Build
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - browser-ext
-    permissions:
-      contents: read
-      id-token: write
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          node-version-file: "${{ matrix.target }}/package.json"
-          cache: "npm"
-          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
-      - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
-        with:
-          name: authentik_${{ matrix.target }}
-          path: bin/
-  build_rs:
-    name: Build
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - pam
-          - nss
-        platform:
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
-        with:
-          go-version-file: go.mod
-          cache: true
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libpam0g-dev libudev-dev
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
-        with:
-          path: cache/
-          key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
-      - run: make ${{ matrix.target }}/build
-      - run: make ${{ matrix.target }}/package
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
-        with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.target }}
-          path: bin/
-  deploy:
+  call-deploy:
     needs:
-      - build_go
-      - build_js
-      - build_rs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          path: ./bin
-      - run: |
-          sudo apt-get remove --purge man-db
-      - uses: ./.github/actions/repo
-        id: repo
-        with:
-          package-path: bin/
-          gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
-      - name: Upload repository
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
-        with:
-          name: repo
-          path: ./repo
-      - name: Upload packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
-        with:
-          name: all-packages
-          path: ./bin
+      - call-build-go
+      - call-build-js
+      - call-build-rs
+    uses: ./.github/workflows/_deploy.yml
+    secrets: inherit
+    with:
+      upload-repo-artifact: true
+
   deploy-to-netlify:
-    needs: deploy
+    needs: call-deploy
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     permissions:
@@ -190,21 +57,21 @@ jobs:
       - id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v2
         with:
-          app-id: ${{ secrets.GH_APP_ID }}
+          client-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIV_KEY }}
       - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654 # v3.0
         id: netlify
         with:
           publish-dir: "./deploy"
-          production-branch: main
+          production-deploy: false
           github-token: ${{ steps.app-token.outputs.token }}
           deploy-message: "Repo: ${{ github.event_name == 'pull_request' && format('PR #{0}', github.event.number) || 'main' }}"
-          alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || '' }}
-          github-deployment-environment: ${{ github.event_name == 'pull_request' && '' || 'pkg' }}
+          alias: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}
           enable-commit-comment: false
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: authentik-pkg.netlify.app
+
   build-container:
     needs: deploy-to-netlify
     permissions:

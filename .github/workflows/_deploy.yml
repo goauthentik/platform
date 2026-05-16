@@ -1,0 +1,38 @@
+name: _deploy (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      upload-repo-artifact:
+        description: Upload 'repo' artifact (needed by Netlify deploy in CI; not needed for release)
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          path: ./bin
+      - run: |
+          sudo apt-get remove --purge man-db
+      - uses: ./.github/actions/repo
+        id: repo
+        with:
+          package-path: bin/
+          gpg-private-key: "${{ secrets.GPG_PRIVATE }}"
+      - name: Upload repository
+        if: ${{ inputs.upload-repo-artifact }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        with:
+          name: repo
+          path: ./repo
+      - name: Upload packages
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        with:
+          name: all-packages
+          path: ./bin

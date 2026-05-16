@@ -1,0 +1,84 @@
+name: _build-go
+
+on:
+  workflow_call:
+    outputs:
+      artifact:
+        value: ${{ jobs.build.outputs.artifact-id }}
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - cli
+          - agent
+          - sysd
+          # Browser support is always included in the agent bundle
+          # - browser_support
+        platform:
+          - macos-15
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - windows-2025
+        exclude:
+          # CLI and sysd are included in the agent bundle
+          - target: sysd
+            platform: macos-15
+          - target: cli
+            platform: macos-15
+          # CLI and sysd are included in the agent bundle
+          - target: sysd
+            platform: windows-2025
+          - target: cli
+            platform: windows-2025
+    runs-on: ${{ matrix.platform }}
+    env:
+      CARGO_TERM_COLOR: always
+    permissions:
+      contents: read
+    outputs:
+      artifact-id: ${{ steps.artifact.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      - id: platform_pure
+        shell: bash
+        run: |
+          platform=$(uname -o | tr '[:upper:]' '[:lower:]')
+          echo "platform=${platform}" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
+        with:
+          path: cache/
+          key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
+
+      # macOS Specific
+      - uses: ./.github/actions/macos-signing
+        if: ${{ steps.platform_pure.outputs.platform == 'darwin' }}
+        with:
+          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
+          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
+          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
+          ac-kid: ${{ secrets.APPLE_AC_KID }}
+          ac-key: ${{ secrets.APPLE_AC_KEY }}
+      # Windows Specific
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
+        with:
+          arch: amd64
+
+      - shell: bash
+        run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        id: artifact
+        with:
+          name: authentik_${{ matrix.platform }}_${{ matrix.target }}
+          path: bin/
