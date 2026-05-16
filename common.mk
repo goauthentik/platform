@@ -39,7 +39,9 @@ define sentry_upload_symbols
 endef
 
 define sign_binary
-	smctl sign key_1504090127 \
+	smctl keypair ls
+	smctl sign \
+		--keypair-alias=key_1504090127 \
 		--input="$(1)" \
 		--simple \
 		--verbose
