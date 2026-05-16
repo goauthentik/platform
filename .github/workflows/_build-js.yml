@@ -2,6 +2,10 @@ name: _build-js
 
 on:
   workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
     outputs:
       artifact:
         value: ${{ jobs.build.outputs.artifact-id }}
