@@ -20,24 +20,18 @@ jobs:
           - cli
           - agent
           - sysd
-          # Browser support is always included in the agent bundle
-          # - browser_support
+          - browser_support
         platform:
           - macos-15
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - windows-2025
         exclude:
-          # CLI and sysd are included in the agent bundle
-          - target: sysd
-            platform: macos-15
-          - target: cli
-            platform: macos-15
-          # CLI and sysd are included in the agent bundle
-          - target: sysd
-            platform: windows-2025
-          - target: cli
-            platform: windows-2025
+          # browser_support is bundled via symlinks in Linux packages
+          - target: browser_support
+            platform: ubuntu-24.04
+          - target: browser_support
+            platform: ubuntu-24.04-arm
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -62,35 +56,15 @@ jobs:
           path: cache/
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
 
-      # macOS Specific
-      - uses: ./.github/actions/macos-signing
-        if: ${{ steps.platform_pure.outputs.platform == 'darwin' }}
-        with:
-          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
-          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
-          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
-          ac-kid: ${{ secrets.APPLE_AC_KID }}
-          ac-key: ${{ secrets.APPLE_AC_KEY }}
-      # Windows Specific
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
-        with:
-          arch: amd64
-      - if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
-        uses: digicert/code-signing-software-trust-action@v1
-      - if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
-        run: |
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
-        shell: bash
-
       - shell: bash
-        run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
+        run: |
+          if [[ "${{ steps.platform_pure.outputs.platform }}" == "gnu/linux" ]]; then
+            make ${{ matrix.target }}/package-gnu/linux
+          else
+            make ${{ matrix.target }}/build
+          fi
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SM_HOST: ${{ secrets.SM_HOST }}
-          SM_API_KEY: ${{ secrets.SM_API_KEY }}
-          SM_CLIENT_CERT_FILE: D:\\Certificate_pkcs12.p12
-          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
           AK_IS_RELEASE: ${{ inputs.is_release }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5

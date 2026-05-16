@@ -14,8 +14,8 @@
            Compressed="true">
     <ui:WixUI Id="AK_WixUI_FeatureTree"
               InstallDirectory="INSTALLFOLDER" />
-    <WixVariable Id="WixUIDialogBmp" Value="$(env.PWD)/package/windows/resources/WixUIDialogBmp.png" />
-    <WixVariable Id="WixUIBannerBmp" Value="$(env.PWD)/package/windows/resources/WixUIBannerBmp.png" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(env.PWD)/resources/WixUIDialogBmp.png" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(env.PWD)/resources/WixUIBannerBmp.png" />
 
     <MediaTemplate EmbedCab="yes" />
     <MajorUpgrade DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit." />
@@ -34,7 +34,7 @@
       <Directory Id="ak_ProgramDataRoot" Name="$(var.Manufacturer)">
       </Directory>
     </StandardDirectory>
-    <Icon Id="authentik_icon" SourceFile="$(env.PWD)/package/windows/resources/icon.ico" />
+    <Icon Id="authentik_icon" SourceFile="$(env.PWD)/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
     <util:CloseApplication Id="ak_agent_close"
                             Target="ak-agent.exe"
@@ -98,9 +98,9 @@
               Source="$(env.ROOT)/bin/browser_support/ak-browser-support.exe"
               KeyPath="true" />
         <File Id="browser_support_json_chrome"
-              Source="$(env.PWD)/package/windows/browser-host-chrome.json" />
+              Source="$(env.PWD)/browser-host-chrome.json" />
         <File Id="browser_support_json_firefox"
-              Source="$(env.PWD)/package/windows/browser-host-firefox.json" />
+              Source="$(env.PWD)/browser-host-firefox.json" />
         <RegistryKey Root="HKLM"
                     Key="SOFTWARE\Google\Chrome\NativeMessagingHosts\io.goauthentik.platform">
           <RegistryValue Type="string" Value="[browser_support]browser-host-chrome.json"/>

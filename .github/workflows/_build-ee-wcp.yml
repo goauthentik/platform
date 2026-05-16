@@ -1,0 +1,30 @@
+name: _build-ee-wcp
+
+on:
+  workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
+        with:
+          path: cache/
+          key: target-cache-wcp-windows-2025
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+      - shell: bash
+        run: |
+          make ee/wcp/build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        with:
+          name: authentik_windows-2025_wcp
+          path: bin/

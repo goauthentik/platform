@@ -16,12 +16,33 @@ jobs:
   call-build-rs:
     uses: ./.github/workflows/_build-rs.yml
     secrets: inherit
+  call-build-ee-wcp:
+    uses: ./.github/workflows/_build-ee-wcp.yml
+    secrets: inherit
+  call-build-ee-psso:
+    uses: ./.github/workflows/_build-ee-psso.yml
+    secrets: inherit
+
+  call-package-darwin:
+    needs:
+      - call-build-go
+      - call-build-ee-psso
+    uses: ./.github/workflows/_package-darwin.yml
+    secrets: inherit
+  call-package-windows:
+    needs:
+      - call-build-go
+      - call-build-ee-wcp
+    uses: ./.github/workflows/_package-windows.yml
+    secrets: inherit
 
   call-deploy:
     needs:
       - call-build-go
       - call-build-js
       - call-build-rs
+      - call-package-darwin
+      - call-package-windows
     uses: ./.github/workflows/_deploy.yml
     secrets: inherit
     with:

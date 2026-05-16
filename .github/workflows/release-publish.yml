@@ -20,11 +20,37 @@ jobs:
     secrets: inherit
     with:
       is_release: true
+  call-build-ee-wcp:
+    uses: ./.github/workflows/_build-ee-wcp.yml
+    secrets: inherit
+    with:
+      is_release: true
+  call-build-ee-psso:
+    uses: ./.github/workflows/_build-ee-psso.yml
+    secrets: inherit
+    with:
+      is_release: true
+
+  call-package-darwin:
+    needs:
+      - call-build-go
+      - call-build-ee-psso
+    uses: ./.github/workflows/_package-darwin.yml
+    secrets: inherit
+  call-package-windows:
+    needs:
+      - call-build-go
+      - call-build-ee-wcp
+    uses: ./.github/workflows/_package-windows.yml
+    secrets: inherit
+
   call-deploy:
     needs:
       - call-build-go
       - call-build-js
       - call-build-rs
+      - call-package-darwin
+      - call-package-windows
     uses: ./.github/workflows/_deploy.yml
     secrets: inherit
     with:
@@ -62,7 +88,7 @@ jobs:
 
   attach-and-publish:
     name: Attach artifacts and publish
-    needs: call-deploy
+    needs: [call-deploy, call-package-darwin, call-package-windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -83,5 +109,5 @@ jobs:
           files: |
             ./packages/authentik_browser-ext/browser-ext/authentik_chrome.zip
             ./packages/authentik_browser-ext/browser-ext/authentik_firefox.zip
-            ./packages/authentik_macos-15_agent/agent_local/authentik Agent Installer.pkg
-            ./packages/authentik_windows-2025_agent/agent_local/agent.msi
+            ./packages/authentik_package-macos/vpkg/macos/authentik Agent Installer.pkg
+            ./packages/authentik_package-windows/vpkg/windows/agent.msi

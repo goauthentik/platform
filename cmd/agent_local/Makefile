@@ -17,11 +17,6 @@ lint:
 
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
-	"$(MAKE)" -C ${TOP} cli/clean
-	"$(MAKE)" -C ${TOP} sysd/clean
-	"$(MAKE)" -C ${TOP} browser_support/clean
-	"$(MAKE)" -C ${TOP} ee/wcp/clean || true
-	"$(MAKE)" -C ${TOP} ee/psso/clean || true
 
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
@@ -40,76 +35,9 @@ bump:
 	"${TOP}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleVersion" "${VERSION}"
 	"${TOP}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleShortVersionString" "${VERSION}"
 
-.PHONY: package-darwin
-package-darwin: clean build
-	"$(MAKE)" -C ${TOP} -j$(nproc) cli/build sysd/build browser_support/build
-	"$(MAKE)" -C ${TOP} ee/psso/build || true
-	cp -R "${PWD}/package/macos/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
-	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
-	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
-	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
-	cp "${TOP}/bin/${TARGET}/${BINARY_NAME}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
-	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
-	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex" || true
-	codesign \
-		--force \
-		--verify \
-		--verbose \
-		--entitlements "${PWD}/package/macos/authentikEndpoint.entitlements" \
-		--sign ${MACOS_SIGN_CERT} \
-		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
-	pkgbuild \
-		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
-		--identifier "io.goauthentik.agent" \
-		--version "${VERSION}.${VERSION_HASH_SHORT}" \
-		--scripts "${PWD}/package/macos/scripts" \
-		--install-location /Applications \
-		"${TOP}/bin/${TARGET}/agent.pkg"
-	productbuild \
-		--distribution "${PWD}/package/macos/distribution.xml" \
-		--package-path "${TOP}/bin/${TARGET}" \
-		--resources "${PWD}/package/macos/resources" \
-		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
-	cd "${TOP}/bin/${TARGET}" && rm "agent.pkg"
-	cd "${TOP}/bin/${TARGET}" && rm -rf "${MACOS_APP_NAME}"
-
 .PHONY: package-gnu/linux
 package-gnu/linux: clean build
 	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
-
-.PHONY: package-msys
-package-msys: clean
-	"$(MAKE)" -C ${TOP} agent/build
-	"$(MAKE)" -C ${TOP} cli/build
-	"$(MAKE)" -C ${TOP} sysd/build
-	"$(MAKE)" -C ${TOP} browser_support/build
-	"$(MAKE)" -C ${TOP} ee/wcp/build || true
-	mkdir -p "${TOP}/cache/${TARGET}"
-ifeq ($(AK_IS_RELEASE),true)
-	$(call sign_binary,"${TOP}/bin/agent_system/ak-sysd.exe")
-	$(call sign_binary,"${TOP}/bin/agent_local/ak-agent.exe")
-	$(call sign_binary,"${TOP}/bin/cli/ak.exe")
-	$(call sign_binary,"${TOP}/bin/browser_support/ak-browser-support.exe")
-else
-	@echo "Skipping code sign for non-release build"
-endif
-	dotnet restore \
-		--packages "${TOP}/cache/${TARGET}" \
-		"$(shell pwd)/package/windows/"
-	ROOT=${TOP} VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} dotnet build \
-		--packages "${TOP}/cache/${TARGET}" \
-		--artifacts-path "${TOP}/cache/${TARGET}" \
-		--output "${TOP}/bin/${TARGET}/" \
-		--no-restore \
-		"$(shell pwd)/package/windows/"
-ifeq ($(AK_IS_RELEASE),true)
-	$(call sign_binary,"${TOP}/bin/${TARGET}/agent.msi")
-else
-	@echo "Skipping code sign for non-release build"
-endif
 
 test-deploy: package
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb
