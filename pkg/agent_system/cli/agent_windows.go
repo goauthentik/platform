@@ -18,7 +18,10 @@ func runAgentPlatform(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	w := &windowssvc.ServiceWrapper{
-		Callback: agent.Start,
+		Callback: func() {
+			agent.Start()
+			agent.Wait()
+		},
 	}
 	if isDebug {
 		return debug.Run("ak_sysd", w)

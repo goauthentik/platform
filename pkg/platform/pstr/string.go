@@ -6,6 +6,7 @@ type PlatformString struct {
 	Windows  *string
 	Darwin   *string
 	Linux    *string
+	Android  *string
 	Fallback string
 }
 
@@ -30,6 +31,10 @@ func (ps PlatformString) ForLinux() string {
 	return ps.fallback(ps.Linux)
 }
 
+func (ps PlatformString) ForAndroid() string {
+	return ps.fallback(ps.Android, ps.Linux)
+}
+
 func (ps PlatformString) ForCurrent() string {
 	switch runtime.GOOS {
 	case "windows":
@@ -38,6 +43,8 @@ func (ps PlatformString) ForCurrent() string {
 		return ps.ForLinux()
 	case "darwin":
 		return ps.ForDarwin()
+	case "android":
+		return ps.ForAndroid()
 	}
 	return ps.Fallback
 }

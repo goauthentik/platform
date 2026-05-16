@@ -12,11 +12,16 @@
 		609FE38D24893242009FD079 /* AuthenticationViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 609FE38B24893242009FD079 /* AuthenticationViewController.xib */; };
 		B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */; };
 		B404B2742E0DD88800A12D29 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = B404B2732E0DD88500A12D29 /* API.swift */; };
-		B42B450A2EA24B120046D847 /* Bridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; };
-		B42B450B2EA24B120046D847 /* Bridge.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		B49BA55B2E0F447A00184992 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B49BA55A2E0F447A00184992 /* Sentry */; };
+		B42B450A2EA24B120046D847 /* Bridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; platformFilters = (ios, macos, ); };
+		B42B450B2EA24B120046D847 /* Bridge.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; platformFilters = (ios, macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B4361FBD2F5DEB3B00B77BDF /* sysd.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FBB2F5DEA9300B77BDF /* sysd.xcframework */; };
+		B4361FBE2F5DEB3B00B77BDF /* sysd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FBB2F5DEA9300B77BDF /* sysd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B4361FC12F5DED0200B77BDF /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FC02F5DECC100B77BDF /* libresolv.tbd */; };
+		B46DB6712F5E0860005DC8C6 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B46DB6702F5E0860005DC8C6 /* Sentry */; };
+		B4714C442F5DF0BA003B0896 /* Bridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; };
+		B4714C452F5DF0BA003B0896 /* Bridge.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B4714C492F5DF1EE003B0896 /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4714C482F5DF1EE003B0896 /* AuthenticationServices.framework */; };
 		B49BA55F2E0F466300184992 /* InteractiveAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA55E2E0F466100184992 /* InteractiveAuth.swift */; };
-		B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5602E0F73AD00184992 /* Sentry.swift */; };
 		B49BA5632E100E4500184992 /* PlatformSSO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B49BA5622E100E4400184992 /* PlatformSSO.swift */; };
 		B4D2A6402EA25C96000B8E49 /* GRPCCore in Frameworks */ = {isa = PBXBuildFile; productRef = B4D2A63F2EA25C96000B8E49 /* GRPCCore */; };
 		B4D2A6432EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 in Frameworks */ = {isa = PBXBuildFile; productRef = B4D2A6422EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 */; };
@@ -32,6 +37,20 @@
 			remoteGlobalIDString = B42B45012EA24AEA0046D847;
 			remoteInfo = GRPC;
 		};
+		B4714C462F5DF0BA003B0896 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 609FE345248929E6009FD079 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B42B45012EA24AEA0046D847;
+			remoteInfo = Bridge;
+		};
+		B4D07EC32F5E0736002F703C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 609FE345248929E6009FD079 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 609FE38324893242009FD079;
+			remoteInfo = PSSO;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,6 +61,18 @@
 			dstSubfolderSpec = 10;
 			files = (
 				B42B450B2EA24B120046D847 /* Bridge.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4361FBF2F5DEB3B00B77BDF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				B4361FBE2F5DEB3B00B77BDF /* sysd.xcframework in Embed Frameworks */,
+				B4714C452F5DF0BA003B0896 /* Bridge.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -58,13 +89,17 @@
 		B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterpriseSSO.swift; sourceTree = "<group>"; };
 		B404B2732E0DD88500A12D29 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		B42B45022EA24AEA0046D847 /* Bridge.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Bridge.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4361FB02F5DE66900B77BDF /* authentik.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = authentik.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4361FBB2F5DEA9300B77BDF /* sysd.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = sysd.xcframework; sourceTree = "<group>"; };
+		B4361FC02F5DECC100B77BDF /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/usr/lib/libresolv.tbd; sourceTree = DEVELOPER_DIR; };
+		B4714C482F5DF1EE003B0896 /* AuthenticationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AuthenticationServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/System/Library/Frameworks/AuthenticationServices.framework; sourceTree = DEVELOPER_DIR; };
 		B49BA55E2E0F466100184992 /* InteractiveAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveAuth.swift; sourceTree = "<group>"; };
-		B49BA5602E0F73AD00184992 /* Sentry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sentry.swift; sourceTree = "<group>"; };
 		B49BA5622E100E4400184992 /* PlatformSSO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformSSO.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B42B45032EA24AEA0046D847 /* Bridge */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Bridge; sourceTree = "<group>"; };
+		B4361FB12F5DE66900B77BDF /* App */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = App; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,7 +108,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				609FE38724893242009FD079 /* AuthenticationServices.framework in Frameworks */,
-				B49BA55B2E0F447A00184992 /* Sentry in Frameworks */,
 				B42B450A2EA24B120046D847 /* Bridge.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -82,10 +116,22 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B46DB6712F5E0860005DC8C6 /* Sentry in Frameworks */,
 				B4D2A6462EA25CC1000B8E49 /* GRPCProtobuf in Frameworks */,
 				B4D2A6432EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 in Frameworks */,
 				B4D2A6402EA25C96000B8E49 /* GRPCCore in Frameworks */,
 				B4D2A66F2EA260B8000B8E49 /* Atomics in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4361FAD2F5DE66900B77BDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4714C492F5DF1EE003B0896 /* AuthenticationServices.framework in Frameworks */,
+				B4714C442F5DF0BA003B0896 /* Bridge.framework in Frameworks */,
+				B4361FBD2F5DEB3B00B77BDF /* sysd.xcframework in Frameworks */,
+				B4361FC12F5DED0200B77BDF /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,6 +142,7 @@
 			isa = PBXGroup;
 			children = (
 				609FE38824893242009FD079 /* PSSO */,
+				B4361FB12F5DE66900B77BDF /* App */,
 				B42B45032EA24AEA0046D847 /* Bridge */,
 				609FE38524893242009FD079 /* Frameworks */,
 				609FE34E248929E6009FD079 /* Products */,
@@ -107,6 +154,7 @@
 			children = (
 				609FE38424893242009FD079 /* PSSO.appex */,
 				B42B45022EA24AEA0046D847 /* Bridge.framework */,
+				B4361FB02F5DE66900B77BDF /* authentik.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,6 +162,9 @@
 		609FE38524893242009FD079 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				B4714C482F5DF1EE003B0896 /* AuthenticationServices.framework */,
+				B4361FC02F5DECC100B77BDF /* libresolv.tbd */,
+				B4361FBB2F5DEA9300B77BDF /* sysd.xcframework */,
 				609FE38624893242009FD079 /* AuthenticationServices.framework */,
 			);
 			name = Frameworks;
@@ -124,9 +175,8 @@
 			children = (
 				609FE38924893242009FD079 /* AuthenticationViewController.swift */,
 				609FE38B24893242009FD079 /* AuthenticationViewController.xib */,
-				B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */,
 				B49BA5622E100E4400184992 /* PlatformSSO.swift */,
-				B49BA5602E0F73AD00184992 /* Sentry.swift */,
+				B402BE7E2E10B08F0024C7D9 /* EnterpriseSSO.swift */,
 				B49BA55E2E0F466100184992 /* InteractiveAuth.swift */,
 				B404B2732E0DD88500A12D29 /* API.swift */,
 				609FE38E24893242009FD079 /* Info.plist */,
@@ -189,10 +239,36 @@
 				B4D2A6422EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 */,
 				B4D2A6452EA25CC1000B8E49 /* GRPCProtobuf */,
 				B4D2A66E2EA260B8000B8E49 /* Atomics */,
+				B46DB6702F5E0860005DC8C6 /* Sentry */,
 			);
 			productName = GRPC;
 			productReference = B42B45022EA24AEA0046D847 /* Bridge.framework */;
 			productType = "com.apple.product-type.framework";
+		};
+		B4361FAF2F5DE66900B77BDF /* authentik */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B4361FBA2F5DE66B00B77BDF /* Build configuration list for PBXNativeTarget "authentik" */;
+			buildPhases = (
+				B4361FAC2F5DE66900B77BDF /* Sources */,
+				B4361FAD2F5DE66900B77BDF /* Frameworks */,
+				B4361FAE2F5DE66900B77BDF /* Resources */,
+				B4361FBF2F5DEB3B00B77BDF /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B4714C472F5DF0BA003B0896 /* PBXTargetDependency */,
+				B4D07EC42F5E0736002F703C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B4361FB12F5DE66900B77BDF /* App */,
+			);
+			name = authentik;
+			packageProductDependencies = (
+			);
+			productName = App;
+			productReference = B4361FB02F5DE66900B77BDF /* authentik.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
@@ -201,7 +277,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastSwiftUpdateCheck = 1640;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2610;
 				ORGANIZATIONNAME = "Authentik Security Inc.";
 				TargetAttributes = {
@@ -211,10 +287,13 @@
 					B42B45012EA24AEA0046D847 = {
 						CreatedOnToolsVersion = 16.4;
 					};
+					B4361FAF2F5DE66900B77BDF = {
+						CreatedOnToolsVersion = 26.3;
+					};
 				};
 			};
 			buildConfigurationList = 609FE348248929E6009FD079 /* Build configuration list for PBXProject "authentikPlatform" */;
-			compatibilityVersion = "Xcode 9.3";
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -235,6 +314,7 @@
 			targets = (
 				609FE38324893242009FD079 /* PSSO */,
 				B42B45012EA24AEA0046D847 /* Bridge */,
+				B4361FAF2F5DE66900B77BDF /* authentik */,
 			);
 		};
 /* End PBXProject section */
@@ -255,6 +335,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B4361FAE2F5DE66900B77BDF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -262,7 +349,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B49BA5612E0F73AF00184992 /* Sentry.swift in Sources */,
 				B49BA55F2E0F466300184992 /* InteractiveAuth.swift in Sources */,
 				B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */,
 				B404B2742E0DD88800A12D29 /* API.swift in Sources */,
@@ -278,13 +364,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B4361FAC2F5DE66900B77BDF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		B42B450D2EA24B120046D847 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+				macos,
+			);
 			target = B42B45012EA24AEA0046D847 /* Bridge */;
 			targetProxy = B42B450C2EA24B120046D847 /* PBXContainerItemProxy */;
+		};
+		B4714C472F5DF0BA003B0896 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B42B45012EA24AEA0046D847 /* Bridge */;
+			targetProxy = B4714C462F5DF0BA003B0896 /* PBXContainerItemProxy */;
+		};
+		B4D07EC42F5E0736002F703C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 609FE38324893242009FD079 /* PSSO */;
+			targetProxy = B4D07EC32F5E0736002F703C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -428,9 +535,13 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PSSO/PSSO.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Developer ID Application";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 232G855Y8N;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 232G855Y8N;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = 232G855Y8N;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
@@ -445,9 +556,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.platform.psso;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "GHA authentik Platform PSSO";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "GHA authentik Platform PSSO";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -477,6 +592,8 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -587,6 +704,101 @@
 			};
 			name = Release;
 		};
+		B4361FB82F5DE66B00B77BDF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = App/authentik.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 232G855Y8N;
+				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/authentik.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = authentik;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.platform.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B4361FB92F5DE66B00B77BDF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = App/authentik.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 232G855Y8N;
+				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "authentik-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = authentik;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.goauthentik.platform.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -613,6 +825,15 @@
 			buildConfigurations = (
 				B42B45072EA24AEA0046D847 /* Debug */,
 				B42B45082EA24AEA0046D847 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B4361FBA2F5DE66B00B77BDF /* Build configuration list for PBXNativeTarget "authentik" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B4361FB82F5DE66B00B77BDF /* Debug */,
+				B4361FB92F5DE66B00B77BDF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -663,7 +884,7 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B49BA55A2E0F447A00184992 /* Sentry */ = {
+		B46DB6702F5E0860005DC8C6 /* Sentry */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;

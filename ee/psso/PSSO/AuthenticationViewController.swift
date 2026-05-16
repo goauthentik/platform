@@ -1,7 +1,7 @@
 import AuthenticationServices
+import Bridge
 import Cocoa
 import OSLog
-import Sentry
 import WebKit
 
 class AuthenticationViewController: NSViewController, WKNavigationDelegate {

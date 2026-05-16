@@ -87,4 +87,5 @@ iOSInjectionProject/
 
 # End of https://www.toptal.com/developers/gitignore/api/swift
 dist/
+sysd.xcframework/**
 .derived-data-log*
