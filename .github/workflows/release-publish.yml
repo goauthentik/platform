@@ -8,12 +8,18 @@ jobs:
   call-build-go:
     uses: ./.github/workflows/_build-go.yml
     secrets: inherit
+    with:
+      is_release: true
   call-build-js:
     uses: ./.github/workflows/_build-js.yml
     secrets: inherit
+    with:
+      is_release: true
   call-build-rs:
     uses: ./.github/workflows/_build-rs.yml
     secrets: inherit
+    with:
+      is_release: true
   call-deploy:
     needs:
       - call-build-go

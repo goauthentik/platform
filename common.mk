@@ -39,12 +39,16 @@ define sentry_upload_symbols
 endef
 
 define sign_binary
-	smctl keypair ls || true
+ifeq ($(AK_IS_RELEASE),true)
+	smctl keypair ls
 	smctl sign \
 		--keypair-alias=key_1504090127 \
 		--simple \
 		--verbose \
-		$(1) || true
+		$(1)
+else
+	@echo "Skipping code sign for non-release build"
+endif
 endef
 
 define go_generate_resources
