@@ -41,13 +41,14 @@ runs:
     - name: Retain legacy composite paths
       shell: bash
       env:
-        PACKAGES: "${{ inputs.package-path }}"
+        PKG_PATH: "${{ inputs.package-path }}"
+        OUTPUT_PATH: "${{ inputs.output-path }}"
       run: |
-        mkdir -p ${PACKAGES}/authentik_macos-15_agent/agent_local
-        cp "${PACKAGES}/bin/authentik_package-macos/authentik Agent Installer.pkg" "${PACKAGES}/authentik_macos-15_agent/agent_local/authentik agent installer.pkg"
+        mkdir -p ${OUTPUT_PATH}/authentik_macos-15_agent/agent_local
+        cp "${PKG_PATH}/authentik_package-macos/authentik Agent Installer.pkg" "${OUTPUT_PATH}/authentik_macos-15_agent/agent_local/authentik agent installer.pkg"
 
-        mkdir -p ${PACKAGES}/authentik_windows-2025_agent/agent_local
-        cp "${PACKAGES}/bin/authentik_package-windows/agent.msi" "${PACKAGES}/authentik_windows-2025_agent/agent_local/agent.msi"
+        mkdir -p ${OUTPUT_PATH}/authentik_windows-2025_agent/agent_local
+        cp "${PKG_PATH}/authentik_package-windows/agent.msi" "${OUTPUT_PATH}/authentik_windows-2025_agent/agent_local/agent.msi"
     - name: Create repository index page
       shell: bash
       env:
