@@ -80,6 +80,7 @@ pub fn auth_interactive(
         iter += 1;
         log::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
+            let result = result_to_pam_result(challenge.result);
             if !challenge.prompt.is_empty() {
                 match conv.send(
                     prompt_meta_to_pam_message_style(&challenge),
@@ -91,8 +92,12 @@ pub fn auth_interactive(
                         return Err(e);
                     }
                 };
+            } else if result == PamResultCode::PAM_SUCCESS {
+                return Ok(challenge);
+            } else if result == PamResultCode::PAM_PERM_DENIED {
+                let _ = conv.send(PAM_ERROR_MSG, "Access denied");
             }
-            return Ok(challenge);
+            return Err(result);
         }
         let mut req_inner = InteractiveAuthContinueRequest {
             txid: challenge.txid.to_owned(),
