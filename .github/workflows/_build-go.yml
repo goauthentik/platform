@@ -5,7 +5,7 @@ on:
     inputs:
       is_release:
         type: boolean
-        default: true
+        default: false
     outputs:
       artifact:
         value: ${{ jobs.build.outputs.artifact-id }}
