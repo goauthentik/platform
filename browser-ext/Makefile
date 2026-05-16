@@ -8,9 +8,9 @@ FILE_NAME_FIREFOX := authentik_firefox.zip
 .PHONY: bump
 bump:
 	npm version ${VERSION} || true
-	yq -i '.version = "${VERSION}"' ${PWD}/manifest-chrome.json
-	yq -i '.version = "${VERSION}"' ${PWD}/manifest-edge.json
-	yq -i '.version = "${VERSION}"' ${PWD}/manifest-firefox.json
+	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-chrome.json"
+	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-edge.json"
+	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-firefox.json"
 	sed -i 's/VERSION = ".*"/VERSION = "${VERSION}"/g' ${PWD}/src/version.ts
 
 .PHONY: build
