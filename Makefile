@@ -116,7 +116,7 @@ dev--initialize: containers/test/local-build
 
 bump:
 	sed -i 's/VERSION = .*/VERSION = ${version}/g' common.mk
-	sed -i 's/^version = ".*"/version = "${version}"/g' ${TOP}/Cargo.toml
+	sed -i 's/^version = ".*"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" agent/bump
 	"$(MAKE)" nss/bump
