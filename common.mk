@@ -44,7 +44,7 @@ define sign_binary
 		--keypair-alias=key_1504090127 \
 		--simple \
 		--verbose \
-		$(1)
+		--input $(1)
 endef
 
 define go_generate_resources

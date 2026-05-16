@@ -89,11 +89,10 @@ package-msys: clean
 	"$(MAKE)" -C ${TOP} ee/wcp/build || true
 	mkdir -p "${TOP}/cache/${TARGET}"
 ifeq ($(AK_IS_RELEASE),true)
-	$(call sign_binary, \
-		--input "${TOP}/bin/agent_system/ak-sysd.exe" \
-		--input "${TOP}/bin/agent_local/ak-agent.exe" \
-		--input "${TOP}/bin/cli/ak.exe" \
-		--input "${TOP}/bin/browser_support/ak-browser-support.exe")
+	$(call sign_binary,"${TOP}/bin/agent_system/ak-sysd.exe")
+	$(call sign_binary,"${TOP}/bin/agent_local/ak-agent.exe")
+	$(call sign_binary,"${TOP}/bin/cli/ak.exe")
+	$(call sign_binary,"${TOP}/bin/browser_support/ak-browser-support.exe")
 else
 	@echo "Skipping code sign for non-release build"
 endif
@@ -107,8 +106,7 @@ endif
 		--no-restore \
 		"$(shell pwd)/package/windows/"
 ifeq ($(AK_IS_RELEASE),true)
-	$(call sign_binary, \
-		--input "${TOP}/bin/${TARGET}/agent.msi")
+	$(call sign_binary,"${TOP}/bin/${TARGET}/agent.msi")
 else
 	@echo "Skipping code sign for non-release build"
 endif
