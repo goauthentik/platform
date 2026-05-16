@@ -34,6 +34,9 @@ endif
 		${GO_BUILD_FLAGS} \
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
+ifeq ($(OS),Windows_NT)
+	$(call sign_binary,"${TOP}/bin/${TARGET}/${BINARY_NAME}")
+endif
 
 .PHONY: bump
 bump:
@@ -97,6 +100,7 @@ package-msys: clean
 		--output "${TOP}/bin/${TARGET}/" \
 		--no-restore \
 		"$(shell pwd)/package/windows/"
+	$(call sign_binary,"${TOP}/bin/${TARGET}/agent.msi")
 
 test-deploy: package
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb
