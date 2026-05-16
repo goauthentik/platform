@@ -2,7 +2,7 @@ name: release-publish
 
 on:
   release:
-    types: [created]
+    types: [created, published]
 
 jobs:
   call-build-go:
