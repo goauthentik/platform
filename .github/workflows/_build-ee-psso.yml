@@ -12,6 +12,14 @@ jobs:
         with:
           path: cache/
           key: target-cache-psso-macos-15
+      # macOS Specific
+      - uses: ./.github/actions/macos-signing
+        with:
+          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
+          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
+          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
+          ac-kid: ${{ secrets.APPLE_AC_KID }}
+          ac-key: ${{ secrets.APPLE_AC_KEY }}
       - run: |
           make ee/psso/build
         env:

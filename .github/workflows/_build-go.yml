@@ -52,21 +52,6 @@ jobs:
           path: cache/
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
 
-      # macOS Specific
-      - uses: ./.github/actions/macos-signing
-        if: ${{ steps.platform_pure.outputs.platform == 'darwin' }}
-        with:
-          p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
-          p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
-          ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
-          ac-kid: ${{ secrets.APPLE_AC_KID }}
-          ac-key: ${{ secrets.APPLE_AC_KEY }}
-      # Windows Specific
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: ${{ steps.platform_pure.outputs.platform == 'msys' }}
-        with:
-          arch: amd64
-
       - shell: bash
         run: |
           if [[ "${{ steps.platform_pure.outputs.platform }}" == "gnu/linux" ]]; then
