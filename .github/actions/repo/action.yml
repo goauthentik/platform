@@ -38,6 +38,16 @@ runs:
         output-path: "${{ inputs.output-path }}"
         gpg-private-key: "${{ inputs.gpg-private-key }}"
         repository-name: authentik-platform
+    - name: Retain legacy composite paths
+      shell: bash
+      env:
+        PATH: "${{ inputs.package-path }}"
+      run: |
+        mkdir -p ${PATH}/authentik_macos-15_agent/agent_local
+        cp "${PATH}/authentik_package-macos/vpkg/macos/authentik Agent Installer.pkg" "${PATH}/authentik_macos-15_agent/agent_local/authentik agent installer.pkg"
+
+        mkdir -p ${PATH}/authentik_windows-2025_agent/agent_local
+        cp "${PATH}/authentik_package-windows/vpkg/windows/agent.msi" "${PATH}/authentik_windows-2025_agent/agent_local/agent.msi"
     - name: Create repository index page
       shell: bash
       env:
