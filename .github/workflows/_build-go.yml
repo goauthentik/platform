@@ -16,24 +16,18 @@ jobs:
           - cli
           - agent
           - sysd
-          # Browser support is always included in the agent bundle
-          # - browser_support
+          - browser_support
         platform:
           - macos-15
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - windows-2025
         exclude:
-          # CLI and sysd are included in the agent bundle
-          - target: sysd
-            platform: macos-15
-          - target: cli
-            platform: macos-15
-          # CLI and sysd are included in the agent bundle
-          - target: sysd
-            platform: windows-2025
-          - target: cli
-            platform: windows-2025
+          # browser_support is bundled via symlinks in Linux packages
+          - target: browser_support
+            platform: ubuntu-24.04
+          - target: browser_support
+            platform: ubuntu-24.04-arm
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -74,7 +68,12 @@ jobs:
           arch: amd64
 
       - shell: bash
-        run: make ${{ matrix.target }}/package-${{ steps.platform_pure.outputs.platform }}
+        run: |
+          if [[ "${{ steps.platform_pure.outputs.platform }}" == "gnu/linux" ]]; then
+            make ${{ matrix.target }}/package-gnu/linux
+          else
+            make ${{ matrix.target }}/build
+          fi
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
