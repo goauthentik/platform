@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+# yaml-language-server: $schema=https://main.goauthentik.io/blueprints/schema.json
 version: 1
 metadata:
   name: authentik CLI
@@ -36,6 +36,11 @@ entries:
       client_type: public
       client_id: authentik-cli
       redirect_uris: []
+      grant_types:
+        - authorization_code
+        - refresh_token
+        - urn:ietf:params:oauth:grant-type:device_code
+        - client_credentials
       property_mappings:
         - !Find [
             authentik_providers_oauth2.scopemapping,
