@@ -43,6 +43,7 @@ runs:
       env:
         PACKAGES: "${{ inputs.package-path }}"
       run: |
+        find ${PACKAGES}
         mkdir -p ${PACKAGES}/authentik_macos-15_agent/agent_local
         cp "${PACKAGES}/authentik_package-macos/vpkg/macos/authentik Agent Installer.pkg" "${PACKAGES}/authentik_macos-15_agent/agent_local/authentik agent installer.pkg"
 
