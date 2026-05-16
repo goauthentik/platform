@@ -209,6 +209,7 @@ tool (
 	github.com/josephspurrier/goversioninfo/cmd/goversioninfo
 	github.com/jstemmer/go-junit-report/v2
 	golang.org/x/mobile/bind
+	golang.org/x/mobile/cmd/gomobile
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	google.golang.org/protobuf/cmd/protoc-gen-go
 )

@@ -18,7 +18,6 @@
 		B4361FBE2F5DEB3B00B77BDF /* sysd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FBB2F5DEA9300B77BDF /* sysd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B4361FC12F5DED0200B77BDF /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FC02F5DECC100B77BDF /* libresolv.tbd */; };
 		B46DB6712F5E0860005DC8C6 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B46DB6702F5E0860005DC8C6 /* Sentry */; };
-		B46DB6732F5E0868005DC8C6 /* SentrySwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = B46DB6722F5E0868005DC8C6 /* SentrySwiftUI */; };
 		B4714C442F5DF0BA003B0896 /* Bridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; };
 		B4714C452F5DF0BA003B0896 /* Bridge.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B4714C492F5DF1EE003B0896 /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4714C482F5DF1EE003B0896 /* AuthenticationServices.framework */; };
@@ -130,7 +129,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4714C492F5DF1EE003B0896 /* AuthenticationServices.framework in Frameworks */,
-				B46DB6732F5E0868005DC8C6 /* SentrySwiftUI in Frameworks */,
 				B4714C442F5DF0BA003B0896 /* Bridge.framework in Frameworks */,
 				B4361FBD2F5DEB3B00B77BDF /* sysd.xcframework in Frameworks */,
 				B4361FC12F5DED0200B77BDF /* libresolv.tbd in Frameworks */,
@@ -267,7 +265,6 @@
 			);
 			name = authentik;
 			packageProductDependencies = (
-				B46DB6722F5E0868005DC8C6 /* SentrySwiftUI */,
 			);
 			productName = App;
 			productReference = B4361FB02F5DE66900B77BDF /* authentik.app */;
@@ -891,11 +888,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
 			productName = Sentry;
-		};
-		B46DB6722F5E0868005DC8C6 /* SentrySwiftUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = SentrySwiftUI;
 		};
 		B4D2A63F2EA25C96000B8E49 /* GRPCCore */ = {
 			isa = XCSwiftPackageProductDependency;

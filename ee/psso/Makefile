@@ -50,7 +50,7 @@ gen:
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
 	sed -i 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*
-	gomobile bind \
+	go tool golang.org/x/mobile/cmd/gomobile bind \
 		-target=ios \
 		-tags mobile \
 		${GO_BUILD_FLAGS} \
