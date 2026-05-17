@@ -1,5 +1,3 @@
-use std::process::{Command, Stdio};
-
 use authentik_sys::generated::sys_directory::system_directory_client::SystemDirectoryClient;
 use authentik_sys::generated::sys_directory::{GetRequest, User};
 use authentik_sys::grpc::grpc_request;
@@ -79,14 +77,6 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
     }) {
         Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
         Err(e) => {
-            let w = Command::new("sh")
-                .arg("-c")
-                .arg("whoami")
-                .stdout(Stdio::piped())
-                .output()
-                .expect("failed to execute process");
-            log::debug!("whoami: {}", String::from_utf8(w.stdout).unwrap());
-
             log::warn!("error when getting user by name '{name}': {e:?}");
             Response::Unavail
         }
