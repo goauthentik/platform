@@ -45,7 +45,7 @@ func (directory *Server) startFetch() {
 
 func (directory *Server) fetch(ctx context.Context, dom *config.DomainConfig, api *api.APIClient) {
 	dcfg := dom.Config()
-	users, err := ak.Paginator(api.CoreAPI.CoreUsersList(ctx).IncludeGroups(true), ak.PaginatorOptions{
+	users, err := ak.Paginator(api.CoreApi.CoreUsersList(ctx).IncludeGroups(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   directory.log,
 	})
@@ -53,7 +53,7 @@ func (directory *Server) fetch(ctx context.Context, dom *config.DomainConfig, ap
 		directory.log.WithError(err).Warning("failed to fetch users")
 		return
 	}
-	groups, err := ak.Paginator(api.CoreAPI.CoreGroupsList(ctx).IncludeUsers(true), ak.PaginatorOptions{
+	groups, err := ak.Paginator(api.CoreApi.CoreGroupsList(ctx).IncludeUsers(true), ak.PaginatorOptions{
 		PageSize: 100,
 		Logger:   directory.log,
 	})

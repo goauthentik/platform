@@ -9,7 +9,7 @@ import (
 )
 
 // Gather collects OS information for the current platform
-func Gather(ctx *common.GatherContext) (api.OperatingSystemRequest, error) {
+func Gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	ctx.Log().Debug("Gathering...")
 	return gather(ctx)
 }

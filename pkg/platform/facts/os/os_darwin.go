@@ -11,12 +11,12 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather(ctx *common.GatherContext) (api.OperatingSystemRequest, error) {
+func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	version := getMacOSVersion()
 	name := getMacOSName()
 
-	return api.OperatingSystemRequest{
-		Arch:    api.PtrString(runtime.GOARCH),
+	return api.DeviceFactsRequestOs{
+		Arch:    runtime.GOARCH,
 		Family:  api.DEVICEFACTSOSFAMILY_MAC_OS,
 		Name:    new(name),
 		Version: new(version),

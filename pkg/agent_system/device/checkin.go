@@ -25,7 +25,7 @@ func (ds *Server) checkIn(ctx context.Context, dom *config.DomainConfig) error {
 		return errors.Wrap(err, "failed to gather device info")
 	}
 	ds.log.Debug("Finished facts gathering")
-	hr, err := api.EndpointsAPI.EndpointsAgentsConnectorsCheckInCreate(ctx).DeviceFactsRequest(*req).Execute()
+	hr, err := api.EndpointsApi.EndpointsAgentsConnectorsCheckInCreate(ctx).DeviceFactsRequest(*req).Execute()
 	if err != nil {
 		return errors.Wrap(ak.HTTPToError(hr, err), "failed to checkin")
 	}

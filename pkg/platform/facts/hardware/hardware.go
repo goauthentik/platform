@@ -5,10 +5,10 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-var StaticHardware *api.HardwareRequest
+var StaticHardware *api.DeviceFactsRequestHardware
 
 // Gather collects hardware information for the current platform
-func Gather(ctx *common.GatherContext) (*api.HardwareRequest, error) {
+func Gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
 	ctx.Log().Debug("Gathering...")
 	return gather(ctx)
 }

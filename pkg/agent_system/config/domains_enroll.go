@@ -28,7 +28,7 @@ func (dc *DomainConfig) Enroll() error {
 	if err != nil {
 		return err
 	}
-	res, hr, err := a.EndpointsAPI.EndpointsAgentsConnectorsEnrollCreate(context.Background()).EnrollRequest(api.EnrollRequest{
+	res, hr, err := a.EndpointsApi.EndpointsAgentsConnectorsEnrollCreate(context.Background()).EnrollRequest(api.EnrollRequest{
 		DeviceSerial: hw.Serial,
 		DeviceName:   net.Hostname,
 	}).Execute()
