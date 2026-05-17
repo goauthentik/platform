@@ -156,7 +156,7 @@ jobs:
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       - run: |
           sudo apt-get update
-          sudo apt-get install -y libpam0g-dev libudev-dev
+          sudo apt-get install -y libpam0g-dev libudev-dev apparmor-utils
           sudo aa-disable /etc/apparmor.d/unix-chkpwd
       - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
         id: setup
