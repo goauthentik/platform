@@ -21,10 +21,6 @@ func Test_Auth(t *testing.T) {
 	JoinDomain(t, tc)
 	AgentSetup(t, tc)
 
-	MustExec(t, tc, "whoami")
-	MustExec(t, tc, "id")
-	MustExec(t, tc, "ls -lah /var/run/authentik/sys.sock")
-
 	cmdTest(t, tc, []cmdTestCase{
 		{
 			name:    "ssh_env",
