@@ -174,7 +174,7 @@ jobs:
         run: |
           make test-e2e
       - run: |
-          chmod -R 777 ./e2e/coverage
+          sudo chmod -R 777 ./e2e/coverage
           make test-e2e-convert
       - uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
         if: ${{ always() }}
