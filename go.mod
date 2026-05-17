@@ -42,7 +42,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/zalando/go-keyring v0.2.8
 	go.etcd.io/bbolt v1.4.3
-	goauthentik.io/api/v3 v3.2026020.16
+	goauthentik.io/api/v3 v3.2026050.0-rc2
 	golang.org/x/crypto v0.51.0
 	golang.org/x/sys v0.44.0
 	golang.org/x/term v0.43.0
@@ -186,7 +186,6 @@ require (
 	golang.org/x/mobile v0.0.0-20260514233045-7de0a8fa7f4d // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.54.0 // indirect
-	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
