@@ -19,11 +19,11 @@ endif
 	ROOT=${TOP} VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} dotnet build \
 		--packages "${TOP}/cache/${TARGET}" \
 		--artifacts-path "${TOP}/cache/${TARGET}" \
-		--output "${TOP}/bin/${TARGET}/" \
+		--output "${TOP}/bin/${TARGET}" \
 		--no-restore \
 		"${PWD}/"
 ifeq ($(AK_IS_RELEASE),true)
-	$(call sign_binary,"${TOP}/bin/${TARGET}/agent.msi")
+	$(call sign_binary,"${TOP}/bin/${TARGET}/authentik Agent Installer.msi")
 else
 	@echo "Skipping code sign for non-release build"
 endif

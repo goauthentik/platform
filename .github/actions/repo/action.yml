@@ -48,7 +48,7 @@ runs:
         cp "${PKG_PATH}/authentik_package-macos/authentik Agent Installer.pkg" "${OUTPUT_PATH}/packages/authentik_macos-15_agent/agent_local/authentik agent installer.pkg"
 
         mkdir -p ${OUTPUT_PATH}/packages/authentik_windows-2025_agent/agent_local
-        cp "${PKG_PATH}/authentik_package-windows/agent.msi" "${OUTPUT_PATH}/packages/authentik_windows-2025_agent/agent_local/agent.msi"
+        cp "${PKG_PATH}/authentik_package-windows/authentik Agent Installer.msi" "${OUTPUT_PATH}/packages/authentik_windows-2025_agent/agent_local/agent.msi"
     - name: Create repository index page
       shell: bash
       env:

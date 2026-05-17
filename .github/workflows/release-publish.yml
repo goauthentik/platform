@@ -110,4 +110,4 @@ jobs:
             ./packages/authentik_browser-ext/browser-ext/authentik_chrome.zip
             ./packages/authentik_browser-ext/browser-ext/authentik_firefox.zip
             ./packages/authentik_package-macos/authentik Agent Installer.pkg
-            ./packages/authentik_package-windows/agent.msi
+            ./packages/authentik_package-windows/authentik Agent Installer.msi
