@@ -30,11 +30,6 @@ endif
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: bump
-bump:
-	"${TOP}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleVersion" "${VERSION}"
-	"${TOP}/hack/plist.py" "${PWD}/package/macos/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleShortVersionString" "${VERSION}"
-
 .PHONY: package-gnu/linux
 package-gnu/linux: clean build
 	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)

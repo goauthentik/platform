@@ -15,4 +15,5 @@ with open(argv[1], "r+") as _plist:
     data = loads(_plist.read().encode())
     data[argv[2]] = argv[3]
     _plist.seek(0)
+    _plist.truncate()
     _plist.write(dumps(data).decode())
