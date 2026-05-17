@@ -41,7 +41,7 @@ func RunChecks(ctx context.Context) error {
 	}
 	fmt.Println(t.String())
 	if !successful {
-		return errors.New("One or more checks failed")
+		return errors.New("one or more checks failed")
 	}
 	return nil
 }
