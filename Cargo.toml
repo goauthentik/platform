@@ -44,7 +44,8 @@ windows-sys = "0.61.2"
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.4.0"
-windows-registry = "0.6.0"
+winreg = { version = "0.56", features = ["serialization-serde"] }
+serde_derive = "1"
 
 [target.'cfg(unix)'.dependencies]
 syslog = "7.0.0"
