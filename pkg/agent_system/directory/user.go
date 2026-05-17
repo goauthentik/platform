@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
@@ -21,12 +20,6 @@ func (directory *Server) ListUsers(ctx context.Context, req *emptypb.Empty) (*pb
 }
 
 func (directory *Server) GetUser(ctx context.Context, req *pb.GetRequest) (*pb.User, error) {
-	directory.log.WithFields(logrus.Fields{
-		"reqId":    req.Id,
-		"reqName":  *req.Name,
-		"cReqName": cleanName(*req.Name),
-		"users":    directory.users,
-	}).Debug("user lookup debug")
 	for _, u := range directory.users {
 		if req.Id != nil && u.Uid == *req.Id {
 			return u, nil
