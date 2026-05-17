@@ -232,7 +232,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 					&StdoutLogConsumer{T: t, Prefix: "testMachine"},
 				},
 			},
-			WaitingFor: wait.ForExec([]string{"/usr/bin/ak-sysd", "troubleshoot", "check"}),
+			WaitingFor: wait.ForExec([]string{"/usr/bin/ak-sysd", "version"}),
 		},
 		Started: true,
 	}
