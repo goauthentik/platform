@@ -81,7 +81,6 @@ pub fn authenticate_impl(
 
     let mut session_data = SessionData {
         username: username.to_string(),
-        token: password.to_owned(),
         local_socket: "".to_owned(),
     };
     let session_id: String;

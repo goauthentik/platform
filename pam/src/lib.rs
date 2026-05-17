@@ -61,8 +61,7 @@ impl PamHooks for PAMAuthentik {
         prelude("sm_close_session", pamh, args.clone(), flags);
         let svc = pam_try_log!(get_service(pamh), "Failed to get service");
         match svc.as_str() {
-            "sshd" => close_session_impl(pamh, args, flags),
-            _ => PamResultCode::PAM_IGNORE,
+            _ => close_session_impl(pamh, args, flags),
         }
     }
 
