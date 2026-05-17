@@ -37,27 +37,23 @@ func Test_Directory_User(t *testing.T) {
 
 	uid := getentLookup(t, tc, "getent passwd akadmin", "akadmin")
 
-	for _, testCase := range []cmdTestCase{
+	cmdTest(t, tc, []cmdTestCase{
 		{
+			name:    "getent_user_all",
 			cmd:     "getent passwd",
 			expects: []string{"akadmin", "authentik Default Admin", uid},
 		},
 		{
+			name:    "getent_user_by_name",
 			cmd:     "getent passwd akadmin",
 			expects: []string{"akadmin", "authentik Default Admin", uid},
 		},
 		{
+			name:    "getent_user_by_id",
 			cmd:     "getent passwd " + uid,
 			expects: []string{"akadmin", "authentik Default Admin", uid},
 		},
-	} {
-		t.Run(testCase.cmd, func(t *testing.T) {
-			output := MustExec(t, tc, testCase.cmd)
-			for _, expect := range testCase.expects {
-				assert.Contains(t, output, expect)
-			}
-		})
-	}
+	})
 }
 
 func Test_Directory_Group(t *testing.T) {
@@ -73,25 +69,21 @@ func Test_Directory_Group(t *testing.T) {
 
 	uid := getentLookup(t, tc, "getent group akadmin", "akadmin")
 
-	for _, testCase := range []cmdTestCase{
+	cmdTest(t, tc, []cmdTestCase{
 		{
+			name:    "getent_group_all",
 			cmd:     "getent group",
 			expects: []string{"akadmin", uid},
 		},
 		{
+			name:    "getent_group_by_name",
 			cmd:     "getent group akadmin",
 			expects: []string{"akadmin", uid},
 		},
 		{
+			name:    "getent_group_by_uid",
 			cmd:     "getent group " + uid,
 			expects: []string{"akadmin", uid},
 		},
-	} {
-		t.Run(testCase.cmd, func(t *testing.T) {
-			output := MustExec(t, tc, testCase.cmd)
-			for _, expect := range testCase.expects {
-				assert.Contains(t, output, expect)
-			}
-		})
-	}
+	})
 }

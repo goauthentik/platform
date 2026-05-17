@@ -26,11 +26,6 @@ import (
 	"goauthentik.io/platform/pkg/cli/setup"
 )
 
-type cmdTestCase struct {
-	cmd     string
-	expects []string
-}
-
 func LocalAuthentikURL() string {
 	if os.Getenv("CI") == "true" {
 		return "http://localhost:9000"
@@ -140,8 +135,10 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 
 	assert.NoError(t, retry.Do(
 		func() error {
-			passwd := MustExec(t, tc, "getent passwd")
-			if strings.Contains(passwd, "akadmin") {
+			if strings.Contains(MustExec(t, tc, "getent passwd"), "akadmin") {
+				return nil
+			}
+			if strings.Contains(MustExec(t, tc, "getent passwd akadmin"), "akadmin") {
 				return nil
 			}
 			return errors.New("akadmin not found")
@@ -252,6 +249,23 @@ func testMachine(t testing.TB) testcontainers.Container {
 	assert.NoError(t, err)
 
 	return tc
+}
+
+type cmdTestCase struct {
+	name    string
+	cmd     string
+	expects []string
+}
+
+func cmdTest(t *testing.T, co testcontainers.Container, cases []cmdTestCase) {
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			output := MustExec(t, co, testCase.cmd)
+			for _, expect := range testCase.expects {
+				assert.Contains(t, output, expect)
+			}
+		})
+	}
 }
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
