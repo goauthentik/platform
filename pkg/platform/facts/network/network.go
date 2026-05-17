@@ -6,7 +6,7 @@ import (
 )
 
 // Gather collects network information for the current platform
-func Gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
+func Gather(ctx *common.GatherContext) (*api.NetworkRequest, error) {
 	ctx.Log().Debug("Gathering...")
 	return gather(ctx)
 }

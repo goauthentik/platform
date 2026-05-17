@@ -12,11 +12,11 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
+func gather(ctx *common.GatherContext) (api.OperatingSystemRequest, error) {
 	name, version := getLinuxDistribution()
 
-	return api.DeviceFactsRequestOs{
-		Arch:    runtime.GOARCH,
+	return api.OperatingSystemRequest{
+		Arch:    api.PtrString(runtime.GOARCH),
 		Family:  api.DEVICEFACTSOSFAMILY_LINUX,
 		Name:    api.PtrString(name),
 		Version: api.PtrString(version),

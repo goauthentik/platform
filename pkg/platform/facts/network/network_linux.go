@@ -13,7 +13,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
+func gather(ctx *common.GatherContext) (*api.NetworkRequest, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestNetwork, error) {
 		return nil, err
 	}
 
-	return &api.DeviceFactsRequestNetwork{
+	return &api.NetworkRequest{
 		FirewallEnabled: api.PtrBool(firewallEnabled),
 		Hostname:        hostname,
 		Interfaces:      interfaces,

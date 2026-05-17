@@ -24,7 +24,7 @@ func Facts() string {
 }
 
 func FactsSetSerial(serial string) {
-	hardware.StaticHardware = &api.DeviceFactsRequestHardware{
+	hardware.StaticHardware = &api.HardwareRequest{
 		Serial: serial,
 	}
 }

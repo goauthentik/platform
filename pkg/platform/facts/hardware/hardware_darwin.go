@@ -22,8 +22,8 @@ type ProfilerSPHardwareDataType struct {
 	} `json:"SPHardwareDataType"`
 }
 
-func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
-	req := &api.DeviceFactsRequestHardware{
+func gather(ctx *common.GatherContext) (*api.HardwareRequest, error) {
+	req := &api.HardwareRequest{
 		Manufacturer: new("Apple Inc."),
 		CpuCount:     new(int32(getCPUCores())),
 		MemoryBytes:  new(int64(getTotalMemory(nil))),

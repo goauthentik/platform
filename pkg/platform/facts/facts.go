@@ -35,19 +35,19 @@ func Gather(ctx *common.GatherContext) (*api.DeviceFactsRequest, error) {
 	if err != nil {
 		errs = append(errs, fmt.Errorf("hardware: %w", err))
 	}
-	req.Hardware = *api.NewNullableDeviceFactsRequestHardware(hw)
+	req.Hardware = *api.NewNullableHardwareRequest(hw)
 
 	net, err := network.Gather(ctx.Child("network"))
 	if err != nil {
 		errs = append(errs, fmt.Errorf("network: %w", err))
 	}
-	req.Network = *api.NewNullableDeviceFactsRequestNetwork(net)
+	req.Network = *api.NewNullableNetworkRequest(net)
 
 	osInfo, err := os.Gather(ctx.Child("os"))
 	if err != nil {
 		errs = append(errs, fmt.Errorf("os: %w", err))
 	}
-	req.Os = *api.NewNullableDeviceFactsRequestOs(&osInfo)
+	req.Os = *api.NewNullableOperatingSystemRequest(&osInfo)
 
 	procs, err := process.Gather(ctx.Child("process"))
 	if err != nil {

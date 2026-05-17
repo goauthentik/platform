@@ -90,7 +90,7 @@ func (dc DomainConfig) Test() error {
 	if err != nil {
 		return err
 	}
-	_, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
+	_, hr, err := ac.EndpointsAPI.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 	if err != nil {
 		if hr != nil && hr.StatusCode == http.StatusForbidden && dc.Managed {
 			err := dc.Delete()
@@ -173,7 +173,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 			return err
 		}
 
-		cfg, _, err := api.EndpointsApi.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
+		cfg, _, err := api.EndpointsAPI.EndpointsAgentsConnectorsAgentConfigRetrieve(context.Background()).Execute()
 		if err != nil {
 			return err
 		}
@@ -188,7 +188,7 @@ func (dc *DomainConfig) fetchRemoteConfig() error {
 			return err
 		}
 
-		brand, _, err := api.CoreApi.CoreBrandsCurrentRetrieve(context.Background()).Execute()
+		brand, _, err := api.CoreAPI.CoreBrandsCurrentRetrieve(context.Background()).Execute()
 		if err != nil {
 			return err
 		}

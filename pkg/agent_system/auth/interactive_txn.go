@@ -168,7 +168,7 @@ func (txn *InteractiveAuthTransaction) doInteractiveAuth(url string) (string, er
 
 func (txn *InteractiveAuthTransaction) finishSuccess() (*pb.InteractiveChallenge, error) {
 	txn.log.Debug("Interactively authorizing device")
-	res, hr, err := txn.api.EndpointsApi.EndpointsAgentsConnectorsAuthIaCreate(txn.ctx).Execute()
+	res, hr, err := txn.api.EndpointsAPI.EndpointsAgentsConnectorsAuthIaCreate(txn.ctx).Execute()
 	if err != nil {
 		return nil, ak.HTTPToError(hr, err)
 	}

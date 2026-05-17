@@ -14,7 +14,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) {
+func gather(ctx *common.GatherContext) (*api.HardwareRequest, error) {
 	computerSystem, err := common.GetWMIValue(cimv2.NewWin32_ComputerSystemEx1, "Win32_computersystem")
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func gather(ctx *common.GatherContext) (*api.DeviceFactsRequestHardware, error) 
 		return nil, err
 	}
 
-	return &api.DeviceFactsRequestHardware{
+	return &api.HardwareRequest{
 		Manufacturer: &manufacturer,
 		Model:        &model,
 		Serial:       serial,
