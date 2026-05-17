@@ -135,13 +135,13 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 
 	assert.NoError(t, retry.Do(
 		func() error {
-			if strings.Contains(MustExec(t, tc, "getent passwd"), "akadmin") {
-				return nil
+			if !strings.Contains(MustExec(t, tc, "getent passwd"), "akadmin") {
+				return errors.New("akadmin not found")
 			}
-			if strings.Contains(MustExec(t, tc, "getent passwd akadmin"), "akadmin") {
-				return nil
+			if !strings.Contains(MustExec(t, tc, "getent passwd akadmin"), "akadmin") {
+				return errors.New("akadmin not found")
 			}
-			return errors.New("akadmin not found")
+			return nil
 		},
 		retry.Attempts(20),
 		retry.MaxDelay(5*time.Second),
