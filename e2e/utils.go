@@ -4,6 +4,7 @@ package e2e
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
@@ -134,6 +137,18 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 		strings.Join(args, " "),
 		exec.WithEnv([]string{fmt.Sprintf("AK_SYS_INSECURE_ENV_TOKEN=%s", testToken)}),
 	)
+
+	assert.NoError(t, retry.Do(
+		func() error {
+			passwd := MustExec(t, tc, "getent passwd")
+			if strings.Contains(passwd, "akadmin") {
+				return nil
+			}
+			return errors.New("akadmin not found")
+		},
+		retry.Attempts(20),
+		retry.MaxDelay(5*time.Second),
+	))
 }
 
 func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {
@@ -173,12 +188,12 @@ func testMachine(t testing.TB) testcontainers.Container {
 	t.Helper()
 
 	hostCoverageDir := lookupRepoDir(t, "/e2e/coverage")
-	t.Logf("host coverage dir: %s", hostCoverageDir)
+	t.Logf("host coverage dir: '%s'", hostCoverageDir)
 
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
 	localCoverageDir := filepath.Join(cwd, "..", "/e2e/coverage")
-	t.Logf("local coverage dir: %s", localCoverageDir)
+	t.Logf("local coverage dir: '%s'", localCoverageDir)
 
 	// Subdirectories we save coverage in
 	coverageSub := []string{
