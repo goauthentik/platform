@@ -21,21 +21,16 @@ func Test_Auth(t *testing.T) {
 	JoinDomain(t, tc)
 	AgentSetup(t, tc)
 
-	for _, testCase := range []cmdTestCase{
+	cmdTest(t, tc, []cmdTestCase{
 		{
+			name:    "ssh_env",
 			cmd:     "ak ssh -i akadmin@$(hostname) env",
 			expects: []string{"AUTHENTIK_CLI_SOCKET", "SSH_CONNECTION"},
 		},
 		{
+			name:    "ssh_ak_whoami",
 			cmd:     "ak ssh -i akadmin@$(hostname) ak whoami",
 			expects: []string{"akadmin"},
 		},
-	} {
-		t.Run(testCase.cmd, func(t *testing.T) {
-			output := MustExec(t, tc, testCase.cmd)
-			for _, expect := range testCase.expects {
-				assert.Contains(t, output, expect)
-			}
-		})
-	}
+	})
 }

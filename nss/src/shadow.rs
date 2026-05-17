@@ -32,7 +32,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
             Response::Success(users)
         }
         Err(e) => {
-            log::warn!("Failed to get users: {e}");
+            log::warn!("Failed to get users: {e:?}");
             Response::Unavail
         }
     }
@@ -49,7 +49,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
     }) {
         Ok(r) => Response::Success(shadow_entry(r.into_inner().name)),
         Err(e) => {
-            log::warn!("Failed to get user by name '{name}': {e}");
+            log::warn!("Failed to get user by name '{name}': {e:?}");
             Response::Unavail
         }
     }

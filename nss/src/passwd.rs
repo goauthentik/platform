@@ -38,7 +38,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
             Response::Success(users)
         }
         Err(e) => {
-            log::warn!("error getting groups: {e}");
+            log::warn!("error getting groups: {e:?}");
             Response::Unavail
         }
     }
@@ -55,7 +55,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
     }) {
         Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting user by ID '{uid}': {e}");
+            log::warn!("error when getting user by ID '{uid}': {e:?}");
             Response::Unavail
         }
     }
@@ -77,7 +77,7 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
     }) {
         Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting user by name '{name}': {e}");
+            log::warn!("error when getting user by name '{name}': {e:?}");
             Response::Unavail
         }
     }

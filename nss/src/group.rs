@@ -38,7 +38,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
             Response::Success(groups)
         }
         Err(e) => {
-            log::warn!("Failed to get groups: {e}");
+            log::warn!("Failed to get groups: {e:?}");
             Response::Unavail
         }
     }
@@ -55,7 +55,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
     }) {
         Ok(r) => Response::Success(ak_group_to_group_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting group by ID '{gid}': {e}");
+            log::warn!("error when getting group by ID '{gid}': {e:?}");
             Response::Unavail
         }
     }
@@ -72,7 +72,7 @@ fn get_entry_by_name(name: String) -> Response<Group> {
     }) {
         Ok(r) => Response::Success(ak_group_to_group_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting group by name '{name}': {e}");
+            log::warn!("error when getting group by name '{name}': {e:?}");
             Response::Unavail
         }
     }

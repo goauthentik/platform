@@ -4,6 +4,7 @@ package e2e
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,7 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/avast/retry-go/v4"
 	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
@@ -22,11 +25,6 @@ import (
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/cli/setup"
 )
-
-type cmdTestCase struct {
-	cmd     string
-	expects []string
-}
 
 func LocalAuthentikURL() string {
 	if os.Getenv("CI") == "true" {
@@ -134,6 +132,20 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 		strings.Join(args, " "),
 		exec.WithEnv([]string{fmt.Sprintf("AK_SYS_INSECURE_ENV_TOKEN=%s", testToken)}),
 	)
+
+	assert.NoError(t, retry.Do(
+		func() error {
+			if !strings.Contains(MustExec(t, tc, "getent passwd"), "akadmin") {
+				return errors.New("akadmin not found")
+			}
+			if !strings.Contains(MustExec(t, tc, "getent passwd akadmin"), "akadmin") {
+				return errors.New("akadmin not found")
+			}
+			return nil
+		},
+		retry.Attempts(20),
+		retry.MaxDelay(5*time.Second),
+	))
 }
 
 func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {
@@ -173,10 +185,12 @@ func testMachine(t testing.TB) testcontainers.Container {
 	t.Helper()
 
 	hostCoverageDir := lookupRepoDir(t, "/e2e/coverage")
+	t.Logf("host coverage dir: '%s'", hostCoverageDir)
 
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
 	localCoverageDir := filepath.Join(cwd, "..", "/e2e/coverage")
+	t.Logf("local coverage dir: '%s'", localCoverageDir)
 
 	// Subdirectories we save coverage in
 	coverageSub := []string{
@@ -218,7 +232,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 					&StdoutLogConsumer{T: t, Prefix: "testMachine"},
 				},
 			},
-			WaitingFor: wait.ForExec([]string{"systemctl", "status"}),
+			WaitingFor: wait.ForExec([]string{"/usr/bin/ak-sysd", "version"}),
 		},
 		Started: true,
 	}
@@ -235,6 +249,23 @@ func testMachine(t testing.TB) testcontainers.Container {
 	assert.NoError(t, err)
 
 	return tc
+}
+
+type cmdTestCase struct {
+	name    string
+	cmd     string
+	expects []string
+}
+
+func cmdTest(t *testing.T, co testcontainers.Container, cases []cmdTestCase) {
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			output := MustExec(t, co, testCase.cmd)
+			for _, expect := range testCase.expects {
+				assert.Contains(t, output, expect)
+			}
+		})
+	}
 }
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout

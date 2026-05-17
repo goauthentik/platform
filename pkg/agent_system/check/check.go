@@ -2,6 +2,7 @@ package check
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss/tree"
@@ -19,8 +20,12 @@ func RunChecks(ctx context.Context) error {
 	}
 	t := tree.New().Enumerator(tree.RoundedEnumerator)
 	catMap := map[string]*tree.Tree{}
+	successful := true
 	for _, chk := range checks {
 		res := chk(ctx)
+		if !res.Success {
+			successful = false
+		}
 		_, ok := catMap[res.Category]
 		if !ok {
 			catMap[res.Category] = tree.Root(res.Category)
@@ -35,6 +40,9 @@ func RunChecks(ctx context.Context) error {
 		t.Child(c)
 	}
 	fmt.Println(t.String())
+	if !successful {
+		return errors.New("one or more checks failed")
+	}
 	return nil
 }
 
