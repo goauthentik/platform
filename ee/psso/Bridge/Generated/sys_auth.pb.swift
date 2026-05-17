@@ -15,12 +15,12 @@ internal import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
-enum InteractiveAuthResult: SwiftProtobuf.Enum, Swift.CaseIterable {
+nonisolated enum InteractiveAuthResult: SwiftProtobuf.Enum, Swift.CaseIterable {
   typealias RawValue = Int
   case pamSuccess // = 0
   case pamPermDenied // = 6
@@ -58,7 +58,7 @@ enum InteractiveAuthResult: SwiftProtobuf.Enum, Swift.CaseIterable {
 
 }
 
-struct TokenAuthRequest: Sendable {
+nonisolated struct TokenAuthRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -72,7 +72,7 @@ struct TokenAuthRequest: Sendable {
   init() {}
 }
 
-struct TokenAuthResponse: Sendable {
+nonisolated struct TokenAuthResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -97,7 +97,7 @@ struct TokenAuthResponse: Sendable {
   fileprivate var _token: Token? = nil
 }
 
-struct InteractiveAuthInitRequest: Sendable {
+nonisolated struct InteractiveAuthInitRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -111,7 +111,7 @@ struct InteractiveAuthInitRequest: Sendable {
   init() {}
 }
 
-struct InteractiveAuthContinueRequest: Sendable {
+nonisolated struct InteractiveAuthContinueRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -125,7 +125,7 @@ struct InteractiveAuthContinueRequest: Sendable {
   init() {}
 }
 
-struct InteractiveAuthRequest: Sendable {
+nonisolated struct InteractiveAuthRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -150,7 +150,7 @@ struct InteractiveAuthRequest: Sendable {
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  enum OneOf_InteractiveAuth: Equatable, Sendable {
+  nonisolated enum OneOf_InteractiveAuth: Equatable, Sendable {
     case init_p(InteractiveAuthInitRequest)
     case `continue`(InteractiveAuthContinueRequest)
 
@@ -159,7 +159,7 @@ struct InteractiveAuthRequest: Sendable {
   init() {}
 }
 
-struct InteractiveAuthAsyncResponse: Sendable {
+nonisolated struct InteractiveAuthAsyncResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -173,7 +173,7 @@ struct InteractiveAuthAsyncResponse: Sendable {
   init() {}
 }
 
-struct InteractiveChallenge: Sendable {
+nonisolated struct InteractiveChallenge: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -196,7 +196,7 @@ struct InteractiveChallenge: Sendable {
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  enum PromptMeta: SwiftProtobuf.Enum, Swift.CaseIterable {
+  nonisolated enum PromptMeta: SwiftProtobuf.Enum, Swift.CaseIterable {
     typealias RawValue = Int
     case unspecified // = 0
     case pamPromptEchoOff // = 1
@@ -257,7 +257,7 @@ struct InteractiveChallenge: Sendable {
   init() {}
 }
 
-struct SystemAuthorizeRequest: Sendable {
+nonisolated struct SystemAuthorizeRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -280,7 +280,7 @@ struct SystemAuthorizeRequest: Sendable {
   fileprivate var _authz: AuthorizeRequest? = nil
 }
 
-struct SystemAuthorizeResponse: Sendable {
+nonisolated struct SystemAuthorizeResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -305,13 +305,13 @@ struct SystemAuthorizeResponse: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "sys_auth"
+fileprivate nonisolated let _protobuf_package = "sys_auth"
 
-extension InteractiveAuthResult: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension InteractiveAuthResult: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0PAM_SUCCESS\0\u{2}\u{6}PAM_PERM_DENIED\0\u{1}PAM_AUTH_ERR\0")
 }
 
-extension TokenAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension TokenAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TokenAuthRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}token\0")
 
@@ -346,7 +346,7 @@ extension TokenAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 }
 
-extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TokenAuthResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}successful\0\u{1}token\0\u{3}session_id\0")
 
@@ -390,7 +390,7 @@ extension TokenAuthResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthInitRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}password\0")
 
@@ -425,7 +425,7 @@ extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension InteractiveAuthContinueRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension InteractiveAuthContinueRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthContinueRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}txid\0\u{1}value\0")
 
@@ -460,7 +460,7 @@ extension InteractiveAuthContinueRequest: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension InteractiveAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension InteractiveAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}init\0\u{1}continue\0")
 
@@ -527,7 +527,7 @@ extension InteractiveAuthRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthAsyncResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}url\0\u{3}header_token\0")
 
@@ -562,7 +562,7 @@ extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._Me
   }
 }
 
-extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveChallenge"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}txid\0\u{1}finished\0\u{1}result\0\u{1}prompt\0\u{3}prompt_meta\0\u{3}debug_info\0\u{3}session_id\0\u{1}component\0")
 
@@ -627,11 +627,11 @@ extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension InteractiveChallenge.PromptMeta: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension InteractiveChallenge.PromptMeta: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}PAM_PROMPT_ECHO_OFF\0\u{1}PAM_PROMPT_ECHO_ON\0\u{1}PAM_ERROR_MSG\0\u{1}PAM_TEXT_INFO\0\u{1}PAM_RADIO_TYPE\0\u{2}\u{2}PAM_BINARY_PROMPT\0\u{2}]\u{1}PASSWORD\0")
 }
 
-extension SystemAuthorizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension SystemAuthorizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SystemAuthorizeRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}session_id\0\u{1}authz\0")
 
@@ -670,7 +670,7 @@ extension SystemAuthorizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension SystemAuthorizeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension SystemAuthorizeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SystemAuthorizeResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0\u{1}code\0")
 

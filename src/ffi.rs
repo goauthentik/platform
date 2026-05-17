@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::pin::Pin;
 use url::Url;
-use windows_registry::LOCAL_MACHINE;
+use winreg::enums::HKEY_LOCAL_MACHINE;
 
 use crate::config::Config;
 use crate::generated::ping::ping_client::PingClient;
@@ -15,7 +15,6 @@ use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
 use crate::grpc::{grpc_request, grpc_request_path};
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
-const REG_CAP_AUTH_INTERACTIVE: &str = "auth_interactive";
 
 #[cxx::bridge]
 #[allow(clippy::module_inception)]
@@ -30,10 +29,16 @@ mod ffi {
         pub session_id: String,
     }
 
+    #[derive(Debug, Serialize, Deserialize, PartialEq)]
+    struct Capabilities {
+        pub interactive_auth_available: bool,
+        pub debug: bool,
+    }
+
     extern "Rust" {
         fn ak_sys_ping(res: Pin<&mut CxxString>);
 
-        fn ak_sys_auth_interactive_available() -> Result<bool>;
+        fn ak_sys_caps() -> Result<Capabilities>;
         fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>)
         -> Result<()>;
         fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
@@ -115,23 +120,27 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
-fn ak_sys_auth_interactive_available() -> Result<bool, Box<dyn Error>> {
-    let key = LOCAL_MACHINE.create("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
-    let iak = key.get_u32(REG_CAP_AUTH_INTERACTIVE);
-    if let Ok(ia) = iak
-        && ia > 0
-    {
-        return Ok(true);
-    }
-    let config = Config::get();
-    let response = grpc_request_path(config.socket_ctrl.to_owned(), async |ch| {
-        return Ok(SystemCtrlClient::new(ch).capabilities(()).await?);
-    })?
-    .into_inner();
-    let authia = Capability::AuthInteractive as i32;
-    let supported = response.capabilities.contains(&authia);
-    if supported {
-        key.set_u32(REG_CAP_AUTH_INTERACTIVE, supported as u32)?;
-    }
-    Ok(supported)
+fn ak_sys_caps() -> Result<ffi::Capabilities, Box<dyn Error>> {
+    let hkcu = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
+    let (key, _disp) =
+        hkcu.create_subkey("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
+
+    let caps: ffi::Capabilities = match key.decode() {
+        Ok(t) => t,
+        Err(_) => {
+            let config = Config::get();
+            let response = grpc_request_path(config.socket_ctrl.to_owned(), async |ch| {
+                return Ok(SystemCtrlClient::new(ch).capabilities(()).await?);
+            })?
+            .into_inner();
+            let authia = Capability::AuthInteractive as i32;
+            let new_config = ffi::Capabilities {
+                interactive_auth_available: response.capabilities.contains(&authia),
+                debug: false,
+            };
+            key.encode(&new_config)?;
+            return Ok(new_config);
+        }
+    };
+    return Ok(caps);
 }

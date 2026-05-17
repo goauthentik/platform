@@ -43,6 +43,7 @@ message CapabilitiesResponse {
     UNSPECIFIED = 0;
     AUTH_INTERACTIVE = 1;
     AUTH_AUTHZ = 2;
+    DEBUG = 3;
   }
   repeated Capability capabilities = 1;
 }

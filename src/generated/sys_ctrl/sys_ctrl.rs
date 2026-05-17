@@ -46,6 +46,7 @@ pub mod capabilities_response {
         Unspecified = 0,
         AuthInteractive = 1,
         AuthAuthz = 2,
+        Debug = 3,
     }
     impl Capability {
         /// String value of the enum field names used in the ProtoBuf definition.
@@ -57,6 +58,7 @@ pub mod capabilities_response {
                 Self::Unspecified => "UNSPECIFIED",
                 Self::AuthInteractive => "AUTH_INTERACTIVE",
                 Self::AuthAuthz => "AUTH_AUTHZ",
+                Self::Debug => "DEBUG",
             }
         }
         /// Creates an enum from field names used in the ProtoBuf definition.
@@ -65,6 +67,7 @@ pub mod capabilities_response {
                 "UNSPECIFIED" => Some(Self::Unspecified),
                 "AUTH_INTERACTIVE" => Some(Self::AuthInteractive),
                 "AUTH_AUTHZ" => Some(Self::AuthAuthz),
+                "DEBUG" => Some(Self::Debug),
                 _ => None,
             }
         }

@@ -15,12 +15,12 @@ internal import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
-struct WhoAmIRequest: Sendable {
+nonisolated struct WhoAmIRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -41,7 +41,7 @@ struct WhoAmIRequest: Sendable {
   fileprivate var _header: RequestHeader? = nil
 }
 
-struct WhoAmIResponse: Sendable {
+nonisolated struct WhoAmIResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -64,7 +64,7 @@ struct WhoAmIResponse: Sendable {
   fileprivate var _header: ResponseHeader? = nil
 }
 
-struct CurrentTokenRequest: Sendable {
+nonisolated struct CurrentTokenRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -82,7 +82,7 @@ struct CurrentTokenRequest: Sendable {
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  enum TypeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
+  nonisolated enum TypeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     typealias RawValue = Int
     case unspecified // = 0
     case verified // = 1
@@ -125,7 +125,7 @@ struct CurrentTokenRequest: Sendable {
   fileprivate var _header: RequestHeader? = nil
 }
 
-struct CurrentTokenResponse: Sendable {
+nonisolated struct CurrentTokenResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -160,7 +160,7 @@ struct CurrentTokenResponse: Sendable {
   fileprivate var _token: Token? = nil
 }
 
-struct TokenExchangeRequest: Sendable {
+nonisolated struct TokenExchangeRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -183,7 +183,7 @@ struct TokenExchangeRequest: Sendable {
   fileprivate var _header: RequestHeader? = nil
 }
 
-struct TokenExchangeResponse: Sendable {
+nonisolated struct TokenExchangeResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -208,7 +208,7 @@ struct TokenExchangeResponse: Sendable {
   fileprivate var _header: ResponseHeader? = nil
 }
 
-struct DeviceTokenExchangeRequest: Sendable {
+nonisolated struct DeviceTokenExchangeRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -231,7 +231,7 @@ struct DeviceTokenExchangeRequest: Sendable {
   fileprivate var _header: RequestHeader? = nil
 }
 
-struct AuthorizeRequest: Sendable {
+nonisolated struct AuthorizeRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -256,7 +256,7 @@ struct AuthorizeRequest: Sendable {
   fileprivate var _header: RequestHeader? = nil
 }
 
-struct AuthorizeResponse: Sendable {
+nonisolated struct AuthorizeResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -279,9 +279,9 @@ struct AuthorizeResponse: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "agent_auth"
+fileprivate nonisolated let _protobuf_package = "agent_auth"
 
-extension WhoAmIRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension WhoAmIRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WhoAmIRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0")
 
@@ -315,7 +315,7 @@ extension WhoAmIRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension WhoAmIResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension WhoAmIResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".WhoAmIResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}body\0")
 
@@ -354,7 +354,7 @@ extension WhoAmIResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   }
 }
 
-extension CurrentTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CurrentTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CurrentTokenRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}type\0")
 
@@ -393,11 +393,11 @@ extension CurrentTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension CurrentTokenRequest.TypeEnum: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CurrentTokenRequest.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}VERIFIED\0\u{1}UNVERIFIED\0")
 }
 
-extension CurrentTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CurrentTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CurrentTokenResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}token\0\u{1}raw\0\u{1}url\0")
 
@@ -446,7 +446,7 @@ extension CurrentTokenResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TokenExchangeRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}client_id\0")
 
@@ -485,7 +485,7 @@ extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension TokenExchangeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension TokenExchangeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TokenExchangeResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}access_token\0\u{3}expires_in\0")
 
@@ -529,7 +529,7 @@ extension TokenExchangeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension DeviceTokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension DeviceTokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DeviceTokenExchangeRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}device_name\0")
 
@@ -568,7 +568,7 @@ extension DeviceTokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension AuthorizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension AuthorizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AuthorizeRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}service\0\u{1}uid\0")
 
@@ -612,7 +612,7 @@ extension AuthorizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 }
 
-extension AuthorizeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension AuthorizeResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".AuthorizeResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0")
 

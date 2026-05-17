@@ -15,12 +15,12 @@ internal import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
-struct RequestHeader: Sendable {
+nonisolated struct RequestHeader: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -32,7 +32,7 @@ struct RequestHeader: Sendable {
   init() {}
 }
 
-struct ResponseHeader: Sendable {
+nonisolated struct ResponseHeader: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -44,7 +44,7 @@ struct ResponseHeader: Sendable {
   init() {}
 }
 
-struct Token: Sendable {
+nonisolated struct Token: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -97,9 +97,9 @@ struct Token: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "agent"
+fileprivate nonisolated let _protobuf_package = "agent"
 
-extension RequestHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension RequestHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RequestHeader"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}profile\0")
 
@@ -129,7 +129,7 @@ extension RequestHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension ResponseHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension ResponseHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".ResponseHeader"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}successful\0")
 
@@ -159,7 +159,7 @@ extension ResponseHeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   }
 }
 
-extension Token: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Token: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Token"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}preferred_username\0\u{1}iss\0\u{1}sub\0\u{1}aud\0\u{1}exp\0\u{1}nbf\0\u{1}iat\0\u{1}jti\0")
 

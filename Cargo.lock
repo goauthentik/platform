@@ -306,6 +306,7 @@ dependencies = [
  "prost-types",
  "sentry",
  "serde",
+ "serde_derive",
  "serde_json",
  "syslog",
  "tokio",
@@ -313,8 +314,8 @@ dependencies = [
  "tonic-prost",
  "tower",
  "url",
- "windows-registry",
  "windows-sys 0.61.2",
+ "winreg",
 ]
 
 [[package]]
@@ -3496,6 +3497,17 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+
+[[package]]
+name = "winreg"
+version = "0.56.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d6f32a0ff4a9f6f01231eb2059cc85479330739333e0e58cadf03b6af2cca10"
+dependencies = [
+ "cfg-if",
+ "serde",
+ "windows-sys 0.61.2",
+]
 
 [[package]]
 name = "wit-bindgen"

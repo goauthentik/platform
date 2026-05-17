@@ -15,12 +15,12 @@ internal import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
-struct RegisterUserRequest: Sendable {
+nonisolated struct RegisterUserRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -36,7 +36,7 @@ struct RegisterUserRequest: Sendable {
   init() {}
 }
 
-struct RegisterUserResponse: Sendable {
+nonisolated struct RegisterUserResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -48,7 +48,7 @@ struct RegisterUserResponse: Sendable {
   init() {}
 }
 
-struct RegisterDeviceRequest: Sendable {
+nonisolated struct RegisterDeviceRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -66,7 +66,7 @@ struct RegisterDeviceRequest: Sendable {
   init() {}
 }
 
-struct RegisterDeviceResponse: Sendable {
+nonisolated struct RegisterDeviceResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -92,9 +92,9 @@ struct RegisterDeviceResponse: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "sys_auth_apple"
+fileprivate nonisolated let _protobuf_package = "sys_auth_apple"
 
-extension RegisterUserRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension RegisterUserRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterUserRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_secure_enclave_key\0\u{3}enclave_key_id\0\u{3}user_auth\0")
 
@@ -134,7 +134,7 @@ extension RegisterUserRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension RegisterUserResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension RegisterUserResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterUserResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0")
 
@@ -164,7 +164,7 @@ extension RegisterUserResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}device_signing_key\0\u{3}device_encryption_key\0\u{3}enc_key_id\0\u{3}sign_key_id\0")
 
@@ -209,7 +209,7 @@ extension RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0\u{3}device_token\0")
 

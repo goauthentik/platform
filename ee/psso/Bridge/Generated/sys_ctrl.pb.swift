@@ -15,12 +15,12 @@ internal import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
-struct Domain: Sendable {
+nonisolated struct Domain: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -32,7 +32,7 @@ struct Domain: Sendable {
   init() {}
 }
 
-struct DomainListResponse: Sendable {
+nonisolated struct DomainListResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -44,7 +44,7 @@ struct DomainListResponse: Sendable {
   init() {}
 }
 
-struct DomainEnrollRequest: Sendable {
+nonisolated struct DomainEnrollRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -60,7 +60,7 @@ struct DomainEnrollRequest: Sendable {
   init() {}
 }
 
-struct DomainEnrollResponse: Sendable {
+nonisolated struct DomainEnrollResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -72,7 +72,7 @@ struct DomainEnrollResponse: Sendable {
   init() {}
 }
 
-struct TroubleshootInspectResponse: Sendable {
+nonisolated struct TroubleshootInspectResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -88,7 +88,7 @@ struct TroubleshootInspectResponse: Sendable {
   init() {}
 }
 
-struct CapabilitiesResponse: Sendable {
+nonisolated struct CapabilitiesResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -97,11 +97,12 @@ struct CapabilitiesResponse: Sendable {
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  enum Capability: SwiftProtobuf.Enum, Swift.CaseIterable {
+  nonisolated enum Capability: SwiftProtobuf.Enum, Swift.CaseIterable {
     typealias RawValue = Int
     case unspecified // = 0
     case authInteractive // = 1
     case authAuthz // = 2
+    case debug // = 3
     case UNRECOGNIZED(Int)
 
     init() {
@@ -113,6 +114,7 @@ struct CapabilitiesResponse: Sendable {
       case 0: self = .unspecified
       case 1: self = .authInteractive
       case 2: self = .authAuthz
+      case 3: self = .debug
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -122,6 +124,7 @@ struct CapabilitiesResponse: Sendable {
       case .unspecified: return 0
       case .authInteractive: return 1
       case .authAuthz: return 2
+      case .debug: return 3
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -131,6 +134,7 @@ struct CapabilitiesResponse: Sendable {
       .unspecified,
       .authInteractive,
       .authAuthz,
+      .debug,
     ]
 
   }
@@ -140,9 +144,9 @@ struct CapabilitiesResponse: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "sys_ctrl"
+fileprivate nonisolated let _protobuf_package = "sys_ctrl"
 
-extension Domain: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Domain: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Domain"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0")
 
@@ -172,7 +176,7 @@ extension Domain: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBas
   }
 }
 
-extension DomainListResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension DomainListResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DomainListResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}domains\0")
 
@@ -202,7 +206,7 @@ extension DomainListResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension DomainEnrollRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension DomainEnrollRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DomainEnrollRequest"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{3}authentik_url\0\u{1}token\0")
 
@@ -242,7 +246,7 @@ extension DomainEnrollRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension DomainEnrollResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension DomainEnrollResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DomainEnrollResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}device_id\0")
 
@@ -272,7 +276,7 @@ extension DomainEnrollResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension TroubleshootInspectResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension TroubleshootInspectResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TroubleshootInspectResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}bucket\0\u{1}kv\0\u{1}children\0")
 
@@ -312,7 +316,7 @@ extension TroubleshootInspectResponse: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 }
 
-extension CapabilitiesResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CapabilitiesResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CapabilitiesResponse"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}capabilities\0")
 
@@ -342,6 +346,6 @@ extension CapabilitiesResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension CapabilitiesResponse.Capability: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}AUTH_INTERACTIVE\0\u{1}AUTH_AUTHZ\0")
+nonisolated extension CapabilitiesResponse.Capability: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}AUTH_INTERACTIVE\0\u{1}AUTH_AUTHZ\0\u{1}DEBUG\0")
 }

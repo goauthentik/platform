@@ -205,14 +205,17 @@ IFACEMETHODIMP
 Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlags) {
   HRESULT hr;
 
+  Capabilities caps;
+
   try {
-    if (!ak_sys_auth_interactive_available()) {
+    caps = ak_sys_caps();
+    if (!caps.interactive_auth_available) {
       spdlog::info("Interactive authentication not available, not showing cred UI");
       hr = E_NOTIMPL;
       return hr;
     }
   } catch (const rust::Error& ex) {
-    spdlog::warn("Exception in ak_sys_auth_interactive_available: {}", ex.what());
+    spdlog::warn("Exception in ak_sys_caps: {}", ex.what());
     hr = E_NOTIMPL;
     return hr;
   }
@@ -231,8 +234,17 @@ Provider::SetUsageScenario(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
       hr = S_OK;
       break;
 
-    case CPUS_CHANGE_PASSWORD:
     case CPUS_CREDUI:
+      if (caps.debug) {
+        m_cpus = cpus;                            // Save usage scenario
+        m_fRecreateEnumeratedCredentials = true;  // Recreate credentials anyways (in all cases)...
+        hr = S_OK;
+      } else {
+        hr = E_NOTIMPL;
+      }
+      break;
+
+    case CPUS_CHANGE_PASSWORD:
       hr = E_NOTIMPL;
       break;
 
