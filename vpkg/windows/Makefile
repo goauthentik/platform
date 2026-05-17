@@ -19,7 +19,7 @@ endif
 	ROOT=${TOP} VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} dotnet build \
 		--packages "${TOP}/cache/${TARGET}" \
 		--artifacts-path "${TOP}/cache/${TARGET}" \
-		--output "${TOP}/bin/${TARGET}/authentik Agent Installer.msi" \
+		--output "${TOP}/bin/${TARGET}" \
 		--no-restore \
 		"${PWD}/"
 ifeq ($(AK_IS_RELEASE),true)
