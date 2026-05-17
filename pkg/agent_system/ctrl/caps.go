@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"goauthentik.io/api/v3"
+	"goauthentik.io/platform/pkg/agent_system/config"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -25,6 +26,9 @@ func (ctrl *Server) Capabilities(context.Context, *emptypb.Empty) (*pb.Capabilit
 	caps := []pb.CapabilitiesResponse_Capability{}
 	if ctrl.InteractiveSupported() {
 		caps = append(caps, pb.CapabilitiesResponse_AUTH_INTERACTIVE)
+	}
+	if config.Manager().Get().Debug {
+		caps = append(caps, pb.CapabilitiesResponse_DEBUG)
 	}
 
 	return &pb.CapabilitiesResponse{

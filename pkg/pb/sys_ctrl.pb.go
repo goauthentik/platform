@@ -28,6 +28,7 @@ const (
 	CapabilitiesResponse_UNSPECIFIED      CapabilitiesResponse_Capability = 0
 	CapabilitiesResponse_AUTH_INTERACTIVE CapabilitiesResponse_Capability = 1
 	CapabilitiesResponse_AUTH_AUTHZ       CapabilitiesResponse_Capability = 2
+	CapabilitiesResponse_DEBUG            CapabilitiesResponse_Capability = 3
 )
 
 // Enum value maps for CapabilitiesResponse_Capability.
@@ -36,11 +37,13 @@ var (
 		0: "UNSPECIFIED",
 		1: "AUTH_INTERACTIVE",
 		2: "AUTH_AUTHZ",
+		3: "DEBUG",
 	}
 	CapabilitiesResponse_Capability_value = map[string]int32{
 		"UNSPECIFIED":      0,
 		"AUTH_INTERACTIVE": 1,
 		"AUTH_AUTHZ":       2,
+		"DEBUG":            3,
 	}
 )
 
@@ -388,15 +391,16 @@ const file_sys_ctrl_proto_rawDesc = "" +
 	"\bchildren\x18\x03 \x03(\v2%.sys_ctrl.TroubleshootInspectResponseR\bchildren\x1a5\n" +
 	"\aKvEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xaa\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xb5\x01\n" +
 	"\x14CapabilitiesResponse\x12M\n" +
-	"\fcapabilities\x18\x01 \x03(\x0e2).sys_ctrl.CapabilitiesResponse.CapabilityR\fcapabilities\"C\n" +
+	"\fcapabilities\x18\x01 \x03(\x0e2).sys_ctrl.CapabilitiesResponse.CapabilityR\fcapabilities\"N\n" +
 	"\n" +
 	"Capability\x12\x0f\n" +
 	"\vUNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10AUTH_INTERACTIVE\x10\x01\x12\x0e\n" +
 	"\n" +
-	"AUTH_AUTHZ\x10\x022\xf9\x02\n" +
+	"AUTH_AUTHZ\x10\x02\x12\t\n" +
+	"\x05DEBUG\x10\x032\xf9\x02\n" +
 	"\n" +
 	"SystemCtrl\x12B\n" +
 	"\n" +

@@ -122,7 +122,8 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
 
 fn ak_sys_caps() -> Result<ffi::Capabilities, Box<dyn Error>> {
     let hkcu = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
-    let (key, _disp) = hkcu.create_subkey("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
+    let (key, _disp) =
+        hkcu.create_subkey("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
 
     let caps: ffi::Capabilities = match key.decode() {
         Ok(t) => t,
