@@ -173,10 +173,12 @@ func testMachine(t testing.TB) testcontainers.Container {
 	t.Helper()
 
 	hostCoverageDir := lookupRepoDir(t, "/e2e/coverage")
+	t.Logf("host coverage dir: %s", hostCoverageDir)
 
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
 	localCoverageDir := filepath.Join(cwd, "..", "/e2e/coverage")
+	t.Logf("local coverage dir: %s", localCoverageDir)
 
 	// Subdirectories we save coverage in
 	coverageSub := []string{
