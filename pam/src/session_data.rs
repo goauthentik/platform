@@ -9,7 +9,6 @@ use std::os::unix::fs::OpenOptionsExt;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SessionData {
     pub username: String,
-    pub token: String,
     pub local_socket: String,
 }
 
@@ -30,7 +29,7 @@ pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
     match serde_json::from_reader(file) {
         Ok(t) => Ok(t),
         Err(e) => {
-            log::warn!("failed to write session data: {e}");
+            log::warn!("failed to read session data: {e}");
             Err(PamResultCode::PAM_AUTH_ERR)
         }
     }

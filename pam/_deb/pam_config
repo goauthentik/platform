@@ -8,4 +8,4 @@ Auth-Initial:
         [success=end default=ignore]    pam_authentik.so
 Session-Type: Additional
 Session:
-        required                        pam_authentik.so
+        [success=ok default=ignore]     pam_authentik.so
