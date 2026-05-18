@@ -45,7 +45,6 @@ overrides:
   rpm:
     scripts:
       postinstall: ./_rpm/post.sh
-      preremove: ./_rpm/preun.sh
     depends:
       - "authentik-sysd"
       - "glibc"
