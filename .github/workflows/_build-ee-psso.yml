@@ -26,6 +26,7 @@ jobs:
           else
             echo "has-signing-cert=false" >> $GITHUB_OUTPUT
           fi
+          echo 'XCB_EXTRA_ARGS=' >> $GITHUB_ENV
       - uses: ./.github/actions/macos-signing
         if: steps.check.outputs.has-signing-cert == 'true'
         with:
@@ -37,7 +38,7 @@ jobs:
       - if: steps.check.outputs.has-signing-cert == 'false'
         run: echo 'XCB_EXTRA_ARGS=CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO' >> $GITHUB_ENV
       - run: |
-          make ee/psso/build
+          make ee/psso/build XCB_EXTRA_ARGS=${XCB_EXTRA_ARGS}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
