@@ -17,13 +17,25 @@ jobs:
           path: cache/
           key: target-cache-psso-macos-15
       # macOS Specific
+      - id: check
+        env:
+          CERT: ${{ secrets.APPLE_SIGN_CERT }}
+        run: |
+          if [ -n "$CERT" ]; then
+            echo "has-signing-cert=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-signing-cert=false" >> $GITHUB_OUTPUT
+          fi
       - uses: ./.github/actions/macos-signing
+        if: steps.check.outputs.has-signing-cert == 'true'
         with:
           p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
           p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
           ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
+      - if: steps.check.outputs.has-signing-cert == 'false'
+        run: echo 'XCB_EXTRA_ARGS=CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO' >> $GITHUB_ENV
       - run: |
           make ee/psso/build
         env:
