@@ -80,7 +80,6 @@ test-integration:
 
 test-e2e: containers/e2e/local-build
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
-	"$(MAKE)" test-e2e-convert
 
 test-e2e-convert:
 	go tool covdata textfmt \
