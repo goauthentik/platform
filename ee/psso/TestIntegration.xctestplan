@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "E6F6F870-6ABF-4923-A537-883407DB9E14",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "selectedTags" : {
+        "tags" : [
+          ".integration"
+        ]
+      },
+      "target" : {
+        "containerPath" : "container:authentikPlatform.xcodeproj",
+        "identifier" : "B47CF5CF2FBE09BF008F0033",
+        "name" : "BridgeTests"
+      }
+    }
+  ],
+  "version" : 1
+}
