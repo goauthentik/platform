@@ -5,7 +5,7 @@ on:
 
 jobs:
   package:
-    runs-on: macos-15
+    runs-on: macos-26
     permissions:
       contents: read
     steps:
@@ -16,23 +16,23 @@ jobs:
           cache: true
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_macos-15_agent
+          name: authentik_macos-26_agent
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_macos-15_cli
+          name: authentik_macos-26_cli
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_macos-15_sysd
+          name: authentik_macos-26_sysd
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_macos-15_browser_support
+          name: authentik_macos-26_browser_support
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_macos-15_psso
+          name: authentik_macos-26_psso
           path: bin/
 
       - uses: ./.github/actions/macos-signing
