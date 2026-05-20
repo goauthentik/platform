@@ -38,6 +38,11 @@ public struct AKInteractiveAuth {
     public var DTH: String
 }
 
+public enum SocketID {
+    case defaultSocket
+    case ctrlSocket
+}
+
 public class SysdBridge {
 
     public static let shared: SysdBridge = SysdBridge()
@@ -51,9 +56,9 @@ public class SysdBridge {
         self.logInterceptor = LogInterceptor(logger: self.logger)
     }
 
-    func getSocketPath(id: String) -> String {
+    func getSocketPath(id: SocketID) -> String {
         #if os(macOS)
-            if id == "default" {
+            if id == .defaultSocket {
                 return "/var/run/authentik-sysd.sock"
             } else {
                 return "/var/run/authentik-sysd-\(id).sock"
@@ -64,7 +69,7 @@ public class SysdBridge {
     }
 
     func withClient<Result: Sendable>(
-        id: String = "default",
+        id: SocketID = .defaultSocket,
         handleClient: (GRPCClient<HTTP2ClientTransport.Posix>) async throws -> Result
     ) async throws -> Result {
         return try await withGRPCClient(
@@ -116,7 +121,7 @@ public class SysdBridge {
     }
 
     public func interactiveAuthSupported() async throws -> Bool {
-        return try await self.withClient { client in
+        return try await self.withClient(id: .ctrlSocket) { client in
             let c = SystemCtrl.Client(wrapping: client)
             let reply = try await c.capabilities(
                 request: ClientRequest(message: Google_Protobuf_Empty())
@@ -137,7 +142,7 @@ public class SysdBridge {
     }
 
     public func domainsEnroll(name: String, authentikURL: String, token: String) async throws {
-        return try await self.withClient(id: "ctrl") { client in
+        return try await self.withClient(id: .ctrlSocket) { client in
             let c = SystemCtrl.Client(wrapping: client)
             let _ = try await c.domainEnroll(
                 request: ClientRequest(
@@ -151,7 +156,7 @@ public class SysdBridge {
     }
 
     public func domainsList(name: String, authentikURL: String, token: String) async throws {
-        return try await self.withClient(id: "ctrl") { client in
+        return try await self.withClient(id: .ctrlSocket) { client in
             let c = SystemCtrl.Client(wrapping: client)
             let reply = try await c.domainList(
                 request: ClientRequest(message: Google_Protobuf_Empty())
