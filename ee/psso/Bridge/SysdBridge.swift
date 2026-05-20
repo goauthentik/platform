@@ -38,9 +38,9 @@ public struct AKInteractiveAuth {
     public var DTH: String
 }
 
-public enum SocketID {
+public enum SocketID: String {
     case defaultSocket
-    case ctrlSocket
+    case ctrlSocket = "ctrl"
 }
 
 public class SysdBridge {
