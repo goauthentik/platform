@@ -52,6 +52,22 @@ jobs:
           flags: go-${{ matrix.platform }}
           files: ${{ github.workspace }}/junit.xml
           report_type: test_results
+  test_swift:
+    name: Test
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - ee/psso
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
+        with:
+          path: cache/
+          key: target-cache-psso-macos-15
+      - run: |
+          make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
   lint_go:
     name: Lint (go)
     runs-on: ubuntu-latest

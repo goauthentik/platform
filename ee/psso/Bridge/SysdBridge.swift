@@ -61,10 +61,10 @@ public class SysdBridge {
             if id == .defaultSocket {
                 return "/var/run/authentik-sysd.sock"
             } else {
-                return "/var/run/authentik-sysd-\(id).sock"
+                return "/var/run/authentik-sysd-\(id.rawValue).sock"
             }
         #elseif os(iOS)
-            return URL.temporaryDirectory.relativePath + "/\(id).sock"
+            return URL.temporaryDirectory.relativePath + "/\(id.rawValue).sock"
         #endif
     }
 
@@ -161,7 +161,7 @@ public class SysdBridge {
             let reply = try await c.domainList(
                 request: ClientRequest(message: Google_Protobuf_Empty())
             )
-//            return reply.domains[0].
+            //            return reply.domains[0].
         }
     }
 
