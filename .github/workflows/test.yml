@@ -68,6 +68,17 @@ jobs:
           key: target-cache-psso-macos-15
       - run: |
           make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
+      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: swift
+      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: swift
+          report_type: test_results
   lint_go:
     name: Lint (go)
     runs-on: ubuntu-latest

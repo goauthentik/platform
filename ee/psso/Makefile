@@ -40,6 +40,7 @@ test:
 		${XCB_DEF_ARGS} \
 		test \
 		-testPlan TestUnit \
+		-enableCodeCoverage YES \
 		${XCB_EXTRA_ARGS}
 
 .PHONY: lint
