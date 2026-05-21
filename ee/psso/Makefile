@@ -40,7 +40,7 @@ test:
 		${XCB_DEF_ARGS} \
 		test \
 		-testPlan TestUnit \
-		-resultBundlePath "${TOP}/cache/${TARGET}/test.xcresult"
+		-resultBundlePath "${TOP}/cache/${TARGET}/test.xcresult" \
 		-enableCodeCoverage YES \
 		${XCB_EXTRA_ARGS}
 
