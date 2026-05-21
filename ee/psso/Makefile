@@ -48,11 +48,11 @@ test:
 		${XCB_EXTRA_ARGS}
 	xcresultparser \
 		--output-format cobertura \
-		-e "${PWD}/Bridge/Generated"
+		-e "${PWD}/Bridge/Generated" \
 		"${TOP}/cache/${TARGET}/test.xcresult" > "${TOP}/cache/${TARGET}/coverage.xml"
 	xcresultparser \
 		--output-format junit \
-		-e "${PWD}/Bridge/Generated"
+		-e "${PWD}/Bridge/Generated" \
 		"${TOP}/cache/${TARGET}/test.xcresult" > "${TOP}/cache/${TARGET}/junit.xml"
 
 .PHONY: lint
