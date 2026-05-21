@@ -5,6 +5,8 @@ XCB_DEF_ARGS = -scheme PSSO \
 		-project authentikPlatform.xcodeproj \
 		-derivedDataPath "${TOP}/cache/${TARGET}"
 XCB_EXTRA_ARGS =
+SOURCES := "${PWD}/Bridge" \
+		"${PWD}/PSSO"
 
 .PHONY: clean
 clean:
@@ -36,6 +38,7 @@ endif
 
 .PHONY: test
 test:
+	rm -rf "${TOP}/cache/${TARGET}/test.xcresult"
 	xcodebuild \
 		${XCB_DEF_ARGS} \
 		test \
@@ -43,15 +46,31 @@ test:
 		-resultBundlePath "${TOP}/cache/${TARGET}/test.xcresult" \
 		-enableCodeCoverage YES \
 		${XCB_EXTRA_ARGS}
+	xcresultparser \
+		--output-format cobertura \
+		-e "${PWD}/Bridge/Generated"
+		"${TOP}/cache/${TARGET}/test.xcresult" > "${TOP}/cache/${TARGET}/coverage.xml"
+	xcresultparser \
+		--output-format junit \
+		-e "${PWD}/Bridge/Generated"
+		"${TOP}/cache/${TARGET}/test.xcresult" > "${TOP}/cache/${TARGET}/junit.xml"
 
 .PHONY: lint
 lint:
-	swift format format \
-		-i \
+	swift format lint \
 		--configuration "${TOP}/.github/swift-format.json" \
 		--recursive \
-		${PWD}/Bridge \
-		${PWD}/PSSO
+		--parallel \
+		$(SOURCES)
+
+.PHONY: lint-fix
+lint-fix:
+	swift format format \
+		-i \
+		--parallel \
+		--configuration "${TOP}/.github/swift-format.json" \
+		--recursive \
+		$(SOURCES)
 
 .PHONY: gen
 gen:
