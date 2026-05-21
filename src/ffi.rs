@@ -6,12 +6,11 @@ use url::Url;
 use winreg::enums::HKEY_LOCAL_MACHINE;
 
 use crate::config::Config;
+use crate::generated::ping::capabilities_response::Capability;
 use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
 use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
-use crate::generated::sys_ctrl::capabilities_response::Capability;
-use crate::generated::sys_ctrl::system_ctrl_client::SystemCtrlClient;
 use crate::grpc::{grpc_request, grpc_request_path};
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
@@ -130,7 +129,7 @@ fn ak_sys_caps() -> Result<ffi::Capabilities, Box<dyn Error>> {
         Err(_) => {
             let config = Config::get();
             let response = grpc_request(async |ch| {
-                return Ok(SystemCtrlClient::new(ch).capabilities(()).await?);
+                return Ok(PingClient::new(ch).capabilities(()).await?);
             })?
             .into_inner();
             let authia = Capability::AuthInteractive as i32;
