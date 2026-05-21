@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
-	"goauthentik.io/platform/pkg/agent_system/ctrl"
+	"goauthentik.io/platform/pkg/agent_system/ping"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
@@ -23,11 +23,11 @@ func DeviceTokenHash(dom *config.DomainConfig) string {
 }
 
 func (auth *Server) InteractiveAuthAsync(ctx context.Context, _ *emptypb.Empty) (*pb.InteractiveAuthAsyncResponse, error) {
-	ctrl, err := component.Get[*ctrl.Server](auth.ctx, ctrl.ID)
+	ping, err := component.Get[*ping.Server](auth.ctx, ping.ID)
 	if err != nil {
 		return nil, err
 	}
-	if !ctrl.InteractiveSupported() {
+	if !ping.InteractiveSupported() {
 		return nil, status.Error(codes.Unavailable, "Interactive authentication not available")
 	}
 

@@ -15,29 +15,33 @@ const ID = "ping"
 
 type Server struct {
 	pb.UnimplementedPingServer
+
+	ctx component.Context
 }
 
 func NewServer(ctx component.Context) (component.Component, error) {
-	srv := &Server{}
+	srv := &Server{
+		ctx: ctx,
+	}
 	return srv, nil
 }
 
-func (ps *Server) Start() error {
+func (ping *Server) Start() error {
 	return nil
 }
 
-func (ps *Server) Stop() error {
+func (ping *Server) Stop() error {
 	return nil
 }
 
-func (ps *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
+func (ping *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 	if id != types.SocketIDDefault {
 		return
 	}
-	pb.RegisterPingServer(s, ps)
+	pb.RegisterPingServer(s, ping)
 }
 
-func (ps *Server) Ping(context.Context, *emptypb.Empty) (*pb.PingResponse, error) {
+func (ping *Server) Ping(context.Context, *emptypb.Empty) (*pb.PingResponse, error) {
 	return &pb.PingResponse{
 		Component: "sysd",
 		Version:   meta.FullVersion(),

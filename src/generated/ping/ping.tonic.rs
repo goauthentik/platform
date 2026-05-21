@@ -108,5 +108,26 @@ pub mod ping_client {
             req.extensions_mut().insert(GrpcMethod::new("ping.Ping", "Ping"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn capabilities(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> std::result::Result<
+            tonic::Response<super::CapabilitiesResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/ping.Ping/Capabilities");
+            let mut req = request.into_request();
+            req.extensions_mut().insert(GrpcMethod::new("ping.Ping", "Capabilities"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }

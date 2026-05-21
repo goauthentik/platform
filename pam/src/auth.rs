@@ -95,7 +95,10 @@ pub fn authenticate_impl(
 
     if password.starts_with(PW_PREFIX) {
         log::debug!("Token authentication");
-        let raw_token = password.strip_prefix(PW_PREFIX).unwrap_or(password).to_string();
+        let raw_token = password
+            .strip_prefix(PW_PREFIX)
+            .unwrap_or(password)
+            .to_string();
         let decoded = match decode_pb::<SshTokenAuthentication>(raw_token) {
             Ok(t) => t,
             Err(e) => {

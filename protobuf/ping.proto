@@ -8,9 +8,20 @@ import "google/protobuf/empty.proto";
 
 service Ping {
   rpc Ping(google.protobuf.Empty) returns (PingResponse);
+  rpc Capabilities(google.protobuf.Empty) returns (CapabilitiesResponse);
 }
 
 message PingResponse {
   string component = 1;
   string version = 2;
+}
+
+message CapabilitiesResponse {
+  enum Capability {
+    UNSPECIFIED = 0;
+    AUTH_INTERACTIVE = 1;
+    AUTH_AUTHZ = 2;
+    DEBUG = 3;
+  }
+  repeated Capability capabilities = 1;
 }
