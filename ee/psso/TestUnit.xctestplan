@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "BC68A688-9FA2-453D-A62A-3A431E0B3F8B",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "performanceAntipatternCheckerEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "skippedTags" : {
+        "tags" : [
+          ".integration"
+        ]
+      },
+      "target" : {
+        "containerPath" : "container:authentikPlatform.xcodeproj",
+        "identifier" : "B47CF5CF2FBE09BF008F0033",
+        "name" : "BridgeTests"
+      }
+    }
+  ],
+  "version" : 2
+}

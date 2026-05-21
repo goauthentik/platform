@@ -3,9 +3,10 @@ include ../../common.mk
 TARGET := psso
 XCB_DEF_ARGS = -scheme PSSO \
 		-project authentikPlatform.xcodeproj \
-		-configuration Release \
 		-derivedDataPath "${TOP}/cache/${TARGET}"
 XCB_EXTRA_ARGS =
+SOURCES := "${PWD}/Bridge" \
+		"${PWD}/PSSO"
 
 .PHONY: clean
 clean:
@@ -21,23 +22,55 @@ bump:
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
-	xcodebuild ${XCB_DEF_ARGS} \
+	xcodebuild \
+		${XCB_DEF_ARGS} \
+		-configuration Release \
 		-showBuildSettings \
 		${XCB_EXTRA_ARGS}
-	xcodebuild ${XCB_DEF_ARGS} ${XCB_EXTRA_ARGS}
+	xcodebuild \
+		${XCB_DEF_ARGS} \
+		-configuration Release \
+		${XCB_EXTRA_ARGS}
 	cp -R "${TOP}/cache/${TARGET}/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}/bin/${TARGET}")
 endif
 
+.PHONY: test
+test:
+	rm -rf "${TOP}/cache/${TARGET}/test.xcresult"
+	xcodebuild \
+		${XCB_DEF_ARGS} \
+		test \
+		-testPlan TestUnit \
+		-resultBundlePath "${TOP}/cache/${TARGET}/test.xcresult" \
+		-enableCodeCoverage YES \
+		${XCB_EXTRA_ARGS}
+	xcresultparser \
+		--output-format cobertura \
+		-e "${PWD}/Bridge/Generated" \
+		"${TOP}/cache/${TARGET}/test.xcresult" > "${TOP}/cache/${TARGET}/coverage.xml"
+	xcresultparser \
+		--output-format junit \
+		-e "${PWD}/Bridge/Generated" \
+		"${TOP}/cache/${TARGET}/test.xcresult" > "${TOP}/cache/${TARGET}/junit.xml"
+
 .PHONY: lint
 lint:
-	swift format format \
-		-i \
+	swift format lint \
 		--configuration "${TOP}/.github/swift-format.json" \
 		--recursive \
-		${PWD}/Bridge \
-		${PWD}/PSSO
+		--parallel \
+		$(SOURCES)
+
+.PHONY: lint-fix
+lint-fix:
+	swift format format \
+		-i \
+		--parallel \
+		--configuration "${TOP}/.github/swift-format.json" \
+		--recursive \
+		$(SOURCES)
 
 .PHONY: gen
 gen:
