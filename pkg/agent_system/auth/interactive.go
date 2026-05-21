@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"goauthentik.io/platform/pkg/agent_system/component"
-	"goauthentik.io/platform/pkg/agent_system/ctrl"
+	"goauthentik.io/platform/pkg/agent_system/ping"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/pb"
 	"google.golang.org/grpc/codes"
@@ -15,11 +15,11 @@ import (
 )
 
 func (auth *Server) InteractiveAuth(ctx context.Context, req *pb.InteractiveAuthRequest) (*pb.InteractiveChallenge, error) {
-	ctrl, err := component.Get[*ctrl.Server](auth.ctx, ctrl.ID)
+	ping, err := component.Get[*ping.Server](auth.ctx, ping.ID)
 	if err != nil {
 		return nil, err
 	}
-	if !ctrl.InteractiveSupported() {
+	if !ping.InteractiveSupported() {
 		return nil, status.Error(codes.Unavailable, "Interactive authentication not available")
 	}
 	var ch *pb.InteractiveChallenge

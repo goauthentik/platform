@@ -121,8 +121,8 @@ public class SysdBridge {
     }
 
     public func interactiveAuthSupported() async throws -> Bool {
-        return try await self.withClient(id: .ctrlSocket) { client in
-            let c = SystemCtrl.Client(wrapping: client)
+        return try await self.withClient { client in
+            let c = Ping.Client(wrapping: client)
             let reply = try await c.capabilities(
                 request: ClientRequest(message: Google_Protobuf_Empty())
             )

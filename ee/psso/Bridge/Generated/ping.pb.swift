@@ -34,6 +34,60 @@ nonisolated struct PingResponse: Sendable {
   init() {}
 }
 
+nonisolated struct CapabilitiesResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var capabilities: [CapabilitiesResponse.Capability] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  nonisolated enum Capability: SwiftProtobuf.Enum, Swift.CaseIterable {
+    typealias RawValue = Int
+    case unspecified // = 0
+    case authInteractive // = 1
+    case authAuthz // = 2
+    case debug // = 3
+    case UNRECOGNIZED(Int)
+
+    init() {
+      self = .unspecified
+    }
+
+    init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .unspecified
+      case 1: self = .authInteractive
+      case 2: self = .authAuthz
+      case 3: self = .debug
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    var rawValue: Int {
+      switch self {
+      case .unspecified: return 0
+      case .authInteractive: return 1
+      case .authAuthz: return 2
+      case .debug: return 3
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    static let allCases: [CapabilitiesResponse.Capability] = [
+      .unspecified,
+      .authInteractive,
+      .authAuthz,
+      .debug,
+    ]
+
+  }
+
+  init() {}
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate nonisolated let _protobuf_package = "ping"
@@ -71,4 +125,38 @@ nonisolated extension PingResponse: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
+}
+
+nonisolated extension CapabilitiesResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".CapabilitiesResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}capabilities\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedEnumField(value: &self.capabilities) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.capabilities.isEmpty {
+      try visitor.visitPackedEnumField(value: self.capabilities, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CapabilitiesResponse, rhs: CapabilitiesResponse) -> Bool {
+    if lhs.capabilities != rhs.capabilities {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension CapabilitiesResponse.Capability: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}AUTH_INTERACTIVE\0\u{1}AUTH_AUTHZ\0\u{1}DEBUG\0")
 }

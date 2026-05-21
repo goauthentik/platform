@@ -1,4 +1,4 @@
-package ctrl
+package ping
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (ctrl *Server) InteractiveSupported() bool {
-	_, dom, err := ctrl.ctx.DomainAPI()
+func (ping *Server) InteractiveSupported() bool {
+	_, dom, err := ping.ctx.DomainAPI()
 	if err != nil {
-		ctrl.log.WithError(err).Warning("failed to get domain API")
+		ping.ctx.Log().WithError(err).Warning("failed to get domain API")
 		return false
 	}
 	lic := dom.Config().LicenseStatus
@@ -22,9 +22,9 @@ func (ctrl *Server) InteractiveSupported() bool {
 	return *lic.Get() != api.LICENSESTATUSENUM_UNLICENSED
 }
 
-func (ctrl *Server) Capabilities(context.Context, *emptypb.Empty) (*pb.CapabilitiesResponse, error) {
+func (ping *Server) Capabilities(context.Context, *emptypb.Empty) (*pb.CapabilitiesResponse, error) {
 	caps := []pb.CapabilitiesResponse_Capability{}
-	if ctrl.InteractiveSupported() {
+	if ping.InteractiveSupported() {
 		caps = append(caps, pb.CapabilitiesResponse_AUTH_INTERACTIVE)
 	}
 	if config.Manager().Get().Debug {

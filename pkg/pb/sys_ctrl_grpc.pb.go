@@ -24,7 +24,6 @@ const (
 	SystemCtrl_DomainEnroll_FullMethodName        = "/sys_ctrl.SystemCtrl/DomainEnroll"
 	SystemCtrl_DomainUnenroll_FullMethodName      = "/sys_ctrl.SystemCtrl/DomainUnenroll"
 	SystemCtrl_TroubleshootInspect_FullMethodName = "/sys_ctrl.SystemCtrl/TroubleshootInspect"
-	SystemCtrl_Capabilities_FullMethodName        = "/sys_ctrl.SystemCtrl/Capabilities"
 )
 
 // SystemCtrlClient is the client API for SystemCtrl service.
@@ -35,7 +34,6 @@ type SystemCtrlClient interface {
 	DomainEnroll(ctx context.Context, in *DomainEnrollRequest, opts ...grpc.CallOption) (*DomainEnrollResponse, error)
 	DomainUnenroll(ctx context.Context, in *Domain, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	TroubleshootInspect(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*TroubleshootInspectResponse, error)
-	Capabilities(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CapabilitiesResponse, error)
 }
 
 type systemCtrlClient struct {
@@ -86,16 +84,6 @@ func (c *systemCtrlClient) TroubleshootInspect(ctx context.Context, in *emptypb.
 	return out, nil
 }
 
-func (c *systemCtrlClient) Capabilities(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CapabilitiesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CapabilitiesResponse)
-	err := c.cc.Invoke(ctx, SystemCtrl_Capabilities_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // SystemCtrlServer is the server API for SystemCtrl service.
 // All implementations must embed UnimplementedSystemCtrlServer
 // for forward compatibility.
@@ -104,7 +92,6 @@ type SystemCtrlServer interface {
 	DomainEnroll(context.Context, *DomainEnrollRequest) (*DomainEnrollResponse, error)
 	DomainUnenroll(context.Context, *Domain) (*emptypb.Empty, error)
 	TroubleshootInspect(context.Context, *emptypb.Empty) (*TroubleshootInspectResponse, error)
-	Capabilities(context.Context, *emptypb.Empty) (*CapabilitiesResponse, error)
 	mustEmbedUnimplementedSystemCtrlServer()
 }
 
@@ -126,9 +113,6 @@ func (UnimplementedSystemCtrlServer) DomainUnenroll(context.Context, *Domain) (*
 }
 func (UnimplementedSystemCtrlServer) TroubleshootInspect(context.Context, *emptypb.Empty) (*TroubleshootInspectResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method TroubleshootInspect not implemented")
-}
-func (UnimplementedSystemCtrlServer) Capabilities(context.Context, *emptypb.Empty) (*CapabilitiesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Capabilities not implemented")
 }
 func (UnimplementedSystemCtrlServer) mustEmbedUnimplementedSystemCtrlServer() {}
 func (UnimplementedSystemCtrlServer) testEmbeddedByValue()                    {}
@@ -223,24 +207,6 @@ func _SystemCtrl_TroubleshootInspect_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SystemCtrl_Capabilities_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SystemCtrlServer).Capabilities(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SystemCtrl_Capabilities_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SystemCtrlServer).Capabilities(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // SystemCtrl_ServiceDesc is the grpc.ServiceDesc for SystemCtrl service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -263,10 +229,6 @@ var SystemCtrl_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TroubleshootInspect",
 			Handler:    _SystemCtrl_TroubleshootInspect_Handler,
-		},
-		{
-			MethodName: "Capabilities",
-			Handler:    _SystemCtrl_Capabilities_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

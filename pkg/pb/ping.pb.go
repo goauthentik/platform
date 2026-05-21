@@ -22,6 +22,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type CapabilitiesResponse_Capability int32
+
+const (
+	CapabilitiesResponse_UNSPECIFIED      CapabilitiesResponse_Capability = 0
+	CapabilitiesResponse_AUTH_INTERACTIVE CapabilitiesResponse_Capability = 1
+	CapabilitiesResponse_AUTH_AUTHZ       CapabilitiesResponse_Capability = 2
+	CapabilitiesResponse_DEBUG            CapabilitiesResponse_Capability = 3
+)
+
+// Enum value maps for CapabilitiesResponse_Capability.
+var (
+	CapabilitiesResponse_Capability_name = map[int32]string{
+		0: "UNSPECIFIED",
+		1: "AUTH_INTERACTIVE",
+		2: "AUTH_AUTHZ",
+		3: "DEBUG",
+	}
+	CapabilitiesResponse_Capability_value = map[string]int32{
+		"UNSPECIFIED":      0,
+		"AUTH_INTERACTIVE": 1,
+		"AUTH_AUTHZ":       2,
+		"DEBUG":            3,
+	}
+)
+
+func (x CapabilitiesResponse_Capability) Enum() *CapabilitiesResponse_Capability {
+	p := new(CapabilitiesResponse_Capability)
+	*p = x
+	return p
+}
+
+func (x CapabilitiesResponse_Capability) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CapabilitiesResponse_Capability) Descriptor() protoreflect.EnumDescriptor {
+	return file_ping_proto_enumTypes[0].Descriptor()
+}
+
+func (CapabilitiesResponse_Capability) Type() protoreflect.EnumType {
+	return &file_ping_proto_enumTypes[0]
+}
+
+func (x CapabilitiesResponse_Capability) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CapabilitiesResponse_Capability.Descriptor instead.
+func (CapabilitiesResponse_Capability) EnumDescriptor() ([]byte, []int) {
+	return file_ping_proto_rawDescGZIP(), []int{1, 0}
+}
+
 type PingResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
@@ -74,6 +126,50 @@ func (x *PingResponse) GetVersion() string {
 	return ""
 }
 
+type CapabilitiesResponse struct {
+	state         protoimpl.MessageState            `protogen:"open.v1"`
+	Capabilities  []CapabilitiesResponse_Capability `protobuf:"varint,1,rep,packed,name=capabilities,proto3,enum=ping.CapabilitiesResponse_Capability" json:"capabilities,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CapabilitiesResponse) Reset() {
+	*x = CapabilitiesResponse{}
+	mi := &file_ping_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CapabilitiesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CapabilitiesResponse) ProtoMessage() {}
+
+func (x *CapabilitiesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_ping_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CapabilitiesResponse.ProtoReflect.Descriptor instead.
+func (*CapabilitiesResponse) Descriptor() ([]byte, []int) {
+	return file_ping_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *CapabilitiesResponse) GetCapabilities() []CapabilitiesResponse_Capability {
+	if x != nil {
+		return x.Capabilities
+	}
+	return nil
+}
+
 var File_ping_proto protoreflect.FileDescriptor
 
 const file_ping_proto_rawDesc = "" +
@@ -82,9 +178,19 @@ const file_ping_proto_rawDesc = "" +
 	"ping.proto\x12\x04ping\x1a\x1bgoogle/protobuf/empty.proto\"F\n" +
 	"\fPingResponse\x12\x1c\n" +
 	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\tR\aversion2:\n" +
+	"\aversion\x18\x02 \x01(\tR\aversion\"\xb1\x01\n" +
+	"\x14CapabilitiesResponse\x12I\n" +
+	"\fcapabilities\x18\x01 \x03(\x0e2%.ping.CapabilitiesResponse.CapabilityR\fcapabilities\"N\n" +
+	"\n" +
+	"Capability\x12\x0f\n" +
+	"\vUNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10AUTH_INTERACTIVE\x10\x01\x12\x0e\n" +
+	"\n" +
+	"AUTH_AUTHZ\x10\x02\x12\t\n" +
+	"\x05DEBUG\x10\x032~\n" +
 	"\x04Ping\x122\n" +
-	"\x04Ping\x12\x16.google.protobuf.Empty\x1a\x12.ping.PingResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\x04Ping\x12\x16.google.protobuf.Empty\x1a\x12.ping.PingResponse\x12B\n" +
+	"\fCapabilities\x12\x16.google.protobuf.Empty\x1a\x1a.ping.CapabilitiesResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_ping_proto_rawDescOnce sync.Once
@@ -98,19 +204,25 @@ func file_ping_proto_rawDescGZIP() []byte {
 	return file_ping_proto_rawDescData
 }
 
-var file_ping_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ping_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_ping_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_ping_proto_goTypes = []any{
-	(*PingResponse)(nil),  // 0: ping.PingResponse
-	(*emptypb.Empty)(nil), // 1: google.protobuf.Empty
+	(CapabilitiesResponse_Capability)(0), // 0: ping.CapabilitiesResponse.Capability
+	(*PingResponse)(nil),                 // 1: ping.PingResponse
+	(*CapabilitiesResponse)(nil),         // 2: ping.CapabilitiesResponse
+	(*emptypb.Empty)(nil),                // 3: google.protobuf.Empty
 }
 var file_ping_proto_depIdxs = []int32{
-	1, // 0: ping.Ping.Ping:input_type -> google.protobuf.Empty
-	0, // 1: ping.Ping.Ping:output_type -> ping.PingResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: ping.CapabilitiesResponse.capabilities:type_name -> ping.CapabilitiesResponse.Capability
+	3, // 1: ping.Ping.Ping:input_type -> google.protobuf.Empty
+	3, // 2: ping.Ping.Capabilities:input_type -> google.protobuf.Empty
+	1, // 3: ping.Ping.Ping:output_type -> ping.PingResponse
+	2, // 4: ping.Ping.Capabilities:output_type -> ping.CapabilitiesResponse
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_ping_proto_init() }
@@ -123,13 +235,14 @@ func file_ping_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ping_proto_rawDesc), len(file_ping_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   1,
+			NumEnums:      1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_ping_proto_goTypes,
 		DependencyIndexes: file_ping_proto_depIdxs,
+		EnumInfos:         file_ping_proto_enumTypes,
 		MessageInfos:      file_ping_proto_msgTypes,
 	}.Build()
 	File_ping_proto = out.File
