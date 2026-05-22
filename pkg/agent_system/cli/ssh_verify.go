@@ -77,7 +77,7 @@ var sshVerifyCmd = &cobra.Command{
 			l.WithError(err).Warning("failed to connect to ctrl")
 			return nil
 		}
-		res, err := sc.SystemAuthTokenClient.TokenAuth(cmd.Context(), &pb.TokenAuthRequest{
+		res, err := sc.TokenAuth(cmd.Context(), &pb.TokenAuthRequest{
 			Username: args[0],
 			Token:    extToken,
 		})

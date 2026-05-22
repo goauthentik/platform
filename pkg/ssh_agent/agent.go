@@ -13,28 +13,24 @@ import (
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
-	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
 type Agent struct {
-	log         *log.Entry
-	fallbackKey ssh.Signer
-	keyCache    map[string]ssh.AlgorithmSigner
-	txn         map[string]*AgentTxn
-	txnMu       sync.RWMutex
-	gtm         *token.GlobalTokenManager
-	ctx         context.Context
+	log   *log.Entry
+	txn   map[string]*AgentTxn
+	txnMu sync.RWMutex
+	gtm   *token.GlobalTokenManager
+	ctx   context.Context
 }
 
 func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context) (*Agent, error) {
 	ag := &Agent{
-		log:      systemlog.Get().WithField("logger", "agent"),
-		keyCache: map[string]ssh.AlgorithmSigner{},
-		txn:      map[string]*AgentTxn{},
-		txnMu:    sync.RWMutex{},
-		gtm:      gtm,
-		ctx:      ctx,
+		log:   systemlog.Get().WithField("logger", "agent"),
+		txn:   map[string]*AgentTxn{},
+		txnMu: sync.RWMutex{},
+		gtm:   gtm,
+		ctx:   ctx,
 	}
 	return ag, nil
 }
@@ -56,7 +52,10 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 		conn, err := l.Accept()
 		if err != nil {
 			if conn != nil {
-				conn.Close()
+				err := conn.Close()
+				if err != nil {
+					ag.log.WithError(err).Warning("failed to close connection")
+				}
 			}
 			// Check if error is from listener being closed
 			if errors.Is(err, net.ErrClosed) {
@@ -72,7 +71,12 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 			}
 		}
 		go func(conn net.Conn) {
-			defer conn.Close()
+			defer func() {
+				err := conn.Close()
+				if err != nil {
+					ag.log.WithError(err).Warning("failed to close connection")
+				}
+			}()
 			nid, err := uuid.NewUUID()
 			if err != nil {
 				ag.log.WithError(err).Warning("failed to generate id")
