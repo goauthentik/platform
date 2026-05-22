@@ -61,7 +61,7 @@ func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.
 
 func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, error) {
 	atxn.log.Debugf("Extension(%s, %d)", extensionType, len(contents))
-	if extensionType == "session-bind@openssh.com" {
+	if extensionType == ExtOpenSSHSessionBind {
 		sb, err := ParseSessionBind(contents)
 		if err != nil {
 			return []byte{}, err
@@ -74,6 +74,8 @@ func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, 
 		}
 		atxn.crt = crt
 		atxn.cpk = sign
+	} else if extensionType == ExtAuthentikAgentTunnel {
+
 	}
 	return []byte{}, nil
 }

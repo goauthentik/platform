@@ -10,6 +10,10 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const (
+	ExtOpenSSHSessionBind = "session-bind@openssh.com"
+)
+
 // ParseSessionBind parses the payload of a "session-bind@openssh.com" extension
 // message. It verifies the signature within the bind message to ensure the
 // integrity of the hop.
