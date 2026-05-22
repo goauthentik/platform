@@ -3,6 +3,7 @@ package grpc_creds
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 
 	"google.golang.org/grpc/peer"
@@ -29,4 +30,24 @@ func AuthFromContext(ctx context.Context) *Creds {
 	}
 	creds := p.AuthInfo.(AuthInfo).Creds
 	return creds
+}
+
+func GetCreds(conn net.Conn) (*Creds, error) {
+	creds, err := getCreds(conn)
+	if err != nil {
+		return nil, err
+	}
+	creds.Proc, err = ProcInfoFrom(int32(creds.PID))
+	if err != nil {
+		return nil, err
+	}
+	parent, err := creds.Proc.Parent()
+	if err != nil {
+		return nil, err
+	}
+	creds.Parent, err = ProcInfoFrom(parent.Pid)
+	if err != nil {
+		return nil, err
+	}
+	return creds, nil
 }
