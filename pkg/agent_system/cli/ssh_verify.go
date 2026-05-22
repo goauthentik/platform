@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
@@ -14,12 +16,16 @@ var sshVerifyCmd = &cobra.Command{
 	Use:    "ssh-verify",
 	Hidden: true,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return systemlog.Setup(pstr.PlatformString{
+		log.SetLevel(log.ErrorLevel)
+		return systemlog.MustSetup(pstr.PlatformString{
 			Linux: new("ak-sysd"),
 		}.ForCurrent())
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		l := systemlog.Get()
+		if len(args) < 3 {
+			return errors.New("invalid number of arguments")
+		}
 		certPubkey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(args[2] + " " + args[1]))
 		if err != nil {
 			return err

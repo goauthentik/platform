@@ -101,19 +101,17 @@ func (atxn *AgentTxn) generateKey() (*ssh.Certificate, ssh.Signer, error) {
 		ValidBefore:     uint64(time.Now().Add(time.Second * time.Duration(*ht.ExpiresIn)).Unix()),
 		Reserved:        []byte{},
 		Key:             key.PublicKey(),
-		KeyId:           "qewr",
+		KeyId:           "",
 		Permissions: ssh.Permissions{
 			CriticalOptions: map[string]string{},
 			Extensions: map[string]string{
-				"permit-X11-forwarding":   "",
-				"permit-agent-forwarding": "",
-				"permit-port-forwarding":  "",
-				"permit-pty":              "",
-				"permit-user-rc":          "",
-			},
-			ExtraData: map[any]any{
+				"permit-X11-forwarding":                "",
+				"permit-agent-forwarding":              "",
+				"permit-port-forwarding":               "",
+				"permit-pty":                           "",
+				"permit-user-rc":                       "",
 				"goauthentik.io/platform/ssh/token":    ht.Token,
-				"goauthentik.io/platform/ssh/host-key": atxn.hostKey.Marshal(),
+				"goauthentik.io/platform/ssh/host-key": string(ssh.MarshalAuthorizedKey(atxn.hostKey)),
 			},
 		},
 	}
