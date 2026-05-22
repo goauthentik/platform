@@ -90,7 +90,7 @@ var sshVerifyCmd = &cobra.Command{
 
 		pubkeyBytes := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(sshCert.SignatureKey)))
 
-		fmt.Printf("cert-authority,principals=\"%s\" %s", res.Token.PreferredUsername, pubkeyBytes)
+		fmt.Printf("cert-authority,principals=\"%s\" %s\n", res.Token.PreferredUsername, pubkeyBytes)
 		return nil
 	},
 }

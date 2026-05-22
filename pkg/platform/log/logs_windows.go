@@ -72,7 +72,7 @@ func platformSetup(appName string) error {
 	})
 	log.StandardLogger().Hooks.Add(h)
 	log.StandardLogger().SetOutput(io.Discard)
-	log.Info("Switched to windows EventLog logging...")
+	log.Debug("Switched to windows EventLog logging...")
 	return nil
 }
 
