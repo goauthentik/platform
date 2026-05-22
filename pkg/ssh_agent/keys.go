@@ -20,6 +20,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	ExtAuthentikPlatformSSHToken   = "goauthentik.io/platform/ssh/ssh/token"
+	ExtAuthentikPlatformSSHHostKey = "goauthentik.io/platform/ssh/host-key"
+)
+
 const profile = "default"
 
 func (atxn *AgentTxn) authorize(deviceName string, deviceId string) error {
@@ -105,13 +110,13 @@ func (atxn *AgentTxn) generateKey() (*ssh.Certificate, ssh.Signer, error) {
 		Permissions: ssh.Permissions{
 			CriticalOptions: map[string]string{},
 			Extensions: map[string]string{
-				"permit-X11-forwarding":                "",
-				"permit-agent-forwarding":              "",
-				"permit-port-forwarding":               "",
-				"permit-pty":                           "",
-				"permit-user-rc":                       "",
-				"goauthentik.io/platform/ssh/token":    ht.Token,
-				"goauthentik.io/platform/ssh/host-key": string(ssh.MarshalAuthorizedKey(atxn.hostKey)),
+				"permit-X11-forwarding":        "",
+				"permit-agent-forwarding":      "",
+				"permit-port-forwarding":       "",
+				"permit-pty":                   "",
+				"permit-user-rc":               "",
+				ExtAuthentikPlatformSSHToken:   ht.Token,
+				ExtAuthentikPlatformSSHHostKey: string(ssh.MarshalAuthorizedKey(atxn.hostKey)),
 			},
 		},
 	}

@@ -17,6 +17,7 @@ import (
 )
 
 type SysdClient struct {
+	pb.SystemAuthTokenClient
 	pb.SessionManagerClient
 	pb.AgentPlatformClient
 	pb.PingClient
@@ -59,6 +60,7 @@ func New(path pstr.PlatformString) (*SysdClient, error) {
 		return nil, err
 	}
 	return &SysdClient{
+		pb.NewSystemAuthTokenClient(conn),
 		pb.NewSessionManagerClient(conn),
 		pb.NewAgentPlatformClient(conn),
 		pb.NewPingClient(conn),

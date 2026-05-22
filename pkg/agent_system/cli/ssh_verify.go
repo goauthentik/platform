@@ -1,14 +1,20 @@
 package cli
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"goauthentik.io/platform/pkg/agent_system/client"
+	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/platform/facts/common"
+	"goauthentik.io/platform/pkg/platform/facts/vendor"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
+	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -34,13 +40,53 @@ var sshVerifyCmd = &cobra.Command{
 		if !ok {
 			return fmt.Errorf("parsed SSH authorized_key is not an SSH certificate (got type %T, cert type %q)", certPubkey, args[2])
 		}
-		l.Debugf("%+v\n", sshCert.Extensions)
-		l.Debugf("%+v\n", sshCert.ExtraData)
-		l.Debugf("%+v\n", sshCert.CriticalOptions)
+
+		extHostKey, ok := sshCert.Extensions[sshagent.ExtAuthentikPlatformSSHToken]
+		if !ok {
+			l.Warning("Invalid cert (no host key ext)")
+			return nil
+		}
+		extToken, ok := sshCert.Extensions[sshagent.ExtAuthentikPlatformSSHToken]
+		if !ok {
+			l.Warning("Invalid cert (no token ext)")
+			return nil
+		}
+
+		// Check host key
+		vnd := vendor.Gather(common.New(l, cmd.Context()))
+		found := false
+		for _, hk := range vnd["ssh_host_keys"].([]string) {
+			if subtle.ConstantTimeCompare([]byte(hk), []byte(extHostKey)) == 1 {
+				found = true
+			}
+		}
+		if !found {
+			l.Warning("Certificate has wrong host-key")
+			return nil
+		}
+
+		// Check token
+		sc, err := client.NewDefault()
+		if err != nil {
+			l.WithError(err).Warning("failed to connect to ctrl")
+			return nil
+		}
+		res, err := sc.SystemAuthTokenClient.TokenAuth(cmd.Context(), &pb.TokenAuthRequest{
+			Username: args[0],
+			Token:    extToken,
+		})
+		if err != nil {
+			l.WithError(err).Warning("failed to validate token")
+			return nil
+		}
+		if !res.Successful {
+			l.Warning("unsuccessful token validation")
+			return nil
+		}
 
 		pubkeyBytes := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(sshCert.SignatureKey)))
 
-		fmt.Printf("cert-authority,principals=\"%s\" %s", args[0], pubkeyBytes)
+		fmt.Printf("cert-authority,principals=\"%s\" %s", res.Token.PreferredUsername, pubkeyBytes)
 		return nil
 	},
 }
