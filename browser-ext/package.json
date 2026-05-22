@@ -14,7 +14,7 @@
     "type": "module",
     "devDependencies": {
         "@codecov/rollup-plugin": "^2.0.1",
-        "@goauthentik/api": "^2026.2.3",
+        "@goauthentik/api": "^2026.5.0",
         "@goauthentik/eslint-config": "^2.0.0",
         "@goauthentik/prettier-config": "^3.5.0",
         "@goauthentik/tsconfig": "^2.0.0",
