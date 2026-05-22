@@ -32,6 +32,7 @@ var sshVerifyCmd = &cobra.Command{
 		if len(args) < 3 {
 			return errors.New("invalid number of arguments")
 		}
+
 		certPubkey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(args[2] + " " + args[1]))
 		if err != nil {
 			return err
@@ -41,7 +42,7 @@ var sshVerifyCmd = &cobra.Command{
 			return fmt.Errorf("parsed SSH authorized_key is not an SSH certificate (got type %T, cert type %q)", certPubkey, args[2])
 		}
 
-		extHostKey, ok := sshCert.Extensions[sshagent.ExtAuthentikPlatformSSHToken]
+		extHostKey, ok := sshCert.Extensions[sshagent.ExtAuthentikPlatformSSHHostKey]
 		if !ok {
 			l.Warning("Invalid cert (no host key ext)")
 			return nil
@@ -53,10 +54,15 @@ var sshVerifyCmd = &cobra.Command{
 		}
 
 		// Check host key
-		vnd := vendor.Gather(common.New(l, cmd.Context()))
 		found := false
-		for _, hk := range vnd["ssh_host_keys"].([]string) {
-			if subtle.ConstantTimeCompare([]byte(hk), []byte(extHostKey)) == 1 {
+		hks := getLocalHostKeys(common.New(l, cmd.Context()))
+		ghk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(extHostKey))
+		if err != nil {
+			l.WithError(err).Warning("failed to parse ext key")
+			return nil
+		}
+		for _, hk := range hks {
+			if subtle.ConstantTimeCompare(ghk.Marshal(), hk.Marshal()) == 1 {
 				found = true
 			}
 		}
@@ -93,4 +99,18 @@ var sshVerifyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(sshVerifyCmd)
+}
+
+func getLocalHostKeys(ctx *common.GatherContext) []ssh.PublicKey {
+	vnd := vendor.Gather(ctx)
+	hks := []ssh.PublicKey{}
+	for _, hk := range vnd["ssh_host_keys"].([]string) {
+		hostPubKey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(hk))
+		if err != nil {
+			ctx.Log().WithError(err).Warning("failed to parse authorized key")
+			continue
+		}
+		hks = append(hks, hostPubKey)
+	}
+	return hks
 }
