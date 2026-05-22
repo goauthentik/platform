@@ -9,18 +9,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-var CA ssh.Signer
-
-func init() {
-	_ca, err := generateSSHPrivateKey()
-	if err != nil {
-		panic(err)
-	}
-	CA = _ca
-}
-
-func (ag *Agent) generateKey() (*ssh.Certificate, ssh.Signer, error) {
-	tk, err := ag.gtm.ForProfile("default").Token()
+func (atxn *AgentTxn) generateKey() (*ssh.Certificate, ssh.Signer, error) {
+	tk, err := atxn.ag.gtm.ForProfile("default").Token()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -43,7 +33,8 @@ func (ag *Agent) generateKey() (*ssh.Certificate, ssh.Signer, error) {
 			CriticalOptions: map[string]string{},
 			Extensions:      map[string]string{},
 			ExtraData: map[any]any{
-				"ak-token": tk.RawAccessToken,
+				"ak-token":    tk.RawAccessToken,
+				"ak-host-key": atxn.hostKey.Type(),
 			},
 		},
 	}

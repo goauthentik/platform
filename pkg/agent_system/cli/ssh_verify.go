@@ -11,16 +11,11 @@ import (
 )
 
 var sshVerifyCmd = &cobra.Command{
-	Use:                "ssh_verify",
-	DisableSuggestions: true,
-	CompletionOptions: cobra.CompletionOptions{
-		DisableDefaultCmd: true,
-	},
+	Use:    "ssh-verify",
+	Hidden: true,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return systemlog.Setup(pstr.PlatformString{
-			// Needs to match event log name in Package.wxs
-			Windows: new("authentik System Service"),
-			Linux:   new("ak-sysd"),
+			Linux: new("ak-sysd"),
 		}.ForCurrent())
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -39,7 +34,6 @@ var sshVerifyCmd = &cobra.Command{
 
 		pubkeyBytes := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(sshCert.SignatureKey)))
 
-		// fmt.Printf("%s %s\n", args[2], args[1])
 		fmt.Printf("cert-authority,principals=\"%s\" %s", args[0], pubkeyBytes)
 		return nil
 	},

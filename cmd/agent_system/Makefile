@@ -37,5 +37,5 @@ package-gnu/linux: build
 	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
 
 test-deploy: package-gnu/linux
-	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}_${ARCH}.deb
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}+ak-${VERSION_HASH_SHORT}_${ARCH}.deb
 	$(TME) systemctl restart ak-sysd
