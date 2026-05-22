@@ -1,0 +1,78 @@
+package sshagent
+
+import (
+	"crypto/rand"
+
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/agent"
+)
+
+type AgentTxn struct {
+	ag  *Agent
+	log *log.Entry
+
+	crt *ssh.Certificate
+	cpk ssh.Signer
+}
+
+func init() {
+	var _ agent.Agent = &AgentTxn{}
+	var _ agent.ExtendedAgent = &AgentTxn{}
+}
+
+func (atxn *AgentTxn) List() ([]*agent.Key, error) {
+	atxn.log.Debug("List()")
+	if atxn.crt == nil {
+		crt, sign, err := atxn.ag.generateKey()
+		if err != nil {
+			atxn.log.WithError(err).Warning("failed to generate cert")
+			return nil, err
+		}
+		atxn.crt = crt
+		atxn.cpk = sign
+	}
+	return []*agent.Key{
+		{
+			Format:  atxn.crt.Type(),
+			Blob:    atxn.crt.Marshal(),
+			Comment: "",
+		},
+	}, nil
+}
+
+// No-op since we use SignWithFlags()
+func (atxn *AgentTxn) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, error) { return nil, nil }
+
+// Stub methods for things we don't implement
+func (atxn *AgentTxn) Add(key agent.AddedKey) error   { atxn.log.Debug("Add()"); return nil }
+func (atxn *AgentTxn) Remove(key ssh.PublicKey) error { atxn.log.Debug("Remove()"); return nil }
+func (atxn *AgentTxn) RemoveAll() error               { atxn.log.Debug("RemoveAll()"); return nil }
+func (atxn *AgentTxn) Lock(passphrase []byte) error   { atxn.log.Debug("Lock()"); return nil }
+func (atxn *AgentTxn) Unlock(passphrase []byte) error { atxn.log.Debug("Unlock()"); return nil }
+
+func (atxn *AgentTxn) Signers() ([]ssh.Signer, error) {
+	atxn.log.Debug("Signers()")
+	return []ssh.Signer{}, nil
+}
+
+func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
+	atxn.log.Debugf("SignWithFlags(%s, %v)", key.Type(), flags)
+
+	if atxn.crt == nil {
+		crt, sign, err := atxn.ag.generateKey()
+		if err != nil {
+			atxn.log.WithError(err).Warning("failed to generate cert")
+			return nil, err
+		}
+		atxn.crt = crt
+		atxn.cpk = sign
+	}
+
+	return atxn.cpk.Sign(rand.Reader, data)
+}
+
+func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, error) {
+	atxn.log.Debugf("Extension(%s, %v)", extensionType, contents)
+	return []byte{}, nil
+}
