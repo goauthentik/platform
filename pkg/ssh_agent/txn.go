@@ -3,6 +3,7 @@ package sshagent
 import (
 	"context"
 	"crypto/rand"
+	"net"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -10,8 +11,9 @@ import (
 )
 
 type AgentTxn struct {
-	ag  *Agent
-	log *log.Entry
+	ag   *Agent
+	log  *log.Entry
+	conn net.Conn
 
 	hostKey ssh.PublicKey
 
