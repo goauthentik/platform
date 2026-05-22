@@ -28,17 +28,6 @@ func init() {
 	var _ agent.ExtendedAgent = &AgentTxn{}
 }
 
-func (atxn *AgentTxn) List() ([]*agent.Key, error) {
-	atxn.log.Debug("List()")
-	return []*agent.Key{
-		{
-			Format:  atxn.crt.Type(),
-			Blob:    atxn.crt.Marshal(),
-			Comment: "",
-		},
-	}, nil
-}
-
 // No-op since we use SignWithFlags()
 func (atxn *AgentTxn) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, error) { return nil, nil }
 
@@ -51,6 +40,17 @@ func (atxn *AgentTxn) Unlock(passphrase []byte) error { atxn.log.Debug("Unlock()
 func (atxn *AgentTxn) Signers() ([]ssh.Signer, error) {
 	atxn.log.Debug("Signers()")
 	return []ssh.Signer{}, nil
+}
+
+func (atxn *AgentTxn) List() ([]*agent.Key, error) {
+	atxn.log.Debug("List()")
+	return []*agent.Key{
+		{
+			Format:  atxn.crt.Type(),
+			Blob:    atxn.crt.Marshal(),
+			Comment: "",
+		},
+	}, nil
 }
 
 func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
