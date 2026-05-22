@@ -43,7 +43,7 @@ require (
 	github.com/zalando/go-keyring v0.2.8
 	go.etcd.io/bbolt v1.4.3
 	goauthentik.io/api/v3 v3.2026020.16
-	golang.org/x/crypto v0.51.0
+	golang.org/x/crypto v0.52.0
 	golang.org/x/sys v0.45.0
 	golang.org/x/term v0.43.0
 	google.golang.org/grpc v1.81.1
