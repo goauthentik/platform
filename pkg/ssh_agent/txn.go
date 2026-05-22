@@ -1,6 +1,7 @@
 package sshagent
 
 import (
+	"context"
 	"crypto/rand"
 
 	log "github.com/sirupsen/logrus"
@@ -16,6 +17,8 @@ type AgentTxn struct {
 
 	crt *ssh.Certificate
 	cpk ssh.Signer
+
+	ctx context.Context
 }
 
 func init() {

@@ -1,13 +1,15 @@
 package agentlocal
 
 import (
+	"context"
+
 	"goauthentik.io/platform/pkg/agent_local/types"
 	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 )
 
 func (a *Agent) startSSH() {
 	l := a.log.WithField("logger", "agent.ssh")
-	ag, err := sshagent.New(l, a.tr)
+	ag, err := sshagent.New(l, a.tr, context.Background())
 	if err != nil {
 		a.log.WithError(err).Warning("failed to init SSH agent")
 		return
