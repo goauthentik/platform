@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sshagent "goauthentik.io/platform/pkg/ssh_agent"
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
@@ -49,7 +50,10 @@ func (sat *sshAgentTunnel) Read(b []byte) (n int, err error) {
 }
 
 func (sat *sshAgentTunnel) Write(b []byte) (n int, err error) {
-	r, err := sat.agent.Extension(sshagent.ExtAuthentikAgentTunnel, b)
+	d := ssh.Marshal(sshagent.ExtAuthentikAgentTunnelData{
+		Data: b,
+	})
+	r, err := sat.agent.Extension(sshagent.ExtAuthentikAgentTunnel, d)
 	if err != nil {
 		return 0, err
 	}

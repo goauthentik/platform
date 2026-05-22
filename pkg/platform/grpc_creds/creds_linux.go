@@ -13,7 +13,7 @@ import (
 func getCreds(conn net.Conn) (*Creds, error) {
 	unixConn, ok := conn.(*net.UnixConn)
 	if !ok {
-		return nil, fmt.Errorf("connection is not a Unix socket, is %v", conn)
+		return nil, fmt.Errorf("connection is not a Unix socket, is %T", conn)
 	}
 	rawConn, err := unixConn.SyscallConn()
 	if err != nil {

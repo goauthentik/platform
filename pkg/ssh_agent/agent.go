@@ -14,6 +14,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"golang.org/x/crypto/ssh/agent"
+	"google.golang.org/grpc"
 )
 
 type Agent struct {
@@ -22,15 +23,19 @@ type Agent struct {
 	txnMu sync.RWMutex
 	gtm   *token.GlobalTokenManager
 	ctx   context.Context
+	grpc  *grpc.Server
+	ml    *MemListener
 }
 
-func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context) (*Agent, error) {
+func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grpc *grpc.Server) (*Agent, error) {
 	ag := &Agent{
 		log:   systemlog.Get().WithField("logger", "agent"),
 		txn:   map[string]*AgentTxn{},
 		txnMu: sync.RWMutex{},
 		gtm:   gtm,
 		ctx:   ctx,
+		grpc:  grpc,
+		ml:    NewMemoryListener(),
 	}
 	return ag, nil
 }
@@ -40,6 +45,7 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 	if err != nil {
 		return err
 	}
+	go ag.grpc.Serve(ag.ml)
 	ag.log.WithField("path", path.ForCurrent()).Info("Listening on socket")
 	for {
 		// Check if context is done
@@ -95,6 +101,10 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 
 			defer func() {
 				ag.txnMu.Lock()
+				err = txn.Close()
+				if err != nil {
+					ag.log.WithError(err).Warning("failed to gracefully close txn")
+				}
 				cancel()
 				delete(ag.txn, nid.String())
 				ag.txnMu.Unlock()
