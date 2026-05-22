@@ -9,12 +9,13 @@ import (
 var (
 	Version   = ""
 	BuildHash = ""
+	Tag       = ""
 )
 
 func FullVersion() string {
 	version := strings.Builder{}
 	version.WriteString(Version)
-	if BuildHash != "" {
+	if BuildHash != "" && Tag == "" {
 		version.WriteRune('-')
 		if len(BuildHash) >= 8 {
 			version.WriteString(BuildHash[:8])
