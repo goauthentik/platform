@@ -19,7 +19,9 @@ func (a *Agent) startSSH() {
 	}
 	ag.Profile = "default"
 	a.ssh = ag
-	err = ag.Listen(types.GetAgentSocketPath(types.SocketIDSSH))
+	path := types.GetAgentSocketPath(types.SocketIDSSH)
+	a.log.WithField("socket", path).Info("Starting SSH Agent")
+	err = ag.Listen(path)
 	if err != nil {
 		a.log.WithError(err).Warn("Failed to serve")
 	}
