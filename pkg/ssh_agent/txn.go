@@ -39,18 +39,18 @@ func init() {
 func (atxn *AgentTxn) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, error) { return nil, nil }
 
 // Stub methods for things we don't implement
-func (atxn *AgentTxn) Add(key agent.AddedKey) error   { atxn.log.Trace("Add()"); return nil }
-func (atxn *AgentTxn) Remove(key ssh.PublicKey) error { atxn.log.Trace("Remove()"); return nil }
-func (atxn *AgentTxn) RemoveAll() error               { atxn.log.Trace("RemoveAll()"); return nil }
-func (atxn *AgentTxn) Lock(passphrase []byte) error   { atxn.log.Trace("Lock()"); return nil }
-func (atxn *AgentTxn) Unlock(passphrase []byte) error { atxn.log.Trace("Unlock()"); return nil }
+func (atxn *AgentTxn) Add(key agent.AddedKey) error   { atxn.log.Debug("Add()"); return nil }
+func (atxn *AgentTxn) Remove(key ssh.PublicKey) error { atxn.log.Debug("Remove()"); return nil }
+func (atxn *AgentTxn) RemoveAll() error               { atxn.log.Debug("RemoveAll()"); return nil }
+func (atxn *AgentTxn) Lock(passphrase []byte) error   { atxn.log.Debug("Lock()"); return nil }
+func (atxn *AgentTxn) Unlock(passphrase []byte) error { atxn.log.Debug("Unlock()"); return nil }
 func (atxn *AgentTxn) Signers() ([]ssh.Signer, error) {
-	atxn.log.Trace("Signers()")
+	atxn.log.Debug("Signers()")
 	return []ssh.Signer{}, nil
 }
 
 func (atxn *AgentTxn) List() ([]*agent.Key, error) {
-	atxn.log.Trace("List()")
+	atxn.log.Debug("List()")
 	keys := []*agent.Key{}
 	atxn.ensureCert()
 	if atxn.crt != nil {
@@ -64,7 +64,7 @@ func (atxn *AgentTxn) List() ([]*agent.Key, error) {
 }
 
 func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
-	atxn.log.Tracef("SignWithFlags(%s, %v)", key.Type(), flags)
+	atxn.log.Debugf("SignWithFlags(%s, %v)", key.Type(), flags)
 	atxn.ensureCert()
 	if atxn.cpk == nil {
 		return nil, errors.New("no key for host")
@@ -73,7 +73,7 @@ func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.
 }
 
 func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, error) {
-	atxn.log.Tracef("Extension(%s, %d)", extensionType, len(contents))
+	atxn.log.Debugf("Extension(%s, %d)", extensionType, len(contents))
 	switch extensionType {
 	case ExtOpenSSHSessionBind:
 		sb, err := ParseSessionBind(contents)

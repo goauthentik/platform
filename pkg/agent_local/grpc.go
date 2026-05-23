@@ -9,16 +9,11 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (a *Agent) setupGRPCServer(extra ...grpc.ServerOption) *grpc.Server {
-	l := a.log.WithField("logger", "agent.grpc")
-	grpc := grpc.NewServer(
-		shared.CommonGRPCServerOpts(l, extra...)...,
-	)
+func (a *Agent) setupGRPCServer(grpc grpc.ServiceRegistrar) {
 	pb.RegisterAgentAuthServer(grpc, a)
 	pb.RegisterAgentCacheServer(grpc, a)
 	pb.RegisterAgentCtrlServer(grpc, a)
 	pb.RegisterPingServer(grpc, a)
-	return grpc
 }
 
 func (a *Agent) startGRPC() {
@@ -27,7 +22,11 @@ func (a *Agent) startGRPC() {
 	if err != nil {
 		a.log.WithError(err).Fatal("Failed to listen")
 	}
-	a.grpc = a.setupGRPCServer(grpc.Creds(grpc_creds.NewTransportCredentials(l.WithField("logger", "agent.grpc.auth"))))
+	grpc := grpc.NewServer(
+		shared.CommonGRPCServerOpts(l, grpc.Creds(grpc_creds.NewTransportCredentials(l.WithField("logger", "agent.grpc.auth"))))...,
+	)
+	a.setupGRPCServer(grpc)
+	a.grpc = grpc
 	a.lis = lis
 	a.log.WithField("socket", lis.Path().ForCurrent()).Info("Starting GRPC server")
 	if err := a.grpc.Serve(lis); err != nil {

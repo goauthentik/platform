@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"strings"
 	"sync"
 
 	"github.com/google/uuid"
@@ -15,7 +14,6 @@ import (
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"golang.org/x/crypto/ssh/agent"
-	"google.golang.org/grpc"
 )
 
 type Agent struct {
@@ -26,11 +24,10 @@ type Agent struct {
 	txnMu sync.RWMutex
 	gtm   *token.GlobalTokenManager
 	ctx   context.Context
-	grpc  *grpc.Server
-	mls   *MuxListener
+	grpc  *MethodCaller
 }
 
-func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grpc *grpc.Server) (*Agent, error) {
+func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grpc *MethodCaller) (*Agent, error) {
 	ag := &Agent{
 		log:   systemlog.Get().WithField("logger", "agent"),
 		txn:   map[string]*AgentTxn{},
@@ -38,7 +35,6 @@ func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grp
 		gtm:   gtm,
 		ctx:   ctx,
 		grpc:  grpc,
-		mls:   &MuxListener{},
 	}
 	return ag, nil
 }
@@ -49,9 +45,6 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 		return err
 	}
 
-	go func() {
-		_ = ag.grpc.Serve(ag.mls)
-	}()
 	ag.log.WithField("path", path.ForCurrent()).Info("Listening on socket")
 	for {
 		// Check if context is done
@@ -110,7 +103,7 @@ func (ag *Agent) handleConn(conn net.Conn) {
 	ag.txn[nid.String()] = txn
 	ag.txnMu.Unlock()
 
-	cleanup := func() {
+	defer func() {
 		ag.txnMu.Lock()
 		err = txn.Close()
 		if err != nil {
@@ -119,18 +112,11 @@ func (ag *Agent) handleConn(conn net.Conn) {
 		cancel()
 		delete(ag.txn, nid.String())
 		ag.txnMu.Unlock()
-	}
+	}()
 
 	txn.log.Debug("new connection to agent")
 	err = agent.ServeAgent(txn, conn)
 	if err != nil && err != io.EOF {
-		if strings.HasPrefix(err.Error(), "agent: ") {
-			ag.log.Debug("Routing to GRPC")
-			ag.mls.AddConn(conn)
-			return
-		} else {
-			ag.log.WithError(err).Warn("error from ssh-agent")
-		}
+		ag.log.WithError(err).Warn("error from ssh-agent")
 	}
-	defer cleanup()
 }

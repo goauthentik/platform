@@ -1,17 +1,14 @@
 package client
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"fmt"
 	"net"
-	"time"
 
-	"github.com/avast/retry-go/v4"
 	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -20,63 +17,38 @@ const (
 )
 
 func NewSSHTunnel(socket string, opts ...opt) (*AgentClient, error) {
+	conn, err := net.Dial("unix", socket)
+	if err != nil {
+		return nil, err
+	}
+	opts = append(opts, sshTunnelOpt(conn))
 	return NewDialer(func(ctx context.Context, s string) (net.Conn, error) {
-		return net.Dial("unix", socket)
-		// return &sshAgentTunnel{
-		// 	agent: agent.NewClient(conn),
-		// 	conn:  conn,
-		// }, nil
+		return net.Dial("unix", "/dev/null")
 	}, opts...)
 }
 
-type sshAgentTunnel struct {
-	agent agent.ExtendedAgent
-	conn  net.Conn
-	buff  bytes.Buffer
-}
-
-func (sat *sshAgentTunnel) Close() error                       { return sat.conn.Close() }
-func (sat *sshAgentTunnel) LocalAddr() net.Addr                { return sat.conn.LocalAddr() }
-func (sat *sshAgentTunnel) RemoteAddr() net.Addr               { return sat.conn.RemoteAddr() }
-func (sat *sshAgentTunnel) SetDeadline(t time.Time) error      { return sat.conn.SetDeadline(t) }
-func (sat *sshAgentTunnel) SetReadDeadline(t time.Time) error  { return sat.conn.SetReadDeadline(t) }
-func (sat *sshAgentTunnel) SetWriteDeadline(t time.Time) error { return sat.conn.SetWriteDeadline(t) }
-
-var errStall = errors.New("stall")
-
-func (sat *sshAgentTunnel) Read(b []byte) (int, error) {
-	dd, err := retry.DoWithData(
-		func() ([]byte, error) {
-			if sat.buff.Len() == 0 {
-				return []byte{}, errStall
+func sshTunnelOpt(c net.Conn) opt {
+	ag := agent.NewClient(c)
+	return func(ac *AgentClient) (grpc.UnaryClientInterceptor, grpc.StreamClientInterceptor) {
+		return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+			d, err := proto.Marshal(req.(proto.Message))
+			if err != nil {
+				return err
 			}
-			d := sat.buff.Bytes()
-			return d, nil
-		},
-		retry.Delay(10*time.Microsecond),
-		retry.DelayType(retry.BackOffDelay),
-		retry.MaxDelay(100*time.Millisecond),
-		retry.Attempts(0),
-	)
-	copy(b, dd)
-	fmt.Printf("write %d %X\n", len(b), b)
-	return len(b), err
-}
-
-func (sat *sshAgentTunnel) Write(b []byte) (int, error) {
-	d := ssh.Marshal(sshagent.ExtAuthentikAgentTunnelData{
-		Data: b,
-	})
-
-	fmt.Printf("write %d %X\n", len(b), b)
-	r, err := sat.agent.Extension(sshagent.ExtAuthentikAgentTunnel, d)
-	if err != nil {
-		return 0, err
+			data := sshagent.ExtAuthentikAgentTunnelData{
+				Method: method,
+				Data:   d,
+			}
+			res, err := ag.Extension(sshagent.ExtAuthentikAgentTunnel, ssh.Marshal(data))
+			if err != nil {
+				return err
+			}
+			rd := sshagent.ExtAuthentikAgentTunnelData{}
+			if err := ssh.Unmarshal(res, &rd); err != nil {
+				return err
+			}
+			proto.Unmarshal(rd.Data, reply.(proto.Message))
+			return nil
+		}, nil
 	}
-
-	_, err = sat.buff.Write(r)
-	if err != nil {
-		return 0, err
-	}
-	return len(b), nil
 }

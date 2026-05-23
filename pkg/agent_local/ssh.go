@@ -9,7 +9,9 @@ import (
 
 func (a *Agent) startSSH() {
 	l := a.log.WithField("logger", "agent.ssh")
-	ag, err := sshagent.New(l, a.tr, context.Background(), a.setupGRPCServer())
+	vgrpc := &sshagent.MethodCaller{}
+	a.setupGRPCServer(vgrpc)
+	ag, err := sshagent.New(l, a.tr, context.Background(), vgrpc)
 	if err != nil {
 		a.log.WithError(err).Warning("failed to init SSH agent")
 		return
