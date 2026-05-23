@@ -82,46 +82,49 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 				continue
 			}
 		}
-		go func(conn net.Conn) {
-			defer func() {
-				err := conn.Close()
-				if err != nil {
-					ag.log.WithError(err).Warning("failed to close connection")
-				}
-			}()
-			nid, err := uuid.NewUUID()
-			if err != nil {
-				ag.log.WithError(err).Warning("failed to generate id")
-				return
-			}
-			cctx, cancel := context.WithCancel(ag.ctx)
-			txn := &AgentTxn{
-				ag:        ag,
-				log:       ag.log.WithField("txn", nid.String()),
-				ctx:       cctx,
-				conn:      conn,
-				tunnelMtx: sync.Mutex{},
-			}
-			ag.txnMu.Lock()
-			ag.txn[nid.String()] = txn
-			ag.txnMu.Unlock()
-
-			defer func() {
-				ag.txnMu.Lock()
-				err = txn.Close()
-				if err != nil {
-					ag.log.WithError(err).Warning("failed to gracefully close txn")
-				}
-				cancel()
-				delete(ag.txn, nid.String())
-				ag.txnMu.Unlock()
-			}()
-
-			txn.log.Debug("new connection to agent")
-			err = agent.ServeAgent(txn, conn)
-			if err != nil && err != io.EOF {
-				ag.log.WithError(err).Warn("error from ssh-agent")
-			}
-		}(conn)
+		go ag.handleConn(conn)
 	}
+}
+
+func (ag *Agent) handleConn(conn net.Conn) {
+	defer func() {
+		err := conn.Close()
+		if err != nil {
+			ag.log.WithError(err).Warning("failed to close connection")
+		}
+	}()
+	nid, err := uuid.NewUUID()
+	if err != nil {
+		ag.log.WithError(err).Warning("failed to generate id")
+		return
+	}
+	cctx, cancel := context.WithCancel(ag.ctx)
+	txn := &AgentTxn{
+		ag:        ag,
+		log:       ag.log.WithField("txn", nid.String()),
+		ctx:       cctx,
+		conn:      conn,
+		tunnelMtx: sync.Mutex{},
+	}
+	ag.txnMu.Lock()
+	ag.txn[nid.String()] = txn
+	ag.txnMu.Unlock()
+
+	defer func() {
+		ag.txnMu.Lock()
+		err = txn.Close()
+		if err != nil {
+			ag.log.WithError(err).Warning("failed to gracefully close txn")
+		}
+		cancel()
+		delete(ag.txn, nid.String())
+		ag.txnMu.Unlock()
+	}()
+
+	txn.log.Debug("new connection to agent")
+	err = agent.ServeAgent(txn, conn)
+	if err != nil && err != io.EOF {
+		ag.log.WithError(err).Warn("error from ssh-agent")
+	}
+
 }
