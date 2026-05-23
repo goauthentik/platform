@@ -14,6 +14,7 @@ func (a *Agent) startSSH() {
 		a.log.WithError(err).Warning("failed to init SSH agent")
 		return
 	}
+	ag.Profile = "default"
 	a.ssh = ag
 	err = ag.Listen(types.GetAgentSocketPath(types.SocketIDSSH))
 	if err != nil {

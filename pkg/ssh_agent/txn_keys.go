@@ -3,8 +3,6 @@ package sshagent
 import (
 	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"strings"
@@ -13,6 +11,7 @@ import (
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
+	"goauthentik.io/platform/pkg/ak/token"
 	"goauthentik.io/platform/pkg/platform/authz"
 	"goauthentik.io/platform/pkg/platform/grpc_creds"
 	"goauthentik.io/platform/pkg/platform/pstr"
@@ -25,8 +24,6 @@ const (
 	ExtAuthentikPlatformSSHToken   = "goauthentik.io/platform/ssh/ssh/token"
 	ExtAuthentikPlatformSSHHostKey = "goauthentik.io/platform/ssh/host-key"
 )
-
-const profile = "default"
 
 func (atxn *AgentTxn) authorize(hostKey string) error {
 	creds, err := grpc_creds.GetCreds(atxn.conn)
@@ -46,7 +43,7 @@ func (atxn *AgentTxn) authorize(hostKey string) error {
 		},
 		TimeoutSuccessful: time.Minute * 30,
 		TimeoutDenied:     time.Minute * 5,
-	}, profile, creds)
+	}, atxn.ag.Profile, creds)
 	if err != nil {
 		return err
 	}
@@ -57,7 +54,7 @@ func (atxn *AgentTxn) authorize(hostKey string) error {
 }
 
 func (atxn *AgentTxn) getHostToken() (*api.AgentTokenResponse, error) {
-	prof := config.Manager().Get().Profiles[profile]
+	prof := config.Manager().Get().Profiles[atxn.ag.Profile]
 	if prof == nil {
 		return nil, status.Error(codes.NotFound, "Profile not found")
 	}
@@ -81,18 +78,8 @@ func (atxn *AgentTxn) getHostToken() (*api.AgentTokenResponse, error) {
 	return dt, nil
 }
 
-func (atxn *AgentTxn) generateKey() (*ssh.Certificate, ssh.Signer, error) {
-	tk, err := atxn.ag.gtm.ForProfile(profile).Token()
-	if err != nil {
-		return nil, nil, err
-	}
-
+func (atxn *AgentTxn) generateCert(rootToken token.Token, hostToken *api.AgentTokenResponse) (*ssh.Certificate, ssh.Signer, error) {
 	key, err := generateSSHPrivateKey()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ht, err := atxn.getHostToken()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -100,12 +87,12 @@ func (atxn *AgentTxn) generateKey() (*ssh.Certificate, ssh.Signer, error) {
 	testCert := &ssh.Certificate{
 		CertType:        ssh.UserCert,
 		Nonce:           []byte{},
-		ValidPrincipals: []string{tk.Claims().Username},
+		ValidPrincipals: []string{rootToken.Claims().Username},
 		ValidAfter:      0,
-		ValidBefore:     uint64(time.Now().Add(time.Second * time.Duration(*ht.ExpiresIn)).Unix()),
+		ValidBefore:     uint64(time.Now().Add(time.Second * time.Duration(*hostToken.ExpiresIn)).Unix()),
 		Reserved:        []byte{},
 		Key:             key.PublicKey(),
-		KeyId:           "",
+		KeyId:           rootToken.Claims().Username,
 		Permissions: ssh.Permissions{
 			CriticalOptions: map[string]string{},
 			Extensions: map[string]string{
@@ -114,7 +101,7 @@ func (atxn *AgentTxn) generateKey() (*ssh.Certificate, ssh.Signer, error) {
 				"permit-port-forwarding":       "",
 				"permit-pty":                   "",
 				"permit-user-rc":               "",
-				ExtAuthentikPlatformSSHToken:   ht.Token,
+				ExtAuthentikPlatformSSHToken:   hostToken.Token,
 				ExtAuthentikPlatformSSHHostKey: string(ssh.MarshalAuthorizedKey(atxn.hostKey)),
 			},
 		},
@@ -132,21 +119,5 @@ func generateSSHPrivateKey() (ssh.Signer, error) {
 		return nil, err
 	}
 
-	bytes, err := x509.MarshalPKCS8PrivateKey(priv)
-	if err != nil {
-		return nil, err
-	}
-
-	privatePem := pem.EncodeToMemory(
-		&pem.Block{
-			Type:  "PRIVATE KEY",
-			Bytes: bytes,
-		},
-	)
-
-	sshPriv, err := ssh.ParsePrivateKey(privatePem)
-	if err != nil {
-		return nil, err
-	}
-	return sshPriv, nil
+	return ssh.NewSignerFromKey(priv)
 }

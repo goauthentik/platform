@@ -52,6 +52,7 @@ func (atxn *AgentTxn) Signers() ([]ssh.Signer, error) {
 func (atxn *AgentTxn) List() ([]*agent.Key, error) {
 	atxn.log.Trace("List()")
 	keys := []*agent.Key{}
+	atxn.ensureCert()
 	if atxn.crt != nil {
 		keys = append(keys, &agent.Key{
 			Format:  atxn.crt.Type(),
@@ -64,6 +65,7 @@ func (atxn *AgentTxn) List() ([]*agent.Key, error) {
 
 func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
 	atxn.log.Tracef("SignWithFlags(%s, %v)", key.Type(), flags)
+	atxn.ensureCert()
 	if atxn.cpk == nil {
 		return nil, errors.New("no key for host")
 	}
@@ -80,17 +82,34 @@ func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, 
 		}
 		atxn.sshSessionID = sb.SessionID
 		atxn.hostKey = sb.HostKey
-		crt, sign, err := atxn.generateKey()
-		if err != nil {
-			atxn.log.WithError(err).Warning("failed to generate cert")
-			return nil, err
-		}
-		atxn.crt = crt
-		atxn.cpk = sign
 	case ExtAuthentikAgentTunnel:
 		return atxn.handleAuthentikAgentTunnel(contents)
 	}
 	return []byte{}, nil
+}
+
+func (atxn *AgentTxn) ensureCert() error {
+	if atxn.crt != nil {
+		return nil
+	}
+	tk, err := atxn.ag.gtm.ForProfile(atxn.ag.Profile).Token()
+	if err != nil {
+		return err
+	}
+
+	ht, err := atxn.getHostToken()
+	if err != nil {
+		return err
+	}
+
+	crt, sign, err := atxn.generateCert(tk, ht)
+	if err != nil {
+		atxn.log.WithError(err).Warning("failed to generate cert")
+		return err
+	}
+	atxn.crt = crt
+	atxn.cpk = sign
+	return nil
 }
 
 func (atxn *AgentTxn) Close() error {

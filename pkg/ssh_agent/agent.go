@@ -19,6 +19,8 @@ import (
 )
 
 type Agent struct {
+	Profile string
+
 	log   *log.Entry
 	txn   map[string]*AgentTxn
 	txnMu sync.RWMutex
