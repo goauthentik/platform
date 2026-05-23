@@ -17,15 +17,15 @@ type mockExtendedAgent struct {
 	extensionFunc func(extensionType string, contents []byte) ([]byte, error)
 }
 
-func (m *mockExtendedAgent) List() ([]*agent.Key, error)                               { return nil, nil }
+func (m *mockExtendedAgent) List() ([]*agent.Key, error) { return nil, nil }
 func (m *mockExtendedAgent) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, error) {
 	return nil, nil
 }
-func (m *mockExtendedAgent) Add(key agent.AddedKey) error         { return nil }
-func (m *mockExtendedAgent) Remove(key ssh.PublicKey) error       { return nil }
-func (m *mockExtendedAgent) RemoveAll() error                     { return nil }
-func (m *mockExtendedAgent) Lock(passphrase []byte) error         { return nil }
-func (m *mockExtendedAgent) Unlock(passphrase []byte) error       { return nil }
+func (m *mockExtendedAgent) Add(key agent.AddedKey) error   { return nil }
+func (m *mockExtendedAgent) Remove(key ssh.PublicKey) error { return nil }
+func (m *mockExtendedAgent) RemoveAll() error               { return nil }
+func (m *mockExtendedAgent) Lock(passphrase []byte) error   { return nil }
+func (m *mockExtendedAgent) Unlock(passphrase []byte) error { return nil }
 func (m *mockExtendedAgent) Signers() ([]ssh.Signer, error) { return nil, nil }
 func (m *mockExtendedAgent) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
 	return nil, nil
@@ -59,7 +59,7 @@ func Test_SSHAgentTunnel_Write(t *testing.T) {
 
 	// Verify the payload is SSH-marshaled ExtAuthentikAgentTunnelData.
 	var parsed sshagent.ExtAuthentikAgentTunnelData
-	ssh.Unmarshal(capturedContents, &parsed)
+	assert.NoError(t, ssh.Unmarshal(capturedContents, &parsed))
 	assert.Equal(t, []byte("hello"), parsed.Data)
 
 	// The extension response should be buffered for subsequent reads.
@@ -103,7 +103,9 @@ func Test_SSHAgentTunnel_StubMethods(t *testing.T) {
 		},
 	}
 	c1, c2 := net.Pipe()
-	defer c2.Close()
+	defer func() {
+		assert.NoError(t, c2.Close())
+	}()
 	sat := &sshAgentTunnel{agent: ma, conn: c1}
 
 	assert.NotNil(t, sat.LocalAddr())
