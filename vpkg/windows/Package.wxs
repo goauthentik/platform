@@ -49,7 +49,7 @@
               Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
               KeyPath="true" />
         <File Id="ak_sysd_config"
-              Source="$(env.ROOT)/cmd/agent_system/package/windows/config.json" />
+              Source="$(env.PWD)/config.json" />
 
         <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\authentik" />
         <util:EventSource Log="authentik"
