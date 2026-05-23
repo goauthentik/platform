@@ -88,28 +88,29 @@ func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, 
 	return []byte{}, nil
 }
 
-func (atxn *AgentTxn) ensureCert() error {
+func (atxn *AgentTxn) ensureCert() {
 	if atxn.crt != nil {
-		return nil
+		return
 	}
 	tk, err := atxn.ag.gtm.ForProfile(atxn.ag.Profile).Token()
 	if err != nil {
-		return err
+		atxn.log.WithError(err).Warning("failed to get token")
+		return
 	}
 
 	ht, err := atxn.getHostToken()
 	if err != nil {
-		return err
+		atxn.log.WithError(err).Warning("failed to exchange host token")
+		return
 	}
 
 	crt, sign, err := atxn.generateCert(tk, ht)
 	if err != nil {
 		atxn.log.WithError(err).Warning("failed to generate cert")
-		return err
+		return
 	}
 	atxn.crt = crt
 	atxn.cpk = sign
-	return nil
 }
 
 func (atxn *AgentTxn) Close() error {

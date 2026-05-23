@@ -49,7 +49,9 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 		return err
 	}
 
-	go ag.grpc.Serve(ag.mls)
+	go func() {
+		_ = ag.grpc.Serve(ag.mls)
+	}()
 	ag.log.WithField("path", path.ForCurrent()).Info("Listening on socket")
 	for {
 		// Check if context is done
