@@ -129,3 +129,12 @@ func Test_AgentTxn_Close_WithTunnel(t *testing.T) {
 	txn.tunnelConn = c1
 	assert.NoError(t, txn.Close())
 }
+
+func Test_AgentTxn_Extension_AgentTunnel_MalformedData(t *testing.T) {
+	txn := newTestTxn()
+	// Malformed SSH wire data: ssh.Unmarshal fails, handleAuthentikAgentTunnel
+	// logs a warning and returns ([]byte{}, nil) without propagating the error.
+	result, err := txn.Extension(ExtAuthentikAgentTunnel, []byte("not-valid-ssh-wire"))
+	assert.NoError(t, err)
+	assert.Equal(t, []byte{}, result)
+}
