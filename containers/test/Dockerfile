@@ -30,4 +30,4 @@ VOLUME [ "/sys/fs/cgroup" ]
 
 RUN systemctl enable ssh.service rsyslog.service
 
-ENTRYPOINT [ "/lib/systemd/systemd"]
+ENTRYPOINT [ "/lib/systemd/systemd" ]

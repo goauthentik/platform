@@ -23,9 +23,6 @@ func Test_Auth_IdentityAgent(t *testing.T) {
 	JoinDomain(t, tc)
 	AgentSetup(t, tc)
 
-	MustExec(t, tc, "ssh-keygen -A")
-	MustExec(t, tc, "systemctl restart ssh")
-
 	sshOpts := []string{
 		"-o StrictHostKeyChecking=no",
 		"-o IdentityAgent=~/.local/share/authentik/agent-ssh.sock",

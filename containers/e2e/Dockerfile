@@ -19,3 +19,7 @@ RUN --mount=type=bind,target=/build/bin,src=./bin \
     systemctl enable ak-agent && \
     rm -f /etc/machine-id && \
     rm -f /etc/ssh/ssh_host_*
+
+COPY ./containers/e2e/entrypoint.sh /bin/entrypoint.sh
+
+ENTRYPOINT [ "/bin/entrypoint.sh" ]
