@@ -17,4 +17,5 @@ RUN --mount=type=bind,target=/build/bin,src=./bin \
     echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-agent"\nEnvironment="HOME=/root"\' > /etc/systemd/system/ak-agent.service.d/coverage.conf && \
     sed -i 's/false/true/g' /etc/authentik/config.json && \
     systemctl enable ak-agent && \
-    rm -f /etc/machine-id
+    rm -f /etc/machine-id && \
+    rm -f /etc/ssh/ssh_host_*
