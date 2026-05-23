@@ -47,7 +47,7 @@ type BrowserSupport struct {
 }
 
 func New() (*BrowserSupport, error) {
-	ac, err := aclient.New(types.GetAgentSocketPath().ForCurrent())
+	ac, err := aclient.New(types.GetAgentSocketPath(types.SocketIDDefault).ForCurrent())
 	if err != nil {
 		return nil, err
 	}

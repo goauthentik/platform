@@ -15,6 +15,7 @@ import (
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/socket"
 	"goauthentik.io/platform/pkg/shared/events"
+	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 	"google.golang.org/grpc"
 )
@@ -33,6 +34,7 @@ type Agent struct {
 	lock lockfile.Lockfile
 	lis  socket.InfoListener
 	bus  *events.Bus
+	ssh  *sshagent.Agent
 }
 
 func New() (*Agent, error) {
@@ -61,6 +63,7 @@ func (a *Agent) Start() {
 		return
 	}
 	go a.startGRPC()
+	go a.startSSH()
 	go a.signalHandler()
 	go func() {
 		<-a.tray.Exit

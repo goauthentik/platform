@@ -11,7 +11,7 @@ import (
 )
 
 func (c *SSHClient) ForwardAgentSocket(remoteSocket string, client *ssh.Client) error {
-	localSocket := types.GetAgentSocketPath()
+	localSocket := types.GetAgentSocketPath(types.SocketIDDefault)
 	remoteListener, err := client.Listen("unix", remoteSocket)
 	if err != nil {
 		return err

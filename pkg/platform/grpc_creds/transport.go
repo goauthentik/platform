@@ -32,21 +32,9 @@ func (c *transportCredentials) ClientHandshake(ctx context.Context, authority st
 }
 
 func (c *transportCredentials) ServerHandshake(conn net.Conn) (net.Conn, credentials.AuthInfo, error) {
-	creds, err := getCreds(conn)
+	creds, err := GetCreds(conn)
 	if err != nil {
-		c.log.WithError(err).Warning("getCreds")
-		return nil, nil, err
-	}
-	creds.Proc, err = ProcInfoFrom(int32(creds.PID))
-	if err != nil {
-		return nil, nil, err
-	}
-	parent, err := creds.Proc.Parent()
-	if err != nil {
-		return nil, nil, err
-	}
-	creds.Parent, err = ProcInfoFrom(parent.Pid)
-	if err != nil {
+		c.log.WithError(err).Warning("Get Creds")
 		return nil, nil, err
 	}
 	return conn, AuthInfo{

@@ -2,7 +2,9 @@ package client
 
 import (
 	"context"
+	"errors"
 	"net"
+	"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	grpc_sentry "github.com/johnbellone/grpc-middleware-sentry"
@@ -45,6 +47,20 @@ func WithLogging() opt {
 }
 
 func New(socketPath string, opts ...opt) (*AgentClient, error) {
+	if _, err := os.Stat(socketPath); errors.Is(err, os.ErrNotExist) {
+		sock, ok := os.LookupEnv(sshAuthSock)
+		if ok {
+			return NewSSHTunnel(sock, opts...)
+		}
+	}
+	return NewDialer(func(ctx context.Context, s string) (net.Conn, error) {
+		return socket.Connect(pstr.PlatformString{
+			Fallback: socketPath,
+		})
+	}, opts...)
+}
+
+func NewDialer(dialer func(ctx context.Context, s string) (net.Conn, error), opts ...opt) (*AgentClient, error) {
 	l := log.WithField("logger", "cli.grpc")
 	ag := &AgentClient{
 		log: l,
@@ -58,13 +74,9 @@ func New(socketPath string, opts ...opt) (*AgentClient, error) {
 		streamInterceptors = append(streamInterceptors, s)
 	}
 	conn, err := grpc.NewClient(
-		"localhost",
+		"[::1]:1",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
-			return socket.Connect(pstr.PlatformString{
-				Fallback: socketPath,
-			})
-		}),
+		grpc.WithContextDialer(dialer),
 		grpc.WithChainUnaryInterceptor(clientInterceptors...),
 		grpc.WithChainStreamInterceptor(streamInterceptors...),
 	)

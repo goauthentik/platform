@@ -32,6 +32,6 @@ package-gnu/linux: build
 	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
 
 test-deploy: package-gnu/linux
-	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+ak-${VERSION_HASH_SHORT}_${ARCH}.deb
 	$(TME) systemctl restart ssh
-	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}_${ARCH}.deb
+	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}+ak-${VERSION_HASH_SHORT}_${ARCH}.deb

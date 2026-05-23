@@ -8,14 +8,28 @@ import (
 	"goauthentik.io/platform/pkg/platform/pstr"
 )
 
-func GetAgentSocketPath() pstr.PlatformString {
-	if sp, ok := os.LookupEnv("AUTHENTIK_CLI_SOCKET"); ok {
+const (
+	SocketIDDefault = "default"
+	SocketIDSSH     = "ssh"
+)
+
+func GetAgentSocketPath(id string) pstr.PlatformString {
+	switch id {
+	case SocketIDDefault:
+		if sp, ok := os.LookupEnv("AUTHENTIK_CLI_SOCKET"); ok {
+			return pstr.PlatformString{
+				Fallback: sp,
+			}
+		}
 		return pstr.PlatformString{
-			Fallback: sp,
+			Linux:   new(path.Join(xdg.DataHome, "authentik", "agent.sock")),
+			Windows: new(`\\.\pipe\authentik\socket`),
+		}
+	case SocketIDSSH:
+		return pstr.PlatformString{
+			Linux:   new(path.Join(xdg.DataHome, "authentik", "agent-ssh.sock")),
+			Windows: new(`\\.\pipe\authentik\socket-ssh`),
 		}
 	}
-	return pstr.PlatformString{
-		Linux:   new(path.Join(xdg.DataHome, "authentik", "agent.sock")),
-		Windows: new(`\\.\pipe\authentik\socket`),
-	}
+	panic("")
 }
