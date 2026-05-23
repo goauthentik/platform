@@ -13,6 +13,7 @@ var sshCmd = &cobra.Command{
 	Short:        "Establish an SSH connection with `host`.",
 	Args:         cobra.MinimumNArgs(1),
 	SilenceUsage: true,
+	Deprecated:   "`ak ssh` is deprecated, migrate to the authentik SSH Agent.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		profile := mustFlag(cmd.Flags().GetString("profile"))
 		agentClient, err := client.New(socketPath)

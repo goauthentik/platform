@@ -10,7 +10,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/network"
 )
 
-func Test_Auth(t *testing.T) {
+func Test_Auth_Legacy(t *testing.T) {
 	net, err := network.New(t.Context(), network.WithAttachable())
 	defer testcontainers.CleanupNetwork(t, net)
 	assert.NoError(t, err)
@@ -20,6 +20,9 @@ func Test_Auth(t *testing.T) {
 	assert.NoError(t, tc.Start(t.Context()))
 	JoinDomain(t, tc)
 	AgentSetup(t, tc)
+
+	MustExec(t, tc, "sed -i 's/KbdInteractiveAuthentication no/KbdInteractiveAuthentication yes/g' /etc/ssh/sshd_config")
+	MustExec(t, tc, "systemctl restart ssh")
 
 	cmdTest(t, tc, []cmdTestCase{
 		{
