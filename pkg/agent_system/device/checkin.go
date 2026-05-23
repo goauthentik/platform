@@ -12,7 +12,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
 
-func (ds *Server) checkIn(ctx context.Context, dom *config.DomainConfig) error {
+func (ds *Server) CheckIn(ctx context.Context, dom *config.DomainConfig) error {
 	time.Sleep(time.Duration(rand.IntN(30)) * time.Second)
 	ds.log.Debug("Starting facts gathering...")
 	api, err := dom.APIClient()

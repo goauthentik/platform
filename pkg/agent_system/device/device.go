@@ -51,7 +51,7 @@ func (ds *Server) runCheckins() {
 	ds.cancel = cancel
 	for _, dom := range config.Manager().Get().Domains() {
 		go func() {
-			_ = ds.checkIn(ctx, dom)
+			_ = ds.CheckIn(ctx, dom)
 		}()
 		d := time.Second * time.Duration(dom.Config().RefreshInterval)
 		ds.log.WithField("interval_s", d.Seconds).Debug("starting checkin")
@@ -61,7 +61,7 @@ func (ds *Server) runCheckins() {
 				select {
 				case <-t.C:
 					ds.log.WithField("domain", dom.Domain).Info("Starting checkin")
-					err := ds.checkIn(ctx, dom)
+					err := ds.CheckIn(ctx, dom)
 					if err != nil {
 						ds.log.WithError(err).Warning("failed to checkin")
 					} else {

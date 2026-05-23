@@ -5,7 +5,9 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
+	"goauthentik.io/platform/pkg/agent_system/component"
 	"goauthentik.io/platform/pkg/agent_system/config"
+	"goauthentik.io/platform/pkg/agent_system/device"
 	"goauthentik.io/platform/pkg/pb"
 	"goauthentik.io/platform/pkg/shared/events"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
@@ -51,6 +53,15 @@ func (ctrl *Server) DomainEnroll(ctx context.Context, req *pb.DomainEnrollReques
 	ctrl.ctx.Bus().DispatchEvent(cfgmgr.TopicConfigChanged, events.NewEvent(ctx, map[string]any{
 		"type": cfgmgr.ConfigChangedAdded,
 	}))
+
+	dev, err := component.Get[*device.Server](ctrl.ctx, device.ID)
+	if err != nil {
+		return nil, err
+	}
+	err = dev.CheckIn(ctx, d)
+	if err != nil {
+		return nil, err
+	}
 	return &pb.DomainEnrollResponse{}, nil
 }
 
