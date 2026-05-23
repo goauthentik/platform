@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/google/uuid"
@@ -15,7 +16,6 @@ import (
 	"goauthentik.io/platform/pkg/platform/socket"
 	"golang.org/x/crypto/ssh/agent"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/test/bufconn"
 )
 
 type Agent struct {
@@ -27,7 +27,7 @@ type Agent struct {
 	gtm   *token.GlobalTokenManager
 	ctx   context.Context
 	grpc  *grpc.Server
-	mls   *bufconn.Listener
+	mls   *MuxListener
 }
 
 func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grpc *grpc.Server) (*Agent, error) {
@@ -38,7 +38,7 @@ func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grp
 		gtm:   gtm,
 		ctx:   ctx,
 		grpc:  grpc,
-		mls:   bufconn.Listen(1024 * 1024),
+		mls:   &MuxListener{},
 	}
 	return ag, nil
 }
@@ -110,7 +110,7 @@ func (ag *Agent) handleConn(conn net.Conn) {
 	ag.txn[nid.String()] = txn
 	ag.txnMu.Unlock()
 
-	defer func() {
+	cleanup := func() {
 		ag.txnMu.Lock()
 		err = txn.Close()
 		if err != nil {
@@ -119,12 +119,18 @@ func (ag *Agent) handleConn(conn net.Conn) {
 		cancel()
 		delete(ag.txn, nid.String())
 		ag.txnMu.Unlock()
-	}()
+	}
 
 	txn.log.Debug("new connection to agent")
 	err = agent.ServeAgent(txn, conn)
 	if err != nil && err != io.EOF {
-		ag.log.WithError(err).Warn("error from ssh-agent")
+		if strings.HasPrefix(err.Error(), "agent: ") {
+			ag.log.Debug("Routing to GRPC")
+			ag.mls.AddConn(conn)
+			return
+		} else {
+			ag.log.WithError(err).Warn("error from ssh-agent")
+		}
 	}
-
+	defer cleanup()
 }

@@ -32,12 +32,12 @@ func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
 
 	if atxn.tunnelConn == nil {
 		atxn.log.Debug("new conn")
-		c, err := atxn.ag.mls.Dial()
-		if err != nil {
-			atxn.log.WithError(err).Warning("failed to get new conn")
-			return []byte{}, nil
-		}
-		atxn.tunnelConn = c
+		// c, err := atxn.ag.mls.Dial()
+		// if err != nil {
+		// 	atxn.log.WithError(err).Warning("failed to get new conn")
+		// 	return []byte{}, nil
+		// }
+		// atxn.tunnelConn = c
 	}
 	n, err := atxn.tunnelConn.Write(d.Data)
 	atxn.log.Debugf("write %+X (%d, max=%d)", d.Data, n, len(d.Data))

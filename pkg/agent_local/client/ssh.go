@@ -20,15 +20,12 @@ const (
 )
 
 func NewSSHTunnel(socket string, opts ...opt) (*AgentClient, error) {
-	conn, err := net.Dial("unix", socket)
-	if err != nil {
-		return nil, err
-	}
 	return NewDialer(func(ctx context.Context, s string) (net.Conn, error) {
-		return &sshAgentTunnel{
-			agent: agent.NewClient(conn),
-			conn:  conn,
-		}, nil
+		return net.Dial("unix", socket)
+		// return &sshAgentTunnel{
+		// 	agent: agent.NewClient(conn),
+		// 	conn:  conn,
+		// }, nil
 	}, opts...)
 }
 
