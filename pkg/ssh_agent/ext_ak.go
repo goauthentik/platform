@@ -3,6 +3,7 @@ package sshagent
 import (
 	"errors"
 	"io"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -45,9 +46,16 @@ func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
 	}
 
 	var dd = make([]byte, 1024)
+	atxn.tunnelConn.SetDeadline(time.Now().Add(2 * time.Second))
 	n, err = atxn.tunnelConn.Read(dd)
 	if err != nil {
+		// bufcon's timeout error doesn't correctly use os.ErrDeadlineExceeded
+		if err.Error() == "i/o timeout" {
+			atxn.log.Debug("deadline")
+			return []byte{}, nil
+		}
 		if errors.Is(err, io.EOF) {
+			atxn.log.Debug("eof")
 			return []byte{}, nil
 		}
 		atxn.log.WithError(err).Warning("failed to read")

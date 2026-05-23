@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -61,7 +62,8 @@ func (sat *sshAgentTunnel) Read(b []byte) (int, error) {
 		retry.Attempts(0),
 	)
 	copy(b, dd)
-	return len(dd), err
+	fmt.Printf("write %d %X\n", len(b), b)
+	return len(b), err
 }
 
 func (sat *sshAgentTunnel) Write(b []byte) (int, error) {
@@ -69,6 +71,7 @@ func (sat *sshAgentTunnel) Write(b []byte) (int, error) {
 		Data: b,
 	})
 
+	fmt.Printf("write %d %X\n", len(b), b)
 	r, err := sat.agent.Extension(sshagent.ExtAuthentikAgentTunnel, d)
 	if err != nil {
 		return 0, err
