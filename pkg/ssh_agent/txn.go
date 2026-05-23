@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"net"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -22,7 +23,8 @@ type AgentTxn struct {
 
 	ctx context.Context
 
-	tc net.Conn
+	tunnelConn net.Conn
+	tunnelMtx  sync.Mutex
 }
 
 func init() {
@@ -84,8 +86,8 @@ func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, 
 }
 
 func (atxn *AgentTxn) Close() error {
-	if atxn.tc != nil {
-		return atxn.tc.Close()
+	if atxn.tunnelConn != nil {
+		return atxn.tunnelConn.Close()
 	}
 	return nil
 }

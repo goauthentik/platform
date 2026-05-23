@@ -3,10 +3,12 @@ package client
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -23,7 +25,6 @@ func NewSSHTunnel(socket string, opts ...opt) (*AgentClient, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return NewDialer(func(ctx context.Context, s string) (net.Conn, error) {
 		return &sshAgentTunnel{
 			agent: agent.NewClient(conn),
@@ -45,11 +46,29 @@ func (sat *sshAgentTunnel) SetDeadline(t time.Time) error      { return sat.conn
 func (sat *sshAgentTunnel) SetReadDeadline(t time.Time) error  { return sat.conn.SetReadDeadline(t) }
 func (sat *sshAgentTunnel) SetWriteDeadline(t time.Time) error { return sat.conn.SetWriteDeadline(t) }
 
-func (sat *sshAgentTunnel) Read(b []byte) (n int, err error) {
-	return sat.buff.Read(b)
+var errStall = errors.New("stall")
+
+func (sat *sshAgentTunnel) Read(b []byte) (int, error) {
+	fmt.Printf("read %d\n", len(b))
+	dd, err := retry.DoWithData(
+		func() ([]byte, error) {
+			fmt.Printf("read %d\n", len(b))
+			if sat.buff.Len() == 0 {
+				return []byte{}, errStall
+			}
+			d := sat.buff.Bytes()
+			return d, nil
+		},
+		retry.Delay(10*time.Microsecond),
+		retry.DelayType(retry.BackOffDelay),
+		retry.MaxDelay(100*time.Millisecond),
+		retry.Attempts(0),
+	)
+	copy(b, dd)
+	return len(dd), err
 }
 
-func (sat *sshAgentTunnel) Write(b []byte) (n int, err error) {
+func (sat *sshAgentTunnel) Write(b []byte) (int, error) {
 	d := ssh.Marshal(sshagent.ExtAuthentikAgentTunnelData{
 		Data: b,
 	})
@@ -65,6 +84,7 @@ func (sat *sshAgentTunnel) Write(b []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
+	fmt.Printf("write %d %+X\n", len(r), r)
 	_, err = sat.buff.Write(r)
 	if err != nil {
 		return 0, err

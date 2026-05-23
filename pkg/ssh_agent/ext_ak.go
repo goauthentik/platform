@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sync"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/http2"
@@ -19,13 +18,12 @@ type ExtAuthentikAgentTunnelData struct {
 	Data []byte
 }
 
-var mtx = sync.Mutex{}
-
 func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
-	mtx.Lock()
+	atxn.log.Debug("lock")
+	atxn.tunnelMtx.Lock()
 	defer func() {
 		atxn.log.Debug("unlock")
-		mtx.Unlock()
+		atxn.tunnelMtx.Unlock()
 	}()
 	d := ExtAuthentikAgentTunnelData{}
 	err := ssh.Unmarshal(raw, &d)
@@ -36,23 +34,23 @@ func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
 
 	fmt.Printf("(%d) %+X \n", len(d.Data), d.Data)
 
-	if atxn.tc == nil {
+	if atxn.tunnelConn == nil {
 		atxn.log.Debug("new conn")
 		c, err := atxn.ag.mls.Dial()
 		if err != nil {
 			atxn.log.WithError(err).Warning("failed to get new conn")
 			return []byte{}, nil
 		}
-		atxn.tc = c
+		atxn.tunnelConn = c
 	}
-	n, err := atxn.tc.Write(d.Data)
+	n, err := atxn.tunnelConn.Write(d.Data)
 	atxn.log.Debugf("write %+X (%d, max=%d)", d.Data, n, len(d.Data))
 	if err != nil {
 		atxn.log.WithError(err).Warning("failed to write")
 	}
 
 	var dd = make([]byte, 1024)
-	n, err = atxn.tc.Read(dd)
+	n, err = atxn.tunnelConn.Read(dd)
 	if err != nil {
 		if errors.Is(err, io.EOF) {
 			return []byte{}, nil

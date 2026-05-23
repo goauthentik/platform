@@ -92,10 +92,11 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 			}
 			cctx, cancel := context.WithCancel(ag.ctx)
 			txn := &AgentTxn{
-				ag:   ag,
-				log:  ag.log.WithField("txn", nid.String()),
-				ctx:  cctx,
-				conn: conn,
+				ag:        ag,
+				log:       ag.log.WithField("txn", nid.String()),
+				ctx:       cctx,
+				conn:      conn,
+				tunnelMtx: sync.Mutex{},
 			}
 			ag.txnMu.Lock()
 			ag.txn[nid.String()] = txn
