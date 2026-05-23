@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
-	"golang.org/x/net/http2"
 )
 
 const (
@@ -49,10 +47,8 @@ func (sat *sshAgentTunnel) SetWriteDeadline(t time.Time) error { return sat.conn
 var errStall = errors.New("stall")
 
 func (sat *sshAgentTunnel) Read(b []byte) (int, error) {
-	fmt.Printf("read %d\n", len(b))
 	dd, err := retry.DoWithData(
 		func() ([]byte, error) {
-			fmt.Printf("read %d\n", len(b))
 			if sat.buff.Len() == 0 {
 				return []byte{}, errStall
 			}
@@ -72,19 +68,12 @@ func (sat *sshAgentTunnel) Write(b []byte) (int, error) {
 	d := ssh.Marshal(sshagent.ExtAuthentikAgentTunnelData{
 		Data: b,
 	})
-	fmt.Printf("(%d) %+X\n", len(b), b)
-
-	fmt.Printf("'%s'\n", string(b))
-
-	fh, err := http2.ReadFrameHeader(bytes.NewBuffer(b[0:15]))
-	fmt.Printf("%+v\n", fh)
-	fmt.Printf("%+v\n", err)
 
 	r, err := sat.agent.Extension(sshagent.ExtAuthentikAgentTunnel, d)
 	if err != nil {
 		return 0, err
 	}
-	fmt.Printf("write %d %+X\n", len(r), r)
+
 	_, err = sat.buff.Write(r)
 	if err != nil {
 		return 0, err

@@ -1,13 +1,10 @@
 package sshagent
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"io"
 
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/net/http2"
 )
 
 const (
@@ -31,8 +28,6 @@ func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
 		atxn.log.WithError(err).Warning("failed to unmarshal tunnel data")
 		return []byte{}, nil
 	}
-
-	fmt.Printf("(%d) %+X \n", len(d.Data), d.Data)
 
 	if atxn.tunnelConn == nil {
 		atxn.log.Debug("new conn")
@@ -59,9 +54,5 @@ func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	atxn.log.Debugf("read %+X (%d), max=%d", dd[:n], n, len(dd))
-
-	fh, err := http2.ReadFrameHeader(bytes.NewBuffer(dd[:n]))
-	fmt.Printf("%+v\n", fh)
-	fmt.Printf("%+v\n", err)
 	return dd[:n], nil
 }
