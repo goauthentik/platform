@@ -13,6 +13,7 @@ import (
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
 	"goauthentik.io/platform/pkg/platform/socket"
+	"goauthentik.io/platform/pkg/shared/grpc"
 	"golang.org/x/crypto/ssh/agent"
 )
 
@@ -24,10 +25,10 @@ type Agent struct {
 	txnMu sync.RWMutex
 	gtm   *token.GlobalTokenManager
 	ctx   context.Context
-	grpc  *MethodCaller
+	grpc  *grpc.MethodCaller
 }
 
-func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grpc *MethodCaller) (*Agent, error) {
+func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grpc *grpc.MethodCaller) (*Agent, error) {
 	ag := &Agent{
 		log:   systemlog.Get().WithField("logger", "agent"),
 		txn:   map[string]*AgentTxn{},
