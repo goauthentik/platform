@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go/v4"
+	"github.com/google/uuid"
 	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
@@ -209,7 +210,7 @@ func testMachine(t testing.TB) testcontainers.Container {
 			Image: "xghcr.io/goauthentik/platform-e2e:local",
 			ConfigModifier: func(c *container.Config) {
 				c.User = "root"
-				c.Hostname = "test-machine"
+				c.Hostname = fmt.Sprintf("test-machine-%s", uuid.New().String())
 			},
 			ExposedPorts: []string{"22"},
 			Env: map[string]string{
