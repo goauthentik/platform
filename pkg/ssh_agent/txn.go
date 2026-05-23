@@ -3,6 +3,7 @@ package sshagent
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"net"
 	"sync"
 
@@ -23,6 +24,8 @@ type AgentTxn struct {
 
 	ctx context.Context
 
+	sshSessionID []byte
+
 	tunnelConn net.Conn
 	tunnelMtx  sync.Mutex
 }
@@ -36,41 +39,46 @@ func init() {
 func (atxn *AgentTxn) Sign(key ssh.PublicKey, data []byte) (*ssh.Signature, error) { return nil, nil }
 
 // Stub methods for things we don't implement
-func (atxn *AgentTxn) Add(key agent.AddedKey) error   { atxn.log.Debug("Add()"); return nil }
-func (atxn *AgentTxn) Remove(key ssh.PublicKey) error { atxn.log.Debug("Remove()"); return nil }
-func (atxn *AgentTxn) RemoveAll() error               { atxn.log.Debug("RemoveAll()"); return nil }
-func (atxn *AgentTxn) Lock(passphrase []byte) error   { atxn.log.Debug("Lock()"); return nil }
-func (atxn *AgentTxn) Unlock(passphrase []byte) error { atxn.log.Debug("Unlock()"); return nil }
+func (atxn *AgentTxn) Add(key agent.AddedKey) error   { atxn.log.Trace("Add()"); return nil }
+func (atxn *AgentTxn) Remove(key ssh.PublicKey) error { atxn.log.Trace("Remove()"); return nil }
+func (atxn *AgentTxn) RemoveAll() error               { atxn.log.Trace("RemoveAll()"); return nil }
+func (atxn *AgentTxn) Lock(passphrase []byte) error   { atxn.log.Trace("Lock()"); return nil }
+func (atxn *AgentTxn) Unlock(passphrase []byte) error { atxn.log.Trace("Unlock()"); return nil }
 func (atxn *AgentTxn) Signers() ([]ssh.Signer, error) {
-	atxn.log.Debug("Signers()")
+	atxn.log.Trace("Signers()")
 	return []ssh.Signer{}, nil
 }
 
 func (atxn *AgentTxn) List() ([]*agent.Key, error) {
-	atxn.log.Debug("List()")
-	return []*agent.Key{
-		{
+	atxn.log.Trace("List()")
+	keys := []*agent.Key{}
+	if atxn.crt != nil {
+		keys = append(keys, &agent.Key{
 			Format:  atxn.crt.Type(),
 			Blob:    atxn.crt.Marshal(),
 			Comment: "",
-		},
-	}, nil
+		})
+	}
+	return keys, nil
 }
 
 func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
-	atxn.log.Debugf("SignWithFlags(%s, %v)", key.Type(), flags)
-
+	atxn.log.Tracef("SignWithFlags(%s, %v)", key.Type(), flags)
+	if atxn.cpk == nil {
+		return nil, errors.New("no key for host")
+	}
 	return atxn.cpk.Sign(rand.Reader, data)
 }
 
 func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, error) {
-	atxn.log.Debugf("Extension(%s, %d)", extensionType, len(contents))
+	atxn.log.Tracef("Extension(%s, %d)", extensionType, len(contents))
 	switch extensionType {
 	case ExtOpenSSHSessionBind:
 		sb, err := ParseSessionBind(contents)
 		if err != nil {
 			return []byte{}, err
 		}
+		atxn.sshSessionID = sb.SessionID
 		atxn.hostKey = sb.HostKey
 		crt, sign, err := atxn.generateKey()
 		if err != nil {

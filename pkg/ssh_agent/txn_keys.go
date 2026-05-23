@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"goauthentik.io/api/v3"
@@ -27,7 +28,7 @@ const (
 
 const profile = "default"
 
-func (atxn *AgentTxn) authorize(deviceName string, deviceId string) error {
+func (atxn *AgentTxn) authorize(hostKey string) error {
 	creds, err := grpc_creds.GetCreds(atxn.conn)
 	if err != nil {
 		return err
@@ -35,13 +36,13 @@ func (atxn *AgentTxn) authorize(deviceName string, deviceId string) error {
 	auth, err := authz.Prompt(authz.AuthorizeAction{
 		Message: func(creds *grpc_creds.Creds) (pstr.PlatformString, error) {
 			return pstr.PlatformString{
-				Darwin:  new(fmt.Sprintf("authorize access device '%s' in '%s'", deviceName, creds.Parent.Cmdline)),
-				Windows: new(fmt.Sprintf("'%s' is attempting to access '%s'", deviceName, creds.Parent.Cmdline)),
-				Linux:   new(fmt.Sprintf("'%s' is attempting to access '%s'", deviceName, creds.Parent.Cmdline)),
+				Darwin:  new(fmt.Sprintf("authorize access device '%s' in '%s'", hostKey, creds.Parent.Cmdline)),
+				Windows: new(fmt.Sprintf("'%s' is attempting to access '%s'", hostKey, creds.Parent.Cmdline)),
+				Linux:   new(fmt.Sprintf("'%s' is attempting to access '%s'", hostKey, creds.Parent.Cmdline)),
 			}, nil
 		},
 		UID: func(creds *grpc_creds.Creds) (string, error) {
-			return fmt.Sprintf("%s:%s", deviceId, creds.UniqueProcessID()), nil
+			return fmt.Sprintf("%s:%s", hostKey, creds.UniqueProcessID()), nil
 		},
 		TimeoutSuccessful: time.Minute * 30,
 		TimeoutDenied:     time.Minute * 5,
@@ -61,11 +62,9 @@ func (atxn *AgentTxn) getHostToken() (*api.AgentTokenResponse, error) {
 		return nil, status.Error(codes.NotFound, "Profile not found")
 	}
 
-	// TODO: Lookup device based on host public key
-	deviceName := "ak-platform-test-machine"
-	deviceId := "d13f2952-a3ad-4971-ba8d-c1790df97e8e"
+	hostKey := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(atxn.hostKey)))
 
-	if err := atxn.authorize(deviceName, deviceId); err != nil {
+	if err := atxn.authorize(hostKey); err != nil {
 		return nil, err
 	}
 
@@ -73,12 +72,12 @@ func (atxn *AgentTxn) getHostToken() (*api.AgentTokenResponse, error) {
 	acfg.HTTPClient = prof.HTTPClient()
 	acfg.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", prof.AccessToken))
 	ac := api.NewAPIClient(acfg)
-	dt, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAuthFedCreate(atxn.ctx).Device(deviceName).Execute()
+	dt, hr, err := ac.EndpointsApi.EndpointsAgentsConnectorsAuthFedCreate(atxn.ctx).Device(fmt.Sprintf("localhost %s", hostKey)).Execute()
 	if err != nil {
 		return nil, ak.HTTPToError(hr, err)
 	}
 
-	atxn.log.WithField("device", deviceName).Debug("Exchanged token")
+	atxn.log.WithField("device", hostKey).Debug("Exchanged token")
 	return dt, nil
 }
 
