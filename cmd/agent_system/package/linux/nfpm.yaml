@@ -14,6 +14,8 @@ contents:
     dst: /usr/bin/ak-sysd
   - src: ./package/linux/usr/lib/systemd/system/ak-sysd.service
     dst: /usr/lib/systemd/system/ak-sysd.service
+  - src: ./package/linux/etc/ssh/sshd_config.d/authentik-authorized-keys.conf
+    dst: /etc/ssh/sshd_config.d/authentik-authorized-keys.conf
   - src: ./package/linux/config.json
     dst: /etc/authentik/config.json
     type: config

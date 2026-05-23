@@ -6,6 +6,7 @@ case "$1" in
         systemctl --system daemon-reload >/dev/null || true
         systemctl enable 'ak-sysd.service' >/dev/null || true
         systemctl restart 'ak-sysd.service' >/dev/null || true
+        systemctl restart 'ssh' >/dev/null || true
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
