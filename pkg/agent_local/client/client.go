@@ -74,7 +74,7 @@ func NewDialer(dialer func(ctx context.Context, s string) (net.Conn, error), opt
 		streamInterceptors = append(streamInterceptors, s)
 	}
 	conn, err := grpc.NewClient(
-		"localhost",
+		"[::1]:1",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithContextDialer(dialer),
 		grpc.WithChainUnaryInterceptor(clientInterceptors...),

@@ -22,7 +22,7 @@ type AgentTxn struct {
 
 	ctx context.Context
 
-	tc *memConn
+	tc net.Conn
 }
 
 func init() {

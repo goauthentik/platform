@@ -15,6 +15,7 @@ import (
 	"goauthentik.io/platform/pkg/platform/socket"
 	"golang.org/x/crypto/ssh/agent"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/test/bufconn"
 )
 
 type Agent struct {
@@ -24,7 +25,7 @@ type Agent struct {
 	gtm   *token.GlobalTokenManager
 	ctx   context.Context
 	grpc  *grpc.Server
-	ml    *MemListener
+	mls   *bufconn.Listener
 }
 
 func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grpc *grpc.Server) (*Agent, error) {
@@ -35,7 +36,7 @@ func New(log *log.Entry, gtm *token.GlobalTokenManager, ctx context.Context, grp
 		gtm:   gtm,
 		ctx:   ctx,
 		grpc:  grpc,
-		ml:    NewMemoryListener(),
+		mls:   bufconn.Listen(1024 * 1024),
 	}
 	return ag, nil
 }
@@ -45,7 +46,8 @@ func (ag *Agent) Listen(path pstr.PlatformString) error {
 	if err != nil {
 		return err
 	}
-	go ag.grpc.Serve(ag.ml)
+
+	go ag.grpc.Serve(ag.mls)
 	ag.log.WithField("path", path.ForCurrent()).Info("Listening on socket")
 	for {
 		// Check if context is done

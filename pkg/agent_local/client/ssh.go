@@ -3,12 +3,14 @@ package client
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net"
 	"time"
 
 	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/net/http2"
 )
 
 const (
@@ -22,11 +24,9 @@ func NewSSHTunnel(socket string, opts ...opt) (*AgentClient, error) {
 		return nil, err
 	}
 
-	agentClient := agent.NewClient(conn)
-
 	return NewDialer(func(ctx context.Context, s string) (net.Conn, error) {
 		return &sshAgentTunnel{
-			agent: agentClient,
+			agent: agent.NewClient(conn),
 			conn:  conn,
 		}, nil
 	}, opts...)
@@ -53,6 +53,14 @@ func (sat *sshAgentTunnel) Write(b []byte) (n int, err error) {
 	d := ssh.Marshal(sshagent.ExtAuthentikAgentTunnelData{
 		Data: b,
 	})
+	fmt.Printf("(%d) %+X\n", len(b), b)
+
+	fmt.Printf("'%s'\n", string(b))
+
+	fh, err := http2.ReadFrameHeader(bytes.NewBuffer(b[0:15]))
+	fmt.Printf("%+v\n", fh)
+	fmt.Printf("%+v\n", err)
+
 	r, err := sat.agent.Extension(sshagent.ExtAuthentikAgentTunnel, d)
 	if err != nil {
 		return 0, err
