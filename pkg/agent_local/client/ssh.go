@@ -28,7 +28,10 @@ func NewSSHTunnel(socket string, opts ...opt) (*AgentClient, error) {
 }
 
 func sshTunnelOpt(c net.Conn) opt {
-	ag := agent.NewClient(c)
+	return sshAgentOpt(agent.NewClient(c))
+}
+
+func sshAgentOpt(ag agent.ExtendedAgent) opt {
 	return func(ac *AgentClient) (grpc.UnaryClientInterceptor, grpc.StreamClientInterceptor) {
 		return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 			d, err := proto.Marshal(req.(proto.Message))

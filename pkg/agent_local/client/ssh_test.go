@@ -1,15 +1,17 @@
 package client
 
 import (
+	"context"
 	"errors"
-	"net"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // mockExtendedAgent implements agent.ExtendedAgent with a configurable Extension callback.
@@ -34,16 +36,22 @@ func (m *mockExtendedAgent) Extension(extensionType string, contents []byte) ([]
 	return m.extensionFunc(extensionType, contents)
 }
 
-func newTestTunnel(ma *mockExtendedAgent) *sshAgentTunnel {
-	c1, _ := net.Pipe()
-	return &sshAgentTunnel{agent: ma, conn: c1}
+func interceptorFromAgent(ma agent.ExtendedAgent) grpc.UnaryClientInterceptor {
+	unary, _ := sshAgentOpt(ma)(nil)
+	return unary
 }
 
-func Test_SSHAgentTunnel_Write(t *testing.T) {
+func Test_sshTunnelOpt_Success(t *testing.T) {
+	const method = "/test.Service/Method"
+
+	replyData, _ := proto.Marshal(&emptypb.Empty{})
+	response := ssh.Marshal(sshagent.ExtAuthentikAgentTunnelData{
+		Method: method,
+		Data:   replyData,
+	})
+
 	var capturedType string
 	var capturedContents []byte
-	response := []byte("response-data")
-
 	ma := &mockExtendedAgent{
 		extensionFunc: func(extensionType string, contents []byte) ([]byte, error) {
 			capturedType = extensionType
@@ -51,67 +59,45 @@ func Test_SSHAgentTunnel_Write(t *testing.T) {
 			return response, nil
 		},
 	}
-	sat := newTestTunnel(ma)
-	n, err := sat.Write([]byte("hello"))
-	assert.NoError(t, err)
-	assert.Equal(t, 5, n)
+
+	interceptor := interceptorFromAgent(ma)
+	req := &emptypb.Empty{}
+	reply := &emptypb.Empty{}
+	assert.NoError(t, interceptor(context.Background(), method, req, reply, nil, nil))
+
 	assert.Equal(t, sshagent.ExtAuthentikAgentTunnel, capturedType)
 
-	// Verify the payload is SSH-marshaled ExtAuthentikAgentTunnelData.
 	var parsed sshagent.ExtAuthentikAgentTunnelData
 	assert.NoError(t, ssh.Unmarshal(capturedContents, &parsed))
-	assert.Equal(t, []byte("hello"), parsed.Data)
-
-	// The extension response should be buffered for subsequent reads.
-	assert.Equal(t, response, sat.buff.Bytes())
+	assert.Equal(t, method, parsed.Method)
+	reqData, _ := proto.Marshal(req)
+	assert.Equal(t, reqData, parsed.Data)
 }
 
-func Test_SSHAgentTunnel_Write_Error(t *testing.T) {
+func Test_sshTunnelOpt_ExtensionError(t *testing.T) {
 	ma := &mockExtendedAgent{
 		extensionFunc: func(extensionType string, contents []byte) ([]byte, error) {
 			return nil, errors.New("extension failed")
 		},
 	}
-	sat := newTestTunnel(ma)
-	n, err := sat.Write([]byte("data"))
+	interceptor := interceptorFromAgent(ma)
+	err := interceptor(context.Background(), "/test.Service/Method", &emptypb.Empty{}, &emptypb.Empty{}, nil, nil)
+	assert.ErrorContains(t, err, "extension failed")
+}
+
+func Test_sshTunnelOpt_BadResponse(t *testing.T) {
+	ma := &mockExtendedAgent{
+		extensionFunc: func(extensionType string, contents []byte) ([]byte, error) {
+			return []byte("not-valid-ssh-wire-format"), nil
+		},
+	}
+	interceptor := interceptorFromAgent(ma)
+	err := interceptor(context.Background(), "/test.Service/Method", &emptypb.Empty{}, &emptypb.Empty{}, nil, nil)
 	assert.Error(t, err)
-	assert.Equal(t, 0, n)
-	assert.Empty(t, sat.buff.Bytes())
 }
 
-func Test_SSHAgentTunnel_Read_FromBuffer(t *testing.T) {
-	ma := &mockExtendedAgent{
-		extensionFunc: func(extensionType string, contents []byte) ([]byte, error) {
-			return nil, nil
-		},
-	}
-	sat := newTestTunnel(ma)
-	expected := []byte("buffered-data")
-	sat.buff.Write(expected)
-
-	buf := make([]byte, 64)
-	n, err := sat.Read(buf)
-	assert.NoError(t, err)
-	assert.Equal(t, len(expected), n)
-	assert.Equal(t, expected, buf[:n])
-}
-
-func Test_SSHAgentTunnel_StubMethods(t *testing.T) {
-	ma := &mockExtendedAgent{
-		extensionFunc: func(extensionType string, contents []byte) ([]byte, error) {
-			return nil, nil
-		},
-	}
-	c1, c2 := net.Pipe()
-	defer func() {
-		assert.NoError(t, c2.Close())
-	}()
-	sat := &sshAgentTunnel{agent: ma, conn: c1}
-
-	assert.NotNil(t, sat.LocalAddr())
-	assert.NotNil(t, sat.RemoteAddr())
-	assert.NoError(t, sat.SetDeadline(time.Time{}))
-	assert.NoError(t, sat.SetReadDeadline(time.Time{}))
-	assert.NoError(t, sat.SetWriteDeadline(time.Time{}))
-	assert.NoError(t, sat.Close())
+func Test_sshTunnelOpt_StreamInterceptorNil(t *testing.T) {
+	ma := &mockExtendedAgent{extensionFunc: func(string, []byte) ([]byte, error) { return nil, nil }}
+	_, stream := sshAgentOpt(ma)(nil)
+	assert.Nil(t, stream)
 }
