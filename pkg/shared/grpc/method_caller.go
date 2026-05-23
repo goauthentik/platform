@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -33,6 +34,11 @@ func (mc *MethodCaller) RegisterService(desc *grpc.ServiceDesc, impl interface{}
 		methods[m.MethodName] = m
 	}
 	mc.services[desc.ServiceName] = serviceEntry{impl: impl, desc: desc, methods: methods}
+}
+
+func (mc *MethodCaller) CallWithPeer(ctx context.Context, fullMethod string, rawRequest []byte, p *peer.Peer) ([]byte, error) {
+	cctx := peer.NewContext(ctx, p)
+	return mc.Call(cctx, fullMethod, rawRequest)
 }
 
 func (mc *MethodCaller) Call(ctx context.Context, fullMethod string, rawRequest []byte) ([]byte, error) {

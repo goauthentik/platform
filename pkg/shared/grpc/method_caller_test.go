@@ -8,10 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"goauthentik.io/platform/pkg/pb"
+	"goauthentik.io/platform/pkg/platform/grpc_creds"
 	grpcutil "goauthentik.io/platform/pkg/shared/grpc"
 )
 
@@ -20,11 +22,15 @@ type pingServer struct {
 	err error
 }
 
-func (s *pingServer) Ping(_ context.Context, _ *emptypb.Empty) (*pb.PingResponse, error) {
+func (s *pingServer) Ping(ctx context.Context, _ *emptypb.Empty) (*pb.PingResponse, error) {
 	if s.err != nil {
 		return nil, s.err
 	}
-	return &pb.PingResponse{}, nil
+	res := &pb.PingResponse{}
+	if p, ok := peer.FromContext(ctx); ok {
+		res.Component = p.AuthInfo.AuthType()
+	}
+	return res, nil
 }
 
 func TestRegisterService_InitializesMap(t *testing.T) {
@@ -75,6 +81,23 @@ func TestCall_HappyPath(t *testing.T) {
 
 	var out pb.PingResponse
 	assert.NoError(t, proto.Unmarshal(resp, &out))
+}
+
+func TestCall_HappyPath_Peer(t *testing.T) {
+	var mc grpcutil.MethodCaller
+	pb.RegisterPingServer(&mc, &pingServer{})
+
+	req, err := proto.Marshal(&emptypb.Empty{})
+	assert.NoError(t, err)
+
+	resp, err := mc.CallWithPeer(context.Background(), "/ping.Ping/Ping", req, &peer.Peer{
+		AuthInfo: grpc_creds.AuthInfo{},
+	})
+	assert.NoError(t, err)
+
+	var out pb.PingResponse
+	assert.NoError(t, proto.Unmarshal(resp, &out))
+	assert.Equal(t, "socket", out.Component)
 }
 
 func TestCall_HandlerError(t *testing.T) {

@@ -50,8 +50,7 @@ func sshAgentOpt(ag agent.ExtendedAgent) opt {
 			if err := ssh.Unmarshal(res, &rd); err != nil {
 				return err
 			}
-			proto.Unmarshal(rd.Data, reply.(proto.Message))
-			return nil
+			return proto.Unmarshal(rd.Data, reply.(proto.Message))
 		}, nil
 	}
 }
