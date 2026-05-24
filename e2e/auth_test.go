@@ -26,6 +26,9 @@ func Test_Auth_IdentityAgent(t *testing.T) {
 	JoinDomain(t, tc)
 	AgentSetup(t, tc)
 
+	t.Cleanup(func() {
+		CleanupHosts(t, tc)
+	})
 	sshOpts := []string{
 		"-o StrictHostKeyChecking=no",
 		"-o IdentityAgent=~/.local/share/authentik/agent-ssh.sock",
@@ -70,6 +73,9 @@ func Test_Auth_Legacy(t *testing.T) {
 	t.Log(string(b))
 	// end debug
 
+	t.Cleanup(func() {
+		CleanupHosts(t, tc)
+	})
 	cmdTest(t, tc, []cmdTestCase{
 		{
 			name:    "ssh_env",
