@@ -41,7 +41,7 @@ var whoamiCmd = &cobra.Command{
 		if jsonMode {
 			return tui.JSON(m)
 		} else {
-			fmt.Print(tui.RenderMapAsTree(m, "User Information:"))
+			fmt.Println(tui.RenderMapAsTree(m, "User Information:"))
 		}
 		return nil
 	},

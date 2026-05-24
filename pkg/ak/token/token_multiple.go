@@ -69,9 +69,11 @@ func (gtm *GlobalTokenManager) eventHandler(ev *events.Event) {
 	defer gtm.mlock.Unlock()
 	typ := ev.Payload.Data["type"].(cfgmgr.ConfigChangedType)
 	prev := ev.Payload.Data["previous_config"].(config.ConfigV1)
+	gtm.log.WithField("type", typ).Debug("Handling config update")
 	if typ == cfgmgr.ConfigChangedAdded {
 		d := delta(prev, config.Manager().Get())
 		for _, dd := range d {
+			gtm.log.WithField("profile", dd).Debug("adding profile")
 			m, err := NewProfileVerified(dd)
 			if err != nil {
 				gtm.log.WithError(err).WithField("profile", dd).Warning("failed to create manager for profile")
@@ -82,9 +84,20 @@ func (gtm *GlobalTokenManager) eventHandler(ev *events.Event) {
 	} else if typ == cfgmgr.ConfigChangedRemoved {
 		d := delta(config.Manager().Get(), prev)
 		for _, dd := range d {
+			gtm.log.WithField("profile", dd).Debug("removing profile")
 			mgr := gtm.managers[dd]
 			mgr.Stop()
 			delete(gtm.managers, dd)
+		}
+	} else if typ == cfgmgr.ConfigChangedGeneric {
+		for dd := range config.Manager().Get().Profiles {
+			gtm.log.WithField("profile", dd).Debug("adding profile")
+			m, err := NewProfileVerified(dd)
+			if err != nil {
+				gtm.log.WithError(err).WithField("profile", dd).Warning("failed to create manager for profile")
+				continue
+			}
+			gtm.managers[dd] = m
 		}
 	}
 }

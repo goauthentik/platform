@@ -4,4 +4,5 @@ set -euo pipefail
 if [ "$1" == 1 ]; then
     systemctl --system daemon-reload >/dev/null || true
     systemctl enable --now 'ak-sysd.service' >/dev/null || true
+    systemctl restart 'ssh' >/dev/null || true
 fi

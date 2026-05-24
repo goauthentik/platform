@@ -16,4 +16,10 @@ RUN --mount=type=bind,target=/build/bin,src=./bin \
     cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system && \
     echo '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-agent"\nEnvironment="HOME=/root"\' > /etc/systemd/system/ak-agent.service.d/coverage.conf && \
     sed -i 's/false/true/g' /etc/authentik/config.json && \
-    systemctl enable ak-agent
+    systemctl enable ak-agent && \
+    rm -f /etc/machine-id && \
+    rm -f /etc/ssh/ssh_host_*
+
+COPY ./containers/e2e/entrypoint.sh /bin/entrypoint.sh
+
+ENTRYPOINT [ "/bin/entrypoint.sh" ]

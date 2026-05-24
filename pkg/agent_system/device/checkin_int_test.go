@@ -16,5 +16,5 @@ func TestCheckin(t *testing.T) {
 	assert.NoError(t, err)
 
 	dds := ds.(*Server)
-	assert.NoError(t, dds.checkIn(t.Context(), dc))
+	assert.NoError(t, dds.CheckIn(t.Context(), dc))
 }

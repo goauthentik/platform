@@ -80,6 +80,7 @@ func (a *Agent) StartForeground() {
 		return
 	}
 	go a.startGRPC()
+	go a.startSSH()
 	a.signalHandler()
 }
 

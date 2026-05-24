@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/fsnotify/fsnotify"
+	sentryhttpclient "github.com/getsentry/sentry-go/httpclient"
 	log "github.com/sirupsen/logrus"
 	"goauthentik.io/platform/pkg/storage/cfgmgr"
 )
@@ -55,5 +56,12 @@ type ConfigV1Profile struct {
 }
 
 func (cv ConfigV1Profile) HTTPClient() *http.Client {
+	if cv.httpClient == nil {
+		cv.httpClient = &http.Client{
+			Transport: sentryhttpclient.NewSentryRoundTripper(
+				nil, sentryhttpclient.WithTracePropagationTargets([]string{cv.AuthentikURL}),
+			),
+		}
+	}
 	return cv.httpClient
 }
