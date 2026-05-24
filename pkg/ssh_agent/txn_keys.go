@@ -25,6 +25,18 @@ const (
 	ExtAuthentikPlatformSSHHostKey = "goauthentik.io/platform/ssh/host-key"
 )
 
+var (
+	privKey ssh.Signer
+)
+
+func init() {
+	key, err := generateSSHPrivateKey()
+	if err != nil {
+		panic(err)
+	}
+	privKey = key
+}
+
 func (atxn *AgentTxn) authorize(hostKey string) error {
 	creds, err := grpc_creds.GetCreds(atxn.conn)
 	if err != nil {
@@ -78,12 +90,7 @@ func (atxn *AgentTxn) getHostToken() (*api.AgentTokenResponse, error) {
 	return dt, nil
 }
 
-func (atxn *AgentTxn) generateCert(rootToken token.Token, hostToken *api.AgentTokenResponse) (*ssh.Certificate, ssh.Signer, error) {
-	key, err := generateSSHPrivateKey()
-	if err != nil {
-		return nil, nil, err
-	}
-
+func (atxn *AgentTxn) generateCert(rootToken token.Token, hostToken *api.AgentTokenResponse) (*ssh.Certificate, error) {
 	testCert := &ssh.Certificate{
 		CertType:        ssh.UserCert,
 		Nonce:           []byte{},
@@ -91,7 +98,7 @@ func (atxn *AgentTxn) generateCert(rootToken token.Token, hostToken *api.AgentTo
 		ValidAfter:      0,
 		ValidBefore:     uint64(time.Now().Add(time.Second * time.Duration(*hostToken.ExpiresIn)).Unix()),
 		Reserved:        []byte{},
-		Key:             key.PublicKey(),
+		Key:             privKey.PublicKey(),
 		KeyId:           rootToken.Claims().Username,
 		Permissions: ssh.Permissions{
 			CriticalOptions: map[string]string{},
@@ -107,10 +114,10 @@ func (atxn *AgentTxn) generateCert(rootToken token.Token, hostToken *api.AgentTo
 		},
 	}
 
-	if err = testCert.SignCert(rand.Reader, key); err != nil {
-		return nil, nil, err
+	if err := testCert.SignCert(rand.Reader, privKey); err != nil {
+		return nil, err
 	}
-	return testCert, key, nil
+	return testCert, nil
 }
 
 func generateSSHPrivateKey() (ssh.Signer, error) {

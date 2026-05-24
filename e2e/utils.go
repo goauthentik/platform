@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/exec"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/ak/flow"
@@ -34,7 +36,7 @@ func LocalAuthentikURL() string {
 	return "http://host.docker.internal:9123"
 }
 
-func ContianerAuthentikURL() string {
+func ContainerAuthentikURL() string {
 	if os.Getenv("CI") == "true" {
 		return "http://host.docker.internal:9000"
 	}
@@ -47,6 +49,13 @@ func AuthentikCreds() (string, string) {
 		return username, os.Getenv("AK_PASSWORD")
 	}
 	return username, "this-password-is-for-testing-dont-use"
+}
+
+func AuthentikToken() string {
+	if os.Getenv("CI") == "true" {
+		return os.Getenv("AK_TOKEN")
+	}
+	return "this-token-is-for-testing-dont-use"
 }
 
 func AuthenticatedSession(t testing.TB) *http.Client {
@@ -103,7 +112,7 @@ func AgentSetup(t testing.TB, tc testcontainers.Container) {
 	assert.NotEqual(t, cfg.AccessToken, "")
 	assert.NotEqual(t, cfg.RefreshToken, "")
 
-	MustExec(t, tc, fmt.Sprintf("ak config setup -a %s", ContianerAuthentikURL()), exec.WithEnv([]string{
+	MustExec(t, tc, fmt.Sprintf("ak config setup -a %s", ContainerAuthentikURL()), exec.WithEnv([]string{
 		fmt.Sprintf("AK_CLI_ACCESS_TOKEN=%s", cfg.AccessToken),
 		fmt.Sprintf("AK_CLI_REFRESH_TOKEN=%s", cfg.RefreshToken),
 	}))
@@ -126,13 +135,17 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 		"join",
 		"ak",
 		"-a",
-		ContianerAuthentikURL(),
+		ContainerAuthentikURL(),
 	}
 	testToken := "test-enroll-key"
 	_ = MustExec(t, tc,
 		strings.Join(args, " "),
 		exec.WithEnv([]string{fmt.Sprintf("AK_SYS_INSECURE_ENV_TOKEN=%s", testToken)}),
 	)
+
+	t.Cleanup(func() {
+		CleanupHosts(t, tc)
+	})
 
 	assert.NoError(t, retry.Do(
 		func() error {
@@ -147,6 +160,30 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 		retry.Attempts(20),
 		retry.MaxDelay(5*time.Second),
 	))
+}
+
+func CleanupHosts(t testing.TB, tc testcontainers.Container) {
+	t.Helper()
+	t.Log("Removing hosts")
+	ac := api.NewConfiguration()
+	ac.AddDefaultHeader("Authorization", "Bearer "+AuthentikToken())
+	u, err := url.Parse(LocalAuthentikURL())
+	assert.NoError(t, err)
+	ac.Host = u.Host
+	ac.Scheme = u.Scheme
+	ac.Servers = api.ServerConfigurations{
+		{
+			URL: fmt.Sprintf("%sapi/v3", u.Path),
+		},
+	}
+	c := api.NewAPIClient(ac)
+	devices, err := ak.Paginator(c.EndpointsApi.EndpointsDevicesList(context.Background()), ak.PaginatorOptions{})
+	assert.NoError(t, err)
+	for _, dev := range devices {
+		_, err := c.EndpointsApi.EndpointsDevicesDestroy(context.Background(), dev.GetDeviceUuid()).Execute()
+		assert.NoError(t, err)
+	}
+	t.Logf("Deleted %d devices", len(devices))
 }
 
 func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {

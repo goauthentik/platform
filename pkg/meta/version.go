@@ -26,6 +26,10 @@ func FullVersion() string {
 	return version.String()
 }
 
+func UserAgent() string {
+	return fmt.Sprintf("goauthentik.io/platform/%s", FullVersion())
+}
+
 func BuildURL() string {
 	return fmt.Sprintf("https://github.com/goauthentik/platform/commit/%s", BuildHash)
 }
