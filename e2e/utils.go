@@ -173,10 +173,10 @@ func CleanupHosts(t testing.TB, tc testcontainers.Container) {
 		},
 	}
 	c := api.NewAPIClient(ac)
-	devices, err := ak.Paginator(c.EndpointsApi.EndpointsDevicesList(t.Context()), ak.PaginatorOptions{})
+	devices, err := ak.Paginator(c.EndpointsApi.EndpointsDevicesList(context.Background()), ak.PaginatorOptions{})
 	assert.NoError(t, err)
 	for _, dev := range devices {
-		_, err := c.EndpointsApi.EndpointsDevicesDestroy(t.Context(), dev.GetDeviceUuid()).Execute()
+		_, err := c.EndpointsApi.EndpointsDevicesDestroy(context.Background(), dev.GetDeviceUuid()).Execute()
 		assert.NoError(t, err)
 	}
 	t.Logf("Deleted %d devices", len(devices))
