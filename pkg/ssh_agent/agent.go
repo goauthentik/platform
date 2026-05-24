@@ -94,11 +94,10 @@ func (ag *Agent) handleConn(conn net.Conn) {
 	}
 	cctx, cancel := context.WithCancel(ag.ctx)
 	txn := &AgentTxn{
-		ag:        ag,
-		log:       ag.log.WithField("txn", nid.String()),
-		ctx:       cctx,
-		conn:      conn,
-		tunnelMtx: sync.Mutex{},
+		ag:   ag,
+		log:  ag.log.WithField("txn", nid.String()),
+		ctx:  cctx,
+		conn: conn,
 	}
 	ag.txnMu.Lock()
 	ag.txn[nid.String()] = txn

@@ -1,7 +1,6 @@
 package sshagent
 
 import (
-	"net"
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -117,16 +116,6 @@ func Test_AgentTxn_Extension_SessionBind_Invalid(t *testing.T) {
 
 func Test_AgentTxn_Close_NilTunnel(t *testing.T) {
 	txn := newTestTxn()
-	assert.NoError(t, txn.Close())
-}
-
-func Test_AgentTxn_Close_WithTunnel(t *testing.T) {
-	txn := newTestTxn()
-	c1, c2 := net.Pipe()
-	defer func() {
-		assert.NoError(t, c2.Close())
-	}()
-	txn.tunnelConn = c1
 	assert.NoError(t, txn.Close())
 }
 

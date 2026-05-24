@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"errors"
 	"net"
-	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -25,9 +24,6 @@ type AgentTxn struct {
 	ctx context.Context
 
 	sshSessionID []byte
-
-	tunnelConn net.Conn
-	tunnelMtx  sync.Mutex
 }
 
 func init() {
@@ -114,8 +110,5 @@ func (atxn *AgentTxn) ensureCert() {
 }
 
 func (atxn *AgentTxn) Close() error {
-	if atxn.tunnelConn != nil {
-		return atxn.tunnelConn.Close()
-	}
 	return nil
 }
