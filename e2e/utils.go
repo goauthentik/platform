@@ -143,6 +143,10 @@ func JoinDomain(t testing.TB, tc testcontainers.Container) {
 		exec.WithEnv([]string{fmt.Sprintf("AK_SYS_INSECURE_ENV_TOKEN=%s", testToken)}),
 	)
 
+	t.Cleanup(func() {
+		CleanupHosts(t, tc)
+	})
+
 	assert.NoError(t, retry.Do(
 		func() error {
 			if !strings.Contains(MustExec(t, tc, "getent passwd"), "akadmin") {

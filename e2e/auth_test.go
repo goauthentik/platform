@@ -4,9 +4,6 @@ package e2e
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	"os"
 	"strings"
 	"testing"
 
@@ -26,9 +23,6 @@ func Test_Auth_IdentityAgent(t *testing.T) {
 	JoinDomain(t, tc)
 	AgentSetup(t, tc)
 
-	t.Cleanup(func() {
-		CleanupHosts(t, tc)
-	})
 	sshOpts := []string{
 		"-o StrictHostKeyChecking=no",
 		"-o IdentityAgent=~/.local/share/authentik/agent-ssh.sock",
@@ -62,20 +56,6 @@ func Test_Auth_Legacy(t *testing.T) {
 	MustExec(t, tc, "sed -i 's/KbdInteractiveAuthentication no/KbdInteractiveAuthentication yes/g' /etc/ssh/sshd_config")
 	MustExec(t, tc, "systemctl restart ssh")
 
-	// debug
-	req, err := http.NewRequest("GET", LocalAuthentikURL()+"/api/v3/endpoints/devices/", nil)
-	assert.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("AK_TOKEN"))
-	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	b, err := io.ReadAll(res.Body)
-	assert.NoError(t, err)
-	t.Log(string(b))
-	// end debug
-
-	t.Cleanup(func() {
-		CleanupHosts(t, tc)
-	})
 	cmdTest(t, tc, []cmdTestCase{
 		{
 			name:    "ssh_env",
