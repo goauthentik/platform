@@ -57,11 +57,10 @@ func Test_AgentTxn_List_WithCert(t *testing.T) {
 		log:     log.WithField("logger", "test"),
 		hostKey: pub,
 	}
-	crt, signer, err := txn.generateCert(newTestToken(), newTestHostToken())
+	crt, err := txn.generateCert(newTestToken(), newTestHostToken())
 	assert.NoError(t, err)
 	// Pre-set crt so ensureCert returns early without touching gtm.
 	txn.crt = crt
-	txn.cpk = signer
 
 	keys, err := txn.List()
 	assert.NoError(t, err)
@@ -69,21 +68,10 @@ func Test_AgentTxn_List_WithCert(t *testing.T) {
 	assert.Equal(t, crt.Type(), keys[0].Format)
 }
 
-func Test_AgentTxn_SignWithFlags_NilKey(t *testing.T) {
-	txn := newTestTxn()
-	// Pre-set a dummy crt so ensureCert returns early; cpk stays nil.
-	txn.crt = &ssh.Certificate{Key: pub}
-	sig, err := txn.SignWithFlags(pub, []byte("data"), 0)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no key for host")
-	assert.Nil(t, sig)
-}
-
 func Test_AgentTxn_SignWithFlags_WithKey(t *testing.T) {
 	txn := newTestTxn()
-	// Pre-set crt and cpk so ensureCert is short-circuited.
+	// Pre-set crt so ensureCert is short-circuited.
 	txn.crt = &ssh.Certificate{Key: pub}
-	txn.cpk = priv
 	sig, err := txn.SignWithFlags(pub, []byte("data to sign"), 0)
 	assert.NoError(t, err)
 	assert.NotNil(t, sig)

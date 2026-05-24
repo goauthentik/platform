@@ -3,7 +3,6 @@ package sshagent
 import (
 	"context"
 	"crypto/rand"
-	"errors"
 	"net"
 
 	log "github.com/sirupsen/logrus"
@@ -19,7 +18,6 @@ type AgentTxn struct {
 	hostKey ssh.PublicKey
 
 	crt *ssh.Certificate
-	cpk ssh.Signer
 
 	ctx context.Context
 
@@ -62,10 +60,7 @@ func (atxn *AgentTxn) List() ([]*agent.Key, error) {
 func (atxn *AgentTxn) SignWithFlags(key ssh.PublicKey, data []byte, flags agent.SignatureFlags) (*ssh.Signature, error) {
 	atxn.log.Debugf("SignWithFlags(%s, %v)", key.Type(), flags)
 	atxn.ensureCert()
-	if atxn.cpk == nil {
-		return nil, errors.New("no key for host")
-	}
-	return atxn.cpk.Sign(rand.Reader, data)
+	return privKey.Sign(rand.Reader, data)
 }
 
 func (atxn *AgentTxn) Extension(extensionType string, contents []byte) ([]byte, error) {
@@ -100,13 +95,12 @@ func (atxn *AgentTxn) ensureCert() {
 		return
 	}
 
-	crt, sign, err := atxn.generateCert(tk, ht)
+	crt, err := atxn.generateCert(tk, ht)
 	if err != nil {
 		atxn.log.WithError(err).Warning("failed to generate cert")
 		return
 	}
 	atxn.crt = crt
-	atxn.cpk = sign
 }
 
 func (atxn *AgentTxn) Close() error {
