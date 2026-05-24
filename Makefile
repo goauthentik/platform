@@ -56,24 +56,20 @@ lint: $(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-go
 
 test:
-	go test \
+	go tool gotest.tools/gotestsum \
+		--junitfile ${PWD}/junit.xml \
+		--jsonfile ${TEST_OUTPUT} \
+		-- \
 		-p 1 \
 		-v \
 		-coverprofile=${PWD}/coverage.txt \
 		-covermode=atomic \
 		-count=${TEST_COUNT} \
-		-json \
 		${GO_TEST_FLAGS} \
-		$(shell go list ${GO_TEST_FLAGS} ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb) \
-			2>&1 | tee ${TEST_OUTPUT}
+		$(shell go list ${GO_TEST_FLAGS} ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb)
 	go tool cover \
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
-	go tool github.com/jstemmer/go-junit-report/v2 \
-		-parser gojson \
-		-in ${TEST_OUTPUT} \
-		-out ${PWD}/junit.xml \
-		-set-exit-code
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
