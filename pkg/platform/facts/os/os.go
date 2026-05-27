@@ -2,7 +2,6 @@ package os
 
 import (
 	"regexp"
-	"strings"
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/facts/common"
@@ -16,12 +15,26 @@ func Gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 
 var versionExtract = regexp.MustCompile(`((?:\d+\.?)+)`)
 
-func extractVersion(fullName string) (string, string) {
-	idx := versionExtract.FindIndex([]byte(fullName))
-	if idx == nil {
-		return fullName, ""
+func extractVersion(versionData map[string]string) (string, string) {
+	name, version := "", ""
+	if _name, ok := versionData["NAME"]; ok {
+		name = _name
 	}
-	name := strings.TrimSpace(fullName[:idx[0]])
-	version := strings.TrimSpace(fullName[idx[0]:])
+	if _name, ok := versionData["DISTRIB_ID"]; ok {
+		name = _name
+	}
+	// Version, in order of lowest to highest priority
+	if _ver, ok := versionData["VERSION_CODENAME"]; ok {
+		version = _ver
+	}
+	if _ver, ok := versionData["DISTRIB_RELEASE"]; ok {
+		version = _ver
+	}
+	if _ver, ok := versionData["BUILD_ID"]; ok {
+		version = _ver
+	}
+	if _ver, ok := versionData["VERSION_ID"]; ok {
+		version = _ver
+	}
 	return name, version
 }

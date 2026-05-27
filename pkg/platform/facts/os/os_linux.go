@@ -25,18 +25,18 @@ func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 
 func getLinuxDistribution() (string, string) {
 	// Try /etc/os-release first (systemd standard)
-	if fullVersion := parseOSRelease("/etc/os-release"); fullVersion != "" {
-		return extractVersion(fullVersion)
+	if versionData, err := parseEnvFile("/etc/os-release"); err == nil {
+		return extractVersion(versionData)
 	}
 
 	// Try /usr/lib/os-release as fallback
-	if fullVersion := parseOSRelease("/usr/lib/os-release"); fullVersion != "" {
-		return extractVersion(fullVersion)
+	if versionData, err := parseEnvFile("/usr/lib/os-release"); err == nil {
+		return extractVersion(versionData)
 	}
 
 	// Try /etc/lsb-release (Ubuntu/Debian)
-	if name, version := parseLSBRelease(); name != "" {
-		return name, version
+	if versionData, err := parseEnvFile("/etc/lsb-release"); err == nil {
+		return extractVersion(versionData)
 	}
 
 	// Try various distribution-specific files
@@ -57,10 +57,11 @@ func getLinuxDistribution() (string, string) {
 	return "Linux", getKernelVersion()
 }
 
-func parseOSRelease(filename string) string {
+func parseEnvFile(filename string) (map[string]string, error) {
+	vals := map[string]string{}
 	file, err := os.Open(filename)
 	if err != nil {
-		return ""
+		return vals, err
 	}
 	defer func() {
 		_ = file.Close()
@@ -70,36 +71,13 @@ func parseOSRelease(filename string) string {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "PRETTY_NAME=") {
-			return strings.Trim(strings.TrimPrefix(line, "PRETTY_NAME="), "\"")
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
 		}
+		vals[key] = strings.Trim(value, "\"'")
 	}
-
-	return ""
-}
-
-func parseLSBRelease() (string, string) {
-	file, err := os.Open("/etc/lsb-release")
-	if err != nil {
-		return "", ""
-	}
-	defer func() {
-		_ = file.Close()
-	}()
-
-	var name, version string
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "DISTRIB_ID=") {
-			name = strings.TrimPrefix(line, "DISTRIB_ID=")
-		} else if strings.HasPrefix(line, "DISTRIB_RELEASE=") {
-			version = strings.TrimPrefix(line, "DISTRIB_RELEASE=")
-		}
-	}
-
-	return name, version
+	return vals, nil
 }
 
 func readFirstLine(filename string) string {
