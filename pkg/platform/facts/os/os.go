@@ -1,8 +1,6 @@
 package os
 
 import (
-	"regexp"
-
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
@@ -12,8 +10,6 @@ func Gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	ctx.Log().Debug("Gathering...")
 	return gather(ctx)
 }
-
-var versionExtract = regexp.MustCompile(`((?:\d+\.?)+)`)
 
 func extractVersion(versionData map[string]string) (string, string) {
 	name, version := "", ""
