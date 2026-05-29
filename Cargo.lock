@@ -657,12 +657,12 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d765eb1c0bda10d31e0ea185f5ee15da532d60b0912d2bd1441783439e749c5"
+checksum = "01334b89b69ff726750c5ce5073fc8bd860e99aa9a8fc5ca11b04730e3aee97a"
 dependencies = [
  "link-section",
- "linktime-proc-macro 0.1.0",
+ "linktime-proc-macro",
 ]
 
 [[package]]
@@ -836,7 +836,7 @@ version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e84c00697eca0d99ddc657698f9238f7426bac392c5ea859f5efdfdd2b719dd7"
 dependencies = [
- "linktime-proc-macro 0.2.0",
+ "linktime-proc-macro",
 ]
 
 [[package]]
@@ -1497,15 +1497,9 @@ dependencies = [
 
 [[package]]
 name = "link-section"
-version = "0.17.1"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0de704e04b8fdab2a6a633e7e9298211da1d6c73334fed54665559909064e58f"
-
-[[package]]
-name = "linktime-proc-macro"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a44cd706ff0d503ee32b2071166510ca27e281228de10cd3aa8d35ff94560f81"
+checksum = "7a63f9687974de7e2caf6c96a1b19c6e882db299fdde09075c5b9e11c58421cd"
 
 [[package]]
 name = "linktime-proc-macro"
