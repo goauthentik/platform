@@ -15,7 +15,7 @@ workspace = true
 authentik_sys = { path = ".." }
 ctap-hid-fido2 = "3.5.11"
 ctor = "1.0.6"
-dtor = "1.0.3"
+dtor = "1.0.4"
 gethostname = "1.1.0"
 hex = "0.4.3"
 libc = "0.2.186"
