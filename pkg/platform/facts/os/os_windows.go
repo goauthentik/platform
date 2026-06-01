@@ -4,7 +4,6 @@ package os
 
 import (
 	"runtime"
-	"strings"
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/facts/common"
@@ -35,7 +34,7 @@ func gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	return api.DeviceFactsRequestOs{
 		Arch:    runtime.GOARCH,
 		Family:  api.DEVICEFACTSOSFAMILY_WINDOWS,
-		Name:    api.PtrString(strings.TrimSpace(productName)),
-		Version: api.PtrString(strings.TrimSpace(version)),
+		Name:    ptrStringIfNotBlank(productName),
+		Version: ptrStringIfNotBlank(version),
 	}, nil
 }

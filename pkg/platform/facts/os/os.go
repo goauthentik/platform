@@ -1,6 +1,8 @@
 package os
 
 import (
+	"strings"
+
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/platform/facts/common"
 )
@@ -9,6 +11,14 @@ import (
 func Gather(ctx *common.GatherContext) (api.DeviceFactsRequestOs, error) {
 	ctx.Log().Debug("Gathering...")
 	return gather(ctx)
+}
+
+func ptrStringIfNotBlank(value string) *string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+	return api.PtrString(value)
 }
 
 func extractVersion(versionData map[string]string) (string, string) {

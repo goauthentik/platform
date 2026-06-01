@@ -1,6 +1,7 @@
 package os
 
 import (
+	"encoding/json"
 	"runtime"
 	"slices"
 	"testing"
@@ -113,6 +114,26 @@ func TestExtract(t *testing.T) {
 			assert.Equal(t, tc.version, version)
 		})
 	}
+}
+
+func TestPtrStringIfNotBlank(t *testing.T) {
+	assert.Nil(t, ptrStringIfNotBlank(""))
+	assert.Nil(t, ptrStringIfNotBlank(" \t\n"))
+
+	value := ptrStringIfNotBlank("  24.04  ")
+	assert.NotNil(t, value)
+	assert.Equal(t, "24.04", *value)
+}
+
+func TestMarshalOmitsBlankOptionalStrings(t *testing.T) {
+	data, err := json.Marshal(api.DeviceFactsRequestOs{
+		Arch:    "amd64",
+		Family:  api.DEVICEFACTSOSFAMILY_LINUX,
+		Name:    ptrStringIfNotBlank("Linux"),
+		Version: ptrStringIfNotBlank(""),
+	})
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{"arch":"amd64","family":"linux","name":"Linux"}`, string(data))
 }
 
 func TestGatherLinux(t *testing.T) {
