@@ -14,7 +14,7 @@ workspace = true
 [dependencies]
 authentik_sys = { path = ".." }
 ctor = "1.0.7"
-dtor = "1.0.4"
+dtor = "1.0.5"
 libc = "0.2.186"
 libnss = "0.9.0"
 log = "0.4.30"
