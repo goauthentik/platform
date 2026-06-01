@@ -18,7 +18,7 @@
         "@goauthentik/eslint-config": "^2.0.0",
         "@goauthentik/prettier-config": "^3.5.0",
         "@goauthentik/tsconfig": "^2.0.0",
-        "@rollup/plugin-commonjs": "^29.0.2",
+        "@rollup/plugin-commonjs": "^29.0.3",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-typescript": "^12.3.0",
         "@sentry/browser": "^10.55.0",
