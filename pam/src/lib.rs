@@ -1,4 +1,5 @@
 mod auth;
+mod dir;
 mod logger;
 mod pam_env;
 mod session;
