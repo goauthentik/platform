@@ -105,7 +105,7 @@ func Test_Auth_LocalOnlyUser(t *testing.T) {
 			// NSS module (getent should not return an authentik entry for them).
 			name:    "local_only_user_not_in_authentik_directory",
 			cmd:     "getent passwd localonly",
-			expects: []string{"localonly:/home/localonly"},
+			expects: []string{"localonly", "/home/localonly"},
 		},
 	})
 }
