@@ -34,7 +34,7 @@ package:
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
 		--identifier "io.goauthentik.agent" \
-		--version "${VERSION}.${VERSION_HASH_SHORT}" \
+		--version "${VERSION}" \
 		--scripts "${PWD}/scripts" \
 		--install-location /Applications \
 		"${TOP}/bin/${TARGET}/agent.pkg"

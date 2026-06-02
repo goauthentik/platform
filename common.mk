@@ -5,13 +5,12 @@ UID = $(shell id -u)
 GID = $(shell id -g)
 VERSION = 0.43.1
 VERSION_HASH = $(shell git rev-parse HEAD)
-VERSION_HASH_SHORT = $(shell git rev-parse HEAD | head -c 8)
 VERSION_TAG = $(shell git tag --points-at HEAD)
 ifeq ($(GITHUB_ACTIONS),true)
 	ifeq ($(AK_IS_RELEASE),true)
 		VERSION_PKG = ${VERSION}
 	else
-		VERSION_PKG = ${VERSION}+ak-${VERSION_HASH_SHORT}
+		VERSION_PKG = ${VERSION}+ak-${shell git rev-parse HEAD | head -c 8}
 	endif
 else
 	VERSION_PKG = ${VERSION}
