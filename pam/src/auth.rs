@@ -72,7 +72,7 @@ pub fn authenticate_impl(
         "failed to send prompt"
     ) {
         Some(password) => match password.to_str() {
-            Ok(t) => t,
+            Ok(t) => t.to_owned(),
             Err(_) => {
                 log::warn!("failed to convert password");
                 return PamResultCode::PAM_AUTH_ERR;
@@ -102,7 +102,7 @@ pub fn authenticate_impl(
         log::debug!("Token authentication");
         let raw_token = password
             .strip_prefix(PW_PREFIX)
-            .unwrap_or(password)
+            .unwrap_or(&password)
             .to_string();
         let decoded = match decode_pb::<SshTokenAuthentication>(raw_token) {
             Ok(t) => t,
