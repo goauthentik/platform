@@ -6,7 +6,7 @@ GID = $(shell id -g)
 VERSION = 0.43.2
 VERSION_HASH = $(shell git rev-parse HEAD)
 VERSION_TAG = $(shell git tag --points-at HEAD)
-ifeq ($(GITHUB_ACTIONS),true)
+ifeq ($(CI),true)
 	ifeq ($(AK_IS_RELEASE),true)
 		VERSION_PKG = ${VERSION}
 	else

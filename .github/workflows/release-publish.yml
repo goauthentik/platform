@@ -37,12 +37,16 @@ jobs:
       - call-build-ee-psso
     uses: ./.github/workflows/_package-darwin.yml
     secrets: inherit
+    with:
+      is_release: true
   call-package-windows:
     needs:
       - call-build-go
       - call-build-ee-wcp
     uses: ./.github/workflows/_package-windows.yml
     secrets: inherit
+    with:
+      is_release: true
 
   call-deploy:
     needs:

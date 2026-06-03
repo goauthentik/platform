@@ -1,7 +1,11 @@
 name: _package-windows
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
 
 jobs:
   package:
@@ -47,6 +51,7 @@ jobs:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
           SM_CLIENT_CERT_FILE: D:\\Certificate_pkcs12.p12
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          AK_IS_RELEASE: ${{ inputs.is_release }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
