@@ -1,7 +1,11 @@
 name: _package-darwin
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
 
 jobs:
   package:
@@ -43,7 +47,10 @@ jobs:
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
       - shell: bash
-        run: make vpkg/macos/package
+        run: |
+          make vpkg/macos/package
+        env:
+          AK_IS_RELEASE: ${{ inputs.is_release }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
