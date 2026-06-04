@@ -132,7 +132,7 @@ pub fn auth_interactive(
                 let credential = match conv.send(style, &challenge.prompt) {
                     Ok(c) => match c {
                         Some(c) => match c.to_str() {
-                            Ok(cc) => cc,
+                            Ok(cc) => cc.to_owned(),
                             Err(_) => {
                                 log::warn!("failed to convert PAM Conversation response to string");
                                 return Err(PamResultCode::PAM_ABORT);
@@ -152,7 +152,7 @@ pub fn auth_interactive(
                         return Err(e);
                     }
                 };
-                req_inner.value = credential.to_owned();
+                req_inner.value = credential;
             }
             Err(_) => {
                 log::warn!(
