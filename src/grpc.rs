@@ -15,7 +15,7 @@ pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
         .authority(":123")
         .path_and_query(path.replace(" ", "%20"))
         .build()?;
-    let endpoint = Endpoint::try_from(u)?;
+    let endpoint = Endpoint::from(u);
     let channel = grpc_dial(endpoint).await?;
     Ok(channel)
 }

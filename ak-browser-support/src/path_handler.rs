@@ -23,7 +23,7 @@ impl PathHandler {
         let sys_channel =
             grpc_endpoint(sysd_socket_path(SysdSocketID::Default).for_current()).await?;
         let user_channel =
-            grpc_endpoint(agent_socket_path(AgentSocketID::Default).for_current()).await?;
+            grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
 
         Ok(Self {
             system_channel: sys_channel,
