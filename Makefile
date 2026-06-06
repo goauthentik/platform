@@ -84,7 +84,7 @@ test-rs: pam/ci-install-deps
 	cargo llvm-cov \
 		--no-report \
 		nextest -p ${TEST_TARGET} \
-			--no-tests pss
+			--no-tests pass
 	cargo llvm-cov report \
 		--codecov \
 		--output-path "${PWD}/cache/llvm-cov-target.json"
