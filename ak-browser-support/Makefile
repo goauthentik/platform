@@ -1,18 +1,25 @@
 include ../common.mk
 
 TARGET := browser_support
+BIN := ak-browser-support
 
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
+.PHONY: build
 build:
-	mkdir -p ${TOP}/bin/${TARGET}
-	mkdir -p ${TOP}/cache/${TARGET}
+	mkdir -p "${TOP}/bin/${TARGET}"
+	mkdir -p "${TOP}/cache/${TARGET}"
 	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
-		--target-dir ${TOP}/cache/${TARGET} \
+		--target-dir "${TOP}/cache/${TARGET}" \
 		--verbose \
 		--release
+	cp "${TOP}/cache/${TARGET}/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
+.PHONY: test
 test:
 	cargo test --verbose
+
+.PHONY: package
+package:
