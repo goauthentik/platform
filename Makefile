@@ -75,6 +75,15 @@ test:
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
 
+test-rs:
+	cargo llvm-cov \
+		--no-report \
+		nextest \
+			--workspace
+	cargo llvm-cov report \
+		--codecov \
+		--output-path "${PWD}/cache/llvm-cov-target.json"
+
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
 
