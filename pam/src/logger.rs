@@ -1,6 +1,7 @@
 use std::{env, ffi::CStr};
 
-use authentik_sys::logger::{log_hook, set_log_level};
+use akp_logger::set_log_level;
+use authentik_sys::logger::log_hook;
 use log::LevelFilter;
 use pam::{constants::PamFlag, module::PamHandle};
 

@@ -1,0 +1,12 @@
+use akp_logger::init_log;
+use authentik_sys::platform::string::PlatformString;
+
+fn main() {
+    init_log(
+        PlatformString::new_with_default("log-example")
+            .with_darwin("io.goauthentik.test")
+            .with_linux("authentik-test")
+            .with_windows("authentik Test"),
+    );
+    log::debug!("foo");
+}

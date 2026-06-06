@@ -1,8 +1,8 @@
 [package]
 name = "authentik_pam"
-version = "0.43.2"
-edition = "2024"
-license = "MIT"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [lib]
 name = "authentik_pam"
@@ -13,14 +13,15 @@ workspace = true
 
 [dependencies]
 authentik_sys = { path = ".." }
+akp-logger = { path = "../akp-logger/" }
 ctap-hid-fido2 = "3.5.11"
 ctor = "1.0.7"
 dtor = "1.0.5"
 gethostname = "1.1.0"
 hex = "0.4.3"
 libc = "0.2.186"
-log = "0.4.31"
+log = { workspace = true }
 pam-bindings = "0.2.1"
-serde = "1.0.228"
-serde_json = "1.0.150"
-whoami = "2.1.0"
+serde = { workspace = true }
+serde_json = { workspace = true }
+whoami = { workspace = true }

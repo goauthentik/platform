@@ -19,9 +19,27 @@ jobs:
         target:
           - pam
           - nss
+          - ak-browser-support
         platform:
+          - macos-26
           - ubuntu-24.04
           - ubuntu-24.04-arm
+          - windows-2025
+        include:
+          - target: pam
+            pre_run: |
+              sudo apt-get update
+              sudo apt-get install -y libpam0g-dev libudev-dev
+        exclude:
+          # pam & nss are linux-only targets
+          - target: pam
+            platform: macos-26
+          - target: pam
+            platform: windows-2025
+          - target: nss
+            platform: macos-26
+          - target: nss
+            platform: windows-2025
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -35,9 +53,9 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libpam0g-dev libudev-dev
+      - if: ${{ matrix.pre_run != '' }}
+        run: |
+          ${{ matrix.pre_run }}
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
           path: cache/

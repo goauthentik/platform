@@ -20,18 +20,11 @@ jobs:
           - cli
           - agent
           - sysd
-          - browser_support
         platform:
           - macos-26
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - windows-2025
-        exclude:
-          # browser_support is bundled via symlinks in Linux packages
-          - target: browser_support
-            platform: ubuntu-24.04
-          - target: browser_support
-            platform: ubuntu-24.04-arm
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always

@@ -5,3 +5,4 @@ pub mod generated;
 pub mod grpc;
 #[cfg(unix)]
 pub mod logger;
+pub mod platform;
