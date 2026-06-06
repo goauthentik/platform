@@ -20,11 +20,7 @@ endif
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: package-gnu/linux
-package-gnu/linux:
-	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
-
-test-deploy: package-gnu/linux
+test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ssh
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb

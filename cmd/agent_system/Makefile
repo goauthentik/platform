@@ -7,10 +7,6 @@ else
 BINARY_NAME := ak-sysd
 endif
 
-.PHONY: lint
-lint:
-	$(call lint_shellcheck,"${PWD}/package")
-
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
@@ -26,10 +22,6 @@ endif
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: package-gnu/linux
-package-gnu/linux:
-	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
-
-test-deploy: package-gnu/linux
+test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ak-sysd

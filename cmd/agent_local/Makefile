@@ -11,8 +11,6 @@ MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
 
 lint:
-	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/linux/_deb")
-	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/linux/_rpm")
 	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/macos/scripts")
 
 clean:
@@ -30,9 +28,5 @@ endif
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: package-gnu/linux
-package-gnu/linux:
-	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
-
-test-deploy: package
+test-deploy: build
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-agent_${VERSION}_${ARCH}.deb
