@@ -83,10 +83,12 @@ test-rs: pam/ci-install-deps
 	mkdir -p "${PWD}/cache"
 	cargo llvm-cov \
 		--no-report \
+		--ignore-filename-regex generated \
 		nextest -p ${TEST_TARGET} \
 			--no-tests pass
 	cargo llvm-cov report \
 		--codecov \
+		--ignore-filename-regex generated \
 		--output-path "${PWD}/cache/llvm-cov-target.json"
 
 test-integration:
