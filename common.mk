@@ -78,13 +78,13 @@ define nfpm_package
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
-			-t ${TOP}/bin/${TARGET} \
+			-t ${TOP}/bin/$(2) \
 			-f $(1)
 	VERSION_PKG=${VERSION_PKG} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \
-			-t ${TOP}/bin/${TARGET} \
+			-t ${TOP}/bin/$(2) \
 			-f $(1)
 endef
 
