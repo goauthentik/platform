@@ -46,7 +46,7 @@ rs-gen-proto:
 		${PROTO_DIR}/*
 	cargo fmt
 
-lint-rs:
+lint-rs: pam/ci-install-deps
 	cargo fmt --all
 	cargo clippy --workspace
 	cargo clippy --fix --allow-dirty --workspace
@@ -75,13 +75,7 @@ test:
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
 
-test-rs:
-ifeq ($(PLATFORM),gnu/linux)
-ifeq ($(CI),true)
-	sudo apt-get update
-	sudo apt-get install -y libpam0g-dev libudev-dev
-endif
-endif
+test-rs: pam/ci-install-deps
 	mkdir -p "${PWD}/cache"
 	cargo llvm-cov \
 		--no-report \
