@@ -36,6 +36,7 @@ tonic = { version = "0.14" }
 tonic-prost = { version = "0.14" }
 tower = { version = "0.5.3", features = ["util"] }
 hyper-util = "0.1.20"
+whoami = "2.1.0"
 
 [dependencies]
 base64 = "0.22.1"
@@ -57,6 +58,7 @@ tower = { workspace = true }
 url = "2.5.8"
 windows-sys = "0.61.2"
 xdg = "3.0.0"
+whoami = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.56", features = ["serialization-serde"] }

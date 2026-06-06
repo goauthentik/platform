@@ -50,13 +50,17 @@ impl PlatformString {
         self
     }
 
-    pub fn for_current(self) -> String {
-        match std::env::consts::OS {
+    pub fn for_platform(self, name: &str) -> String {
+        match name {
             "macos" => self.darwin.or(self.linux).unwrap_or(self.fallback),
             "windows" => self.windows.or(self.linux).unwrap_or(self.fallback),
             "linux" => self.linux.unwrap_or(self.fallback),
             "android" => self.android.or(self.linux).unwrap_or(self.fallback),
             _ => self.fallback,
         }
+    }
+
+    pub fn for_current(self) -> String {
+        self.for_platform(std::env::consts::OS)
     }
 }

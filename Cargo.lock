@@ -343,6 +343,7 @@ dependencies = [
  "tonic-prost",
  "tower",
  "url",
+ "whoami",
  "windows-sys 0.61.2",
  "winreg",
  "xdg",

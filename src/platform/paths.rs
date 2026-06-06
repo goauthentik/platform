@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, path::PathBuf};
 
 use crate::platform::string::PlatformString;
 
@@ -25,6 +25,27 @@ pub enum AgentSocketID {
     SSH,
 }
 
+/**
+ * The XDG crate does not correctly use Library/Application Support on macos, and always uses
+ * .local/... on all unix-like platforms
+ */
+fn macos_lib_app_support(last_seg: &str) -> String {
+    let mut root = PathBuf::new();
+    let home = match env::home_dir() {
+        Some(h) => h.to_str().unwrap().to_string(),
+        None => {
+            let username = whoami::username().unwrap();
+            format!("/Users/{}", username)
+        }
+    };
+    root.push(home);
+    root.push("Library");
+    root.push("Application Support");
+    root.push("authentik");
+    root.push(last_seg);
+    root.as_path().to_str().unwrap().to_string()
+}
+
 pub fn agent_socket_path(id: AgentSocketID) -> PlatformString {
     let xdg_dirs = xdg::BaseDirectories::with_prefix("authentik");
     let mut unix_sock = xdg_dirs.data_home.unwrap();
@@ -36,13 +57,41 @@ pub fn agent_socket_path(id: AgentSocketID) -> PlatformString {
             unix_sock.push("agent.sock");
             PlatformString::new()
                 .with_windows(r"\\.\pipe\authentik\socket")
+                .with_darwin(&macos_lib_app_support("agent.sock"))
                 .with_linux(unix_sock.as_path().to_str().unwrap())
         }
         AgentSocketID::SSH => {
             unix_sock.push("agent-ssh.sock");
             PlatformString::new()
                 .with_windows(r"\\.\pipe\authentik\socket-ssh")
+                .with_darwin(&macos_lib_app_support("agent-ssh.sock"))
                 .with_linux(unix_sock.as_path().to_str().unwrap())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_agent_default_macos() {
+        let binding = env::home_dir().unwrap();
+        let home = binding.to_str().unwrap();
+        assert_eq!(
+            agent_socket_path(AgentSocketID::Default).for_platform("macos"),
+            format!("{}/Library/Application Support/authentik/agent.sock", home)
+        )
+    }
+
+    #[test]
+    fn test_agent_default_linux() {
+        let binding = env::home_dir().unwrap();
+        let home = binding.to_str().unwrap();
+        assert_eq!(
+            agent_socket_path(AgentSocketID::Default).for_platform("linux"),
+            format!("{}/.local/share/agent.sock", home)
+        )
     }
 }

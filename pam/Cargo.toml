@@ -24,4 +24,4 @@ log = { workspace = true }
 pam-bindings = "0.2.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
-whoami = "2.1.0"
+whoami = { workspace = true }
