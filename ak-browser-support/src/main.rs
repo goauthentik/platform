@@ -1,6 +1,5 @@
 use akp_logger::init_log;
 use authentik_sys::platform::string::PlatformString;
-use native_messaging::host::NmError;
 
 use crate::path_handler::PathHandler;
 
@@ -12,7 +11,7 @@ mod models;
 mod path_handler;
 
 #[tokio::main]
-async fn main() -> Result<(), NmError> {
+async fn main() {
     init_log(
         PlatformString::new()
             .with_windows("authentik Browser Support")
@@ -23,9 +22,15 @@ async fn main() -> Result<(), NmError> {
         Ok(ph) => ph,
         Err(e) => {
             log::warn!("Failed to create path handler: {e:?}");
-            return Err(NmError::Disconnected);
+            return;
         }
     };
 
-    path_handler.start().await
+    match path_handler.start().await {
+        Ok(_) => return,
+        Err(e) => {
+            log::warn!("Failed to start native messaging handler: {e:?}");
+            return;
+        }
+    };
 }
