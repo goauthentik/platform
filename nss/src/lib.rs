@@ -4,6 +4,7 @@ mod shadow;
 
 use akp_logger::{init_log, set_log_level};
 use authentik_sys::logger::{exit_log, log_hook};
+use authentik_sys::platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
 use group::AuthentikGroupHooks;
@@ -18,7 +19,7 @@ libnss_group_hooks!(authentik, AuthentikGroupHooks);
 
 #[ctor(unsafe)]
 fn ctor() {
-    init_log("libnss-authentik");
+    init_log(PlatformString::new_with_default("libnss-authentik"));
     // With NSS we don't have a good way to configure log level dynamically
     // we could read it from /etc/authentik
     set_log_level(LevelFilter::Warn);

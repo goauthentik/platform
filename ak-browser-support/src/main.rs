@@ -1,4 +1,5 @@
 use akp_logger::init_log;
+use authentik_sys::platform::string::PlatformString;
 use native_messaging::host::NmError;
 
 use crate::path_handler::PathHandler;
@@ -12,7 +13,12 @@ mod path_handler;
 
 #[tokio::main]
 async fn main() -> Result<(), NmError> {
-    init_log("ak-browser-support");
+    init_log(
+        PlatformString::new()
+            .with_windows("authentik Browser Support")
+            .with_linux("ak-browser-support")
+            .with_darwin("io.goauthentik.platform.browser-support"),
+    );
     let path_handler = match PathHandler::new().await {
         Ok(ph) => ph,
         Err(e) => {

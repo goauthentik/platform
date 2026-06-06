@@ -1,4 +1,5 @@
 use log::LevelFilter;
+use authentik_sys::platform::string::PlatformString;
 
 #[cfg(target_os = "macos")]
 mod macos;
@@ -9,13 +10,13 @@ mod linux;
 #[cfg(target_os = "windows")]
 mod windows;
 
-pub fn init_log(name: &str) {
+pub fn init_log(name: PlatformString) {
     #[cfg(target_os = "macos")]
-    macos::init_log(name);
+    macos::init_log(&name.for_current());
     #[cfg(target_os = "linux")]
-    linux::init_log(name);
+    linux::init_log(&name.for_current());
     #[cfg(target_os = "windows")]
-    windows::init_log(name);
+    windows::init_log(&name.for_current());
 }
 
 pub fn set_log_level(level: LevelFilter) {

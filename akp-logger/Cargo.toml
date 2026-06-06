@@ -8,6 +8,7 @@ license.workspace = true
 name = "log"
 
 [dependencies]
+authentik_sys = { path = ".." }
 log = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
