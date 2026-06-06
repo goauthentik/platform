@@ -21,7 +21,7 @@ mod tests {
     use std::convert::Infallible;
 
     use hyper_util::rt::TokioIo;
-    use tokio::io::{duplex, DuplexStream};
+    use tokio::io::{DuplexStream, duplex};
     use tonic::transport::{Channel, Endpoint};
     use tower::service_fn;
 

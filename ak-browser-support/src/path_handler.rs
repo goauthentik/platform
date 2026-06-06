@@ -1,4 +1,7 @@
-use authentik_sys::grpc::grpc_endpoint;
+use authentik_sys::{
+    grpc::grpc_endpoint,
+    platform::paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
+};
 use std::error::Error;
 use tonic::transport::{Channel, Endpoint};
 
@@ -18,10 +21,16 @@ pub(crate) struct PathHandler {
 impl PathHandler {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
         log::debug!("Creating GRPC connection to sysd");
-        let sys_ep = Endpoint::try_from(format!("http://:123/?{}", "path"))?;
+        let sys_ep = Endpoint::try_from(format!(
+            "http://:123/?{}",
+            sysd_socket_path(SysdSocketID::Default).for_current()
+        ))?;
         let sys_channel = grpc_endpoint(sys_ep).await?;
         log::debug!("Creating GRPC connection to user-agent");
-        let user_ep = Endpoint::try_from(format!("http://:123/?{}", "path"))?;
+        let user_ep = Endpoint::try_from(format!(
+            "http://:123/?{}",
+            agent_socket_path(AgentSocketID::Default).for_current()
+        ))?;
         let user_channel = grpc_endpoint(user_ep).await?;
 
         Ok(Self {

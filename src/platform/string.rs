@@ -1,14 +1,21 @@
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlatformString {
-	windows:  Option<String>,
-	darwin:   Option<String>,
-	linux:    Option<String>,
-	android:  Option<String>,
-	fallback: String,
+    windows: Option<String>,
+    darwin: Option<String>,
+    linux: Option<String>,
+    android: Option<String>,
+    fallback: String,
+}
+
+impl Default for PlatformString {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PlatformString {
-
     pub fn new() -> PlatformString {
         PlatformString::new_with_default("")
     }
@@ -25,22 +32,22 @@ impl PlatformString {
 
     pub fn with_windows(mut self, windows: &str) -> PlatformString {
         self.windows = Some(windows.to_string());
-        return self
+        self
     }
 
     pub fn with_darwin(mut self, darwin: &str) -> PlatformString {
         self.darwin = Some(darwin.to_string());
-        return self
+        self
     }
 
     pub fn with_linux(mut self, linux: &str) -> PlatformString {
         self.linux = Some(linux.to_string());
-        return self
+        self
     }
 
     pub fn with_android(mut self, android: &str) -> PlatformString {
         self.android = Some(android.to_string());
-        return self
+        self
     }
 
     pub fn for_current(self) -> String {
@@ -52,5 +59,4 @@ impl PlatformString {
             _ => self.fallback,
         }
     }
-
 }
