@@ -74,7 +74,7 @@ jobs:
       - env:
           RS_TEST_FLAGS: ${{ matrix.test_flags }}
         run: |
-          make test-rs
+          make test-rs RS_TEST_FLAGS="$RS_TEST_FLAGS"
       - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v5
         if: ${{ always() }}
         with:
