@@ -2,6 +2,7 @@ include common.mk
 
 TEST_COUNT = 1
 GO_TEST_FLAGS =
+RS_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
@@ -48,8 +49,12 @@ rs-gen-proto:
 
 lint-rs: pam/ci-install-deps
 	cargo fmt --all
-	cargo clippy --workspace
-	cargo clippy --fix --allow-dirty --workspace
+	cargo clippy --workspace \
+		${RS_TEST_FLAGS}
+	cargo clippy --fix \
+		--allow-dirty \
+		--workspace \
+		${RS_TEST_FLAGS}
 
 lint-go:
 	golangci-lint run
@@ -80,7 +85,7 @@ test-rs: pam/ci-install-deps
 	cargo llvm-cov \
 		--no-report \
 		nextest \
-			--workspace
+			--workspace ${RS_TEST_FLAGS}
 	cargo llvm-cov report \
 		--codecov \
 		--output-path "${PWD}/cache/llvm-cov-target.json"
