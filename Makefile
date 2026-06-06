@@ -83,7 +83,8 @@ test-rs: pam/ci-install-deps
 	mkdir -p "${PWD}/cache"
 	cargo llvm-cov \
 		--no-report \
-		nextest ${TEST_TARGET}
+		nextest -p ${TEST_TARGET} \
+			--no-tests pss
 	cargo llvm-cov report \
 		--codecov \
 		--output-path "${PWD}/cache/llvm-cov-target.json"
