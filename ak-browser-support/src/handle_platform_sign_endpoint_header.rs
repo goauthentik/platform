@@ -4,7 +4,6 @@ use authentik_sys::generated::{
     agent::RequestHeader,
     agent_platform::{PlatformEndpointRequest, agent_platform_client::AgentPlatformClient},
 };
-use native_messaging::host::Sender;
 use serde_json::Value;
 
 use crate::{

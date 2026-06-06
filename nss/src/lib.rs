@@ -2,7 +2,8 @@ mod group;
 mod passwd;
 mod shadow;
 
-use authentik_sys::logger::{exit_log, init_log, log_hook, set_log_level};
+use akp_logger::{init_log, set_log_level};
+use authentik_sys::logger::{exit_log, log_hook};
 use ctor::ctor;
 use dtor::dtor;
 use group::AuthentikGroupHooks;

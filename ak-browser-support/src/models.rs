@@ -13,6 +13,19 @@ pub(crate) struct Message {
     pub data: HashMap<String, Value>,
 }
 
+#[cfg(test)]
+impl Message {
+    pub fn test_msg() -> Message {
+        return Message {
+            version: "1".to_string(),
+            path: "".to_string(),
+            id: "foo".to_string(),
+            profile: "".to_string(),
+            data: HashMap::new(),
+        };
+    }
+}
+
 impl Message {
     pub fn route_path(&self) -> String {
         self.path.clone()

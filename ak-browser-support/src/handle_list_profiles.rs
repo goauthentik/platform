@@ -1,7 +1,6 @@
 use std::error::Error;
 
 use authentik_sys::generated::agent_ctrl::agent_ctrl_client::AgentCtrlClient;
-use native_messaging::host::Sender;
 use serde_json::{Value, to_value};
 
 use crate::{
@@ -10,10 +9,7 @@ use crate::{
 };
 
 impl PathHandler {
-    pub async fn handle_list_profiles(
-        &self,
-        msg: Message,
-    ) -> Result<Response, Box<dyn Error>> {
+    pub async fn handle_list_profiles(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
         let profiles = AgentCtrlClient::new(self.user_channel.clone())
             .list_profiles(())
             .await?

@@ -1,7 +1,5 @@
 use std::error::Error;
 
-use native_messaging::host::Sender;
-
 use crate::{
     models::{Message, Response},
     path_handler::PathHandler,
@@ -18,18 +16,17 @@ impl PathHandler {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     // Note this useful idiom: importing names from outer (for mod tests) scope.
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     #[test]
-//     fn test_ping() {
-//         let handler = PathHandler {
-//             system_channel: None,
-//             user_channel: None,
-//         };
-//         assert_eq!(handler.handle_ping(Message {}, Sender {}));
-//     }
-
-// }
+    #[tokio::test]
+    async fn test_ping() {
+        let handler = PathHandler {
+            system_channel: None,
+            user_channel: None,
+        };
+        let res = handler.handle_ping(Message::test_msg()).await.unwrap();
+        assert_eq!(res.data.get("ping").unwrap().as_str().unwrap(), "pong");
+    }
+}

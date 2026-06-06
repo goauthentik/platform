@@ -189,6 +189,7 @@ dependencies = [
 name = "ak-browser-support"
 version = "0.43.2"
 dependencies = [
+ "akp-logger",
  "authentik_sys",
  "log",
  "native_messaging",
@@ -199,10 +200,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "ak-logger"
+name = "akp-logger"
 version = "0.43.2"
 dependencies = [
+ "eventlog",
+ "log",
  "oslog",
+ "syslog",
 ]
 
 [[package]]
@@ -286,6 +290,7 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 name = "authentik_nss"
 version = "0.43.2"
 dependencies = [
+ "akp-logger",
  "authentik_sys",
  "ctor",
  "dtor",
@@ -298,6 +303,7 @@ dependencies = [
 name = "authentik_pam"
 version = "0.43.2"
 dependencies = [
+ "akp-logger",
  "authentik_sys",
  "ctap-hid-fido2",
  "ctor",
@@ -318,7 +324,6 @@ version = "0.43.2"
 dependencies = [
  "base64",
  "cxx",
- "eventlog",
  "hyper-util",
  "libc",
  "log",
@@ -330,7 +335,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "syslog",
  "tokio",
  "tonic",
  "tonic-prost",

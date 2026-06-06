@@ -4,7 +4,6 @@ use authentik_sys::generated::{
     agent::RequestHeader,
     agent_auth::{CurrentTokenRequest, agent_auth_client::AgentAuthClient, current_token_request},
 };
-use native_messaging::host::Sender;
 
 use crate::{
     models::{Message, Response},

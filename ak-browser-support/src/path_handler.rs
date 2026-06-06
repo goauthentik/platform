@@ -38,7 +38,7 @@ impl PathHandler {
                     serde_json::from_str(&raw).map_err(NmError::DeserializeJson)?;
                 log::debug!("Handling browser message {}", incoming.route_path());
                 if incoming.version == "1" {
-                    let res = sself.handle_v1(incoming).await? ;
+                    let res = sself.handle_v1(incoming).await?;
                     return send.send(&res).await;
                 }
                 log::warn!(
@@ -57,9 +57,7 @@ impl PathHandler {
             "ping" => self.handle_ping(msg).await,
             "get_token" => self.handle_get_token(msg).await,
             "list_profiles" => self.handle_list_profiles(msg).await,
-            "platform_sign_endpoint_header" => {
-                self.handle_platform_sign_endpoint_header(msg).await
-            }
+            "platform_sign_endpoint_header" => self.handle_platform_sign_endpoint_header(msg).await,
             _ => Err(Box::from("No handler found")),
         };
         match result {
