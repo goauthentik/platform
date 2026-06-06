@@ -1,4 +1,5 @@
-use std::{env, error::Error, path::PathBuf};
+use std::{env, error::Error};
+use dirs_next::data_dir;
 
 use crate::platform::string::PlatformString;
 
@@ -25,56 +26,33 @@ pub enum AgentSocketID {
     SSH,
 }
 
-/**
- * The XDG crate does not correctly use Library/Application Support on macos, and always uses
- * .local/... on all unix-like platforms
- */
-fn macos_lib_app_support(last_seg: &str) -> Result<String, Box<dyn Error>> {
-    let mut root = PathBuf::new();
-    let home = match env::home_dir() {
-        Some(h) => match h.to_str() {
-            Some(ps) => ps.to_string(),
-            None => return Err(Box::from("Failed to convert home_dir to path")),
-        },
-        None => {
-            let username = whoami::username()?;
-            format!("/Users/{}", username)
-        }
+fn xdg_data_path(last_seg: &str) -> Result<String, Box<dyn Error>> {
+    let mut data = match data_dir() {
+        Some(d) => d,
+        None => return Err(Box::from("Failed to get XDG data path")),
     };
-    root.push(home);
-    root.push("Library");
-    root.push("Application Support");
-    root.push("authentik");
-    root.push(last_seg);
-    match root.as_path().to_str() {
+    data.push("authentik");
+    data.push(last_seg);
+    match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
-        None => Err(Box::from("Failed to convert path to string")),
+        None => Err(Box::from("Failed to convert path to string"))
     }
 }
 
 pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString, Box<dyn Error>> {
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("authentik");
-    let mut unix_sock = match xdg_dirs.data_home {
-        Some(p) => p,
-        None => return Err(Box::from("Failed to get XDG data path")),
-    };
     match id {
         AgentSocketID::Default => {
             if let Ok(x) = env::var("AUTHENTIK_CLI_SOCKET") {
                 return Ok(PlatformString::new_with_default(&x));
             }
-            unix_sock.push("agent.sock");
             Ok(PlatformString::new()
                 .with_windows(r"\\.\pipe\authentik\socket")
-                .with_darwin(&macos_lib_app_support("agent.sock")?)
-                .with_linux(unix_sock.as_path().to_str().unwrap_or("")))
+                .with_linux(&xdg_data_path( "agent.sock")?))
         }
         AgentSocketID::SSH => {
-            unix_sock.push("agent-ssh.sock");
             Ok(PlatformString::new()
                 .with_windows(r"\\.\pipe\authentik\socket-ssh")
-                .with_darwin(&macos_lib_app_support("agent-ssh.sock")?)
-                .with_linux(unix_sock.as_path().to_str().unwrap_or("")))
+                .with_linux(&xdg_data_path( "agent-ssh.sock")?))
         }
     }
 }
@@ -84,6 +62,7 @@ mod tests {
 
     use super::*;
 
+    #[cfg(target_os = "macos")]
     #[test]
     fn test_agent_default_macos() {
         let binding = env::home_dir().unwrap();
@@ -96,6 +75,7 @@ mod tests {
         )
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn test_agent_default_linux() {
         let binding = env::home_dir().unwrap();
