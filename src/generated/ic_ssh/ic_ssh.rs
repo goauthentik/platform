@@ -8,4 +8,5 @@ pub struct SshTokenAuthentication {
     #[prost(string, tag="2")]
     pub local_socket: ::prost::alloc::string::String,
 }
+include!("ic_ssh.serde.rs");
 // @@protoc_insertion_point(module)

@@ -15,4 +15,5 @@ pub struct PlatformEndpointResponse {
     pub message: ::prost::alloc::string::String,
 }
 include!("agent_platform.tonic.rs");
+include!("agent_platform.serde.rs");
 // @@protoc_insertion_point(module)
