@@ -36,10 +36,15 @@ impl PathHandler {
             async move {
                 let incoming: Message =
                     serde_json::from_str(&raw).map_err(NmError::DeserializeJson)?;
+                log::debug!("Handling browser message {}", incoming.route_path());
                 if incoming.version == "1" {
                     return sself.handle_v1(incoming, send).await;
                 }
-                log::warn!("Invalid version message received: {} (path {})", incoming.version, incoming.route_path());
+                log::warn!(
+                    "Invalid version message received: {} (path {})",
+                    incoming.version,
+                    incoming.route_path()
+                );
                 Err(NmError::Disconnected)
             }
         })
@@ -52,9 +57,7 @@ impl PathHandler {
             "get_token" => self.handle_get_token(msg, send).await,
             "list_profiles" => self.handle_list_profiles(msg, send).await,
             "platform_sign_endpoint_header" => {
-                self
-                    .handle_platform_sign_endpoint_header(msg, send)
-                    .await
+                self.handle_platform_sign_endpoint_header(msg, send).await
             }
             _ => Ok(()),
         };

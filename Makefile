@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
-TARGETS := pam nss cmd/browser_support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows containers/selenium containers/test containers/e2e
+TARGETS := pam nss ak-browser-support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
@@ -117,6 +117,7 @@ bump:
 	sed -i 's/VERSION = .*/VERSION = ${version}/g' common.mk
 	sed -i 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
 	"$(MAKE)" browser-ext/bump
+	"$(MAKE)" ak-browser-support/bump
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" nss/bump
 	"$(MAKE)" pam/bump
@@ -129,8 +130,8 @@ pam/%:
 nss/%:
 	"$(MAKE)" -C "${TOP}/nss" $*
 
-browser_support/%:
-	"$(MAKE)" -C "${TOP}/cmd/browser_support" $*
+ak-browser-support/%:
+	"$(MAKE)" -C "${TOP}/ak-browser-support" $*
 
 cli/%:
 	"$(MAKE)" -C "${TOP}/cmd/cli" $*
