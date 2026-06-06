@@ -31,7 +31,7 @@ endif
 		"${TOP}/cmd/${TARGET}"
 
 .PHONY: package-gnu/linux
-package-gnu/linux: clean build
+package-gnu/linux:
 	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
 
 test-deploy: package

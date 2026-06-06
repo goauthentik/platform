@@ -11,12 +11,12 @@ maintainer: "Authentik Security Inc."
 license: "MIT"
 section: security
 contents:
-  - src: "../cache/pam/release/libauthentik_pam.so"
+  - src: "../bin/pam/libauthentik_pam.so"
     dst: "/usr/lib/security/pam_authentik.so"
     file_info:
       mode: 0644
     packager: deb
-  - src: "../cache/pam/release/libauthentik_pam.so"
+  - src: "../bin/pam/libauthentik_pam.so"
     dst: "/usr/lib64/security/pam_authentik.so"
     file_info:
       mode: 0644

@@ -39,11 +39,6 @@ jobs:
           go-version-file: go.mod
           cache: true
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-      - id: platform_pure
-        shell: bash
-        run: |
-          platform=$(uname -o | tr '[:upper:]' '[:lower:]')
-          echo "platform=${platform}" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
           path: cache/
@@ -51,11 +46,7 @@ jobs:
 
       - shell: bash
         run: |
-          if [[ "${{ steps.platform_pure.outputs.platform }}" == "gnu/linux" ]]; then
-            make ${{ matrix.target }}/package-gnu/linux
-          else
-            make ${{ matrix.target }}/build
-          fi
+          make ${{ matrix.target }}/build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           AK_IS_RELEASE: ${{ inputs.is_release }}

@@ -13,12 +13,13 @@ build:
 		--target-dir ${TOP}/cache/${TARGET} \
 		--verbose \
 		--release
+	cp "${TOP}/cache/${TARGET}/release/libauthentik_nss.so" "${TOP}/bin/${TARGET}/"
 
 test:
 	cargo test --verbose
 
-package: build
+package:
 	DEB_BUILD_GNU_TYPE=${DEB_BUILD_GNU_TYPE} $(call nfpm_package,${TOP}/${TARGET}/nfpm.yaml)
 
-test-deploy: package
+test-deploy: build package
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/libnss-authentik_${VERSION}_${ARCH}.deb

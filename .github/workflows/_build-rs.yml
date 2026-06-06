@@ -62,7 +62,6 @@ jobs:
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
       - run: |
           make ${{ matrix.target }}/build
-          make ${{ matrix.target }}/package
         env:
           AK_IS_RELEASE: ${{ inputs.is_release }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
