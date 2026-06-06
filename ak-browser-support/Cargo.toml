@@ -1,0 +1,17 @@
+[package]
+name = "ak-browser-support"
+version = "0.43.2"
+edition = "2024"
+license = "MIT"
+
+[lints]
+workspace = true
+
+[dependencies]
+tonic = { workspace = true }
+log = { workspace = true }
+authentik_sys = { path = ".." }
+native_messaging = { version = "0.2.0", features = ["tokio"] }
+serde = "1.0.228"
+serde_json = "1.0.150"
+tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "sync"] }

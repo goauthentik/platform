@@ -162,4 +162,5 @@ impl InteractiveAuthResult {
     }
 }
 include!("sys_auth.tonic.rs");
+include!("sys_auth.serde.rs");
 // @@protoc_insertion_point(module)

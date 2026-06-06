@@ -31,13 +31,17 @@ rs-gen-proto:
 	cargo install protoc-gen-prost
 	cargo install protoc-gen-tonic
 	cargo install protoc-gen-prost-crate
+	cargo install protoc-gen-prost-serde
 	mkdir -p $(PROTO_OUT)
 	protoc \
 		--prost_out=$(PROTO_OUT) \
+		--prost_opt=compile_well_known_types \
+		--prost_opt=extern_path=.google.protobuf=::pbjson_types \
 		--prost-crate_out=$(PROTO_OUT) \
 		--prost-crate_opt=no_features \
 		--tonic_out=$(PROTO_OUT) \
 		--tonic_opt=no_server \
+		--prost-serde_out=$(PROTO_OUT) \
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
 	cargo fmt

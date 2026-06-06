@@ -21,12 +21,13 @@ pub struct Token {
     #[prost(string, repeated, tag="4")]
     pub aud: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     #[prost(message, optional, tag="5")]
-    pub exp: ::core::option::Option<::prost_types::Timestamp>,
+    pub exp: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(message, optional, tag="6")]
-    pub nbf: ::core::option::Option<::prost_types::Timestamp>,
+    pub nbf: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(message, optional, tag="7")]
-    pub iat: ::core::option::Option<::prost_types::Timestamp>,
+    pub iat: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(string, tag="8")]
     pub jti: ::prost::alloc::string::String,
 }
+include!("agent.serde.rs");
 // @@protoc_insertion_point(module)

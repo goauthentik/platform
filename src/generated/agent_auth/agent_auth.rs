@@ -100,4 +100,5 @@ pub struct AuthorizeResponse {
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
 }
 include!("agent_auth.tonic.rs");
+include!("agent_auth.serde.rs");
 // @@protoc_insertion_point(module)

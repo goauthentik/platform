@@ -10,7 +10,7 @@ use tower::service_fn;
 use crate::config::Config;
 
 #[cfg(unix)]
-async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
+pub async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
     return ep
         .connect_with_connector(service_fn(async move |p: Uri| {
             use tokio::net::UnixStream;
@@ -31,7 +31,7 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
 }
 
 #[cfg(windows)]
-async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
+pub async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
     return ep
         .connect_with_connector(service_fn(async |p: Uri| {
             use std::time::Duration;
