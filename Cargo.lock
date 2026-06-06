@@ -199,7 +199,6 @@ dependencies = [
  "tokio",
  "tonic",
  "tower",
- "winreg 0.52.0",
 ]
 
 [[package]]
@@ -1715,6 +1714,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "toml",
+ "winreg 0.52.0",
 ]
 
 [[package]]
