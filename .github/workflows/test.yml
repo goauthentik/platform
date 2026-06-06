@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   test_go:
-    name: Test
+    name: Test (go)
     strategy:
       fail-fast: false
       matrix:
@@ -53,7 +53,7 @@ jobs:
           files: ${{ github.workspace }}/junit.xml
           report_type: test_results
   test_rs:
-    name: Test
+    name: Test (rust)
     strategy:
       fail-fast: false
       matrix:
