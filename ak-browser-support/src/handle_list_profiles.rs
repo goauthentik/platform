@@ -13,8 +13,7 @@ impl PathHandler {
     pub async fn handle_list_profiles(
         &self,
         msg: Message,
-        send: Sender,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Response, Box<dyn Error>> {
         let profiles = AgentCtrlClient::new(self.user_channel.clone())
             .list_profiles(())
             .await?
@@ -26,7 +25,6 @@ impl PathHandler {
             .map(|p| to_value(p).unwrap_or(Value::Null))
             .collect();
         res.data.insert("profiles".to_owned(), Value::Array(c));
-        send.send(&res).await?;
-        Ok(())
+        Ok(res)
     }
 }

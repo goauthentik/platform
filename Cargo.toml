@@ -1,7 +1,8 @@
 [package]
 name = "authentik_sys"
-version = "0.43.2"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [lib]
 crate-type = ["staticlib", "lib"]
@@ -21,6 +22,11 @@ members = [
     "pam",
     "ak-browser-support",
 ]
+
+[workspace.package]
+version = "0.43.2"
+edition = "2024"
+license = "MIT"
 
 [[example]]
 name = "grpc"

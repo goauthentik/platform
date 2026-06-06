@@ -12,7 +12,7 @@ use crate::{
 };
 
 impl PathHandler {
-    pub async fn handle_get_token(&self, msg: Message, send: Sender) -> Result<(), Box<dyn Error>> {
+    pub async fn handle_get_token(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
         let current = AgentAuthClient::new(self.user_channel.clone())
             .get_current_token(CurrentTokenRequest {
                 header: Some(RequestHeader {
@@ -27,7 +27,6 @@ impl PathHandler {
             .insert("token".to_owned(), serde_json::Value::String(current.raw));
         res.data
             .insert("url".to_owned(), serde_json::Value::String(current.url));
-        send.send(&res).await?;
-        Ok(())
+        Ok(res)
     }
 }

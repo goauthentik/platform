@@ -117,10 +117,7 @@ bump:
 	sed -i 's/VERSION = .*/VERSION = ${version}/g' common.mk
 	sed -i 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
 	"$(MAKE)" browser-ext/bump
-	"$(MAKE)" ak-browser-support/bump
 	"$(MAKE)" vpkg/macos/bump
-	"$(MAKE)" nss/bump
-	"$(MAKE)" pam/bump
 	"$(MAKE)" ee/psso/bump || true
 	"$(MAKE)" ee/wcp/bump || true
 

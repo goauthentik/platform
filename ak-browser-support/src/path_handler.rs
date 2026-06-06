@@ -7,7 +7,7 @@ use native_messaging::{
     host::{NmError, Sender},
 };
 
-use crate::models::Message;
+use crate::models::{Message, Response};
 
 #[derive(Clone)]
 pub(crate) struct PathHandler {
@@ -38,7 +38,8 @@ impl PathHandler {
                     serde_json::from_str(&raw).map_err(NmError::DeserializeJson)?;
                 log::debug!("Handling browser message {}", incoming.route_path());
                 if incoming.version == "1" {
-                    return sself.handle_v1(incoming, send).await;
+                    let res = sself.handle_v1(incoming).await? ;
+                    return send.send(&res).await;
                 }
                 log::warn!(
                     "Invalid version message received: {} (path {})",
@@ -51,18 +52,18 @@ impl PathHandler {
         .await
     }
 
-    async fn handle_v1(self, msg: Message, send: Sender) -> Result<(), NmError> {
+    async fn handle_v1(self, msg: Message) -> Result<Response, NmError> {
         let result = match msg.route_path().trim() {
-            "ping" => self.handle_ping(msg, send).await,
-            "get_token" => self.handle_get_token(msg, send).await,
-            "list_profiles" => self.handle_list_profiles(msg, send).await,
+            "ping" => self.handle_ping(msg).await,
+            "get_token" => self.handle_get_token(msg).await,
+            "list_profiles" => self.handle_list_profiles(msg).await,
             "platform_sign_endpoint_header" => {
-                self.handle_platform_sign_endpoint_header(msg, send).await
+                self.handle_platform_sign_endpoint_header(msg).await
             }
-            _ => Ok(()),
+            _ => Err(Box::from("No handler found")),
         };
         match result {
-            Ok(_) => Ok(()),
+            Ok(res) => Ok(res),
             Err(e) => {
                 log::warn!("Failed to run handler: {e:?}");
                 Err(NmError::Disconnected)

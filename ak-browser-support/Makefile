@@ -2,9 +2,6 @@ include ../common.mk
 
 TARGET := browser_support
 
-bump:
-	sed -i 's/^version = ".*"/version = "${VERSION}"/g' ${PWD}/Cargo.toml
-
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"

@@ -16,8 +16,7 @@ impl PathHandler {
     pub async fn handle_platform_sign_endpoint_header(
         &self,
         msg: Message,
-        send: Sender,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<Response, Box<dyn Error>> {
         let challenge = match msg.data.get("challenge") {
             Some(ch) => match ch.as_str() {
                 Some(sch) => sch,
@@ -39,7 +38,6 @@ impl PathHandler {
             "response".to_owned(),
             Value::String(signed_response.message),
         );
-        send.send(&res).await?;
-        Ok(())
+        Ok(res)
     }
 }
