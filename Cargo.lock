@@ -191,12 +191,14 @@ version = "0.43.2"
 dependencies = [
  "akp-logger",
  "authentik_sys",
+ "hyper-util",
  "log",
  "native_messaging",
  "serde",
  "serde_json",
  "tokio",
  "tonic",
+ "tower",
 ]
 
 [[package]]

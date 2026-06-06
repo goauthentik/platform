@@ -1,4 +1,3 @@
-use libc::{getegid, geteuid, getgid, getuid};
 use log::LevelFilter;
 use syslog::BasicLogger;
 use syslog::{Facility, Formatter3164};

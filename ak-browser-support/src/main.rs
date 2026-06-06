@@ -12,7 +12,7 @@ mod path_handler;
 
 #[tokio::main]
 async fn main() -> Result<(), NmError> {
-    init_log("");
+    init_log("ak-browser-support");
     let path_handler = match PathHandler::new().await {
         Ok(ph) => ph,
         Err(e) => {
