@@ -7,9 +7,6 @@ else
 BINARY_NAME := ak-agent
 endif
 
-MACOS_APP_NAME := authentik Agent.app
-MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
-
 lint:
 	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/macos/scripts")
 
