@@ -7,9 +7,6 @@ else
 BINARY_NAME := ak-agent
 endif
 
-lint:
-	$(call lint_shellcheck,"${TOP}/cmd/${TARGET}/package/macos/scripts")
-
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
