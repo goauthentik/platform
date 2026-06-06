@@ -20,4 +20,5 @@ pub struct FidoResponse {
     #[prost(bytes="vec", tag="3")]
     pub authenticator_data: ::prost::alloc::vec::Vec<u8>,
 }
+include!("ic_pam_fido.serde.rs");
 // @@protoc_insertion_point(module)

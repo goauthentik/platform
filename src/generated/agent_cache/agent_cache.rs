@@ -14,7 +14,7 @@ pub struct CacheGetResponse {
     #[prost(enumeration="CacheStatus", tag="2")]
     pub status: i32,
     #[prost(message, optional, tag="3")]
-    pub expiry: ::core::option::Option<::prost_types::Timestamp>,
+    pub expiry: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(string, tag="4")]
     pub value: ::prost::alloc::string::String,
 }
@@ -25,7 +25,7 @@ pub struct CacheSetRequest {
     #[prost(string, repeated, tag="2")]
     pub keys: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     #[prost(message, optional, tag="3")]
-    pub expiry: ::core::option::Option<::prost_types::Timestamp>,
+    pub expiry: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(string, tag="4")]
     pub value: ::prost::alloc::string::String,
 }
@@ -67,4 +67,5 @@ impl CacheStatus {
     }
 }
 include!("agent_cache.tonic.rs");
+include!("agent_cache.serde.rs");
 // @@protoc_insertion_point(module)

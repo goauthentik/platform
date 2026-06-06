@@ -44,4 +44,5 @@ pub struct Group {
     pub passwd: ::prost::alloc::string::String,
 }
 include!("sys_directory.tonic.rs");
+include!("sys_directory.serde.rs");
 // @@protoc_insertion_point(module)

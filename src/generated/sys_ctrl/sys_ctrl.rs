@@ -34,4 +34,5 @@ pub struct TroubleshootInspectResponse {
     pub children: ::prost::alloc::vec::Vec<TroubleshootInspectResponse>,
 }
 include!("sys_ctrl.tonic.rs");
+include!("sys_ctrl.serde.rs");
 // @@protoc_insertion_point(module)
