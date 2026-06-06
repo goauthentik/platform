@@ -15,7 +15,7 @@ build:
 		--target-dir "${TOP}/cache/${TARGET}" \
 		--verbose \
 		--release
-	cp "${TOP}/cache/${TARGET}/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 .PHONY: test
 test:
