@@ -2,7 +2,6 @@ include common.mk
 
 TEST_COUNT = 1
 GO_TEST_FLAGS =
-RS_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
@@ -84,8 +83,7 @@ test-rs: pam/ci-install-deps
 	mkdir -p "${PWD}/cache"
 	cargo llvm-cov \
 		--no-report \
-		nextest \
-			--workspace ${RS_TEST_FLAGS}
+		nextest ${TEST_TARGET}
 	cargo llvm-cov report \
 		--codecov \
 		--output-path "${PWD}/cache/llvm-cov-target.json"
