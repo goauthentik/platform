@@ -2,7 +2,7 @@ include ../common.mk
 
 TARGET = pam
 
-build:
+build: ci-install-deps
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
 	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
