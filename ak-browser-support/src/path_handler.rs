@@ -1,9 +1,9 @@
 use authentik_sys::{
-    grpc::grpc_endpoint,
+    grpc::{grpc_endpoint},
     platform::paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
 };
 use std::error::Error;
-use tonic::transport::{Channel, Endpoint};
+use tonic::transport::{Channel};
 
 use native_messaging::{
     event_loop,
@@ -21,17 +21,9 @@ pub(crate) struct PathHandler {
 impl PathHandler {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
         log::debug!("Creating GRPC connection to sysd: {}", sysd_socket_path(SysdSocketID::Default).for_current());
-        let sys_ep = Endpoint::try_from(format!(
-            "http://:123/?{}",
-            sysd_socket_path(SysdSocketID::Default).for_current()
-        ))?;
-        let sys_channel = grpc_endpoint(sys_ep).await?;
+        let sys_channel = grpc_endpoint(sysd_socket_path(SysdSocketID::Default).for_current()).await?;
         log::debug!("Creating GRPC connection to user-agent: {}", agent_socket_path(AgentSocketID::Default).for_current());
-        let user_ep = Endpoint::try_from(format!(
-            "http://:123/?{}",
-            agent_socket_path(AgentSocketID::Default).for_current()
-        ))?;
-        let user_channel = grpc_endpoint(user_ep).await?;
+        let user_channel = grpc_endpoint(agent_socket_path(AgentSocketID::Default).for_current()).await?;
 
         Ok(Self {
             system_channel: sys_channel,
