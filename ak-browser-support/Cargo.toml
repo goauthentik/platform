@@ -23,5 +23,9 @@ tokio = { workspace = true, features = [
 ] }
 tower = { workspace = true }
 
+# Needed because the native-messaging crate always requires this on windows
+[target.'cfg(windows)'.dependencies]
+winreg = { version = "0.52", optional = true }
+
 [dev-dependencies]
 hyper-util = { version = "0.1", features = ["tokio"] }
