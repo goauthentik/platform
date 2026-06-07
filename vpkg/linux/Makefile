@@ -7,7 +7,12 @@ export DEB_BUILD_GNU_TYPE
 .PHONY: package
 package:
 	mkdir -p "${TOP}/bin/${TARGET}"
+	mkdir -p "${TOP}/bin/cli/completions"
 	mkdir -p "${TOP}/bin/agent_system/completions"
+	"${TOP}/hack/completions.sh" \
+		"${TOP}/cmd/cli" \
+		"${TOP}/bin/cli/completions" \
+		"cli"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/cmd/agent_system" \
 		"${TOP}/bin/agent_system/completions" \

@@ -21,8 +21,6 @@ build:
 	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIN}"
 	mkdir -p "${TOP}/bin/${TARGET}/man"
 	"${TOP}/cache/${TARGET}/release/gen-man" "${TOP}/bin/${TARGET}/man"
-	mkdir -p "${TOP}/bin/${TARGET}/completions"
-	"${TOP}/cache/${TARGET}/release/gen-completions" "${TOP}/bin/${TARGET}/completions"
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
