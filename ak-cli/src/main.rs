@@ -65,6 +65,11 @@ async fn main() -> Result<(), Error> {
         Commands::Version => commands::version::version(&cli).await,
         Commands::Config { command } => match command {
             ConfigCommands::ListProfiles => commands::config::list_profiles(&cli).await,
+            ConfigCommands::Setup {
+                authentik_url,
+                client_id,
+                app_slug,
+            } => commands::config::setup(&cli, authentik_url, client_id, app_slug).await,
         },
         Commands::Auth { command } => match command {
             AuthCommands::Raw { client_id } => commands::auth::raw(&cli, client_id).await,

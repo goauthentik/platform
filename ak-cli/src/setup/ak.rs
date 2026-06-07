@@ -3,6 +3,9 @@ use std::error::Error;
 use crate::setup::Profile;
 use url::Url;
 
+pub const DEFAULT_APP_SLUG: &str = "authentik-cli";
+pub const DEFAULT_CLIENT_ID: &str = "authentik-cli";
+
 pub struct URLSet {
     pub authorize_url: Url,
     pub device_code_url: Url,
