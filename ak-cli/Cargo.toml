@@ -7,6 +7,10 @@ license.workspace = true
 [lints]
 workspace = true
 
+[[bin]]
+name = "ak"
+path = "src/main.rs"
+
 [dependencies]
 akp-logger = { path = "../akp-logger" }
 authentik_sys = { "path" = ".." }
