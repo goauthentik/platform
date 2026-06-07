@@ -1,5 +1,5 @@
 use akp_logger::set_log_level;
-use clap::{CommandFactory, Error, Parser, Subcommand};
+use clap::{Error, Parser, Subcommand};
 use log::LevelFilter;
 
 use crate::commands::{auth::AuthCommands, config::ConfigCommands};
@@ -48,15 +48,6 @@ enum Commands {
         #[command(subcommand)]
         command: AuthCommands,
     },
-
-    #[command(hide = true)]
-    GenerateCompletions {
-        shell: clap_complete::Shell,
-    },
-    #[command(hide = true)]
-    GenerateManpage {
-        out_dir: std::path::PathBuf,
-    },
 }
 
 #[tokio::main]
@@ -66,18 +57,6 @@ async fn main() -> Result<(), Error> {
     set_log_level(LevelFilter::Warn);
     if cli.verbose {
         set_log_level(LevelFilter::Trace);
-    }
-
-    if let Commands::GenerateCompletions { shell } = &cli.command {
-        clap_complete::generate(*shell, &mut Cli::command(), "ak", &mut std::io::stdout());
-        return Ok(());
-    }
-    if let Commands::GenerateManpage { out_dir } = &cli.command {
-        let man = clap_mangen::Man::new(Cli::command());
-        let mut buf: Vec<u8> = Default::default();
-        man.render(&mut buf).expect("man page generation failed");
-        std::fs::write(out_dir.join("ak.1"), buf).expect("failed to write man page");
-        return Ok(());
     }
 
     let res = match &cli.command {
@@ -95,7 +74,6 @@ async fn main() -> Result<(), Error> {
                 region,
             } => commands::auth::aws(&cli, client_id, role_arn, region).await,
         },
-        Commands::GenerateCompletions { .. } | Commands::GenerateManpage { .. } => unreachable!(),
     };
     match res {
         Ok(_) => Ok(()),

@@ -18,13 +18,7 @@ build:
 		--target-dir "${TOP}/cache/${TARGET}" \
 		--verbose \
 		--release
-	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIN}"
-	mkdir -p "${TOP}/bin/${TARGET}/man"
-	"${TOP}/cache/${TARGET}/release/${BIN}" generate-manpage "${TOP}/bin/${TARGET}/man"
-	mkdir -p "${TOP}/bin/${TARGET}/completions"
-	for s in bash zsh fish; do \
-		"${TOP}/cache/${TARGET}/release/${BIN}" generate-completions $$s > "${TOP}/bin/${TARGET}/completions/ak.$$s"; \
-	done
+	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb

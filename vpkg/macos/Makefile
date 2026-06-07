@@ -28,12 +28,6 @@ package:
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"*
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*
-	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/man"
-	cp "${TOP}/bin/cli/man/ak.1" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/man/"
-	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/completions"
-	cp "${TOP}/bin/cli/completions/ak.bash" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/completions/"
-	cp "${TOP}/bin/cli/completions/ak.zsh" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/completions/"
-	cp "${TOP}/bin/cli/completions/ak.fish" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/completions/"
 	codesign \
 		--force \
 		--verify \
