@@ -67,10 +67,6 @@ mkdir -p /usr/local/bin
 ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak" /usr/local/bin/ak
 ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak-vault" /usr/local/bin/ak-vault
 
-echo "Installing man page"
-mkdir -p /usr/local/share/man/man1
-cp "$INSTALL_DIR/authentik Agent.app/Contents/Resources/man/ak.1" /usr/local/share/man/man1/ak.1
-
 echo "Installing browser native messaging host"
 
 chromeSystemWidePath="/Library/Google/Chrome/NativeMessagingHosts"
