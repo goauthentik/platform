@@ -18,7 +18,9 @@ build:
 		--target-dir "${TOP}/cache/${TARGET}" \
 		--verbose \
 		--release
-	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIN}"
+	mkdir -p "${TOP}/bin/${TARGET}/man"
+	"${TOP}/cache/${TARGET}/release/gen-man" "${TOP}/bin/${TARGET}/man"
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb

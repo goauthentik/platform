@@ -14,3 +14,7 @@ contents:
     dst: /usr/bin/ak
   - src: ../../bin/cli/completions/cli.bash
     dst: /etc/bash_completion.d/ak-cli
+  - src: ../../bin/cli/man/ak.1
+    dst: /usr/share/man/man1/ak.1
+    file_info:
+      mode: 0644
