@@ -8,6 +8,7 @@ use tonic::transport::{Channel, Endpoint};
 use tower::service_fn;
 
 use crate::config::Config;
+use crate::generated::agent::ResponseHeader;
 
 pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
     let u = Uri::builder()
@@ -145,4 +146,13 @@ pub fn decode_pb<T: ::prost::Message + Default>(token: String) -> Result<T, Box<
 pub fn encode_pb<T: ::prost::Message>(msg: T) -> Result<String, Box<dyn Error>> {
     let raw = msg.encode_to_vec();
     Ok(BASE64_STANDARD.encode(raw))
+}
+
+pub fn assert_response_valid(header: Option<ResponseHeader>) -> Result<(), Box<dyn Error>> {
+    if let Some(header) = header {
+        if !header.successful {
+            return Err(Box::from("unsuccessful request"));
+        }
+    }
+    Ok(())
 }
