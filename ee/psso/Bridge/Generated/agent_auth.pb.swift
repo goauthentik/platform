@@ -199,7 +199,7 @@ nonisolated struct TokenExchangeResponse: Sendable {
 
   var accessToken: String = String()
 
-  var expiresIn: UInt64 = 0
+  var expiresIn: Int64 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -497,7 +497,7 @@ nonisolated extension TokenExchangeResponse: SwiftProtobuf.Message, SwiftProtobu
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.accessToken) }()
-      case 3: try { try decoder.decodeSingularUInt64Field(value: &self.expiresIn) }()
+      case 3: try { try decoder.decodeSingularInt64Field(value: &self.expiresIn) }()
       default: break
       }
     }
@@ -515,7 +515,7 @@ nonisolated extension TokenExchangeResponse: SwiftProtobuf.Message, SwiftProtobu
       try visitor.visitSingularStringField(value: self.accessToken, fieldNumber: 2)
     }
     if self.expiresIn != 0 {
-      try visitor.visitSingularUInt64Field(value: self.expiresIn, fieldNumber: 3)
+      try visitor.visitSingularInt64Field(value: self.expiresIn, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }

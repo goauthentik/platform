@@ -75,8 +75,8 @@ pub struct TokenExchangeResponse {
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
     #[prost(string, tag="2")]
     pub access_token: ::prost::alloc::string::String,
-    #[prost(uint64, tag="3")]
-    pub expires_in: u64,
+    #[prost(int64, tag="3")]
+    pub expires_in: i64,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct DeviceTokenExchangeRequest {
