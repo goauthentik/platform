@@ -2,9 +2,9 @@ include ../common.mk
 
 TARGET := cli
 ifeq ($(OS),Windows_NT)
-BINARY_NAME := ak.exe
+BIN := ak.exe
 else
-BINARY_NAME := ak
+BIN := ak
 endif
 
 .PHONY: clean
