@@ -26,6 +26,7 @@ pub struct CredentialsOpts {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct AWSCredentialOutput {
     version: i32,
     access_key_id: String,
