@@ -20,18 +20,7 @@ endif
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: package-gnu/linux
-package-gnu/linux: build
-	ln -s ak "${TOP}/bin/${TARGET}/ak-vault" || true
-	ln -s ak "${TOP}/bin/${TARGET}/ak-browser-support" || true
-	mkdir -p "${TOP}/bin/${TARGET}/completions"
-	"${TOP}/hack/completions.sh" \
-		"${TOP}/cmd/${TARGET}" \
-		"${TOP}/bin/${TARGET}/completions" \
-		"${TARGET}"
-	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
-
-test-deploy: package-gnu/linux
+test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ssh
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb

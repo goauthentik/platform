@@ -20,6 +20,3 @@ build:
 .PHONY: test
 test:
 	cargo test --verbose
-
-.PHONY: package
-package:

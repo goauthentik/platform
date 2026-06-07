@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
-TARGETS := pam nss ak-browser-support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows containers/selenium containers/test containers/e2e
+TARGETS := pam nss ak-browser-support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
@@ -46,10 +46,14 @@ rs-gen-proto:
 		${PROTO_DIR}/*
 	cargo fmt
 
-lint-rs:
+lint-rs: pam/ci-install-deps
 	cargo fmt --all
-	cargo clippy --workspace
-	cargo clippy --fix --allow-dirty --workspace
+	cargo clippy --workspace \
+		${RS_TEST_FLAGS}
+	cargo clippy --fix \
+		--allow-dirty \
+		--workspace \
+		${RS_TEST_FLAGS}
 
 lint-go:
 	golangci-lint run
@@ -74,6 +78,18 @@ test:
 	go tool cover \
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
+
+test-rs: pam/ci-install-deps
+	mkdir -p "${PWD}/cache"
+	cargo llvm-cov \
+		--no-report \
+		--ignore-filename-regex generated \
+		nextest -p ${TEST_TARGET} \
+			--no-tests pass
+	cargo llvm-cov report \
+		--codecov \
+		--ignore-filename-regex generated \
+		--output-path "${PWD}/cache/llvm-cov-target.json"
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
@@ -153,6 +169,9 @@ vpkg/macos/%:
 
 vpkg/windows/%:
 	"$(MAKE)" -C "${TOP}/vpkg/windows" $*
+
+vpkg/linux/%:
+	"$(MAKE)" -C "${TOP}/vpkg/linux" $*
 
 containers/selenium/%:
 	"$(MAKE)" -C "${TOP}/containers/selenium" $*

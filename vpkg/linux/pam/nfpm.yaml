@@ -11,24 +11,24 @@ maintainer: "Authentik Security Inc."
 license: "MIT"
 section: security
 contents:
-  - src: "../cache/pam/release/libauthentik_pam.so"
+  - src: "../../bin/pam/libauthentik_pam.so"
     dst: "/usr/lib/security/pam_authentik.so"
     file_info:
       mode: 0644
     packager: deb
-  - src: "../cache/pam/release/libauthentik_pam.so"
+  - src: "../../bin/pam/libauthentik_pam.so"
     dst: "/usr/lib64/security/pam_authentik.so"
     file_info:
       mode: 0644
     packager: rpm
   # Config
-  - src: "./_deb/pam_config"
+  - src: "./pam/_deb/pam_config"
     dst: "/usr/share/pam-configs/authentik"
     file_info:
       mode: 0644
     packager: deb
     type: config
-  - src: "./_rpm/authselect"
+  - src: "./pam/_rpm/authselect"
     dst: /usr/share/authselect/vendor/authentik
     packager: rpm
     type: config
@@ -40,11 +40,11 @@ overrides:
       - "libssl3 | libssl3t64"
       - "libpam0g"
     scripts:
-      postinstall: ./_deb/postinst.sh
-      preremove: ./_deb/prerm.sh
+      postinstall: ./pam/_deb/postinst.sh
+      preremove: ./pam/_deb/prerm.sh
   rpm:
     scripts:
-      postinstall: ./_rpm/post.sh
+      postinstall: ./pam/_rpm/post.sh
     depends:
       - "authentik-sysd"
       - "glibc"

@@ -4,6 +4,10 @@ TARGET := vpkg/macos
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
 
+.PHONY: lint
+lint:
+	$(call lint_shellcheck,"${PWD}/scripts")
+
 .PHONY: bump
 bump:
 	"${TOP}/hack/plist.py" "${PWD}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleVersion" "${VERSION}"

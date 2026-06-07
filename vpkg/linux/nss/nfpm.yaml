@@ -11,13 +11,13 @@ maintainer: "Authentik Security Inc."
 license: "MIT"
 section: security
 contents:
-  - src: ../cache/nss/release/libauthentik_nss.so
+  - src: ../../bin/nss/libauthentik_nss.so
     dst: "/usr/lib/${DEB_BUILD_GNU_TYPE}/libnss_authentik.so.2"
     file_info:
       mode: 0644
     packager: deb
     expand: true
-  - src: ../cache/nss/release/libauthentik_nss.so
+  - src: ../../bin/nss/libauthentik_nss.so
     dst: "/usr/lib64/libnss_authentik.so.2"
     file_info:
       mode: 0644
@@ -29,7 +29,7 @@ overrides:
       - "libc6"
       - "libssl3 | libssl3t64"
     scripts:
-      postinstall: ./_deb/postinst.sh
+      postinstall: ./nss/_deb/postinst.sh
   rpm:
     depends:
       - "authentik-sysd"

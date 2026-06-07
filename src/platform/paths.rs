@@ -84,7 +84,7 @@ mod tests {
             agent_socket_path(AgentSocketID::Default)
                 .unwrap()
                 .for_platform("linux"),
-            format!("{}/.local/share/agent.sock", home)
+            format!("{}/.local/share/authentik/agent.sock", home)
         )
     }
 }

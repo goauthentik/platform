@@ -12,11 +12,11 @@ license: "MIT"
 contents:
   - src: ../../bin/agent_system/ak-sysd
     dst: /usr/bin/ak-sysd
-  - src: ./package/linux/usr/lib/systemd/system/ak-sysd.service
+  - src: ./sysd/usr/lib/systemd/system/ak-sysd.service
     dst: /usr/lib/systemd/system/ak-sysd.service
-  - src: ./package/linux/etc/ssh/sshd_config.d/authentik-authorized-keys.conf
+  - src: ./sysd/etc/ssh/sshd_config.d/authentik-authorized-keys.conf
     dst: /etc/ssh/sshd_config.d/authentik-authorized-keys.conf
-  - src: ./package/linux/config.json
+  - src: ./sysd/config.json
     dst: /etc/authentik/config.json
     type: config
   - src: ../../bin/agent_system/completions/agent_system.bash
@@ -27,18 +27,18 @@ contents:
     type: dir
   - src: ../../bin/browser_support/ak-browser-support
     dst: /usr/bin/ak-browser-support
-  - src: ./package/linux/browser-host-chrome.json
+  - src: ./sysd/browser-host-chrome.json
     dst: /etc/opt/chrome/native-messaging-hosts/io.goauthentik.platform.json
-  - src: ./package/linux/browser-host-chrome.json
+  - src: ./sysd/browser-host-chrome.json
     dst: /etc/chromium/native-messaging-hosts/io.goauthentik.platform.json
-  - src: ./package/linux/browser-host-chrome.json
+  - src: ./sysd/browser-host-chrome.json
     dst: /etc/opt/edge/native-messaging-hosts/io.goauthentik.platform.json
-  - src: ./package/linux/browser-host-firefox.json
+  - src: ./sysd/browser-host-firefox.json
     dst: /usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json
 overrides:
   deb:
     scripts:
-      postinstall: ./package/linux/_deb/postinst.sh
+      postinstall: ./sysd/_deb/postinst.sh
   rpm:
     scripts:
-      postinstall: ./package/linux/_rpm/postinst.sh
+      postinstall: ./sysd/_rpm/postinst.sh
