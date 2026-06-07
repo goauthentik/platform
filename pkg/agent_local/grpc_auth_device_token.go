@@ -51,6 +51,6 @@ func (a *Agent) DeviceTokenExchange(ctx context.Context, req *pb.DeviceTokenExch
 			Successful: true,
 		},
 		AccessToken: dt.Token,
-		ExpiresIn:   uint64(dt.GetExpiresIn()),
+		ExpiresIn:   int64(dt.GetExpiresIn()),
 	}, nil
 }
