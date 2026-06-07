@@ -149,10 +149,9 @@ pub fn encode_pb<T: ::prost::Message>(msg: T) -> Result<String, Box<dyn Error>> 
 }
 
 pub fn assert_response_valid(header: Option<ResponseHeader>) -> Result<(), Box<dyn Error>> {
-    if let Some(header) = header {
-        if !header.successful {
+    if let Some(header) = header
+        && !header.successful {
             return Err(Box::from("unsuccessful request"));
         }
-    }
     Ok(())
 }

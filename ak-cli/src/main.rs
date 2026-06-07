@@ -47,7 +47,7 @@ enum Commands {
     Auth {
         #[command(subcommand)]
         command: AuthCommands,
-    }
+    },
 }
 
 #[tokio::main]
@@ -67,7 +67,12 @@ async fn main() -> Result<(), Error> {
         },
         Commands::Auth { command } => match command {
             AuthCommands::Raw { client_id } => commands::auth::raw(&cli, client_id).await,
-        }
+            AuthCommands::Aws {
+                client_id,
+                role_arn,
+                region,
+            } => commands::auth::aws(&cli, client_id, role_arn, region).await,
+        },
     };
     match res {
         Ok(_) => Ok(()),

@@ -20,3 +20,5 @@ tokio = { workspace = true }
 tonic = { workspace = true }
 pbjson-types = { workspace = true }
 chrono = { workspace = true }
+aws-sdk-sts = "1.106.0"
+aws-types = "1.3.16"

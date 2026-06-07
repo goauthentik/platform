@@ -24,7 +24,7 @@ pub async fn list_profiles(_cli: &Cli) -> Result<(), Box<dyn Error>> {
         .into_inner();
     assert_response_valid(res.header)?;
     for profile in res.profiles {
-        println!("{}", Line::styled(format!("{}", profile.name), format::inline_style()))
+        println!("{}", Line::styled(profile.name.to_string(), format::inline_style()))
     }
     Ok(())
 }

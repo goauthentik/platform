@@ -98,11 +98,10 @@ pub fn value_to_tree_node(label: &str, value: &Value) -> TreeNode {
 
         Value::String(s) => {
             // Mirror the Go behaviour: if the string is itself valid JSON, recurse
-            if let Ok(inner) = serde_json::from_str::<Value>(s) {
-                if matches!(inner, Value::Object(_) | Value::Array(_)) {
+            if let Ok(inner) = serde_json::from_str::<Value>(s)
+                && matches!(inner, Value::Object(_) | Value::Array(_)) {
                     return value_to_tree_node(label, &inner);
                 }
-            }
             leaf_node(label, s)
         }
 
@@ -132,7 +131,7 @@ pub fn render_json(raw: String, title: &str, json: bool) -> Result<(), Box<dyn E
         println!("{}", raw);
     } else {
         let body: Value = serde_json::from_str(&raw)?;
-        let lines = render_map_as_tree(&body, &title);
+        let lines = render_map_as_tree(&body, title);
         for line in &lines {
             println!("{}", line.spans.iter().map(|s| s.content.as_ref()).collect::<String>());
         }

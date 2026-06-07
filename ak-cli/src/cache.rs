@@ -8,12 +8,11 @@ use authentik_sys::{
     grpc::{assert_response_valid, grpc_endpoint},
     platform::paths::{AgentSocketID, agent_socket_path},
 };
-use chrono::{DateTime, Utc};
 use pbjson_types::Timestamp;
 use serde::{Serialize, de::DeserializeOwned};
 
 pub trait CacheData {
-    fn expiry(&self) -> DateTime<Utc>;
+    fn expiry(&self) -> Timestamp;
 }
 
 pub struct ClientCache<T: CacheData> {
@@ -24,20 +23,20 @@ pub struct ClientCache<T: CacheData> {
 }
 
 impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
-    pub fn new<S: CacheData>(header: RequestHeader, keys: Vec<String>) -> Self {
+    pub fn new(header: RequestHeader, keys: Vec<String>) -> Self {
         Self {
-            keys: keys,
-            header: header,
+            keys,
+            header,
             _phantom: PhantomData,
         }
     }
 
-    pub async fn get(self) -> Result<T, Box<dyn Error>> {
+    pub async fn get(&self) -> Result<T, Box<dyn Error>> {
         let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
         let res = AgentCacheClient::new(c)
             .cache_get(CacheGetRequest {
-                header: Some(self.header),
-                keys: self.keys,
+                header: Some(self.header.clone()),
+                keys: self.keys.clone(),
             })
             .await?
             .into_inner();
@@ -46,10 +45,10 @@ impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
         Ok(value)
     }
 
-    pub async fn set(&mut self, value: T) -> Result<(), Box<dyn Error>> {
+    pub async fn set(&self, value: T) -> Result<(), Box<dyn Error>> {
         let json = serde_json::to_string(&value)?;
 
-        let expiry_ts = Timestamp::from(value.expiry());
+        let expiry_ts = value.expiry();
 
         let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
         let res = AgentCacheClient::new(c)
