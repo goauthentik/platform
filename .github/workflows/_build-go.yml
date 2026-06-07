@@ -17,7 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - cli
           - agent
           - sysd
         platform:

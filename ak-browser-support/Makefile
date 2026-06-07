@@ -1,7 +1,11 @@
 include ../common.mk
 
 TARGET := browser_support
+ifeq ($(OS),Windows_NT)
+BIN := ak-browser-support.exe
+else
 BIN := ak-browser-support
+endif
 
 .PHONY: clean
 clean:

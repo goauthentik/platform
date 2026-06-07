@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
-TARGETS := pam nss ak-browser-support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
+TARGETS := pam nss ak-browser-support ak-cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
@@ -125,7 +125,7 @@ test-join:
 		authentik-platform_devcontainer-test-machine-1 \
 		ak-sysd domains join ak -a http://authentik:9000
 
-test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
+test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
 dev--initialize: containers/test/local-build
 
@@ -146,8 +146,8 @@ nss/%:
 ak-browser-support/%:
 	"$(MAKE)" -C "${TOP}/ak-browser-support" $*
 
-cli/%:
-	"$(MAKE)" -C "${TOP}/cmd/cli" $*
+ak-cli/%:
+	"$(MAKE)" -C "${TOP}/ak-cli" $*
 
 sysd/%:
 	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*

@@ -1,5 +1,5 @@
-use std::{env, error::Error};
 use dirs_next::data_dir;
+use std::{env, error::Error};
 
 use crate::platform::string::PlatformString;
 
@@ -35,7 +35,7 @@ fn xdg_data_path(last_seg: &str) -> Result<String, Box<dyn Error>> {
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
-        None => Err(Box::from("Failed to convert path to string"))
+        None => Err(Box::from("Failed to convert path to string")),
     }
 }
 
@@ -47,13 +47,11 @@ pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString, Box<dyn Er
             }
             Ok(PlatformString::new()
                 .with_windows(r"\\.\pipe\authentik\socket")
-                .with_linux(&xdg_data_path( "agent.sock")?))
+                .with_linux(&xdg_data_path("agent.sock")?))
         }
-        AgentSocketID::SSH => {
-            Ok(PlatformString::new()
-                .with_windows(r"\\.\pipe\authentik\socket-ssh")
-                .with_linux(&xdg_data_path( "agent-ssh.sock")?))
-        }
+        AgentSocketID::SSH => Ok(PlatformString::new()
+            .with_windows(r"\\.\pipe\authentik\socket-ssh")
+            .with_linux(&xdg_data_path("agent-ssh.sock")?)),
     }
 }
 

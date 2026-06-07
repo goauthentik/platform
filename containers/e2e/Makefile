@@ -18,9 +18,9 @@ build-packages:
 	$(MAKE) -C "${TOP}" agent/build AK_GO_BUILD_FLAGS=-cover
 	$(MAKE) -C "${TOP}" -j$(shell nproc) \
 		sysd/build \
-		cli/build \
 		nss/build \
 		pam/build \
+		ak-cli/build \
 		ak-browser-support/build \
 		AK_GO_BUILD_FLAGS=-cover \
 		RUST_BUILD_FLAGS="-C instrument-coverage"

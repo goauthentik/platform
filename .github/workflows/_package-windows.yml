@@ -24,7 +24,7 @@ jobs:
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_windows-2025_cli
+          name: authentik_windows-2025_ak-cli
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
