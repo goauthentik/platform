@@ -1,7 +1,4 @@
-use authentik_sys::{
-    generated::ic_ssh::SshTokenAuthentication,
-    grpc::{Bridge, decode_pb},
-};
+use authentik_sys::grpc::Bridge;
 use pam::{
     constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
     conv::Conv,
@@ -12,7 +9,7 @@ use std::ffi::CStr;
 
 use crate::{
     ENV_SESSION_ID,
-    auth::{interactive::auth_interactive, token::auth_token},
+    auth::interactive::auth_interactive,
     dir::check_user_exists,
     pam_env::pam_put_env,
     pam_try_log,
@@ -22,9 +19,7 @@ use crate::{
 pub mod authorize;
 pub mod fido;
 pub mod interactive;
-pub mod token;
 
-pub const PW_PREFIX: &str = "\u{200b}";
 pub const PW_PROMPT: &str = "authentik Password: ";
 
 pub fn authenticate_impl(
@@ -84,11 +79,10 @@ pub fn authenticate_impl(
         }
     };
 
-    let mut session_data = SessionData {
+    let session_data = SessionData {
         username: username.to_string(),
         local_socket: "".to_owned(),
     };
-    let session_id: String;
 
     let bridge = match Bridge::new() {
         Ok(b) => b,
@@ -98,33 +92,12 @@ pub fn authenticate_impl(
         }
     };
 
-    if password.starts_with(PW_PREFIX) {
-        log::debug!("Token authentication");
-        let raw_token = password
-            .strip_prefix(PW_PREFIX)
-            .unwrap_or(&password)
-            .to_string();
-        let decoded = match decode_pb::<SshTokenAuthentication>(raw_token) {
-            Ok(t) => t,
-            Err(e) => {
-                log::warn!("failed to decode token: {}", e);
-                return PamResultCode::PAM_ABORT;
-            }
-        };
-        let token_res = match auth_token(username, decoded.token.to_owned(), bridge) {
-            Ok(t) => t,
-            Err(e) => return e,
-        };
-        session_data.local_socket = decoded.local_socket;
-        session_id = token_res.session_id;
-    } else {
-        log::debug!("Interactive authentication");
-        let int_res = match auth_interactive(username, password.to_owned(), &conv, bridge) {
-            Ok(ss) => ss,
-            Err(code) => return code,
-        };
-        session_id = int_res.session_id;
-    }
+    log::debug!("Interactive authentication");
+    let int_res = match auth_interactive(username, password.to_owned(), &conv, bridge) {
+        Ok(ss) => ss,
+        Err(code) => return code,
+    };
+    let session_id: String = int_res.session_id;
     if !session_data.local_socket.is_empty() {
         pam_try_log!(
             pam_put_env(
