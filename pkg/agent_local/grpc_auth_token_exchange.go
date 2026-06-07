@@ -46,5 +46,6 @@ func (a *Agent) CachedTokenExchange(ctx context.Context, req *pb.TokenExchangeRe
 			Successful: true,
 		},
 		AccessToken: nt.RawAccessToken,
+		ExpiresIn:   nt.ExpiresIn,
 	}, nil
 }
