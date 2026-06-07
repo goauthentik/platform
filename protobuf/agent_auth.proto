@@ -48,7 +48,7 @@ message TokenExchangeRequest {
 message TokenExchangeResponse {
   agent.ResponseHeader header = 1;
   string access_token = 2;
-  uint64 expires_in = 3;
+  int64 expires_in = 3;
 }
 
 message DeviceTokenExchangeRequest {
