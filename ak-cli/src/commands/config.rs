@@ -27,9 +27,9 @@ pub enum ConfigCommands {
     Setup {
         #[arg(short, long, required = true)]
         authentik_url: String,
-        #[arg(short, long, required = true, default_value = DEFAULT_CLIENT_ID)]
+        #[arg(short, long, default_value = DEFAULT_CLIENT_ID)]
         client_id: String,
-        #[arg(short, long, required = true, default_value = DEFAULT_APP_SLUG)]
+        #[arg(short, long, default_value = DEFAULT_APP_SLUG)]
         app_slug: String,
     },
 }
