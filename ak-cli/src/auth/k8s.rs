@@ -9,7 +9,6 @@ use authentik_sys::{
     platform::paths::{AgentSocketID, agent_socket_path},
 };
 use chrono::{DateTime, TimeDelta, Utc};
-use pbjson_types::Timestamp;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
@@ -36,7 +35,7 @@ pub struct ExecCredential {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ExecCredentialStatus {
     #[serde(rename = "expirationTimestamp")]
-    pub expiration_timestamp: Option<Timestamp>,
+    pub expiration_timestamp: Option<DateTime<Utc>>,
     pub token: Option<String>,
     #[serde(rename = "clientCertificateData")]
     pub client_certificate_data: Option<String>,
@@ -57,8 +56,7 @@ pub async fn get_credentials(opts: CredentialsOpts) -> Result<ExecCredential, Bo
         .into_inner();
     assert_response_valid(res.header)?;
 
-    let now: DateTime<Utc> = Utc::now();
-    now + TimeDelta::seconds(res.expires_in);
+    let expiry: DateTime<Utc> = Utc::now() + TimeDelta::seconds(res.expires_in);
 
     Ok(ExecCredential {
         api_version: Some("client.authentication.k8s.io/v1".to_string()),
@@ -67,10 +65,7 @@ pub async fn get_credentials(opts: CredentialsOpts) -> Result<ExecCredential, Bo
             client_certificate_data: None,
             client_key_data: None,
             token: Some(res.access_token),
-            expiration_timestamp: Some(Timestamp {
-                seconds: 0,
-                nanos: 0,
-            }),
+            expiration_timestamp: Some(expiry),
         }),
     })
 }
