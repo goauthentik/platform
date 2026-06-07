@@ -29,11 +29,6 @@ pub mod ic_pam_fido {
     include!("ic_pam_fido/ic_pam_fido.rs");
     // @@protoc_insertion_point(ic_pam_fido)
 }
-// @@protoc_insertion_point(attribute:ic_ssh)
-pub mod ic_ssh {
-    include!("ic_ssh/ic_ssh.rs");
-    // @@protoc_insertion_point(ic_ssh)
-}
 // @@protoc_insertion_point(attribute:ping)
 pub mod ping {
     include!("ping/ping.rs");
