@@ -11,6 +11,8 @@ workspace = true
 akp-logger = { path = "../akp-logger" }
 authentik_sys = { "path" = ".." }
 clap = { version = "4.6.1", features = ["derive"] }
+clap_complete = "4"
+clap_mangen = "0.2"
 log = { workspace = true }
 proc-macro2 = "1.0.106"
 ratatui = "0.30.1"

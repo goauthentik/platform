@@ -12,5 +12,13 @@ license: "MIT"
 contents:
   - src: ../../bin/cli/ak
     dst: /usr/bin/ak
-  - src: ../../bin/cli/completions/cli.bash
-    dst: /etc/bash_completion.d/ak-cli
+  - src: ../../bin/cli/completions/ak.bash
+    dst: /etc/bash_completion.d/ak
+  - src: ../../bin/cli/completions/ak.zsh
+    dst: /usr/share/zsh/vendor-completions/_ak
+  - src: ../../bin/cli/completions/ak.fish
+    dst: /usr/share/fish/vendor_completions.d/ak.fish
+  - src: ../../bin/cli/man/ak.1
+    dst: /usr/share/man/man1/ak.1
+    file_info:
+      mode: 0644
