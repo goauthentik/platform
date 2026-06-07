@@ -52,9 +52,9 @@ pub async fn list_profiles(_cli: &Cli) -> Result<(), Box<dyn Error>> {
 
 pub async fn setup(
     cli: &Cli,
-    authentik_url: &String,
-    client_id: &String,
-    app_slug: &String,
+    authentik_url: &str,
+    client_id: &str,
+    app_slug: &str,
 ) -> Result<(), Box<dyn Error>> {
     let access_token: String;
     let refresh_token: String;
@@ -67,13 +67,21 @@ pub async fn setup(
         let prof = setup::setup(setup::Options {
             profile_name: cli.profile.clone(),
             authentik_url: Url::parse(authentik_url)?,
-            app_slug: app_slug.clone(),
-            client_id: client_id.clone(),
+            app_slug: app_slug.to_owned(),
+            client_id: client_id.to_owned(),
             url_callback: None,
         })
         .await?;
-        access_token = prof.access_token.unwrap();
-        refresh_token = prof.refresh_token.unwrap();
+        if let Some(at) = prof.access_token
+            && let Some(rt) = prof.refresh_token
+        {
+            access_token = at;
+            refresh_token = rt;
+        } else {
+            return Err(Box::from(
+                "Device-flow setup did not return access/refresh token",
+            ));
+        }
     }
 
     let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
@@ -82,11 +90,11 @@ pub async fn setup(
             header: Some(RequestHeader {
                 profile: cli.profile.clone(),
             }),
-            authentik_url: authentik_url.clone(),
-            app_slug: app_slug.clone(),
-            client_id: client_id.clone(),
-            access_token,
-            refresh_token,
+            authentik_url: authentik_url.to_owned(),
+            app_slug: app_slug.to_owned(),
+            client_id: client_id.to_owned(),
+            access_token: access_token.clone(),
+            refresh_token: refresh_token.clone(),
         })
         .await?
         .into_inner();
