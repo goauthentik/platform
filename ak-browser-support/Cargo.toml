@@ -1,0 +1,27 @@
+[package]
+name = "ak-browser-support"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+akp-logger = { path = "../akp-logger" }
+tonic = { workspace = true }
+log = { workspace = true }
+authentik_sys = { path = ".." }
+native_messaging = { version = "0.2.0", features = ["tokio", "windows-registry"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = [
+    "macros",
+    "rt",
+    "rt-multi-thread",
+    "sync",
+] }
+tower = { workspace = true }
+
+[dev-dependencies]
+hyper-util = { version = "0.1", features = ["tokio"] }

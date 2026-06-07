@@ -1,7 +1,8 @@
 [package]
 name = "authentik_sys"
-version = "0.42.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 [lib]
 crate-type = ["staticlib", "lib"]
@@ -16,36 +17,49 @@ workspace = true
 
 [workspace]
 resolver = "3"
-members = ["nss", "pam"]
+members = ["nss", "pam", "ak-browser-support", "akp-logger"]
+
+[workspace.package]
+version = "0.43.2"
+edition = "2024"
+license = "MIT"
 
 [[example]]
 name = "grpc"
 
-[[example]]
-name = "log"
+[workspace.dependencies]
+log = "0.4.32"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+tokio = { version = "1.52.3", features = ["rt-multi-thread"] }
+tonic = { version = "0.14" }
+tonic-prost = { version = "0.14" }
+tower = { version = "0.5.3", features = ["util"] }
+hyper-util = "0.1.20"
+whoami = "2.1.0"
 
 [dependencies]
 base64 = "0.22.1"
 cxx = "1.0.194"
-hyper-util = "0.1.20"
+hyper-util = { workspace = true }
 libc = "0.2.186"
-log = "0.4.29"
+log = { workspace = true }
+pbjson = "0.9.0"
+pbjson-types = "0.9.0"
 prost = "0.14"
 prost-types = "0.14"
 sentry = "0.48.2"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
-tokio = { version = "1.52.3", features = ["rt-multi-thread"] }
-tonic = "0.14"
-tonic-prost = "0.14"
-tower = { version = "0.5.3", features = ["util" ]}
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+tonic-prost = { workspace = true }
+tower = { workspace = true }
 url = "2.5.8"
 windows-sys = "0.61.2"
+whoami = { workspace = true }
+dirs-next = "2.0.0"
 
 [target.'cfg(windows)'.dependencies]
-eventlog = "0.4.0"
 winreg = { version = "0.56", features = ["serialization-serde"] }
 serde_derive = "1"
-
-[target.'cfg(unix)'.dependencies]
-syslog = "7.0.0"

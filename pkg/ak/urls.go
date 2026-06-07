@@ -6,6 +6,7 @@ import (
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/agent_local/config"
+	"goauthentik.io/platform/pkg/meta"
 )
 
 type URLSet struct {
@@ -34,5 +35,7 @@ func APIConfig(profile config.ConfigV1Profile) *api.Configuration {
 	}
 	c.Host = u.Host
 	c.Scheme = u.Scheme
+	c.UserAgent = meta.UserAgent()
+	c.AddDefaultHeader("X-AK-Platform-Version", meta.Version)
 	return c
 }

@@ -11,7 +11,7 @@ use crate::generated::ping::ping_client::PingClient;
 use crate::generated::sys_auth::TokenAuthRequest;
 use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
-use crate::grpc::{grpc_request, grpc_request_path};
+use crate::grpc::grpc_request;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 
@@ -127,7 +127,6 @@ fn ak_sys_caps() -> Result<ffi::Capabilities, Box<dyn Error>> {
     let caps: ffi::Capabilities = match key.decode() {
         Ok(t) => t,
         Err(_) => {
-            let config = Config::get();
             let response = grpc_request(async |ch| {
                 return Ok(PingClient::new(ch).capabilities(()).await?);
             })?

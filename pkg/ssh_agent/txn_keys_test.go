@@ -37,7 +37,7 @@ func Test_TXN_GenerateCert(t *testing.T) {
 		ag:      &Agent{},
 		hostKey: pub,
 	}
-	crt, sig, err := txn.generateCert(token.Token{
+	crt, err := txn.generateCert(token.Token{
 		AccessToken: &jwt.Token{
 			Claims: &token.AuthentikClaims{},
 		},
@@ -46,7 +46,6 @@ func Test_TXN_GenerateCert(t *testing.T) {
 		Token:     "foo",
 	})
 	assert.NoError(t, err)
-	assert.NotNil(t, sig)
 	assert.NotNil(t, crt)
 }
 
@@ -60,7 +59,7 @@ func Test_generateSSHPrivateKey(t *testing.T) {
 func Test_TXN_GenerateCert_Fields(t *testing.T) {
 	const testUsername = "alice"
 	txn := &AgentTxn{ag: &Agent{}, hostKey: pub}
-	crt, _, err := txn.generateCert(token.Token{
+	crt, err := txn.generateCert(token.Token{
 		AccessToken: &jwt.Token{
 			Claims: &token.AuthentikClaims{Username: testUsername},
 		},

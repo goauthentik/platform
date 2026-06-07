@@ -3,10 +3,18 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = 0.42.0
+VERSION = 0.43.2
 VERSION_HASH = $(shell git rev-parse HEAD)
-VERSION_HASH_SHORT = $(shell git rev-parse HEAD | head -c 8)
 VERSION_TAG = $(shell git tag --points-at HEAD)
+ifeq ($(CI),true)
+	ifeq ($(AK_IS_RELEASE),true)
+		VERSION_PKG = ${VERSION}
+	else
+		VERSION_PKG = ${VERSION}+ak-${shell git rev-parse HEAD | head -c 8}
+	endif
+else
+	VERSION_PKG = ${VERSION}
+endif
 VERSION_TS = $(shell date +%s)
 PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 ifeq ($(OS),Windows_NT)
@@ -66,17 +74,17 @@ define go_generate_resources
 endef
 
 define nfpm_package
-	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} \
+	VERSION_PKG=${VERSION_PKG} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p deb \
-			-t ${TOP}/bin/${TARGET} \
+			-t ${TOP}/bin/$(2) \
 			-f $(1)
-	VERSION=${VERSION} VERSION_HASH_SHORT=${VERSION_HASH_SHORT} ARCH=${ARCH} \
+	VERSION_PKG=${VERSION_PKG} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
 			package \
 			-p rpm \
-			-t ${TOP}/bin/${TARGET} \
+			-t ${TOP}/bin/$(2) \
 			-f $(1)
 endef
 

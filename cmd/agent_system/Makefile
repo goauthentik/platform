@@ -7,10 +7,6 @@ else
 BINARY_NAME := ak-sysd
 endif
 
-.PHONY: lint
-lint:
-	$(call lint_shellcheck,"${PWD}/package")
-
 .PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
@@ -26,16 +22,6 @@ endif
 		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
 		"${TOP}/cmd/${TARGET}"
 
-.PHONY: package-gnu/linux
-package-gnu/linux: build
-	"$(MAKE)" -C ${TOP} browser_support/build
-	mkdir -p "${TOP}/bin/${TARGET}/completions"
-	"${TOP}/hack/completions.sh" \
-		"${TOP}/cmd/${TARGET}" \
-		"${TOP}/bin/${TARGET}/completions" \
-		"${TARGET}"
-	$(call nfpm_package,${TOP}/cmd/${TARGET}/package/linux/nfpm.yaml)
-
-test-deploy: package-gnu/linux
-	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}+ak-${VERSION_HASH_SHORT}_${ARCH}.deb
+test-deploy: build
+	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-sysd_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ak-sysd

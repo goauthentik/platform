@@ -10,6 +10,7 @@ use whoami::username;
 
 use crate::ENV_SESSION_ID;
 use crate::auth::interactive::result_to_pam_result;
+use crate::dir::check_user_exists;
 
 pub fn authenticate_authorize_impl(
     _pamh: &mut PamHandle,
@@ -31,6 +32,10 @@ pub fn authenticate_authorize_impl(
             return PamResultCode::PAM_IGNORE;
         }
     };
+    // Check if user actually exists in authentik
+    if let Err(code) = check_user_exists(user.clone()) {
+        return code;
+    }
     let ak = std::env::vars().find(|k| k.0 == ENV_SESSION_ID);
     let session_id = match ak {
         Some(s) => s.1,

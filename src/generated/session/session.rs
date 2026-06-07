@@ -30,7 +30,7 @@ pub struct SessionStatusResponse {
     #[prost(string, tag="2")]
     pub error: ::prost::alloc::string::String,
     #[prost(message, optional, tag="3")]
-    pub expiry: ::core::option::Option<::prost_types::Timestamp>,
+    pub expiry: ::core::option::Option<::pbjson_types::Timestamp>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CloseSessionRequest {
@@ -45,4 +45,5 @@ pub struct CloseSessionResponse {
     pub success: bool,
 }
 include!("session.tonic.rs");
+include!("session.serde.rs");
 // @@protoc_insertion_point(module)

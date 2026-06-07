@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "authentik-sysd"
+arch: "${ARCH}"
+platform: "linux"
+version: "${VERSION_PKG}"
+description: |
+  authentik System Agent
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+contents:
+  - src: ../../bin/agent_system/ak-sysd
+    dst: /usr/bin/ak-sysd
+  - src: ./sysd/usr/lib/systemd/system/ak-sysd.service
+    dst: /usr/lib/systemd/system/ak-sysd.service
+  - src: ./sysd/etc/ssh/sshd_config.d/authentik-authorized-keys.conf
+    dst: /etc/ssh/sshd_config.d/authentik-authorized-keys.conf
+  - src: ./sysd/config.json
+    dst: /etc/authentik/config.json
+    type: config
+  - src: ../../bin/agent_system/completions/agent_system.bash
+    dst: /etc/bash_completion.d/ak-sysd
+  - dst: /etc/authentik/domains
+    type: dir
+  - dst: /var/lib/authentik
+    type: dir
+  - src: ../../bin/browser_support/ak-browser-support
+    dst: /usr/bin/ak-browser-support
+  - src: ./sysd/browser-host-chrome.json
+    dst: /etc/opt/chrome/native-messaging-hosts/io.goauthentik.platform.json
+  - src: ./sysd/browser-host-chrome.json
+    dst: /etc/chromium/native-messaging-hosts/io.goauthentik.platform.json
+  - src: ./sysd/browser-host-chrome.json
+    dst: /etc/opt/edge/native-messaging-hosts/io.goauthentik.platform.json
+  - src: ./sysd/browser-host-firefox.json
+    dst: /usr/lib/mozilla/native-messaging-hosts/io.goauthentik.platform.json
+overrides:
+  deb:
+    scripts:
+      postinstall: ./sysd/_deb/postinst.sh
+  rpm:
+    scripts:
+      postinstall: ./sysd/_rpm/postinst.sh

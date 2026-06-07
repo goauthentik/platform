@@ -79,7 +79,7 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 	}
 	apiConfig.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer+agent %s", dc.Token))
 	apiConfig.AddDefaultHeader("X-AK-Platform-Version", meta.Version)
-	apiConfig.UserAgent = fmt.Sprintf("goauthentik.io/platform/%s", meta.FullVersion())
+	apiConfig.UserAgent = meta.UserAgent()
 
 	c := api.NewAPIClient(apiConfig)
 	return c, nil

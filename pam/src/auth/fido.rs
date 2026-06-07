@@ -30,25 +30,29 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse, Box<dyn Error
         up: true,
     };
 
-    if req.uv {
+    let pin_cstring: Option<std::ffi::CString> = if req.uv {
         match conv.send(PAM_PROMPT_ECHO_OFF, "Input Security key PIN: ") {
             Ok(c) => match c {
-                Some(c) => match c.to_str() {
-                    Ok(cc) => {
-                        assertion_args.pin = Some(cc);
-                        assertion_args.uv = None;
-                    }
-                    Err(e) => return Err(Box::from(e)),
-                },
+                Some(c) => Some(c),
                 None => {
                     log::warn!("Failed to get PIN");
                     return Err(Box::from("failed to get pin"));
                 }
             },
-            Err(_) => {
-                return Err(Box::from("failed to get pin"));
+            Err(_) => return Err(Box::from("failed to get pin")),
+        }
+    } else {
+        None
+    };
+
+    if let Some(ref pc) = pin_cstring {
+        match pc.to_str() {
+            Ok(cc) => {
+                assertion_args.pin = Some(cc);
+                assertion_args.uv = None;
             }
-        };
+            Err(e) => return Err(Box::from(e)),
+        }
     }
 
     pam_print_user(conv, "Touch your security key...");

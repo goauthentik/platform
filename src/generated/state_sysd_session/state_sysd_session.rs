@@ -9,16 +9,17 @@ pub struct StateSession {
     #[prost(string, tag="3")]
     pub token_hash: ::prost::alloc::string::String,
     #[prost(message, optional, tag="4")]
-    pub expires_at: ::core::option::Option<::prost_types::Timestamp>,
+    pub expires_at: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(uint32, tag="5")]
     pub pid: u32,
     #[prost(uint32, tag="6")]
     pub ppid: u32,
     #[prost(message, optional, tag="7")]
-    pub created_at: ::core::option::Option<::prost_types::Timestamp>,
+    pub created_at: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(string, tag="8")]
     pub local_socket: ::prost::alloc::string::String,
     #[prost(bool, tag="9")]
     pub opened: bool,
 }
+include!("state_sysd_session.serde.rs");
 // @@protoc_insertion_point(module)

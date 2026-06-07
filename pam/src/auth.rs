@@ -10,6 +10,7 @@ use std::ffi::CStr;
 use crate::{
     ENV_SESSION_ID,
     auth::interactive::auth_interactive,
+    dir::check_user_exists,
     pam_env::pam_put_env,
     pam_try_log,
     session_data::{_write_session_data, SessionData},
@@ -46,6 +47,10 @@ pub fn authenticate_impl(
         }
     };
     log::debug!("got username: '{username}'");
+    // Check if user actually exists in authentik
+    if let Err(code) = check_user_exists(username.clone()) {
+        return code;
+    }
     let conv = match pamh.get_item::<Conv>() {
         Ok(Some(conv)) => conv,
         Ok(None) => {
@@ -62,7 +67,7 @@ pub fn authenticate_impl(
         "failed to send prompt"
     ) {
         Some(password) => match password.to_str() {
-            Ok(t) => t,
+            Ok(t) => t.to_owned(),
             Err(_) => {
                 log::warn!("failed to convert password");
                 return PamResultCode::PAM_AUTH_ERR;

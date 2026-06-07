@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   test_go:
-    name: Test
+    name: Test (go)
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +26,7 @@ jobs:
           - windows-2025
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version-file: go.mod
@@ -52,6 +52,51 @@ jobs:
           flags: go-${{ matrix.platform }}
           files: ${{ github.workspace }}/junit.xml
           report_type: test_results
+  test_rs:
+    name: Test (rust)
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - authentik_pam
+          - authentik_nss
+          - ak-browser-support
+          - authentik_sys
+        platform:
+          - macos-26
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - windows-2025
+        exclude:
+          - platform: windows-2025
+            target: authentik_pam
+          - platform: windows-2025
+            target: authentik_nss
+          - platform: macos-26
+            target: authentik_pam
+          - platform: macos-26
+            target: authentik_nss
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
+      - uses: taiki-e/install-action@6887963ccf37a9ddcd8c5fa4baeb3e1e5fd61fa1 # v2
+        with:
+          tool: cargo-llvm-cov nextest
+      - run: |
+          make test-rs TEST_TARGET=${{ matrix.target }}
+      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: rs-${{ matrix.platform }}-${{ matrix.target }}
+          files: ${{ github.workspace }}/cache/llvm-cov-target.json
+      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: rs-${{ matrix.platform }}-${{ matrix.target }}
+          files: ${{ github.workspace }}/cache/llvm-cov-target.json
+          report_type: test_results
   test_swift:
     name: Test
     strategy:
@@ -61,7 +106,7 @@ jobs:
           - ee/psso
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
           path: cache/
@@ -86,13 +131,11 @@ jobs:
     name: Lint (go)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version-file: go.mod
           cache: true
-      - name: Install libraries
-        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev
       - uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v8
         with:
           args: --timeout 5000s
@@ -100,10 +143,7 @@ jobs:
     name: Lint (rust)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libpam0g-dev libudev-dev
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - run: make lint-rs
   lint_js:
     name: Lint
@@ -114,7 +154,7 @@ jobs:
           - browser-ext
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version-file: "${{ matrix.target }}/package.json"
@@ -130,13 +170,13 @@ jobs:
           - ee/wcp
     runs-on: windows-2025
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - run: make ${{ matrix.target }}/lint
   test_go_int:
     name: Test (integration)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version-file: go.mod
@@ -166,7 +206,7 @@ jobs:
         with:
           use_oidc: true
           flags: go-integration
-          files: ${{ github.workspace }}/coverage.txt
+          files: ${{ github.workspace }}/target/llvm-cov-target/rust.json
       - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v5
         if: ${{ always() }}
         with:
@@ -178,15 +218,12 @@ jobs:
     name: Test (e2e)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version-file: go.mod
           cache: true
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libpam0g-dev libudev-dev
       - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
         id: setup
         with:
@@ -201,17 +238,12 @@ jobs:
           ./hack/authentik/wait.sh
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
         run: |
           make test-e2e
       - run: |
           sudo chmod -R 777 ./e2e/coverage
           make test-e2e-convert
-      - if: ${{ always() }}
-        run: |
-          docker logs ${{ steps.setup.outputs.server_container_id }}
-      - if: ${{ always() }}
-        run: |
-          docker logs ${{ steps.setup.outputs.worker_container_id }}
       - uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
         if: ${{ always() }}
         with:

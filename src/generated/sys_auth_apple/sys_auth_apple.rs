@@ -43,4 +43,5 @@ pub struct RegisterDeviceResponse {
     pub device_token: ::prost::alloc::string::String,
 }
 include!("sys_auth_apple.tonic.rs");
+include!("sys_auth_apple.serde.rs");
 // @@protoc_insertion_point(module)

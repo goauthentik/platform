@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
-TARGETS := pam nss cmd/browser_support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows containers/selenium containers/test containers/e2e
+TARGETS := pam nss ak-browser-support cmd/cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
@@ -31,21 +31,29 @@ rs-gen-proto:
 	cargo install protoc-gen-prost
 	cargo install protoc-gen-tonic
 	cargo install protoc-gen-prost-crate
+	cargo install protoc-gen-prost-serde
 	mkdir -p $(PROTO_OUT)
 	protoc \
 		--prost_out=$(PROTO_OUT) \
+		--prost_opt=compile_well_known_types \
+		--prost_opt=extern_path=.google.protobuf=::pbjson_types \
 		--prost-crate_out=$(PROTO_OUT) \
 		--prost-crate_opt=no_features \
 		--tonic_out=$(PROTO_OUT) \
 		--tonic_opt=no_server \
+		--prost-serde_out=$(PROTO_OUT) \
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
 	cargo fmt
 
-lint-rs:
+lint-rs: pam/ci-install-deps
 	cargo fmt --all
-	cargo clippy --workspace
-	cargo clippy --fix --allow-dirty --workspace
+	cargo clippy --workspace \
+		${RS_TEST_FLAGS}
+	cargo clippy --fix \
+		--allow-dirty \
+		--workspace \
+		${RS_TEST_FLAGS}
 
 lint-go:
 	golangci-lint run
@@ -56,24 +64,32 @@ lint: $(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-go
 
 test:
-	go test \
+	go tool gotest.tools/gotestsum \
+		--junitfile ${PWD}/junit.xml \
+		--jsonfile ${TEST_OUTPUT} \
+		-- \
 		-p 1 \
 		-v \
 		-coverprofile=${PWD}/coverage.txt \
 		-covermode=atomic \
 		-count=${TEST_COUNT} \
-		-json \
 		${GO_TEST_FLAGS} \
-		$(shell go list ${GO_TEST_FLAGS} ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb) \
-			2>&1 | tee ${TEST_OUTPUT}
+		$(shell go list ${GO_TEST_FLAGS} ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb)
 	go tool cover \
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
-	go tool github.com/jstemmer/go-junit-report/v2 \
-		-parser gojson \
-		-in ${TEST_OUTPUT} \
-		-out ${PWD}/junit.xml \
-		-set-exit-code
+
+test-rs: pam/ci-install-deps
+	mkdir -p "${PWD}/cache"
+	cargo llvm-cov \
+		--no-report \
+		--ignore-filename-regex generated \
+		nextest -p ${TEST_TARGET} \
+			--no-tests pass
+	cargo llvm-cov report \
+		--codecov \
+		--ignore-filename-regex generated \
+		--output-path "${PWD}/cache/llvm-cov-target.json"
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
@@ -118,8 +134,6 @@ bump:
 	sed -i 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" vpkg/macos/bump
-	"$(MAKE)" nss/bump
-	"$(MAKE)" pam/bump
 	"$(MAKE)" ee/psso/bump || true
 	"$(MAKE)" ee/wcp/bump || true
 
@@ -129,8 +143,8 @@ pam/%:
 nss/%:
 	"$(MAKE)" -C "${TOP}/nss" $*
 
-browser_support/%:
-	"$(MAKE)" -C "${TOP}/cmd/browser_support" $*
+ak-browser-support/%:
+	"$(MAKE)" -C "${TOP}/ak-browser-support" $*
 
 cli/%:
 	"$(MAKE)" -C "${TOP}/cmd/cli" $*
@@ -155,6 +169,9 @@ vpkg/macos/%:
 
 vpkg/windows/%:
 	"$(MAKE)" -C "${TOP}/vpkg/windows" $*
+
+vpkg/linux/%:
+	"$(MAKE)" -C "${TOP}/vpkg/linux" $*
 
 containers/selenium/%:
 	"$(MAKE)" -C "${TOP}/containers/selenium" $*

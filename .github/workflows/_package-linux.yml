@@ -1,0 +1,58 @@
+name: _package-linux
+
+on:
+  workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_${{ matrix.platform }}_cli
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_${{ matrix.platform }}_agent
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_${{ matrix.platform }}_sysd
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_${{ matrix.platform }}_ak-browser-support
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_${{ matrix.platform }}_nss
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_${{ matrix.platform }}_pam
+          path: bin/
+      - shell: bash
+        run: make vpkg/linux/package
+        env:
+          AK_IS_RELEASE: ${{ inputs.is_release }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+        with:
+          name: authentik_package-linux-${{ matrix.platform }}
+          path: bin/

@@ -48,4 +48,5 @@ pub mod capabilities_response {
     }
 }
 include!("ping.tonic.rs");
+include!("ping.serde.rs");
 // @@protoc_insertion_point(module)

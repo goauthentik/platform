@@ -9,16 +9,25 @@ use tower::service_fn;
 
 use crate::config::Config;
 
+pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
+    let u = Uri::builder()
+        .scheme("http")
+        .authority(":123")
+        .path_and_query(path.replace(" ", "%20"))
+        .build()?;
+    let endpoint = Endpoint::from(u);
+    let channel = grpc_dial(endpoint).await?;
+    Ok(channel)
+}
+
 #[cfg(unix)]
-async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
+async fn grpc_dial(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
     return ep
         .connect_with_connector(service_fn(async move |p: Uri| {
             use tokio::net::UnixStream;
 
-            let path = p
-                .query()
-                .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?
-                .to_string();
+            let path = p.path().replace("%20", " ");
+            log::debug!("Connecting to GRPC socket '{path}'");
             let client = match UnixStream::connect(path).await {
                 Ok(c) => c,
                 Err(e) => {
@@ -31,17 +40,15 @@ async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error>
 }
 
 #[cfg(windows)]
-async fn grpc_endpoint(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
+async fn grpc_dial(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
     return ep
         .connect_with_connector(service_fn(async |p: Uri| {
             use std::time::Duration;
             use tokio::net::windows::named_pipe::ClientOptions;
             use tokio::time;
 
-            let path = p
-                .query()
-                .ok_or(std::io::Error::from(std::io::ErrorKind::NotFound))?
-                .to_string();
+            let path = p.path().replace("%20", " ");
+            log::debug!("Connecting to GRPC socket '{path}'");
             let client = loop {
                 match ClientOptions::new().open(&path) {
                     Ok(client) => break client,
@@ -62,7 +69,7 @@ pub fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
 ) -> Result<T, Box<dyn Error>> {
     let config = Config::get();
 
-    grpc_request_path(config.socket_default.to_owned(), future)
+    grpc_request_path(config.socket_default.for_current().to_owned(), future)
 }
 
 pub fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
@@ -72,12 +79,7 @@ pub fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
     let rt = Builder::new_current_thread().enable_all().build()?;
 
     rt.block_on(async {
-        log::debug!("creating grpc client");
-        let ep = match Endpoint::try_from(format!("http://:123/?{}", path)) {
-            Ok(e) => e,
-            Err(e) => return Err(Box::from(e)),
-        };
-        let channel = grpc_endpoint(ep).await?;
+        let channel = grpc_endpoint(path).await?;
         match future(channel).await {
             Ok(t) => Ok(t),
             Err(e) => Err(e),
@@ -115,7 +117,7 @@ impl SysdBridge for Bridge {
     ) -> Result<T, Box<dyn Error>> {
         let config = Config::get();
 
-        self.grpc_request_path(config.socket_default.to_owned(), future)
+        self.grpc_request_path(config.socket_default.for_current().to_owned(), future)
     }
 
     fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
@@ -125,11 +127,7 @@ impl SysdBridge for Bridge {
     ) -> Result<T, Box<dyn Error>> {
         self.rt.block_on(async {
             log::debug!("creating grpc client");
-            let ep = match Endpoint::try_from(format!("http://:123/?{}", path)) {
-                Ok(e) => e,
-                Err(e) => return Err(Box::from(e)),
-            };
-            let channel = grpc_endpoint(ep).await?;
+            let channel = grpc_endpoint(path).await?;
             match future(channel).await {
                 Ok(t) => Ok(t),
                 Err(e) => Err(e),

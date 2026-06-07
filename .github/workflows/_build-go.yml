@@ -20,18 +20,11 @@ jobs:
           - cli
           - agent
           - sysd
-          - browser_support
         platform:
           - macos-26
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - windows-2025
-        exclude:
-          # browser_support is bundled via symlinks in Linux packages
-          - target: browser_support
-            platform: ubuntu-24.04
-          - target: browser_support
-            platform: ubuntu-24.04-arm
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -40,17 +33,12 @@ jobs:
     outputs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version-file: go.mod
           cache: true
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-      - id: platform_pure
-        shell: bash
-        run: |
-          platform=$(uname -o | tr '[:upper:]' '[:lower:]')
-          echo "platform=${platform}" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
           path: cache/
@@ -58,11 +46,7 @@ jobs:
 
       - shell: bash
         run: |
-          if [[ "${{ steps.platform_pure.outputs.platform }}" == "gnu/linux" ]]; then
-            make ${{ matrix.target }}/package-gnu/linux
-          else
-            make ${{ matrix.target }}/build
-          fi
+          make ${{ matrix.target }}/build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           AK_IS_RELEASE: ${{ inputs.is_release }}

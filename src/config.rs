@@ -1,11 +1,16 @@
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fs, sync::LazyLock};
 
+use crate::platform::{
+    paths::{SysdSocketID, sysd_socket_path},
+    string::PlatformString,
+};
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Config {
     pub debug: bool,
-    pub socket_default: String,
-    pub socket_ctrl: String,
+    pub socket_default: PlatformString,
+    pub socket_ctrl: PlatformString,
 }
 
 static GLOBAL_DATA: LazyLock<Config> = LazyLock::new(|| Config::from_default().unwrap_or_default());
@@ -14,19 +19,8 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             debug: false,
-            #[cfg(target_os = "linux")]
-            socket_default: "/var/run/authentik/sys.sock".to_string(),
-            #[cfg(target_os = "macos")]
-            socket_default: "/var/run/authentik-sysd.sock".to_string(),
-            #[cfg(target_os = "windows")]
-            socket_default: r"\\.\pipe\authentik\sysd".to_string(),
-
-            #[cfg(target_os = "linux")]
-            socket_ctrl: "/var/run/authentik/sys-ctrl.sock".to_string(),
-            #[cfg(target_os = "macos")]
-            socket_ctrl: "/var/run/authentik-sysd-ctrl.sock".to_string(),
-            #[cfg(target_os = "windows")]
-            socket_ctrl: r"\\.\pipe\authentik\sysd-ctrl".to_string(),
+            socket_default: sysd_socket_path(SysdSocketID::Default),
+            socket_ctrl: sysd_socket_path(SysdSocketID::CTRL),
         }
     }
 }

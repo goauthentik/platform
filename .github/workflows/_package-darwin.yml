@@ -1,7 +1,11 @@
 name: _package-darwin
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      is_release:
+        type: boolean
+        default: false
 
 jobs:
   package:
@@ -9,7 +13,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
           go-version-file: go.mod
@@ -28,7 +32,7 @@ jobs:
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_macos-26_browser_support
+          name: authentik_macos-26_ak-browser-support
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
@@ -43,7 +47,10 @@ jobs:
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
       - shell: bash
-        run: make vpkg/macos/package
+        run: |
+          make vpkg/macos/package
+        env:
+          AK_IS_RELEASE: ${{ inputs.is_release }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:

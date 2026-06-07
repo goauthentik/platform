@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "authentik-cli"
+arch: "${ARCH}"
+platform: "linux"
+version: "${VERSION_PKG}"
+description: |
+  authentik CLI
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+contents:
+  - src: ../../bin/cli/ak
+    dst: /usr/bin/ak
+  - src: ../../bin/cli/completions/cli.bash
+    dst: /etc/bash_completion.d/ak-cli
