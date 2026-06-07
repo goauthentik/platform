@@ -24,3 +24,6 @@ pbjson-types = { workspace = true }
 chrono = { workspace = true }
 aws-sdk-sts = "1.106.0"
 aws-types = "1.3.16"
+oauth-device-flows = "0.1.0"
+url = { workspace = true }
+open = "5.3.5"

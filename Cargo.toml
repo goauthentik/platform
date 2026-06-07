@@ -40,6 +40,7 @@ whoami = "2.1.0"
 pbjson = "0.9.0"
 pbjson-types = "0.9.0"
 chrono = { version = "0.4.45", features = ["serde"] }
+url = "2.5.8"
 
 [dependencies]
 base64 = "0.22.1"
@@ -58,10 +59,10 @@ tokio = { workspace = true }
 tonic = { workspace = true }
 tonic-prost = { workspace = true }
 tower = { workspace = true }
-url = "2.5.8"
 windows-sys = "0.61.2"
 whoami = { workspace = true }
 dirs-next = "2.0.0"
+url = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.56", features = ["serialization-serde"] }

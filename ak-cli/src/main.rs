@@ -8,6 +8,7 @@ pub mod auth;
 pub mod cache;
 pub mod commands;
 pub mod format;
+pub mod setup;
 
 #[derive(Parser)]
 #[command(name = "authentik CLI")]
