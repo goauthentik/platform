@@ -125,7 +125,7 @@ test-join:
 		authentik-platform_devcontainer-test-machine-1 \
 		ak-sysd domains join ak -a http://authentik:9000
 
-test-full: clean agent/test-deploy sysd/test-deploy cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
+test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
 
 dev--initialize: containers/test/local-build
 
