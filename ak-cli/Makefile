@@ -1,4 +1,4 @@
-include ../../common.mk
+include ../common.mk
 
 TARGET := cli
 ifeq ($(OS),Windows_NT)
@@ -7,18 +7,18 @@ else
 BINARY_NAME := ak
 endif
 
+.PHONY: clean
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
-ifeq ($(OS),Windows_NT)
-	$(call go_generate_resources,authentik Platform CLI)
-endif
-	go build \
-		${GO_BUILD_FLAGS} \
-		-o "${TOP}/bin/${TARGET}/${BINARY_NAME}" \
-		"${TOP}/cmd/${TARGET}"
+	mkdir -p "${TOP}/cache/${TARGET}"
+	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
+		--target-dir "${TOP}/cache/${TARGET}" \
+		--verbose \
+		--release
+	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb

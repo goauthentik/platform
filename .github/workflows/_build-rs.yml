@@ -20,6 +20,7 @@ jobs:
           - pam
           - nss
           - ak-browser-support
+          - ak-cli
         platform:
           - macos-26
           - ubuntu-24.04
