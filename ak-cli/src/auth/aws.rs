@@ -78,7 +78,10 @@ pub async fn get_credentials(opts: CredentialsOpts) -> Result<AWSCredentialOutpu
         .await?
         .into_inner();
     assert_response_valid(curr.header)?;
-    let username = curr.token.ok_or("Failed to get current token")?.preferred_username;
+    let username = curr
+        .token
+        .ok_or("Failed to get current token")?
+        .preferred_username;
 
     log::debug!("Fetching AWS Credentials...");
     let aws_creds = sts
