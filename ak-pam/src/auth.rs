@@ -66,7 +66,7 @@ pub fn authenticate_impl(
         conv.send(PAM_PROMPT_ECHO_OFF, PW_PROMPT),
         "failed to send prompt"
     ) {
-        Some(password) => match password.to_str() {
+        Some(password) => match password.as_str() {
             Ok(t) => t.to_owned(),
             Err(_) => {
                 log::warn!("failed to convert password");
