@@ -317,6 +317,6 @@ func (lc *StdoutLogConsumer) Accept(l testcontainers.Log) {
 	lc.T.Logf("%s: %s", lc.Prefix, string(l.Content))
 }
 
-func IsExecAny(mode os.FileMode) bool {
-	return mode&0111 != 0
+func IsExecAll(mode os.FileMode) bool {
+	return mode&0111 == 0111
 }

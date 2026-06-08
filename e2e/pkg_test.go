@@ -61,7 +61,7 @@ func TestPackaging_DEB(t *testing.T) {
 				t.Run(bin, func(t *testing.T) {
 					stat, err := os.Stat(bin)
 					assert.NoError(t, err)
-					assert.True(t, IsExecAny(stat.Mode()))
+					assert.True(t, IsExecAll(stat.Mode()), "%s is not executable", bin)
 				})
 			}
 		})
@@ -117,7 +117,7 @@ func TestPackaging_RPM(t *testing.T) {
 				t.Run(bin, func(t *testing.T) {
 					stat, err := os.Stat(bin)
 					assert.NoError(t, err)
-					assert.True(t, IsExecAny(stat.Mode()))
+					assert.True(t, IsExecAll(stat.Mode()), "%s is not executable", bin)
 				})
 			}
 		})
