@@ -10,7 +10,11 @@ use crate::{
 
 impl PathHandler {
     pub async fn handle_list_profiles(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
-        let profiles = AgentCtrlClient::new(self.user_channel.clone())
+        let uc = match &self.user_channel {
+            Some(c) => c.clone(),
+            None => return Err(Box::from("Not connected to user agent")),
+        };
+        let profiles = AgentCtrlClient::new(uc)
             .list_profiles(())
             .await?
             .into_inner();

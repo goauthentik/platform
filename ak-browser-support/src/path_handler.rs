@@ -15,18 +15,24 @@ use crate::models::{Message, Response};
 #[derive(Clone)]
 pub(crate) struct PathHandler {
     pub(crate) system_channel: Channel,
-    pub(crate) user_channel: Channel,
+    pub(crate) user_channel: Option<Channel>,
 }
 
 impl PathHandler {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
-        let sys_channel =
+        let system_channel =
             grpc_endpoint(sysd_socket_path(SysdSocketID::Default).for_current()).await?;
         let user_channel =
-            grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
+            match grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await {
+                Ok(c) => Some(c),
+                Err(e) => {
+                    log::warn!("failed to connect to user agent: {e:?}");
+                    None
+                },
+            };
 
         Ok(Self {
-            system_channel: sys_channel,
+            system_channel,
             user_channel,
         })
     }
