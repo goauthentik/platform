@@ -63,6 +63,8 @@ jobs:
   deploy-to-netlify:
     needs: call-deploy
     runs-on: ubuntu-latest
+    outputs:
+      deploy-url: ${{ steps.netlify.outputs.deploy-url }}
     steps:
       - name: Download repository
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
@@ -80,6 +82,7 @@ jobs:
           client-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIV_KEY }}
       - uses: nwtgck/actions-netlify@4cbaf4c08f1a7bfa537d6113472ef4424e4eb654 # v3.0
+        id: netlify
         with:
           publish-dir: "./deploy"
           production-deploy: true
@@ -89,6 +92,46 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: authentik-pkg.netlify.app
+
+  build-container:
+    needs: deploy-to-netlify
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - containers/selenium
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
+      - uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        env:
+          AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
+        run: |
+          cd ${{ matrix.target }}
+          echo "tag<<EOF" >> $GITHUB_OUTPUT
+          make ci-container-tag >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "build-args<<EOF" >> $GITHUB_OUTPUT
+          make ci-build-args >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: ${{ matrix.target }}
+          file: ${{ matrix.target }}/Dockerfile
+          push: true
+          build-args: ${{ steps.meta.outputs.build-args }}
+          tags: ${{ steps.meta.outputs.tag }}
+          platforms: linux/amd64,linux/arm64
 
   attach-and-publish:
     name: Attach artifacts and publish
