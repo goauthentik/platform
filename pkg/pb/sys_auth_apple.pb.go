@@ -194,16 +194,17 @@ func (x *RegisterDeviceRequest) GetSignKeyId() string {
 }
 
 type RegisterDeviceResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	Issuer        string                 `protobuf:"bytes,2,opt,name=issuer,proto3" json:"issuer,omitempty"`
-	TokenEndpoint string                 `protobuf:"bytes,3,opt,name=token_endpoint,json=tokenEndpoint,proto3" json:"token_endpoint,omitempty"`
-	JwksEndpoint  string                 `protobuf:"bytes,4,opt,name=jwks_endpoint,json=jwksEndpoint,proto3" json:"jwks_endpoint,omitempty"`
-	Audience      string                 `protobuf:"bytes,5,opt,name=audience,proto3" json:"audience,omitempty"`
-	NonceEndpoint string                 `protobuf:"bytes,6,opt,name=nonce_endpoint,json=nonceEndpoint,proto3" json:"nonce_endpoint,omitempty"`
-	DeviceToken   string                 `protobuf:"bytes,7,opt,name=device_token,json=deviceToken,proto3" json:"device_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	ClientId              string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	Issuer                string                 `protobuf:"bytes,2,opt,name=issuer,proto3" json:"issuer,omitempty"`
+	TokenEndpoint         string                 `protobuf:"bytes,3,opt,name=token_endpoint,json=tokenEndpoint,proto3" json:"token_endpoint,omitempty"`
+	JwksEndpoint          string                 `protobuf:"bytes,4,opt,name=jwks_endpoint,json=jwksEndpoint,proto3" json:"jwks_endpoint,omitempty"`
+	Audience              string                 `protobuf:"bytes,5,opt,name=audience,proto3" json:"audience,omitempty"`
+	NonceEndpoint         string                 `protobuf:"bytes,6,opt,name=nonce_endpoint,json=nonceEndpoint,proto3" json:"nonce_endpoint,omitempty"`
+	DeviceToken           string                 `protobuf:"bytes,7,opt,name=device_token,json=deviceToken,proto3" json:"device_token,omitempty"`
+	AuthorizationEndpoint string                 `protobuf:"bytes,8,opt,name=authorization_endpoint,json=authorizationEndpoint,proto3" json:"authorization_endpoint,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *RegisterDeviceResponse) Reset() {
@@ -285,6 +286,13 @@ func (x *RegisterDeviceResponse) GetDeviceToken() string {
 	return ""
 }
 
+func (x *RegisterDeviceResponse) GetAuthorizationEndpoint() string {
+	if x != nil {
+		return x.AuthorizationEndpoint
+	}
+	return ""
+}
+
 var File_sys_auth_apple_proto protoreflect.FileDescriptor
 
 const file_sys_auth_apple_proto_rawDesc = "" +
@@ -301,7 +309,7 @@ const file_sys_auth_apple_proto_rawDesc = "" +
 	"\x15device_encryption_key\x18\x02 \x01(\tR\x13deviceEncryptionKey\x12\x1c\n" +
 	"\n" +
 	"enc_key_id\x18\x03 \x01(\tR\bencKeyId\x12\x1e\n" +
-	"\vsign_key_id\x18\x04 \x01(\tR\tsignKeyId\"\xff\x01\n" +
+	"\vsign_key_id\x18\x04 \x01(\tR\tsignKeyId\"\xb6\x02\n" +
 	"\x16RegisterDeviceResponse\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x16\n" +
 	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12%\n" +
@@ -309,7 +317,8 @@ const file_sys_auth_apple_proto_rawDesc = "" +
 	"\rjwks_endpoint\x18\x04 \x01(\tR\fjwksEndpoint\x12\x1a\n" +
 	"\baudience\x18\x05 \x01(\tR\baudience\x12%\n" +
 	"\x0enonce_endpoint\x18\x06 \x01(\tR\rnonceEndpoint\x12!\n" +
-	"\fdevice_token\x18\a \x01(\tR\vdeviceToken2\xcd\x01\n" +
+	"\fdevice_token\x18\a \x01(\tR\vdeviceToken\x125\n" +
+	"\x16authorization_endpoint\x18\b \x01(\tR\x15authorizationEndpoint2\xcd\x01\n" +
 	"\x0fSystemAuthApple\x12Y\n" +
 	"\fRegisterUser\x12#.sys_auth_apple.RegisterUserRequest\x1a$.sys_auth_apple.RegisterUserResponse\x12_\n" +
 	"\x0eRegisterDevice\x12%.sys_auth_apple.RegisterDeviceRequest\x1a&.sys_auth_apple.RegisterDeviceResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"

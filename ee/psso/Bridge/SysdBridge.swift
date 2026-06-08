@@ -182,7 +182,7 @@ public class SysdBridge {
                         }
                     ))
                 return ASAuthorizationProviderExtensionUserLoginConfiguration(
-                    loginUserName: reply.username
+                    loginUserName: reply.username,
                 )
             }
         }
@@ -211,6 +211,7 @@ public class SysdBridge {
                     jwksEndpointURL: URL(string: res.jwksEndpoint)!,
                     audience: res.audience
                 )
+                cfg.authorizationURL = URL(string: res.authorizationEndpoint)!
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
                 cfg.customNonceRequestValues
                     .append(

@@ -34,4 +34,5 @@ message RegisterDeviceResponse {
   string audience = 5;
   string nonce_endpoint = 6;
   string device_token = 7;
+  string authorization_endpoint = 8;
 }
