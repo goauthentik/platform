@@ -5,7 +5,6 @@ use std::pin::Pin;
 use url::Url;
 use winreg::enums::HKEY_LOCAL_MACHINE;
 
-use ak_platform::config::Config;
 use ak_platform::generated::ping::capabilities_response::Capability;
 use ak_platform::generated::ping::ping_client::PingClient;
 use ak_platform::generated::sys_auth::TokenAuthRequest;
