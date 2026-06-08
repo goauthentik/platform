@@ -4,6 +4,7 @@ package e2e
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/moby/moby/api/types/container"
@@ -51,6 +52,18 @@ func TestPackaging_DEB(t *testing.T) {
 					MustExec(t, tc, fmt.Sprintf("dpkg -i %s", pkg))
 				})
 			}
+			for _, bin := range []string{
+				"/usr/bin/ak",
+				"/usr/bin/ak-agent",
+				"/usr/bin/ak-sysd",
+				"/usr/bin/ak-browser-support",
+			} {
+				t.Run(bin, func(t *testing.T) {
+					stat, err := os.Stat(bin)
+					assert.NoError(t, err)
+					assert.True(t, IsExecAny(stat.Mode()))
+				})
+			}
 		})
 	}
 }
@@ -93,6 +106,18 @@ func TestPackaging_RPM(t *testing.T) {
 			} {
 				t.Run(pkg, func(t *testing.T) {
 					MustExec(t, tc, fmt.Sprintf("yum install -y %s", pkg))
+				})
+			}
+			for _, bin := range []string{
+				"/usr/bin/ak",
+				"/usr/bin/ak-agent",
+				"/usr/bin/ak-sysd",
+				"/usr/bin/ak-browser-support",
+			} {
+				t.Run(bin, func(t *testing.T) {
+					stat, err := os.Stat(bin)
+					assert.NoError(t, err)
+					assert.True(t, IsExecAny(stat.Mode()))
 				})
 			}
 		})
