@@ -124,6 +124,7 @@ jobs:
       - id: meta
         env:
           AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
+          AK_IS_RELEASE: "true"
         run: |
           cd ${{ matrix.target }}
           echo "tag<<EOF" >> $GITHUB_OUTPUT
