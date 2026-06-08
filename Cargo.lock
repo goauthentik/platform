@@ -58,16 +58,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ak-ffi"
-version = "0.43.2"
-dependencies = [
- "ak-platform",
- "cxx",
- "url",
- "winreg 0.56.0",
-]
-
-[[package]]
 name = "ak-nss"
 version = "0.43.2"
 dependencies = [
@@ -117,6 +107,16 @@ dependencies = [
  "tonic",
  "tonic-prost",
  "tower",
+]
+
+[[package]]
+name = "ak_ffi"
+version = "0.43.2"
+dependencies = [
+ "ak-platform",
+ "cxx",
+ "url",
+ "winreg 0.56.0",
 ]
 
 [[package]]

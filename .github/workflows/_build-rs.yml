@@ -17,8 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - pam
-          - nss
+          - ak-pam
+          - ak-nss
           - ak-browser-support
           - ak-cli
         platform:
@@ -28,13 +28,13 @@ jobs:
           - windows-2025
         exclude:
           # pam & nss are linux-only targets
-          - target: pam
+          - target: ak-pam
             platform: macos-26
-          - target: pam
+          - target: ak-pam
             platform: windows-2025
-          - target: nss
+          - target: ak-nss
             platform: macos-26
-          - target: nss
+          - target: ak-nss
             platform: windows-2025
     runs-on: ${{ matrix.platform }}
     env:
