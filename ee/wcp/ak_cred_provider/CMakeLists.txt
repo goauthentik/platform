@@ -53,7 +53,7 @@ target_link_libraries(${PROJECT_NAME}
   ${SHLWAPI_LIB_PATH}
   ak_common
   cefsimple
-  authentik_sys_bridge
+  ak_ffi_bridge
 )
 
 # TODO: Add tests and install targets if needed.

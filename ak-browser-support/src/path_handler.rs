@@ -1,4 +1,4 @@
-use authentik_sys::{
+use ak_platform::{
     grpc::grpc_endpoint,
     platform::paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
 };

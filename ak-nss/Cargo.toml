@@ -1,0 +1,20 @@
+[package]
+name = "ak-nss"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "nss_authentik"
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+ctor = "1.0.7"
+dtor = "1.0.5"
+libc = "0.2.186"
+libnss = "0.9.0"
+log = { workspace = true }

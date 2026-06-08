@@ -1,5 +1,5 @@
-use akp_logger::init_log;
-use authentik_sys::platform::string::PlatformString;
+use ak_platform::log::init_log;
+use ak_platform::platform::string::PlatformString;
 
 use crate::path_handler::PathHandler;
 

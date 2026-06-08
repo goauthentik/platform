@@ -1,4 +1,4 @@
-use akp_logger::set_log_level;
+use ak_platform::log::set_log_level;
 use clap::{Error, Parser, Subcommand};
 use log::LevelFilter;
 

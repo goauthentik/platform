@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use authentik_sys::generated::{
+use ak_platform::generated::{
     agent::RequestHeader,
     agent_platform::{PlatformEndpointRequest, agent_platform_client::AgentPlatformClient},
 };

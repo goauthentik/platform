@@ -44,15 +44,15 @@ source "hack/windows/setup.sh"
 
 ### Targets
 
-#### `pam/%`
+#### `ak-pam/%`
 
-PAM module (`libauthentik_pam.so`), built in Rust. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
+PAM module (`pam_authentik.so`), built in Rust. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
 
 Requirements: Rust toolchain, `libpam0g-dev`, `libudev-dev`. Requires sysd agent running at login time.
 
-#### `nss/%`
+#### `ak-nss/%`
 
-NSS module (`libauthentik_nss.so`), built in Rust. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
+NSS module (`libnss_authentik.so`), built in Rust. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
 
 Requirements: Rust toolchain. Requires sysd agent running.
 

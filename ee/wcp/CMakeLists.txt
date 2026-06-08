@@ -269,20 +269,20 @@ if (CXXBRIDGE STREQUAL "CXXBRIDGE-NOTFOUND")
 endif()
 
 corrosion_import_crate(
-  MANIFEST_PATH ../../Cargo.toml
-  CRATES authentik_sys
+  MANIFEST_PATH ../../ak-ffi/Cargo.toml
+  CRATES ak_ffi
 )
 corrosion_add_cxxbridge(
-  authentik_sys_bridge
-  CRATE authentik_sys
+  ak_ffi_bridge
+  CRATE ak_ffi
   FILES ffi.rs
 )
 
 if(MSVC)
-    set_property(TARGET authentik_sys PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-    set_property(TARGET authentik_sys_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-    corrosion_set_env_vars(authentik_sys "CFLAGS=-MT" "CXXFLAGS=-MT")
-    corrosion_set_env_vars(authentik_sys_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
+    set_property(TARGET ak_ffi PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+    set_property(TARGET ak_ffi_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+    corrosion_set_env_vars(ak_ffi "CFLAGS=-MT" "CXXFLAGS=-MT")
+    corrosion_set_env_vars(ak_ffi_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
 endif()
 
 FetchContent_Declare(spdlog

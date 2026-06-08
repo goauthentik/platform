@@ -6,7 +6,7 @@
 #define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 
 #include "rust/cxx.h"
-#include "authentik_sys_bridge/ffi.h"
+#include "ak_ffi_bridge/ffi.h"
 #include <spdlog/spdlog.h>
 
 #include <string>

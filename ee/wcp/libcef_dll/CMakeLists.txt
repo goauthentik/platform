@@ -980,7 +980,7 @@ target_link_libraries(${CEF_TARGET}
   ${CRYPT32_LIB_PATH}
   ${NETAPI32_LIB_PATH}
   ak_common
-  authentik_sys_bridge
+  ak_ffi_bridge
 )
 
 # Copy binary and resource files to the target output directory.

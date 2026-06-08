@@ -1,0 +1,143 @@
+use cxx::{CxxString, let_cxx_string};
+use std::collections::HashMap;
+use std::error::Error;
+use std::pin::Pin;
+use url::Url;
+use winreg::enums::HKEY_LOCAL_MACHINE;
+
+use ak_platform::generated::ping::capabilities_response::Capability;
+use ak_platform::generated::ping::ping_client::PingClient;
+use ak_platform::generated::sys_auth::TokenAuthRequest;
+use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
+use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
+use ak_platform::grpc::grpc_request;
+
+const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
+
+#[cxx::bridge]
+#[allow(clippy::module_inception)]
+mod ffi {
+    struct AuthStartAsync {
+        pub url: String,
+        pub header_token: String,
+    }
+
+    struct TokenResponse {
+        pub username: String,
+        pub session_id: String,
+    }
+
+    #[derive(Debug, Serialize, Deserialize, PartialEq)]
+    struct Capabilities {
+        pub interactive_auth_available: bool,
+        pub debug: bool,
+    }
+
+    extern "Rust" {
+        fn ak_sys_ping(res: Pin<&mut CxxString>);
+
+        fn ak_sys_caps() -> Result<Capabilities>;
+        fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>)
+        -> Result<()>;
+        fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
+        fn ak_sys_auth_token_validate(
+            raw_token: &CxxString,
+            token: &mut TokenResponse,
+        ) -> Result<bool>;
+        fn ak_sys_auth_start_async(res: &mut AuthStartAsync) -> Result<bool>;
+    }
+}
+
+fn ak_sys_ping(res: Pin<&mut CxxString>) {
+    let resp = match grpc_request(async |ch| {
+        return Ok(PingClient::new(ch).ping(()).await?);
+    }) {
+        Ok(r) => r.into_inner().version,
+        Err(e) => e.to_string(),
+    };
+    res.push_str(&resp);
+}
+
+fn ak_sys_auth_url_extract_token(
+    url: &CxxString,
+    token: Pin<&mut CxxString>,
+) -> Result<(), Box<dyn Error>> {
+    let p = Url::parse(url.to_str()?)?;
+    let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
+    let raw_token = qm
+        .get(TOKEN_QUERY_PARAM)
+        .ok_or("failed to get token from URL")?;
+    token.push_str(&raw_token);
+    Ok(())
+}
+
+fn ak_sys_auth_url(
+    url: &CxxString,
+    token: &mut ffi::TokenResponse,
+) -> Result<bool, Box<dyn Error>> {
+    let p = Url::parse(url.to_str()?)?;
+    let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
+    let raw_token = qm
+        .get(TOKEN_QUERY_PARAM)
+        .ok_or("failed to get token from URL")?;
+    let_cxx_string!(crt = raw_token);
+    ak_sys_auth_token_validate(&crt, token)
+}
+
+fn ak_sys_auth_token_validate(
+    raw_token: &CxxString,
+    token: &mut ffi::TokenResponse,
+) -> Result<bool, Box<dyn Error>> {
+    let p = raw_token.to_str()?;
+    let response = grpc_request(async |ch| {
+        return Ok(SystemAuthTokenClient::new(ch)
+            .token_auth(TokenAuthRequest {
+                username: "".to_string(),
+                token: p.to_owned(),
+            })
+            .await?);
+    })?
+    .into_inner();
+
+    if let Some(pt) = response.token {
+        token.username = pt.preferred_username;
+    }
+    token.session_id = response.session_id;
+    Ok(response.successful)
+}
+
+fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dyn Error>> {
+    let response = grpc_request(async |ch| {
+        return Ok(SystemAuthInteractiveClient::new(ch)
+            .interactive_auth_async(())
+            .await?);
+    })?
+    .into_inner();
+    res.url = response.url;
+    res.header_token = response.header_token;
+    Ok(true)
+}
+
+fn ak_sys_caps() -> Result<ffi::Capabilities, Box<dyn Error>> {
+    let hkcu = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
+    let (key, _disp) =
+        hkcu.create_subkey("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
+
+    let caps: ffi::Capabilities = match key.decode() {
+        Ok(t) => t,
+        Err(_) => {
+            let response = grpc_request(async |ch| {
+                return Ok(PingClient::new(ch).capabilities(()).await?);
+            })?
+            .into_inner();
+            let authia = Capability::AuthInteractive as i32;
+            let new_config = ffi::Capabilities {
+                interactive_auth_available: response.capabilities.contains(&authia),
+                debug: false,
+            };
+            key.encode(&new_config)?;
+            return Ok(new_config);
+        }
+    };
+    return Ok(caps);
+}

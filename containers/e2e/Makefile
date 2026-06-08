@@ -18,8 +18,8 @@ build-packages:
 	$(MAKE) -C "${TOP}" agent/build AK_GO_BUILD_FLAGS=-cover
 	$(MAKE) -C "${TOP}" -j$(shell nproc) \
 		sysd/build \
-		nss/build \
-		pam/build \
+		ak-nss/build \
+		ak-pam/build \
 		ak-cli/build \
 		ak-browser-support/build \
 		AK_GO_BUILD_FLAGS=-cover \
