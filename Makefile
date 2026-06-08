@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/src/generated"
 
-TARGETS := pam nss ak-browser-support ak-cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
@@ -46,7 +46,7 @@ rs-gen-proto:
 		${PROTO_DIR}/*
 	cargo fmt
 
-lint-rs: pam/ci-install-deps
+lint-rs:ak-pam/ci-install-deps
 	cargo fmt --all
 	cargo clippy --workspace \
 		${RS_TEST_FLAGS}
@@ -79,7 +79,7 @@ test:
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
 
-test-rs: pam/ci-install-deps
+test-rs:ak-pam/ci-install-deps
 	mkdir -p "${PWD}/cache"
 	cargo llvm-cov \
 		--no-report \
@@ -125,7 +125,7 @@ test-join:
 		authentik-platform_devcontainer-test-machine-1 \
 		ak-sysd domains join ak -a http://authentik:9000
 
-test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deploy nss/test-deploy pam/test-deploy test-ssh
+test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deployak-nss/test-deployak-pam/test-deploy test-ssh
 
 dev--initialize: containers/test/local-build
 

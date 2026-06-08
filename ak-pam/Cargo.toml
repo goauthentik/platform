@@ -1,11 +1,11 @@
 [package]
-name = "authentik_nss"
+name = "ak-pam"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [lib]
-name = "authentik_nss"
+name = "pam_authentik"
 crate-type = ["cdylib"]
 
 [lints]
@@ -14,8 +14,13 @@ workspace = true
 [dependencies]
 authentik_sys = { path = ".." }
 akp-logger = { path = "../akp-logger/" }
+ctap-hid-fido2 = "3.5.11"
 ctor = "1.0.7"
 dtor = "1.0.5"
+gethostname = "1.1.0"
 libc = "0.2.186"
-libnss = "0.9.0"
 log = { workspace = true }
+pam-bindings = "0.2.1"
+serde = { workspace = true }
+serde_json = { workspace = true }
+whoami = { workspace = true }

@@ -9,7 +9,7 @@ build: ci-install-deps
 		--target-dir ${TOP}/cache/${TARGET} \
 		--verbose \
 		--release
-	cp "${TOP}/cache/${TARGET}/release/libauthentik_pam.so" "${TOP}/bin/${TARGET}/"
+	cp "${TOP}/cache/${TARGET}/release/pam_authentik.so" "${TOP}/bin/${TARGET}/"
 
 test:
 	cargo test --verbose

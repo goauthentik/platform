@@ -9,7 +9,7 @@ build:
 		--target-dir ${TOP}/cache/${TARGET} \
 		--verbose \
 		--release
-	cp "${TOP}/cache/${TARGET}/release/libauthentik_nss.so" "${TOP}/bin/${TARGET}/"
+	cp "${TOP}/cache/${TARGET}/release/libnss_authentik.so" "${TOP}/bin/${TARGET}/"
 
 test:
 	cargo test --verbose
