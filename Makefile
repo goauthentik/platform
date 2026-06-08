@@ -3,7 +3,7 @@ include common.mk
 TEST_COUNT = 1
 GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
-PROTO_OUT := "${PWD}/src/generated"
+PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
 TARGETS := ak-pam ak-nss ak-browser-support ak-cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
 

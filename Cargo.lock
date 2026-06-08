@@ -27,7 +27,6 @@ name = "ak-browser-support"
 version = "0.43.2"
 dependencies = [
  "ak-platform",
- "authentik_sys",
  "hyper-util",
  "log",
  "native_messaging",
@@ -63,7 +62,6 @@ name = "ak-nss"
 version = "0.43.2"
 dependencies = [
  "ak-platform",
- "authentik_sys",
  "ctor",
  "dtor",
  "libc",
@@ -76,7 +74,6 @@ name = "ak-pam"
 version = "0.43.2"
 dependencies = [
  "ak-platform",
- "authentik_sys",
  "ctap-hid-fido2",
  "ctor",
  "dtor",
@@ -271,7 +268,6 @@ name = "authentik_sys"
 version = "0.43.2"
 dependencies = [
  "cxx",
- "log",
  "url",
  "winreg 0.56.0",
 ]
