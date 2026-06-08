@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use crate::cache::{CacheData, ClientCache};
-use authentik_sys::{
+use ak_platform::{
     generated::{
         agent::RequestHeader,
         agent_auth::{

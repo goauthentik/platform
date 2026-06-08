@@ -1,4 +1,4 @@
-use authentik_sys::{
+use ak_platform::{
     generated::ping::ping_client::PingClient,
     grpc::grpc_endpoint,
     platform::{

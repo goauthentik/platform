@@ -58,10 +58,10 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - authentik_pam
-          - authentik_nss
+          - ak-pam
+          - ak-nss
           - ak-browser-support
-          - authentik_sys
+          - ak-platform
         platform:
           - macos-26
           - ubuntu-24.04
@@ -69,13 +69,13 @@ jobs:
           - windows-2025
         exclude:
           - platform: windows-2025
-            target: authentik_pam
+            target: ak-pam
           - platform: windows-2025
-            target: authentik_nss
+            target: ak-nss
           - platform: macos-26
-            target: authentik_pam
+            target: ak-pam
           - platform: macos-26
-            target: authentik_nss
+            target: ak-nss
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5

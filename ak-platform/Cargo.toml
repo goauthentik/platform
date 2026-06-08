@@ -1,0 +1,36 @@
+[package]
+name = "ak-platform"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[example]]
+name = "log"
+
+[[example]]
+name = "grpc_client"
+
+[dependencies]
+base64 = "0.22.1"
+hyper-util = { workspace = true }
+log = { workspace = true }
+pbjson = { workspace = true }
+pbjson-types = { workspace = true }
+prost = "0.14"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+tonic-prost = { workspace = true }
+tower = { workspace = true }
+dirs-next = "2.0.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+oslog = "0.2.0"
+
+[target.'cfg(unix)'.dependencies]
+syslog = "7.0.0"
+libc = "0.2.186"
+
+[target.'cfg(windows)'.dependencies]
+eventlog = "0.4.0"

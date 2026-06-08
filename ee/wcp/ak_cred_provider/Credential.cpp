@@ -8,7 +8,7 @@
 // {
 #include "cefsimple/cefsimple_win.h"
 // }
-#include "authentik_sys_bridge/ffi.h"
+#include "ak_ffi_bridge/ffi.h"
 #include <WinUser.h>
 
 #define WIN_PASS_LEN 50
