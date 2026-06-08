@@ -6,7 +6,7 @@ use ak_platform::generated::sys_auth::{
 use ak_platform::grpc::{SysdBridge, encode_pb};
 use pam::{
     constants::{
-        PAM_BINARY_PROMPT, PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,
+        PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,
         PAM_TEXT_INFO, PamMessageStyle, PamResultCode,
     },
     conv::Conv,
@@ -28,7 +28,6 @@ pub fn result_to_pam_result(result: i32) -> PamResultCode {
 
 pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> PamMessageStyle {
     match PromptMeta::try_from(challenge.prompt_meta) {
-        Ok(PromptMeta::PamBinaryPrompt) => PAM_BINARY_PROMPT,
         Ok(PromptMeta::PamErrorMsg) => PAM_ERROR_MSG,
         Ok(PromptMeta::PamPromptEchoOff) => PAM_PROMPT_ECHO_OFF,
         Ok(PromptMeta::PamPromptEchoOn) => PAM_PROMPT_ECHO_ON,
@@ -131,7 +130,7 @@ pub fn auth_interactive(
                 let style = prompt_meta_to_pam_message_style(&challenge);
                 let credential = match conv.send(style, &challenge.prompt) {
                     Ok(c) => match c {
-                        Some(c) => match c.to_str() {
+                        Some(c) => match c.as_str() {
                             Ok(cc) => cc.to_owned(),
                             Err(_) => {
                                 log::warn!("failed to convert PAM Conversation response to string");
