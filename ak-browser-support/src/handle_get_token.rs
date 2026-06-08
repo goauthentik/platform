@@ -12,7 +12,11 @@ use crate::{
 
 impl PathHandler {
     pub async fn handle_get_token(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
-        let current = AgentAuthClient::new(self.user_channel.clone())
+        let uc = match &self.user_channel {
+            Some(c) => c.clone(),
+            None => return Err(Box::from("Not connected to user agent")),
+        };
+        let current = AgentAuthClient::new(uc)
             .get_current_token(CurrentTokenRequest {
                 header: Some(RequestHeader {
                     profile: msg.profile.clone(),

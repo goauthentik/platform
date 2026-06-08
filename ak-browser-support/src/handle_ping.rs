@@ -44,7 +44,7 @@ mod tests {
     async fn test_ping() {
         let handler = PathHandler {
             system_channel: mock_channel().await,
-            user_channel: mock_channel().await,
+            user_channel: None,
         };
         let res = handler.handle_ping(Message::test_msg()).await.unwrap();
         assert_eq!(res.data.get("ping").unwrap().as_str().unwrap(), "pong");
