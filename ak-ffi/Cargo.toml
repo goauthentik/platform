@@ -1,0 +1,19 @@
+[package]
+name = "ak-ffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["staticlib", "lib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+cxx = "1.0.194"
+url = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+winreg = { version = "0.56", features = ["serialization-serde"] }

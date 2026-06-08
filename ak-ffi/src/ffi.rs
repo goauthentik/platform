@@ -5,13 +5,13 @@ use std::pin::Pin;
 use url::Url;
 use winreg::enums::HKEY_LOCAL_MACHINE;
 
-use crate::config::Config;
-use crate::generated::ping::capabilities_response::Capability;
-use crate::generated::ping::ping_client::PingClient;
-use crate::generated::sys_auth::TokenAuthRequest;
-use crate::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
-use crate::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
-use crate::grpc::grpc_request;
+use ak_platform::config::Config;
+use ak_platform::generated::ping::capabilities_response::Capability;
+use ak_platform::generated::ping::ping_client::PingClient;
+use ak_platform::generated::sys_auth::TokenAuthRequest;
+use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
+use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
+use ak_platform::grpc::grpc_request;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 

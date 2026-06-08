@@ -61,7 +61,7 @@ jobs:
           - ak-pam
           - ak-nss
           - ak-browser-support
-          - authentik_sys
+          - ak-platform
         platform:
           - macos-26
           - ubuntu-24.04

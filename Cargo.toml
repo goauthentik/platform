@@ -1,23 +1,11 @@
-[package]
-name = "authentik_sys"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-
-[lib]
-crate-type = ["staticlib", "lib"]
-
 [workspace.lints.clippy]
 panic = "deny"
 unwrap_used = "deny"
 expect_used = "deny"
 
-[lints]
-workspace = true
-
 [workspace]
 resolver = "3"
-members = ["ak-nss", "ak-pam", "ak-browser-support", "ak-platform", "ak-cli"]
+members = ["ak-nss", "ak-pam", "ak-browser-support", "ak-platform", "ak-cli", "ak-ffi"]
 
 [workspace.package]
 version = "0.43.2"
@@ -38,10 +26,3 @@ pbjson = "0.9.0"
 pbjson-types = "0.9.0"
 chrono = { version = "0.4.45", features = ["serde"] }
 url = "2.5.8"
-
-[dependencies]
-cxx = "1.0.194"
-url = { workspace = true }
-
-[target.'cfg(windows)'.dependencies]
-winreg = { version = "0.56", features = ["serialization-serde"] }

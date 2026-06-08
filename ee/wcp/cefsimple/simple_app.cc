@@ -16,7 +16,7 @@
 #include "cefsimple/simple_handler.h"
 #include "ak_cred_provider/include/resource.h"
 #include "include/cef_image.h"
-#include "authentik_sys_bridge/ffi.h"
+#include "ak_ffi_bridge/ffi.h"
 #include "rust/cxx.h"
 
 // GetModuleHandle(NULL) returns a handle to the module that was used to create the process.
