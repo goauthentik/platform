@@ -189,7 +189,7 @@ dependencies = [
 name = "ak-browser-support"
 version = "0.43.2"
 dependencies = [
- "akp-logger",
+ "ak-platform",
  "authentik_sys",
  "hyper-util",
  "log",
@@ -205,7 +205,7 @@ dependencies = [
 name = "ak-cli"
 version = "0.43.2"
 dependencies = [
- "akp-logger",
+ "ak-platform",
  "authentik_sys",
  "aws-sdk-sts",
  "aws-types",
@@ -226,7 +226,7 @@ dependencies = [
 name = "ak-nss"
 version = "0.43.2"
 dependencies = [
- "akp-logger",
+ "ak-platform",
  "authentik_sys",
  "ctor",
  "dtor",
@@ -236,7 +236,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "akp-logger"
+name = "ak-pam"
+version = "0.43.2"
+dependencies = [
+ "ak-platform",
+ "authentik_sys",
+ "ctap-hid-fido2",
+ "ctor",
+ "dtor",
+ "gethostname",
+ "libc",
+ "log",
+ "pam-bindings",
+ "serde",
+ "serde_json",
+ "whoami",
+]
+
+[[package]]
+name = "ak-platform"
 version = "0.43.2"
 dependencies = [
  "authentik_sys",
@@ -399,24 +417,6 @@ name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
-
-[[package]]
-name = "authentik_pam"
-version = "0.43.2"
-dependencies = [
- "akp-logger",
- "authentik_sys",
- "ctap-hid-fido2",
- "ctor",
- "dtor",
- "gethostname",
- "libc",
- "log",
- "pam-bindings",
- "serde",
- "serde_json",
- "whoami",
-]
 
 [[package]]
 name = "authentik_sys"

@@ -8,7 +8,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-akp-logger = { path = "../akp-logger" }
+ak-platform = { path = "../ak-platform" }
 tonic = { workspace = true }
 log = { workspace = true }
 authentik_sys = { path = ".." }

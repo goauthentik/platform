@@ -1,5 +1,5 @@
 [package]
-name = "akp-logger"
+name = "ak-platform"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

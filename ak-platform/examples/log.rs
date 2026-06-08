@@ -1,4 +1,4 @@
-use akp_logger::init_log;
+use ak_platform::log::init_log;
 use authentik_sys::platform::string::PlatformString;
 
 fn main() {

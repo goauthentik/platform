@@ -10,7 +10,7 @@ use crate::auth::authorize::authenticate_authorize_impl;
 use crate::logger::prelude;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
-use akp_logger::init_log;
+use ak_platform::log::init_log;
 use authentik_sys::logger::exit_log;
 use authentik_sys::logger::log_hook;
 use authentik_sys::platform::string::PlatformString;

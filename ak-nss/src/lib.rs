@@ -2,7 +2,7 @@ mod group;
 mod passwd;
 mod shadow;
 
-use akp_logger::{init_log, set_log_level};
+use ak_platform::log::{init_log, set_log_level};
 use authentik_sys::logger::{exit_log, log_hook};
 use authentik_sys::platform::string::PlatformString;
 use ctor::ctor;

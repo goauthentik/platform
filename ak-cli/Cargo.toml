@@ -12,7 +12,7 @@ name = "ak"
 path = "src/main.rs"
 
 [dependencies]
-akp-logger = { path = "../akp-logger" }
+ak-platform = { path = "../ak-platform" }
 authentik_sys = { "path" = ".." }
 clap = { version = "4.6.1", features = ["derive"] }
 log = { workspace = true }
