@@ -115,6 +115,7 @@ version = "0.43.2"
 dependencies = [
  "ak-platform",
  "cxx",
+ "serde",
  "url",
  "winreg 0.56.0",
 ]

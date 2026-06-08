@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [lib]
-name = "libnss_authentik"
+name = "nss_authentik"
 crate-type = ["cdylib"]
 
 [lints]
