@@ -1,4 +1,4 @@
-use authentik_sys::{
+use ak_platform::{
     generated::sys_directory::{GetRequest, system_directory_client::SystemDirectoryClient},
     grpc::grpc_request,
 };

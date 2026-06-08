@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use authentik_sys::{
+use ak_platform::{
     generated::ic_pam_fido::{FidoRequest, FidoResponse},
     grpc::decode_pb,
 };

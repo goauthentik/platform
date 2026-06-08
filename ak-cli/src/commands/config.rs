@@ -1,4 +1,4 @@
-use authentik_sys::{
+use ak_platform::{
     generated::{
         agent::RequestHeader,
         agent_ctrl::{SetupRequest, agent_ctrl_client::AgentCtrlClient},

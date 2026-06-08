@@ -1,5 +1,5 @@
 use ak_platform::log::init_log;
-use authentik_sys::platform::string::PlatformString;
+use ak_platform::platform::string::PlatformString;
 
 fn main() {
     init_log(

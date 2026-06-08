@@ -1,4 +1,4 @@
-use authentik_sys::platform::string::PlatformString;
+use crate::platform::string::PlatformString;
 use log::LevelFilter;
 
 #[cfg(target_os = "macos")]

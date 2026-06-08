@@ -1,6 +1,6 @@
 use std::{error::Error, marker::PhantomData};
 
-use authentik_sys::{
+use ak_platform::{
     generated::{
         agent::RequestHeader,
         agent_cache::{CacheGetRequest, CacheSetRequest, agent_cache_client::AgentCacheClient},

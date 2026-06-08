@@ -13,7 +13,7 @@ use crate::session::open_session_impl;
 use ak_platform::log::init_log;
 use authentik_sys::logger::exit_log;
 use authentik_sys::logger::log_hook;
-use authentik_sys::platform::string::PlatformString;
+use ak_platform::platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
 use pam::constants::PAM_TEXT_INFO;
