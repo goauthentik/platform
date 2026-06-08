@@ -8,14 +8,12 @@ license.workspace = true
 name = "log"
 
 [dependencies]
-authentik_sys = { path = ".." }
 base64 = "0.22.1"
 hyper-util = { workspace = true }
 log = { workspace = true }
 pbjson = { workspace = true }
 pbjson-types = { workspace = true }
 prost = "0.14"
-prost-types = "0.14"
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
