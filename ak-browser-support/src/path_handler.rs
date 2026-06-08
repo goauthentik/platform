@@ -28,7 +28,7 @@ impl PathHandler {
                 Err(e) => {
                     log::warn!("failed to connect to user agent: {e:?}");
                     None
-                },
+                }
             };
 
         Ok(Self {

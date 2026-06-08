@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
 	"goauthentik.io/api/v3"
 	"goauthentik.io/platform/pkg/ak"
@@ -43,12 +44,13 @@ func (auth *Server) RegisterDevice(ctx context.Context, req *pb.RegisterDeviceRe
 		return nil, err
 	}
 	return &pb.RegisterDeviceResponse{
-		ClientId:      d.ClientId,
-		Issuer:        d.Issuer,
-		TokenEndpoint: d.TokenEndpoint,
-		JwksEndpoint:  d.JwksEndpoint,
-		Audience:      d.Audience,
-		NonceEndpoint: d.NonceEndpoint,
-		DeviceToken:   dom.Token,
+		ClientId:              d.ClientId,
+		Issuer:                d.Issuer,
+		TokenEndpoint:         d.TokenEndpoint,
+		JwksEndpoint:          d.JwksEndpoint,
+		Audience:              d.Audience,
+		NonceEndpoint:         d.NonceEndpoint,
+		DeviceToken:           dom.Token,
+		AuthorizationEndpoint: fmt.Sprintf("%s/application/o/authorize/", dom.AuthentikURL),
 	}, nil
 }
