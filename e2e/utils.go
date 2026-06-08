@@ -316,7 +316,3 @@ type StdoutLogConsumer struct {
 func (lc *StdoutLogConsumer) Accept(l testcontainers.Log) {
 	lc.T.Logf("%s: %s", lc.Prefix, string(l.Content))
 }
-
-func IsExecAll(mode os.FileMode) bool {
-	return mode&0111 == 0111
-}
