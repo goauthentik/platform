@@ -3310,11 +3310,12 @@ dependencies = [
 
 [[package]]
 name = "pam-bindings"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "702856d628a09bbdc2b9b2dadd608193ae46ab4b081b6d1fd5baec1251a92057"
+checksum = "95ca8ded51d7b55e02c84ee36e024ea9843d800da0ed371e07e6733092bd073e"
 dependencies = [
  "libc",
+ "zeroize",
 ]
 
 [[package]]
