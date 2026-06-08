@@ -7,6 +7,9 @@ license.workspace = true
 [[example]]
 name = "log"
 
+[[example]]
+name = "grpc_client"
+
 [dependencies]
 base64 = "0.22.1"
 hyper-util = { workspace = true }

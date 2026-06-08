@@ -24,9 +24,6 @@ version = "0.43.2"
 edition = "2024"
 license = "MIT"
 
-[[example]]
-name = "grpc"
-
 [workspace.dependencies]
 log = "0.4.32"
 serde = { version = "1.0.228", features = ["derive"] }
