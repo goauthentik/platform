@@ -11,7 +11,6 @@ workspace = true
 ak-platform = { path = "../ak-platform" }
 tonic = { workspace = true }
 log = { workspace = true }
-authentik_sys = { path = ".." }
 native_messaging = { version = "0.2.0", features = ["tokio", "windows-registry"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

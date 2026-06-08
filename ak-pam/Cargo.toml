@@ -12,7 +12,6 @@ crate-type = ["cdylib"]
 workspace = true
 
 [dependencies]
-authentik_sys = { path = ".." }
 ak-platform = { path = "../ak-platform" }
 ctap-hid-fido2 = "3.5.11"
 ctor = "1.0.7"

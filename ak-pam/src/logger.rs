@@ -1,7 +1,7 @@
 use std::{env, ffi::CStr};
 
 use ak_platform::log::set_log_level;
-use authentik_sys::logger::log_hook;
+use ak_platform::log::unix::log_hook;
 use log::LevelFilter;
 use pam::{constants::PamFlag, module::PamHandle};
 

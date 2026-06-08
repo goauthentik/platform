@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use authentik_sys::generated::agent_ctrl::agent_ctrl_client::AgentCtrlClient;
+use ak_platform::generated::agent_ctrl::agent_ctrl_client::AgentCtrlClient;
 use serde_json::{Value, to_value};
 
 use crate::{

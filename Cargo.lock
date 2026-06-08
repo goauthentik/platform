@@ -97,6 +97,7 @@ dependencies = [
  "dirs-next",
  "eventlog",
  "hyper-util",
+ "libc",
  "log",
  "oslog",
  "pbjson",
@@ -270,7 +271,6 @@ name = "authentik_sys"
 version = "0.43.2"
 dependencies = [
  "cxx",
- "libc",
  "log",
  "url",
  "winreg 0.56.0",

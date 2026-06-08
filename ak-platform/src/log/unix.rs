@@ -1,7 +1,5 @@
 use libc::{getegid, geteuid, getgid, getuid};
 
-pub fn exit_log() {}
-
 pub fn log_hook(name: &str) {
     let pid = std::process::id();
     let ppid = std::os::unix::process::parent_id();

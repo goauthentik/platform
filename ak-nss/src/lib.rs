@@ -3,7 +3,7 @@ mod passwd;
 mod shadow;
 
 use ak_platform::log::{init_log, set_log_level};
-use authentik_sys::logger::{exit_log, log_hook};
+use ak_platform::log::unix::log_hook;
 use ak_platform::platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
@@ -29,5 +29,4 @@ fn ctor() {
 #[dtor(unsafe)]
 fn dtor() {
     log_hook("dtor");
-    exit_log();
 }

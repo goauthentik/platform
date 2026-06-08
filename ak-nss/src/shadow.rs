@@ -1,7 +1,7 @@
-use authentik_sys::generated::sys_directory::GetRequest;
-use authentik_sys::generated::sys_directory::system_directory_client::SystemDirectoryClient;
-use authentik_sys::grpc::grpc_request;
-use authentik_sys::logger::log_hook;
+use ak_platform::generated::sys_directory::GetRequest;
+use ak_platform::generated::sys_directory::system_directory_client::SystemDirectoryClient;
+use ak_platform::grpc::grpc_request;
+use ak_platform::log::unix::log_hook;
 use libnss::interop::Response;
 use libnss::shadow::{Shadow, ShadowHooks};
 

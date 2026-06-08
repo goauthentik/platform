@@ -12,7 +12,6 @@ crate-type = ["cdylib"]
 workspace = true
 
 [dependencies]
-authentik_sys = { path = ".." }
 ak-platform = { path = "../ak-platform" }
 ctor = "1.0.7"
 dtor = "1.0.5"

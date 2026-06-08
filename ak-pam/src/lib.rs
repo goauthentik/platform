@@ -11,8 +11,7 @@ use crate::logger::prelude;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
 use ak_platform::log::init_log;
-use authentik_sys::logger::exit_log;
-use authentik_sys::logger::log_hook;
+use ak_platform::log::unix::log_hook;
 use ak_platform::platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
@@ -37,7 +36,6 @@ fn ctor() {
 #[dtor(unsafe)]
 fn dtor() {
     log_hook("dtor");
-    exit_log();
 }
 
 impl PamHooks for PAMAuthentik {

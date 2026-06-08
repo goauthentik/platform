@@ -44,8 +44,6 @@ url = "2.5.8"
 
 [dependencies]
 cxx = "1.0.194"
-libc = "0.2.186"
-log = { workspace = true }
 url = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]

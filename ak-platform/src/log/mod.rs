@@ -2,13 +2,16 @@ use crate::platform::string::PlatformString;
 use log::LevelFilter;
 
 #[cfg(target_os = "macos")]
-mod macos;
+pub mod macos;
 
 #[cfg(target_os = "linux")]
-mod linux;
+pub mod linux;
 
 #[cfg(target_os = "windows")]
-mod windows;
+pub mod windows;
+
+#[cfg(unix)]
+pub mod unix;
 
 pub fn init_log(name: PlatformString) {
     #[cfg(target_os = "macos")]

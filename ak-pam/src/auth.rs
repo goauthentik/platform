@@ -1,4 +1,4 @@
-use authentik_sys::grpc::Bridge;
+use ak_platform::grpc::Bridge;
 use pam::{
     constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
     conv::Conv,
