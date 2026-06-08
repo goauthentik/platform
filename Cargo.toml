@@ -8,7 +8,7 @@ resolver = "3"
 members = ["ak-nss", "ak-pam", "ak-browser-support", "ak-platform", "ak-cli", "ak-ffi"]
 
 [workspace.package]
-version = "0.44.1"
+version = "0.44.2"
 edition = "2024"
 license = "MIT"
 
