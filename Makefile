@@ -46,7 +46,7 @@ rs-gen-proto:
 		${PROTO_DIR}/*
 	cargo fmt
 
-lint-rs:ak-pam/ci-install-deps
+lint-rs: ak-pam/ci-install-deps
 	cargo fmt --all
 	cargo clippy --workspace \
 		${RS_TEST_FLAGS}
@@ -79,7 +79,7 @@ test:
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
 
-test-rs:ak-pam/ci-install-deps
+test-rs: ak-pam/ci-install-deps
 	mkdir -p "${PWD}/cache"
 	cargo llvm-cov \
 		--no-report \
@@ -137,11 +137,11 @@ bump:
 	"$(MAKE)" ee/psso/bump || true
 	"$(MAKE)" ee/wcp/bump || true
 
-pam/%:
-	"$(MAKE)" -C "${TOP}/pam" $*
+ak-pam/%:
+	"$(MAKE)" -C "${TOP}/ak-pam" $*
 
-nss/%:
-	"$(MAKE)" -C "${TOP}/nss" $*
+ak-nss/%:
+	"$(MAKE)" -C "${TOP}/ak-nss" $*
 
 ak-browser-support/%:
 	"$(MAKE)" -C "${TOP}/ak-browser-support" $*
