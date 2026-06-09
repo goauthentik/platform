@@ -3,18 +3,15 @@ use std::{future::Future, pin::Pin, sync::Arc, task::Poll};
 use bytes::Bytes;
 use http::request::Request;
 use http::response::Response;
-use http_body::Body;
 use http_body_util::BodyExt;
-use http_body_util::Empty;
-use prost::Message;
-use service_binding::Binding;
+use http_body_util::Full;
 use ssh_agent_lib::{
     agent::Session,
-    client::connect,
+    client::Client,
     proto::{Extension, Unparsed},
 };
-use tokio::{runtime::Handle, sync::Mutex, task::block_in_place};
-use tonic::{GrpcMethod, Status, service::Interceptor};
+use tokio::net::UnixStream;
+use tokio::sync::Mutex;
 use tower::{Layer, Service};
 pub const EXT_AUTHENTIK_AGENT_TUNNEL: &str = "agent-tunnel@goauthentik.io";
 
@@ -65,13 +62,15 @@ impl ExtAuthentikAgentTunnelData {
 }
 
 pub struct SSHTunnel {
-    client: Arc<Mutex<Box<dyn Session>>>,
+    client: Arc<Mutex<Client<UnixStream>>>,
 }
 
 impl SSHTunnel {
     pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let client =
-            connect(Binding::FilePath(std::env::var("SSH_AUTH_SOCK")?.into()).try_into()?)?;
+        let sock_path = std::env::var("SSH_AUTH_SOCK")
+            .map_err(|_| "SSH_AUTH_SOCK is not set")?;
+        let stream = UnixStream::connect(sock_path).await?;
+        let client = Client::new(stream);
         Ok(SSHTunnel {
             client: Arc::new(Mutex::new(client)),
         })
@@ -83,62 +82,6 @@ impl Clone for SSHTunnel {
         SSHTunnel {
             client: Arc::clone(&self.client),
         }
-    }
-}
-
-impl Interceptor for SSHTunnel {
-    fn call(&mut self, request: tonic::Request<()>) -> Result<tonic::Request<()>, tonic::Status> {
-        let body: &() = request.get_ref();
-
-        let meth = match request.extensions().get::<GrpcMethod>() {
-            Some(m) => m,
-            None => {
-                return Err(tonic::Status::from_error(Box::from(
-                    "Failed to get GRPC method",
-                )));
-            }
-        };
-
-        let payload = ExtAuthentikAgentTunnelData {
-            method: format!("{}/{}", meth.service(), meth.method()),
-            data: body.encode_to_vec(),
-        };
-
-        let res_raw = block_in_place(|| {
-            Handle::current().block_on(async {
-                match self
-                    .client
-                    .lock()
-                    .await
-                    .extension(Extension {
-                        name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
-                        details: Unparsed::from(payload.serialize()),
-                    })
-                    .await
-                {
-                    Ok(res) => Ok(res),
-                    Err(e) => {
-                        return {
-                            println!("ext err: {e:?}");
-                            Err(Status::from_error(Box::from(e)))
-                        };
-                    }
-                }
-            })
-        })?;
-
-        if let Some(res) = res_raw {
-            assert_eq!(res.name, EXT_AUTHENTIK_AGENT_TUNNEL);
-
-            let res = ExtAuthentikAgentTunnelData::deserialize(&res.details.into_bytes());
-            if let Some(p_res) = res {
-                println!("res: {:?}", p_res.data);
-            }
-        } else {
-            return Err(Status::from_error(Box::from("No response")));
-        }
-
-        todo!()
     }
 }
 
@@ -185,7 +128,7 @@ where
 
     fn poll_ready(
         &mut self,
-        cx: &mut std::task::Context<'_>,
+        _: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
@@ -202,14 +145,14 @@ where
                 .map_err(Into::into)?
                 .to_bytes();
 
-            println!("{:?}", method);
-
             let payload = ExtAuthentikAgentTunnelData {
                 method: method.trim_start_matches("/").to_string(),
-                data: body_bytes.into(),
+                data: strip_grpc_frame(&body_bytes)?.into(),
             };
+            println!("meth: {:?}", payload.method);
+            println!("data: {:?}", payload.data);
 
-            let res = match tunnel
+            let raw_res = match tunnel
                 .client
                 .lock()
                 .await
@@ -219,20 +162,61 @@ where
                 })
                 .await
             {
-                Ok(res) => res,
-                Err(e) => return Err(Box::from(e)),
+                Ok(res) => match res {
+                    Some(rres) => rres,
+                    None => return Err(Box::from("No response")),
+                },
+                Err(e) => {
+                    eprintln!("failed to send ext: {e:?}");
+                    return Err(Box::from(e));
+                }
             };
-            println!("{:?}", res);
 
-            Ok(Response::new(tonic::body::Body::empty()))
+            println!("{:?}", raw_res);
+            let res = match ExtAuthentikAgentTunnelData::deserialize(&raw_res.details.into_bytes())
+            {
+                Some(d) => d,
+                None => return Err(Box::from("failed to parse response")),
+            };
+
+            let framed = add_grpc_frame(&res.data);
+            let body = tonic::body::Body::new(Full::new(Bytes::from(framed)));
+            let response = Response::builder()
+                .status(200)
+                .header("content-type", "application/grpc+proto")
+                .header("grpc-status", "0")
+                .body(body)
+                .map_err(|e| -> BoxError { Box::new(e) })?;
+
+            Ok(response)
         })
     }
+}
+
+/// Strip the 5-byte gRPC framing from a request body to get the raw proto bytes.
+fn strip_grpc_frame(data: &[u8]) -> Result<&[u8], BoxError> {
+    if data.len() < 5 {
+        return Err("gRPC frame too short".into());
+    }
+    // data[0] = compression flag; data[1..5] = message length
+    let msg_len = u32::from_be_bytes([data[1], data[2], data[3], data[4]]) as usize;
+    data.get(5..5 + msg_len)
+        .ok_or_else(|| "gRPC frame length exceeds buffer".into())
+}
+
+/// Wrap raw proto bytes in a gRPC frame (5-byte uncompressed header).
+fn add_grpc_frame(proto: &[u8]) -> Vec<u8> {
+    let mut buf = Vec::with_capacity(5 + proto.len());
+    buf.push(0u8); // no compression
+    buf.extend_from_slice(&(proto.len() as u32).to_be_bytes());
+    buf.extend_from_slice(proto);
+    buf
 }
 
 #[cfg(test)]
 mod tests {
     use crate::generated::{agent::RequestHeader, agent_auth::WhoAmIRequest};
-
+    use prost::Message;
     use super::*;
 
     #[test]

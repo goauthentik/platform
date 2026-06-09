@@ -106,7 +106,6 @@ dependencies = [
  "prost",
  "serde",
  "serde_json",
- "service-binding",
  "simplelog",
  "ssh-agent-lib",
  "syslog",
