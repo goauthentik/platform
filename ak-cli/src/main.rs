@@ -1,4 +1,4 @@
-use ak_platform::log::set_log_level;
+use ak_platform::log::{init_log_interactive, set_log_level};
 use clap::{Error, Parser, Subcommand};
 use log::LevelFilter;
 
@@ -55,6 +55,7 @@ enum Commands {
 async fn main() -> Result<(), Error> {
     let cli = Cli::parse();
 
+    init_log_interactive();
     set_log_level(LevelFilter::Warn);
     if cli.verbose {
         set_log_level(LevelFilter::Trace);
@@ -71,15 +72,23 @@ async fn main() -> Result<(), Error> {
                 app_slug,
             } => commands::config::setup(&cli, authentik_url, client_id, app_slug).await,
         },
-        Commands::Auth { command } => match command {
-            AuthCommands::Raw { client_id } => commands::auth::raw(&cli, client_id).await,
-            AuthCommands::Kubectl { client_id } => commands::auth::kubectl(&cli, client_id).await,
-            AuthCommands::Aws {
-                client_id,
-                role_arn,
-                region,
-            } => commands::auth::aws(&cli, client_id, role_arn, region).await,
-        },
+        Commands::Auth { command } => {
+            // If not in verbose, set a higher default log level as the output matters
+            if !cli.verbose {
+                set_log_level(LevelFilter::Error);
+            }
+            match command {
+                AuthCommands::Raw { client_id } => commands::auth::raw(&cli, client_id).await,
+                AuthCommands::Kubectl { client_id } => {
+                    commands::auth::kubectl(&cli, client_id).await
+                }
+                AuthCommands::Aws {
+                    client_id,
+                    role_arn,
+                    region,
+                } => commands::auth::aws(&cli, client_id, role_arn, region).await,
+            }
+        }
     };
     match res {
         Ok(_) => Ok(()),
