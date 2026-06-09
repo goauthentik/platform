@@ -10,6 +10,8 @@ use tower::service_fn;
 use crate::config::Config;
 use crate::generated::agent::ResponseHeader;
 
+pub mod ssh;
+
 pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
     let u = Uri::builder()
         .scheme("http")
