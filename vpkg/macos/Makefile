@@ -13,8 +13,18 @@ bump:
 	"${TOP}/hack/plist.py" "${PWD}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleVersion" "${VERSION}"
 	"${TOP}/hack/plist.py" "${PWD}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleShortVersionString" "${VERSION}"
 
-.PHONY: package
-package:
+.PHONY: local
+local:
+	$(MAKE) -C "${TOP}" -j \
+		agent/build \
+		sysd/build \
+		ee/psso/build \
+		ak-browser-support/build \
+		ak-cli/build
+	$(MAKE) -C "${TOP}" vpkg/macos/build-app
+
+.PHONY: build-app
+build-app:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
@@ -35,6 +45,9 @@ package:
 		--entitlements "${PWD}/authentikEndpoint.entitlements" \
 		--sign ${MACOS_SIGN_CERT} \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
+
+.PHONY: package
+package: build-app
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
 		--identifier "io.goauthentik.agent" \
