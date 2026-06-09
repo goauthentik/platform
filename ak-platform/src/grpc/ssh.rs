@@ -1,6 +1,11 @@
 use prost::Message;
-use russh::{CryptoVec, keys::agent::client::AgentClient};
-use tokio::{net::UnixStream, runtime::Handle, task::block_in_place};
+use service_binding::Binding;
+use ssh_agent_lib::{
+    agent::Session,
+    client::connect,
+    proto::{Extension, Unparsed},
+};
+use tokio::{runtime::Handle, task::block_in_place};
 use tonic::{GrpcMethod, Status, service::Interceptor};
 
 pub const EXT_AUTHENTIK_AGENT_TUNNEL: &str = "agent-tunnel@goauthentik.io";
@@ -52,12 +57,13 @@ impl ExtAuthentikAgentTunnelData {
 }
 
 pub struct SSHTunnel {
-    client: AgentClient<UnixStream>,
+    client: Box<dyn Session>,
 }
 
 impl SSHTunnel {
     pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let client = AgentClient::connect_env().await?;
+        let client =
+            connect(Binding::FilePath(std::env::var("SSH_AUTH_SOCK")?.into()).try_into()?)?;
         Ok(SSHTunnel { client })
     }
 }
@@ -79,28 +85,83 @@ impl Interceptor for SSHTunnel {
             method: format!("{}/{}", meth.service(), meth.method()),
             data: body.encode_to_vec(),
         };
-
-        let res_raw = block_in_place(|| {
-            Handle::current().block_on(async {
-                let cv = CryptoVec::from(payload.serialize());
-                let res = match self.client.query_extension(EXT_AUTHENTIK_AGENT_TUNNEL.as_bytes(), cv.clone()).await {
-                    Ok(_) => Ok(cv),
-                    Err(e) => return {
-                        println!("ext err: {e:?}");
-                        Err(Status::from_error(Box::from(e)))
-                    },
-                };
-                return res;
-            })
-        })?;
-
-        // let res = ExtAuthentikAgentTunnelData::deserialize(res_raw);
-
         println!("metadata: {:?}", request.metadata());
         println!("ext: {:?}", meth);
         println!("body: {:?}", payload.data);
-        println!("res: {:?}", res_raw);
+        println!("sz: {:?}", payload.serialize());
+
+        let res_raw = block_in_place(|| {
+            Handle::current().block_on(async {
+                match self
+                    .client
+                    .extension(Extension {
+                        name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
+                        details: Unparsed::from(payload.serialize()),
+                    })
+                    .await
+                {
+                    Ok(res) => Ok(res),
+                    Err(e) => {
+                        return {
+                            println!("ext err: {e:?}");
+                            Err(Status::from_error(Box::from(e)))
+                        };
+                    }
+                }
+            })
+        })?;
+
+        if let Some(res) = res_raw {
+            assert_eq!(res.name, EXT_AUTHENTIK_AGENT_TUNNEL);
+
+            let res = ExtAuthentikAgentTunnelData::deserialize(&res.details.into_bytes());
+            if let Some(p_res) = res {
+                println!("res: {:?}", p_res.data);
+            }
+        } else {
+            return Err(Status::from_error(Box::from("No response")));
+        }
 
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::generated::{agent::RequestHeader, agent_auth::WhoAmIRequest};
+
+    use super::*;
+
+    #[test]
+    fn serialize() {
+        let msg = WhoAmIRequest {
+            header: Some(RequestHeader {
+                profile: "default".to_string(),
+            }),
+        };
+        let encoded = msg.encode_to_vec();
+        let ext = ExtAuthentikAgentTunnelData {
+            method: "ping.Ping/Ping".to_string(),
+            data: encoded,
+        };
+        assert_eq!(
+            ext.serialize(),
+            [
+                0, 0, 0, 14, 112, 105, 110, 103, 46, 80, 105, 110, 103, 47, 80, 105, 110, 103, 0,
+                0, 0, 11, 10, 9, 10, 7, 100, 101, 102, 97, 117, 108, 116
+            ]
+        );
+    }
+
+    #[test]
+    fn deserialize() {
+        let encoded: Vec<u8> = vec![
+0, 0, 0, 27, 97, 103, 101, 110, 116, 95, 97, 117, 116, 104, 46, 65, 103, 101, 110, 116, 65, 117, 116, 104, 47, 87, 104, 111, 65, 109, 73, 0, 0, 0, 0        ];
+        let parsed = ExtAuthentikAgentTunnelData::deserialize(&encoded).unwrap();
+        assert_eq!(parsed.method, "agent_auth.AgentAuth/WhoAmI");
+
+        let m = WhoAmIRequest::decode(&*parsed.data).unwrap();
+
+        assert_eq!(m.header.unwrap().profile, "default");
     }
 }
