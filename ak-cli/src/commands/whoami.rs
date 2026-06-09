@@ -5,7 +5,7 @@ use ak_platform::{
         agent::RequestHeader,
         agent_auth::{WhoAmIRequest, agent_auth_client::AgentAuthClient},
     },
-    grpc::{assert_response_valid, grpc_endpoint, ssh::{SSHLayer, SSHTunnel}},
+    grpc::{assert_response_valid, grpc_endpoint, ssh::SSHTunnel},
     platform::paths::{AgentSocketID, agent_socket_path},
 };
 
@@ -14,8 +14,7 @@ use crate::{Cli, format};
 pub async fn whoami(cli: &Cli) -> Result<(), Box<dyn Error>> {
     let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
     let tunnel = SSHTunnel::new().await?;
-    let service = SSHLayer::new(tunnel).service(c);
-    let res = AgentAuthClient::new(service)
+    let res = AgentAuthClient::with_interceptor(c, tunnel)
         .who_am_i(WhoAmIRequest {
             header: Some(RequestHeader {
                 profile: cli.profile.clone(),
