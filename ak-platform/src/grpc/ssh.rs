@@ -39,7 +39,6 @@ impl ExtAuthentikAgentTunnelData {
             return None;
         }
         let method_len = u32::from_be_bytes(buf[0..4].try_into().ok()?) as usize;
-
         let method_start = 4;
         let method_end = method_start + method_len;
         if buf.len() < method_end + 4 {
@@ -67,8 +66,7 @@ pub struct SSHTunnel {
 
 impl SSHTunnel {
     pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let sock_path = std::env::var("SSH_AUTH_SOCK")
-            .map_err(|_| "SSH_AUTH_SOCK is not set")?;
+        let sock_path = std::env::var("SSH_AUTH_SOCK").map_err(|_| "SSH_AUTH_SOCK is not set")?;
         let stream = UnixStream::connect(sock_path).await?;
         let client = Client::new(stream);
         Ok(SSHTunnel {
@@ -149,8 +147,6 @@ where
                 method: method.trim_start_matches("/").to_string(),
                 data: strip_grpc_frame(&body_bytes)?.into(),
             };
-            println!("meth: {:?}", payload.method);
-            println!("data: {:?}", payload.data);
 
             let raw_res = match tunnel
                 .client
@@ -172,8 +168,11 @@ where
                 }
             };
 
-            println!("{:?}", raw_res);
-            let res = match ExtAuthentikAgentTunnelData::deserialize(&raw_res.details.into_bytes())
+            // Required as the inner message is also SSH encoded as a whole
+            let mut raw_bytes = raw_res.details.into_bytes();
+            raw_bytes.drain(0..4);
+
+            let res = match ExtAuthentikAgentTunnelData::deserialize(&raw_bytes)
             {
                 Some(d) => d,
                 None => return Err(Box::from("failed to parse response")),
@@ -215,9 +214,9 @@ fn add_grpc_frame(proto: &[u8]) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::generated::{agent::RequestHeader, agent_auth::WhoAmIRequest};
     use prost::Message;
-    use super::*;
 
     #[test]
     fn serialize() {
@@ -243,11 +242,11 @@ mod tests {
     #[test]
     fn deserialize() {
         let encoded: Vec<u8> = vec![
-            0, 0, 0, 27, 97, 103, 101, 110, 116, 95, 97, 117, 116, 104, 46, 65, 103, 101, 110, 116,
-            65, 117, 116, 104, 47, 87, 104, 111, 65, 109, 73, 0, 0, 0, 0,
+            0, 0, 0, 14, 112, 105, 110, 103, 46, 80, 105, 110, 103, 47, 80, 105, 110, 103, 0, 0, 0,
+            11, 10, 9, 10, 7, 100, 101, 102, 97, 117, 108, 116,
         ];
         let parsed = ExtAuthentikAgentTunnelData::deserialize(&encoded).unwrap();
-        assert_eq!(parsed.method, "agent_auth.AgentAuth/WhoAmI");
+        assert_eq!(parsed.method, "ping.Ping/Ping");
 
         let m = WhoAmIRequest::decode(&*parsed.data).unwrap();
 

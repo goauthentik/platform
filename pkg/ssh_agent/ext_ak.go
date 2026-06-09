@@ -8,12 +8,19 @@ import (
 )
 
 const (
-	ExtAuthentikAgentTunnel = "agent-tunnel@goauthentik.io"
+	ExtAuthentikAgentTunnel       = "agent-tunnel@goauthentik.io"
+	SSHAgentExtensionResponseType = 29
 )
 
 type ExtAuthentikAgentTunnelData struct {
 	Method string
 	Data   []byte
+}
+
+type ExtAuthentikAgentTunnelDataResp struct {
+	Typ  uint8
+	Ext  string
+	Data []byte
 }
 
 func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
@@ -42,9 +49,13 @@ func (atxn *AgentTxn) handleAuthentikAgentTunnel(raw []byte) ([]byte, error) {
 		return []byte{}, nil
 	}
 
-	rd := ExtAuthentikAgentTunnelData{
-		Method: d.Method,
-		Data:   rr,
+	rd := ExtAuthentikAgentTunnelDataResp{
+		Typ: SSHAgentExtensionResponseType,
+		Ext: ExtAuthentikAgentTunnel,
+		Data: ssh.Marshal(ExtAuthentikAgentTunnelData{
+			Method: d.Method,
+			Data:   rr,
+		}),
 	}
 	return ssh.Marshal(rd), nil
 }
