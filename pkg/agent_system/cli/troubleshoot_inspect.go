@@ -20,12 +20,16 @@ var troubleshootInspectCmd = &cobra.Command{
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to ctrl")
 		}
+		dc, err := client.NewDefault()
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to default")
+		}
 
 		r, err := sc.TroubleshootInspect(cmd.Context(), &emptypb.Empty{})
 		if err != nil {
 			return err
 		}
-		cap, err := sc.Capabilities(cmd.Context(), &emptypb.Empty{})
+		cap, err := dc.Capabilities(cmd.Context(), &emptypb.Empty{})
 		if err != nil {
 			return err
 		}
