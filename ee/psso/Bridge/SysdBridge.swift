@@ -211,7 +211,9 @@ public class SysdBridge {
                     jwksEndpointURL: URL(string: res.jwksEndpoint)!,
                     audience: res.audience
                 )
-                cfg.authorizationURL = URL(string: res.authorizationEndpoint)!
+                if #available(macOS 27.0, *) {
+                    cfg.authorizationURL = URL(string: res.authorizationEndpoint)!
+                }
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
                 cfg.customNonceRequestValues
                     .append(
