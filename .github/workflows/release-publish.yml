@@ -47,6 +47,14 @@ jobs:
     secrets: inherit
     with:
       is_release: true
+  call-package-linux:
+    needs:
+      - call-build-go
+      - call-build-rs
+    uses: ./.github/workflows/_package-linux.yml
+    secrets: inherit
+    with:
+      is_release: true
 
   call-deploy:
     needs:
@@ -55,6 +63,7 @@ jobs:
       - call-build-rs
       - call-package-darwin
       - call-package-windows
+      - call-package-linux
     uses: ./.github/workflows/_deploy.yml
     secrets: inherit
     with:
@@ -115,6 +124,7 @@ jobs:
       - id: meta
         env:
           AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
+          AK_IS_RELEASE: "true"
         run: |
           cd ${{ matrix.target }}
           echo "tag<<EOF" >> $GITHUB_OUTPUT
