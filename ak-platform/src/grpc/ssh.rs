@@ -1,3 +1,11 @@
+use std::{future::Future, pin::Pin, sync::Arc, task::Poll};
+
+use bytes::Bytes;
+use http::request::Request;
+use http::response::Response;
+use http_body::Body;
+use http_body_util::BodyExt;
+use http_body_util::Empty;
 use prost::Message;
 use service_binding::Binding;
 use ssh_agent_lib::{
@@ -5,9 +13,9 @@ use ssh_agent_lib::{
     client::connect,
     proto::{Extension, Unparsed},
 };
-use tokio::{runtime::Handle, task::block_in_place};
+use tokio::{runtime::Handle, sync::Mutex, task::block_in_place};
 use tonic::{GrpcMethod, Status, service::Interceptor};
-
+use tower::{Layer, Service};
 pub const EXT_AUTHENTIK_AGENT_TUNNEL: &str = "agent-tunnel@goauthentik.io";
 
 /// Payload sent to the SSH agent via the tunnel extension.
@@ -57,14 +65,24 @@ impl ExtAuthentikAgentTunnelData {
 }
 
 pub struct SSHTunnel {
-    client: Box<dyn Session>,
+    client: Arc<Mutex<Box<dyn Session>>>,
 }
 
 impl SSHTunnel {
     pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let client =
             connect(Binding::FilePath(std::env::var("SSH_AUTH_SOCK")?.into()).try_into()?)?;
-        Ok(SSHTunnel { client })
+        Ok(SSHTunnel {
+            client: Arc::new(Mutex::new(client)),
+        })
+    }
+}
+
+impl Clone for SSHTunnel {
+    fn clone(&self) -> Self {
+        SSHTunnel {
+            client: Arc::clone(&self.client),
+        }
     }
 }
 
@@ -85,15 +103,13 @@ impl Interceptor for SSHTunnel {
             method: format!("{}/{}", meth.service(), meth.method()),
             data: body.encode_to_vec(),
         };
-        println!("metadata: {:?}", request.metadata());
-        println!("ext: {:?}", meth);
-        println!("body: {:?}", payload.data);
-        println!("sz: {:?}", payload.serialize());
 
         let res_raw = block_in_place(|| {
             Handle::current().block_on(async {
                 match self
                     .client
+                    .lock()
+                    .await
                     .extension(Extension {
                         name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
                         details: Unparsed::from(payload.serialize()),
@@ -123,6 +139,93 @@ impl Interceptor for SSHTunnel {
         }
 
         todo!()
+    }
+}
+
+pub struct SSHLayer {
+    tunnel: SSHTunnel,
+}
+
+impl SSHLayer {
+    pub fn new(tunnel: SSHTunnel) -> Self {
+        Self { tunnel }
+    }
+
+    pub fn service<S>(&self, _inner: S) -> SSHService {
+        SSHService {
+            tunnel: self.tunnel.clone(),
+        }
+    }
+}
+
+impl<S> Layer<S> for SSHLayer {
+    type Service = SSHService;
+
+    fn layer(&self, _inner: S) -> Self::Service {
+        SSHService {
+            tunnel: self.tunnel.clone(),
+        }
+    }
+}
+
+type BoxError = Box<dyn std::error::Error + Send + Sync>;
+
+pub struct SSHService {
+    tunnel: SSHTunnel,
+}
+
+impl<B> Service<Request<B>> for SSHService
+where
+    B: http_body::Body<Data = Bytes> + Send + 'static,
+    B::Error: Into<BoxError>,
+{
+    type Response = Response<tonic::body::Body>;
+    type Error = BoxError;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(
+        &mut self,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<B>) -> Self::Future {
+        let tunnel = self.tunnel.clone();
+
+        Box::pin(async move {
+            let method = req.uri().path().to_string();
+            let body_bytes = req
+                .into_body()
+                .collect()
+                .await
+                .map_err(Into::into)?
+                .to_bytes();
+
+            println!("{:?}", method);
+
+            let payload = ExtAuthentikAgentTunnelData {
+                method: method.trim_start_matches("/").to_string(),
+                data: body_bytes.into(),
+            };
+
+            let res = match tunnel
+                .client
+                .lock()
+                .await
+                .extension(Extension {
+                    name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
+                    details: Unparsed::from(payload.serialize()),
+                })
+                .await
+            {
+                Ok(res) => res,
+                Err(e) => return Err(Box::from(e)),
+            };
+            println!("{:?}", res);
+
+            Ok(Response::new(tonic::body::Body::empty()))
+        })
     }
 }
 
@@ -156,7 +259,9 @@ mod tests {
     #[test]
     fn deserialize() {
         let encoded: Vec<u8> = vec![
-0, 0, 0, 27, 97, 103, 101, 110, 116, 95, 97, 117, 116, 104, 46, 65, 103, 101, 110, 116, 65, 117, 116, 104, 47, 87, 104, 111, 65, 109, 73, 0, 0, 0, 0        ];
+            0, 0, 0, 27, 97, 103, 101, 110, 116, 95, 97, 117, 116, 104, 46, 65, 103, 101, 110, 116,
+            65, 117, 116, 104, 47, 87, 104, 111, 65, 109, 73, 0, 0, 0, 0,
+        ];
         let parsed = ExtAuthentikAgentTunnelData::deserialize(&encoded).unwrap();
         assert_eq!(parsed.method, "agent_auth.AgentAuth/WhoAmI");
 
