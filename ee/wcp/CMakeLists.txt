@@ -272,6 +272,9 @@ corrosion_import_crate(
   MANIFEST_PATH ../../ak-ffi/Cargo.toml
   CRATES ak_ffi
 )
+# getrandom (transitive dep) calls BCryptGenRandom on Windows; propagate the
+# requirement to all CMake consumers of ak_ffi via the link interface.
+corrosion_link_libraries(ak_ffi bcrypt)
 corrosion_add_cxxbridge(
   ak_ffi_bridge
   CRATE ak_ffi
