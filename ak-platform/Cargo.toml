@@ -36,3 +36,6 @@ simplelog = "0.12.2"
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.4.0"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "io-util"] }

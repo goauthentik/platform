@@ -64,3 +64,18 @@ pub async fn listen(
     let stream = NamedPipeListenerStream::new(path, perm)?;
     Ok(ListenerStream::Windows(stream))
 }
+
+#[cfg(test)]
+mod tests {
+    use tokio::net::windows::named_pipe::ClientOptions;
+
+    use super::{listen, SocketPermMode};
+
+    #[tokio::test]
+    async fn listen_creates_pipe() {
+        let path = r"\\.\pipe\ak-test-server-creates".to_string();
+        let _listener = listen(path.clone(), SocketPermMode::Owner).await.unwrap();
+        // If the pipe exists, a client can open it immediately.
+        ClientOptions::new().open(&path).unwrap();
+    }
+}

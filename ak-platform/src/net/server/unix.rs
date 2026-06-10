@@ -36,3 +36,44 @@ pub async fn listen(
 
     Ok(ListenerStream::Unix(UnixListenerStream::new(uds)))
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::os::unix::fs::MetadataExt;
+
+    use super::{listen, SocketPermMode};
+
+    #[tokio::test]
+    async fn listen_creates_socket() {
+        let path = "/tmp/ak-test-net-creates.sock".to_string();
+        let _listener = listen(path.clone(), SocketPermMode::Owner).await.unwrap();
+        assert!(fs::metadata(&path).is_ok());
+    }
+
+    #[tokio::test]
+    async fn listen_removes_stale_socket() {
+        let path = "/tmp/ak-test-net-stale.sock".to_string();
+        let _first = listen(path.clone(), SocketPermMode::Owner).await.unwrap();
+        // drop _first so the file stays but the listener is gone
+        drop(_first);
+        // second listen must not fail with EADDRINUSE
+        listen(path.clone(), SocketPermMode::Owner).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn listen_permission_owner() {
+        let path = "/tmp/ak-test-net-perm-owner.sock".to_string();
+        let _listener = listen(path.clone(), SocketPermMode::Owner).await.unwrap();
+        let mode = fs::metadata(&path).unwrap().mode() & 0o777;
+        assert_eq!(mode, 0o600);
+    }
+
+    #[tokio::test]
+    async fn listen_permission_everyone() {
+        let path = "/tmp/ak-test-net-perm-everyone.sock".to_string();
+        let _listener = listen(path.clone(), SocketPermMode::Everyone).await.unwrap();
+        let mode = fs::metadata(&path).unwrap().mode() & 0o777;
+        assert_eq!(mode, 0o666);
+    }
+}
