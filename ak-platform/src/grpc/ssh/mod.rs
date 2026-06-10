@@ -164,3 +164,161 @@ fn add_grpc_frame(proto: &[u8]) -> Vec<u8> {
     buf.extend_from_slice(proto);
     buf
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use bytes::Bytes;
+    use http::Request;
+    use http_body_util::{BodyExt, Full};
+    use ssh_agent_lib::{
+        agent::{Session, listen as ssh_listen},
+        error::AgentError,
+        proto::{Extension, Unparsed},
+    };
+    use tokio::sync::Mutex;
+    use tower::Service;
+
+    use super::{SSHTunnel, add_grpc_frame, strip_grpc_frame};
+    use crate::grpc::ssh::ext::{EXT_AUTHENTIK_AGENT_TUNNEL, ExtAuthentikAgentTunnelData};
+
+    // --- strip_grpc_frame ---
+
+    #[test]
+    fn strip_grpc_frame_valid() {
+        let data = [0x00u8, 0x00, 0x00, 0x00, 0x05, 1, 2, 3, 4, 5];
+        let result = strip_grpc_frame(&data).unwrap();
+        assert_eq!(result, &[1u8, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn strip_grpc_frame_empty_payload() {
+        let data = [0x00u8, 0x00, 0x00, 0x00, 0x00];
+        let result = strip_grpc_frame(&data).unwrap();
+        assert_eq!(result, &[] as &[u8]);
+    }
+
+    #[test]
+    fn strip_grpc_frame_too_short() {
+        let err = strip_grpc_frame(&[0x00u8, 0x01, 0x02]).unwrap_err();
+        assert!(err.to_string().contains("too short"), "error was: {err}");
+    }
+
+    #[test]
+    fn strip_grpc_frame_length_exceeds_buffer() {
+        // Header claims 100 bytes, only 3 bytes of payload follow.
+        let mut data = vec![0x00u8, 0x00, 0x00, 0x00, 100];
+        data.extend_from_slice(&[1u8, 2, 3]);
+        let err = strip_grpc_frame(&data).unwrap_err();
+        assert!(
+            err.to_string().contains("exceeds buffer"),
+            "error was: {err}"
+        );
+    }
+
+    // --- add_grpc_frame ---
+
+    #[test]
+    fn add_grpc_frame_header_bytes() {
+        assert_eq!(
+            add_grpc_frame(b"hello"),
+            [0x00, 0x00, 0x00, 0x00, 0x05, b'h', b'e', b'l', b'l', b'o']
+        );
+    }
+
+    #[test]
+    fn add_grpc_frame_empty() {
+        assert_eq!(add_grpc_frame(b""), [0x00, 0x00, 0x00, 0x00, 0x00]);
+    }
+
+    #[test]
+    fn roundtrip_add_then_strip() {
+        let original = b"some proto bytes";
+        let framed = add_grpc_frame(original);
+        let stripped = strip_grpc_frame(&framed).unwrap();
+        assert_eq!(stripped, original);
+    }
+
+    // --- Integration test: full gRPC-over-SSH-tunnel flow ---
+
+    #[derive(Clone, Default)]
+    struct MockTunnelAgent;
+
+    #[ssh_agent_lib::async_trait]
+    impl Session for MockTunnelAgent {
+        async fn extension(&mut self, ext: Extension) -> Result<Option<Extension>, AgentError> {
+            let req = ExtAuthentikAgentTunnelData::deserialize(&ext.details.into_bytes())
+                .ok_or(AgentError::Failure)?;
+
+            let serialized = ExtAuthentikAgentTunnelData {
+                method: req.method,
+                data: req.data,
+            }
+            .serialize();
+
+            // mod.rs drains the first 4 bytes of the response before deserializing,
+            // matching the SSH encoding convention where extension bodies carry a
+            // u32 length prefix.
+            let mut prefixed = Vec::with_capacity(4 + serialized.len());
+            prefixed.extend_from_slice(&(serialized.len() as u32).to_be_bytes());
+            prefixed.extend_from_slice(&serialized);
+
+            Ok(Some(Extension {
+                name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
+                details: Unparsed::from(prefixed),
+            }))
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn ssh_service_routes_request_through_tunnel()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use crate::net::client::StreamType;
+        use ssh_agent_lib::client::Client;
+        use tokio::net::UnixListener;
+
+        let sock_path = "/tmp/ak-test-grpc-ssh-integration.sock";
+        let _ = std::fs::remove_file(sock_path);
+
+        let listener = UnixListener::bind(sock_path)?;
+        let server_handle =
+            tokio::spawn(async move { ssh_listen(listener, MockTunnelAgent).await });
+
+        let stream = tokio::net::UnixStream::connect(sock_path).await?;
+        let client = Client::new(StreamType::Unix(stream));
+
+        let tunnel = SSHTunnel {
+            client: Arc::new(Mutex::new(client)),
+        };
+        let mut svc = tunnel.service(());
+
+        let proto_payload: &[u8] = &[0x01, 0x02, 0x03];
+        let req = Request::builder()
+            .method("POST")
+            .uri("/some.Service/Method")
+            .header("content-type", "application/grpc+proto")
+            .body(Full::new(Bytes::from(add_grpc_frame(proto_payload))))?;
+
+        let resp = svc.call(req).await?;
+
+        assert_eq!(resp.status(), 200);
+        assert_eq!(
+            resp.headers()
+                .get("grpc-status")
+                .and_then(|v| v.to_str().ok()),
+            Some("0")
+        );
+
+        let body_bytes = resp.into_body().collect().await?.to_bytes();
+        let stripped = strip_grpc_frame(&body_bytes)?;
+        assert_eq!(stripped, proto_payload);
+
+        server_handle.abort();
+        let _ = server_handle.await;
+        let _ = std::fs::remove_file(sock_path);
+
+        Ok(())
+    }
+}
