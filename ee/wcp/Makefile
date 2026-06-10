@@ -30,7 +30,7 @@ build:
 	${TOP}/hack/windows/setup.sh
 	mkdir -p ${TOP}/bin/${OUT_TARGET}
 	mkdir -p ${TOP}/cache/${OUT_TARGET}
-	cmake -B"${TOP}/cache/${OUT_TARGET}" -G "Visual Studio 17" "${PWD}"
+	cmake -B"${TOP}/cache/${OUT_TARGET}" -G "Visual Studio 18" "${PWD}"
 	cmake --build "${TOP}/cache/${OUT_TARGET}" --config Release
 	cp -r ${TOP}/cache/${OUT_TARGET}/ak_cred_provider/Release/* ${TOP}/bin/${OUT_TARGET}/
 ifdef SENTRY_AUTH_TOKEN

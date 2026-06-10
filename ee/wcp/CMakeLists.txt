@@ -96,7 +96,7 @@
 #
 # To perform a Windows build using a 32-bit CEF binary distribution:
 #   Using the Visual Studio 2022 IDE:
-#     > cmake -G "Visual Studio 17" -A Win32 ..
+#     > cmake -G "Visual Studio 18" -A Win32 ..
 #     Open build\cef.sln in Visual Studio and select Build > Build Solution.
 #
 #   Using Ninja with Visual Studio 2022 command-line tools:
@@ -107,7 +107,7 @@
 #
 # To perform a Windows build using a 64-bit CEF binary distribution:
 #   Using the Visual Studio 2022 IDE:
-#     > cmake -G "Visual Studio 17" -A x64 ..
+#     > cmake -G "Visual Studio 18" -A x64 ..
 #     Open build\cef.sln in Visual Studio and select Build > Build Solution.
 #
 #   Using Ninja with Visual Studio 2022 command-line tools:
@@ -118,7 +118,7 @@
 #
 # To perform a Windows build using an ARM64 CEF binary distribution:
 #   Using the Visual Studio 2022 IDE:
-#     > cmake -G "Visual Studio 17" -A arm64 ..
+#     > cmake -G "Visual Studio 18" -A arm64 ..
 #     Open build\cef.sln in Visual Studio and select Build > Build Solution.
 #
 #   Using Ninja with Visual Studio 2022 command-line tools:

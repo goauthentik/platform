@@ -96,7 +96,7 @@ Requirements: Xcode, `swift-format`, `protoc` with the `grpc-swift-2` plugin (fo
 
 Windows Credential Provider (Enterprise Edition), built with CMake and MSVC. **Windows only** (windows-2025, x86\_64).
 
-Requirements: Visual Studio 17 (MSVC, amd64), CMake, GnuWin32, LLVM (`clang-format` for linting). Run `hack/windows/setup.sh` first to configure the required paths.
+Requirements: Visual Studio 18 (MSVC, amd64), CMake, GnuWin32, LLVM (`clang-format` for linting). Run `hack/windows/setup.sh` first to configure the required paths.
 
 #### `vpkg/macos/%`
 
