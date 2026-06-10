@@ -9,6 +9,8 @@ use tokio_stream::wrappers::UnixListenerStream;
 #[cfg(windows)]
 use tokio::net::windows::named_pipe::NamedPipeServer;
 
+use crate::platform::string::PlatformString;
+
 #[cfg(unix)]
 pub mod unix;
 #[cfg(windows)]
@@ -50,11 +52,11 @@ impl Stream for ListenerStream {
 }
 
 pub async fn listen(
-    path: String,
+    path: PlatformString,
     perm: SocketPermMode,
 ) -> Result<ListenerStream, Box<dyn std::error::Error + Send + Sync>> {
     #[cfg(unix)]
-    return unix::listen(path, perm).await;
+    return unix::listen(path.for_current(), perm).await;
     #[cfg(windows)]
-    return windows::listen(path, perm).await;
+    return windows::listen(path.for_current(), perm).await;
 }

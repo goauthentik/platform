@@ -11,6 +11,8 @@ use tokio::net::UnixStream;
 #[cfg(windows)]
 use tokio::net::windows::named_pipe::NamedPipeClient;
 
+use crate::platform::string::PlatformString;
+
 #[cfg(unix)]
 pub mod unix;
 #[cfg(windows)]
@@ -71,9 +73,9 @@ impl AsyncWrite for StreamType {
     }
 }
 
-pub async fn connect(path: String) -> Result<TokioIo<StreamType>, Box<dyn Error + Send + Sync>> {
+pub async fn connect(path: PlatformString) -> Result<TokioIo<StreamType>, Box<dyn Error + Send + Sync>> {
     #[cfg(unix)]
-    return unix::connect(path).await;
+    return unix::connect(path.for_current()).await;
     #[cfg(windows)]
-    return windows::connect(path).await;
+    return windows::connect(path.for_current()).await;
 }
