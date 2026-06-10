@@ -10,24 +10,29 @@ use ssh_agent_lib::{
     client::Client,
     proto::{Extension, Unparsed},
 };
-use tokio::net::UnixStream;
 use tokio::sync::Mutex;
 use tower::{Layer, Service};
 
 use crate::grpc::ssh::ext::EXT_AUTHENTIK_AGENT_TUNNEL;
 use crate::grpc::ssh::ext::ExtAuthentikAgentTunnelData;
+use crate::net::client::StreamType;
+use crate::net::client::connect;
+use crate::platform::string::PlatformString;
 
 pub mod ext;
 
 pub struct SSHTunnel {
-    client: Arc<Mutex<Client<UnixStream>>>,
+    client: Arc<Mutex<Client<StreamType>>>,
 }
 
 impl SSHTunnel {
     pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let sock_path = std::env::var("SSH_AUTH_SOCK").map_err(|_| "SSH_AUTH_SOCK is not set")?;
-        let stream = UnixStream::connect(sock_path).await?;
-        let client = Client::new(stream);
+        let st = match connect(PlatformString::new_with_default(&sock_path)).await {
+            Ok(s) => s,
+            Err(e) => return Err(e),
+        };
+        let client = Client::new(st.into_inner());
         Ok(SSHTunnel {
             client: Arc::new(Mutex::new(client)),
         })
@@ -113,7 +118,6 @@ where
                     None => return Err(Box::from("No response")),
                 },
                 Err(e) => {
-                    eprintln!("failed to send ext: {e:?}");
                     return Err(Box::from(e));
                 }
             };
