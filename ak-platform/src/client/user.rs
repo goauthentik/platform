@@ -49,7 +49,7 @@ type AnyBody = UnsyncBoxBody<Bytes, BoxError>;
 #[derive(Clone)]
 enum AnyServiceInner {
     Socket(Channel),
-    SSH(SSHService),
+    Ssh(SSHService),
 }
 
 pub struct AnyService(AnyServiceInner);
@@ -62,7 +62,7 @@ impl Service<http::Request<tonic::body::Body>> for AnyService {
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         match &mut self.0 {
             AnyServiceInner::Socket(c) => c.poll_ready(cx).map_err(Into::into),
-            AnyServiceInner::SSH(s) => {
+            AnyServiceInner::Ssh(s) => {
                 <SSHService as Service<http::Request<tonic::body::Body>>>::poll_ready(s, cx)
             }
         }
@@ -77,7 +77,7 @@ impl Service<http::Request<tonic::body::Body>> for AnyService {
                     Ok(res.map(|b| b.map_err(|e| -> BoxError { Box::new(e) }).boxed_unsync()))
                 })
             }
-            AnyServiceInner::SSH(s) => {
+            AnyServiceInner::Ssh(s) => {
                 let fut = s.call(req);
                 Box::pin(async move {
                     let res = fut.await?;
@@ -93,7 +93,7 @@ impl Client<AnyService> {
         if std::env::var("SSH_AUTH_SOCK").is_ok() {
             let service = SSHTunnel::new().await?.service(());
             Ok(Client {
-                c: AnyService(AnyServiceInner::SSH(service)),
+                c: AnyService(AnyServiceInner::Ssh(service)),
             })
         } else {
             let path = agent_socket_path(AgentSocketID::Default)?.for_current();
