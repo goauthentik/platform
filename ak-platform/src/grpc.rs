@@ -1,7 +1,6 @@
 use std::error::Error;
 
 use base64::{Engine, prelude::BASE64_STANDARD};
-use hyper_util::rt::TokioIo;
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
@@ -9,6 +8,7 @@ use tower::service_fn;
 
 use crate::config::Config;
 use crate::generated::agent::ResponseHeader;
+use crate::net;
 
 pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
     let u = Uri::builder()
@@ -21,46 +21,12 @@ pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
     Ok(channel)
 }
 
-#[cfg(unix)]
 async fn grpc_dial(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
     return ep
         .connect_with_connector(service_fn(async move |p: Uri| {
-            use tokio::net::UnixStream;
-
             let path = p.path().replace("%20", " ");
             log::debug!("Connecting to GRPC socket '{path}'");
-            let client = match UnixStream::connect(path).await {
-                Ok(c) => c,
-                Err(e) => {
-                    return Err(e);
-                }
-            };
-            Ok(TokioIo::new(client))
-        }))
-        .await;
-}
-
-#[cfg(windows)]
-async fn grpc_dial(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
-    return ep
-        .connect_with_connector(service_fn(async |p: Uri| {
-            use std::time::Duration;
-            use tokio::net::windows::named_pipe::ClientOptions;
-            use tokio::time;
-
-            let path = p.path().replace("%20", " ");
-            log::debug!("Connecting to GRPC socket '{path}'");
-            let client = loop {
-                match ClientOptions::new().open(&path) {
-                    Ok(client) => break client,
-                    Err(e) if e.raw_os_error() == Some(231) => (),
-                    Err(e) => return Err(e),
-                }
-
-                time::sleep(Duration::from_millis(50)).await;
-            };
-
-            Ok(TokioIo::new(client))
+            net::connect(path).await
         }))
         .await;
 }
