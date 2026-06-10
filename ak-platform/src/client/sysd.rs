@@ -14,6 +14,7 @@ use crate::{
     platform::paths::{SysdSocketID, sysd_socket_path},
 };
 
+#[derive(Clone)]
 pub struct Client {
     c: Channel,
 }
@@ -22,6 +23,10 @@ impl Client {
     pub async fn new(id: SysdSocketID) -> Result<Self, Box<dyn Error>> {
         let c = grpc_endpoint(sysd_socket_path(id).for_current()).await?;
         Ok(Client { c })
+    }
+
+    pub fn new_channel(c: Channel) -> Self {
+        Client { c }
     }
 
     pub fn auth_token(self) -> SystemAuthTokenClient<Channel> {

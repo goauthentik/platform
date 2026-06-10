@@ -2,7 +2,7 @@ use std::error::Error;
 
 use ak_platform::generated::{
     agent::RequestHeader,
-    agent_platform::{PlatformEndpointRequest, agent_platform_client::AgentPlatformClient},
+    agent_platform::PlatformEndpointRequest,
 };
 use serde_json::Value;
 
@@ -23,7 +23,10 @@ impl PathHandler {
             },
             None => return Err(Box::from("No challenge")),
         };
-        let signed_response = AgentPlatformClient::new(self.system_channel.clone())
+        let signed_response = self
+            .system_client
+            .clone()
+            .platform()
             .signed_endpoint_header(PlatformEndpointRequest {
                 header: Some(RequestHeader {
                     profile: msg.profile.clone(),

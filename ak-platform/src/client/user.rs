@@ -12,8 +12,7 @@ use crate::{
     generated::{
         agent_auth::agent_auth_client::AgentAuthClient,
         agent_cache::agent_cache_client::AgentCacheClient,
-        agent_ctrl::agent_ctrl_client::AgentCtrlClient,
-        ping::ping_client::PingClient,
+        agent_ctrl::agent_ctrl_client::AgentCtrlClient, ping::ping_client::PingClient,
     },
     grpc::{
         grpc_endpoint,
@@ -102,6 +101,12 @@ impl Client<AnyService> {
             Ok(Client {
                 c: AnyService(AnyServiceInner::Socket(c)),
             })
+        }
+    }
+
+    pub fn new_channel(c: Channel) -> Self {
+        Client {
+            c: AnyService(AnyServiceInner::Socket(c)),
         }
     }
 }

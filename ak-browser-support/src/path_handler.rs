@@ -1,9 +1,8 @@
 use ak_platform::{
-    grpc::grpc_endpoint,
-    platform::paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
+    client::{sysd, user::{self, AnyService}},
+    platform::paths::SysdSocketID,
 };
 use std::error::Error;
-use tonic::transport::Channel;
 
 use native_messaging::{
     event_loop,
@@ -14,26 +13,25 @@ use crate::models::{Message, Response};
 
 #[derive(Clone)]
 pub(crate) struct PathHandler {
-    pub(crate) system_channel: Channel,
-    pub(crate) user_channel: Option<Channel>,
+    pub(crate) system_client: sysd::Client,
+    pub(crate) user_client: Option<user::Client<AnyService>>,
 }
 
 impl PathHandler {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
-        let system_channel =
-            grpc_endpoint(sysd_socket_path(SysdSocketID::Default).for_current()).await?;
-        let user_channel =
-            match grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await {
+        let system_client = sysd::Client::new(SysdSocketID::Default).await?;
+        let user_client =
+            match user::Client::new().await {
                 Ok(c) => Some(c),
                 Err(e) => {
                     log::warn!("failed to connect to user agent: {e:?}");
                     None
-                },
+                }
             };
 
         Ok(Self {
-            system_channel,
-            user_channel,
+            system_client,
+            user_client,
         })
     }
 

@@ -1,6 +1,5 @@
 use std::error::Error;
 
-use ak_platform::generated::agent_ctrl::agent_ctrl_client::AgentCtrlClient;
 use serde_json::{Value, to_value};
 
 use crate::{
@@ -10,12 +9,11 @@ use crate::{
 
 impl PathHandler {
     pub async fn handle_list_profiles(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
-        let uc = match &self.user_channel {
+        let uc = match &self.user_client {
             Some(c) => c.clone(),
             None => return Err(Box::from("Not connected to user agent")),
         };
-        let profiles = AgentCtrlClient::new(uc)
-            .list_profiles(())
+        let profiles = uc.ctrl().list_profiles(())
             .await?
             .into_inner();
         let mut res = Response::in_response_to(msg);
