@@ -18,6 +18,7 @@ pub mod unix;
 #[cfg(windows)]
 pub mod windows;
 
+#[derive(Debug)]
 pub enum StreamType {
     #[cfg(unix)]
     Unix(UnixStream),

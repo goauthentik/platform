@@ -2,7 +2,7 @@ use std::error::Error;
 
 use ak_platform::generated::{
     agent::RequestHeader,
-    agent_auth::{CurrentTokenRequest, agent_auth_client::AgentAuthClient, current_token_request},
+    agent_auth::{CurrentTokenRequest, current_token_request},
 };
 
 use crate::{
@@ -12,12 +12,11 @@ use crate::{
 
 impl PathHandler {
     pub async fn handle_get_token(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
-        let uc = match &self.user_channel {
+        let uc = match &self.user_client {
             Some(c) => c.clone(),
             None => return Err(Box::from("Not connected to user agent")),
         };
-        let current = AgentAuthClient::new(uc)
-            .get_current_token(CurrentTokenRequest {
+        let current = uc.auth().get_current_token(CurrentTokenRequest {
                 header: Some(RequestHeader {
                     profile: msg.profile.clone(),
                 }),

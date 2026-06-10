@@ -1,10 +1,9 @@
 use ak_platform::{
     generated::{
         agent::RequestHeader,
-        agent_ctrl::{SetupRequest, agent_ctrl_client::AgentCtrlClient},
+        agent_ctrl::SetupRequest,
     },
-    grpc::{assert_response_valid, grpc_endpoint},
-    platform::paths::{AgentSocketID, agent_socket_path},
+    grpc::assert_response_valid,
 };
 use clap::Subcommand;
 use ratatui::text::Line;
@@ -12,14 +11,14 @@ use std::{env, error::Error};
 use url::Url;
 
 use crate::{
-    Cli, format,
+    App, format,
     setup::{
         self,
         ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
     },
 };
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Clone)]
 pub enum ConfigCommands {
     /// List profiles
     ListProfiles,
@@ -34,9 +33,12 @@ pub enum ConfigCommands {
     },
 }
 
-pub async fn list_profiles(_cli: &Cli) -> Result<(), Box<dyn Error>> {
-    let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-    let res = AgentCtrlClient::new(c)
+pub async fn list_profiles(app: App) -> Result<(), Box<dyn Error>> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
         .list_profiles(())
         .await?
         .into_inner();
@@ -51,7 +53,7 @@ pub async fn list_profiles(_cli: &Cli) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn setup(
-    cli: &Cli,
+    app: App,
     authentik_url: &str,
     client_id: &str,
     app_slug: &str,
@@ -65,7 +67,7 @@ pub async fn setup(
         refresh_token = rt;
     } else {
         let prof = setup::setup(setup::Options {
-            profile_name: cli.profile.clone(),
+            profile_name: app.args.profile.clone(),
             authentik_url: Url::parse(authentik_url)?,
             app_slug: app_slug.to_owned(),
             client_id: client_id.to_owned(),
@@ -84,11 +86,14 @@ pub async fn setup(
         }
     }
 
-    let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-    let res = AgentCtrlClient::new(c)
+    let res = app
+        .clone()
+        .user()
+        .await?
+        .ctrl()
         .setup(SetupRequest {
             header: Some(RequestHeader {
-                profile: cli.profile.clone(),
+                profile: app.args.profile.clone(),
             }),
             authentik_url: authentik_url.to_owned(),
             app_slug: app_slug.to_owned(),

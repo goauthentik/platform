@@ -3,4 +3,5 @@ pub mod generated;
 pub mod grpc;
 pub mod log;
 pub mod platform;
+pub mod client;
 pub mod net;

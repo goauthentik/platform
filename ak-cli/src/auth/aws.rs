@@ -2,15 +2,13 @@ use std::error::Error;
 
 use crate::cache::{CacheData, ClientCache};
 use ak_platform::{
-    generated::{
+    client::user::{AnyService, Client}, generated::{
         agent::RequestHeader,
         agent_auth::{
-            CurrentTokenRequest, TokenExchangeRequest, agent_auth_client::AgentAuthClient,
+            CurrentTokenRequest, TokenExchangeRequest,
             current_token_request,
         },
-    },
-    grpc::{assert_response_valid, grpc_endpoint},
-    platform::paths::{AgentSocketID, agent_socket_path},
+    }, grpc::assert_response_valid
 };
 use aws_types::{SdkConfig, region::Region};
 use pbjson_types::Timestamp;
@@ -41,8 +39,9 @@ impl CacheData for AWSCredentialOutput {
     }
 }
 
-pub async fn get_credentials(opts: CredentialsOpts) -> Result<AWSCredentialOutput, Box<dyn Error>> {
+pub async fn get_credentials(c: Client<AnyService>, opts: CredentialsOpts) -> Result<AWSCredentialOutput, Box<dyn Error>> {
     let cc = ClientCache::new(
+        c.clone(),
         RequestHeader {
             profile: opts.profile.clone(),
         },
@@ -57,9 +56,7 @@ pub async fn get_credentials(opts: CredentialsOpts) -> Result<AWSCredentialOutpu
         .build();
     let sts = aws_sdk_sts::Client::new(config);
 
-    let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-    let res = AgentAuthClient::new(c.clone())
-        .cached_token_exchange(TokenExchangeRequest {
+    let res = c.clone().auth().cached_token_exchange(TokenExchangeRequest {
             header: Some(RequestHeader {
                 profile: opts.profile.clone(),
             }),
@@ -69,8 +66,7 @@ pub async fn get_credentials(opts: CredentialsOpts) -> Result<AWSCredentialOutpu
         .into_inner();
     assert_response_valid(res.header)?;
 
-    let curr = AgentAuthClient::new(c.clone())
-        .get_current_token(CurrentTokenRequest {
+    let curr = c.clone().auth().get_current_token(CurrentTokenRequest {
             header: Some(RequestHeader {
                 profile: opts.profile.clone(),
             }),

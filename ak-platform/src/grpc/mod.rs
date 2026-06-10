@@ -11,6 +11,8 @@ use crate::generated::agent::ResponseHeader;
 use crate::net;
 use crate::platform::string::PlatformString;
 
+pub mod ssh;
+
 pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
     let u = Uri::builder()
         .scheme("http")
