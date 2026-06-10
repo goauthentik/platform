@@ -47,6 +47,7 @@ impl Client<SSHService> {
 type BoxError = Box<dyn Error + Send + Sync>;
 type AnyBody = UnsyncBoxBody<Bytes, BoxError>;
 
+#[derive(Clone)]
 enum AnyServiceInner {
     Socket(Channel),
     SSH(SSHService),
@@ -102,6 +103,18 @@ impl Client<AnyService> {
                 c: AnyService(AnyServiceInner::Socket(c)),
             })
         }
+    }
+}
+
+impl Clone for AnyService {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl Clone for Client<AnyService> {
+    fn clone(&self) -> Self {
+        Self { c: self.c.clone() }
     }
 }
 

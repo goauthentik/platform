@@ -9,9 +9,9 @@ use ak_platform::{
 use ratatui::text::Line;
 use std::error::Error;
 
-use crate::{Cli, format};
+use crate::{App, format};
 
-pub async fn version(_cli: &Cli) -> Result<(), Box<dyn Error>> {
+pub async fn version(_app: App) -> Result<(), Box<dyn Error>> {
     let user_version = agent_version(agent_socket_path(AgentSocketID::Default)?).await;
     let system_version = agent_version(sysd_socket_path(SysdSocketID::Default)).await;
     let versions = vec![

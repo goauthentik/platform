@@ -60,6 +60,7 @@ impl<S> Layer<S> for SSHTunnel {
 
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
+#[derive(Clone)]
 pub struct SSHService {
     layer: SSHTunnel,
 }

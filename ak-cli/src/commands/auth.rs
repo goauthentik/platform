@@ -1,9 +1,9 @@
 use clap::Subcommand;
 use std::error::Error;
 
-use crate::{Cli, auth::aws, auth::k8s, auth::raw};
+use crate::{App, auth::{aws, k8s, raw}};
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Clone)]
 pub enum AuthCommands {
     /// Authenticate to arbitrary API calls.
     Raw {
@@ -26,9 +26,9 @@ pub enum AuthCommands {
     },
 }
 
-pub async fn raw(cli: &Cli, client_id: &str) -> Result<(), Box<dyn Error>> {
-    let creds = raw::get_credentials(raw::CredentialsOpts {
-        profile: cli.profile.clone(),
+pub async fn raw(app: App, client_id: &str) -> Result<(), Box<dyn Error>> {
+    let creds = raw::get_credentials(app.clone().user().await?, raw::CredentialsOpts {
+        profile: app.args.profile.clone(),
         client_id: client_id.to_owned(),
     })
     .await?;
@@ -37,13 +37,13 @@ pub async fn raw(cli: &Cli, client_id: &str) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn aws(
-    cli: &Cli,
+    app: App,
     client_id: &str,
     role_arn: &str,
     region: &str,
 ) -> Result<(), Box<dyn Error>> {
-    let creds = aws::get_credentials(aws::CredentialsOpts {
-        profile: cli.profile.clone(),
+    let creds = aws::get_credentials(app.clone().user().await?, aws::CredentialsOpts {
+        profile: app.args.profile.clone(),
         client_id: client_id.to_owned(),
         role_arn: role_arn.to_owned(),
         region: region.to_owned(),
@@ -53,9 +53,9 @@ pub async fn aws(
     Ok(())
 }
 
-pub async fn kubectl(cli: &Cli, client_id: &str) -> Result<(), Box<dyn Error>> {
-    let creds = k8s::get_credentials(k8s::CredentialsOpts {
-        profile: cli.profile.clone(),
+pub async fn kubectl(app: App, client_id: &str) -> Result<(), Box<dyn Error>> {
+    let creds = k8s::get_credentials(app.clone().user().await?, k8s::CredentialsOpts {
+        profile: app.args.profile.clone(),
         client_id: client_id.to_owned(),
     })
     .await?;
