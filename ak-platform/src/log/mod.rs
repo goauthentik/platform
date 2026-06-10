@@ -1,5 +1,6 @@
 use crate::platform::string::PlatformString;
 use log::LevelFilter;
+use simplelog::{Config, TermLogger};
 
 #[cfg(target_os = "macos")]
 pub mod macos;
@@ -24,4 +25,15 @@ pub fn init_log(name: PlatformString) {
 
 pub fn set_log_level(level: LevelFilter) {
     log::set_max_level(level);
+}
+
+pub fn init_log_interactive() {
+    TermLogger::init(
+        LevelFilter::Trace,
+        Config::default(),
+        simplelog::TerminalMode::Stderr,
+        simplelog::ColorChoice::Auto,
+    ).unwrap_or_else(|_| {
+        eprintln!("Failed to setup terminal logger")
+    });
 }

@@ -1,6 +1,6 @@
 use ak_platform::{
     client::user::{AnyService, Client},
-    log::set_log_level,
+    log::{init_log_interactive, set_log_level},
 };
 use clap::{Error, Parser, Subcommand};
 use log::LevelFilter;
@@ -77,6 +77,7 @@ impl App {
 async fn main() -> Result<(), Error> {
     let cli = CliArgs::parse();
 
+    init_log_interactive();
     set_log_level(LevelFilter::Warn);
     if cli.verbose {
         set_log_level(LevelFilter::Trace);
@@ -98,7 +99,12 @@ async fn main() -> Result<(), Error> {
                 app_slug,
             } => commands::config::setup(app, authentik_url, client_id, app_slug).await,
         },
-        Commands::Auth { command } => match command {
+        Commands::Auth { command } => {
+            // If not in verbose, set a higher default log level as the output matters
+            if !cli.verbose {
+                set_log_level(LevelFilter::Error);
+            }
+            match command {
             AuthCommands::Raw { client_id } => commands::auth::raw(app, client_id).await,
             AuthCommands::Kubectl { client_id } => commands::auth::kubectl(app, client_id).await,
             AuthCommands::Aws {
@@ -106,7 +112,8 @@ async fn main() -> Result<(), Error> {
                 role_arn,
                 region,
             } => commands::auth::aws(app, client_id, role_arn, region).await,
-        },
+            }
+        }
     };
     match res {
         Ok(_) => Ok(()),
