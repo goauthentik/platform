@@ -5,7 +5,7 @@ use hyper_util::rt::TokioIo;
 use tokio::net::windows::named_pipe::ClientOptions;
 use tokio::time;
 
-use crate::net::StreamType;
+use crate::net::client::StreamType;
 
 pub async fn connect(path: String) -> Result<TokioIo<StreamType>, Box<dyn Error + Send + Sync>> {
     let client = loop {

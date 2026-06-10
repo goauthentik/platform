@@ -1,9 +1,9 @@
-use std::error::Error;
+use std::{error::Error, fs::create_dir_all, path::Path};
 
 use hyper_util::rt::TokioIo;
 use tokio::net::UnixStream;
 
-use crate::net::StreamType;
+use crate::net::client::StreamType;
 
 pub async fn connect(path: String) -> Result<TokioIo<StreamType>, Box<dyn Error + Send + Sync>> {
     let client = match UnixStream::connect(path).await {

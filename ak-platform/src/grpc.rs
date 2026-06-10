@@ -26,7 +26,7 @@ async fn grpc_dial(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
         .connect_with_connector(service_fn(async move |p: Uri| {
             let path = p.path().replace("%20", " ");
             log::debug!("Connecting to GRPC socket '{path}'");
-            net::connect(path).await
+            net::client::connect(path).await
         }))
         .await;
 }
