@@ -41,6 +41,7 @@ impl CacheData for AWSCredentialOutput {
 
 pub async fn get_credentials(c: Client<AnyService>, opts: CredentialsOpts) -> Result<AWSCredentialOutput, Box<dyn Error>> {
     let cc = ClientCache::new(
+        c.clone(),
         RequestHeader {
             profile: opts.profile.clone(),
         },

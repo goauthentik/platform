@@ -1,10 +1,9 @@
 use ak_platform::{
     generated::{
         agent::RequestHeader,
-        agent_ctrl::{SetupRequest, agent_ctrl_client::AgentCtrlClient},
+        agent_ctrl::SetupRequest,
     },
-    grpc::{assert_response_valid, grpc_endpoint},
-    platform::paths::{AgentSocketID, agent_socket_path},
+    grpc::assert_response_valid,
 };
 use clap::Subcommand;
 use ratatui::text::Line;
@@ -34,9 +33,12 @@ pub enum ConfigCommands {
     },
 }
 
-pub async fn list_profiles(_app: App) -> Result<(), Box<dyn Error>> {
-    let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-    let res = AgentCtrlClient::new(c)
+pub async fn list_profiles(app: App) -> Result<(), Box<dyn Error>> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
         .list_profiles(())
         .await?
         .into_inner();

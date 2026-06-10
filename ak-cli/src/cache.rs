@@ -1,12 +1,12 @@
 use std::{error::Error, marker::PhantomData};
 
 use ak_platform::{
+    client::user::{AnyService, Client},
     generated::{
         agent::RequestHeader,
-        agent_cache::{CacheGetRequest, CacheSetRequest, agent_cache_client::AgentCacheClient},
+        agent_cache::{CacheGetRequest, CacheSetRequest},
     },
-    grpc::{assert_response_valid, grpc_endpoint},
-    platform::paths::{AgentSocketID, agent_socket_path},
+    grpc::assert_response_valid,
 };
 use pbjson_types::Timestamp;
 use serde::{Serialize, de::DeserializeOwned};
@@ -19,21 +19,25 @@ pub struct ClientCache<T: CacheData> {
     keys: Vec<String>,
     header: RequestHeader,
 
+    c: Client<AnyService>,
     _phantom: PhantomData<T>,
 }
 
 impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
-    pub fn new(header: RequestHeader, keys: Vec<String>) -> Self {
+    pub fn new(c: Client<AnyService>, header: RequestHeader, keys: Vec<String>) -> Self {
         Self {
             keys,
             header,
+            c,
             _phantom: PhantomData,
         }
     }
 
     pub async fn get(&self) -> Result<T, Box<dyn Error>> {
-        let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-        let res = AgentCacheClient::new(c)
+        let res = self
+            .c
+            .clone()
+            .cache()
             .cache_get(CacheGetRequest {
                 header: Some(self.header.clone()),
                 keys: self.keys.clone(),
@@ -50,8 +54,10 @@ impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
 
         let expiry_ts = value.expiry();
 
-        let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-        let res = AgentCacheClient::new(c)
+        let res = self
+            .c
+            .clone()
+            .cache()
             .cache_set(CacheSetRequest {
                 header: Some(self.header.clone()),
                 keys: self.keys.clone(),
