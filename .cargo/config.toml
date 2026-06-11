@@ -1,5 +1,5 @@
 [build]
-target-dir = "cache/"
+target-dir = "cache/_local/"
 
 [target.aarch64-apple-darwin]
 rustflags = [
