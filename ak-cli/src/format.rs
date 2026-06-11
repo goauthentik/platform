@@ -1,8 +1,8 @@
+use ak_platform::prelude::*;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::error::Error;
 
 // Styles — use functions instead of lazy statics for composability
 pub fn key_style() -> Style {
@@ -127,7 +127,7 @@ pub fn render_map_as_tree(data: &Value, root_title: &str) -> Vec<Line<'static>> 
     root.render()
 }
 
-pub fn render_json(raw: String, title: &str, json: bool) -> Result<(), Box<dyn Error>> {
+pub fn render_json(raw: String, title: &str, json: bool) -> Result<()> {
     if json {
         println!("{}", raw);
     } else {

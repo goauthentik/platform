@@ -1,11 +1,11 @@
+use crate::commands::{auth::AuthCommands, config::ConfigCommands};
+use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
     log::{init_log_interactive, set_log_level},
 };
 use clap::{Error, Parser, Subcommand};
 use log::LevelFilter;
-
-use crate::commands::{auth::AuthCommands, config::ConfigCommands};
 
 pub mod auth;
 pub mod cache;
@@ -61,7 +61,7 @@ enum Commands {
 }
 
 impl App {
-    pub async fn user(mut self) -> Result<Client<AnyService>, Box<dyn std::error::Error>> {
+    pub async fn user(mut self) -> Result<Client<AnyService>> {
         match self.client {
             Some(c) => Ok(c),
             None => {
@@ -74,7 +74,7 @@ impl App {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> std::result::Result<(), Error> {
     let cli = CliArgs::parse();
 
     init_log_interactive();

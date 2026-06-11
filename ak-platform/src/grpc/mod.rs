@@ -1,5 +1,4 @@
-use std::error::Error;
-
+use crate::prelude::*;
 use base64::{Engine, prelude::BASE64_STANDARD};
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
@@ -13,7 +12,7 @@ use crate::string::PlatformString;
 
 pub mod ssh;
 
-pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
+pub async fn grpc_endpoint(path: String) -> Result<Channel> {
     let u = Uri::builder()
         .scheme("http")
         .authority(":123")
@@ -24,7 +23,7 @@ pub async fn grpc_endpoint(path: String) -> Result<Channel, Box<dyn Error>> {
     Ok(channel)
 }
 
-async fn grpc_dial(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
+async fn grpc_dial(ep: Endpoint) -> std::result::Result<Channel, tonic::transport::Error> {
     return ep
         .connect_with_connector(service_fn(async move |p: Uri| {
             let path = p.path().replace("%20", " ");
@@ -34,18 +33,16 @@ async fn grpc_dial(ep: Endpoint) -> Result<Channel, tonic::transport::Error> {
         .await;
 }
 
-pub fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
-    future: impl Fn(Channel) -> F,
-) -> Result<T, Box<dyn Error>> {
+pub fn grpc_request<T, F: Future<Output = Result<T>>>(future: impl Fn(Channel) -> F) -> Result<T> {
     let config = Config::get();
 
     grpc_request_path(config.socket_default.for_current().to_owned(), future)
 }
 
-pub fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+pub fn grpc_request_path<T, F: Future<Output = Result<T>>>(
     path: String,
     future: impl Fn(Channel) -> F,
-) -> Result<T, Box<dyn Error>> {
+) -> Result<T> {
     let rt = Builder::new_current_thread().enable_all().build()?;
 
     rt.block_on(async {
@@ -58,15 +55,15 @@ pub fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
 }
 
 pub trait SysdBridge {
-    fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+    fn grpc_request<T, F: Future<Output = Result<T>>>(
         &self,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T, Box<dyn Error>>;
-    fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+    ) -> Result<T>;
+    fn grpc_request_path<T, F: Future<Output = Result<T>>>(
         &self,
         path: String,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T, Box<dyn Error>>;
+    ) -> Result<T>;
 }
 
 pub struct Bridge {
@@ -74,27 +71,27 @@ pub struct Bridge {
 }
 
 impl Bridge {
-    pub fn new() -> Result<Self, Box<dyn Error>> {
+    pub fn new() -> Result<Self> {
         let rt = Builder::new_current_thread().enable_all().build()?;
         Ok(Self { rt })
     }
 }
 
 impl SysdBridge for Bridge {
-    fn grpc_request<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+    fn grpc_request<T, F: Future<Output = Result<T>>>(
         &self,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T, Box<dyn Error>> {
+    ) -> Result<T> {
         let config = Config::get();
 
         self.grpc_request_path(config.socket_default.for_current().to_owned(), future)
     }
 
-    fn grpc_request_path<T, F: Future<Output = Result<T, Box<dyn Error>>>>(
+    fn grpc_request_path<T, F: Future<Output = Result<T>>>(
         &self,
         path: String,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T, Box<dyn Error>> {
+    ) -> Result<T> {
         self.rt.block_on(async {
             log::debug!("creating grpc client");
             let channel = grpc_endpoint(path).await?;
@@ -106,18 +103,18 @@ impl SysdBridge for Bridge {
     }
 }
 
-pub fn decode_pb<T: ::prost::Message + Default>(token: String) -> Result<T, Box<dyn Error>> {
+pub fn decode_pb<T: ::prost::Message + Default>(token: String) -> Result<T> {
     let raw = BASE64_STANDARD.decode(token)?;
     let msg = T::decode(&*raw)?;
     Ok(msg)
 }
 
-pub fn encode_pb<T: ::prost::Message>(msg: T) -> Result<String, Box<dyn Error>> {
+pub fn encode_pb<T: ::prost::Message>(msg: T) -> Result<String> {
     let raw = msg.encode_to_vec();
     Ok(BASE64_STANDARD.encode(raw))
 }
 
-pub fn assert_response_valid(header: Option<ResponseHeader>) -> Result<(), Box<dyn Error>> {
+pub fn assert_response_valid(header: Option<ResponseHeader>) -> Result<()> {
     if let Some(header) = header
         && !header.successful
     {

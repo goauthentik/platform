@@ -1,15 +1,14 @@
+use crate::setup::ak::urls_for_profile;
+use ak_platform::prelude::*;
 use oauth_device_flows::provider::GenericProviderConfig;
 use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
 use open::that;
-use std::error::Error;
 use std::time::Duration;
 use url::Url;
 
-use crate::setup::ak::urls_for_profile;
-
 pub mod ak;
 
-type URLCallback = fn(url: Url) -> Result<(), Box<dyn Error>>;
+type URLCallback = fn(url: Url) -> Result<()>;
 
 pub struct Options {
     pub profile_name: String,
@@ -39,7 +38,7 @@ impl Profile {
     }
 }
 
-pub async fn setup(opts: Options) -> Result<Profile, Box<dyn Error>> {
+pub async fn setup(opts: Options) -> Result<Profile> {
     let urls = urls_for_profile(Profile::new(
         opts.authentik_url.clone(),
         opts.app_slug.clone(),
@@ -47,7 +46,7 @@ pub async fn setup(opts: Options) -> Result<Profile, Box<dyn Error>> {
     ))?;
     let callback: URLCallback = match opts.url_callback {
         Some(c) => c,
-        None => |url: Url| -> Result<(), Box<dyn Error>> {
+        None => |url: Url| -> Result<()> {
             match that(url.to_string()) {
                 Ok(_) => Ok(()),
                 Err(e) => Err(Box::from(e)),

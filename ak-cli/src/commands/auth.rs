@@ -1,10 +1,9 @@
-use clap::Subcommand;
-use std::error::Error;
-
 use crate::{
     App,
     auth::{aws, k8s, raw},
 };
+use ak_platform::prelude::*;
+use clap::Subcommand;
 
 #[derive(Subcommand, Clone)]
 pub enum AuthCommands {
@@ -29,7 +28,7 @@ pub enum AuthCommands {
     },
 }
 
-pub async fn raw(app: App, client_id: &str) -> Result<(), Box<dyn Error>> {
+pub async fn raw(app: App, client_id: &str) -> Result<()> {
     let creds = raw::get_credentials(
         app.clone().user().await?,
         raw::CredentialsOpts {
@@ -42,12 +41,7 @@ pub async fn raw(app: App, client_id: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub async fn aws(
-    app: App,
-    client_id: &str,
-    role_arn: &str,
-    region: &str,
-) -> Result<(), Box<dyn Error>> {
+pub async fn aws(app: App, client_id: &str, role_arn: &str, region: &str) -> Result<()> {
     let creds = aws::get_credentials(
         app.clone().user().await?,
         aws::CredentialsOpts {
@@ -62,7 +56,7 @@ pub async fn aws(
     Ok(())
 }
 
-pub async fn kubectl(app: App, client_id: &str) -> Result<(), Box<dyn Error>> {
+pub async fn kubectl(app: App, client_id: &str) -> Result<()> {
     let creds = k8s::get_credentials(
         app.clone().user().await?,
         k8s::CredentialsOpts {

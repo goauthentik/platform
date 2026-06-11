@@ -1,5 +1,4 @@
-use std::{error::Error, marker::PhantomData};
-
+use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{
@@ -10,6 +9,7 @@ use ak_platform::{
 };
 use pbjson_types::Timestamp;
 use serde::{Serialize, de::DeserializeOwned};
+use std::marker::PhantomData;
 
 pub trait CacheData {
     fn expiry(&self) -> Timestamp;
@@ -33,7 +33,7 @@ impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
         }
     }
 
-    pub async fn get(&self) -> Result<T, Box<dyn Error>> {
+    pub async fn get(&self) -> Result<T> {
         let res = self
             .c
             .clone()
@@ -49,7 +49,7 @@ impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
         Ok(value)
     }
 
-    pub async fn set(&self, value: T) -> Result<(), Box<dyn Error>> {
+    pub async fn set(&self, value: T) -> Result<()> {
         let json = serde_json::to_string(&value)?;
 
         let expiry_ts = value.expiry();
