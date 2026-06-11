@@ -23,7 +23,12 @@ async fn main() -> Result<()> {
                 return;
             }
         };
-        grpc.start().await;
+        match grpc.start().await {
+            Ok(_) => (),
+            Err(e) => {
+                log::error!("Failed to start grpc server: {e:?}");
+            }
+        };
         drop(w);
     });
     wg.wait().await;

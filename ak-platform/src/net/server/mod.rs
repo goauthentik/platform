@@ -112,6 +112,7 @@ pub async fn listen(
         std::fs::set_permissions(&path_str, std::fs::Permissions::from_mode(mode as u32))?;
     }
 
+    log::debug!("Starting socket on {path_str}");
     let (tx, rx) = mpsc::channel(1);
     tokio::spawn(async move {
         loop {

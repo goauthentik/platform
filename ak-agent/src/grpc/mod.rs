@@ -8,6 +8,9 @@ use ak_platform::{
 use tonic::transport::Server;
 
 pub mod agent_auth;
+pub mod agent_cache;
+pub mod agent_ctrl;
+pub mod ping;
 
 pub struct AgentGRPCServer {
     agent: Agent,
@@ -15,8 +18,7 @@ pub struct AgentGRPCServer {
 
 impl AgentGRPCServer {
     pub async fn new(agent: Agent) -> Result<AgentGRPCServer> {
-        let ag = AgentGRPCServer { agent };
-        Ok(ag)
+        Ok(AgentGRPCServer { agent })
     }
 
     pub async fn start(self) -> Result<()> {
