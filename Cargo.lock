@@ -72,8 +72,10 @@ name = "ak-agent"
 version = "0.44.3"
 dependencies = [
  "ak-platform",
+ "log",
  "tokio",
  "tonic",
+ "waitgroup",
 ]
 
 [[package]]
@@ -6716,6 +6718,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d9b2acfb050df409c972a37d3b8e08cdea3bddb0c09db9d53137e504cfabed0"
 dependencies = [
  "utf8parse",
+]
+
+[[package]]
+name = "waitgroup"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1f50000a783467e6c0200f9d10642f4bc424e39efc1b770203e88b488f79292"
+dependencies = [
+ "atomic-waker",
 ]
 
 [[package]]

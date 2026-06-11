@@ -1,0 +1,19 @@
+[package]
+name = "ak-agent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ak-agent"
+path = "src/main.rs"
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+tokio = { workspace = true }
+tonic = { workspace = true }
+waitgroup = "0.1.2"
+log = { workspace = true }
