@@ -65,7 +65,7 @@ impl App {
         match self.client {
             Some(c) => Ok(c),
             None => {
-                let c = Client::new().await?;
+                let c = Client::new(self.args.socket).await?;
                 self.client = Some(c.clone());
                 Ok(c)
             }
