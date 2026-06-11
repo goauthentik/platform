@@ -14,14 +14,14 @@ pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
         UserConsentVerifierAvailability::Available => (),
         o => {
             log::debug!("Windows hello: not available: {o:?}");
-            return Ok(false)
-        },
+            return Ok(false);
+        }
     };
     match UserConsentVerifier::RequestVerificationAsync(&hmsg)?.await? {
         UserConsentVerificationResult::Verified => Ok(true),
         e => {
             log::debug!("Windows hello verification response: {e:?}");
             Ok(false)
-        },
+        }
     }
 }

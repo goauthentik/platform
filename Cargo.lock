@@ -68,6 +68,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ak-agent"
+version = "0.44.3"
+dependencies = [
+ "ak-platform",
+ "tokio",
+ "tonic",
+]
+
+[[package]]
 name = "ak-browser-support"
 version = "0.44.3"
 dependencies = [

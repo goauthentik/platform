@@ -2,8 +2,8 @@ use std::error::Error;
 
 use hyper_util::rt::TokioIo;
 use interprocess::local_socket::{
-    tokio::{prelude::*, Stream as LocalSocketStream},
     GenericFilePath,
+    tokio::{Stream as LocalSocketStream, prelude::*},
 };
 
 use crate::string::PlatformString;

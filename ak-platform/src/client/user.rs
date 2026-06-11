@@ -98,11 +98,9 @@ impl Client<AnyService> {
             _path = agent_socket_path(AgentSocketID::Default)?.for_current();
         }
         match grpc_endpoint(_path).await {
-            Ok(t) => {
-                Ok(Client {
-                    c: AnyService(AnyServiceInner::Socket(t)),
-                })
-            }
+            Ok(t) => Ok(Client {
+                c: AnyService(AnyServiceInner::Socket(t)),
+            }),
             Err(e) => {
                 // If we can't open the socket due to an IO Error of file not found,
                 // and we're trying to use the default socket path, attempt SSH connection
@@ -110,12 +108,13 @@ impl Client<AnyService> {
                 if let Some(io_err) = e.downcast_ref::<std::io::Error>()
                     && io_err.kind() == ErrorKind::NotFound
                     && let None = path
-                    && std::env::var("SSH_AUTH_SOCK").is_ok() {
-                        let service = SSHTunnel::new().await?.service(());
-                        return Ok(Client {
-                            c: AnyService(AnyServiceInner::Ssh(service)),
-                        });
-                    }
+                    && std::env::var("SSH_AUTH_SOCK").is_ok()
+                {
+                    let service = SSHTunnel::new().await?.service(());
+                    return Ok(Client {
+                        c: AnyService(AnyServiceInner::Ssh(service)),
+                    });
+                }
                 Err(e)
             }
         }

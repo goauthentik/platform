@@ -1,5 +1,8 @@
 use ak_platform::{
-    client::{sysd, user::{self, AnyService}},
+    client::{
+        sysd,
+        user::{self, AnyService},
+    },
     paths::SysdSocketID,
 };
 use std::error::Error;
@@ -20,14 +23,13 @@ pub(crate) struct PathHandler {
 impl PathHandler {
     pub async fn new() -> Result<Self, Box<dyn Error>> {
         let system_client = sysd::Client::new(SysdSocketID::Default).await?;
-        let user_client =
-            match user::Client::new(None).await {
-                Ok(c) => Some(c),
-                Err(e) => {
-                    log::warn!("failed to connect to user agent: {e:?}");
-                    None
-                }
-            };
+        let user_client = match user::Client::new(None).await {
+            Ok(c) => Some(c),
+            Err(e) => {
+                log::warn!("failed to connect to user agent: {e:?}");
+                None
+            }
+        };
 
         Ok(Self {
             system_client,

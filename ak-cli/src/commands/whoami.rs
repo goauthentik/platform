@@ -1,10 +1,7 @@
 use std::error::Error;
 
 use ak_platform::{
-    generated::{
-        agent::RequestHeader,
-        agent_auth::WhoAmIRequest,
-    },
+    generated::{agent::RequestHeader, agent_auth::WhoAmIRequest},
     grpc::assert_response_valid,
 };
 

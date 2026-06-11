@@ -83,7 +83,7 @@ async fn main() -> Result<(), Error> {
         set_log_level(LevelFilter::Trace);
     }
 
-    let app  = App {
+    let app = App {
         args: cli.clone(),
         client: None,
     };
@@ -105,13 +105,15 @@ async fn main() -> Result<(), Error> {
                 set_log_level(LevelFilter::Error);
             }
             match command {
-            AuthCommands::Raw { client_id } => commands::auth::raw(app, client_id).await,
-            AuthCommands::Kubectl { client_id } => commands::auth::kubectl(app, client_id).await,
-            AuthCommands::Aws {
-                client_id,
-                role_arn,
-                region,
-            } => commands::auth::aws(app, client_id, role_arn, region).await,
+                AuthCommands::Raw { client_id } => commands::auth::raw(app, client_id).await,
+                AuthCommands::Kubectl { client_id } => {
+                    commands::auth::kubectl(app, client_id).await
+                }
+                AuthCommands::Aws {
+                    client_id,
+                    role_arn,
+                    region,
+                } => commands::auth::aws(app, client_id, role_arn, region).await,
             }
         }
     };

@@ -277,8 +277,8 @@ mod tests {
     async fn ssh_service_routes_request_through_tunnel()
     -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use interprocess::local_socket::{
-            tokio::{prelude::*, Stream as LocalSocketStream},
             GenericFilePath,
+            tokio::{Stream as LocalSocketStream, prelude::*},
         };
         use ssh_agent_lib::client::Client;
         use tokio::net::UnixListener;

@@ -1,7 +1,10 @@
 use clap::Subcommand;
 use std::error::Error;
 
-use crate::{App, auth::{aws, k8s, raw}};
+use crate::{
+    App,
+    auth::{aws, k8s, raw},
+};
 
 #[derive(Subcommand, Clone)]
 pub enum AuthCommands {
@@ -27,10 +30,13 @@ pub enum AuthCommands {
 }
 
 pub async fn raw(app: App, client_id: &str) -> Result<(), Box<dyn Error>> {
-    let creds = raw::get_credentials(app.clone().user().await?, raw::CredentialsOpts {
-        profile: app.args.profile.clone(),
-        client_id: client_id.to_owned(),
-    })
+    let creds = raw::get_credentials(
+        app.clone().user().await?,
+        raw::CredentialsOpts {
+            profile: app.args.profile.clone(),
+            client_id: client_id.to_owned(),
+        },
+    )
     .await?;
     println!("{}", creds.access_token);
     Ok(())
@@ -42,22 +48,28 @@ pub async fn aws(
     role_arn: &str,
     region: &str,
 ) -> Result<(), Box<dyn Error>> {
-    let creds = aws::get_credentials(app.clone().user().await?, aws::CredentialsOpts {
-        profile: app.args.profile.clone(),
-        client_id: client_id.to_owned(),
-        role_arn: role_arn.to_owned(),
-        region: region.to_owned(),
-    })
+    let creds = aws::get_credentials(
+        app.clone().user().await?,
+        aws::CredentialsOpts {
+            profile: app.args.profile.clone(),
+            client_id: client_id.to_owned(),
+            role_arn: role_arn.to_owned(),
+            region: region.to_owned(),
+        },
+    )
     .await?;
     print!("{}", serde_json::to_string(&creds)?);
     Ok(())
 }
 
 pub async fn kubectl(app: App, client_id: &str) -> Result<(), Box<dyn Error>> {
-    let creds = k8s::get_credentials(app.clone().user().await?, k8s::CredentialsOpts {
-        profile: app.args.profile.clone(),
-        client_id: client_id.to_owned(),
-    })
+    let creds = k8s::get_credentials(
+        app.clone().user().await?,
+        k8s::CredentialsOpts {
+            profile: app.args.profile.clone(),
+            client_id: client_id.to_owned(),
+        },
+    )
     .await?;
     print!("{}", serde_json::to_string(&creds)?);
     Ok(())

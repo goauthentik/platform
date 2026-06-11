@@ -5,7 +5,16 @@ expect_used = "deny"
 
 [workspace]
 resolver = "3"
-members = ["ak-nss", "ak-pam", "ak-browser-support", "ak-platform", "ak-cli", "ak-ffi", "ak-platform-authz"]
+members = [
+    "ak-agent",
+    "ak-browser-support",
+    "ak-cli",
+    "ak-ffi",
+    "ak-nss",
+    "ak-pam",
+    "ak-platform-authz",
+    "ak-platform",
+]
 
 [workspace.package]
 version = "0.44.3"
@@ -16,7 +25,7 @@ license = "MIT"
 log = "0.4.32"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
-tokio = { version = "1.52.3", features = ["rt-multi-thread"] }
+tokio = { version = "1.52.3", features = ["rt-multi-thread", "macros"] }
 tonic = { version = "0.14" }
 tonic-prost = { version = "0.14" }
 tower = { version = "0.5.3", features = ["util"] }

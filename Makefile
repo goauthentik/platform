@@ -40,7 +40,6 @@ rs-gen-proto:
 		--prost-crate_out=$(PROTO_OUT) \
 		--prost-crate_opt=no_features \
 		--tonic_out=$(PROTO_OUT) \
-		--tonic_opt=no_server \
 		--prost-serde_out=$(PROTO_OUT) \
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*

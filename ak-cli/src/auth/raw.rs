@@ -2,10 +2,7 @@ use std::error::Error;
 
 use ak_platform::{
     client::user::{AnyService, Client},
-    generated::{
-        agent::RequestHeader,
-        agent_auth::TokenExchangeRequest,
-    },
+    generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
     grpc::assert_response_valid,
 };
 
