@@ -31,7 +31,7 @@ impl ProcCredentials {
 
     pub fn pid(self) -> i32 {
         match self.pc {
-            Some(p) => p.pid().unwrap_or(-1_i32 ),
+            Some(p) => p.pid().unwrap_or(-1_i32),
             None => -1,
         }
     }

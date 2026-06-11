@@ -6,8 +6,8 @@ use ak_platform::generated::sys_auth::{
 use ak_platform::grpc::{SysdBridge, encode_pb};
 use pam::{
     constants::{
-        PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE,
-        PAM_TEXT_INFO, PamMessageStyle, PamResultCode,
+        PAM_ERROR_MSG, PAM_PROMPT_ECHO_OFF, PAM_PROMPT_ECHO_ON, PAM_RADIO_TYPE, PAM_TEXT_INFO,
+        PamMessageStyle, PamResultCode,
     },
     conv::Conv,
 };

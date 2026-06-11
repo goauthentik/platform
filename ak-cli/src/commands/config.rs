@@ -1,8 +1,5 @@
 use ak_platform::{
-    generated::{
-        agent::RequestHeader,
-        agent_ctrl::SetupRequest,
-    },
+    generated::{agent::RequestHeader, agent_ctrl::SetupRequest},
     grpc::assert_response_valid,
 };
 use clap::Subcommand;

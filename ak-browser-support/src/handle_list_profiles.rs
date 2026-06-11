@@ -13,9 +13,7 @@ impl PathHandler {
             Some(c) => c.clone(),
             None => return Err(Box::from("Not connected to user agent")),
         };
-        let profiles = uc.ctrl().list_profiles(())
-            .await?
-            .into_inner();
+        let profiles = uc.ctrl().list_profiles(()).await?.into_inner();
         let mut res = Response::in_response_to(msg);
         let c = profiles
             .profiles

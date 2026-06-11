@@ -17,12 +17,15 @@ pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
         Err(e) => return Err(Box::from(e)),
     }
 
-    match context.evaluate_policy_async(policy, &msg.for_current())?.await {
+    match context
+        .evaluate_policy_async(policy, &msg.for_current())?
+        .await
+    {
         Ok(b) => Ok(b),
         Err(e) => match e {
             LAError::AppCancel(_) => Ok(false),
             LAError::BridgeFailed(_) => Ok(false),
-            e => Err(Box::from(e))
+            e => Err(Box::from(e)),
         },
     }
 }

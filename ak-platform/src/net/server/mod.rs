@@ -1,16 +1,13 @@
-use std::{io, path::Path, pin::Pin, task::{Context, Poll}};
+use std::{
+    io,
+    path::Path,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
-use interprocess::local_socket::{
-    tokio::prelude::*,
-    GenericFilePath,
-    ListenerOptions,
-};
-use tokio::sync::mpsc;
 use interprocess::local_socket::{GenericFilePath, ListenerOptions, tokio::prelude::*};
-use tokio::{
-    io::{AsyncRead, AsyncWrite, ReadBuf},
-    sync::mpsc,
-};
+use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
+use tokio::sync::mpsc;
 use tokio_stream::Stream as AsyncStream;
 
 use crate::string::PlatformString;
@@ -100,7 +97,9 @@ pub async fn listen(
         .create_tokio();
 
     #[cfg(unix)]
-    unsafe { libc::umask(old_umask) };
+    unsafe {
+        libc::umask(old_umask)
+    };
 
     let listener = create_result?;
 
@@ -110,10 +109,7 @@ pub async fn listen(
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(
-            &path_str,
-            std::fs::Permissions::from_mode(mode as u32),
-        )?;
+        std::fs::set_permissions(&path_str, std::fs::Permissions::from_mode(mode as u32))?;
     }
 
     let (tx, rx) = mpsc::channel(1);
@@ -138,7 +134,7 @@ pub async fn listen(
 
 #[cfg(test)]
 mod tests {
-    use super::{listen, SocketPermMode};
+    use super::{SocketPermMode, listen};
     use crate::string::PlatformString;
 
     fn ps(s: &str) -> PlatformString {

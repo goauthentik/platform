@@ -16,7 +16,9 @@ impl PathHandler {
             Some(c) => c.clone(),
             None => return Err(Box::from("Not connected to user agent")),
         };
-        let current = uc.auth().get_current_token(CurrentTokenRequest {
+        let current = uc
+            .auth()
+            .get_current_token(CurrentTokenRequest {
                 header: Some(RequestHeader {
                     profile: msg.profile.clone(),
                 }),
