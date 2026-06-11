@@ -53,6 +53,9 @@ jobs:
         with:
           path: cache/
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
+      - name: Build builder image
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: make containers/builder/build
       - run: |
           make ${{ matrix.target }}/build
         env:
