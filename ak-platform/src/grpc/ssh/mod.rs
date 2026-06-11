@@ -13,16 +13,17 @@ use ssh_agent_lib::{
 use tokio::sync::Mutex;
 use tower::{Layer, Service};
 
+use interprocess::local_socket::tokio::Stream as LocalSocketStream;
+
 use crate::grpc::ssh::ext::EXT_AUTHENTIK_AGENT_TUNNEL;
 use crate::grpc::ssh::ext::ExtAuthentikAgentTunnelData;
-use crate::net::client::StreamType;
 use crate::net::client::connect;
 use crate::platform::string::PlatformString;
 
 pub mod ext;
 
 pub struct SSHTunnel {
-    client: Arc<Mutex<Client<StreamType>>>,
+    client: Arc<Mutex<Client<LocalSocketStream>>>,
 }
 
 impl SSHTunnel {
@@ -275,7 +276,10 @@ mod tests {
     #[tokio::test]
     async fn ssh_service_routes_request_through_tunnel()
     -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        use crate::net::client::StreamType;
+        use interprocess::local_socket::{
+            tokio::{prelude::*, Stream as LocalSocketStream},
+            GenericFilePath,
+        };
         use ssh_agent_lib::client::Client;
         use tokio::net::UnixListener;
 
@@ -286,8 +290,9 @@ mod tests {
         let server_handle =
             tokio::spawn(async move { ssh_listen(listener, MockTunnelAgent).await });
 
-        let stream = tokio::net::UnixStream::connect(sock_path).await?;
-        let client = Client::new(StreamType::Unix(stream));
+        let name = sock_path.to_fs_name::<GenericFilePath>()?;
+        let stream = LocalSocketStream::connect(name).await?;
+        let client = Client::new(stream);
 
         let tunnel = SSHTunnel {
             client: Arc::new(Mutex::new(client)),
