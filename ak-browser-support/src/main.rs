@@ -1,5 +1,5 @@
 use ak_platform::log::init_log;
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 
 use crate::path_handler::PathHandler;
 

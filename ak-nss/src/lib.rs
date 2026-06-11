@@ -4,7 +4,7 @@ mod shadow;
 
 use ak_platform::log::unix::log_hook;
 use ak_platform::log::{init_log, set_log_level};
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
 use group::AuthentikGroupHooks;

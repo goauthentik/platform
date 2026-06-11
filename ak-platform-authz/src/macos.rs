@@ -2,7 +2,7 @@ use std::error::Error;
 
 use localauthentication::{async_api::AsyncContextExt, prelude::*};
 
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 
 pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
     let context = LAContext::new()?;

@@ -1,10 +1,8 @@
 use ak_platform::{
     generated::ping::ping_client::PingClient,
     grpc::grpc_endpoint,
-    platform::{
-        paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
-        string::PlatformString,
-    },
+    paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
+    string::PlatformString,
 };
 use ratatui::text::Line;
 use std::error::Error;

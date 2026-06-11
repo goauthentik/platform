@@ -6,7 +6,7 @@ use interprocess::local_socket::{
     GenericFilePath,
 };
 
-use crate::platform::string::PlatformString;
+use crate::string::PlatformString;
 
 pub async fn connect(
     path: PlatformString,

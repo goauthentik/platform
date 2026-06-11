@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 
 #[cfg(target_os = "macos")]
 pub mod macos;

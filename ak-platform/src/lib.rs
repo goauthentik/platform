@@ -5,4 +5,5 @@ pub mod grpc;
 pub mod keyring;
 pub mod log;
 pub mod net;
-pub mod platform;
+pub mod paths;
+pub mod string;

@@ -1,4 +1,4 @@
-use crate::platform::string::PlatformString;
+use crate::string::PlatformString;
 use log::LevelFilter;
 use simplelog::{Config, TermLogger};
 

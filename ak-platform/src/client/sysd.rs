@@ -11,7 +11,7 @@ use crate::{
         sys_directory::system_directory_client::SystemDirectoryClient,
     },
     grpc::grpc_endpoint,
-    platform::paths::{SysdSocketID, sysd_socket_path},
+    paths::{SysdSocketID, sysd_socket_path},
 };
 
 #[derive(Clone)]

@@ -2,7 +2,7 @@ use std::error::Error;
 
 use polkit_rs::{self, CheckAuthorizationFlags, SystemBusName};
 
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 
 pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
     let auth = polkit_rs::Authority::get();

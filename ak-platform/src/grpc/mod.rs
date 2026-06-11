@@ -9,7 +9,7 @@ use tower::service_fn;
 use crate::config::Config;
 use crate::generated::agent::ResponseHeader;
 use crate::net;
-use crate::platform::string::PlatformString;
+use crate::string::PlatformString;
 
 pub mod ssh;
 

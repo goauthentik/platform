@@ -12,7 +12,7 @@ use crate::session::close_session_impl;
 use crate::session::open_session_impl;
 use ak_platform::log::init_log;
 use ak_platform::log::unix::log_hook;
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
 use pam::constants::PAM_TEXT_INFO;
