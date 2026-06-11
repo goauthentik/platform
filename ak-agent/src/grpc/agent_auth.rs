@@ -11,7 +11,7 @@ use ak_platform::{
 };
 use tonic::{Request, Response, Status};
 
-use crate::{Agent, grpc::AgentGRPCServer};
+use crate::grpc::AgentGRPCServer;
 
 #[tonic::async_trait]
 impl AgentAuth for AgentGRPCServer {
