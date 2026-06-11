@@ -19,9 +19,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-  ak_ffi_bridge
+  ak-ffi-bridge
   spdlog
   sentry
 )
-set_property(TARGET ak_ffi PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-set_property(TARGET ak_ffi_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+set_property(TARGET ak-ffi PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+set_property(TARGET ak-ffi-bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)

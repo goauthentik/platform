@@ -28,10 +28,10 @@ target_link_libraries(${PROJECT_NAME}
   ${CREDUI_LIB_PATH}
   ${SECUR32_LIB_PATH}
   ${SHLWAPI_LIB_PATH}
-  ak_ffi_bridge
+  ak-ffi-bridge
   ak_common
   spdlog
 )
 set_property(TARGET ak_lsa PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-set_property(TARGET ak_ffi PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-set_property(TARGET ak_ffi_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+set_property(TARGET ak-ffi PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+set_property(TARGET ak-ffi-bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)

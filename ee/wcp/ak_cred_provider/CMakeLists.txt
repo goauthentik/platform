@@ -53,7 +53,7 @@ target_link_libraries(${PROJECT_NAME}
   ${SHLWAPI_LIB_PATH}
   ak_common
   cefsimple
-  ak_ffi_bridge
+  ak-ffi-bridge
 )
 
 # TODO: Add tests and install targets if needed.
