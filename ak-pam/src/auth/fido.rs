@@ -1,4 +1,4 @@
-use std::error::Error;
+use ak_platform::prelude::*;
 
 use ak_platform::{
     generated::ic_pam_fido::{FidoRequest, FidoResponse},
@@ -11,7 +11,7 @@ use pam::{constants::PAM_PROMPT_ECHO_OFF, conv::Conv};
 
 use crate::pam_print_user;
 
-pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse, Box<dyn Error>> {
+pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse> {
     let req = decode_pb::<FidoRequest>(raw)?;
 
     let mut cfg = Cfg::init();

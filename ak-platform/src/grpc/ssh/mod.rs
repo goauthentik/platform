@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use std::{future::Future, pin::Pin, sync::Arc, task::Poll};
 
 use bytes::Bytes;
@@ -27,7 +28,7 @@ pub struct SSHTunnel {
 }
 
 impl SSHTunnel {
-    pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new() -> Result<Self> {
         let sock_path = std::env::var("SSH_AUTH_SOCK").map_err(|_| "SSH_AUTH_SOCK is not set")?;
         let st = match connect(PlatformString::new_with_default(&sock_path)).await {
             Ok(s) => s,
@@ -78,12 +79,13 @@ where
 {
     type Response = Response<tonic::body::Body>;
     type Error = BoxError;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+    type Future =
+        Pin<Box<dyn Future<Output = std::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn poll_ready(
         &mut self,
         _: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Result<(), Self::Error>> {
+    ) -> std::task::Poll<std::result::Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 
@@ -147,7 +149,7 @@ where
 }
 
 /// Strip the 5-byte gRPC framing from a request body to get the raw proto bytes.
-fn strip_grpc_frame(data: &[u8]) -> Result<&[u8], BoxError> {
+fn strip_grpc_frame(data: &[u8]) -> Result<&[u8]> {
     if data.len() < 5 {
         return Err("gRPC frame too short".into());
     }
@@ -277,8 +279,8 @@ mod tests {
     async fn ssh_service_routes_request_through_tunnel()
     -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use interprocess::local_socket::{
-            tokio::{prelude::*, Stream as LocalSocketStream},
             GenericFilePath,
+            tokio::{Stream as LocalSocketStream, prelude::*},
         };
         use ssh_agent_lib::client::Client;
         use tokio::net::UnixListener;

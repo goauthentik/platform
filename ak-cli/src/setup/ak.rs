@@ -1,8 +1,6 @@
-use std::error::Error;
-
 use crate::setup::Profile;
+use ak_platform::prelude::*;
 use url::Url;
-
 pub const DEFAULT_APP_SLUG: &str = "authentik-cli";
 pub const DEFAULT_CLIENT_ID: &str = "authentik-cli";
 
@@ -14,7 +12,7 @@ pub struct URLSet {
     pub jwks: Url,
 }
 
-pub fn urls_for_profile(profile: Profile) -> Result<URLSet, Box<dyn Error>> {
+pub fn urls_for_profile(profile: Profile) -> Result<URLSet> {
     let mut base = profile.authentik_url.clone();
     if !base.path().ends_with("/") {
         let new_path = base.path().to_string() + "/";

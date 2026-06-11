@@ -1,8 +1,11 @@
+use ak_platform::prelude::*;
 use ak_platform::{
-    client::{sysd, user::{self, AnyService}},
+    client::{
+        sysd,
+        user::{self, AnyService},
+    },
     paths::SysdSocketID,
 };
-use std::error::Error;
 
 use native_messaging::{
     event_loop,
@@ -18,16 +21,15 @@ pub(crate) struct PathHandler {
 }
 
 impl PathHandler {
-    pub async fn new() -> Result<Self, Box<dyn Error>> {
+    pub async fn new() -> Result<Self> {
         let system_client = sysd::Client::new(SysdSocketID::Default).await?;
-        let user_client =
-            match user::Client::new(None).await {
-                Ok(c) => Some(c),
-                Err(e) => {
-                    log::warn!("failed to connect to user agent: {e:?}");
-                    None
-                }
-            };
+        let user_client = match user::Client::new(None).await {
+            Ok(c) => Some(c),
+            Err(e) => {
+                log::warn!("failed to connect to user agent: {e:?}");
+                None
+            }
+        };
 
         Ok(Self {
             system_client,
@@ -35,7 +37,7 @@ impl PathHandler {
         })
     }
 
-    pub async fn start(self) -> Result<(), NmError> {
+    pub async fn start(self) -> std::result::Result<(), NmError> {
         event_loop(move |raw: String, send: Sender| {
             let sself = self.clone();
             async move {
@@ -57,7 +59,7 @@ impl PathHandler {
         .await
     }
 
-    async fn handle_v1(self, msg: Message) -> Result<Response, NmError> {
+    async fn handle_v1(self, msg: Message) -> std::result::Result<Response, NmError> {
         let result = match msg.route_path().trim() {
             "ping" => self.handle_ping(msg).await,
             "get_token" => self.handle_get_token(msg).await,

@@ -1,15 +1,3 @@
-use ak_platform::{
-    generated::{
-        agent::RequestHeader,
-        agent_ctrl::SetupRequest,
-    },
-    grpc::assert_response_valid,
-};
-use clap::Subcommand;
-use ratatui::text::Line;
-use std::{env, error::Error};
-use url::Url;
-
 use crate::{
     App, format,
     setup::{
@@ -17,6 +5,15 @@ use crate::{
         ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
     },
 };
+use ak_platform::prelude::*;
+use ak_platform::{
+    generated::{agent::RequestHeader, agent_ctrl::SetupRequest},
+    grpc::assert_response_valid,
+};
+use clap::Subcommand;
+use ratatui::text::Line;
+use std::env;
+use url::Url;
 
 #[derive(Subcommand, Clone)]
 pub enum ConfigCommands {
@@ -33,7 +30,7 @@ pub enum ConfigCommands {
     },
 }
 
-pub async fn list_profiles(app: App) -> Result<(), Box<dyn Error>> {
+pub async fn list_profiles(app: App) -> Result<()> {
     let res = app
         .user()
         .await?
@@ -52,12 +49,7 @@ pub async fn list_profiles(app: App) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub async fn setup(
-    app: App,
-    authentik_url: &str,
-    client_id: &str,
-    app_slug: &str,
-) -> Result<(), Box<dyn Error>> {
+pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &str) -> Result<()> {
     let access_token: String;
     let refresh_token: String;
     if let Ok(at) = env::var("AK_CLI_ACCESS_TOKEN")

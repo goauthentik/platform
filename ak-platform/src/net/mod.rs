@@ -6,8 +6,8 @@ mod tests {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio_stream::StreamExt;
 
-    use crate::net::{client, server};
     use crate::net::server::SocketPermMode;
+    use crate::net::{client, server};
     use crate::string::PlatformString;
 
     #[cfg(unix)]

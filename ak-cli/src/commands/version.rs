@@ -1,3 +1,5 @@
+use crate::{App, format};
+use ak_platform::prelude::*;
 use ak_platform::{
     generated::ping::ping_client::PingClient,
     grpc::grpc_endpoint,
@@ -5,11 +7,8 @@ use ak_platform::{
     string::PlatformString,
 };
 use ratatui::text::Line;
-use std::error::Error;
 
-use crate::{App, format};
-
-pub async fn version(_app: App) -> Result<(), Box<dyn Error>> {
+pub async fn version(_app: App) -> Result<()> {
     let user_version = agent_version(agent_socket_path(AgentSocketID::Default)?).await;
     let system_version = agent_version(sysd_socket_path(SysdSocketID::Default)).await;
     let versions = vec![

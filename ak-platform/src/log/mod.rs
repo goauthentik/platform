@@ -33,7 +33,6 @@ pub fn init_log_interactive() {
         Config::default(),
         simplelog::TerminalMode::Stderr,
         simplelog::ColorChoice::Auto,
-    ).unwrap_or_else(|_| {
-        eprintln!("Failed to setup terminal logger")
-    });
+    )
+    .unwrap_or_else(|_| eprintln!("Failed to setup terminal logger"));
 }

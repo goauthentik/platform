@@ -1,9 +1,6 @@
 use std::error::Error;
 
-use ak_platform::generated::{
-    agent::RequestHeader,
-    agent_platform::PlatformEndpointRequest,
-};
+use ak_platform::generated::{agent::RequestHeader, agent_platform::PlatformEndpointRequest};
 use serde_json::Value;
 
 use crate::{

@@ -1,14 +1,12 @@
-use std::error::Error;
-
 use crate::cache::{CacheData, ClientCache};
+use ak_platform::prelude::*;
 use ak_platform::{
-    client::user::{AnyService, Client}, generated::{
+    client::user::{AnyService, Client},
+    generated::{
         agent::RequestHeader,
-        agent_auth::{
-            CurrentTokenRequest, TokenExchangeRequest,
-            current_token_request,
-        },
-    }, grpc::assert_response_valid
+        agent_auth::{CurrentTokenRequest, TokenExchangeRequest, current_token_request},
+    },
+    grpc::assert_response_valid,
 };
 use aws_types::{SdkConfig, region::Region};
 use pbjson_types::Timestamp;
@@ -39,7 +37,10 @@ impl CacheData for AWSCredentialOutput {
     }
 }
 
-pub async fn get_credentials(c: Client<AnyService>, opts: CredentialsOpts) -> Result<AWSCredentialOutput, Box<dyn Error>> {
+pub async fn get_credentials(
+    c: Client<AnyService>,
+    opts: CredentialsOpts,
+) -> Result<AWSCredentialOutput> {
     let cc = ClientCache::new(
         c.clone(),
         RequestHeader {
@@ -56,7 +57,10 @@ pub async fn get_credentials(c: Client<AnyService>, opts: CredentialsOpts) -> Re
         .build();
     let sts = aws_sdk_sts::Client::new(config);
 
-    let res = c.clone().auth().cached_token_exchange(TokenExchangeRequest {
+    let res = c
+        .clone()
+        .auth()
+        .cached_token_exchange(TokenExchangeRequest {
             header: Some(RequestHeader {
                 profile: opts.profile.clone(),
             }),
@@ -66,7 +70,10 @@ pub async fn get_credentials(c: Client<AnyService>, opts: CredentialsOpts) -> Re
         .into_inner();
     assert_response_valid(res.header)?;
 
-    let curr = c.clone().auth().get_current_token(CurrentTokenRequest {
+    let curr = c
+        .clone()
+        .auth()
+        .get_current_token(CurrentTokenRequest {
             header: Some(RequestHeader {
                 profile: opts.profile.clone(),
             }),

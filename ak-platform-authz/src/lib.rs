@@ -11,7 +11,6 @@ pub mod linux;
 #[cfg(target_os = "windows")]
 pub mod windows;
 
-
 pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
     #[cfg(target_os = "macos")]
     return macos::prompt(msg).await;

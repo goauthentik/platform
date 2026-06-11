@@ -1,16 +1,11 @@
-use std::error::Error;
-
+use crate::{App, format};
+use ak_platform::prelude::*;
 use ak_platform::{
-    generated::{
-        agent::RequestHeader,
-        agent_auth::WhoAmIRequest,
-    },
+    generated::{agent::RequestHeader, agent_auth::WhoAmIRequest},
     grpc::assert_response_valid,
 };
 
-use crate::{App, format};
-
-pub async fn whoami(app: App) -> Result<(), Box<dyn Error>> {
+pub async fn whoami(app: App) -> Result<()> {
     let res = app
         .clone()
         .user()
