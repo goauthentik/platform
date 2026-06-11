@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::future::Future;
+use std::io::ErrorKind;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -89,18 +90,34 @@ impl Service<http::Request<tonic::body::Body>> for AnyService {
 }
 
 impl Client<AnyService> {
-    pub async fn new() -> Result<Self, Box<dyn Error>> {
-        if std::env::var("SSH_AUTH_SOCK").is_ok() {
-            let service = SSHTunnel::new().await?.service(());
-            Ok(Client {
-                c: AnyService(AnyServiceInner::Ssh(service)),
-            })
+    pub async fn new(path: Option<String>) -> Result<Self, Box<dyn Error>> {
+        let mut _path: String;
+        if let Some(_p) = path.clone() {
+            _path = _p;
         } else {
-            let path = agent_socket_path(AgentSocketID::Default)?.for_current();
-            let c = grpc_endpoint(path).await?;
-            Ok(Client {
-                c: AnyService(AnyServiceInner::Socket(c)),
-            })
+            _path = agent_socket_path(AgentSocketID::Default)?.for_current();
+        }
+        match grpc_endpoint(_path).await {
+            Ok(t) => {
+                Ok(Client {
+                    c: AnyService(AnyServiceInner::Socket(t)),
+                })
+            }
+            Err(e) => {
+                // If we can't open the socket due to an IO Error of file not found,
+                // and we're trying to use the default socket path, attempt SSH connection
+                // If the user specified a path, then we return the error
+                if let Some(io_err) = e.downcast_ref::<std::io::Error>()
+                    && io_err.kind() == ErrorKind::NotFound
+                    && let None = path
+                    && std::env::var("SSH_AUTH_SOCK").is_ok() {
+                        let service = SSHTunnel::new().await?.service(());
+                        return Ok(Client {
+                            c: AnyService(AnyServiceInner::Ssh(service)),
+                        });
+                    }
+                Err(e)
+            }
         }
     }
 
