@@ -11,9 +11,9 @@ RUN apt-get update && \
         pkg-config \
         libssl-dev \
         curl \
-        ca-certificates && \
+        ca-certificates \
         libpam0g-dev libudev-dev \
-        libpolkit-gobject-1-dev libglib2.0-dev \
+        libpolkit-gobject-1-dev libglib2.0-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
