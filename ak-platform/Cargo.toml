@@ -10,6 +10,9 @@ name = "log"
 [[example]]
 name = "grpc_client"
 
+[[example]]
+name = "authz_prompt"
+
 [dependencies]
 base64 = "0.22.1"
 hyper-util = { workspace = true }
@@ -38,13 +41,13 @@ interprocess = { version = "2", features = ["tokio"] }
 [target.'cfg(target_os = "macos")'.dependencies]
 oslog = "0.2.0"
 apple-native-keyring-store = "1.0.0"
-apple-localauthentication = "0.3.4"
+apple-localauthentication = { version = "0.3.5", features = ["async"] }
 
 [target.'cfg(unix)'.dependencies]
 syslog = "7.0.0"
 libc = "0.2.186"
 
-[target.'cfg(linux)'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 polkit-rs = "0.3.0"
 
 [target.'cfg(windows)'.dependencies]

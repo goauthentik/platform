@@ -1,2 +1,10 @@
 [build]
 target-dir = "cache/"
+
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-Wl,-rpath,/usr/lib/swift"
+]
+
+[env]
+MACOSX_DEPLOYMENT_TARGET = "13.0"

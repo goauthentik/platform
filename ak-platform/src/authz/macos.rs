@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use localauthentication::prelude::*;
+use localauthentication::{async_api::AsyncContextExt, prelude::*};
 
 use crate::platform::string::PlatformString;
 
@@ -17,7 +17,7 @@ pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
         Err(e) => return Err(Box::from(e)),
     }
 
-    match context.evaluate_policy(policy, &msg.for_current()) {
+    match context.evaluate_policy_async(policy, &msg.for_current())?.await {
         Ok(b) => Ok(b),
         Err(e) => Err(Box::from(e)),
     }
