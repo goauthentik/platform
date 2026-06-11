@@ -144,6 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
+      - run: make ci-install-deps
       - run: make lint-rs
   lint_js:
     name: Lint
@@ -160,7 +161,6 @@ jobs:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "npm"
           cache-dependency-path: "${{ matrix.target }}/package-lock.json"
-      - run: make ci-install-deps
       - run: make ${{ matrix.target }}/lint
   lint_cpp:
     name: Lint
