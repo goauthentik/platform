@@ -3,7 +3,7 @@
 #include "ak_common/include/ak_log.h"
 #include "ak_common/include/ak_version.h"
 #include "Provider.h"
-#include "ak_ffi_bridge/ffi.h"
+#include "ak-ffi-bridge/ffi.h"
 #include "rust/cxx.h"
 #include <spdlog/spdlog.h>
 

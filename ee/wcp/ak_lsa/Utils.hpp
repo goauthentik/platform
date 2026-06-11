@@ -2,7 +2,7 @@
 #include <cassert>
 #include <fstream>
 #include <wincred.h>
-#include "ak_ffi_bridge/ffi.h"
+#include "ak-ffi-bridge/ffi.h"
 #include "rust/cxx.h"
 #include "ak_common/include/ak_log.h"
 #include "spdlog/spdlog.h"

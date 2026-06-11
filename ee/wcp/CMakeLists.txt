@@ -270,22 +270,22 @@ endif()
 
 corrosion_import_crate(
   MANIFEST_PATH ../../ak-ffi/Cargo.toml
-  CRATES ak_ffi
+  CRATES ak-ffi
 )
 # getrandom (transitive dep) calls BCryptGenRandom on Windows; propagate the
-# requirement to all CMake consumers of ak_ffi via the link interface.
-corrosion_link_libraries(ak_ffi bcrypt)
+# requirement to all CMake consumers of ak-ffi via the link interface.
+corrosion_link_libraries(ak-ffi bcrypt)
 corrosion_add_cxxbridge(
-  ak_ffi_bridge
-  CRATE ak_ffi
+  ak-ffi-bridge
+  CRATE ak-ffi
   FILES ffi.rs
 )
 
 if(MSVC)
-    set_property(TARGET ak_ffi PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-    set_property(TARGET ak_ffi_bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
-    corrosion_set_env_vars(ak_ffi "CFLAGS=-MT" "CXXFLAGS=-MT")
-    corrosion_set_env_vars(ak_ffi_bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
+    set_property(TARGET ak-ffi PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+    set_property(TARGET ak-ffi-bridge PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded)
+    corrosion_set_env_vars(ak-ffi "CFLAGS=-MT" "CXXFLAGS=-MT")
+    corrosion_set_env_vars(ak-ffi-bridge "CFLAGS=-MT" "CXXFLAGS=-MT")
 endif()
 
 FetchContent_Declare(spdlog
