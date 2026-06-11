@@ -1,11 +1,21 @@
 use std::{collections::HashMap, error::Error};
 
+#[cfg(not(target_os = "macos"))]
 use keyring::use_named_store;
+#[cfg(target_os = "macos")]
+use keyring::use_named_store_with_modifiers;
 use keyring_core::Entry;
+
+#[cfg(target_os = "macos")]
+const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.shared";
 
 pub fn init() -> Result<(), Box<dyn Error>> {
     #[cfg(target_os = "macos")]
-    use_named_store("protected")?;
+    {
+        let mut mods: HashMap<&str, &str> = HashMap::new();
+        mods.insert("access-group", MACOS_KEYCHAIN_GROUP);
+        use_named_store_with_modifiers("protected", &mods)?;
+    }
     #[cfg(target_os = "windows")]
     use_named_store("windows")?;
     #[cfg(target_os = "linux")]
@@ -22,8 +32,6 @@ pub enum Accessibility {
     User,
 }
 
-const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.shared";
-
 fn entry_modifies(
     _service: &str,
     _user: &str,
@@ -32,7 +40,6 @@ fn entry_modifies(
     let mut mods: HashMap<&str, &str> = HashMap::new();
     #[cfg(target_os = "macos")]
     {
-        mods.insert("access-policy", MACOS_KEYCHAIN_GROUP);
         match access {
             Accessibility::User => {
                 mods.insert("access-policy", "after-first-unlock");

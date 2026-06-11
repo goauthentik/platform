@@ -6,4 +6,5 @@ pub mod keyring;
 pub mod log;
 pub mod net;
 pub mod paths;
+pub mod prelude;
 pub mod string;

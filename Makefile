@@ -43,7 +43,7 @@ rs-gen-proto:
 		--prost-serde_out=$(PROTO_OUT) \
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
-	cargo fmt
+	cargo fmt --all
 
 ci-install-deps:
 ifeq ($(PLATFORM),gnu/linux)

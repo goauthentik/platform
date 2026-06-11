@@ -1,6 +1,5 @@
-use std::error::Error;
-
 use crate::cache::{CacheData, ClientCache};
+use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{
@@ -41,7 +40,7 @@ impl CacheData for AWSCredentialOutput {
 pub async fn get_credentials(
     c: Client<AnyService>,
     opts: CredentialsOpts,
-) -> Result<AWSCredentialOutput, Box<dyn Error>> {
+) -> Result<AWSCredentialOutput> {
     let cc = ClientCache::new(
         c.clone(),
         RequestHeader {

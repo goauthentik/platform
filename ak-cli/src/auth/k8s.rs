@@ -1,5 +1,4 @@
-use std::error::Error;
-
+use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
@@ -43,7 +42,7 @@ pub struct ExecCredentialStatus {
 pub async fn get_credentials(
     c: Client<AnyService>,
     opts: CredentialsOpts,
-) -> Result<ExecCredential, Box<dyn Error>> {
+) -> Result<ExecCredential> {
     let res = c
         .auth()
         .cached_token_exchange(TokenExchangeRequest {

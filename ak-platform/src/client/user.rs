@@ -1,3 +1,4 @@
+use crate::prelude::*;
 use std::error::Error;
 use std::future::Future;
 use std::io::ErrorKind;
@@ -27,24 +28,23 @@ pub struct Client<C> {
 }
 
 impl Client<Channel> {
-    pub async fn new_with_id(id: AgentSocketID) -> Result<Self, Box<dyn Error>> {
+    pub async fn new_with_id(id: AgentSocketID) -> Result<Self> {
         Self::new_with_path(agent_socket_path(id)?.for_current()).await
     }
 
-    pub async fn new_with_path(p: String) -> Result<Self, Box<dyn Error>> {
+    pub async fn new_with_path(p: String) -> Result<Self> {
         let c = grpc_endpoint(p).await?;
         Ok(Client { c })
     }
 }
 
 impl Client<SSHService> {
-    pub async fn new_with_ssh() -> Result<Self, Box<dyn Error>> {
+    pub async fn new_with_ssh() -> Result<Self> {
         let service = SSHTunnel::new().await?.service(());
         Ok(Client { c: service })
     }
 }
 
-type BoxError = Box<dyn Error + Send + Sync>;
 type AnyBody = UnsyncBoxBody<Bytes, BoxError>;
 
 #[derive(Clone)]
@@ -58,9 +58,10 @@ pub struct AnyService(AnyServiceInner);
 impl Service<http::Request<tonic::body::Body>> for AnyService {
     type Response = http::Response<AnyBody>;
     type Error = BoxError;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+    type Future =
+        Pin<Box<dyn Future<Output = std::result::Result<Self::Response, Self::Error>> + Send>>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
         match &mut self.0 {
             AnyServiceInner::Socket(c) => c.poll_ready(cx).map_err(Into::into),
             AnyServiceInner::Ssh(s) => {
@@ -90,7 +91,7 @@ impl Service<http::Request<tonic::body::Body>> for AnyService {
 }
 
 impl Client<AnyService> {
-    pub async fn new(path: Option<String>) -> Result<Self, Box<dyn Error>> {
+    pub async fn new(path: Option<String>) -> Result<Self> {
         let mut _path: String;
         if let Some(_p) = path.clone() {
             _path = _p;

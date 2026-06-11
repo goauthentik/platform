@@ -1,6 +1,7 @@
 use dirs_next::data_dir;
-use std::{env, error::Error};
+use std::env;
 
+use crate::prelude::*;
 use crate::string::PlatformString;
 
 pub enum SysdSocketID {
@@ -26,7 +27,7 @@ pub enum AgentSocketID {
     SSH,
 }
 
-fn xdg_data_path(last_seg: &str) -> Result<String, Box<dyn Error>> {
+fn xdg_data_path(last_seg: &str) -> Result<String> {
     let mut data = match data_dir() {
         Some(d) => d,
         None => return Err(Box::from("Failed to get XDG data path")),
@@ -39,7 +40,7 @@ fn xdg_data_path(last_seg: &str) -> Result<String, Box<dyn Error>> {
     }
 }
 
-pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString, Box<dyn Error>> {
+pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
     match id {
         AgentSocketID::Default => {
             if let Ok(x) = env::var("AUTHENTIK_CLI_SOCKET") {

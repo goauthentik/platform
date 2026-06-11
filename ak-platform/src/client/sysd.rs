@@ -1,5 +1,4 @@
-use std::error::Error;
-
+use crate::prelude::*;
 use tonic::transport::Channel;
 
 use crate::{
@@ -20,7 +19,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn new(id: SysdSocketID) -> Result<Self, Box<dyn Error>> {
+    pub async fn new(id: SysdSocketID) -> Result<Self> {
         let c = grpc_endpoint(sysd_socket_path(id).for_current()).await?;
         Ok(Client { c })
     }

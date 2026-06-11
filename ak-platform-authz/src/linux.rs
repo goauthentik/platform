@@ -4,7 +4,7 @@ use polkit_rs::{self, CheckAuthorizationFlags, SystemBusName};
 
 use ak_platform::string::PlatformString;
 
-pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
+pub async fn prompt(_msg: PlatformString) -> Result<bool, Box<dyn Error>> {
     let auth = polkit_rs::Authority::get();
     let subj = SystemBusName::new(":1.42");
     let result = auth
