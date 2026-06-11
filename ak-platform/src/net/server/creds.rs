@@ -29,9 +29,12 @@ impl ProcCredentials {
         ProcCredentials { pc }
     }
 
-    pub fn pid(self) -> i32 {
+    pub fn pid(self) -> i64 {
         match self.pc {
-            Some(p) => p.pid().unwrap_or(-1_i32),
+            Some(p) => match p.pid() {
+                Some(p) => p.into(),
+                None => -1 as i64,
+            },
             None => -1,
         }
     }
