@@ -34,6 +34,36 @@ _LD_FLAGS = ${LD_FLAGS} \
 	-X goauthentik.io/platform/pkg/meta.Tag=${VERSION_TAG}
 GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
 RUST_BUILD_FLAGS =
+DOCKER_BUILDER_IMAGE ?= authentik/ak-builder
+CARGO_CRATE_DIR := $(subst $(TOP),,$(CURDIR))
+
+ifneq ($(LOCAL_WORKSPACE),)
+CONTAINER_TOP := ${LOCAL_WORKSPACE}
+else
+CONTAINER_TOP := ${TOP}
+endif
+
+ifeq ($(PLATFORM),gnu/linux)
+define cargo_build
+	docker run --rm \
+		-it \
+		--volume "$(CONTAINER_TOP):/workspace" \
+		--workdir "/workspace/$(CARGO_CRATE_DIR)" \
+		--env RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		$(DOCKER_BUILDER_IMAGE) \
+		cargo build \
+			--target-dir /workspace/cache/$(1) \
+			--verbose \
+			--release
+endef
+else
+define cargo_build
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" cargo build \
+		--target-dir $(TOP)cache/$(1) \
+		--verbose \
+		--release
+endef
+endif
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 
