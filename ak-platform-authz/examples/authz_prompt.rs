@@ -1,4 +1,5 @@
-use ak_platform::{authz::prompt, log::init_log_interactive, platform::string::PlatformString};
+use ak_platform::{log::init_log_interactive, platform::string::PlatformString};
+use ak_platform_authz::prompt;
 
 #[tokio::main]
 async fn main() {

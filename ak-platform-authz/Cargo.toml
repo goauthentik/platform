@@ -1,0 +1,23 @@
+[package]
+name = "ak-platform-authz"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[example]]
+name = "authz_prompt"
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+tokio = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+apple-localauthentication = { version = "0.3.5", features = ["async"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+polkit-rs = "0.3.0"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62.2", features = [
+    "Security_Credentials_UI"
+] }

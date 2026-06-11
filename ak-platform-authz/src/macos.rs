@@ -2,7 +2,7 @@ use std::error::Error;
 
 use localauthentication::{async_api::AsyncContextExt, prelude::*};
 
-use crate::platform::string::PlatformString;
+use ak_platform::platform::string::PlatformString;
 
 pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
     let context = LAContext::new()?;
@@ -19,6 +19,10 @@ pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
 
     match context.evaluate_policy_async(policy, &msg.for_current())?.await {
         Ok(b) => Ok(b),
-        Err(e) => Err(Box::from(e)),
+        Err(e) => match e {
+            LAError::AppCancel(_) => Ok(false),
+            LAError::BridgeFailed(_) => Ok(false),
+            e => Err(Box::from(e))
+        },
     }
 }

@@ -135,7 +135,6 @@ dependencies = [
 name = "ak-platform"
 version = "0.44.3"
 dependencies = [
- "apple-localauthentication",
  "apple-native-keyring-store",
  "base64",
  "bytes",
@@ -153,7 +152,6 @@ dependencies = [
  "oslog",
  "pbjson",
  "pbjson-types",
- "polkit-rs",
  "prost",
  "serde",
  "serde_json",
@@ -165,6 +163,16 @@ dependencies = [
  "tonic",
  "tonic-prost",
  "tower",
+]
+
+[[package]]
+name = "ak-platform-authz"
+version = "0.44.3"
+dependencies = [
+ "ak-platform",
+ "apple-localauthentication",
+ "polkit-rs",
+ "tokio",
  "windows 0.62.2",
 ]
 

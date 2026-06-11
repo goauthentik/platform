@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use crate::platform::string::PlatformString;
+use ak_platform::platform::string::PlatformString;
 use windows::{
     Security::Credentials::UI::{
         UserConsentVerificationResult, UserConsentVerifier, UserConsentVerifierAvailability,
