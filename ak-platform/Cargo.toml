@@ -31,6 +31,7 @@ http-body-util = "0.1.3"
 http-body = "1.0.1"
 simplelog = "0.12.2"
 tokio-stream = "0.1.18"
+interprocess = { version = "2", features = ["tokio"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 oslog = "0.2.0"
