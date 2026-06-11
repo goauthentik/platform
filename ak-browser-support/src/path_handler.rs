@@ -1,6 +1,6 @@
 use ak_platform::{
     client::{sysd, user::{self, AnyService}},
-    platform::paths::SysdSocketID,
+    paths::SysdSocketID,
 };
 use std::error::Error;
 

@@ -1,7 +1,9 @@
+pub mod client;
 pub mod config;
 pub mod generated;
 pub mod grpc;
+pub mod keyring;
 pub mod log;
-pub mod platform;
-pub mod client;
 pub mod net;
+pub mod paths;
+pub mod string;

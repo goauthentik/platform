@@ -18,7 +18,7 @@ use interprocess::local_socket::tokio::Stream as LocalSocketStream;
 use crate::grpc::ssh::ext::EXT_AUTHENTIK_AGENT_TUNNEL;
 use crate::grpc::ssh::ext::ExtAuthentikAgentTunnelData;
 use crate::net::client::connect;
-use crate::platform::string::PlatformString;
+use crate::string::PlatformString;
 
 pub mod ext;
 

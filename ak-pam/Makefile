@@ -14,11 +14,3 @@ test:
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/libpam-authentik_${VERSION}_${ARCH}.deb
 	$(TME) systemctl restart ssh
-
-ci-install-deps:
-ifeq ($(PLATFORM),gnu/linux)
-ifeq ($(CI),true)
-	sudo apt-get update
-	sudo apt-get install -y libpam0g-dev libudev-dev
-endif
-endif

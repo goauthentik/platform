@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fs, sync::LazyLock};
 
-use crate::platform::{
+use crate::{
     paths::{SysdSocketID, sysd_socket_path},
     string::PlatformString,
 };

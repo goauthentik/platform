@@ -8,7 +8,7 @@ use interprocess::local_socket::{
 use tokio::sync::mpsc;
 use tokio_stream::Stream as AsyncStream;
 
-use crate::platform::string::PlatformString;
+use crate::string::PlatformString;
 
 pub enum SocketPermMode {
     Owner,
@@ -102,7 +102,7 @@ pub async fn listen(
 #[cfg(test)]
 mod tests {
     use super::{listen, SocketPermMode};
-    use crate::platform::string::PlatformString;
+    use crate::string::PlatformString;
 
     fn ps(s: &str) -> PlatformString {
         PlatformString::new_with_default(s)

@@ -23,13 +23,13 @@ The local agent is required for most testing; create a new terminal and run `./b
 ### macOS Dependencies
 
 ```shell
-brew install gmake go rustup
+brew install gmake go rustup swift
 ```
 
 ### Linux Dependencies
 
 ```shell
-sudo apt-get install libpam0g-dev libudev-dev
+sudo apt-get install libpam0g-dev libudev-dev libpolkit-gobject-1-dev libglib2.0-dev
 ```
 
 ### Windows Dependencies

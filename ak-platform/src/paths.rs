@@ -1,7 +1,7 @@
 use dirs_next::data_dir;
 use std::{env, error::Error};
 
-use crate::platform::string::PlatformString;
+use crate::string::PlatformString;
 
 pub enum SysdSocketID {
     Default,

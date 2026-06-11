@@ -46,7 +46,17 @@ rs-gen-proto:
 		${PROTO_DIR}/*
 	cargo fmt
 
-lint-rs: ak-pam/ci-install-deps
+ci-install-deps:
+ifeq ($(PLATFORM),gnu/linux)
+ifeq ($(CI),true)
+	sudo apt-get update
+	sudo apt-get install -y \
+		libpam0g-dev libudev-dev \
+		libpolkit-gobject-1-dev libglib2.0-dev
+endif
+endif
+
+lint-rs:
 	cargo fmt --all
 	cargo clippy --workspace \
 		${RS_TEST_FLAGS}
@@ -79,7 +89,7 @@ test:
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
 
-test-rs: ak-pam/ci-install-deps
+test-rs: ci-install-deps
 	mkdir -p "${PWD}/cache"
 	cargo llvm-cov \
 		--no-report \

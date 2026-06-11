@@ -19,7 +19,7 @@ use crate::{
         grpc_endpoint,
         ssh::{SSHService, SSHTunnel},
     },
-    platform::paths::{AgentSocketID, agent_socket_path},
+    paths::{AgentSocketID, agent_socket_path},
 };
 
 pub struct Client<C> {

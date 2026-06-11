@@ -8,7 +8,7 @@ mod tests {
 
     use crate::net::{client, server};
     use crate::net::server::SocketPermMode;
-    use crate::platform::string::PlatformString;
+    use crate::string::PlatformString;
 
     #[cfg(unix)]
     #[tokio::test]
