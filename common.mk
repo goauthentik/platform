@@ -46,7 +46,7 @@ endif
 ifeq ($(PLATFORM),gnu/linux)
 define cargo_build
 	docker run --rm \
-		-it \
+		-i \
 		--volume "$(CONTAINER_TOP):/workspace" \
 		--workdir "/workspace/$(CARGO_CRATE_DIR)" \
 		--env RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
