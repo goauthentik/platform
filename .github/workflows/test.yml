@@ -160,6 +160,7 @@ jobs:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "npm"
           cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+      - run: make ci-install-deps
       - run: make ${{ matrix.target }}/lint
   lint_cpp:
     name: Lint
