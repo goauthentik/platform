@@ -52,6 +52,9 @@ polkit-rs = "0.3.0"
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.4.0"
+windows = { version = "0.62.2", features = [
+    "Security_Credentials_UI"
+] }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "io-util"] }

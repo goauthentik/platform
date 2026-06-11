@@ -23,7 +23,7 @@ The local agent is required for most testing; create a new terminal and run `./b
 ### macOS Dependencies
 
 ```shell
-brew install gmake go rustup
+brew install gmake go rustup swift
 ```
 
 ### Linux Dependencies
