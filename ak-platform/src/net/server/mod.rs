@@ -2,12 +2,9 @@ use std::{io, path::Path, pin::Pin, task::{Context, Poll}};
 
 use interprocess::local_socket::{
     tokio::prelude::*,
+    GenericFilePath,
     ListenerOptions,
 };
-#[cfg(unix)]
-use interprocess::local_socket::GenericFilePath;
-#[cfg(windows)]
-use interprocess::local_socket::GenericNamespaced;
 use tokio::sync::mpsc;
 use tokio_stream::Stream as AsyncStream;
 
@@ -44,10 +41,7 @@ pub async fn listen(
     #[cfg(not(unix))]
     let _ = Path::new(&path_str);
 
-    #[cfg(unix)]
     let name = path_str.as_str().to_fs_name::<GenericFilePath>()?;
-    #[cfg(windows)]
-    let name = path_str.as_str().to_ns_name::<GenericNamespaced>()?;
 
     #[cfg(unix)]
     let mode: libc::mode_t = match perm {
