@@ -240,6 +240,7 @@ jobs:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
         run: |
+          make containers/builder/build
           make test-e2e
       - run: |
           sudo chmod -R 777 ./e2e/coverage

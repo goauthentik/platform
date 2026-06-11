@@ -173,6 +173,9 @@ vpkg/windows/%:
 vpkg/linux/%:
 	"$(MAKE)" -C "${TOP}/vpkg/linux" $*
 
+containers/builder/%:
+	"$(MAKE)" -C "${TOP}/containers/builder" $*
+
 containers/selenium/%:
 	"$(MAKE)" -C "${TOP}/containers/selenium" $*
 
