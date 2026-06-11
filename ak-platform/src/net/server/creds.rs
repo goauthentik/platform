@@ -33,7 +33,7 @@ impl ProcCredentials {
         match self.pc {
             Some(p) => match p.pid() {
                 Some(p) => p.into(),
-                None => -1 as i64,
+                None => -1_i64,
             },
             None => -1,
         }

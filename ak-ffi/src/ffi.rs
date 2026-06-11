@@ -1,6 +1,6 @@
+use ak_platform::prelude::*;
 use cxx::{CxxString, let_cxx_string};
 use std::collections::HashMap;
-use std::error::Error;
 use std::pin::Pin;
 use url::Url;
 use winreg::enums::HKEY_LOCAL_MACHINE;
@@ -58,10 +58,7 @@ fn ak_sys_ping(res: Pin<&mut CxxString>) {
     res.push_str(&resp);
 }
 
-fn ak_sys_auth_url_extract_token(
-    url: &CxxString,
-    token: Pin<&mut CxxString>,
-) -> Result<(), Box<dyn Error>> {
+fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>) -> Result<()> {
     let p = Url::parse(url.to_str()?)?;
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
     let raw_token = qm
@@ -71,10 +68,7 @@ fn ak_sys_auth_url_extract_token(
     Ok(())
 }
 
-fn ak_sys_auth_url(
-    url: &CxxString,
-    token: &mut ffi::TokenResponse,
-) -> Result<bool, Box<dyn Error>> {
+fn ak_sys_auth_url(url: &CxxString, token: &mut ffi::TokenResponse) -> Result<bool> {
     let p = Url::parse(url.to_str()?)?;
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
     let raw_token = qm
@@ -87,7 +81,7 @@ fn ak_sys_auth_url(
 fn ak_sys_auth_token_validate(
     raw_token: &CxxString,
     token: &mut ffi::TokenResponse,
-) -> Result<bool, Box<dyn Error>> {
+) -> Result<bool> {
     let p = raw_token.to_str()?;
     let response = grpc_request(async |ch| {
         return Ok(SystemAuthTokenClient::new(ch)
@@ -106,7 +100,7 @@ fn ak_sys_auth_token_validate(
     Ok(response.successful)
 }
 
-fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dyn Error>> {
+fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool> {
     let response = grpc_request(async |ch| {
         return Ok(SystemAuthInteractiveClient::new(ch)
             .interactive_auth_async(())
@@ -118,7 +112,7 @@ fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool, Box<dy
     Ok(true)
 }
 
-fn ak_sys_caps() -> Result<ffi::Capabilities, Box<dyn Error>> {
+fn ak_sys_caps() -> Result<ffi::Capabilities> {
     let hkcu = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
     let (key, _disp) =
         hkcu.create_subkey("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
