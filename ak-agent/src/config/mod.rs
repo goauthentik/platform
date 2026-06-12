@@ -21,7 +21,7 @@ pub struct ConfigV1Profile {
     #[serde(rename = "refresh_token")]
     pub fallback_refresh_token: String,
 
-	// Not saved to JSON, loaded from keychain
+    // Not saved to JSON, loaded from keychain
     #[serde(skip)]
     pub _access_token: String,
     #[serde(skip)]

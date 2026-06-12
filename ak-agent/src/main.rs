@@ -7,9 +7,9 @@ use waitgroup::WaitGroup;
 use crate::grpc::AgentGRPCServer;
 use crate::ssh::AgentSSHServer;
 
+pub mod config;
 pub mod grpc;
 pub mod ssh;
-pub mod config;
 
 pub struct Agent {}
 

@@ -1,6 +1,6 @@
+use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::sync::Arc;
 use std::time::Duration;
-use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 
 use crate::Agent;
 use ak_platform::generated::agent_cache::agent_cache_server::AgentCacheServer;

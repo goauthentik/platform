@@ -35,6 +35,7 @@ keyring = "4.0.1"
 keyring-core = "1.0.0"
 interprocess = { version = "2", features = ["tokio"] }
 chrono = { workspace = true }
+notify = "8.2.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 oslog = "0.2.0"
