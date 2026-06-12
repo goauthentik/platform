@@ -23,7 +23,10 @@ pub struct ClientCache<T: CacheData> {
     _phantom: PhantomData<T>,
 }
 
-impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
+impl<T> ClientCache<T>
+where
+    T: CacheData + Serialize + DeserializeOwned,
+{
     pub fn new(c: Client<AnyService>, header: RequestHeader, keys: Vec<String>) -> Self {
         Self {
             keys,

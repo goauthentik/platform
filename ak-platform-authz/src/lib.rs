@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 use ak_platform::{net::server::creds::ProcCredentials, prelude::*, string::PlatformString};
-use tonic::{Status};
+use tonic::Status;
 
 type MessageFn = Box<dyn (Fn(&ProcCredentials) -> Result<PlatformString>) + Send>;
 type UidFn = Box<dyn (Fn(&ProcCredentials) -> Result<String>) + Send>;
@@ -44,10 +44,11 @@ impl AuthorizeAction {
             Err(e) => return Err(Box::from(e.to_string())),
         }
         .get(&uid)
-            && v.exp >= Instant::now() {
-                log::trace!("Valid last result in cache: {:?}", v.success);
-                return Ok(v.success);
-            }
+            && v.exp >= Instant::now()
+        {
+            log::trace!("Valid last result in cache: {:?}", v.success);
+            return Ok(v.success);
+        }
         let msg = (self.message)(&creds)?.clone();
         log::trace!("Prompting for authz: {uid}");
         let res = sys::prompt(msg).await?;
@@ -68,7 +69,10 @@ impl AuthorizeAction {
         Ok(res)
     }
 
-    pub async fn prompt_grpc(self, creds: Option<ProcCredentials>) -> std::result::Result<bool, Status> {
+    pub async fn prompt_grpc(
+        self,
+        creds: Option<ProcCredentials>,
+    ) -> std::result::Result<bool, Status> {
         let creds = match creds {
             Some(c) => c,
             None => return Err(Status::permission_denied("No credentials")),

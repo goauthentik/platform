@@ -62,17 +62,18 @@ impl AgentAuth for AgentGRPCServer {
         let service = inner.service.clone();
         let uid = inner.uid.clone();
 
-        let result = AuthorizeAction {
-            message: Box::new(move |_c| {
-                Ok(PlatformString::new()
-                    .with_darwin(&format!("authorize access to '{}'", service)))
-            }),
-            uid: Box::new(move |_c| Ok(uid.clone())),
-            timeout_success: Duration::from_hours(2),
-            timeout_denied: Duration::from_mins(5),
-        }
-        .prompt_grpc(pc)
-        .await?;
+        let result =
+            AuthorizeAction {
+                message: Box::new(move |_c| {
+                    Ok(PlatformString::new()
+                        .with_darwin(&format!("authorize access to '{}'", service)))
+                }),
+                uid: Box::new(move |_c| Ok(uid.clone())),
+                timeout_success: Duration::from_hours(2),
+                timeout_denied: Duration::from_mins(5),
+            }
+            .prompt_grpc(pc)
+            .await?;
 
         Ok(Response::new(AuthorizeResponse {
             header: Some(ResponseHeader { successful: result }),

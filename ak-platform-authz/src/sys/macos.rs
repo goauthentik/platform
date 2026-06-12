@@ -1,4 +1,4 @@
-use localauthentication::{prelude::*, async_api::AsyncContextExt};
+use localauthentication::{async_api::AsyncContextExt, prelude::*};
 
 use ak_platform::prelude::BoxError;
 
@@ -32,6 +32,5 @@ pub async fn prompt(msg: String) -> std::result::Result<bool, BoxError> {
         let _ = tx.send(result);
     });
 
-    rx.await
-        .map_err(|e| BoxError::from(e.to_string()))?
+    rx.await.map_err(|e| BoxError::from(e.to_string()))?
 }

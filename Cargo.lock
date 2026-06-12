@@ -73,7 +73,10 @@ version = "0.44.3"
 dependencies = [
  "ak-platform",
  "ak-platform-authz",
+ "chrono",
  "log",
+ "pbjson-types",
+ "serde",
  "tokio",
  "tonic",
  "tower-http",
@@ -152,6 +155,7 @@ dependencies = [
  "apple-native-keyring-store",
  "base64",
  "bytes",
+ "chrono",
  "dirs-next",
  "eventlog",
  "http 1.4.2",

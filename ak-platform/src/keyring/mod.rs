@@ -43,9 +43,7 @@ impl Display for KeyringError {
         }
     }
 }
-impl Error for KeyringError {
-
-}
+impl Error for KeyringError {}
 
 pub enum Accessibility {
     Always,

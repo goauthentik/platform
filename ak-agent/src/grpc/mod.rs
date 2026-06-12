@@ -21,12 +21,12 @@ pub mod agent_ctrl;
 pub mod ping;
 
 pub struct AgentGRPCServer {
-    agent: Agent,
+    _agent: Agent,
 }
 
 impl AgentGRPCServer {
     pub async fn new(agent: Agent) -> Result<AgentGRPCServer> {
-        Ok(AgentGRPCServer { agent })
+        Ok(AgentGRPCServer { _agent: agent })
     }
 
     pub async fn start(self) -> Result<()> {
@@ -49,9 +49,13 @@ impl AgentGRPCServer {
                     .on_request(|request: &http::Request<tonic::body::Body>, _span: &Span| {
                         log::info!("started call: {}", request.uri().path());
                     })
-                    .on_response(|_response: &http::Response<tonic::body::Body>, latency: Duration, _span: &Span| {
-                        log::info!("finished call, took {:?}", latency);
-                    }),
+                    .on_response(
+                        |_response: &http::Response<tonic::body::Body>,
+                         latency: Duration,
+                         _span: &Span| {
+                            log::info!("finished call, took {:?}", latency);
+                        },
+                    ),
             )
             .add_service(AgentAuthServer::from_arc(Arc::clone(&shared)))
             .add_service(AgentCacheServer::from_arc(Arc::clone(&shared)))

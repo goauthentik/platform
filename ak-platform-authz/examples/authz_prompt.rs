@@ -3,7 +3,7 @@ use std::time::Duration;
 use ak_platform::{
     log::init_log_interactive, net::server::creds::ProcCredentials, string::PlatformString,
 };
-use ak_platform_authz::{AuthorizeAction};
+use ak_platform_authz::AuthorizeAction;
 
 #[tokio::main]
 async fn main() {
