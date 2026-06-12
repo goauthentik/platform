@@ -1,6 +1,6 @@
 use std::{collections::HashMap, error::Error, fmt::Display};
 
-#[cfg(test)]
+#[cfg(any(test, debug_assertions))]
 use keyring::use_named_store;
 #[cfg(not(target_os = "macos"))]
 use keyring::use_named_store;
@@ -15,7 +15,7 @@ const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.sha
 
 #[allow(unreachable_code)]
 pub fn init() -> Result<(), BoxError> {
-    #[cfg(test)]
+    #[cfg(any(test, debug_assertions))]
     return Ok(use_named_store("sample")?);
     #[cfg(target_os = "macos")]
     {
@@ -61,7 +61,7 @@ fn entry_modifies(
     access: Accessibility,
 ) -> HashMap<&'static str, &'static str> {
     let mut mods: HashMap<&str, &str> = HashMap::new();
-    #[cfg(all(target_os = "macos", not(test)))]
+    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
     {
         match access {
             Accessibility::User => {
