@@ -21,20 +21,20 @@ impl<T> ConfigManager<T>
 where
     T: Config + 'static,
 {
-    pub fn new(path: String) -> Result<Arc<Self>> {
+    pub async fn new(path: String) -> Result<Arc<Self>> {
         let cm = ConfigManager {
             path,
             loaded: RwLock::new(T::default()),
             _phantom: PhantomData,
         };
         log::debug!("Config file path: {}", cm.path);
-        cm.load()?;
+        cm.load().await?;
         log::debug!("Starting config watch");
         let shared = Arc::new(cm);
         let watch_arc = Arc::clone(&shared);
         let res_arc = Arc::clone(&watch_arc);
-        std::thread::spawn(move || {
-            match watch_arc.watch() {
+        tokio::spawn(async move {
+            match watch_arc.watch().await {
                 Ok(_) => (),
                 Err(e) => {
                     log::warn!("failed to watch files: {e:?}");
@@ -48,7 +48,7 @@ where
         self.loaded.into_inner().unwrap()
     }
 
-    pub fn load(&self) -> Result<()> {
+    pub async fn load(&self) -> Result<()> {
         log::debug!("Loading config");
         let file = match File::open(self.path.clone()) {
             Ok(f) => f,
@@ -64,15 +64,15 @@ where
             },
         };
 
-        let new_val: T = serde_json::from_reader(file)?;
-        new_val.post_load()?;
+        let mut new_val: T = serde_json::from_reader(file)?;
+        new_val.post_load().await?;
         *self.loaded.write().unwrap() = new_val;
         Ok(())
     }
 
-    pub fn save(&self) -> Result<()> {
+    pub async fn save(&self) -> Result<()> {
         let loaded = self.loaded.read().unwrap();
-        loaded.pre_save()?;
+        loaded.pre_save().await?;
         log::debug!("saving config");
         let file = OpenOptions::new()
             .create(true)
@@ -119,11 +119,11 @@ mod tests {
     }
 
     impl Config for TestCfg {
-        fn post_load(&self) -> crate::prelude::Result<()> {
+        async fn post_load(&mut self) -> crate::prelude::Result<()> {
             self.post_load_called.store(true, Ordering::SeqCst);
             Ok(())
         }
-        fn pre_save(&self) -> crate::prelude::Result<()> {
+        async fn pre_save(&self) -> crate::prelude::Result<()> {
             self.pre_save_called.store(true, Ordering::SeqCst);
             Ok(())
         }
@@ -135,48 +135,48 @@ mod tests {
         path.to_str().unwrap().to_string()
     }
 
-    #[test]
-    fn test_load() {
+    #[tokio::test]
+    async fn test_load() {
         let dir = TempDir::new().unwrap();
         let path = temp_file(&dir, r#"{"field":"foo"}"#);
 
-        let mgr = ConfigManager::<TestCfg>::new(path).unwrap();
+        let mgr = ConfigManager::<TestCfg>::new(path).await.unwrap();
         assert_eq!(mgr.loaded.read().unwrap().field, "foo");
 
         mgr.loaded.write().unwrap().field = "fo".into();
-        mgr.save().unwrap();
+        mgr.save().await.unwrap();
     }
 
-    #[test]
-    fn test_hooks() {
+    #[tokio::test]
+    async fn test_hooks() {
         let dir = TempDir::new().unwrap();
         let path = temp_file(&dir, r#"{"field":"foo"}"#);
 
-        let mgr = ConfigManager::<TestCfg>::new(path).unwrap();
+        let mgr = ConfigManager::<TestCfg>::new(path).await.unwrap();
         let post_load = Arc::clone(&mgr.loaded.read().unwrap().post_load_called);
         let pre_save = Arc::clone(&mgr.loaded.read().unwrap().pre_save_called);
 
-        mgr.save().unwrap();
+        mgr.save().await.unwrap();
         assert!(pre_save.load(Ordering::SeqCst));
 
-        mgr.load().unwrap();
+        mgr.load().await.unwrap();
         assert!(post_load.load(Ordering::SeqCst));
     }
 
-    #[test]
-    fn test_load_invalid() {
+    #[tokio::test]
+    async fn test_load_invalid() {
         let dir = TempDir::new().unwrap();
         let path = temp_file(&dir, r#"{"field":"foo}"#);
 
-        assert!(ConfigManager::<TestCfg>::new(path).is_err());
+        assert!(ConfigManager::<TestCfg>::new(path).await.is_err());
     }
 
-    #[test]
-    fn test_reload() {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_reload() {
         let dir = TempDir::new().unwrap();
         let path = temp_file(&dir, r#"{"field":"foo"}"#);
 
-        let mgr = ConfigManager::<TestCfg>::new(path.clone()).unwrap();
+        let mgr = ConfigManager::<TestCfg>::new(path.clone()).await.unwrap();
         assert_eq!(mgr.loaded.read().unwrap().field, "foo");
 
         // Allow the watcher thread to start and register with the OS.

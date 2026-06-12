@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use ak_platform::log::init_log_interactive;
-use ak_platform::prelude::*;
+use ak_platform::{keyring, prelude::*};
 use waitgroup::WaitGroup;
 
 use crate::grpc::AgentGRPCServer;
@@ -16,6 +16,7 @@ pub struct Agent {}
 #[tokio::main]
 async fn main() -> Result<()> {
     let ag = Agent {};
+    keyring::init()?;
     init_log_interactive();
 
     let wg = WaitGroup::new();
