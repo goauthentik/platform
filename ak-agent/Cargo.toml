@@ -24,6 +24,8 @@ serde = { workspace = true }
 chrono = { workspace = true }
 pbjson-types = { workspace = true }
 ssh-agent-lib = { workspace = true }
-reqwest = "0.13.4"
+reqwest = { version = "0.13.4", features = ["json"] }
+jsonwebtoken = "9"
+url = { workspace = true }
 sentry = { workspace = true }
 sentry-tower = { version = "0.48.2", features = ["http"] }

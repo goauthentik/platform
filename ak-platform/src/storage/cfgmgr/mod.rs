@@ -2,8 +2,10 @@ use std::{
     fs::{File, OpenOptions},
     io::ErrorKind,
     marker::PhantomData,
-    sync::{Arc, RwLock},
+    sync::Arc,
 };
+
+use tokio::sync::{Notify, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::{prelude::*, storage::cfgmgr::schema::Config};
 
@@ -13,6 +15,7 @@ pub mod watch;
 pub struct ConfigManager<T: Config> {
     path: String,
     loaded: RwLock<T>,
+    reload_notify: Arc<Notify>,
 
     _phantom: PhantomData<T>,
 }
@@ -25,6 +28,7 @@ where
         let cm = ConfigManager {
             path,
             loaded: RwLock::new(T::default()),
+            reload_notify: Arc::new(Notify::new()),
             _phantom: PhantomData,
         };
         log::debug!("Config file path: {}", cm.path);
@@ -45,7 +49,19 @@ where
     }
 
     pub fn get(self) -> T {
-        self.loaded.into_inner().unwrap()
+        self.loaded.into_inner()
+    }
+
+    pub fn on_reload(&self) -> Arc<Notify> {
+        Arc::clone(&self.reload_notify)
+    }
+
+    pub async fn read(&self) -> RwLockReadGuard<'_, T> {
+        self.loaded.read().await
+    }
+
+    pub async fn write(&self) -> RwLockWriteGuard<'_, T> {
+        self.loaded.write().await
     }
 
     pub async fn load(&self) -> Result<()> {
@@ -55,7 +71,7 @@ where
             Err(e) => match e.kind() {
                 ErrorKind::NotFound => {
                     log::debug!("File not found, loading defaults");
-                    *self.loaded.write().unwrap() = T::default();
+                    *self.loaded.write().await = T::default();
                     return Ok(());
                 }
                 _ => {
@@ -66,12 +82,13 @@ where
 
         let mut new_val: T = serde_json::from_reader(file)?;
         new_val.post_load().await?;
-        *self.loaded.write().unwrap() = new_val;
+        *self.loaded.write().await = new_val;
+        self.reload_notify.notify_waiters();
         Ok(())
     }
 
     pub async fn save(&self) -> Result<()> {
-        let loaded = self.loaded.read().unwrap();
+        let loaded = self.loaded.read().await;
         loaded.pre_save().await?;
         log::debug!("saving config");
         let file = OpenOptions::new()
@@ -141,9 +158,9 @@ mod tests {
         let path = temp_file(&dir, r#"{"field":"foo"}"#);
 
         let mgr = ConfigManager::<TestCfg>::new(path).await.unwrap();
-        assert_eq!(mgr.loaded.read().unwrap().field, "foo");
+        assert_eq!(mgr.loaded.read().await.field, "foo");
 
-        mgr.loaded.write().unwrap().field = "fo".into();
+        mgr.loaded.write().await.field = "fo".into();
         mgr.save().await.unwrap();
     }
 
@@ -153,8 +170,8 @@ mod tests {
         let path = temp_file(&dir, r#"{"field":"foo"}"#);
 
         let mgr = ConfigManager::<TestCfg>::new(path).await.unwrap();
-        let post_load = Arc::clone(&mgr.loaded.read().unwrap().post_load_called);
-        let pre_save = Arc::clone(&mgr.loaded.read().unwrap().pre_save_called);
+        let post_load = Arc::clone(&mgr.loaded.read().await.post_load_called);
+        let pre_save = Arc::clone(&mgr.loaded.read().await.pre_save_called);
 
         mgr.save().await.unwrap();
         assert!(pre_save.load(Ordering::SeqCst));
@@ -177,7 +194,7 @@ mod tests {
         let path = temp_file(&dir, r#"{"field":"foo"}"#);
 
         let mgr = ConfigManager::<TestCfg>::new(path.clone()).await.unwrap();
-        assert_eq!(mgr.loaded.read().unwrap().field, "foo");
+        assert_eq!(mgr.loaded.read().await.field, "foo");
 
         // Allow the watcher thread to start and register with the OS.
         std::thread::sleep(Duration::from_millis(500));
@@ -189,6 +206,6 @@ mod tests {
         std::fs::write(dir.path().join("trigger"), "").unwrap();
 
         std::thread::sleep(Duration::from_secs(5));
-        assert_eq!(mgr.loaded.read().unwrap().field, "bar");
+        assert_eq!(mgr.loaded.read().await.field, "bar");
     }
 }
