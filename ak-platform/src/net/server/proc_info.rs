@@ -102,9 +102,19 @@ impl ProcInfo {
     pub fn parent_cmdline(&self) -> Result<String, BoxError> {
         let p = match &self.parent {
             Some(p) => p,
-            None => return Err("Process has no parent process".into())
+            None => return Err("Process has no parent process".into()),
         };
-        return Ok(p.cmdline.clone())
+        Ok(p.cmdline.clone())
+    }
+
+    pub fn unique_process_id(&self) -> Result<String, BoxError> {
+        let p = self.parent.clone().ok_or("failed to get parent process")?;
+        let first_exe = p
+            .cmdline
+            .split(" ")
+            .next()
+            .ok_or("failed to get first exe")?;
+        Ok(format!("{}:{}", p.exe.to_string_lossy(), first_exe))
     }
 }
 

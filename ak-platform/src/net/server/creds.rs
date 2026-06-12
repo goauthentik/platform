@@ -1,24 +1,58 @@
-use interprocess::local_socket::PeerCreds;
 use tonic::transport::server::Connected;
 
 use crate::net::server::ConnectedLocalStream;
 use crate::net::server::proc_info::ProcInfo;
 use crate::prelude::*;
 
+#[cfg(not(target_os = "macos"))]
 use interprocess::local_socket::tokio::prelude::*;
+
+#[cfg(target_os = "macos")]
+fn peer_pid_via_getsockopt(stream: &interprocess::local_socket::tokio::Stream) -> i64 {
+    use std::os::fd::{AsFd, AsRawFd};
+    let interprocess::local_socket::tokio::Stream::UdSocket(inner) = stream;
+    let fd = inner.as_fd().as_raw_fd();
+    let mut pid: libc::pid_t = 0;
+    let mut len: libc::socklen_t = std::mem::size_of::<libc::pid_t>() as _;
+    let ret = unsafe {
+        libc::getsockopt(
+            fd,
+            0, // SOL_LOCAL
+            libc::LOCAL_PEERPID,
+            &mut pid as *mut _ as *mut libc::c_void,
+            &mut len,
+        )
+    };
+    if ret == 0 { pid as i64 } else { -1 }
+}
 
 impl Connected for ConnectedLocalStream {
     type ConnectInfo = ProcCredentials;
 
     fn connect_info(&self) -> Self::ConnectInfo {
+        #[cfg(target_os = "macos")]
+        {
+            let pid = peer_pid_via_getsockopt(&self.0);
+            if pid < 0 {
+                log::warn!("LOCAL_PEERPID getsockopt failed");
+            } else {
+                log::trace!("Peer pid (macos): {pid}");
+            }
+            ProcCredentials {
+                pid: if pid >= 0 { Some(pid) } else { None },
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
         match self.0.peer_creds() {
             Ok(pc) => {
                 log::trace!("Extracted peer creds: {:?}", pc);
-                ProcCredentials::new(Some(pc))
-            },
+                ProcCredentials {
+                    pid: pc.pid().map(|p| p as i64),
+                }
+            }
             Err(e) => {
                 log::warn!("Failed to get peer credentials: {e:?}");
-                ProcCredentials::new(None)
+                ProcCredentials { pid: None }
             }
         }
     }
@@ -26,32 +60,26 @@ impl Connected for ConnectedLocalStream {
 
 #[derive(Clone, Debug)]
 pub struct ProcCredentials {
-    pc: Option<PeerCreds>,
+    pid: Option<i64>,
 }
 
 impl ProcCredentials {
-    pub fn new(pc: Option<PeerCreds>) -> ProcCredentials {
-        ProcCredentials { pc }
+    pub fn new(pid: Option<i64>) -> ProcCredentials {
+        ProcCredentials { pid }
     }
 
     pub fn current() -> ProcCredentials {
-        ProcCredentials { pc: None }
+        ProcCredentials { pid: None }
     }
 
     pub fn pid(&self) -> i64 {
-        match self.pc {
-            Some(p) => match p.pid() {
-                Some(p) => p.into(),
-                None => -1_i64,
-            },
-            None => -1,
-        }
+        self.pid.unwrap_or(-1)
     }
 
     pub fn proc_info(self) -> Result<ProcInfo> {
         let pid = self.pid();
         if pid < 0 {
-            log::trace!("pid: {pid}, {:?}", self.clone().pc.clone());
+            log::trace!("pid: {pid}");
             return Err("Invalid pid".into());
         }
         ProcInfo::from_pid(pid as u32).map_err(|e| e.into())
