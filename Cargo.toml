@@ -37,3 +37,4 @@ chrono = { version = "0.4.45", features = ["serde"] }
 url = "2.5.8"
 tracing = "0.1.44"
 ssh-agent-lib = "0.6.0"
+sentry = "0.48.2"

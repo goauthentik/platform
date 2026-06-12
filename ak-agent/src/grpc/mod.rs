@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::time::Duration;
+use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 
 use crate::Agent;
 use ak_platform::generated::agent_cache::agent_cache_server::AgentCacheServer;
@@ -44,6 +45,8 @@ impl AgentGRPCServer {
         };
         let shared = Arc::new(self);
         Ok(Server::builder()
+            .layer(NewSentryLayer::new_from_top())
+            .layer(SentryHttpLayer::new().enable_transaction())
             .layer(
                 tower_http::trace::TraceLayer::new_for_grpc()
                     .on_request(|request: &http::Request<tonic::body::Body>, _span: &Span| {

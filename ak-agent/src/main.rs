@@ -9,6 +9,7 @@ use crate::ssh::AgentSSHServer;
 
 pub mod grpc;
 pub mod ssh;
+pub mod config;
 
 pub struct Agent {}
 
