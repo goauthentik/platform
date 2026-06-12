@@ -76,6 +76,8 @@ dependencies = [
  "log",
  "tokio",
  "tonic",
+ "tower-http",
+ "tracing",
  "waitgroup",
 ]
 
@@ -6255,6 +6257,7 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
+ "tracing",
  "url",
 ]
 

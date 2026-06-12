@@ -57,13 +57,10 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<AuthorizeRequest>,
     ) -> Result<Response<AuthorizeResponse>, Status> {
-        let creds = match request.extensions().get::<ProcCredentials>().cloned() {
-            Some(c) => c,
-            None => return Err(Status::permission_denied("No credentials")),
-        };
+        let pc = request.extensions().get::<ProcCredentials>().cloned();
         let inner = request.into_inner();
-        let service = inner.service;
-        let uid = inner.uid;
+        let service = inner.service.clone();
+        let uid = inner.uid.clone();
 
         let result = AuthorizeAction {
             message: Box::new(move |_c| {
@@ -74,9 +71,8 @@ impl AgentAuth for AgentGRPCServer {
             timeout_success: Duration::from_hours(2),
             timeout_denied: Duration::from_mins(5),
         }
-        .prompt(creds)
-        .await
-        .map_err(Status::from_error)?;
+        .prompt_grpc(pc)
+        .await?;
 
         Ok(Response::new(AuthorizeResponse {
             header: Some(ResponseHeader { successful: result }),

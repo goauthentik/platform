@@ -1,15 +1,17 @@
-use std::{collections::HashMap, error::Error};
+use std::{collections::HashMap, error::Error, fmt::Display};
 
 #[cfg(not(target_os = "macos"))]
 use keyring::use_named_store;
 #[cfg(target_os = "macos")]
 use keyring::use_named_store_with_modifiers;
-use keyring_core::Entry;
+use keyring_core::{Entry, Error::NoEntry};
+
+use crate::prelude::BoxError;
 
 #[cfg(target_os = "macos")]
 const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.shared";
 
-pub fn init() -> Result<(), Box<dyn Error>> {
+pub fn init() -> Result<(), BoxError> {
     #[cfg(target_os = "macos")]
     {
         let mut mods: HashMap<&str, &str> = HashMap::new();
@@ -25,6 +27,24 @@ pub fn init() -> Result<(), Box<dyn Error>> {
 
 pub fn service(name: &str) -> String {
     format!("io.goauthentik.agent.{name}")
+}
+
+#[derive(Debug)]
+pub enum KeyringError {
+    Other(BoxError),
+    NotFound(),
+}
+
+impl Display for KeyringError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            KeyringError::NotFound() => write!(f, "entry not found"),
+            KeyringError::Other(e) => e.fmt(f),
+        }
+    }
+}
+impl Error for KeyringError {
+
 }
 
 pub enum Accessibility {
@@ -50,15 +70,13 @@ fn entry_modifies(
     mods
 }
 
-pub async fn get(
-    service: &str,
-    user: &str,
-    access: Accessibility,
-) -> Result<String, Box<dyn Error>> {
-    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))?;
+pub async fn get(service: &str, user: &str, access: Accessibility) -> Result<String, KeyringError> {
+    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
+        .map_err(|e| KeyringError::Other(e.into()))?;
     match e.get_password() {
         Ok(p) => Ok(p),
-        Err(e) => Err(Box::from(e)),
+        Err(NoEntry) => Err(KeyringError::NotFound()),
+        Err(e) => Err(KeyringError::Other(e.into())),
     }
 }
 
@@ -67,18 +85,22 @@ pub async fn set(
     user: &str,
     access: Accessibility,
     data: String,
-) -> Result<(), Box<dyn Error>> {
-    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))?;
-    e.set_password(&data)?;
-    Ok(())
+) -> Result<(), KeyringError> {
+    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
+        .map_err(|e| KeyringError::Other(e.into()))?;
+    match e.set_password(&data) {
+        Ok(()) => Ok(()),
+        Err(NoEntry) => Err(KeyringError::NotFound()),
+        Err(e) => Err(KeyringError::Other(e.into())),
+    }
 }
 
-pub async fn delete(
-    service: &str,
-    user: &str,
-    access: Accessibility,
-) -> Result<(), Box<dyn Error>> {
-    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))?;
-    e.delete_credential()?;
-    Ok(())
+pub async fn delete(service: &str, user: &str, access: Accessibility) -> Result<(), KeyringError> {
+    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
+        .map_err(|e| KeyringError::Other(e.into()))?;
+    match e.delete_credential() {
+        Ok(()) => Ok(()),
+        Err(NoEntry) => Ok(()),
+        Err(e) => Err(KeyringError::Other(e.into())),
+    }
 }
