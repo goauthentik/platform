@@ -1,6 +1,6 @@
 use std::sync::Arc;
-use std::time::Duration;
 
+use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use tokio::sync::{Notify, RwLock};
 
@@ -64,7 +64,7 @@ impl ProfileTokenManager {
         }
     }
 
-    pub async fn unverified(&self) -> Result<AuthentikClaims> {
+    pub async fn unverified(&self) -> Result<Token> {
         let raw = {
             let config = self.cfg.read().await;
             let profile = config
@@ -73,7 +73,12 @@ impl ProfileTokenManager {
                 .ok_or("profile not found")?;
             profile._access_token.clone()
         };
-        super::parse_unverified(&raw)
+        Ok(Token {
+            access_token: raw,
+            token_type: None,
+            refresh_token: None,
+            expires_in: None,
+        })
     }
 
     pub async fn token(&self) -> Result<Token> {
@@ -141,7 +146,14 @@ impl ProfileTokenManager {
                         log::warn!("profile '{profile_name}' not found, stopping renewal");
                         return;
                     }
-                    Some(profile) => Self::time_until_expiry(&profile._access_token),
+                    Some(profile) => match Self::time_until_expiry(&profile._access_token).to_std()
+                    {
+                        Ok(d) => d,
+                        Err(e) => {
+                            log::warn!("couldn't convert duration to std: {e:?}");
+                            return;
+                        }
+                    },
                 }
             };
 
@@ -255,15 +267,11 @@ impl ProfileTokenManager {
         Ok(data.claims)
     }
 
-    fn time_until_expiry(token: &str) -> Duration {
+    fn time_until_expiry(token: &str) -> TimeDelta {
         let Ok(claims) = super::parse_unverified(token) else {
-            return Duration::from_secs(60);
+            return TimeDelta::seconds(60);
         };
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        Duration::from_secs(claims.exp.saturating_sub(now))
+        claims.exp - Utc::now()
     }
 
     fn is_expired(e: &jsonwebtoken::errors::Error) -> bool {

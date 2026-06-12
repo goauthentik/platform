@@ -1,10 +1,10 @@
 use ak_platform::{
     generated::{
-        agent::ResponseHeader,
+        agent::{ResponseHeader, Token},
         agent_auth::{
             AuthorizeRequest, AuthorizeResponse, CurrentTokenRequest, CurrentTokenResponse,
             DeviceTokenExchangeRequest, TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest,
-            WhoAmIResponse, agent_auth_server::AgentAuth,
+            WhoAmIResponse, agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
     net::server::creds::ProcCredentials,
@@ -36,7 +36,7 @@ impl AgentAuth for AgentGRPCServer {
                     .with_windows(format!("'{cmd}' is attempting to access your account info"))
                     .with_linux(format!("'{cmd}' is attempting to access your account info")))
             }),
-            uid: Box::new(|_| Ok("".to_string())),
+            uid: Box::new(|c| c.clone().proc_info()?.unique_process_id()),
             timeout_success: Duration::from_secs(0),
             timeout_denied: Duration::from_secs(0),
         }
@@ -68,9 +68,63 @@ impl AgentAuth for AgentGRPCServer {
 
     async fn get_current_token(
         &self,
-        _request: Request<CurrentTokenRequest>,
+        request: Request<CurrentTokenRequest>,
     ) -> Result<Response<CurrentTokenResponse>, Status> {
-        todo!()
+        let proc_creds = request.extensions().get::<ProcCredentials>().cloned();
+        let inner_req = request.into_inner();
+        let token_manager = self
+            .agent
+            .gtm
+            .for_profile(
+                &inner_req
+                    .clone()
+                    .header
+                    .ok_or(Status::invalid_argument("missing header"))?
+                    .profile,
+            )
+            .await
+            .ok_or(Status::invalid_argument("profile not found"))?;
+
+        AuthorizeAction {
+            message: Box::new(|c| {
+                let cmd = c.clone().proc_info()?.parent_cmdline()?;
+                Ok(PlatformString::new()
+                    .with_darwin(format!("authorize access to your account in '{cmd}'"))
+                    .with_windows(format!("'{cmd}' is attempting to access your account"))
+                    .with_linux(format!("'{cmd}' is attempting to access your account")))
+            }),
+            uid: Box::new(|_| Ok("".to_string())),
+            timeout_success: Duration::from_secs(0),
+            timeout_denied: Duration::from_secs(0),
+        }
+        .prompt_grpc(proc_creds)
+        .await?;
+
+        let token = match inner_req.r#type() {
+            Type::Unspecified => Err(Status::invalid_argument("unsupported token type")),
+            Type::Unverified => Ok(token_manager
+                .unverified()
+                .await
+                .map_err(Status::from_error)?),
+            Type::Verified => Ok(token_manager.token().await.map_err(Status::from_error)?),
+        }?;
+        let c = token.claims().map_err(Status::from_error)?;
+
+        Ok(Response::new(CurrentTokenResponse {
+            header: Some(ResponseHeader { successful: true }),
+            token: Some(Token {
+                preferred_username: c.preferred_username,
+                iss: c.iss,
+                sub: c.sub,
+                aud: c.aud,
+                exp: Some(c.exp.into()),
+                nbf: Some(c.nbf.into()),
+                iat: Some(c.iat.into()),
+                jti: c.jti,
+            }),
+            raw: token.access_token,
+            url: "".to_string(),
+        }))
     }
 
     async fn cached_token_exchange(

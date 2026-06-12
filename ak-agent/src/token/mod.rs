@@ -1,4 +1,5 @@
 use ak_platform::prelude::*;
+use chrono::{DateTime, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header};
 use serde::{Deserialize, Serialize};
 
@@ -7,9 +8,14 @@ pub mod profile;
 
 #[derive(Debug, Deserialize)]
 pub struct AuthentikClaims {
-    pub preferred_username: Option<String>,
-    pub exp: u64,
-    pub sub: Option<String>,
+    pub iss: String,
+    pub sub: String,
+    pub aud: Vec<String>,
+    pub exp: DateTime<Utc>,
+    pub nbf: DateTime<Utc>,
+    pub iat: DateTime<Utc>,
+    pub jti: String,
+    pub preferred_username: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
