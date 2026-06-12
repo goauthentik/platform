@@ -2,6 +2,7 @@ use interprocess::local_socket::PeerCreds;
 use tonic::transport::server::Connected;
 
 use crate::net::server::ConnectedLocalStream;
+use crate::net::server::proc_info::{ProcInfo, ProcInfoError};
 
 use interprocess::local_socket::tokio::prelude::*;
 
@@ -41,5 +42,13 @@ impl ProcCredentials {
             },
             None => -1,
         }
+    }
+
+    pub fn proc_info(self) -> Option<Result<ProcInfo, ProcInfoError>> {
+        let pid = self.pid();
+        if pid < 0 {
+            return None;
+        }
+        Some(ProcInfo::from_pid(pid as u32))
     }
 }

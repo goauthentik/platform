@@ -14,6 +14,7 @@ use tokio_stream::Stream as AsyncStream;
 use crate::string::PlatformString;
 
 pub mod creds;
+pub mod proc_info;
 
 pub enum SocketPermMode {
     Owner,
