@@ -72,6 +72,7 @@ name = "ak-agent"
 version = "0.44.3"
 dependencies = [
  "ak-platform",
+ "ak-platform-authz",
  "log",
  "tokio",
  "tonic",
@@ -185,6 +186,7 @@ dependencies = [
  "log",
  "polkit-rs",
  "tokio",
+ "tonic",
  "windows 0.62.2",
 ]
 

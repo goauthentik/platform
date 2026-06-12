@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
 use crate::Agent;
+use ak_platform::generated::agent_cache::agent_cache_server::AgentCacheServer;
+use ak_platform::generated::agent_ctrl::agent_ctrl_server::AgentCtrlServer;
+use ak_platform::generated::ping::ping_server::PingServer;
 use ak_platform::prelude::*;
 use ak_platform::{
     generated::agent_auth::agent_auth_server::AgentAuthServer,
@@ -34,8 +39,12 @@ impl AgentGRPCServer {
                 return Err(e);
             }
         };
+        let shared = Arc::new(self);
         Ok(Server::builder()
-            .add_service(AgentAuthServer::new(self))
+            .add_service(AgentAuthServer::from_arc(Arc::clone(&shared)))
+            .add_service(AgentCacheServer::from_arc(Arc::clone(&shared)))
+            .add_service(AgentCtrlServer::from_arc(Arc::clone(&shared)))
+            .add_service(PingServer::from_arc(Arc::clone(&shared)))
             .serve_with_incoming(listener)
             .await?)
     }

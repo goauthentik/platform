@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use ak_platform::{
     generated::{
         agent::ResponseHeader,
@@ -8,7 +10,9 @@ use ak_platform::{
         },
     },
     net::server::creds::ProcCredentials,
+    string::PlatformString,
 };
+use ak_platform_authz::AuthorizeAction;
 use tonic::{Request, Response, Status};
 
 use crate::grpc::AgentGRPCServer;
@@ -17,9 +21,9 @@ use crate::grpc::AgentGRPCServer;
 impl AgentAuth for AgentGRPCServer {
     async fn who_am_i(
         &self,
-        _request: Request<WhoAmIRequest>,
+        request: Request<WhoAmIRequest>,
     ) -> Result<Response<WhoAmIResponse>, Status> {
-        let pc = _request.extensions().get::<ProcCredentials>();
+        let pc = request.extensions().get::<ProcCredentials>();
         log::trace!("pc: {pc:?}");
         log::debug!("whoami");
         Ok(Response::new(WhoAmIResponse {
@@ -51,8 +55,31 @@ impl AgentAuth for AgentGRPCServer {
 
     async fn authorize(
         &self,
-        _request: Request<AuthorizeRequest>,
+        request: Request<AuthorizeRequest>,
     ) -> Result<Response<AuthorizeResponse>, Status> {
-        todo!()
+        let creds = match request.extensions().get::<ProcCredentials>().cloned() {
+            Some(c) => c,
+            None => return Err(Status::permission_denied("No credentials")),
+        };
+        let inner = request.into_inner();
+        let service = inner.service;
+        let uid = inner.uid;
+
+        let result = AuthorizeAction {
+            message: Box::new(move |_c| {
+                Ok(PlatformString::new()
+                    .with_darwin(&format!("authorize access to '{}'", service)))
+            }),
+            uid: Box::new(move |_c| Ok(uid.clone())),
+            timeout_success: Duration::from_hours(2),
+            timeout_denied: Duration::from_mins(5),
+        }
+        .prompt(creds)
+        .await
+        .map_err(Status::from_error)?;
+
+        Ok(Response::new(AuthorizeResponse {
+            header: Some(ResponseHeader { successful: result }),
+        }))
     }
 }

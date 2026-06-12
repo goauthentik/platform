@@ -6,13 +6,19 @@ use crate::grpc::AgentGRPCServer;
 #[tonic::async_trait]
 impl Ping for AgentGRPCServer {
     async fn ping(&self, _request: Request<()>) -> Result<Response<PingResponse>, Status> {
-        todo!()
+        let ver = env!("CARGO_PKG_VERSION");
+        Ok(Response::new(PingResponse {
+            component: "agent".to_string(),
+            version: ver.to_string(),
+        }))
     }
 
     async fn capabilities(
         &self,
         _request: Request<()>,
     ) -> Result<Response<CapabilitiesResponse>, Status> {
-        todo!()
+        Ok(Response::new(CapabilitiesResponse {
+            capabilities: vec![],
+        }))
     }
 }

@@ -11,6 +11,7 @@ name = "authz_prompt"
 ak-platform = { path = "../ak-platform" }
 tokio = { workspace = true }
 log = { workspace = true }
+tonic = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-localauthentication = { version = "0.3.5", features = ["async"] }

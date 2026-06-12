@@ -12,7 +12,7 @@ pub mod windows;
 
 pub async fn prompt(msg: PlatformString) -> Result<bool> {
     #[cfg(target_os = "macos")]
-    return macos::prompt(msg).await;
+    return macos::prompt(msg.for_current()).await;
     #[cfg(target_os = "linux")]
     return linux::prompt(msg).await;
     #[cfg(target_os = "windows")]
