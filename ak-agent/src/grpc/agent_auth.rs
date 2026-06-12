@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use ak_platform::{
     generated::{
         agent::ResponseHeader,
@@ -13,6 +11,8 @@ use ak_platform::{
     string::PlatformString,
 };
 use ak_platform_authz::AuthorizeAction;
+use reqwest::Method;
+use std::time::Duration;
 use tonic::{Request, Response, Status};
 
 use crate::grpc::AgentGRPCServer;
@@ -23,12 +23,40 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<WhoAmIRequest>,
     ) -> Result<Response<WhoAmIResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>();
-        log::trace!("pc: {pc:?}");
-        log::debug!("whoami");
+        let pc = request.extensions().get::<ProcCredentials>().cloned();
+        let profile = self
+            .profile_for_request(request.into_inner().header)
+            .await?;
+
+        AuthorizeAction {
+            message: Box::new(|_| Ok(PlatformString::new().with_darwin("darwin"))),
+            uid: Box::new(|_| Ok("".to_string())),
+            timeout_success: Duration::from_secs(0),
+            timeout_denied: Duration::from_secs(0),
+        }
+        .prompt_grpc(pc)
+        .await?;
+
+        let req = match profile
+            .http_client()
+            .request(Method::GET, "")
+            .bearer_auth("")
+            .send()
+            .await
+        {
+            Ok(r) => r,
+            Err(e) => return Err(Status::from_error(e.into())),
+        };
+        if !req.status().is_success() {
+            return Err(Status::internal("Invalid status code for whoami request"));
+        }
+
         Ok(Response::new(WhoAmIResponse {
             header: Some(ResponseHeader { successful: true }),
-            body: "".to_string(),
+            body: req
+                .text()
+                .await
+                .map_err(|e| Status::from_error(Box::from(e)))?,
         }))
     }
 

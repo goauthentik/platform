@@ -11,8 +11,8 @@ use crate::ssh::AgentSSHServer;
 use crate::token::global::GlobalTokenManager;
 
 pub struct Agent {
-    cfg: Arc<ConfigManager<ConfigV1>>,
-    gtm: Arc<GlobalTokenManager>,
+    pub cfg: Arc<ConfigManager<ConfigV1>>,
+    pub gtm: Arc<GlobalTokenManager>,
 }
 
 impl Agent {

@@ -11,7 +11,7 @@ pub struct ConfigV1 {
     pub profiles: HashMap<String, ConfigV1Profile>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigV1Profile {
     pub authentik_url: String,
     pub app_slug: String,

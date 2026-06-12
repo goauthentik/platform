@@ -24,9 +24,9 @@ pub fn init() -> Result<(), BoxError> {
         return Ok(use_named_store_with_modifiers("protected", &mods)?);
     }
     #[cfg(target_os = "windows")]
-    return OK(use_named_store("windows")?);
+    return Ok(use_named_store("windows")?);
     #[cfg(target_os = "linux")]
-    return OK(use_named_store("secret-service")?);
+    return Ok(use_named_store("secret-service")?);
     Err(Box::from("no keychain implementation for current OS"))
 }
 
@@ -55,6 +55,7 @@ pub enum Accessibility {
     User,
 }
 
+#[allow(unused_variables, unused_mut)]
 fn entry_modifies(
     _service: &str,
     _user: &str,

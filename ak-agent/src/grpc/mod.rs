@@ -1,8 +1,11 @@
+use ak_platform::generated::agent::RequestHeader;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::sync::Arc;
 use std::time::Duration;
+use tonic::Status;
 
 use crate::Agent;
+use crate::config::ConfigV1Profile;
 use ak_platform::generated::agent_cache::agent_cache_server::AgentCacheServer;
 use ak_platform::generated::agent_ctrl::agent_ctrl_server::AgentCtrlServer;
 use ak_platform::generated::ping::ping_server::PingServer;
@@ -22,12 +25,12 @@ pub mod agent_ctrl;
 pub mod ping;
 
 pub struct AgentGRPCServer {
-    _agent: Arc<Agent>,
+    agent: Arc<Agent>,
 }
 
 impl AgentGRPCServer {
     pub async fn new(agent: Arc<Agent>) -> Result<AgentGRPCServer> {
-        Ok(AgentGRPCServer { _agent: agent })
+        Ok(AgentGRPCServer { agent })
     }
 
     pub async fn start(self) -> Result<()> {
@@ -66,5 +69,21 @@ impl AgentGRPCServer {
             .add_service(PingServer::from_arc(Arc::clone(&shared)))
             .serve_with_incoming(listener)
             .await?)
+    }
+
+    pub async fn profile_for_request(
+        &self,
+        header: Option<RequestHeader>,
+    ) -> std::result::Result<ConfigV1Profile, Status> {
+        let read = self.agent.cfg.read().await;
+        let h = match header {
+            Some(h) => h,
+            None => return Err(Status::invalid_argument("no request header")),
+        };
+        let profile = match read.profiles.get(&h.profile) {
+            Some(p) => p.clone(),
+            None => return Err(Status::not_found("profile not found")),
+        };
+        Ok(profile)
     }
 }
