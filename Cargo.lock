@@ -344,6 +344,7 @@ dependencies = [
  "simplelog",
  "ssh-agent-lib",
  "syslog",
+ "tempfile",
  "tokio",
  "tokio-stream",
  "tonic",
