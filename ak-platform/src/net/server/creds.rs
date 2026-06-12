@@ -29,6 +29,10 @@ impl ProcCredentials {
         ProcCredentials { pc }
     }
 
+    pub fn current() -> ProcCredentials {
+        ProcCredentials { pc: None }
+    }
+
     pub fn pid(self) -> i64 {
         match self.pc {
             Some(p) => match p.pid() {

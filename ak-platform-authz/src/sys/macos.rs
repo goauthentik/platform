@@ -1,10 +1,9 @@
-use std::error::Error;
-
-use localauthentication::{async_api::AsyncContextExt, prelude::*};
+use ak_platform::prelude::*;
+use localauthentication::{LAContext, LAError, LAPolicy, async_api::AsyncContextExt};
 
 use ak_platform::string::PlatformString;
 
-pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
+pub async fn prompt(msg: PlatformString) -> Result<bool> {
     let context = LAContext::new()?;
 
     let policy = LAPolicy::DeviceOwnerAuthentication;

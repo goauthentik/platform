@@ -1,21 +1,69 @@
-use std::error::Error;
+pub mod sys;
+use std::ops::Add;
+use std::time::{Duration, Instant};
 
-use ak_platform::string::PlatformString;
+use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
 
-#[cfg(target_os = "macos")]
-pub mod macos;
+use ak_platform::{net::server::creds::ProcCredentials, prelude::*, string::PlatformString};
 
-#[cfg(target_os = "linux")]
-pub mod linux;
+pub struct AuthorizeAction {
+    pub message: fn(parent: ProcCredentials) -> Result<PlatformString>,
+    pub uid: fn(parent: ProcCredentials) -> Result<String>,
+    pub timeout_success: Duration,
+    pub timeout_denied: Duration,
+}
 
-#[cfg(target_os = "windows")]
-pub mod windows;
+impl AuthorizeAction {
+    pub fn timeout(self, status: bool) -> Duration {
+        match status {
+            true => self.timeout_success,
+            false => self.timeout_denied,
+        }
+    }
+}
 
-pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
-    #[cfg(target_os = "macos")]
-    return macos::prompt(msg).await;
-    #[cfg(target_os = "linux")]
-    return linux::prompt(msg).await;
-    #[cfg(target_os = "windows")]
-    return windows::prompt(msg).await;
+struct AuthState {
+    exp: Instant,
+    success: bool,
+}
+
+static LAST_AUTH_MAP: LazyLock<Mutex<HashMap<String, AuthState>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub async fn prompt(action: AuthorizeAction, creds: ProcCredentials) -> Result<bool> {
+    let uid = (action.uid)(creds.clone())?;
+    log::trace!("Checking if we need to authorize: {uid}");
+    match match LAST_AUTH_MAP.try_lock() {
+        Ok(it) => it,
+        Err(e) => return Err(Box::from(e.to_string())),
+    }
+    .get(&uid)
+    {
+        Some(v) => {
+            if v.exp >= Instant::now() {
+                log::trace!("Valid last result in cache: {:?}", v.success);
+                return Ok(v.success);
+            }
+        }
+        None => {}
+    }
+    let msg = (action.message)(creds)?;
+    log::trace!("Prompting for authz: {uid}");
+    let res = sys::prompt(msg).await?;
+
+    match LAST_AUTH_MAP.try_lock() {
+        Ok(mut it) => {
+            it.insert(
+                uid,
+                AuthState {
+                    exp: Instant::now().add(action.timeout(res)),
+                    success: res,
+                },
+            );
+        }
+        Err(e) => return Err(Box::from(e.to_string())),
+    }
+
+    Ok(res)
 }

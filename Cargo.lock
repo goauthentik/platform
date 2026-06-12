@@ -182,6 +182,7 @@ version = "0.44.3"
 dependencies = [
  "ak-platform",
  "apple-localauthentication",
+ "log",
  "polkit-rs",
  "tokio",
  "windows 0.62.2",
