@@ -1,12 +1,14 @@
-use std::{ffi::OsString, fmt, path::PathBuf};
+use std::{fmt, path::PathBuf};
 
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
+
+use crate::prelude::BoxError;
 
 #[derive(Debug, Clone)]
 pub struct ProcInfo {
     pub pid: u32,
     pub exe: PathBuf,
-    pub cmdline: Vec<OsString>,
+    pub cmdline: String,
     pub parent: Option<Box<ProcInfo>>,
 }
 
@@ -38,11 +40,7 @@ impl ProcInfo {
             let kind = ProcessRefreshKind::nothing()
                 .with_exe(UpdateKind::OnlyIfNotSet)
                 .with_cmd(UpdateKind::OnlyIfNotSet);
-            sys.refresh_processes_specifics(
-                ProcessesToUpdate::Some(&[sysinfo_pid]),
-                false,
-                kind,
-            );
+            sys.refresh_processes_specifics(ProcessesToUpdate::Some(&[sysinfo_pid]), false, kind);
             let process = sys
                 .process(sysinfo_pid)
                 .ok_or(ProcInfoError::ProcessNotFound(pid))?;
@@ -67,12 +65,24 @@ impl ProcInfo {
             .exe()
             .ok_or(ProcInfoError::ExeNotAvailable(pid))?
             .to_path_buf();
-        let cmdline = process.cmd().to_vec();
+        let cmdline = process
+            .cmd()
+            .to_vec()
+            .iter()
+            .map(|f| f.to_str().unwrap_or(""))
+            .collect::<Vec<&str>>()
+            .join(" ");
 
         let parent = parent_pid_opt.and_then(|ppid| {
             let p = sys.process(ppid)?;
             let exe = p.exe()?.to_path_buf();
-            let cmdline = p.cmd().to_vec();
+            let cmdline = p
+                .cmd()
+                .to_vec()
+                .iter()
+                .map(|f| f.to_str().unwrap_or(""))
+                .collect::<Vec<&str>>()
+                .join(" ");
             Some(Box::new(ProcInfo {
                 pid: ppid.as_u32(),
                 exe,
@@ -88,22 +98,24 @@ impl ProcInfo {
             parent,
         })
     }
+
+    pub fn parent_cmdline(&self) -> Result<String, BoxError> {
+        let p = match &self.parent {
+            Some(p) => p,
+            None => return Err("Process has no parent process".into())
+        };
+        return Ok(p.cmdline.clone())
+    }
 }
 
 impl fmt::Display for ProcInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let cmdline = self
-            .cmdline
-            .iter()
-            .map(|s| s.to_string_lossy())
-            .collect::<Vec<_>>()
-            .join(" ");
         write!(
             f,
             "Process <id={}, exe={}, cmdline={}>",
             self.pid,
             self.exe.display(),
-            cmdline,
+            self.cmdline,
         )
     }
 }

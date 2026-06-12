@@ -29,7 +29,13 @@ impl AgentAuth for AgentGRPCServer {
             .await?;
 
         AuthorizeAction {
-            message: Box::new(|_| Ok(PlatformString::new().with_darwin("darwin"))),
+            message: Box::new(|c| {
+                let cmd = c.clone().proc_info()?.parent_cmdline()?;
+                Ok(PlatformString::new()
+                    .with_darwin(format!("authorize access to your account info in '{cmd}'"))
+                    .with_windows(format!("'{cmd}' is attempting to access your account info"))
+                    .with_linux(format!("'{cmd}' is attempting to access your account info")))
+            }),
             uid: Box::new(|_| Ok("".to_string())),
             timeout_success: Duration::from_secs(0),
             timeout_denied: Duration::from_secs(0),
@@ -90,18 +96,16 @@ impl AgentAuth for AgentGRPCServer {
         let service = inner.service.clone();
         let uid = inner.uid.clone();
 
-        let result =
-            AuthorizeAction {
-                message: Box::new(move |_c| {
-                    Ok(PlatformString::new()
-                        .with_darwin(&format!("authorize access to '{}'", service)))
-                }),
-                uid: Box::new(move |_c| Ok(uid.clone())),
-                timeout_success: Duration::from_hours(2),
-                timeout_denied: Duration::from_mins(5),
-            }
-            .prompt_grpc(pc)
-            .await?;
+        let result = AuthorizeAction {
+            message: Box::new(move |_c| {
+                Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
+            }),
+            uid: Box::new(move |_c| Ok(uid.clone())),
+            timeout_success: Duration::from_hours(2),
+            timeout_denied: Duration::from_mins(5),
+        }
+        .prompt_grpc(pc)
+        .await?;
 
         Ok(Response::new(AuthorizeResponse {
             header: Some(ResponseHeader { successful: result }),

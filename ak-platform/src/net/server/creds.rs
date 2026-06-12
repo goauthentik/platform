@@ -2,7 +2,8 @@ use interprocess::local_socket::PeerCreds;
 use tonic::transport::server::Connected;
 
 use crate::net::server::ConnectedLocalStream;
-use crate::net::server::proc_info::{ProcInfo, ProcInfoError};
+use crate::net::server::proc_info::ProcInfo;
+use crate::prelude::*;
 
 use interprocess::local_socket::tokio::prelude::*;
 
@@ -11,7 +12,10 @@ impl Connected for ConnectedLocalStream {
 
     fn connect_info(&self) -> Self::ConnectInfo {
         match self.0.peer_creds() {
-            Ok(pc) => ProcCredentials::new(Some(pc)),
+            Ok(pc) => {
+                log::trace!("Extracted peer creds: {:?}", pc);
+                ProcCredentials::new(Some(pc))
+            },
             Err(e) => {
                 log::warn!("Failed to get peer credentials: {e:?}");
                 ProcCredentials::new(None)
@@ -34,7 +38,7 @@ impl ProcCredentials {
         ProcCredentials { pc: None }
     }
 
-    pub fn pid(self) -> i64 {
+    pub fn pid(&self) -> i64 {
         match self.pc {
             Some(p) => match p.pid() {
                 Some(p) => p.into(),
@@ -44,11 +48,12 @@ impl ProcCredentials {
         }
     }
 
-    pub fn proc_info(self) -> Option<Result<ProcInfo, ProcInfoError>> {
+    pub fn proc_info(self) -> Result<ProcInfo> {
         let pid = self.pid();
         if pid < 0 {
-            return None;
+            log::trace!("pid: {pid}, {:?}", self.clone().pc.clone());
+            return Err("Invalid pid".into());
         }
-        Some(ProcInfo::from_pid(pid as u32))
+        ProcInfo::from_pid(pid as u32).map_err(|e| e.into())
     }
 }
