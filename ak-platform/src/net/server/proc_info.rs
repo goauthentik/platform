@@ -7,6 +7,7 @@ pub struct ProcInfo {
     pub pid: u32,
     pub exe: PathBuf,
     pub cmdline: Vec<OsString>,
+    pub parent: Option<Box<ProcInfo>>,
 }
 
 #[derive(Debug)]
@@ -31,14 +32,34 @@ impl std::error::Error for ProcInfoError {}
 impl ProcInfo {
     pub fn from_pid(pid: u32) -> Result<Self, ProcInfoError> {
         let sysinfo_pid = Pid::from_u32(pid);
-        let mut sys = System::new();
-        sys.refresh_processes_specifics(
-            ProcessesToUpdate::Some(&[sysinfo_pid]),
-            false,
-            ProcessRefreshKind::nothing()
+        let parent_pid_opt = {
+            // First pass: fetch the target process and record its parent PID.
+            let mut sys = System::new();
+            let kind = ProcessRefreshKind::nothing()
                 .with_exe(UpdateKind::OnlyIfNotSet)
-                .with_cmd(UpdateKind::OnlyIfNotSet),
-        );
+                .with_cmd(UpdateKind::OnlyIfNotSet);
+            sys.refresh_processes_specifics(
+                ProcessesToUpdate::Some(&[sysinfo_pid]),
+                false,
+                kind,
+            );
+            let process = sys
+                .process(sysinfo_pid)
+                .ok_or(ProcInfoError::ProcessNotFound(pid))?;
+            process.parent()
+        };
+
+        // Second pass: fetch both PIDs together so we pay one OS scan.
+        let mut pids = vec![sysinfo_pid];
+        if let Some(ppid) = parent_pid_opt {
+            pids.push(ppid);
+        }
+        let mut sys = System::new();
+        let kind = ProcessRefreshKind::nothing()
+            .with_exe(UpdateKind::OnlyIfNotSet)
+            .with_cmd(UpdateKind::OnlyIfNotSet);
+        sys.refresh_processes_specifics(ProcessesToUpdate::Some(&pids), false, kind);
+
         let process = sys
             .process(sysinfo_pid)
             .ok_or(ProcInfoError::ProcessNotFound(pid))?;
@@ -47,7 +68,25 @@ impl ProcInfo {
             .ok_or(ProcInfoError::ExeNotAvailable(pid))?
             .to_path_buf();
         let cmdline = process.cmd().to_vec();
-        Ok(Self { pid, exe, cmdline })
+
+        let parent = parent_pid_opt.and_then(|ppid| {
+            let p = sys.process(ppid)?;
+            let exe = p.exe()?.to_path_buf();
+            let cmdline = p.cmd().to_vec();
+            Some(Box::new(ProcInfo {
+                pid: ppid.as_u32(),
+                exe,
+                cmdline,
+                parent: None,
+            }))
+        });
+
+        Ok(Self {
+            pid,
+            exe,
+            cmdline,
+            parent,
+        })
     }
 }
 
@@ -80,6 +119,9 @@ mod tests {
         assert_eq!(info.pid, pid);
         assert!(info.exe.exists(), "exe path should exist: {:?}", info.exe);
         assert!(!info.cmdline.is_empty(), "cmdline should not be empty");
+        let parent = info.parent.expect("current process should have a parent");
+        assert!(parent.pid > 0, "parent pid should be non-zero");
+        assert!(parent.parent.is_none(), "parent should not recurse further");
     }
 
     #[test]
