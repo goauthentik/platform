@@ -21,11 +21,11 @@ pub mod agent_ctrl;
 pub mod ping;
 
 pub struct AgentGRPCServer {
-    _agent: Agent,
+    _agent: Arc<Agent>,
 }
 
 impl AgentGRPCServer {
-    pub async fn new(agent: Agent) -> Result<AgentGRPCServer> {
+    pub async fn new(agent: Arc<Agent>) -> Result<AgentGRPCServer> {
         Ok(AgentGRPCServer { _agent: agent })
     }
 

@@ -77,6 +77,7 @@ dependencies = [
  "log",
  "pbjson-types",
  "serde",
+ "ssh-agent-lib",
  "tokio",
  "tonic",
  "tower-http",

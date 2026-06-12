@@ -1,10 +1,15 @@
+use std::sync::Arc;
+
 use ak_platform::log::init_log_interactive;
 use ak_platform::prelude::*;
 use waitgroup::WaitGroup;
 
 use crate::grpc::AgentGRPCServer;
+use crate::ssh::AgentSSHServer;
 
 pub mod grpc;
+pub mod ssh;
+
 pub struct Agent {}
 
 #[tokio::main]
@@ -14,9 +19,14 @@ async fn main() -> Result<()> {
 
     let wg = WaitGroup::new();
 
-    let w = wg.worker();
+    let w_grpc = wg.worker();
+    let w_ssh = wg.worker();
+
+    let shared = Arc::new(ag);
+    let shared_grpc = Arc::clone(&shared);
+
     tokio::spawn(async move {
-        let grpc = match AgentGRPCServer::new(ag).await {
+        let grpc = match AgentGRPCServer::new(shared_grpc).await {
             Ok(grpc) => grpc,
             Err(e) => {
                 log::error!("Failed to start grpc server: {e:?}");
@@ -29,7 +39,18 @@ async fn main() -> Result<()> {
                 log::error!("Failed to start grpc server: {e:?}");
             }
         };
-        drop(w);
+        drop(w_grpc);
+    });
+
+    tokio::spawn(async move {
+        let ssh = AgentSSHServer::new(Arc::clone(&shared)).await;
+        match ssh.start().await {
+            Ok(()) => (),
+            Err(e) => {
+                log::error!("failed to start ssh agent: {e:?}");
+            }
+        };
+        drop(w_ssh);
     });
     wg.wait().await;
     Ok(())
