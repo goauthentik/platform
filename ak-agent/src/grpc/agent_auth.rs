@@ -67,10 +67,10 @@ impl AgentAuth for AgentGRPCServer {
         .prompt_grpc(pc)
         .await?;
 
-        let req = match profile
+        let req = match profile.clone()
             .http_client()
-            .request(Method::GET, "")
-            .bearer_auth("")
+            .request(Method::GET, format!("{}/application/o/userinfo/", profile.clone().authentik_url))
+            .bearer_auth(profile._access_token)
             .send()
             .await
         {
