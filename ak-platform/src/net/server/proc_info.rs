@@ -148,9 +148,10 @@ mod tests {
 
     #[test]
     fn not_found_error() {
-        // PID 0 is never a valid user-space process
-        let err = ProcInfo::from_pid(0).unwrap_err();
-        assert!(matches!(err, ProcInfoError::ProcessNotFound(0)));
+        // PID 0 is the System Idle Process on Windows, so use u32::MAX which is
+        // never a valid PID on any OS.
+        let err = ProcInfo::from_pid(u32::MAX).unwrap_err();
+        assert!(matches!(err, ProcInfoError::ProcessNotFound(u32::MAX)));
     }
 
     #[test]
