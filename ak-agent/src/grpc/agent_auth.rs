@@ -1,3 +1,4 @@
+use ak_meta::user_agent;
 use ak_platform::{
     generated::{
         agent::{ResponseHeader, Token},
@@ -227,10 +228,7 @@ impl AgentAuth for AgentGRPCServer {
                 reqwest::header::CONTENT_TYPE,
                 "application/x-www-form-urlencoded",
             )
-            .header(
-                reqwest::header::USER_AGENT,
-                format!("authentik-agent v{}", env!("CARGO_PKG_VERSION")),
-            )
+            .header(reqwest::header::USER_AGENT, user_agent())
             .body(body)
             .send()
             .await
@@ -298,7 +296,7 @@ impl AgentAuth for AgentGRPCServer {
         let api_config = authentik_client::apis::configuration::Configuration {
             base_path: format!("{}/api/v3", profile.authentik_url),
             bearer_access_token: Some(profile.access_token()),
-            user_agent: Some(format!("authentik-agent v{}", env!("CARGO_PKG_VERSION"))),
+            user_agent: Some(user_agent()),
             ..Default::default()
         };
 

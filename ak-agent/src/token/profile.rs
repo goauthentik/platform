@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use ak_meta::user_agent;
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use tokio::sync::{Notify, RwLock};
@@ -146,14 +147,15 @@ impl ProfileTokenManager {
                         log::warn!("profile '{profile_name}' not found, stopping renewal");
                         return;
                     }
-                    Some(profile) => match Self::time_until_expiry(&profile.access_token()).to_std()
-                    {
-                        Ok(d) => d,
-                        Err(e) => {
-                            log::warn!("couldn't convert duration to std: {e:?}");
-                            return;
+                    Some(profile) => {
+                        match Self::time_until_expiry(&profile.access_token()).to_std() {
+                            Ok(d) => d,
+                            Err(e) => {
+                                log::warn!("couldn't convert duration to std: {e:?}");
+                                return;
+                            }
                         }
-                    },
+                    }
                 }
             };
 
@@ -204,10 +206,7 @@ impl ProfileTokenManager {
                 reqwest::header::CONTENT_TYPE,
                 "application/x-www-form-urlencoded",
             )
-            .header(
-                reqwest::header::USER_AGENT,
-                format!("authentik-agent v{}", env!("CARGO_PKG_VERSION")),
-            )
+            .header(reqwest::header::USER_AGENT, user_agent())
             .body(body)
             .send()
             .await?;

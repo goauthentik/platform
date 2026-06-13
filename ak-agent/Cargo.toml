@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 ak-platform-authz = { path = "../ak-platform-authz" }
+ak-meta = { path = "../ak-meta" }
 authentik-client = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }

@@ -1,11 +1,8 @@
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use ak_platform::{
-    net::server::creds::ProcCredentials,
-    prelude::*,
-    string::PlatformString,
-};
+use ak_meta::user_agent;
+use ak_platform::{net::server::creds::ProcCredentials, prelude::*, string::PlatformString};
 use ak_platform_authz::AuthorizeAction;
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
 use ssh_key::{Certificate, PrivateKey, public::KeyData};
@@ -121,7 +118,7 @@ impl SSHAgentTransaction {
         let api_config = authentik_client::apis::configuration::Configuration {
             base_path: format!("{}/api/v3", profile.authentik_url),
             bearer_access_token: Some(profile.access_token()),
-            user_agent: Some(format!("authentik-agent v{}", env!("CARGO_PKG_VERSION"))),
+            user_agent: Some(user_agent()),
             ..Default::default()
         };
 

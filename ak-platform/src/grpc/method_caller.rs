@@ -10,11 +10,8 @@ use tower::util::BoxCloneService;
 use crate::net::server::creds::ProcCredentials;
 use crate::prelude::*;
 
-type BoxedSvc = BoxCloneService<
-    http::Request<Full<Bytes>>,
-    http::Response<tonic::body::Body>,
-    Infallible,
->;
+type BoxedSvc =
+    BoxCloneService<http::Request<Full<Bytes>>, http::Response<tonic::body::Body>, Infallible>;
 
 /// Routes raw proto bytes to registered tonic services over their HTTP interface,
 /// mirroring the Go `MethodCaller` / `grpc.ServiceRegistrar` pattern.
@@ -45,8 +42,7 @@ impl MethodCaller {
                 http::Request<Full<Bytes>>,
                 Response = http::Response<tonic::body::Body>,
                 Error = Infallible,
-            >
-            + Clone
+            > + Clone
             + Send
             + 'static,
         S::Future: Send + 'static,
@@ -68,9 +64,7 @@ impl MethodCaller {
         let svc = self
             .services
             .get(service_name)
-            .ok_or_else(|| -> BoxError {
-                Box::from(format!("unknown service: {service_name}"))
-            })?
+            .ok_or_else(|| -> BoxError { Box::from(format!("unknown service: {service_name}")) })?
             .clone();
 
         let mut req = http::Request::builder()
@@ -119,9 +113,9 @@ impl MethodCaller {
 
 fn parse_service_name(method: &str) -> Result<&str> {
     let path = method.trim_start_matches('/');
-    let end = path.rfind('/').ok_or_else(|| -> BoxError {
-        Box::from(format!("invalid method path: {method}"))
-    })?;
+    let end = path
+        .rfind('/')
+        .ok_or_else(|| -> BoxError { Box::from(format!("invalid method path: {method}")) })?;
     Ok(&path[..end])
 }
 
@@ -206,10 +200,7 @@ mod tests {
             .call("/unknown.Service/Method", &[])
             .await
             .unwrap_err();
-        assert!(
-            err.to_string().contains("unknown service"),
-            "got: {err}"
-        );
+        assert!(err.to_string().contains("unknown service"), "got: {err}");
     }
 
     #[tokio::test]
@@ -257,10 +248,7 @@ mod tests {
         let mut data = vec![0x00u8, 0x00, 0x00, 0x00, 100];
         data.extend_from_slice(&[1u8, 2, 3]);
         let err = grpc_unframe(&data).unwrap_err();
-        assert!(
-            err.to_string().contains("truncated"),
-            "error was: {err}"
-        );
+        assert!(err.to_string().contains("truncated"), "error was: {err}");
     }
 
     // --- grpc_frame ---

@@ -7,8 +7,7 @@ use ssh_agent_lib::{
 };
 
 use crate::ssh::{
-    ext_ak::EXT_AUTHENTIK_AGENT_TUNNEL,
-    ext_session_bind::EXT_OPENSSH_SESSION_BIND,
+    ext_ak::EXT_AUTHENTIK_AGENT_TUNNEL, ext_session_bind::EXT_OPENSSH_SESSION_BIND,
     txn::SSHAgentTransaction,
 };
 
@@ -23,7 +22,7 @@ impl Session for SSHAgentTransaction {
                     credential: PublicCredential::Cert(Box::new((*cert).clone())),
                     comment,
                 }])
-            },
+            }
             None => Ok(vec![]),
         }
     }

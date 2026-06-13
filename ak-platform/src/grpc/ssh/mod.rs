@@ -165,8 +165,8 @@ mod tests {
     use tokio::sync::Mutex;
     use tower::Service;
 
-    use super::{SSHTunnel};
-    use crate::grpc::method_caller::{grpc_frame,grpc_unframe};
+    use super::SSHTunnel;
+    use crate::grpc::method_caller::{grpc_frame, grpc_unframe};
     use crate::grpc::ssh::ext::{EXT_AUTHENTIK_AGENT_TUNNEL, ExtAuthentikAgentTunnelData};
 
     // --- Integration test: full gRPC-over-SSH-tunnel flow ---

@@ -4,17 +4,12 @@ use ak_platform::{
     generated::{
         agent_auth::agent_auth_server::AgentAuthServer,
         agent_cache::agent_cache_server::AgentCacheServer,
-        agent_ctrl::agent_ctrl_server::AgentCtrlServer,
-        ping::ping_server::PingServer,
+        agent_ctrl::agent_ctrl_server::AgentCtrlServer, ping::ping_server::PingServer,
     },
     grpc::method_caller::MethodCaller,
     net::server::creds::ProcCredentials,
 };
-use ssh_agent_lib::{
-    error::AgentError,
-    proto::Extension,
-    ssh_encoding::Encode as SshEncode,
-};
+use ssh_agent_lib::{error::AgentError, proto::Extension, ssh_encoding::Encode as SshEncode};
 
 use crate::grpc::AgentGRPCServer;
 use crate::ssh::txn::SSHAgentTransaction;
@@ -39,10 +34,7 @@ impl ssh_agent_lib::ssh_encoding::Decode for TunnelRequest {
     }
 }
 
-pub fn build_method_caller(
-    grpc: Arc<AgentGRPCServer>,
-    creds: ProcCredentials,
-) -> MethodCaller {
+pub fn build_method_caller(grpc: Arc<AgentGRPCServer>, creds: ProcCredentials) -> MethodCaller {
     let mut caller = MethodCaller::new(creds);
     caller.add_service(AgentAuthServer::from_arc(Arc::clone(&grpc)));
     caller.add_service(AgentCacheServer::from_arc(Arc::clone(&grpc)));
@@ -120,10 +112,9 @@ mod tests {
     #[test]
     fn decode_valid_tunnel_request() {
         let raw = encode_tunnel_request("/ping.Ping/Ping", b"proto");
-        let req = <TunnelRequest as ssh_agent_lib::ssh_encoding::Decode>::decode(
-            &mut raw.as_slice(),
-        )
-        .unwrap();
+        let req =
+            <TunnelRequest as ssh_agent_lib::ssh_encoding::Decode>::decode(&mut raw.as_slice())
+                .unwrap();
         assert_eq!(req.method, "/ping.Ping/Ping");
         assert_eq!(req.data, b"proto");
     }
@@ -131,10 +122,9 @@ mod tests {
     #[test]
     fn decode_empty_data_field() {
         let raw = encode_tunnel_request("/ping.Ping/Ping", b"");
-        let req = <TunnelRequest as ssh_agent_lib::ssh_encoding::Decode>::decode(
-            &mut raw.as_slice(),
-        )
-        .unwrap();
+        let req =
+            <TunnelRequest as ssh_agent_lib::ssh_encoding::Decode>::decode(&mut raw.as_slice())
+                .unwrap();
         assert!(req.data.is_empty());
     }
 

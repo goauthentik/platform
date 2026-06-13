@@ -52,7 +52,6 @@ pub fn generate_cert(
         .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::from(e.to_string()) })
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,8 +1,8 @@
+use ssh_agent_lib::ssh_encoding::Decode as _;
 use ssh_agent_lib::{
     error::AgentError,
     proto::{Extension, extension::message::SessionBind},
 };
-use ssh_agent_lib::ssh_encoding::Decode as _;
 
 use crate::ssh::txn::SSHAgentTransaction;
 

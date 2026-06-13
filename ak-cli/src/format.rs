@@ -178,11 +178,10 @@ pub fn render_timestamp(ot: Option<Timestamp>) -> String {
                 Err(e) => return e.to_string(),
             };
             dt.to_rfc2822()
-        },
+        }
         None => "-".to_string(),
     }
 }
-
 
 // ── example / smoke-test ─────────────────────────────────────────────────────
 
