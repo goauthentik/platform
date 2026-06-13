@@ -142,7 +142,7 @@ impl AgentAuth for AgentGRPCServer {
                 sub: c.sub,
                 aud: c.aud,
                 exp: Some(c.exp.into()),
-                nbf: Some(c.nbf.into()),
+                nbf: None,
                 iat: Some(c.iat.into()),
                 jti: c.jti,
             }),

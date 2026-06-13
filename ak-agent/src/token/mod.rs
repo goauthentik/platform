@@ -2,17 +2,22 @@ use ak_platform::prelude::*;
 use chrono::{DateTime, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header};
 use serde::{Deserialize, Serialize};
+use serde_with::{serde_as, OneOrMany};
+use serde_with::formats::PreferOne;
 
 pub mod global;
 pub mod profile;
 
+#[serde_as]
 #[derive(Debug, Deserialize)]
 pub struct AuthentikClaims {
     pub iss: String,
     pub sub: String,
+    #[serde_as(as = "OneOrMany<_, PreferOne>")]
     pub aud: Vec<String>,
+    #[serde(with = "chrono::serde::ts_seconds")]
     pub exp: DateTime<Utc>,
-    pub nbf: DateTime<Utc>,
+    #[serde(with = "chrono::serde::ts_seconds")]
     pub iat: DateTime<Utc>,
     pub jti: String,
     pub preferred_username: String,

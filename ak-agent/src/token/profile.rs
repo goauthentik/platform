@@ -261,6 +261,7 @@ impl ProfileTokenManager {
         let key = DecodingKey::from_jwk(jwk)?;
         let mut validation = Validation::new(header.alg);
         validation.validate_exp = true;
+        validation.validate_aud = false;
         let data = decode::<AuthentikClaims>(token, &key, &validation)?;
         Ok(data.claims)
     }

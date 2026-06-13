@@ -30,3 +30,4 @@ jsonwebtoken = "9"
 url = { workspace = true }
 sentry = { workspace = true }
 sentry-tower = { version = "0.48.2", features = ["http"] }
+serde_with = "3.21.0"

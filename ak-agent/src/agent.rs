@@ -30,11 +30,9 @@ impl Agent {
 
         let w_grpc = wg.worker();
         let w_ssh = wg.worker();
-        let w_gtm = wg.worker();
 
         let shared = Arc::new(self);
         let shared_grpc = Arc::clone(&shared);
-        let shared_gtm = Arc::clone(&shared_grpc);
 
         tokio::spawn(async move {
             let grpc = match AgentGRPCServer::new(shared_grpc).await {
@@ -61,10 +59,6 @@ impl Agent {
                 }
             };
             drop(w_ssh);
-        });
-        tokio::spawn(async move {
-            shared_gtm.gtm.start().await;
-            drop(w_gtm);
         });
         wg.wait().await;
         Ok(())

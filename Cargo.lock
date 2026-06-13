@@ -245,6 +245,7 @@ dependencies = [
  "sentry",
  "sentry-tower",
  "serde",
+ "serde_with",
  "ssh-agent-lib",
  "tokio",
  "tonic",
