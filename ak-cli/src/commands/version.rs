@@ -1,4 +1,5 @@
 use crate::{App, format};
+use ak_meta::full_version;
 use ak_platform::prelude::*;
 use ak_platform::{
     generated::ping::ping_client::PingClient,
@@ -12,7 +13,7 @@ pub async fn version(_app: App) -> Result<()> {
     let user_version = agent_version(agent_socket_path(AgentSocketID::Default)?).await;
     let system_version = agent_version(sysd_socket_path(SysdSocketID::Default)).await;
     let versions = vec![
-        format!("authentik Agent CLI: {}", env!("CARGO_PKG_VERSION")),
+        format!("authentik Agent CLI: {}", full_version()),
         format!("Agent: {}", user_version),
         format!("System: {}", system_version),
     ];

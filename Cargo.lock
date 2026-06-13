@@ -86,6 +86,7 @@ dependencies = [
 name = "ak-cli"
 version = "0.44.3"
 dependencies = [
+ "ak-meta",
  "ak-platform",
  "aws-sdk-sts",
  "aws-types",
@@ -100,6 +101,13 @@ dependencies = [
  "serde_json",
  "tokio",
  "url",
+]
+
+[[package]]
+name = "ak-meta"
+version = "0.44.3"
+dependencies = [
+ "ak-platform",
 ]
 
 [[package]]

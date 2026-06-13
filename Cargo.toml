@@ -5,7 +5,7 @@ expect_used = "deny"
 
 [workspace]
 resolver = "3"
-members = ["ak-nss", "ak-pam", "ak-browser-support", "ak-platform", "ak-cli", "ak-ffi", "ak-platform-authz"]
+members = ["ak-nss", "ak-pam", "ak-browser-support", "ak-platform", "ak-cli", "ak-ffi", "ak-platform-authz", "ak-meta"]
 
 [workspace.package]
 version = "0.44.3"
