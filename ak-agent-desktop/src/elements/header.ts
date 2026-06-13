@@ -1,5 +1,7 @@
 import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+import logoSvg from "@goauthentik/brand-assets/icon_left_brand_white.svg?raw";
 
 @customElement("ak-platform-header")
 export class Header extends LitElement {
@@ -17,12 +19,14 @@ export class Header extends LitElement {
             cursor: default;
             user-select: none;
         }
-        .brand {
-            font-size: 17px;
-            font-weight: 600;
-            color: #fff;
-            letter-spacing: -0.2px;
-            text-align: center;
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo svg {
+            height: 26px;
+            width: auto;
         }
         .actions {
             display: flex;
@@ -78,7 +82,7 @@ export class Header extends LitElement {
         return html`
             <div class="header" @mousedown=${this._startDrag}>
                 <div></div>
-                <div class="brand">authentik</div>
+                <div class="logo">${unsafeHTML(logoSvg)}</div>
                 <div class="actions">
                     <button class="icon-btn" aria-label="Notifications">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
