@@ -52,7 +52,10 @@ jobs:
           cache: true
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
-          path: cache/
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cache/
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
       - name: Build builder image
         if: startsWith(matrix.platform, 'ubuntu')
