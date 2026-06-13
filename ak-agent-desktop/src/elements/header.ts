@@ -6,7 +6,7 @@ export class Header extends LitElement {
     static styles = css`
         :host {
             display: block;
-            background: var(--ak-color-brand, #1565c0);
+            background: var(--ak-color-brand);
         }
         .header {
             display: grid;

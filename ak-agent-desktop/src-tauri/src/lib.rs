@@ -1,8 +1,6 @@
-use tauri::{
-    tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
-};
-use ak_platform::{keyring, log::init_log, string::PlatformString};
 use ak_platform::prelude::*;
+use ak_platform::{keyring, log::init_log, string::PlatformString};
+use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 
 mod cmd;
 mod ui;
@@ -15,14 +13,14 @@ pub fn run() {
             .with_linux("ak-agent"),
     );
     match keyring::init() {
-        Ok(_)=> {},
+        Ok(_) => {}
         Err(e) => {
             eprintln!("Failed to setup keyring: {e:?}");
         }
     };
 
     match start_tauri() {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(e) => {
             log::error!("Failed to start tauri: {e:?}");
         }
@@ -64,16 +62,15 @@ pub fn start_tauri() -> Result<()> {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            cmd::greet,
-        ])
+        .invoke_handler(tauri::generate_handler![cmd::greet,])
         .build(tauri::generate_context!())?
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = event
-                && code.is_none() {
-                    api.prevent_exit();
-                    ui::hide_to_tray(app);
-                }
+                && code.is_none()
+            {
+                api.prevent_exit();
+                ui::hide_to_tray(app);
+            }
         });
     Ok(())
 }

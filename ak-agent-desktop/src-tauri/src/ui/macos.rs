@@ -1,5 +1,7 @@
-use tauri::{App, menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder}};
-// use ak_platform::prelude::*;
+use tauri::{
+    App,
+    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
+};
 
 pub fn setup_menu(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let hide_item = MenuItemBuilder::with_id("hide_to_tray", "Hide to Tray")

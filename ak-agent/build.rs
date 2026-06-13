@@ -8,7 +8,9 @@ fn main() {
             Some("authentik Platform Agent"),
             Some("Authentik Security Inc."),
             Some("2026 Authentik Security Inc."),
-            None
-        ).link().unwrap();
+            None,
+        )
+        .link()
+        .unwrap();
     }
 }

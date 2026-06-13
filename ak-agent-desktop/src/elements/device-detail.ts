@@ -62,7 +62,7 @@ export class DeviceDetail extends LitElement {
             width: 14px;
             height: 14px;
             flex-shrink: 0;
-            color: var(--ak-color-brand, #1565c0);
+            color: var(--ak-color-brand);
         }
         .menu-btn {
             background: none;
