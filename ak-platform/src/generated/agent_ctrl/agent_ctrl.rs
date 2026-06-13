@@ -24,6 +24,14 @@ pub struct SetupResponse {
 pub struct Profile {
     #[prost(string, tag="1")]
     pub name: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub username: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub authentik_url: ::prost::alloc::string::String,
+    #[prost(message, optional, tag="4")]
+    pub last_renewed: ::core::option::Option<::pbjson_types::Timestamp>,
+    #[prost(message, optional, tag="5")]
+    pub next_renew: ::core::option::Option<::pbjson_types::Timestamp>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListProfilesResponse {

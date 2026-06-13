@@ -15,15 +15,25 @@ impl AgentCtrl for AgentGRPCServer {
         &self,
         _request: Request<()>,
     ) -> Result<Response<ListProfilesResponse>, Status> {
-        let profiles = self
-            .agent
-            .cfg
-            .read()
-            .await
-            .profiles
-            .keys()
-            .map(|k| Profile { name: k.clone() })
-            .collect::<Vec<Profile>>();
+        let mut profiles = vec![];
+        for (key, c_prof) in self.agent.cfg.read().await.profiles.iter() {
+            let ptm = self
+                .agent
+                .gtm
+                .for_profile(key)
+                .await
+                .ok_or(Status::invalid_argument("profile not found"))?;
+            let token = ptm.token().await.map_err(Status::from_error)?;
+            let claims = token.claims().map_err(Status::from_error)?;
+            let o_prof = Profile {
+                name: key.clone(),
+                username: claims.preferred_username,
+                authentik_url: c_prof.authentik_url.clone(),
+                last_renewed: Some(claims.iat.into()),
+                next_renew: Some(claims.exp.into()),
+            };
+            profiles.push(o_prof);
+        }
         Ok(Response::new(ListProfilesResponse {
             header: Some(ResponseHeader { successful: true }),
             profiles,

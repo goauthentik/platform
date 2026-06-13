@@ -118,9 +118,33 @@ impl serde::Serialize for Profile {
         if !self.name.is_empty() {
             len += 1;
         }
+        if !self.username.is_empty() {
+            len += 1;
+        }
+        if !self.authentik_url.is_empty() {
+            len += 1;
+        }
+        if self.last_renewed.is_some() {
+            len += 1;
+        }
+        if self.next_renew.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("agent_ctrl.Profile", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
+        }
+        if !self.username.is_empty() {
+            struct_ser.serialize_field("username", &self.username)?;
+        }
+        if !self.authentik_url.is_empty() {
+            struct_ser.serialize_field("authentikUrl", &self.authentik_url)?;
+        }
+        if let Some(v) = self.last_renewed.as_ref() {
+            struct_ser.serialize_field("lastRenewed", v)?;
+        }
+        if let Some(v) = self.next_renew.as_ref() {
+            struct_ser.serialize_field("nextRenew", v)?;
         }
         struct_ser.end()
     }
@@ -133,11 +157,22 @@ impl<'de> serde::Deserialize<'de> for Profile {
     {
         const FIELDS: &[&str] = &[
             "name",
+            "username",
+            "authentik_url",
+            "authentikUrl",
+            "last_renewed",
+            "lastRenewed",
+            "next_renew",
+            "nextRenew",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Name,
+            Username,
+            AuthentikUrl,
+            LastRenewed,
+            NextRenew,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -160,6 +195,10 @@ impl<'de> serde::Deserialize<'de> for Profile {
                     {
                         match value {
                             "name" => Ok(GeneratedField::Name),
+                            "username" => Ok(GeneratedField::Username),
+                            "authentikUrl" | "authentik_url" => Ok(GeneratedField::AuthentikUrl),
+                            "lastRenewed" | "last_renewed" => Ok(GeneratedField::LastRenewed),
+                            "nextRenew" | "next_renew" => Ok(GeneratedField::NextRenew),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -180,6 +219,10 @@ impl<'de> serde::Deserialize<'de> for Profile {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut name__ = None;
+                let mut username__ = None;
+                let mut authentik_url__ = None;
+                let mut last_renewed__ = None;
+                let mut next_renew__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -188,10 +231,38 @@ impl<'de> serde::Deserialize<'de> for Profile {
                             }
                             name__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::Username => {
+                            if username__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("username"));
+                            }
+                            username__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::AuthentikUrl => {
+                            if authentik_url__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("authentikUrl"));
+                            }
+                            authentik_url__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::LastRenewed => {
+                            if last_renewed__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("lastRenewed"));
+                            }
+                            last_renewed__ = map_.next_value()?;
+                        }
+                        GeneratedField::NextRenew => {
+                            if next_renew__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("nextRenew"));
+                            }
+                            next_renew__ = map_.next_value()?;
+                        }
                     }
                 }
                 Ok(Profile {
                     name: name__.unwrap_or_default(),
+                    username: username__.unwrap_or_default(),
+                    authentik_url: authentik_url__.unwrap_or_default(),
+                    last_renewed: last_renewed__,
+                    next_renew: next_renew__,
                 })
             }
         }
