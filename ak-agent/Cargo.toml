@@ -11,6 +11,9 @@ workspace = true
 name = "ak-agent"
 path = "src/main.rs"
 
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 ak-platform-authz = { path = "../ak-platform-authz" }

@@ -7,6 +7,7 @@ expect_used = "deny"
 resolver = "3"
 members = [
     "ak-agent",
+    "ak-agent-desktop/src-tauri",
     "ak-browser-support",
     "ak-cli",
     "ak-ffi",
