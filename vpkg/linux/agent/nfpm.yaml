@@ -10,7 +10,7 @@ homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
 contents:
-  - src: ../../bin/agent_local/ak-agent
+  - src: ../../bin/agent/ak-agent
     dst: /usr/bin/ak-agent
   - src: ./agent/etc/systemd/user/ak-agent.service
     dst: /etc/systemd/user/ak-agent.service

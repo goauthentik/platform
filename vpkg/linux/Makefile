@@ -15,7 +15,7 @@ package:
 		"agent_system"
 	chmod +x "${TOP}/bin/cli/ak"
 	chmod +x "${TOP}/bin/agent_system/ak-sysd"
-	chmod +x "${TOP}/bin/agent_local/ak-agent"
+	chmod +x "${TOP}/bin/agent/ak-agent"
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
 	$(call nfpm_package,${TOP}/vpkg/linux/cli/nfpm.yaml,cli)
 	$(call nfpm_package,${TOP}/vpkg/linux/sysd/nfpm.yaml,agent_system)
