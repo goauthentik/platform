@@ -19,8 +19,12 @@ pub fn init() -> Result<(), BoxError> {
     return Ok(use_named_store("sample")?);
     #[cfg(target_os = "macos")]
     {
+        use std::env;
+
         let mut mods: HashMap<&str, &str> = HashMap::new();
         mods.insert("access-group", MACOS_KEYCHAIN_GROUP);
+        // Our macOS app itself is not sandboxed
+        unsafe { env::set_var("APP_SANDBOX_CONTAINER_ID", "") };
         return Ok(use_named_store_with_modifiers("protected", &mods)?);
     }
     #[cfg(target_os = "windows")]
