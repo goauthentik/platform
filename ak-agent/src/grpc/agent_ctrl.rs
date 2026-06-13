@@ -6,6 +6,7 @@ use ak_platform::generated::{
 };
 use tonic::{Request, Response, Status};
 
+use crate::config::ConfigV1Profile;
 use crate::grpc::AgentGRPCServer;
 
 #[tonic::async_trait]
@@ -31,8 +32,29 @@ impl AgentCtrl for AgentGRPCServer {
 
     async fn setup(
         &self,
-        _request: Request<SetupRequest>,
+        request: Request<SetupRequest>,
     ) -> Result<Response<SetupResponse>, Status> {
-        todo!()
+        let req = request.into_inner();
+        let profile_name = req
+            .header
+            .ok_or(Status::invalid_argument("missing header"))?
+            .profile;
+        {
+            let mut cfg = self.agent.cfg.write().await;
+            cfg.profiles.insert(
+                profile_name,
+                ConfigV1Profile::from_tokens(
+                    req.authentik_url,
+                    req.app_slug,
+                    req.client_id,
+                    req.access_token,
+                    req.refresh_token,
+                ),
+            );
+        }
+        self.agent.cfg.save().await.map_err(Status::from_error)?;
+        Ok(Response::new(SetupResponse {
+            header: Some(ResponseHeader { successful: true }),
+        }))
     }
 }

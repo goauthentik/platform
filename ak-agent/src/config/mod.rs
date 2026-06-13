@@ -34,6 +34,25 @@ pub struct ConfigV1Profile {
 }
 
 impl ConfigV1Profile {
+    pub fn from_tokens(
+        authentik_url: String,
+        app_slug: String,
+        client_id: String,
+        access_token: String,
+        refresh_token: String,
+    ) -> Self {
+        ConfigV1Profile {
+            authentik_url,
+            app_slug,
+            client_id,
+            fallback_access_token: access_token.clone(),
+            fallback_refresh_token: refresh_token.clone(),
+            _access_token: access_token,
+            _refresh_token: refresh_token,
+            _http_client: None,
+        }
+    }
+
     pub fn http_client(mut self) -> Client {
         match self._http_client {
             Some(c) => c,
