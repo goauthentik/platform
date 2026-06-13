@@ -10,11 +10,11 @@ members = [
     "ak-browser-support",
     "ak-cli",
     "ak-ffi",
+    "ak-meta",
     "ak-nss",
     "ak-pam",
     "ak-platform-authz",
     "ak-platform",
-    "ak-meta",
 ]
 
 [workspace.package]
