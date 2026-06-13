@@ -71,7 +71,7 @@ impl ProfileTokenManager {
                 .profiles
                 .get(&self.profile_name)
                 .ok_or("profile not found")?;
-            profile._access_token.clone()
+            profile.access_token().clone()
         };
         Ok(Token {
             access_token: raw,
@@ -89,8 +89,8 @@ impl ProfileTokenManager {
                 .get(&self.profile_name)
                 .ok_or("profile not found")?;
             (
-                profile._access_token.clone(),
-                profile._refresh_token.clone(),
+                profile.access_token().clone(),
+                profile.refresh_token().clone(),
             )
         };
 
@@ -107,9 +107,9 @@ impl ProfileTokenManager {
                         .get(&self.profile_name)
                         .ok_or("profile not found")?;
                     return Ok(Token {
-                        access_token: profile._access_token.clone(),
+                        access_token: profile.access_token().clone(),
                         token_type: None,
-                        refresh_token: Some(profile._refresh_token.clone()),
+                        refresh_token: Some(profile.refresh_token().clone()),
                         expires_in: None,
                     });
                 }
@@ -146,7 +146,7 @@ impl ProfileTokenManager {
                         log::warn!("profile '{profile_name}' not found, stopping renewal");
                         return;
                     }
-                    Some(profile) => match Self::time_until_expiry(&profile._access_token).to_std()
+                    Some(profile) => match Self::time_until_expiry(&profile.access_token()).to_std()
                     {
                         Ok(d) => d,
                         Err(e) => {
@@ -187,7 +187,7 @@ impl ProfileTokenManager {
                 .ok_or("profile not found")?;
             (
                 format!("{}/application/o/token/", profile.authentik_url),
-                profile._refresh_token.clone(),
+                profile.refresh_token().clone(),
                 profile.client_id.clone(),
             )
         };
@@ -225,11 +225,11 @@ impl ProfileTokenManager {
                 .profiles
                 .get_mut(&self.profile_name)
                 .ok_or("profile not found")?;
-            profile._access_token = new_token.access_token.clone();
+            profile.set_access_token(new_token.access_token.clone());
             if let Some(rt) = &new_token.refresh_token
                 && !rt.is_empty()
             {
-                profile._refresh_token = rt.clone();
+                profile.set_refresh_token(rt.clone())
             }
         }
 

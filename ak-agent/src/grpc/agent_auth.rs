@@ -74,7 +74,7 @@ impl AgentAuth for AgentGRPCServer {
                 Method::GET,
                 format!("{}/application/o/userinfo/", profile.clone().authentik_url),
             )
-            .bearer_auth(profile._access_token)
+            .bearer_auth(profile.access_token())
             .send()
             .await
         {
@@ -217,7 +217,7 @@ impl AgentAuth for AgentGRPCServer {
                 "client_assertion_type",
                 "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
             )
-            .append_pair("client_assertion", &profile._access_token)
+            .append_pair("client_assertion", &profile.access_token())
             .append_pair("scope", "openid email profile")
             .finish();
 
@@ -297,7 +297,7 @@ impl AgentAuth for AgentGRPCServer {
 
         let api_config = authentik_client::apis::configuration::Configuration {
             base_path: format!("{}/api/v3", profile.authentik_url),
-            bearer_access_token: Some(profile._access_token),
+            bearer_access_token: Some(profile.access_token()),
             user_agent: Some(format!("authentik-agent v{}", env!("CARGO_PKG_VERSION"))),
             ..Default::default()
         };

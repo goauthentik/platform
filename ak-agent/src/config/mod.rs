@@ -25,9 +25,9 @@ pub struct ConfigV1Profile {
 
     // Not saved to JSON, loaded from keychain
     #[serde(skip)]
-    pub _access_token: String,
+    _access_token: String,
     #[serde(skip)]
-    pub _refresh_token: String,
+    _refresh_token: String,
 
     #[serde(skip)]
     _http_client: Option<Client>,
@@ -51,6 +51,22 @@ impl ConfigV1Profile {
             _refresh_token: refresh_token,
             _http_client: None,
         }
+    }
+
+    pub fn access_token(&self) -> String {
+        self._access_token.clone()
+    }
+
+    pub fn refresh_token(&self) -> String {
+        self._refresh_token.clone()
+    }
+
+    pub fn set_access_token<T: ToString>(&mut self, t: T) {
+        self._access_token = t.to_string()
+    }
+
+    pub fn set_refresh_token<T: ToString>(&mut self, t: T) {
+        self._refresh_token = t.to_string()
     }
 
     pub fn http_client(mut self) -> Client {
@@ -99,6 +115,7 @@ impl Config for ConfigV1 {
         }
         Ok(())
     }
+
     async fn pre_save(&self) -> Result<()> {
         for (key, val) in self.profiles.iter() {
             keyring::set(
