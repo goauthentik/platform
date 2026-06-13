@@ -1,4 +1,6 @@
 use ak_platform::prelude::*;
+use chrono::{DateTime, Utc};
+use pbjson_types::Timestamp;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use serde_json::Value;
@@ -167,6 +169,20 @@ fn leaf_node(label: &str, value: &str) -> TreeNode {
 fn ansi_color(s: &str, code: u8) -> String {
     format!("\x1b[38;5;{code}m{s}\x1b[0m")
 }
+
+pub fn render_timestamp(ot: Option<Timestamp>) -> String {
+    match ot {
+        Some(t) => {
+            let dt: DateTime<Utc> = match t.try_into() {
+                Ok(date) => date,
+                Err(e) => return e.to_string(),
+            };
+            return dt.to_rfc2822()
+        },
+        None => "-".to_string(),
+    }
+}
+
 
 // ── example / smoke-test ─────────────────────────────────────────────────────
 

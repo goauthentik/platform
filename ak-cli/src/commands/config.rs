@@ -1,6 +1,6 @@
 use crate::{
     App,
-    format::{self},
+    format::{self, render_timestamp},
     setup::{
         self,
         ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
@@ -47,9 +47,9 @@ pub async fn list_profiles(app: App) -> Result<()> {
             Line::styled(profile.name.to_string(), format::inline_style())
         );
         println!("\tUsername: {}", profile.username);
-        println!("\tLast Renewal : {:?}", profile.last_renewed);
-        println!("\tNext Renewal : {:?}", profile.next_renew);
-        println!("\tauthentik URL : {}", profile.authentik_url);
+        println!("\tLast Renewal: {}", render_timestamp(profile.last_renewed));
+        println!("\tNext Renewal: {}", render_timestamp(profile.next_renew));
+        println!("\tauthentik URL: {}", profile.authentik_url);
     }
     Ok(())
 }
