@@ -19,7 +19,7 @@ package:
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
 	$(call nfpm_package,${TOP}/vpkg/linux/cli/nfpm.yaml,cli)
 	$(call nfpm_package,${TOP}/vpkg/linux/sysd/nfpm.yaml,agent_system)
-	$(call nfpm_package,${TOP}/vpkg/linux/agent/nfpm.yaml,agent_local)
+	$(call nfpm_package,${TOP}/vpkg/linux/agent/nfpm.yaml,agent)
 	$(call nfpm_package,${TOP}/vpkg/linux/nss/nfpm.yaml,nss)
 	$(call nfpm_package,${TOP}/vpkg/linux/pam/nfpm.yaml,pam)
 
