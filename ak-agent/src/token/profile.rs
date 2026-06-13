@@ -226,12 +226,10 @@ impl ProfileTokenManager {
                 .get_mut(&self.profile_name)
                 .ok_or("profile not found")?;
             profile._access_token = new_token.access_token.clone();
-            profile.fallback_access_token = new_token.access_token.clone();
             if let Some(rt) = &new_token.refresh_token
                 && !rt.is_empty()
             {
                 profile._refresh_token = rt.clone();
-                profile.fallback_refresh_token = rt.clone();
             }
         }
 
