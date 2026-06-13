@@ -39,3 +39,4 @@ tracing = "0.1.44"
 ssh-agent-lib = "0.6.0"
 sentry = "0.48.2"
 authentik-client = "2026.5.3"
+uuid = { version = "1.23.3", features = ["v4"] }

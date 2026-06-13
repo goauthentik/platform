@@ -51,7 +51,13 @@ impl Agent {
             drop(w_grpc);
         });
         tokio::spawn(async move {
-            let ssh = AgentSSHServer::new(Arc::clone(&shared)).await;
+            let ssh = match AgentSSHServer::new(Arc::clone(&shared)).await {
+                Ok(s) => s,
+                Err(e) => {
+                    log::error!("failed to create ssh agent: {e:?}");
+                    return;
+                }
+            };
             match ssh.start().await {
                 Ok(()) => (),
                 Err(e) => {

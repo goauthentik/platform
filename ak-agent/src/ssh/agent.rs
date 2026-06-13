@@ -1,35 +1,49 @@
+use signature::Signer as _;
 use ssh_agent_lib::{
     agent::Session,
     error::AgentError,
-    proto::{Extension, Identity, ProtoError, SignRequest},
+    proto::{Extension, Identity, PublicCredential, SignRequest},
     ssh_key::Signature,
 };
 
-use crate::ssh::AgentSSHServer;
+use crate::ssh::{
+    ext_ak::EXT_AUTHENTIK_AGENT_TUNNEL,
+    ext_session_bind::EXT_OPENSSH_SESSION_BIND,
+    txn::SSHAgentTransaction,
+};
 
 #[ssh_agent_lib::async_trait]
-impl Session for AgentSSHServer {
-    /// Request a list of keys managed by this session.
+impl Session for SSHAgentTransaction {
     async fn request_identities(&mut self) -> Result<Vec<Identity>, AgentError> {
         log::trace!("ssh-agent: request_identities()");
-        Err(AgentError::from(ProtoError::UnsupportedCommand {
-            command: 11,
-        }))
+        match self.ensure_cert().await {
+            Some(cert) => {
+                let comment = cert.key_id().to_string();
+                Ok(vec![Identity {
+                    credential: PublicCredential::Cert(Box::new((*cert).clone())),
+                    comment,
+                }])
+            },
+            None => Ok(vec![]),
+        }
     }
 
-    /// Perform a private key signature operation.
-    async fn sign(&mut self, _request: SignRequest) -> Result<Signature, AgentError> {
+    async fn sign(&mut self, request: SignRequest) -> Result<Signature, AgentError> {
         log::trace!("ssh-agent: sign()");
-        Err(AgentError::from(ProtoError::UnsupportedCommand {
-            command: 13,
-        }))
+        // Attempt cert load (may trigger user authorization prompt).
+        // Signing proceeds regardless of cert state, matching Go behavior.
+        self.ensure_cert().await;
+        self.priv_key
+            .try_sign(&request.data)
+            .map_err(AgentError::other)
     }
 
-    /// Invoke a custom, vendor-specific extension on the agent.
-    async fn extension(&mut self, _extension: Extension) -> Result<Option<Extension>, AgentError> {
-        log::trace!("ssh-agent: extension({})", _extension.name);
-        Err(AgentError::from(ProtoError::UnsupportedCommand {
-            command: 27,
-        }))
+    async fn extension(&mut self, extension: Extension) -> Result<Option<Extension>, AgentError> {
+        log::trace!("ssh-agent: extension({})", extension.name);
+        match extension.name.as_str() {
+            EXT_OPENSSH_SESSION_BIND => self.handle_session_bind(&extension).await,
+            EXT_AUTHENTIK_AGENT_TUNNEL => self.handle_agent_tunnel(&extension).await,
+            _ => Ok(None),
+        }
     }
 }

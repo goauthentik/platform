@@ -25,9 +25,14 @@ serde = { workspace = true }
 chrono = { workspace = true }
 pbjson-types = { workspace = true }
 ssh-agent-lib = { workspace = true }
+ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
+ssh-encoding = "0.2"
+signature = "2"
+tonic-prost = { workspace = true }
 reqwest = { version = "0.13.4", features = ["json"] }
 jsonwebtoken = "9"
 url = { workspace = true }
 sentry = { workspace = true }
 sentry-tower = { version = "0.48.2", features = ["http"] }
 serde_with = "3.21.0"
+uuid = { workspace = true }

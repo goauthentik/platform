@@ -246,12 +246,17 @@ dependencies = [
  "sentry-tower",
  "serde",
  "serde_with",
+ "signature",
  "ssh-agent-lib",
+ "ssh-encoding",
+ "ssh-key",
  "tokio",
  "tonic",
+ "tonic-prost",
  "tower-http",
  "tracing",
  "url",
+ "uuid",
  "waitgroup",
 ]
 
