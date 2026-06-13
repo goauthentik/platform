@@ -15,7 +15,7 @@ local-build:
 
 .PHONY: build-packages
 build-packages:
-	$(MAKE) -C "${TOP}" agent/build AK_GO_BUILD_FLAGS=-cover
+	$(MAKE) -C "${TOP}" ak-agent/build
 	$(MAKE) -C "${TOP}" -j$(shell nproc) \
 		sysd/build \
 		ak-nss/build \
