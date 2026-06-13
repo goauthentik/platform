@@ -1,14 +1,16 @@
-use std::{collections::HashMap, error::Error, fmt::Display};
+use std::{error::Error, fmt::Display};
 
-#[cfg(any(test, debug_assertions))]
+#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+use std::collections::HashMap;
+
+#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
 use keyring::use_named_store;
-#[cfg(not(target_os = "macos"))]
-use keyring::use_named_store;
-#[cfg(target_os = "macos")]
-use keyring::use_named_store_with_modifiers;
+#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
 use keyring_core::{Entry, Error::NoEntry};
 
 use crate::prelude::BoxError;
+#[cfg(target_os = "macos")]
+pub mod macos;
 
 #[cfg(target_os = "macos")]
 const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.shared";
@@ -17,16 +19,10 @@ const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.sha
 pub fn init() -> Result<(), BoxError> {
     #[cfg(any(test, debug_assertions))]
     return Ok(use_named_store("sample")?);
+    // On macOS release builds the keychain is accessed directly via security-framework
+    // (no keyring store needed — see the get/set/delete implementations below).
     #[cfg(target_os = "macos")]
-    {
-        use std::env;
-
-        let mut mods: HashMap<&str, &str> = HashMap::new();
-        mods.insert("access-group", MACOS_KEYCHAIN_GROUP);
-        // Our macOS app itself is not sandboxed
-        unsafe { env::set_var("APP_SANDBOX_CONTAINER_ID", "") };
-        return Ok(use_named_store_with_modifiers("protected", &mods)?);
-    }
+    return Ok(());
     #[cfg(target_os = "windows")]
     return Ok(use_named_store("windows")?);
     #[cfg(target_os = "linux")]
@@ -59,32 +55,32 @@ pub enum Accessibility {
     User,
 }
 
-#[allow(unused_variables, unused_mut)]
+
+// ---------------------------------------------------------------------------
+// Fallback: all other platforms (and macOS test/debug builds) use keyring store
+// ---------------------------------------------------------------------------
+#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
 fn entry_modifies(
     _service: &str,
     _user: &str,
-    access: Accessibility,
+    _access: Accessibility,
 ) -> HashMap<&'static str, &'static str> {
-    let mut mods: HashMap<&str, &str> = HashMap::new();
-    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
-    {
-        match access {
-            Accessibility::User => {
-                mods.insert("access-policy", "after-first-unlock");
-            }
-            Accessibility::Always => (),
-        };
-    }
-    mods
+    HashMap::new()
 }
 
 pub async fn get(service: &str, user: &str, access: Accessibility) -> Result<String, KeyringError> {
-    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-        .map_err(|e| KeyringError::Other(e.into()))?;
-    match e.get_password() {
-        Ok(p) => Ok(p),
-        Err(NoEntry) => Err(KeyringError::NotFound()),
-        Err(e) => Err(KeyringError::Other(e.into())),
+    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
+    return macos::get(service, user, &access);
+
+    #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+    {
+        let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
+            .map_err(|e| KeyringError::Other(e.into()))?;
+        match e.get_password() {
+            Ok(p) => Ok(p),
+            Err(NoEntry) => Err(KeyringError::NotFound()),
+            Err(e) => Err(KeyringError::Other(e.into())),
+        }
     }
 }
 
@@ -94,22 +90,34 @@ pub async fn set(
     access: Accessibility,
     data: String,
 ) -> Result<(), KeyringError> {
-    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-        .map_err(|e| KeyringError::Other(e.into()))?;
-    match e.set_password(&data) {
-        Ok(()) => Ok(()),
-        Err(NoEntry) => Err(KeyringError::NotFound()),
-        Err(e) => Err(KeyringError::Other(e.into())),
+    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
+    return macos::set(service, user, &access, &data);
+
+    #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+    {
+        let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
+            .map_err(|e| KeyringError::Other(e.into()))?;
+        match e.set_password(&data) {
+            Ok(()) => Ok(()),
+            Err(NoEntry) => Err(KeyringError::NotFound()),
+            Err(e) => Err(KeyringError::Other(e.into())),
+        }
     }
 }
 
 pub async fn delete(service: &str, user: &str, access: Accessibility) -> Result<(), KeyringError> {
-    let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-        .map_err(|e| KeyringError::Other(e.into()))?;
-    match e.delete_credential() {
-        Ok(()) => Ok(()),
-        Err(NoEntry) => Ok(()),
-        Err(e) => Err(KeyringError::Other(e.into())),
+    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
+    return macos::delete(service, user, &access);
+
+    #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+    {
+        let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
+            .map_err(|e| KeyringError::Other(e.into()))?;
+        match e.delete_credential() {
+            Ok(()) => Ok(()),
+            Err(NoEntry) => Ok(()),
+            Err(e) => Err(KeyringError::Other(e.into())),
+        }
     }
 }
 

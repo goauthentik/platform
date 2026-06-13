@@ -41,6 +41,8 @@ sysinfo = { version = "0.39.3", default-features = false, features = ["system"] 
 [target.'cfg(target_os = "macos")'.dependencies]
 oslog = "0.2.0"
 apple-native-keyring-store = "1.0.0"
+security-framework = { version = "3.7", features = ["OSX_10_15"] }
+core-foundation = "0.10"
 
 [target.'cfg(unix)'.dependencies]
 syslog = "7.0.0"
