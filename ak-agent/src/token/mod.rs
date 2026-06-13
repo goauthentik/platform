@@ -9,7 +9,7 @@ pub mod global;
 pub mod profile;
 
 #[serde_as]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AuthentikClaims {
     pub iss: String,
     pub sub: String,

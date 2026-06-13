@@ -1,5 +1,6 @@
 use ak_platform::prelude::*;
 use ak_platform::{keyring, log::init_log, string::PlatformString};
+use tauri::Manager;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 
 mod cmd;
@@ -34,9 +35,11 @@ pub fn start_tauri() -> Result<()> {
         }))
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 match ak_agent::agent::Agent::new().await {
                     Ok(agent) => {
+                        handle.manage(agent.clone());
                         if let Err(e) = agent.start().await {
                             log::error!("agent exited with error: {e}");
                         }
@@ -62,7 +65,7 @@ pub fn start_tauri() -> Result<()> {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![cmd::greet,])
+        .invoke_handler(tauri::generate_handler![cmd::greet, cmd::get_user_info,])
         .build(tauri::generate_context!())?
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = event
