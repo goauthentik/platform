@@ -5,7 +5,6 @@ import (
 	"net/url"
 
 	"goauthentik.io/api/v3"
-	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/meta"
 )
 
@@ -17,7 +16,17 @@ type URLSet struct {
 	JWKS          string
 }
 
-func URLsForProfile(profile config.ConfigV1Profile) URLSet {
+type ConfigV1Profile struct {
+	AuthentikURL string `json:"authentik_url"`
+	AppSlug      string `json:"app_slug"`
+	ClientID     string `json:"client_id"`
+
+	// Not saved to JSON, loaded from keychain
+	AccessToken  string `json:"-"`
+	RefreshToken string `json:"-"`
+}
+
+func URLsForProfile(profile ConfigV1Profile) URLSet {
 	return URLSet{
 		AuthorizeURL:  fmt.Sprintf("%s/application/o/authorize/", profile.AuthentikURL),
 		DeviceCodeURL: fmt.Sprintf("%s/application/o/device/", profile.AuthentikURL),
@@ -27,7 +36,7 @@ func URLsForProfile(profile config.ConfigV1Profile) URLSet {
 	}
 }
 
-func APIConfig(profile config.ConfigV1Profile) *api.Configuration {
+func APIConfig(profile ConfigV1Profile) *api.Configuration {
 	u, err := url.Parse(profile.AuthentikURL)
 	c := api.NewConfiguration()
 	if err != nil {
