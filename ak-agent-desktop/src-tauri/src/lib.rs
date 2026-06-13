@@ -1,11 +1,11 @@
 use tauri::{
-    Manager, WebviewUrl, WebviewWindowBuilder,
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
 };
 use ak_platform::{keyring, log::init_log, string::PlatformString};
 use ak_platform::prelude::*;
 
 mod cmd;
+mod ui;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -32,7 +32,7 @@ pub fn run() {
 pub fn start_tauri() -> Result<()> {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            show_main(app);
+            ui::show_main(app);
         }))
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
@@ -47,6 +47,9 @@ pub fn start_tauri() -> Result<()> {
                 }
             });
 
+            #[cfg(target_os = "macos")]
+            ui::macos::setup_menu(app)?;
+
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .on_tray_icon_event(|tray, e| {
@@ -55,7 +58,7 @@ pub fn start_tauri() -> Result<()> {
                         ..
                     } = e
                     {
-                        show_main(tray.app_handle());
+                        ui::show_main(tray.app_handle());
                     }
                 })
                 .build(app)?;
@@ -66,29 +69,11 @@ pub fn start_tauri() -> Result<()> {
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| {
-            match event {
-                tauri::RunEvent::ExitRequested { code, api, .. } => {
-                    if code.is_none() {
-                        api.prevent_exit();
-                        if let Some(win) = app.get_webview_window("main") {
-                            let _ = win.hide();
-                        }
-                    }
-                },
-                _ => {},
-            }
+            if let tauri::RunEvent::ExitRequested { code, api, .. } = event
+                && code.is_none() {
+                    api.prevent_exit();
+                    ui::hide_to_tray(app);
+                }
         });
     Ok(())
-}
-
-fn show_main(app: &tauri::AppHandle) {
-    let win = match app.get_webview_window("main") {
-        Some(w) => w,
-        None => WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
-            .title("App")
-            .build()
-            .unwrap(),
-    };
-    let _ = win.show();
-    let _ = win.set_focus();
 }
