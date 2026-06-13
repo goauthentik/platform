@@ -1,5 +1,6 @@
 use crate::{
-    App, format,
+    App,
+    format::{self},
     setup::{
         self,
         ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
@@ -42,9 +43,13 @@ pub async fn list_profiles(app: App) -> Result<()> {
     assert_response_valid(res.header)?;
     for profile in res.profiles {
         println!(
-            "{}",
+            "{}:",
             Line::styled(profile.name.to_string(), format::inline_style())
-        )
+        );
+        println!("\tUsername: {}", profile.username);
+        println!("\tLast Renewal : {:?}", profile.last_renewed);
+        println!("\tNext Renewal : {:?}", profile.next_renew);
+        println!("\tauthentik URL : {}", profile.authentik_url);
     }
     Ok(())
 }

@@ -55,7 +55,6 @@ pub enum Accessibility {
     User,
 }
 
-
 // ---------------------------------------------------------------------------
 // Fallback: all other platforms (and macOS test/debug builds) use keyring store
 // ---------------------------------------------------------------------------
