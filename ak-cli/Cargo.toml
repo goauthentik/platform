@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 clap = { version = "4.6.1", features = ["derive"] }
+clap_complete = "4"
 log = { workspace = true }
 ratatui = "0.30.1"
 serde = { workspace = true }

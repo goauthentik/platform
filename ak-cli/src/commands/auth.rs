@@ -18,7 +18,7 @@ pub enum AuthCommands {
         client_id: String,
         #[arg(short, long, required = true)]
         role_arn: String,
-        #[arg(short, long, required = true)]
+        #[arg(short = 'e', long, required = true)]
         region: String,
     },
     /// Authenticate to a Kubernetes Cluster with the authentik profile.
