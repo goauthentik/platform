@@ -2,11 +2,13 @@ use tauri::{
     Manager, WebviewUrl, WebviewWindowBuilder,
 };
 
+const WINDOW_LABEL: &str = "main";
+
 #[cfg(target_os = "macos")]
 pub mod macos;
 
 pub fn hide_to_tray(app: &tauri::AppHandle) {
-    if let Some(win) = app.get_webview_window("main") {
+    if let Some(win) = app.get_webview_window(WINDOW_LABEL) {
         let _ = win.hide();
     }
     #[cfg(target_os = "macos")]
@@ -20,10 +22,12 @@ pub fn show_main(app: &tauri::AppHandle) {
         let _ = app.show();
     }
 
-    let win = match app.get_webview_window("main") {
+    let win = match app.get_webview_window(WINDOW_LABEL) {
         Some(w) => w,
-        None => WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+        None => WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default())
             .title("App")
+            .hidden_title(true)
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
             .build()
             .unwrap(),
     };

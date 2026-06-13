@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ak-agent-desktop",
+  "productName": "authentik Agent",
   "version": "0.1.0",
   "identifier": "io.goauthentik.platform.agent.desktop",
   "build": {
@@ -17,7 +17,7 @@
     }
   },
   "bundle": {
-    "active": true,
+    "active": false,
     "targets": "all",
     "icon": [
       "icons/32x32.png",

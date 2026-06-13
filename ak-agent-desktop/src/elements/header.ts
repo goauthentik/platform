@@ -9,17 +9,20 @@ export class Header extends LitElement {
             background: var(--ak-color-brand, #1565c0);
         }
         .header {
-            display: flex;
+            display: grid;
+            grid-template-columns: 78px 1fr auto;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
+            padding: 0 16px 0 0;
             height: 52px;
+            cursor: default;
+            user-select: none;
         }
         .brand {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 600;
             color: #fff;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.2px;
+            text-align: center;
         }
         .actions {
             display: flex;
@@ -62,9 +65,19 @@ export class Header extends LitElement {
         }
     `;
 
+    private _startDrag(e: MouseEvent) {
+        if (e.button !== 0) return;
+        const target = e.composedPath()[0] as HTMLElement;
+        if (target.closest?.("button, a, .avatar")) return;
+        void import("@tauri-apps/api/window")
+            .then(({ getCurrentWindow }) => void getCurrentWindow().startDragging())
+            .catch(() => {/* not in Tauri */});
+    }
+
     render() {
         return html`
-            <div class="header">
+            <div class="header" @mousedown=${this._startDrag}>
+                <div></div>
                 <div class="brand">authentik</div>
                 <div class="actions">
                     <button class="icon-btn" aria-label="Notifications">

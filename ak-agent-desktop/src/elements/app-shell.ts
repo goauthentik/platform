@@ -5,6 +5,7 @@ import "./header.js";
 import "./tab-bar.js";
 import "./device-carousel.js";
 import "./device-detail.js";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 @customElement("ak-app-shell")
 export class AppShell extends LitElement {
@@ -80,7 +81,15 @@ export class AppShell extends LitElement {
 
     render() {
         return html`
-            <ak-platform-header></ak-platform-header>
+            <ak-platform-header @mousedown=${(ev: MouseEvent) => {
+                    const appWindow = getCurrentWindow();
+                  if (ev.buttons === 1) {
+                    // Primary (left) button
+                    ev.detail === 2
+                      ? appWindow.toggleMaximize() // Maximize on double click
+                      : appWindow.startDragging(); // Else start dragging
+                  }
+            }}></ak-platform-header>
             <ak-tab-bar
                 .activeTab=${this._activeTab}
                 @ak-tab-change=${this._onTabChange}
