@@ -9,10 +9,14 @@ package:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/bin/cli/completions"
 	mkdir -p "${TOP}/bin/agent_system/completions"
-	"${TOP}/hack/completions.sh" \
+	"${TOP}/hack/completions_go.sh" \
 		"${TOP}/cmd/agent_system" \
 		"${TOP}/bin/agent_system/completions" \
 		"agent_system"
+	"${TOP}/hack/completions_rust.sh" \
+		"ak-cli" \
+		"${TOP}/bin/cli/completions" \
+		"ak"
 	chmod +x "${TOP}/bin/cli/ak"
 	chmod +x "${TOP}/bin/agent_system/ak-sysd"
 	chmod +x "${TOP}/bin/agent/ak-agent"
