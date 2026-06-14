@@ -5,6 +5,7 @@ use ak_platform::{
     log::{init_log_interactive, set_log_level},
 };
 use clap::{Error, Parser, Subcommand};
+use clap_complete::Shell;
 use log::LevelFilter;
 
 pub mod auth;
@@ -58,6 +59,11 @@ enum Commands {
         #[command(subcommand)]
         command: AuthCommands,
     },
+    /// Generate shell completion scripts
+    Completions {
+        /// Shell to generate completions for
+        shell: Shell,
+    },
 }
 
 impl App {
@@ -89,6 +95,7 @@ async fn main() -> std::result::Result<(), Error> {
     };
 
     let res = match &cli.command {
+        Commands::Completions { shell } => commands::completions::completions(*shell).await,
         Commands::Whoami => commands::whoami::whoami(app).await,
         Commands::Version => commands::version::version(app).await,
         Commands::Config { command } => match command {
