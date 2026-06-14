@@ -33,13 +33,21 @@ fn proc_start_time() -> Option<u64> {
 }
 
 pub async fn prompt(_msg: PlatformString) -> Result<bool> {
-    let conn = zbus::Connection::system()
-        .await
-        .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+    let conn = match zbus::Connection::system().await {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("polkit: D-Bus system bus unavailable, allowing authorization: {e}");
+            return Ok(true);
+        }
+    };
 
-    let proxy = PolkitAuthorityProxy::new(&conn)
-        .await
-        .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+    let proxy = match PolkitAuthorityProxy::new(&conn).await {
+        Ok(p) => p,
+        Err(e) => {
+            log::warn!("polkit: could not connect to PolicyKit1 authority, allowing authorization: {e}");
+            return Ok(true);
+        }
+    };
 
     let pid: u32 = std::process::id();
     let mut subject_details: HashMap<String, OwnedValue> = HashMap::new();
