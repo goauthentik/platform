@@ -27,11 +27,10 @@ overrides:
     depends:
       - "authentik-sysd"
       - "libc6"
-      - "libssl3 | libssl3t64"
+
     scripts:
       postinstall: ./nss/_deb/postinst.sh
   rpm:
     depends:
       - "authentik-sysd"
       - "glibc"
-      - "openssl-libs"
