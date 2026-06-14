@@ -30,7 +30,7 @@ pub fn show_main(app: &tauri::AppHandle) {
                 b = b
                     .hidden_title(true)
                     .title_bar_style(tauri::TitleBarStyle::Overlay)
-                    .traffic_light_position(LogicalPosition::new(16, 52 / 2))
+                    .traffic_light_position(LogicalPosition::new(16, 28))
             }
             b.build().unwrap()
         }
