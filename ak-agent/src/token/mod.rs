@@ -21,6 +21,8 @@ pub struct AuthentikClaims {
     pub iat: DateTime<Utc>,
     pub jti: String,
     pub preferred_username: String,
+    pub email: String,
+    pub name: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

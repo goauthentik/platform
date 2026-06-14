@@ -6,6 +6,13 @@ import "./tab-bar.js";
 import "./device-carousel.js";
 import "./device-detail.js";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
+
+export interface userInfo {
+  preferred_username: string;
+  email: string;
+  name: string;
+}
 
 @customElement("ak-app-shell")
 export class AppShell extends LitElement {
@@ -23,8 +30,14 @@ export class AppShell extends LitElement {
         }
     `;
 
-    @state() private _activeTab: TabId = "devices";
-    @state() private _selectedDeviceId = "mac-jens";
+    @state()
+    private _activeTab: TabId = "devices";
+
+    @state()
+    private _selectedDeviceId = "mac-jens";
+
+    @state()
+    private user? : userInfo;
 
     private devices: Device[] = [
         {
@@ -77,6 +90,11 @@ export class AppShell extends LitElement {
 
     private _onDeviceSelect(e: CustomEvent) {
         this._selectedDeviceId = e.detail.id;
+    }
+
+    async connectedCallback(): Promise<void> {
+        super.connectedCallback();
+        this.user = await invoke<userInfo>("get_user_info", { profile: "default" });
     }
 
     render() {
