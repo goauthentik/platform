@@ -5,7 +5,7 @@ ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
-RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-server nano htop libpam0g-dev libudev-dev yq curl gpg ca-certificates' && \
+RUN INSTALL_PKGS='findutils iproute2 sudo systemd rsyslog pamtester openssh-server nano htop libpam0g-dev libudev-dev yq curl gpg ca-certificates libpolkit-gobject-1-0' && \
     apt-get update && \
     apt-get install $INSTALL_PKGS -y --no-install-recommends && \
     apt-get clean && \
