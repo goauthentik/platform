@@ -56,6 +56,10 @@ where
         Arc::clone(&self.reload_notify)
     }
 
+    pub fn notify_reload(&self) {
+        self.reload_notify.notify_waiters();
+    }
+
     pub async fn read(&self) -> RwLockReadGuard<'_, T> {
         self.loaded.read().await
     }
@@ -98,6 +102,7 @@ where
             .write(true)
             .open(self.path.clone())?;
         serde_json::to_writer(file, &*loaded)?;
+        self.notify_reload();
         Ok(())
     }
 }

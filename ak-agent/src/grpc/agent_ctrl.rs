@@ -52,7 +52,7 @@ impl AgentCtrl for AgentGRPCServer {
         {
             let mut cfg = self.agent.cfg.write().await;
             cfg.profiles.insert(
-                profile_name,
+                profile_name.clone(),
                 ConfigV1Profile::from_tokens(
                     req.authentik_url,
                     req.app_slug,
@@ -63,6 +63,7 @@ impl AgentCtrl for AgentGRPCServer {
             );
         }
         self.agent.cfg.save().await.map_err(Status::from_error)?;
+        log::info!("setup new profile {profile_name}");
         Ok(Response::new(SetupResponse {
             header: Some(ResponseHeader { successful: true }),
         }))
