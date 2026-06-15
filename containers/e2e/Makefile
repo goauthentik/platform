@@ -13,6 +13,18 @@ local-build:
 		-f "${PWD}/Dockerfile" \
 		${TOP}
 
+.PHONY: ci-build
+ci-build:
+	$(MAKE) -C ${TOP} containers/test/local-build
+	mkdir -p ${TOP}/bin
+	docker build \
+		-t xghcr.io/goauthentik/platform-e2e:local \
+		--no-cache \
+		--build-arg="AK_PLATFORM_VER=${VERSION_PKG}" \
+		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \
+		-f "${PWD}/Dockerfile" \
+		${TOP}
+
 .PHONY: build-packages
 build-packages:
 	$(MAKE) -C "${TOP}" ak-agent/build

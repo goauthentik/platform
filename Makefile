@@ -106,6 +106,9 @@ test-integration:
 test-e2e: containers/e2e/local-build
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
 
+test-e2e-ci:
+	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+
 test-e2e-convert:
 	go tool covdata textfmt \
 		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
