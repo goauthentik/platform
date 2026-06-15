@@ -1,4 +1,4 @@
-use std::error::Error;
+use ak_platform::prelude::*;
 
 use ak_platform::string::PlatformString;
 use windows::{
@@ -8,7 +8,7 @@ use windows::{
     core::HSTRING,
 };
 
-pub async fn prompt(msg: PlatformString) -> Result<bool, Box<dyn Error>> {
+pub async fn prompt(msg: PlatformString) -> Result<bool> {
     let hmsg = HSTRING::from(msg.for_current());
     match UserConsentVerifier::CheckAvailabilityAsync()?.await? {
         UserConsentVerifierAvailability::Available => (),
