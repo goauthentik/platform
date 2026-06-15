@@ -50,8 +50,7 @@ ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev \
-		libpolkit-gobject-1-dev libglib2.0-dev
+		libpam0g-dev libudev-dev
 endif
 endif
 

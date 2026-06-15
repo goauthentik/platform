@@ -18,12 +18,8 @@ contents:
     dst: /usr/share/polkit-1/actions/io.goauthentik.platform.policy
 overrides:
   deb:
-    depends:
-      - libpolkit-gobject-1-0
     scripts:
       postinstall: ./agent/_deb/postinst.sh
   rpm:
-    depends:
-      - polkit-libs
     scripts:
       postinstall: ./agent/_rpm/post.sh
