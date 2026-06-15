@@ -101,13 +101,13 @@ where
         let loaded = self.loaded.read().await;
         loaded.pre_save().await?;
         log::debug!("saving config");
-        let file = OpenOptions::new()
-            .create(true)
-            .truncate(true)
-            .read(true)
-            .write(true)
-            .mode(0o600)
-            .open(self.path.clone())?;
+        let mut opts = OpenOptions::new();
+        opts.create(true).truncate(true).read(true).write(true);
+        #[cfg(unix)]
+        {
+            opts.mode(0o600);
+        }
+        let file = opts.open(self.path.clone())?;
         serde_json::to_writer(file, &*loaded)?;
         self.notify_reload();
         Ok(())
