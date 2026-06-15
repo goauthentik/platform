@@ -26,7 +26,7 @@ pub fn init() -> Result<(), BoxError> {
     #[cfg(target_os = "windows")]
     return Ok(use_named_store("windows")?);
     #[cfg(target_os = "linux")]
-    return Ok(use_named_store("secret-service")?);
+    return Ok(use_named_store("keyutils")?);
     Err(Box::from("no keychain implementation for current OS"))
 }
 
