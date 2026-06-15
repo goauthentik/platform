@@ -51,11 +51,11 @@ impl AuthorizeAction {
         }
         let msg = (self.message)(&creds)?.clone();
         log::trace!("Prompting for authz: {uid}");
-        let res = match sys::prompt(msg).await  {
+        let res = match sys::prompt(msg).await {
             Ok(r) => r,
             Err(e) => {
                 log::trace!("error during authz: {e:?}");
-                return Err(e)
+                return Err(e);
             }
         };
 

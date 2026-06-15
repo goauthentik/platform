@@ -7,7 +7,7 @@ use zbus::zvariant::OwnedValue;
     interface = "org.freedesktop.PolicyKit1.Authority",
     default_service = "org.freedesktop.PolicyKit1",
     default_path = "/org/freedesktop/PolicyKit1/Authority",
-    gen_blocking = false,
+    gen_blocking = false
 )]
 trait PolkitAuthority {
     async fn check_authorization(
@@ -44,7 +44,9 @@ pub async fn prompt(_msg: PlatformString) -> Result<bool> {
     let proxy = match PolkitAuthorityProxy::new(&conn).await {
         Ok(p) => p,
         Err(e) => {
-            log::warn!("polkit: could not connect to PolicyKit1 authority, allowing authorization: {e}");
+            log::warn!(
+                "polkit: could not connect to PolicyKit1 authority, allowing authorization: {e}"
+            );
             return Ok(true);
         }
     };

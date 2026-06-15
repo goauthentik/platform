@@ -1,7 +1,9 @@
 use std::{
-    fs::{File, OpenOptions},
+    fs::{File, OpenOptions, create_dir_all},
     io::ErrorKind,
     marker::PhantomData,
+    os::unix::fs::OpenOptionsExt,
+    path::Path,
     sync::Arc,
 };
 
@@ -32,6 +34,10 @@ where
             _phantom: PhantomData,
         };
         log::debug!("Config file path: {}", cm.path);
+        if let Some(parent) = Path::new(&cm.path).parent() {
+            log::debug!("Creating parent config dir: {}", parent.to_string_lossy());
+            create_dir_all(parent)?;
+        }
         cm.load().await?;
         log::debug!("Starting config watch");
         let shared = Arc::new(cm);
@@ -100,6 +106,7 @@ where
             .truncate(true)
             .read(true)
             .write(true)
+            .mode(0o600)
             .open(self.path.clone())?;
         serde_json::to_writer(file, &*loaded)?;
         self.notify_reload();
