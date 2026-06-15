@@ -1,12 +1,12 @@
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
 use std::{
     fs::{File, OpenOptions, create_dir_all},
     io::ErrorKind,
     marker::PhantomData,
-    os::unix::fs::OpenOptionsExt,
     path::Path,
     sync::Arc,
 };
-
 use tokio::sync::{Notify, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::{prelude::*, storage::cfgmgr::schema::Config};
