@@ -66,6 +66,7 @@ impl AgentCtrl for AgentGRPCServer {
             log::warn!("failed to save config: {e:?}");
             return Err(Status::from_error(e));
         }
+        self.agent.gtm.wait_for_profile(&profile_name).await;
         log::info!("setup new profile {profile_name}");
         Ok(Response::new(SetupResponse {
             header: Some(ResponseHeader { successful: true }),
