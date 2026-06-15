@@ -95,6 +95,7 @@ dependencies = [
  "log",
  "pbjson-types",
  "reqwest 0.13.4",
+ "reqwest-middleware",
  "sentry",
  "sentry-tower",
  "serde",

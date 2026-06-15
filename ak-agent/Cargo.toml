@@ -31,6 +31,7 @@ ssh-encoding = "0.2"
 signature = "2"
 tonic-prost = { workspace = true }
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
+reqwest-middleware = "0.5.2"
 jsonwebtoken = "9"
 url = { workspace = true }
 sentry = { workspace = true }

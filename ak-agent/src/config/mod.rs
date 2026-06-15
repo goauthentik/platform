@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
+use ak_meta::user_agent;
 use ak_platform::prelude::*;
 use ak_platform::{keyring, storage::cfgmgr::schema::Config};
+use authentik_client::apis::configuration::Configuration;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -73,10 +75,34 @@ impl ConfigV1Profile {
         match self._http_client {
             Some(c) => c,
             None => {
-                let c = reqwest::Client::new();
+                // TEMP, the authentik-client crate currently incorrectly drops the auth for certain
+                // endpoint-related endpoints, thus we inject it as a header in reqwest
+                let c = reqwest::Client::builder()
+                    .default_headers(
+                        [(
+                            reqwest::header::AUTHORIZATION,
+                            reqwest::header::HeaderValue::from_str(&self.access_token()).unwrap(),
+                        )]
+                        .into_iter()
+                        .collect(),
+                    )
+                    .build()
+                    .unwrap();
                 self._http_client = Some(c.clone());
                 c
             }
+        }
+    }
+
+    pub fn api_config(self) -> Configuration {
+        Configuration {
+            base_path: format!("{}/api/v3", self.authentik_url.clone()),
+            bearer_access_token: Some(self.access_token()),
+            user_agent: Some(user_agent()),
+            client: reqwest_middleware::ClientBuilder::new(self.http_client()).build(),
+            basic_auth: None,
+            oauth_access_token: None,
+            api_key: None,
         }
     }
 }
