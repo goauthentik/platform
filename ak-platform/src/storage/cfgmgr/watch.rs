@@ -28,11 +28,10 @@ where
                 }
             };
             if let EventKind::Modify(_) = ev.kind {
-                continue;
-            }
-            log::debug!("config file update");
-            if let Err(e) = self.load().await {
-                log::warn!("failed to reload config: {e:?}");
+                log::debug!("config file update");
+                if let Err(e) = self.load().await {
+                    log::warn!("failed to reload config: {e:?}");
+                }
             }
         }
         Ok(())

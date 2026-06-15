@@ -28,7 +28,7 @@ func (cfg *Manager[T]) watch() error {
 				if !ok {
 					continue
 				}
-				if event.Has(fsnotify.Write) {
+				if !event.Has(fsnotify.Write) {
 					continue
 				}
 				if cfg.FilterWatchEvent != nil && !cfg.FilterWatchEvent(event) {
