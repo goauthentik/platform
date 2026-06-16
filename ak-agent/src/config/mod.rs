@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use ak_meta::user_agent;
 use ak_platform::prelude::*;
-use ak_platform::{keyring, storage::cfgmgr::schema::Config};
+use ak_platform::storage::cfgmgr::schema::Config;
+use ak_platform_keyring;
 use authentik_client::apis::configuration::Configuration;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -119,29 +120,29 @@ impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
         for (key, val) in self.profiles.iter_mut() {
             log::debug!("Getting access token for profile: {key}");
-            match keyring::get(
-                &keyring::service("access_token"),
+            match ak_platform_keyring::get(
+                &ak_platform_keyring::service("access_token"),
                 key,
-                keyring::Accessibility::User,
+                ak_platform_keyring::Accessibility::User,
             )
             .await
             {
                 Ok(v) => val._access_token = v,
-                Err(keyring::KeyringError::NotFound()) => {
+                Err(ak_platform_keyring::KeyringError::NotFound()) => {
                     val._access_token = val.fallback_access_token.clone()
                 }
                 Err(e) => return Err(e.into()),
             }
             log::debug!("Getting refresh token for profile: {key}");
-            match keyring::get(
-                &keyring::service("refresh_token"),
+            match ak_platform_keyring::get(
+                &ak_platform_keyring::service("refresh_token"),
                 key,
-                keyring::Accessibility::User,
+                ak_platform_keyring::Accessibility::User,
             )
             .await
             {
                 Ok(v) => val._refresh_token = v,
-                Err(keyring::KeyringError::NotFound()) => {
+                Err(ak_platform_keyring::KeyringError::NotFound()) => {
                     val._refresh_token = val.fallback_refresh_token.clone()
                 }
                 Err(e) => return Err(e.into()),
@@ -152,17 +153,17 @@ impl Config for ConfigV1 {
 
     async fn pre_save(&self) -> Result<()> {
         for (key, val) in self.profiles.iter() {
-            keyring::set(
-                &keyring::service("access_token"),
+            ak_platform_keyring::set(
+                &ak_platform_keyring::service("access_token"),
                 key,
-                keyring::Accessibility::User,
+                ak_platform_keyring::Accessibility::User,
                 val._access_token.clone(),
             )
             .await?;
-            keyring::set(
-                &keyring::service("refresh_token"),
+            ak_platform_keyring::set(
+                &ak_platform_keyring::service("refresh_token"),
                 key,
-                keyring::Accessibility::User,
+                ak_platform_keyring::Accessibility::User,
                 val._refresh_token.clone(),
             )
             .await?;

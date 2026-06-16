@@ -89,6 +89,7 @@ dependencies = [
  "ak-meta",
  "ak-platform",
  "ak-platform-authz",
+ "ak-platform-keyring",
  "authentik-client",
  "chrono",
  "jsonwebtoken",
@@ -239,6 +240,23 @@ dependencies = [
  "tonic",
  "windows 0.62.2",
  "zbus",
+]
+
+[[package]]
+name = "ak-platform-keyring"
+version = "0.44.3"
+dependencies = [
+ "ak-platform",
+ "apple-native-keyring-store",
+ "chrono",
+ "core-foundation",
+ "keyring",
+ "keyring-core",
+ "log",
+ "security-framework",
+ "serde",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

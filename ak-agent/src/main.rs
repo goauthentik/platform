@@ -1,6 +1,5 @@
-use ak_platform::{keyring, log, prelude::*, string::PlatformString};
-
 use crate::agent::Agent;
+use ak_platform::{log, prelude::*, string::PlatformString};
 
 pub mod agent;
 pub mod config;
@@ -15,7 +14,7 @@ async fn main() -> Result<()> {
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
     );
-    keyring::init()?;
+    ak_platform_keyring::init()?;
     let ag = Agent::new().await?;
     ag.start().await?;
     Ok(())

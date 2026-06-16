@@ -2,10 +2,10 @@ use chrono::{DateTime, Utc};
 use serde::{Serialize, de::DeserializeOwned};
 use std::marker::PhantomData;
 
-use crate::{
-    keyring::{self, KeyringError},
-    prelude::BoxError,
-};
+use ak_platform::prelude::BoxError;
+
+use crate::KeyringError;
+
 pub trait CacheData {
     fn expiry(&self) -> DateTime<Utc>;
 }
@@ -37,10 +37,10 @@ where
     pub async fn set(self, val: T) -> Result<(), BoxError> {
         log::debug!("Writing to cache");
         let serialized = serde_json::to_string(&val).map_err(Box::new)?;
-        keyring::set(
-            &keyring::service(&self.uid),
+        crate::set(
+            &crate::service(&self.uid),
             &self.profile_name,
-            keyring::Accessibility::User,
+            crate::Accessibility::User,
             serialized,
         )
         .await
@@ -49,10 +49,10 @@ where
 
     pub async fn get(self) -> Result<T, CacheError> {
         log::debug!("Checking cache");
-        let cached = match keyring::get(
-            &keyring::service(&self.uid),
+        let cached = match crate::get(
+            &crate::service(&self.uid),
             &self.profile_name,
-            keyring::Accessibility::User,
+            crate::Accessibility::User,
         )
         .await
         {
@@ -62,10 +62,10 @@ where
         };
         let v: T = serde_json::from_str(&cached).map_err(|e| CacheError::Other(e.into()))?;
         if v.expiry() < Utc::now() {
-            keyring::delete(
-                &keyring::service(&self.uid),
+            crate::delete(
+                &crate::service(&self.uid),
                 &self.profile_name,
-                keyring::Accessibility::User,
+                crate::Accessibility::User,
             )
             .await
             .map_err(|e| CacheError::Other(e.into()))?;

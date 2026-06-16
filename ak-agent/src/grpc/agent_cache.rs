@@ -1,14 +1,12 @@
 use crate::grpc::AgentGRPCServer;
-use ak_platform::{
-    generated::{
-        agent::ResponseHeader,
-        agent_cache::{
-            CacheGetRequest, CacheGetResponse, CacheSetRequest, CacheSetResponse, CacheStatus,
-            agent_cache_server::AgentCache,
-        },
+use ak_platform::generated::{
+    agent::ResponseHeader,
+    agent_cache::{
+        CacheGetRequest, CacheGetResponse, CacheSetRequest, CacheSetResponse, CacheStatus,
+        agent_cache_server::AgentCache,
     },
-    storage::cache::{Cache, CacheData, CacheError},
 };
+use ak_platform_keyring::cache::{Cache, CacheData, CacheError};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tonic::{Request, Response, Status};

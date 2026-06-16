@@ -1,0 +1,22 @@
+[package]
+name = "ak-platform-keyring"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+keyring = "4.0.1"
+keyring-core = "1.0.0"
+serde = { workspace = true }
+chrono = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+apple-native-keyring-store = "1.0.0"
+security-framework = { version = "3.7", features = ["OSX_10_15"] }
+core-foundation = "0.10"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "io-util"] }

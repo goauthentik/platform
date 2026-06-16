@@ -8,9 +8,11 @@ use keyring::use_named_store;
 #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
 use keyring_core::{Entry, Error::NoEntry};
 
-use crate::prelude::BoxError;
+use ak_platform::prelude::BoxError;
 #[cfg(target_os = "macos")]
 pub mod macos;
+
+pub mod cache;
 
 #[cfg(target_os = "macos")]
 const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.shared";

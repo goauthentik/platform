@@ -81,7 +81,7 @@ pub fn delete(service: &str, user: &str, access: &Accessibility) -> Result<(), K
 #[cfg(all(test, target_os = "macos"))]
 pub mod tests {
     use super::*;
-    use crate::keyring::service;
+    use crate::service;
 
     #[test]
     fn full() {
