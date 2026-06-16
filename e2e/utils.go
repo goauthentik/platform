@@ -187,6 +187,10 @@ func CleanupHosts(t testing.TB, tc testcontainers.Container) {
 
 func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {
 	t.Helper()
+	options = append(
+		[]exec.ProcessOption{exec.WithEnv([]string{"LLVM_PROFILE_FILE=/tmp/ak-coverage/rs/default_%m_%p.profraw"})},
+		options...,
+	)
 	options = append(options, exec.Multiplexed())
 	t.Logf("Running command '%s'...", strings.Join(cmd, " "))
 	c, out, err := co.Exec(context.Background(), cmd, options...)
@@ -200,7 +204,7 @@ func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, option
 
 func MustExec(t testing.TB, co testcontainers.Container, cmd string, options ...exec.ProcessOption) string {
 	t.Helper()
-	rc, b := ExecCommand(t, co, []string{"sh", "-c", "LLVM_PROFILE_FILE=/tmp/ak-coverage/rs/default_%m_%p.profraw " + cmd}, options...)
+	rc, b := ExecCommand(t, co, []string{"sh", "-c", cmd}, options...)
 	assert.Equal(t, 0, rc, b)
 	return b
 }
@@ -279,11 +283,8 @@ func testMachine(t testing.TB) testcontainers.Container {
 		MustExec(t, tc, "journalctl -u ak-sysd")
 		MustExec(t, tc, "journalctl -u ak-agent")
 		MustExec(t, tc, "journalctl -u ssh")
-		MustExec(t, tc, "systemctl is-active ak-agent || true")
-		MustExec(t, tc, "ls -la /tmp/ak-coverage/rs/ || echo 'rs dir missing'")
 		MustExec(t, tc, "systemctl stop ak-sysd")
 		MustExec(t, tc, "systemctl stop ak-agent")
-		MustExec(t, tc, "ls -la /tmp/ak-coverage/rs/ || echo 'rs dir missing after stop'")
 		testcontainers.CleanupContainer(t, tc)
 	})
 	assert.NoError(t, err)
