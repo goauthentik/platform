@@ -75,5 +75,7 @@ mod tests {
         let conn = _listener.next().await.unwrap().unwrap();
         let ci = conn.connect_info();
         assert_eq!(ci.pid(), std::process::id() as i64);
+        assert!(ci.clone().proc_info().unwrap().parent_cmdline().is_ok());
+        assert!(ci.clone().proc_info().unwrap().unique_process_id().is_ok());
     }
 }
