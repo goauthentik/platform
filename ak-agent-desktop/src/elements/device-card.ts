@@ -1,7 +1,8 @@
+import type { Device } from "../types.js";
+
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
-import type { Device } from "../types.js";
 
 @customElement("ak-device-card")
 export class DeviceCard extends LitElement {
@@ -75,24 +76,35 @@ export class DeviceCard extends LitElement {
     @property({ type: Boolean, reflect: true }) selected = false;
 
     private _click() {
-        this.dispatchEvent(new CustomEvent("ak-device-select", {
-            bubbles: true,
-            composed: true,
-            detail: { id: this.device?.id },
-        }));
+        this.dispatchEvent(
+            new CustomEvent("ak-device-select", {
+                bubbles: true,
+                composed: true,
+                detail: { id: this.device?.id },
+            }),
+        );
     }
 
     render() {
         return html`
             <div class="card" @click=${this._click}>
                 <div class="icon-wrap">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2"/>
-                        <path d="M2 20h20"/>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M2 20h20" />
                     </svg>
-                    ${when(this.device?.badgeCount, () => html`
-                        <div class="badge">${this.device?.badgeCount}</div>
-                    `)}
+                    ${when(
+                        this.device?.badgeCount,
+                        () => html` <div class="badge">${this.device?.badgeCount}</div> `,
+                    )}
                 </div>
                 <div class="name">${this.device?.name}</div>
             </div>

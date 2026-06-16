@@ -1,7 +1,8 @@
+import type { TabId } from "../types.js";
+
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
-import type { TabId } from "../types.js";
 
 @customElement("ak-tab-bar")
 export class TabBar extends LitElement {
@@ -27,7 +28,9 @@ export class TabBar extends LitElement {
             background: transparent;
             color: var(--ak-color-tab-inactive-text, #1565c0);
             font-family: inherit;
-            transition: background 0.15s, color 0.15s;
+            transition:
+                background 0.15s,
+                color 0.15s;
         }
         .tab.active {
             background: var(--ak-color-tab-pill-bg, #1565c0);
@@ -41,11 +44,13 @@ export class TabBar extends LitElement {
     @property({ type: String }) activeTab: TabId = "devices";
 
     private _select(tab: TabId) {
-        this.dispatchEvent(new CustomEvent("ak-tab-change", {
-            bubbles: true,
-            composed: true,
-            detail: { tab },
-        }));
+        this.dispatchEvent(
+            new CustomEvent("ak-tab-change", {
+                bubbles: true,
+                composed: true,
+                detail: { tab },
+            }),
+        );
     }
 
     render() {
@@ -54,11 +59,15 @@ export class TabBar extends LitElement {
                 <button
                     class=${classMap({ tab: true, active: this.activeTab === "devices" })}
                     @click=${() => this._select("devices")}
-                >Devices</button>
+                >
+                    Devices
+                </button>
                 <button
                     class=${classMap({ tab: true, active: this.activeTab === "apps" })}
                     @click=${() => this._select("apps")}
-                >Apps</button>
+                >
+                    Apps
+                </button>
             </div>
         `;
     }

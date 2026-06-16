@@ -65,7 +65,7 @@ pub fn start_tauri() -> Result<()> {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![cmd::greet, cmd::get_user_info,])
+        .invoke_handler(tauri::generate_handler![cmd::get_user_info, cmd::list_profiles])
         .build(tauri::generate_context!())?
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = event

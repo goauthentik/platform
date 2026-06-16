@@ -1,18 +1,15 @@
-import { css, html, LitElement } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import type { Device, TabId } from "../types.js";
 import "./header.js";
 import "./tab-bar.js";
 import "./device-carousel.js";
 import "./device-detail.js";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { invoke } from "@tauri-apps/api/core";
 
-export interface userInfo {
-  preferred_username: string;
-  email: string;
-  name: string;
-}
+import { listProfiles, profile, userInfo } from "../bridge";
+import type { Device, TabId } from "../types.js";
+
+import { getCurrentWindow } from "@tauri-apps/api/window";
+
+import { css, html, LitElement } from "lit";
+import { customElement, state } from "lit/decorators.js";
 
 @customElement("ak-app-shell")
 export class AppShell extends LitElement {
@@ -37,7 +34,10 @@ export class AppShell extends LitElement {
     private _selectedDeviceId = "mac-jens";
 
     @state()
-    private user? : userInfo;
+    private user?: userInfo;
+
+    @state()
+    private profiles?: profile[];
 
     private devices: Device[] = [
         {
@@ -94,20 +94,23 @@ export class AppShell extends LitElement {
 
     async connectedCallback(): Promise<void> {
         super.connectedCallback();
-        this.user = await invoke<userInfo>("get_user_info", { profile: "default" });
+        this.user = await userInfo("default");
+        this.profiles = await listProfiles();
     }
 
     render() {
         return html`
-            <ak-platform-header @mousedown=${(ev: MouseEvent) => {
+            <ak-platform-header
+                @mousedown=${(ev: MouseEvent) => {
                     const appWindow = getCurrentWindow();
-                  if (ev.buttons === 1) {
-                    // Primary (left) button
-                    ev.detail === 2
-                      ? appWindow.toggleMaximize() // Maximize on double click
-                      : appWindow.startDragging(); // Else start dragging
-                  }
-            }}></ak-platform-header>
+                    if (ev.buttons === 1) {
+                        // Primary (left) button
+                        ev.detail === 2
+                            ? appWindow.toggleMaximize() // Maximize on double click
+                            : appWindow.startDragging(); // Else start dragging
+                    }
+                }}
+            ></ak-platform-header>
             <ak-tab-bar
                 .activeTab=${this._activeTab}
                 @ak-tab-change=${this._onTabChange}

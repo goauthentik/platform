@@ -1,26 +1,34 @@
 {
-  "name": "ak-agent-desktop",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "tauri": "tauri"
-  },
-  "dependencies": {
-    "@goauthentik/brand-assets": "^2.0.0",
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "lit": "^3.3.3"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^2",
-    "typescript": "~5.6.2",
-    "vite": "^6.0.3"
-  },
-  "allowScripts": {
-    "esbuild@0.25.12": true
-  }
+    "name": "ak-agent-desktop",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "build": "tsc && vite build",
+        "dev": "vite",
+        "lint": "eslint --fix .",
+        "lint-check": "eslint --max-warnings 0 .",
+        "prettier": "prettier --cache --write -u .",
+        "prettier-check": "prettier --cache --check -u .",
+        "preview": "vite preview",
+        "tauri": "tauri"
+    },
+    "type": "module",
+    "dependencies": {
+        "@goauthentik/brand-assets": "^2.0.0",
+        "@tauri-apps/api": "^2",
+        "@tauri-apps/plugin-opener": "^2",
+        "lit": "^3.3.3"
+    },
+    "devDependencies": {
+        "@goauthentik/eslint-config": "^2.0.0",
+        "@goauthentik/prettier-config": "^3.5.0",
+        "@goauthentik/tsconfig": "^2.0.0",
+        "@tauri-apps/cli": "^2",
+        "typescript": "^6.0.3",
+        "vite": "^6.0.3"
+    },
+    "prettier": "@goauthentik/prettier-config",
+    "allowScripts": {
+        "esbuild@0.25.12": true
+    }
 }

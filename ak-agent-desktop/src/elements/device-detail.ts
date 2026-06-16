@@ -1,21 +1,21 @@
+import type { Device } from "../types.js";
+
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
-import type { Device } from "../types.js";
 
 const STATUS_LABELS: Record<Device["status"], string> = {
-    compliant: "In compliance",
+    "compliant": "In compliance",
     "non-compliant": "Non-compliant",
-    pending: "Checking compliance",
+    "pending": "Checking compliance",
 };
 
 const STATUS_DESCRIPTIONS: Record<Device["status"], string> = {
-    compliant:
+    "compliant":
         "This device meets company compliance and security policies. You can access resources with this device.",
     "non-compliant":
         "This device does not meet compliance requirements. Some resources may be restricted.",
-    pending:
-        "Compliance status is being evaluated. This may take a few minutes.",
+    "pending": "Compliance status is being evaluated. This may take a few minutes.",
 };
 
 @customElement("ak-device-detail")
@@ -138,23 +138,42 @@ export class DeviceDetail extends LitElement {
             <div class="detail">
                 <div class="header-row">
                     <div class="icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="3" width="20" height="14" rx="2"/>
-                            <path d="M2 20h20"/>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <rect x="2" y="3" width="20" height="14" rx="2" />
+                            <path d="M2 20h20" />
                         </svg>
                     </div>
                     <div class="title-area">
                         <h2 class="device-name">${this.device.name}</h2>
-                        ${when(this.device.isCurrent, () => html`
-                            <div class="subtitle">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="16" x2="12" y2="12"/>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
-                                </svg>
-                                This is the device you are currently using.
-                            </div>
-                        `)}
+                        ${when(
+                            this.device.isCurrent,
+                            () => html`
+                                <div class="subtitle">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="16" x2="12" y2="12" />
+                                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                                    </svg>
+                                    This is the device you are currently using.
+                                </div>
+                            `,
+                        )}
                     </div>
                     <button class="menu-btn" aria-label="More options">•••</button>
                 </div>

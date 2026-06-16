@@ -1,10 +1,12 @@
+import "./device-card.js";
+
+import type { Device } from "../types.js";
+
 import { css, html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import { when } from "lit/directives/when.js";
-import type { Device } from "../types.js";
-import "./device-card.js";
 
 @customElement("ak-device-carousel")
 export class DeviceCarousel extends LitElement {
@@ -41,11 +43,7 @@ export class DeviceCarousel extends LitElement {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(
-                to left,
-                var(--ak-color-surface, #f6f6f6) 50%,
-                transparent
-            );
+            background: linear-gradient(to left, var(--ak-color-surface, #f6f6f6) 50%, transparent);
             border: none;
             cursor: pointer;
             color: var(--ak-color-text-secondary, #5a5a5a);
@@ -110,16 +108,27 @@ export class DeviceCarousel extends LitElement {
                                 .device=${d}
                                 .selected=${d.id === this.selectedId}
                             ></ak-device-card>
-                        `
+                        `,
                     )}
                 </div>
-                ${when(this._canScrollRight, () => html`
-                    <button class="arrow" @click=${this._scrollRight} aria-label="Scroll right">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </button>
-                `)}
+                ${when(
+                    this._canScrollRight,
+                    () => html`
+                        <button class="arrow" @click=${this._scrollRight} aria-label="Scroll right">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </button>
+                    `,
+                )}
             </div>
         `;
     }
