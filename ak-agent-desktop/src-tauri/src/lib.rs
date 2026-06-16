@@ -1,5 +1,5 @@
 use ak_platform::prelude::*;
-use ak_platform::{keyring, log::init_log, string::PlatformString};
+use ak_platform::{log::init_log, string::PlatformString};
 use tauri::Manager;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 
@@ -13,7 +13,7 @@ pub fn run() {
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
     );
-    match keyring::init() {
+    match ak_platform_keyring::init() {
         Ok(_) => {}
         Err(e) => {
             eprintln!("Failed to setup keyring: {e:?}");

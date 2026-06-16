@@ -27,7 +27,7 @@ where
                     continue;
                 }
             };
-            if let EventKind::Modify(_) = ev.kind {
+            if let EventKind::Access(_) = ev.kind {
                 continue;
             }
             log::debug!("config file update");

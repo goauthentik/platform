@@ -46,12 +46,12 @@ rs-gen-proto:
 	cargo fmt --all
 
 ci-install-deps:
+	rustup component add llvm-tools-preview
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev \
-		libpolkit-gobject-1-dev libglib2.0-dev
+		libpam0g-dev libudev-dev
 endif
 endif
 
@@ -106,14 +106,18 @@ test-integration:
 test-e2e: containers/e2e/local-build
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
 
+test-e2e-ci:
+	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+
 test-e2e-convert:
 	go tool covdata textfmt \
-		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
+		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -maxdepth 1 -type d ! -name rs | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
 		-o ${PWD}/coverage_in_container.txt
 	go tool cover \
 		-html ${PWD}/coverage_in_container.txt \
 		-o ${PWD}/coverage_in_container.html
+	"$(MAKE)" test-e2e-convert-rs
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000

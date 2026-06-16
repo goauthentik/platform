@@ -1,10 +1,12 @@
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
 use std::{
-    fs::{File, OpenOptions},
+    fs::{File, OpenOptions, create_dir_all},
     io::ErrorKind,
     marker::PhantomData,
+    path::Path,
     sync::Arc,
 };
-
 use tokio::sync::{Notify, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::{prelude::*, storage::cfgmgr::schema::Config};
@@ -32,6 +34,10 @@ where
             _phantom: PhantomData,
         };
         log::debug!("Config file path: {}", cm.path);
+        if let Some(parent) = Path::new(&cm.path).parent() {
+            log::debug!("Creating parent config dir: {}", parent.to_string_lossy());
+            create_dir_all(parent)?;
+        }
         cm.load().await?;
         log::debug!("Starting config watch");
         let shared = Arc::new(cm);
@@ -54,6 +60,10 @@ where
 
     pub fn on_reload(&self) -> Arc<Notify> {
         Arc::clone(&self.reload_notify)
+    }
+
+    pub fn notify_reload(&self) {
+        self.reload_notify.notify_waiters();
     }
 
     pub async fn read(&self) -> RwLockReadGuard<'_, T> {
@@ -91,13 +101,15 @@ where
         let loaded = self.loaded.read().await;
         loaded.pre_save().await?;
         log::debug!("saving config");
-        let file = OpenOptions::new()
-            .create(true)
-            .truncate(true)
-            .read(true)
-            .write(true)
-            .open(self.path.clone())?;
+        let mut opts = OpenOptions::new();
+        opts.create(true).truncate(true).read(true).write(true);
+        #[cfg(unix)]
+        {
+            opts.mode(0o600);
+        }
+        let file = opts.open(self.path.clone())?;
         serde_json::to_writer(file, &*loaded)?;
+        self.notify_reload();
         Ok(())
     }
 }

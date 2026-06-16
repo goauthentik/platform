@@ -29,7 +29,7 @@ brew install gmake go rustup swift
 ### Linux Dependencies
 
 ```shell
-sudo apt-get install libpam0g-dev libudev-dev libpolkit-gobject-1-dev libglib2.0-dev
+sudo apt-get install libpam0g-dev libudev-dev
 ```
 
 ### Windows Dependencies

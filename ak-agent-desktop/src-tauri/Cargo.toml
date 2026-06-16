@@ -17,6 +17,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 ak-agent = { path = "../../ak-agent" }
 ak-platform = { path = "../../ak-platform" }
+ak-platform-keyring = { path = "../../ak-platform-keyring" }
 log = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

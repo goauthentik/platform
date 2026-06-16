@@ -54,7 +54,7 @@ impl AgentSSHServer {
             .keys()
             .next()
             .cloned()
-            .unwrap_or_default();
+            .unwrap_or("default".into());
 
         Ok(AgentSSHServer {
             agent,

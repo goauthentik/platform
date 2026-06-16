@@ -15,6 +15,7 @@ members = [
     "ak-nss",
     "ak-pam",
     "ak-platform-authz",
+    "ak-platform-keyring",
     "ak-platform",
 ]
 
@@ -39,6 +40,6 @@ chrono = { version = "0.4.45", features = ["serde"] }
 url = "2.5.8"
 tracing = "0.1.44"
 ssh-agent-lib = "0.6.0"
-sentry = "0.48.2"
-authentik-client = "2026.5.3"
+sentry = { version = "0.48.2", default-features = false, features = ["backtrace", "contexts", "debug-images", "panic", "reqwest", "rustls"] }
+authentik-client = { version = "2026.5.3", default-features = false, features = ["rustls"] }
 uuid = { version = "1.23.3", features = ["v4"] }

@@ -51,7 +51,13 @@ impl AuthorizeAction {
         }
         let msg = (self.message)(&creds)?.clone();
         log::trace!("Prompting for authz: {uid}");
-        let res = sys::prompt(msg).await?;
+        let res = match sys::prompt(msg).await {
+            Ok(r) => r,
+            Err(e) => {
+                log::trace!("error during authz: {e:?}");
+                return Err(e);
+            }
+        };
 
         match LAST_AUTH_MAP.try_lock() {
             Ok(mut it) => {
@@ -65,7 +71,7 @@ impl AuthorizeAction {
             }
             Err(e) => return Err(Box::from(e.to_string())),
         }
-
+        log::trace!("Authz result: {res}");
         Ok(res)
     }
 
