@@ -16,16 +16,6 @@ async fn main() -> Result<()> {
     );
     ak_platform_keyring::init()?;
     let ag = Agent::new().await?;
-    #[cfg(unix)]
-    {
-        use tokio::signal::unix::{SignalKind, signal};
-        let mut sigterm = signal(SignalKind::terminate())?;
-        tokio::select! {
-            result = ag.start() => result?,
-            _ = sigterm.recv() => {}
-        }
-    }
-    #[cfg(not(unix))]
     ag.start().await?;
     Ok(())
 }
