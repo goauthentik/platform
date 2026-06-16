@@ -75,39 +75,43 @@ impl ConfigV1Profile {
         match self._http_client {
             Some(c) => c,
             None => {
-                // TEMP, the authentik-client crate currently incorrectly drops the auth for certain
-                // endpoint-related endpoints, thus we inject it as a header in reqwest
-                let c = reqwest::Client::builder()
-                    .default_headers(
-                        [(
-                            reqwest::header::AUTHORIZATION,
-                            reqwest::header::HeaderValue::from_str(&format!(
-                                "Bearer {}",
-                                self.access_token()
-                            ))
-                            .unwrap(),
-                        )]
-                        .into_iter()
-                        .collect(),
-                    )
-                    .build()
-                    .unwrap();
+                let c = Client::new();
                 self._http_client = Some(c.clone());
                 c
             }
         }
     }
 
-    pub fn api_config(self) -> Configuration {
-        Configuration {
+    // TEMP, the authentik-client crate currently incorrectly drops the auth for certain
+    // endpoint-related endpoints, thus we inject it as a header in reqwest
+    pub fn authenticated_http_client(self) -> Result<Client> {
+        let c = Client::builder()
+            .default_headers(
+                [(
+                    reqwest::header::AUTHORIZATION,
+                    reqwest::header::HeaderValue::from_str(&format!(
+                        "Bearer {}",
+                        self.access_token()
+                    ))?,
+                )]
+                .into_iter()
+                .collect(),
+            )
+            .build()?;
+        Ok(c)
+    }
+
+    pub fn api_config(self) -> Result<Configuration> {
+        Ok(Configuration {
             base_path: format!("{}/api/v3", self.authentik_url.clone()),
             bearer_access_token: Some(self.access_token()),
             user_agent: Some(user_agent()),
-            client: reqwest_middleware::ClientBuilder::new(self.http_client()).build(),
+            client: reqwest_middleware::ClientBuilder::new(self.authenticated_http_client()?)
+                .build(),
             basic_auth: None,
             oauth_access_token: None,
             api_key: None,
-        }
+        })
     }
 }
 

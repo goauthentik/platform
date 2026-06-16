@@ -113,7 +113,7 @@ impl SSHAgentTransaction {
         self.authorize(&host_key_trimmed).await?;
 
         let device_name = format!("localhost {}", host_key_trimmed);
-        let api_config = profile.api_config();
+        let api_config = profile.api_config()?;
 
         let dt = endpoints_agents_connectors_auth_fed_create(&api_config, &device_name)
             .await
