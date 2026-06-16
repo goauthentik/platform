@@ -81,7 +81,11 @@ impl ConfigV1Profile {
                     .default_headers(
                         [(
                             reqwest::header::AUTHORIZATION,
-                            reqwest::header::HeaderValue::from_str(&self.access_token()).unwrap(),
+                            reqwest::header::HeaderValue::from_str(&format!(
+                                "Bearer {}",
+                                self.access_token()
+                            ))
+                            .unwrap(),
                         )]
                         .into_iter()
                         .collect(),
