@@ -250,8 +250,8 @@ func testMachine(t testing.TB) testcontainers.Container {
 			},
 			ExposedPorts: []string{"22"},
 			Env: map[string]string{
-				"GOCOVERDIR": "/tmp/ak-coverage/cli",
-				// "LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
+				"GOCOVERDIR":        "/tmp/ak-coverage/cli",
+				"LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
 			},
 			HostConfigModifier: func(hc *container.HostConfig) {
 				hc.Privileged = true

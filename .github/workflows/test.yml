@@ -251,6 +251,25 @@ jobs:
         with:
           name: authentik_package-linux-ubuntu-24.04-e2e
           path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_ubuntu-24.04_ak-agent-e2e
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_ubuntu-24.04_ak-cli-e2e
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_ubuntu-24.04_ak-nss-e2e
+          path: bin/
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        with:
+          name: authentik_ubuntu-24.04_ak-pam-e2e
+          path: bin/
+      - run: |
+          rustup component add llvm-tools-preview
+          chmod +x bin/agent/ak-agent bin/cli/ak
       - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
         id: setup
         with:
@@ -290,3 +309,9 @@ jobs:
           flags: go-e2e
           files: ${{ github.workspace }}/junit.xml
           report_type: test_results
+      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: rs-e2e
+          files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov

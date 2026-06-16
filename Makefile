@@ -46,6 +46,7 @@ rs-gen-proto:
 	cargo fmt --all
 
 ci-install-deps:
+	rustup component add llvm-tools-preview
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
@@ -110,12 +111,33 @@ test-e2e-ci:
 
 test-e2e-convert:
 	go tool covdata textfmt \
-		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
+		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -maxdepth 1 -type d ! -name rs | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
 		-o ${PWD}/coverage_in_container.txt
 	go tool cover \
 		-html ${PWD}/coverage_in_container.txt \
 		-o ${PWD}/coverage_in_container.html
+	"$(MAKE)" test-e2e-convert-rs
+
+test-e2e-convert-rs:
+	@LLVM_BIN="$$(rustc --print sysroot)/lib/rustlib/$$(rustc -vV | sed -n 's|host: ||p')/bin" && \
+		if find "${PWD}/e2e/coverage/rs" -name "*.profraw" -print -quit | grep -q .; then \
+			mkdir -p "${PWD}/cache" && \
+			$$LLVM_BIN/llvm-profdata merge \
+				-sparse \
+				"${PWD}/e2e/coverage/rs/"*.profraw \
+				-o "${PWD}/cache/rs-e2e.profdata" && \
+			$$LLVM_BIN/llvm-cov export \
+				--instr-profile "${PWD}/cache/rs-e2e.profdata" \
+				--format=lcov \
+				--object "${PWD}/bin/agent/ak-agent" \
+				--object "${PWD}/bin/cli/ak" \
+				--object "${PWD}/bin/nss/libnss_authentik.so" \
+				--object "${PWD}/bin/pam/libpam_authentik.so" \
+				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
+		else \
+			echo "No Rust profraw files found, skipping Rust e2e coverage conversion"; \
+		fi
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
