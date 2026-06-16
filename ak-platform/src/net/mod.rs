@@ -5,6 +5,7 @@ pub mod server;
 mod tests {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio_stream::StreamExt;
+    use tonic::transport::server::Connected;
 
     use crate::net::server::SocketPermMode;
     use crate::net::{client, server};
@@ -58,5 +59,21 @@ mod tests {
         assert_eq!(&buf[..n], b"hello");
 
         server_task.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn listen_connect_proc_info() {
+        let path = PlatformString::new()
+            .with_linux("/tmp/ak-proc-info.sock")
+            .with_windows(r"\\.\pipe\ak-ak-proc-info");
+        let mut _listener = server::listen(path.clone(), SocketPermMode::Owner)
+            .await
+            .unwrap();
+        #[cfg(unix)]
+        assert!(std::fs::metadata(path.clone().for_current()).is_ok());
+        let _c = client::connect(path).await.unwrap();
+        let conn = _listener.next().await.unwrap().unwrap();
+        let ci = conn.connect_info();
+        assert_eq!(ci.pid(), std::process::id() as i64);
     }
 }
