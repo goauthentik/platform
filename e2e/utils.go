@@ -187,6 +187,10 @@ func CleanupHosts(t testing.TB, tc testcontainers.Container) {
 
 func ExecCommand(t testing.TB, co testcontainers.Container, cmd []string, options ...exec.ProcessOption) (int, string) {
 	t.Helper()
+	options = append(
+		[]exec.ProcessOption{exec.WithEnv([]string{"LLVM_PROFILE_FILE=/tmp/ak-coverage/rs/default_%m_%p.profraw"})},
+		options...,
+	)
 	options = append(options, exec.Multiplexed())
 	t.Logf("Running command '%s'...", strings.Join(cmd, " "))
 	c, out, err := co.Exec(context.Background(), cmd, options...)
