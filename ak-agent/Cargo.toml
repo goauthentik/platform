@@ -1,0 +1,44 @@
+[package]
+name = "ak-agent"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ak-agent"
+path = "src/main.rs"
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+ak-platform-authz = { path = "../ak-platform-authz" }
+ak-platform-keyring = { path = "../ak-platform-keyring" }
+ak-meta = { path = "../ak-meta" }
+authentik-client = { workspace = true }
+tokio = { workspace = true }
+tonic = { workspace = true }
+waitgroup = "0.1.2"
+log = { workspace = true }
+tower-http = { version = "0.6.11", features = ["trace"] }
+tracing = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+pbjson-types = { workspace = true }
+ssh-agent-lib = { workspace = true }
+ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
+ssh-encoding = "0.2"
+signature = "2"
+tonic-prost = { workspace = true }
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
+reqwest-middleware = "0.5.2"
+jsonwebtoken = "9"
+url = { workspace = true }
+sentry = { workspace = true }
+sentry-tower = { version = "0.48.2", features = ["http"] }
+serde_with = "3.21.0"
+uuid = { workspace = true }
+
+[build-dependencies]
+windows_exe_info = "0.5.2"

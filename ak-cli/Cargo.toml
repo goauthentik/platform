@@ -14,17 +14,17 @@ path = "src/main.rs"
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 ak-meta = { path = "../ak-meta" }
+aws-sdk-sts = { version = "1.106.0", features = ["behavior-version-latest"] }
+aws-types = "1.3.16"
+chrono = { workspace = true }
 clap = { version = "4.6.1", features = ["derive"] }
 clap_complete = "4"
 log = { workspace = true }
+oauth-device-flows = "0.1.0"
+open = "5.3.5"
+pbjson-types = { workspace = true }
 ratatui = "0.30.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
-pbjson-types = { workspace = true }
-chrono = { workspace = true }
-aws-sdk-sts = { version = "1.106.0", features = ["behavior-version-latest"] }
-aws-types = "1.3.16"
-oauth-device-flows = "0.1.0"
 url = { workspace = true }
-open = "5.3.5"

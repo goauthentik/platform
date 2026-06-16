@@ -42,7 +42,7 @@ func TestPackaging_DEB(t *testing.T) {
 
 			for _, pkg := range []string{
 				"/tmp/ak-bin/cli/*.deb",
-				"/tmp/ak-bin/agent_local/*.deb",
+				"/tmp/ak-bin/agent/*.deb",
 				"/tmp/ak-bin/agent_system/*.deb",
 				"/tmp/ak-bin/pam/*.deb",
 				"/tmp/ak-bin/nss/*.deb",
@@ -86,7 +86,7 @@ func TestPackaging_RPM(t *testing.T) {
 
 			for _, pkg := range []string{
 				"/tmp/ak-bin/cli/*.rpm",
-				"/tmp/ak-bin/agent_local/*.rpm",
+				"/tmp/ak-bin/agent/*.rpm",
 				"/tmp/ak-bin/agent_system/*.rpm",
 				"/tmp/ak-bin/nss/*.rpm",
 				"/tmp/ak-bin/pam/*.rpm",

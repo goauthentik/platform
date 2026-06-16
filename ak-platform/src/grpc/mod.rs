@@ -10,6 +10,7 @@ use crate::generated::agent::ResponseHeader;
 use crate::net;
 use crate::string::PlatformString;
 
+pub mod method_caller;
 pub mod ssh;
 
 pub async fn grpc_endpoint(path: String) -> Result<Channel> {

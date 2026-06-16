@@ -30,22 +30,22 @@ impl PlatformString {
         }
     }
 
-    pub fn with_windows(mut self, windows: &str) -> PlatformString {
+    pub fn with_windows<T: ToString>(mut self, windows: T) -> PlatformString {
         self.windows = Some(windows.to_string());
         self
     }
 
-    pub fn with_darwin(mut self, darwin: &str) -> PlatformString {
+    pub fn with_darwin<T: ToString>(mut self, darwin: T) -> PlatformString {
         self.darwin = Some(darwin.to_string());
         self
     }
 
-    pub fn with_linux(mut self, linux: &str) -> PlatformString {
+    pub fn with_linux<T: ToString>(mut self, linux: T) -> PlatformString {
         self.linux = Some(linux.to_string());
         self
     }
 
-    pub fn with_android(mut self, android: &str) -> PlatformString {
+    pub fn with_android<T: ToString>(mut self, android: T) -> PlatformString {
         self.android = Some(android.to_string());
         self
     }

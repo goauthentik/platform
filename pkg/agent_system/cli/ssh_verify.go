@@ -13,8 +13,12 @@ import (
 	"goauthentik.io/platform/pkg/platform/facts/vendor"
 	systemlog "goauthentik.io/platform/pkg/platform/log"
 	"goauthentik.io/platform/pkg/platform/pstr"
-	sshagent "goauthentik.io/platform/pkg/ssh_agent"
 	"golang.org/x/crypto/ssh"
+)
+
+const (
+	ExtAuthentikPlatformSSHToken   = "goauthentik.io/platform/ssh/ssh/token"
+	ExtAuthentikPlatformSSHHostKey = "goauthentik.io/platform/ssh/host-key"
 )
 
 var sshVerifyCmd = &cobra.Command{
@@ -40,12 +44,12 @@ var sshVerifyCmd = &cobra.Command{
 			return fmt.Errorf("parsed SSH authorized_key is not an SSH certificate (got type %T, cert type %q)", certPubkey, args[2])
 		}
 
-		extHostKey, ok := sshCert.Extensions[sshagent.ExtAuthentikPlatformSSHHostKey]
+		extHostKey, ok := sshCert.Extensions[ExtAuthentikPlatformSSHHostKey]
 		if !ok {
 			l.Warning("Invalid cert (no host key ext)")
 			return nil
 		}
-		extToken, ok := sshCert.Extensions[sshagent.ExtAuthentikPlatformSSHToken]
+		extToken, ok := sshCert.Extensions[ExtAuthentikPlatformSSHToken]
 		if !ok {
 			l.Warning("Invalid cert (no token ext)")
 			return nil

@@ -1,11 +1,12 @@
 use std::{
-    io,
+    fmt, io,
     path::Path,
     pin::Pin,
     task::{Context, Poll},
 };
 
 use interprocess::local_socket::{GenericFilePath, ListenerOptions, tokio::prelude::*};
+use ssh_agent_lib::agent::ListeningSocket;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::sync::mpsc;
 use tokio_stream::Stream as AsyncStream;
@@ -13,6 +14,7 @@ use tokio_stream::Stream as AsyncStream;
 use crate::string::PlatformString;
 
 pub mod creds;
+pub mod proc_info;
 
 pub enum SocketPermMode {
     Owner,
@@ -21,6 +23,12 @@ pub enum SocketPermMode {
 }
 
 pub struct ConnectedLocalStream(LocalSocketStream);
+
+impl fmt::Debug for ConnectedLocalStream {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ConnectedLocalStream").finish()
+    }
+}
 
 impl AsyncRead for ConnectedLocalStream {
     fn poll_read(
@@ -52,6 +60,25 @@ impl AsyncWrite for ConnectedLocalStream {
 
 pub struct ListenerStream {
     rx: mpsc::Receiver<io::Result<ConnectedLocalStream>>,
+}
+
+impl fmt::Debug for ListenerStream {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ListenerStream").finish()
+    }
+}
+
+#[ssh_agent_lib::async_trait]
+impl ListeningSocket for ListenerStream {
+    type Stream = ConnectedLocalStream;
+
+    async fn accept(&mut self) -> io::Result<Self::Stream> {
+        match self.rx.recv().await {
+            Some(Ok(stream)) => Ok(stream),
+            Some(Err(e)) => Err(e),
+            None => Err(io::Error::new(io::ErrorKind::BrokenPipe, "listener closed")),
+        }
+    }
 }
 
 impl AsyncStream for ListenerStream {
@@ -112,6 +139,7 @@ pub async fn listen(
         std::fs::set_permissions(&path_str, std::fs::Permissions::from_mode(mode as u32))?;
     }
 
+    log::debug!("Starting socket on {path_str}");
     let (tx, rx) = mpsc::channel(1);
     tokio::spawn(async move {
         loop {

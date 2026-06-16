@@ -6,6 +6,15 @@ on:
       is_release:
         type: boolean
         default: false
+      go_build_flags:
+        type: string
+        default: ""
+      artifact_suffix:
+        type: string
+        default: ""
+      platforms:
+        type: string
+        default: '["macos-26","ubuntu-24.04","ubuntu-24.04-arm","windows-2025"]'
     outputs:
       artifact:
         value: ${{ jobs.build.outputs.artifact-id }}
@@ -17,13 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - agent
           - sysd
-        platform:
-          - macos-26
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - windows-2025
+        platform: ${{ fromJSON(inputs.platforms) }}
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -47,11 +51,12 @@ jobs:
         run: |
           make ${{ matrix.target }}/build
         env:
+          AK_GO_BUILD_FLAGS: ${{ inputs.go_build_flags }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           AK_IS_RELEASE: ${{ inputs.is_release }}
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.target }}
+          name: authentik_${{ matrix.platform }}_${{ matrix.target }}${{ inputs.artifact_suffix }}
           path: bin/

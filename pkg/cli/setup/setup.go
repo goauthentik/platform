@@ -5,7 +5,6 @@ import (
 
 	"github.com/cli/browser"
 
-	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/shared/tui"
 	"goauthentik.io/platform/vnd/oauth"
@@ -19,8 +18,8 @@ type Options struct {
 	URLCallback  func(url string) error
 }
 
-func Setup(opts Options) (*config.ConfigV1Profile, error) {
-	urls := ak.URLsForProfile(config.ConfigV1Profile{
+func Setup(opts Options) (*ak.ConfigV1Profile, error) {
+	urls := ak.URLsForProfile(ak.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 	})
@@ -49,7 +48,7 @@ func Setup(opts Options) (*config.ConfigV1Profile, error) {
 		return nil, err
 	}
 
-	return &config.ConfigV1Profile{
+	return &ak.ConfigV1Profile{
 		AuthentikURL: opts.AuthentikURL,
 		AppSlug:      opts.AppSlug,
 		ClientID:     opts.ClientID,

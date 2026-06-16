@@ -13,14 +13,24 @@ bump:
 	"${TOP}/hack/plist.py" "${PWD}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleVersion" "${VERSION}"
 	"${TOP}/hack/plist.py" "${PWD}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleShortVersionString" "${VERSION}"
 
-.PHONY: package
-package:
+.PHONY: local
+local:
+	$(MAKE) -C "${TOP}" -j \
+		ak-agent/build \
+		sysd/build \
+		ee/psso/build \
+		ak-browser-support/build \
+		ak-cli/build
+	$(MAKE) -C "${TOP}" vpkg/macos/build-app
+
+.PHONY: build-app
+build-app:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
 	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
-	cp "${TOP}/bin/agent_local/ak-agent" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${TOP}/bin/agent/ak-agent" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
@@ -35,6 +45,9 @@ package:
 		--entitlements "${PWD}/authentikEndpoint.entitlements" \
 		--sign ${MACOS_SIGN_CERT} \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
+
+.PHONY: package
+package: build-app
 	pkgbuild \
 		--component "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}" \
 		--identifier "io.goauthentik.agent" \

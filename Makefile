@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
@@ -46,12 +46,12 @@ rs-gen-proto:
 	cargo fmt --all
 
 ci-install-deps:
+	rustup component add llvm-tools-preview
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev \
-		libpolkit-gobject-1-dev libglib2.0-dev
+		libpam0g-dev libudev-dev
 endif
 endif
 
@@ -106,17 +106,38 @@ test-integration:
 test-e2e: containers/e2e/local-build
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
 
+test-e2e-ci:
+	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+
 test-e2e-convert:
 	go tool covdata textfmt \
-		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
+		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -maxdepth 1 -type d ! -name rs | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
 		-o ${PWD}/coverage_in_container.txt
 	go tool cover \
 		-html ${PWD}/coverage_in_container.txt \
 		-o ${PWD}/coverage_in_container.html
+	"$(MAKE)" test-e2e-convert-rs
 
-test-agent:
-	go run -v ./cmd/agent_local/
+test-e2e-convert-rs:
+	@LLVM_BIN="$$(rustc --print sysroot)/lib/rustlib/$$(rustc -vV | sed -n 's|host: ||p')/bin" && \
+		if find "${PWD}/e2e/coverage/rs" -name "*.profraw" -print -quit | grep -q .; then \
+			mkdir -p "${PWD}/cache" && \
+			$$LLVM_BIN/llvm-profdata merge \
+				-sparse \
+				"${PWD}/e2e/coverage/rs/"*.profraw \
+				-o "${PWD}/cache/rs-e2e.profdata" && \
+			$$LLVM_BIN/llvm-cov export \
+				--instr-profile "${PWD}/cache/rs-e2e.profdata" \
+				--format=lcov \
+				--object "${PWD}/bin/agent/ak-agent" \
+				--object "${PWD}/bin/cli/ak" \
+				--object "${PWD}/bin/nss/libnss_authentik.so" \
+				--object "${PWD}/bin/pam/libpam_authentik.so" \
+				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
+		else \
+			echo "No Rust profraw files found, skipping Rust e2e coverage conversion"; \
+		fi
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
@@ -161,8 +182,8 @@ ak-cli/%:
 sysd/%:
 	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*
 
-agent/%:
-	"$(MAKE)" -C "${TOP}/cmd/agent_local" $*
+ak-agent/%:
+	"$(MAKE)" -C "${TOP}/ak-agent" $*
 
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*

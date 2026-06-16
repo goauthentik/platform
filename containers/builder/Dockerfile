@@ -12,10 +12,11 @@ RUN apt-get update && \
         libssl-dev \
         curl \
         ca-certificates \
-        libpam0g-dev libudev-dev \
-        libpolkit-gobject-1-dev libglib2.0-dev && \
+        libpam0g-dev libudev-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --no-modify-path --default-toolchain stable && \
     chmod -R a+rX /usr/local/rustup /usr/local/cargo
+
+ENV CARGO_TERM_COLOR=always

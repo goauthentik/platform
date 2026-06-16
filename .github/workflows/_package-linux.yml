@@ -6,15 +6,19 @@ on:
       is_release:
         type: boolean
         default: false
+      artifact_suffix:
+        type: string
+        default: ""
+      platforms:
+        type: string
+        default: '["ubuntu-24.04","ubuntu-24.04-arm"]'
 
 jobs:
   package:
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
+        platform: ${{ fromJSON(inputs.platforms) }}
     runs-on: ${{ matrix.platform }}
     permissions:
       contents: read
@@ -26,27 +30,27 @@ jobs:
           cache: true
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_${{ matrix.platform }}_ak-cli
+          name: authentik_${{ matrix.platform }}_ak-cli${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_${{ matrix.platform }}_agent
+          name: authentik_${{ matrix.platform }}_ak-agent${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_${{ matrix.platform }}_sysd
+          name: authentik_${{ matrix.platform }}_sysd${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_${{ matrix.platform }}_ak-browser-support
+          name: authentik_${{ matrix.platform }}_ak-browser-support${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_${{ matrix.platform }}_ak-nss
+          name: authentik_${{ matrix.platform }}_ak-nss${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_${{ matrix.platform }}_ak-pam
+          name: authentik_${{ matrix.platform }}_ak-pam${{ inputs.artifact_suffix }}
           path: bin/
       - shell: bash
         run: make vpkg/linux/package
@@ -54,5 +58,5 @@ jobs:
           AK_IS_RELEASE: ${{ inputs.is_release }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
-          name: authentik_package-linux-${{ matrix.platform }}
+          name: authentik_package-linux-${{ matrix.platform }}${{ inputs.artifact_suffix }}
           path: bin/

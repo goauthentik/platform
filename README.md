@@ -18,7 +18,7 @@ The primary supported development environment is devcontainers included with thi
 
 To build all the packages and install them on the dev container, run `make test-full`
 
-The local agent is required for most testing; create a new terminal and run `./bin/agent_local/ak-agent`.
+The local agent is required for most testing; create a new terminal and run `./bin/agent/ak-agent`.
 
 ### macOS Dependencies
 
@@ -29,7 +29,7 @@ brew install gmake go rustup swift
 ### Linux Dependencies
 
 ```shell
-sudo apt-get install libpam0g-dev libudev-dev libpolkit-gobject-1-dev libglib2.0-dev
+sudo apt-get install libpam0g-dev libudev-dev
 ```
 
 ### Windows Dependencies
@@ -102,19 +102,19 @@ Requirements: Visual Studio 18 (MSVC, amd64), CMake, GnuWin32, LLVM (`clang-form
 
 macOS installer package (`authentik Agent Installer.pkg`). Assembles pre-built binaries (agent, sysd, ak-cli, ak-browser-support, PSSO.appex) into an app bundle, signs it, and produces a distributable `.pkg`. **macOS only**.
 
-Requirements: Pre-built outputs from `agent/build`, `sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build`. Apple code-signing certificate and provisioning profile in `~/Library/MobileDevice/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
+Requirements: Pre-built outputs from `ak-agent/build`, `sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build`. Apple code-signing certificate and provisioning profile in `~/Library/MobileDevice/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
 
 #### `vpkg/windows/%`
 
 Windows installer package (`authentik Agent Installer.msi`), built with `dotnet`. **Windows only**.
 
-Requirements: Pre-built outputs from `agent/build`, `sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/wcp/build`. `dotnet` SDK.
+Requirements: Pre-built outputs from `ak-agent/build`, `sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/wcp/build`. `dotnet` SDK.
 
 #### `vpkg/linux/%`
 
 Linux DEB and RPM packages, produced via `nfpm` (invoked as a Go tool). **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
 
-Requirements: Pre-built outputs from `ak-cli/build`, `sysd/build`, `agent/build`, `ak-browser-support/build`, `nss/build`, and `pam/build`. Go (used to run `nfpm`). Packages produced: `authentik-cli`, `authentik-sysd`, `authentik-agent`, `libnss-authentik`, `libpam-authentik`.
+Requirements: Pre-built outputs from `ak-cli/build`, `sysd/build`, `ak-agent/build`, `ak-browser-support/build`, `nss/build`, and `pam/build`. Go (used to run `nfpm`). Packages produced: `authentik-cli`, `authentik-sysd`, `authentik-agent`, `libnss-authentik`, `libpam-authentik`.
 
 #### `containers/selenium/%`
 

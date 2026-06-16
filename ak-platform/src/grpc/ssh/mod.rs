@@ -1,3 +1,5 @@
+use crate::grpc::method_caller::grpc_frame;
+use crate::grpc::method_caller::grpc_unframe;
 use crate::prelude::*;
 use std::{future::Future, pin::Pin, sync::Arc, task::Poll};
 
@@ -103,7 +105,7 @@ where
 
             let payload = ExtAuthentikAgentTunnelData {
                 method: method.trim_start_matches("/").to_string(),
-                data: strip_grpc_frame(&body_bytes)?.into(),
+                data: grpc_unframe(&body_bytes)?,
             };
 
             let raw_res = match tunnel
@@ -134,7 +136,7 @@ where
                 None => return Err(Box::from("failed to parse response")),
             };
 
-            let framed = add_grpc_frame(&res.data);
+            let framed = grpc_frame(&res.data);
             let body = tonic::body::Body::new(Full::new(Bytes::from(framed)));
             let response = Response::builder()
                 .status(200)
@@ -146,26 +148,6 @@ where
             Ok(response)
         })
     }
-}
-
-/// Strip the 5-byte gRPC framing from a request body to get the raw proto bytes.
-fn strip_grpc_frame(data: &[u8]) -> Result<&[u8]> {
-    if data.len() < 5 {
-        return Err("gRPC frame too short".into());
-    }
-    // data[0] = compression flag; data[1..5] = message length
-    let msg_len = u32::from_be_bytes([data[1], data[2], data[3], data[4]]) as usize;
-    data.get(5..5 + msg_len)
-        .ok_or_else(|| "gRPC frame length exceeds buffer".into())
-}
-
-/// Wrap raw proto bytes in a gRPC frame (5-byte uncompressed header).
-fn add_grpc_frame(proto: &[u8]) -> Vec<u8> {
-    let mut buf = Vec::with_capacity(5 + proto.len());
-    buf.push(0u8); // no compression
-    buf.extend_from_slice(&(proto.len() as u32).to_be_bytes());
-    buf.extend_from_slice(proto);
-    buf
 }
 
 #[cfg(test)]
@@ -183,65 +165,9 @@ mod tests {
     use tokio::sync::Mutex;
     use tower::Service;
 
-    use super::{SSHTunnel, add_grpc_frame, strip_grpc_frame};
+    use super::SSHTunnel;
+    use crate::grpc::method_caller::{grpc_frame, grpc_unframe};
     use crate::grpc::ssh::ext::{EXT_AUTHENTIK_AGENT_TUNNEL, ExtAuthentikAgentTunnelData};
-
-    // --- strip_grpc_frame ---
-
-    #[test]
-    fn strip_grpc_frame_valid() {
-        let data = [0x00u8, 0x00, 0x00, 0x00, 0x05, 1, 2, 3, 4, 5];
-        let result = strip_grpc_frame(&data).unwrap();
-        assert_eq!(result, &[1u8, 2, 3, 4, 5]);
-    }
-
-    #[test]
-    fn strip_grpc_frame_empty_payload() {
-        let data = [0x00u8, 0x00, 0x00, 0x00, 0x00];
-        let result = strip_grpc_frame(&data).unwrap();
-        assert_eq!(result, &[] as &[u8]);
-    }
-
-    #[test]
-    fn strip_grpc_frame_too_short() {
-        let err = strip_grpc_frame(&[0x00u8, 0x01, 0x02]).unwrap_err();
-        assert!(err.to_string().contains("too short"), "error was: {err}");
-    }
-
-    #[test]
-    fn strip_grpc_frame_length_exceeds_buffer() {
-        // Header claims 100 bytes, only 3 bytes of payload follow.
-        let mut data = vec![0x00u8, 0x00, 0x00, 0x00, 100];
-        data.extend_from_slice(&[1u8, 2, 3]);
-        let err = strip_grpc_frame(&data).unwrap_err();
-        assert!(
-            err.to_string().contains("exceeds buffer"),
-            "error was: {err}"
-        );
-    }
-
-    // --- add_grpc_frame ---
-
-    #[test]
-    fn add_grpc_frame_header_bytes() {
-        assert_eq!(
-            add_grpc_frame(b"hello"),
-            [0x00, 0x00, 0x00, 0x00, 0x05, b'h', b'e', b'l', b'l', b'o']
-        );
-    }
-
-    #[test]
-    fn add_grpc_frame_empty() {
-        assert_eq!(add_grpc_frame(b""), [0x00, 0x00, 0x00, 0x00, 0x00]);
-    }
-
-    #[test]
-    fn roundtrip_add_then_strip() {
-        let original = b"some proto bytes";
-        let framed = add_grpc_frame(original);
-        let stripped = strip_grpc_frame(&framed).unwrap();
-        assert_eq!(stripped, original);
-    }
 
     // --- Integration test: full gRPC-over-SSH-tunnel flow ---
 
@@ -306,7 +232,7 @@ mod tests {
             .method("POST")
             .uri("/some.Service/Method")
             .header("content-type", "application/grpc+proto")
-            .body(Full::new(Bytes::from(add_grpc_frame(proto_payload))))?;
+            .body(Full::new(Bytes::from(grpc_frame(proto_payload))))?;
 
         let resp = svc.call(req).await?;
 
@@ -319,7 +245,7 @@ mod tests {
         );
 
         let body_bytes = resp.into_body().collect().await?.to_bytes();
-        let stripped = strip_grpc_frame(&body_bytes)?;
+        let stripped = grpc_unframe(&body_bytes)?;
         assert_eq!(stripped, proto_payload);
 
         server_handle.abort();

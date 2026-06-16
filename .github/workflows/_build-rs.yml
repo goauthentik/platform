@@ -6,6 +6,15 @@ on:
       is_release:
         type: boolean
         default: false
+      rust_build_flags:
+        type: string
+        default: ""
+      artifact_suffix:
+        type: string
+        default: ""
+      platforms:
+        type: string
+        default: '["macos-26","ubuntu-24.04","ubuntu-24.04-arm","windows-2025"]'
     outputs:
       artifact:
         value: ${{ jobs.build.outputs.artifact-id }}
@@ -17,15 +26,12 @@ jobs:
       fail-fast: false
       matrix:
         target:
+          - ak-agent
           - ak-pam
           - ak-nss
           - ak-browser-support
           - ak-cli
-        platform:
-          - macos-26
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - windows-2025
+        platform: ${{ fromJSON(inputs.platforms) }}
         exclude:
           # pam & nss are linux-only targets
           - target: ak-pam
@@ -51,7 +57,10 @@ jobs:
           cache: true
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
         with:
-          path: cache/
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cache/
           key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
       - name: Build builder image
         if: startsWith(matrix.platform, 'ubuntu')
@@ -59,9 +68,10 @@ jobs:
       - run: |
           make ${{ matrix.target }}/build
         env:
+          RUST_BUILD_FLAGS: ${{ inputs.rust_build_flags }}
           AK_IS_RELEASE: ${{ inputs.is_release }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.target }}
+          name: authentik_${{ matrix.platform }}_${{ matrix.target }}${{ inputs.artifact_suffix }}
           path: bin/

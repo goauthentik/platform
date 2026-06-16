@@ -1,8 +1,10 @@
+use crate::format;
 use crate::setup::ak::urls_for_profile;
 use ak_platform::prelude::*;
 use oauth_device_flows::provider::GenericProviderConfig;
 use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
 use open::that;
+use ratatui::text::Line;
 use std::time::Duration;
 use url::Url;
 
@@ -49,7 +51,17 @@ pub async fn setup(opts: Options) -> Result<Profile> {
         None => |url: Url| -> Result<()> {
             match that(url.to_string()) {
                 Ok(_) => Ok(()),
-                Err(e) => Err(Box::from(e)),
+                Err(e) => {
+                    log::debug!("failed to open URL in browser: {e:?}");
+                    println!(
+                        "{}",
+                        Line::styled(
+                            format!("Open this URL in your browser: {}", url),
+                            format::box_style()
+                        )
+                    );
+                    Ok(())
+                }
             }
         },
     };
