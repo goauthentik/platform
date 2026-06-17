@@ -1,5 +1,7 @@
 import type { profile } from "../bridge.js";
 
+import { openUrl } from "@tauri-apps/plugin-opener";
+
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
@@ -11,7 +13,7 @@ function renewalStatus(nextRenew: Date | string | null): RenewalStatus {
     const now = Date.now();
     const diff = next.getTime() - now;
     if (diff < 0) return "expired";
-    if (diff < 7 * 24 * 60 * 60 * 1000) return "expiring";
+    if (diff < 60 * 60 * 1000) return "expiring";
     return "active";
 }
 
@@ -24,7 +26,7 @@ const STATUS_LABELS: Record<RenewalStatus, string> = {
 
 function formatDate(d: Date | string | null): string {
     if (!d) return "—";
-    return new Date(d).toLocaleDateString(undefined, {
+    return new Date(d).toLocaleTimeString(undefined, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -143,7 +145,15 @@ export class ProfileStatus extends LitElement {
                                       >
                                   </div>
                                   <div class="profile-username">${p.username}</div>
-                                  <div class="profile-url">${p.authentikUrl}</div>
+                                  <div class="profile-url">
+                                      <button
+                                          @click=${() => {
+                                              openUrl(p.authentikUrl);
+                                          }}
+                                      >
+                                          Open authentik
+                                      </button>
+                                  </div>
                                   <div class="renewal-dates">
                                       <div class="date-field">
                                           <span class="date-label">Last renewed:</span>${formatDate(
