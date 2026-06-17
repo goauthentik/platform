@@ -21,7 +21,7 @@ tokio = { workspace = true }
 tonic = { workspace = true }
 waitgroup = "0.1.2"
 log = { workspace = true }
-tower-http = { version = "0.6.11", features = ["trace"] }
+tower-http = { version = "0.7.0", features = ["trace"] }
 tracing = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
