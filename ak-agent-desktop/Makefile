@@ -22,7 +22,7 @@ endif
 	mkdir -p "${TOP}/cache/${TARGET}"
 	npm i
 	npm run build
-	$(call cargo_build_local,$(TARGET),--features tauri/custom-protocol --features tauri/devtools)
+	$(call cargo_build_local,$(TARGET),--features tauri/custom-protocol --features tauri/devtools -p ak-agent-desktop)
 	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build
