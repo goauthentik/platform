@@ -1,5 +1,6 @@
 use crate::agent::Agent;
-use ak_platform::{log, prelude::*, string::PlatformString};
+use ak_meta::full_version;
+use ak_platform::{prelude::*, string::PlatformString};
 
 pub mod agent;
 pub mod config;
@@ -9,11 +10,12 @@ pub mod token;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    log::init_log(
+    ak_platform::log::init_log(
         PlatformString::new()
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
     );
+    log::trace!("authentik Agent v{}", full_version());
     ak_platform_keyring::init()?;
     let ag = Agent::new().await?;
     ag.start().await?;

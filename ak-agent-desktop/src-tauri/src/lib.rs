@@ -1,3 +1,4 @@
+use ak_meta::full_version;
 use ak_platform::prelude::*;
 use ak_platform::{log::init_log, string::PlatformString};
 use tauri::Manager;
@@ -13,6 +14,7 @@ pub fn run() {
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
     );
+    log::trace!("authentik Agent Desktop v{}", full_version());
     match ak_platform_keyring::init() {
         Ok(_) => {}
         Err(e) => {
@@ -65,7 +67,10 @@ pub fn start_tauri() -> Result<()> {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![cmd::get_user_info, cmd::list_profiles])
+        .invoke_handler(tauri::generate_handler![
+            cmd::get_user_info,
+            cmd::list_profiles
+        ])
         .build(tauri::generate_context!())?
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = event
