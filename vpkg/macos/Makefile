@@ -16,7 +16,7 @@ bump:
 .PHONY: local
 local:
 	$(MAKE) -C "${TOP}" -j \
-		ak-agent/build \
+		ak-agent-desktop/build \
 		sysd/build \
 		ee/psso/build \
 		ak-browser-support/build \
