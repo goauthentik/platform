@@ -12,11 +12,17 @@ clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
 build:
+ifeq ($(PLATFORM),gnu/linux)
+ifeq ($(CI),true)
+	sudo apt-get update
+	sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+endif
+endif
 	mkdir -p "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/cache/${TARGET}"
 	npm i
 	npm run build
-	$(call cargo_build,$(TARGET),--features tauri/custom-protocol --features tauri/devtools)
+	$(call cargo_build_local,$(TARGET),--features tauri/custom-protocol --features tauri/devtools)
 	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build

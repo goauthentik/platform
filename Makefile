@@ -47,13 +47,6 @@ rs-gen-proto:
 
 ci-install-deps:
 	rustup component add llvm-tools-preview
-ifeq ($(PLATFORM),gnu/linux)
-ifeq ($(CI),true)
-	sudo apt-get update
-	sudo apt-get install -y \
-		libpam0g-dev libudev-dev
-endif
-endif
 
 lint-rs:
 	cargo fmt --all
@@ -117,7 +110,6 @@ test-e2e-convert:
 	go tool cover \
 		-html ${PWD}/coverage_in_container.txt \
 		-o ${PWD}/coverage_in_container.html
-	"$(MAKE)" test-e2e-convert-rs
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000

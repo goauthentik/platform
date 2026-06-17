@@ -12,7 +12,7 @@ RUN apt-get update && \
         libssl-dev \
         curl \
         ca-certificates \
-        libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf && \
+        libpam0g-dev libudev-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
