@@ -78,13 +78,16 @@ impl AuthorizeAction {
     pub async fn prompt_grpc(
         self,
         creds: Option<ProcCredentials>,
-    ) -> std::result::Result<bool, Status> {
+    ) -> std::result::Result<(), Status> {
         let creds = match creds {
             Some(c) => c,
             None => return Err(Status::permission_denied("No credentials")),
         };
         match self.prompt(creds.clone()).await {
-            Ok(r) => Ok(r),
+            Ok(r) => match r {
+                true => Ok(()),
+                false => Err(Status::permission_denied("user denied")),
+            },
             Err(e) => Err(Status::from_error(e)),
         }
     }
