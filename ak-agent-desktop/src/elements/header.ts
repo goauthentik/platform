@@ -1,5 +1,6 @@
-import logoSvg from "@goauthentik/brand-assets/icon_left_brand_white.svg?raw";
 import type { userInfo } from "../bridge.js";
+
+import logoSvg from "@goauthentik/brand-assets/icon_left_brand_white.svg?raw";
 
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";

@@ -16,7 +16,7 @@ build:
 	mkdir -p "${TOP}/cache/${TARGET}"
 	npm i
 	npm run build
-	$(call cargo_build,$(TARGET),--features tauri/custom-protocol)
+	$(call cargo_build,$(TARGET),--features tauri/custom-protocol --features tauri/devtools)
 	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build

@@ -133,7 +133,7 @@ export class ProfileStatus extends LitElement {
                 ${this.profiles.length === 0
                     ? html`<div class="empty">No profiles configured.</div>`
                     : this.profiles.map((p) => {
-                          const status = renewalStatus(p.next_renew);
+                          const status = renewalStatus(p.nextRenew);
                           return html`
                               <div class="profile-row">
                                   <div class="profile-header">
@@ -143,15 +143,17 @@ export class ProfileStatus extends LitElement {
                                       >
                                   </div>
                                   <div class="profile-username">${p.username}</div>
-                                  <div class="profile-url">${p.authentik_url}</div>
+                                  <div class="profile-url">${p.authentikUrl}</div>
                                   <div class="renewal-dates">
                                       <div class="date-field">
-                                          <span class="date-label">Last renewed:</span
-                                          >${formatDate(p.last_renewed)}
+                                          <span class="date-label">Last renewed:</span>${formatDate(
+                                              p.lastRenewed,
+                                          )}
                                       </div>
                                       <div class="date-field">
-                                          <span class="date-label">Next renewal:</span
-                                          >${formatDate(p.next_renew)}
+                                          <span class="date-label">Next renewal:</span>${formatDate(
+                                              p.nextRenew,
+                                          )}
                                       </div>
                                   </div>
                               </div>
