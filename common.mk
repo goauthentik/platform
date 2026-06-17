@@ -73,7 +73,14 @@ define cargo_build
 endef
 else
 define cargo_build
-	$(call,cargo_build_local,$(1),$(2))
+RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		AK_VERSION=${VERSION} \
+		AK_BUILDHASH=${VERSION_HASH} \
+		AK_TAG=${VERSION_TAG} \
+		cargo build \
+		--target-dir $(TOP)cache/$(1) \
+		--verbose \
+		--release $(2)
 endef
 endif
 
