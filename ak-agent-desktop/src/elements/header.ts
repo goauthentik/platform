@@ -1,11 +1,13 @@
 import logoSvg from "@goauthentik/brand-assets/icon_left_brand_white.svg?raw";
+import type { userInfo } from "../bridge.js";
 
 import { css, html, LitElement } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 @customElement("ak-platform-header")
 export class Header extends LitElement {
+    @property({ type: Object }) user?: userInfo;
     static styles = css`
         :host {
             display: block;
@@ -72,6 +74,16 @@ export class Header extends LitElement {
         }
     `;
 
+    private get _initials(): string {
+        if (!this.user?.name) return "?";
+        return this.user.name
+            .split(" ")
+            .filter(Boolean)
+            .map((w) => w[0].toUpperCase())
+            .slice(0, 2)
+            .join("");
+    }
+
     private _startDrag(e: MouseEvent) {
         if (e.button !== 0) return;
         const target = e.composedPath()[0] as HTMLElement;
@@ -89,21 +101,7 @@ export class Header extends LitElement {
                 <div></div>
                 <div class="logo">${unsafeHTML(logoSvg)}</div>
                 <div class="actions">
-                    <button class="icon-btn" aria-label="Notifications">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                        </svg>
-                    </button>
-                    <div class="avatar">JL</div>
+                    <div class="avatar">${this._initials}</div>
                 </div>
             </div>
         `;

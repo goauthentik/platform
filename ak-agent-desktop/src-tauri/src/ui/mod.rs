@@ -23,8 +23,8 @@ pub fn show_main(app: &tauri::AppHandle) {
     let win = match app.get_webview_window(WINDOW_LABEL) {
         Some(w) => w,
         None => {
-            let mut b =
-                WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default()).title("App");
+            let mut b = WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default())
+                .title("authentik Agent");
             #[cfg(target_os = "macos")]
             {
                 b = b

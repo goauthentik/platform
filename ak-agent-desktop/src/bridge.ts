@@ -10,8 +10,8 @@ export interface profile {
     name: string;
     username: string;
     authentik_url: string;
-    last_renewed: Date | null;
-    next_renew: Date | null;
+    last_renewed: string;
+    next_renew: string;
 }
 
 export async function userInfo(profile: String) {
