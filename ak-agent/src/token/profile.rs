@@ -252,10 +252,10 @@ impl ProfileTokenManager {
     ) -> std::result::Result<AuthentikClaims, jsonwebtoken::errors::Error> {
         let header = decode_header(token)?;
         let kid = header.kid.ok_or_else(|| {
-            jsonwebtoken::errors::Error::from(jsonwebtoken::errors::ErrorKind::InvalidKeyFormat)
+            jsonwebtoken::errors::Error::from(jsonwebtoken::errors::ErrorKind::MissingRequiredClaim("kid".into()))
         })?;
         let jwk = jwks.find(&kid).ok_or_else(|| {
-            jsonwebtoken::errors::Error::from(jsonwebtoken::errors::ErrorKind::InvalidKeyFormat)
+            jsonwebtoken::errors::Error::from(jsonwebtoken::errors::ErrorKind::InvalidToken)
         })?;
         let key = DecodingKey::from_jwk(jwk)?;
         let mut validation = Validation::new(header.alg);
