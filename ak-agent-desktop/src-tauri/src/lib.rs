@@ -55,6 +55,7 @@ pub fn start_tauri() -> Result<()> {
 
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
+                .icon_as_template(true)
                 .on_tray_icon_event(|tray, e| {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,

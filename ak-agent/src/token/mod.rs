@@ -44,7 +44,6 @@ pub(crate) fn parse_unverified(token: &str) -> Result<AuthentikClaims> {
     let header = decode_header(token)
         .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::from(e.to_string()) })?;
     let mut validation = Validation::new(header.alg);
-    validation.insecure_disable_signature_validation();
     validation.validate_exp = false;
     validation.validate_aud = false;
     let data = decode::<AuthentikClaims>(token, &DecodingKey::from_secret(&[]), &validation)
