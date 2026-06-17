@@ -2,9 +2,9 @@ include ../common.mk
 
 TARGET := agent-desktop
 ifeq ($(OS),Windows_NT)
-BIN := ak-agent.exe
+BIN := ak-agent-desktop.exe
 else
-BIN := ak-agent
+BIN := ak-agent-desktop
 endif
 
 .PHONY: clean
@@ -14,7 +14,9 @@ clean:
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/cache/${TARGET}"
-	$(call cargo_build,$(TARGET))
+	npm i
+	npm run build
+	$(call cargo_build,$(TARGET),--features tauri/custom-protocol)
 	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build

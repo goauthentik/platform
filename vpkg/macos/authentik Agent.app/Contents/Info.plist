@@ -5,7 +5,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>authentik Agent</string>
 	<key>CFBundleExecutable</key>
-	<string>ak-agent</string>
+	<string>ak-agent-desktop</string>
 	<key>CFBundleIconFile</key>
 	<string>icon.icns</string>
 	<key>CFBundleIdentifier</key>

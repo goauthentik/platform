@@ -69,7 +69,7 @@ define cargo_build
 		cargo build \
 		--target-dir $(TOP)cache/$(1) \
 		--verbose \
-		--release
+		--release $(2)
 endef
 endif
 

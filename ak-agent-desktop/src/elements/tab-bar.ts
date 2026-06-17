@@ -1,5 +1,3 @@
-import type { TabId } from "../types.js";
-
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -41,9 +39,9 @@ export class TabBar extends LitElement {
         }
     `;
 
-    @property({ type: String }) activeTab: TabId = "devices";
+    @property({ type: String }) activeTab: string = "devices";
 
-    private _select(tab: TabId) {
+    private _select(tab: string) {
         this.dispatchEvent(
             new CustomEvent("ak-tab-change", {
                 bubbles: true,
