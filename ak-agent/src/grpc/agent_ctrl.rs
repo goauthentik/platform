@@ -23,7 +23,7 @@ impl AgentCtrl for AgentGRPCServer {
                 .for_profile(key)
                 .await
                 .ok_or(Status::invalid_argument("profile not found"))?;
-            let token = ptm.token().await.map_err(Status::from_error)?;
+            let token = ptm.unverified().await.map_err(Status::from_error)?;
             let claims = token.claims().map_err(Status::from_error)?;
             let o_prof = Profile {
                 name: key.clone(),
