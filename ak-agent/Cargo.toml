@@ -21,19 +21,19 @@ tokio = { workspace = true }
 tonic = { workspace = true }
 waitgroup = "0.1.2"
 log = { workspace = true }
-tower-http = { version = "0.6.11", features = ["trace"] }
+tower-http = { version = "0.7.0", features = ["trace"] }
 tracing = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
 pbjson-types = { workspace = true }
 ssh-agent-lib = { workspace = true }
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
-ssh-encoding = "0.2"
+ssh-encoding = "0.3"
 signature = "2"
 tonic-prost = { workspace = true }
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
 reqwest-middleware = "0.5.2"
-jsonwebtoken = "9"
+jsonwebtoken = "10"
 url = { workspace = true }
 sentry = { workspace = true }
 sentry-tower = { version = "0.48.2", features = ["http"] }
