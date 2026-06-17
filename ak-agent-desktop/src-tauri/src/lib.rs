@@ -1,7 +1,7 @@
 use ak_meta::full_version;
 use ak_platform::prelude::*;
 use ak_platform::{log::init_log, string::PlatformString};
-use tauri::Manager;
+use tauri::{Manager, Emitter};
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 
 mod cmd;
@@ -42,6 +42,21 @@ pub fn start_tauri() -> Result<()> {
                 match ak_agent::agent::Agent::new().await {
                     Ok(agent) => {
                         handle.manage(agent.clone());
+                        let watcher_handle = handle.clone();
+                        let reload_notify = agent.cfg.on_reload();
+                        tauri::async_runtime::spawn(async move {
+                            loop {
+                                reload_notify.notified().await;
+                                let visible = watcher_handle
+                                    .get_webview_window(ui::WINDOW_LABEL)
+                                    .and_then(|w| w.is_visible().ok())
+                                    .unwrap_or(false);
+                                if visible
+                                    && let Err(e) = watcher_handle.emit("ak-config-reloaded", ()) {
+                                        log::warn!("failed to emit config reload event: {e}");
+                                    }
+                            }
+                        });
                         if let Err(e) = agent.start().await {
                             log::error!("agent exited with error: {e}");
                         }

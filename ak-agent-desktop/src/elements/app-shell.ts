@@ -5,6 +5,7 @@ import "./profile-status.js";
 import { listProfiles, profile, userInfo } from "../bridge";
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { listen } from "@tauri-apps/api/event";
 
 import { css, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
@@ -31,8 +32,20 @@ export class AppShell extends LitElement {
     @state()
     private profiles?: profile[];
 
+    private _unlisten?: () => void;
+
     async connectedCallback(): Promise<void> {
         super.connectedCallback();
+        this._unlisten = await listen("ak-config-reloaded", () => this._refresh());
+        await this._refresh();
+    }
+
+    disconnectedCallback(): void {
+        super.disconnectedCallback();
+        this._unlisten?.();
+    }
+
+    private async _refresh(): Promise<void> {
         this.user = await userInfo("default");
         this.profiles = await listProfiles();
     }

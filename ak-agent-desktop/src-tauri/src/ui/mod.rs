@@ -1,6 +1,6 @@
 use tauri::{LogicalPosition, Manager, WebviewUrl, WebviewWindowBuilder};
 
-const WINDOW_LABEL: &str = "main";
+pub const WINDOW_LABEL: &str = "main";
 
 #[cfg(target_os = "macos")]
 pub mod macos;
