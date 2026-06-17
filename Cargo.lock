@@ -103,7 +103,7 @@ dependencies = [
  "serde_with",
  "signature",
  "ssh-agent-lib",
- "ssh-encoding",
+ "ssh-encoding 0.3.0",
  "ssh-key",
  "tokio",
  "tonic",
@@ -6409,7 +6409,7 @@ dependencies = [
  "secrecy 0.10.3",
  "service-binding",
  "signature",
- "ssh-encoding",
+ "ssh-encoding 0.2.0",
  "ssh-key",
  "subtle",
  "thiserror 2.0.18",
@@ -6424,7 +6424,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "caac132742f0d33c3af65bfcde7f6aa8f62f0e991d80db99149eb9d44708784f"
 dependencies = [
  "cipher 0.4.4",
- "ssh-encoding",
+ "ssh-encoding 0.2.0",
 ]
 
 [[package]]
@@ -6437,6 +6437,12 @@ dependencies = [
  "pem-rfc7468",
  "sha2 0.10.9",
 ]
+
+[[package]]
+name = "ssh-encoding"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b54d0ed0498daf3f78d82e00e28c8eec9d75a067c4cfbcc7a0f7d0f4077749e"
 
 [[package]]
 name = "ssh-key"
@@ -6455,7 +6461,7 @@ dependencies = [
  "sha2 0.10.9",
  "signature",
  "ssh-cipher",
- "ssh-encoding",
+ "ssh-encoding 0.2.0",
  "subtle",
  "zeroize",
 ]
