@@ -33,7 +33,7 @@ signature = "2"
 tonic-prost = { workspace = true }
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
 reqwest-middleware = "0.5.2"
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+jsonwebtoken = "9"
 url = { workspace = true }
 sentry = { workspace = true }
 sentry-tower = { version = "0.48.2", features = ["http"] }
