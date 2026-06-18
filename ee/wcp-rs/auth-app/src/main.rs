@@ -16,20 +16,8 @@ use std::os::windows::io::FromRawHandle;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use log::LevelFilter;
-use simplelog::{Config, WriteLogger};
+use ak_platform::string::PlatformString;
 use tauri::{WebviewUrl, WebviewWindowBuilder, WindowEvent};
-
-/// Initialise a file logger that writes to %TEMP%\ak-auth-app.log.
-/// Called once at startup before any other log output.
-/// Errors are ignored — logging is best-effort for a child process launched by
-/// a Windows credential provider (no console is available under LogonUI).
-fn init_log() {
-    let log_path = std::env::temp_dir().join("ak-auth-app.log");
-    if let Ok(f) = File::create(&log_path) {
-        let _ = WriteLogger::init(LevelFilter::Debug, Config::default(), f);
-    }
-}
 
 /// Write a single line to the DLL's inherited anonymous pipe.
 /// Protocol: `OK <username>` on success, `CANCEL` otherwise.
@@ -133,7 +121,7 @@ fn inject_header_token(window: &tauri::WebviewWindow, header_token: String) {
 }
 
 fn main() {
-    init_log();
+    ak_platform::log::init_log(PlatformString::new_with_default("authentik WCP Browser"));
 
     let pipe = arg("--pipe-handle").and_then(|s| s.parse::<usize>().ok());
 

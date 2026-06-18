@@ -283,7 +283,6 @@ dependencies = [
  "ak-platform",
  "ak_ffi",
  "log",
- "simplelog",
  "windows 0.61.3",
  "windows-core 0.61.2",
 ]
@@ -679,7 +678,6 @@ dependencies = [
  "ak-platform",
  "ak_ffi",
  "log",
- "simplelog",
  "tauri",
  "tauri-build",
  "webview2-com",

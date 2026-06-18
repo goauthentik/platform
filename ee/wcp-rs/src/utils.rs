@@ -1,8 +1,5 @@
 use std::fs::File;
 
-use log::LevelFilter;
-use simplelog::{Config, WriteLogger};
-
 use windows::{
     core::{w, GUID, HRESULT, HSTRING, PWSTR},
     Win32::{
@@ -16,17 +13,6 @@ use windows::{
         },
     },
 };
-
-pub fn init_log() {
-    let logger = WriteLogger::new(
-        LevelFilter::Info,
-        Config::default(),
-        File::create("my_rust_binary.log").unwrap(),
-    );
-    log::set_boxed_logger(Box::new(logger))
-        .map(|()| log::set_max_level(LevelFilter::Trace))
-        .expect("Failed to setup logger");
-}
 
 /// Allocate a NUL-terminated wide string with `CoTaskMemAlloc` so it can be
 /// handed back to LogonUI through an out-param (LogonUI frees it with

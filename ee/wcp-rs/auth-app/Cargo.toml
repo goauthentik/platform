@@ -14,8 +14,7 @@ tauri-build = { version = "2", features = [] }
 ak_ffi = { path = "../../../ak-ffi" }
 ak-platform = { path = "../../../ak-platform" }
 tauri = { version = "2", features = [] }
-log = "0.4"
-simplelog = "0.12"
+log = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.38"

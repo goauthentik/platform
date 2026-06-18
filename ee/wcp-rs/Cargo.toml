@@ -29,5 +29,4 @@ windows = { version = "0.61.3", features = [
     "Win32_System_SystemInformation",
 ] }
 windows-core = "0.61.2"
-log = "0.4"
-simplelog = "0.12.2"
+log = { workspace = true }

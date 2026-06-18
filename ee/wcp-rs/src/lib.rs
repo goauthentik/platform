@@ -4,6 +4,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+use ak_platform::string::PlatformString;
 use windows::{
     core::{GUID, HRESULT, Interface},
     Win32::{
@@ -15,7 +16,7 @@ use windows::{
     },
 };
 
-use crate::{credprovider::factory::CredentialProviderFactory, utils::init_log};
+use crate::{credprovider::factory::CredentialProviderFactory};
 
 mod auth;
 mod credprovider;
@@ -45,7 +46,7 @@ extern "system" fn DllGetClassObject(
         return E_INVALIDARG;
     }
 
-    init_log();
+    ak_platform::log::init_log(PlatformString::new_with_default("authentik WCP"));
     log::debug!("CredProvider : DllGetClassObject");
 
     let rclsid = unsafe { *rclsid };
