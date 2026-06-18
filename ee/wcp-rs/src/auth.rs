@@ -23,22 +23,32 @@ use std::path::PathBuf;
 use windows::{
     Win32::{
         Foundation::{
-            CloseHandle, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, HMODULE, SetHandleInformation,
+            CloseHandle, E_FAIL, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, HMODULE,
+            SetHandleInformation,
         },
-        Security::SECURITY_ATTRIBUTES,
+        Security::{
+            DuplicateTokenEx, SECURITY_ATTRIBUTES, TOKEN_ACCESS_MASK, TOKEN_ALL_ACCESS,
+            TOKEN_ASSIGN_PRIMARY, TOKEN_DUPLICATE, TOKEN_QUERY, TokenPrimary, SecurityImpersonation,
+        },
         Storage::FileSystem::ReadFile,
         System::{
+            Diagnostics::ToolHelp::{
+                CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
+                TH32CS_SNAPPROCESS,
+            },
             LibraryLoader::{
                 GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
                 GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, GetModuleFileNameW,
                 GetModuleHandleExW,
             },
             Pipes::CreatePipe,
+            RemoteDesktop::{ProcessIdToSessionId, WTSGetActiveConsoleSessionId, WTSQueryUserToken},
             Threading::{
-                CreateProcessW, DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT,
+                CreateProcessAsUserW, DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT,
                 INFINITE, InitializeProcThreadAttributeList, LPPROC_THREAD_ATTRIBUTE_LIST,
-                PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION, STARTUPINFOEXW,
-                UpdateProcThreadAttribute, WaitForSingleObject,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION,
+                PROCESS_QUERY_INFORMATION, STARTUPINFOEXW, UpdateProcThreadAttribute,
+                WaitForSingleObject, OpenProcess, OpenProcessToken,
             },
         },
     },
@@ -153,16 +163,30 @@ pub fn run_auth_flow() -> AuthOutcome {
     si.lpAttributeList = attr_list;
     let mut pi = PROCESS_INFORMATION::default();
 
+    let token = match acquire_interactive_token() {
+        Ok(t) => t,
+        Err(e) => {
+            log::error!("acquire_interactive_token failed: {e}");
+            unsafe {
+                DeleteProcThreadAttributeList(attr_list);
+                let _ = CloseHandle(read_handle);
+                let _ = CloseHandle(write_handle);
+            }
+            return AuthOutcome::Cancelled;
+        }
+    };
+
     let spawned = unsafe {
-        CreateProcessW(
-            None,
+        CreateProcessAsUserW(
+            Some(token),
+            PCWSTR::null(),
             Some(PWSTR(cmdline_wide.as_mut_ptr())),
             None,
             None,
             true, // inherit handles (restricted to the handle list)
             EXTENDED_STARTUPINFO_PRESENT,
             None,
-            None,
+            PCWSTR::null(),
             &si.StartupInfo,
             &mut pi,
         )
@@ -170,10 +194,11 @@ pub fn run_auth_flow() -> AuthOutcome {
 
     unsafe {
         DeleteProcThreadAttributeList(attr_list);
+        CloseHandle(token).ok();
     }
 
     if spawned.is_err() {
-        log::error!("CreateProcessW failed for auth-app");
+        log::error!("CreateProcessAsUserW failed for auth-app: {:?}", spawned);
         unsafe {
             let _ = CloseHandle(read_handle);
             let _ = CloseHandle(write_handle);
@@ -233,6 +258,95 @@ fn read_pipe_line(read_handle: HANDLE) -> Option<String> {
     }
     let text = String::from_utf8_lossy(&data);
     text.lines().next().map(|s| s.to_string())
+}
+
+/// Acquire a primary token for the active console (interactive) session.
+///
+/// The credential provider DLL runs in LogonUI's Session 0, but WebView2 and
+/// other GUI subsystems require the process to run in the interactive session
+/// (typically Session 1). We obtain a token for that session so
+/// `CreateProcessAsUserW` can launch auth-app.exe there.
+///
+/// Strategy:
+/// 1. `WTSQueryUserToken` — works when a user is already logged in (unlock).
+/// 2. Duplicate the `winlogon.exe` token in the console session — covers fresh
+///    logon, where no user token exists yet.
+fn acquire_interactive_token() -> windows::core::Result<HANDLE> {
+    unsafe {
+        let session = WTSGetActiveConsoleSessionId();
+        if session == 0xFFFF_FFFF {
+            log::error!("WTSGetActiveConsoleSessionId: no active console session");
+            return Err(E_FAIL.into());
+        }
+        log::info!("interactive console session: {session}");
+
+        let mut token = HANDLE::default();
+        if WTSQueryUserToken(session, &mut token).is_ok() {
+            log::info!("acquired user token for session {session}");
+            return Ok(token);
+        }
+
+        log::info!("WTSQueryUserToken failed (fresh logon?), trying winlogon token");
+        winlogon_token_for_session(session)
+    }
+}
+
+/// Find `winlogon.exe` running in `session_id` and duplicate its primary token.
+/// Used as a fallback during fresh logon when no user token is available yet.
+fn winlogon_token_for_session(session_id: u32) -> windows::core::Result<HANDLE> {
+    unsafe {
+        let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)?;
+
+        let mut entry: PROCESSENTRY32W = std::mem::zeroed();
+        entry.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+
+        let mut result: windows::core::Result<HANDLE> = Err(E_FAIL.into());
+
+        if Process32FirstW(snap, &mut entry).is_ok() {
+            loop {
+                let nul = entry.szExeFile.iter().position(|&c| c == 0).unwrap_or(entry.szExeFile.len());
+                let name = String::from_utf16_lossy(&entry.szExeFile[..nul]);
+
+                if name.eq_ignore_ascii_case("winlogon.exe") {
+                    let mut proc_session = 0u32;
+                    if ProcessIdToSessionId(entry.th32ProcessID, &mut proc_session).is_ok()
+                        && proc_session == session_id
+                    {
+                        if let Ok(hproc) = OpenProcess(PROCESS_QUERY_INFORMATION, false, entry.th32ProcessID) {
+                            let access = TOKEN_ACCESS_MASK(
+                                TOKEN_DUPLICATE.0 | TOKEN_QUERY.0 | TOKEN_ASSIGN_PRIMARY.0,
+                            );
+                            let mut raw = HANDLE::default();
+                            if OpenProcessToken(hproc, access, &mut raw).is_ok() {
+                                let mut dup = HANDLE::default();
+                                if DuplicateTokenEx(
+                                    raw,
+                                    TOKEN_ALL_ACCESS,
+                                    None,
+                                    SecurityImpersonation,
+                                    TokenPrimary,
+                                    &mut dup,
+                                ).is_ok() {
+                                    log::info!("duplicated winlogon token for session {session_id}");
+                                    result = Ok(dup);
+                                }
+                                CloseHandle(raw).ok();
+                            }
+                            CloseHandle(hproc).ok();
+                        }
+                        break;
+                    }
+                }
+
+                if Process32NextW(snap, &mut entry).is_err() {
+                    break;
+                }
+            }
+        }
+
+        CloseHandle(snap).ok();
+        result
+    }
 }
 
 /// Resolve `auth-app.exe` sitting next to this DLL by locating our own module
