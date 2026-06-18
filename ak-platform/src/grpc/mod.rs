@@ -14,24 +14,29 @@ pub mod method_caller;
 pub mod ssh;
 
 pub async fn grpc_endpoint(path: String) -> Result<Channel> {
+    // The URI is a placeholder required by tonic; the connector ignores it and
+    // connects via `path` directly, so the path never needs to be URI-encoded.
+    // This avoids the http crate rejecting Windows named-pipe paths (\\.\pipe\…)
+    // which don't start with '/'.
     let u = Uri::builder()
         .scheme("http")
-        .authority(":123")
-        .path_and_query(path.replace(" ", "%20"))
+        .authority("authentik-sysd")
+        .path_and_query("/")
         .build()?;
     let endpoint = Endpoint::from(u);
-    let channel = grpc_dial(endpoint).await?;
+    let channel = grpc_dial(endpoint, path).await?;
     Ok(channel)
 }
 
-async fn grpc_dial(ep: Endpoint) -> std::result::Result<Channel, tonic::transport::Error> {
-    return ep
-        .connect_with_connector(service_fn(async move |p: Uri| {
-            let path = p.path().replace("%20", " ");
+async fn grpc_dial(ep: Endpoint, path: String) -> std::result::Result<Channel, tonic::transport::Error> {
+    ep.connect_with_connector(service_fn(move |_: Uri| {
+        let path = path.clone();
+        async move {
             log::debug!("Connecting to GRPC socket '{path}'");
             net::client::connect(PlatformString::new_with_default(&path)).await
-        }))
-        .await;
+        }
+    }))
+    .await
 }
 
 pub fn grpc_request<T, F: Future<Output = Result<T>>>(future: impl Fn(Channel) -> F) -> Result<T> {
