@@ -277,6 +277,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ak-windows"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "simplelog",
+ "windows 0.61.3",
+ "windows-core 0.61.2",
+]
+
+[[package]]
 name = "ak_ffi"
 version = "0.44.3"
 dependencies = [
@@ -659,6 +669,14 @@ name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
+
+[[package]]
+name = "auth-app"
+version = "0.1.0"
+dependencies = [
+ "tauri",
+ "tauri-build",
+]
 
 [[package]]
 name = "authentik-client"

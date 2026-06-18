@@ -17,6 +17,8 @@ members = [
     "ak-platform-authz",
     "ak-platform-keyring",
     "ak-platform",
+    "ee/wcp-rs",
+    "ee/wcp-rs/auth-app",
 ]
 
 [workspace.package]

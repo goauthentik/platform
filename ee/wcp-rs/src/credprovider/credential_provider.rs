@@ -1,0 +1,125 @@
+use windows::{
+    core::{implement, Ref, Result, BOOL, GUID, PWSTR},
+    Win32::{
+        Foundation::{E_INVALIDARG, FALSE},
+        UI::Shell::{
+            ICredentialProvider, ICredentialProviderCredential, ICredentialProviderEvents,
+            ICredentialProviderSetUserArray, ICredentialProviderSetUserArray_Impl,
+            ICredentialProviderUserArray, ICredentialProvider_Impl, CPFT_LARGE_TEXT, CPFT_SUBMIT_BUTTON, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+            CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR, CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+        },
+    },
+};
+
+use crate::credprovider::credential::Credential;
+
+#[implement(ICredentialProvider, ICredentialProviderSetUserArray)]
+pub struct CredentialProvider {
+    _credentials: Vec<Credential>,
+}
+
+impl CredentialProvider {
+    pub fn new() -> Self {
+        Self {
+            _credentials: Vec::new(),
+        }
+    }
+}
+
+impl ICredentialProvider_Impl for CredentialProvider_Impl {
+    fn SetUsageScenario(
+        &self,
+        cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+        _dwflags: u32,
+    ) -> Result<()> {
+        log::info!("SetUsageScenario called with scenario: {:?}", cpus);
+        Ok(())
+    }
+
+    fn SetSerialization(
+        &self,
+        _pcpcs: *const CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+    ) -> Result<()> {
+        Ok(())
+    }
+
+    fn Advise(
+        &self,
+        _pcpe: Ref<'_, ICredentialProviderEvents>,
+        _upadvisecontext: usize,
+    ) -> Result<()> {
+        Ok(())
+    }
+
+    fn UnAdvise(&self) -> Result<()> {
+        Ok(())
+    }
+
+    fn GetFieldDescriptorCount(&self) -> Result<u32> {
+        Ok(2)
+    }
+
+    fn GetFieldDescriptorAt(
+        &self,
+        dwindex: u32,
+    ) -> Result<*mut CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR> {
+        let descriptor = match dwindex {
+            0 => CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR {
+                dwFieldID: 0,
+                cpft: CPFT_LARGE_TEXT,
+                pszLabel: PWSTR::from_raw(
+                    "authentik Login"
+                        .encode_utf16()
+                        .chain(std::iter::once(0))
+                        .collect::<Vec<u16>>()
+                        .as_mut_ptr(),
+                ),
+                guidFieldType: GUID::zeroed(),
+            },
+            1 => CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR {
+                dwFieldID: 1,
+                cpft: CPFT_SUBMIT_BUTTON,
+                pszLabel: PWSTR::from_raw(
+                    "Sign In with authentik"
+                        .encode_utf16()
+                        .chain(std::iter::once(0))
+                        .collect::<Vec<u16>>()
+                        .as_mut_ptr(),
+                ),
+                guidFieldType: GUID::zeroed(),
+            },
+            _ => return Err(E_INVALIDARG.into()),
+        };
+
+        Ok(Box::into_raw(Box::new(descriptor)))
+    }
+
+    fn GetCredentialCount(
+        &self,
+        pdwcount: *mut u32,
+        pdwdefault: *mut u32,
+        pbautologonwithdefault: *mut BOOL,
+    ) -> Result<()> {
+        unsafe {
+            *pdwcount = 1;
+            *pdwdefault = 0;
+            *pbautologonwithdefault = FALSE;
+        }
+        Ok(())
+    }
+
+    fn GetCredentialAt(&self, dwindex: u32) -> Result<ICredentialProviderCredential> {
+        if dwindex == 0 {
+            let credential = Credential::new();
+            Ok(credential.into())
+        } else {
+            Err(E_INVALIDARG.into())
+        }
+    }
+}
+
+impl ICredentialProviderSetUserArray_Impl for CredentialProvider_Impl {
+    fn SetUserArray(&self, _users: Ref<'_, ICredentialProviderUserArray>) -> Result<()> {
+        Ok(())
+    }
+}
