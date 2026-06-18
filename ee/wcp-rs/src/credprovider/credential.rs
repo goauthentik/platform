@@ -6,7 +6,8 @@ use windows::{
         Graphics::Gdi::HBITMAP,
         System::Com::CoTaskMemFree,
         UI::Shell::{
-            CPFIS_NONE, CPFS_DISPLAY_IN_SELECTED_TILE, CPGSR_NO_CREDENTIAL_NOT_FINISHED,
+            CPFIS_NONE, CPFS_DISPLAY_IN_BOTH_TILES, CPFS_DISPLAY_IN_SELECTED_TILE,
+            CPGSR_NO_CREDENTIAL_NOT_FINISHED,
             CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_NONE, CPSI_SUCCESS,
             CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
             CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE, CREDENTIAL_PROVIDER_FIELD_STATE,
@@ -76,8 +77,12 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
     ) -> Result<()> {
         unsafe {
             match dwfieldid {
-                0 | 1 => {
+                0 => {
                     *pcpfs = CPFS_DISPLAY_IN_SELECTED_TILE;
+                    *pcpfis = CPFIS_NONE;
+                }
+                1 => {
+                    *pcpfs = CPFS_DISPLAY_IN_BOTH_TILES;
                     *pcpfis = CPFIS_NONE;
                 }
                 _ => return Err(E_INVALIDARG.into()),
@@ -109,7 +114,7 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
     fn GetSubmitButtonValue(&self, dwfieldid: u32) -> Result<u32> {
         if dwfieldid == 1 {
-            Ok(1)
+            Ok(0)
         } else {
             Err(E_INVALIDARG.into())
         }
