@@ -3,23 +3,30 @@ use std::sync::Mutex;
 use windows::{
     core::{implement, w, Ref, Result, BOOL, PCWSTR, PWSTR},
     Win32::{
-        Foundation::{E_ABORT, E_INVALIDARG, E_NOTIMPL, FALSE, NTSTATUS},
+        Foundation::{E_ABORT, E_FAIL, E_INVALIDARG, E_NOTIMPL, FALSE, NTSTATUS},
         Graphics::Gdi::HBITMAP,
+        System::Com::CoTaskMemFree,
         UI::Shell::{
             IConnectableCredentialProviderCredential,
             IConnectableCredentialProviderCredential_Impl, ICredentialProviderCredential,
             ICredentialProviderCredential2, ICredentialProviderCredential2_Impl,
             ICredentialProviderCredentialEvents, ICredentialProviderCredential_Impl,
             IQueryContinueWithStatus, CPFIS_NONE, CPFS_DISPLAY_IN_SELECTED_TILE,
-            CPGSR_NO_CREDENTIAL_NOT_FINISHED, CPSI_SUCCESS,
-            CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+            CPGSR_NO_CREDENTIAL_NOT_FINISHED, CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_NONE,
+            CPSI_SUCCESS, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
             CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE, CREDENTIAL_PROVIDER_FIELD_STATE,
             CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE, CREDENTIAL_PROVIDER_STATUS_ICON,
+            CREDENTIAL_PROVIDER_USAGE_SCENARIO,
         },
     },
 };
 
 use crate::auth::{run_auth_flow, AuthOutcome};
+
+struct AuthData {
+    username: String,
+    password: String,
+}
 
 #[implement(
     ICredentialProviderCredential,
@@ -28,17 +35,18 @@ use crate::auth::{run_auth_flow, AuthOutcome};
 )]
 pub struct Credential {
     _fields: [PWSTR; 4],
-    /// Username reported by the Tauri auth window once it signals completion.
-    /// Equivalent to `sHookData::strUsername` in the C++ implementation. Set in
-    /// `Connect`, consumed by `GetSerialization`.
-    auth_user: Mutex<Option<String>>,
+    /// Username + random password set during Connect(), consumed by GetSerialization().
+    auth_data: Mutex<Option<AuthData>>,
+    /// Usage scenario from the provider, needed for KERB MessageType selection.
+    cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
 }
 
 impl Credential {
-    pub fn new() -> Self {
+    pub fn new(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> Self {
         Self {
             _fields: [PWSTR::null(); 4],
-            auth_user: Mutex::new(None),
+            auth_data: Mutex::new(None),
+            cpus,
         }
     }
 }
@@ -68,11 +76,7 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
     ) -> Result<()> {
         unsafe {
             match dwfieldid {
-                0 => {
-                    *pcpfs = CPFS_DISPLAY_IN_SELECTED_TILE;
-                    *pcpfis = CPFIS_NONE;
-                }
-                1 => {
+                0 | 1 => {
                     *pcpfs = CPFS_DISPLAY_IN_SELECTED_TILE;
                     *pcpfis = CPFIS_NONE;
                 }
@@ -94,7 +98,7 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
                 ))
             }
             1 => Ok(PWSTR::null()),
-            _ => return Err(E_INVALIDARG.into()),
+            _ => Err(E_INVALIDARG.into()),
         }
     }
 
@@ -121,19 +125,11 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
     fn GetComboBoxValueCount(
         &self,
-        dwfieldid: u32,
-        pcitems: *mut u32,
-        pdwselecteditem: *mut u32,
+        _dwfieldid: u32,
+        _pcitems: *mut u32,
+        _pdwselecteditem: *mut u32,
     ) -> Result<()> {
-        if dwfieldid == 1 {
-            unsafe {
-                *pcitems = 3; // Microsoft, Google, GitHub
-                *pdwselecteditem = 0; // Default to Microsoft
-            }
-            Ok(())
-        } else {
-            Err(E_NOTIMPL.into())
-        }
+        Err(E_NOTIMPL.into())
     }
 
     fn GetComboBoxValueAt(&self, _dwfieldid: u32, _dwitem: u32) -> Result<PWSTR> {
@@ -159,82 +155,51 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
     fn GetSerialization(
         &self,
         pcpgsr: *mut CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE,
-        _pcpcs: *mut CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+        pcpcs: *mut CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
         ppszoptionalstatustext: *mut PWSTR,
         pcpsioptionalstatusicon: *mut CREDENTIAL_PROVIDER_STATUS_ICON,
     ) -> Result<()> {
-        // By this point Connect() has already run the auth flow and stored the
-        // signalled username (mirrors the C++ flow where Connect blocks until
-        // sHookData reports complete, then GetSerialization packs the logon).
-        let user = self.auth_user.lock().unwrap().clone();
+        let data = self.auth_data.lock().unwrap().take();
 
         unsafe {
-            match user {
-                Some(username) => {
-                    log::info!(
-                        "GetSerialization: auth signalled for '{username}'. \
-                         Credential packing (KerbInteractiveUnlockLogonPack) is TODO."
-                    );
-                    // TODO: build KERB_INTERACTIVE_UNLOCK_LOGON for `username`
-                    // (reset local password + pack) and return
-                    // CPGSR_RETURN_CREDENTIAL_FINISHED. Deferred until the real
-                    // authentication/account-mapping work lands.
-                    let msg = format!("Authenticated as {username} (logon packing TODO)");
-                    *ppszoptionalstatustext = crate::utils::cotask_pwstr(&msg);
-                    *pcpsioptionalstatusicon = CPSI_SUCCESS;
-                    *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
+            *pcpsioptionalstatusicon = CPSI_NONE;
+            *ppszoptionalstatustext = PWSTR::null();
+
+            let Some(AuthData { username, password }) = data else {
+                *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
+                return Ok(());
+            };
+
+            let domain = crate::helpers::get_computer_name();
+
+            match crate::helpers::kerb_interactive_unlock_logon_pack(
+                &domain, &username, &password, self.cpus,
+            ) {
+                Ok((buf, len)) => {
+                    match crate::helpers::retrieve_negotiate_auth_package() {
+                        Ok(auth_pkg) => {
+                            (*pcpcs).rgbSerialization = buf;
+                            (*pcpcs).cbSerialization = len;
+                            (*pcpcs).ulAuthenticationPackage = auth_pkg;
+                            (*pcpcs).clsidCredentialProvider = crate::CLSID_CREDENTIAL_PROVIDER;
+                            *pcpsioptionalstatusicon = CPSI_SUCCESS;
+                            *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
+                            log::info!("GetSerialization: packed credential for '{username}'");
+                        }
+                        Err(e) => {
+                            log::error!("retrieve_negotiate_auth_package failed: {e}");
+                            CoTaskMemFree(Some(buf as *const _));
+                            *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
+                        }
+                    }
                 }
-                None => {
+                Err(e) => {
+                    log::error!("kerb_interactive_unlock_logon_pack failed: {e}");
                     *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
                 }
             }
         }
         Ok(())
-        // // Launch OAuth authentication
-        // match self.launch_oauth_auth() {
-        //     Ok(token_info) => {
-        //         unsafe {
-        //             *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
-
-        //             // Create credential serialization
-        //             let username = token_info.user_info.email.clone();
-        //             let username_wide: Vec<u16> =
-        //                 username.encode_utf16().chain(std::iter::once(0)).collect();
-
-        //             (*pcpcs).ulAuthenticationPackage = 0; // MSV1_0
-        //             (*pcpcs).cbSerialization = (username_wide.len() * 2) as u32;
-        //             (*pcpcs).rgbSerialization = username_wide.as_ptr() as *mut u8;
-
-        //             // Set success status
-        //             let status_text = format!("Welcome, {}!", token_info.user_info.name);
-        //             *ppszoptionalstatustext = PWSTR::from_raw(
-        //                 status_text
-        //                     .encode_utf16()
-        //                     .chain(std::iter::once(0))
-        //                     .collect::<Vec<u16>>()
-        //                     .as_mut_ptr(),
-        //             );
-        //             *pcpsioptionalstatusicon = CPSI_SUCCESS;
-        //         }
-        //         Ok(())
-        //     }
-        //     Err(e) => {
-        //         unsafe {
-        //             *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
-
-        //             let error_text = "OAuth authentication failed";
-        //             *ppszoptionalstatustext = PWSTR::from_raw(
-        //                 error_text
-        //                     .encode_utf16()
-        //                     .chain(std::iter::once(0))
-        //                     .collect::<Vec<u16>>()
-        //                     .as_mut_ptr(),
-        //             );
-        //             *pcpsioptionalstatusicon = CPSI_ERROR;
-        //         }
-        //         Err(e)
-        //     }
-        // }
     }
 
     fn ReportResult(
@@ -256,36 +221,37 @@ impl ICredentialProviderCredential2_Impl for Credential_Impl {
 
 impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
     fn Connect(&self, pqcws: Ref<'_, IQueryContinueWithStatus>) -> Result<()> {
-        log::info!("Connect: launching Tauri auth window and waiting for signal");
+        log::info!("Connect: launching Tauri auth window");
 
-        // Show a status message while the external window is up, like the C++
-        // provider's pqcws->SetStatusMessage(L"Please sign in...").
         if let Some(q) = pqcws.as_ref() {
             unsafe {
                 let _ = q.SetStatusMessage(w!("Please sign in to your authentik account..."));
             }
         }
 
-        // Blocks until the auth-app signals completion or cancellation over the
-        // named pipe (the equivalent of the C++ `while (!IsComplete())` loop).
         match run_auth_flow() {
             AuthOutcome::Completed { username } => {
                 log::info!("Connect: authentication complete (user: {username})");
-                *self.auth_user.lock().unwrap() = Some(username);
+
+                let password = crate::helpers::generate_random_password();
+                if let Err(e) = crate::helpers::reset_local_password(&username, &password) {
+                    log::error!("Connect: failed to reset local password for '{username}': {e}");
+                    return Err(E_FAIL.into());
+                }
+                log::info!("Connect: local password reset for '{username}'");
+
+                *self.auth_data.lock().unwrap() = Some(AuthData { username, password });
                 Ok(())
             }
             AuthOutcome::Cancelled => {
                 log::info!("Connect: authentication cancelled");
-                *self.auth_user.lock().unwrap() = None;
-                // Returning an error (not S_OK) avoids the Disconnect button and
-                // tells LogonUI the connect attempt did not succeed.
+                *self.auth_data.lock().unwrap() = None;
                 Err(E_ABORT.into())
             }
         }
     }
 
     fn Disconnect(&self) -> Result<()> {
-        log::debug!("Credential::IConnectableCredentialProviderCredential_Impl::Disconnect");
         Ok(())
     }
 }

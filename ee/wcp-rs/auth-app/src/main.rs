@@ -16,7 +16,20 @@ use std::os::windows::io::FromRawHandle;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
+use log::LevelFilter;
+use simplelog::{Config, WriteLogger};
 use tauri::{WebviewUrl, WebviewWindowBuilder, WindowEvent};
+
+/// Initialise a file logger that writes to %TEMP%\ak-auth-app.log.
+/// Called once at startup before any other log output.
+/// Errors are ignored — logging is best-effort for a child process launched by
+/// a Windows credential provider (no console is available under LogonUI).
+fn init_log() {
+    let log_path = std::env::temp_dir().join("ak-auth-app.log");
+    if let Ok(f) = File::create(&log_path) {
+        let _ = WriteLogger::init(LevelFilter::Debug, Config::default(), f);
+    }
+}
 
 /// Write a single line to the DLL's inherited anonymous pipe.
 /// Protocol: `OK <username>` on success, `CANCEL` otherwise.
@@ -26,15 +39,16 @@ use tauri::{WebviewUrl, WebviewWindowBuilder, WindowEvent};
 /// is a valid handle here. We wrap it in a `File`, write the line, and let the
 /// `File` drop close it (signalling EOF to the DLL's read end).
 fn signal(handle: &Option<usize>, msg: &str) {
+    log::info!("signalling pipe: {msg}");
     let Some(raw) = handle else {
-        eprintln!("auth-app: no --pipe-handle given, would have signalled: {msg}");
+        log::warn!("no --pipe-handle given, would have signalled: {msg}");
         return;
     };
     // SAFETY: the integer is a handle inherited from the parent for exactly this
     // purpose; taking ownership via File is correct.
     let mut f = unsafe { File::from_raw_handle(*raw as *mut std::ffi::c_void) };
     if let Err(e) = writeln!(f, "{msg}").and_then(|_| f.flush()) {
-        eprintln!("auth-app: failed to write to inherited pipe handle: {e}");
+        log::error!("failed to write to inherited pipe handle: {e}");
     }
 }
 
@@ -69,12 +83,14 @@ fn inject_header_token(window: &tauri::WebviewWindow, header_token: String) {
     };
     use windows_core::HSTRING;
 
+    log::debug!("registering WebResourceRequested filter for header injection");
+
     if let Err(e) = window.with_webview(move |wv| {
         let controller = wv.controller();
         let wv2 = match unsafe { controller.CoreWebView2() } {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("auth-app: CoreWebView2 failed: {e}");
+                log::error!("CoreWebView2 failed: {e}");
                 return;
             }
         };
@@ -85,9 +101,11 @@ fn inject_header_token(window: &tauri::WebviewWindow, header_token: String) {
                 COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,
             )
         } {
-            eprintln!("auth-app: AddWebResourceRequestedFilter failed: {e}");
+            log::error!("AddWebResourceRequestedFilter failed: {e}");
             return;
         }
+
+        log::debug!("WebResourceRequested filter registered; injecting header on all requests");
 
         let mut token = 0i64;
         if let Err(e) = unsafe {
@@ -107,15 +125,23 @@ fn inject_header_token(window: &tauri::WebviewWindow, header_token: String) {
                 &mut token,
             )
         } {
-            eprintln!("auth-app: add_WebResourceRequested failed: {e}");
+            log::error!("add_WebResourceRequested failed: {e}");
         }
     }) {
-        eprintln!("auth-app: with_webview dispatch failed: {e}");
+        log::error!("with_webview dispatch failed: {e}");
     }
 }
 
 fn main() {
+    init_log();
+
     let pipe = arg("--pipe-handle").and_then(|s| s.parse::<usize>().ok());
+
+    log::info!(
+        "auth-app starting (pid={}, pipe-handle={:?})",
+        std::process::id(),
+        pipe
+    );
 
     // Tracks whether we already signalled success, so the window-close handler
     // doesn't also send a spurious CANCEL.
@@ -131,16 +157,25 @@ fn main() {
             let (url, header_token) = match ak_ffi::ffi::sys_auth_start_async() {
                 Ok(r) => r,
                 Err(e) => {
-                    eprintln!("auth_start_async failed: {e}");
+                    log::error!("auth_start_async failed: {e}");
                     signal(&pipe, "CANCEL");
                     std::process::exit(1);
                 }
             };
 
+            // Log the origin only (scheme + host) — the path may contain tokens.
+            if let Ok(parsed) = url.parse::<tauri::Url>() {
+                log::info!(
+                    "auth URL: {}://{}",
+                    parsed.scheme(),
+                    parsed.host_str().unwrap_or("<no host>")
+                );
+            }
+
             let target: tauri::Url = match url.parse() {
                 Ok(u) => u,
                 Err(e) => {
-                    eprintln!("invalid auth URL from backend: {e}");
+                    log::error!("invalid auth URL from backend: {e}");
                     signal(&pipe, "CANCEL");
                     std::process::exit(1);
                 }
@@ -148,23 +183,29 @@ fn main() {
             let pipe_nav = pipe;
             let completed_nav = completed.clone();
 
+            log::info!("opening webview");
             let window = WebviewWindowBuilder::new(app, "auth", WebviewUrl::External(target))
                 .title("Authenticate")
                 .inner_size(900.0, 700.0)
                 .center()
                 .on_navigation(move |u| {
-                    if u.as_str().starts_with(REDIRECT_PREFIX) {
+                    let url_str = u.as_str();
+                    if url_str.starts_with(REDIRECT_PREFIX) {
+                        log::info!("redirect detected (prefix match), calling sys_auth_url");
                         // Mirror C++ simple_handler.h OnBeforeResourceLoad: validate
                         // the token embedded in the redirect URL and extract the
                         // authenticated username.
-                        let msg = match ak_ffi::ffi::sys_auth_url(u.as_str()) {
-                            Ok(Some(username)) => format!("OK {username}"),
+                        let msg = match ak_ffi::ffi::sys_auth_url(url_str) {
+                            Ok(Some(username)) => {
+                                log::info!("sys_auth_url: authenticated as '{username}'");
+                                format!("OK {username}")
+                            }
                             Ok(None) => {
-                                eprintln!("auth_url: token validation failed");
+                                log::warn!("sys_auth_url: token validation failed");
                                 "CANCEL".to_string()
                             }
                             Err(e) => {
-                                eprintln!("auth_url error: {e}");
+                                log::error!("sys_auth_url error: {e}");
                                 "CANCEL".to_string()
                             }
                         };
@@ -172,9 +213,12 @@ fn main() {
                         completed_nav.store(true, Ordering::SeqCst);
                         std::process::exit(0);
                     }
+                    log::debug!("navigation: {}", u.host_str().unwrap_or(url_str));
                     true
                 })
                 .build()?;
+
+            log::info!("webview window built");
 
             // Mirror C++ OnBeforeResourceLoad: inject X-Authentik-Platform-Auth-DTH
             // on every outgoing request via WebView2's WebResourceRequested event.
@@ -186,6 +230,7 @@ fn main() {
         .on_window_event(move |_window, event| {
             if let WindowEvent::CloseRequested { .. } = event {
                 if !completed_close.load(Ordering::SeqCst) {
+                    log::info!("window closed without completing auth — sending CANCEL");
                     signal(&pipe_close, "CANCEL");
                 }
             }

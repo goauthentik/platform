@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use windows::{
     core::{implement, Ref, Result, BOOL, GUID, PWSTR},
     Win32::{
@@ -17,13 +19,13 @@ use crate::credprovider::credential::Credential;
 
 #[implement(ICredentialProvider, ICredentialProviderSetUserArray)]
 pub struct CredentialProvider {
-    _credentials: Vec<Credential>,
+    cpus: Mutex<CREDENTIAL_PROVIDER_USAGE_SCENARIO>,
 }
 
 impl CredentialProvider {
     pub fn new() -> Self {
         Self {
-            _credentials: Vec::new(),
+            cpus: Mutex::new(CPUS_LOGON),
         }
     }
 }
@@ -45,12 +47,16 @@ impl ICredentialProvider_Impl for CredentialProvider_Impl {
             log::info!("Interactive authentication not available, not showing cred UI");
             return Err(E_NOTIMPL.into());
         }
-        match cpus {
+        let result = match cpus {
             CPUS_LOGON | CPUS_UNLOCK_WORKSTATION => Ok(()),
             CPUS_CREDUI if debug => Ok(()),
             CPUS_CREDUI | CPUS_CHANGE_PASSWORD => Err(E_NOTIMPL.into()),
             _ => Err(E_INVALIDARG.into()),
+        };
+        if result.is_ok() {
+            *self.cpus.lock().unwrap() = cpus;
         }
+        result
     }
 
     fn SetSerialization(
@@ -127,7 +133,8 @@ impl ICredentialProvider_Impl for CredentialProvider_Impl {
 
     fn GetCredentialAt(&self, dwindex: u32) -> Result<ICredentialProviderCredential> {
         if dwindex == 0 {
-            let credential = Credential::new();
+            let cpus = *self.cpus.lock().unwrap();
+            let credential = Credential::new(cpus);
             Ok(credential.into())
         } else {
             Err(E_INVALIDARG.into())

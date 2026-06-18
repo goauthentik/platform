@@ -19,11 +19,12 @@ use crate::{credprovider::factory::CredentialProviderFactory, utils::init_log};
 
 mod auth;
 mod credprovider;
+mod helpers;
 mod utils;
 
 
 static PROVIDER_FACTORY_REFERENCE_COUNT: AtomicUsize = AtomicUsize::new(0);
-const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x12345678_1234_1234_1234_123456789012);
+pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x12345678_1234_1234_1234_123456789012);
 
 #[unsafe(no_mangle)]
 extern "system" fn DllGetClassObject(
