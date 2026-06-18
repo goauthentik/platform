@@ -1,8 +1,9 @@
-use std::sync::Mutex;
+use std::{mem::size_of, sync::Mutex};
 
 use windows::{
     Win32::{
-        Foundation::{E_INVALIDARG, E_NOTIMPL, FALSE},
+        Foundation::{E_INVALIDARG, E_NOTIMPL, E_OUTOFMEMORY, FALSE},
+        System::Com::CoTaskMemAlloc,
         UI::Shell::{
             CPFT_LARGE_TEXT, CPFT_SUBMIT_BUTTON, CPUS_CHANGE_PASSWORD, CPUS_CREDUI, CPUS_LOGON,
             CPUS_UNLOCK_WORKSTATION, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
@@ -12,7 +13,7 @@ use windows::{
             ICredentialProviderSetUserArray_Impl, ICredentialProviderUserArray,
         },
     },
-    core::{BOOL, GUID, PWSTR, Ref, Result, implement},
+    core::{BOOL, GUID, Ref, Result, implement},
 };
 
 use crate::credprovider::credential::Credential;
@@ -90,31 +91,27 @@ impl ICredentialProvider_Impl for CredentialProvider_Impl {
             0 => CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR {
                 dwFieldID: 0,
                 cpft: CPFT_LARGE_TEXT,
-                pszLabel: PWSTR::from_raw(
-                    "authentik Login"
-                        .encode_utf16()
-                        .chain(std::iter::once(0))
-                        .collect::<Vec<u16>>()
-                        .as_mut_ptr(),
-                ),
+                pszLabel: crate::utils::cotask_pwstr("authentik Login"),
                 guidFieldType: GUID::zeroed(),
             },
             1 => CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR {
                 dwFieldID: 1,
                 cpft: CPFT_SUBMIT_BUTTON,
-                pszLabel: PWSTR::from_raw(
-                    "Sign In with authentik"
-                        .encode_utf16()
-                        .chain(std::iter::once(0))
-                        .collect::<Vec<u16>>()
-                        .as_mut_ptr(),
-                ),
+                pszLabel: crate::utils::cotask_pwstr("Sign In with authentik"),
                 guidFieldType: GUID::zeroed(),
             },
             _ => return Err(E_INVALIDARG.into()),
         };
 
-        Ok(Box::into_raw(Box::new(descriptor)))
+        unsafe {
+            let ptr = CoTaskMemAlloc(size_of::<CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR>())
+                as *mut CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR;
+            if ptr.is_null() {
+                return Err(E_OUTOFMEMORY.into());
+            }
+            std::ptr::write(ptr, descriptor);
+            Ok(ptr)
+        }
     }
 
     fn GetCredentialCount(

@@ -88,15 +88,7 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
     fn GetStringValue(&self, dwfieldid: u32) -> Result<PWSTR> {
         match dwfieldid {
-            0 => {
-                let text = "authentik";
-                Ok(PWSTR::from_raw(
-                    text.encode_utf16()
-                        .chain(std::iter::once(0))
-                        .collect::<Vec<u16>>()
-                        .as_mut_ptr(),
-                ))
-            }
+            0 => Ok(crate::utils::cotask_pwstr("authentik")),
             1 => Ok(PWSTR::null()),
             _ => Err(E_INVALIDARG.into()),
         }

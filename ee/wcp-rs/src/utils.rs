@@ -15,7 +15,6 @@ use windows::{
 /// Allocate a NUL-terminated wide string with `CoTaskMemAlloc` so it can be
 /// handed back to LogonUI through an out-param (LogonUI frees it with
 /// `CoTaskMemFree`).
-#[allow(dead_code)]
 pub fn cotask_pwstr(s: &str) -> PWSTR {
     let wide: Vec<u16> = s.encode_utf16().chain(std::iter::once(0)).collect();
     unsafe {
