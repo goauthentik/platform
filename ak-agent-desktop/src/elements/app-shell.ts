@@ -1,5 +1,4 @@
 import "./header.js";
-import "./tab-bar.js";
 import "./profile-status.js";
 
 import { listProfiles, profile, userInfo } from "../bridge";

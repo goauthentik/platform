@@ -13,7 +13,7 @@ function renewalStatus(nextRenew: Date | string | null): RenewalStatus {
     const now = Date.now();
     const diff = next.getTime() - now;
     if (diff < 0) return "expired";
-    if (diff < 60 * 60 * 1000) return "expiring";
+    if (diff < 30 * 60 * 1000) return "expiring";
     return "active";
 }
 
@@ -144,7 +144,7 @@ export class ProfileStatus extends LitElement {
                                           >${STATUS_LABELS[status]}</span
                                       >
                                   </div>
-                                  <div class="profile-username">${p.username}</div>
+                                  <div class="profile-username">Username: ${p.username}</div>
                                   <div class="profile-url">
                                       <button
                                           @click=${() => {

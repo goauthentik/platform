@@ -16,7 +16,7 @@ export class Header extends LitElement {
         }
         .header {
             display: grid;
-            grid-template-columns: 78px 1fr auto;
+            grid-template-columns: 1fr 1fr;
             align-items: center;
             padding: 0 16px 0 0;
             height: 52px;
@@ -31,47 +31,6 @@ export class Header extends LitElement {
         .logo svg {
             height: 26px;
             width: auto;
-        }
-        .actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .icon-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 6px;
-            color: rgba(255, 255, 255, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition:
-                background 0.15s,
-                color 0.15s;
-        }
-        .icon-btn:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.15);
-        }
-        .icon-btn svg {
-            width: 20px;
-            height: 20px;
-        }
-        .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 999px;
-            background: #e57c00;
-            color: #fff;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            user-select: none;
         }
     `;
 
@@ -99,7 +58,6 @@ export class Header extends LitElement {
     render() {
         return html`
             <div class="header" @mousedown=${this._startDrag}>
-                <div></div>
                 <div class="logo">${unsafeHTML(logoSvg)}</div>
                 <div class="actions">
                     <div class="avatar">${this._initials}</div>
