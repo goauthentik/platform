@@ -6,23 +6,19 @@ use std::{
 
 use ak_platform::string::PlatformString;
 use windows::{
-    core::{GUID, HRESULT, Interface},
     Win32::{
-        Foundation::{
-            CLASS_E_CLASSNOTAVAILABLE, E_INVALIDARG,
-            E_POINTER, S_FALSE, S_OK,
-        },
+        Foundation::{CLASS_E_CLASSNOTAVAILABLE, E_INVALIDARG, E_POINTER, S_FALSE, S_OK},
         System::Com::IClassFactory,
     },
+    core::{GUID, HRESULT, Interface},
 };
 
-use crate::{credprovider::factory::CredentialProviderFactory};
+use crate::credprovider::factory::CredentialProviderFactory;
 
 mod auth;
 mod credprovider;
 mod helpers;
 mod utils;
-
 
 static PROVIDER_FACTORY_REFERENCE_COUNT: AtomicUsize = AtomicUsize::new(0);
 pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x12345678_1234_1234_1234_123456789012);

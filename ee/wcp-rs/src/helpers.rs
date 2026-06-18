@@ -4,22 +4,21 @@
 //! and the random-password + NetUserSetInfo flow from the C++ provider.
 
 use windows::{
-    core::{PCWSTR, PSTR, PWSTR},
     Win32::{
         Foundation::{E_FAIL, E_OUTOFMEMORY, HANDLE},
         NetworkManagement::NetManagement::{NetUserSetInfo, USER_INFO_1003},
         Security::{
             Authentication::Identity::{
-                KerbInteractiveLogon, KerbWorkstationUnlockLogon, LsaConnectUntrusted,
+                KERB_INTERACTIVE_UNLOCK_LOGON, KERB_LOGON_SUBMIT_TYPE, KerbInteractiveLogon,
+                KerbWorkstationUnlockLogon, LSA_STRING, LSA_UNICODE_STRING, LsaConnectUntrusted,
                 LsaDeregisterLogonProcess, LsaLookupAuthenticationPackage,
-                KERB_INTERACTIVE_UNLOCK_LOGON, KERB_LOGON_SUBMIT_TYPE, LSA_STRING,
-                LSA_UNICODE_STRING,
             },
-            Cryptography::{BCryptGenRandom, BCRYPT_USE_SYSTEM_PREFERRED_RNG},
+            Cryptography::{BCRYPT_USE_SYSTEM_PREFERRED_RNG, BCryptGenRandom},
         },
         System::Com::CoTaskMemAlloc,
         UI::Shell::CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     },
+    core::{PCWSTR, PSTR, PWSTR},
 };
 
 use windows::Win32::UI::Shell::CPUS_UNLOCK_WORKSTATION;
@@ -52,7 +51,7 @@ pub fn reset_local_password(username: &str, password: &str) -> windows::core::Re
 
     let result = unsafe {
         NetUserSetInfo(
-            PCWSTR::null(),                               // local machine
+            PCWSTR::null(), // local machine
             PCWSTR(username_wide.as_ptr()),
             1003,
             &info as *const USER_INFO_1003 as *const u8,
@@ -92,7 +91,9 @@ pub fn retrieve_negotiate_auth_package() -> windows::core::Result<u32> {
     let mut auth_package = 0u32;
     let status =
         unsafe { LsaLookupAuthenticationPackage(lsa_handle, &lsa_name, &mut auth_package) };
-    unsafe { let _ = LsaDeregisterLogonProcess(lsa_handle); };
+    unsafe {
+        let _ = LsaDeregisterLogonProcess(lsa_handle);
+    };
 
     if status.0 != 0 {
         return Err(windows::core::Error::from(E_FAIL));

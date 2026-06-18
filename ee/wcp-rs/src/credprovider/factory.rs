@@ -1,21 +1,17 @@
-use std::{
-    ffi::c_void, mem, ptr, sync::atomic::Ordering
-};
+use std::{ffi::c_void, mem, ptr, sync::atomic::Ordering};
 
 use windows::{
-    core::{implement, Result, BOOL, GUID, IUnknown, Interface, Ref},
     Win32::{
-        Foundation::{
-            CLASS_E_NOAGGREGATION, E_INVALIDARG, E_NOINTERFACE,
-            E_POINTER
-        },
+        Foundation::{CLASS_E_NOAGGREGATION, E_INVALIDARG, E_NOINTERFACE, E_POINTER},
         System::Com::{IClassFactory, IClassFactory_Impl},
         UI::Shell::ICredentialProvider,
     },
+    core::{BOOL, GUID, IUnknown, Interface, Ref, Result, implement},
 };
 
-use crate::{credprovider::credential_provider::CredentialProvider, PROVIDER_FACTORY_REFERENCE_COUNT};
-
+use crate::{
+    PROVIDER_FACTORY_REFERENCE_COUNT, credprovider::credential_provider::CredentialProvider,
+};
 
 #[implement(IClassFactory)]
 pub struct CredentialProviderFactory;

@@ -1,17 +1,17 @@
 use std::fs::File;
 
 use windows::{
-    core::{w, GUID, HRESULT, HSTRING, PWSTR},
     Win32::{
         Foundation::{E_FAIL, S_OK},
         System::{
             Com::CoTaskMemAlloc,
             Registry::{
-                RegCloseKey, RegCreateKeyExW, RegDeleteKeyW, RegSetValueExW, HKEY,
-                HKEY_LOCAL_MACHINE, KEY_WRITE, REG_OPTION_NON_VOLATILE, REG_SZ,
+                HKEY, HKEY_LOCAL_MACHINE, KEY_WRITE, REG_OPTION_NON_VOLATILE, REG_SZ, RegCloseKey,
+                RegCreateKeyExW, RegDeleteKeyW, RegSetValueExW,
             },
         },
     },
+    core::{GUID, HRESULT, HSTRING, PWSTR, w},
 };
 
 /// Allocate a NUL-terminated wide string with `CoTaskMemAlloc` so it can be
@@ -75,10 +75,6 @@ pub fn unregister_credential_provider(clsid: &GUID) -> HRESULT {
         );
 
         let result = RegDeleteKeyW(HKEY_LOCAL_MACHINE, &HSTRING::from(&key_path));
-        if result.is_ok() {
-            S_OK
-        } else {
-            E_FAIL
-        }
+        if result.is_ok() { S_OK } else { E_FAIL }
     }
 }

@@ -13,8 +13,8 @@
 use std::fs::File;
 use std::io::Write;
 use std::os::windows::io::FromRawHandle;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use ak_platform::string::PlatformString;
 use tauri::{WebviewUrl, WebviewWindowBuilder, WindowEvent};
@@ -65,7 +65,7 @@ const REDIRECT_PREFIX: &str = "goauthentik.io://";
 fn inject_header_token(window: &tauri::WebviewWindow, header_token: String) {
     use webview2_com::{
         Microsoft::Web::WebView2::Win32::{
-            ICoreWebView2WebResourceRequest, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,
+            COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL, ICoreWebView2WebResourceRequest,
         },
         WebResourceRequestedEventHandler,
     };

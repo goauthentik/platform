@@ -1,27 +1,27 @@
 use std::sync::Mutex;
 
 use windows::{
-    core::{implement, w, Ref, Result, BOOL, PCWSTR, PWSTR},
     Win32::{
         Foundation::{E_ABORT, E_FAIL, E_INVALIDARG, E_NOTIMPL, FALSE, NTSTATUS},
         Graphics::Gdi::HBITMAP,
         System::Com::CoTaskMemFree,
         UI::Shell::{
-            IConnectableCredentialProviderCredential,
-            IConnectableCredentialProviderCredential_Impl, ICredentialProviderCredential,
-            ICredentialProviderCredential2, ICredentialProviderCredential2_Impl,
-            ICredentialProviderCredentialEvents, ICredentialProviderCredential_Impl,
-            IQueryContinueWithStatus, CPFIS_NONE, CPFS_DISPLAY_IN_SELECTED_TILE,
-            CPGSR_NO_CREDENTIAL_NOT_FINISHED, CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_NONE,
-            CPSI_SUCCESS, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+            CPFIS_NONE, CPFS_DISPLAY_IN_SELECTED_TILE, CPGSR_NO_CREDENTIAL_NOT_FINISHED,
+            CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_NONE, CPSI_SUCCESS,
+            CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
             CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE, CREDENTIAL_PROVIDER_FIELD_STATE,
             CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE, CREDENTIAL_PROVIDER_STATUS_ICON,
-            CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+            CREDENTIAL_PROVIDER_USAGE_SCENARIO, IConnectableCredentialProviderCredential,
+            IConnectableCredentialProviderCredential_Impl, ICredentialProviderCredential,
+            ICredentialProviderCredential_Impl, ICredentialProviderCredential2,
+            ICredentialProviderCredential2_Impl, ICredentialProviderCredentialEvents,
+            IQueryContinueWithStatus,
         },
     },
+    core::{BOOL, PCWSTR, PWSTR, Ref, Result, implement, w},
 };
 
-use crate::auth::{run_auth_flow, AuthOutcome};
+use crate::auth::{AuthOutcome, run_auth_flow};
 
 struct AuthData {
     username: String,
@@ -175,24 +175,22 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
             match crate::helpers::kerb_interactive_unlock_logon_pack(
                 &domain, &username, &password, self.cpus,
             ) {
-                Ok((buf, len)) => {
-                    match crate::helpers::retrieve_negotiate_auth_package() {
-                        Ok(auth_pkg) => {
-                            (*pcpcs).rgbSerialization = buf;
-                            (*pcpcs).cbSerialization = len;
-                            (*pcpcs).ulAuthenticationPackage = auth_pkg;
-                            (*pcpcs).clsidCredentialProvider = crate::CLSID_CREDENTIAL_PROVIDER;
-                            *pcpsioptionalstatusicon = CPSI_SUCCESS;
-                            *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
-                            log::info!("GetSerialization: packed credential for '{username}'");
-                        }
-                        Err(e) => {
-                            log::error!("retrieve_negotiate_auth_package failed: {e}");
-                            CoTaskMemFree(Some(buf as *const _));
-                            *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
-                        }
+                Ok((buf, len)) => match crate::helpers::retrieve_negotiate_auth_package() {
+                    Ok(auth_pkg) => {
+                        (*pcpcs).rgbSerialization = buf;
+                        (*pcpcs).cbSerialization = len;
+                        (*pcpcs).ulAuthenticationPackage = auth_pkg;
+                        (*pcpcs).clsidCredentialProvider = crate::CLSID_CREDENTIAL_PROVIDER;
+                        *pcpsioptionalstatusicon = CPSI_SUCCESS;
+                        *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
+                        log::info!("GetSerialization: packed credential for '{username}'");
                     }
-                }
+                    Err(e) => {
+                        log::error!("retrieve_negotiate_auth_package failed: {e}");
+                        CoTaskMemFree(Some(buf as *const _));
+                        *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
+                    }
+                },
                 Err(e) => {
                     log::error!("kerb_interactive_unlock_logon_pack failed: {e}");
                     *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;

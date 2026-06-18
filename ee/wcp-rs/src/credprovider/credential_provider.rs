@@ -1,18 +1,18 @@
 use std::sync::Mutex;
 
 use windows::{
-    core::{implement, Ref, Result, BOOL, GUID, PWSTR},
     Win32::{
         Foundation::{E_INVALIDARG, E_NOTIMPL, FALSE},
         UI::Shell::{
-            ICredentialProvider, ICredentialProviderCredential, ICredentialProviderEvents,
-            ICredentialProviderSetUserArray, ICredentialProviderSetUserArray_Impl,
-            ICredentialProviderUserArray, ICredentialProvider_Impl, CPFT_LARGE_TEXT,
-            CPFT_SUBMIT_BUTTON, CPUS_CHANGE_PASSWORD, CPUS_CREDUI, CPUS_LOGON,
+            CPFT_LARGE_TEXT, CPFT_SUBMIT_BUTTON, CPUS_CHANGE_PASSWORD, CPUS_CREDUI, CPUS_LOGON,
             CPUS_UNLOCK_WORKSTATION, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
             CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR, CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+            ICredentialProvider, ICredentialProvider_Impl, ICredentialProviderCredential,
+            ICredentialProviderEvents, ICredentialProviderSetUserArray,
+            ICredentialProviderSetUserArray_Impl, ICredentialProviderUserArray,
         },
     },
+    core::{BOOL, GUID, PWSTR, Ref, Result, implement},
 };
 
 use crate::credprovider::credential::Credential;

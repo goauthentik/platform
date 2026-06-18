@@ -21,27 +21,28 @@ use std::mem::size_of;
 use std::path::PathBuf;
 
 use windows::{
-    core::{PCWSTR, PWSTR},
     Win32::{
         Foundation::{
-            CloseHandle, SetHandleInformation, HANDLE, HANDLE_FLAGS, HANDLE_FLAG_INHERIT, HMODULE,
+            CloseHandle, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, HMODULE, SetHandleInformation,
         },
         Security::SECURITY_ATTRIBUTES,
         Storage::FileSystem::ReadFile,
         System::{
             LibraryLoader::{
-                GetModuleFileNameW, GetModuleHandleExW, GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, GetModuleFileNameW,
+                GetModuleHandleExW,
             },
             Pipes::CreatePipe,
             Threading::{
-                CreateProcessW, DeleteProcThreadAttributeList, InitializeProcThreadAttributeList,
-                UpdateProcThreadAttribute, WaitForSingleObject, EXTENDED_STARTUPINFO_PRESENT,
-                INFINITE, LPPROC_THREAD_ATTRIBUTE_LIST, PROCESS_INFORMATION,
-                PROC_THREAD_ATTRIBUTE_HANDLE_LIST, STARTUPINFOEXW,
+                CreateProcessW, DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT,
+                INFINITE, InitializeProcThreadAttributeList, LPPROC_THREAD_ATTRIBUTE_LIST,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION, STARTUPINFOEXW,
+                UpdateProcThreadAttribute, WaitForSingleObject,
             },
         },
     },
+    core::{PCWSTR, PWSTR},
 };
 
 /// Result of the auth flow, analogous to the C++ `sHookData` complete/cancel
