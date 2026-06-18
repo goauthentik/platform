@@ -33,7 +33,10 @@ pub fn init() -> Result<(), BoxError> {
 }
 
 pub fn service(name: &str) -> String {
-    format!("io.goauthentik.agent.{name}")
+    #[cfg(debug_assertions)]
+    return format!("io.goauthentik.agent-debug.{name}");
+    #[cfg(not(debug_assertions))]
+    return format!("io.goauthentik.agent.{name}");
 }
 
 #[derive(Debug)]
