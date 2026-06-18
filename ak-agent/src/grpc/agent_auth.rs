@@ -326,7 +326,7 @@ impl AgentAuth for AgentGRPCServer {
         let service = inner.service.clone();
         let uid = inner.uid.clone();
 
-        let result = AuthorizeAction {
+        AuthorizeAction {
             message: Box::new(move |_c| {
                 Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
             }),
@@ -338,7 +338,7 @@ impl AgentAuth for AgentGRPCServer {
         .await?;
 
         Ok(Response::new(AuthorizeResponse {
-            header: Some(ResponseHeader { successful: result }),
+            header: Some(ResponseHeader { successful: true }),
         }))
     }
 }

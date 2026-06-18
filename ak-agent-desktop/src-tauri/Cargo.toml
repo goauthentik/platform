@@ -1,0 +1,29 @@
+[package]
+name = "ak-agent-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "ak_agent_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+ak-agent = { path = "../../ak-agent" }
+ak-platform = { path = "../../ak-platform" }
+ak-platform-keyring = { path = "../../ak-platform-keyring" }
+ak-meta = { path = "../../ak-meta" }
+log = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"

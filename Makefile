@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
 
 .PHONY: all
 all: clean gen
@@ -51,7 +51,7 @@ ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev
+		libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 endif
 endif
 
@@ -117,27 +117,6 @@ test-e2e-convert:
 	go tool cover \
 		-html ${PWD}/coverage_in_container.txt \
 		-o ${PWD}/coverage_in_container.html
-	"$(MAKE)" test-e2e-convert-rs
-
-test-e2e-convert-rs:
-	@LLVM_BIN="$$(rustc --print sysroot)/lib/rustlib/$$(rustc -vV | sed -n 's|host: ||p')/bin" && \
-		if find "${PWD}/e2e/coverage/rs" -name "*.profraw" -print -quit | grep -q .; then \
-			mkdir -p "${PWD}/cache" && \
-			$$LLVM_BIN/llvm-profdata merge \
-				-sparse \
-				"${PWD}/e2e/coverage/rs/"*.profraw \
-				-o "${PWD}/cache/rs-e2e.profdata" && \
-			$$LLVM_BIN/llvm-cov export \
-				--instr-profile "${PWD}/cache/rs-e2e.profdata" \
-				--format=lcov \
-				--object "${PWD}/bin/agent/ak-agent" \
-				--object "${PWD}/bin/cli/ak" \
-				--object "${PWD}/bin/nss/libnss_authentik.so" \
-				--object "${PWD}/bin/pam/libpam_authentik.so" \
-				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
-		else \
-			echo "No Rust profraw files found, skipping Rust e2e coverage conversion"; \
-		fi
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
@@ -184,6 +163,9 @@ sysd/%:
 
 ak-agent/%:
 	"$(MAKE)" -C "${TOP}/ak-agent" $*
+
+ak-agent-desktop/%:
+	"$(MAKE)" -C "${TOP}/ak-agent-desktop" $*
 
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*

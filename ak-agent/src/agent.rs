@@ -10,6 +10,7 @@ use crate::grpc::AgentGRPCServer;
 use crate::ssh::AgentSSHServer;
 use crate::token::global::GlobalTokenManager;
 
+#[derive(Clone)]
 pub struct Agent {
     pub cfg: Arc<ConfigManager<ConfigV1>>,
     pub gtm: Arc<GlobalTokenManager>,

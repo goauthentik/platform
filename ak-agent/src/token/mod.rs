@@ -1,6 +1,6 @@
 use ak_platform::prelude::*;
 use chrono::{DateTime, Utc};
-use jsonwebtoken::{DecodingKey, Validation, decode, decode_header};
+use jsonwebtoken::dangerous::insecure_decode;
 use serde::{Deserialize, Serialize};
 use serde_with::formats::PreferOne;
 use serde_with::{OneOrMany, serde_as};
@@ -9,7 +9,7 @@ pub mod global;
 pub mod profile;
 
 #[serde_as]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AuthentikClaims {
     pub iss: String,
     pub sub: String,
@@ -41,13 +41,7 @@ impl Token {
 }
 
 pub(crate) fn parse_unverified(token: &str) -> Result<AuthentikClaims> {
-    let header = decode_header(token)
-        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::from(e.to_string()) })?;
-    let mut validation = Validation::new(header.alg);
-    validation.insecure_disable_signature_validation();
-    validation.validate_exp = false;
-    validation.validate_aud = false;
-    let data = decode::<AuthentikClaims>(token, &DecodingKey::from_secret(&[]), &validation)
+    let data = insecure_decode::<AuthentikClaims>(token)
         .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::from(e.to_string()) })?;
     Ok(data.claims)
 }
