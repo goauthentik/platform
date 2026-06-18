@@ -121,7 +121,7 @@ fn inject_header_token(window: &tauri::WebviewWindow, header_token: String) {
 }
 
 fn main() {
-    ak_platform::log::init_log(PlatformString::new_with_default("authentik WCP Browser"));
+    ak_platform::log::init_log(PlatformString::new_with_default("ak_cefexe"));
 
     let pipe = arg("--pipe-handle").and_then(|s| s.parse::<usize>().ok());
 

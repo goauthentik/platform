@@ -89,7 +89,7 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
     fn GetStringValue(&self, dwfieldid: u32) -> Result<PWSTR> {
         match dwfieldid {
             0 => {
-                let text = "OAuth Authentication";
+                let text = "authentik";
                 Ok(PWSTR::from_raw(
                     text.encode_utf16()
                         .chain(std::iter::once(0))

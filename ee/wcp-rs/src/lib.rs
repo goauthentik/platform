@@ -21,7 +21,7 @@ mod helpers;
 mod utils;
 
 static PROVIDER_FACTORY_REFERENCE_COUNT: AtomicUsize = AtomicUsize::new(0);
-pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x12345678_1234_1234_1234_123456789012);
+pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E_8E0A_1D0F8E73577A);
 
 #[unsafe(no_mangle)]
 extern "system" fn DllGetClassObject(
@@ -42,7 +42,7 @@ extern "system" fn DllGetClassObject(
         return E_INVALIDARG;
     }
 
-    ak_platform::log::init_log(PlatformString::new_with_default("authentik WCP"));
+    ak_platform::log::init_log(PlatformString::new_with_default("ak_cred_provider"));
     log::debug!("CredProvider : DllGetClassObject");
 
     let rclsid = unsafe { *rclsid };

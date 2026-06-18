@@ -1,5 +1,3 @@
-use std::fs::File;
-
 use windows::{
     Win32::{
         Foundation::{E_FAIL, S_OK},
