@@ -1,11 +1,13 @@
 use windows::{
     core::{implement, Ref, Result, BOOL, GUID, PWSTR},
     Win32::{
-        Foundation::{E_INVALIDARG, FALSE},
+        Foundation::{E_INVALIDARG, E_NOTIMPL, FALSE},
         UI::Shell::{
             ICredentialProvider, ICredentialProviderCredential, ICredentialProviderEvents,
             ICredentialProviderSetUserArray, ICredentialProviderSetUserArray_Impl,
-            ICredentialProviderUserArray, ICredentialProvider_Impl, CPFT_LARGE_TEXT, CPFT_SUBMIT_BUTTON, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+            ICredentialProviderUserArray, ICredentialProvider_Impl, CPFT_LARGE_TEXT,
+            CPFT_SUBMIT_BUTTON, CPUS_CHANGE_PASSWORD, CPUS_CREDUI, CPUS_LOGON,
+            CPUS_UNLOCK_WORKSTATION, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
             CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR, CREDENTIAL_PROVIDER_USAGE_SCENARIO,
         },
     },
@@ -32,8 +34,23 @@ impl ICredentialProvider_Impl for CredentialProvider_Impl {
         cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
         _dwflags: u32,
     ) -> Result<()> {
-        log::info!("SetUsageScenario called with scenario: {:?}", cpus);
-        Ok(())
+        let (available, debug) = match ak_ffi::ffi::sys_caps() {
+            Ok(c) => c,
+            Err(e) => {
+                log::warn!("ak_sys_caps failed: {e}");
+                return Err(E_NOTIMPL.into());
+            }
+        };
+        if !available {
+            log::info!("Interactive authentication not available, not showing cred UI");
+            return Err(E_NOTIMPL.into());
+        }
+        match cpus {
+            CPUS_LOGON | CPUS_UNLOCK_WORKSTATION => Ok(()),
+            CPUS_CREDUI if debug => Ok(()),
+            CPUS_CREDUI | CPUS_CHANGE_PASSWORD => Err(E_NOTIMPL.into()),
+            _ => Err(E_INVALIDARG.into()),
+        }
     }
 
     fn SetSerialization(

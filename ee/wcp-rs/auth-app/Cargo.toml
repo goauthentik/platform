@@ -11,4 +11,9 @@ path = "src/main.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+ak_ffi = { path = "../../../ak-ffi" }
 tauri = { version = "2", features = [] }
+
+[target.'cfg(windows)'.dependencies]
+webview2-com = "0.38"
+windows-core = "0.61"

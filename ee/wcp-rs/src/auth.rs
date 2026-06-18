@@ -44,17 +44,6 @@ use windows::{
     },
 };
 
-/// The page the webview opens. In a real deployment this is the authentik
-/// OAuth2 authorize URL.
-const AUTH_URL: &str = "https://example.com";
-
-/// When the webview navigates to a URL starting with this prefix, the app
-/// treats authentication as complete. In a real deployment this is the OAuth2
-/// `redirect_uri`. For this proof of concept it's the page example.com's
-/// "More information..." link points at, so the round-trip is demonstrable
-/// without a real identity provider.
-const REDIRECT_PREFIX: &str = "https://www.iana.org";
-
 /// Result of the auth flow, analogous to the C++ `sHookData` complete/cancel
 /// state plus the resolved username.
 pub enum AuthOutcome {
@@ -103,12 +92,12 @@ pub fn run_auth_flow() -> AuthOutcome {
     }
 
     // Build the command line. The child receives the inherited write handle as a
-    // raw integer it can reconstruct.
+    // raw integer it can reconstruct. The auth URL and redirect prefix are
+    // fetched by auth-app itself via ak_ffi::sys_auth_start_async(), mirroring
+    // how the C++ CEF browser fetches them from the backend on startup.
     let cmdline = format!(
-        "\"{}\" --url {} --redirect {} --pipe-handle {}",
+        "\"{}\" --pipe-handle {}",
         exe.display(),
-        AUTH_URL,
-        REDIRECT_PREFIX,
         write_handle.0 as usize
     );
     let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();

@@ -135,3 +135,32 @@ fn ak_sys_caps() -> Result<ffi::Capabilities> {
     };
     return Ok(caps);
 }
+
+/// Returns `(interactive_auth_available, debug)` with a pure-Rust signature
+/// so Rust crates can call this without depending on CXX types.
+pub fn sys_caps() -> Result<(bool, bool)> {
+    let c = ak_sys_caps()?;
+    Ok((c.interactive_auth_available, c.debug))
+}
+
+/// Returns `(url, header_token)` with a pure-Rust signature.
+pub fn sys_auth_start_async() -> Result<(String, String)> {
+    let mut res = ffi::AuthStartAsync {
+        url: String::new(),
+        header_token: String::new(),
+    };
+    ak_sys_auth_start_async(&mut res)?;
+    Ok((res.url, res.header_token))
+}
+
+/// Validates the `goauthentik.io://` redirect URL and returns the authenticated
+/// username, or `None` if the backend rejected the token.
+pub fn sys_auth_url(url: &str) -> Result<Option<String>> {
+    let_cxx_string!(cxx_url = url);
+    let mut token = ffi::TokenResponse {
+        username: String::new(),
+        session_id: String::new(),
+    };
+    let ok = ak_sys_auth_url(&cxx_url, &mut token)?;
+    Ok(if ok { Some(token.username) } else { None })
+}

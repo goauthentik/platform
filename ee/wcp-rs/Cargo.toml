@@ -7,6 +7,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
+ak_ffi = { path = "../../ak-ffi" }
 windows = { version = "0.61.3", features = [
     "Win32_Foundation",
     "Win32_System_Com",

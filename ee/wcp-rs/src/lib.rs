@@ -25,7 +25,7 @@ mod utils;
 static PROVIDER_FACTORY_REFERENCE_COUNT: AtomicUsize = AtomicUsize::new(0);
 const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x12345678_1234_1234_1234_123456789012);
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 extern "system" fn DllGetClassObject(
     rclsid: *const GUID,
     riid: *const GUID,
@@ -62,7 +62,7 @@ extern "system" fn DllGetClassObject(
     S_OK
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn DllCanUnloadNow() -> HRESULT {
     log::debug!(
         "DllCanUnloadNow called, Dll ref count = {}",
@@ -74,12 +74,12 @@ pub extern "system" fn DllCanUnloadNow() -> HRESULT {
     S_FALSE
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn DllRegisterServer() -> HRESULT {
     utils::register_credential_provider(&CLSID_CREDENTIAL_PROVIDER)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "system" fn DllUnregisterServer() -> HRESULT {
     utils::unregister_credential_provider(&CLSID_CREDENTIAL_PROVIDER)
 }
