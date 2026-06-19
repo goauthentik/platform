@@ -20,4 +20,4 @@ build:
 
 .PHONY: test
 test:
-	cargo test --verbose
+	$(call cargo_test,ak-browser-support)

@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform
 
 .PHONY: all
 all: clean gen
@@ -46,7 +46,6 @@ rs-gen-proto:
 	cargo fmt --all
 
 ci-install-deps:
-	rustup component add llvm-tools-preview
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
@@ -87,18 +86,6 @@ test:
 	go tool cover \
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
-
-test-rs: ci-install-deps
-	mkdir -p "${PWD}/cache"
-	cargo llvm-cov \
-		--no-report \
-		--ignore-filename-regex generated \
-		nextest -p ${TEST_TARGET} \
-			--no-tests pass
-	cargo llvm-cov report \
-		--codecov \
-		--ignore-filename-regex generated \
-		--output-path "${PWD}/cache/llvm-cov-target.json"
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
@@ -157,6 +144,9 @@ ak-browser-support/%:
 
 ak-cli/%:
 	"$(MAKE)" -C "${TOP}/ak-cli" $*
+
+ak-platform/%:
+	"$(MAKE)" -C "${TOP}/ak-platform" $*
 
 sysd/%:
 	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*

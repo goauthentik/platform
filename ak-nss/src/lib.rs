@@ -1,4 +1,6 @@
+pub mod backend;
 mod group;
+pub mod mapping;
 mod passwd;
 mod shadow;
 
@@ -8,14 +10,13 @@ use ak_platform::log::{init_log, set_log_level};
 use ak_platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
-use group::AuthentikGroupHooks;
 use libnss::{libnss_group_hooks, libnss_passwd_hooks, libnss_shadow_hooks};
-use passwd::AuthentikPasswdHooks;
-use shadow::AuthentikShadowHooks;
 
-libnss_passwd_hooks!(authentik, AuthentikPasswdHooks);
-libnss_shadow_hooks!(authentik, AuthentikShadowHooks);
-libnss_group_hooks!(authentik, AuthentikGroupHooks);
+pub struct AuthentikNSS {}
+
+libnss_passwd_hooks!(authentik, AuthentikNSS);
+libnss_shadow_hooks!(authentik, AuthentikNSS);
+libnss_group_hooks!(authentik, AuthentikNSS);
 
 #[ctor(unsafe)]
 fn ctor() {
