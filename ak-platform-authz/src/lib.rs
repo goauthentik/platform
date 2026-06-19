@@ -1,4 +1,3 @@
-pub mod sys;
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
@@ -10,6 +9,8 @@ use tonic::Status;
 
 type MessageFn = Box<dyn (Fn(&ProcCredentials) -> Result<PlatformString>) + Send>;
 type UidFn = Box<dyn (Fn(&ProcCredentials) -> Result<String>) + Send>;
+
+pub mod sys;
 
 pub struct AuthorizeAction {
     pub message: MessageFn,
@@ -36,9 +37,11 @@ static LAST_AUTH_MAP: LazyLock<Mutex<HashMap<String, AuthState>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 impl AuthorizeAction {
+    #[tracing::instrument(skip(self), fields(uid))]
     pub async fn prompt(self, creds: ProcCredentials) -> Result<bool> {
         let uid = (self.uid)(&creds)?.clone();
-        log::trace!("Checking if we need to authorize: {uid}");
+        tracing::Span::current().record("uid", &uid);
+        tracing::trace!(uid, "Checking if we need to authorize");
         if let Some(v) = match LAST_AUTH_MAP.try_lock() {
             Ok(it) => it,
             Err(e) => return Err(Box::from(e.to_string())),
@@ -46,15 +49,15 @@ impl AuthorizeAction {
         .get(&uid)
             && v.exp >= Instant::now()
         {
-            log::trace!("Valid last result in cache: {:?}", v.success);
+            tracing::trace!(cached = v.success, "Valid last result in cache");
             return Ok(v.success);
         }
         let msg = (self.message)(&creds)?.clone();
-        log::trace!("Prompting for authz: {uid}");
+        tracing::trace!(uid, "Prompting for authz");
         let res = match sys::prompt(msg).await {
             Ok(r) => r,
             Err(e) => {
-                log::trace!("error during authz: {e:?}");
+                tracing::trace!("error during authz: {e:?}");
                 return Err(e);
             }
         };
@@ -71,7 +74,7 @@ impl AuthorizeAction {
             }
             Err(e) => return Err(Box::from(e.to_string())),
         }
-        log::trace!("Authz result: {res}");
+        tracing::trace!(result = res, "Finished authorization");
         Ok(res)
     }
 

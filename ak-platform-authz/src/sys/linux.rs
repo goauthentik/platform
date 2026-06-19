@@ -36,7 +36,7 @@ pub async fn prompt(_msg: PlatformString) -> Result<bool> {
     let conn = match zbus::Connection::system().await {
         Ok(c) => c,
         Err(e) => {
-            log::warn!("polkit: D-Bus system bus unavailable, allowing authorization: {e}");
+            tracing::warn!("polkit: D-Bus system bus unavailable, allowing authorization: {e:?}");
             return Ok(true);
         }
     };
@@ -44,8 +44,8 @@ pub async fn prompt(_msg: PlatformString) -> Result<bool> {
     let proxy = match PolkitAuthorityProxy::new(&conn).await {
         Ok(p) => p,
         Err(e) => {
-            log::warn!(
-                "polkit: could not connect to PolicyKit1 authority, allowing authorization: {e}"
+            tracing::warn!(
+                "polkit: could not connect to PolicyKit1 authority, allowing authorization: {e:?}"
             );
             return Ok(true);
         }

@@ -13,14 +13,14 @@ pub async fn prompt(msg: PlatformString) -> Result<bool> {
     match UserConsentVerifier::CheckAvailabilityAsync()?.await? {
         UserConsentVerifierAvailability::Available => (),
         o => {
-            log::debug!("Windows hello: not available: {o:?}");
+            tracing::debug!("Windows hello: not available: {o:?}");
             return Ok(false);
         }
     };
     match UserConsentVerifier::RequestVerificationAsync(&hmsg)?.await? {
         UserConsentVerificationResult::Verified => Ok(true),
         e => {
-            log::debug!("Windows hello verification response: {e:?}");
+            tracing::debug!("Windows hello verification response: {e:?}");
             Ok(false)
         }
     }

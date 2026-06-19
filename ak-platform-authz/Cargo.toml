@@ -10,7 +10,7 @@ name = "authz_prompt"
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 tokio = { workspace = true }
-log = { workspace = true }
+tracing = { workspace = true }
 tonic = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]

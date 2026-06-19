@@ -248,9 +248,9 @@ version = "0.44.3"
 dependencies = [
  "ak-platform",
  "apple-localauthentication",
- "log",
  "tokio",
  "tonic",
+ "tracing",
  "windows 0.62.2",
  "zbus",
 ]
