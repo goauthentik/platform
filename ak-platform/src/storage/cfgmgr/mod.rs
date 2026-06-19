@@ -14,6 +14,7 @@ use crate::{prelude::*, storage::cfgmgr::schema::Config};
 pub mod schema;
 pub mod watch;
 
+#[derive(Debug)]
 pub struct ConfigManager<T: Config> {
     path: String,
     loaded: RwLock<T>,
@@ -33,13 +34,13 @@ where
             reload_notify: Arc::new(Notify::new()),
             _phantom: PhantomData,
         };
-        log::debug!("Config file path: {}", cm.path);
+        tracing::debug!("Config file path: {}", cm.path);
         if let Some(parent) = Path::new(&cm.path).parent() {
-            log::debug!("Creating parent config dir: {}", parent.to_string_lossy());
+            tracing::debug!("Creating parent config dir: {}", parent.to_string_lossy());
             create_dir_all(parent)?;
         }
         cm.load().await?;
-        log::debug!("Starting config watch");
+        tracing::debug!("Starting config watch");
         let shared = Arc::new(cm);
         let watch_arc = Arc::clone(&shared);
         let res_arc = Arc::clone(&watch_arc);
@@ -47,7 +48,7 @@ where
             match watch_arc.watch().await {
                 Ok(_) => (),
                 Err(e) => {
-                    log::warn!("failed to watch files: {e:?}");
+                    tracing::warn!("failed to watch files: {e:?}");
                 }
             };
         });
@@ -74,13 +75,14 @@ where
         self.loaded.write().await
     }
 
+    #[tracing::instrument]
     pub async fn load(&self) -> Result<()> {
-        log::debug!("Loading config");
+        tracing::debug!("Loading config");
         let file = match File::open(self.path.clone()) {
             Ok(f) => f,
             Err(e) => match e.kind() {
                 ErrorKind::NotFound => {
-                    log::debug!("File not found, loading defaults");
+                    tracing::debug!("File not found, loading defaults");
                     *self.loaded.write().await = T::default();
                     return Ok(());
                 }
@@ -97,10 +99,11 @@ where
         Ok(())
     }
 
+    #[tracing::instrument]
     pub async fn save(&self) -> Result<()> {
         let loaded = self.loaded.read().await;
         loaded.pre_save().await?;
-        log::debug!("saving config");
+        tracing::debug!("saving config");
         let mut opts = OpenOptions::new();
         opts.create(true).truncate(true).read(true).write(true);
         #[cfg(unix)]
@@ -128,7 +131,7 @@ mod tests {
     use super::*;
     use crate::storage::cfgmgr::schema::Config;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Debug)]
     struct TestCfg {
         field: String,
         #[serde(skip)]

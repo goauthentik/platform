@@ -2,6 +2,7 @@ mod group;
 mod passwd;
 mod shadow;
 
+use ak_platform::log::LevelFilter;
 use ak_platform::log::unix::log_hook;
 use ak_platform::log::{init_log, set_log_level};
 use ak_platform::string::PlatformString;
@@ -9,7 +10,6 @@ use ctor::ctor;
 use dtor::dtor;
 use group::AuthentikGroupHooks;
 use libnss::{libnss_group_hooks, libnss_passwd_hooks, libnss_shadow_hooks};
-use log::LevelFilter;
 use passwd::AuthentikPasswdHooks;
 use shadow::AuthentikShadowHooks;
 

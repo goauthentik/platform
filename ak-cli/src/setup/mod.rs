@@ -52,7 +52,7 @@ pub async fn setup(opts: Options) -> Result<Profile> {
             match that(url.to_string()) {
                 Ok(_) => Ok(()),
                 Err(e) => {
-                    log::debug!("failed to open URL in browser: {e:?}");
+                    tracing::debug!("failed to open URL in browser: {e:?}");
                     println!(
                         "{}",
                         Line::styled(
@@ -93,7 +93,7 @@ pub async fn setup(opts: Options) -> Result<Profile> {
     };
     callback(verification_uri.clone())?;
 
-    log::debug!("Waiting for authentication...");
+    eprintln!("Waiting for authentication...");
     let token_response = device_flow.poll_for_token().await?;
 
     let mut profile = Profile {

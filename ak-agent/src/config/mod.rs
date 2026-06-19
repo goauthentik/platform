@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use ak_meta::user_agent;
-use ak_platform::prelude::*;
+use ak_platform::log::LevelFilter;
+use ak_platform::{log::set_log_level, prelude::*};
 use ak_platform::storage::cfgmgr::schema::Config;
 use ak_platform_keyring;
 use authentik_client::apis::configuration::Configuration;
@@ -14,7 +15,7 @@ pub struct ConfigV1 {
     pub profiles: HashMap<String, ConfigV1Profile>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ConfigV1Profile {
     pub authentik_url: String,
     pub app_slug: String,
@@ -34,6 +35,21 @@ pub struct ConfigV1Profile {
 
     #[serde(skip)]
     _http_client: Option<Client>,
+}
+
+impl Debug for ConfigV1Profile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConfigV1Profile")
+            .field("authentik_url", &self.authentik_url)
+            .field("app_slug", &self.app_slug)
+            .field("client_id", &self.client_id)
+            .field("fallback_access_token", &self.fallback_access_token.len())
+            .field("fallback_refresh_token", &self.fallback_refresh_token.len())
+            .field("_access_token", &self._access_token.len())
+            .field("_refresh_token", &self._refresh_token.len())
+            .field("_http_client", &self._http_client)
+            .finish()
+    }
 }
 
 impl ConfigV1Profile {
@@ -118,8 +134,12 @@ impl ConfigV1Profile {
 
 impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
+        set_log_level(match self.debug {
+            true => LevelFilter::Trace,
+            false => LevelFilter::Warn,
+        });
         for (key, val) in self.profiles.iter_mut() {
-            log::debug!("Getting access token for profile: {key}");
+            tracing::debug!(profile = key, "Getting access token for profile");
             match ak_platform_keyring::get(
                 &ak_platform_keyring::service("access_token"),
                 key,
@@ -133,7 +153,7 @@ impl Config for ConfigV1 {
                 }
                 Err(e) => return Err(e.into()),
             }
-            log::debug!("Getting refresh token for profile: {key}");
+            tracing::debug!(profile = key, "Getting refresh token for profile");
             match ak_platform_keyring::get(
                 &ak_platform_keyring::service("refresh_token"),
                 key,

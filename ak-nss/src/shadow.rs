@@ -1,19 +1,18 @@
 use ak_platform::generated::sys_directory::GetRequest;
 use ak_platform::generated::sys_directory::system_directory_client::SystemDirectoryClient;
 use ak_platform::grpc::grpc_request;
-use ak_platform::log::unix::log_hook;
 use libnss::interop::Response;
 use libnss::shadow::{Shadow, ShadowHooks};
 
 pub struct AuthentikShadowHooks;
 impl ShadowHooks for AuthentikShadowHooks {
+    #[tracing::instrument]
     fn get_all_entries() -> Response<Vec<Shadow>> {
-        log_hook("shadow::get_all_entries");
         get_all_entries()
     }
 
+    #[tracing::instrument(fields(name))]
     fn get_entry_by_name(name: String) -> Response<Shadow> {
-        log_hook("shadow::get_entry_by_name");
         get_entry_by_name(name)
     }
 }
@@ -32,7 +31,7 @@ fn get_all_entries() -> Response<Vec<Shadow>> {
             Response::Success(users)
         }
         Err(e) => {
-            log::warn!("Failed to get users: {e:?}");
+            tracing::warn!("Failed to get users: {e:?}");
             Response::Unavail
         }
     }
@@ -49,7 +48,7 @@ fn get_entry_by_name(name: String) -> Response<Shadow> {
     }) {
         Ok(r) => Response::Success(shadow_entry(r.into_inner().name)),
         Err(e) => {
-            log::warn!("Failed to get user by name '{name}': {e:?}");
+            tracing::warn!("Failed to get user by name '{name}': {e:?}");
             Response::Unavail
         }
     }

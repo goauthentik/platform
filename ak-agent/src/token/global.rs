@@ -42,7 +42,10 @@ impl GlobalTokenManager {
                         managers.insert(name.clone(), Arc::new(m));
                     }
                     Err(e) => {
-                        log::warn!("failed to create manager for profile '{name}': {e:?}");
+                        tracing::warn!(
+                            profile = name,
+                            "failed to create manager for profile: {e:?}"
+                        );
                     }
                 }
             }
@@ -69,19 +72,22 @@ impl GlobalTokenManager {
             let known: HashSet<String> = managers.read().await.keys().cloned().collect();
 
             for name in current.difference(&known) {
-                log::debug!("adding profile '{name}'");
+                tracing::debug!(profile = name, "adding profile");
                 match ProfileTokenManager::new_verified(name.clone(), Arc::clone(&cfg)).await {
                     Ok(m) => {
                         managers.write().await.insert(name.clone(), Arc::new(m));
                     }
                     Err(e) => {
-                        log::warn!("failed to create manager for profile '{name}': {e:?}");
+                        tracing::warn!(
+                            profile = name,
+                            "failed to create manager for profile: {e:?}"
+                        );
                     }
                 }
             }
 
             for name in known.difference(&current) {
-                log::debug!("removing profile '{name}'");
+                tracing::debug!(profile = name, "removing profile");
                 if let Some(m) = managers.write().await.remove(name) {
                     m.stop();
                 }

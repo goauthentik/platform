@@ -93,7 +93,6 @@ dependencies = [
  "authentik-client",
  "chrono",
  "jsonwebtoken",
- "log",
  "pbjson-types",
  "reqwest 0.13.4",
  "reqwest-middleware",
@@ -124,13 +123,13 @@ dependencies = [
  "ak-meta",
  "ak-platform",
  "ak-platform-keyring",
- "log",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
+ "tracing",
 ]
 
 [[package]]
@@ -139,13 +138,13 @@ version = "0.44.3"
 dependencies = [
  "ak-platform",
  "hyper-util",
- "log",
  "native_messaging",
  "serde",
  "serde_json",
  "tokio",
  "tonic",
  "tower",
+ "tracing",
 ]
 
 [[package]]
@@ -159,7 +158,6 @@ dependencies = [
  "chrono",
  "clap",
  "clap_complete",
- "log",
  "oauth-device-flows",
  "open",
  "pbjson-types",
@@ -167,6 +165,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
  "url",
 ]
 
@@ -186,7 +185,7 @@ dependencies = [
  "dtor 1.0.5",
  "libc",
  "libnss",
- "log",
+ "tracing",
 ]
 
 [[package]]
@@ -239,6 +238,7 @@ dependencies = [
  "tonic",
  "tonic-prost",
  "tower",
+ "tracing",
 ]
 
 [[package]]
@@ -247,9 +247,9 @@ version = "0.44.3"
 dependencies = [
  "ak-platform",
  "apple-localauthentication",
- "log",
  "tokio",
  "tonic",
+ "tracing",
  "windows 0.62.2",
  "zbus",
 ]
@@ -264,11 +264,11 @@ dependencies = [
  "core-foundation",
  "keyring",
  "keyring-core",
- "log",
  "security-framework",
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -8804,6 +8804,7 @@ version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
 dependencies = [
+ "log",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",

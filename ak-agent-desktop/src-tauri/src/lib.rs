@@ -14,7 +14,7 @@ pub fn run() {
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
     );
-    log::trace!("authentik Agent Desktop v{}", full_version());
+    tracing::trace!("authentik Agent Desktop v{}", full_version());
     match ak_platform_keyring::init() {
         Ok(_) => {}
         Err(e) => {
@@ -25,7 +25,7 @@ pub fn run() {
     match start_tauri() {
         Ok(_) => {}
         Err(e) => {
-            log::error!("Failed to start tauri: {e:?}");
+            tracing::error!("Failed to start tauri: {e:?}");
         }
     }
 }
@@ -54,15 +54,15 @@ pub fn start_tauri() -> Result<()> {
                                 if visible
                                     && let Err(e) = watcher_handle.emit("ak-config-reloaded", ())
                                 {
-                                    log::warn!("failed to emit config reload event: {e}");
+                                    tracing::warn!("failed to emit config reload event: {e}");
                                 }
                             }
                         });
                         if let Err(e) = agent.start().await {
-                            log::error!("agent exited with error: {e}");
+                            tracing::error!("agent exited with error: {e}");
                         }
                     }
-                    Err(e) => log::error!("failed to start agent: {e}"),
+                    Err(e) => tracing::error!("failed to start agent: {e}"),
                 }
             });
 

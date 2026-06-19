@@ -72,7 +72,7 @@ impl AgentSSHServer {
         {
             Ok(l) => l,
             Err(e) => {
-                log::warn!("failed to listen: {e:?}");
+                tracing::warn!("failed to listen: {e:?}");
                 return Err(e);
             }
         };

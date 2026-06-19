@@ -20,7 +20,6 @@ authentik-client = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }
 waitgroup = "0.1.2"
-log = { workspace = true }
 tower-http = { version = "0.7.0", features = ["trace"] }
 tracing = { workspace = true }
 serde = { workspace = true }

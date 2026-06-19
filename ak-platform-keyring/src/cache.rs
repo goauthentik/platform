@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Serialize, de::DeserializeOwned};
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
 use ak_platform::prelude::BoxError;
@@ -10,6 +11,7 @@ pub trait CacheData {
     fn expiry(&self) -> DateTime<Utc>;
 }
 
+#[derive(Debug)]
 pub struct Cache<T> {
     uid: String,
     profile_name: String,
@@ -24,7 +26,7 @@ pub enum CacheError {
 
 impl<T> Cache<T>
 where
-    T: CacheData + Clone + Serialize + DeserializeOwned,
+    T: CacheData + Clone + Serialize + DeserializeOwned + Debug,
 {
     pub fn new(profile_name: String, uid_parts: Vec<String>) -> Self {
         Cache {
@@ -34,8 +36,9 @@ where
         }
     }
 
+    #[tracing::instrument]
     pub async fn set(self, val: T) -> Result<(), BoxError> {
-        log::debug!("Writing to cache");
+        tracing::debug!("Writing to cache");
         let serialized = serde_json::to_string(&val).map_err(Box::new)?;
         crate::set(
             &crate::service(&self.uid),
@@ -47,8 +50,9 @@ where
         .map_err(Box::from)
     }
 
+    #[tracing::instrument]
     pub async fn get(self) -> Result<T, CacheError> {
-        log::debug!("Checking cache");
+        tracing::debug!("Checking cache");
         let cached = match crate::get(
             &crate::service(&self.uid),
             &self.profile_name,

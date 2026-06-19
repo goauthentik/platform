@@ -28,7 +28,7 @@ async fn grpc_dial(ep: Endpoint) -> std::result::Result<Channel, tonic::transpor
     return ep
         .connect_with_connector(service_fn(async move |p: Uri| {
             let path = p.path().replace("%20", " ");
-            log::debug!("Connecting to GRPC socket '{path}'");
+            tracing::debug!(path = path, "Connecting to GRPC socket");
             net::client::connect(PlatformString::new_with_default(&path)).await
         }))
         .await;
@@ -94,7 +94,7 @@ impl SysdBridge for Bridge {
         future: impl Fn(Channel) -> F,
     ) -> Result<T> {
         self.rt.block_on(async {
-            log::debug!("creating grpc client");
+            tracing::debug!("creating grpc client");
             let channel = grpc_endpoint(path).await?;
             match future(channel).await {
                 Ok(t) => Ok(t),

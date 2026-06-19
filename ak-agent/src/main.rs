@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
     );
-    log::trace!("authentik Agent v{}", full_version());
+    tracing::trace!("authentik Agent v{}", full_version());
     ak_platform_keyring::init()?;
     let ag = Agent::new().await?;
     ag.start().await?;

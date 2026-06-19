@@ -55,6 +55,7 @@ impl Display for KeyringError {
 }
 impl Error for KeyringError {}
 
+#[derive(Debug)]
 pub enum Accessibility {
     Always,
     User,
@@ -72,6 +73,7 @@ fn entry_modifies(
     HashMap::new()
 }
 
+#[tracing::instrument(fields(service, user))]
 pub async fn get(service: &str, user: &str, access: Accessibility) -> Result<String, KeyringError> {
     #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
     return macos::get(service, user, &access);
@@ -88,6 +90,7 @@ pub async fn get(service: &str, user: &str, access: Accessibility) -> Result<Str
     }
 }
 
+#[tracing::instrument(fields(service, user))]
 pub async fn set(
     service: &str,
     user: &str,
@@ -109,6 +112,7 @@ pub async fn set(
     }
 }
 
+#[tracing::instrument(fields(service, user))]
 pub async fn delete(service: &str, user: &str, access: Accessibility) -> Result<(), KeyringError> {
     #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
     return macos::delete(service, user, &access);

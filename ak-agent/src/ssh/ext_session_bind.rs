@@ -24,10 +24,10 @@ impl SSHAgentTransaction {
             )));
         }
 
-        log::debug!(
-            "ssh-agent: session-bind: host_key={}, forwarding={}",
-            bind.host_key.algorithm(),
-            bind.is_forwarding
+        tracing::debug!(
+            ssh_host_key = bind.host_key.algorithm().to_string(),
+            ssh_forwarding = bind.is_forwarding,
+            "ssh-agent: session-bind successful"
         );
 
         self.host_key = Some(bind.host_key);

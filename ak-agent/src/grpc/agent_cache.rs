@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::grpc::AgentGRPCServer;
 use ak_platform::generated::{
     agent::ResponseHeader,
@@ -15,6 +17,15 @@ use tonic::{Request, Response, Status};
 pub struct AgentCacheEntry {
     pub body: String,
     pub exp: DateTime<Utc>,
+}
+
+impl Debug for AgentCacheEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AgentCacheEntry")
+            .field("body", &self.body.len())
+            .field("exp", &self.exp)
+            .finish()
+    }
 }
 
 impl CacheData for AgentCacheEntry {

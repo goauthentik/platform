@@ -1,8 +1,9 @@
 use std::io::IsTerminal;
 
 use crate::string::PlatformString;
-use log::LevelFilter;
 use simplelog::{Config, TermLogger};
+
+pub use log::LevelFilter;
 
 #[cfg(target_os = "macos")]
 pub mod macos;

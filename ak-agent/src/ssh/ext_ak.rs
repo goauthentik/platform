@@ -53,7 +53,7 @@ impl SSHAgentTransaction {
             match <TunnelRequest as ssh_agent_lib::ssh_encoding::Decode>::decode(&mut &raw[..]) {
                 Ok(r) => r,
                 Err(e) => {
-                    log::warn!("agent-tunnel: failed to decode request: {e:?}");
+                    tracing::warn!("agent-tunnel: failed to decode request: {e:?}");
                     return Ok(Some(Extension {
                         name: EXT_AUTHENTIK_AGENT_TUNNEL.into(),
                         details: vec![].into(),
@@ -64,7 +64,7 @@ impl SSHAgentTransaction {
         let grpc = match AgentGRPCServer::new(Arc::clone(&self.agent)).await {
             Ok(g) => Arc::new(g),
             Err(e) => {
-                log::warn!("agent-tunnel: failed to create gRPC server: {e:?}");
+                tracing::warn!("agent-tunnel: failed to create gRPC server: {e:?}");
                 return Ok(Some(Extension {
                     name: EXT_AUTHENTIK_AGENT_TUNNEL.into(),
                     details: vec![].into(),
@@ -76,7 +76,7 @@ impl SSHAgentTransaction {
         let response_data = match caller.call(&req.method, &req.data).await {
             Ok(bytes) => bytes,
             Err(e) => {
-                log::warn!("agent-tunnel: call failed for '{}': {e:?}", req.method);
+                tracing::warn!(method = req.method, "agent-tunnel: call failed: {e:?}");
                 return Ok(Some(Extension {
                     name: EXT_AUTHENTIK_AGENT_TUNNEL.into(),
                     details: vec![].into(),
