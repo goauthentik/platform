@@ -84,6 +84,23 @@ RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 endef
 endif
 
+define cargo_test
+	mkdir -p "${PWD}/cache"
+	cargo llvm-cov \
+		--no-report \
+		--ignore-filename-regex generated \
+		nextest -p $(1) \
+			--no-tests pass
+	cargo llvm-cov report \
+		--codecov \
+		--ignore-filename-regex generated \
+		--output-path "${PWD}/cache/llvm-cov-target.json"
+	cargo llvm-cov report \
+		--html \
+		--ignore-filename-regex generated \
+		--output-dir "${PWD}/cache/llvm-cov-html/"
+endef
+
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 
 define lint_shellcheck

@@ -46,7 +46,6 @@ rs-gen-proto:
 	cargo fmt --all
 
 ci-install-deps:
-	rustup component add llvm-tools-preview
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
@@ -87,22 +86,6 @@ test:
 	go tool cover \
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
-
-test-rs: ci-install-deps
-	mkdir -p "${PWD}/cache"
-	cargo llvm-cov \
-		--no-report \
-		--ignore-filename-regex generated \
-		nextest -p ${TEST_TARGET} \
-			--no-tests pass
-	cargo llvm-cov report \
-		--codecov \
-		--ignore-filename-regex generated \
-		--output-path "${PWD}/cache/llvm-cov-target.json"
-	cargo llvm-cov report \
-		--html \
-		--ignore-filename-regex generated \
-		--output-dir "${PWD}/cache/llvm-cov-html/"
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
