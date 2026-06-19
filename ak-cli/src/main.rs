@@ -1,4 +1,5 @@
 use crate::commands::{auth::AuthCommands, config::ConfigCommands};
+use ak_platform::log::LevelFilter;
 use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
@@ -6,7 +7,6 @@ use ak_platform::{
 };
 use clap::{Error, Parser, Subcommand};
 use clap_complete::Shell;
-use log::LevelFilter;
 
 pub mod auth;
 pub mod cache;

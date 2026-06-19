@@ -87,7 +87,7 @@ pub async fn get_credentials(
         .ok_or("Failed to get current token")?
         .preferred_username;
 
-    log::debug!("Fetching AWS Credentials...");
+    tracing::debug!("Fetching AWS Credentials...");
     let aws_creds = sts
         .assume_role_with_web_identity()
         .role_arn(opts.role_arn)
