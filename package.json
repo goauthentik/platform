@@ -1,0 +1,5 @@
+{
+    "name": "authentik-platform",
+    "private": true,
+    "packageManager": "pnpm@11.5.1"
+}
