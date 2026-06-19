@@ -264,7 +264,7 @@ impl AgentAuth for AgentGRPCServer {
             vec!["token-cache".to_string(), client_id.clone()],
         );
         if let Err(e) = cache.set(cached).await {
-            log::warn!("cached_token_exchange: failed to write cache: {e:?}");
+            tracing::warn!("cached_token_exchange: failed to write cache: {e:?}");
         }
 
         tracing::debug!(client_id, "cached_token_exchange: exchanged new token");
@@ -319,7 +319,7 @@ impl AgentAuth for AgentGRPCServer {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        log::debug!("device_token_exchange: exchanged token for device '{device_name}'");
+        tracing::debug!(device = device_name, "device_token_exchange: exchanged token for device");
         Ok(Response::new(TokenExchangeResponse {
             header: Some(ResponseHeader { successful: true }),
             access_token: dt.token,

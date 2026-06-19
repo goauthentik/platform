@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use ak_meta::user_agent;
 use ak_platform::prelude::*;
@@ -14,7 +14,7 @@ pub struct ConfigV1 {
     pub profiles: HashMap<String, ConfigV1Profile>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ConfigV1Profile {
     pub authentik_url: String,
     pub app_slug: String,
@@ -34,6 +34,21 @@ pub struct ConfigV1Profile {
 
     #[serde(skip)]
     _http_client: Option<Client>,
+}
+
+impl Debug for ConfigV1Profile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConfigV1Profile")
+            .field("authentik_url", &self.authentik_url)
+            .field("app_slug", &self.app_slug)
+            .field("client_id", &self.client_id)
+            .field("fallback_access_token", &self.fallback_access_token.len())
+            .field("fallback_refresh_token", &self.fallback_refresh_token.len())
+            .field("_access_token", &self._access_token.len())
+            .field("_refresh_token", &self._refresh_token.len())
+            .field("_http_client", &self._http_client)
+            .finish()
+    }
 }
 
 impl ConfigV1Profile {
