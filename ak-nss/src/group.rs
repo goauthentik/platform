@@ -74,10 +74,10 @@ mod tests {
 
     impl DirectoryBridge for MockBridge {
         fn list_users(&self) -> Result<Vec<User>> {
-            Ok(vec![])
+            unreachable!()
         }
         fn get_user(&self, _req: GetRequest) -> Result<User> {
-            Err("not found".into())
+            unreachable!()
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
             Ok(self.groups.clone())
@@ -97,10 +97,10 @@ mod tests {
     struct ErrorBridge;
     impl DirectoryBridge for ErrorBridge {
         fn list_users(&self) -> Result<Vec<User>> {
-            Err("unavailable".into())
+            unreachable!()
         }
         fn get_user(&self, _: GetRequest) -> Result<User> {
-            Err("unavailable".into())
+            unreachable!()
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
             Err("unavailable".into())

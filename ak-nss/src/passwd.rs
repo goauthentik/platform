@@ -90,10 +90,10 @@ mod tests {
                 .ok_or_else(|| "not found".into())
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
-            Ok(vec![])
+            unreachable!()
         }
         fn get_group(&self, _req: GetRequest) -> Result<AKGroup> {
-            Err("not found".into())
+            unreachable!()
         }
     }
 
@@ -106,10 +106,10 @@ mod tests {
             Err("unavailable".into())
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
-            Err("unavailable".into())
+            unreachable!()
         }
         fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
-            Err("unavailable".into())
+            unreachable!()
         }
     }
 
