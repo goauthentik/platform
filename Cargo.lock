@@ -272,6 +272,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ak-sysd"
+version = "0.44.3"
+dependencies = [
+ "ak-meta",
+ "ak-platform",
+ "ak-platform-keyring",
+ "authentik-client",
+ "clap",
+ "clap_complete",
+ "tokio",
+]
+
+[[package]]
 name = "ak_ffi"
 version = "0.44.3"
 dependencies = [

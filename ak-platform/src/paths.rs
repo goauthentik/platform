@@ -9,6 +9,13 @@ pub enum SysdSocketID {
     CTRL,
 }
 
+pub fn sysd_config_file() -> PlatformString {
+    PlatformString::new()
+    .with_darwin("/opt/authentik/config/config.json")
+    .with_linux("/etc/authentik/config.json")
+    .with_windows(r"C:\Program Files\Authentik Security Inc\sysd\config.json")
+}
+
 pub fn sysd_socket_path(id: SysdSocketID) -> PlatformString {
     match id {
         SysdSocketID::CTRL => PlatformString::new()
