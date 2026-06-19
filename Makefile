@@ -99,6 +99,10 @@ test-rs: ci-install-deps
 		--codecov \
 		--ignore-filename-regex generated \
 		--output-path "${PWD}/cache/llvm-cov-target.json"
+	cargo llvm-cov report \
+		--html \
+		--ignore-filename-regex generated \
+		--output-dir "${PWD}/cache/llvm-cov-html/"
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
