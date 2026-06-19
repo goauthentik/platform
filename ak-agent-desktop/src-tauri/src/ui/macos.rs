@@ -7,9 +7,6 @@ pub fn setup_menu(app: &mut App) -> std::result::Result<(), Box<dyn std::error::
     let hide_item = MenuItemBuilder::with_id("hide_to_tray", "Hide to Tray")
         .accelerator("Cmd+Q")
         .build(app)?;
-    let quit_item = MenuItemBuilder::with_id("quit", "Quit")
-        .accelerator("Cmd+Shift+Q")
-        .build(app)?;
 
     let app_name = app.config().product_name.as_deref().unwrap_or("App");
     let app_submenu = SubmenuBuilder::new(app, app_name)
@@ -22,7 +19,6 @@ pub fn setup_menu(app: &mut App) -> std::result::Result<(), Box<dyn std::error::
         .show_all()
         .separator()
         .item(&hide_item)
-        .item(&quit_item)
         .build()?;
 
     let edit_submenu = SubmenuBuilder::new(app, "Edit")
@@ -52,8 +48,6 @@ pub fn setup_menu(app: &mut App) -> std::result::Result<(), Box<dyn std::error::
     app.on_menu_event(|app, event| {
         if event.id() == "hide_to_tray" {
             super::hide_to_tray(app);
-        } else if event.id() == "quit" {
-            app.exit(0);
         }
     });
     Ok(())
