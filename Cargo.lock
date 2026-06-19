@@ -123,13 +123,13 @@ dependencies = [
  "ak-meta",
  "ak-platform",
  "ak-platform-keyring",
- "log",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
+ "tracing",
 ]
 
 [[package]]
