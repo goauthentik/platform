@@ -265,11 +265,11 @@ dependencies = [
  "core-foundation",
  "keyring",
  "keyring-core",
- "log",
  "security-framework",
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
 ]
 
 [[package]]

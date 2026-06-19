@@ -11,7 +11,7 @@ keyring-core = "1.0.0"
 serde = { workspace = true }
 chrono = { workspace = true }
 serde_json = { workspace = true }
-log = { workspace = true }
+tracing = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = "1.0.0"
