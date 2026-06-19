@@ -26,7 +26,7 @@ impl PathHandler {
         let user_client = match user::Client::new(None).await {
             Ok(c) => Some(c),
             Err(e) => {
-                log::warn!("failed to connect to user agent: {e:?}");
+                tracing::warn!("failed to connect to user agent: {e:?}");
                 None
             }
         };
@@ -43,12 +43,12 @@ impl PathHandler {
             async move {
                 let incoming: Message =
                     serde_json::from_str(&raw).map_err(NmError::DeserializeJson)?;
-                log::debug!("Handling browser message {}", incoming.route_path());
+                tracing::debug!(path = incoming.route_path(), "Handling browser message");
                 if incoming.version == "1" {
                     let res = sself.handle_v1(incoming).await?;
                     return send.send(&res).await;
                 }
-                log::warn!(
+                tracing::warn!(
                     "Invalid version message received: {} (path {})",
                     incoming.version,
                     incoming.route_path()
@@ -70,7 +70,7 @@ impl PathHandler {
         match result {
             Ok(res) => Ok(res),
             Err(e) => {
-                log::warn!("Failed to run handler: {e:?}");
+                tracing::warn!("Failed to run handler: {e:?}");
                 Err(NmError::Disconnected)
             }
         }
