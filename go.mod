@@ -29,7 +29,7 @@ require (
 	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/testcontainers/testcontainers-go v0.42.0
+	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/zalando/go-keyring v0.2.8
 	go.etcd.io/bbolt v1.4.3
 	goauthentik.io/api/v3 v3.2026020.16
