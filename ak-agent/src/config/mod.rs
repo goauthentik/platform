@@ -1,7 +1,8 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use ak_meta::user_agent;
-use ak_platform::prelude::*;
+use ak_platform::log::LevelFilter;
+use ak_platform::{log::set_log_level, prelude::*};
 use ak_platform::storage::cfgmgr::schema::Config;
 use ak_platform_keyring;
 use authentik_client::apis::configuration::Configuration;
@@ -133,6 +134,10 @@ impl ConfigV1Profile {
 
 impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
+        set_log_level(match self.debug {
+            true => LevelFilter::Trace,
+            false => LevelFilter::Warn,
+        });
         for (key, val) in self.profiles.iter_mut() {
             tracing::debug!(profile = key, "Getting access token for profile");
             match ak_platform_keyring::get(
