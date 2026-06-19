@@ -1,25 +1,24 @@
 use ak_platform::generated::sys_directory::system_directory_client::SystemDirectoryClient;
 use ak_platform::generated::sys_directory::{GetRequest, User};
 use ak_platform::grpc::grpc_request;
-use ak_platform::log::unix::log_hook;
 use libc::uid_t;
 use libnss::interop::Response;
 use libnss::passwd::{Passwd, PasswdHooks};
 
 pub struct AuthentikPasswdHooks;
 impl PasswdHooks for AuthentikPasswdHooks {
+    #[tracing::instrument]
     fn get_all_entries() -> Response<Vec<Passwd>> {
-        log_hook("passwd::get_all_entries");
         get_all_entries()
     }
 
+    #[tracing::instrument(fields(uid))]
     fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
-        log_hook("passwd::get_entry_by_uid");
         get_entry_by_uid(uid)
     }
 
+    #[tracing::instrument(fields(name))]
     fn get_entry_by_name(name: String) -> Response<Passwd> {
-        log_hook("passwd::get_entry_by_name");
         get_entry_by_name(name)
     }
 }
@@ -38,7 +37,7 @@ fn get_all_entries() -> Response<Vec<Passwd>> {
             Response::Success(users)
         }
         Err(e) => {
-            log::warn!("error getting groups: {e:?}");
+            tracing::warn!("error getting groups: {e:?}");
             Response::Unavail
         }
     }
@@ -55,7 +54,7 @@ fn get_entry_by_uid(uid: uid_t) -> Response<Passwd> {
     }) {
         Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting user by ID '{uid}': {e:?}");
+            tracing::warn!("error when getting user by ID '{uid}': {e:?}");
             Response::Unavail
         }
     }
@@ -77,14 +76,14 @@ fn get_entry_by_name(name: String) -> Response<Passwd> {
     }) {
         Ok(r) => Response::Success(user_to_passwd_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting user by name '{name}': {e:?}");
+            tracing::warn!("error when getting user by name '{name}': {e:?}");
             Response::Unavail
         }
     }
 }
 
 fn user_to_passwd_entry(entry: User) -> Passwd {
-    let e = Passwd {
+    Passwd {
         name: entry.name,
         passwd: "x".to_owned(),
         uid: entry.uid,
@@ -92,7 +91,5 @@ fn user_to_passwd_entry(entry: User) -> Passwd {
         gecos: entry.gecos,
         dir: entry.homedir,
         shell: entry.shell,
-    };
-    log::trace!("user: '{}' {}:{}", e.name, e.uid, e.gid);
-    e
+    }
 }

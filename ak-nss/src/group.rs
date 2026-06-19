@@ -1,25 +1,24 @@
 use ak_platform::generated::sys_directory::system_directory_client::SystemDirectoryClient;
 use ak_platform::generated::sys_directory::{GetRequest, Group as AKGroup};
 use ak_platform::grpc::grpc_request;
-use ak_platform::log::unix::log_hook;
 use libc::gid_t;
 use libnss::group::{Group, GroupHooks};
 use libnss::interop::Response;
 
 pub struct AuthentikGroupHooks;
 impl GroupHooks for AuthentikGroupHooks {
+    #[tracing::instrument]
     fn get_all_entries() -> Response<Vec<Group>> {
-        log_hook("group::get_all_entries");
         get_all_entries()
     }
 
+    #[tracing::instrument(fields(gid))]
     fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
-        log_hook("group::get_entry_by_gid");
         get_entry_by_gid(gid)
     }
 
+    #[tracing::instrument(fields(name))]
     fn get_entry_by_name(name: String) -> Response<Group> {
-        log_hook("group::get_entry_by_name");
         get_entry_by_name(name)
     }
 }
@@ -38,7 +37,7 @@ fn get_all_entries() -> Response<Vec<Group>> {
             Response::Success(groups)
         }
         Err(e) => {
-            log::warn!("Failed to get groups: {e:?}");
+            tracing::warn!("Failed to get groups: {e:?}");
             Response::Unavail
         }
     }
@@ -55,7 +54,7 @@ fn get_entry_by_gid(gid: gid_t) -> Response<Group> {
     }) {
         Ok(r) => Response::Success(ak_group_to_group_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting group by ID '{gid}': {e:?}");
+            tracing::warn!("error when getting group by ID '{gid}': {e:?}");
             Response::Unavail
         }
     }
@@ -72,7 +71,7 @@ fn get_entry_by_name(name: String) -> Response<Group> {
     }) {
         Ok(r) => Response::Success(ak_group_to_group_entry(r.into_inner())),
         Err(e) => {
-            log::warn!("error when getting group by name '{name}': {e:?}");
+            tracing::warn!("error when getting group by name '{name}': {e:?}");
             Response::Unavail
         }
     }

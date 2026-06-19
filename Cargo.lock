@@ -185,7 +185,7 @@ dependencies = [
  "dtor 1.0.5",
  "libc",
  "libnss",
- "log",
+ "tracing",
 ]
 
 [[package]]
