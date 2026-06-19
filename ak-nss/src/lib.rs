@@ -2,7 +2,6 @@ mod group;
 mod passwd;
 mod shadow;
 
-#[cfg(target_vendor = "apple")]
 use ak_platform::log::LevelFilter;
 use ak_platform::log::unix::log_hook;
 use ak_platform::log::{init_log, set_log_level};

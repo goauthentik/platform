@@ -131,7 +131,7 @@ mod tests {
     use super::*;
     use crate::storage::cfgmgr::schema::Config;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Debug)]
     struct TestCfg {
         field: String,
         #[serde(skip)]
