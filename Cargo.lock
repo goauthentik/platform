@@ -130,7 +130,6 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-single-instance",
  "tracing",
- "windows_exe_info",
 ]
 
 [[package]]
