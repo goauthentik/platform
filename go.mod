@@ -22,7 +22,7 @@ require (
 	github.com/micromdm/plist v0.2.2
 	github.com/microsoft/wmi v0.43.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/moby/moby/api v1.54.2
+	github.com/moby/moby/api v1.55.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/shirou/gopsutil/v4 v4.26.5
