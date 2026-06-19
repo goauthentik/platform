@@ -1,8 +1,8 @@
 use ak_platform::generated::agent::RequestHeader;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::sync::Arc;
-use std::time::Duration;
 use tonic::Status;
+use tower_http::trace::{DefaultOnFailure, DefaultOnRequest, TraceLayer};
 
 use crate::Agent;
 use crate::config::ConfigV1Profile;
@@ -15,9 +15,8 @@ use ak_platform::{
     net::server::{SocketPermMode, listen},
     paths::{AgentSocketID, agent_socket_path},
 };
-use tonic::codegen::http;
 use tonic::transport::Server;
-use tracing::Span;
+use tracing::Level;
 
 pub mod agent_auth;
 pub mod agent_cache;
@@ -51,17 +50,9 @@ impl AgentGRPCServer {
             .layer(NewSentryLayer::new_from_top())
             .layer(SentryHttpLayer::new().enable_transaction())
             .layer(
-                tower_http::trace::TraceLayer::new_for_grpc()
-                    .on_request(|request: &http::Request<tonic::body::Body>, _span: &Span| {
-                        log::info!("started call: {}", request.uri().path());
-                    })
-                    .on_response(
-                        |_response: &http::Response<tonic::body::Body>,
-                         latency: Duration,
-                         _span: &Span| {
-                            log::info!("finished call, took {:?}", latency);
-                        },
-                    ),
+                TraceLayer::new_for_grpc()
+                    .on_request(DefaultOnRequest::new().level(Level::INFO))
+                    .on_failure(DefaultOnFailure::new().level(Level::ERROR)),
             )
             .add_service(AgentAuthServer::from_arc(Arc::clone(&shared)))
             .add_service(AgentCacheServer::from_arc(Arc::clone(&shared)))

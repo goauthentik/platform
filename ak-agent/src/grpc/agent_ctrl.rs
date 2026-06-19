@@ -67,7 +67,7 @@ impl AgentCtrl for AgentGRPCServer {
             return Err(Status::from_error(e));
         }
         self.agent.gtm.wait_for_profile(&profile_name).await;
-        log::info!("setup new profile {profile_name}");
+        tracing::info!(profile = profile_name, "setup new profile");
         Ok(Response::new(SetupResponse {
             header: Some(ResponseHeader { successful: true }),
         }))

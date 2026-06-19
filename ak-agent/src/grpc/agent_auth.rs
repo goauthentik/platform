@@ -17,7 +17,7 @@ use ak_platform_keyring::cache::CacheData;
 use chrono::{DateTime, Utc};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::{fmt::Debug, time::Duration};
 use tonic::{Request, Response, Status};
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -32,6 +32,16 @@ struct CachedExchangeToken {
 impl CacheData for CachedExchangeToken {
     fn expiry(&self) -> DateTime<Utc> {
         self.created + chrono::TimeDelta::seconds(self.expires_in)
+    }
+}
+
+impl Debug for CachedExchangeToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CachedExchangeToken")
+            .field("access_token", &self.access_token.len())
+            .field("expires_in", &self.expires_in)
+            .field("created", &self.created)
+            .finish()
     }
 }
 
@@ -203,7 +213,7 @@ impl AgentAuth for AgentGRPCServer {
             vec!["token-cache".to_string(), client_id.clone()],
         );
         if let Ok(cached) = cache.get().await {
-            log::debug!("cached_token_exchange: returning cached token for '{client_id}'");
+            tracing::debug!(client_id, "cached_token_exchange: returning cached token");
             return Ok(Response::new(TokenExchangeResponse {
                 header: Some(ResponseHeader { successful: true }),
                 access_token: cached.access_token,
@@ -257,7 +267,7 @@ impl AgentAuth for AgentGRPCServer {
             log::warn!("cached_token_exchange: failed to write cache: {e:?}");
         }
 
-        log::debug!("cached_token_exchange: exchanged new token for '{client_id}'");
+        tracing::debug!(client_id, "cached_token_exchange: exchanged new token");
         Ok(Response::new(TokenExchangeResponse {
             header: Some(ResponseHeader { successful: true }),
             access_token: new_token.access_token,

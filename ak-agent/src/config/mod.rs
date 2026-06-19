@@ -119,7 +119,7 @@ impl ConfigV1Profile {
 impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
         for (key, val) in self.profiles.iter_mut() {
-            log::debug!("Getting access token for profile: {key}");
+            tracing::debug!(profile = key, "Getting access token for profile");
             match ak_platform_keyring::get(
                 &ak_platform_keyring::service("access_token"),
                 key,
@@ -133,7 +133,7 @@ impl Config for ConfigV1 {
                 }
                 Err(e) => return Err(e.into()),
             }
-            log::debug!("Getting refresh token for profile: {key}");
+            tracing::debug!(profile = key, "Getting refresh token for profile");
             match ak_platform_keyring::get(
                 &ak_platform_keyring::service("refresh_token"),
                 key,
