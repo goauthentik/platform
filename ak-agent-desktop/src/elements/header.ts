@@ -34,20 +34,8 @@ export class Header extends LitElement {
         }
     `;
 
-    private get _initials(): string {
-        if (!this.user?.name) return "?";
-        return this.user.name
-            .split(" ")
-            .filter(Boolean)
-            .map((w) => w[0].toUpperCase())
-            .slice(0, 2)
-            .join("");
-    }
-
     private _startDrag(e: MouseEvent) {
         if (e.button !== 0) return;
-        const target = e.composedPath()[0] as HTMLElement;
-        if (target.closest?.("button, a, .avatar")) return;
         void import("@tauri-apps/api/window")
             .then(({ getCurrentWindow }) => void getCurrentWindow().startDragging())
             .catch(() => {
@@ -59,9 +47,6 @@ export class Header extends LitElement {
         return html`
             <div class="header" @mousedown=${this._startDrag}>
                 <div class="logo">${unsafeHTML(logoSvg)}</div>
-                <div class="actions">
-                    <div class="avatar">${this._initials}</div>
-                </div>
             </div>
         `;
     }
