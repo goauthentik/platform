@@ -28,7 +28,7 @@
         "vite": "^6.0.3"
     },
     "prettier": "@goauthentik/prettier-config",
-    "allowScripts": {
-        "esbuild@0.25.12": true
+    "pnpm": {
+        "onlyBuiltDependencies": ["esbuild"]
     }
 }

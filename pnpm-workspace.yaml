@@ -1,0 +1,5 @@
+packages:
+  - browser-ext
+  - ak-agent-desktop
+allowBuilds:
+  esbuild: true
