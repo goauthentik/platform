@@ -21,7 +21,10 @@ pub struct AgentCacheEntry {
 
 impl Debug for AgentCacheEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("AgentCacheEntry").field("body", &self.body.len()).field("exp", &self.exp).finish()
+        f.debug_struct("AgentCacheEntry")
+            .field("body", &self.body.len())
+            .field("exp", &self.exp)
+            .finish()
     }
 }
 

@@ -30,7 +30,7 @@ impl SSHAgentTransaction {
         let host_key = match &self.host_key {
             Some(k) => k.clone(),
             None => {
-                log::debug!("ssh-agent: ensure_cert: no host key set yet");
+                tracing::debug!("ssh-agent: ensure_cert: no host key set yet");
                 return None;
             }
         };
@@ -38,9 +38,9 @@ impl SSHAgentTransaction {
         let token_mgr = match self.agent.gtm.for_profile(&self.profile).await {
             Some(m) => m,
             None => {
-                log::warn!(
-                    "ssh-agent: ensure_cert: profile '{}' not found",
-                    self.profile
+                tracing::warn!(
+                    profile = self.profile,
+                    "ssh-agent: ensure_cert: profile not found"
                 );
                 return None;
             }
@@ -49,7 +49,7 @@ impl SSHAgentTransaction {
         let root_token = match token_mgr.token().await {
             Ok(t) => t,
             Err(e) => {
-                log::warn!("ssh-agent: ensure_cert: failed to get root token: {e:?}");
+                tracing::warn!("ssh-agent: ensure_cert: failed to get root token: {e:?}");
                 return None;
             }
         };
@@ -57,7 +57,7 @@ impl SSHAgentTransaction {
         let claims = match root_token.claims() {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("ssh-agent: ensure_cert: failed to parse token claims: {e:?}");
+                tracing::warn!("ssh-agent: ensure_cert: failed to parse token claims: {e:?}");
                 return None;
             }
         };
@@ -65,7 +65,7 @@ impl SSHAgentTransaction {
         let (host_token_str, expires_in) = match self.get_host_token(&host_key).await {
             Ok(t) => t,
             Err(e) => {
-                log::warn!("ssh-agent: ensure_cert: failed to get host token: {e:?}");
+                tracing::warn!("ssh-agent: ensure_cert: failed to get host token: {e:?}");
                 return None;
             }
         };
@@ -85,7 +85,7 @@ impl SSHAgentTransaction {
         ) {
             Ok(c) => c,
             Err(e) => {
-                log::warn!("ssh-agent: ensure_cert: failed to generate cert: {e:?}");
+                tracing::warn!("ssh-agent: ensure_cert: failed to generate cert: {e:?}");
                 return None;
             }
         };

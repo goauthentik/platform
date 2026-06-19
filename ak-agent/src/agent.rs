@@ -39,14 +39,14 @@ impl Agent {
             let grpc = match AgentGRPCServer::new(shared_grpc).await {
                 Ok(grpc) => grpc,
                 Err(e) => {
-                    log::error!("Failed to start grpc server: {e:?}");
+                    tracing::error!("Failed to start grpc server: {e:?}");
                     return;
                 }
             };
             match grpc.start().await {
                 Ok(_) => (),
                 Err(e) => {
-                    log::error!("Failed to start grpc server: {e:?}");
+                    tracing::error!("Failed to start grpc server: {e:?}");
                 }
             };
             drop(w_grpc);
@@ -55,14 +55,14 @@ impl Agent {
             let ssh = match AgentSSHServer::new(Arc::clone(&shared)).await {
                 Ok(s) => s,
                 Err(e) => {
-                    log::error!("failed to create ssh agent: {e:?}");
+                    tracing::error!("failed to create ssh agent: {e:?}");
                     return;
                 }
             };
             match ssh.start().await {
                 Ok(()) => (),
                 Err(e) => {
-                    log::error!("failed to start ssh agent: {e:?}");
+                    tracing::error!("failed to start ssh agent: {e:?}");
                 }
             };
             drop(w_ssh);

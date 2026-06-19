@@ -319,7 +319,10 @@ impl AgentAuth for AgentGRPCServer {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        tracing::debug!(device = device_name, "device_token_exchange: exchanged token for device");
+        tracing::debug!(
+            device = device_name,
+            "device_token_exchange: exchanged token for device"
+        );
         Ok(Response::new(TokenExchangeResponse {
             header: Some(ResponseHeader { successful: true }),
             access_token: dt.token,
