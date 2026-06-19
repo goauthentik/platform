@@ -1,10 +1,10 @@
-use std::future::Future;
+use std::{fmt::Debug, future::Future};
 
 use serde::{Serialize, de::DeserializeOwned};
 
 use crate::prelude::*;
 
-pub trait Config: Default + Serialize + DeserializeOwned + Sized + Sync + Send {
+pub trait Config: Default + Serialize + DeserializeOwned + Sized + Sync + Send + Debug {
     fn post_load(&mut self) -> impl Future<Output = Result<()>> + Send {
         async { Ok(()) }
     }

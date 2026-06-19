@@ -23,16 +23,16 @@ where
             let ev: Event = match evr {
                 Ok(e) => e,
                 Err(e) => {
-                    log::warn!("error watching file: {e:?}");
+                    tracing::warn!("error watching file: {e:?}");
                     continue;
                 }
             };
             if let EventKind::Access(_) = ev.kind {
                 continue;
             }
-            log::debug!("config file update");
+            tracing::debug!("config file update");
             if let Err(e) = self.load().await {
-                log::warn!("failed to reload config: {e:?}");
+                tracing::warn!("failed to reload config: {e:?}");
             }
         }
         Ok(())

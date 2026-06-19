@@ -38,7 +38,7 @@ pbjson = "0.9.0"
 pbjson-types = "0.9.0"
 chrono = { version = "0.4.45", features = ["serde"] }
 url = "2.5.8"
-tracing = "0.1.44"
+tracing = { version = "0.1.44", features = ["log"] }
 ssh-agent-lib = "0.6.0"
 sentry = { version = "0.48.2", default-features = false, features = ["backtrace", "contexts", "debug-images", "panic", "reqwest", "rustls"] }
 authentik-client = { version = "2026.5.3", default-features = false, features = ["rustls"] }

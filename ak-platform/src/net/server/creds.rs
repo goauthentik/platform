@@ -34,9 +34,9 @@ impl Connected for ConnectedLocalStream {
         {
             let pid = peer_pid_via_getsockopt(&self.0);
             if pid < 0 {
-                log::warn!("LOCAL_PEERPID getsockopt failed");
+                tracing::warn!("LOCAL_PEERPID getsockopt failed");
             } else {
-                log::trace!("Peer pid (macos): {pid}");
+                tracing::trace!("Peer pid (macos): {pid}");
             }
             ProcCredentials {
                 pid: if pid >= 0 { Some(pid) } else { None },
@@ -45,13 +45,13 @@ impl Connected for ConnectedLocalStream {
         #[cfg(not(target_os = "macos"))]
         match self.0.peer_creds() {
             Ok(pc) => {
-                log::trace!("Extracted peer creds: {:?}", pc);
+                tracing::trace!("Extracted peer creds: {:?}", pc);
                 ProcCredentials {
                     pid: pc.pid().map(|p| p as i64),
                 }
             }
             Err(e) => {
-                log::warn!("Failed to get peer credentials: {e:?}");
+                tracing::warn!("Failed to get peer credentials: {e:?}");
                 ProcCredentials { pid: None }
             }
         }
@@ -79,7 +79,7 @@ impl ProcCredentials {
     pub fn proc_info(self) -> Result<ProcInfo> {
         let pid = self.pid();
         if pid < 0 {
-            log::trace!("pid: {pid}");
+            tracing::trace!("pid: {pid}");
             return Err("Invalid pid".into());
         }
         ProcInfo::from_pid(pid as u32).map_err(|e| e.into())

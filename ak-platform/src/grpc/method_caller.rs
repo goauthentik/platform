@@ -20,6 +20,7 @@ type BoxedSvc =
 /// wrappers (`AgentAuthServer::from_arc(...)`) as the real gRPC server, so adding
 /// a new method to any service automatically becomes available through the caller
 /// without any changes here.
+#[derive(Debug)]
 pub struct MethodCaller {
     services: HashMap<String, BoxedSvc>,
     creds: ProcCredentials,
@@ -58,6 +59,7 @@ impl MethodCaller {
     /// Call a gRPC method by its full path (e.g. `/ping.Ping/Ping`).
     /// `data` is the raw serialised proto request (no gRPC framing).
     /// Returns the raw serialised proto response on success.
+    #[tracing::instrument]
     pub async fn call(&mut self, method: &str, data: &[u8]) -> Result<Vec<u8>> {
         let service_name = parse_service_name(method)?;
 
