@@ -100,7 +100,7 @@ impl ProfileTokenManager {
             match Self::verify_token(&raw, &guard) {
                 Ok(_) => {}
                 Err(e) if Self::is_expired(&e) => {
-                    log::debug!("token expired, renewing");
+                    tracing::debug!("token expired, renewing");
                     self.renew().await?;
                     let config = self.cfg.read().await;
                     let profile = config
@@ -115,7 +115,7 @@ impl ProfileTokenManager {
                     });
                 }
                 Err(e) => {
-                    log::warn!("token verification failed, returning unverified: {e:?}");
+                    tracing::warn!("token verification failed, returning unverified: {e:?}");
                 }
             }
         }
@@ -144,14 +144,17 @@ impl ProfileTokenManager {
                 let config = cfg.read().await;
                 match config.profiles.get(&profile_name) {
                     None => {
-                        log::warn!("profile '{profile_name}' not found, stopping renewal");
+                        tracing::warn!(
+                            profile = profile_name,
+                            "profile not found, stopping renewal"
+                        );
                         return;
                     }
                     Some(profile) => {
                         match Self::time_until_expiry(&profile.access_token()).to_std() {
                             Ok(d) => d,
                             Err(e) => {
-                                log::warn!("couldn't convert duration to std: {e:?}");
+                                tracing::warn!("couldn't convert duration to std: {e:?}");
                                 return;
                             }
                         }
@@ -159,11 +162,14 @@ impl ProfileTokenManager {
                 }
             };
 
-            log::debug!("profile '{profile_name}': renewing token in {sleep_dur:?}");
+            tracing::debug!(
+                profile = profile_name,
+                "profile: renewing token in {sleep_dur:?}"
+            );
 
             tokio::select! {
                 _ = tokio::time::sleep(sleep_dur) => {
-                    log::debug!("profile '{profile_name}': renewing token now");
+                    tracing::debug!(profile = profile_name, "renewing token now");
                     // Construct a temporary manager view to reuse renew()
                     let ptm = ProfileTokenManager {
                         profile_name: profile_name.clone(),
@@ -172,7 +178,7 @@ impl ProfileTokenManager {
                         cancel: Arc::clone(&cancel),
                     };
                     if let Err(e) = ptm.renew().await {
-                        log::warn!("profile '{profile_name}': failed to renew token: {e:?}");
+                        tracing::warn!(profile = profile_name, "failed to renew token: {e:?}");
                     }
                 }
                 _ = cancel.notified() => return,
@@ -233,10 +239,7 @@ impl ProfileTokenManager {
         }
 
         self.cfg.save().await?;
-        log::debug!(
-            "profile '{}': successfully refreshed token",
-            self.profile_name
-        );
+        tracing::debug!(profile = self.profile_name, "successfully refreshed token",);
         Ok(())
     }
 
