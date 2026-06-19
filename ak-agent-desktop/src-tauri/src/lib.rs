@@ -1,8 +1,8 @@
 use ak_meta::full_version;
 use ak_platform::prelude::*;
 use ak_platform::{log::init_log, string::PlatformString};
-use tauri::{Manager, Emitter};
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
+use tauri::{Emitter, Manager};
 
 mod cmd;
 mod ui;
@@ -52,9 +52,10 @@ pub fn start_tauri() -> Result<()> {
                                     .and_then(|w| w.is_visible().ok())
                                     .unwrap_or(false);
                                 if visible
-                                    && let Err(e) = watcher_handle.emit("ak-config-reloaded", ()) {
-                                        log::warn!("failed to emit config reload event: {e}");
-                                    }
+                                    && let Err(e) = watcher_handle.emit("ak-config-reloaded", ())
+                                {
+                                    log::warn!("failed to emit config reload event: {e}");
+                                }
                             }
                         });
                         if let Err(e) = agent.start().await {
