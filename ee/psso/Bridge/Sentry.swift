@@ -1,4 +1,4 @@
-import Sentry
+import SentrySwift
 
 public class Sentry {
     static public func setup() {
