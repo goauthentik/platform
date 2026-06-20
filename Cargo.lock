@@ -281,10 +281,14 @@ dependencies = [
  "authentik-client",
  "clap",
  "clap_complete",
+ "sentry",
+ "sentry-tower",
  "serde",
  "tokio",
  "tonic",
  "tonic-prost",
+ "tower-http 0.7.0",
+ "tracing",
 ]
 
 [[package]]

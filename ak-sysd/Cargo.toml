@@ -22,3 +22,7 @@ clap_complete = "4"
 serde = { workspace = true }
 tonic = { workspace = true }
 tonic-prost = { workspace = true }
+tracing = { workspace = true }
+sentry = { workspace = true }
+sentry-tower = { version = "0.48.2", features = ["http"] }
+tower-http = { version = "0.7.0", features = ["trace"] }

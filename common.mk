@@ -85,7 +85,7 @@ endef
 endif
 
 define cargo_test
-	mkdir -p "${PWD}/cache"
+	mkdir -p "${TOP}/cache"
 	cargo llvm-cov \
 		--no-report \
 		--ignore-filename-regex generated \
@@ -94,11 +94,11 @@ define cargo_test
 	cargo llvm-cov report \
 		--codecov \
 		--ignore-filename-regex generated \
-		--output-path "${PWD}/cache/llvm-cov-target.json"
+		--output-path "${TOP}/cache/llvm-cov-target.json"
 	cargo llvm-cov report \
 		--html \
 		--ignore-filename-regex generated \
-		--output-dir "${PWD}/cache/llvm-cov-html/"
+		--output-dir "${TOP}/cache/llvm-cov-html/"
 endef
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1

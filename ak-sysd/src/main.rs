@@ -1,5 +1,7 @@
 use ak_platform::paths::sysd_config_file;
-use clap::{Parser, Subcommand};
+use clap::{Error, Parser, Subcommand};
+use ak_platform::prelude::*;
+use crate::agent::Agent;
 
 pub mod agent;
 pub mod cfg;
@@ -25,4 +27,14 @@ enum Commands {
 }
 
 #[tokio::main]
-pub async fn main() {}
+pub async fn main() -> Result<()> {
+    let cli = SysdArgs::parse();
+
+    match &cli.command {
+        Commands::Agent => {
+            let ag = Agent::new(cli.config).await?;
+            ag.start().await?;
+        }
+    }
+    Ok(())
+}
