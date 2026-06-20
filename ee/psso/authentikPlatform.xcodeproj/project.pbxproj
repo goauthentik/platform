@@ -238,6 +238,8 @@
 				B42B450D2EA24B120046D847 /* PBXTargetDependency */,
 			);
 			name = PSSO;
+			packageProductDependencies = (
+			);
 			productName = PSSO;
 			productReference = 609FE38424893242009FD079 /* PSSO.appex */;
 			productType = "com.apple.product-type.app-extension";
