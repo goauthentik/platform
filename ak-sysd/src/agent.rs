@@ -15,10 +15,20 @@ impl Agent {
         let cfg = ConfigManager::new(config_path).await?;
         let comp = HashMap::new();
 
-        Ok(Agent {
+        let mut ag = Agent {
             cfg,
             components: comp,
-        })
+        };
+        ag.register_components().await?;
+        Ok(ag)
+    }
+
+    pub async fn register_components(&mut self) -> Result<()> {
+        for (name, constr) in Agent::register_platform_components() {
+            let comp = (constr)()?;
+            self.components.insert(name, ComponentInstance::new(comp));
+        }
+        Ok(())
     }
 
     pub async fn start() {}

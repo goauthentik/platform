@@ -21,3 +21,9 @@ pub trait Component {
 pub struct ComponentInstance {
     comp: Arc<Box<dyn Component>>,
 }
+
+impl ComponentInstance {
+    pub fn new(comp: Box<dyn Component>) -> ComponentInstance {
+        ComponentInstance { comp: Arc::new(comp) }
+    }
+}
