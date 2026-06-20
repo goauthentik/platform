@@ -1,9 +1,9 @@
 use ak_platform::paths::sysd_config_file;
-use clap::{Error, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 
 pub mod agent;
-pub mod components;
 pub mod cfg;
+pub mod components;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik System Daemon")]
@@ -18,7 +18,6 @@ pub struct SysdArgs {
     command: Commands,
 }
 
-
 #[derive(Subcommand, Clone)]
 enum Commands {
     /// Run the authentik system agent
@@ -26,6 +25,4 @@ enum Commands {
 }
 
 #[tokio::main]
-pub async fn main ()  {
-
-}
+pub async fn main() {}

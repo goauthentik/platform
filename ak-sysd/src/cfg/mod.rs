@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use ak_platform::storage::cfgmgr::schema::Config as ConfigSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
@@ -8,6 +8,4 @@ pub struct Config {
     domain_dir: String,
 }
 
-impl ConfigSchema for Config {
-
-}
+impl ConfigSchema for Config {}

@@ -1,15 +1,13 @@
-use ak_meta::full_version;
-use ak_platform::generated::ping::{CapabilitiesResponse, PingResponse, ping_server::{Ping}};
-use tonic::{Request, Response, Status};
 use crate::components::Component;
+use ak_meta::full_version;
+use ak_platform::generated::ping::{CapabilitiesResponse, PingResponse, ping_server::Ping};
+use tonic::{Request, Response, Status};
 
-pub struct PingComponent {
-
-}
+pub struct PingComponent {}
 
 impl Component for PingComponent {
-    fn new() -> ak_platform::prelude::Result<impl Component> {
-        Ok(Self {})
+    fn new() -> ak_platform::prelude::Result<Box<dyn Component>> {
+        Ok(Box::new(Self {}))
     }
 
     fn start(&self) -> ak_platform::prelude::Result<()> {
@@ -20,7 +18,7 @@ impl Component for PingComponent {
         Ok(())
     }
 
-    fn register_for_id(&self, id: ak_platform::paths::SysdSocketID) {
+    fn register_for_id(&self, _id: ak_platform::paths::SysdSocketID) {
         todo!()
     }
 

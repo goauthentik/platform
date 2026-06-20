@@ -1,12 +1,10 @@
 use crate::components::Component;
 
-pub struct AuthComponent {
-
-}
+pub struct AuthComponent {}
 
 impl Component for AuthComponent {
-    fn new() -> ak_platform::prelude::Result<impl Component> {
-        Ok(Self {})
+    fn new() -> ak_platform::prelude::Result<Box<dyn Component>> {
+        Ok(Box::new(Self {}))
     }
 
     fn start(&self) -> ak_platform::prelude::Result<()> {
@@ -17,7 +15,7 @@ impl Component for AuthComponent {
         todo!()
     }
 
-    fn register_for_id(&self, id: ak_platform::paths::SysdSocketID) {
+    fn register_for_id(&self, _id: ak_platform::paths::SysdSocketID) {
         todo!()
     }
 
