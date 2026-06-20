@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 100;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -65,22 +65,26 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		B42B450E2EA24B120046D847 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolder = Frameworks;
+			dstSubfolderSpec = 10;
 			files = (
 				B42B450B2EA24B120046D847 /* Bridge.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B4361FBF2F5DEB3B00B77BDF /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
 			dstPath = "";
-			dstSubfolder = Frameworks;
+			dstSubfolderSpec = 10;
 			files = (
 				B4361FBE2F5DEB3B00B77BDF /* sysd.xcframework in Embed Frameworks */,
 				B4714C452F5DF0BA003B0896 /* Bridge.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -106,33 +110,24 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B42B45032EA24AEA0046D847 /* Bridge */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = Bridge;
-			sourceTree = "<group>";
-		};
-		B4361FB12F5DE66900B77BDF /* App */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = App;
-			sourceTree = "<group>";
-		};
-		B47CF5D12FBE09BF008F0033 /* BridgeTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BridgeTests;
-			sourceTree = "<group>";
-		};
+		B42B45032EA24AEA0046D847 /* Bridge */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Bridge; sourceTree = "<group>"; };
+		B4361FB12F5DE66900B77BDF /* App */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = App; sourceTree = "<group>"; };
+		B47CF5D12FBE09BF008F0033 /* BridgeTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = BridgeTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		609FE38124893242009FD079 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				609FE38724893242009FD079 /* AuthenticationServices.framework in Frameworks */,
 				B42B450A2EA24B120046D847 /* Bridge.framework in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B42B44FF2EA24AEA0046D847 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				B4D2A6462EA25CC1000B8E49 /* GRPCProtobuf in Frameworks */,
 				B4D2A6432EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 in Frameworks */,
@@ -140,21 +135,26 @@
 				B4D2A6402EA25C96000B8E49 /* GRPCCore in Frameworks */,
 				B4D2A66F2EA260B8000B8E49 /* Atomics in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B4361FAD2F5DE66900B77BDF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				B4714C492F5DF1EE003B0896 /* AuthenticationServices.framework in Frameworks */,
 				B4714C442F5DF0BA003B0896 /* Bridge.framework in Frameworks */,
 				B4361FBD2F5DEB3B00B77BDF /* sysd.xcframework in Frameworks */,
 				B4361FC12F5DED0200B77BDF /* libresolv.tbd in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B47CF5CD2FBE09BF008F0033 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				B47CF5D42FBE09BF008F0033 /* Bridge.framework in Frameworks */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -215,8 +215,10 @@
 /* Begin PBXHeadersBuildPhase section */
 		B42B44FD2EA24AEA0046D847 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
@@ -236,6 +238,8 @@
 				B42B450D2EA24B120046D847 /* PBXTargetDependency */,
 			);
 			name = PSSO;
+			packageProductDependencies = (
+			);
 			productName = PSSO;
 			productReference = 609FE38424893242009FD079 /* PSSO.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -250,6 +254,8 @@
 				B42B45002EA24AEA0046D847 /* Resources */,
 			);
 			buildRules = (
+			);
+			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
 				B42B45032EA24AEA0046D847 /* Bridge */,
@@ -285,6 +291,8 @@
 				B4361FB12F5DE66900B77BDF /* App */,
 			);
 			name = authentik;
+			packageProductDependencies = (
+			);
 			productName = App;
 			productReference = B4361FB02F5DE66900B77BDF /* authentik.app */;
 			productType = "com.apple.product-type.application";
@@ -306,6 +314,8 @@
 				B47CF5D12FBE09BF008F0033 /* BridgeTests */,
 			);
 			name = BridgeTests;
+			packageProductDependencies = (
+			);
 			productName = BridgeTests;
 			productReference = B47CF5D02FBE09BF008F0033 /* BridgeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -336,6 +346,7 @@
 				};
 			};
 			buildConfigurationList = 609FE348248929E6009FD079 /* Build configuration list for PBXProject "authentikPlatform" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -350,7 +361,6 @@
 				B4D2A66D2EA260B8000B8E49 /* XCRemoteSwiftPackageReference "swift-atomics" */,
 				B42DBF982FE6E65200D3649B /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
-			preferredProjectObjectVersion = 56;
 			productRefGroup = 609FE34E248929E6009FD079 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -366,31 +376,40 @@
 /* Begin PBXResourcesBuildPhase section */
 		609FE38224893242009FD079 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				609FE38D24893242009FD079 /* AuthenticationViewController.xib in Resources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B42B45002EA24AEA0046D847 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				B47CF5DC2FBE10DC008F0033 /* TestIntegration.xctestplan in Resources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B4361FAE2F5DE66900B77BDF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B47CF5CE2FBE09BF008F0033 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		609FE38024893242009FD079 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 				B49BA55F2E0F466300184992 /* InteractiveAuth.swift in Sources */,
 				B402BE7F2E10B0940024C7D9 /* EnterpriseSSO.swift in Sources */,
@@ -398,21 +417,28 @@
 				609FE38A24893242009FD079 /* AuthenticationViewController.swift in Sources */,
 				B49BA5632E100E4500184992 /* PlatformSSO.swift in Sources */,
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B42B44FE2EA24AEA0046D847 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B4361FAC2F5DE66900B77BDF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B47CF5CC2FBE09BF008F0033 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
 			files = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -455,7 +481,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		609FE374248929EB009FD079 /* Debug configuration for PBXProject "authentikPlatform" */ = {
+		609FE374248929EB009FD079 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -520,7 +546,7 @@
 			};
 			name = Debug;
 		};
-		609FE375248929EB009FD079 /* Release configuration for PBXProject "authentikPlatform" */ = {
+		609FE375248929EB009FD079 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -578,7 +604,7 @@
 			};
 			name = Release;
 		};
-		609FE39424893243009FD079 /* Debug configuration for PBXNativeTarget "PSSO" */ = {
+		609FE39424893243009FD079 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PSSO/PSSO.entitlements;
@@ -615,7 +641,7 @@
 			};
 			name = Debug;
 		};
-		609FE39524893243009FD079 /* Release configuration for PBXNativeTarget "PSSO" */ = {
+		609FE39524893243009FD079 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PSSO/PSSO.entitlements;
@@ -646,7 +672,7 @@
 			};
 			name = Release;
 		};
-		B42B45072EA24AEA0046D847 /* Debug configuration for PBXNativeTarget "Bridge" */ = {
+		B42B45072EA24AEA0046D847 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
@@ -700,7 +726,7 @@
 			};
 			name = Debug;
 		};
-		B42B45082EA24AEA0046D847 /* Release configuration for PBXNativeTarget "Bridge" */ = {
+		B42B45082EA24AEA0046D847 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
@@ -752,7 +778,7 @@
 			};
 			name = Release;
 		};
-		B4361FB82F5DE66B00B77BDF /* Debug configuration for PBXNativeTarget "authentik" */ = {
+		B4361FB82F5DE66B00B77BDF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -800,7 +826,7 @@
 			};
 			name = Debug;
 		};
-		B4361FB92F5DE66B00B77BDF /* Release configuration for PBXNativeTarget "authentik" */ = {
+		B4361FB92F5DE66B00B77BDF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -847,7 +873,7 @@
 			};
 			name = Release;
 		};
-		B47CF5D72FBE09BF008F0033 /* Debug configuration for PBXNativeTarget "BridgeTests" */ = {
+		B47CF5D72FBE09BF008F0033 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -878,7 +904,7 @@
 			};
 			name = Debug;
 		};
-		B47CF5D82FBE09BF008F0033 /* Release configuration for PBXNativeTarget "BridgeTests" */ = {
+		B47CF5D82FBE09BF008F0033 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -913,41 +939,46 @@
 		609FE348248929E6009FD079 /* Build configuration list for PBXProject "authentikPlatform" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				609FE374248929EB009FD079 /* Debug configuration for PBXProject "authentikPlatform" */,
-				609FE375248929EB009FD079 /* Release configuration for PBXProject "authentikPlatform" */,
+				609FE374248929EB009FD079 /* Debug */,
+				609FE375248929EB009FD079 /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		609FE39324893243009FD079 /* Build configuration list for PBXNativeTarget "PSSO" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				609FE39424893243009FD079 /* Debug configuration for PBXNativeTarget "PSSO" */,
-				609FE39524893243009FD079 /* Release configuration for PBXNativeTarget "PSSO" */,
+				609FE39424893243009FD079 /* Debug */,
+				609FE39524893243009FD079 /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		B42B45062EA24AEA0046D847 /* Build configuration list for PBXNativeTarget "Bridge" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B42B45072EA24AEA0046D847 /* Debug configuration for PBXNativeTarget "Bridge" */,
-				B42B45082EA24AEA0046D847 /* Release configuration for PBXNativeTarget "Bridge" */,
+				B42B45072EA24AEA0046D847 /* Debug */,
+				B42B45082EA24AEA0046D847 /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		B4361FBA2F5DE66B00B77BDF /* Build configuration list for PBXNativeTarget "authentik" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B4361FB82F5DE66B00B77BDF /* Debug configuration for PBXNativeTarget "authentik" */,
-				B4361FB92F5DE66B00B77BDF /* Release configuration for PBXNativeTarget "authentik" */,
+				B4361FB82F5DE66B00B77BDF /* Debug */,
+				B4361FB92F5DE66B00B77BDF /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		B47CF5D92FBE09BF008F0033 /* Build configuration list for PBXNativeTarget "BridgeTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B47CF5D72FBE09BF008F0033 /* Debug configuration for PBXNativeTarget "BridgeTests" */,
-				B47CF5D82FBE09BF008F0033 /* Release configuration for PBXNativeTarget "BridgeTests" */,
+				B47CF5D72FBE09BF008F0033 /* Debug */,
+				B47CF5D82FBE09BF008F0033 /* Release */,
 			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
@@ -961,7 +992,6 @@
 				minimumVersion = 9.18.0;
 			};
 			traits = (
-				V10,
 			);
 		};
 		B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */ = {
