@@ -1,6 +1,9 @@
 use ak_platform::paths::sysd_config_file;
 use clap::{Error, Parser, Subcommand};
 
+pub mod agent;
+pub mod components;
+pub mod cfg;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik System Daemon")]
