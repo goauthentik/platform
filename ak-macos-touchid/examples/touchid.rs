@@ -1,7 +1,9 @@
-use ak_macos_touchid::authenticate_with_touchid;
+use ak_macos_touchid::{AuthRequest, authenticate_with_touchid};
 
 #[tokio::main]
 async fn main() {
-    let res = authenticate_with_touchid("foo".to_owned());
+    let res = authenticate_with_touchid(AuthRequest {
+        reason: "foo".to_owned(),
+    });
     eprintln!("Result: {res}");
 }
