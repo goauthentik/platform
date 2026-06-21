@@ -27,8 +27,8 @@ struct AccessRequest {
 
 struct AuthentikAccessRequestView: View {
     var request = AccessRequest()
+    var authz: LocalAuthenticationView?
     var onDeny: () -> Void = {}
-    var onAuthorize: () -> Void = {}
 
     @State private var approveAll = false
     @State private var expanded = false
@@ -308,17 +308,7 @@ struct AuthentikAccessRequestView: View {
 
             Spacer()
 
-            Button(action: onAuthorize) {
-                HStack(spacing: 10) {
-                    (Text("Authorize with ") + Text("Touch ID").bold())
-                        .font(.system(size: 14))
-                        .foregroundStyle(bodyText)
-                    Image(systemName: "touchid")
-                        .font(.system(size: 24))
-                        .foregroundStyle(request.accentColor)
-                }
-            }
-            .buttonStyle(.plain)
+            authz
         }
     }
 }
@@ -351,7 +341,7 @@ extension Color {
 // MARK: - Preview
 
 #Preview {
-    AuthentikAccessRequestView()
+    AuthentikAccessRequestView(authz: nil)
         .padding(48)
         .background(
             LinearGradient(

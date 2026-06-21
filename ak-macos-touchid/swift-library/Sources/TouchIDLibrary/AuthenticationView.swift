@@ -19,11 +19,9 @@ struct AuthenticationView: View {
     }
 
     var body: some View {
-        VStack {
-            Text(self.reason)
-            authz
+        AuthentikAccessRequestView(request: AccessRequest(), authz: self.authz) {
+            onResult(false, nil)
         }
-        .padding()
         .onAppear() {
             authz.auth() { ok, err in
                 if err != nil {
@@ -33,12 +31,6 @@ struct AuthenticationView: View {
                 }
             }
         }
-        .containerBackground(
-            .thinMaterial, for: .window
-        )
-        .toolbarBackgroundVisibility(
-            .hidden, for: .windowToolbar
-        )
     }
 }
 
