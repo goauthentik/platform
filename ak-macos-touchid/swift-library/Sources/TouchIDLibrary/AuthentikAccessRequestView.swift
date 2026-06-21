@@ -298,6 +298,7 @@ struct AuthentikAccessRequestView: View {
             Button("Deny", action: onDeny)
                 .buttonStyle(.bordered)
                 .controlSize(.large)
+                .keyboardShortcut(.escape, modifiers: [])
 
             Spacer()
 
