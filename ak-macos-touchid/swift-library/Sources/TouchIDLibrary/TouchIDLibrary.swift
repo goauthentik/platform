@@ -4,32 +4,28 @@ import LocalAuthentication
 import Dispatch
 import SwiftUI
 
-private struct AuthResult {
-    let success: Bool
-    let error: String?
-}
 
 public func authenticate_with_touchid(req: AccessRequestFfi) -> Bool {
     let model = accessRequestModel(from: req)
-
     let semaphore = DispatchSemaphore(value: 0)
-    var result = AuthResult(success: false, error: nil)
-
+    var authResult = false
     let coord = AuthenticationCoordinator()
-    coord.showAuthenticationSync(request: model) { success, error in
-        result = AuthResult(success: success, error: error)
-        semaphore.signal()
+
+    // NSWindow and NSApplication.run() must be on the main thread.
+    // Dispatch the entire UI coordinator to main; block the calling thread on the semaphore.
+    DispatchQueue.main.async {
+        coord.showAuthenticationSync(request: model) { success, _ in
+            authResult = success
+            semaphore.signal()
+        }
     }
 
     let timeout = DispatchTime.now() + .seconds(60)
-    let waitResult = semaphore.wait(timeout: timeout)
-
-    if waitResult == .timedOut {
-        coord.cancelAuthentication()
+    if semaphore.wait(timeout: timeout) == .timedOut {
+        DispatchQueue.main.async { coord.cancelAuthentication() }
         return false
     }
-
-    return result.success
+    return authResult
 }
 
 public func is_touchid_available() -> Bool {

@@ -45,38 +45,39 @@ public class AuthenticationCoordinator: ObservableObject {
         window.standardWindowButton(.zoomButton)?.isHidden = true
 
         window.isMovableByWindowBackground = true
-        window.alphaValue = 0
-        window.orderFrontRegardless()
 
-        // Activate and grab focus once the run loop is spinning; calling activate() before
-        // app.run() has no effect because the event loop hasn't started yet.
-        DispatchQueue.main.async {
-            self.app.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
+        // Force SwiftUI layout so we know the window's real size before centering.
+        hostingController.view.layoutSubtreeIfNeeded()
 
-            // Center after layout so the window has its final size
-            if let screen = NSScreen.main {
-                let sf = screen.visibleFrame
-                let wf = window.frame
-                window.setFrameOrigin(NSPoint(
-                    x: sf.midX - wf.width / 2,
-                    y: sf.midY
-                ))
-            }
-
-            window.alphaValue = 1
+        if let screen = NSScreen.main {
+            let sf = screen.visibleFrame
+            let wf = window.frame
+            window.setFrameOrigin(NSPoint(
+                x: sf.midX - wf.width / 2,
+                y: sf.midY
+            ))
         }
+
+        // We are already on the main thread (dispatched from TouchIDLibrary).
+        // Do all window/app setup synchronously — a nested DispatchQueue.main.async
+        // would be blocked behind the outer dispatch block for the entire duration
+        // of runModal(for:), so it would never fire.
+        self.app.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+
         currentWindow = window
-        self.app.run()
+        self.app.runModal(for: window)
+        window.orderOut(nil)
+        currentWindow = nil
     }
 
     private func handleAuthenticationResult(success: Bool, error: String?) {
         print("got authorization result: \(success)")
         currentCallback?(success, error)
-        self.app.stop(nil)
-        // NSApplication.stop will only stop the application on the next UI event
-        // hence we post an empty event to trigger that
-        self.app.postEvent(.init(), atStart: false)
+        // LAContext fires its reply on a background thread. stopModal() uses
+        // postEvent internally, which is documented thread-safe, so this is
+        // safe to call here without dispatching to main.
+        self.app.stopModal()
     }
 
     func cancelAuthentication() {
