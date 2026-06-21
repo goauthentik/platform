@@ -14,7 +14,7 @@ tracing = { workspace = true }
 tonic = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-apple-localauthentication = { version = "0.3.5", features = ["async"] }
+ak-macos-touchid = { path = "../ak-macos-touchid" }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 zbus = "5"
