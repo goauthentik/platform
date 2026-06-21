@@ -11,24 +11,21 @@ public class AuthenticationCoordinator: ObservableObject {
         self.app.setActivationPolicy(.regular)
     }
 
-    public func showAuthenticationSync(reason: String, callback: @escaping (Bool, String?) -> Void) {
+    func showAuthenticationSync(request: AccessRequestModel, callback: @escaping (Bool, String?) -> Void) {
         self.currentCallback = callback
-        self.presentAuthenticationWindow(reason: reason)
+        self.presentAuthenticationWindow(request: request)
     }
 
-    private func presentAuthenticationWindow(reason: String) {
-        // Create the SwiftUI view with dismiss callback
+    private func presentAuthenticationWindow(request: AccessRequestModel) {
         let authView = AuthenticationView(
-            reason: reason,
+            request: request,
             onResult: { [weak self] success, error in
                 self?.handleAuthenticationResult(success: success, error: error)
             },
         )
 
-        // Create hosting controller
         let hostingController = NSHostingController(rootView: authView)
 
-        // Create window
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
             styleMask: [.titled, .fullSizeContentView],

@@ -2,18 +2,16 @@ import SwiftUI
 
 // MARK: - Model
 
-struct AccessRequest {
+struct AccessRequestModel {
     var title: String = "authentik Access Requested"
-    var requestingApp: String = "iTermServer-3.6.11"
-    /// Optional app icon. When nil, a generic document graphic is shown.
+    var requestingApp: String = ""
     var appIcon: Image? = nil
     var accentColor: Color = Color(hex: 0xFD4B2D)
 
-    var profileName: String = "Jane Doe"
-    var profileEmail: String = "jane@goauthentik.io"
-    var profileUsername: String = "jdoe"
-    var profileGroups: String = "Engineering, Admins"
-    /// Optional avatar. When nil, initials on an accent gradient are shown.
+    var profileName: String = ""
+    var profileEmail: String = ""
+    var profileUsername: String = ""
+    var profileGroups: String = ""
     var profileAvatar: Image? = nil
 
     var initials: String {
@@ -26,7 +24,7 @@ struct AccessRequest {
 // MARK: - View
 
 struct AuthentikAccessRequestView: View {
-    var request = AccessRequest()
+    var request = AccessRequestModel()
     var authz: LocalAuthenticationView?
     var onDeny: () -> Void = {}
 
@@ -341,12 +339,22 @@ extension Color {
 // MARK: - Preview
 
 #Preview {
-    AuthentikAccessRequestView(authz: nil)
-        .padding(48)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: 0xC9C7CC), Color(hex: 0xB7B4BB)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
+    AuthentikAccessRequestView(
+        request: AccessRequestModel(
+            title: "authentik Access Requested",
+            requestingApp: "iTermServer-3.6.11",
+            profileName: "Jane Doe",
+            profileEmail: "jane@goauthentik.io",
+            profileUsername: "jdoe",
+            profileGroups: "Engineering, Admins"
+        ),
+        authz: nil
+    )
+    .padding(48)
+    .background(
+        LinearGradient(
+            colors: [Color(hex: 0xC9C7CC), Color(hex: 0xB7B4BB)],
+            startPoint: .topLeading, endPoint: .bottomTrailing
         )
+    )
 }

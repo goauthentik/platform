@@ -3,15 +3,15 @@ import LocalAuthenticationEmbeddedUI
 import SwiftUI
 
 struct AuthenticationView: View {
-    var reason: String;
+    var request: AccessRequestModel
     let onResult: (Bool, String?) -> Void
     private var authz: LocalAuthenticationView
 
     init(
-        reason: String,
+        request: AccessRequestModel,
         onResult: @escaping (Bool, String?) -> Void,
     ) {
-        self.reason = reason
+        self.request = request
         self.onResult = onResult
         self.authz = LocalAuthenticationView(
             context: LAContext(),
@@ -19,7 +19,7 @@ struct AuthenticationView: View {
     }
 
     var body: some View {
-        AuthentikAccessRequestView(request: AccessRequest(), authz: self.authz) {
+        AuthentikAccessRequestView(request: request, authz: self.authz) {
             onResult(false, nil)
         }
         .onAppear() {
@@ -68,7 +68,16 @@ struct LocalAuthenticationView: NSViewRepresentable {
 }
 
 #Preview {
-    AuthenticationView(reason: "my reason") {_,_ in
+    AuthenticationView(
+        request: AccessRequestModel(
+            title: "authentik Access Requested",
+            requestingApp: "iTermServer-3.6.11",
+            profileName: "Jane Doe",
+            profileEmail: "jane@goauthentik.io",
+            profileUsername: "jdoe",
+            profileGroups: "Engineering, Admins"
+        )
+    ) { _, _ in
         print("foo")
     }
 }
