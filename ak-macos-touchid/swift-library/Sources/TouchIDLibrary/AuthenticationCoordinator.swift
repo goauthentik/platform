@@ -45,6 +45,7 @@ public class AuthenticationCoordinator: ObservableObject {
         window.standardWindowButton(.zoomButton)?.isHidden = true
 
         window.isMovableByWindowBackground = true
+        window.alphaValue = 0
         window.orderFrontRegardless()
 
         // Activate and grab focus once the run loop is spinning; calling activate() before
@@ -62,6 +63,8 @@ public class AuthenticationCoordinator: ObservableObject {
                     y: sf.midY
                 ))
             }
+
+            window.alphaValue = 1
         }
         currentWindow = window
         self.app.run()
