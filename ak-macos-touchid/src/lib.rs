@@ -80,11 +80,10 @@ impl TempImageFile {
             Some(b) if !b.is_empty() => b,
             _ => return Self(None),
         };
-        static ID: std::sync::atomic::AtomicU64 =
-            std::sync::atomic::AtomicU64::new(0);
+        static ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let id = ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let path = std::env::temp_dir()
-            .join(format!("ak-touchid-{}-{}.png", std::process::id(), id));
+        let path =
+            std::env::temp_dir().join(format!("ak-touchid-{}-{}.png", std::process::id(), id));
         match std::fs::write(&path, bytes) {
             Ok(()) => Self(Some(path)),
             Err(_) => Self(None),

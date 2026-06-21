@@ -9,7 +9,9 @@ use ak_platform_authz::AuthorizeAction;
 #[tokio::main]
 async fn main() -> Result<(), BoxError> {
     init_log_interactive();
-    let creds = ProcCredentials::new(Some(ProcCredentials::current().proc_info()?.parent.unwrap().pid as i64));
+    let creds = ProcCredentials::new(Some(
+        ProcCredentials::current().proc_info()?.parent.unwrap().pid as i64,
+    ));
     let res = AuthorizeAction {
         message: Box::new(|_| Ok(PlatformString::new_with_default("authz prompt"))),
         uid: Box::new(|_| Ok("static".to_string())),

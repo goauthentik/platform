@@ -118,11 +118,7 @@ impl ProcInfo {
         let parent_pid_opt = {
             let mut sys = System::new();
             let kind = ProcessRefreshKind::nothing().with_cmd(UpdateKind::OnlyIfNotSet);
-            sys.refresh_processes_specifics(
-                ProcessesToUpdate::Some(&[sysinfo_pid]),
-                false,
-                kind,
-            );
+            sys.refresh_processes_specifics(ProcessesToUpdate::Some(&[sysinfo_pid]), false, kind);
             sys.process(sysinfo_pid)
                 .ok_or(ProcInfoError::ProcessNotFound(pid))?
                 .parent()

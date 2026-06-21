@@ -71,7 +71,9 @@ impl ProcCredentials {
     }
 
     pub fn current() -> ProcCredentials {
-        ProcCredentials { pid: Some(process::id() as i64) }
+        ProcCredentials {
+            pid: Some(process::id() as i64),
+        }
     }
 
     pub fn pid(&self) -> i64 {
