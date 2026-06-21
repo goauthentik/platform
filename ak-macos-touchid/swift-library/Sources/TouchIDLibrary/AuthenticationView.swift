@@ -1,9 +1,3 @@
-//
-//  ContentView.swift
-//  swiftui-test
-//
-//  Created by Jens Langhammer on 19.10.25.
-//
 import LocalAuthentication
 import LocalAuthenticationEmbeddedUI
 import SwiftUI
@@ -81,10 +75,8 @@ struct LocalAuthenticationView: NSViewRepresentable {
     }
 }
 
-
 #Preview {
     AuthenticationView(reason: "my reason") {_,_ in
         print("foo")
     }
 }
-
