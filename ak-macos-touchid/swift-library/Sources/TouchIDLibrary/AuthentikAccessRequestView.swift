@@ -19,6 +19,10 @@ struct AccessRequestModel {
         let s = parts.compactMap { $0.first }.map(String.init).joined().uppercased()
         return s.isEmpty ? "U" : s
     }
+
+    var hasProfileData: Bool {
+        !profileName.isEmpty || !profileEmail.isEmpty || !profileUsername.isEmpty || profileAvatar != nil
+    }
 }
 
 // MARK: - View
@@ -49,11 +53,13 @@ struct AuthentikAccessRequestView: View {
             subtitle
                 .padding(.bottom, 18)
 
-            profileCard
+            if request.hasProfileData {
+                profileCard
 
-            if expanded {
-                profileDetails
-                    .padding(.top, 10)
+                if expanded {
+                    profileDetails
+                        .padding(.top, 10)
+                }
             }
 
             approveToggle
@@ -134,27 +140,16 @@ struct AuthentikAccessRequestView: View {
     }
 
     private var authentikBadge: some View {
-        RoundedRectangle(cornerRadius: 15, style: .continuous)
-            .fill(
-                RadialGradient(
-                    colors: [Color(hex: 0xFF7A4D), request.accentColor, Color(hex: 0xE23517)],
-                    center: UnitPoint(x: 0.28, y: 0.22),
-                    startRadius: 0, endRadius: 70
-                )
-            )
-            .frame(width: 64, height: 64)
-            .overlay(
-                // keyhole mark
-                ZStack {
-                    Circle()
-                        .strokeBorder(.white, lineWidth: 4)
-                        .frame(width: 30, height: 30)
-                    Capsule()
-                        .fill(.white)
-                        .frame(width: 4, height: 13)
-                }
-            )
-            .shadow(color: request.accentColor.opacity(0.45), radius: 2.5, x: 0, y: 2)
+        Group {
+            if let url = Bundle.module.url(forResource: "authentik", withExtension: "icns"),
+               let nsImage = NSImage(contentsOf: url)
+            {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 64, height: 64)
+            }
+        }
     }
 
     // MARK: Subtitle
