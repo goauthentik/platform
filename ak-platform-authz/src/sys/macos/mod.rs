@@ -1,12 +1,9 @@
-use std::path::{Path, PathBuf};
-
 use ak_macos_touchid::{AccessRequest, authenticate_with_touchid};
-use ak_platform::{net::server::proc_info::ProcInfo, prelude::BoxError};
+use ak_platform::{net::server::proc_info::{ProcInfo, proc_exe_path, proc_parent_pid}, prelude::BoxError};
 
-use crate::sys::{AuthorizationRequest, macos::{app::{find_app_bundle, populate_from_bundle}, system::{proc_exe_path, proc_parent_pid}}};
+use crate::sys::{AuthorizationRequest, macos::{app::{find_app_bundle, populate_from_bundle}}};
 
 pub mod app;
-pub mod system;
 
 pub async fn lookup_app_info(pc: Option<ProcInfo>) -> Result<AccessRequest, BoxError> {
     let mut ar = AccessRequest::default();
@@ -28,15 +25,16 @@ pub async fn lookup_app_info(pc: Option<ProcInfo>) -> Result<AccessRequest, BoxE
         current = proc.parent.as_deref();
     }
 
-    // ProcInfo only stores one parent level, and sysinfo silently drops the
-    // parent when it can't read its exe. Use proc_pidinfo/proc_pidpath instead,
-    // which work for sandboxed and system-owned processes alike.
+    // Continue walking up the process tree beyond the one parent level stored
+    // in ProcInfo. proc_parent_pid/proc_exe_path are kept decoupled here so
+    // that a process with an unreadable exe (sandboxed, system-owned) doesn't
+    // stop the walk — we can still get its parent PID and keep climbing.
     let mut walk_pid = pc.parent.as_ref().map(|p| p.pid);
     while let Some(pid) = walk_pid {
         let Some(ppid) = proc_parent_pid(pid) else { break };
 
         if let Some(exe) = proc_exe_path(ppid) {
-            tracing::trace!(pid = ppid, exe = %exe.display(), "Checking process (manual walk)");
+            tracing::trace!(pid = ppid, exe = %exe.display(), "Checking process (tree walk)");
             if let Some(bundle) = find_app_bundle(&exe) {
                 tracing::trace!(bundle = %bundle.display(), "Found app bundle");
                 populate_from_bundle(&mut ar, &bundle);

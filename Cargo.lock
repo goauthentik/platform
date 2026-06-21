@@ -257,7 +257,6 @@ version = "0.44.3"
 dependencies = [
  "ak-macos-touchid",
  "ak-platform",
- "libc",
  "plist",
  "tokio",
  "tonic",
