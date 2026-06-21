@@ -31,13 +31,13 @@ public class AuthenticationCoordinator: ObservableObject {
         // Create window
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
-            styleMask: [.titled, .closable],
+            styleMask: [.titled],
             backing: .buffered,
             defer: false
         )
 
         window.contentViewController = hostingController
-        window.level = .screenSaver
+        window.level = .popUpMenu
         window.isOpaque = false
         window.backgroundColor = .clear
 
