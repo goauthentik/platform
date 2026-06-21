@@ -42,12 +42,15 @@ public class AuthenticationCoordinator: ObservableObject {
         window.backgroundColor = .clear
 
         window.isMovableByWindowBackground = true
-        window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
-        self.app.activate(ignoringOtherApps: true)
 
-        // Defer centering so SwiftUI has finished its layout pass and the window has its final size
+        // Activate and grab focus once the run loop is spinning; calling activate() before
+        // app.run() has no effect because the event loop hasn't started yet.
         DispatchQueue.main.async {
+            self.app.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+
+            // Center after layout so the window has its final size
             if let screen = NSScreen.main {
                 let sf = screen.visibleFrame
                 let wf = window.frame
