@@ -1,7 +1,6 @@
 import SwiftUI
 import AppKit
 
-@MainActor
 public class AuthenticationCoordinator: ObservableObject {
     private var currentWindow: NSWindow?
     private var currentCallback: ((Bool, String?) -> Void)?

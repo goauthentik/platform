@@ -5,11 +5,15 @@ edition.workspace = true
 license.workspace = true
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["staticlib", "rlib"]
+
+[[example]]
+name = "touchid"
 
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 swift-bridge = "0.1"
+tokio = { workspace = true }
 
 [build-dependencies]
 swift-bridge-build = "0.1"

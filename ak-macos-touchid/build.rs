@@ -9,7 +9,7 @@ fn main() {
     compile_swift();
 
     // 3. Link to Swift library
-    println!("cargo:rustc-link-lib=static=swift-library");
+    println!("cargo:rustc-link-lib=static=TouchIDLibrary");
     println!(
         "cargo:rustc-link-search={}",
         swift_library_static_lib_dir().to_str().unwrap()

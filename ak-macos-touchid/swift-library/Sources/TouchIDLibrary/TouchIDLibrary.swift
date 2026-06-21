@@ -8,10 +8,8 @@ private struct AuthResult {
     let error: String?
 }
 
-public func authenticate_with_touchid(reason: UnsafePointer<CChar>) -> Bool {
-    guard let reasonString = String(validatingCString: reason) else {
-        return false
-    }
+public func authenticate_with_touchid(reason: RustString) -> Bool {
+    let reasonString = reason.toString()
     // Use a semaphore to make the async call synchronous
     let semaphore = DispatchSemaphore(value: 0)
     var result = AuthResult(success: false, error: nil)

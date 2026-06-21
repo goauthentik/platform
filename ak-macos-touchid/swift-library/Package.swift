@@ -9,12 +9,16 @@ let package = Package(
     products: [
         .library(
             name: "TouchIDLibrary",
+            type: .static,
             targets: ["TouchIDLibrary"]),
     ],
     targets: [
         .target(
             name: "TouchIDLibrary",
             dependencies: [],
-            publicHeadersPath: "include"),
+            publicHeadersPath: "include",
+            swiftSettings: [
+                .swiftLanguageMode(.v5)
+            ]),
     ]
 )
