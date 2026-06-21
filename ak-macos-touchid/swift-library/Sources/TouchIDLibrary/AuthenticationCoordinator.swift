@@ -37,15 +37,26 @@ public class AuthenticationCoordinator: ObservableObject {
         )
 
         window.contentViewController = hostingController
-        window.center()
+        window.level = .screenSaver
+        window.isOpaque = false
+        window.backgroundColor = .clear
 
-        // Force the window to be key and front
+        window.isMovableByWindowBackground = true
         window.makeKeyAndOrderFront(nil)
-//        self.app!.activate(ignoringOtherApps: true)
         window.orderFrontRegardless()
-//        window.standardWindowButton(.closeButton)?.isHidden = true
-//        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-//        window.standardWindowButton(.zoomButton)?.isHidden = true
+        self.app.activate(ignoringOtherApps: true)
+
+        // Defer centering so SwiftUI has finished its layout pass and the window has its final size
+        DispatchQueue.main.async {
+            if let screen = NSScreen.main {
+                let sf = screen.visibleFrame
+                let wf = window.frame
+                window.setFrameOrigin(NSPoint(
+                    x: sf.midX - wf.width / 2,
+                    y: sf.midY
+                ))
+            }
+        }
         currentWindow = window
         self.app.run()
     }
