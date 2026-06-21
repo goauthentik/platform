@@ -1,0 +1,15 @@
+[package]
+name = "ak-macos-touchid"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+swift-bridge = "0.1"
+
+[build-dependencies]
+swift-bridge-build = "0.1"

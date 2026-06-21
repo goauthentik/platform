@@ -17,6 +17,7 @@ members = [
     "ak-platform-authz",
     "ak-platform-keyring",
     "ak-platform",
+    "ak-macos-touchid",
 ]
 
 [workspace.package]

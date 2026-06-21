@@ -8,9 +8,7 @@ private struct AuthResult {
     let error: String?
 }
 
-@_cdecl("authenticate_with_touchid")
-@MainActor
-public func authenticate_with_touchid(_ reason: UnsafePointer<CChar>) -> Bool {
+public func authenticate_with_touchid(reason: UnsafePointer<CChar>) -> Bool {
     guard let reasonString = String(validatingCString: reason) else {
         return false
     }
@@ -36,8 +34,6 @@ public func authenticate_with_touchid(_ reason: UnsafePointer<CChar>) -> Bool {
     return result.success
 }
 
-@_cdecl("is_touchid_available")
-@MainActor
 public func is_touchid_available() -> Bool {
     let context = LAContext()
     var error: NSError?
