@@ -47,6 +47,7 @@ private func accessRequestModel(from req: AccessRequestFfi) -> AccessRequestMode
     model.profileEmail = req.profile_email.toString()
     model.profileUsername = req.profile_username.toString()
     model.profileGroups = req.profile_groups.toString()
+    model.reason = req.reason.toString()
 
     let iconPath = req.app_icon_path.toString()
     if !iconPath.isEmpty, let nsImage = NSImage(contentsOfFile: iconPath) {

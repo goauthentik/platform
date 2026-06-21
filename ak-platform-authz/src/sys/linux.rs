@@ -3,6 +3,8 @@ use ak_platform::string::PlatformString;
 use std::collections::HashMap;
 use zbus::zvariant::OwnedValue;
 
+use crate::sys::AuthorizationRequest;
+
 #[zbus::proxy(
     interface = "org.freedesktop.PolicyKit1.Authority",
     default_service = "org.freedesktop.PolicyKit1",
@@ -32,7 +34,7 @@ fn proc_start_time() -> Option<u64> {
     fields.get(19)?.parse().ok()
 }
 
-pub async fn prompt(_msg: PlatformString) -> Result<bool> {
+pub async fn prompt(_req: AuthorizationRequest) -> Result<bool> {
     let conn = match zbus::Connection::system().await {
         Ok(c) => c,
         Err(e) => {

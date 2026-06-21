@@ -14,6 +14,8 @@ struct AccessRequestModel {
     var profileGroups: String = ""
     var profileAvatar: Image? = nil
 
+    var reason: String = ""
+
     var initials: String {
         let parts = profileName.split(separator: " ").prefix(2)
         let s = parts.compactMap { $0.first }.map(String.init).joined().uppercased()
@@ -61,10 +63,6 @@ struct AuthentikAccessRequestView: View {
                         .padding(.top, 10)
                 }
             }
-
-            approveToggle
-                .padding(.top, 18)
-                .padding(.bottom, 24)
 
             footer
         }
@@ -155,12 +153,7 @@ struct AuthentikAccessRequestView: View {
     // MARK: Subtitle
 
     private var subtitle: some View {
-        (
-            Text("Allow ")
-            + Text(request.requestingApp).bold()
-            + Text(" to use this ")
-            + Text("profile").bold()
-        )
+        Text(self.request.reason)
         .font(.system(size: 14))
         .foregroundStyle(bodyText)
         .multilineTextAlignment(.center)
@@ -259,36 +252,6 @@ struct AuthentikAccessRequestView: View {
                 .foregroundStyle(bodyText)
         }
         .font(.system(size: 12.5))
-    }
-
-    // MARK: Approve toggle
-
-    private var approveToggle: some View {
-        Button {
-            approveAll.toggle()
-        } label: {
-            HStack(spacing: 9) {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(approveAll ? request.accentColor : .white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .strokeBorder(Color.black.opacity(0.28), lineWidth: 0.5)
-                    )
-                    .frame(width: 16, height: 16)
-                    .overlay {
-                        if approveAll {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-                Text("Approve for all applications")
-                    .font(.system(size: 13))
-                    .foregroundStyle(bodyText)
-                Spacer(minLength: 0)
-            }
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: Footer

@@ -8,8 +8,10 @@ use windows::{
     core::HSTRING,
 };
 
-pub async fn prompt(msg: PlatformString) -> Result<bool> {
-    let hmsg = HSTRING::from(msg.for_current());
+use crate::sys::AuthorizationRequest;
+
+pub async fn prompt(req: AuthorizationRequest) -> Result<bool> {
+    let hmsg = HSTRING::from(req.msg.for_current());
     match UserConsentVerifier::CheckAvailabilityAsync()?.await? {
         UserConsentVerifierAvailability::Available => (),
         o => {

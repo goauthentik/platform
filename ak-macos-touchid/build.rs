@@ -40,7 +40,7 @@ fn main() {
             "cargo:rustc-link-search={}/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx/",
             &xcode_path
         );
-        println!("cargo:rustc-link-search={}", "/usr/lib/swift");
+        println!("cargo:rustc-link-search=/usr/lib/swift");
     }
 }
 
@@ -49,7 +49,7 @@ fn compile_swift() {
 
     let mut cmd = Command::new("swift");
 
-    cmd.current_dir(swift_package_dir).arg("build").args(&[
+    cmd.current_dir(swift_package_dir).arg("build").args([
         "-Xswiftc",
         "-import-objc-header",
         "-Xswiftc",
@@ -60,7 +60,7 @@ fn compile_swift() {
     ]);
 
     if is_release_build() {
-        cmd.args(&["-c", "release"]);
+        cmd.args(["-c", "release"]);
     }
 
     let exit_status = cmd.spawn().unwrap().wait_with_output().unwrap();

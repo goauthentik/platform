@@ -1,3 +1,4 @@
+use ak_platform::net::server::proc_info::ProcInfo;
 use ak_platform::prelude::*;
 use ak_platform::string::PlatformString;
 
@@ -10,11 +11,18 @@ pub mod linux;
 #[cfg(target_os = "windows")]
 pub mod windows;
 
-pub async fn prompt(msg: PlatformString) -> Result<bool> {
+pub struct AuthorizationRequest {
+    pub msg: PlatformString,
+    pub proc_info: Option<ProcInfo>,
+    pub profile: Option<String>,
+    // pub user_info: AuthentikClaims,
+}
+
+pub async fn prompt(req: AuthorizationRequest) -> Result<bool> {
     #[cfg(target_os = "macos")]
-    return macos::prompt(msg.for_current()).await;
+    return macos::prompt(req).await;
     #[cfg(target_os = "linux")]
-    return linux::prompt(msg).await;
+    return linux::prompt(req).await;
     #[cfg(target_os = "windows")]
-    return windows::prompt(msg).await;
+    return windows::prompt(req).await;
 }

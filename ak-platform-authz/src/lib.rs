@@ -7,6 +7,8 @@ use std::sync::{LazyLock, Mutex};
 use ak_platform::{net::server::creds::ProcCredentials, prelude::*, string::PlatformString};
 use tonic::Status;
 
+use crate::sys::AuthorizationRequest;
+
 type MessageFn = Box<dyn (Fn(&ProcCredentials) -> Result<PlatformString>) + Send>;
 type UidFn = Box<dyn (Fn(&ProcCredentials) -> Result<String>) + Send>;
 
@@ -54,7 +56,13 @@ impl AuthorizeAction {
         }
         let msg = (self.message)(&creds)?.clone();
         tracing::trace!(uid, "Prompting for authz");
-        let res = match sys::prompt(msg).await {
+        let res = match sys::prompt(AuthorizationRequest {
+            msg,
+            proc_info: Some(creds.proc_info()?),
+            profile: None,
+        })
+        .await
+        {
             Ok(r) => r,
             Err(e) => {
                 tracing::trace!("error during authz: {e:?}");

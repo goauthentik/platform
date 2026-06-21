@@ -1,3 +1,5 @@
+use std::process;
+
 use tonic::transport::server::Connected;
 
 use crate::net::server::ConnectedLocalStream;
@@ -69,7 +71,7 @@ impl ProcCredentials {
     }
 
     pub fn current() -> ProcCredentials {
-        ProcCredentials { pid: None }
+        ProcCredentials { pid: Some(process::id() as i64) }
     }
 
     pub fn pid(&self) -> i64 {
