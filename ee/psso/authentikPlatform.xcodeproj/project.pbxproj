@@ -14,10 +14,10 @@
 		B404B2742E0DD88800A12D29 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = B404B2732E0DD88500A12D29 /* API.swift */; };
 		B42B450A2EA24B120046D847 /* Bridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; platformFilters = (ios, macos, ); };
 		B42B450B2EA24B120046D847 /* Bridge.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; platformFilters = (ios, macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B42DBF9A2FE6E65200D3649B /* SentrySPM in Frameworks */ = {isa = PBXBuildFile; productRef = B42DBF992FE6E65200D3649B /* SentrySPM */; };
 		B4361FBD2F5DEB3B00B77BDF /* sysd.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FBB2F5DEA9300B77BDF /* sysd.xcframework */; };
 		B4361FBE2F5DEB3B00B77BDF /* sysd.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FBB2F5DEA9300B77BDF /* sysd.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B4361FC12F5DED0200B77BDF /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = B4361FC02F5DECC100B77BDF /* libresolv.tbd */; };
-		B46DB6712F5E0860005DC8C6 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = B46DB6702F5E0860005DC8C6 /* Sentry */; };
 		B4714C442F5DF0BA003B0896 /* Bridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; };
 		B4714C452F5DF0BA003B0896 /* Bridge.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B42B45022EA24AEA0046D847 /* Bridge.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B4714C492F5DF1EE003B0896 /* AuthenticationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B4714C482F5DF1EE003B0896 /* AuthenticationServices.framework */; };
@@ -129,9 +129,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B46DB6712F5E0860005DC8C6 /* Sentry in Frameworks */,
 				B4D2A6462EA25CC1000B8E49 /* GRPCProtobuf in Frameworks */,
 				B4D2A6432EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 in Frameworks */,
+				B42DBF9A2FE6E65200D3649B /* SentrySPM in Frameworks */,
 				B4D2A6402EA25C96000B8E49 /* GRPCCore in Frameworks */,
 				B4D2A66F2EA260B8000B8E49 /* Atomics in Frameworks */,
 			);
@@ -238,6 +238,8 @@
 				B42B450D2EA24B120046D847 /* PBXTargetDependency */,
 			);
 			name = PSSO;
+			packageProductDependencies = (
+			);
 			productName = PSSO;
 			productReference = 609FE38424893242009FD079 /* PSSO.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -264,7 +266,7 @@
 				B4D2A6422EA25CAF000B8E49 /* GRPCNIOTransportHTTP2 */,
 				B4D2A6452EA25CC1000B8E49 /* GRPCProtobuf */,
 				B4D2A66E2EA260B8000B8E49 /* Atomics */,
-				B46DB6702F5E0860005DC8C6 /* Sentry */,
+				B42DBF992FE6E65200D3649B /* SentrySPM */,
 			);
 			productName = GRPC;
 			productReference = B42B45022EA24AEA0046D847 /* Bridge.framework */;
@@ -353,11 +355,11 @@
 			);
 			mainGroup = 609FE344248929E6009FD079;
 			packageReferences = (
-				B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */,
 				B4D2A6412EA25CAF000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-nio-transport" */,
 				B4D2A6442EA25CC1000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */,
 				B4D2A66D2EA260B8000B8E49 /* XCRemoteSwiftPackageReference "swift-atomics" */,
+				B42DBF982FE6E65200D3649B /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			productRefGroup = 609FE34E248929E6009FD079 /* Products */;
 			projectDirPath = "";
@@ -982,53 +984,55 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+		B42DBF982FE6E65200D3649B /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
 			requirement = {
-				kind = exactVersion;
-				version = 8.53.1;
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.18.0;
 			};
+			traits = (
+			);
 		};
 		B4D2A63E2EA25C96000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-2" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/grpc/grpc-swift-2";
 			requirement = {
-				kind = exactVersion;
-				version = 2.3.0;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
 			};
 		};
 		B4D2A6412EA25CAF000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-nio-transport" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/grpc/grpc-swift-nio-transport.git";
 			requirement = {
-				kind = exactVersion;
-				version = 2.4.5;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.0;
 			};
 		};
 		B4D2A6442EA25CC1000B8E49 /* XCRemoteSwiftPackageReference "grpc-swift-protobuf" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/grpc/grpc-swift-protobuf";
 			requirement = {
-				kind = exactVersion;
-				version = 2.2.1;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
 			};
 		};
 		B4D2A66D2EA260B8000B8E49 /* XCRemoteSwiftPackageReference "swift-atomics" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-atomics.git";
 			requirement = {
-				kind = exactVersion;
-				version = 1.3.0;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		B46DB6702F5E0860005DC8C6 /* Sentry */ = {
+		B42DBF992FE6E65200D3649B /* SentrySPM */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B49BA5542E0EF70B00184992 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = Sentry;
+			package = B42DBF982FE6E65200D3649B /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = SentrySPM;
 		};
 		B4D2A63F2EA25C96000B8E49 /* GRPCCore */ = {
 			isa = XCSwiftPackageProductDependency;
