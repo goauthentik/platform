@@ -20,6 +20,7 @@ impl PathHandler {
 mod tests {
     use std::convert::Infallible;
 
+    use ak_platform::client::sysd;
     use hyper_util::rt::TokioIo;
     use tokio::io::{DuplexStream, duplex};
     use tonic::transport::{Channel, Endpoint};
@@ -43,8 +44,8 @@ mod tests {
     #[tokio::test]
     async fn test_ping() {
         let handler = PathHandler {
-            system_channel: mock_channel().await,
-            user_channel: None,
+            system_client: sysd::Client::new_channel(mock_channel().await),
+            user_client: None,
         };
         let res = handler.handle_ping(Message::test_msg()).await.unwrap();
         assert_eq!(res.data.get("ping").unwrap().as_str().unwrap(), "pong");

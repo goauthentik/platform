@@ -5,14 +5,12 @@ TARGET = nss
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	mkdir -p ${TOP}/cache/${TARGET}
-	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
-		--target-dir ${TOP}/cache/${TARGET} \
-		--verbose \
-		--release
+	$(call cargo_build,$(TARGET))
 	cp "${TOP}/cache/${TARGET}/release/libnss_authentik.so" "${TOP}/bin/${TARGET}/"
 
+.PHONY: test
 test:
-	cargo test --verbose
+	$(call cargo_test,ak-nss)
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/libnss-authentik_${VERSION}_${ARCH}.deb

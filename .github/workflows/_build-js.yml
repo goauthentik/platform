@@ -24,12 +24,15 @@ jobs:
     outputs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v5
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version-file: "${{ matrix.target }}/package.json"
-          cache: "npm"
-          cache-dependency-path: "${{ matrix.target }}/package-lock.json"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
       - run: make ${{ matrix.target }}/package
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact

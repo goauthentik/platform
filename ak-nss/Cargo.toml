@@ -6,7 +6,7 @@ license.workspace = true
 
 [lib]
 name = "nss_authentik"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [lints]
 workspace = true
@@ -17,4 +17,4 @@ ctor = "1.0.7"
 dtor = "1.0.5"
 libc = "0.2.186"
 libnss = "0.9.0"
-log = { workspace = true }
+tracing = { workspace = true }

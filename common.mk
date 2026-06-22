@@ -33,7 +33,73 @@ _LD_FLAGS = ${LD_FLAGS} \
 	-X goauthentik.io/platform/pkg/meta.BuildHash=${VERSION_HASH} \
 	-X goauthentik.io/platform/pkg/meta.Tag=${VERSION_TAG}
 GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
+
 RUST_BUILD_FLAGS =
+DOCKER_BUILDER_IMAGE ?= authentik/ak-builder
+CARGO_CRATE_DIR := $(subst $(TOP),,$(CURDIR))
+
+ifneq ($(LOCAL_WORKSPACE),)
+CONTAINER_TOP := ${LOCAL_WORKSPACE}
+else
+CONTAINER_TOP := ${TOP}
+endif
+
+define cargo_build_local
+RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		AK_VERSION=${VERSION} \
+		AK_BUILDHASH=${VERSION_HASH} \
+		AK_TAG=${VERSION_TAG} \
+		cargo build \
+		--target-dir $(TOP)cache/$(1) \
+		--verbose \
+		--release $(2)
+endef
+
+ifeq ($(PLATFORM),gnu/linux)
+define cargo_build
+	docker run --rm \
+		-i \
+		--volume "$(CONTAINER_TOP):/workspace" \
+		--workdir "/workspace/$(CARGO_CRATE_DIR)" \
+		--env RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		--env AK_VERSION="${VERSION}" \
+		--env AK_BUILDHASH="${VERSION_HASH}" \
+		--env AK_TAG="${VERSION_TAG}" \
+		$(DOCKER_BUILDER_IMAGE) \
+		cargo build \
+			--target-dir /workspace/cache/$(1) \
+			--verbose \
+			--release
+endef
+else
+define cargo_build
+RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		AK_VERSION=${VERSION} \
+		AK_BUILDHASH=${VERSION_HASH} \
+		AK_TAG=${VERSION_TAG} \
+		cargo build \
+		--target-dir $(TOP)cache/$(1) \
+		--verbose \
+		--release $(2)
+endef
+endif
+
+define cargo_test
+	mkdir -p "${PWD}/cache"
+	cargo llvm-cov \
+		--no-report \
+		--ignore-filename-regex generated \
+		nextest -p $(1) \
+			--no-tests pass
+	cargo llvm-cov report \
+		--codecov \
+		--ignore-filename-regex generated \
+		--output-path "${PWD}/cache/llvm-cov-target.json"
+	cargo llvm-cov report \
+		--html \
+		--ignore-filename-regex generated \
+		--output-dir "${PWD}/cache/llvm-cov-html/"
+endef
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 

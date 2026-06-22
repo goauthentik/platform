@@ -1,9 +1,11 @@
+use ak_platform::prelude::*;
 use ak_platform::{
-    grpc::grpc_endpoint,
-    platform::paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
+    client::{
+        sysd,
+        user::{self, AnyService},
+    },
+    paths::SysdSocketID,
 };
-use std::error::Error;
-use tonic::transport::Channel;
 
 use native_messaging::{
     event_loop,
@@ -14,41 +16,39 @@ use crate::models::{Message, Response};
 
 #[derive(Clone)]
 pub(crate) struct PathHandler {
-    pub(crate) system_channel: Channel,
-    pub(crate) user_channel: Option<Channel>,
+    pub(crate) system_client: sysd::Client,
+    pub(crate) user_client: Option<user::Client<AnyService>>,
 }
 
 impl PathHandler {
-    pub async fn new() -> Result<Self, Box<dyn Error>> {
-        let system_channel =
-            grpc_endpoint(sysd_socket_path(SysdSocketID::Default).for_current()).await?;
-        let user_channel =
-            match grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await {
-                Ok(c) => Some(c),
-                Err(e) => {
-                    log::warn!("failed to connect to user agent: {e:?}");
-                    None
-                }
-            };
+    pub async fn new() -> Result<Self> {
+        let system_client = sysd::Client::new(SysdSocketID::Default).await?;
+        let user_client = match user::Client::new(None).await {
+            Ok(c) => Some(c),
+            Err(e) => {
+                tracing::warn!("failed to connect to user agent: {e:?}");
+                None
+            }
+        };
 
         Ok(Self {
-            system_channel,
-            user_channel,
+            system_client,
+            user_client,
         })
     }
 
-    pub async fn start(self) -> Result<(), NmError> {
+    pub async fn start(self) -> std::result::Result<(), NmError> {
         event_loop(move |raw: String, send: Sender| {
             let sself = self.clone();
             async move {
                 let incoming: Message =
                     serde_json::from_str(&raw).map_err(NmError::DeserializeJson)?;
-                log::debug!("Handling browser message {}", incoming.route_path());
+                tracing::debug!(path = incoming.route_path(), "Handling browser message");
                 if incoming.version == "1" {
                     let res = sself.handle_v1(incoming).await?;
                     return send.send(&res).await;
                 }
-                log::warn!(
+                tracing::warn!(
                     "Invalid version message received: {} (path {})",
                     incoming.version,
                     incoming.route_path()
@@ -59,7 +59,7 @@ impl PathHandler {
         .await
     }
 
-    async fn handle_v1(self, msg: Message) -> Result<Response, NmError> {
+    async fn handle_v1(self, msg: Message) -> std::result::Result<Response, NmError> {
         let result = match msg.route_path().trim() {
             "ping" => self.handle_ping(msg).await,
             "get_token" => self.handle_get_token(msg).await,
@@ -70,7 +70,7 @@ impl PathHandler {
         match result {
             Ok(res) => Ok(res),
             Err(e) => {
-                log::warn!("Failed to run handler: {e:?}");
+                tracing::warn!("Failed to run handler: {e:?}");
                 Err(NmError::Disconnected)
             }
         }

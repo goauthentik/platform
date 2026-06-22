@@ -1,8 +1,10 @@
+use ak_platform::prelude::*;
+use chrono::{DateTime, Utc};
+use pbjson_types::Timestamp;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::error::Error;
 
 // Styles — use functions instead of lazy statics for composability
 pub fn key_style() -> Style {
@@ -127,7 +129,7 @@ pub fn render_map_as_tree(data: &Value, root_title: &str) -> Vec<Line<'static>> 
     root.render()
 }
 
-pub fn render_json(raw: String, title: &str, json: bool) -> Result<(), Box<dyn Error>> {
+pub fn render_json(raw: String, title: &str, json: bool) -> Result<()> {
     if json {
         println!("{}", raw);
     } else {
@@ -166,6 +168,19 @@ fn leaf_node(label: &str, value: &str) -> TreeNode {
 /// Minimal ANSI 256-color wrapper — keeps parity with lipgloss colour ints.
 fn ansi_color(s: &str, code: u8) -> String {
     format!("\x1b[38;5;{code}m{s}\x1b[0m")
+}
+
+pub fn render_timestamp(ot: Option<Timestamp>) -> String {
+    match ot {
+        Some(t) => {
+            let dt: DateTime<Utc> = match t.try_into() {
+                Ok(date) => date,
+                Err(e) => return e.to_string(),
+            };
+            dt.to_rfc2822()
+        }
+        None => "-".to_string(),
+    }
 }
 
 // ── example / smoke-test ─────────────────────────────────────────────────────

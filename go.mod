@@ -8,39 +8,34 @@ require (
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/adrg/xdg v0.5.3
 	github.com/aletheia7/ul v1.5.0
-	github.com/amenzhinsky/go-polkit v0.0.0-20210519083301-ee6a51849123
 	github.com/avast/retry-go/v4 v4.7.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/cli/browser v1.3.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/getsentry/sentry-go v0.45.1
-	github.com/godbus/dbus/v5 v5.2.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/johnbellone/grpc-middleware-sentry v0.4.0
 	github.com/keybase/go-keychain v0.0.1
-	github.com/kolide/systray v1.10.4
-	github.com/mergestat/timediff v0.0.4
 	github.com/micromdm/plist v0.2.2
 	github.com/microsoft/wmi v0.43.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/moby/moby/api v1.54.2
-	github.com/nightlyone/lockfile v1.0.0
+	github.com/moby/moby/api v1.55.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/shirou/gopsutil/v4 v4.26.5
 	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/testcontainers/testcontainers-go v0.42.0
+	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/zalando/go-keyring v0.2.8
-	go.etcd.io/bbolt v1.4.3
+	go.etcd.io/bbolt v1.5.0
 	goauthentik.io/api/v3 v3.2026020.16
-	golang.org/x/crypto v0.52.0
-	golang.org/x/sys v0.45.0
-	golang.org/x/term v0.43.0
+	golang.org/x/crypto v0.53.0
+	golang.org/x/sys v0.46.0
+	golang.org/x/term v0.44.0
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 )
@@ -93,6 +88,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/rpmpack v0.7.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -146,8 +142,7 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
-	github.com/spf13/pflag v1.0.9 // indirect
-	github.com/tevino/abool v1.2.0 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/ulikunitz/xz v0.5.14 // indirect
@@ -166,10 +161,10 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/mobile v0.0.0-20260514233045-7de0a8fa7f4d // indirect
 	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect

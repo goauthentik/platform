@@ -23,7 +23,6 @@ import (
 	"github.com/testcontainers/testcontainers-go/exec"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"goauthentik.io/api/v3"
-	"goauthentik.io/platform/pkg/agent_local/config"
 	"goauthentik.io/platform/pkg/ak"
 	"goauthentik.io/platform/pkg/ak/flow"
 	"goauthentik.io/platform/pkg/cli/setup"
@@ -59,7 +58,7 @@ func AuthentikToken() string {
 }
 
 func AuthenticatedSession(t testing.TB) *http.Client {
-	exec, err := flow.NewFlowExecutor(t.Context(), "default-authentication-flow", ak.APIConfig(config.ConfigV1Profile{
+	exec, err := flow.NewFlowExecutor(t.Context(), "default-authentication-flow", ak.APIConfig(ak.ConfigV1Profile{
 		AuthentikURL: LocalAuthentikURL(),
 	}), flow.FlowExecutorOptions{
 		Logger: func(msg string, fields map[string]any) {
@@ -92,7 +91,7 @@ func AgentSetup(t testing.TB, tc testcontainers.Container) {
 			assert.NoError(t, err)
 
 			// Use flow executor to finish OAuth authorization
-			conf := ak.APIConfig(config.ConfigV1Profile{
+			conf := ak.APIConfig(ak.ConfigV1Profile{
 				AuthentikURL: LocalAuthentikURL(),
 			})
 			conf.HTTPClient = authClient
@@ -251,8 +250,8 @@ func testMachine(t testing.TB) testcontainers.Container {
 			},
 			ExposedPorts: []string{"22"},
 			Env: map[string]string{
-				"GOCOVERDIR": "/tmp/ak-coverage/cli",
-				// "LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
+				"GOCOVERDIR":        "/tmp/ak-coverage/cli",
+				"LLVM_PROFILE_FILE": "/tmp/ak-coverage/rs/default_%m_%p.profraw",
 			},
 			HostConfigModifier: func(hc *container.HostConfig) {
 				hc.Privileged = true

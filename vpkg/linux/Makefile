@@ -9,19 +9,25 @@ package:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/bin/cli/completions"
 	mkdir -p "${TOP}/bin/agent_system/completions"
-	"${TOP}/hack/completions.sh" \
+	"${TOP}/hack/completions_go.sh" \
 		"${TOP}/cmd/agent_system" \
 		"${TOP}/bin/agent_system/completions" \
 		"agent_system"
+	"${TOP}/hack/completions_rust.sh" \
+		"ak-cli" \
+		"${TOP}/bin/cli/completions" \
+		"ak"
 	chmod +x "${TOP}/bin/cli/ak"
 	chmod +x "${TOP}/bin/agent_system/ak-sysd"
-	chmod +x "${TOP}/bin/agent_local/ak-agent"
+	chmod +x "${TOP}/bin/agent/ak-agent"
+	chmod +x "${TOP}/bin/agent-desktop/ak-agent-desktop"
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
 	$(call nfpm_package,${TOP}/vpkg/linux/cli/nfpm.yaml,cli)
 	$(call nfpm_package,${TOP}/vpkg/linux/sysd/nfpm.yaml,agent_system)
-	$(call nfpm_package,${TOP}/vpkg/linux/agent/nfpm.yaml,agent_local)
+	$(call nfpm_package,${TOP}/vpkg/linux/agent/nfpm.yaml,agent)
 	$(call nfpm_package,${TOP}/vpkg/linux/nss/nfpm.yaml,nss)
 	$(call nfpm_package,${TOP}/vpkg/linux/pam/nfpm.yaml,pam)
+	$(call nfpm_package,${TOP}/vpkg/linux/agent-desktop/nfpm.yaml,agent-desktop)
 
 .PHONY: lint
 lint:

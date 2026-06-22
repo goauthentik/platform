@@ -7,7 +7,7 @@ FILE_NAME_FIREFOX := authentik_firefox.zip
 
 .PHONY: bump
 bump:
-	npm version ${VERSION} || true
+	pnpm version ${VERSION} || true
 	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-chrome.json"
 	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-edge.json"
 	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-firefox.json"
@@ -17,8 +17,8 @@ bump:
 build:
 	mkdir -p ${TOP}/bin/${TARGET}
 	rm -rf ${PWD}/dist/*
-	npm i
-	npm run build
+	pnpm install
+	pnpm run build
 
 .PHONY: package
 package: package-chrome package-firefox
@@ -52,6 +52,6 @@ package-firefox: build
 
 .PHONY: lint
 lint:
-	npm i
-	npm run lint-check
-	npm run prettier-check
+	pnpm install
+	pnpm run lint-check
+	pnpm run prettier-check

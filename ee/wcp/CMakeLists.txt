@@ -96,7 +96,7 @@
 #
 # To perform a Windows build using a 32-bit CEF binary distribution:
 #   Using the Visual Studio 2022 IDE:
-#     > cmake -G "Visual Studio 17" -A Win32 ..
+#     > cmake -G "Visual Studio 18" -A Win32 ..
 #     Open build\cef.sln in Visual Studio and select Build > Build Solution.
 #
 #   Using Ninja with Visual Studio 2022 command-line tools:
@@ -107,7 +107,7 @@
 #
 # To perform a Windows build using a 64-bit CEF binary distribution:
 #   Using the Visual Studio 2022 IDE:
-#     > cmake -G "Visual Studio 17" -A x64 ..
+#     > cmake -G "Visual Studio 18" -A x64 ..
 #     Open build\cef.sln in Visual Studio and select Build > Build Solution.
 #
 #   Using Ninja with Visual Studio 2022 command-line tools:
@@ -118,7 +118,7 @@
 #
 # To perform a Windows build using an ARM64 CEF binary distribution:
 #   Using the Visual Studio 2022 IDE:
-#     > cmake -G "Visual Studio 17" -A arm64 ..
+#     > cmake -G "Visual Studio 18" -A arm64 ..
 #     Open build\cef.sln in Visual Studio and select Build > Build Solution.
 #
 #   Using Ninja with Visual Studio 2022 command-line tools:
@@ -272,6 +272,9 @@ corrosion_import_crate(
   MANIFEST_PATH ../../ak-ffi/Cargo.toml
   CRATES ak_ffi
 )
+# getrandom (transitive dep) calls BCryptGenRandom on Windows; propagate the
+# requirement to all CMake consumers of ak_ffi via the link interface.
+corrosion_link_libraries(ak_ffi bcrypt)
 corrosion_add_cxxbridge(
   ak_ffi_bridge
   CRATE ak_ffi

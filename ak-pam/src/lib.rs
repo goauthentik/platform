@@ -12,7 +12,7 @@ use crate::session::close_session_impl;
 use crate::session::open_session_impl;
 use ak_platform::log::init_log;
 use ak_platform::log::unix::log_hook;
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
 use pam::constants::PAM_TEXT_INFO;
@@ -51,18 +51,14 @@ impl PamHooks for PAMAuthentik {
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         prelude("sm_open_session", pamh, args.clone(), flags);
-        let svc = pam_try_log!(get_service(pamh), "Failed to get service");
-        match svc.as_str() {
-            _ => open_session_impl(pamh, args, flags),
-        }
+        let _ = pam_try_log!(get_service(pamh), "Failed to get service");
+        open_session_impl(pamh, args, flags)
     }
 
     fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         prelude("sm_close_session", pamh, args.clone(), flags);
-        let svc = pam_try_log!(get_service(pamh), "Failed to get service");
-        match svc.as_str() {
-            _ => close_session_impl(pamh, args, flags),
-        }
+        let _ = pam_try_log!(get_service(pamh), "Failed to get service");
+        close_session_impl(pamh, args, flags)
     }
 
     fn sm_setcred(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {

@@ -1,12 +1,8 @@
-use std::error::Error;
-
+use ak_platform::prelude::*;
 use ak_platform::{
-    generated::{
-        agent::RequestHeader,
-        agent_auth::{TokenExchangeRequest, agent_auth_client::AgentAuthClient},
-    },
-    grpc::{assert_response_valid, grpc_endpoint},
-    platform::paths::{AgentSocketID, agent_socket_path},
+    client::user::{AnyService, Client},
+    generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
+    grpc::assert_response_valid,
 };
 
 pub struct CredentialsOpts {
@@ -18,9 +14,12 @@ pub struct RawCredentialOutput {
     pub access_token: String,
 }
 
-pub async fn get_credentials(opts: CredentialsOpts) -> Result<RawCredentialOutput, Box<dyn Error>> {
-    let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-    let res = AgentAuthClient::new(c)
+pub async fn get_credentials(
+    c: Client<AnyService>,
+    opts: CredentialsOpts,
+) -> Result<RawCredentialOutput> {
+    let res = c
+        .auth()
         .cached_token_exchange(TokenExchangeRequest {
             header: Some(RequestHeader {
                 profile: opts.profile,

@@ -2,7 +2,7 @@
 
 ## Build tools and test environment
 
-- Visual Studio 17 2022
+- Visual Studio 2026
 - Windows 10/11 x64
 - Rust (`winget install -e --id Rustlang.Rustup`)
 - Make

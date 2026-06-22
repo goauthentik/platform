@@ -1,5 +1,10 @@
+pub mod client;
 pub mod config;
 pub mod generated;
 pub mod grpc;
 pub mod log;
-pub mod platform;
+pub mod net;
+pub mod paths;
+pub mod prelude;
+pub mod storage;
+pub mod string;

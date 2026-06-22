@@ -15,12 +15,9 @@ clean:
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/cache/${TARGET}"
-	RUSTFLAGS="${RUST_BUILD_FLAGS}" cargo build \
-		--target-dir "${TOP}/cache/${TARGET}" \
-		--verbose \
-		--release
+	$(call cargo_build,$(TARGET))
 	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 .PHONY: test
 test:
-	cargo test --verbose
+	$(call cargo_test,ak-browser-support)

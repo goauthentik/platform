@@ -1,5 +1,5 @@
 use ak_platform::log::init_log;
-use ak_platform::platform::string::PlatformString;
+use ak_platform::string::PlatformString;
 
 use crate::path_handler::PathHandler;
 
@@ -21,7 +21,7 @@ async fn main() {
     let path_handler = match PathHandler::new().await {
         Ok(ph) => ph,
         Err(e) => {
-            log::warn!("Failed to create path handler: {e:?}");
+            tracing::warn!("Failed to create path handler: {e:?}");
             return;
         }
     };
@@ -29,7 +29,7 @@ async fn main() {
     match path_handler.start().await {
         Ok(_) => return,
         Err(e) => {
-            log::warn!("Failed to start native messaging handler: {e:?}");
+            tracing::warn!("Failed to start native messaging handler: {e:?}");
             return;
         }
     };

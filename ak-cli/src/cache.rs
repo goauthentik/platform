@@ -1,15 +1,15 @@
-use std::{error::Error, marker::PhantomData};
-
+use ak_platform::prelude::*;
 use ak_platform::{
+    client::user::{AnyService, Client},
     generated::{
         agent::RequestHeader,
-        agent_cache::{CacheGetRequest, CacheSetRequest, agent_cache_client::AgentCacheClient},
+        agent_cache::{CacheGetRequest, CacheSetRequest},
     },
-    grpc::{assert_response_valid, grpc_endpoint},
-    platform::paths::{AgentSocketID, agent_socket_path},
+    grpc::assert_response_valid,
 };
 use pbjson_types::Timestamp;
 use serde::{Serialize, de::DeserializeOwned};
+use std::marker::PhantomData;
 
 pub trait CacheData {
     fn expiry(&self) -> Timestamp;
@@ -19,21 +19,28 @@ pub struct ClientCache<T: CacheData> {
     keys: Vec<String>,
     header: RequestHeader,
 
+    c: Client<AnyService>,
     _phantom: PhantomData<T>,
 }
 
-impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
-    pub fn new(header: RequestHeader, keys: Vec<String>) -> Self {
+impl<T> ClientCache<T>
+where
+    T: CacheData + Serialize + DeserializeOwned,
+{
+    pub fn new(c: Client<AnyService>, header: RequestHeader, keys: Vec<String>) -> Self {
         Self {
             keys,
             header,
+            c,
             _phantom: PhantomData,
         }
     }
 
-    pub async fn get(&self) -> Result<T, Box<dyn Error>> {
-        let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-        let res = AgentCacheClient::new(c)
+    pub async fn get(&self) -> Result<T> {
+        let res = self
+            .c
+            .clone()
+            .cache()
             .cache_get(CacheGetRequest {
                 header: Some(self.header.clone()),
                 keys: self.keys.clone(),
@@ -45,13 +52,15 @@ impl<T: CacheData + Serialize + DeserializeOwned> ClientCache<T> {
         Ok(value)
     }
 
-    pub async fn set(&self, value: T) -> Result<(), Box<dyn Error>> {
+    pub async fn set(&self, value: T) -> Result<()> {
         let json = serde_json::to_string(&value)?;
 
         let expiry_ts = value.expiry();
 
-        let c = grpc_endpoint(agent_socket_path(AgentSocketID::Default)?.for_current()).await?;
-        let res = AgentCacheClient::new(c)
+        let res = self
+            .c
+            .clone()
+            .cache()
             .cache_set(CacheSetRequest {
                 header: Some(self.header.clone()),
                 keys: self.keys.clone(),

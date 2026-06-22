@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
+name: "authentik-agent-desktop"
+arch: "${ARCH}"
+platform: "linux"
+version: "${VERSION_PKG}"
+description: |
+  authentik Agent (Desktop)
+vendor: "Authentik Security Inc."
+homepage: "https://goauthentik.io"
+maintainer: "Authentik Security Inc."
+license: "MIT"
+contents:
+  - src: ../../bin/agent-desktop/ak-agent-desktop
+    dst: /usr/bin/ak-agent-desktop
+  - src: ./agent/usr/share/polkit-1/actions/io.goauthentik.platform.policy
+    dst: /usr/share/polkit-1/actions/io.goauthentik.platform.policy
+  - src: ./agent-desktop/usr/share/applications/authentik-agent-desktop.desktop
+    dst: /usr/share/applications/authentik-agent-desktop.desktop
+  - src: ../../ak-agent-desktop/src-tauri/icons/128x128.png
+    dst: /usr/share/icons/hicolor/128x128/apps/authentik-agent-desktop.png
+overrides:
+  deb:
+    depends:
+      - "libwebkit2gtk-4.1-0"
+      - "libgtk-3-0"
+      - "libappindicator3-1"
+  rpm:
+    depends:
+      - "webkit2gtk4.1-0"
+      - "gtk3-0"
+      - "libappindicator-gtk3-0"

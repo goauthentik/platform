@@ -1,5 +1,9 @@
-use crate::platform::string::PlatformString;
-use log::LevelFilter;
+use std::io::IsTerminal;
+
+use crate::string::PlatformString;
+use simplelog::{Config, TermLogger};
+
+pub use log::LevelFilter;
 
 #[cfg(target_os = "macos")]
 pub mod macos;
@@ -14,6 +18,9 @@ pub mod windows;
 pub mod unix;
 
 pub fn init_log(name: PlatformString) {
+    if !should_switch() {
+        return init_log_interactive();
+    }
     #[cfg(target_os = "macos")]
     macos::init_log(&name.for_current());
     #[cfg(target_os = "linux")]
@@ -24,4 +31,24 @@ pub fn init_log(name: PlatformString) {
 
 pub fn set_log_level(level: LevelFilter) {
     log::set_max_level(level);
+}
+
+pub fn init_log_interactive() {
+    TermLogger::init(
+        LevelFilter::Trace,
+        Config::default(),
+        simplelog::TerminalMode::Stderr,
+        simplelog::ColorChoice::Auto,
+    )
+    .unwrap_or_else(|_| eprintln!("Failed to setup terminal logger"));
+}
+
+pub fn should_switch() -> bool {
+    if std::io::stdout().is_terminal() {
+        return false;
+    }
+    #[cfg(debug_assertions)]
+    return false;
+    #[cfg(not(debug_assertions))]
+    return true;
 }

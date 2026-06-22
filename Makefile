@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli cmd/agent_system cmd/agent_local browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform
 
 .PHONY: all
 all: clean gen
@@ -40,13 +40,21 @@ rs-gen-proto:
 		--prost-crate_out=$(PROTO_OUT) \
 		--prost-crate_opt=no_features \
 		--tonic_out=$(PROTO_OUT) \
-		--tonic_opt=no_server \
 		--prost-serde_out=$(PROTO_OUT) \
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
-	cargo fmt
+	cargo fmt --all
 
-lint-rs: ak-pam/ci-install-deps
+ci-install-deps:
+ifeq ($(PLATFORM),gnu/linux)
+ifeq ($(CI),true)
+	sudo apt-get update
+	sudo apt-get install -y \
+		libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+endif
+endif
+
+lint-rs:
 	cargo fmt --all
 	cargo clippy --workspace \
 		${RS_TEST_FLAGS}
@@ -79,35 +87,23 @@ test:
 		-html ${PWD}/coverage.txt \
 		-o ${PWD}/coverage.html
 
-test-rs: ak-pam/ci-install-deps
-	mkdir -p "${PWD}/cache"
-	cargo llvm-cov \
-		--no-report \
-		--ignore-filename-regex generated \
-		nextest -p ${TEST_TARGET} \
-			--no-tests pass
-	cargo llvm-cov report \
-		--codecov \
-		--ignore-filename-regex generated \
-		--output-path "${PWD}/cache/llvm-cov-target.json"
-
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
 
 test-e2e: containers/e2e/local-build
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
 
+test-e2e-ci:
+	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+
 test-e2e-convert:
 	go tool covdata textfmt \
-		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -type d | xargs | sed 's/ /,/g') \
+		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -maxdepth 1 -type d ! -name rs | xargs | sed 's/ /,/g') \
 		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
 		-o ${PWD}/coverage_in_container.txt
 	go tool cover \
 		-html ${PWD}/coverage_in_container.txt \
 		-o ${PWD}/coverage_in_container.html
-
-test-agent:
-	go run -v ./cmd/agent_local/
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
@@ -149,11 +145,17 @@ ak-browser-support/%:
 ak-cli/%:
 	"$(MAKE)" -C "${TOP}/ak-cli" $*
 
+ak-platform/%:
+	"$(MAKE)" -C "${TOP}/ak-platform" $*
+
 sysd/%:
 	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*
 
-agent/%:
-	"$(MAKE)" -C "${TOP}/cmd/agent_local" $*
+ak-agent/%:
+	"$(MAKE)" -C "${TOP}/ak-agent" $*
+
+ak-agent-desktop/%:
+	"$(MAKE)" -C "${TOP}/ak-agent-desktop" $*
 
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*
@@ -172,6 +174,9 @@ vpkg/windows/%:
 
 vpkg/linux/%:
 	"$(MAKE)" -C "${TOP}/vpkg/linux" $*
+
+containers/builder/%:
+	"$(MAKE)" -C "${TOP}/containers/builder" $*
 
 containers/selenium/%:
 	"$(MAKE)" -C "${TOP}/containers/selenium" $*

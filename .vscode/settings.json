@@ -2,7 +2,8 @@
   "protoc": {
     "options": ["-I=protos/"]
   },
-  "rust-analyzer.cargo.targetDir": "cache/vscode/",
+  "rust-analyzer.cargo.targetDir": "cache/_local/",
+  "rust-analyzer.testExplorer": true,
   "files.associations": {
     "zshrc": "shellscript",
     "*.hcl": "terraform",

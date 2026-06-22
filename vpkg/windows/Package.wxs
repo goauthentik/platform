@@ -77,7 +77,7 @@
                           Name="authentik User Service"
                           EventMessageFile="[System64Folder]EventCreate.exe"/>
         <File Id="ak_agent"
-              Source="$(env.ROOT)/bin/agent_local/ak-agent.exe"
+              Source="$(env.ROOT)/bin/agent-desktop/ak-agent-desktop.exe"
               KeyPath="true" />
       </Component>
       <Component Id="cli" Bitness="always64" Directory="cli">
