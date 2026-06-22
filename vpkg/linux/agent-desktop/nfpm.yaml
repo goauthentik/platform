@@ -10,7 +10,7 @@ homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
 contents:
-  - src: ../../bin/agent-desktop/ak-agent
+  - src: ../../bin/agent-desktop/ak-agent-desktop
     dst: /usr/bin/ak-agent-desktop
   - src: ./agent/usr/share/polkit-1/actions/io.goauthentik.platform.policy
     dst: /usr/share/polkit-1/actions/io.goauthentik.platform.policy
