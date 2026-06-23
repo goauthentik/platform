@@ -29,6 +29,9 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             registration.accountDisplayName = "authentik"
             registration.includePreviousRefreshTokenInLoginRequest = true
             do {
+                if #available(macOS 27.0, *) {
+                    registration.federationType = .openID
+                }
                 try loginManager.saveLoginConfiguration(registration)
                 return .success
             } catch {
@@ -46,8 +49,24 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         options: ASAuthorizationProviderExtensionRequestOptions = [],
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         self.logger.debug(
-            "beginUserRegistration \(userName ?? ""), method \(String(describing: method)), options \(String(describing: options))"
+            "beginUserRegistration '\(userName ?? "")', method \(String(describing: method)), options \(String(describing: options))"
         )
+        if loginManager.isUserRegistered && !options.contains(.registrationRepair) {
+            self.logger.info("User is already registered and repair is not required")
+            return .success
+        }
+        if #available(macOS 27.0, *) {
+            if method == .openID {
+                loginManager.saveUserLoginConfiguration(ASAuthorizationProviderExtensionUserLoginConfiguration(
+                    loginUserName: userName ??,
+                ))
+                return .success
+            }
+        }
+        if !options.contains(.userInteractionEnabled) {
+            self.logger.error("User interaction is required")
+            return .userInterfaceRequired
+        }
         do {
             let supported = try await SysdBridge.shared.interactiveAuthSupported()
             if !supported {
@@ -83,7 +102,10 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
 
     func supportedGrantTypes() -> ASAuthorizationProviderExtensionSupportedGrantTypes {
         self.logger.debug("supportedGrantTypes")
-        return [.jwtBearer]
+        if #available(macOS 27.0, *) {
+            return [.jwtBearer, .tokenExchange];
+        }
+        return [.jwtBearer];
     }
 
     func keyWillRotate(

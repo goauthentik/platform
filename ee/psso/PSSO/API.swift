@@ -40,13 +40,24 @@ class API {
         userToken: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
-                from: loginManger.key(for: .userSecureEnclaveKey)!)!
+            let enclaveKeyID: String
+            let userSecureEnclaveKey: String
+            if let key = loginManger.key(for: .userDeviceSigning),
+               let (keyID, pemKey, _) = try getPublicKeyString(from: key)
+            {
+                enclaveKeyID = keyID
+                userSecureEnclaveKey = pemKey
+            } else {
+                self.logger.warning(
+                    "userDeviceSigning not available (method may not require it)")
+                enclaveKeyID = "foo"
+                userSecureEnclaveKey = "bar"
+            }
             self.logger.debug("registering user with sysd...")
             let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
-                    enclaveKeyID: EnclaveKeyID,
-                    userSecureEnclaveKey: UserSecureEnclaveKey,
+                    enclaveKeyID: enclaveKeyID,
+                    userSecureEnclaveKey: userSecureEnclaveKey,
                     userAuth: userToken,
                 )
             self.logger
