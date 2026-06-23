@@ -3,6 +3,12 @@ import Bridge
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistrationHandler {
 
+    /// Whether to embed the previous refresh token in the login request. Disabled by default for
+    /// the `UserSecureEnclaveKey` method: after a password reset or session revocation a stale
+    /// refresh token can cause the login request to be rejected. Flip to `true` to test against a
+    /// server that expects it.
+    static let includePreviousRefreshTokenInLoginRequest = false
+
     var supportedDeviceEncryptionAlgorithms: [ASAuthorizationProviderExtensionEncryptionAlgorithm] {
         return [.ecdhe_A256GCM]
     }
@@ -27,7 +33,8 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         )
         if let registration = registration {
             registration.accountDisplayName = "authentik"
-            registration.includePreviousRefreshTokenInLoginRequest = true
+            registration.includePreviousRefreshTokenInLoginRequest =
+                AuthenticationViewController.includePreviousRefreshTokenInLoginRequest
             do {
                 try loginManager.saveLoginConfiguration(registration)
                 return .success
