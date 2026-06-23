@@ -83,6 +83,48 @@ class API {
         }
     }
 
+    /// Re-register a rotated device key with the backend so the IdP keeps a matching public
+    /// key. Without this, the OS begins signing login assertions with a key the IdP was never
+    /// told about, which the token endpoint rejects → eventual `permanentLoginFailure`.
+    /// Device registration needs only the device keys + domain token, so it runs without user
+    /// interaction. Returns false on any failure so the caller can reject the rotation.
+    func RotateDeviceKey(
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
+        keyType: ASAuthorizationProviderExtensionKeyType,
+        newKey: SecKey,
+    ) async -> Bool {
+        do {
+            // The rotation hasn't happened yet, so `loginManager.key(for:)` still returns the
+            // current keys. Substitute the incoming `newKey` for the type being rotated.
+            guard let currentSigning = loginManager.key(for: .currentDeviceSigning),
+                let currentEncryption = loginManager.key(for: .currentDeviceEncryption)
+            else {
+                self.logger.error("device keys unavailable during rotation")
+                return false
+            }
+            let signingKey = keyType == .currentDeviceSigning ? newKey : currentSigning
+            let encryptionKey = keyType == .currentDeviceEncryption ? newKey : currentEncryption
+
+            guard let (signKeyID, deviceSigningKey, _) = try getPublicKeyString(from: signingKey),
+                let (encKeyID, deviceEncryptionKey, _) = try getPublicKeyString(from: encryptionKey)
+            else {
+                self.logger.error("failed to derive public keys during rotation")
+                return false
+            }
+            _ = try await SysdBridge.shared.pssoRegisterDevice(
+                deviceSigningKey: deviceSigningKey,
+                deviceEncryptionKey: deviceEncryptionKey,
+                encKeyID: encKeyID,
+                signKeyID: signKeyID
+            )
+            self.logger.debug("re-registered rotated device key with backend")
+            return true
+        } catch {
+            self.logger.error("failed to re-register rotated device key: \(error)")
+            return false
+        }
+    }
+
     func getPublicKey(from privateKey: SecKey) -> SecKey? {
         // Use SecKeyCopyPublicKey to get the public key from the private key
         guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
