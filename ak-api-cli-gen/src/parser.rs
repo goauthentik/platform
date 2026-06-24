@@ -63,35 +63,87 @@ const CANONICAL_OPS: &[&str] = &[
 /// Standard CRUD verbs used by the fallback heuristic.
 const CRUD_VERBS: &[&str] = &["list", "create", "destroy", "retrieve", "update"];
 
-/// Context-aware split: choose the resource/operation boundary by finding the longest
-/// prefix `P` such that another function in the same module has suffix `P_{canonical_op}`.
+/// Context-aware split: find the longest prefix `P` that is a "real resource", then return
+/// `(P, normalize_operation(rest))`.
 ///
-/// This correctly handles custom actions like `users_set_password_create`:
-/// because `users_list`, `users_retrieve`, etc. exist, `users` is identified as the resource
-/// and `set_password_create` becomes the operation.
+/// A prefix qualifies as a real resource when **either**:
+/// - a sibling `{P}_list` exists (the clearest indicator), **or**
+/// - ≥ 2 distinct sibling canonical ops exist (e.g. both `_retrieve` and `_create`).
 ///
-/// Falls back to [`split_resource_op`] when no sibling evidence is found.
+/// Requiring a list or plurality prevents custom actions like `users_impersonate_create`
+/// (whose only sibling is `users_impersonate_end_retrieve`) from falsely promoting
+/// `users_impersonate` to a resource.
+///
+/// The operation is additionally normalized to drop a trailing CRUD verb from multi-word
+/// custom action names (`impersonate_create` → `impersonate`, `health_list` → `health`).
 pub fn split_with_context(suffix: &str, module_suffixes: &HashSet<String>) -> (String, String) {
+    let (resource, operation) = raw_context_split(suffix, module_suffixes);
+    (resource, normalize_operation(&operation))
+}
+
+fn raw_context_split(suffix: &str, module_suffixes: &HashSet<String>) -> (String, String) {
     let words: Vec<&str> = suffix.split('_').collect();
 
     if words.len() == 1 {
         return (String::new(), words[0].to_owned());
     }
 
-    // Try each prefix from longest to shortest. A prefix is accepted as the resource when
-    // a *different* function in the same module has `{prefix}_{canonical_op}` as its suffix.
     for i in (1..words.len()).rev() {
         let prefix = words[..i].join("_");
-        for &op in CANONICAL_OPS {
-            let candidate = format!("{prefix}_{op}");
-            if candidate != suffix && module_suffixes.contains(&candidate) {
-                let operation = words[i..].join("_");
-                return (prefix, operation);
-            }
+        if is_real_resource(&prefix, suffix, module_suffixes) {
+            let operation = words[i..].join("_");
+            return (prefix, operation);
         }
     }
 
     split_resource_op(suffix)
+}
+
+/// Returns `true` when `prefix` is a genuine resource: it has a `_list` sibling, or ≥ 2 distinct
+/// canonical-op siblings (excluding the function currently being split).
+fn is_real_resource(prefix: &str, current_suffix: &str, module_suffixes: &HashSet<String>) -> bool {
+    let list_key = format!("{prefix}_list");
+    if list_key != current_suffix && module_suffixes.contains(&list_key) {
+        return true;
+    }
+    let mut count = 0usize;
+    for &op in CANONICAL_OPS {
+        let candidate = format!("{prefix}_{op}");
+        if candidate != current_suffix && module_suffixes.contains(&candidate) {
+            count += 1;
+            if count >= 2 {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Operations that must keep their trailing CRUD verb even though they are multi-word.
+const KEEP_OPERATION_AS_IS: &[&str] = &["partial_update", "used_by_list"];
+
+/// Strip the trailing CRUD verb from a multi-word custom action name.
+///
+/// Examples:
+/// - `"impersonate_create"` → `"impersonate"`
+/// - `"health_list"` → `"health"`
+/// - `"check_access_retrieve"` → `"check_access"`
+/// - `"list_latest"` → `"list_latest"` (last word `latest` is not a CRUD verb)
+/// - `"create"` → `"create"` (single word, unchanged)
+/// - `"partial_update"` → `"partial_update"` (in the keep list)
+pub fn normalize_operation(op: &str) -> String {
+    if KEEP_OPERATION_AS_IS.contains(&op) {
+        return op.to_owned();
+    }
+    let words: Vec<&str> = op.split('_').collect();
+    if words.len() > 1 {
+        if let Some(&last) = words.last() {
+            if CRUD_VERBS.contains(&last) {
+                return words[..words.len() - 1].join("_");
+            }
+        }
+    }
+    op.to_owned()
 }
 
 /// Fallback heuristic split used when no module context is available.
@@ -234,12 +286,12 @@ pub fn extract_functions(module: &str, file: &syn::File) -> Vec<ApiFunction> {
     collect_raw(module, file)
         .into_iter()
         .map(|raw| {
-            let (resource, operation) = split_resource_op(&raw.suffix);
+            let (resource, op) = split_resource_op(&raw.suffix);
             ApiFunction {
                 module: raw.module,
                 full_name: raw.full_name,
                 resource,
-                operation,
+                operation: normalize_operation(&op),
                 params: raw.params,
                 returns_unit: raw.returns_unit,
                 returns_response: raw.returns_response,
@@ -389,7 +441,8 @@ mod tests {
 
     #[test]
     fn split_with_context_custom_action() {
-        // users_set_password_create: "users" is the resource because users_list exists as sibling.
+        // users_set_password_create: "users" is the resource because users_list exists.
+        // The trailing _create is stripped by normalize_operation.
         let ctx = suffixes(&[
             "users_list",
             "users_retrieve",
@@ -399,7 +452,30 @@ mod tests {
         ]);
         assert_eq!(
             split_with_context("users_set_password_create", &ctx),
-            ("users".to_owned(), "set_password_create".to_owned())
+            ("users".to_owned(), "set_password".to_owned())
+        );
+    }
+
+    #[test]
+    fn split_with_context_impersonate_pair() {
+        // Both impersonate_create and impersonate_end_retrieve should land under "users",
+        // not under a fake "users_impersonate" resource (which would only have 1 canonical op).
+        let ctx = suffixes(&[
+            "users_list",
+            "users_retrieve",
+            "users_create",
+            "users_destroy",
+            "users_set_password_create",
+            "users_impersonate_create",
+            "users_impersonate_end_retrieve",
+        ]);
+        assert_eq!(
+            split_with_context("users_impersonate_create", &ctx),
+            ("users".to_owned(), "impersonate".to_owned())
+        );
+        assert_eq!(
+            split_with_context("users_impersonate_end_retrieve", &ctx),
+            ("users".to_owned(), "impersonate_end".to_owned())
         );
     }
 
