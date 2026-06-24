@@ -17,8 +17,7 @@ pub mod setup;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik CLI")]
-#[command(version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[command(about, long_about = None)]
 pub struct CliArgs {
     /// Enable debug logging
     #[arg(short, long, default_value_t = false)]
