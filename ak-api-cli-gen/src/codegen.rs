@@ -61,7 +61,7 @@ fn gen_top_level_enum(modules: &[&str]) -> TokenStream {
             let doc = format!("{} API", capitalize_first(m));
             quote! {
                 #[doc = #doc]
-                #variant(#args),
+                #variant(Box<#args>),
             }
         })
         .collect();
@@ -124,7 +124,7 @@ fn gen_module(module: &str, resources: &BTreeMap<&str, Vec<&ApiFunction>>) -> To
                 let doc = format!("`{}`", f.full_name);
                 variants.push(quote! {
                     #[doc = #doc]
-                    #variant(#args_struct),
+                    #variant(Box<#args_struct>),
                 });
                 match_arms.push(quote! {
                     #cmd_ident::#variant(args) => args.execute(config).await,
@@ -138,7 +138,7 @@ fn gen_module(module: &str, resources: &BTreeMap<&str, Vec<&ApiFunction>>) -> To
             let doc = format!("`{}` operations", resource.replace('_', "-"));
             variants.push(quote! {
                 #[doc = #doc]
-                #res_variant(#res_args),
+                #res_variant(Box<#res_args>),
             });
             match_arms.push(quote! {
                 #cmd_ident::#res_variant(args) => args.command.execute(config).await,
@@ -188,7 +188,7 @@ fn gen_resource(module: &str, resource: &str, functions: &[&ApiFunction]) -> Tok
             let doc = format!("`{}`", f.full_name);
             quote! {
                 #[doc = #doc]
-                #variant(#args_struct),
+                #variant(Box<#args_struct>),
             }
         })
         .collect();
