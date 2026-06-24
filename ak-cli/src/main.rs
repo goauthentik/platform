@@ -102,7 +102,14 @@ impl App {
             return p.clone();
         }
         let cp: Result<String> = async {
-            let res = self.clone().user().await?.ctrl().current_profile(()).await?.into_inner();
+            let res = self
+                .clone()
+                .user()
+                .await?
+                .ctrl()
+                .current_profile(())
+                .await?
+                .into_inner();
             assert_response_valid(res.header)?;
             Ok(res.profile)
         }

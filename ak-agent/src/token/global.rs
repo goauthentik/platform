@@ -114,8 +114,8 @@ impl GlobalTokenManager {
         }
     }
 
-    pub async fn for_profile(&self, name: &str) -> Option<Arc<ProfileTokenManager>> {
-        self.managers.read().await.get(name).cloned()
+    pub async fn for_profile<T: ToString>(&self, name: T) -> Option<Arc<ProfileTokenManager>> {
+        self.managers.read().await.get(&name.to_string()).cloned()
     }
 }
 
