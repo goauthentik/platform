@@ -33,7 +33,6 @@ build-app:
 	chmod +x "${TOP}/bin/agent_system/ak-sysd"
 	chmod +x "${TOP}/bin/agent-desktop/ak-agent-desktop"
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
-	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/agent_system/ak-sysd" \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
@@ -49,6 +48,7 @@ build-app:
 	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
+	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*
 	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
 	codesign \
 		--force \
