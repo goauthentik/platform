@@ -390,8 +390,12 @@ fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
                 .map(|f| {
                     let flag = &f.cli_flag;
                     let ident = format_ident!("{}", &f.rust_ident);
+                    let help_attr = match &f.help {
+                        Some(h) => quote! { help = #h, },
+                        None => quote! {},
+                    };
                     quote! {
-                        #[arg(long = #flag)]
+                        #[arg(long = #flag, #help_attr)]
                         pub #ident: Option<String>,
                     }
                 })

@@ -3,9 +3,10 @@ use syn::Item;
 
 #[derive(Debug, Clone)]
 pub struct ModelField {
-    pub json_key: String,   // the serde rename value (JSON key)
-    pub cli_flag: String,   // kebab-case flag name
-    pub rust_ident: String, // sanitized Rust identifier for the struct field
+    pub json_key: String,        // the serde rename value (JSON key)
+    pub cli_flag: String,        // kebab-case flag name
+    pub rust_ident: String,      // sanitized Rust identifier for the struct field
+    pub help: Option<String>,    // extracted from /// doc comments
 }
 
 #[derive(Debug, Clone)]
@@ -492,10 +493,12 @@ pub fn parse_model_fields(models_dir: &Path, type_name: &str) -> Vec<ModelField>
                 if rust_ident == "body" {
                     return None;
                 }
+                let help = get_doc_comment(&f.attrs);
                 Some(ModelField {
                     json_key,
                     cli_flag,
                     rust_ident,
+                    help,
                 })
             })
             .collect();
@@ -522,6 +525,32 @@ fn get_serde_rename(attrs: &[syn::Attribute]) -> Option<String> {
         }
     }
     None
+}
+
+/// Extract concatenated `///` doc comment lines from a field's attributes.
+fn get_doc_comment(attrs: &[syn::Attribute]) -> Option<String> {
+    let mut lines: Vec<String> = Vec::new();
+    for attr in attrs {
+        if !attr.path().is_ident("doc") {
+            continue;
+        }
+        if let syn::Meta::NameValue(ref nv) = attr.meta {
+            if let syn::Expr::Lit(ref el) = nv.value {
+                if let syn::Lit::Str(ref ls) = el.lit {
+                    let text = ls.value();
+                    let trimmed = text.trim().to_owned();
+                    if !trimmed.is_empty() {
+                        lines.push(trimmed);
+                    }
+                }
+            }
+        }
+    }
+    if lines.is_empty() {
+        None
+    } else {
+        Some(lines.join(" "))
+    }
 }
 
 fn pascal_to_snake(s: &str) -> String {
