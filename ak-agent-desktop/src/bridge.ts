@@ -1,6 +1,6 @@
-import { SessionUser, SessionUserFromJSON } from '@goauthentik/api';
+import { SessionUser, SessionUserFromJSON } from "@goauthentik/api";
 
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from "@tauri-apps/api/core";
 
 export interface profile {
     name: string;
@@ -11,8 +11,12 @@ export interface profile {
 }
 
 export async function userInfo(profile: String): Promise<SessionUser> {
-    const rawUser =  await invoke<unknown>("get_user_info", { profile: profile });
+    const rawUser = await invoke<unknown>("get_user_info", { profile: profile });
     return SessionUserFromJSON(rawUser);
+}
+
+export async function activeProfile(): Promise<string> {
+    return await invoke<string>("active_profile");
 }
 
 export async function listProfiles(): Promise<profile[]> {
