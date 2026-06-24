@@ -4,6 +4,8 @@ use std::env;
 use crate::prelude::*;
 use crate::string::PlatformString;
 
+pub const DEFAULT_PROFILE: &str = "default";
+
 pub enum SysdSocketID {
     Default,
     CTRL,

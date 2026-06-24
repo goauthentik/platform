@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::Agent;
 use ak_platform::{
     net::server::{ConnectedLocalStream, ListenerStream, SocketPermMode, listen},
-    paths::{AgentSocketID, agent_socket_path},
+    paths::{AgentSocketID, DEFAULT_PROFILE, agent_socket_path},
     prelude::*,
 };
 use ssh_agent_lib::agent::{Session, listen as ssh_listen};
@@ -54,7 +54,7 @@ impl AgentSSHServer {
             .keys()
             .next()
             .cloned()
-            .unwrap_or("default".into());
+            .unwrap_or(DEFAULT_PROFILE.into());
 
         Ok(AgentSSHServer {
             agent,

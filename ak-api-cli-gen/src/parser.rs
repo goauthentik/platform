@@ -632,13 +632,14 @@ fn get_doc_comment(attrs: &[syn::Attribute]) -> Option<String> {
         }
         if let syn::Meta::NameValue(ref nv) = attr.meta
             && let syn::Expr::Lit(ref el) = nv.value
-                && let syn::Lit::Str(ref ls) = el.lit {
-                    let text = ls.value();
-                    let trimmed = text.trim().to_owned();
-                    if !trimmed.is_empty() {
-                        lines.push(trimmed);
-                    }
-                }
+            && let syn::Lit::Str(ref ls) = el.lit
+        {
+            let text = ls.value();
+            let trimmed = text.trim().to_owned();
+            if !trimmed.is_empty() {
+                lines.push(trimmed);
+            }
+        }
     }
     if lines.is_empty() {
         None

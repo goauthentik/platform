@@ -1,5 +1,6 @@
 use crate::commands::{auth::AuthCommands, config::ConfigCommands};
 use ak_platform::log::LevelFilter;
+use ak_platform::paths::DEFAULT_PROFILE;
 use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
@@ -26,7 +27,7 @@ pub struct CliArgs {
     #[arg(short, long, default_value_t = false)]
     json: bool,
     /// A name for the profile
-    #[arg(short, long, default_value = "default")]
+    #[arg(short, long, default_value = DEFAULT_PROFILE)]
     profile: String,
     /// Socket the agent is listening on
     #[arg(short, long)]
