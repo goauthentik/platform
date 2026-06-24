@@ -29,11 +29,11 @@ build-app:
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources"
-	"${TOP}/hack/completions_go.sh" \
+	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/agent_system/ak-sysd" \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
 		"agent_system"
-	"${TOP}/hack/completions_rust.sh" \
+	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/cli/ak" \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
 		"ak"

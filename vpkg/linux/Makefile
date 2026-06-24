@@ -9,11 +9,11 @@ package:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/bin/cli/completions"
 	mkdir -p "${TOP}/bin/agent_system/completions"
-	"${TOP}/hack/completions_go.sh" \
+	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/agent_system/ak-sysd" \
 		"${TOP}/bin/agent_system/completions" \
 		"agent_system"
-	"${TOP}/hack/completions_rust.sh" \
+	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/cli/ak" \
 		"${TOP}/bin/cli/completions" \
 		"ak"
