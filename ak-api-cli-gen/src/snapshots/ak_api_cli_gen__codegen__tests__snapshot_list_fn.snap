@@ -1,6 +1,6 @@
 ---
 source: ak-api-cli-gen/src/codegen.rs
-assertion_line: 935
+assertion_line: 955
 expression: code
 ---
 fn __json_field_value(s: &str) -> serde_json::Value {
@@ -65,9 +65,9 @@ impl CoreApplicationsCommand {
 }
 #[derive(Debug, Clone, clap::Args, Default)]
 pub struct CoreApplicationsListArgs {
-    #[arg(long = "name")]
+    #[arg(long = "name", value_name = "STRING")]
     pub name: Option<String>,
-    #[arg(long = "page")]
+    #[arg(long = "page", value_name = "NUMBER")]
     pub page: Option<i32>,
 }
 impl CoreApplicationsListArgs {

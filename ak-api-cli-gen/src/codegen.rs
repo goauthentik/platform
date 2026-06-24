@@ -353,12 +353,12 @@ fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
     let field = format_ident!("{}", &param.field_name);
 
     match &param.ty {
-        // Required path params → positional arguments (no --flag)
+        // Required path params → positional (no --flag, no value_name needed)
         ParamType::RequiredStr => {
             let idx = *pos_index;
             *pos_index += 1;
             quote! {
-                #[arg(index = #idx)]
+                #[arg(index = #idx, value_name = "STRING")]
                 pub #field: String,
             }
         }
@@ -366,22 +366,22 @@ fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
             let idx = *pos_index;
             *pos_index += 1;
             quote! {
-                #[arg(index = #idx)]
+                #[arg(index = #idx, value_name = "NUMBER")]
                 pub #field: i32,
             }
         }
 
-        // Everything else stays as named flags
+        // Named flags
         ParamType::OptionalStr => quote! {
-            #[arg(long = #flag)]
+            #[arg(long = #flag, value_name = "STRING")]
             pub #field: Option<String>,
         },
         ParamType::OptionalInt => quote! {
-            #[arg(long = #flag)]
+            #[arg(long = #flag, value_name = "NUMBER")]
             pub #field: Option<i32>,
         },
         ParamType::OptionalBool => quote! {
-            #[arg(long = #flag)]
+            #[arg(long = #flag, value_name = "BOOL", help = "true or false")]
             pub #field: Option<String>,
         },
         ParamType::RequiredModel(_, fields) | ParamType::OptionalModel(_, fields) => {
@@ -390,60 +390,76 @@ fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
                 .map(|f| {
                     let flag = &f.cli_flag;
                     let ident = format_ident!("{}", &f.rust_ident);
+                    let type_hint = f.type_hint;
                     let help_attr = match &f.help {
                         Some(h) => quote! { help = #h, },
                         None => quote! {},
                     };
                     quote! {
-                        #[arg(long = #flag, #help_attr)]
+                        #[arg(long = #flag, value_name = #type_hint, #help_attr)]
                         pub #ident: Option<String>,
                     }
                 })
                 .collect();
             quote! {
-                #[arg(long = "body", help = "JSON body (individual field flags override specific fields)")]
+                #[arg(long = "body", value_name = "JSON",
+                      help = "JSON body (individual field flags override specific fields)")]
                 pub body: Option<String>,
                 #(#field_flags)*
             }
         }
-        ParamType::OptionalEnum(_) => quote! {
-            #[arg(long = #flag)]
-            pub #field: Option<String>,
-        },
+        ParamType::OptionalEnum(_, values) => {
+            let help = if values.is_empty() {
+                String::new()
+            } else {
+                format!("Possible values: {}", values.join(", "))
+            };
+            if help.is_empty() {
+                quote! {
+                    #[arg(long = #flag, value_name = "STRING")]
+                    pub #field: Option<String>,
+                }
+            } else {
+                quote! {
+                    #[arg(long = #flag, value_name = "STRING", help = #help)]
+                    pub #field: Option<String>,
+                }
+            }
+        }
         ParamType::RequiredVecStr => quote! {
-            #[arg(long = #flag, num_args = 1..)]
+            #[arg(long = #flag, value_name = "STRING", num_args = 1..)]
             pub #field: Vec<String>,
         },
         ParamType::RequiredVecInt => quote! {
-            #[arg(long = #flag, num_args = 1..)]
+            #[arg(long = #flag, value_name = "NUMBER", num_args = 1..)]
             pub #field: Vec<String>,
         },
         ParamType::OptionalVecStr => quote! {
-            #[arg(long = #flag, num_args = 0..)]
+            #[arg(long = #flag, value_name = "STRING", num_args = 0..)]
             pub #field: Vec<String>,
         },
         ParamType::OptionalVecInt => quote! {
-            #[arg(long = #flag, num_args = 0..)]
+            #[arg(long = #flag, value_name = "NUMBER", num_args = 0..)]
             pub #field: Vec<String>,
         },
         ParamType::OptionalVecUuid => quote! {
-            #[arg(long = #flag, num_args = 0..)]
+            #[arg(long = #flag, value_name = "UUID", num_args = 0..)]
             pub #field: Vec<String>,
         },
         ParamType::OptionalVecModel(_) => quote! {
-            #[arg(long = #flag, num_args = 0.., help = "JSON-encoded values")]
+            #[arg(long = #flag, value_name = "JSON", num_args = 0..)]
             pub #field: Vec<String>,
         },
         ParamType::OptionalChronoStr => quote! {
-            #[arg(long = #flag, help = "RFC 3339 datetime string")]
+            #[arg(long = #flag, value_name = "DATETIME", help = "RFC 3339 datetime string")]
             pub #field: Option<String>,
         },
         ParamType::RequiredFile => quote! {
-            #[arg(long = #flag)]
+            #[arg(long = #flag, value_name = "PATH")]
             pub #field: std::path::PathBuf,
         },
         ParamType::OptionalFile => quote! {
-            #[arg(long = #flag)]
+            #[arg(long = #flag, value_name = "PATH")]
             pub #field: Option<std::path::PathBuf>,
         },
     }
@@ -561,7 +577,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
             )
         }
 
-        ParamType::OptionalEnum(type_name) => {
+        ParamType::OptionalEnum(type_name, _) => {
             let type_ident = format_ident!("{}", type_name);
             let local = format_ident!("_enum_{}", &param.field_name);
             let flag = &param.cli_flag;

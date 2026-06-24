@@ -7,6 +7,7 @@ pub struct ModelField {
     pub cli_flag: String,        // kebab-case flag name
     pub rust_ident: String,      // sanitized Rust identifier for the struct field
     pub help: Option<String>,    // extracted from /// doc comments
+    pub type_hint: &'static str, // e.g. "STRING", "NUMBER", "BOOL", "UUID"
 }
 
 #[derive(Debug, Clone)]
@@ -45,7 +46,8 @@ pub enum ParamType {
     OptionalModel(String, Vec<ModelField>),
     /// An optional enum/filter param (model type that is NOT a `*Request`).
     /// Accepted as a plain string and parsed via serde.
-    OptionalEnum(String),
+    /// The Vec holds the serde-rename values from each enum variant.
+    OptionalEnum(String, Vec<String>),
     RequiredVecStr,
     RequiredVecInt,
     OptionalVecStr,
@@ -277,6 +279,10 @@ pub fn parse_all_apis(
                         let fields = parse_model_fields(models_dir, &type_name);
                         param.ty = ParamType::OptionalModel(type_name, fields);
                     }
+                    ParamType::OptionalEnum(type_name, _) => {
+                        let values = parse_enum_values(models_dir, &type_name);
+                        param.ty = ParamType::OptionalEnum(type_name, values);
+                    }
                     _ => {}
                 }
             }
@@ -431,7 +437,7 @@ fn classify_compact(s: &str) -> ParamType {
             if inner.ends_with("Request") {
                 ParamType::OptionalModel(inner.to_owned(), Vec::new())
             } else {
-                ParamType::OptionalEnum(inner.to_owned())
+                ParamType::OptionalEnum(inner.to_owned(), Vec::new())
             }
         }
         _ if s.starts_with("Option<chrono::") => ParamType::OptionalChronoStr,
@@ -489,21 +495,99 @@ pub fn parse_model_fields(models_dir: &Path, type_name: &str) -> Vec<ModelField>
                 let json_key = get_serde_rename(&f.attrs).unwrap_or_else(|| field_name.clone());
                 let cli_flag = to_cli_flag(&field_name);
                 let rust_ident = sanitize_field_name(&field_name);
-                // Skip any field whose rust_ident would clash with the `body` flag we generate
                 if rust_ident == "body" {
                     return None;
                 }
-                let help = get_doc_comment(&f.attrs);
-                Some(ModelField {
-                    json_key,
-                    cli_flag,
-                    rust_ident,
-                    help,
-                })
+                // Compact type string for hint/enum detection.
+                let field_ty = &f.ty;
+                let compact_ty: String = quote::quote!(#field_ty)
+                    .to_string()
+                    .chars()
+                    .filter(|&c| c != ' ')
+                    .collect();
+                let type_hint = field_type_hint(&compact_ty);
+
+                // Extract doc comment, then optionally append enum possible values.
+                let mut help = get_doc_comment(&f.attrs);
+                if let Some(enum_name) = enum_type_name(&compact_ty) {
+                    let values = parse_enum_values(models_dir, enum_name);
+                    if !values.is_empty() {
+                        let values_str = format!("Possible values: {}", values.join(", "));
+                        help = Some(match help {
+                            Some(doc) => format!("{doc} {values_str}"),
+                            None => values_str,
+                        });
+                    }
+                }
+
+                Some(ModelField { json_key, cli_flag, rust_ident, help, type_hint })
             })
             .collect();
     }
     Vec::new()
+}
+
+/// Extract serde-rename strings from every variant of an enum model file.
+pub fn parse_enum_values(models_dir: &Path, type_name: &str) -> Vec<String> {
+    let filename = format!("{}.rs", pascal_to_snake(type_name));
+    let content = match std::fs::read_to_string(models_dir.join(&filename)) {
+        Ok(c) => c,
+        Err(_) => return Vec::new(),
+    };
+    let file = match syn::parse_file(&content) {
+        Ok(f) => f,
+        Err(_) => return Vec::new(),
+    };
+    for item in &file.items {
+        let e = match item {
+            syn::Item::Enum(e) if e.ident == type_name => e,
+            _ => continue,
+        };
+        return e
+            .variants
+            .iter()
+            .filter_map(|v| get_serde_rename(&v.attrs))
+            .collect();
+    }
+    Vec::new()
+}
+
+/// If the compact type string contains an optional or direct enum reference
+/// (i.e. `Option<models::Foo>` where `Foo` doesn't end with `Request`),
+/// return the enum type name so callers can look up its values.
+fn enum_type_name(compact: &str) -> Option<&str> {
+    let inner = compact
+        .strip_prefix("Option<models::")
+        .and_then(|s| s.strip_suffix('>'))
+        .or_else(|| compact.strip_prefix("models::"))?;
+    // Only consider non-Request types (those are body models, not enums).
+    if inner.ends_with("Request") {
+        None
+    } else {
+        Some(inner)
+    }
+}
+
+/// Map a compact type string to a short type hint shown as the Clap value_name.
+fn field_type_hint(compact: &str) -> &'static str {
+    match compact {
+        "String" | "Option<String>" => "STRING",
+        "i32" | "i64" | "u32" | "u64"
+        | "Option<i32>" | "Option<i64>" | "Option<u32>" | "Option<u64>" => "NUMBER",
+        "bool" | "Option<bool>" => "BOOL",
+        "uuid::Uuid" | "Option<uuid::Uuid>" => "UUID",
+        "Option<Vec<String>>" | "Vec<String>" => "STRING...",
+        "Option<Vec<i32>>" | "Option<Vec<i64>>" | "Vec<i32>" | "Vec<i64>" => "NUMBER...",
+        "Option<Vec<uuid::Uuid>>" | "Vec<uuid::Uuid>" => "UUID...",
+        _ if compact.starts_with("Option<chrono::") || compact.starts_with("chrono::") => {
+            "DATETIME"
+        }
+        _ if compact.starts_with("Option<Vec<models::") || compact.starts_with("Vec<models::") => {
+            "JSON..."
+        }
+        // Enum or nested model – both are passed as a string at the CLI level.
+        _ => "STRING",
+    }
 }
 
 fn get_serde_rename(attrs: &[syn::Attribute]) -> Option<String> {
