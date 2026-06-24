@@ -134,7 +134,7 @@ impl AgentAuth for AgentGRPCServer {
                     .with_windows(format!("'{cmd}' is attempting to access your account"))
                     .with_linux(format!("'{cmd}' is attempting to access your account")))
             }),
-            uid: Box::new(|_| Ok("".to_string())),
+            uid: Box::new(move |c| c.clone().proc_info()?.unique_process_id()),
             timeout_success: Duration::from_secs(0),
             timeout_denied: Duration::from_secs(0),
         }
