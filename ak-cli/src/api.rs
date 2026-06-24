@@ -25,7 +25,7 @@ pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<(), B
         .into_inner();
 
     let config = Configuration {
-        base_path: res.url,
+        base_path: format!("{}/api/v3", res.url),
         bearer_access_token: Some(res.raw),
         user_agent: Some(user_agent()),
         ..Default::default()
