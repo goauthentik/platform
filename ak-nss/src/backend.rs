@@ -1,5 +1,5 @@
 use ak_platform::generated::sys_directory::{
-    system_directory_client::SystemDirectoryClient, GetRequest, Group as AKGroup, User,
+    GetRequest, Group as AKGroup, User, system_directory_client::SystemDirectoryClient,
 };
 use ak_platform::grpc::grpc_request;
 use ak_platform::prelude::Result;

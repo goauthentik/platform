@@ -121,10 +121,12 @@ fn gen_module(module: &str, resources: &BTreeMap<&str, Vec<&ApiFunction>>) -> To
             for f in fns {
                 let variant = op_variant_ident(&f.operation);
                 let args_struct = fn_args_struct_ident(f);
-                let doc = f.doc.as_deref()
-                .map(first_sentence)
-                .unwrap_or(&f.full_name)
-                .to_owned();
+                let doc = f
+                    .doc
+                    .as_deref()
+                    .map(first_sentence)
+                    .unwrap_or(&f.full_name)
+                    .to_owned();
                 variants.push(quote! {
                     #[doc = #doc]
                     #variant(Box<#args_struct>),
@@ -188,7 +190,9 @@ fn gen_resource(module: &str, resource: &str, functions: &[&ApiFunction]) -> Tok
         .map(|f| {
             let variant = op_variant_ident(&f.operation);
             let args_struct = fn_args_struct_ident(f);
-            let doc = f.doc.as_deref()
+            let doc = f
+                .doc
+                .as_deref()
                 .map(first_sentence)
                 .unwrap_or(&f.full_name)
                 .to_owned();
@@ -759,7 +763,7 @@ fn to_pascal_case(s: &str) -> String {
 /// so long OpenAPI descriptions don't flood command listings.
 fn first_sentence(s: &str) -> &str {
     // Look for ". " or ".\n" — common sentence boundaries in doc strings.
-    for (i, _) in s.match_indices(". ").chain(s.match_indices(".\n")) {
+    if let Some((i, _)) = s.match_indices(". ").chain(s.match_indices(".\n")).next() {
         return &s[..i + 1];
     }
     s

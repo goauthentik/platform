@@ -526,7 +526,13 @@ pub fn parse_model_fields(models_dir: &Path, type_name: &str) -> Vec<ModelField>
                     }
                 }
 
-                Some(ModelField { json_key, cli_flag, rust_ident, help, type_hint })
+                Some(ModelField {
+                    json_key,
+                    cli_flag,
+                    rust_ident,
+                    help,
+                    type_hint,
+                })
             })
             .collect();
     }
@@ -578,8 +584,8 @@ fn enum_type_name(compact: &str) -> Option<&str> {
 fn field_type_hint(compact: &str) -> &'static str {
     match compact {
         "String" | "Option<String>" => "STRING",
-        "i32" | "i64" | "u32" | "u64"
-        | "Option<i32>" | "Option<i64>" | "Option<u32>" | "Option<u64>" => "NUMBER",
+        "i32" | "i64" | "u32" | "u64" | "Option<i32>" | "Option<i64>" | "Option<u32>"
+        | "Option<u64>" => "NUMBER",
         "bool" | "Option<bool>" => "BOOL",
         "uuid::Uuid" | "Option<uuid::Uuid>" => "UUID",
         "Option<Vec<String>>" | "Vec<String>" => "STRING...",
@@ -624,17 +630,15 @@ fn get_doc_comment(attrs: &[syn::Attribute]) -> Option<String> {
         if !attr.path().is_ident("doc") {
             continue;
         }
-        if let syn::Meta::NameValue(ref nv) = attr.meta {
-            if let syn::Expr::Lit(ref el) = nv.value {
-                if let syn::Lit::Str(ref ls) = el.lit {
+        if let syn::Meta::NameValue(ref nv) = attr.meta
+            && let syn::Expr::Lit(ref el) = nv.value
+                && let syn::Lit::Str(ref ls) = el.lit {
                     let text = ls.value();
                     let trimmed = text.trim().to_owned();
                     if !trimmed.is_empty() {
                         lines.push(trimmed);
                     }
                 }
-            }
-        }
     }
     if lines.is_empty() {
         None

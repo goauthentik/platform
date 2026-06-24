@@ -26,9 +26,7 @@ impl GroupHooks for AuthentikNSS {
 
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Group>> {
     match bridge.list_groups() {
-        Ok(groups) => {
-            Response::Success(groups.into_iter().map(ak_group_to_group_entry).collect())
-        }
+        Ok(groups) => Response::Success(groups.into_iter().map(ak_group_to_group_entry).collect()),
         Err(e) => {
             tracing::warn!("Failed to get groups: {e:?}");
             Response::Unavail
@@ -137,7 +135,10 @@ mod tests {
 
     #[test]
     fn get_all_entries_unavail_on_error() {
-        assert!(matches!(get_all_entries_with(&ErrorBridge), Response::Unavail));
+        assert!(matches!(
+            get_all_entries_with(&ErrorBridge),
+            Response::Unavail
+        ));
     }
 
     #[test]
