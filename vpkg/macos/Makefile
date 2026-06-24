@@ -30,7 +30,7 @@ build-app:
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources"
 	"${TOP}/hack/completions_go.sh" \
-		"${TOP}/cmd/agent_system" \
+		"${TOP}/bin/agent_system/ak-sysd" \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
 		"agent_system"
 	"${TOP}/hack/completions_rust.sh" \

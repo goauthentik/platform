@@ -10,7 +10,7 @@ package:
 	mkdir -p "${TOP}/bin/cli/completions"
 	mkdir -p "${TOP}/bin/agent_system/completions"
 	"${TOP}/hack/completions_go.sh" \
-		"${TOP}/cmd/agent_system" \
+		"${TOP}/bin/agent_system/ak-sysd" \
 		"${TOP}/bin/agent_system/completions" \
 		"agent_system"
 	"${TOP}/hack/completions_rust.sh" \
