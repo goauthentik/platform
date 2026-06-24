@@ -1,6 +1,6 @@
 ---
 source: ak-api-cli-gen/src/codegen.rs
-assertion_line: 955
+assertion_line: 976
 expression: code
 ---
 fn __json_field_value(s: &str) -> serde_json::Value {
@@ -50,7 +50,7 @@ pub struct CoreApplicationsArgs {
 }
 #[derive(Debug, Clone, clap::Subcommand)]
 pub enum CoreApplicationsCommand {
-    ///`core_applications_list`
+    ///core_applications_list
     List(Box<CoreApplicationsListArgs>),
 }
 impl CoreApplicationsCommand {

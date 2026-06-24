@@ -121,7 +121,10 @@ fn gen_module(module: &str, resources: &BTreeMap<&str, Vec<&ApiFunction>>) -> To
             for f in fns {
                 let variant = op_variant_ident(&f.operation);
                 let args_struct = fn_args_struct_ident(f);
-                let doc = format!("`{}`", f.full_name);
+                let doc = f.doc.as_deref()
+                .map(first_sentence)
+                .unwrap_or(&f.full_name)
+                .to_owned();
                 variants.push(quote! {
                     #[doc = #doc]
                     #variant(Box<#args_struct>),
@@ -185,7 +188,10 @@ fn gen_resource(module: &str, resource: &str, functions: &[&ApiFunction]) -> Tok
         .map(|f| {
             let variant = op_variant_ident(&f.operation);
             let args_struct = fn_args_struct_ident(f);
-            let doc = format!("`{}`", f.full_name);
+            let doc = f.doc.as_deref()
+                .map(first_sentence)
+                .unwrap_or(&f.full_name)
+                .to_owned();
             quote! {
                 #[doc = #doc]
                 #variant(Box<#args_struct>),
@@ -749,6 +755,16 @@ fn to_pascal_case(s: &str) -> String {
         .collect()
 }
 
+/// Return only the first sentence of a doc comment (up to and including the first `. `),
+/// so long OpenAPI descriptions don't flood command listings.
+fn first_sentence(s: &str) -> &str {
+    // Look for ". " or ".\n" — common sentence boundaries in doc strings.
+    for (i, _) in s.match_indices(". ").chain(s.match_indices(".\n")) {
+        return &s[..i + 1];
+    }
+    s
+}
+
 fn capitalize_first(s: &str) -> String {
     let mut chars = s.chars();
     match chars.next() {
@@ -785,6 +801,7 @@ mod tests {
             ],
             returns_unit: false,
             returns_response: false,
+            doc: None,
         }
     }
 
@@ -802,6 +819,7 @@ mod tests {
             }],
             returns_unit: false,
             returns_response: false,
+            doc: None,
         }
     }
 
@@ -819,6 +837,7 @@ mod tests {
             }],
             returns_unit: false,
             returns_response: false,
+            doc: None,
         }
     }
 
@@ -836,6 +855,7 @@ mod tests {
             }],
             returns_unit: true,
             returns_response: false,
+            doc: None,
         }
     }
 
@@ -849,6 +869,7 @@ mod tests {
             params: vec![],
             returns_unit: false,
             returns_response: false,
+            doc: None,
         }
     }
 

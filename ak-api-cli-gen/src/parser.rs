@@ -23,6 +23,8 @@ pub struct ApiFunction {
     pub returns_unit: bool,
     /// True when the function returns `reqwest::Response` (raw stream, not serializable).
     pub returns_response: bool,
+    /// Doc comment extracted from the `///` lines above the function, if any.
+    pub doc: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -213,6 +215,7 @@ struct RawFn {
     params: Vec<ApiParam>,
     returns_unit: bool,
     returns_response: bool,
+    doc: Option<String>,
 }
 
 pub fn parse_all_apis(
@@ -260,6 +263,7 @@ pub fn parse_all_apis(
                 params: raw.params.clone(),
                 returns_unit: raw.returns_unit,
                 returns_response: raw.returns_response,
+                doc: raw.doc.clone(),
             });
         }
     }
@@ -317,6 +321,7 @@ fn raw_from_item(module: &str, item: &Item) -> Option<RawFn> {
         params: extract_params(&f.sig.inputs),
         returns_unit: check_returns_unit(&f.sig.output),
         returns_response: check_returns_response(&f.sig.output),
+        doc: get_doc_comment(&f.attrs),
     })
 }
 
@@ -335,6 +340,7 @@ pub fn extract_functions(module: &str, file: &syn::File) -> Vec<ApiFunction> {
                 params: raw.params,
                 returns_unit: raw.returns_unit,
                 returns_response: raw.returns_response,
+                doc: raw.doc,
             }
         })
         .collect()
