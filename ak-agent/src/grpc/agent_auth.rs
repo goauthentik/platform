@@ -111,7 +111,8 @@ impl AgentAuth for AgentGRPCServer {
         request: Request<CurrentTokenRequest>,
     ) -> Result<Response<CurrentTokenResponse>, Status> {
         let proc_creds = request.extensions().get::<ProcCredentials>().cloned();
-        let inner_req = request.into_inner();
+        let inner_req = request.into_inner().clone();
+        let profile = self.profile_for_request(inner_req.header.clone()).await?;
         let token_manager = self
             .agent
             .gtm
@@ -163,7 +164,7 @@ impl AgentAuth for AgentGRPCServer {
                 jti: c.jti,
             }),
             raw: token.access_token,
-            url: "".to_string(),
+            url: profile.authentik_url.to_string(),
         }))
     }
 

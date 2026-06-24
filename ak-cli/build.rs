@@ -6,8 +6,7 @@ fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=../Cargo.lock");
 
     let apis_dir = find_authentik_client_apis()?;
-    let code = ak_api_cli_gen::generate(&apis_dir)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let code = ak_api_cli_gen::generate(&apis_dir).map_err(|e| anyhow::anyhow!("{e}"))?;
 
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     std::fs::write(out_dir.join("api_commands.rs"), code)?;

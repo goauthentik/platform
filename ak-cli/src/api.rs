@@ -1,4 +1,37 @@
+use ak_meta::user_agent;
+use ak_platform::{
+    generated::{
+        agent::RequestHeader,
+        agent_auth::{CurrentTokenRequest, current_token_request::Type},
+    },
+    prelude::BoxError,
+};
+use authentik_client::apis::configuration::Configuration;
+
 include!(concat!(env!("OUT_DIR"), "/api_commands.rs"));
+
+pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<(), BoxError> {
+    let profile = app.clone().args.profile;
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .auth()
+        .get_current_token(CurrentTokenRequest {
+            header: Some(RequestHeader { profile }),
+            r#type: Type::Verified as i32,
+        })
+        .await?
+        .into_inner();
+
+    let config = Configuration {
+        base_path: res.url,
+        bearer_access_token: Some(res.raw),
+        user_agent: Some(user_agent()),
+        ..Default::default()
+    };
+    cmd.execute(&config).await.map_err(Box::from)
+}
 
 #[cfg(test)]
 mod tests {

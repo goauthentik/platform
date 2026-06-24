@@ -5,7 +5,6 @@ use ak_platform::{
     client::user::{AnyService, Client},
     log::{init_log_interactive, set_log_level},
 };
-use authentik_client::apis::configuration::Configuration;
 use clap::{Error, Parser, Subcommand};
 use clap_complete::Shell;
 
@@ -66,11 +65,11 @@ enum Commands {
         /// Shell to generate completions for
         shell: Shell,
     },
-    /// API
-    API {
+    /// Directly interact with the authentik API
+    Api {
         #[command(subcommand)]
         command: api::ApiCommand,
-    }
+    },
 }
 
 impl App {
@@ -130,14 +129,7 @@ async fn main() -> std::result::Result<(), Error> {
                 } => commands::auth::aws(app, client_id, role_arn, region).await,
             }
         }
-        Commands::API { command } => {
-            let config = Configuration {
-                base_path: "foo/api/v3".to_string(),
-                bearer_access_token: Some("foo".to_string()),
-                ..Default::default()
-            };
-            command.execute(&config).await.map_err(|e| Box::from(e))
-        }
+        Commands::Api { command } => api::exec_api_command(app, command).await,
     };
     match res {
         Ok(_) => Ok(()),
