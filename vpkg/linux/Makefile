@@ -14,7 +14,7 @@ package:
 		"${TOP}/bin/agent_system/completions" \
 		"agent_system"
 	"${TOP}/hack/completions_rust.sh" \
-		"ak-cli" \
+		"${TOP}/bin/cli/ak" \
 		"${TOP}/bin/cli/completions" \
 		"ak"
 	chmod +x "${TOP}/bin/cli/ak"

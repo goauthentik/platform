@@ -26,18 +26,27 @@ local:
 .PHONY: build-app
 build-app:
 	mkdir -p "${TOP}/bin/${TARGET}"
-	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
-	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns"
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources"
+	"${TOP}/hack/completions_go.sh" \
+		"${TOP}/cmd/agent_system" \
+		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
+		"agent_system"
+	"${TOP}/hack/completions_rust.sh" \
+		"${TOP}/bin/cli/ak" \
+		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
+		"ak"
+	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
-	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
-	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"*
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
+	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"*
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*
+	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
 	codesign \
 		--force \
 		--verify \
