@@ -61,7 +61,7 @@ enum Commands {
         command: AuthCommands,
     },
     /// Generate shell completion scripts
-    Completions {
+    Completion {
         /// Shell to generate completions for
         shell: Shell,
     },
@@ -101,7 +101,7 @@ async fn main() -> std::result::Result<(), Error> {
     };
 
     let res = match &cli.command {
-        Commands::Completions { shell } => commands::completions::completions(*shell).await,
+        Commands::Completion { shell } => commands::completions::completions(*shell).await,
         Commands::Whoami => commands::whoami::whoami(app).await,
         Commands::Version => commands::version::version(app).await,
         Commands::Config { command } => match command {
