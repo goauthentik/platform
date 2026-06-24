@@ -19,8 +19,7 @@ updates:
       - BeryJu
   - package-ecosystem: npm
     directories:
-      - /browser-ext
-      - /ak-agent-desktop
+      - /
     schedule:
       interval: daily
       time: "04:00"
