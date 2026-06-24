@@ -10,6 +10,9 @@ importers:
 
   ak-agent-desktop:
     dependencies:
+      '@goauthentik/api':
+        specifier: ^2026.5.3
+        version: 2026.5.3
       '@goauthentik/brand-assets':
         specifier: ^2.0.0
         version: 2.0.0

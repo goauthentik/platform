@@ -8,6 +8,7 @@ import { listen } from "@tauri-apps/api/event";
 
 import { css, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
+import { SessionUser } from "@goauthentik/api";
 
 @customElement("ak-app-shell")
 export class AppShell extends LitElement {
@@ -26,7 +27,7 @@ export class AppShell extends LitElement {
     `;
 
     @state()
-    private user?: userInfo;
+    private user?: SessionUser;
 
     @state()
     private profiles?: profile[];

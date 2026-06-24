@@ -1,4 +1,4 @@
-import type { userInfo } from "../bridge.js";
+import { SessionUser } from "@goauthentik/api";
 
 import logoSvg from "@goauthentik/brand-assets/icon_left_brand_white.svg?raw";
 
@@ -8,7 +8,9 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 @customElement("ak-platform-header")
 export class Header extends LitElement {
-    @property({ type: Object }) user?: userInfo;
+    @property({ type: Object })
+    user?: SessionUser;
+
     static styles = css`
         :host {
             display: block;

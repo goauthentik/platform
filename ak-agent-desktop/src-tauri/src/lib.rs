@@ -86,7 +86,8 @@ pub fn start_tauri() -> Result<()> {
         })
         .invoke_handler(tauri::generate_handler![
             cmd::get_user_info,
-            cmd::list_profiles
+            cmd::list_profiles,
+            cmd::active_profile,
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| {
