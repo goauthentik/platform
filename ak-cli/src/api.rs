@@ -11,7 +11,7 @@ use authentik_client::apis::configuration::Configuration;
 include!(concat!(env!("OUT_DIR"), "/api_commands.rs"));
 
 pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<(), BoxError> {
-    let profile = app.clone().args.profile;
+    let profile = app.profile();
     let res = app
         .user()
         .await?
