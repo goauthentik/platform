@@ -1,7 +1,7 @@
-use crate::parser::{ApiFunction, ApiParam, ParamType};
+use crate::parser::{ApiFunction, ApiParam, ModelField, ParamType};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 /// Top-level entry point: generate everything from a flat list of API functions.
 ///
@@ -34,7 +34,14 @@ pub fn generate_all(functions: &[ApiFunction]) -> TokenStream {
         .map(|(module, resources)| gen_module(module, resources))
         .collect();
 
+    let helper_fn = quote! {
+        fn __json_field_value(s: &str) -> serde_json::Value {
+            serde_json::from_str(s).unwrap_or_else(|_| serde_json::Value::String(s.to_owned()))
+        }
+    };
+
     quote! {
+        #helper_fn
         #top_level_enum
         #top_level_impl
         #modules_const
@@ -225,18 +232,71 @@ fn gen_resource(module: &str, resource: &str, functions: &[&ApiFunction]) -> Tok
 
 // ── Function-level args struct and execute impl ───────────────────────────────
 
+/// Return a clone of `param` with model fields filtered to exclude any whose `rust_ident`
+/// matches a name already used by another (non-model) param in the same function.
+fn filter_model_fields(param: &ApiParam, occupied: &HashSet<String>) -> ApiParam {
+    let ty = match &param.ty {
+        ParamType::RequiredModel(name, fields) => {
+            let filtered: Vec<ModelField> = fields
+                .iter()
+                .filter(|f| !occupied.contains(&f.rust_ident))
+                .cloned()
+                .collect();
+            ParamType::RequiredModel(name.clone(), filtered)
+        }
+        ParamType::OptionalModel(name, fields) => {
+            let filtered: Vec<ModelField> = fields
+                .iter()
+                .filter(|f| !occupied.contains(&f.rust_ident))
+                .cloned()
+                .collect();
+            ParamType::OptionalModel(name.clone(), filtered)
+        }
+        other => other.clone(),
+    };
+    ApiParam {
+        name: param.name.clone(),
+        field_name: param.field_name.clone(),
+        cli_flag: param.cli_flag.clone(),
+        ty,
+    }
+}
+
 fn gen_fn_item(f: &ApiFunction) -> TokenStream {
     let struct_ident = fn_args_struct_ident(f);
     let module_mod = format_ident!("{}_api", f.module);
     let fn_ident = format_ident!("{}", f.full_name);
 
+    // Collect field names used by non-model params so we can exclude conflicting model fields.
+    let non_model_field_names: HashSet<String> = f
+        .params
+        .iter()
+        .filter(|p| {
+            !matches!(
+                &p.ty,
+                ParamType::RequiredModel(_, _) | ParamType::OptionalModel(_, _)
+            )
+        })
+        .map(|p| p.field_name.clone())
+        .collect();
+
+    // Build params with model fields filtered to remove conflicts.
+    let params: Vec<ApiParam> = f
+        .params
+        .iter()
+        .map(|p| filter_model_fields(p, &non_model_field_names))
+        .collect();
+
     // Assign positional indexes to required path params (RequiredStr, RequiredInt).
     let mut pos_index: usize = 1;
-    let fields: Vec<TokenStream> = f.params.iter().map(|p| gen_field(p, &mut pos_index)).collect();
+    let fields: Vec<TokenStream> = params
+        .iter()
+        .map(|p| gen_field(p, &mut pos_index))
+        .collect();
 
     let mut conversions: Vec<TokenStream> = Vec::new();
     let mut call_args: Vec<TokenStream> = Vec::new();
-    for param in &f.params {
+    for param in &params {
         let (conv, arg) = gen_param_conversion(param);
         if let Some(c) = conv {
             conversions.push(c);
@@ -324,14 +384,24 @@ fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
             #[arg(long = #flag)]
             pub #field: Option<String>,
         },
-        ParamType::RequiredModel(_) => quote! {
-            #[arg(long = "body", help = "JSON-encoded request body")]
-            pub body: String,
-        },
-        ParamType::OptionalModel(_) => quote! {
-            #[arg(long = "body", help = "Optional JSON-encoded request body")]
-            pub body: Option<String>,
-        },
+        ParamType::RequiredModel(_, fields) | ParamType::OptionalModel(_, fields) => {
+            let field_flags: Vec<TokenStream> = fields
+                .iter()
+                .map(|f| {
+                    let flag = &f.cli_flag;
+                    let ident = format_ident!("{}", &f.rust_ident);
+                    quote! {
+                        #[arg(long = #flag)]
+                        pub #ident: Option<String>,
+                    }
+                })
+                .collect();
+            quote! {
+                #[arg(long = "body", help = "JSON body (individual field flags override specific fields)")]
+                pub body: Option<String>,
+                #(#field_flags)*
+            }
+        }
         ParamType::OptionalEnum(_) => quote! {
             #[arg(long = #flag)]
             pub #field: Option<String>,
@@ -415,27 +485,73 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
             )
         }
 
-        ParamType::RequiredModel(type_name) => {
+        ParamType::RequiredModel(type_name, fields) => {
             let type_ident = format_ident!("{}", type_name);
             let local = format_ident!("_body_{}", &param.name.replace("__", "_"));
+            let field_overrides: Vec<TokenStream> = fields
+                .iter()
+                .map(|f| {
+                    let ident = format_ident!("{}", &f.rust_ident);
+                    let key = &f.json_key;
+                    quote! {
+                        if let Some(__v) = &self.#ident {
+                            __obj.insert(#key.to_owned(), __json_field_value(__v));
+                        }
+                    }
+                })
+                .collect();
             (
                 Some(quote! {
+                    let mut __body_json: serde_json::Value = match &self.body {
+                        Some(b) => serde_json::from_str(b)?,
+                        None => serde_json::Value::Object(Default::default()),
+                    };
+                    let __obj = __body_json.as_object_mut()
+                        .ok_or_else(|| anyhow::anyhow!("--body must be a JSON object"))?;
+                    #(#field_overrides)*
                     let #local: authentik_client::models::#type_ident =
-                        serde_json::from_str(&self.body)?;
+                        serde_json::from_value(__body_json)?;
                 }),
                 quote! { #local },
             )
         }
 
-        ParamType::OptionalModel(type_name) => {
+        ParamType::OptionalModel(type_name, fields) => {
             let type_ident = format_ident!("{}", type_name);
             let local = format_ident!("_body_{}", &param.name.replace("__", "_"));
+            let field_idents_vec: Vec<proc_macro2::Ident> = fields
+                .iter()
+                .map(|f| format_ident!("{}", &f.rust_ident))
+                .collect();
+            let field_overrides: Vec<TokenStream> = fields
+                .iter()
+                .map(|f| {
+                    let ident = format_ident!("{}", &f.rust_ident);
+                    let key = &f.json_key;
+                    quote! {
+                        if let Some(__v) = &self.#ident {
+                            __obj.insert(#key.to_owned(), __json_field_value(__v));
+                        }
+                    }
+                })
+                .collect();
+            let has_any_input = quote! {
+                self.body.is_some() #(|| self.#field_idents_vec.is_some())*
+            };
             (
                 Some(quote! {
-                    let #local: Option<authentik_client::models::#type_ident> =
-                        self.body.as_deref()
-                            .map(serde_json::from_str)
-                            .transpose()?;
+                    let #local: Option<authentik_client::models::#type_ident> = if !{ #has_any_input } {
+                        None
+                    } else {
+                        let mut __body_json: serde_json::Value = match &self.body {
+                            Some(b) => serde_json::from_str(b)?,
+                            None => serde_json::Value::Object(Default::default()),
+                        };
+                        let __obj = __body_json.as_object_mut()
+                            .ok_or_else(|| anyhow::anyhow!("--body must be a JSON object"))?;
+                        #(#field_overrides)*
+                        Some(serde_json::from_value(__body_json)?)
+                    };
                 }),
                 quote! { #local },
             )
@@ -546,7 +662,10 @@ fn module_variant_ident(module: &str) -> Ident {
 }
 
 fn module_args_ident(module: &str) -> Ident {
-    Ident::new(&format!("{}Args", capitalize_first(module)), Span::call_site())
+    Ident::new(
+        &format!("{}Args", capitalize_first(module)),
+        Span::call_site(),
+    )
 }
 
 fn module_command_ident(module: &str) -> Ident {
@@ -562,14 +681,22 @@ fn resource_variant_ident(resource: &str) -> Ident {
 
 fn resource_args_ident(module: &str, resource: &str) -> Ident {
     Ident::new(
-        &format!("{}{}Args", capitalize_first(module), to_pascal_case(resource)),
+        &format!(
+            "{}{}Args",
+            capitalize_first(module),
+            to_pascal_case(resource)
+        ),
         Span::call_site(),
     )
 }
 
 fn resource_command_ident(module: &str, resource: &str) -> Ident {
     Ident::new(
-        &format!("{}{}Command", capitalize_first(module), to_pascal_case(resource)),
+        &format!(
+            "{}{}Command",
+            capitalize_first(module),
+            to_pascal_case(resource)
+        ),
         Span::call_site(),
     )
 }
@@ -668,7 +795,7 @@ mod tests {
                 name: "application_request".to_owned(),
                 field_name: "application_request".to_owned(),
                 cli_flag: "application-request".to_owned(),
-                ty: ParamType::RequiredModel("ApplicationRequest".to_owned()),
+                ty: ParamType::RequiredModel("ApplicationRequest".to_owned(), vec![]),
             }],
             returns_unit: false,
             returns_response: false,
@@ -738,7 +865,12 @@ mod tests {
     #[test]
     fn generate_compiles_with_mixed_module() {
         // Same module, two resources
-        let fns = vec![make_list_fn(), make_retrieve_fn(), make_create_fn(), make_destroy_fn()];
+        let fns = vec![
+            make_list_fn(),
+            make_retrieve_fn(),
+            make_create_fn(),
+            make_destroy_fn(),
+        ];
         let tokens = generate_all(&fns);
         assert!(syn::parse2::<syn::File>(tokens).is_ok());
     }
@@ -771,14 +903,20 @@ mod tests {
     #[test]
     fn op_naming_conventions() {
         assert_eq!(op_variant_ident("retrieve").to_string(), "Retrieve");
-        assert_eq!(op_variant_ident("partial_update").to_string(), "PartialUpdate");
+        assert_eq!(
+            op_variant_ident("partial_update").to_string(),
+            "PartialUpdate"
+        );
         assert_eq!(op_variant_ident("used_by_list").to_string(), "UsedByList");
     }
 
     #[test]
     fn fn_struct_naming() {
         let f = make_retrieve_fn();
-        assert_eq!(fn_args_struct_ident(&f).to_string(), "CoreUsersRetrieveArgs");
+        assert_eq!(
+            fn_args_struct_ident(&f).to_string(),
+            "CoreUsersRetrieveArgs"
+        );
     }
 
     #[test]

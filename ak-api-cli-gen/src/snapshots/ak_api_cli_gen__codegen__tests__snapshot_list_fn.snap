@@ -1,8 +1,11 @@
 ---
 source: ak-api-cli-gen/src/codegen.rs
-assertion_line: 797
+assertion_line: 851
 expression: code
 ---
+fn __json_field_value(s: &str) -> serde_json::Value {
+    serde_json::from_str(s).unwrap_or_else(|_| serde_json::Value::String(s.to_owned()))
+}
 #[derive(Debug, Clone, clap::Subcommand)]
 pub enum ApiCommand {
     ///Core API

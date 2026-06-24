@@ -2,6 +2,13 @@ use std::{collections::HashSet, path::Path};
 use syn::Item;
 
 #[derive(Debug, Clone)]
+pub struct ModelField {
+    pub json_key: String,   // the serde rename value (JSON key)
+    pub cli_flag: String,   // kebab-case flag name
+    pub rust_ident: String, // sanitized Rust identifier for the struct field
+}
+
+#[derive(Debug, Clone)]
 pub struct ApiFunction {
     pub module: String,
     pub full_name: String,
@@ -32,9 +39,9 @@ pub enum ParamType {
     OptionalInt,
     OptionalBool,
     /// A required request body (model type name ends with `Request`). Accepted as JSON.
-    RequiredModel(String),
+    RequiredModel(String, Vec<ModelField>),
     /// An optional request body (model type name ends with `Request`). Accepted as JSON.
-    OptionalModel(String),
+    OptionalModel(String, Vec<ModelField>),
     /// An optional enum/filter param (model type that is NOT a `*Request`).
     /// Accepted as a plain string and parsed via serde.
     OptionalEnum(String),
@@ -99,11 +106,16 @@ fn raw_context_split(suffix: &str, module_suffixes: &HashSet<String>) -> (String
     split_resource_op(suffix)
 }
 
-/// Returns `true` when `prefix` is a genuine resource: it has a `_list` sibling, or ≥ 2 distinct
-/// canonical-op siblings (excluding the function currently being split).
+/// Returns `true` when `prefix` is a genuine resource: it has a `_list` sibling (the current
+/// function IS allowed to be that sibling), or ≥ 2 distinct non-self canonical-op siblings.
+///
+/// Allowing the current function to be its own `_list` evidence is intentional: it ensures
+/// that `permissions_assigned_by_roles_list` is anchored to the `permissions_assigned_by_roles`
+/// resource rather than falling through to the shorter `permissions` prefix, which would cause a
+/// struct naming collision between the resource wrapper and a function args struct.
 fn is_real_resource(prefix: &str, current_suffix: &str, module_suffixes: &HashSet<String>) -> bool {
     let list_key = format!("{prefix}_list");
-    if list_key != current_suffix && module_suffixes.contains(&list_key) {
+    if module_suffixes.contains(&list_key) {
         return true;
     }
     let mut count = 0usize;
@@ -136,12 +148,11 @@ pub fn normalize_operation(op: &str) -> String {
         return op.to_owned();
     }
     let words: Vec<&str> = op.split('_').collect();
-    if words.len() > 1 {
-        if let Some(&last) = words.last() {
-            if CRUD_VERBS.contains(&last) {
-                return words[..words.len() - 1].join("_");
-            }
-        }
+    if words.len() > 1
+        && let Some(&last) = words.last()
+        && CRUD_VERBS.contains(&last)
+    {
+        return words[..words.len() - 1].join("_");
     }
     op.to_owned()
 }
@@ -165,13 +176,19 @@ pub fn split_resource_op(suffix: &str) -> (String, String) {
     }
 
     // 3-word compound ops.
-    if words.len() >= 3 && &words[words.len() - 3..] == ["used", "by", "list"] {
-        return (words[..words.len() - 3].join("_"), "used_by_list".to_owned());
+    if words.len() >= 3 && words[words.len() - 3..] == ["used", "by", "list"] {
+        return (
+            words[..words.len() - 3].join("_"),
+            "used_by_list".to_owned(),
+        );
     }
 
     // 2-word compound ops.
-    if words.len() >= 2 && &words[words.len() - 2..] == ["partial", "update"] {
-        return (words[..words.len() - 2].join("_"), "partial_update".to_owned());
+    if words.len() >= 2 && words[words.len() - 2..] == ["partial", "update"] {
+        return (
+            words[..words.len() - 2].join("_"),
+            "partial_update".to_owned(),
+        );
     }
 
     // Rightmost standard CRUD verb.
@@ -199,10 +216,7 @@ pub fn parse_all_apis(
     apis_dir: &Path,
 ) -> Result<Vec<ApiFunction>, Box<dyn std::error::Error + Send + Sync>> {
     let entries = std::fs::read_dir(apis_dir)?;
-    let mut paths: Vec<_> = entries
-        .filter_map(|e| e.ok())
-        .map(|e| e.path())
-        .collect();
+    let mut paths: Vec<_> = entries.filter_map(|e| e.ok()).map(|e| e.path()).collect();
     paths.sort();
 
     // First pass: collect raw function data, grouped by module.
@@ -232,11 +246,9 @@ pub fn parse_all_apis(
     // Second pass: use each module's full suffix set to split resource/operation accurately.
     let mut all_fns = Vec::new();
     for raw_fns in by_module.values() {
-        let module_suffixes: HashSet<String> =
-            raw_fns.iter().map(|f| f.suffix.clone()).collect();
+        let module_suffixes: HashSet<String> = raw_fns.iter().map(|f| f.suffix.clone()).collect();
         for raw in raw_fns {
-            let (resource, operation) =
-                split_with_context(&raw.suffix, &module_suffixes);
+            let (resource, operation) = split_with_context(&raw.suffix, &module_suffixes);
             all_fns.push(ApiFunction {
                 module: raw.module.clone(),
                 full_name: raw.full_name.clone(),
@@ -246,6 +258,27 @@ pub fn parse_all_apis(
                 returns_unit: raw.returns_unit,
                 returns_response: raw.returns_response,
             });
+        }
+    }
+
+    // Derive models directory from apis directory (sibling of apis/)
+    let models_dir_opt: Option<std::path::PathBuf> = apis_dir.parent().map(|p| p.join("models"));
+
+    if let Some(ref models_dir) = models_dir_opt {
+        for f in &mut all_fns {
+            for param in &mut f.params {
+                match param.ty.clone() {
+                    ParamType::RequiredModel(type_name, _) => {
+                        let fields = parse_model_fields(models_dir, &type_name);
+                        param.ty = ParamType::RequiredModel(type_name, fields);
+                    }
+                    ParamType::OptionalModel(type_name, _) => {
+                        let fields = parse_model_fields(models_dir, &type_name);
+                        param.ty = ParamType::OptionalModel(type_name, fields);
+                    }
+                    _ => {}
+                }
+            }
         }
     }
 
@@ -337,7 +370,12 @@ fn extract_params(
             let ty = classify_type(&pat_type.ty);
             let field_name = sanitize_field_name(&name);
             let cli_flag = to_cli_flag(&name);
-            Some(ApiParam { name, field_name, cli_flag, ty })
+            Some(ApiParam {
+                name,
+                field_name,
+                cli_flag,
+                ty,
+            })
         })
         .collect()
 }
@@ -363,9 +401,7 @@ fn classify_compact(s: &str) -> ParamType {
         "Vec<String>" => ParamType::RequiredVecStr,
         "Vec<i32>" | "Vec<i64>" | "Vec<u32>" | "Vec<u64>" => ParamType::RequiredVecInt,
         "Option<&str>" => ParamType::OptionalStr,
-        "Option<i32>" | "Option<i64>" | "Option<u32>" | "Option<u64>" => {
-            ParamType::OptionalInt
-        }
+        "Option<i32>" | "Option<i64>" | "Option<u32>" | "Option<u64>" => ParamType::OptionalInt,
         "Option<bool>" => ParamType::OptionalBool,
         "Option<Vec<String>>" => ParamType::OptionalVecStr,
         "Option<Vec<uuid::Uuid>>" => ParamType::OptionalVecUuid,
@@ -375,7 +411,7 @@ fn classify_compact(s: &str) -> ParamType {
         "Option<std::path::PathBuf>" => ParamType::OptionalFile,
         _ if s.starts_with("models::") => {
             let name = last_path_segment(s);
-            ParamType::RequiredModel(name)
+            ParamType::RequiredModel(name, Vec::new())
         }
         _ if s.starts_with("Option<Vec<models::") => {
             let inner = s
@@ -392,7 +428,7 @@ fn classify_compact(s: &str) -> ParamType {
             // Types ending in "Request" are JSON request bodies.
             // All others (enums, modes, etc.) are accepted as plain strings.
             if inner.ends_with("Request") {
-                ParamType::OptionalModel(inner.to_owned())
+                ParamType::OptionalModel(inner.to_owned(), Vec::new())
             } else {
                 ParamType::OptionalEnum(inner.to_owned())
             }
@@ -411,19 +447,92 @@ fn last_path_segment(s: &str) -> String {
 fn sanitize_field_name(name: &str) -> String {
     let s = name.replace("__", "_");
     match s.as_str() {
-        "type" | "use" | "loop" | "for" | "if" | "else" | "match" | "fn" | "struct"
-        | "enum" | "impl" | "trait" | "return" | "let" | "const" | "static" | "pub"
-        | "mod" | "super" | "self" | "Self" | "where" | "async" | "await" | "move"
-        | "in" | "while" | "break" | "continue" | "ref" | "mut" | "extern" | "crate"
-        | "dyn" | "as" | "true" | "false" | "unsafe" | "yield" | "abstract"
-        | "become" | "do" | "final" | "override" | "priv" | "typeof" | "unsized"
-        | "virtual" | "try" => format!("{s}_field"),
+        "type" | "use" | "loop" | "for" | "if" | "else" | "match" | "fn" | "struct" | "enum"
+        | "impl" | "trait" | "return" | "let" | "const" | "static" | "pub" | "mod" | "super"
+        | "self" | "Self" | "where" | "async" | "await" | "move" | "in" | "while" | "break"
+        | "continue" | "ref" | "mut" | "extern" | "crate" | "dyn" | "as" | "true" | "false"
+        | "unsafe" | "yield" | "abstract" | "become" | "do" | "final" | "override" | "priv"
+        | "typeof" | "unsized" | "virtual" | "try" => format!("{s}_field"),
         _ => s,
     }
 }
 
 fn to_cli_flag(name: &str) -> String {
     name.replace("__", "-").replace('_', "-")
+}
+
+pub fn parse_model_fields(models_dir: &Path, type_name: &str) -> Vec<ModelField> {
+    let filename = format!("{}.rs", pascal_to_snake(type_name));
+    let path = models_dir.join(&filename);
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => return Vec::new(),
+    };
+    let file = match syn::parse_file(&content) {
+        Ok(f) => f,
+        Err(_) => return Vec::new(),
+    };
+    for item in &file.items {
+        let s = match item {
+            syn::Item::Struct(s) if s.ident == type_name => s,
+            _ => continue,
+        };
+        let named = match &s.fields {
+            syn::Fields::Named(f) => &f.named,
+            _ => continue,
+        };
+        return named
+            .iter()
+            .filter_map(|f| {
+                let field_name = f.ident.as_ref()?.to_string();
+                let json_key = get_serde_rename(&f.attrs).unwrap_or_else(|| field_name.clone());
+                let cli_flag = to_cli_flag(&field_name);
+                let rust_ident = sanitize_field_name(&field_name);
+                // Skip any field whose rust_ident would clash with the `body` flag we generate
+                if rust_ident == "body" {
+                    return None;
+                }
+                Some(ModelField {
+                    json_key,
+                    cli_flag,
+                    rust_ident,
+                })
+            })
+            .collect();
+    }
+    Vec::new()
+}
+
+fn get_serde_rename(attrs: &[syn::Attribute]) -> Option<String> {
+    for attr in attrs {
+        if !attr.path().is_ident("serde") {
+            continue;
+        }
+        let compact: String = quote::quote!(#attr)
+            .to_string()
+            .chars()
+            .filter(|&c| c != ' ')
+            .collect();
+        // compact looks like: `#[serde(rename="open_in_new_tab",skip_serializing_if="Option::is_none")]`
+        if let Some(idx) = compact.find("rename=\"") {
+            let rest = &compact[idx + 8..];
+            if let Some(end) = rest.find('"') {
+                return Some(rest[..end].to_owned());
+            }
+        }
+    }
+    None
+}
+
+fn pascal_to_snake(s: &str) -> String {
+    let mut result = String::new();
+    for (i, c) in s.chars().enumerate() {
+        if c.is_uppercase() && i > 0 {
+            result.push('_');
+        }
+        result.push(c.to_ascii_lowercase());
+    }
+    result
 }
 
 #[cfg(test)]
@@ -507,7 +616,11 @@ mod tests {
     #[test]
     fn split_with_context_list_variant() {
         // iterations_list_latest: "iterations" has iterations_list sibling, so resource=iterations.
-        let ctx = suffixes(&["iterations_list", "iterations_list_latest", "iterations_list_open"]);
+        let ctx = suffixes(&[
+            "iterations_list",
+            "iterations_list_latest",
+            "iterations_list_open",
+        ]);
         assert_eq!(
             split_with_context("iterations_list_latest", &ctx),
             ("iterations".to_owned(), "list_latest".to_owned())
@@ -626,7 +739,7 @@ mod tests {
         assert_eq!(fns[0].operation, "create");
         assert_eq!(fns[0].params.len(), 1);
         assert!(
-            matches!(&fns[0].params[0].ty, ParamType::RequiredModel(n) if n == "ApplicationRequest")
+            matches!(&fns[0].params[0].ty, ParamType::RequiredModel(n, _) if n == "ApplicationRequest")
         );
     }
 
@@ -659,7 +772,7 @@ mod tests {
         assert_eq!(fns[0].operation, "partial_update");
         assert!(matches!(fns[0].params[0].ty, ParamType::RequiredStr));
         assert!(
-            matches!(&fns[0].params[1].ty, ParamType::OptionalModel(n) if n == "PatchedApplicationRequest")
+            matches!(&fns[0].params[1].ty, ParamType::OptionalModel(n, _) if n == "PatchedApplicationRequest")
         );
     }
 
