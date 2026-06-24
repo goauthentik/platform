@@ -141,16 +141,18 @@ export class ProfileStatus extends LitElement {
                               <div class="profile-row">
                                   <div class="profile-header">
                                       <span class="profile-name">${p.name}</span>
-                                      ${p.name === this.activeProfile
-                                          ? html`
-                                                <span class="status-badge active"
-                                                    >Active Profile</span
-                                                >
-                                            `
-                                          : nothing}
-                                      <span class="status-badge ${status}"
-                                          >${STATUS_LABELS[status]}</span
-                                      >
+                                      <div class="status-container">
+                                          ${p.name === this.activeProfile
+                                              ? html`
+                                                    <span class="status-badge active"
+                                                        >Active Profile</span
+                                                    >
+                                                `
+                                              : nothing}
+                                          <span class="status-badge ${status}"
+                                              >${STATUS_LABELS[status]}</span
+                                          >
+                                      </div>
                                   </div>
                                   <div class="profile-username">Username: ${p.username}</div>
                                   <div class="profile-url">

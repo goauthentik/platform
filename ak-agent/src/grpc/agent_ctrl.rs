@@ -79,8 +79,10 @@ impl AgentCtrl for AgentGRPCServer {
         request: Request<RequestHeader>,
     ) -> Result<Response<ResponseHeader>, Status> {
         let new_profile = request.into_inner().profile;
-        let mut cfg = self.agent.cfg.write().await;
-        cfg.active_profile = new_profile.clone();
+        {
+            let mut cfg = self.agent.cfg.write().await;
+            cfg.active_profile = new_profile.clone();
+        }
         if let Err(e) = self.agent.cfg.save().await {
             tracing::warn!("failed to save config: {e:?}");
             return Err(Status::from_error(e));
