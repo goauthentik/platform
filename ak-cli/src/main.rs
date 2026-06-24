@@ -45,8 +45,9 @@ enum Commands {
     /// Version of authentik Agent components
     Version,
     /// Switch to a different active profile
+    #[command(alias = "s")]
     SwitchProfile {
-        #[arg(short, long, required = true)]
+        #[arg(required = true)]
         profile: String,
     },
 
