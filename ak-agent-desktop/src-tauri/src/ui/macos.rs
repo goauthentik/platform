@@ -3,6 +3,11 @@ use tauri::{
     menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
 };
 
+pub fn setup_app(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    setup_menu(app)
+}
+
 pub fn setup_menu(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let hide_item = MenuItemBuilder::with_id("hide_to_tray", "Hide to Tray")
         .accelerator("Cmd+Q")

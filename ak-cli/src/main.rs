@@ -8,6 +8,7 @@ use ak_platform::{
 use clap::{Error, Parser, Subcommand};
 use clap_complete::Shell;
 
+pub mod api;
 pub mod auth;
 pub mod cache;
 pub mod commands;
@@ -16,8 +17,7 @@ pub mod setup;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik CLI")]
-#[command(version, about, long_about = None)]
-#[command(propagate_version = true)]
+#[command(about, long_about = None)]
 pub struct CliArgs {
     /// Enable debug logging
     #[arg(short, long, default_value_t = false)]
@@ -63,6 +63,11 @@ enum Commands {
     Completions {
         /// Shell to generate completions for
         shell: Shell,
+    },
+    /// Directly interact with the authentik API
+    Api {
+        #[command(subcommand)]
+        command: api::ApiCommand,
     },
 }
 
@@ -123,6 +128,7 @@ async fn main() -> std::result::Result<(), Error> {
                 } => commands::auth::aws(app, client_id, role_arn, region).await,
             }
         }
+        Commands::Api { command } => api::exec_api_command(app, command).await,
     };
     match res {
         Ok(_) => Ok(()),

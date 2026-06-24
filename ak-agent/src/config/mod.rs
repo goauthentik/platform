@@ -2,8 +2,8 @@ use std::{collections::HashMap, fmt::Debug};
 
 use ak_meta::user_agent;
 use ak_platform::log::LevelFilter;
-use ak_platform::{log::set_log_level, prelude::*};
 use ak_platform::storage::cfgmgr::schema::Config;
+use ak_platform::{log::set_log_level, prelude::*};
 use ak_platform_keyring;
 use authentik_client::apis::configuration::Configuration;
 use reqwest::Client;
