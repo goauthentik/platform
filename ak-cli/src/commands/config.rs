@@ -104,3 +104,31 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
 
     Ok(())
 }
+
+pub async fn current_profile(app: App, profile: &str) -> Result<()> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
+        .current_profile(())
+        .await?
+        .into_inner();
+    assert_response_valid(Some(res))?;
+    Ok(())
+}
+
+pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
+        .switch_profile(RequestHeader {
+            profile: profile.to_string(),
+        })
+        .await?
+        .into_inner();
+    assert_response_valid(Some(res))?;
+    Ok(())
+}

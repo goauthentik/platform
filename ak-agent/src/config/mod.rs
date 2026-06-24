@@ -2,6 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use ak_meta::user_agent;
 use ak_platform::log::LevelFilter;
+use ak_platform::paths::DEFAULT_PROFILE;
 use ak_platform::storage::cfgmgr::schema::Config;
 use ak_platform::{log::set_log_level, prelude::*};
 use ak_platform_keyring;
@@ -9,10 +10,22 @@ use authentik_client::apis::configuration::Configuration;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ConfigV1 {
     pub debug: bool,
+    #[serde(default)]
+    pub active_profile: String,
     pub profiles: HashMap<String, ConfigV1Profile>,
+}
+
+impl Default for ConfigV1 {
+    fn default() -> Self {
+        Self {
+            debug: false,
+            active_profile: DEFAULT_PROFILE.to_string(),
+            profiles: Default::default(),
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]

@@ -49,6 +49,11 @@ enum Commands {
     Whoami,
     /// Version of authentik Agent components
     Version,
+    /// Switch to a different active profile
+    SwitchProfile {
+        #[arg(short, long, required = true)]
+        profile: String,
+    },
 
     /// Configure authentik CLI
     Config {
@@ -104,6 +109,7 @@ async fn main() -> std::result::Result<(), Error> {
         Commands::Completions { shell } => commands::completions::completions(*shell).await,
         Commands::Whoami => commands::whoami::whoami(app).await,
         Commands::Version => commands::version::version(app).await,
+        Commands::SwitchProfile { profile } => commands::config::switch_profile(app, profile).await,
         Commands::Config { command } => match command {
             ConfigCommands::ListProfiles => commands::config::list_profiles(app).await,
             ConfigCommands::Setup {
