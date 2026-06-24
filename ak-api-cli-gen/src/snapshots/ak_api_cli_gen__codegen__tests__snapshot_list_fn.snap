@@ -1,0 +1,84 @@
+---
+source: ak-api-cli-gen/src/codegen.rs
+assertion_line: 797
+expression: code
+---
+#[derive(Debug, Clone, clap::Subcommand)]
+pub enum ApiCommand {
+    ///Core API
+    Core(CoreArgs),
+}
+impl ApiCommand {
+    pub async fn execute(
+        &self,
+        config: &authentik_client::apis::configuration::Configuration,
+    ) -> anyhow::Result<()> {
+        match self {
+            ApiCommand::Core(args) => args.command.execute(config).await,
+        }
+    }
+}
+pub const API_MODULES: &[&str] = &["core"];
+pub const API_FUNCTION_COUNT: usize = 1usize;
+#[derive(Debug, Clone, clap::Args)]
+pub struct CoreArgs {
+    #[command(subcommand)]
+    pub command: CoreCommand,
+}
+#[derive(Debug, Clone, clap::Subcommand)]
+pub enum CoreCommand {
+    ///`applications` operations
+    Applications(CoreApplicationsArgs),
+}
+impl CoreCommand {
+    pub async fn execute(
+        &self,
+        config: &authentik_client::apis::configuration::Configuration,
+    ) -> anyhow::Result<()> {
+        match self {
+            CoreCommand::Applications(args) => args.command.execute(config).await,
+        }
+    }
+}
+#[derive(Debug, Clone, clap::Args)]
+pub struct CoreApplicationsArgs {
+    #[command(subcommand)]
+    pub command: CoreApplicationsCommand,
+}
+#[derive(Debug, Clone, clap::Subcommand)]
+pub enum CoreApplicationsCommand {
+    ///`core_applications_list`
+    List(CoreApplicationsListArgs),
+}
+impl CoreApplicationsCommand {
+    pub async fn execute(
+        &self,
+        config: &authentik_client::apis::configuration::Configuration,
+    ) -> anyhow::Result<()> {
+        match self {
+            CoreApplicationsCommand::List(args) => args.execute(config).await,
+        }
+    }
+}
+#[derive(Debug, Clone, clap::Args, Default)]
+pub struct CoreApplicationsListArgs {
+    #[arg(long = "name")]
+    pub name: Option<String>,
+    #[arg(long = "page")]
+    pub page: Option<i32>,
+}
+impl CoreApplicationsListArgs {
+    pub async fn execute(
+        &self,
+        config: &authentik_client::apis::configuration::Configuration,
+    ) -> anyhow::Result<()> {
+        let result = authentik_client::apis::core_api::core_applications_list(
+                config,
+                self.name.as_deref(),
+                self.page,
+            )
+            .await?;
+        println!("{}", serde_json::to_string_pretty(& result) ?);
+        Ok(())
+    }
+}

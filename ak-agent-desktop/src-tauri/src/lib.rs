@@ -67,7 +67,7 @@ pub fn start_tauri() -> Result<()> {
             });
 
             #[cfg(target_os = "macos")]
-            ui::macos::setup_menu(app)?;
+            ui::macos::setup_app(app)?;
 
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
