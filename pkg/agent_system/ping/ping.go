@@ -41,9 +41,21 @@ func (ping *Server) RegisterForID(id string, s grpc.ServiceRegistrar) {
 	pb.RegisterPingServer(s, ping)
 }
 
-func (ping *Server) Ping(context.Context, *emptypb.Empty) (*pb.PingResponse, error) {
-	return &pb.PingResponse{
+func (ping *Server) Ping(ctx context.Context, _ *emptypb.Empty) (*pb.PingResponse, error) {
+	d, _, err := ping.ctx.DomainAPI()
+	if err != nil {
+		ping.ctx.Log().WithError(err).Warning("failed to get domain API")
+		return nil, err
+	}
+	res := &pb.PingResponse{
 		Component: "sysd",
 		Version:   meta.FullVersion(),
-	}, nil
+	}
+	v, _, err := d.AdminApi.AdminVersionRetrieve(ctx).Execute()
+	if err != nil {
+		ping.ctx.Log().WithError(err).Warning("failed to get authentik version")
+	} else {
+		res.ServerVersion = v.VersionCurrent
+	}
+	return res, nil
 }

@@ -185,12 +185,18 @@ impl serde::Serialize for PingResponse {
         if !self.version.is_empty() {
             len += 1;
         }
+        if !self.server_version.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("ping.PingResponse", len)?;
         if !self.component.is_empty() {
             struct_ser.serialize_field("component", &self.component)?;
         }
         if !self.version.is_empty() {
             struct_ser.serialize_field("version", &self.version)?;
+        }
+        if !self.server_version.is_empty() {
+            struct_ser.serialize_field("serverVersion", &self.server_version)?;
         }
         struct_ser.end()
     }
@@ -204,12 +210,15 @@ impl<'de> serde::Deserialize<'de> for PingResponse {
         const FIELDS: &[&str] = &[
             "component",
             "version",
+            "server_version",
+            "serverVersion",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Component,
             Version,
+            ServerVersion,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -233,6 +242,7 @@ impl<'de> serde::Deserialize<'de> for PingResponse {
                         match value {
                             "component" => Ok(GeneratedField::Component),
                             "version" => Ok(GeneratedField::Version),
+                            "serverVersion" | "server_version" => Ok(GeneratedField::ServerVersion),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -254,6 +264,7 @@ impl<'de> serde::Deserialize<'de> for PingResponse {
             {
                 let mut component__ = None;
                 let mut version__ = None;
+                let mut server_version__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Component => {
@@ -268,11 +279,18 @@ impl<'de> serde::Deserialize<'de> for PingResponse {
                             }
                             version__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::ServerVersion => {
+                            if server_version__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("serverVersion"));
+                            }
+                            server_version__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(PingResponse {
                     component: component__.unwrap_or_default(),
                     version: version__.unwrap_or_default(),
+                    server_version: server_version__.unwrap_or_default(),
                 })
             }
         }

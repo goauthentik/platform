@@ -29,6 +29,8 @@ nonisolated struct PingResponse: Sendable {
 
   var version: String = String()
 
+  var serverVersion: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -94,7 +96,7 @@ fileprivate nonisolated let _protobuf_package = "ping"
 
 nonisolated extension PingResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PingResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}component\0\u{1}version\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}component\0\u{1}version\0\u{3}server_version\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -104,6 +106,7 @@ nonisolated extension PingResponse: SwiftProtobuf.Message, SwiftProtobuf._Messag
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.component) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.version) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.serverVersion) }()
       default: break
       }
     }
@@ -116,12 +119,16 @@ nonisolated extension PingResponse: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if !self.version.isEmpty {
       try visitor.visitSingularStringField(value: self.version, fieldNumber: 2)
     }
+    if !self.serverVersion.isEmpty {
+      try visitor.visitSingularStringField(value: self.serverVersion, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: PingResponse, rhs: PingResponse) -> Bool {
     if lhs.component != rhs.component {return false}
     if lhs.version != rhs.version {return false}
+    if lhs.serverVersion != rhs.serverVersion {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
