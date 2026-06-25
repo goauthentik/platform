@@ -50,9 +50,13 @@ export class AppShell extends LitElement {
     }
 
     private async _refresh(): Promise<void> {
-        this.user = await userInfo("default");
         this.profiles = await listProfiles();
         this.activeProfile = await activeProfile();
+        try {
+            this.user = await userInfo("default");
+        } catch (exc) {
+            console.warn("Failed to fetch user info", exc);
+        }
     }
 
     render() {
