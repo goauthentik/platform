@@ -11,6 +11,8 @@ import "google/protobuf/timestamp.proto";
 service AgentCtrl {
   rpc ListProfiles(google.protobuf.Empty) returns (ListProfilesResponse);
   rpc Setup(SetupRequest) returns (SetupResponse);
+  rpc SwitchProfile(agent.RequestHeader) returns (agent.ResponseHeader);
+  rpc CurrentProfile(google.protobuf.Empty) returns (CurrentProfileResponse);
 }
 
 message SetupRequest {
@@ -37,4 +39,9 @@ message Profile {
 message ListProfilesResponse {
   agent.ResponseHeader header = 1;
   repeated Profile profiles = 2;
+}
+
+message CurrentProfileResponse {
+  agent.ResponseHeader header = 1;
+  string profile = 2;
 }

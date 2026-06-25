@@ -32,6 +32,7 @@ pub fn run() {
 
 pub fn start_tauri() -> Result<()> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             ui::show_main(app);
         }))
@@ -86,7 +87,8 @@ pub fn start_tauri() -> Result<()> {
         })
         .invoke_handler(tauri::generate_handler![
             cmd::get_user_info,
-            cmd::list_profiles
+            cmd::list_profiles,
+            cmd::active_profile,
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| {

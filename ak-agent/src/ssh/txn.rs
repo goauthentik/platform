@@ -13,7 +13,6 @@ use crate::ssh::txn_keys::generate_cert;
 pub struct SSHAgentTransaction {
     pub agent: Arc<Agent>,
     pub priv_key: Arc<PrivateKey>,
-    pub profile: String,
     pub creds: ProcCredentials,
     pub host_key: Option<KeyData>,
     pub session_id: Option<Vec<u8>>,
@@ -35,11 +34,12 @@ impl SSHAgentTransaction {
             }
         };
 
-        let token_mgr = match self.agent.gtm.for_profile(&self.profile).await {
+        let profile = self.agent.cfg.read().await.active_profile.clone();
+        let token_mgr = match self.agent.gtm.for_profile(profile.clone()).await {
             Some(m) => m,
             None => {
                 tracing::warn!(
-                    profile = self.profile,
+                    profile = profile,
                     "ssh-agent: ensure_cert: profile not found"
                 );
                 return None;
@@ -97,10 +97,11 @@ impl SSHAgentTransaction {
 
     async fn get_host_token(&self, host_key: &KeyData) -> Result<(String, i64)> {
         let profile = {
+            let profile = self.agent.cfg.read().await.active_profile.clone();
             let cfg = self.agent.cfg.read().await;
             cfg.profiles
-                .get(&self.profile)
-                .ok_or("profile not found")?
+                .get(&profile)
+                .ok_or(format!("profile {} not found", profile))?
                 .clone()
         };
 

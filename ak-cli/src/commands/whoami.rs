@@ -13,7 +13,7 @@ pub async fn whoami(app: App) -> Result<()> {
         .auth()
         .who_am_i(WhoAmIRequest {
             header: Some(RequestHeader {
-                profile: app.args.profile.clone(),
+                profile: app.profile(),
             }),
         })
         .await?

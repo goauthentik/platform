@@ -1,7 +1,8 @@
 use ak_platform::generated::{
-    agent::ResponseHeader,
+    agent::{RequestHeader, ResponseHeader},
     agent_ctrl::{
-        ListProfilesResponse, Profile, SetupRequest, SetupResponse, agent_ctrl_server::AgentCtrl,
+        CurrentProfileResponse, ListProfilesResponse, Profile, SetupRequest, SetupResponse,
+        agent_ctrl_server::AgentCtrl,
     },
 };
 use tonic::{Request, Response, Status};
@@ -61,6 +62,9 @@ impl AgentCtrl for AgentGRPCServer {
                     req.refresh_token,
                 ),
             );
+            if cfg.active_profile.is_empty() {
+                cfg.active_profile = profile_name.clone();
+            }
         }
         if let Err(e) = self.agent.cfg.save().await {
             tracing::warn!("failed to save config: {e:?}");
@@ -70,6 +74,34 @@ impl AgentCtrl for AgentGRPCServer {
         tracing::info!(profile = profile_name, "setup new profile");
         Ok(Response::new(SetupResponse {
             header: Some(ResponseHeader { successful: true }),
+        }))
+    }
+
+    async fn switch_profile(
+        &self,
+        request: Request<RequestHeader>,
+    ) -> Result<Response<ResponseHeader>, Status> {
+        let new_profile = request.into_inner().profile;
+        {
+            let mut cfg = self.agent.cfg.write().await;
+            cfg.active_profile = new_profile.clone();
+        }
+        if let Err(e) = self.agent.cfg.save().await {
+            tracing::warn!("failed to save config: {e:?}");
+            return Err(Status::from_error(e));
+        }
+        tracing::debug!(profile = new_profile, "Switched active profile");
+        Ok(Response::new(ResponseHeader { successful: true }))
+    }
+
+    async fn current_profile(
+        &self,
+        _request: Request<()>,
+    ) -> Result<Response<CurrentProfileResponse>, Status> {
+        let cfg = self.agent.cfg.read().await;
+        Ok(Response::new(CurrentProfileResponse {
+            header: Some(ResponseHeader { successful: true }),
+            profile: cfg.active_profile.clone(),
         }))
     }
 }

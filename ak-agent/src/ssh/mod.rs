@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::Agent;
 use ak_platform::{
     net::server::{ConnectedLocalStream, ListenerStream, SocketPermMode, listen},
-    paths::{AgentSocketID, DEFAULT_PROFILE, agent_socket_path},
+    paths::{AgentSocketID, agent_socket_path},
     prelude::*,
 };
 use ssh_agent_lib::agent::{Session, listen as ssh_listen};
@@ -23,7 +23,6 @@ use uuid::Uuid;
 pub struct AgentSSHServer {
     agent: Arc<Agent>,
     priv_key: Arc<PrivateKey>,
-    profile: String,
 }
 
 impl ssh_agent_lib::agent::Agent<ListenerStream> for AgentSSHServer {
@@ -31,7 +30,6 @@ impl ssh_agent_lib::agent::Agent<ListenerStream> for AgentSSHServer {
         SSHAgentTransaction {
             agent: Arc::clone(&self.agent),
             priv_key: Arc::clone(&self.priv_key),
-            profile: self.profile.clone(),
             creds: socket.connect_info(),
             host_key: None,
             session_id: None,
@@ -45,21 +43,9 @@ impl AgentSSHServer {
     pub async fn new(agent: Arc<Agent>) -> Result<Self> {
         let priv_key = PrivateKey::random(&mut OsRng, Algorithm::Ed25519)
             .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
-
-        let profile = agent
-            .cfg
-            .read()
-            .await
-            .profiles
-            .keys()
-            .next()
-            .cloned()
-            .unwrap_or(DEFAULT_PROFILE.into());
-
         Ok(AgentSSHServer {
             agent,
             priv_key: Arc::new(priv_key),
-            profile,
         })
     }
 

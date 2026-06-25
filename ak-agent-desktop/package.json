@@ -14,9 +14,11 @@
     },
     "type": "module",
     "dependencies": {
+        "@goauthentik/api": "^2026.5.3",
         "@goauthentik/brand-assets": "^2.0.0",
         "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-opener": "^2",
+        "@tauri-apps/plugin-os": "~2.3.2",
         "lit": "^3.3.3"
     },
     "devDependencies": {
@@ -29,6 +31,8 @@
     },
     "prettier": "@goauthentik/prettier-config",
     "pnpm": {
-        "onlyBuiltDependencies": ["esbuild"]
+        "onlyBuiltDependencies": [
+            "esbuild"
+        ]
     }
 }
