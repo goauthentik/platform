@@ -105,7 +105,7 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
     Ok(())
 }
 
-pub async fn current_profile(app: App) -> Result<String> {
+pub async fn current_profile(app: App) -> Result<()> {
     let res = app
         .user()
         .await?
@@ -115,7 +115,8 @@ pub async fn current_profile(app: App) -> Result<String> {
         .await?
         .into_inner();
     assert_response_valid(res.header)?;
-    Ok(res.profile)
+    println!("{}", res.profile);
+    Ok(())
 }
 
 pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
@@ -130,5 +131,6 @@ pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
         .await?
         .into_inner();
     assert_response_valid(Some(res))?;
+    println!("Successfully switched to profile '{profile}'!");
     Ok(())
 }
