@@ -62,6 +62,9 @@ impl AgentCtrl for AgentGRPCServer {
                     req.refresh_token,
                 ),
             );
+            if cfg.active_profile.is_empty() {
+                cfg.active_profile = profile_name.clone();
+            }
         }
         if let Err(e) = self.agent.cfg.save().await {
             tracing::warn!("failed to save config: {e:?}");
