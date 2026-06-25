@@ -10,7 +10,7 @@ use authentik_client::apis::configuration::Configuration;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigV1 {
     pub debug: bool,
     #[serde(default)]

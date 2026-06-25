@@ -6,11 +6,18 @@ pub type Result<T> = std::result::Result<T, String>;
 
 #[tauri::command]
 pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile>> {
+    let snapshot: Vec<_> = {
+        let cfg = state.cfg.read().await;
+        cfg.profiles
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
+    };
     let mut profiles = vec![];
-    for (key, c_prof) in state.cfg.read().await.profiles.iter() {
+    for (key, c_prof) in snapshot {
         let ptm = state
             .gtm
-            .for_profile(key)
+            .for_profile(&key)
             .await
             .ok_or("profile not found")?;
         let token = ptm.token().await.map_err(|e| e.to_string())?;
