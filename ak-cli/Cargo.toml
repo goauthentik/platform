@@ -35,4 +35,4 @@ uuid.workspace = true
 [build-dependencies]
 ak-api-cli-gen.workspace = true
 anyhow.workspace = true
-cargo_metadata = "0.19"
+cargo_metadata = "0.23"
