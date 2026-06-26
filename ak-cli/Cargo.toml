@@ -28,3 +28,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+anyhow.workspace = true
+authentik-client.workspace = true
+uuid.workspace = true
+
+[build-dependencies]
+ak-api-cli-gen.workspace = true
+anyhow.workspace = true
+cargo_metadata = "0.23"

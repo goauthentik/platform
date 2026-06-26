@@ -118,7 +118,10 @@ mod tests {
 
     #[test]
     fn get_all_entries_unavail_on_error() {
-        assert!(matches!(get_all_entries_with(&ErrorBridge), Response::Unavail));
+        assert!(matches!(
+            get_all_entries_with(&ErrorBridge),
+            Response::Unavail
+        ));
     }
 
     #[test]

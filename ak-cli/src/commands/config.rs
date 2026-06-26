@@ -64,7 +64,7 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         refresh_token = rt;
     } else {
         let prof = setup::setup(setup::Options {
-            profile_name: app.args.profile.clone(),
+            profile_name: app.args.profile.clone().unwrap_or(app.profile()),
             authentik_url: Url::parse(authentik_url)?,
             app_slug: app_slug.to_owned(),
             client_id: client_id.to_owned(),
@@ -90,7 +90,7 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         .ctrl()
         .setup(SetupRequest {
             header: Some(RequestHeader {
-                profile: app.args.profile.clone(),
+                profile: app.args.profile.clone().unwrap_or(app.profile()),
             }),
             authentik_url: authentik_url.to_owned(),
             app_slug: app_slug.to_owned(),
@@ -102,5 +102,35 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         .into_inner();
     assert_response_valid(res.header)?;
 
+    Ok(())
+}
+
+pub async fn current_profile(app: App) -> Result<()> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
+        .current_profile(())
+        .await?
+        .into_inner();
+    assert_response_valid(res.header)?;
+    println!("{}", res.profile);
+    Ok(())
+}
+
+pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
+        .switch_profile(RequestHeader {
+            profile: profile.to_string(),
+        })
+        .await?
+        .into_inner();
+    assert_response_valid(Some(res))?;
+    println!("Successfully switched to profile '{profile}'!");
     Ok(())
 }

@@ -1,10 +1,12 @@
 import "./header.js";
 import "./profile-status.js";
 
-import { listProfiles, profile, userInfo } from "../bridge";
+import { activeProfile, listProfiles, profile, userInfo } from "../bridge";
 
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { SessionUser } from "@goauthentik/api";
+
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { css, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
@@ -26,10 +28,13 @@ export class AppShell extends LitElement {
     `;
 
     @state()
-    private user?: userInfo;
+    private user?: SessionUser;
 
     @state()
     private profiles?: profile[];
+
+    @state()
+    private activeProfile?: string;
 
     private _unlisten?: () => void;
 
@@ -45,8 +50,13 @@ export class AppShell extends LitElement {
     }
 
     private async _refresh(): Promise<void> {
-        this.user = await userInfo("default");
         this.profiles = await listProfiles();
+        this.activeProfile = await activeProfile();
+        try {
+            this.user = await userInfo("default");
+        } catch (exc) {
+            console.warn("Failed to fetch user info", exc);
+        }
     }
 
     render() {
@@ -64,7 +74,10 @@ export class AppShell extends LitElement {
                 }}
             ></ak-platform-header>
             <div class="content">
-                <ak-profile-status .profiles=${this.profiles ?? []}></ak-profile-status>
+                <ak-profile-status
+                    .profiles=${this.profiles ?? []}
+                    .activeProfile=${this.activeProfile}
+                ></ak-profile-status>
             </div>
         `;
     }

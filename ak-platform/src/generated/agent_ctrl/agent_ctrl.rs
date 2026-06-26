@@ -40,6 +40,13 @@ pub struct ListProfilesResponse {
     #[prost(message, repeated, tag="2")]
     pub profiles: ::prost::alloc::vec::Vec<Profile>,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CurrentProfileResponse {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::ResponseHeader>,
+    #[prost(string, tag="2")]
+    pub profile: ::prost::alloc::string::String,
+}
 include!("agent_ctrl.tonic.rs");
 include!("agent_ctrl.serde.rs");
 // @@protoc_insertion_point(module)

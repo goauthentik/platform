@@ -101,8 +101,8 @@ where
 
     #[tracing::instrument]
     pub async fn save(&self) -> Result<()> {
-        let loaded = self.loaded.read().await;
-        loaded.pre_save().await?;
+        let snapshot = self.loaded.read().await.clone();
+        snapshot.pre_save().await?;
         tracing::debug!("saving config");
         let mut opts = OpenOptions::new();
         opts.create(true).truncate(true).read(true).write(true);
@@ -111,7 +111,7 @@ where
             opts.mode(0o600);
         }
         let file = opts.open(self.path.clone())?;
-        serde_json::to_writer(file, &*loaded)?;
+        serde_json::to_writer(file, &snapshot)?;
         self.notify_reload();
         Ok(())
     }

@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>authentik Agent</string>
+	<key>CFBundleName</key>
+	<string>authentik Agent</string>
 	<key>CFBundleExecutable</key>
 	<string>ak-agent-desktop</string>
 	<key>CFBundleIconFile</key>
