@@ -15,10 +15,25 @@ class API {
         -> ASAuthorizationProviderExtensionLoginConfiguration?
     {
         do {
-            let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
-                from: loginManager.key(for: .currentDeviceSigning)!)!
-            let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
-                from: loginManager.key(for: .currentDeviceEncryption)!)!
+            guard let signingKey = loginManager.key(for: .currentDeviceSigning) else {
+                self.logger.error("device signing key unavailable")
+                return nil
+            }
+            guard let encryptionKey = loginManager.key(for: .currentDeviceEncryption) else {
+                self.logger.error("device encryption key unavailable")
+                return nil
+            }
+            guard let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(from: signingKey)
+            else {
+                self.logger.error("failed to derive device signing public key")
+                return nil
+            }
+            guard
+                let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(from: encryptionKey)
+            else {
+                self.logger.error("failed to derive device encryption public key")
+                return nil
+            }
             self.logger.debug("registering device with sysd...")
             let config = try await SysdBridge.shared.pssoRegisterDevice(
                 deviceSigningKey: DeviceSigningKey,
@@ -40,8 +55,17 @@ class API {
         userToken: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
-                from: loginManger.key(for: .userSecureEnclaveKey)!)!
+            guard let enclaveKey = loginManger.key(for: .userSecureEnclaveKey) else {
+                self.logger.error("user secure enclave key unavailable")
+                return .failed
+            }
+            guard
+                let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
+                    from: enclaveKey)
+            else {
+                self.logger.error("failed to derive user secure enclave public key")
+                return .failed
+            }
             self.logger.debug("registering user with sysd...")
             let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
@@ -56,6 +80,48 @@ class API {
         } catch {
             self.logger.error("failed to register: \(error)")
             return .failed
+        }
+    }
+
+    /// Re-register a rotated device key with the backend so the IdP keeps a matching public
+    /// key. Without this, the OS begins signing login assertions with a key the IdP was never
+    /// told about, which the token endpoint rejects → eventual `permanentLoginFailure`.
+    /// Device registration needs only the device keys + domain token, so it runs without user
+    /// interaction. Returns false on any failure so the caller can reject the rotation.
+    func RotateDeviceKey(
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
+        keyType: ASAuthorizationProviderExtensionKeyType,
+        newKey: SecKey,
+    ) async -> Bool {
+        do {
+            // The rotation hasn't happened yet, so `loginManager.key(for:)` still returns the
+            // current keys. Substitute the incoming `newKey` for the type being rotated.
+            guard let currentSigning = loginManager.key(for: .currentDeviceSigning),
+                let currentEncryption = loginManager.key(for: .currentDeviceEncryption)
+            else {
+                self.logger.error("device keys unavailable during rotation")
+                return false
+            }
+            let signingKey = keyType == .currentDeviceSigning ? newKey : currentSigning
+            let encryptionKey = keyType == .currentDeviceEncryption ? newKey : currentEncryption
+
+            guard let (signKeyID, deviceSigningKey, _) = try getPublicKeyString(from: signingKey),
+                let (encKeyID, deviceEncryptionKey, _) = try getPublicKeyString(from: encryptionKey)
+            else {
+                self.logger.error("failed to derive public keys during rotation")
+                return false
+            }
+            _ = try await SysdBridge.shared.pssoRegisterDevice(
+                deviceSigningKey: deviceSigningKey,
+                deviceEncryptionKey: deviceEncryptionKey,
+                encKeyID: encKeyID,
+                signKeyID: signKeyID
+            )
+            self.logger.debug("re-registered rotated device key with backend")
+            return true
+        } catch {
+            self.logger.error("failed to re-register rotated device key: \(error)")
+            return false
         }
     }
 

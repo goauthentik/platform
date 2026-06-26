@@ -43,6 +43,11 @@ public enum SocketID: String {
     case ctrlSocket = "ctrl"
 }
 
+public enum SysdBridgeError: Error {
+    /// A login-configuration endpoint returned by the server was empty or not a valid URL.
+    case invalidEndpoint(name: String, value: String)
+}
+
 public class SysdBridge {
 
     public static let shared: SysdBridge = SysdBridge()
@@ -193,6 +198,7 @@ public class SysdBridge {
             encKeyID: String,
             signKeyID: String,
         ) async throws -> ASAuthorizationProviderExtensionLoginConfiguration {
+            let logger = self.logger
             return try await self.withClient { client in
                 let c = SystemAuthApple.Client(wrapping: client)
                 let res = try await c.registerDevice(
@@ -204,14 +210,29 @@ public class SysdBridge {
                             $0.signKeyID = signKeyID
                         }
                     ))
+                guard let tokenEndpointURL = URL(string: res.tokenEndpoint) else {
+                    logger.error("invalid token endpoint: '\(res.tokenEndpoint)'")
+                    throw SysdBridgeError.invalidEndpoint(
+                        name: "tokenEndpoint", value: res.tokenEndpoint)
+                }
+                guard let jwksEndpointURL = URL(string: res.jwksEndpoint) else {
+                    logger.error("invalid jwks endpoint: '\(res.jwksEndpoint)'")
+                    throw SysdBridgeError.invalidEndpoint(
+                        name: "jwksEndpoint", value: res.jwksEndpoint)
+                }
+                guard let nonceEndpointURL = URL(string: res.nonceEndpoint) else {
+                    logger.error("invalid nonce endpoint: '\(res.nonceEndpoint)'")
+                    throw SysdBridgeError.invalidEndpoint(
+                        name: "nonceEndpoint", value: res.nonceEndpoint)
+                }
                 let cfg = ASAuthorizationProviderExtensionLoginConfiguration(
                     clientID: res.clientID,
                     issuer: res.issuer,
-                    tokenEndpointURL: URL(string: res.tokenEndpoint)!,
-                    jwksEndpointURL: URL(string: res.jwksEndpoint)!,
+                    tokenEndpointURL: tokenEndpointURL,
+                    jwksEndpointURL: jwksEndpointURL,
                     audience: res.audience
                 )
-                cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
+                cfg.nonceEndpointURL = nonceEndpointURL
                 cfg.customNonceRequestValues
                     .append(
                         URLQueryItem(
