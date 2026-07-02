@@ -1,4 +1,4 @@
-use ak_platform::prelude::*;
+use eyre::Result;
 use ak_platform::{
     client::{
         sysd,
@@ -22,7 +22,9 @@ pub(crate) struct PathHandler {
 
 impl PathHandler {
     pub async fn new() -> Result<Self> {
-        let system_client = sysd::Client::new(SysdSocketID::Default).await?;
+        let system_client = sysd::Client::new(SysdSocketID::Default)
+            .await
+            .map_err(|e| eyre::eyre!("failed to connect to system daemon: {e}"))?;
         let user_client = match user::Client::new(None).await {
             Ok(c) => Some(c),
             Err(e) => {
@@ -65,7 +67,7 @@ impl PathHandler {
             "get_token" => self.handle_get_token(msg).await,
             "list_profiles" => self.handle_list_profiles(msg).await,
             "platform_sign_endpoint_header" => self.handle_platform_sign_endpoint_header(msg).await,
-            _ => Err(Box::from("No handler found")),
+            _ => Err(eyre::eyre!("No handler found")),
         };
         match result {
             Ok(res) => Ok(res),
