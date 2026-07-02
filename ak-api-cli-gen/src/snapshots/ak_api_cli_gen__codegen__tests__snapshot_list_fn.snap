@@ -15,7 +15,7 @@ impl ApiCommand {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> anyhow::Result<()> {
+    ) -> eyre::Result<()> {
         match self {
             ApiCommand::Core(args) => args.command.execute(config).await,
         }
@@ -37,7 +37,7 @@ impl CoreCommand {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> anyhow::Result<()> {
+    ) -> eyre::Result<()> {
         match self {
             CoreCommand::Applications(args) => args.command.execute(config).await,
         }
@@ -57,7 +57,7 @@ impl CoreApplicationsCommand {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> anyhow::Result<()> {
+    ) -> eyre::Result<()> {
         match self {
             CoreApplicationsCommand::List(args) => args.execute(config).await,
         }
@@ -74,7 +74,7 @@ impl CoreApplicationsListArgs {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> anyhow::Result<()> {
+    ) -> eyre::Result<()> {
         let result = authentik_client::apis::core_api::core_applications_list(
                 config,
                 self.name.as_deref(),

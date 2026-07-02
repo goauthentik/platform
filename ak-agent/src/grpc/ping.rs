@@ -1,7 +1,7 @@
 use ak_meta::full_version;
 use ak_platform::generated::ping::{CapabilitiesResponse, PingResponse, ping_server::Ping};
-use tonic::{Request, Response, Status};
 use authentik_client::apis::admin_api::admin_version_retrieve;
+use tonic::{Request, Response, Status};
 
 use crate::grpc::AgentGRPCServer;
 
@@ -20,7 +20,9 @@ impl Ping for AgentGRPCServer {
             .clone()
             .api_config()
             .map_err(Status::from_error)?;
-        let ver = admin_version_retrieve(&api).await.map_err(|e| Status::from_error(e.into()))?;
+        let ver = admin_version_retrieve(&api)
+            .await
+            .map_err(|e| Status::from_error(e.into()))?;
         Ok(Response::new(PingResponse {
             component: "agent".to_string(),
             version: full_version(),

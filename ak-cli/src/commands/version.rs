@@ -31,6 +31,7 @@ async fn agent_version(p: PlatformString) -> String {
     let res = match PingClient::new(c).ping(()).await {
         Ok(res) => res,
         Err(e) => return format!("{e:?}"),
-    }.into_inner();
+    }
+    .into_inner();
     format!("{} (Server {})", res.version, res.server_version)
 }
