@@ -1,5 +1,5 @@
 use crate::cache::{CacheData, ClientCache};
-use ak_platform::prelude::*;
+use eyre::{bail, Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{
@@ -66,9 +66,10 @@ pub async fn get_credentials(
             }),
             client_id: opts.client_id.clone(),
         })
-        .await?
+        .await
+        .wrap_err("failed to exchange token")?
         .into_inner();
-    assert_response_valid(res.header)?;
+    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
 
     let curr = c
         .clone()
@@ -79,12 +80,13 @@ pub async fn get_credentials(
             }),
             r#type: current_token_request::Type::Verified as i32,
         })
-        .await?
+        .await
+        .wrap_err("failed to get current token")?
         .into_inner();
-    assert_response_valid(curr.header)?;
+    assert_response_valid(curr.header).map_err(|e| eyre::eyre!("{e}"))?;
     let username = curr
         .token
-        .ok_or("Failed to get current token")?
+        .ok_or_else(|| eyre::eyre!("Failed to get current token"))?
         .preferred_username;
 
     tracing::debug!("Fetching AWS Credentials...");
@@ -94,7 +96,8 @@ pub async fn get_credentials(
         .role_session_name(username)
         .web_identity_token(res.access_token)
         .send()
-        .await?;
+        .await
+        .wrap_err("failed to assume AWS role")?;
 
     if let Some(c) = aws_creds.credentials {
         let cached = AWSCredentialOutput {
@@ -107,8 +110,8 @@ pub async fn get_credentials(
                 nanos: c.expiration.subsec_nanos() as i32,
             },
         };
-        cc.set(cached.clone()).await?;
+        cc.set(cached.clone()).await.wrap_err("failed to cache AWS credentials")?;
         return Ok(cached);
     }
-    Err(Box::from("No credentials received"))
+    bail!("No credentials received")
 }

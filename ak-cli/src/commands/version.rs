@@ -1,6 +1,6 @@
 use crate::{App, format};
 use ak_meta::full_version;
-use ak_platform::prelude::*;
+use eyre::Result;
 use ak_platform::{
     generated::ping::ping_client::PingClient,
     grpc::grpc_endpoint,
@@ -10,7 +10,10 @@ use ak_platform::{
 use ratatui::text::Line;
 
 pub async fn version(_app: App) -> Result<()> {
-    let user_version = agent_version(agent_socket_path(AgentSocketID::Default)?).await;
+    let user_version = agent_version(
+        agent_socket_path(AgentSocketID::Default).map_err(|e| eyre::eyre!("{e}"))?,
+    )
+    .await;
     let system_version = agent_version(sysd_socket_path(SysdSocketID::Default)).await;
     let versions = vec![
         format!("authentik Agent CLI: {}", full_version()),

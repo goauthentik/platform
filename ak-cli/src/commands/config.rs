@@ -6,7 +6,7 @@ use crate::{
         ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
     },
 };
-use ak_platform::prelude::*;
+use eyre::{bail, Result, WrapErr};
 use ak_platform::{
     generated::{agent::RequestHeader, agent_ctrl::SetupRequest},
     grpc::assert_response_valid,
@@ -38,9 +38,10 @@ pub async fn list_profiles(app: App) -> Result<()> {
         .clone()
         .ctrl()
         .list_profiles(())
-        .await?
+        .await
+        .wrap_err("failed to list profiles")?
         .into_inner();
-    assert_response_valid(res.header)?;
+    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
     for profile in res.profiles {
         println!(
             "{}:",
@@ -65,21 +66,20 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
     } else {
         let prof = setup::setup(setup::Options {
             profile_name: app.args.profile.clone().unwrap_or(app.profile()),
-            authentik_url: Url::parse(authentik_url)?,
+            authentik_url: Url::parse(authentik_url).wrap_err("invalid authentik URL")?,
             app_slug: app_slug.to_owned(),
             client_id: client_id.to_owned(),
             url_callback: None,
         })
-        .await?;
+        .await
+        .wrap_err("device flow setup failed")?;
         if let Some(at) = prof.access_token
             && let Some(rt) = prof.refresh_token
         {
             access_token = at;
             refresh_token = rt;
         } else {
-            return Err(Box::from(
-                "Device-flow setup did not return access/refresh token",
-            ));
+            bail!("Device-flow setup did not return access/refresh token");
         }
     }
 
@@ -98,9 +98,10 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
             access_token: access_token.clone(),
             refresh_token: refresh_token.clone(),
         })
-        .await?
+        .await
+        .wrap_err("failed to register profile with agent")?
         .into_inner();
-    assert_response_valid(res.header)?;
+    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
 
     Ok(())
 }
@@ -112,9 +113,10 @@ pub async fn current_profile(app: App) -> Result<()> {
         .clone()
         .ctrl()
         .current_profile(())
-        .await?
+        .await
+        .wrap_err("failed to get current profile")?
         .into_inner();
-    assert_response_valid(res.header)?;
+    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
     println!("{}", res.profile);
     Ok(())
 }
@@ -128,9 +130,10 @@ pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
         .switch_profile(RequestHeader {
             profile: profile.to_string(),
         })
-        .await?
+        .await
+        .wrap_err("failed to switch profile")?
         .into_inner();
-    assert_response_valid(Some(res))?;
+    assert_response_valid(Some(res)).map_err(|e| eyre::eyre!("{e}"))?;
     println!("Successfully switched to profile '{profile}'!");
     Ok(())
 }

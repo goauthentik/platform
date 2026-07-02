@@ -1,4 +1,4 @@
-use ak_platform::prelude::*;
+use eyre::{Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
@@ -26,9 +26,10 @@ pub async fn get_credentials(
             }),
             client_id: opts.client_id,
         })
-        .await?
+        .await
+        .wrap_err("failed to exchange token")?
         .into_inner();
-    assert_response_valid(res.header)?;
+    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
     Ok(RawCredentialOutput {
         access_token: res.access_token,
     })
