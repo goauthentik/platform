@@ -38,6 +38,7 @@ impl Message {
 #[derive(Serialize, Clone)]
 pub(crate) struct Response {
     pub data: HashMap<String, Value>,
+    successful: bool,
     response_to: String,
 }
 
@@ -46,6 +47,14 @@ impl Response {
         Response {
             data: HashMap::new(),
             response_to: m.message_id().clone(),
+            successful: true,
+        }
+    }
+    pub fn error_response(m: Message, e: String) -> Response {
+        Response {
+            data: HashMap::from([("error".to_string(), serde_json::Value::String(e))]),
+            successful: false,
+            response_to: m.message_id().to_owned(),
         }
     }
 }

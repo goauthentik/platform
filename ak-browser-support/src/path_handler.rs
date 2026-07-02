@@ -62,18 +62,19 @@ impl PathHandler {
     }
 
     async fn handle_v1(self, msg: Message) -> std::result::Result<Response, NmError> {
-        let result = match msg.route_path().trim() {
-            "ping" => self.handle_ping(msg).await,
-            "get_token" => self.handle_get_token(msg).await,
-            "list_profiles" => self.handle_list_profiles(msg).await,
-            "platform_sign_endpoint_header" => self.handle_platform_sign_endpoint_header(msg).await,
+        let mm = msg.clone();
+        let result = match mm.route_path().trim() {
+            "ping" => self.handle_ping(mm).await,
+            "get_token" => self.handle_get_token(mm).await,
+            "list_profiles" => self.handle_list_profiles(mm).await,
+            "platform_sign_endpoint_header" => self.handle_platform_sign_endpoint_header(mm).await,
             _ => Err(eyre::eyre!("No handler found")),
         };
         match result {
             Ok(res) => Ok(res),
             Err(e) => {
                 tracing::warn!("Failed to run handler: {e:?}");
-                Err(NmError::Disconnected)
+                Ok(Response::error_response(msg, e.to_string()))
             }
         }
     }
