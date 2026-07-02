@@ -287,6 +287,7 @@ dependencies = [
  "apple-native-keyring-store",
  "chrono",
  "core-foundation",
+ "eyre",
  "keyring",
  "keyring-core",
  "security-framework",
