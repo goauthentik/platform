@@ -1,6 +1,7 @@
-use crate::prelude::*;
-use base64::{Engine, prelude::BASE64_STANDARD};
+use eyre::Result;
 use eyre::bail;
+use std::future::Future;
+use base64::{Engine, prelude::BASE64_STANDARD};
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
@@ -49,10 +50,7 @@ pub fn grpc_request_path<T, F: Future<Output = Result<T>>>(
 
     rt.block_on(async {
         let channel = grpc_endpoint(path).await?;
-        match future(channel).await {
-            Ok(t) => Ok(t),
-            Err(e) => Err(e),
-        }
+        future(channel).await
     })
 }
 

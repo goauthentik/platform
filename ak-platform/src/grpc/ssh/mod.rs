@@ -1,6 +1,6 @@
 use crate::grpc::method_caller::grpc_frame;
 use crate::grpc::method_caller::grpc_unframe;
-use crate::prelude::*;
+use eyre::Result;
 use std::{future::Future, pin::Pin, sync::Arc, task::Poll};
 
 use bytes::Bytes;

@@ -82,6 +82,5 @@ impl ProcCredentials {
             tracing::trace!("pid: {pid}");
             bail!("Invalid pid");
         }
-        ProcInfo::from_pid(pid as u32).map_err(eyre::Report::from)
-    }
+        ProcInfo::from_pid(pid as u32)}
 }

@@ -64,7 +64,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
 mod tests {
     use super::*;
     use ak_platform::generated::sys_directory::{Group as AKGroup, User};
-    use ak_platform::prelude::Result;
+    use eyre::Result;
 
     struct MockBridge {
         groups: Vec<AKGroup>,
@@ -88,7 +88,7 @@ mod tests {
                         || req.name.as_deref().map_or(false, |n| n == g.name)
                 })
                 .cloned()
-                .ok_or_else(|| "not found".into())
+                .ok_or_else(|| eyre::eyre!("not found"))
         }
     }
 
@@ -101,10 +101,10 @@ mod tests {
             unreachable!()
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
-            Err("unavailable".into())
+            Err(eyre::eyre!("unavailable"))
         }
         fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
-            Err("unavailable".into())
+            Err(eyre::eyre!("unavailable"))
         }
     }
 

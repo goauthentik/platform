@@ -8,8 +8,7 @@ use tower::ServiceExt;
 use tower::util::BoxCloneService;
 
 use crate::net::server::creds::ProcCredentials;
-use crate::prelude::*;
-use eyre::{bail, eyre};
+use eyre::{Result, bail, eyre};
 
 type BoxedSvc =
     BoxCloneService<http::Request<Full<Bytes>>, http::Response<tonic::body::Body>, Infallible>;
@@ -160,6 +159,7 @@ mod tests {
             Ok(tonic::Response::new(PingResponse {
                 component: "test".into(),
                 version: "1.0".into(),
+                server_version: "".into(),
             }))
         }
 

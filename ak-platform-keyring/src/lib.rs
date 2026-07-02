@@ -21,7 +21,7 @@ const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.sha
 #[allow(unreachable_code)]
 pub fn init() -> Result<()> {
     #[cfg(any(test, debug_assertions))]
-    return Ok(use_named_store("sample").wrap_err("failed to initialize sample keyring store")?);
+    return use_named_store("sample").wrap_err("failed to initialize sample keyring store");
     // On macOS release builds the keychain is accessed directly via security-framework
     // (no keyring store needed — see the get/set/delete implementations below).
     #[cfg(target_os = "macos")]

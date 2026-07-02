@@ -2,7 +2,7 @@ use std::{fmt::Debug, future::Future};
 
 use serde::{Serialize, de::DeserializeOwned};
 
-use crate::prelude::*;
+use eyre::Result;
 
 pub trait Config:
     Default + Serialize + DeserializeOwned + Sized + Sync + Send + Debug + Clone
