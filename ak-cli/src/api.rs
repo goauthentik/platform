@@ -31,7 +31,6 @@ pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<()> {
     };
     cmd.execute(&config)
         .await
-        .map_err(|e| eyre::eyre!("{e}"))
         .wrap_err("API command failed")
 }
 

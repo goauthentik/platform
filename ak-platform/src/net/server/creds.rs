@@ -1,8 +1,8 @@
+use eyre::{Result, bail};
 use tonic::transport::server::Connected;
 
 use crate::net::server::ConnectedLocalStream;
 use crate::net::server::proc_info::ProcInfo;
-use crate::prelude::*;
 
 #[cfg(not(target_os = "macos"))]
 use interprocess::local_socket::tokio::prelude::*;
@@ -80,8 +80,8 @@ impl ProcCredentials {
         let pid = self.pid();
         if pid < 0 {
             tracing::trace!("pid: {pid}");
-            return Err("Invalid pid".into());
+            bail!("Invalid pid");
         }
-        ProcInfo::from_pid(pid as u32).map_err(|e| e.into())
+        ProcInfo::from_pid(pid as u32).map_err(eyre::Report::from)
     }
 }

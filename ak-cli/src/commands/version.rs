@@ -11,7 +11,7 @@ use ratatui::text::Line;
 
 pub async fn version(_app: App) -> Result<()> {
     let user_version = agent_version(
-        agent_socket_path(AgentSocketID::Default).map_err(|e| eyre::eyre!("{e}"))?,
+        agent_socket_path(AgentSocketID::Default)?,
     )
     .await;
     let system_version = agent_version(sysd_socket_path(SysdSocketID::Default)).await;

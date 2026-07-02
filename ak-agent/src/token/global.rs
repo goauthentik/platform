@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::{Notify, RwLock};
 
-use ak_platform::prelude::*;
+use eyre::{Result, bail};
 use ak_platform::storage::cfgmgr::ConfigManager;
 
 use crate::config::ConfigV1;
@@ -21,7 +21,7 @@ pub struct GlobalTokenManager {
 impl GlobalTokenManager {
     pub async fn new(cfg: Arc<ConfigManager<ConfigV1>>) -> Result<Self> {
         if GLOBAL_CREATED.swap(true, Ordering::SeqCst) {
-            return Err(Box::from("only a single global token manager can be used"));
+            bail!("only a single global token manager can be used");
         }
         let gtm = GlobalTokenManager {
             cfg: Arc::clone(&cfg),

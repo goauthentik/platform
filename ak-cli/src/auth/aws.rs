@@ -69,7 +69,7 @@ pub async fn get_credentials(
         .await
         .wrap_err("failed to exchange token")?
         .into_inner();
-    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+    assert_response_valid(res.header)?;
 
     let curr = c
         .clone()
@@ -83,7 +83,7 @@ pub async fn get_credentials(
         .await
         .wrap_err("failed to get current token")?
         .into_inner();
-    assert_response_valid(curr.header).map_err(|e| eyre::eyre!("{e}"))?;
+    assert_response_valid(curr.header)?;
     let username = curr
         .token
         .ok_or_else(|| eyre::eyre!("Failed to get current token"))?

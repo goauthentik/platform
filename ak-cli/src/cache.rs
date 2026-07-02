@@ -48,7 +48,7 @@ where
             .await
             .wrap_err("cache get RPC failed")?
             .into_inner();
-        assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+        assert_response_valid(res.header)?;
         let value: T = serde_json::from_str(&res.value).wrap_err("failed to deserialize cached value")?;
         Ok(value)
     }
@@ -71,7 +71,7 @@ where
             .await
             .wrap_err("cache set RPC failed")?
             .into_inner();
-        assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+        assert_response_valid(res.header)?;
         Ok(())
     }
 }

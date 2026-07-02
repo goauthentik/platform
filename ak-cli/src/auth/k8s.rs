@@ -54,7 +54,7 @@ pub async fn get_credentials(
         .await
         .wrap_err("failed to exchange token")?
         .into_inner();
-    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+    assert_response_valid(res.header)?;
 
     let expiry: DateTime<Utc> = Utc::now() + TimeDelta::seconds(res.expires_in);
 

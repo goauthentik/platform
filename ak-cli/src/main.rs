@@ -110,7 +110,7 @@ impl App {
                 .current_profile(())
                 .await?
                 .into_inner();
-            assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+            assert_response_valid(res.header)?;
             Ok(res.profile)
         }
         .await;
@@ -131,7 +131,6 @@ impl App {
             Some(c) => Ok(c),
             None => Ok(Client::new(self.args.socket)
                 .await
-                .map_err(|e| eyre::eyre!("{e}"))
                 .wrap_err("failed to connect to user agent")?),
         }
     }

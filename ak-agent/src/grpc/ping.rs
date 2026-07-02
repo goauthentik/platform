@@ -19,7 +19,7 @@ impl Ping for AgentGRPCServer {
             .ok_or_else(|| Status::not_found("profile not found"))?
             .clone()
             .api_config()
-            .map_err(Status::from_error)?;
+            .map_err(|e| Status::from_error(e.into()))?;
         let ver = admin_version_retrieve(&api)
             .await
             .map_err(|e| Status::from_error(e.into()))?;

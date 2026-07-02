@@ -41,7 +41,7 @@ pub async fn list_profiles(app: App) -> Result<()> {
         .await
         .wrap_err("failed to list profiles")?
         .into_inner();
-    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+    assert_response_valid(res.header)?;
     for profile in res.profiles {
         println!(
             "{}:",
@@ -101,7 +101,7 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         .await
         .wrap_err("failed to register profile with agent")?
         .into_inner();
-    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+    assert_response_valid(res.header)?;
 
     Ok(())
 }
@@ -116,7 +116,7 @@ pub async fn current_profile(app: App) -> Result<()> {
         .await
         .wrap_err("failed to get current profile")?
         .into_inner();
-    assert_response_valid(res.header).map_err(|e| eyre::eyre!("{e}"))?;
+    assert_response_valid(res.header)?;
     println!("{}", res.profile);
     Ok(())
 }
@@ -133,7 +133,7 @@ pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
         .await
         .wrap_err("failed to switch profile")?
         .into_inner();
-    assert_response_valid(Some(res)).map_err(|e| eyre::eyre!("{e}"))?;
+    assert_response_valid(Some(res))?;
     println!("Successfully switched to profile '{profile}'!");
     Ok(())
 }

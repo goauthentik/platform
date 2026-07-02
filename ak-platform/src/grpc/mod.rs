@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use base64::{Engine, prelude::BASE64_STANDARD};
+use eyre::bail;
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
@@ -119,7 +120,7 @@ pub fn assert_response_valid(header: Option<ResponseHeader>) -> Result<()> {
     if let Some(header) = header
         && !header.successful
     {
-        return Err(Box::from("unsuccessful request"));
+        bail!("unsuccessful request");
     }
     Ok(())
 }

@@ -1,4 +1,4 @@
-use ak_platform::prelude::*;
+use eyre::{Result, bail};
 
 use ak_platform::{
     generated::ic_pam_fido::{FidoRequest, FidoResponse},
@@ -16,7 +16,7 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse> {
 
     let mut cfg = Cfg::init();
     cfg.keep_alive_msg = String::new();
-    let device = FidoKeyHidFactory::create(&cfg)?;
+    let device = FidoKeyHidFactory::create(&cfg).map_err(|e| eyre::eyre!("{e:#}"))?;
 
     let mut assertion_args = GetAssertionArgs {
         rpid: req.rp_id,
@@ -42,10 +42,10 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse> {
                 },
                 None => {
                     log::warn!("Failed to get PIN");
-                    return Err(Box::from("failed to get pin"));
+                    bail!("failed to get pin");
                 }
             },
-            Err(_) => return Err(Box::from("failed to get pin")),
+            Err(_) => bail!("failed to get pin"),
         }
     } else {
         None
@@ -59,7 +59,9 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse> {
     pam_print_user(conv, "Touch your security key...");
     let _ = device.wink();
 
-    let assertions = device.get_assertion_with_args(&assertion_args)?;
+    let assertions = device
+        .get_assertion_with_args(&assertion_args)
+        .map_err(|e| eyre::eyre!("{e:#}"))?;
     log::debug!("FIDO2: Authenticate Success");
 
     pam_print_user(conv, "Validating...");
