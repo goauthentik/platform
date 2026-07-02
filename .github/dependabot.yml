@@ -26,6 +26,10 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-patch-days: 3
   - package-ecosystem: "github-actions"
     directories:
       - /
