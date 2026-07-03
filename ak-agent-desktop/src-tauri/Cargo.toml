@@ -16,6 +16,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 ak-agent = { path = "../../ak-agent" }
+eyre = { workspace = true }
 ak-platform = { path = "../../ak-platform" }
 ak-platform-keyring = { path = "../../ak-platform-keyring" }
 ak-meta = { path = "../../ak-meta" }

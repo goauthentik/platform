@@ -1,5 +1,6 @@
+use eyre::Result;
 use serde::{Deserialize, Serialize};
-use std::{error::Error, fs, sync::LazyLock};
+use std::{fs, sync::LazyLock};
 
 use crate::{
     paths::{SysdSocketID, sysd_socket_path},
@@ -30,11 +31,11 @@ impl Config {
         GLOBAL_DATA.clone()
     }
 
-    pub fn from_default() -> Result<Self, Box<dyn Error>> {
+    pub fn from_default() -> Result<Self> {
         Config::from_file("/etc/authentik/config.json")
     }
 
-    pub fn from_file(path: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn from_file(path: &str) -> Result<Self> {
         let content = fs::read_to_string(path)?;
         let config: Config = serde_json::from_str(&content)?;
         Ok(config)

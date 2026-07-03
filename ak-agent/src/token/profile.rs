@@ -5,7 +5,7 @@ use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use tokio::sync::{Notify, RwLock};
 
-use ak_platform::prelude::*;
+use eyre::{Result, bail};
 use ak_platform::storage::cfgmgr::ConfigManager;
 
 use crate::config::ConfigV1;
@@ -29,7 +29,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             format!(
                 "{}/application/o/{}/jwks/",
                 profile.authentik_url, profile.app_slug
@@ -71,7 +71,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             profile.access_token().clone()
         };
         Ok(Token {
@@ -88,7 +88,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             (
                 profile.access_token().clone(),
                 profile.refresh_token().clone(),
@@ -106,7 +106,7 @@ impl ProfileTokenManager {
                     let profile = config
                         .profiles
                         .get(&self.profile_name)
-                        .ok_or("profile not found")?;
+                        .ok_or_else(|| eyre::eyre!("profile not found"))?;
                     return Ok(Token {
                         access_token: profile.access_token().clone(),
                         token_type: None,
@@ -192,7 +192,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             (
                 format!("{}/application/o/token/", profile.authentik_url),
                 profile.refresh_token().clone(),
@@ -219,7 +219,7 @@ impl ProfileTokenManager {
 
         if !res.status().is_success() {
             let body = res.text().await?;
-            return Err(Box::from(format!("token renewal failed: {body}")));
+            bail!("token renewal failed: {body}");
         }
 
         let new_token: Token = res.json().await?;
@@ -229,7 +229,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get_mut(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             profile.set_access_token(new_token.access_token.clone());
             if let Some(rt) = &new_token.refresh_token
                 && !rt.is_empty()

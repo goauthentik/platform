@@ -8,7 +8,7 @@ use tower::ServiceExt;
 use tower::util::BoxCloneService;
 
 use crate::net::server::creds::ProcCredentials;
-use crate::prelude::*;
+use eyre::{Result, bail, eyre};
 
 type BoxedSvc =
     BoxCloneService<http::Request<Full<Bytes>>, http::Response<tonic::body::Body>, Infallible>;
@@ -66,7 +66,7 @@ impl MethodCaller {
         let svc = self
             .services
             .get(service_name)
-            .ok_or_else(|| -> BoxError { Box::from(format!("unknown service: {service_name}")) })?
+            .ok_or_else(|| eyre!("unknown service: {service_name}"))?
             .clone();
 
         let mut req = http::Request::builder()
@@ -75,7 +75,7 @@ impl MethodCaller {
             .header("content-type", "application/grpc+proto")
             .header("te", "trailers")
             .body(Full::new(Bytes::from(grpc_frame(data))))
-            .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+            .map_err(|e| eyre!("{e}"))?;
         req.extensions_mut().insert(self.creds.clone());
 
         let resp = svc
@@ -87,7 +87,7 @@ impl MethodCaller {
         let collected = body
             .collect()
             .await
-            .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+            .map_err(|e| eyre!("{e}"))?;
 
         // gRPC status lives in HTTP/2 trailers; fall back to headers for
         // direct (non-transport) calls where they may be merged.
@@ -106,7 +106,7 @@ impl MethodCaller {
                 .or_else(|| parts.headers.get("grpc-message"))
                 .and_then(|v| v.to_str().ok())
                 .unwrap_or("gRPC call failed");
-            return Err(Box::from(format!("gRPC status {status}: {msg}")));
+            bail!("gRPC status {status}: {msg}");
         }
 
         grpc_unframe(&collected.to_bytes())
@@ -117,7 +117,7 @@ fn parse_service_name(method: &str) -> Result<&str> {
     let path = method.trim_start_matches('/');
     let end = path
         .rfind('/')
-        .ok_or_else(|| -> BoxError { Box::from(format!("invalid method path: {method}")) })?;
+        .ok_or_else(|| eyre!("invalid method path: {method}"))?;
     Ok(&path[..end])
 }
 
@@ -131,12 +131,12 @@ pub fn grpc_frame(data: &[u8]) -> Vec<u8> {
 
 pub fn grpc_unframe(data: &[u8]) -> Result<Vec<u8>> {
     if data.len() < 5 {
-        return Err(Box::from("gRPC response frame too short"));
+        bail!("gRPC response frame too short");
     }
     let msg_len = u32::from_be_bytes([data[1], data[2], data[3], data[4]]) as usize;
     data.get(5..5 + msg_len)
         .map(<[u8]>::to_vec)
-        .ok_or_else(|| Box::from("gRPC response truncated") as BoxError)
+        .ok_or_else(|| eyre!("gRPC response truncated"))
 }
 
 #[cfg(test)]
@@ -159,6 +159,7 @@ mod tests {
             Ok(tonic::Response::new(PingResponse {
                 component: "test".into(),
                 version: "1.0".into(),
+                server_version: "".into(),
             }))
         }
 
