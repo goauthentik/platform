@@ -1,4 +1,4 @@
-use ak_platform::prelude::*;
+use eyre::{Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{
@@ -45,15 +45,16 @@ where
                 header: Some(self.header.clone()),
                 keys: self.keys.clone(),
             })
-            .await?
+            .await
+            .wrap_err("cache get RPC failed")?
             .into_inner();
         assert_response_valid(res.header)?;
-        let value: T = serde_json::from_str(&res.value)?;
+        let value: T = serde_json::from_str(&res.value).wrap_err("failed to deserialize cached value")?;
         Ok(value)
     }
 
     pub async fn set(&self, value: T) -> Result<()> {
-        let json = serde_json::to_string(&value)?;
+        let json = serde_json::to_string(&value).wrap_err("failed to serialize value for cache")?;
 
         let expiry_ts = value.expiry();
 
@@ -67,7 +68,8 @@ where
                 expiry: Some(expiry_ts),
                 value: json,
             })
-            .await?
+            .await
+            .wrap_err("cache set RPC failed")?
             .into_inner();
         assert_response_valid(res.header)?;
         Ok(())

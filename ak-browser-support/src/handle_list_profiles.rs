@@ -1,4 +1,4 @@
-use std::error::Error;
+use eyre::{Result, WrapErr};
 
 use serde_json::{Value, to_value};
 
@@ -8,12 +8,18 @@ use crate::{
 };
 
 impl PathHandler {
-    pub async fn handle_list_profiles(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
-        let uc = match &self.user_client {
-            Some(c) => c.clone(),
-            None => return Err(Box::from("Not connected to user agent")),
-        };
-        let profiles = uc.ctrl().list_profiles(()).await?.into_inner();
+    pub async fn handle_list_profiles(&self, msg: Message) -> Result<Response> {
+        let uc = self
+            .user_client
+            .as_ref()
+            .ok_or_else(|| eyre::eyre!("Not connected to user agent"))?
+            .clone();
+        let profiles = uc
+            .ctrl()
+            .list_profiles(())
+            .await
+            .wrap_err("failed to list profiles")?
+            .into_inner();
         let mut res = Response::in_response_to(msg);
         let c = profiles
             .profiles

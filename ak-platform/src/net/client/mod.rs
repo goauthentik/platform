@@ -1,5 +1,4 @@
-use std::error::Error;
-
+use eyre::Result;
 use hyper_util::rt::TokioIo;
 use interprocess::local_socket::{
     GenericFilePath,
@@ -8,9 +7,7 @@ use interprocess::local_socket::{
 
 use crate::string::PlatformString;
 
-pub async fn connect(
-    path: PlatformString,
-) -> Result<TokioIo<LocalSocketStream>, Box<dyn Error + Send + Sync>> {
+pub async fn connect(path: PlatformString) -> Result<TokioIo<LocalSocketStream>> {
     let name = path.for_current().to_fs_name::<GenericFilePath>()?;
 
     let stream = LocalSocketStream::connect(name).await?;

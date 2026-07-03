@@ -1,6 +1,6 @@
 use crate::grpc::method_caller::grpc_frame;
 use crate::grpc::method_caller::grpc_unframe;
-use crate::prelude::*;
+use eyre::Result;
 use std::{future::Future, pin::Pin, sync::Arc, task::Poll};
 
 use bytes::Bytes;
@@ -31,7 +31,8 @@ pub struct SSHTunnel {
 
 impl SSHTunnel {
     pub async fn new() -> Result<Self> {
-        let sock_path = std::env::var("SSH_AUTH_SOCK").map_err(|_| "SSH_AUTH_SOCK is not set")?;
+        let sock_path = std::env::var("SSH_AUTH_SOCK")
+            .map_err(|_| eyre::eyre!("SSH_AUTH_SOCK is not set"))?;
         let st = match connect(PlatformString::new_with_default(&sock_path)).await {
             Ok(s) => s,
             Err(e) => return Err(e),

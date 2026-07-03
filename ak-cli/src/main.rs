@@ -2,7 +2,7 @@ use crate::commands::{auth::AuthCommands, config::ConfigCommands};
 use ak_platform::grpc::assert_response_valid;
 use ak_platform::log::LevelFilter;
 use ak_platform::paths::DEFAULT_PROFILE;
-use ak_platform::prelude::*;
+use eyre::{Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     log::{init_log_interactive, set_log_level},
@@ -129,7 +129,9 @@ impl App {
     pub async fn user(self) -> Result<Client<AnyService>> {
         match self.client {
             Some(c) => Ok(c),
-            None => Ok(Client::new(self.args.socket).await?),
+            None => Ok(Client::new(self.args.socket)
+                .await
+                .wrap_err("failed to connect to user agent")?),
         }
     }
 }
