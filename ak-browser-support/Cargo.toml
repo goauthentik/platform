@@ -10,6 +10,7 @@ workspace = true
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 tonic = { workspace = true }
+eyre = { workspace = true }
 tracing = { workspace = true }
 native_messaging = { version = "0.3.0", features = ["tokio"] }
 serde = { workspace = true }

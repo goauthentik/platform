@@ -2,7 +2,7 @@ use std::{path::Path, sync::Arc};
 
 use tokio::sync::mpsc;
 
-use crate::prelude::*;
+use eyre::Result;
 use crate::storage::cfgmgr::{ConfigManager, schema::Config};
 use notify::{Event, EventKind, RecursiveMode, Watcher, recommended_watcher};
 
