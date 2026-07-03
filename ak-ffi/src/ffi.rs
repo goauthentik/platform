@@ -63,7 +63,7 @@ fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>) ->
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
     let raw_token = qm
         .get(TOKEN_QUERY_PARAM)
-        .ok_or("failed to get token from URL")?;
+        .ok_or_else(|| eyre::eyre!("failed to get token from URL"))?;
     token.push_str(&raw_token);
     Ok(())
 }
@@ -73,7 +73,7 @@ fn ak_sys_auth_url(url: &CxxString, token: &mut ffi::TokenResponse) -> Result<bo
     let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
     let raw_token = qm
         .get(TOKEN_QUERY_PARAM)
-        .ok_or("failed to get token from URL")?;
+        .ok_or_else(|| eyre::eyre!("failed to get token from URL"))?;
     let_cxx_string!(crt = raw_token);
     ak_sys_auth_token_validate(&crt, token)
 }
