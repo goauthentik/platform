@@ -1,5 +1,5 @@
 use crate::{App, format};
-use ak_platform::prelude::*;
+use eyre::{Result, WrapErr};
 use ak_platform::{
     generated::{agent::RequestHeader, agent_auth::WhoAmIRequest},
     grpc::assert_response_valid,
@@ -16,7 +16,8 @@ pub async fn whoami(app: App) -> Result<()> {
                 profile: app.profile(),
             }),
         })
-        .await?
+        .await
+        .wrap_err("whoami RPC failed")?
         .into_inner();
     assert_response_valid(res.header)?;
     format::render_json(res.body, "User Information", app.args.json)

@@ -2,7 +2,7 @@ use ak_platform::generated::sys_directory::{
     GetRequest, Group as AKGroup, User, system_directory_client::SystemDirectoryClient,
 };
 use ak_platform::grpc::grpc_request;
-use ak_platform::prelude::Result;
+use eyre::Result;
 
 pub trait DirectoryBridge {
     fn list_users(&self) -> Result<Vec<User>>;

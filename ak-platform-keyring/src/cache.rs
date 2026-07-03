@@ -1,9 +1,8 @@
 use chrono::{DateTime, Utc};
+use eyre::{Result, WrapErr};
 use serde::{Serialize, de::DeserializeOwned};
 use std::fmt::Debug;
 use std::marker::PhantomData;
-
-use ak_platform::prelude::BoxError;
 
 use crate::KeyringError;
 
@@ -19,7 +18,7 @@ pub struct Cache<T> {
 }
 
 pub enum CacheError {
-    Other(BoxError),
+    Other(eyre::Report),
     Expired(),
     NotFound(),
 }
@@ -37,9 +36,9 @@ where
     }
 
     #[tracing::instrument]
-    pub async fn set(self, val: T) -> Result<(), BoxError> {
+    pub async fn set(self, val: T) -> Result<()> {
         tracing::debug!("Writing to cache");
-        let serialized = serde_json::to_string(&val).map_err(Box::new)?;
+        let serialized = serde_json::to_string(&val).wrap_err("failed to serialize cache value")?;
         crate::set(
             &crate::service(&self.uid),
             &self.profile_name,
@@ -47,7 +46,7 @@ where
             serialized,
         )
         .await
-        .map_err(Box::from)
+        .map_err(|e| eyre::eyre!("keyring set failed: {e}"))
     }
 
     #[tracing::instrument]
@@ -64,7 +63,8 @@ where
             Err(KeyringError::NotFound()) => return Err(CacheError::NotFound()),
             Err(KeyringError::Other(e)) => return Err(CacheError::Other(e)),
         };
-        let v: T = serde_json::from_str(&cached).map_err(|e| CacheError::Other(e.into()))?;
+        let v: T =
+            serde_json::from_str(&cached).map_err(|e| CacheError::Other(eyre::Report::from(e)))?;
         if v.expiry() < Utc::now() {
             crate::delete(
                 &crate::service(&self.uid),
@@ -72,7 +72,7 @@ where
                 crate::Accessibility::User,
             )
             .await
-            .map_err(|e| CacheError::Other(e.into()))?;
+            .map_err(|e| CacheError::Other(eyre::Report::from(e)))?;
         }
         Ok(v)
     }

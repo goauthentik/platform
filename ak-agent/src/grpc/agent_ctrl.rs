@@ -24,8 +24,8 @@ impl AgentCtrl for AgentGRPCServer {
                 .for_profile(key)
                 .await
                 .ok_or(Status::invalid_argument("profile not found"))?;
-            let token = ptm.unverified().await.map_err(Status::from_error)?;
-            let claims = token.claims().map_err(Status::from_error)?;
+            let token = ptm.unverified().await.map_err(|e| Status::from_error(e.into()))?;
+            let claims = token.claims().map_err(|e| Status::from_error(e.into()))?;
             let o_prof = Profile {
                 name: key.clone(),
                 username: claims.preferred_username,
@@ -68,7 +68,7 @@ impl AgentCtrl for AgentGRPCServer {
         }
         if let Err(e) = self.agent.cfg.save().await {
             tracing::warn!("failed to save config: {e:?}");
-            return Err(Status::from_error(e));
+            return Err(Status::from_error(e.into()));
         }
         self.agent.gtm.wait_for_profile(&profile_name).await;
         tracing::info!(profile = profile_name, "setup new profile");
@@ -88,7 +88,7 @@ impl AgentCtrl for AgentGRPCServer {
         }
         if let Err(e) = self.agent.cfg.save().await {
             tracing::warn!("failed to save config: {e:?}");
-            return Err(Status::from_error(e));
+            return Err(Status::from_error(e.into()));
         }
         tracing::debug!(profile = new_profile, "Switched active profile");
         Ok(Response::new(ResponseHeader { successful: true }))

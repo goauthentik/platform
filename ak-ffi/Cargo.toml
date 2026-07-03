@@ -12,6 +12,7 @@ workspace = true
 
 [dependencies]
 ak-platform = { path = "../ak-platform" }
+eyre = { workspace = true }
 cxx = "1.0.194"
 url = { workspace = true }
 serde = { workspace = true }

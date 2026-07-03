@@ -10,8 +10,9 @@ workspace = true
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 tonic = { workspace = true }
+eyre = { workspace = true }
 tracing = { workspace = true }
-native_messaging = { version = "0.2.0", features = ["tokio", "windows-registry"] }
+native_messaging = { version = "0.3.0", features = ["tokio"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = [

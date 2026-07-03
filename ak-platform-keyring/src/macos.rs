@@ -52,9 +52,9 @@ fn build_options(service: &str, user: &str, access: &Accessibility) -> PasswordO
 pub fn get(service: &str, user: &str, access: &Accessibility) -> Result<String, KeyringError> {
     let options = build_options(service, user, access);
     match generic_password(options) {
-        Ok(bytes) => String::from_utf8(bytes).map_err(|e| KeyringError::Other(e.into())),
+        Ok(bytes) => String::from_utf8(bytes).map_err(|e| KeyringError::Other(eyre::Report::from(e))),
         Err(e) if e.code() == -25300 => Err(KeyringError::NotFound()),
-        Err(e) => Err(KeyringError::Other(Box::new(e))),
+        Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
     }
 }
 
@@ -66,7 +66,7 @@ pub fn set(
 ) -> Result<(), KeyringError> {
     let options = build_options(service, user, access);
     set_generic_password_options(data.as_bytes(), options)
-        .map_err(|e| KeyringError::Other(Box::new(e)))
+        .map_err(|e| KeyringError::Other(eyre::Report::from(e)))
 }
 
 pub fn delete(service: &str, user: &str, access: &Accessibility) -> Result<(), KeyringError> {
@@ -74,7 +74,7 @@ pub fn delete(service: &str, user: &str, access: &Accessibility) -> Result<(), K
     match delete_generic_password_options(options) {
         Ok(()) => Ok(()),
         Err(e) if e.code() == -25300 => Ok(()),
-        Err(e) => Err(KeyringError::Other(Box::new(e))),
+        Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
     }
 }
 
