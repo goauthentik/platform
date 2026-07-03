@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use eyre::Result;
 use std::error::Error;
 use std::future::Future;
 use std::io::ErrorKind;
@@ -44,6 +44,8 @@ impl Client<SSHService> {
         Ok(Client { c: service })
     }
 }
+
+type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
 type AnyBody = UnsyncBoxBody<Bytes, BoxError>;
 

@@ -1,6 +1,7 @@
 use crate::agent::Agent;
 use ak_meta::full_version;
-use ak_platform::{prelude::*, string::PlatformString};
+use ak_platform::string::PlatformString;
+use eyre::Result;
 
 pub mod agent;
 pub mod config;
@@ -16,7 +17,7 @@ async fn main() -> Result<()> {
             .with_linux("ak-agent"),
     );
     tracing::trace!("authentik Agent v{}", full_version());
-    ak_platform_keyring::init()?;
+    ak_platform_keyring::init().map_err(|e| eyre::eyre!("{e}"))?;
     let ag = Agent::new().await?;
     ag.start().await?;
     Ok(())

@@ -88,7 +88,7 @@ fn gen_top_level_impl(modules: &[&str]) -> TokenStream {
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> anyhow::Result<()> {
+            ) -> eyre::Result<()> {
                 match self {
                     #(#arms)*
                 }
@@ -168,7 +168,7 @@ fn gen_module(module: &str, resources: &BTreeMap<&str, Vec<&ApiFunction>>) -> To
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> anyhow::Result<()> {
+            ) -> eyre::Result<()> {
                 match self {
                     #(#match_arms)*
                 }
@@ -229,7 +229,7 @@ fn gen_resource(module: &str, resource: &str, functions: &[&ApiFunction]) -> Tok
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> anyhow::Result<()> {
+            ) -> eyre::Result<()> {
                 match self {
                     #(#arms)*
                 }
@@ -326,7 +326,7 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
             #(#conversions)*
             let response = authentik_client::apis::#module_mod::#fn_ident(config, #(#call_args),*).await?;
             let body = response.text().await
-                .map_err(|e| anyhow::anyhow!("failed to read response body: {e}"))?;
+                .map_err(|e| eyre::eyre!("failed to read response body: {e}"))?;
             print!("{}", body);
             Ok(())
         }
@@ -349,7 +349,7 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> anyhow::Result<()> {
+            ) -> eyre::Result<()> {
                 #result_handling
             }
         }
@@ -493,7 +493,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                 Some(quote! {
                     let #local: Vec<i32> = self.#field
                         .iter()
-                        .map(|s| s.parse::<i32>().map_err(|e| anyhow::anyhow!("{e}")))
+                        .map(|s| s.parse::<i32>().map_err(|e| eyre::eyre!("{e}")))
                         .collect::<Result<Vec<_>, _>>()?;
                 }),
                 quote! { #local },
@@ -508,7 +508,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                     let #local: Option<bool> = self.#field
                         .as_deref()
                         .map(|s| s.parse::<bool>()
-                            .map_err(|e| anyhow::anyhow!("invalid bool for --{}: {e}", #flag)))
+                            .map_err(|e| eyre::eyre!("invalid bool for --{}: {e}", #flag)))
                         .transpose()?;
                 }),
                 quote! { #local },
@@ -537,7 +537,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                         None => serde_json::Value::Object(Default::default()),
                     };
                     let __obj = __body_json.as_object_mut()
-                        .ok_or_else(|| anyhow::anyhow!("--body must be a JSON object"))?;
+                        .ok_or_else(|| eyre::eyre!("--body must be a JSON object"))?;
                     #(#field_overrides)*
                     let #local: authentik_client::models::#type_ident =
                         serde_json::from_value(__body_json)?;
@@ -578,7 +578,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                             None => serde_json::Value::Object(Default::default()),
                         };
                         let __obj = __body_json.as_object_mut()
-                            .ok_or_else(|| anyhow::anyhow!("--body must be a JSON object"))?;
+                            .ok_or_else(|| eyre::eyre!("--body must be a JSON object"))?;
                         #(#field_overrides)*
                         Some(serde_json::from_value(__body_json)?)
                     };
@@ -599,7 +599,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                                 let quoted = format!("\"{}\"", s);
                                 serde_json::from_str::<authentik_client::models::#type_ident>(&quoted)
                                     .or_else(|_| serde_json::from_str(s))
-                                    .map_err(|e| anyhow::anyhow!("invalid value for --{}: {}", #flag, e))
+                                    .map_err(|e| eyre::eyre!("invalid value for --{}: {}", #flag, e))
                             })
                             .transpose()?;
                 }),
@@ -625,7 +625,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                         None
                     } else {
                         Some(self.#field.iter()
-                            .map(|s| s.parse::<i32>().map_err(|e| anyhow::anyhow!("{e}")))
+                            .map(|s| s.parse::<i32>().map_err(|e| eyre::eyre!("{e}")))
                             .collect::<Result<Vec<_>, _>>()?)
                     };
                 }),
@@ -641,7 +641,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                         None
                     } else {
                         Some(self.#field.iter()
-                            .map(|s| s.parse::<uuid::Uuid>().map_err(|e| anyhow::anyhow!("{e}")))
+                            .map(|s| s.parse::<uuid::Uuid>().map_err(|e| eyre::eyre!("{e}")))
                             .collect::<Result<Vec<_>, _>>()?)
                     };
                 }),
@@ -675,7 +675,7 @@ fn gen_param_conversion(param: &ApiParam) -> (Option<TokenStream>, TokenStream) 
                         self.#field.as_deref()
                             .map(|s| {
                                 s.parse::<chrono::DateTime<chrono::FixedOffset>>()
-                                    .map_err(|e| anyhow::anyhow!("{e}"))
+                                    .map_err(|e| eyre::eyre!("{e}"))
                             })
                             .transpose()?;
                 }),

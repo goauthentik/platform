@@ -2,7 +2,7 @@ use crate::{
     App,
     auth::{aws, k8s, raw},
 };
-use ak_platform::prelude::*;
+use eyre::Result;
 use clap::Subcommand;
 
 #[derive(Subcommand, Clone)]

@@ -1,4 +1,4 @@
-use std::error::Error;
+use eyre::{Result, WrapErr};
 
 use ak_platform::generated::{agent::RequestHeader, agent_platform::PlatformEndpointRequest};
 use serde_json::Value;
@@ -12,14 +12,12 @@ impl PathHandler {
     pub async fn handle_platform_sign_endpoint_header(
         &self,
         msg: Message,
-    ) -> Result<Response, Box<dyn Error>> {
-        let challenge = match msg.data.get("challenge") {
-            Some(ch) => match ch.as_str() {
-                Some(sch) => sch,
-                None => return Err(Box::from("No challenge")),
-            },
-            None => return Err(Box::from("No challenge")),
-        };
+    ) -> Result<Response> {
+        let challenge = msg
+            .data
+            .get("challenge")
+            .and_then(|ch| ch.as_str())
+            .ok_or_else(|| eyre::eyre!("No challenge"))?;
         let signed_response = self
             .system_client
             .clone()
@@ -30,7 +28,8 @@ impl PathHandler {
                 }),
                 challenge: challenge.to_string(),
             })
-            .await?
+            .await
+            .wrap_err("failed to sign endpoint header")?
             .into_inner();
         let mut res = Response::in_response_to(msg);
         res.data.insert(

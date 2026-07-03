@@ -1,16 +1,14 @@
 use ak_meta::user_agent;
-use ak_platform::{
-    generated::{
-        agent::RequestHeader,
-        agent_auth::{CurrentTokenRequest, current_token_request::Type},
-    },
-    prelude::BoxError,
+use ak_platform::generated::{
+    agent::RequestHeader,
+    agent_auth::{CurrentTokenRequest, current_token_request::Type},
 };
+use eyre::{Result, WrapErr};
 use authentik_client::apis::configuration::Configuration;
 
 include!(concat!(env!("OUT_DIR"), "/api_commands.rs"));
 
-pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<(), BoxError> {
+pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<()> {
     let profile = app.profile();
     let res = app
         .user()
@@ -21,7 +19,8 @@ pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<(), B
             header: Some(RequestHeader { profile }),
             r#type: Type::Verified as i32,
         })
-        .await?
+        .await
+        .wrap_err("failed to get API access token")?
         .into_inner();
 
     let config = Configuration {
@@ -30,7 +29,9 @@ pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<(), B
         user_agent: Some(user_agent()),
         ..Default::default()
     };
-    cmd.execute(&config).await.map_err(Box::from)
+    cmd.execute(&config)
+        .await
+        .wrap_err("API command failed")
 }
 
 #[cfg(test)]

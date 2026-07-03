@@ -1,6 +1,6 @@
 use crate::format;
 use crate::setup::ak::urls_for_profile;
-use ak_platform::prelude::*;
+use eyre::Result;
 use oauth_device_flows::provider::GenericProviderConfig;
 use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
 use open::that;

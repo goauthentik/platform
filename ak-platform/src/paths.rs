@@ -1,7 +1,6 @@
 use dirs_next::{config_dir, data_dir};
+use eyre::{Result, bail};
 use std::env;
-
-use crate::prelude::*;
 use crate::string::PlatformString;
 
 pub const DEFAULT_PROFILE: &str = "default";
@@ -32,26 +31,26 @@ pub enum AgentSocketID {
 fn xdg_data_path(last_seg: &str) -> Result<String> {
     let mut data = match data_dir() {
         Some(d) => d,
-        None => return Err(Box::from("Failed to get XDG data path")),
+        None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
-        None => Err(Box::from("Failed to convert path to string")),
+        None => bail!("Failed to convert path to string"),
     }
 }
 
 pub fn xdg_config_path(last_seg: &str) -> Result<String> {
     let mut data = match config_dir() {
         Some(d) => d,
-        None => return Err(Box::from("Failed to get XDG data path")),
+        None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
-        None => Err(Box::from("Failed to convert path to string")),
+        None => bail!("Failed to convert path to string"),
     }
 }
 

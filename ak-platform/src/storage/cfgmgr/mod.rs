@@ -9,7 +9,8 @@ use std::{
 };
 use tokio::sync::{Notify, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use crate::{prelude::*, storage::cfgmgr::schema::Config};
+use eyre::Result;
+use crate::storage::cfgmgr::schema::Config;
 
 pub mod schema;
 pub mod watch;
@@ -131,7 +132,7 @@ mod tests {
     use super::*;
     use crate::storage::cfgmgr::schema::Config;
 
-    #[derive(Serialize, Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug, Clone)]
     struct TestCfg {
         field: String,
         #[serde(skip)]
@@ -151,11 +152,11 @@ mod tests {
     }
 
     impl Config for TestCfg {
-        async fn post_load(&mut self) -> crate::prelude::Result<()> {
+        async fn post_load(&mut self) -> eyre::Result<()> {
             self.post_load_called.store(true, Ordering::SeqCst);
             Ok(())
         }
-        async fn pre_save(&self) -> crate::prelude::Result<()> {
+        async fn pre_save(&self) -> eyre::Result<()> {
             self.pre_save_called.store(true, Ordering::SeqCst);
             Ok(())
         }

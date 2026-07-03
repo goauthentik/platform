@@ -1,4 +1,6 @@
-use crate::prelude::*;
+use eyre::Result;
+use eyre::bail;
+use std::future::Future;
 use base64::{Engine, prelude::BASE64_STANDARD};
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
@@ -48,10 +50,7 @@ pub fn grpc_request_path<T, F: Future<Output = Result<T>>>(
 
     rt.block_on(async {
         let channel = grpc_endpoint(path).await?;
-        match future(channel).await {
-            Ok(t) => Ok(t),
-            Err(e) => Err(e),
-        }
+        future(channel).await
     })
 }
 
@@ -119,7 +118,7 @@ pub fn assert_response_valid(header: Option<ResponseHeader>) -> Result<()> {
     if let Some(header) = header
         && !header.successful
     {
-        return Err(Box::from("unsuccessful request"));
+        bail!("unsuccessful request");
     }
     Ok(())
 }
