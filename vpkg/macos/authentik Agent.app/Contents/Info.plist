@@ -13,9 +13,9 @@
 	<key>CFBundleName</key>
 	<string>authentik Agent</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.50.0</string>
+	<string>0.50.1</string>
 	<key>CFBundleVersion</key>
-	<string>0.50.0</string>
+	<string>0.50.1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>15.0</string>
 	<key>LSUIElement</key>
