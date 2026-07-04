@@ -7,17 +7,21 @@ license.workspace = true
 [dependencies]
 ak-platform = { path = "../ak-platform" }
 eyre = { workspace = true }
-keyring = "4.0.1"
-keyring-core = "1.0.0"
+keyring-core = { version = "1.0.0", features = ["sample"] }
 serde = { workspace = true }
 chrono = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-apple-native-keyring-store = "1.0.0"
 security-framework = { version = "3.7", features = ["OSX_10_15"] }
 core-foundation = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+windows-native-keyring-store = "1.1.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+linux-keyutils-keyring-store = "1.0.0"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "io-util"] }
