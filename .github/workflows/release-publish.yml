@@ -34,6 +34,7 @@ jobs:
   call-package-darwin:
     needs:
       - call-build-go
+      - call-build-rs
       - call-build-ee-psso
     uses: ./.github/workflows/_package-darwin.yml
     secrets: inherit
@@ -42,6 +43,7 @@ jobs:
   call-package-windows:
     needs:
       - call-build-go
+      - call-build-rs
       - call-build-ee-wcp
     uses: ./.github/workflows/_package-windows.yml
     secrets: inherit
