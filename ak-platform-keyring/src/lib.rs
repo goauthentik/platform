@@ -4,11 +4,9 @@ use std::{error::Error, fmt::Display};
 use std::collections::HashMap;
 
 #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
-use keyring::use_named_store;
-#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
 use keyring_core::{Entry, Error::NoEntry};
 
-use eyre::{Result, WrapErr, bail};
+use eyre::{Result, bail};
 
 #[cfg(target_os = "macos")]
 pub mod macos;
@@ -21,15 +19,31 @@ const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.sha
 #[allow(unreachable_code)]
 pub fn init() -> Result<()> {
     #[cfg(any(test, debug_assertions))]
-    return use_named_store("sample").wrap_err("failed to initialize sample keyring store");
+    {
+        keyring_core::set_default_store(
+            keyring_core::sample::Store::new()
+                .map_err(|e| eyre::eyre!("failed to initialize sample keyring store: {e}"))?,
+        );
+        return Ok(());
+    }
     // On macOS release builds the keychain is accessed directly via security-framework
     // (no keyring store needed — see the get/set/delete implementations below).
     #[cfg(target_os = "macos")]
     return Ok(());
     #[cfg(target_os = "windows")]
-    return Ok(use_named_store("windows").wrap_err("failed to initialize Windows keyring store")?);
+    {
+        let store = windows_native_keyring_store::Store::new()
+            .map_err(|e| eyre::eyre!("failed to initialize Windows keyring store: {e}"))?;
+        keyring_core::set_default_store(store);
+        return Ok(());
+    }
     #[cfg(target_os = "linux")]
-    return Ok(use_named_store("keyutils").wrap_err("failed to initialize Linux keyring store")?);
+    {
+        let store = linux_keyutils_keyring_store::Store::new()
+            .map_err(|e| eyre::eyre!("failed to initialize Linux keyring store: {e}"))?;
+        keyring_core::set_default_store(store);
+        return Ok(());
+    }
     bail!("no keychain implementation for current OS")
 }
 
