@@ -45,6 +45,8 @@ updates:
     directories:
       - /containers/selenium
       - /containers/test
+    commit-message:
+      prefix: "containers:"
     schedule:
       interval: daily
       time: "04:00"
@@ -59,6 +61,8 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+    commit-message:
+      prefix: "ee/psso:"
     groups:
       grpc:
         patterns:
@@ -68,3 +72,15 @@ updates:
       apple:
         patterns:
           - github.com/apple/*
+  - package-ecosystem: rust-toolchain
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "04:00"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "core:"
+    labels:
+      - dependencies
+    cooldown:
+      default-days: 3
