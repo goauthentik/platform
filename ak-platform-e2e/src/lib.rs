@@ -62,9 +62,10 @@ pub fn lookup_repo_dir(rel: &str) -> PathBuf {
     if let Ok(lw) = env::var("LOCAL_WORKSPACE") {
         return PathBuf::from(lw).join(rel_clean);
     }
-    // Integration tests run from ak-tests/, so workspace root is one level up
-    let cwd = env::current_dir().expect("cwd");
-    let root = cwd.parent().unwrap_or(&cwd);
+    // CARGO_MANIFEST_DIR points to ak-platform-e2e/ at compile time; its parent
+    // is the workspace root regardless of where cargo-nextest sets the runtime CWD.
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest.parent().unwrap_or(&manifest);
     root.join(rel_clean)
 }
 
@@ -299,11 +300,9 @@ pub async fn cleanup_hosts() -> Result<()> {
 /// Go harness's `wait.ForExec` condition.
 pub async fn test_machine() -> Result<ContainerAsync<GenericImage>> {
     let host_coverage_dir = lookup_repo_dir("ak-platform-e2e/coverage");
-    let cwd = env::current_dir().expect("cwd");
-    let local_coverage_dir = cwd
-        .parent()
-        .unwrap_or(&cwd)
-        .join("ak-platform-e2e/coverage");
+    // Use the compile-time manifest dir for local fs ops; cwd.parent() breaks when
+    // cargo-nextest sets CWD to the workspace root rather than the package directory.
+    let local_coverage_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("coverage");
 
     for sub in &["cli", "ak-sysd", "ak-agent", "rs"] {
         let fd = local_coverage_dir.join(sub);
@@ -318,7 +317,7 @@ pub async fn test_machine() -> Result<ContainerAsync<GenericImage>> {
     let host_coverage_str = host_coverage_dir.to_string_lossy().into_owned();
 
     let container = GenericImage::new("xghcr.io/goauthentik/platform-e2e", "local")
-        .with_env_var("GOCOVERDIR", "/tmp/ak-coverage/cli")
+        .with_env_var("GOCOVERDIR", "/tmp/ak-coverage/ak-sysd")
         .with_env_var(
             "LLVM_PROFILE_FILE",
             "/tmp/ak-coverage/rs/default_%m_%p.profraw",
