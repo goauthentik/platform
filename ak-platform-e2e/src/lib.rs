@@ -317,7 +317,7 @@ pub async fn test_machine() -> Result<ContainerAsync<GenericImage>> {
         .with_host("host.docker.internal", Host::HostGateway)
         .with_log_consumer(|frame: &LogFrame| {
             let line = String::from_utf8_lossy(frame.bytes());
-            tracing::debug!("[e2e] {}", line);
+            tracing::debug!("[e2e] {}", line.trim());
         })
         .start()
         .await
