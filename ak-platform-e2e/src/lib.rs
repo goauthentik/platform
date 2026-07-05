@@ -1,7 +1,7 @@
 use std::{env, fs, path::PathBuf, time::Duration};
 
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
-use eyre::{Context, Result, bail};
+use eyre::{Context, ContextCompat, Result, bail};
 use oauth_device_flows::provider::GenericProviderConfig;
 use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
 use testcontainers::core::CmdWaitFor;
@@ -256,19 +256,34 @@ pub async fn join_domain(container: &ContainerAsync<GenericImage>) -> Result<()>
 /// Removes all enrolled devices from authentik via the admin API.
 pub async fn cleanup_hosts() -> Result<()> {
     let base_url = local_authentik_url();
+    let token = authentik_token();
+
+    // Use raw reqwest to avoid generated-client serde failures on nullable UUID fields.
+    let body: serde_json::Value = reqwest::Client::new()
+        .get(format!("{}/api/v3/endpoints/devices/", base_url))
+        .query(&[("page_size", "100")])
+        .bearer_auth(&token)
+        .send()
+        .await
+        .wrap_err("failed to list devices")?
+        .error_for_status()
+        .wrap_err("failed to list devices")?
+        .json()
+        .await
+        .wrap_err("failed to parse device list")?;
+
+    let results = body["results"]
+        .as_array()
+        .wrap_err("invalid device list response")?;
+    let count = results.len();
+
     let mut config = AkConfig::new();
     config.base_path = format!("{}/api/v3", base_url);
-    config.bearer_access_token = Some(authentik_token());
+    config.bearer_access_token = Some(token);
 
-    let result =
-        endpoints_api::endpoints_devices_list(&config, None, None, None, None, Some(100), None)
-            .await
-            .wrap_err("failed to list devices")?;
-
-    let count = result.results.len();
-    for device in result.results {
-        if let Some(uuid) = device.device_uuid {
-            endpoints_api::endpoints_devices_destroy(&config, &uuid.to_string())
+    for device in results {
+        if let Some(uuid) = device["device_uuid"].as_str() {
+            endpoints_api::endpoints_devices_destroy(&config, uuid)
                 .await
                 .wrap_err("failed to destroy device")?;
         }
