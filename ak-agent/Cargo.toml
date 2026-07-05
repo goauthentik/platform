@@ -29,7 +29,7 @@ pbjson-types = { workspace = true }
 ssh-agent-lib = { workspace = true }
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
 ssh-encoding = "0.3"
-signature = "2"
+signature = "3"
 tonic-prost = { workspace = true }
 reqwest = { workspace = true }
 reqwest-middleware = "0.5.2"
