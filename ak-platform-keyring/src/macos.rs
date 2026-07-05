@@ -52,7 +52,9 @@ fn build_options(service: &str, user: &str, access: &Accessibility) -> PasswordO
 pub fn get(service: &str, user: &str, access: &Accessibility) -> Result<String, KeyringError> {
     let options = build_options(service, user, access);
     match generic_password(options) {
-        Ok(bytes) => String::from_utf8(bytes).map_err(|e| KeyringError::Other(eyre::Report::from(e))),
+        Ok(bytes) => {
+            String::from_utf8(bytes).map_err(|e| KeyringError::Other(eyre::Report::from(e)))
+        }
         Err(e) if e.code() == -25300 => Err(KeyringError::NotFound()),
         Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
     }

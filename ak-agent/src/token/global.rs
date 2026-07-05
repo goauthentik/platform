@@ -4,8 +4,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::{Notify, RwLock};
 
-use eyre::{Result, bail};
 use ak_platform::storage::cfgmgr::ConfigManager;
+use eyre::{Result, bail};
 
 use crate::config::ConfigV1;
 use crate::token::profile::ProfileTokenManager;

@@ -6,12 +6,12 @@ use crate::{
         ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
     },
 };
-use eyre::{bail, Result, WrapErr};
 use ak_platform::{
     generated::{agent::RequestHeader, agent_ctrl::SetupRequest},
     grpc::assert_response_valid,
 };
 use clap::Subcommand;
+use eyre::{Result, WrapErr, bail};
 use ratatui::text::Line;
 use std::env;
 use url::Url;

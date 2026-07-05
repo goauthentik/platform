@@ -1,4 +1,7 @@
-use ak_tests::{CmdTestCase, agent_setup, cleanup_hosts, cmd_test, join_domain, must_exec, test_init, test_machine};
+use ak_tests::{
+    CmdTestCase, agent_setup, cleanup_hosts, cmd_test, join_domain, must_exec, test_init,
+    test_machine,
+};
 
 #[tokio::test]
 async fn test_auth_identity_agent() {

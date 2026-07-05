@@ -147,7 +147,10 @@ impl AgentAuth for AgentGRPCServer {
                 .unverified()
                 .await
                 .map_err(|e| Status::from_error(e.into()))?),
-            Type::Verified => Ok(token_manager.token().await.map_err(|e| Status::from_error(e.into()))?),
+            Type::Verified => Ok(token_manager
+                .token()
+                .await
+                .map_err(|e| Status::from_error(e.into()))?),
         }?;
         let c = token.claims().map_err(|e| Status::from_error(e.into()))?;
 

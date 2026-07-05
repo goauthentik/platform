@@ -301,7 +301,7 @@ jobs:
           make containers/e2e/ci-build
           make test-e2e-ci
       - run: |
-          sudo chmod -R 777 ./e2e/coverage
+          sudo chmod -R 777 ./ak-platform-e2e/coverage
           make test-e2e-convert
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}

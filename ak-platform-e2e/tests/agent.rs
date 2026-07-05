@@ -1,4 +1,4 @@
-use ak_tests::{agent_setup, cmd_test, test_machine, CmdTestCase};
+use ak_tests::{CmdTestCase, agent_setup, cmd_test, test_init, test_machine};
 
 #[tokio::test]
 async fn test_agent_whoami() {

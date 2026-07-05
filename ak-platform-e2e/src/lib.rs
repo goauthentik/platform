@@ -1,7 +1,7 @@
 use std::{env, fs, path::PathBuf, time::Duration};
 
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
-use eyre::{bail, Context, Result};
+use eyre::{Context, Result, bail};
 use testcontainers::{
     ContainerAsync, GenericImage, ImageExt,
     core::{CgroupnsMode, ExecCommand, Host, Mount, logs::LogFrame},
@@ -176,15 +176,15 @@ pub async fn agent_setup(container: &ContainerAsync<GenericImage>) -> Result<()>
         "{}/api/v3/flows/executor/default-provider-authorization-implicit-consent/?format=json",
         base_url
     );
-    if let Ok(resp) = auth_client.get(&consent_url).send().await {
-        if let Ok(challenge) = resp.json::<serde_json::Value>().await {
-            let component = challenge["component"].as_str().unwrap_or("").to_string();
-            let _ = auth_client
-                .post(&consent_url)
-                .json(&serde_json::json!({ "component": component }))
-                .send()
-                .await;
-        }
+    if let Ok(resp) = auth_client.get(&consent_url).send().await
+        && let Ok(challenge) = resp.json::<serde_json::Value>().await
+    {
+        let component = challenge["component"].as_str().unwrap_or("").to_string();
+        let _ = auth_client
+            .post(&consent_url)
+            .json(&serde_json::json!({ "component": component }))
+            .send()
+            .await;
     }
 
     // Poll the token endpoint until the device authorization is approved
@@ -195,10 +195,7 @@ pub async fn agent_setup(container: &ContainerAsync<GenericImage>) -> Result<()>
         let token_resp = auth_client
             .post(format!("{}/application/o/token/", base_url))
             .form(&[
-                (
-                    "grant_type",
-                    "urn:ietf:params:oauth:grant-type:device_code",
-                ),
+                ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
                 ("device_code", &device_code),
                 ("client_id", "authentik-cli"),
             ])
@@ -301,13 +298,18 @@ pub async fn cleanup_hosts() -> Result<()> {
 pub async fn test_machine() -> Result<ContainerAsync<GenericImage>> {
     let host_coverage_dir = lookup_repo_dir("ak-platform-e2e/coverage");
     let cwd = env::current_dir().expect("cwd");
-    let local_coverage_dir = cwd.parent().unwrap_or(&cwd).join("../ak-platform-e2e/coverage");
+    let local_coverage_dir = cwd
+        .parent()
+        .unwrap_or(&cwd)
+        .join("../ak-platform-e2e/coverage");
 
     for sub in &["cli", "ak-sysd", "ak-agent", "rs"] {
         let fd = local_coverage_dir.join(sub);
-        tracing::debug!(path = fd.to_string_lossy().to_string(), "Creating coverage dir");
-        fs::create_dir_all(fd)
-            .wrap_err(format!("failed to create coverage subdir '{}'", sub))?;
+        tracing::debug!(
+            path = fd.to_string_lossy().to_string(),
+            "Creating coverage dir"
+        );
+        fs::create_dir_all(fd).wrap_err(format!("failed to create coverage subdir '{}'", sub))?;
     }
 
     let hostname = format!("test-machine-{}", Uuid::new_v4());

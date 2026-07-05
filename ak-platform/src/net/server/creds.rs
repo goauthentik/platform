@@ -82,5 +82,6 @@ impl ProcCredentials {
             tracing::trace!("pid: {pid}");
             bail!("Invalid pid");
         }
-        ProcInfo::from_pid(pid as u32)}
+        ProcInfo::from_pid(pid as u32)
+    }
 }

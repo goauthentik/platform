@@ -9,10 +9,7 @@ use crate::{
 };
 
 impl PathHandler {
-    pub async fn handle_platform_sign_endpoint_header(
-        &self,
-        msg: Message,
-    ) -> Result<Response> {
+    pub async fn handle_platform_sign_endpoint_header(&self, msg: Message) -> Result<Response> {
         let challenge = msg
             .data
             .get("challenge")

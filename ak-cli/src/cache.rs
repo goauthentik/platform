@@ -1,4 +1,3 @@
-use eyre::{Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{
@@ -7,6 +6,7 @@ use ak_platform::{
     },
     grpc::assert_response_valid,
 };
+use eyre::{Result, WrapErr};
 use pbjson_types::Timestamp;
 use serde::{Serialize, de::DeserializeOwned};
 use std::marker::PhantomData;
@@ -49,7 +49,8 @@ where
             .wrap_err("cache get RPC failed")?
             .into_inner();
         assert_response_valid(res.header)?;
-        let value: T = serde_json::from_str(&res.value).wrap_err("failed to deserialize cached value")?;
+        let value: T =
+            serde_json::from_str(&res.value).wrap_err("failed to deserialize cached value")?;
         Ok(value)
     }
 

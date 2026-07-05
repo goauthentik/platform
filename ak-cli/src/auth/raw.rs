@@ -1,9 +1,9 @@
-use eyre::{Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
     grpc::assert_response_valid,
 };
+use eyre::{Result, WrapErr};
 
 pub struct CredentialsOpts {
     pub profile: String,

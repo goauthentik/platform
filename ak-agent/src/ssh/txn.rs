@@ -2,9 +2,9 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use ak_platform::{net::server::creds::ProcCredentials, string::PlatformString};
-use eyre::{Result, WrapErr, bail};
 use ak_platform_authz::AuthorizeAction;
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
+use eyre::{Result, WrapErr, bail};
 use ssh_key::{Certificate, PrivateKey, public::KeyData};
 use uuid::Uuid;
 

@@ -90,10 +90,7 @@ impl AsyncStream for ListenerStream {
     }
 }
 
-pub async fn listen(
-    path: PlatformString,
-    perm: SocketPermMode,
-) -> Result<ListenerStream> {
+pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<ListenerStream> {
     let path_str = path.for_current();
 
     #[cfg(unix)]

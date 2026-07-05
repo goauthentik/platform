@@ -1,7 +1,7 @@
+use base64::{Engine, prelude::BASE64_STANDARD};
 use eyre::Result;
 use eyre::bail;
 use std::future::Future;
-use base64::{Engine, prelude::BASE64_STANDARD};
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};

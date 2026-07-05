@@ -9,8 +9,8 @@ use std::{
 };
 use tokio::sync::{Notify, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use eyre::Result;
 use crate::storage::cfgmgr::schema::Config;
+use eyre::Result;
 
 pub mod schema;
 pub mod watch;

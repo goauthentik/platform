@@ -1,5 +1,5 @@
-use eyre::Result;
 use chrono::{DateTime, Utc};
+use eyre::Result;
 use pbjson_types::Timestamp;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};

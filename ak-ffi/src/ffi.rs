@@ -1,5 +1,5 @@
-use eyre::Result;
 use cxx::{CxxString, let_cxx_string};
+use eyre::Result;
 use std::collections::HashMap;
 use std::pin::Pin;
 use url::Url;

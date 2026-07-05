@@ -2,8 +2,8 @@ use crate::{
     App,
     auth::{aws, k8s, raw},
 };
-use eyre::Result;
 use clap::Subcommand;
+use eyre::Result;
 
 #[derive(Subcommand, Clone)]
 pub enum AuthCommands {
