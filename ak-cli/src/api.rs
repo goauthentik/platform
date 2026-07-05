@@ -3,8 +3,8 @@ use ak_platform::generated::{
     agent::RequestHeader,
     agent_auth::{CurrentTokenRequest, current_token_request::Type},
 };
-use eyre::{Result, WrapErr};
 use authentik_client::apis::configuration::Configuration;
+use eyre::{Result, WrapErr};
 
 include!(concat!(env!("OUT_DIR"), "/api_commands.rs"));
 
@@ -29,9 +29,7 @@ pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<()> {
         user_agent: Some(user_agent()),
         ..Default::default()
     };
-    cmd.execute(&config)
-        .await
-        .wrap_err("API command failed")
+    cmd.execute(&config).await.wrap_err("API command failed")
 }
 
 #[cfg(test)]

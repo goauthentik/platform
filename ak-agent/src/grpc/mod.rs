@@ -9,12 +9,12 @@ use crate::config::ConfigV1Profile;
 use ak_platform::generated::agent_cache::agent_cache_server::AgentCacheServer;
 use ak_platform::generated::agent_ctrl::agent_ctrl_server::AgentCtrlServer;
 use ak_platform::generated::ping::ping_server::PingServer;
-use eyre::Result;
 use ak_platform::{
     generated::agent_auth::agent_auth_server::AgentAuthServer,
     net::server::{SocketPermMode, listen},
     paths::{AgentSocketID, agent_socket_path},
 };
+use eyre::Result;
 use tonic::transport::Server;
 use tracing::Level;
 

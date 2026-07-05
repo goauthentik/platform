@@ -2,13 +2,13 @@ use crate::commands::{auth::AuthCommands, config::ConfigCommands};
 use ak_platform::grpc::assert_response_valid;
 use ak_platform::log::LevelFilter;
 use ak_platform::paths::DEFAULT_PROFILE;
-use eyre::{Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     log::{init_log_interactive, set_log_level},
 };
 use clap::{Error, Parser, Subcommand};
 use clap_complete::Shell;
+use eyre::{Result, WrapErr};
 
 pub mod api;
 pub mod auth;

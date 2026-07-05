@@ -2,8 +2,8 @@ use std::{path::Path, sync::Arc};
 
 use tokio::sync::mpsc;
 
-use eyre::Result;
 use crate::storage::cfgmgr::{ConfigManager, schema::Config};
+use eyre::Result;
 use notify::{Event, EventKind, RecursiveMode, Watcher, recommended_watcher};
 
 impl<T> ConfigManager<T>

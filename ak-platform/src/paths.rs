@@ -1,7 +1,7 @@
+use crate::string::PlatformString;
 use dirs_next::{config_dir, data_dir};
 use eyre::{Result, bail};
 use std::env;
-use crate::string::PlatformString;
 
 pub const DEFAULT_PROFILE: &str = "default";
 

@@ -1,4 +1,3 @@
-use eyre::Result;
 use ak_platform::{
     client::{
         sysd,
@@ -6,6 +5,7 @@ use ak_platform::{
     },
     paths::SysdSocketID,
 };
+use eyre::Result;
 
 use native_messaging::{
     event_loop,

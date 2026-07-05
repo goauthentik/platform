@@ -31,8 +31,8 @@ pub struct SSHTunnel {
 
 impl SSHTunnel {
     pub async fn new() -> Result<Self> {
-        let sock_path = std::env::var("SSH_AUTH_SOCK")
-            .map_err(|_| eyre::eyre!("SSH_AUTH_SOCK is not set"))?;
+        let sock_path =
+            std::env::var("SSH_AUTH_SOCK").map_err(|_| eyre::eyre!("SSH_AUTH_SOCK is not set"))?;
         let st = match connect(PlatformString::new_with_default(&sock_path)).await {
             Ok(s) => s,
             Err(e) => return Err(e),

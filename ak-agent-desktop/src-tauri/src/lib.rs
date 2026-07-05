@@ -1,6 +1,6 @@
 use ak_meta::full_version;
-use eyre::Result;
 use ak_platform::{log::init_log, string::PlatformString};
+use eyre::Result;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 

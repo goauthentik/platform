@@ -244,7 +244,7 @@ jobs:
       artifact_suffix: "-e2e"
       platforms: '["ubuntu-24.04"]'
     secrets: inherit
-  test_go_e2e:
+  test_rs_e2e:
     name: Test (e2e)
     needs: [package_linux_e2e]
     runs-on: ubuntu-24.04
@@ -254,7 +254,12 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+        with:
+          rustflags: ""
+      - uses: taiki-e/install-action@c93ccc03e00cd0e08e494f5fd058a6c55a6a1907 # v2
+        with:
+          tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: authentik_package-linux-ubuntu-24.04-e2e
@@ -275,9 +280,7 @@ jobs:
         with:
           name: authentik_ubuntu-24.04_ak-pam-e2e
           path: bin/
-      - run: |
-          rustup component add llvm-tools-preview
-          chmod +x bin/agent/ak-agent bin/cli/ak
+      - run: chmod +x bin/agent/ak-agent bin/cli/ak
       - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
         id: setup
         with:
@@ -293,29 +296,25 @@ jobs:
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
           make containers/e2e/ci-build
           make test-e2e-ci
       - run: |
-          sudo chmod -R 777 ./e2e/coverage
+          sudo chmod -R 777 ./ak-platform-e2e/coverage
           make test-e2e-convert
-      - uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
-        if: ${{ always() }}
-        with:
-          paths: ${{ github.workspace }}/junit.xml
-          show: "fail"
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: go-e2e
-          files: ${{ github.workspace }}/coverage.txt
+          flags: rs-e2e
+          files: ${{ github.workspace }}/cache/llvm-cov-target.json
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: go-e2e
-          files: ${{ github.workspace }}/junit.xml
+          flags: rs-e2e
+          files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}

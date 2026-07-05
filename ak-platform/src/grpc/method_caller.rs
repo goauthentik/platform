@@ -84,10 +84,7 @@ impl MethodCaller {
             .unwrap_or_else(|_: Infallible| unreachable!());
 
         let (parts, body) = resp.into_parts();
-        let collected = body
-            .collect()
-            .await
-            .map_err(|e| eyre!("{e}"))?;
+        let collected = body.collect().await.map_err(|e| eyre!("{e}"))?;
 
         // gRPC status lives in HTTP/2 trailers; fall back to headers for
         // direct (non-transport) calls where they may be merged.

@@ -37,6 +37,7 @@ chrono = { workspace = true }
 notify = "8.2.0"
 sysinfo = { version = "0.39.3", default-features = false, features = ["system"] }
 tracing = { workspace = true }
+env_filter = "2.0.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 oslog = "0.2.0"

@@ -1,5 +1,4 @@
 use crate::cache::{CacheData, ClientCache};
-use eyre::{bail, Result, WrapErr};
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{
@@ -9,6 +8,7 @@ use ak_platform::{
     grpc::assert_response_valid,
 };
 use aws_types::{SdkConfig, region::Region};
+use eyre::{Result, WrapErr, bail};
 use pbjson_types::Timestamp;
 use serde::{Deserialize, Serialize};
 
@@ -110,7 +110,9 @@ pub async fn get_credentials(
                 nanos: c.expiration.subsec_nanos() as i32,
             },
         };
-        cc.set(cached.clone()).await.wrap_err("failed to cache AWS credentials")?;
+        cc.set(cached.clone())
+            .await
+            .wrap_err("failed to cache AWS credentials")?;
         return Ok(cached);
     }
     bail!("No credentials received")
