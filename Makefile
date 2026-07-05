@@ -109,6 +109,7 @@ test-e2e-convert:
 	else \
 		echo "No Go in-container coverage found, skipping Go coverage conversion"; \
 	fi
+	find ${PWD}/ak-platform-e2e/coverage
 	$(call rs_e2e_coverage_convert)
 
 test-setup:
