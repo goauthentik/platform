@@ -301,7 +301,7 @@ pub async fn test_machine() -> Result<ContainerAsync<GenericImage>> {
     let local_coverage_dir = cwd
         .parent()
         .unwrap_or(&cwd)
-        .join("../ak-platform-e2e/coverage");
+        .join("ak-platform-e2e/coverage");
 
     for sub in &["cli", "ak-sysd", "ak-agent", "rs"] {
         let fd = local_coverage_dir.join(sub);
