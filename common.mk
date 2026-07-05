@@ -111,7 +111,7 @@ define rs_e2e_coverage_convert
 		touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
 	else \
 		HOST=$$(rustc -vV 2>/dev/null | awk '/^host:/{print $$2}'); \
-		TOOLCHAIN=$$(rustup toolchain list 2>/dev/null | awk '/(default)/{print $$1}'); \
+		TOOLCHAIN=$$(rustup show active-toolchain 2>/dev/null | awk '{print $$1}'); \
 		LLVM_DIR=$$(rustup show home 2>/dev/null)/toolchains/$$TOOLCHAIN/lib/rustlib/$$HOST/bin; \
 		$$LLVM_DIR/llvm-profdata merge -sparse $$PROFRAW_FILES \
 			-o "${PWD}/cache/rs-e2e-merged.profdata"; \
