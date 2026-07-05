@@ -90,7 +90,8 @@ define cargo_test
 		--no-report \
 		--ignore-filename-regex generated \
 		nextest -p $(1) \
-			--no-tests pass
+			--no-tests pass \
+			--no-fail-fast
 	cargo llvm-cov report \
 		--codecov \
 		--ignore-filename-regex generated \

@@ -272,7 +272,7 @@ pub async fn cleanup_hosts() -> Result<()> {
                 .wrap_err("failed to destroy device")?;
         }
     }
-    eprintln!("Deleted {} devices", count);
+    tracing::info!("Deleted {} devices", count);
 
     Ok(())
 }
@@ -316,7 +316,7 @@ pub async fn test_machine() -> Result<ContainerAsync<GenericImage>> {
         .with_host("host.docker.internal", Host::HostGateway)
         .with_log_consumer(|frame: &LogFrame| {
             let line = String::from_utf8_lossy(frame.bytes());
-            eprint!("[e2e] {}", line);
+            tracing::debug!("[e2e] {}", line);
         })
         .start()
         .await
@@ -342,7 +342,7 @@ pub async fn exec_command(
     cmd: &str,
     env_vars: &[(&str, &str)],
 ) -> Result<(i64, String)> {
-    eprintln!("[exec] {}", cmd);
+    tracing::info!("[exec] {}", cmd);
     let exec_cmd = ExecCommand::new(["sh", "-c", cmd])
         .with_env_vars(env_vars.iter().map(|(k, v)| (k.to_string(), v.to_string())));
 
@@ -351,12 +351,16 @@ pub async fn exec_command(
         .await
         .wrap_err(format!("exec failed: '{}'", cmd))?;
 
-    let stdout_bytes = result.stdout_to_vec().await?;
-    let stdout = String::from_utf8_lossy(&stdout_bytes).to_string();
     let exit_code = result.exit_code().await?.unwrap_or(-1);
-    eprintln!("[exec] exit={} output={:?}", exit_code, stdout.trim());
+    tracing::info!("[exec] {} exit={}", cmd, exit_code);
+    let stdout_str = String::from_utf8_lossy(&result.stdout_to_vec().await?).into_owned();
+    let stderr_str = String::from_utf8_lossy(&result.stderr_to_vec().await?).into_owned();
+    stdout_str.lines().for_each(|l| tracing::info!("{}", l));
+    stderr_str.lines().for_each(|l| tracing::warn!("{}", l));
 
-    Ok((exit_code, stdout))
+    let output = format!("{}{}", stdout_str, stderr_str);
+
+    Ok((exit_code, output))
 }
 
 /// Executes a shell command in a container, returning stdout or an error on
