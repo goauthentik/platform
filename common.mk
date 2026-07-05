@@ -34,7 +34,7 @@ _LD_FLAGS = ${LD_FLAGS} \
 	-X goauthentik.io/platform/pkg/meta.Tag=${VERSION_TAG}
 GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
 
-RUST_BUILD_FLAGS =
+RUST_BUILD_FLAGS ?=
 DOCKER_BUILDER_IMAGE ?= authentik/ak-builder
 CARGO_CRATE_DIR := $(subst $(TOP),,$(CURDIR))
 
