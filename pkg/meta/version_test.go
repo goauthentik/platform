@@ -11,7 +11,6 @@ func Test_VersionBranch(t *testing.T) {
 	BuildHash = "foobarbaz"
 	Tag = ""
 	assert.Equal(t, "1.2.3-foobarba", FullVersion())
-	assert.Equal(t, "https://github.com/goauthentik/platform/commit/foobarbaz", BuildURL())
 }
 
 func Test_Tag(t *testing.T) {

@@ -2,12 +2,7 @@ package tui
 
 import (
 	"encoding/json"
-	"os"
 )
-
-func JSON(input any) error {
-	return json.NewEncoder(os.Stdout).Encode(input)
-}
 
 func AnyToMap(input any) (map[string]any, error) {
 	b, err := json.Marshal(input)
