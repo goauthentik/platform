@@ -101,6 +101,37 @@ define cargo_test
 		--output-dir "${PWD}/cache/llvm-cov-html/"
 endef
 
+define rs_e2e_coverage_convert
+	mkdir -p "${PWD}/cache"
+	PROFRAW_FILES=$$(find "${PWD}/ak-platform-e2e/coverage/rs" -name '*.profraw' 2>/dev/null | tr '\n' ' '); \
+	if [ -z "$$PROFRAW_FILES" ]; then \
+		echo "No Rust profraw files found in ak-platform-e2e/coverage/rs, creating empty coverage file"; \
+		touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
+	else \
+		HOST=$$(rustc -vV 2>/dev/null | awk '/^host:/{print $$2}'); \
+		TOOLCHAIN=$$(rustup toolchain list 2>/dev/null | awk '/(default)/{print $$1}'); \
+		LLVM_DIR=$$(rustup show home 2>/dev/null)/toolchains/$$TOOLCHAIN/lib/rustlib/$$HOST/bin; \
+		$$LLVM_DIR/llvm-profdata merge -sparse $$PROFRAW_FILES \
+			-o "${PWD}/cache/rs-e2e-merged.profdata"; \
+		OBJECTS=""; \
+		for bin in "${PWD}/bin/cli/ak" "${PWD}/bin/agent/ak-agent" \
+				"${PWD}/bin/nss/libnss_authentik.so" "${PWD}/bin/pam/libpam_authentik.so"; do \
+			if [ -f "$$bin" ]; then OBJECTS="$$OBJECTS -object $$bin"; fi; \
+		done; \
+		if [ -z "$$OBJECTS" ]; then \
+			echo "No instrumented Rust binaries found in bin/, creating empty coverage file"; \
+			touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
+		else \
+			$$LLVM_DIR/llvm-cov export \
+				-format=lcov \
+				-instr-profile="${PWD}/cache/rs-e2e-merged.profdata" \
+				$$OBJECTS \
+				-ignore-filename-regex='generated|\.cargo' \
+				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
+		fi; \
+	fi
+endef
+
 TME := docker exec authentik-platform_devcontainer-test-machine-1
 
 define lint_shellcheck

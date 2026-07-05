@@ -97,13 +97,19 @@ test-e2e-ci:
 	$(call cargo_test,ak-tests)
 
 test-e2e-convert:
-	go tool covdata textfmt \
-		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -maxdepth 1 -type d ! -name rs | xargs | sed 's/ /,/g') \
-		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
-		-o ${PWD}/coverage_in_container.txt
-	go tool cover \
-		-html ${PWD}/coverage_in_container.txt \
-		-o ${PWD}/coverage_in_container.html
+	GO_COVDIRS=$$(find "${PWD}/ak-platform-e2e/coverage/" -mindepth 1 -maxdepth 1 -type d ! -name rs 2>/dev/null | xargs echo | sed 's/ /,/g'); \
+	if [ -n "$$GO_COVDIRS" ]; then \
+		go tool covdata textfmt \
+			-i "$$GO_COVDIRS" \
+			--pkg "$$(go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g')" \
+			-o "${PWD}/coverage_in_container.txt" && \
+		go tool cover \
+			-html "${PWD}/coverage_in_container.txt" \
+			-o "${PWD}/coverage_in_container.html"; \
+	else \
+		echo "No Go in-container coverage found, skipping Go coverage conversion"; \
+	fi
+	$(call rs_e2e_coverage_convert)
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
