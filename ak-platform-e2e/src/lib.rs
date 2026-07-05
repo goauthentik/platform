@@ -4,6 +4,7 @@ use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints
 use eyre::{Context, Result, bail};
 use oauth_device_flows::provider::GenericProviderConfig;
 use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
+use testcontainers::core::CmdWaitFor;
 use testcontainers::{
     ContainerAsync, GenericImage, ImageExt,
     core::{CgroupnsMode, ExecCommand, Host, Mount, logs::LogFrame},
@@ -344,14 +345,15 @@ pub async fn exec_command(
 ) -> Result<(i64, String)> {
     tracing::info!("[exec] {}", cmd);
     let exec_cmd = ExecCommand::new(["sh", "-c", cmd])
-        .with_env_vars(env_vars.iter().map(|(k, v)| (k.to_string(), v.to_string())));
+        .with_env_vars(env_vars.iter().map(|(k, v)| (k.to_string(), v.to_string())))
+        .with_cmd_ready_condition(CmdWaitFor::Exit { code: None });
 
     let mut result = container
         .exec(exec_cmd)
         .await
         .wrap_err(format!("exec failed: '{}'", cmd))?;
 
-    let exit_code = result.exit_code().await?.unwrap_or(-1);
+    let exit_code = result.exit_code().await.unwrap().unwrap();
     tracing::info!("[exec] {} exit={}", cmd, exit_code);
     let stdout_str = String::from_utf8_lossy(&result.stdout_to_vec().await?).into_owned();
     let stderr_str = String::from_utf8_lossy(&result.stderr_to_vec().await?).into_owned();
