@@ -15,9 +15,12 @@
         "ms-azuretools.vscode-docker",
         "redhat.vscode-yaml",
         "rust-lang.rust-analyzer",
-        "DrBlury.protobuf-vsc"
+        "DrBlury.protobuf-vsc",
+        "tauri-apps.tauri-vscode"
       ],
       "settings": {
+        "rust-analyzer.cargo.targetDir": "cache/_devcontainer/",
+        "rust-analyzer.testExplorer": true,
         "protoc": {
           "options": [
             "-I=protos/"

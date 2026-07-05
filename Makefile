@@ -91,10 +91,10 @@ test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
 
 test-e2e: containers/e2e/local-build
-	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+	$(call cargo_test,ak-tests)
 
 test-e2e-ci:
-	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+	$(call cargo_test,ak-tests)
 
 test-e2e-convert:
 	go tool covdata textfmt \

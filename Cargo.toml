@@ -16,6 +16,7 @@ members = [
     "ak-nss",
     "ak-pam",
     "ak-platform-authz",
+    "ak-platform-e2e",
     "ak-platform-keyring",
     "ak-platform",
 ]
