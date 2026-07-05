@@ -91,7 +91,8 @@ define cargo_test
 		--ignore-filename-regex generated \
 		nextest -p $(1) \
 			--no-tests pass \
-			--no-fail-fast
+			--no-fail-fast \
+			--test-threads 1
 	cargo llvm-cov report \
 		--codecov \
 		--ignore-filename-regex generated \
