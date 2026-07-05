@@ -14,7 +14,7 @@ use url::Url;
 use uuid::Uuid;
 
 pub fn test_init() {
-    ak_platform::log::init_log_interactive_with_filter(Some("debug,bollard::docker=warn"));
+    ak_platform::log::init_log_interactive_with_filter(Some("warn,ak-platform-e2e=trace"));
     ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
 }
 
