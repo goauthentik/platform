@@ -64,6 +64,10 @@ jobs:
           - ak-platform
           - ak-cli
           - ak-agent
+          - ak-api-cli-gen
+          - ak-agent-desktop
+          - ak-playform-authz
+          - ak-playform-keyring
         platform:
           - macos-26
           - ubuntu-24.04
