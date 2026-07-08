@@ -137,6 +137,7 @@ pub async fn authenticated_session() -> Result<reqwest::Client> {
 /// consent, then sets AK_CLI_ACCESS_TOKEN / AK_CLI_REFRESH_TOKEN and runs
 /// `ak config setup` in the container.
 pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
+    tracing::info!("Setting up agent");
     let base_url = local_authentik_url();
     let mut base = Url::parse(&base_url).wrap_err("invalid authentik URL")?;
     if !base.path().ends_with('/') {
@@ -226,6 +227,7 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
 ///
 /// Call `cleanup_hosts().await` in your test's cleanup to remove the enrolled device.
 pub async fn join_domain(tm: &TestMachine) -> Result<()> {
+    tracing::info!("Joining domain...");
     let ak_url = container_authentik_url();
     must_exec(
         &tm.container,
