@@ -1,4 +1,4 @@
-use ak_tests::{lookup_repo_dir, must_exec, test_init};
+use ak_platform_e2e::{lookup_repo_dir, must_exec, test_init};
 use testcontainers::{ContainerAsync, GenericImage, ImageExt, core::Mount, runners::AsyncRunner};
 
 async fn pkg_container(image: &str, tag: &str, bin_dir: &str) -> ContainerAsync<GenericImage> {

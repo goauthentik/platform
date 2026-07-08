@@ -1,4 +1,4 @@
-use ak_tests::{CmdTestCase, TestMachine, agent_setup, cmd_test, test_init};
+use ak_platform_e2e::{CmdTestCase, TestMachine, agent_setup, cmd_test, test_init};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_agent_whoami() {

@@ -12,7 +12,7 @@ pub mod test_machine;
 pub use test_machine::TestMachine;
 
 pub fn test_init() {
-    ak_platform::log::init_log_interactive_with_filter(Some("warn,ak-platform-e2e=trace"));
+    ak_platform::log::init_log_interactive_with_filter(Some("warn,ak_platform_e2e=trace"));
     ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
 }
 
@@ -312,8 +312,12 @@ pub async fn exec_command(
     tracing::info!("[exec] {} exit={}", cmd, exit_code);
     let stdout_str = String::from_utf8_lossy(&result.stdout_to_vec().await?).into_owned();
     let stderr_str = String::from_utf8_lossy(&result.stderr_to_vec().await?).into_owned();
-    stdout_str.lines().for_each(|l| tracing::info!("{}", l));
-    stderr_str.lines().for_each(|l| tracing::warn!("{}", l));
+    stdout_str
+        .lines()
+        .for_each(|l| tracing::info!("[stdout] {}", l));
+    stderr_str
+        .lines()
+        .for_each(|l| tracing::warn!("[stderr] {}", l));
 
     let output = format!("{}{}", stdout_str, stderr_str);
 
