@@ -191,13 +191,16 @@ jobs:
           go-version-file: go.mod
           cache: true
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-      - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
+      - uses: goauthentik/action-setup-authentik@9b0996a6bb09a217fa6f8145d4e0a0865a5df516 # v2.1
         id: setup
         with:
           version: beta
           sentry_env: goauthentik-platform-ci
           blueprints_path: ./hack/authentik/blueprints
           wait: true
+          enterprise_license: true
+          enterprise_license_users_internal: 100
+          enterprise_license_users_external: 100
       - env:
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
@@ -281,13 +284,16 @@ jobs:
           name: authentik_ubuntu-24.04_ak-pam-e2e
           path: bin/
       - run: chmod +x bin/agent/ak-agent bin/cli/ak
-      - uses: goauthentik/action-setup-authentik@9640994d98397fb40b525e6795c29d407ad201fa # v2.0
+      - uses: goauthentik/action-setup-authentik@9b0996a6bb09a217fa6f8145d4e0a0865a5df516 # v2.1
         id: setup
         with:
           version: beta
           sentry_env: goauthentik-platform-ci
           blueprints_path: ./hack/authentik/blueprints
           wait: true
+          enterprise_license: true
+          enterprise_license_users_internal: 100
+          enterprise_license_users_external: 100
       - env:
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
