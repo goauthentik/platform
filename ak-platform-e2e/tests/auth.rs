@@ -1,4 +1,4 @@
-use ak_tests::{
+use ak_platform_e2e::{
     CmdTestCase, TestMachine, agent_setup, cleanup_hosts, cmd_test, join_domain, must_exec,
     test_init,
 };

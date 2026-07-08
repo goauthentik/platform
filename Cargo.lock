@@ -237,6 +237,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "ak-platform-e2e"
+version = "0.50.1"
+dependencies = [
+ "ak-platform",
+ "authentik-client",
+ "eyre",
+ "oauth-device-flows",
+ "reqwest 0.13.4",
+ "serde",
+ "serde_json",
+ "testcontainers",
+ "tokio",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "ak-platform-keyring"
 version = "0.50.1"
 dependencies = [
@@ -252,24 +270,6 @@ dependencies = [
  "tokio",
  "tracing",
  "windows-native-keyring-store",
-]
-
-[[package]]
-name = "ak-tests"
-version = "0.50.1"
-dependencies = [
- "ak-platform",
- "authentik-client",
- "eyre",
- "oauth-device-flows",
- "reqwest 0.13.4",
- "serde",
- "serde_json",
- "testcontainers",
- "tokio",
- "tracing",
- "url",
- "uuid",
 ]
 
 [[package]]

@@ -57,6 +57,7 @@ impl TestMachine {
 
         let tm = Self { container };
         // Wait for ak-sysd to be healthy (mirrors Go's wait.ForExec)
+        tracing::debug!("Waiting for sysd to be running...");
         for attempt in 0..20 {
             if attempt > 0 {
                 tokio::time::sleep(Duration::from_secs(3)).await;
@@ -83,6 +84,7 @@ impl std::ops::Deref for TestMachine {
 impl Drop for TestMachine {
     fn drop(&mut self) {
         tokio::task::block_in_place(|| {
+            tracing::info!("Test machine cleanup");
             tokio::runtime::Handle::current().block_on(async {
                 for cmd in [
                     "journalctl -u ak-sysd",
