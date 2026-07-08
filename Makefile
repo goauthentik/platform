@@ -91,10 +91,10 @@ test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
 
 test-e2e: containers/e2e/local-build
-	$(call cargo_test,ak-tests)
+	$(call cargo_test,ak-platform-e2e)
 
 test-e2e-ci:
-	$(call cargo_test,ak-tests)
+	$(call cargo_test,ak-platform-e2e)
 
 test-e2e-convert:
 	GO_COVDIRS=$$(find "${PWD}/ak-platform-e2e/coverage/" -mindepth 1 -maxdepth 1 -type d ! -name rs 2>/dev/null | xargs echo | sed 's/ /,/g'); \
