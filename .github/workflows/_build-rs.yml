@@ -62,15 +62,16 @@ jobs:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             cache/
-          key: target-cache-${{ matrix.target }}-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}
+          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}
           restore-keys: |
-            target-cache-${{ matrix.target }}-${{ matrix.platform }}-
+            target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-
+            target-cache-${{ matrix.platform }}-
       - name: Build builder image
         if: startsWith(matrix.platform, 'ubuntu')
         run: make containers/builder/build
@@ -84,3 +85,11 @@ jobs:
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}${{ inputs.artifact_suffix }}
           path: bin/
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
+        if: always()
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cache/
+          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}

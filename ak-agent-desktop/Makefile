@@ -19,11 +19,11 @@ ifeq ($(CI),true)
 endif
 endif
 	mkdir -p "${TOP}/bin/${TARGET}"
-	mkdir -p "${TOP}/cache/${TARGET}"
+	mkdir -p "${TOP}/cache/shared"
 	pnpm install
 	pnpm run build
 	$(call cargo_build_local,$(TARGET),--features tauri/custom-protocol --features tauri/devtools -p ak-agent-desktop)
-	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
