@@ -1,17 +1,15 @@
-use std::{env, fs, path::PathBuf, time::Duration};
+use std::{env, path::PathBuf, time::Duration};
 
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
 use eyre::{Context, ContextCompat, Result, bail};
 use oauth_device_flows::provider::GenericProviderConfig;
 use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
 use testcontainers::core::CmdWaitFor;
-use testcontainers::{
-    ContainerAsync, GenericImage, ImageExt,
-    core::{CgroupnsMode, ExecCommand, Host, Mount, logs::LogFrame},
-    runners::AsyncRunner,
-};
+use testcontainers::{ContainerAsync, GenericImage, core::ExecCommand};
 use url::Url;
-use uuid::Uuid;
+
+pub mod test_machine;
+pub use test_machine::TestMachine;
 
 pub fn test_init() {
     ak_platform::log::init_log_interactive_with_filter(Some("warn,ak-platform-e2e=trace"));
@@ -138,7 +136,7 @@ pub async fn authenticated_session() -> Result<reqwest::Client> {
 /// Uses the OAuth device flow with the authenticated session auto-approving the
 /// consent, then sets AK_CLI_ACCESS_TOKEN / AK_CLI_REFRESH_TOKEN and runs
 /// `ak config setup` in the container.
-pub async fn agent_setup(container: &ContainerAsync<GenericImage>) -> Result<()> {
+pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
     let base_url = local_authentik_url();
     let mut base = Url::parse(&base_url).wrap_err("invalid authentik URL")?;
     if !base.path().ends_with('/') {
@@ -211,7 +209,7 @@ pub async fn agent_setup(container: &ContainerAsync<GenericImage>) -> Result<()>
     let access_token = token_response.access_token().to_owned();
     let refresh_token = token_response.refresh_token().unwrap_or("").to_owned();
     must_exec(
-        container,
+        &tm.container,
         &format!("ak config setup -a {}", ak_url),
         &[
             ("AK_CLI_ACCESS_TOKEN", &access_token),
@@ -227,10 +225,10 @@ pub async fn agent_setup(container: &ContainerAsync<GenericImage>) -> Result<()>
 /// to appear in the NSS database.
 ///
 /// Call `cleanup_hosts().await` in your test's cleanup to remove the enrolled device.
-pub async fn join_domain(container: &ContainerAsync<GenericImage>) -> Result<()> {
+pub async fn join_domain(tm: &TestMachine) -> Result<()> {
     let ak_url = container_authentik_url();
     must_exec(
-        container,
+        &tm.container,
         &format!("ak-sysd domains join ak -a {}", ak_url),
         &[("AK_SYS_INSECURE_ENV_TOKEN", "test-enroll-key")],
     )
@@ -242,9 +240,9 @@ pub async fn join_domain(container: &ContainerAsync<GenericImage>) -> Result<()>
         if attempt > 0 {
             tokio::time::sleep(Duration::from_secs(2)).await;
         }
-        let (rc1, out1) = exec_command(container, "getent passwd", &[]).await?;
+        let (rc1, out1) = exec_command(&tm.container, "getent passwd", &[]).await?;
         if rc1 == 0 && out1.contains("akadmin") {
-            let (rc2, out2) = exec_command(container, "getent passwd akadmin", &[]).await?;
+            let (rc2, out2) = exec_command(&tm.container, "getent passwd akadmin", &[]).await?;
             if rc2 == 0 && out2.contains("akadmin") {
                 return Ok(());
             }
@@ -292,63 +290,6 @@ pub async fn cleanup_hosts() -> Result<()> {
     tracing::info!("Deleted {} devices", count);
 
     Ok(())
-}
-
-/// Creates and starts the e2e test machine container.
-///
-/// Waits for `ak-sysd version` to succeed before returning, matching the
-/// Go harness's `wait.ForExec` condition.
-pub async fn test_machine() -> Result<ContainerAsync<GenericImage>> {
-    let host_coverage_dir = lookup_repo_dir("ak-platform-e2e/coverage");
-    // Use the compile-time manifest dir for local fs ops; cwd.parent() breaks when
-    // cargo-nextest sets CWD to the workspace root rather than the package directory.
-    let local_coverage_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("coverage");
-
-    for sub in &["cli", "ak-sysd", "ak-agent", "rs"] {
-        let fd = local_coverage_dir.join(sub);
-        tracing::debug!(
-            path = fd.to_string_lossy().to_string(),
-            "Creating coverage dir"
-        );
-        fs::create_dir_all(fd).wrap_err(format!("failed to create coverage subdir '{}'", sub))?;
-    }
-
-    let hostname = format!("test-machine-{}", Uuid::new_v4());
-    let host_coverage_str = host_coverage_dir.to_string_lossy().into_owned();
-
-    let container = GenericImage::new("xghcr.io/goauthentik/platform-e2e", "local")
-        .with_env_var("GOCOVERDIR", "/tmp/ak-coverage/ak-sysd")
-        .with_env_var(
-            "LLVM_PROFILE_FILE",
-            "/tmp/ak-coverage/rs/default_%m_%p.profraw",
-        )
-        .with_hostname(hostname)
-        .with_user("root")
-        .with_privileged(true)
-        .with_cgroupns_mode(CgroupnsMode::Host)
-        .with_mount(Mount::bind_mount("/sys/fs/cgroup", "/sys/fs/cgroup"))
-        .with_mount(Mount::bind_mount(&host_coverage_str, "/tmp/ak-coverage"))
-        .with_host("host.docker.internal", Host::HostGateway)
-        .with_log_consumer(|frame: &LogFrame| {
-            let line = String::from_utf8_lossy(frame.bytes());
-            tracing::debug!("[e2e] {}", line.trim());
-        })
-        .start()
-        .await
-        .wrap_err("failed to start e2e container")?;
-
-    // Wait for ak-sysd to be healthy (mirrors Go's wait.ForExec)
-    for attempt in 0..20 {
-        if attempt > 0 {
-            tokio::time::sleep(Duration::from_secs(3)).await;
-        }
-        let (exit_code, _) = exec_command(&container, "/usr/bin/ak-sysd version", &[]).await?;
-        if exit_code == 0 {
-            return Ok(container);
-        }
-    }
-
-    bail!("ak-sysd not ready after 60 seconds")
 }
 
 /// Executes a shell command in a container, returning (exit_code, stdout).
@@ -407,12 +348,9 @@ pub struct CmdTestCase {
 
 /// Runs a series of command test cases against a container, asserting that each
 /// expected string is present in the command's output.
-pub async fn cmd_test(
-    container: &ContainerAsync<GenericImage>,
-    cases: Vec<CmdTestCase>,
-) -> Result<()> {
+pub async fn cmd_test(tm: &TestMachine, cases: Vec<CmdTestCase>) -> Result<()> {
     for case in cases {
-        let output = must_exec(container, &case.cmd, &[]).await?;
+        let output = must_exec(&tm.container, &case.cmd, &[]).await?;
         for expected in &case.expects {
             assert!(
                 output.contains(expected.as_str()),

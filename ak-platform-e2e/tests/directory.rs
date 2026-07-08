@@ -1,5 +1,5 @@
 use ak_tests::{
-    CmdTestCase, cleanup_hosts, cmd_test, join_domain, must_exec, test_init, test_machine,
+    CmdTestCase, TestMachine, cleanup_hosts, cmd_test, join_domain, must_exec, test_init,
 };
 use testcontainers::{ContainerAsync, GenericImage};
 
@@ -16,16 +16,16 @@ async fn getent_lookup(container: &ContainerAsync<GenericImage>, cmd: &str, key:
     panic!("key '{}' not found in '{}' output", key, cmd);
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_directory_user() {
     test_init();
-    let container = test_machine().await.expect("test machine");
-    join_domain(&container).await.expect("join domain");
+    let tm = TestMachine::new().await.expect("test machine");
+    join_domain(&tm).await.expect("join domain");
 
-    let uid = getent_lookup(&container, "getent passwd akadmin", "akadmin").await;
+    let uid = getent_lookup(&tm, "getent passwd akadmin", "akadmin").await;
 
     cmd_test(
-        &container,
+        &tm,
         vec![
             CmdTestCase {
                 name: "getent_user_all".to_string(),
@@ -58,16 +58,16 @@ async fn test_directory_user() {
     cleanup_hosts().await.expect("cleanup");
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_directory_group() {
     test_init();
-    let container = test_machine().await.expect("test machine");
-    join_domain(&container).await.expect("join domain");
+    let tm = TestMachine::new().await.expect("test machine");
+    join_domain(&tm).await.expect("join domain");
 
-    let gid = getent_lookup(&container, "getent group akadmin", "akadmin").await;
+    let gid = getent_lookup(&tm, "getent group akadmin", "akadmin").await;
 
     cmd_test(
-        &container,
+        &tm,
         vec![
             CmdTestCase {
                 name: "getent_group_all".to_string(),
