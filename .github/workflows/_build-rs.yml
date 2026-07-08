@@ -68,7 +68,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             cache/
-          key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
+          key: target-cache-${{ matrix.target }}-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            target-cache-${{ matrix.target }}-${{ matrix.platform }}-
       - name: Build builder image
         if: startsWith(matrix.platform, 'ubuntu')
         run: make containers/builder/build
