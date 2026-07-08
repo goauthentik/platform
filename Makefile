@@ -164,6 +164,9 @@ ak-agent/%:
 ak-agent-desktop/%:
 	"$(MAKE)" -C "${TOP}/ak-agent-desktop" $*
 
+ak-api-cli-gen/%:
+	"$(MAKE)" -C "${TOP}/ak-api-cli-gen" $*
+
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*
 

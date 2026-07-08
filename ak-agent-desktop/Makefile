@@ -29,3 +29,7 @@ test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ssh
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
+
+.PHONY: test
+test:
+	$(call cargo_test,ak-agent-desktop)
