@@ -1,13 +1,13 @@
-use ak_tests::{CmdTestCase, agent_setup, cmd_test, test_init, test_machine};
+use ak_tests::{CmdTestCase, TestMachine, agent_setup, cmd_test, test_init};
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread")]
 async fn test_agent_whoami() {
     test_init();
-    let container = test_machine().await.expect("test machine");
-    agent_setup(&container).await.expect("agent setup");
+    let tm = TestMachine::new().await.expect("test machine");
+    agent_setup(&tm).await.expect("agent setup");
 
     cmd_test(
-        &container,
+        &tm,
         vec![CmdTestCase {
             name: "whoami".to_string(),
             cmd: "ak whoami".to_string(),
