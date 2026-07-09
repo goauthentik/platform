@@ -32,6 +32,7 @@ eyre.workspace = true
 color-eyre.workspace = true
 authentik-client.workspace = true
 uuid.workspace = true
+sentry.workspace = true
 
 [build-dependencies]
 ak-api-cli-gen.workspace = true

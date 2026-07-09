@@ -8,6 +8,10 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+    groups:
+      go_x:
+        patterns:
+          - golang.org/x/*
   - package-ecosystem: cargo
     directories:
       - /
@@ -17,6 +21,11 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+    groups:
+      aws:
+        patterns:
+          - aws-sdk-*
+          - aws-*
   - package-ecosystem: npm
     directories:
       - /

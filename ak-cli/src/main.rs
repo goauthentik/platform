@@ -136,7 +136,7 @@ impl App {
     }
 }
 
-#[tokio::main]
+#[ak_meta::main("ak-cli")]
 async fn main() -> std::result::Result<(), Error> {
     let cli = CliArgs::parse();
 

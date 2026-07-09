@@ -2,6 +2,7 @@ use crate::agent::Agent;
 use ak_meta::full_version;
 use ak_platform::string::PlatformString;
 use eyre::Result;
+use tracing_subscriber::prelude::*;
 
 pub mod agent;
 pub mod config;
@@ -9,8 +10,12 @@ pub mod grpc;
 pub mod ssh;
 pub mod token;
 
-#[tokio::main]
+#[ak_meta::main("ak-agent")]
 async fn main() -> Result<()> {
+    tracing_subscriber::Registry::default()
+        .with(sentry::integrations::tracing::layer())
+        .init();
+
     ak_platform::log::init_log(
         PlatformString::new()
             .with_windows("authentik User Service")
