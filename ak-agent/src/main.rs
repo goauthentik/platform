@@ -11,6 +11,10 @@ pub mod token;
 
 #[ak_meta::main("ak-agent")]
 async fn main() -> Result<()> {
+    tracing_subscriber::Registry::default()
+        .with(sentry::integrations::tracing::layer())
+        .init();
+
     ak_platform::log::init_log(
         PlatformString::new()
             .with_windows("authentik User Service")
