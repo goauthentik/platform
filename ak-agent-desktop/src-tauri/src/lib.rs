@@ -9,6 +9,7 @@ mod ui;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let _guard = sentry::init(ak_meta::sentry_options("ak-agent-desktop"));
     init_log(
         PlatformString::new()
             .with_windows("authentik User Service")

@@ -81,6 +81,7 @@ dependencies = [
  "ak-platform-keyring",
  "authentik-client",
  "eyre",
+ "sentry",
  "serde",
  "serde_json",
  "tauri",
@@ -106,10 +107,12 @@ dependencies = [
 name = "ak-browser-support"
 version = "0.50.1"
 dependencies = [
+ "ak-meta",
  "ak-platform",
  "eyre",
  "hyper-util",
  "native_messaging",
+ "sentry",
  "serde",
  "serde_json",
  "tokio",
@@ -138,6 +141,7 @@ dependencies = [
  "open",
  "pbjson-types",
  "ratatui",
+ "sentry",
  "serde",
  "serde_json",
  "tokio",
@@ -150,7 +154,18 @@ dependencies = [
 name = "ak-meta"
 version = "0.50.1"
 dependencies = [
+ "ak-meta-macros",
  "ak-platform",
+ "sentry",
+]
+
+[[package]]
+name = "ak-meta-macros"
+version = "0.50.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.118",
 ]
 
 [[package]]
@@ -6806,6 +6821,7 @@ dependencies = [
  "sentry-core",
  "sentry-debug-images",
  "sentry-panic",
+ "sentry-tower",
  "sentry-tracing",
  "tokio",
  "ureq",

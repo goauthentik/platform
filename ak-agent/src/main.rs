@@ -9,7 +9,7 @@ pub mod grpc;
 pub mod ssh;
 pub mod token;
 
-#[tokio::main]
+#[ak_meta::main("ak-agent")]
 async fn main() -> Result<()> {
     ak_platform::log::init_log(
         PlatformString::new()
