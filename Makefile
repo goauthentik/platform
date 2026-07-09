@@ -112,6 +112,9 @@ test-e2e-convert:
 	find ${PWD}/ak-platform-e2e/coverage
 	$(call rs_e2e_coverage_convert)
 
+rs-build-coverage-convert:
+	$(call rs_build_coverage_convert)
+
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
 

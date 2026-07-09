@@ -57,6 +57,8 @@ endef
 
 ifeq ($(PLATFORM),gnu/linux)
 define cargo_build
+	rm -rf "$(CONTAINER_TOP)cache/build-profraw"
+	mkdir -p "$(CONTAINER_TOP)cache/build-profraw"
 	docker run --rm \
 		-i \
 		--volume "$(CONTAINER_TOP):/workspace" \
@@ -65,6 +67,7 @@ define cargo_build
 		--env AK_VERSION="${VERSION}" \
 		--env AK_BUILDHASH="${VERSION_HASH}" \
 		--env AK_TAG="${VERSION_TAG}" \
+		--env LLVM_PROFILE_FILE="/workspace/cache/build-profraw/%m_%p.profraw" \
 		$(DOCKER_BUILDER_IMAGE) \
 		cargo build \
 			--target-dir /workspace/cache/shared \
@@ -132,6 +135,16 @@ define rs_e2e_coverage_convert
 				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
 		fi; \
 	fi
+endef
+
+define rs_build_coverage_convert
+	mkdir -p "${PWD}/cache"
+	docker run --rm \
+		-i \
+		--volume "$(CONTAINER_TOP):/workspace" \
+		--workdir /workspace \
+		$(DOCKER_BUILDER_IMAGE) \
+		bash hack/rs-build-coverage-convert.sh
 endef
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1
