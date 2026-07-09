@@ -9,6 +9,7 @@ workspace = true
 
 [dependencies]
 ak-platform = { path = "../ak-platform" }
+ak-meta = { path = "../ak-meta" }
 tonic = { workspace = true }
 eyre = { workspace = true }
 tracing = { workspace = true }
@@ -22,6 +23,7 @@ tokio = { workspace = true, features = [
     "sync",
 ] }
 tower = { workspace = true }
+sentry = { workspace = true }
 
 [dev-dependencies]
 hyper-util = { version = "0.1", features = ["tokio"] }
