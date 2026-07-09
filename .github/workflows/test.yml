@@ -84,7 +84,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@50414676f9f5d50a65992c6dd2ed02641263226c # v2
+      - uses: taiki-e/install-action@5ebac0d9522d786674368e47e92963ba13f2c376 # v2
         with:
           tool: cargo-llvm-cov nextest
       - run: |
@@ -260,7 +260,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@50414676f9f5d50a65992c6dd2ed02641263226c # v2
+      - uses: taiki-e/install-action@5ebac0d9522d786674368e47e92963ba13f2c376 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
