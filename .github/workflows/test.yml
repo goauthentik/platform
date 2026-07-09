@@ -115,7 +115,9 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: cache/
-          key: target-cache-psso-macos-15
+          key: target-cache-psso-macos-15-${{ hashFiles('ee/psso/**') }}
+          restore-keys: |
+            target-cache-psso-macos-15-
       - run: |
           brew install xcresultparser
           make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'

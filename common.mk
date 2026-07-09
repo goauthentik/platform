@@ -50,7 +50,7 @@ RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 		AK_BUILDHASH=${VERSION_HASH} \
 		AK_TAG=${VERSION_TAG} \
 		cargo build \
-		--target-dir $(TOP)cache/$(1) \
+		--target-dir $(TOP)cache/shared \
 		--verbose \
 		--release $(2)
 endef
@@ -67,7 +67,7 @@ define cargo_build
 		--env AK_TAG="${VERSION_TAG}" \
 		$(DOCKER_BUILDER_IMAGE) \
 		cargo build \
-			--target-dir /workspace/cache/$(1) \
+			--target-dir /workspace/cache/shared \
 			--verbose \
 			--release
 endef
@@ -78,7 +78,7 @@ RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 		AK_BUILDHASH=${VERSION_HASH} \
 		AK_TAG=${VERSION_TAG} \
 		cargo build \
-		--target-dir $(TOP)cache/$(1) \
+		--target-dir $(TOP)cache/shared \
 		--verbose \
 		--release $(2)
 endef
