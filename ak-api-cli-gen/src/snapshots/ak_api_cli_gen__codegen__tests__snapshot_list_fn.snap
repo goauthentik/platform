@@ -1,15 +1,11 @@
 ---
 source: ak-api-cli-gen/src/codegen.rs
-assertion_line: 976
 expression: code
 ---
-fn __json_field_value(s: &str) -> serde_json::Value {
-    serde_json::from_str(s).unwrap_or_else(|_| serde_json::Value::String(s.to_owned()))
-}
 #[derive(Debug, Clone, clap::Subcommand)]
 pub enum ApiCommand {
     ///Core API
-    Core(Box<CoreArgs>),
+    Core(Box<core::CoreArgs>),
 }
 impl ApiCommand {
     pub async fn execute(
@@ -23,6 +19,14 @@ impl ApiCommand {
 }
 pub const API_MODULES: &[&str] = &["core"];
 pub const API_FUNCTION_COUNT: usize = 1usize;
+pub mod core {
+    include!(concat!(env!("OUT_DIR"), "/", "api_commands_core.rs"));
+}
+
+// ── api_commands_core.rs ──
+fn __json_field_value(s: &str) -> serde_json::Value {
+    serde_json::from_str(s).unwrap_or_else(|_| serde_json::Value::String(s.to_owned()))
+}
 #[derive(Debug, Clone, clap::Args)]
 pub struct CoreArgs {
     #[command(subcommand)]

@@ -3,6 +3,24 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use std::collections::{BTreeMap, HashSet};
 
+/// Generated code, split into a root file and one file per API module.
+///
+/// Splitting the (otherwise tens-of-thousands-of-lines) generated CLI into per-module files
+/// keeps individual translation units small, which improves incremental-compile and
+/// codegen-unit-partitioning behavior for the crate that `include!`s them.
+pub struct GeneratedCode {
+    /// Top-level items (the `ApiCommand` enum, `API_MODULES`/`API_FUNCTION_COUNT` consts, and a
+    /// `pub mod` + `include!` declaration for each module file below).
+    pub root: TokenStream,
+    /// `(file_name, contents)` pairs, one per API module. `file_name` is the exact name the root
+    /// file's `include!` expects, so callers just need to write each entry under `OUT_DIR`.
+    pub modules: Vec<(String, TokenStream)>,
+}
+
+fn module_file_name(module: &str) -> String {
+    format!("api_commands_{module}.rs")
+}
+
 /// Top-level entry point: generate everything from a flat list of API functions.
 ///
 /// The generated hierarchy is:
@@ -10,7 +28,7 @@ use std::collections::{BTreeMap, HashSet};
 ///
 /// Functions with an empty resource (e.g. `schema_retrieve`) skip the resource level and appear
 /// directly under the module command enum.
-pub fn generate_all(functions: &[ApiFunction]) -> TokenStream {
+pub fn generate_all(functions: &[ApiFunction]) -> GeneratedCode {
     // Group: module → resource → functions (BTreeMap for deterministic order).
     let mut by_module: BTreeMap<&str, BTreeMap<&str, Vec<&ApiFunction>>> = BTreeMap::new();
     for f in functions {
@@ -29,25 +47,42 @@ pub fn generate_all(functions: &[ApiFunction]) -> TokenStream {
     let fn_count = functions.len();
     let fn_count_const = quote! { pub const API_FUNCTION_COUNT: usize = #fn_count; };
 
-    let module_items: Vec<TokenStream> = by_module
-        .iter()
-        .map(|(module, resources)| gen_module(module, resources))
-        .collect();
-
     let helper_fn = quote! {
         fn __json_field_value(s: &str) -> serde_json::Value {
             serde_json::from_str(s).unwrap_or_else(|_| serde_json::Value::String(s.to_owned()))
         }
     };
 
-    quote! {
-        #helper_fn
+    let modules: Vec<(String, TokenStream)> = by_module
+        .iter()
+        .map(|(module, resources)| {
+            let body = gen_module(module, resources);
+            (module_file_name(module), quote! { #helper_fn #body })
+        })
+        .collect();
+
+    let mod_declarations: Vec<TokenStream> = module_names
+        .iter()
+        .map(|m| {
+            let mod_ident = format_ident!("{}", m);
+            let file_name = module_file_name(m);
+            quote! {
+                pub mod #mod_ident {
+                    include!(concat!(env!("OUT_DIR"), "/", #file_name));
+                }
+            }
+        })
+        .collect();
+
+    let root = quote! {
         #top_level_enum
         #top_level_impl
         #modules_const
         #fn_count_const
-        #(#module_items)*
-    }
+        #(#mod_declarations)*
+    };
+
+    GeneratedCode { root, modules }
 }
 
 // ── Top-level ApiCommand enum ─────────────────────────────────────────────────
@@ -57,11 +92,12 @@ fn gen_top_level_enum(modules: &[&str]) -> TokenStream {
         .iter()
         .map(|m| {
             let variant = module_variant_ident(m);
+            let mod_ident = format_ident!("{}", m);
             let args = module_args_ident(m);
             let doc = format!("{} API", capitalize_first(m));
             quote! {
                 #[doc = #doc]
-                #variant(Box<#args>),
+                #variant(Box<#mod_ident::#args>),
             }
         })
         .collect();
@@ -877,34 +913,44 @@ mod tests {
         }
     }
 
+    /// Every file `generate_all` produces (the root plus each module file) must independently
+    /// parse as a valid Rust file — that's what the crate embedding them via `include!` needs.
+    fn assert_all_files_parse(generated: &GeneratedCode) {
+        assert!(
+            syn::parse2::<syn::File>(generated.root.clone()).is_ok(),
+            "root file failed to parse"
+        );
+        for (name, tokens) in &generated.modules {
+            assert!(
+                syn::parse2::<syn::File>(tokens.clone()).is_ok(),
+                "module file {name} failed to parse"
+            );
+        }
+    }
+
     #[test]
     fn generate_compiles_with_list_fn() {
-        let tokens = generate_all(&[make_list_fn()]);
-        assert!(syn::parse2::<syn::File>(tokens).is_ok());
+        assert_all_files_parse(&generate_all(&[make_list_fn()]));
     }
 
     #[test]
     fn generate_compiles_with_retrieve_fn() {
-        let tokens = generate_all(&[make_retrieve_fn()]);
-        assert!(syn::parse2::<syn::File>(tokens).is_ok());
+        assert_all_files_parse(&generate_all(&[make_retrieve_fn()]));
     }
 
     #[test]
     fn generate_compiles_with_create_fn() {
-        let tokens = generate_all(&[make_create_fn()]);
-        assert!(syn::parse2::<syn::File>(tokens).is_ok());
+        assert_all_files_parse(&generate_all(&[make_create_fn()]));
     }
 
     #[test]
     fn generate_compiles_with_destroy_fn() {
-        let tokens = generate_all(&[make_destroy_fn()]);
-        assert!(syn::parse2::<syn::File>(tokens).is_ok());
+        assert_all_files_parse(&generate_all(&[make_destroy_fn()]));
     }
 
     #[test]
     fn generate_compiles_with_direct_fn() {
-        let tokens = generate_all(&[make_direct_fn()]);
-        assert!(syn::parse2::<syn::File>(tokens).is_ok());
+        assert_all_files_parse(&generate_all(&[make_direct_fn()]));
     }
 
     #[test]
@@ -916,8 +962,7 @@ mod tests {
             make_create_fn(),
             make_destroy_fn(),
         ];
-        let tokens = generate_all(&fns);
-        assert!(syn::parse2::<syn::File>(tokens).is_ok());
+        assert_all_files_parse(&generate_all(&fns));
     }
 
     #[test]
@@ -966,17 +1011,35 @@ mod tests {
 
     #[test]
     fn modules_const_in_output() {
-        let tokens = generate_all(&[make_list_fn()]);
-        let code = tokens.to_string();
+        let generated = generate_all(&[make_list_fn()]);
+        let code = generated.root.to_string();
         assert!(code.contains("API_MODULES"));
         assert!(code.contains("\"core\""));
     }
 
     #[test]
-    fn snapshot_list_fn() {
-        let tokens = generate_all(&[make_list_fn()]);
+    fn module_file_included_from_root() {
+        let generated = generate_all(&[make_list_fn()]);
+        assert_eq!(generated.modules.len(), 1);
+        assert_eq!(generated.modules[0].0, "api_commands_core.rs");
+        let root_code = generated.root.to_string();
+        assert!(root_code.contains("\"api_commands_core.rs\""));
+        assert!(root_code.contains("pub mod core"));
+    }
+
+    fn pretty(tokens: TokenStream) -> String {
         let parsed = syn::parse2::<syn::File>(tokens).unwrap();
-        let code = prettyplease::unparse(&parsed);
+        prettyplease::unparse(&parsed)
+    }
+
+    #[test]
+    fn snapshot_list_fn() {
+        let generated = generate_all(&[make_list_fn()]);
+        let mut code = pretty(generated.root);
+        for (name, tokens) in generated.modules {
+            code.push_str(&format!("\n// ── {name} ──\n"));
+            code.push_str(&pretty(tokens));
+        }
         insta::assert_snapshot!(code);
     }
 }

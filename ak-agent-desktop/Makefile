@@ -29,3 +29,13 @@ test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ssh
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
+
+.PHONY: test
+test:
+ifeq ($(PLATFORM),gnu/linux)
+ifeq ($(CI),true)
+	sudo apt-get update
+	sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+endif
+endif
+	$(call cargo_test,ak-agent-desktop)
