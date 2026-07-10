@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/agent_system/client"
 	"goauthentik.io/platform/pkg/pb"
@@ -39,7 +38,7 @@ var sshVerifyCmd = &cobra.Command{
 			return
 		}
 		// user, b64key, type = cmd.Args
-		err := validate(cmd.Context(), l, args[0], args[1], args[2])
+		err := validate(cmd.Context(), args[0], args[1], args[2])
 		if err != nil {
 			l.WithError(err).Warning("failed to verify ssh cert")
 		}
@@ -50,7 +49,7 @@ func init() {
 	rootCmd.AddCommand(sshVerifyCmd)
 }
 
-func validate(ctx context.Context, l *log.Entry, user, b64key, typ string) error {
+func validate(ctx context.Context, user, b64key, typ string) error {
 	certPubkey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(typ + " " + b64key))
 	if err != nil {
 		return err
@@ -71,7 +70,7 @@ func validate(ctx context.Context, l *log.Entry, user, b64key, typ string) error
 
 	// Check host key
 	found := false
-	hks := getLocalHostKeys(common.New(l, ctx))
+	hks := getLocalHostKeys(common.New(systemlog.Get(), ctx))
 	ghk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(extHostKey))
 	if err != nil {
 		return errors.Wrap(err, "failed to parse ext key")
@@ -88,20 +87,17 @@ func validate(ctx context.Context, l *log.Entry, user, b64key, typ string) error
 	// Check token
 	sc, err := client.NewDefault()
 	if err != nil {
-		l.WithError(err).Warning("failed to connect to ctrl")
-		return nil
+		return errors.Wrap(err, "failed to connect to ctrl")
 	}
 	res, err := sc.TokenAuth(ctx, &pb.TokenAuthRequest{
 		Username: user,
 		Token:    extToken,
 	})
 	if err != nil {
-		l.WithError(err).Warning("failed to validate token")
-		return nil
+		return errors.Wrap(err, "failed to validate token")
 	}
 	if !res.Successful {
-		l.Warning("unsuccessful token validation")
-		return nil
+		return errors.New("unsuccessful token validation")
 	}
 
 	pubkeyBytes := strings.TrimSpace(string(ssh.MarshalAuthorizedKey(sshCert.SignatureKey)))
