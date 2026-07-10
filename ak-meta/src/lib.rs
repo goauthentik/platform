@@ -46,7 +46,7 @@ pub fn sentry_options<T: ToString>(name: T) -> ClientOptions {
         release: Some(release),
         send_default_pii: false,
         traces_sample_rate: 0.3,
-        debug: true,
+        debug: false,
         ..Default::default()
     }
 }
