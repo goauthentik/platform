@@ -150,7 +150,7 @@ impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
         set_log_level(match self.debug {
             true => LevelFilter::Trace,
-            false => LevelFilter::Warn,
+            false => LevelFilter::Trace,
         });
         for (key, val) in self.profiles.iter_mut() {
             tracing::debug!(profile = key, "Getting access token for profile");
