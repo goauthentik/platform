@@ -1,3 +1,4 @@
+use eyre::Result;
 use std::{
     fmt, io,
     path::Path,
@@ -89,10 +90,7 @@ impl AsyncStream for ListenerStream {
     }
 }
 
-pub async fn listen(
-    path: PlatformString,
-    perm: SocketPermMode,
-) -> Result<ListenerStream, Box<dyn std::error::Error + Send + Sync>> {
+pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<ListenerStream> {
     let path_str = path.for_current();
 
     #[cfg(unix)]

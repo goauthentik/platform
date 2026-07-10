@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use eyre::Result;
 use tonic::transport::Channel;
 
 use crate::{

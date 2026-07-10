@@ -1,4 +1,4 @@
-use std::error::Error;
+use eyre::{Result, WrapErr};
 
 use ak_platform::generated::{
     agent::RequestHeader,
@@ -11,11 +11,12 @@ use crate::{
 };
 
 impl PathHandler {
-    pub async fn handle_get_token(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
-        let uc = match &self.user_client {
-            Some(c) => c.clone(),
-            None => return Err(Box::from("Not connected to user agent")),
-        };
+    pub async fn handle_get_token(&self, msg: Message) -> Result<Response> {
+        let uc = self
+            .user_client
+            .as_ref()
+            .ok_or_else(|| eyre::eyre!("Not connected to user agent"))?
+            .clone();
         let current = uc
             .auth()
             .get_current_token(CurrentTokenRequest {
@@ -24,7 +25,8 @@ impl PathHandler {
                 }),
                 r#type: current_token_request::Type::Verified as i32,
             })
-            .await?
+            .await
+            .wrap_err("failed to get current token")?
             .into_inner();
         let mut res = Response::in_response_to(msg);
         res.data

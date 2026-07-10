@@ -14,9 +14,9 @@ clean:
 .PHONY: build
 build:
 	mkdir -p "${TOP}/bin/${TARGET}"
-	mkdir -p "${TOP}/cache/${TARGET}"
+	mkdir -p "${TOP}/cache/shared"
 	$(call cargo_build,$(TARGET))
-	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 .PHONY: test
 test:

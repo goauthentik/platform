@@ -19,13 +19,23 @@ ifeq ($(CI),true)
 endif
 endif
 	mkdir -p "${TOP}/bin/${TARGET}"
-	mkdir -p "${TOP}/cache/${TARGET}"
+	mkdir -p "${TOP}/cache/shared"
 	pnpm install
 	pnpm run build
 	$(call cargo_build_local,$(TARGET),--features tauri/custom-protocol --features tauri/devtools -p ak-agent-desktop)
-	cp "${TOP}/cache/${TARGET}/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ssh
 	sudo dpkg -i ${TOP}/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
+
+.PHONY: test
+test:
+ifeq ($(PLATFORM),gnu/linux)
+ifeq ($(CI),true)
+	sudo apt-get update
+	sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+endif
+endif
+	$(call cargo_test,ak-agent-desktop)

@@ -2,7 +2,7 @@ import type { profile } from "../bridge.js";
 
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-import { css, html, LitElement } from "lit";
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 type RenewalStatus = "active" | "expiring" | "expired" | "disconnected";
@@ -18,7 +18,7 @@ function renewalStatus(nextRenew: Date | string | null): RenewalStatus {
 }
 
 const STATUS_LABELS: Record<RenewalStatus, string> = {
-    active: "Active",
+    active: "Valid",
     expiring: "Expiring soon",
     expired: "Needs renewal",
     disconnected: "Not connected",
@@ -127,6 +127,7 @@ export class ProfileStatus extends LitElement {
     `;
 
     @property({ type: Array }) profiles: profile[] = [];
+    @property() activeProfile?: string;
 
     render() {
         return html`
@@ -140,9 +141,18 @@ export class ProfileStatus extends LitElement {
                               <div class="profile-row">
                                   <div class="profile-header">
                                       <span class="profile-name">${p.name}</span>
-                                      <span class="status-badge ${status}"
-                                          >${STATUS_LABELS[status]}</span
-                                      >
+                                      <div class="status-container">
+                                          ${p.name === this.activeProfile
+                                              ? html`
+                                                    <span class="status-badge active"
+                                                        >Active Profile</span
+                                                    >
+                                                `
+                                              : nothing}
+                                          <span class="status-badge ${status}"
+                                              >${STATUS_LABELS[status]}</span
+                                          >
+                                      </div>
                                   </div>
                                   <div class="profile-username">Username: ${p.username}</div>
                                   <div class="profile-url">

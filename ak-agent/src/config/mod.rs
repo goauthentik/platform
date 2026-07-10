@@ -2,17 +2,31 @@ use std::{collections::HashMap, fmt::Debug};
 
 use ak_meta::user_agent;
 use ak_platform::log::LevelFilter;
-use ak_platform::{log::set_log_level, prelude::*};
+use ak_platform::log::set_log_level;
+use ak_platform::paths::DEFAULT_PROFILE;
 use ak_platform::storage::cfgmgr::schema::Config;
 use ak_platform_keyring;
 use authentik_client::apis::configuration::Configuration;
+use eyre::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigV1 {
     pub debug: bool,
+    #[serde(default)]
+    pub active_profile: String,
     pub profiles: HashMap<String, ConfigV1Profile>,
+}
+
+impl Default for ConfigV1 {
+    fn default() -> Self {
+        Self {
+            debug: false,
+            active_profile: DEFAULT_PROFILE.to_string(),
+            profiles: Default::default(),
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -136,7 +150,7 @@ impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
         set_log_level(match self.debug {
             true => LevelFilter::Trace,
-            false => LevelFilter::Warn,
+            false => LevelFilter::Trace,
         });
         for (key, val) in self.profiles.iter_mut() {
             tracing::debug!(profile = key, "Getting access token for profile");

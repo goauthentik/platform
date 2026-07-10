@@ -1,5 +1,5 @@
-use ak_platform::prelude::*;
 use chrono::{DateTime, Utc};
+use eyre::Result;
 use jsonwebtoken::dangerous::insecure_decode;
 use serde::{Deserialize, Serialize};
 use serde_with::formats::PreferOne;
@@ -41,7 +41,6 @@ impl Token {
 }
 
 pub(crate) fn parse_unverified(token: &str) -> Result<AuthentikClaims> {
-    let data = insecure_decode::<AuthentikClaims>(token)
-        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::from(e.to_string()) })?;
+    let data = insecure_decode::<AuthentikClaims>(token).map_err(|e| eyre::eyre!("{e}"))?;
     Ok(data.claims)
 }

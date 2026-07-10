@@ -26,9 +26,7 @@ impl GroupHooks for AuthentikNSS {
 
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Group>> {
     match bridge.list_groups() {
-        Ok(groups) => {
-            Response::Success(groups.into_iter().map(ak_group_to_group_entry).collect())
-        }
+        Ok(groups) => Response::Success(groups.into_iter().map(ak_group_to_group_entry).collect()),
         Err(e) => {
             tracing::warn!("Failed to get groups: {e:?}");
             Response::Unavail
@@ -66,7 +64,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
 mod tests {
     use super::*;
     use ak_platform::generated::sys_directory::{Group as AKGroup, User};
-    use ak_platform::prelude::Result;
+    use eyre::Result;
 
     struct MockBridge {
         groups: Vec<AKGroup>,
@@ -90,7 +88,7 @@ mod tests {
                         || req.name.as_deref().map_or(false, |n| n == g.name)
                 })
                 .cloned()
-                .ok_or_else(|| "not found".into())
+                .ok_or_else(|| eyre::eyre!("not found"))
         }
     }
 
@@ -103,10 +101,10 @@ mod tests {
             unreachable!()
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
-            Err("unavailable".into())
+            Err(eyre::eyre!("unavailable"))
         }
         fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
-            Err("unavailable".into())
+            Err(eyre::eyre!("unavailable"))
         }
     }
 
@@ -137,7 +135,10 @@ mod tests {
 
     #[test]
     fn get_all_entries_unavail_on_error() {
-        assert!(matches!(get_all_entries_with(&ErrorBridge), Response::Unavail));
+        assert!(matches!(
+            get_all_entries_with(&ErrorBridge),
+            Response::Unavail
+        ));
     }
 
     #[test]

@@ -78,6 +78,7 @@ type PingResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Component     string                 `protobuf:"bytes,1,opt,name=component,proto3" json:"component,omitempty"`
 	Version       string                 `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	ServerVersion string                 `protobuf:"bytes,3,opt,name=server_version,json=serverVersion,proto3" json:"server_version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -122,6 +123,13 @@ func (x *PingResponse) GetComponent() string {
 func (x *PingResponse) GetVersion() string {
 	if x != nil {
 		return x.Version
+	}
+	return ""
+}
+
+func (x *PingResponse) GetServerVersion() string {
+	if x != nil {
+		return x.ServerVersion
 	}
 	return ""
 }
@@ -175,10 +183,11 @@ var File_ping_proto protoreflect.FileDescriptor
 const file_ping_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"ping.proto\x12\x04ping\x1a\x1bgoogle/protobuf/empty.proto\"F\n" +
+	"ping.proto\x12\x04ping\x1a\x1bgoogle/protobuf/empty.proto\"m\n" +
 	"\fPingResponse\x12\x1c\n" +
 	"\tcomponent\x18\x01 \x01(\tR\tcomponent\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\tR\aversion\"\xb1\x01\n" +
+	"\aversion\x18\x02 \x01(\tR\aversion\x12%\n" +
+	"\x0eserver_version\x18\x03 \x01(\tR\rserverVersion\"\xb1\x01\n" +
 	"\x14CapabilitiesResponse\x12I\n" +
 	"\fcapabilities\x18\x01 \x03(\x0e2%.ping.CapabilitiesResponse.CapabilityR\fcapabilities\"N\n" +
 	"\n" +

@@ -6,12 +6,12 @@ use crate::{
         ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
     },
 };
-use ak_platform::prelude::*;
 use ak_platform::{
     generated::{agent::RequestHeader, agent_ctrl::SetupRequest},
     grpc::assert_response_valid,
 };
 use clap::Subcommand;
+use eyre::{Result, WrapErr, bail};
 use ratatui::text::Line;
 use std::env;
 use url::Url;
@@ -38,7 +38,8 @@ pub async fn list_profiles(app: App) -> Result<()> {
         .clone()
         .ctrl()
         .list_profiles(())
-        .await?
+        .await
+        .wrap_err("failed to list profiles")?
         .into_inner();
     assert_response_valid(res.header)?;
     for profile in res.profiles {
@@ -64,22 +65,21 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         refresh_token = rt;
     } else {
         let prof = setup::setup(setup::Options {
-            profile_name: app.args.profile.clone(),
-            authentik_url: Url::parse(authentik_url)?,
+            profile_name: app.args.profile.clone().unwrap_or(app.profile()),
+            authentik_url: Url::parse(authentik_url).wrap_err("invalid authentik URL")?,
             app_slug: app_slug.to_owned(),
             client_id: client_id.to_owned(),
             url_callback: None,
         })
-        .await?;
+        .await
+        .wrap_err("device flow setup failed")?;
         if let Some(at) = prof.access_token
             && let Some(rt) = prof.refresh_token
         {
             access_token = at;
             refresh_token = rt;
         } else {
-            return Err(Box::from(
-                "Device-flow setup did not return access/refresh token",
-            ));
+            bail!("Device-flow setup did not return access/refresh token");
         }
     }
 
@@ -90,7 +90,7 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         .ctrl()
         .setup(SetupRequest {
             header: Some(RequestHeader {
-                profile: app.args.profile.clone(),
+                profile: app.args.profile.clone().unwrap_or(app.profile()),
             }),
             authentik_url: authentik_url.to_owned(),
             app_slug: app_slug.to_owned(),
@@ -98,9 +98,42 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
             access_token: access_token.clone(),
             refresh_token: refresh_token.clone(),
         })
-        .await?
+        .await
+        .wrap_err("failed to register profile with agent")?
         .into_inner();
     assert_response_valid(res.header)?;
 
+    Ok(())
+}
+
+pub async fn current_profile(app: App) -> Result<()> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
+        .current_profile(())
+        .await
+        .wrap_err("failed to get current profile")?
+        .into_inner();
+    assert_response_valid(res.header)?;
+    println!("{}", res.profile);
+    Ok(())
+}
+
+pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
+        .switch_profile(RequestHeader {
+            profile: profile.to_string(),
+        })
+        .await
+        .wrap_err("failed to switch profile")?
+        .into_inner();
+    assert_response_valid(Some(res))?;
+    println!("Successfully switched to profile '{profile}'!");
     Ok(())
 }

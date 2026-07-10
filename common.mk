@@ -3,7 +3,7 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = 0.44.3
+VERSION = 0.50.2
 VERSION_HASH = $(shell git rev-parse HEAD)
 VERSION_TAG = $(shell git tag --points-at HEAD)
 ifeq ($(CI),true)
@@ -34,7 +34,7 @@ _LD_FLAGS = ${LD_FLAGS} \
 	-X goauthentik.io/platform/pkg/meta.Tag=${VERSION_TAG}
 GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
 
-RUST_BUILD_FLAGS =
+RUST_BUILD_FLAGS ?=
 DOCKER_BUILDER_IMAGE ?= authentik/ak-builder
 CARGO_CRATE_DIR := $(subst $(TOP),,$(CURDIR))
 
@@ -50,7 +50,7 @@ RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 		AK_BUILDHASH=${VERSION_HASH} \
 		AK_TAG=${VERSION_TAG} \
 		cargo build \
-		--target-dir $(TOP)cache/$(1) \
+		--target-dir $(TOP)cache/shared \
 		--verbose \
 		--release $(2)
 endef
@@ -67,7 +67,7 @@ define cargo_build
 		--env AK_TAG="${VERSION_TAG}" \
 		$(DOCKER_BUILDER_IMAGE) \
 		cargo build \
-			--target-dir /workspace/cache/$(1) \
+			--target-dir /workspace/cache/shared \
 			--verbose \
 			--release
 endef
@@ -78,7 +78,7 @@ RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 		AK_BUILDHASH=${VERSION_HASH} \
 		AK_TAG=${VERSION_TAG} \
 		cargo build \
-		--target-dir $(TOP)cache/$(1) \
+		--target-dir $(TOP)cache/shared \
 		--verbose \
 		--release $(2)
 endef
@@ -90,7 +90,9 @@ define cargo_test
 		--no-report \
 		--ignore-filename-regex generated \
 		nextest -p $(1) \
-			--no-tests pass
+			--no-tests pass \
+			--no-fail-fast \
+			--test-threads 1
 	cargo llvm-cov report \
 		--codecov \
 		--ignore-filename-regex generated \
@@ -99,6 +101,37 @@ define cargo_test
 		--html \
 		--ignore-filename-regex generated \
 		--output-dir "${TOP}/cache/llvm-cov-html/"
+endef
+
+define rs_e2e_coverage_convert
+	mkdir -p "${PWD}/cache"
+	PROFRAW_FILES=$$(find "${PWD}/ak-platform-e2e/coverage/rs" -name '*.profraw' 2>/dev/null | tr '\n' ' '); \
+	if [ -z "$$PROFRAW_FILES" ]; then \
+		echo "No Rust profraw files found in ak-platform-e2e/coverage/rs, creating empty coverage file"; \
+		touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
+	else \
+		HOST=$$(rustc -vV 2>/dev/null | awk '/^host:/{print $$2}'); \
+		TOOLCHAIN=$$(rustup show active-toolchain 2>/dev/null | awk '{print $$1}'); \
+		LLVM_DIR=$$(rustup show home 2>/dev/null)/toolchains/$$TOOLCHAIN/lib/rustlib/$$HOST/bin; \
+		$$LLVM_DIR/llvm-profdata merge -sparse $$PROFRAW_FILES \
+			-o "${PWD}/cache/rs-e2e-merged.profdata"; \
+		OBJECTS=""; \
+		for bin in "${PWD}/bin/cli/ak" "${PWD}/bin/agent/ak-agent" \
+				"${PWD}/bin/nss/libnss_authentik.so" "${PWD}/bin/pam/libpam_authentik.so"; do \
+			if [ -f "$$bin" ]; then OBJECTS="$$OBJECTS -object $$bin"; fi; \
+		done; \
+		if [ -z "$$OBJECTS" ]; then \
+			echo "No instrumented Rust binaries found in bin/, creating empty coverage file"; \
+			touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
+		else \
+			$$LLVM_DIR/llvm-cov export \
+				-format=lcov \
+				-instr-profile="${PWD}/cache/rs-e2e-merged.profdata" \
+				$$OBJECTS \
+				-ignore-filename-regex='generated|\.cargo' \
+				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
+		fi; \
+	fi
 endef
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1

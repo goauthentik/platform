@@ -2,9 +2,7 @@ package grpc_creds
 
 import (
 	"context"
-	"fmt"
 	"net"
-	"strings"
 
 	"google.golang.org/grpc/peer"
 )
@@ -16,11 +14,6 @@ type Creds struct {
 	PID int
 	UID string
 	GID string
-}
-
-func (c Creds) UniqueProcessID() string {
-	firstExe := strings.SplitN(c.Parent.Cmdline, " ", 2)
-	return fmt.Sprintf("%s:%s", c.Parent.Exe, firstExe[0])
 }
 
 func AuthFromContext(ctx context.Context) *Creds {

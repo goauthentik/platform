@@ -14,16 +14,6 @@ var (
 	ValueStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
 )
 
-func BoxStyle() lipgloss.Style {
-	return lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#fd4b2d")).
-		Padding(1).
-		PaddingLeft(5).
-		PaddingRight(5)
-}
-
 func InlineStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Bold(true).

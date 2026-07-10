@@ -1,12 +1,13 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use ak_meta::user_agent;
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use tokio::sync::{Notify, RwLock};
 
-use ak_platform::prelude::*;
 use ak_platform::storage::cfgmgr::ConfigManager;
+use eyre::{Result, bail};
 
 use crate::config::ConfigV1;
 use crate::token::{AuthentikClaims, Token};
@@ -29,7 +30,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             format!(
                 "{}/application/o/{}/jwks/",
                 profile.authentik_url, profile.app_slug
@@ -71,7 +72,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             profile.access_token().clone()
         };
         Ok(Token {
@@ -88,7 +89,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             (
                 profile.access_token().clone(),
                 profile.refresh_token().clone(),
@@ -106,7 +107,7 @@ impl ProfileTokenManager {
                     let profile = config
                         .profiles
                         .get(&self.profile_name)
-                        .ok_or("profile not found")?;
+                        .ok_or_else(|| eyre::eyre!("profile not found"))?;
                     return Ok(Token {
                         access_token: profile.access_token().clone(),
                         token_type: None,
@@ -151,11 +152,14 @@ impl ProfileTokenManager {
                         return;
                     }
                     Some(profile) => {
-                        match Self::time_until_expiry(&profile.access_token()).to_std() {
+                        let dur = Self::time_until_expiry(&profile.access_token());
+                        match dur.to_std() {
                             Ok(d) => d,
                             Err(e) => {
-                                tracing::warn!("couldn't convert duration to std: {e:?}");
-                                return;
+                                tracing::warn!(
+                                    "couldn't convert duration {dur:?} to std, defaulting to 30s: {e:?}"
+                                );
+                                Duration::from_secs(30)
                             }
                         }
                     }
@@ -192,7 +196,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             (
                 format!("{}/application/o/token/", profile.authentik_url),
                 profile.refresh_token().clone(),
@@ -219,7 +223,7 @@ impl ProfileTokenManager {
 
         if !res.status().is_success() {
             let body = res.text().await?;
-            return Err(Box::from(format!("token renewal failed: {body}")));
+            bail!("token renewal failed: {body}");
         }
 
         let new_token: Token = res.json().await?;
@@ -229,7 +233,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get_mut(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             profile.set_access_token(new_token.access_token.clone());
             if let Some(rt) = &new_token.refresh_token
                 && !rt.is_empty()

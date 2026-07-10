@@ -111,7 +111,8 @@ impl AgentAuth for AgentGRPCServer {
         request: Request<CurrentTokenRequest>,
     ) -> Result<Response<CurrentTokenResponse>, Status> {
         let proc_creds = request.extensions().get::<ProcCredentials>().cloned();
-        let inner_req = request.into_inner();
+        let inner_req = request.into_inner().clone();
+        let profile = self.profile_for_request(inner_req.header.clone()).await?;
         let token_manager = self
             .agent
             .gtm
@@ -133,7 +134,7 @@ impl AgentAuth for AgentGRPCServer {
                     .with_windows(format!("'{cmd}' is attempting to access your account"))
                     .with_linux(format!("'{cmd}' is attempting to access your account")))
             }),
-            uid: Box::new(|_| Ok("".to_string())),
+            uid: Box::new(move |c| c.clone().proc_info()?.unique_process_id()),
             timeout_success: Duration::from_secs(0),
             timeout_denied: Duration::from_secs(0),
         }
@@ -145,10 +146,13 @@ impl AgentAuth for AgentGRPCServer {
             Type::Unverified => Ok(token_manager
                 .unverified()
                 .await
-                .map_err(Status::from_error)?),
-            Type::Verified => Ok(token_manager.token().await.map_err(Status::from_error)?),
+                .map_err(|e| Status::from_error(e.into()))?),
+            Type::Verified => Ok(token_manager
+                .token()
+                .await
+                .map_err(|e| Status::from_error(e.into()))?),
         }?;
-        let c = token.claims().map_err(Status::from_error)?;
+        let c = token.claims().map_err(|e| Status::from_error(e.into()))?;
 
         Ok(Response::new(CurrentTokenResponse {
             header: Some(ResponseHeader { successful: true }),
@@ -163,7 +167,7 @@ impl AgentAuth for AgentGRPCServer {
                 jti: c.jti,
             }),
             raw: token.access_token,
-            url: "".to_string(),
+            url: profile.authentik_url.to_string(),
         }))
     }
 

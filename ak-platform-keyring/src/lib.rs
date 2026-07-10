@@ -4,11 +4,10 @@ use std::{error::Error, fmt::Display};
 use std::collections::HashMap;
 
 #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
-use keyring::use_named_store;
-#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
 use keyring_core::{Entry, Error::NoEntry};
 
-use ak_platform::prelude::BoxError;
+use eyre::{Result, bail};
+
 #[cfg(target_os = "macos")]
 pub mod macos;
 
@@ -18,18 +17,34 @@ pub mod cache;
 const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.shared";
 
 #[allow(unreachable_code)]
-pub fn init() -> Result<(), BoxError> {
+pub fn init() -> Result<()> {
     #[cfg(any(test, debug_assertions))]
-    return Ok(use_named_store("sample")?);
+    {
+        keyring_core::set_default_store(
+            keyring_core::sample::Store::new()
+                .map_err(|e| eyre::eyre!("failed to initialize sample keyring store: {e}"))?,
+        );
+        return Ok(());
+    }
     // On macOS release builds the keychain is accessed directly via security-framework
     // (no keyring store needed — see the get/set/delete implementations below).
     #[cfg(target_os = "macos")]
     return Ok(());
     #[cfg(target_os = "windows")]
-    return Ok(use_named_store("windows")?);
+    {
+        let store = windows_native_keyring_store::Store::new()
+            .map_err(|e| eyre::eyre!("failed to initialize Windows keyring store: {e}"))?;
+        keyring_core::set_default_store(store);
+        return Ok(());
+    }
     #[cfg(target_os = "linux")]
-    return Ok(use_named_store("keyutils")?);
-    Err(Box::from("no keychain implementation for current OS"))
+    {
+        let store = linux_keyutils_keyring_store::Store::new()
+            .map_err(|e| eyre::eyre!("failed to initialize Linux keyring store: {e}"))?;
+        keyring_core::set_default_store(store);
+        return Ok(());
+    }
+    bail!("no keychain implementation for current OS")
 }
 
 pub fn service(name: &str) -> String {
@@ -41,7 +56,7 @@ pub fn service(name: &str) -> String {
 
 #[derive(Debug)]
 pub enum KeyringError {
-    Other(BoxError),
+    Other(eyre::Report),
     NotFound(),
 }
 
@@ -81,11 +96,11 @@ pub async fn get(service: &str, user: &str, access: Accessibility) -> Result<Str
     #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
     {
         let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-            .map_err(|e| KeyringError::Other(e.into()))?;
+            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
         match e.get_password() {
             Ok(p) => Ok(p),
             Err(NoEntry) => Err(KeyringError::NotFound()),
-            Err(e) => Err(KeyringError::Other(e.into())),
+            Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
         }
     }
 }
@@ -103,11 +118,11 @@ pub async fn set(
     #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
     {
         let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-            .map_err(|e| KeyringError::Other(e.into()))?;
+            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
         match e.set_password(&data) {
             Ok(()) => Ok(()),
             Err(NoEntry) => Err(KeyringError::NotFound()),
-            Err(e) => Err(KeyringError::Other(e.into())),
+            Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
         }
     }
 }
@@ -120,11 +135,11 @@ pub async fn delete(service: &str, user: &str, access: Accessibility) -> Result<
     #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
     {
         let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-            .map_err(|e| KeyringError::Other(e.into()))?;
+            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
         match e.delete_credential() {
             Ok(()) => Ok(()),
             Err(NoEntry) => Ok(()),
-            Err(e) => Err(KeyringError::Other(e.into())),
+            Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
         }
     }
 }

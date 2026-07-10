@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -153,6 +154,10 @@ func (x *SetupResponse) GetHeader() *ResponseHeader {
 type Profile struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	AuthentikUrl  string                 `protobuf:"bytes,3,opt,name=authentik_url,json=authentikUrl,proto3" json:"authentik_url,omitempty"`
+	LastRenewed   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=last_renewed,json=lastRenewed,proto3" json:"last_renewed,omitempty"`
+	NextRenew     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=next_renew,json=nextRenew,proto3" json:"next_renew,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -192,6 +197,34 @@ func (x *Profile) GetName() string {
 		return x.Name
 	}
 	return ""
+}
+
+func (x *Profile) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *Profile) GetAuthentikUrl() string {
+	if x != nil {
+		return x.AuthentikUrl
+	}
+	return ""
+}
+
+func (x *Profile) GetLastRenewed() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastRenewed
+	}
+	return nil
+}
+
+func (x *Profile) GetNextRenew() *timestamppb.Timestamp {
+	if x != nil {
+		return x.NextRenew
+	}
+	return nil
 }
 
 type ListProfilesResponse struct {
@@ -246,12 +279,64 @@ func (x *ListProfilesResponse) GetProfiles() []*Profile {
 	return nil
 }
 
+type CurrentProfileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Header        *ResponseHeader        `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Profile       string                 `protobuf:"bytes,2,opt,name=profile,proto3" json:"profile,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CurrentProfileResponse) Reset() {
+	*x = CurrentProfileResponse{}
+	mi := &file_agent_ctrl_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CurrentProfileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CurrentProfileResponse) ProtoMessage() {}
+
+func (x *CurrentProfileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_ctrl_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CurrentProfileResponse.ProtoReflect.Descriptor instead.
+func (*CurrentProfileResponse) Descriptor() ([]byte, []int) {
+	return file_agent_ctrl_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CurrentProfileResponse) GetHeader() *ResponseHeader {
+	if x != nil {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *CurrentProfileResponse) GetProfile() string {
+	if x != nil {
+		return x.Profile
+	}
+	return ""
+}
+
 var File_agent_ctrl_proto protoreflect.FileDescriptor
 
 const file_agent_ctrl_proto_rawDesc = "" +
 	"\n" +
 	"\x10agent_ctrl.proto\x12\n" +
-	"agent_ctrl\x1a\vagent.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xe1\x01\n" +
+	"agent_ctrl\x1a\vagent.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe1\x01\n" +
 	"\fSetupRequest\x12,\n" +
 	"\x06header\x18\x01 \x01(\v2\x14.agent.RequestHeaderR\x06header\x12#\n" +
 	"\rauthentik_url\x18\x02 \x01(\tR\fauthentikUrl\x12\x19\n" +
@@ -260,15 +345,25 @@ const file_agent_ctrl_proto_rawDesc = "" +
 	"\faccess_token\x18\x05 \x01(\tR\vaccessToken\x12#\n" +
 	"\rrefresh_token\x18\x06 \x01(\tR\frefreshToken\">\n" +
 	"\rSetupResponse\x12-\n" +
-	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\"\x1d\n" +
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\"\xd8\x01\n" +
 	"\aProfile\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"v\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12#\n" +
+	"\rauthentik_url\x18\x03 \x01(\tR\fauthentikUrl\x12=\n" +
+	"\flast_renewed\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vlastRenewed\x129\n" +
+	"\n" +
+	"next_renew\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tnextRenew\"v\n" +
 	"\x14ListProfilesResponse\x12-\n" +
 	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12/\n" +
-	"\bprofiles\x18\x02 \x03(\v2\x13.agent_ctrl.ProfileR\bprofiles2\x93\x01\n" +
+	"\bprofiles\x18\x02 \x03(\v2\x13.agent_ctrl.ProfileR\bprofiles\"a\n" +
+	"\x16CurrentProfileResponse\x12-\n" +
+	"\x06header\x18\x01 \x01(\v2\x15.agent.ResponseHeaderR\x06header\x12\x18\n" +
+	"\aprofile\x18\x02 \x01(\tR\aprofile2\x9f\x02\n" +
 	"\tAgentCtrl\x12H\n" +
 	"\fListProfiles\x12\x16.google.protobuf.Empty\x1a .agent_ctrl.ListProfilesResponse\x12<\n" +
-	"\x05Setup\x12\x18.agent_ctrl.SetupRequest\x1a\x19.agent_ctrl.SetupResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
+	"\x05Setup\x12\x18.agent_ctrl.SetupRequest\x1a\x19.agent_ctrl.SetupResponse\x12<\n" +
+	"\rSwitchProfile\x12\x14.agent.RequestHeader\x1a\x15.agent.ResponseHeader\x12L\n" +
+	"\x0eCurrentProfile\x12\x16.google.protobuf.Empty\x1a\".agent_ctrl.CurrentProfileResponseB\vZ\x06pkg/pb\xba\x02\x00b\x06proto3"
 
 var (
 	file_agent_ctrl_proto_rawDescOnce sync.Once
@@ -282,30 +377,39 @@ func file_agent_ctrl_proto_rawDescGZIP() []byte {
 	return file_agent_ctrl_proto_rawDescData
 }
 
-var file_agent_ctrl_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_agent_ctrl_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_agent_ctrl_proto_goTypes = []any{
-	(*SetupRequest)(nil),         // 0: agent_ctrl.SetupRequest
-	(*SetupResponse)(nil),        // 1: agent_ctrl.SetupResponse
-	(*Profile)(nil),              // 2: agent_ctrl.Profile
-	(*ListProfilesResponse)(nil), // 3: agent_ctrl.ListProfilesResponse
-	(*RequestHeader)(nil),        // 4: agent.RequestHeader
-	(*ResponseHeader)(nil),       // 5: agent.ResponseHeader
-	(*emptypb.Empty)(nil),        // 6: google.protobuf.Empty
+	(*SetupRequest)(nil),           // 0: agent_ctrl.SetupRequest
+	(*SetupResponse)(nil),          // 1: agent_ctrl.SetupResponse
+	(*Profile)(nil),                // 2: agent_ctrl.Profile
+	(*ListProfilesResponse)(nil),   // 3: agent_ctrl.ListProfilesResponse
+	(*CurrentProfileResponse)(nil), // 4: agent_ctrl.CurrentProfileResponse
+	(*RequestHeader)(nil),          // 5: agent.RequestHeader
+	(*ResponseHeader)(nil),         // 6: agent.ResponseHeader
+	(*timestamppb.Timestamp)(nil),  // 7: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),          // 8: google.protobuf.Empty
 }
 var file_agent_ctrl_proto_depIdxs = []int32{
-	4, // 0: agent_ctrl.SetupRequest.header:type_name -> agent.RequestHeader
-	5, // 1: agent_ctrl.SetupResponse.header:type_name -> agent.ResponseHeader
-	5, // 2: agent_ctrl.ListProfilesResponse.header:type_name -> agent.ResponseHeader
-	2, // 3: agent_ctrl.ListProfilesResponse.profiles:type_name -> agent_ctrl.Profile
-	6, // 4: agent_ctrl.AgentCtrl.ListProfiles:input_type -> google.protobuf.Empty
-	0, // 5: agent_ctrl.AgentCtrl.Setup:input_type -> agent_ctrl.SetupRequest
-	3, // 6: agent_ctrl.AgentCtrl.ListProfiles:output_type -> agent_ctrl.ListProfilesResponse
-	1, // 7: agent_ctrl.AgentCtrl.Setup:output_type -> agent_ctrl.SetupResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	5,  // 0: agent_ctrl.SetupRequest.header:type_name -> agent.RequestHeader
+	6,  // 1: agent_ctrl.SetupResponse.header:type_name -> agent.ResponseHeader
+	7,  // 2: agent_ctrl.Profile.last_renewed:type_name -> google.protobuf.Timestamp
+	7,  // 3: agent_ctrl.Profile.next_renew:type_name -> google.protobuf.Timestamp
+	6,  // 4: agent_ctrl.ListProfilesResponse.header:type_name -> agent.ResponseHeader
+	2,  // 5: agent_ctrl.ListProfilesResponse.profiles:type_name -> agent_ctrl.Profile
+	6,  // 6: agent_ctrl.CurrentProfileResponse.header:type_name -> agent.ResponseHeader
+	8,  // 7: agent_ctrl.AgentCtrl.ListProfiles:input_type -> google.protobuf.Empty
+	0,  // 8: agent_ctrl.AgentCtrl.Setup:input_type -> agent_ctrl.SetupRequest
+	5,  // 9: agent_ctrl.AgentCtrl.SwitchProfile:input_type -> agent.RequestHeader
+	8,  // 10: agent_ctrl.AgentCtrl.CurrentProfile:input_type -> google.protobuf.Empty
+	3,  // 11: agent_ctrl.AgentCtrl.ListProfiles:output_type -> agent_ctrl.ListProfilesResponse
+	1,  // 12: agent_ctrl.AgentCtrl.Setup:output_type -> agent_ctrl.SetupResponse
+	6,  // 13: agent_ctrl.AgentCtrl.SwitchProfile:output_type -> agent.ResponseHeader
+	4,  // 14: agent_ctrl.AgentCtrl.CurrentProfile:output_type -> agent_ctrl.CurrentProfileResponse
+	11, // [11:15] is the sub-list for method output_type
+	7,  // [7:11] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_agent_ctrl_proto_init() }
@@ -320,7 +424,7 @@ func file_agent_ctrl_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_ctrl_proto_rawDesc), len(file_agent_ctrl_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -42,11 +42,11 @@ overrides:
       postinstall: ./pam/_deb/postinst.sh
       preremove: ./pam/_deb/prerm.sh
   rpm:
-    scripts:
-      postinstall: ./pam/_rpm/post.sh
     depends:
       - "authentik-sysd"
       - "glibc"
       - "pam-libs"
       # Dependency on NSS due to authselect configuring both
       - "libnss-authentik"
+    scripts:
+      postinstall: ./pam/_rpm/post.sh

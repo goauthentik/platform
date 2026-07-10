@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=authentik Agent
+Comment=authentik Agent (Desktop)
+Exec=/usr/bin/ak-agent-desktop
+Icon=authentik-agent-desktop
+Terminal=false
+Categories=Network;Security;
+StartupNotify=true

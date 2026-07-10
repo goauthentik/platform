@@ -1,9 +1,9 @@
-use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
     grpc::assert_response_valid,
 };
+use eyre::{Result, WrapErr};
 
 pub struct CredentialsOpts {
     pub profile: String,
@@ -26,7 +26,8 @@ pub async fn get_credentials(
             }),
             client_id: opts.client_id,
         })
-        .await?
+        .await
+        .wrap_err("failed to exchange token")?
         .into_inner();
     assert_response_valid(res.header)?;
     Ok(RawCredentialOutput {

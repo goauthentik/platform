@@ -10,7 +10,7 @@ mod handle_platform_sign_endpoint_header;
 mod models;
 mod path_handler;
 
-#[tokio::main]
+#[ak_meta::main("ak-browser-support")]
 async fn main() {
     init_log(
         PlatformString::new()

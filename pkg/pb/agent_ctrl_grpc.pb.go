@@ -20,8 +20,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AgentCtrl_ListProfiles_FullMethodName = "/agent_ctrl.AgentCtrl/ListProfiles"
-	AgentCtrl_Setup_FullMethodName        = "/agent_ctrl.AgentCtrl/Setup"
+	AgentCtrl_ListProfiles_FullMethodName   = "/agent_ctrl.AgentCtrl/ListProfiles"
+	AgentCtrl_Setup_FullMethodName          = "/agent_ctrl.AgentCtrl/Setup"
+	AgentCtrl_SwitchProfile_FullMethodName  = "/agent_ctrl.AgentCtrl/SwitchProfile"
+	AgentCtrl_CurrentProfile_FullMethodName = "/agent_ctrl.AgentCtrl/CurrentProfile"
 )
 
 // AgentCtrlClient is the client API for AgentCtrl service.
@@ -30,6 +32,8 @@ const (
 type AgentCtrlClient interface {
 	ListProfiles(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListProfilesResponse, error)
 	Setup(ctx context.Context, in *SetupRequest, opts ...grpc.CallOption) (*SetupResponse, error)
+	SwitchProfile(ctx context.Context, in *RequestHeader, opts ...grpc.CallOption) (*ResponseHeader, error)
+	CurrentProfile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CurrentProfileResponse, error)
 }
 
 type agentCtrlClient struct {
@@ -60,12 +64,34 @@ func (c *agentCtrlClient) Setup(ctx context.Context, in *SetupRequest, opts ...g
 	return out, nil
 }
 
+func (c *agentCtrlClient) SwitchProfile(ctx context.Context, in *RequestHeader, opts ...grpc.CallOption) (*ResponseHeader, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ResponseHeader)
+	err := c.cc.Invoke(ctx, AgentCtrl_SwitchProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentCtrlClient) CurrentProfile(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CurrentProfileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CurrentProfileResponse)
+	err := c.cc.Invoke(ctx, AgentCtrl_CurrentProfile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AgentCtrlServer is the server API for AgentCtrl service.
 // All implementations must embed UnimplementedAgentCtrlServer
 // for forward compatibility.
 type AgentCtrlServer interface {
 	ListProfiles(context.Context, *emptypb.Empty) (*ListProfilesResponse, error)
 	Setup(context.Context, *SetupRequest) (*SetupResponse, error)
+	SwitchProfile(context.Context, *RequestHeader) (*ResponseHeader, error)
+	CurrentProfile(context.Context, *emptypb.Empty) (*CurrentProfileResponse, error)
 	mustEmbedUnimplementedAgentCtrlServer()
 }
 
@@ -81,6 +107,12 @@ func (UnimplementedAgentCtrlServer) ListProfiles(context.Context, *emptypb.Empty
 }
 func (UnimplementedAgentCtrlServer) Setup(context.Context, *SetupRequest) (*SetupResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Setup not implemented")
+}
+func (UnimplementedAgentCtrlServer) SwitchProfile(context.Context, *RequestHeader) (*ResponseHeader, error) {
+	return nil, status.Error(codes.Unimplemented, "method SwitchProfile not implemented")
+}
+func (UnimplementedAgentCtrlServer) CurrentProfile(context.Context, *emptypb.Empty) (*CurrentProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CurrentProfile not implemented")
 }
 func (UnimplementedAgentCtrlServer) mustEmbedUnimplementedAgentCtrlServer() {}
 func (UnimplementedAgentCtrlServer) testEmbeddedByValue()                   {}
@@ -139,6 +171,42 @@ func _AgentCtrl_Setup_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AgentCtrl_SwitchProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestHeader)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentCtrlServer).SwitchProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentCtrl_SwitchProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentCtrlServer).SwitchProfile(ctx, req.(*RequestHeader))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AgentCtrl_CurrentProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentCtrlServer).CurrentProfile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentCtrl_CurrentProfile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentCtrlServer).CurrentProfile(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AgentCtrl_ServiceDesc is the grpc.ServiceDesc for AgentCtrl service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -153,6 +221,14 @@ var AgentCtrl_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Setup",
 			Handler:    _AgentCtrl_Setup_Handler,
+		},
+		{
+			MethodName: "SwitchProfile",
+			Handler:    _AgentCtrl_SwitchProfile_Handler,
+		},
+		{
+			MethodName: "CurrentProfile",
+			Handler:    _AgentCtrl_CurrentProfile_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,9 +1,10 @@
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use ak_platform::{net::server::creds::ProcCredentials, prelude::*, string::PlatformString};
+use ak_platform::{net::server::creds::ProcCredentials, string::PlatformString};
 use ak_platform_authz::AuthorizeAction;
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
+use eyre::{Result, WrapErr, bail};
 use ssh_key::{Certificate, PrivateKey, public::KeyData};
 use uuid::Uuid;
 
@@ -13,7 +14,6 @@ use crate::ssh::txn_keys::generate_cert;
 pub struct SSHAgentTransaction {
     pub agent: Arc<Agent>,
     pub priv_key: Arc<PrivateKey>,
-    pub profile: String,
     pub creds: ProcCredentials,
     pub host_key: Option<KeyData>,
     pub session_id: Option<Vec<u8>>,
@@ -35,11 +35,12 @@ impl SSHAgentTransaction {
             }
         };
 
-        let token_mgr = match self.agent.gtm.for_profile(&self.profile).await {
+        let profile = self.agent.cfg.read().await.active_profile.clone();
+        let token_mgr = match self.agent.gtm.for_profile(profile.clone()).await {
             Some(m) => m,
             None => {
                 tracing::warn!(
-                    profile = self.profile,
+                    profile = profile,
                     "ssh-agent: ensure_cert: profile not found"
                 );
                 return None;
@@ -97,17 +98,18 @@ impl SSHAgentTransaction {
 
     async fn get_host_token(&self, host_key: &KeyData) -> Result<(String, i64)> {
         let profile = {
+            let profile = self.agent.cfg.read().await.active_profile.clone();
             let cfg = self.agent.cfg.read().await;
             cfg.profiles
-                .get(&self.profile)
-                .ok_or("profile not found")?
+                .get(&profile)
+                .ok_or_else(|| eyre::eyre!("profile {} not found", profile))?
                 .clone()
         };
 
         let pk = ssh_key::PublicKey::from(host_key.clone());
         let host_key_str = pk
             .to_openssh()
-            .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+            .wrap_err("failed to serialize host public key")?;
         let host_key_trimmed = host_key_str.trim().to_string();
 
         self.authorize(&host_key_trimmed).await?;
@@ -117,7 +119,7 @@ impl SSHAgentTransaction {
 
         let dt = endpoints_agents_connectors_auth_fed_create(&api_config, &device_name)
             .await
-            .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+            .map_err(|e| eyre::eyre!("{e}"))?;
 
         Ok((dt.token, dt.expires_in.unwrap_or(0) as i64))
     }
@@ -145,7 +147,7 @@ impl SSHAgentTransaction {
         .await?;
 
         if !result {
-            return Err(Box::from("authorization denied by user"));
+            bail!("authorization denied by user");
         }
         Ok(())
     }

@@ -9,7 +9,8 @@ use std::{
 };
 use tokio::sync::{Notify, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use crate::{prelude::*, storage::cfgmgr::schema::Config};
+use crate::storage::cfgmgr::schema::Config;
+use eyre::Result;
 
 pub mod schema;
 pub mod watch;
@@ -101,8 +102,8 @@ where
 
     #[tracing::instrument]
     pub async fn save(&self) -> Result<()> {
-        let loaded = self.loaded.read().await;
-        loaded.pre_save().await?;
+        let snapshot = self.loaded.read().await.clone();
+        snapshot.pre_save().await?;
         tracing::debug!("saving config");
         let mut opts = OpenOptions::new();
         opts.create(true).truncate(true).read(true).write(true);
@@ -111,7 +112,7 @@ where
             opts.mode(0o600);
         }
         let file = opts.open(self.path.clone())?;
-        serde_json::to_writer(file, &*loaded)?;
+        serde_json::to_writer(file, &snapshot)?;
         self.notify_reload();
         Ok(())
     }
@@ -131,7 +132,7 @@ mod tests {
     use super::*;
     use crate::storage::cfgmgr::schema::Config;
 
-    #[derive(Serialize, Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug, Clone)]
     struct TestCfg {
         field: String,
         #[serde(skip)]
@@ -151,11 +152,11 @@ mod tests {
     }
 
     impl Config for TestCfg {
-        async fn post_load(&mut self) -> crate::prelude::Result<()> {
+        async fn post_load(&mut self) -> eyre::Result<()> {
             self.post_load_called.store(true, Ordering::SeqCst);
             Ok(())
         }
-        async fn pre_save(&self) -> crate::prelude::Result<()> {
+        async fn pre_save(&self) -> eyre::Result<()> {
             self.pre_save_called.store(true, Ordering::SeqCst);
             Ok(())
         }
