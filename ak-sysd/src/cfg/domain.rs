@@ -1,0 +1,303 @@
+use crate::state::StateStore;
+use ak_meta::user_agent;
+use authentik_client::apis::configuration::Configuration;
+use authentik_client::models::{AgentConfig, EnrollRequest};
+use eyre::{Result, bail, eyre};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+/// Domain tokens are stored in the keyring under this service name, scoped
+/// per-domain via the `user` field (the domain name).
+fn keyring_service() -> String {
+    ak_platform_keyring::service("sysd-domain-token")
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct DomainConfig {
+    pub enabled: bool,
+    pub authentik_url: String,
+    pub domain: String,
+    pub managed: bool,
+    /// Only present in the JSON file if the keyring is unavailable.
+    #[serde(rename = "token", default)]
+    pub fallback_token: String,
+    #[serde(skip)]
+    pub token: String,
+}
+
+impl DomainConfig {
+    fn file_name(&self) -> String {
+        format!("{}.json", self.domain)
+    }
+}
+
+pub struct LoadedDomain {
+    pub cfg: DomainConfig,
+    pub api: Configuration,
+    pub remote: Arc<RwLock<Option<AgentConfig>>>,
+}
+
+fn build_api_client(authentik_url: &str, token: &str) -> Configuration {
+    Configuration {
+        base_path: format!("{}/api/v3", authentik_url.trim_end_matches('/')),
+        bearer_access_token: Some(token.to_string()),
+        user_agent: Some(user_agent()),
+        ..Default::default()
+    }
+}
+
+/// Rejects domain names that would let a saved/deleted file escape
+/// `domain_dir` (e.g. via `..` or path separators) before it's ever joined
+/// into a path — ported from Go's `ensurePathWithinDir` guard.
+fn validate_domain_name(name: &str) -> Result<()> {
+    if name.is_empty() || name.contains('/') || name.contains('\\') || name == "." || name == ".." {
+        bail!("invalid domain name: {name}");
+    }
+    Ok(())
+}
+
+pub struct DomainManager {
+    domain_dir: String,
+    state: Arc<StateStore>,
+    domains: RwLock<Vec<Arc<LoadedDomain>>>,
+}
+
+impl DomainManager {
+    pub async fn new(domain_dir: String, state: Arc<StateStore>) -> Result<Arc<Self>> {
+        Ok(Arc::new(Self {
+            domain_dir,
+            state,
+            domains: RwLock::new(Vec::new()),
+        }))
+    }
+
+    /// Loads every `*.json` file in `domain_dir`, pulling each domain's token
+    /// from the keyring (falling back to the in-file token if the keyring
+    /// entry is missing), then loads any MDM-managed domain on top.
+    pub async fn load_all(&self) -> Result<()> {
+        let mut loaded = Vec::new();
+
+        if !self.domain_dir.is_empty() {
+            std::fs::create_dir_all(&self.domain_dir).ok();
+            let entries = std::fs::read_dir(&self.domain_dir)
+                .map_err(|e| eyre!("failed to read domain_dir {}: {e}", self.domain_dir))?;
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|e| e.to_str()) != Some("json") {
+                    continue;
+                }
+                let raw = std::fs::read_to_string(&path)?;
+                let mut cfg: DomainConfig = serde_json::from_str(&raw)?;
+                cfg.token = self.resolve_token(&cfg).await;
+                loaded.push(Arc::new(LoadedDomain {
+                    api: build_api_client(&cfg.authentik_url, &cfg.token),
+                    remote: Arc::new(RwLock::new(None)),
+                    cfg,
+                }));
+            }
+        }
+
+        *self.domains.write().await = loaded;
+
+        if let Err(e) = self.load_managed().await {
+            tracing::warn!("failed to load managed domain config: {e:?}");
+        }
+
+        Ok(())
+    }
+
+    async fn resolve_token(&self, cfg: &DomainConfig) -> String {
+        match ak_platform_keyring::get(
+            &keyring_service(),
+            &cfg.domain,
+            ak_platform_keyring::Accessibility::Always,
+        )
+        .await
+        {
+            Ok(token) => token,
+            Err(_) => cfg.fallback_token.clone(),
+        }
+    }
+
+    pub async fn domains(&self) -> Vec<Arc<LoadedDomain>> {
+        self.domains.read().await.clone()
+    }
+
+    /// First enabled domain — mirrors Go's `dom[0]` shortcut for
+    /// single-tenant components (ping, auth, directory, device). Do not
+    /// invent smarter "current domain" selection here.
+    pub async fn active(&self) -> Result<Arc<LoadedDomain>> {
+        self.domains
+            .read()
+            .await
+            .iter()
+            .find(|d| d.cfg.enabled)
+            .cloned()
+            .ok_or_else(|| eyre!("no enabled domain configured"))
+    }
+
+    pub async fn save_domain(&self, cfg: DomainConfig) -> Result<()> {
+        validate_domain_name(&cfg.domain)?;
+        if let Err(e) = ak_platform_keyring::set(
+            &keyring_service(),
+            &cfg.domain,
+            ak_platform_keyring::Accessibility::Always,
+            cfg.token.clone(),
+        )
+        .await
+        {
+            tracing::warn!("failed to save domain token to keyring, falling back to file: {e:?}");
+        }
+
+        let path = std::path::Path::new(&self.domain_dir).join(cfg.file_name());
+        std::fs::create_dir_all(&self.domain_dir)?;
+        let mut on_disk = cfg.clone();
+        // If the keyring write above failed, keep the token recoverable in the file.
+        on_disk.fallback_token = cfg.token.clone();
+        let json = serde_json::to_string_pretty(&on_disk)?;
+        std::fs::write(&path, json)?;
+
+        let loaded = Arc::new(LoadedDomain {
+            api: build_api_client(&cfg.authentik_url, &cfg.token),
+            remote: Arc::new(RwLock::new(None)),
+            cfg,
+        });
+        let mut domains = self.domains.write().await;
+        domains.retain(|d| d.cfg.domain != loaded.cfg.domain);
+        domains.push(loaded);
+        Ok(())
+    }
+
+    pub async fn delete_domain(&self, name: &str) -> Result<()> {
+        validate_domain_name(name)?;
+        let path = std::path::Path::new(&self.domain_dir).join(format!("{name}.json"));
+        if path.exists() {
+            std::fs::remove_file(&path)?;
+        }
+        if let Err(e) = ak_platform_keyring::delete(
+            &keyring_service(),
+            name,
+            ak_platform_keyring::Accessibility::Always,
+        )
+        .await
+        {
+            tracing::warn!("failed to delete domain token from keyring: {e:?}");
+        }
+        self.domains.write().await.retain(|d| d.cfg.domain != name);
+        Ok(())
+    }
+
+    /// Exchanges a one-time registration token for a permanent device token.
+    /// Does not save the resulting domain — callers must call
+    /// `save_domain` explicitly, mirroring Go's `Enroll()`/`SaveDomain()` split.
+    pub async fn enroll(
+        &self,
+        domain: String,
+        authentik_url: String,
+        one_time_token: String,
+    ) -> Result<DomainConfig> {
+        let serial = ak_platform_facts::serial().unwrap_or_default();
+        let hostname = ak_platform_facts::hostname();
+        let api = build_api_client(&authentik_url, &one_time_token);
+        let res = authentik_client::apis::endpoints_api::endpoints_agents_connectors_enroll_create(
+            &api,
+            EnrollRequest::new(serial, hostname),
+        )
+        .await
+        .map_err(|e| eyre!("enrollment failed: {e}"))?;
+
+        Ok(DomainConfig {
+            enabled: true,
+            authentik_url,
+            domain,
+            managed: false,
+            fallback_token: String::new(),
+            token: res.token,
+        })
+    }
+
+    /// Verifies connectivity for a domain, mirroring Go's `Test()`.
+    pub async fn test(&self, cfg: &DomainConfig) -> Result<AgentConfig> {
+        let api = build_api_client(&cfg.authentik_url, &cfg.token);
+        let remote = authentik_client::apis::endpoints_api::endpoints_agents_connectors_agent_config_retrieve(&api)
+            .await
+            .map_err(|e| eyre!("connectivity test failed: {e}"))?;
+        Ok(remote)
+    }
+
+    /// Tests every loaded domain; any that fail are logged and left enabled
+    /// (mirroring the lack of hard-disable behavior actually verified in
+    /// this pass — flagged for confirmation against `SystemAgent.DomainCheck()`).
+    pub async fn healthcheck_all(&self) {
+        let domains = self.domains().await;
+        for d in domains {
+            match self.test(&d.cfg).await {
+                Ok(remote) => {
+                    *d.remote.write().await = Some(remote);
+                }
+                Err(e) => {
+                    tracing::warn!(domain = d.cfg.domain, "domain healthcheck failed: {e:?}");
+                }
+            }
+        }
+    }
+
+    /// Refreshes a domain's cached `AgentConfig`, writing it into the
+    /// `domain_cache` state table alongside the in-memory copy.
+    pub async fn fetch_remote_config(&self, domain_name: &str) -> Result<()> {
+        let domains = self.domains().await;
+        let Some(d) = domains.iter().find(|d| d.cfg.domain == domain_name) else {
+            bail!("domain not found: {domain_name}");
+        };
+        let remote = self.test(&d.cfg).await?;
+        let cfg_json = serde_json::to_string(&remote)?;
+        self.state
+            .domain_cache_set(domain_name, &cfg_json, "", chrono::Utc::now().timestamp())
+            .await?;
+        *d.remote.write().await = Some(remote);
+        Ok(())
+    }
+
+    /// Loads (or re-enrolls, or removes) the MDM-managed domain. See
+    /// `cfg::managed` for the platform-specific config source.
+    pub async fn load_managed(&self) -> Result<()> {
+        let Some(managed) = crate::cfg::managed::load_managed_config()? else {
+            return Ok(());
+        };
+
+        const MANAGED_DOMAIN_NAME: &str = "ak-mdm-managed";
+        let existing = self
+            .domains()
+            .await
+            .into_iter()
+            .find(|d| d.cfg.domain == MANAGED_DOMAIN_NAME);
+
+        if let Some(existing) = existing {
+            if existing
+                .cfg
+                .authentik_url
+                .eq_ignore_ascii_case(&managed.url)
+            {
+                tracing::debug!("resumed existing managed domain");
+                return Ok(());
+            }
+            if let Err(e) = self.delete_domain(MANAGED_DOMAIN_NAME).await {
+                tracing::warn!("failed to delete old managed domain: {e:?}");
+            }
+        }
+
+        let cfg = self
+            .enroll(
+                MANAGED_DOMAIN_NAME.to_string(),
+                managed.url,
+                managed.registration_token,
+            )
+            .await
+            .map_err(|e| eyre!("failed to enroll managed domain: {e}"))?;
+        let mut cfg = cfg;
+        cfg.managed = true;
+        self.save_domain(cfg).await?;
+        Ok(())
+    }
+}
