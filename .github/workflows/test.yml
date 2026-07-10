@@ -86,7 +86,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@5ebac0d9522d786674368e47e92963ba13f2c376 # v2
+      - uses: taiki-e/install-action@c7eb1735f09259a5035e8e5d44b1406b1cddc0fb # v2
         with:
           tool: cargo-llvm-cov nextest
       - run: |
@@ -195,7 +195,7 @@ jobs:
           go-version-file: go.mod
           cache: true
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-      - uses: goauthentik/action-setup-authentik@9b0996a6bb09a217fa6f8145d4e0a0865a5df516 # v2.1
+      - uses: goauthentik/action-setup-authentik@3e55d49b89bd7fc1bd6f2b714b4bd311549aaa97 # v3.0
         id: setup
         with:
           version: beta
@@ -264,7 +264,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@5ebac0d9522d786674368e47e92963ba13f2c376 # v2
+      - uses: taiki-e/install-action@c7eb1735f09259a5035e8e5d44b1406b1cddc0fb # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
@@ -288,7 +288,7 @@ jobs:
           name: authentik_ubuntu-24.04_ak-pam-e2e
           path: bin/
       - run: chmod +x bin/agent/ak-agent bin/cli/ak
-      - uses: goauthentik/action-setup-authentik@9b0996a6bb09a217fa6f8145d4e0a0865a5df516 # v2.1
+      - uses: goauthentik/action-setup-authentik@3e55d49b89bd7fc1bd6f2b714b4bd311549aaa97 # v3.0
         id: setup
         with:
           version: beta
