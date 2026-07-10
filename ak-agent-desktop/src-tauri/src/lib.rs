@@ -90,6 +90,7 @@ pub fn start_tauri() -> Result<()> {
             cmd::get_user_info,
             cmd::list_profiles,
             cmd::active_profile,
+            cmd::get_versions,
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| {
