@@ -1,7 +1,8 @@
 import "./header.js";
 import "./profile-status.js";
+import "./status-bar.js";
 
-import { activeProfile, listProfiles, profile, userInfo } from "../bridge";
+import { activeProfile, getVersions, listProfiles, profile, userInfo, Versions } from "../bridge";
 
 import { SessionUser } from "@goauthentik/api";
 
@@ -36,6 +37,9 @@ export class AppShell extends LitElement {
     @state()
     private activeProfile?: string;
 
+    @state()
+    private versions?: Versions;
+
     private _unlisten?: () => void;
 
     async connectedCallback(): Promise<void> {
@@ -56,6 +60,11 @@ export class AppShell extends LitElement {
             this.user = await userInfo("default");
         } catch (exc) {
             console.warn("Failed to fetch user info", exc);
+        }
+        try {
+            this.versions = await getVersions();
+        } catch (exc) {
+            console.warn("Failed to fetch versions", exc);
         }
     }
 
@@ -79,6 +88,7 @@ export class AppShell extends LitElement {
                     .activeProfile=${this.activeProfile}
                 ></ak-profile-status>
             </div>
+            <ak-status-bar .versions=${this.versions}></ak-status-bar>
         `;
     }
 }

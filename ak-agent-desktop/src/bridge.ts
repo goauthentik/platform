@@ -37,3 +37,19 @@ export async function listProfiles(): Promise<profile[]> {
         });
     });
 }
+
+export interface ComponentVersion {
+    version?: string;
+    serverVersion?: string;
+    error?: string;
+}
+
+export interface Versions {
+    desktop: string;
+    agent: ComponentVersion;
+    sysd: ComponentVersion;
+}
+
+export async function getVersions(): Promise<Versions> {
+    return await invoke<Versions>("get_versions");
+}
