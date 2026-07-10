@@ -44,6 +44,7 @@ rs-gen-proto:
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
 	cargo fmt --all
+	cargo clippy --fix --allow-dirty -p ak-platform
 
 ci-install-deps:
 ifeq ($(PLATFORM),gnu/linux)
