@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use ak_meta::user_agent;
 use chrono::{TimeDelta, Utc};
@@ -151,11 +152,14 @@ impl ProfileTokenManager {
                         return;
                     }
                     Some(profile) => {
-                        match Self::time_until_expiry(&profile.access_token()).to_std() {
+                        let dur = Self::time_until_expiry(&profile.access_token());
+                        match dur.to_std() {
                             Ok(d) => d,
                             Err(e) => {
-                                tracing::warn!("couldn't convert duration to std: {e:?}");
-                                return;
+                                tracing::warn!(
+                                    "couldn't convert duration {dur:?} to std, defaulting to 30s: {e:?}"
+                                );
+                                Duration::from_secs(30)
                             }
                         }
                     }
