@@ -6,15 +6,15 @@ use tonic::{Request, Response, Status};
 pub struct PingComponent {}
 
 impl Component for PingComponent {
-    fn new() -> ak_platform::prelude::Result<Box<dyn Component>> {
+    fn new() -> eyre::Result<Box<dyn Component>> {
         Ok(Box::new(Self {}))
     }
 
-    fn start(&self) -> ak_platform::prelude::Result<()> {
+    fn start(&self) -> eyre::Result<()> {
         Ok(())
     }
 
-    fn stop(&self) -> ak_platform::prelude::Result<()> {
+    fn stop(&self) -> eyre::Result<()> {
         Ok(())
     }
 
@@ -33,6 +33,7 @@ impl Ping for PingComponent {
         Ok(Response::new(PingResponse {
             component: "sysd".to_string(),
             version: full_version(),
+            server_version: "".to_string(),
         }))
     }
 

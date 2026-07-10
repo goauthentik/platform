@@ -1,13 +1,13 @@
 #[cfg(target_os = "macos")]
 use crate::components::{Component, ComponentConstructor, ping::PingComponent};
 use crate::{cfg::Config, components::ComponentInstance};
-use ak_platform::prelude::*;
 use ak_platform::storage::cfgmgr::ConfigManager;
-use tonic::transport::Server;
-use tracing::Level;
-use std::{collections::HashMap, sync::Arc};
+use eyre::Result;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
+use std::{collections::HashMap, sync::Arc};
+use tonic::transport::Server;
 use tower_http::trace::{DefaultOnFailure, DefaultOnRequest, TraceLayer};
+use tracing::Level;
 
 pub struct Agent {
     cfg: Arc<ConfigManager<Config>>,
@@ -40,13 +40,13 @@ impl Agent {
     pub async fn register_components(&mut self) -> Result<()> {
         for (name, constr) in Agent::register_platform_components() {
             let comp = (constr)()?;
-            tracing::debug!(component=name, "Registering component");
+            tracing::debug!(component = name, "Registering component");
             self.components.insert(name, ComponentInstance::new(comp));
         }
         Ok(())
     }
 
-    pub async fn start(&self)  -> Result<()> {
+    pub async fn start(&self) -> Result<()> {
         Ok(())
     }
 }
@@ -54,6 +54,9 @@ impl Agent {
 #[cfg(target_os = "macos")]
 impl Agent {
     pub fn register_platform_components() -> HashMap<String, ComponentConstructor> {
-        HashMap::from([(PingComponent::id(), PingComponent::new as ComponentConstructor)])
+        HashMap::from([(
+            PingComponent::id(),
+            PingComponent::new as ComponentConstructor,
+        )])
     }
 }

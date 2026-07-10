@@ -1,4 +1,5 @@
-use ak_platform::{paths::SysdSocketID, prelude::*};
+use ak_platform::paths::SysdSocketID;
+use eyre::Result;
 use std::sync::Arc;
 
 pub mod auth;
@@ -24,6 +25,8 @@ pub struct ComponentInstance {
 
 impl ComponentInstance {
     pub fn new(comp: Box<dyn Component>) -> ComponentInstance {
-        ComponentInstance { comp: Arc::new(comp) }
+        ComponentInstance {
+            comp: Arc::new(comp),
+        }
     }
 }

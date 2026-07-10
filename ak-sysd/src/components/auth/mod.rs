@@ -1,17 +1,18 @@
 use crate::components::Component;
+use eyre::Result;
 
 pub struct AuthComponent {}
 
 impl Component for AuthComponent {
-    fn new() -> ak_platform::prelude::Result<Box<dyn Component>> {
+    fn new() -> Result<Box<dyn Component>> {
         Ok(Box::new(Self {}))
     }
 
-    fn start(&self) -> ak_platform::prelude::Result<()> {
+    fn start(&self) -> Result<()> {
         todo!()
     }
 
-    fn stop(&self) -> ak_platform::prelude::Result<()> {
+    fn stop(&self) -> Result<()> {
         todo!()
     }
 
