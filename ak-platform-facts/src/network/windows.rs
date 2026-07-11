@@ -4,23 +4,41 @@ use wmi::{COMLibrary, WMIConnection};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "PascalCase")]
+struct Win32NetworkAdapter {
+    net_connection_id: Option<String>,
+    index: Option<u32>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
 struct Win32NetworkAdapterConfiguration {
-    description: Option<String>,
+    interface_index: Option<u32>,
     dns_server_search_order: Option<Vec<String>>,
 }
 
+/// Looks up the adapter's numeric index by its connection name
+/// (`NetConnectionID`, the friendly name shown in Windows), then filters
+/// `Win32_NetworkAdapterConfiguration` by that exact `InterfaceIndex`.
 pub fn dns_servers(iface: &str) -> Vec<String> {
     (|| -> Result<Vec<String>> {
         let con = WMIConnection::new(COMLibrary::new()?)?;
-        let configs: Vec<Win32NetworkAdapterConfiguration> = con.query()?;
-        let matched = configs.iter().find(|c| {
-            c.description
+
+        let adapters: Vec<Win32NetworkAdapter> = con.query()?;
+        let Some(index) = adapters.iter().find_map(|a| {
+            a.net_connection_id
                 .as_deref()
-                .is_some_and(|d| d.eq_ignore_ascii_case(iface) || d.contains(iface))
-        });
-        Ok(matched
-            .or_else(|| configs.iter().find(|c| c.dns_server_search_order.is_some()))
-            .and_then(|c| c.dns_server_search_order.clone())
+                .is_some_and(|n| n.eq_ignore_ascii_case(iface))
+                .then_some(a.index)
+                .flatten()
+        }) else {
+            return Ok(Vec::new());
+        };
+
+        let configs: Vec<Win32NetworkAdapterConfiguration> = con.query()?;
+        Ok(configs
+            .into_iter()
+            .find(|c| c.interface_index == Some(index))
+            .and_then(|c| c.dns_server_search_order)
             .unwrap_or_default())
     })()
     .unwrap_or_default()

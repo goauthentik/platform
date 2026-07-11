@@ -21,7 +21,6 @@ use other as imp;
 use authentik_client::models::DeviceGroupRequest;
 use eyre::Result;
 
-/// Enumerates local groups for the current host.
 pub fn gather() -> Result<Vec<DeviceGroupRequest>> {
     imp::gather()
 }

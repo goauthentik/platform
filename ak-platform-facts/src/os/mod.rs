@@ -21,7 +21,6 @@ use other as imp;
 use authentik_client::models::OperatingSystemRequest;
 use eyre::Result;
 
-/// Gathers OS family/name/version/arch for the current host.
 pub fn gather() -> Result<OperatingSystemRequest> {
     imp::gather()
 }

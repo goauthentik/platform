@@ -10,10 +10,9 @@ pub fn attempt<T>(name: &str, f: impl FnOnce() -> Result<T>) -> Option<T> {
     }
 }
 
-/// Placeholder for `target_os` values Go's own package never targeted
-/// either (anything other than linux/macos/windows). Only referenced from
-/// `other.rs` modules, which are themselves only compiled for such targets
-/// — dead code on every platform this actually gets built for.
+/// Only referenced from `other.rs` modules, which are themselves only
+/// compiled for targets outside linux/macos/windows — dead code on every
+/// platform this actually gets built for.
 #[allow(dead_code)]
 pub fn unsupported_platform<T>(subsystem: &str) -> Result<T> {
     eyre::bail!(

@@ -28,16 +28,33 @@ fn profile() -> Result<SpHardwareEntry> {
 }
 
 pub fn serial() -> Result<String> {
+    if let Some(serial) = super::static_serial() {
+        return Ok(serial);
+    }
     profile()?
         .serial_number
         .ok_or_else(|| eyre::eyre!("serial_number missing from system_profiler output"))
 }
 
 pub fn gather() -> Result<HardwareRequest> {
-    let profile = profile()?;
     let mut sys = sysinfo::System::new();
     sys.refresh_cpu_all();
     sys.refresh_memory();
+
+    // model/cpu_name stay unset here — they're only ever populated from
+    // the system_profiler response below, which this path skips.
+    if let Some(serial) = super::static_serial() {
+        return Ok(HardwareRequest {
+            manufacturer: Some("Apple Inc.".to_string()),
+            model: None,
+            serial,
+            cpu_name: None,
+            cpu_count: Some(sys.cpus().len() as i32),
+            memory_bytes: Some(sys.total_memory() as i64),
+        });
+    }
+
+    let profile = profile()?;
     Ok(HardwareRequest {
         manufacturer: Some("Apple Inc.".to_string()),
         model: profile.machine_model,

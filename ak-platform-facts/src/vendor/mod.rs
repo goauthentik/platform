@@ -15,9 +15,8 @@ fn ssh_host_key_dir() -> &'static str {
     "/etc/ssh"
 }
 
-/// Reads local SSH host public keys directly instead of shelling
-/// `ssh-keyscan localhost` (which Go does): simpler, and doesn't depend on
-/// sshd already listening.
+/// Reads local SSH host public keys directly rather than scanning over the
+/// network — doesn't depend on sshd already listening.
 fn ssh_host_keys() -> Vec<String> {
     let Ok(entries) = std::fs::read_dir(ssh_host_key_dir()) else {
         return Vec::new();
@@ -48,8 +47,6 @@ fn rdp_cert_fingerprint() -> String {
     String::new()
 }
 
-/// Gathers ak-sysd-specific vendor extras: agent version, local SSH host
-/// keys, and (Windows-only) the RDP certificate fingerprint.
 pub fn gather() -> HashMap<String, Value> {
     let mut vendor = HashMap::new();
     vendor.insert(

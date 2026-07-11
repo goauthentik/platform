@@ -1,7 +1,6 @@
 use eyre::Result;
 
-/// Only device-mapper devices (`dm-*`, used by LVM/LUKS) can be encrypted;
-/// matches Go's check of `/sys/block/<dev>/dm/name` for a "crypt" target.
+/// Only device-mapper devices (`dm-*`, used by LVM/LUKS) can be encrypted.
 pub fn encryption_enabled(name: &str, _mountpoint: &str) -> Result<bool> {
     let basename = name.rsplit('/').next().unwrap_or(name);
     if !basename.starts_with("dm-") {

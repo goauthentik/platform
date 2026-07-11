@@ -14,8 +14,7 @@ pub fn dns_servers(iface: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// Matches Go's own approach (`sudo pfctl -s info`) — inherits the same
-/// requirement that the caller has passwordless sudo for `pfctl`.
+/// Requires passwordless sudo for `pfctl`.
 pub fn firewall_enabled() -> Result<bool> {
     let out = run(std::process::Command::new("sudo").args(["pfctl", "-s", "info"]))?;
     Ok(out.contains("Status: Enabled"))

@@ -2,7 +2,6 @@ use authentik_client::models::ProcessRequest;
 use eyre::Result;
 use sysinfo::{ProcessesToUpdate, System, Users};
 
-/// Matches Go's `Cmdline()` → `Exe()` → `Name()` fallback chain.
 fn process_name(process: &sysinfo::Process) -> String {
     let cmd = process.cmd();
     if !cmd.is_empty() {
@@ -18,9 +17,8 @@ fn process_name(process: &sysinfo::Process) -> String {
     process.name().to_string_lossy().to_string()
 }
 
-/// Enumerates running processes for the current host. Fully cross-platform
-/// via `sysinfo` — no per-OS code needed, unlike Go's `gopsutil`-based
-/// implementation which still had a separate Windows name-resolution path.
+/// Fully cross-platform via `sysinfo` — unlike the other subsystems in
+/// this crate, there's no per-OS module here.
 pub fn gather() -> Result<Vec<ProcessRequest>> {
     let mut system = System::new();
     system.refresh_processes(ProcessesToUpdate::All, true);

@@ -42,8 +42,6 @@ fn disks_base() -> Vec<DiskRequest> {
         .collect()
 }
 
-/// Gathers disk partitions/capacity (via `sysinfo`) and per-disk encryption
-/// status (platform-specific).
 pub fn gather() -> Result<Vec<DiskRequest>> {
     let mut disks = disks_base();
     for disk in &mut disks {

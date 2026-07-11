@@ -15,8 +15,7 @@ fn resolv_conf_nameservers() -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// `/etc/resolv.conf` is system-wide on Linux, so every interface gets the
-/// same list, matching Go's behavior.
+/// `/etc/resolv.conf` is system-wide, so every interface gets the same list.
 pub fn dns_servers(_iface: &str) -> Vec<String> {
     resolv_conf_nameservers()
 }

@@ -10,19 +10,26 @@ pub mod vendor;
 
 pub use hardware::serial;
 
+use std::collections::HashMap;
+
 use authentik_client::models::DeviceFactsRequest;
 use util::attempt;
 
-/// Hostname of the current host, also used for enrollment.
 pub fn hostname() -> String {
     sysinfo::System::host_name().unwrap_or_default()
 }
 
-/// Gathers all device facts for the current host, matching the shape of
-/// Go's `facts.Gather`. Each subsystem is attempted independently: a
-/// failure in one (e.g. an unreadable file, a missing command) is logged
-/// and leaves that section unset rather than failing the whole call.
+/// Each subsystem is attempted independently: a failure in one leaves
+/// that section unset rather than failing the whole call.
 pub fn gather() -> DeviceFactsRequest {
+    // Namespaced so other vendors/agents can write their own top-level
+    // keys into the same shared map.
+    let mut vendor = HashMap::new();
+    vendor.insert(
+        "goauthentik.io/platform".to_string(),
+        serde_json::to_value(vendor::gather()).unwrap_or_default(),
+    );
+
     DeviceFactsRequest {
         hardware: Some(attempt("hardware", hardware::gather)),
         os: Some(attempt("os", os::gather)),
@@ -32,7 +39,7 @@ pub fn gather() -> DeviceFactsRequest {
         users: Some(attempt("users", user::gather)),
         groups: Some(attempt("groups", group::gather)),
         software: None,
-        vendor: Some(vendor::gather()),
+        vendor: Some(vendor),
     }
 }
 

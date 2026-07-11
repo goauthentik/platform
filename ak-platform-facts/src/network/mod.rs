@@ -22,9 +22,8 @@ use authentik_client::models::{NetworkInterfaceRequest, NetworkRequest};
 use eyre::Result;
 use sysinfo::{InterfaceOperationalState, Networks};
 
-/// Enumerates non-loopback, operational interfaces (name/MAC/IPs) via
-/// `sysinfo`, matching Go's `net.Interfaces()` filtering, and attaches
-/// per-interface DNS servers via the platform-specific lookup.
+/// Only interfaces that are up, non-loopback, have a hardware address, and
+/// have at least one non-loopback IP address are included.
 fn interfaces() -> Vec<NetworkInterfaceRequest> {
     let networks = Networks::new_with_refreshed_list();
     let mut interfaces: Vec<NetworkInterfaceRequest> = networks
@@ -38,27 +37,32 @@ fn interfaces() -> Vec<NetworkInterfaceRequest> {
                     | InterfaceOperationalState::LowerLayerDown
             )
         })
-        .filter(|(_, data)| {
-            let ips = data.ip_networks();
-            ips.is_empty() || ips.iter().any(|ip| !ip.addr.is_loopback())
-        })
-        .map(|(name, data)| NetworkInterfaceRequest {
-            name: name.clone(),
-            hardware_address: data.mac_address().to_string(),
-            ip_addresses: Some(
-                data.ip_networks()
-                    .iter()
-                    .map(|ip| ip.addr.to_string())
-                    .collect(),
-            ),
-            dns_servers: Some(imp::dns_servers(name)),
+        .filter_map(|(name, data)| {
+            let mac = data.mac_address();
+            if mac.is_unspecified() {
+                return None;
+            }
+            let valid_addresses: Vec<String> = data
+                .ip_networks()
+                .iter()
+                .filter(|ip| !ip.addr.is_loopback())
+                .map(|ip| ip.addr.to_string())
+                .collect();
+            if valid_addresses.is_empty() {
+                return None;
+            }
+            Some(NetworkInterfaceRequest {
+                name: name.clone(),
+                hardware_address: mac.to_string(),
+                ip_addresses: Some(valid_addresses),
+                dns_servers: Some(imp::dns_servers(name)),
+            })
         })
         .collect();
     interfaces.sort_by(|a, b| a.name.cmp(&b.name));
     interfaces
 }
 
-/// Gathers hostname, interfaces, and firewall status for the current host.
 pub fn gather() -> Result<NetworkRequest> {
     Ok(NetworkRequest {
         hostname: sysinfo::System::host_name().unwrap_or_default(),

@@ -21,7 +21,6 @@ use other as imp;
 use authentik_client::models::DeviceUserRequest;
 use eyre::Result;
 
-/// Enumerates local user accounts for the current host.
 pub fn gather() -> Result<Vec<DeviceUserRequest>> {
     imp::gather()
 }

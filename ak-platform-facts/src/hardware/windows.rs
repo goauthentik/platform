@@ -37,6 +37,21 @@ fn wmi_serial(con: &WMIConnection) -> Result<Option<String>> {
         .filter(|s| !s.trim().is_empty()))
 }
 
+fn cpu_count(computer_system: Option<&Win32ComputerSystem>) -> i32 {
+    if let Some(count) = computer_system.and_then(|c| c.number_of_logical_processors) {
+        return count as i32;
+    }
+    if let Some(cores) = std::env::var("NUMBER_OF_PROCESSORS")
+        .ok()
+        .and_then(|v| v.parse::<i32>().ok())
+    {
+        return cores;
+    }
+    std::thread::available_parallelism()
+        .map(|n| n.get() as i32)
+        .unwrap_or(1)
+}
+
 fn registry_machine_guid() -> Result<String> {
     let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
     let key = hklm.open_subkey("SOFTWARE\\Microsoft\\Cryptography")?;
@@ -69,7 +84,7 @@ pub fn gather() -> Result<HardwareRequest> {
         model: computer_system.as_ref().and_then(|c| c.model.clone()),
         serial,
         cpu_name: processor.and_then(|c| c.name),
-        cpu_count: computer_system.and_then(|c| c.number_of_logical_processors.map(|n| n as i32)),
+        cpu_count: Some(cpu_count(computer_system.as_ref())),
         memory_bytes: (memory_bytes > 0).then_some(memory_bytes as i64),
     })
 }
