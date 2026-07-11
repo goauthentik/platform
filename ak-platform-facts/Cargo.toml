@@ -1,0 +1,24 @@
+[package]
+name = "ak-platform-facts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+ak-meta = { path = "../ak-meta" }
+authentik-client = { workspace = true }
+eyre = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+sysinfo = { version = "0.39.6", default-features = false, features = ["system", "disk", "network", "user"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+plist = "1.9.0"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"
+wmi = "0.18"
