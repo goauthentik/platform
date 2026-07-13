@@ -34,7 +34,7 @@ importers:
         version: 2.0.0(typescript-eslint@8.62.1(eslint@8.57.1)(typescript@6.0.3))(typescript@6.0.3)
       '@goauthentik/prettier-config':
         specifier: ^3.5.0
-        version: 3.5.0(prettier-plugin-packagejson@3.0.2(prettier@3.9.4))(prettier@3.9.4)
+        version: 3.5.0(prettier-plugin-packagejson@3.0.2(prettier@3.9.5))(prettier@3.9.5)
       '@goauthentik/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0
@@ -61,7 +61,7 @@ importers:
         version: 2.0.0(@typescript-eslint/parser@8.62.1(eslint@9.39.4)(typescript@6.0.3))(typescript-eslint@8.62.1(eslint@9.39.4)(typescript@6.0.3))(typescript@6.0.3)
       '@goauthentik/prettier-config':
         specifier: ^3.5.0
-        version: 3.5.0(prettier-plugin-packagejson@3.0.2(prettier@3.9.4))(prettier@3.9.4)
+        version: 3.5.0(prettier-plugin-packagejson@3.0.2(prettier@3.9.5))(prettier@3.9.5)
       '@goauthentik/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0
@@ -90,11 +90,11 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       prettier:
-        specifier: ^3.9.4
-        version: 3.9.4
+        specifier: ^3.9.5
+        version: 3.9.5
       prettier-plugin-packagejson:
         specifier: ^3.0.2
-        version: 3.0.2(prettier@3.9.4)
+        version: 3.0.2(prettier@3.9.5)
       rollup:
         specifier: ^4.62.2
         version: 4.62.2
@@ -1952,13 +1952,8 @@ packages:
       prettier:
         optional: true
 
-  prettier@3.9.1:
-    resolution: {integrity: sha512-ppiDo2CSwexck1eyZUwJHg/N3nf1+6IRCv7W/VJ5vaLnVCmB7+3CdRfMwoCHBBX6xTrREDTksZ4OZl5SSf4zXA==}
-    engines: {node: '>=14'}
-    hasBin: true
-
-  prettier@3.9.4:
-    resolution: {integrity: sha512-yWG/o/4oJfo036EKAfK6ACAoDOfHeRHx4tuxkfBZiauURiaSmYwlpOr5LQqKtIkRD2z1PLteme2WoxEnj4tHTg==}
+  prettier@3.9.5:
+    resolution: {integrity: sha512-/FVl766LpUfB5vXgCYOYa0MeV/441Ia99AeICQIQFTY/Nw0roZwULcXpku5i1/m5kt/baz+s4Zogspd839HSMg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -2637,11 +2632,11 @@ snapshots:
       - jiti
       - supports-color
 
-  '@goauthentik/prettier-config@3.5.0(prettier-plugin-packagejson@3.0.2(prettier@3.9.4))(prettier@3.9.4)':
+  '@goauthentik/prettier-config@3.5.0(prettier-plugin-packagejson@3.0.2(prettier@3.9.5))(prettier@3.9.5)':
     dependencies:
       format-imports: 4.0.8
-      prettier: 3.9.4
-      prettier-plugin-packagejson: 3.0.2(prettier@3.9.4)
+      prettier: 3.9.5
+      prettier-plugin-packagejson: 3.0.2(prettier@3.9.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -3873,7 +3868,7 @@ snapshots:
       minimatch: 10.2.5
       node-cache: 5.1.2
       optionator: 0.9.4
-      prettier: 3.9.1
+      prettier: 3.9.5
       segment-sort: 1.0.9
       tmp: 0.2.7
       typescript: 5.9.3
@@ -4454,15 +4449,13 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-packagejson@3.0.2(prettier@3.9.4):
+  prettier-plugin-packagejson@3.0.2(prettier@3.9.5):
     dependencies:
       sort-package-json: 3.7.1
     optionalDependencies:
-      prettier: 3.9.4
+      prettier: 3.9.5
 
-  prettier@3.9.1: {}
-
-  prettier@3.9.4: {}
+  prettier@3.9.5: {}
 
   prop-types@15.8.1:
     dependencies:
