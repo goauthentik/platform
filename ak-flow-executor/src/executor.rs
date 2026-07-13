@@ -10,6 +10,7 @@ use reqwest::Client;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest_cookie_store::{CookieStore, CookieStoreMutex};
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::sync::Arc;
 
 use crate::builder::FlowExecutorBuilder;
@@ -26,6 +27,17 @@ pub enum FlowError {
     FlowSolve(Error<FlowsExecutorSolveError>),
     Other(Report),
 }
+
+impl Display for FlowError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FlowError::FlowGet(error) => error.fmt(f),
+            FlowError::FlowSolve(error) => error.fmt(f),
+            FlowError::Other(report) => report.fmt(f),
+        }
+    }
+}
+impl std::error::Error for FlowError {}
 
 pub trait Solver {
     fn component(&self) -> String;
@@ -170,16 +182,16 @@ impl FlowExecutor {
             match nc {
                 ChallengeTypes::AkStageAccessDenied(_) => {
                     tracing::warn!("access denied");
-                    return Ok(false)
-                },
+                    return Ok(false);
+                }
                 ChallengeTypes::XakFlowRedirect(_) => {
                     tracing::info!("Flow finished");
-                    return Ok(true)
-                },
+                    return Ok(true);
+                }
                 ChallengeTypes::AkProviderOauth2DeviceCodeFinish(_) => {
                     tracing::info!("Flow finished");
-                    return Ok(true)
-                },
+                    return Ok(true);
+                }
                 _ => {
                     let component = nc.component();
                     tracing::trace!(component, "Finding solver for component");

@@ -6,7 +6,10 @@ use authentik_client::models::{
     PasswordChallengeResponseRequest, UserLoginChallengeResponseRequest,
 };
 
-use crate::{builder::FlowExecutorBuilder, executor::{FlowError, Solver}};
+use crate::{
+    builder::FlowExecutorBuilder,
+    executor::{FlowError, Solver},
+};
 use regex::regex;
 const CODE_PASSWORD_SEPARATOR: &str = ";";
 

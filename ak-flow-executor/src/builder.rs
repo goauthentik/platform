@@ -21,6 +21,13 @@ impl FlowExecutorBuilder {
         self.flow_slug = Some(slug.to_string());
         self
     }
+    pub fn base_url<T: ToString>(mut self, url: T) -> Self {
+        self.ref_config = Some(Configuration {
+            base_path: url.to_string(),
+            ..Default::default()
+        });
+        self
+    }
     pub fn reference_config(mut self, config: Configuration) -> Self {
         self.ref_config = Some(config);
         self
