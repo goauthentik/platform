@@ -125,6 +125,10 @@ impl FlowExecutor {
         Err(FlowError::Other(eyre::eyre!("No cookie found")))
     }
 
+    pub fn get_client(self) -> Client {
+        self.api_config.client.as_ref().clone()
+    }
+
     pub async fn start(&mut self) -> Result<(), FlowError> {
         let challenge = self.get_initial_challenge().await?;
         self.nc = Some(challenge);
