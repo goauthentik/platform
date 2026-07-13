@@ -14,7 +14,7 @@
     },
     "type": "module",
     "dependencies": {
-        "@goauthentik/api": "^2026.5.3",
+        "@goauthentik/api": "^2026.5.4",
         "@goauthentik/brand-assets": "^2.0.0",
         "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-opener": "^2",
