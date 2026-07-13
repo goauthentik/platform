@@ -1,0 +1,21 @@
+[package]
+name = "ak-flow-executor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+authentik-client = { workspace = true }
+eyre = { workspace = true }
+ak-meta = { path = "../ak-meta" }
+reqwest = { workspace = true }
+reqwest-middleware = "0.5.2"
+tracing = { workspace = true }
+url = { workspace = true }
+reqwest_cookie_store = "0.10.0"
+cookie_store = "0.22.1"
+regex = "1.13.0"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["time"] }
+ak-platform = { path = "../ak-platform" }
