@@ -1,5 +1,6 @@
 use std::{env, path::PathBuf, time::Duration};
 
+use ak_flow_executor::executor::FlowExecutor;
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
 use eyre::{Context, ContextCompat, Result, bail};
 use oauth_device_flows::provider::GenericProviderConfig;
@@ -73,62 +74,16 @@ pub async fn authenticated_session() -> Result<reqwest::Client> {
     let base_url = local_authentik_url();
     let (username, password) = authentik_creds();
 
-    let client = reqwest::Client::builder()
-        .cookie_store(true)
+    let mut fe = FlowExecutor::builder()
+        .base_url(format!("{}/api/v3", base_url))
+        .flow("default-authentication-flow")
+        .with_answer("ak-stage-identification", &username)
+        .set_secrets(password, false)
         .build()
-        .wrap_err("failed to build HTTP client")?;
+        .await?;
+    fe.execute().await?;
 
-    let flow_url = format!(
-        "{}/api/v3/flows/executor/default-authentication-flow/?format=json",
-        base_url
-    );
-
-    let mut challenge = client
-        .get(&flow_url)
-        .send()
-        .await
-        .wrap_err("failed to start authentication flow")?
-        .json::<serde_json::Value>()
-        .await
-        .wrap_err("failed to parse flow challenge")?;
-
-    // Walk through the flow steps (identification → password → redirect)
-    loop {
-        let component = challenge["component"].as_str().unwrap_or("").to_string();
-        let body = if component.contains("identification") {
-            serde_json::json!({ "component": component, "uid_field": username })
-        } else if component.contains("password") {
-            serde_json::json!({ "component": component, "password": password })
-        } else {
-            break; // redirect or unknown — authentication complete
-        };
-
-        let resp = client
-            .post(&flow_url)
-            .json(&body)
-            .send()
-            .await
-            .wrap_err("flow step failed")?;
-
-        // A non-JSON redirect response means success
-        let ct = resp
-            .headers()
-            .get("content-type")
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or("");
-        if !ct.contains("json") {
-            break;
-        }
-
-        challenge = resp.json::<serde_json::Value>().await?;
-        let t = challenge["type"].as_str().unwrap_or("");
-        let c = challenge["component"].as_str().unwrap_or("");
-        if t == "redirect" || c == "xak-flow-redirect" {
-            break;
-        }
-    }
-
-    Ok(client)
+    Ok(fe.get_client())
 }
 
 /// Sets up the ak CLI agent in a container.

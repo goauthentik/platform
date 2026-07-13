@@ -12,6 +12,7 @@ members = [
     "ak-browser-support",
     "ak-cli",
     "ak-ffi",
+    "ak-flow-executor",
     "ak-meta",
     "ak-meta-macros",
     "ak-nss",
