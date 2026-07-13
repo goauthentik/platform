@@ -274,6 +274,7 @@ dependencies = [
 name = "ak-platform-e2e"
 version = "0.50.2"
 dependencies = [
+ "ak-flow-executor",
  "ak-platform",
  "authentik-client",
  "eyre",
