@@ -75,7 +75,7 @@ pub async fn authenticated_session() -> Result<reqwest::Client> {
     let (username, password) = authentik_creds();
 
     let mut fe = FlowExecutor::builder()
-        .base_url(base_url)
+        .base_url(format!("{}/api/v3", base_url))
         .flow("default-authentication-flow")
         .with_answer("ak-stage-identification", &username)
         .set_secrets(password, false)
