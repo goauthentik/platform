@@ -4,6 +4,7 @@ pub mod hardware;
 pub mod network;
 pub mod os;
 pub mod process;
+mod query;
 mod util;
 pub mod user;
 pub mod vendor;

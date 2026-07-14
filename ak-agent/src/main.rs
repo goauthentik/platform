@@ -2,7 +2,6 @@ use crate::agent::Agent;
 use ak_meta::full_version;
 use ak_platform::string::PlatformString;
 use eyre::Result;
-use tracing_subscriber::prelude::*;
 
 pub mod agent;
 pub mod config;

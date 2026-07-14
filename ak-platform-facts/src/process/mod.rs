@@ -1,46 +1,32 @@
 use authentik_client::models::ProcessRequest;
 use eyre::Result;
-use sysinfo::{ProcessesToUpdate, System, Users};
 
-fn process_name(process: &sysinfo::Process) -> String {
-    let cmd = process.cmd();
-    if !cmd.is_empty() {
-        return cmd
-            .iter()
-            .map(|s| s.to_string_lossy())
-            .collect::<Vec<_>>()
-            .join(" ");
+use crate::query::query_named;
+
+fn process_name(row: &osquery::Row) -> String {
+    if let Some(cmdline) = row.get("cmdline").filter(|s| !s.is_empty()) {
+        return cmdline.to_string();
     }
-    if let Some(exe) = process.exe() {
-        return exe.to_string_lossy().to_string();
+    if let Some(path) = row.get("path").filter(|s| !s.is_empty()) {
+        return path.to_string();
     }
-    process.name().to_string_lossy().to_string()
+    row.get("name").cloned().unwrap_or_default()
 }
 
-/// Fully cross-platform via `sysinfo` — unlike the other subsystems in
-/// this crate, there's no per-OS module here.
+/// Fully cross-platform via `osquery`'s `processes`/`users` tables —
+/// unlike the other subsystems in this crate, there's no per-OS module
+/// here.
 pub fn gather() -> Result<Vec<ProcessRequest>> {
-    let mut system = System::new();
-    system.refresh_processes(ProcessesToUpdate::All, true);
-    let users = Users::new_with_refreshed_list();
-
-    Ok(system
-        .processes()
-        .values()
-        .filter_map(|process| {
-            let name = process_name(process);
+    Ok(query_named("processes_with_user")?
+        .into_iter()
+        .filter_map(|row| {
+            let name = process_name(&row);
             if name.is_empty() {
                 return None;
             }
-            let user = process
-                .user_id()
-                .and_then(|uid| users.get_user_by_id(uid))
-                .map(|u| u.name().to_string());
-            Some(ProcessRequest {
-                id: process.pid().as_u32() as i32,
-                name,
-                user,
-            })
+            let id = row.get("pid")?.parse::<i32>().ok()?;
+            let user = row.get("username").filter(|s| !s.is_empty()).cloned();
+            Some(ProcessRequest { id, name, user })
         })
         .collect())
 }
