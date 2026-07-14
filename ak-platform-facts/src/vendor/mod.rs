@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 mod windows;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Add};
 
 use serde_json::Value;
 
@@ -30,7 +30,7 @@ fn ssh_host_keys() -> Vec<String> {
                 .is_some_and(|n| n.starts_with("ssh_host_") && n.ends_with("_key.pub"))
         })
         .filter_map(|p| std::fs::read_to_string(p).ok())
-        .map(|s| s.trim().to_string())
+        .map(|s| "localhost ".to_string().add(&s).trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
     keys.sort();
@@ -59,4 +59,17 @@ pub fn gather() -> HashMap<String, Value> {
         Value::String(rdp_cert_fingerprint()),
     );
     vendor
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ssh_valid() {
+        let keys = ssh_host_keys();
+        for key in keys {
+            assert!(key.starts_with("localhost "));
+        }
+    }
 }
