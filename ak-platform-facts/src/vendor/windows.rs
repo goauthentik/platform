@@ -9,7 +9,8 @@ struct Win32TsGeneralSetting {
 }
 
 pub fn rdp_cert_fingerprint() -> Result<String> {
-    let con = WMIConnection::with_namespace_path("ROOT\\CIMV2\\TerminalServices", COMLibrary::new()?)?;
+    let con =
+        WMIConnection::with_namespace_path("ROOT\\CIMV2\\TerminalServices", COMLibrary::new()?)?;
     let settings: Vec<Win32TsGeneralSetting> = con.query()?;
     Ok(settings
         .into_iter()

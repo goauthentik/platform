@@ -5,8 +5,8 @@ pub mod network;
 pub mod os;
 pub mod process;
 mod query;
-mod util;
 pub mod user;
+mod util;
 pub mod vendor;
 
 pub use hardware::serial;

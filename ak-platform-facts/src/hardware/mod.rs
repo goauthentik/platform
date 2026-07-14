@@ -43,12 +43,19 @@ pub fn gather() -> Result<HardwareRequest> {
     };
 
     Ok(HardwareRequest {
-        manufacturer: row.get("hardware_vendor").filter(|s| !s.is_empty()).cloned(),
+        manufacturer: row
+            .get("hardware_vendor")
+            .filter(|s| !s.is_empty())
+            .cloned(),
         model: row.get("hardware_model").filter(|s| !s.is_empty()).cloned(),
         serial,
         cpu_name: row.get("cpu_brand").filter(|s| !s.is_empty()).cloned(),
-        cpu_count: row.get("cpu_logical_cores").and_then(|s| s.parse::<i32>().ok()),
-        memory_bytes: row.get("physical_memory").and_then(|s| s.parse::<i64>().ok()),
+        cpu_count: row
+            .get("cpu_logical_cores")
+            .and_then(|s| s.parse::<i32>().ok()),
+        memory_bytes: row
+            .get("physical_memory")
+            .and_then(|s| s.parse::<i64>().ok()),
     })
 }
 

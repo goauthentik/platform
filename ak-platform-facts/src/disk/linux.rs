@@ -6,6 +6,7 @@ pub fn encryption_enabled(name: &str, _mountpoint: &str) -> Result<bool> {
     if !basename.starts_with("dm-") {
         return Ok(false);
     }
-    let dm_name = std::fs::read_to_string(format!("/sys/block/{basename}/dm/name")).unwrap_or_default();
+    let dm_name =
+        std::fs::read_to_string(format!("/sys/block/{basename}/dm/name")).unwrap_or_default();
     Ok(dm_name.to_lowercase().contains("crypt"))
 }

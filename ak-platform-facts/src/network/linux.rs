@@ -26,7 +26,8 @@ fn iptables_has_rules() -> bool {
 }
 
 fn ufw_active() -> bool {
-    run(std::process::Command::new("ufw").arg("status")).is_ok_and(|out| out.contains("Status: active"))
+    run(std::process::Command::new("ufw").arg("status"))
+        .is_ok_and(|out| out.contains("Status: active"))
 }
 
 fn firewalld_active() -> bool {
