@@ -21,7 +21,7 @@
         "@rollup/plugin-commonjs": "^29.0.3",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-typescript": "^12.3.0",
-        "@sentry/browser": "^10.63.0",
+        "@sentry/browser": "^10.64.0",
         "@types/chrome": "^0.2.0",
         "eslint": "^9.39.3",
         "fuse.js": "^7.4.2",
