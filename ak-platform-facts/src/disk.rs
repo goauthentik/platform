@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use authentik_client::models::DiskRequest;
 use eyre::Result;
+use serde::Deserialize;
 use sysinfo::Disks;
 
 use crate::query::query_named;
@@ -34,32 +35,55 @@ fn normalize_device_name(name: &str) -> String {
     name.rsplit('/').next().unwrap_or(name).to_lowercase()
 }
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[derive(Deserialize)]
+struct MountRow {
+    #[serde(default)]
+    device: String,
+    #[serde(default)]
+    path: String,
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[derive(Deserialize)]
+struct DiskEncryptionRow {
+    #[serde(default)]
+    name: String,
+    #[serde(default)]
+    encrypted: String,
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[derive(Deserialize)]
+struct BlockDeviceRow {
+    #[serde(default)]
+    name: String,
+    #[serde(default)]
+    label: String,
+}
+
 /// Bridges sysinfo's disk listing (keyed by `mount_point()` — sysinfo's
 /// `name()` is a Finder volume label on macOS, not a device node, so it
 /// can't be matched against these tables directly) to osquery's
 /// device-node-keyed `disk_encryption`/`block_devices` rows.
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 fn apply_unix_encryption_and_label(disks: &mut [DiskRequest]) -> Result<()> {
-    let device_by_mount: HashMap<String, String> = query_named("mounts")?
+    let device_by_mount: HashMap<String, String> = query_named::<MountRow>("mounts")?
         .into_iter()
-        .filter_map(|row| Some((row.get("path")?.clone(), row.get("device")?.clone())))
+        .filter(|row| !row.device.is_empty() && !row.path.is_empty())
+        .map(|row| (row.path, row.device))
         .collect();
 
-    let encrypted_by_device: HashMap<String, bool> = query_named("disk_encryption")?
+    let encrypted_by_device: HashMap<String, bool> = query_named::<DiskEncryptionRow>("disk_encryption")?
         .into_iter()
-        .filter_map(|row| {
-            let key = normalize_device_name(row.get("name")?);
-            Some((key, row.get("encrypted")? == "1"))
-        })
+        .filter(|row| !row.name.is_empty())
+        .map(|row| (normalize_device_name(&row.name), row.encrypted == "1"))
         .collect();
 
-    let label_by_device: HashMap<String, String> = query_named("block_devices")?
+    let label_by_device: HashMap<String, String> = query_named::<BlockDeviceRow>("block_devices")?
         .into_iter()
-        .filter_map(|row| {
-            let key = normalize_device_name(row.get("name")?);
-            let label = row.get("label").filter(|s| !s.is_empty())?.clone();
-            Some((key, label))
-        })
+        .filter(|row| !row.name.is_empty() && !row.label.is_empty())
+        .map(|row| (normalize_device_name(&row.name), row.label))
         .collect();
 
     for disk in disks.iter_mut() {
@@ -73,26 +97,33 @@ fn apply_unix_encryption_and_label(disks: &mut [DiskRequest]) -> Result<()> {
     Ok(())
 }
 
+#[cfg(target_os = "windows")]
+#[derive(Deserialize)]
+struct BitlockerRow {
+    #[serde(default)]
+    drive_letter: String,
+    #[serde(default)]
+    protection_status: String,
+    #[serde(default)]
+    conversion_status: String,
+}
+
 /// `label` is left `None` here — no regression, it was always `None` on
 /// Windows before this migration too (no osquery table exposes a Windows
 /// volume label equivalent).
 #[cfg(target_os = "windows")]
 fn apply_windows_encryption(disks: &mut [DiskRequest]) -> Result<()> {
-    let rows = query_named("bitlocker_info")?;
+    let rows = query_named::<BitlockerRow>("bitlocker_info")?;
     for disk in disks.iter_mut() {
         let mountpoint = disk.mountpoint.trim_end_matches('\\');
         disk.encryption_enabled = rows
             .iter()
-            .find(|row| {
-                row.get("drive_letter")
-                    .is_some_and(|dl| dl.trim_end_matches('\\').eq_ignore_ascii_case(mountpoint))
-            })
+            .find(|row| row.drive_letter.trim_end_matches('\\').eq_ignore_ascii_case(mountpoint))
             .map(|row| {
                 // Relies on the documented Win32_EncryptableVolume-mirrored
                 // INTEGER enums, not the unverified `encryption_method`
                 // TEXT string (see query.rs).
-                row.get("protection_status").is_some_and(|s| s == "1")
-                    && row.get("conversion_status").is_some_and(|s| s != "0")
+                row.protection_status == "1" && row.conversion_status != "0"
             });
     }
     Ok(())

@@ -1,5 +1,6 @@
 use authentik_client::models::{NetworkInterfaceRequest, NetworkRequest};
 use eyre::Result;
+use serde::Deserialize;
 use sysinfo::{InterfaceOperationalState, Networks};
 
 use crate::query::query_named;
@@ -45,6 +46,13 @@ fn interfaces_base() -> Vec<NetworkInterfaceRequest> {
     interfaces
 }
 
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[derive(Deserialize)]
+struct DnsResolverRow {
+    #[serde(default)]
+    address: String,
+}
+
 /// Linux + macOS: `dns_resolvers` is system-wide, not per-interface, so
 /// every interface gets the same list. This is an intentional accuracy
 /// trade-off on macOS specifically — the old implementation used
@@ -53,10 +61,11 @@ fn interfaces_base() -> Vec<NetworkInterfaceRequest> {
 /// limitation Linux already had via `/etc/resolv.conf`.
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 fn apply_dns_servers(interfaces: &mut [NetworkInterfaceRequest]) {
-    let nameservers: Vec<String> = query_named("dns_resolvers")
+    let nameservers: Vec<String> = query_named::<DnsResolverRow>("dns_resolvers")
         .map(|rows| {
             rows.into_iter()
-                .filter_map(|row| row.get("address").filter(|s| !s.is_empty()).cloned())
+                .map(|row| row.address)
+                .filter(|s| !s.is_empty())
                 .collect()
         })
         .unwrap_or_default();
@@ -69,7 +78,6 @@ fn apply_dns_servers(interfaces: &mut [NetworkInterfaceRequest]) {
 /// (`dns_resolvers` is Linux/macOS-only).
 #[cfg(target_os = "windows")]
 fn apply_dns_servers(interfaces: &mut [NetworkInterfaceRequest]) {
-    use serde::Deserialize;
     use wmi::{COMLibrary, WMIConnection};
 
     #[derive(Deserialize)]
@@ -141,6 +149,13 @@ fn firewall_enabled() -> Result<bool> {
     Ok(iptables_has_rules() || ufw_active() || firewalld_active())
 }
 
+#[cfg(target_os = "macos")]
+#[derive(Deserialize)]
+struct AlfRow {
+    #[serde(default)]
+    global_state: String,
+}
+
 /// This is the actual macOS System Settings -> Network -> Firewall toggle
 /// (reads `/Library/Preferences/com.apple.alf.plist`), more correct than
 /// the old `pfctl -s info` check (`pf` is a lower-level packet filter, not
@@ -148,11 +163,9 @@ fn firewall_enabled() -> Result<bool> {
 /// entirely.
 #[cfg(target_os = "macos")]
 fn firewall_enabled() -> Result<bool> {
-    Ok(query_named("macos_firewall")?.iter().any(|row| {
-        row.get("global_state")
-            .and_then(|s| s.parse::<i64>().ok())
-            .is_some_and(|state| state != 0)
-    }))
+    Ok(query_named::<AlfRow>("macos_firewall")?
+        .iter()
+        .any(|row| row.global_state.parse::<i64>().is_ok_and(|state| state != 0)))
 }
 
 /// Kept native: no real osquery table exposes profile-level
@@ -160,7 +173,6 @@ fn firewall_enabled() -> Result<bool> {
 /// per-rule, not per-profile).
 #[cfg(target_os = "windows")]
 fn firewall_enabled() -> Result<bool> {
-    use serde::Deserialize;
     use wmi::{COMLibrary, WMIConnection};
 
     #[derive(Deserialize)]
@@ -174,19 +186,29 @@ fn firewall_enabled() -> Result<bool> {
     Ok(profiles.iter().any(|p| p.enabled == Some(1)))
 }
 
+#[derive(Deserialize)]
+struct RouteRow {
+    #[serde(default)]
+    gateway: String,
+    #[serde(rename = "type", default)]
+    route_type: String,
+    #[serde(default)]
+    metric: String,
+}
+
 /// Brand new on all three platforms: `gateway` was hardcoded `None`
 /// before this migration everywhere, so there's no native/osquery split
 /// to preserve here.
 fn gateway() -> Result<Option<String>> {
-    let rows = query_named("default_gateway")?;
-    if let Some(row) = rows.iter().find(|r| r.get("type").map(String::as_str) == Some("gateway")) {
-        return Ok(row.get("gateway").filter(|s| !s.is_empty()).cloned());
+    let rows = query_named::<RouteRow>("default_gateway")?;
+    if let Some(row) = rows.iter().find(|r| r.route_type == "gateway") {
+        return Ok((!row.gateway.is_empty()).then(|| row.gateway.clone()));
     }
     Ok(rows
-        .iter()
-        .filter(|r| r.get("gateway").is_some_and(|g| !g.is_empty()))
-        .min_by_key(|r| r.get("metric").and_then(|m| m.parse::<i64>().ok()).unwrap_or(i64::MAX))
-        .and_then(|r| r.get("gateway").cloned()))
+        .into_iter()
+        .filter(|r| !r.gateway.is_empty())
+        .min_by_key(|r| r.metric.parse::<i64>().unwrap_or(i64::MAX))
+        .map(|r| r.gateway))
 }
 
 pub fn gather() -> Result<NetworkRequest> {

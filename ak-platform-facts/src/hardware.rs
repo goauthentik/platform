@@ -2,8 +2,9 @@ use std::sync::{LazyLock, RwLock};
 
 use authentik_client::models::HardwareRequest;
 use eyre::Result;
+use serde::Deserialize;
 
-use crate::query::query_named;
+use crate::query::{non_empty, query_named};
 
 /// Lets an embedding host supply the serial directly, bypassing the
 /// osquery-based lookup. Checked unconditionally on every platform, though
@@ -21,17 +22,31 @@ pub(crate) fn static_serial() -> Option<String> {
     STATIC_SERIAL.read().ok().and_then(|guard| guard.clone())
 }
 
-fn system_info_row() -> Result<osquery::Row> {
-    query_named("system_info")?
+#[derive(Deserialize)]
+struct SystemInfoRow {
+    #[serde(default)]
+    hardware_vendor: String,
+    #[serde(default)]
+    hardware_model: String,
+    #[serde(default)]
+    hardware_serial: String,
+    #[serde(default)]
+    cpu_brand: String,
+    #[serde(default)]
+    cpu_logical_cores: String,
+    #[serde(default)]
+    physical_memory: String,
+}
+
+fn system_info_row() -> Result<SystemInfoRow> {
+    query_named::<SystemInfoRow>("system_info")?
         .into_iter()
         .next()
         .ok_or_else(|| eyre::eyre!("system_info returned no rows"))
 }
 
-fn native_serial(row: &osquery::Row) -> Result<String> {
-    row.get("hardware_serial")
-        .filter(|s| !s.is_empty())
-        .cloned()
+fn native_serial(row: &SystemInfoRow) -> Result<String> {
+    non_empty(row.hardware_serial.clone())
         .ok_or_else(|| eyre::eyre!("hardware_serial missing or empty in system_info"))
 }
 
@@ -43,19 +58,12 @@ pub fn gather() -> Result<HardwareRequest> {
     };
 
     Ok(HardwareRequest {
-        manufacturer: row
-            .get("hardware_vendor")
-            .filter(|s| !s.is_empty())
-            .cloned(),
-        model: row.get("hardware_model").filter(|s| !s.is_empty()).cloned(),
+        manufacturer: non_empty(row.hardware_vendor),
+        model: non_empty(row.hardware_model),
         serial,
-        cpu_name: row.get("cpu_brand").filter(|s| !s.is_empty()).cloned(),
-        cpu_count: row
-            .get("cpu_logical_cores")
-            .and_then(|s| s.parse::<i32>().ok()),
-        memory_bytes: row
-            .get("physical_memory")
-            .and_then(|s| s.parse::<i64>().ok()),
+        cpu_name: non_empty(row.cpu_brand),
+        cpu_count: row.cpu_logical_cores.parse::<i32>().ok(),
+        memory_bytes: row.physical_memory.parse::<i64>().ok(),
     })
 }
 

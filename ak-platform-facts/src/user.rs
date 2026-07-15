@@ -1,21 +1,33 @@
 use authentik_client::models::DeviceUserRequest;
 use eyre::Result;
+use serde::Deserialize;
 
-use crate::query::query_named;
+use crate::query::{non_empty, query_named};
+
+#[derive(Deserialize)]
+struct UserRow {
+    #[serde(default)]
+    uid: String,
+    #[serde(default)]
+    username: String,
+    #[serde(default)]
+    description: String,
+    #[serde(default)]
+    directory: String,
+}
 
 pub fn gather() -> Result<Vec<DeviceUserRequest>> {
-    Ok(query_named("users")?
+    Ok(query_named::<UserRow>("users")?
         .into_iter()
         .filter_map(|row| {
-            let id = row.get("uid")?.clone();
-            let username = row.get("username").filter(|s| !s.is_empty()).cloned();
-            let name = row.get("description").filter(|s| !s.is_empty()).cloned();
-            let home = row.get("directory").filter(|s| !s.is_empty()).cloned();
+            if row.uid.is_empty() {
+                return None;
+            }
             Some(DeviceUserRequest {
-                id,
-                username,
-                name,
-                home,
+                id: row.uid,
+                username: non_empty(row.username),
+                name: non_empty(row.description),
+                home: non_empty(row.directory),
             })
         })
         .collect())

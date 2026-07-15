@@ -1,15 +1,28 @@
 use authentik_client::models::DeviceGroupRequest;
 use eyre::Result;
+use serde::Deserialize;
 
-use crate::query::query_named;
+use crate::query::{non_empty, query_named};
+
+#[derive(Deserialize)]
+struct GroupRow {
+    #[serde(default)]
+    gid: String,
+    #[serde(default)]
+    groupname: String,
+}
 
 pub fn gather() -> Result<Vec<DeviceGroupRequest>> {
-    Ok(query_named("groups")?
+    Ok(query_named::<GroupRow>("groups")?
         .into_iter()
         .filter_map(|row| {
-            let id = row.get("gid")?.clone();
-            let name = row.get("groupname").filter(|s| !s.is_empty()).cloned();
-            Some(DeviceGroupRequest { id, name })
+            if row.gid.is_empty() {
+                return None;
+            }
+            Some(DeviceGroupRequest {
+                id: row.gid,
+                name: non_empty(row.groupname),
+            })
         })
         .collect())
 }

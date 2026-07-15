@@ -1,7 +1,8 @@
 use std::sync::OnceLock;
 
 use eyre::Result;
-use osquery::{OsqueryError, OsqueryInstance, Row};
+use osquery::{OsqueryError, OsqueryInstance};
+use serde::de::DeserializeOwned;
 
 /// `OsqueryInstance::start()` can only ever succeed once per process
 /// (enforced by osquery-rs's own global guard), so this cell holds the
@@ -98,8 +99,8 @@ const QUERIES: &[NamedQuery] = &[
 ];
 
 /// Runs a query by name from the [`QUERIES`] registry against the embedded
-/// osquery engine and returns its rows.
-pub(crate) fn query_named(name: &str) -> Result<Vec<Row>> {
+/// osquery engine, deserializing each row into `T`.
+pub(crate) fn query_named<T: DeserializeOwned>(name: &str) -> Result<Vec<T>> {
     let sql = QUERIES
         .iter()
         .find(|q| q.name == name)
@@ -108,7 +109,15 @@ pub(crate) fn query_named(name: &str) -> Result<Vec<Row>> {
     tracing::debug!("running osquery query {name:?}: {sql}");
     let instance = instance()?;
     let result = instance
-        .query(sql)
+        .query::<T>(sql)
         .map_err(|e| eyre::eyre!("osquery query {name:?} failed: {e}"))?;
     Ok(result.rows)
+}
+
+/// osquery's rows are fundamentally `map<string, string>` on the engine
+/// side, so a SQL NULL always arrives as an empty string, never a missing
+/// key or JSON null — this converts that convention into an
+/// `Option<String>` for callers.
+pub(crate) fn non_empty(s: String) -> Option<String> {
+    (!s.is_empty()).then_some(s)
 }

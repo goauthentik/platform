@@ -1264,7 +1264,7 @@ dependencies = [
  "prost-types",
  "tonic",
  "tonic-prost",
- "ureq 3.3.0",
+ "ureq",
 ]
 
 [[package]]
@@ -3712,7 +3712,7 @@ dependencies = [
  "tokio",
  "tokio-rustls 0.26.4",
  "tower-service",
- "webpki-roots 1.0.7",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -5245,8 +5245,8 @@ dependencies = [
 
 [[package]]
 name = "osquery"
-version = "0.1.4"
-source = "git+https://github.com/BeryJu/osquery-rs#5a1f9b83d46f2c97305fb98fef5fa11fe4b3ec91"
+version = "0.2.0"
+source = "git+https://github.com/BeryJu/osquery-rs#e40036c82f5ae7fd719574c566bd47ed77e54a56"
 dependencies = [
  "log",
  "osquery-sys",
@@ -5257,13 +5257,13 @@ dependencies = [
 
 [[package]]
 name = "osquery-sys"
-version = "0.1.4"
-source = "git+https://github.com/BeryJu/osquery-rs#5a1f9b83d46f2c97305fb98fef5fa11fe4b3ec91"
+version = "0.2.0"
+source = "git+https://github.com/BeryJu/osquery-rs#e40036c82f5ae7fd719574c566bd47ed77e54a56"
 dependencies = [
  "cc",
  "sha2 0.11.0",
  "shlex",
- "ureq 2.12.1",
+ "ureq",
 ]
 
 [[package]]
@@ -6392,7 +6392,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
- "webpki-roots 1.0.7",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -6876,7 +6876,7 @@ dependencies = [
  "sentry-tower",
  "sentry-tracing",
  "tokio",
- "ureq 3.3.0",
+ "ureq",
 ]
 
 [[package]]
@@ -8769,21 +8769,6 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "ureq"
-version = "2.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02d1a66277ed75f640d608235660df48c8e3c19f3b4edb6a263315626cc3c01d"
-dependencies = [
- "base64 0.22.1",
- "log",
- "once_cell",
- "rustls 0.23.37",
- "rustls-pki-types",
- "url",
- "webpki-roots 0.26.11",
-]
-
-[[package]]
-name = "ureq"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dea7109cdcd5864d4eeb1b58a1648dc9bf520360d7af16ec26d0a9354bafcfc0"
@@ -8795,7 +8780,7 @@ dependencies = [
  "rustls-pki-types",
  "ureq-proto",
  "utf8-zero",
- "webpki-roots 1.0.7",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -9186,15 +9171,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31141ce3fc3e300ae89b78c0dd67f9708061d1d2eda54b8209346fd6be9a92c"
 dependencies = [
  "rustls-pki-types",
-]
-
-[[package]]
-name = "webpki-roots"
-version = "0.26.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
-dependencies = [
- "webpki-roots 1.0.7",
 ]
 
 [[package]]
