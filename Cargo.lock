@@ -278,7 +278,6 @@ dependencies = [
  "authentik-client",
  "eyre",
  "osquery",
- "plist",
  "serde",
  "serde_json",
  "sysinfo",

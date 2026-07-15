@@ -53,6 +53,48 @@ const QUERIES: &[NamedQuery] = &[
         // where underscore-prefixed groups aren't a real convention).
         sql: "SELECT gid, groupname FROM groups WHERE groupname NOT LIKE '\\_%' ESCAPE '\\'",
     },
+    NamedQuery {
+        name: "mounts",
+        // Bridges sysinfo's mount_point()-keyed disk listing to osquery's
+        // device-node-keyed disk_encryption/block_devices rows. Needed
+        // because sysinfo's Disk::name() on macOS is a Finder volume
+        // label ("Macintosh HD"), not a device node, so there's no way
+        // to match it against those tables' `name` column directly.
+        sql: "SELECT device, path FROM mounts",
+    },
+    NamedQuery {
+        name: "disk_encryption",
+        // Linux + macOS only (no Windows table). Linux's implementation
+        // returns empty results entirely unless running as root/euid 0.
+        sql: "SELECT name, encrypted FROM disk_encryption",
+    },
+    NamedQuery {
+        name: "block_devices",
+        sql: "SELECT name, label FROM block_devices",
+    },
+    NamedQuery {
+        name: "bitlocker_info",
+        // Backed by the same Win32_EncryptableVolume WMI class the old
+        // native Windows code queried. protection_status/
+        // conversion_status are documented INTEGER enums mirroring that
+        // WMI class; encryption_method is TEXT with unverified exact
+        // string values, so it isn't used in the boolean "is encrypted"
+        // logic.
+        sql: "SELECT drive_letter, protection_status, conversion_status, encryption_method \
+              FROM bitlocker_info",
+    },
+    NamedQuery {
+        name: "default_gateway",
+        sql: "SELECT gateway, type, metric FROM routes WHERE destination = '0.0.0.0' AND netmask = 0",
+    },
+    NamedQuery {
+        name: "macos_firewall",
+        sql: "SELECT global_state FROM alf",
+    },
+    NamedQuery {
+        name: "dns_resolvers",
+        sql: "SELECT address FROM dns_resolvers WHERE type = 'nameserver'",
+    },
 ];
 
 /// Runs a query by name from the [`QUERIES`] registry against the embedded
