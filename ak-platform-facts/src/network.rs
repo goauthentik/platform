@@ -29,7 +29,7 @@ fn interfaces_base() -> Vec<NetworkInterfaceRequest> {
                 .ip_networks()
                 .iter()
                 .filter(|ip| !ip.addr.is_loopback())
-                .map(|ip| ip.addr.to_string())
+                .map(|ip| ip.to_string())
                 .collect();
             if valid_addresses.is_empty() {
                 return None;

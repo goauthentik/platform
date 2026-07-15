@@ -24,6 +24,19 @@ struct OsVersionRow {
     version: String,
 }
 
+// Map rust's arch to go's arch for compat
+fn go_style_arch() -> String {
+    match std::env::consts::ARCH {
+        "x86_64" => "amd64",
+        "aarch64" => "arm64",
+        "x86" => "386",
+        "loongarch64" => "loong64",
+        "powerpc64" => "ppc64",
+        other => other,
+    }
+    .to_string()
+}
+
 pub fn gather() -> Result<OperatingSystemRequest> {
     let row = query_named::<OsVersionRow>("os_version")?.into_iter().next();
     let (name, version) = match row {
@@ -34,7 +47,7 @@ pub fn gather() -> Result<OperatingSystemRequest> {
         family: family()?,
         name,
         version,
-        arch: Some(std::env::consts::ARCH.to_string()),
+        arch: Some(go_style_arch()),
     })
 }
 
