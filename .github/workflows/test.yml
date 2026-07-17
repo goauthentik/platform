@@ -66,6 +66,7 @@ jobs:
           - ak-agent
           - ak-api-cli-gen
           - ak-agent-desktop
+          - ak-platform-facts
         platform:
           - macos-26
           - ubuntu-24.04
