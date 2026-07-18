@@ -90,6 +90,13 @@ jobs:
       - uses: taiki-e/install-action@c7eb1735f09259a5035e8e5d44b1406b1cddc0fb # v2
         with:
           tool: cargo-llvm-cov nextest
+      # ak-platform-facts/tests/facts_parity.rs shells out to `go run ...
+      # troubleshoot facts` to cross-check against the Rust gatherer.
+      - if: ${{ matrix.target == 'ak-platform-facts' }}
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache: true
       - name: Install osquery-toolchain
         if: ${{ matrix.target == 'ak-platform-facts' && (matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm') }}
         run: |
