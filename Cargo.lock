@@ -5245,8 +5245,8 @@ dependencies = [
 
 [[package]]
 name = "osquery"
-version = "0.2.0"
-source = "git+https://github.com/BeryJu/osquery-rs#e40036c82f5ae7fd719574c566bd47ed77e54a56"
+version = "0.2.1"
+source = "git+https://github.com/BeryJu/osquery-rs#edd075833c9b1ad4f44d5b813fc01771365a7512"
 dependencies = [
  "log",
  "osquery-sys",
@@ -5257,8 +5257,8 @@ dependencies = [
 
 [[package]]
 name = "osquery-sys"
-version = "0.2.0"
-source = "git+https://github.com/BeryJu/osquery-rs#e40036c82f5ae7fd719574c566bd47ed77e54a56"
+version = "0.2.1"
+source = "git+https://github.com/BeryJu/osquery-rs#edd075833c9b1ad4f44d5b813fc01771365a7512"
 dependencies = [
  "cc",
  "sha2 0.11.0",
