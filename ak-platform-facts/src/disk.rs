@@ -74,11 +74,12 @@ fn apply_unix_encryption_and_label(disks: &mut [DiskRequest]) -> Result<()> {
         .map(|row| (row.path, row.device))
         .collect();
 
-    let encrypted_by_device: HashMap<String, bool> = query_named::<DiskEncryptionRow>("disk_encryption")?
-        .into_iter()
-        .filter(|row| !row.name.is_empty())
-        .map(|row| (normalize_device_name(&row.name), row.encrypted == "1"))
-        .collect();
+    let encrypted_by_device: HashMap<String, bool> =
+        query_named::<DiskEncryptionRow>("disk_encryption")?
+            .into_iter()
+            .filter(|row| !row.name.is_empty())
+            .map(|row| (normalize_device_name(&row.name), row.encrypted == "1"))
+            .collect();
 
     let label_by_device: HashMap<String, String> = query_named::<BlockDeviceRow>("block_devices")?
         .into_iter()
@@ -118,7 +119,11 @@ fn apply_windows_encryption(disks: &mut [DiskRequest]) -> Result<()> {
         let mountpoint = disk.mountpoint.trim_end_matches('\\');
         disk.encryption_enabled = rows
             .iter()
-            .find(|row| row.drive_letter.trim_end_matches('\\').eq_ignore_ascii_case(mountpoint))
+            .find(|row| {
+                row.drive_letter
+                    .trim_end_matches('\\')
+                    .eq_ignore_ascii_case(mountpoint)
+            })
             .map(|row| {
                 // Relies on the documented Win32_EncryptableVolume-mirrored
                 // INTEGER enums, not the unverified `encryption_method`
@@ -149,6 +154,10 @@ mod tests {
     fn gather_succeeds_and_has_at_least_one_disk() {
         let disks = gather().unwrap();
         assert!(!disks.is_empty());
-        assert!(disks.iter().all(|d| !d.name.is_empty() && !d.mountpoint.is_empty()));
+        assert!(
+            disks
+                .iter()
+                .all(|d| !d.name.is_empty() && !d.mountpoint.is_empty())
+        );
     }
 }

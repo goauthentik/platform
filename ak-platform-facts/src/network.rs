@@ -163,9 +163,11 @@ struct AlfRow {
 /// entirely.
 #[cfg(target_os = "macos")]
 fn firewall_enabled() -> Result<bool> {
-    Ok(query_named::<AlfRow>("macos_firewall")?
-        .iter()
-        .any(|row| row.global_state.parse::<i64>().is_ok_and(|state| state != 0)))
+    Ok(query_named::<AlfRow>("macos_firewall")?.iter().any(|row| {
+        row.global_state
+            .parse::<i64>()
+            .is_ok_and(|state| state != 0)
+    }))
 }
 
 /// Kept native: no real osquery table exposes profile-level

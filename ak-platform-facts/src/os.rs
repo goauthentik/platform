@@ -38,7 +38,9 @@ fn go_style_arch() -> String {
 }
 
 pub fn gather() -> Result<OperatingSystemRequest> {
-    let row = query_named::<OsVersionRow>("os_version")?.into_iter().next();
+    let row = query_named::<OsVersionRow>("os_version")?
+        .into_iter()
+        .next();
     let (name, version) = match row {
         Some(row) => (non_empty(row.name), non_empty(row.version)),
         None => (None, None),
