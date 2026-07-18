@@ -82,7 +82,12 @@ mod tests {
 
     #[test]
     fn gather_produces_positive_memory_and_cpu_count() {
+        // Virtualized CI runners commonly report no hardware_serial via
+        // osquery's system_info table; use the static-serial override so
+        // this test doesn't depend on the host exposing a real one.
+        set_static_serial(Some("test-serial".to_string()));
         let hw = gather().unwrap();
+        set_static_serial(None);
         assert!(hw.memory_bytes.is_some_and(|b| b > 0));
         assert!(hw.cpu_count.is_some_and(|c| c > 0));
         assert!(!hw.serial.is_empty());
