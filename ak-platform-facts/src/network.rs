@@ -78,7 +78,7 @@ fn apply_dns_servers(interfaces: &mut [NetworkInterfaceRequest]) {
 /// (`dns_resolvers` is Linux/macOS-only).
 #[cfg(target_os = "windows")]
 fn apply_dns_servers(interfaces: &mut [NetworkInterfaceRequest]) {
-    use wmi::{COMLibrary, WMIConnection};
+    use wmi::WMIConnection;
 
     #[derive(Deserialize)]
     #[serde(rename_all = "PascalCase")]
@@ -99,7 +99,7 @@ fn apply_dns_servers(interfaces: &mut [NetworkInterfaceRequest]) {
     /// `InterfaceIndex`.
     fn dns_servers_for(iface: &str) -> Vec<String> {
         (|| -> Result<Vec<String>> {
-            let con = WMIConnection::new(COMLibrary::new()?)?;
+            let con = WMIConnection::new()?;
 
             let adapters: Vec<Win32NetworkAdapter> = con.query()?;
             let Some(index) = adapters.iter().find_map(|a| {
@@ -173,7 +173,7 @@ fn firewall_enabled() -> Result<bool> {
 /// per-rule, not per-profile).
 #[cfg(target_os = "windows")]
 fn firewall_enabled() -> Result<bool> {
-    use wmi::{COMLibrary, WMIConnection};
+    use wmi::WMIConnection;
 
     #[derive(Deserialize)]
     #[serde(rename_all = "PascalCase")]
@@ -181,7 +181,7 @@ fn firewall_enabled() -> Result<bool> {
         enabled: Option<u32>,
     }
 
-    let con = WMIConnection::with_namespace_path("ROOT\\StandardCimv2", COMLibrary::new()?)?;
+    let con = WMIConnection::with_namespace_path("ROOT\\StandardCimv2")?;
     let profiles: Vec<NetFirewallProfile> = con.query()?;
     Ok(profiles.iter().any(|p| p.enabled == Some(1)))
 }
