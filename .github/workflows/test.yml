@@ -90,6 +90,16 @@ jobs:
       - uses: taiki-e/install-action@c7eb1735f09259a5035e8e5d44b1406b1cddc0fb # v2
         with:
           tool: cargo-llvm-cov nextest
+      - name: Install osquery-toolchain
+        if: ${{ matrix.target == 'ak-platform-facts' && (matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm') }}
+        run: |
+          ARCH=$(uname -m)
+          curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
+            "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-${ARCH}.tar.xz"
+          sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
+          rm /tmp/osquery-toolchain.tar.xz
+      - if: ${{ matrix.platform == 'windows-2025' }}
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
       - run: |
           make ${{ matrix.target }}/test
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
@@ -161,6 +171,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config
       - run: make ci-install-deps
+      - name: Install osquery-toolchain
+        run: |
+          curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
+            "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-x86_64.tar.xz"
+          sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
+          rm /tmp/osquery-toolchain.tar.xz
       - run: make lint-rs
   lint_js:
     name: Lint
