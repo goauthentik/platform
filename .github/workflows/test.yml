@@ -98,10 +98,22 @@ jobs:
             "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-${ARCH}.tar.xz"
           sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
           rm /tmp/osquery-toolchain.tar.xz
-      - if: ${{ matrix.platform == 'windows-2025' }}
+      - if: ${{ matrix.target == 'ak-platform-facts' && matrix.platform == 'windows-2025' }}
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
+      - name: Force real MSVC link.exe
+        # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
+        # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
+        # PATH resolution on this runner image, breaking cargo's link step
+        # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.
+        if: ${{ matrix.target == 'ak-platform-facts' && matrix.platform == 'windows-2025' }}
+        shell: pwsh
+        run: |
+          $linkExe = (Get-Command link.exe -All | Where-Object { $_.Source -notlike '*\Git\*' } | Select-Object -First 1).Source
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linkExe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - run: |
           make ${{ matrix.target }}/test
+        env:
+          RUSTFLAGS: ${{ (matrix.target == 'ak-platform-facts' && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
