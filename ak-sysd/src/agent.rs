@@ -1,4 +1,3 @@
-#[cfg(target_os = "macos")]
 use crate::components::{Component, ComponentConstructor, ping::PingComponent};
 use crate::{cfg::Config, components::ComponentInstance};
 use ak_platform::storage::cfgmgr::ConfigManager;

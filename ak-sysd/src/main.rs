@@ -6,6 +6,8 @@ use eyre::Result;
 pub mod agent;
 pub mod cfg;
 pub mod components;
+pub mod util;
+pub mod events;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik System Daemon")]

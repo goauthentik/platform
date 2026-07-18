@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 pub mod auth;
 pub mod ping;
+pub mod directory;
 
 pub type ComponentConstructor = fn() -> Result<Box<dyn Component>>;
 

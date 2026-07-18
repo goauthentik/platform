@@ -321,6 +321,7 @@ dependencies = [
  "sentry",
  "sentry-tower",
  "serde",
+ "serde_json",
  "tokio",
  "tonic",
  "tonic-prost",

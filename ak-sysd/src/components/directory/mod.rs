@@ -13,6 +13,10 @@ use tonic::{Request, Response, Status};
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
 const PAGE_SIZE: i32 = 100;
 
+pub struct DirectoryFetchedEvent {
+    pub domain: String,
+}
+
 pub struct DirectoryComponent {
     ctx: SysdContext,
     users: Arc<RwLock<Vec<User>>>,
@@ -205,6 +209,7 @@ impl DirectoryComponent {
         *self.users.write().await = users;
         *self.groups.write().await = groups;
 
+        self.ctx.events.dispatch::<DirectoryFetchedEvent>();
         self.ctx.events.dispatch(SysdEvent::DirectoryFetched {
             domain: domain.cfg.domain.clone(),
         });
