@@ -19,9 +19,9 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "aes"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66bd29a732b644c0431c6140f370d097879203d79b80c94a6747ba0872adaef8"
+checksum = "f1fc76eaeac4c9164506c466d4ffdd8ec9d0c5bf57ee97177c4d8eceb3a0e138"
 dependencies = [
  "cipher 0.5.2",
  "cpubits",
@@ -2017,9 +2017,9 @@ dependencies = [
 
 [[package]]
 name = "ctap-hid-fido2"
-version = "3.5.11"
+version = "3.5.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e75cc091f4eab3642ecf7f413f71342ac2b6bc1264fba4ce166de1c2d286e3ab"
+checksum = "96157315d868b9012e2a7105d22badfbff69f191d2beb8d6f32487ad85c429e1"
 dependencies = [
  "aes",
  "anyhow",
