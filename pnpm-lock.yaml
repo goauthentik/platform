@@ -11,8 +11,8 @@ importers:
   ak-agent-desktop:
     dependencies:
       '@goauthentik/api':
-        specifier: ^2026.5.4
-        version: 2026.5.4
+        specifier: ^2026.5.5
+        version: 2026.5.5
       '@goauthentik/brand-assets':
         specifier: ^2.0.0
         version: 2.0.0
@@ -54,8 +54,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(rollup@4.62.2)
       '@goauthentik/api':
-        specifier: ^2026.5.4
-        version: 2026.5.4
+        specifier: ^2026.5.5
+        version: 2026.5.5
       '@goauthentik/eslint-config':
         specifier: ^2.0.3
         version: 2.0.3(@typescript-eslint/parser@8.63.0(eslint@9.39.4)(typescript@6.0.3))(typescript-eslint@8.63.0(eslint@9.39.4)(typescript@6.0.3))(typescript@6.0.3)
@@ -286,8 +286,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@goauthentik/api@2026.5.4':
-    resolution: {integrity: sha512-4oi9YqxrctUaeXdvnmBEJd3Rmcu8qqd1kzu5ilv/Iykz0K59ShdWdLNRdZKx6YL00bRJYwt8joYM3mXwgOKu5g==}
+  '@goauthentik/api@2026.5.5':
+    resolution: {integrity: sha512-7AqGYH9nyPzIBanCb/afnMLwDvLrc0MF37fDHlHm2JZjC5+TwKsfQWwXEY5GH7VwAKw2spZt7vQIeAiwBT4Diw==}
 
   '@goauthentik/brand-assets@2.0.0':
     resolution: {integrity: sha512-yRJrV+KuGrz7MNcRzAkZa4e7LuciuFZBVSyPFRd/EndxgiqcFuFHyn+6tEurKNmianBNURhe2qm5ytoLFgEWFQ==}
@@ -2641,7 +2641,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@goauthentik/api@2026.5.4': {}
+  '@goauthentik/api@2026.5.5': {}
 
   '@goauthentik/brand-assets@2.0.0': {}
 
