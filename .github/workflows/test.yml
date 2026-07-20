@@ -93,7 +93,7 @@ jobs:
       # ak-platform-facts/tests/facts_parity.rs shells out to `go run ...
       # troubleshoot facts` to cross-check against the Rust gatherer.
       - if: ${{ matrix.target == 'ak-platform-facts' }}
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
           cache: true
