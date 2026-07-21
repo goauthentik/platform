@@ -39,7 +39,18 @@ jobs:
           name: authentik_macos-26_psso
           path: bin/
 
+      - id: check
+        env:
+          CERT: ${{ secrets.APPLE_SIGN_CERT }}
+        run: |
+          if [ -n "$CERT" ]; then
+            echo "has-signing-cert=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-signing-cert=false" >> $GITHUB_OUTPUT
+          fi
+          echo 'XCB_EXTRA_ARGS=' >> $GITHUB_ENV
       - uses: ./.github/actions/macos-signing
+        if: steps.check.outputs.has-signing-cert == 'true'
         with:
           p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
           p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
