@@ -24,7 +24,7 @@
         "@sentry/browser": "^10.65.0",
         "@types/chrome": "^0.2.0",
         "eslint": "^9.39.3",
-        "fuse.js": "^7.4.2",
+        "fuse.js": "^7.5.0",
         "lit": "^3.3.3",
         "prettier": "^3.9.5",
         "prettier-plugin-packagejson": "^3.0.2",
