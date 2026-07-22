@@ -360,17 +360,15 @@ jobs:
         with:
           use_oidc: true
           flags: rs-e2e
-          files: ${{ github.workspace }}/cache/llvm-cov-target.json
+          files: |
+            ${{ github.workspace }}/cache/llvm-cov-target.json
+            ${{ github.workspace }}/cache/rs-e2e-coverage.lcov
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-e2e
-          files: ${{ github.workspace }}/cache/llvm-cov-target.json
+          files: |
+            ${{ github.workspace }}/cache/llvm-cov-target.json
+            ${{ github.workspace }}/cache/rs-e2e-coverage.lcov
           report_type: test_results
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: rs-e2e
-          files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov
