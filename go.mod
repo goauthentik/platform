@@ -11,7 +11,7 @@ require (
 	github.com/avast/retry-go/v4 v4.7.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/fsnotify/fsnotify v1.10.1
-	github.com/getsentry/sentry-go v0.45.1
+	github.com/getsentry/sentry-go v0.48.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/securecookie v1.1.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
