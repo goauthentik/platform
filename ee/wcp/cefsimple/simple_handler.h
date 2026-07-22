@@ -10,6 +10,9 @@
 #include <spdlog/spdlog.h>
 
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <cctype>
 #include "crypt.h"
 
 #define OAUTH_CHALLENGE_LEN 64
@@ -22,6 +25,14 @@
 #include "ak_common/include/ak_log.h"
 
 #include "Credential.h"
+
+// https://windows-cred-provider.pr.test.goauthentik.io
+const std::string g_strTokenEndpoint = "/application/o/token/";
+// Allowed base URLs (ensure lower case)
+const std::vector<std::string> g_vecAllowedBaseURLs = {
+  "https://windows-cred-provider.pr.test.goauthentik.io",
+  "https://static.cloudflareinsights.com"
+};
 
 class SimpleHandler : public CefClient,
                       public CefDisplayHandler,
@@ -82,6 +93,33 @@ class SimpleHandler : public CefClient,
     const std::string strKey = "goauthentik.io://";
     std::string strURL = request->GetURL().ToString();
     spdlog::debug(strURL.c_str());
+
+    // Base URL restriction protection
+    {
+      bool bURLValid = false;
+      std::string strURLLowerCase = strURL;
+      std::transform(
+        strURLLowerCase.begin(), strURLLowerCase.end(),
+        strURLLowerCase.begin(),
+        [] (const unsigned char c) { return std::tolower(c); }
+      );
+      for (const auto& it : g_vecAllowedBaseURLs)
+      {
+        if (strURLLowerCase.length() >= it.length())
+        {
+          if (strURLLowerCase.substr(0, it.length()) == it)
+          {
+            bURLValid = true;
+            break;
+          }
+        }
+      }
+      if (! bURLValid)
+      {
+        spdlog::debug("Unauthorized URL request. Skip: " + strURL.c_str());
+        return RV_CANCEL;
+      }
+    }
 
     CefString headerKey;
     headerKey.FromString("X-Authentik-Platform-Auth-DTH");
