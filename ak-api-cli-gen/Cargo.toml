@@ -11,7 +11,7 @@ workspace = true
 prettyplease = "0.2"
 proc-macro2 = "1"
 quote = "1"
-syn = { version = "2", features = ["full"] }
+syn = { version = "3", features = ["full"] }
 
 [dev-dependencies]
 insta = "1"
