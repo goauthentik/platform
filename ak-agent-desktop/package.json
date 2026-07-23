@@ -26,7 +26,7 @@
         "@goauthentik/prettier-config": "^3.5.0",
         "@goauthentik/tsconfig": "^2.0.0",
         "@tauri-apps/cli": "^2",
-        "typescript": "^6.0.3",
+        "typescript": "^7.0.2",
         "vite": "^8.1.5"
     },
     "prettier": "@goauthentik/prettier-config",
