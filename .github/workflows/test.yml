@@ -14,44 +14,6 @@ permissions:
   id-token: write
 
 jobs:
-  test_go:
-    name: Test (go)
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - macos-26
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - windows-2025
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-      - run: |
-          make test
-      - uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
-        if: ${{ always() }}
-        with:
-          paths: ${{ github.workspace }}/junit.xml
-          show: "fail"
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-${{ matrix.platform }}
-          files: ${{ github.workspace }}/coverage.txt
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-${{ matrix.platform }}
-          files: ${{ github.workspace }}/junit.xml
-          report_type: test_results
   test_rs:
     name: Test (rust)
     strategy:
@@ -91,13 +53,6 @@ jobs:
       - uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7 # v2
         with:
           tool: cargo-llvm-cov nextest
-      # ak-platform-facts/tests/facts_parity.rs shells out to `go run ...
-      # troubleshoot facts` to cross-check against the Rust gatherer.
-      - if: ${{ matrix.target == 'ak-platform-facts' }}
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
       - name: Install osquery-toolchain
         if: ${{ matrix.target == 'ak-platform-facts' && (matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm') }}
         run: |
@@ -167,18 +122,6 @@ jobs:
           flags: swift
           files: ${{ github.workspace }}/cache/psso/junit.xml
           report_type: test_results
-  lint_go:
-    name: Lint (go)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v8
-        with:
-          args: --timeout 5000s
   lint_rs:
     name: Lint (rust)
     runs-on: ubuntu-latest
@@ -228,51 +171,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: make ${{ matrix.target }}/lint
-  test_go_int:
-    name: Test (integration)
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-      - uses: goauthentik/action-setup-authentik@3e55d49b89bd7fc1bd6f2b714b4bd311549aaa97 # v3.0
-        id: setup
-        with:
-          version: beta
-          sentry_env: goauthentik-platform-ci
-          blueprints_path: ./hack/authentik/blueprints
-          wait: true
-          enterprise_license: true
-          enterprise_license_users_internal: 100
-          enterprise_license_users_external: 100
-      - env:
-          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
-          AK_URL: ${{ steps.setup.outputs.http_url }}
-        run: |
-          ./hack/authentik/wait.sh
-      - run: |
-          make test-integration
-      - uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
-        if: ${{ always() }}
-        with:
-          paths: ${{ github.workspace }}/junit.xml
-          show: "fail"
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-integration
-          files: ${{ github.workspace }}/target/llvm-cov-target/rust.json
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-integration
-          files: ${{ github.workspace }}/junit.xml
-          report_type: test_results
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
     with:
@@ -293,10 +191,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
