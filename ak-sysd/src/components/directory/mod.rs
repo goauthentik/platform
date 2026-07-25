@@ -5,20 +5,24 @@ use ak_platform::generated::sys_directory::{
     system_directory_server::{SystemDirectory, SystemDirectoryServer},
 };
 use ak_platform::paths::SysdSocketID;
-use authentik_client::apis::configuration::Configuration;
-use authentik_client::models;
 use eyre::Result;
+use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 use tonic::{Request, Response, Status};
+pub mod groups;
+pub mod users;
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
-const PAGE_SIZE: i32 = 100;
+pub const PAGE_SIZE: i32 = 100;
 
 pub struct DirectoryComponent {
     ctx: SysdContext,
     users: Arc<RwLock<Vec<User>>>,
     groups: Arc<RwLock<Vec<Group>>>,
+    nss_uid_offset: i32,
+    nss_gid_offset: i32,
 }
 
 impl DirectoryComponent {
@@ -27,132 +31,27 @@ impl DirectoryComponent {
             ctx,
             users: Arc::new(RwLock::new(vec![])),
             groups: Arc::new(RwLock::new(vec![])),
+            nss_uid_offset: 10000,
+            nss_gid_offset: 10000,
         }
     }
 }
 
-/// NSS-safe username cleaning: lowercase, `@`/`:` replaced with `-`. The
-/// exact regex Go uses (`pkg/agent_system/directory/user.go`, not read in
-/// this pass) may differ in edge cases — this is a best-effort approximation.
-fn clean_name(name: &str) -> String {
-    name.to_lowercase()
-        .replace(['@', ':'], "-")
-        .chars()
-        .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
-        .collect()
-}
-
-fn attr_number(
-    attrs: &Option<std::collections::HashMap<String, serde_json::Value>>,
-    key: &str,
-) -> Option<u32> {
+pub fn attr_number(attrs: &Option<HashMap<String, serde_json::Value>>, key: &str) -> Option<u32> {
     attrs.as_ref()?.get(key)?.as_str()?.parse().ok()
 }
 
-fn user_uid(u: &models::User, nss_uid_offset: i32) -> u32 {
-    attr_number(&u.attributes, "uidNumber").unwrap_or((nss_uid_offset + u.pk) as u32)
-}
-
-/// A user's synthetic primary group defaults to the *same value* as their
-/// uid, not a separate offset — this looks like a typo but matches Go.
-fn user_gid(u: &models::User, nss_uid_offset: i32) -> u32 {
-    attr_number(&u.attributes, "gidNumber").unwrap_or_else(|| user_uid(u, nss_uid_offset))
-}
-
-fn group_gid(g: &models::Group, nss_gid_offset: i32) -> u32 {
-    attr_number(&g.attributes, "gidNumber").unwrap_or((nss_gid_offset + g.num_pk) as u32)
-}
-
-async fn fetch_all_users(api: &Configuration) -> Result<Vec<models::User>> {
-    let mut all = vec![];
-    let mut page = 1;
-    loop {
-        let res = authentik_client::apis::core_api::core_users_list(
-            api,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,       // attributes..groups_by_pk
-            Some(true), // include_groups
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None, // include_roles..last_updated__lt
-            None,
-            None, // name, ordering
-            Some(page),
-            Some(PAGE_SIZE), // page, page_size
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None, // path..uuid
-        )
-        .await
-        .map_err(|e| eyre::eyre!("core_users_list failed: {e}"))?;
-        all.extend(res.results);
-        if res.pagination.next == 0.0 {
-            break;
-        }
-        page = res.pagination.next as i32;
-    }
-    Ok(all)
-}
-
-async fn fetch_all_groups(api: &Configuration) -> Result<Vec<models::Group>> {
-    let mut all = vec![];
-    let mut page = 1;
-    loop {
-        let res = authentik_client::apis::core_api::core_groups_list(
-            api,
-            None,
-            None,
-            None,
-            None,
-            Some(true),
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some(page),
-            Some(PAGE_SIZE),
-            None,
-        )
-        .await
-        .map_err(|e| eyre::eyre!("core_groups_list failed: {e}"))?;
-        all.extend(res.results);
-        if res.pagination.next == 0.0 {
-            break;
-        }
-        page = res.pagination.next as i32;
-    }
-    Ok(all)
-}
-
 impl DirectoryComponent {
-    async fn fetch(&self) -> Result<()> {
+    async fn fetch(&mut self) -> Result<()> {
         let domain = self.ctx.domains.active().await?;
-        let nss_uid_offset = domain
+        self.nss_uid_offset = domain
             .remote
             .read()
             .await
             .as_ref()
             .map(|r| r.nss_uid_offset)
             .unwrap_or(10000);
-        let nss_gid_offset = domain
+        self.nss_gid_offset = domain
             .remote
             .read()
             .await
@@ -160,47 +59,18 @@ impl DirectoryComponent {
             .map(|r| r.nss_gid_offset)
             .unwrap_or(10000);
 
-        let raw_users = fetch_all_users(&domain.api).await?;
-        let raw_groups = fetch_all_groups(&domain.api).await?;
+        let raw_users = self.fetch_all_users(&domain.api).await?;
+        let raw_groups = self.fetch_all_groups(&domain.api).await?;
 
         let mut users = vec![];
         let mut synthetic_groups = vec![];
         for u in &raw_users {
-            let name = clean_name(&u.username);
-            let uid = user_uid(u, nss_uid_offset);
-            let gid = user_gid(u, nss_uid_offset);
-            users.push(User {
-                name: name.clone(),
-                uid,
-                gid,
-                gecos: u.name.clone(),
-                homedir: format!("/home/{name}"),
-                shell: "/bin/bash".to_string(),
-            });
-            synthetic_groups.push(Group {
-                name,
-                gid,
-                members: vec![],
-                passwd: "x".to_string(),
-            });
+            users.push(self.convert_user(u));
+            synthetic_groups.push(self.convert_user_to_group(u));
         }
         users.sort_by_key(|u| u.uid);
 
-        let mut groups: Vec<Group> = raw_groups
-            .iter()
-            .map(|g| Group {
-                name: clean_name(&g.name),
-                gid: group_gid(g, nss_gid_offset),
-                members: g
-                    .users_obj
-                    .clone()
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|u| clean_name(&u.username))
-                    .collect(),
-                passwd: "x".to_string(),
-            })
-            .collect();
+        let mut groups: Vec<Group> = raw_groups.iter().map(|g| self.convert_group(g)).collect();
         groups.extend(synthetic_groups);
         groups.sort_by_key(|g| g.gid);
 
@@ -211,6 +81,17 @@ impl DirectoryComponent {
             domain: domain.cfg.domain.clone(),
         });
         Ok(())
+    }
+
+    /// NSS-safe username cleaning: lowercase, `@`/`:` replaced with `-`. The
+    /// exact regex Go uses (`pkg/agent_system/directory/user.go`, not read in
+    /// this pass) may differ in edge cases — this is a best-effort approximation.
+    pub fn clean_name(&self, name: &str) -> String {
+        name.to_lowercase()
+            .replace(['@', ':'], "-")
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
+            .collect()
     }
 }
 
@@ -224,15 +105,19 @@ impl Component for DirectoryComponent {
         let ctx = self.ctx.clone();
         let users = Arc::clone(&self.users);
         let groups = Arc::clone(&self.groups);
+        let nss_uid_offset = self.nss_uid_offset;
+        let nss_gid_offset = self.nss_gid_offset;
         tokio::spawn(async move {
-            let this = DirectoryComponent {
+            let mut this = DirectoryComponent {
                 ctx: ctx.clone(),
                 users,
                 groups,
+                nss_uid_offset,
+                nss_gid_offset,
             };
             let jitter = rand::random::<u64>() % 30;
             tokio::select! {
-                _ = tokio::time::sleep(std::time::Duration::from_secs(jitter)) => {}
+                _ = tokio::time::sleep(Duration::from_secs(jitter)) => {}
                 _ = ctx.cancel.cancelled() => return,
             }
             loop {
@@ -240,7 +125,7 @@ impl Component for DirectoryComponent {
                     tracing::warn!("directory fetch failed: {e:?}");
                 }
                 tokio::select! {
-                    _ = tokio::time::sleep(std::time::Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS)) => {}
+                    _ = tokio::time::sleep(Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS)) => {}
                     _ = ctx.cancel.cancelled() => return,
                 }
             }
