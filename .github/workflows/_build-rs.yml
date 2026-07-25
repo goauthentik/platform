@@ -78,6 +78,16 @@ jobs:
         with:
           rustflags: ""
           cache: false
+      - name: Force real MSVC link.exe
+        # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
+        # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
+        # PATH resolution on this runner image, breaking cargo's link step
+        # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.
+        if: ${{ matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025' }}
+        shell: pwsh
+        run: |
+          $linkExe = (Get-Command link.exe -All | Where-Object { $_.Source -notlike '*\Git\*' } | Select-Object -First 1).Source
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linkExe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - if: ${{ !startsWith(matrix.platform, 'ubuntu') }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
