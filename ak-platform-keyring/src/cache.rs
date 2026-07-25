@@ -4,7 +4,7 @@ use serde::{Serialize, de::DeserializeOwned};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
-use crate::KeyringError;
+use crate::{KeyringError, KeyringStore};
 
 pub trait CacheData {
     fn expiry(&self) -> DateTime<Utc>;
@@ -39,40 +39,44 @@ where
     pub async fn set(self, val: T) -> Result<()> {
         tracing::debug!("Writing to cache");
         let serialized = serde_json::to_string(&val).wrap_err("failed to serialize cache value")?;
-        crate::set(
-            &crate::service(&self.uid),
-            &self.profile_name,
-            crate::Accessibility::User,
-            serialized,
-        )
-        .await
-        .map_err(|e| eyre::eyre!("keyring set failed: {e}"))
+        crate::store()
+            .set(
+                &crate::service(&self.uid),
+                &self.profile_name,
+                crate::Accessibility::User,
+                serialized,
+            )
+            .await
+            .map_err(|e| eyre::eyre!("keyring set failed: {e}"))
     }
 
     #[tracing::instrument]
     pub async fn get(self) -> Result<T, CacheError> {
         tracing::debug!("Checking cache");
-        let cached = match crate::get(
-            &crate::service(&self.uid),
-            &self.profile_name,
-            crate::Accessibility::User,
-        )
-        .await
-        {
-            Ok(c) => c.clone(),
-            Err(KeyringError::NotFound()) => return Err(CacheError::NotFound()),
-            Err(KeyringError::Other(e)) => return Err(CacheError::Other(e)),
-        };
-        let v: T =
-            serde_json::from_str(&cached).map_err(|e| CacheError::Other(eyre::Report::from(e)))?;
-        if v.expiry() < Utc::now() {
-            crate::delete(
+        let cached = match crate::store()
+            .get(
                 &crate::service(&self.uid),
                 &self.profile_name,
                 crate::Accessibility::User,
             )
             .await
-            .map_err(|e| CacheError::Other(eyre::Report::from(e)))?;
+        {
+            Ok(c) => c.clone(),
+            Err(KeyringError::NotFound()) => return Err(CacheError::NotFound()),
+            Err(KeyringError::NotAvailable()) => return Err(CacheError::NotFound()),
+            Err(KeyringError::Other(e)) => return Err(CacheError::Other(e)),
+        };
+        let v: T =
+            serde_json::from_str(&cached).map_err(|e| CacheError::Other(eyre::Report::from(e)))?;
+        if v.expiry() < Utc::now() {
+            crate::store()
+                .delete(
+                    &crate::service(&self.uid),
+                    &self.profile_name,
+                    crate::Accessibility::User,
+                )
+                .await
+                .map_err(|e| CacheError::Other(eyre::Report::from(e)))?;
         }
         Ok(v)
     }
