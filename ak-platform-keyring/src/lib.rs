@@ -1,18 +1,6 @@
-use std::{error::Error, fmt::Display};
+use std::{error::Error, fmt::Display, sync::LazyLock};
 
-#[cfg(not(any(
-    all(target_os = "macos", not(any(test, debug_assertions))),
-    all(target_os = "linux", not(any(test, debug_assertions))),
-)))]
-use std::collections::HashMap;
-
-#[cfg(not(any(
-    all(target_os = "macos", not(any(test, debug_assertions))),
-    all(target_os = "linux", not(any(test, debug_assertions))),
-)))]
-use keyring_core::{Entry, Error::NoEntry};
-
-use eyre::{Result, bail};
+use eyre::Result;
 
 #[cfg(target_os = "macos")]
 pub mod macos;
@@ -20,38 +8,61 @@ pub mod macos;
 #[cfg(target_os = "linux")]
 pub mod linux;
 
+#[cfg(target_os = "windows")]
+pub mod windows;
+
+#[cfg(any(test, debug_assertions))]
+pub mod memory;
+
 pub mod cache;
 
-#[cfg(target_os = "macos")]
-const MACOS_KEYCHAIN_GROUP: &str = "group.232G855Y8N.io.goauthentik.platform.shared";
+/// A backend capable of storing, retrieving and deleting credentials.
+///
+/// One implementation exists per platform (see [`macos`], [`linux`], [`windows`]) plus an
+/// in-memory [`memory`] store used for development. Use [`get`] to obtain the correct
+/// instance for the current build.
+// #[allow(async_fn_in_trait)]
+pub trait KeyringStore {
+    fn get(
+        &self,
+        service: &str,
+        user: &str,
+        access: Accessibility,
+    ) -> impl std::future::Future<Output = Result<String, KeyringError>> + Send;
+    fn set(
+        &self,
+        service: &str,
+        user: &str,
+        access: Accessibility,
+        data: String,
+    ) -> impl std::future::Future<Output = Result<(), KeyringError>> + Send;
+    fn delete(
+        &self,
+        service: &str,
+        user: &str,
+        access: Accessibility,
+    ) -> impl std::future::Future<Output = Result<(), KeyringError>> + Send;
+}
 
-#[allow(unreachable_code)]
-pub fn init() -> Result<()> {
-    #[cfg(any(test, debug_assertions))]
-    {
-        keyring_core::set_default_store(
-            keyring_core::sample::Store::new()
-                .map_err(|e| eyre::eyre!("failed to initialize sample keyring store: {e}"))?,
-        );
-        return Ok(());
-    }
-    // On macOS release builds the keychain is accessed directly via security-framework
-    // (no keyring store needed — see the get/set/delete implementations below).
-    #[cfg(target_os = "macos")]
-    return Ok(());
-    #[cfg(target_os = "windows")]
-    {
-        let store = windows_native_keyring_store::Store::new()
-            .map_err(|e| eyre::eyre!("failed to initialize Windows keyring store: {e}"))?;
-        keyring_core::set_default_store(store);
-        return Ok(());
-    }
-    // On Linux release builds credentials are stored directly via the Secret
-    // Service D-Bus API (see the get/set/delete implementations below); the
-    // connection is opened per call, so there is nothing to initialize here.
-    #[cfg(target_os = "linux")]
-    return Ok(());
-    bail!("no keychain implementation for current OS")
+// `DefaultStore` resolves to the backend for the current build: the in-memory store for
+// development (test/debug) builds on any platform, and the native store otherwise.
+#[cfg(any(test, debug_assertions))]
+pub type DefaultStore = memory::MemoryStore;
+#[cfg(all(not(any(test, debug_assertions)), target_os = "macos"))]
+pub type DefaultStore = macos::MacosStore;
+#[cfg(all(not(any(test, debug_assertions)), target_os = "linux"))]
+pub type DefaultStore = linux::LinuxStore;
+#[cfg(all(not(any(test, debug_assertions)), target_os = "windows"))]
+pub type DefaultStore = windows::WindowsStore;
+
+// A single shared store instance, constructed lazily on first use and reused by every
+// caller. State lives inside each store (behind `Mutex` fields), so sharing one instance
+// keeps that state consistent across calls.
+static INSTANCE: LazyLock<DefaultStore> = LazyLock::new(DefaultStore::new);
+
+/// Returns the [`KeyringStore`] instance for the current build.
+pub fn get() -> &'static DefaultStore {
+    &INSTANCE
 }
 
 pub fn service(name: &str) -> String {
@@ -83,112 +94,24 @@ pub enum Accessibility {
     User,
 }
 
-// ---------------------------------------------------------------------------
-// Fallback: all other platforms (and macOS test/debug builds) use keyring store
-// ---------------------------------------------------------------------------
-#[cfg(not(any(
-    all(target_os = "macos", not(any(test, debug_assertions))),
-    all(target_os = "linux", not(any(test, debug_assertions))),
-)))]
-fn entry_modifies(
-    _service: &str,
-    _user: &str,
-    _access: Accessibility,
-) -> HashMap<&'static str, &'static str> {
-    HashMap::new()
-}
-
-#[tracing::instrument(fields(service, user))]
-pub async fn get(service: &str, user: &str, access: Accessibility) -> Result<String, KeyringError> {
-    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
-    return macos::get(service, user, &access);
-
-    #[cfg(all(target_os = "linux", not(any(test, debug_assertions))))]
-    return linux::get(service, user, &access).await;
-
-    #[cfg(not(any(
-        all(target_os = "macos", not(any(test, debug_assertions))),
-        all(target_os = "linux", not(any(test, debug_assertions))),
-    )))]
-    {
-        let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
-        match e.get_password() {
-            Ok(p) => Ok(p),
-            Err(NoEntry) => Err(KeyringError::NotFound()),
-            Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
-        }
-    }
-}
-
-#[tracing::instrument(fields(service, user))]
-pub async fn set(
-    service: &str,
-    user: &str,
-    access: Accessibility,
-    data: String,
-) -> Result<(), KeyringError> {
-    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
-    return macos::set(service, user, &access, &data);
-
-    #[cfg(all(target_os = "linux", not(any(test, debug_assertions))))]
-    return linux::set(service, user, &access, &data).await;
-
-    #[cfg(not(any(
-        all(target_os = "macos", not(any(test, debug_assertions))),
-        all(target_os = "linux", not(any(test, debug_assertions))),
-    )))]
-    {
-        let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
-        match e.set_password(&data) {
-            Ok(()) => Ok(()),
-            Err(NoEntry) => Err(KeyringError::NotFound()),
-            Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
-        }
-    }
-}
-
-#[tracing::instrument(fields(service, user))]
-pub async fn delete(service: &str, user: &str, access: Accessibility) -> Result<(), KeyringError> {
-    #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
-    return macos::delete(service, user, &access);
-
-    #[cfg(all(target_os = "linux", not(any(test, debug_assertions))))]
-    return linux::delete(service, user, &access).await;
-
-    #[cfg(not(any(
-        all(target_os = "macos", not(any(test, debug_assertions))),
-        all(target_os = "linux", not(any(test, debug_assertions))),
-    )))]
-    {
-        let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
-            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
-        match e.delete_credential() {
-            Ok(()) => Ok(()),
-            Err(NoEntry) => Ok(()),
-            Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
-        }
-    }
-}
-
 #[cfg(test)]
 pub mod tests {
     use super::*;
 
     #[tokio::test]
     async fn full() {
-        init().unwrap();
-        set(
-            &service("foo"),
-            "bar",
-            Accessibility::User,
-            "baz".to_string(),
-        )
-        .await
-        .unwrap();
+        get()
+            .set(
+                &service("foo"),
+                "bar",
+                Accessibility::User,
+                "baz".to_string(),
+            )
+            .await
+            .unwrap();
         assert_eq!(
-            get(&service("foo"), "bar", Accessibility::User)
+            get()
+                .get(&service("foo"), "bar", Accessibility::User)
                 .await
                 .unwrap(),
             "baz"
