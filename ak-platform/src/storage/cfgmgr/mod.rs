@@ -119,6 +119,7 @@ where
 }
 
 #[cfg(any(test, debug_assertions))]
+#[allow(clippy::unwrap_used)]
 pub mod test {
     use std::sync::Arc;
 
