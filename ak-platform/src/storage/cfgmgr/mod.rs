@@ -102,7 +102,7 @@ where
 
     #[tracing::instrument]
     pub async fn save(&self) -> Result<()> {
-        let snapshot = self.loaded.read().await.clone();
+        let mut snapshot = self.loaded.read().await.clone();
         snapshot.pre_save().await?;
         tracing::debug!("saving config");
         let mut opts = OpenOptions::new();
@@ -156,7 +156,7 @@ mod tests {
             self.post_load_called.store(true, Ordering::SeqCst);
             Ok(())
         }
-        async fn pre_save(&self) -> eyre::Result<()> {
+        async fn pre_save(&mut self) -> eyre::Result<()> {
             self.pre_save_called.store(true, Ordering::SeqCst);
             Ok(())
         }
