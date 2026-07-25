@@ -16,12 +16,6 @@ pub fn run() {
             .with_linux("ak-agent"),
     );
     tracing::trace!("authentik Agent Desktop v{}", full_version());
-    match ak_platform_keyring::init() {
-        Ok(_) => {}
-        Err(e) => {
-            eprintln!("Failed to setup keyring: {e:?}");
-        }
-    };
 
     match start_tauri() {
         Ok(_) => {}

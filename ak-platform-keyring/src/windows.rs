@@ -23,7 +23,8 @@ impl WindowsStore {
         if let Some(store) = guard.as_ref() {
             return Ok(store.clone());
         }
-        let store: Arc<CredentialStore> = windows_native_keyring_store::Store::new().map_err(map_kc)?;
+        let store: Arc<CredentialStore> =
+            windows_native_keyring_store::Store::new().map_err(map_kc)?;
         *guard = Some(store.clone());
         Ok(store)
     }
