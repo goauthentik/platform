@@ -61,7 +61,7 @@ pub type DefaultStore = windows::WindowsStore;
 static INSTANCE: LazyLock<DefaultStore> = LazyLock::new(DefaultStore::new);
 
 /// Returns the [`KeyringStore`] instance for the current build.
-pub fn get() -> &'static DefaultStore {
+pub fn store() -> &'static DefaultStore {
     &INSTANCE
 }
 
@@ -100,7 +100,7 @@ pub mod tests {
 
     #[tokio::test]
     async fn full() {
-        get()
+        store()
             .set(
                 &service("foo"),
                 "bar",
@@ -110,7 +110,7 @@ pub mod tests {
             .await
             .unwrap();
         assert_eq!(
-            get()
+            store()
                 .get(&service("foo"), "bar", Accessibility::User)
                 .await
                 .unwrap(),

@@ -39,7 +39,7 @@ where
     pub async fn set(self, val: T) -> Result<()> {
         tracing::debug!("Writing to cache");
         let serialized = serde_json::to_string(&val).wrap_err("failed to serialize cache value")?;
-        crate::get()
+        crate::store()
             .set(
                 &crate::service(&self.uid),
                 &self.profile_name,
@@ -53,7 +53,7 @@ where
     #[tracing::instrument]
     pub async fn get(self) -> Result<T, CacheError> {
         tracing::debug!("Checking cache");
-        let cached = match crate::get()
+        let cached = match crate::store()
             .get(
                 &crate::service(&self.uid),
                 &self.profile_name,
@@ -68,7 +68,7 @@ where
         let v: T =
             serde_json::from_str(&cached).map_err(|e| CacheError::Other(eyre::Report::from(e)))?;
         if v.expiry() < Utc::now() {
-            crate::get()
+            crate::store()
                 .delete(
                     &crate::service(&self.uid),
                     &self.profile_name,
