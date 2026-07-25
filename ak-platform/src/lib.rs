@@ -7,3 +7,4 @@ pub mod net;
 pub mod paths;
 pub mod storage;
 pub mod string;
+pub mod tui;
