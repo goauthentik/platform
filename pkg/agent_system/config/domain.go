@@ -2,6 +2,8 @@ package config
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -62,12 +64,21 @@ func (dc DomainConfig) APIClient() (*api.APIClient, error) {
 	}
 	u, err := url.Parse(dc.AuthentikURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse authentik URL")
+	}
+	certpool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get x509 system cert pool")
 	}
 	apiConfig := api.NewConfiguration()
 	apiConfig.HTTPClient = &http.Client{
 		Transport: sentryhttpclient.NewSentryRoundTripper(
-			nil, sentryhttpclient.WithTracePropagationTargets([]string{u.Host}),
+			&http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: certpool,
+				},
+			},
+			sentryhttpclient.WithTracePropagationTargets([]string{u.Host}),
 		),
 	}
 	apiConfig.Host = u.Host

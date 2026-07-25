@@ -77,23 +77,27 @@ enum Commands {
 pub struct App {
     args: CliArgs,
     client: Option<Client<AnyService>>,
-    active_profile: String,
+    active_profile: Option<String>,
 }
 
 impl App {
-    pub async fn new(args: CliArgs) -> Self {
-        let mut app = App {
+    pub fn new(args: CliArgs) -> Self {
+        App {
             args,
             client: None,
-            active_profile: "".to_string(),
-        };
-        let active_profile = app.lookup_profile().await;
-        app.active_profile = active_profile;
-        app
+            active_profile: None,
+        }
     }
 
-    pub fn profile(&self) -> String {
-        self.active_profile.clone()
+    pub async fn profile(&mut self) -> String {
+        match self.active_profile.as_ref() {
+            Some(p) => p.clone(),
+            None => {
+                let p = self.lookup_profile().await;
+                self.active_profile = Some(p.clone());
+                p.clone()
+            }
+        }
     }
 
     async fn lookup_profile(&self) -> String {
@@ -146,7 +150,7 @@ async fn main() -> std::result::Result<(), Error> {
         set_log_level(LevelFilter::Trace);
     }
 
-    let app = App::new(cli.clone()).await;
+    let app = App::new(cli.clone());
 
     let res = match &cli.command {
         Commands::Completion { shell } => commands::completions::completions(*shell).await,

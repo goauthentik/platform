@@ -8,8 +8,8 @@ use eyre::{Result, WrapErr};
 
 include!(concat!(env!("OUT_DIR"), "/api_commands.rs"));
 
-pub async fn exec_api_command(app: super::App, cmd: &ApiCommand) -> Result<()> {
-    let profile = app.profile();
+pub async fn exec_api_command(mut app: super::App, cmd: &ApiCommand) -> Result<()> {
+    let profile = app.profile().await;
     let res = app
         .user()
         .await?

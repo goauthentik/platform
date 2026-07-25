@@ -55,7 +55,12 @@ pub async fn list_profiles(app: App) -> Result<()> {
     Ok(())
 }
 
-pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &str) -> Result<()> {
+pub async fn setup(
+    mut app: App,
+    authentik_url: &str,
+    client_id: &str,
+    app_slug: &str,
+) -> Result<()> {
     let access_token: String;
     let refresh_token: String;
     if let Ok(at) = env::var("AK_CLI_ACCESS_TOKEN")
@@ -65,7 +70,7 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         refresh_token = rt;
     } else {
         let prof = setup::setup(setup::Options {
-            profile_name: app.args.profile.clone().unwrap_or(app.profile()),
+            profile_name: app.args.profile.clone().unwrap_or(app.profile().await),
             authentik_url: Url::parse(authentik_url).wrap_err("invalid authentik URL")?,
             app_slug: app_slug.to_owned(),
             client_id: client_id.to_owned(),
@@ -90,7 +95,7 @@ pub async fn setup(app: App, authentik_url: &str, client_id: &str, app_slug: &st
         .ctrl()
         .setup(SetupRequest {
             header: Some(RequestHeader {
-                profile: app.args.profile.clone().unwrap_or(app.profile()),
+                profile: app.args.profile.clone().unwrap_or(app.profile().await),
             }),
             authentik_url: authentik_url.to_owned(),
             app_slug: app_slug.to_owned(),

@@ -1,13 +1,16 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"goauthentik.io/platform/pkg/platform/facts"
 	"goauthentik.io/platform/pkg/platform/facts/common"
 	"goauthentik.io/platform/pkg/shared/tui"
+	"golang.org/x/term"
 )
 
 var troubleshootFactsCmd = &cobra.Command{
@@ -17,6 +20,9 @@ var troubleshootFactsCmd = &cobra.Command{
 		facts, err := facts.Gather(common.New(log.WithField("cmd", "facts"), cmd.Context()))
 		if err != nil {
 			return err
+		}
+		if !term.IsTerminal(int(os.Stdout.Fd())) {
+			return json.NewEncoder(os.Stdout).Encode(facts)
 		}
 		m, err := tui.AnyToMap(facts)
 		if err != nil {

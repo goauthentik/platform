@@ -11,7 +11,7 @@ name = "log"
 name = "grpc_client"
 
 [dependencies]
-base64 = "0.22.1"
+base64 = "0.23.0"
 hyper-util = { workspace = true }
 log = { workspace = true }
 pbjson = { workspace = true }
