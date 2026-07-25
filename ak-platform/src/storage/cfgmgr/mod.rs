@@ -118,7 +118,7 @@ where
     }
 }
 
-#[cfg(any(test, debug_assertions))]
+#[cfg(test)]
 pub mod test {
     use std::sync::Arc;
 
