@@ -162,7 +162,7 @@ mod test {
     use ak_platform::generated::sys_ctrl::system_ctrl_server::SystemCtrl;
     use tonic::Request;
 
-    use crate::{components::ctrl::CtrlComponent, context::test::test_context};
+    use crate::{components::ctrl::CtrlComponent, context::testutils::test_context};
 
     #[tokio::test]
     async fn test_inspect() {

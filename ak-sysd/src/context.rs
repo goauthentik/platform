@@ -63,15 +63,15 @@ impl SysdContext {
 
 #[cfg(any(test, debug_assertions))]
 #[allow(clippy::unwrap_used)]
-pub mod test {
+pub mod testutils {
     use std::sync::Arc;
 
-    use ak_platform::storage::cfgmgr::{ConfigManager, test::test_config_manager};
+    use ak_platform::storage::cfgmgr::{ConfigManager, testutils::test_config_manager};
 
     use crate::{
-        cfg::{Config, domain::test::test_manager},
+        cfg::{Config, domain::testutils::test_manager},
         context::SysdContext,
-        state::test::test_store,
+        state::testutils::test_store,
     };
 
     pub async fn test_context() -> SysdContext {

@@ -120,7 +120,7 @@ where
 
 #[cfg(any(test, debug_assertions))]
 #[allow(clippy::unwrap_used)]
-pub mod test {
+pub mod testutils {
     use std::sync::Arc;
 
     use tokio::sync::Notify;

@@ -230,7 +230,7 @@ impl ComponentKv {
 
 #[cfg(any(test, debug_assertions))]
 #[allow(clippy::unwrap_used)]
-pub mod test {
+pub mod testutils {
     use tempfile::TempDir;
 
     use crate::state::StateStore;
