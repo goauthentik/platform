@@ -53,7 +53,7 @@ pub struct FlowExecutor {
     api_config: Configuration,
     nc: Option<ChallengeTypes>,
 
-    pub(crate) solvers: Vec<Box<dyn Solver>>,
+    pub(crate) solvers: Vec<Box<dyn Solver + Send + Sync>>,
     pub(crate) answers: HashMap<String, String>,
 
     jar: Arc<CookieStoreMutex>,
@@ -104,11 +104,15 @@ impl FlowExecutor {
         })
     }
 
-    pub fn challenge(self) -> Option<ChallengeTypes> {
+    pub fn challenge(&self) -> Option<ChallengeTypes> {
         self.nc.clone()
     }
 
-    pub fn get_session(self) -> Result<Cookie<'static>, FlowError> {
+    pub fn cookie_jar(&self) -> Arc<CookieStoreMutex> {
+        Arc::clone(&self.jar)
+    }
+
+    pub fn get_session(&self) -> Result<Cookie<'static>, FlowError> {
         let url = url::Url::parse(&self.api_config.base_path)
             .map_err(|e| FlowError::Other(eyre::eyre!(e)))?;
         let Some(domain) = url.domain() else {
@@ -125,7 +129,7 @@ impl FlowExecutor {
         Err(FlowError::Other(eyre::eyre!("No cookie found")))
     }
 
-    pub fn get_client(self) -> Client {
+    pub fn get_client(&self) -> Client {
         self.api_config.client.as_ref().clone()
     }
 

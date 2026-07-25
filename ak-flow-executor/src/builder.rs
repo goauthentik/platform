@@ -9,7 +9,7 @@ use crate::executor::{FlowError, FlowExecutor, HEADER_AUTHENTIK_REMOTE_IP, Solve
 pub struct FlowExecutorBuilder {
     flow_slug: Option<String>,
     ref_config: Option<Configuration>,
-    solvers: Vec<Box<dyn Solver>>,
+    solvers: Vec<Box<dyn Solver + Send + Sync>>,
     pub(crate) answers: HashMap<String, String>,
     pub(crate) headers: HeaderMap,
 
@@ -37,7 +37,7 @@ impl FlowExecutorBuilder {
             .insert(component.to_string(), answer.to_string());
         self
     }
-    pub fn with_solver<S: Solver + 'static>(mut self, solver: S) -> Self {
+    pub fn with_solver<S: Solver + Send + Sync + 'static>(mut self, solver: S) -> Self {
         self.solvers.push(Box::new(solver));
         self
     }
