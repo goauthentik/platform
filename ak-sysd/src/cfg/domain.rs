@@ -36,8 +36,7 @@ pub struct LoadedDomain {
     pub cfg: DomainConfig,
     pub api: Configuration,
     pub remote: Arc<RwLock<Option<AgentConfig>>>,
-    /// The domain's brand, cached alongside `remote`. Supplies the
-    /// authentication flow slug the interactive-auth flow executor drives.
+    // Supplies the flow_authentication slug used by interactive auth.
     pub brand: Arc<RwLock<Option<CurrentBrand>>>,
 }
 
@@ -258,8 +257,6 @@ impl DomainManager {
         let remote = self.test(&d.cfg).await?;
         let cfg_json = serde_json::to_string(&remote)?;
 
-        // Cache the brand alongside the agent config; its
-        // `flow_authentication` slug drives the interactive-auth flow.
         let brand = authentik_client::apis::core_api::core_brands_current_retrieve(&d.api)
             .await
             .map_err(|e| eyre!("failed to fetch current brand: {e}"))?;

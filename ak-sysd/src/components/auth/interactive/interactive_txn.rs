@@ -22,8 +22,7 @@ use crate::util::to_status;
 const QS_TOKEN: &str = "ak-auth-ia-token";
 const PASSWORD_PROMPT: &str = "authentik Password: ";
 
-/// hex(sha256(device token)), the value of the `X-Authentik-Platform-Auth-DTH`
-/// header the finish request must carry.
+// Value of the X-Authentik-Platform-Auth-DTH header.
 pub(super) fn device_token_hash(token: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
@@ -37,7 +36,7 @@ pub struct InteractiveAuthTransaction {
     domain: Arc<LoadedDomain>,
     fex: FlowExecutor,
     username: String,
-    /// Password supplied at Init, submitted once then cleared.
+    // Init password, submitted once then cleared.
     password: Option<String>,
 }
 
@@ -70,8 +69,8 @@ impl InteractiveAuthTransaction {
         })
     }
 
-    /// Advances the flow to the next challenge the client must answer,
-    /// auto-solving identification/password stages where possible.
+    /// Advances the flow, auto-solving identification/password where possible,
+    /// until it produces a challenge for the client (or finishes).
     pub async fn get_next_challenge(&mut self) -> Result<InteractiveChallenge, Status> {
         let Some(ch) = self.fex.challenge() else {
             return Err(Status::internal("no current flow challenge"));
@@ -137,9 +136,8 @@ impl InteractiveAuthTransaction {
         }
     }
 
-    /// Submits `value` for the current stage. Returns `Ok(None)` on success
-    /// (caller advances the flow) or `Ok(Some(challenge))` for a flow error
-    /// surfaced back to the client as an error prompt.
+    /// Submits `value` for the current stage. `Ok(None)` on success;
+    /// `Ok(Some(challenge))` carries a flow error back as an error prompt.
     pub(super) async fn solve_challenge(
         &mut self,
         value: String,
@@ -180,8 +178,8 @@ impl InteractiveAuthTransaction {
         }
     }
 
-    /// Completes the flow: exchange the authenticated session for a one-time
-    /// token via the finish redirect, then mint a real session from it.
+    /// Exchanges the authenticated flow session for a one-time token via the
+    /// finish redirect, then mints a real session from it.
     async fn finish_success(&mut self) -> Result<InteractiveChallenge, Status> {
         let ia = endpoints_agents_connectors_auth_ia_create(&self.domain.api)
             .await
@@ -191,8 +189,7 @@ impl InteractiveAuthTransaction {
         let (client, captured) =
             redirect_scheme::build_finish_client(self.fex.cookie_jar()).map_err(to_status)?;
 
-        // The terminal goauthentik.io:// hop is captured by the redirect
-        // policy, so the request's own result is irrelevant.
+        // The token is captured from the redirect, not the response body.
         let _ = client
             .get(&ia.url)
             .header("X-Authentik-Platform-Auth-DTH", &dth)

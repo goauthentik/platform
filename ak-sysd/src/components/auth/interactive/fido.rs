@@ -27,8 +27,7 @@ struct AllowCredential {
     id: String,
 }
 
-/// clientDataJSON as the WebAuthn client would produce it. Built and verified
-/// through this one helper so both sides stay byte-identical.
+// Built once and reused for request and response so both sides are byte-identical.
 fn build_client_data_json(challenge: &str, origin: &str) -> Result<Vec<u8>, Status> {
     serde_json::to_vec(&json!({
         "type": "webauthn.get",
@@ -45,8 +44,7 @@ fn parse_challenge(dc: &DeviceChallenge) -> Result<WebauthnChallenge, Status> {
         .map_err(|e| Status::internal(format!("invalid webauthn challenge: {e}")))
 }
 
-/// Turns an authentik webauthn device challenge into a binary PAM prompt
-/// carrying a base64 `FidoRequest`.
+/// webauthn device challenge -> binary PAM prompt carrying a `FidoRequest`.
 pub fn parse_webauthn_request(
     txid: &str,
     dc: &DeviceChallenge,
@@ -80,7 +78,7 @@ pub fn parse_webauthn_request(
     })
 }
 
-/// Turns the client's base64 `FidoResponse` into the flow challenge response.
+/// client's `FidoResponse` -> flow challenge response.
 pub fn parse_webauthn_response(
     raw: &str,
     dc: &DeviceChallenge,

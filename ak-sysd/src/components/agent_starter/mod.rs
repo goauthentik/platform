@@ -4,6 +4,9 @@ use ak_platform::paths::SysdSocketID;
 use eyre::Result;
 use std::sync::Arc;
 
+#[cfg(windows)]
+mod win;
+
 pub struct AgentStarterComponent {
     ctx: SysdContext,
 }
@@ -74,7 +77,9 @@ fn agent_exec_path() -> Result<String> {
 }
 
 mod gui_user {
-    use eyre::{Result, bail};
+    use eyre::Result;
+    #[cfg(unix)]
+    use eyre::bail;
 
     /// Finds the currently GUI-logged-in user. No existing helper anywhere
     /// in the workspace — this is new platform code on every OS.
@@ -110,10 +115,8 @@ mod gui_user {
 
     #[cfg(target_os = "windows")]
     pub fn current_gui_user() -> Result<String> {
-        bail!(
-            "GUI-logged-in user detection not yet implemented on Windows — \
-             needs WTSEnumerateSessions via a new windows-sys dependency"
-        );
+        let session = super::win::active_session_id()?;
+        super::win::session_username(session)
     }
 }
 
@@ -189,10 +192,8 @@ mod exec_as_user {
     }
 
     #[cfg(windows)]
-    pub fn run(_path: &str, _user: &str, _debug: bool) -> Result<()> {
-        eyre::bail!(
-            "exec-as-user not yet implemented on Windows — needs WTSQueryUserToken + \
-             CreateProcessAsUserW via a new windows-sys dependency"
-        );
+    pub fn run(path: &str, _user: &str, debug: bool) -> Result<()> {
+        let session = super::win::active_session_id()?;
+        super::win::spawn_as_session(path, session, debug)
     }
 }

@@ -4,14 +4,12 @@ use ak_flow_executor::CookieStoreMutex;
 use eyre::Result;
 use reqwest::{Client, Url, redirect};
 
-/// Max redirect hops before giving up. Custom policies bypass reqwest's
-/// built-in cap, so we enforce our own.
+// Custom policies bypass reqwest's built-in cap, so cap manually.
 const MAX_HOPS: usize = 10;
 
-/// Builds a client sharing the flow executor's cookie jar that captures the
-/// terminal `goauthentik.io://platform/finished` redirect instead of following
-/// it — that scheme has no network handler, and the auth token rides in its
-/// query string. The captured URL lands in the returned slot.
+/// Client sharing the flow executor's cookie jar that captures the terminal
+/// `goauthentik.io://` redirect (carrying the auth token) instead of following
+/// it. The captured URL lands in the returned slot.
 pub fn build_finish_client(jar: Arc<CookieStoreMutex>) -> Result<(Client, Arc<Mutex<Option<Url>>>)> {
     let captured: Arc<Mutex<Option<Url>>> = Arc::new(Mutex::new(None));
     let slot = Arc::clone(&captured);

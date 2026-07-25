@@ -1,11 +1,9 @@
 use crate::state::SessionRecord;
 use eyre::Result;
 
-/// Terminates the process associated with an expired session. Ported from
-/// Go's `terminate_linux.go` on Linux; Windows support is a placeholder —
-/// `pkg/agent_system/session/terminate_other.go` was not read in this pass,
-/// so its exact behavior (real `TerminateProcess` call vs. a no-op stub) is
-/// unconfirmed.
+/// Terminates the process associated with an expired session. Linux sends
+/// SIGTERM then SIGKILL (ported from `terminate_linux.go`); Windows calls
+/// `TerminateProcess` (Go has no implementation to port). Untested on Windows.
 pub async fn terminate_session(session: &SessionRecord) -> Result<()> {
     if let Some(socket) = &session.local_socket {
         std::fs::remove_file(socket).ok();
@@ -26,12 +24,28 @@ pub async fn terminate_session(session: &SessionRecord) -> Result<()> {
 
     #[cfg(target_os = "windows")]
     {
-        tracing::warn!(
-            session = session.id,
-            "Windows session termination not yet implemented — read \
-             pkg/agent_system/session/terminate_other.go before implementing"
-        );
+        if let Some(pid) = session.pid {
+            terminate_pid(pid);
+        }
     }
 
     Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn terminate_pid(pid: u32) {
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{OpenProcess, PROCESS_TERMINATE, TerminateProcess};
+
+    unsafe {
+        match OpenProcess(PROCESS_TERMINATE, false, pid) {
+            Ok(handle) => {
+                if let Err(e) = TerminateProcess(handle, 1) {
+                    tracing::warn!(pid, "failed to terminate process: {e}");
+                }
+                let _ = CloseHandle(handle);
+            }
+            Err(e) => tracing::warn!(pid, "failed to open process for termination: {e}"),
+        }
+    }
 }

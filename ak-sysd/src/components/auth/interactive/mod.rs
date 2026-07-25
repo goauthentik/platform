@@ -33,8 +33,7 @@ fn random_id(len: usize) -> String {
     BASE64_STANDARD.encode(bytes)
 }
 
-/// True when the active domain's license permits interactive auth (mirrors
-/// the `AUTH_INTERACTIVE` capability advertised by the ping component).
+// Matches the AUTH_INTERACTIVE capability the ping component advertises.
 async fn interactive_supported(ctx: &SysdContext) -> bool {
     if let Ok(active) = ctx.domains.active().await
         && let Some(remote) = active.remote.read().await.as_ref()
@@ -78,7 +77,6 @@ async fn interactive_auth_init(
         .filter(|slug| !slug.is_empty())
         .ok_or_else(|| Status::internal("no authentication flow configured for domain brand"))?;
 
-    // 64 bytes to match Go's securecookie.GenerateRandomKey(64).
     let id = random_id(64);
     let mut txn = InteractiveAuthTransaction::new(
         id.clone(),
@@ -105,8 +103,7 @@ async fn interactive_auth_continue(
     };
     let mut txn = txn.lock().await;
 
-    // Already finished: re-return success with a fresh session id (Go does the
-    // same on repeat calls).
+    // Already finished: re-return success with a fresh session id, as Go does.
     if let Some(result) = txn.result {
         return Ok(InteractiveChallenge {
             txid: cont.txid,
