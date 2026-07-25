@@ -23,21 +23,23 @@ impl WindowsStore {
         if let Some(store) = guard.as_ref() {
             return Ok(store.clone());
         }
-        let store: Arc<CredentialStore> = windows_native_keyring_store::Store::new().map_err(other)?;
+        let store: Arc<CredentialStore> = windows_native_keyring_store::Store::new().map_err(map_kc)?;
         *guard = Some(store.clone());
         Ok(store)
     }
 
     fn entry(&self, service: &str, user: &str) -> Result<keyring_core::Entry, KeyringError> {
-        self.store()?.build(service, user, None).map_err(other)
+        self.store()?.build(service, user, None).map_err(map_kc)
     }
 }
 
-fn other<E>(e: E) -> KeyringError
-where
-    E: std::error::Error + Send + Sync + 'static,
-{
-    KeyringError::Other(eyre::Report::from(e))
+// Maps a keyring-core error, translating "no storage access" (the Credential Manager
+// is unreachable) into `NotAvailable` so callers can distinguish a missing backend.
+fn map_kc(e: keyring_core::Error) -> KeyringError {
+    match e {
+        keyring_core::Error::NoStorageAccess(_) => KeyringError::NotAvailable(),
+        e => KeyringError::Other(eyre::Report::from(e)),
+    }
 }
 
 impl KeyringStore for WindowsStore {
@@ -50,7 +52,7 @@ impl KeyringStore for WindowsStore {
         match self.entry(service, user)?.get_password() {
             Ok(p) => Ok(p),
             Err(NoEntry) => Err(KeyringError::NotFound()),
-            Err(e) => Err(other(e)),
+            Err(e) => Err(map_kc(e)),
         }
     }
 
@@ -64,7 +66,7 @@ impl KeyringStore for WindowsStore {
         match self.entry(service, user)?.set_password(&data) {
             Ok(()) => Ok(()),
             Err(NoEntry) => Err(KeyringError::NotFound()),
-            Err(e) => Err(other(e)),
+            Err(e) => Err(map_kc(e)),
         }
     }
 
@@ -77,7 +79,7 @@ impl KeyringStore for WindowsStore {
         match self.entry(service, user)?.delete_credential() {
             Ok(()) => Ok(()),
             Err(NoEntry) => Ok(()),
-            Err(e) => Err(other(e)),
+            Err(e) => Err(map_kc(e)),
         }
     }
 }

@@ -68,6 +68,7 @@ impl KeyringStore for MacosStore {
                 String::from_utf8(bytes).map_err(|e| KeyringError::Other(eyre::Report::from(e)))
             }
             Err(e) if e.code() == -25300 => Err(KeyringError::NotFound()),
+            Err(e) if e.code() == -25291 => Err(KeyringError::NotAvailable()),
             Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
         }
     }
@@ -80,8 +81,11 @@ impl KeyringStore for MacosStore {
         data: String,
     ) -> Result<(), KeyringError> {
         let options = self.build_options(service, user, &access);
-        set_generic_password_options(data.as_bytes(), options)
-            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))
+        match set_generic_password_options(data.as_bytes(), options) {
+            Ok(()) => Ok(()),
+            Err(e) if e.code() == -25291 => Err(KeyringError::NotAvailable()),
+            Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
+        }
     }
 
     async fn delete(
@@ -94,6 +98,7 @@ impl KeyringStore for MacosStore {
         match delete_generic_password_options(options) {
             Ok(()) => Ok(()),
             Err(e) if e.code() == -25300 => Ok(()),
+            Err(e) if e.code() == -25291 => Err(KeyringError::NotAvailable()),
             Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
         }
     }
