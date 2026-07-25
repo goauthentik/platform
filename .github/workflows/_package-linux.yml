@@ -52,6 +52,10 @@ jobs:
         with:
           name: authentik_${{ matrix.platform }}_ak-pam${{ inputs.artifact_suffix }}
           path: bin/
+      - run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt update
+          sudo apt install nfpm -y
       - shell: bash
         run: make vpkg/linux/package
         env:
