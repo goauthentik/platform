@@ -28,11 +28,11 @@ pub enum AuthCommands {
     },
 }
 
-pub async fn raw(app: App, client_id: &str) -> Result<()> {
+pub async fn raw(mut app: App, client_id: &str) -> Result<()> {
     let creds = raw::get_credentials(
         app.clone().user().await?,
         raw::CredentialsOpts {
-            profile: app.profile(),
+            profile: app.profile().await,
             client_id: client_id.to_owned(),
         },
     )
@@ -41,11 +41,11 @@ pub async fn raw(app: App, client_id: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn aws(app: App, client_id: &str, role_arn: &str, region: &str) -> Result<()> {
+pub async fn aws(mut app: App, client_id: &str, role_arn: &str, region: &str) -> Result<()> {
     let creds = aws::get_credentials(
         app.clone().user().await?,
         aws::CredentialsOpts {
-            profile: app.profile(),
+            profile: app.profile().await,
             client_id: client_id.to_owned(),
             role_arn: role_arn.to_owned(),
             region: region.to_owned(),
@@ -56,11 +56,11 @@ pub async fn aws(app: App, client_id: &str, role_arn: &str, region: &str) -> Res
     Ok(())
 }
 
-pub async fn kubectl(app: App, client_id: &str) -> Result<()> {
+pub async fn kubectl(mut app: App, client_id: &str) -> Result<()> {
     let creds = k8s::get_credentials(
         app.clone().user().await?,
         k8s::CredentialsOpts {
-            profile: app.profile(),
+            profile: app.profile().await,
             client_id: client_id.to_owned(),
         },
     )
