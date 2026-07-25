@@ -1,15 +1,24 @@
 use std::{error::Error, fmt::Display};
 
-#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+#[cfg(not(any(
+    all(target_os = "macos", not(any(test, debug_assertions))),
+    all(target_os = "linux", not(any(test, debug_assertions))),
+)))]
 use std::collections::HashMap;
 
-#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+#[cfg(not(any(
+    all(target_os = "macos", not(any(test, debug_assertions))),
+    all(target_os = "linux", not(any(test, debug_assertions))),
+)))]
 use keyring_core::{Entry, Error::NoEntry};
 
 use eyre::{Result, bail};
 
 #[cfg(target_os = "macos")]
 pub mod macos;
+
+#[cfg(target_os = "linux")]
+pub mod linux;
 
 pub mod cache;
 
@@ -37,13 +46,11 @@ pub fn init() -> Result<()> {
         keyring_core::set_default_store(store);
         return Ok(());
     }
+    // On Linux release builds credentials are stored directly via the Secret
+    // Service D-Bus API (see the get/set/delete implementations below); the
+    // connection is opened per call, so there is nothing to initialize here.
     #[cfg(target_os = "linux")]
-    {
-        let store = linux_keyutils_keyring_store::Store::new()
-            .map_err(|e| eyre::eyre!("failed to initialize Linux keyring store: {e}"))?;
-        keyring_core::set_default_store(store);
-        return Ok(());
-    }
+    return Ok(());
     bail!("no keychain implementation for current OS")
 }
 
@@ -79,7 +86,10 @@ pub enum Accessibility {
 // ---------------------------------------------------------------------------
 // Fallback: all other platforms (and macOS test/debug builds) use keyring store
 // ---------------------------------------------------------------------------
-#[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+#[cfg(not(any(
+    all(target_os = "macos", not(any(test, debug_assertions))),
+    all(target_os = "linux", not(any(test, debug_assertions))),
+)))]
 fn entry_modifies(
     _service: &str,
     _user: &str,
@@ -93,7 +103,13 @@ pub async fn get(service: &str, user: &str, access: Accessibility) -> Result<Str
     #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
     return macos::get(service, user, &access);
 
-    #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+    #[cfg(all(target_os = "linux", not(any(test, debug_assertions))))]
+    return linux::get(service, user, &access).await;
+
+    #[cfg(not(any(
+        all(target_os = "macos", not(any(test, debug_assertions))),
+        all(target_os = "linux", not(any(test, debug_assertions))),
+    )))]
     {
         let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
             .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
@@ -115,7 +131,13 @@ pub async fn set(
     #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
     return macos::set(service, user, &access, &data);
 
-    #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+    #[cfg(all(target_os = "linux", not(any(test, debug_assertions))))]
+    return linux::set(service, user, &access, &data).await;
+
+    #[cfg(not(any(
+        all(target_os = "macos", not(any(test, debug_assertions))),
+        all(target_os = "linux", not(any(test, debug_assertions))),
+    )))]
     {
         let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
             .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
@@ -132,7 +154,13 @@ pub async fn delete(service: &str, user: &str, access: Accessibility) -> Result<
     #[cfg(all(target_os = "macos", not(any(test, debug_assertions))))]
     return macos::delete(service, user, &access);
 
-    #[cfg(not(all(target_os = "macos", not(any(test, debug_assertions)))))]
+    #[cfg(all(target_os = "linux", not(any(test, debug_assertions))))]
+    return linux::delete(service, user, &access).await;
+
+    #[cfg(not(any(
+        all(target_os = "macos", not(any(test, debug_assertions))),
+        all(target_os = "linux", not(any(test, debug_assertions))),
+    )))]
     {
         let e = Entry::new_with_modifiers(service, user, &entry_modifies(service, user, access))
             .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
