@@ -28,12 +28,6 @@ endif
 TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
 
-_LD_FLAGS = ${LD_FLAGS} \
-	-X goauthentik.io/platform/pkg/meta.Version=${VERSION} \
-	-X goauthentik.io/platform/pkg/meta.BuildHash=${VERSION_HASH} \
-	-X goauthentik.io/platform/pkg/meta.Tag=${VERSION_TAG}
-GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
-
 RUST_BUILD_FLAGS ?=
 DOCKER_BUILDER_IMAGE ?= authentik/ak-builder
 CARGO_CRATE_DIR := $(subst $(TOP),,$(CURDIR))

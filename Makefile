@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
 
 .PHONY: all
 all: clean gen
@@ -15,17 +15,8 @@ clean:
 	rm -rf ${PWD}/bin/*
 
 .PHONY: gen
-gen: go-gen-proto rs-gen-proto ee/psso/gen
+gen: rs-gen-proto ee/psso/gen
 	go generate ./...
-
-go-gen-proto:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	protoc \
-		--go_out ${PWD} \
-		--go-grpc_out=${PWD} \
-		-I $(PROTO_DIR) \
-		$(PROTO_DIR)/**
 
 rs-gen-proto:
 	cargo install protoc-gen-prost
@@ -125,9 +116,6 @@ ak-platform/%:
 
 ak-sysd/%:
 	"$(MAKE)" -C "${TOP}/ak-sysd" $*
-
-sysd/%:
-	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*
 
 ak-agent/%:
 	"$(MAKE)" -C "${TOP}/ak-agent" $*

@@ -1,17 +1,5 @@
 version: 2
 updates:
-  - package-ecosystem: gomod
-    directory: "/"
-    schedule:
-      interval: daily
-      time: "04:00"
-    open-pull-requests-limit: 10
-    assignees:
-      - BeryJu
-    groups:
-      go_x:
-        patterns:
-          - golang.org/x/*
   - package-ecosystem: cargo
     directories:
       - /
