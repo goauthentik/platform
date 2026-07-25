@@ -4,9 +4,11 @@ use crate::state::TroubleshootNode;
 use crate::util::to_status;
 use ak_platform::generated::sys_ctrl::{
     Domain, DomainEnrollRequest, DomainEnrollResponse, DomainListResponse,
-    TroubleshootInspectResponse, system_ctrl_server::SystemCtrl,
+    TroubleshootInspectResponse, system_ctrl_server::{SystemCtrl, SystemCtrlServer},
 };
+use ak_platform::paths::SysdSocketID;
 use eyre::Result;
+use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 pub struct CtrlComponent {
@@ -54,6 +56,12 @@ impl Component for CtrlComponent {
 
     async fn stop(&self) -> Result<()> {
         Ok(())
+    }
+
+    fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
+        if matches!(socket, SysdSocketID::CTRL) {
+            routes.add_service(SystemCtrlServer::from_arc(self));
+        }
     }
 }
 
@@ -103,11 +111,9 @@ impl SystemCtrl for CtrlComponent {
             .ctx
             .registry
             .get::<crate::components::device::DeviceComponent>("device")
-        {
-            if let Err(e) = device.checkin_domain(&cfg.domain).await {
+            && let Err(e) = device.checkin_domain(&cfg.domain).await {
                 tracing::warn!("post-enroll checkin failed: {e:?}");
             }
-        }
 
         // Go's response never actually sets device_id (`&pb.DomainEnrollResponse{}`) —
         // porting that literal (likely latent-gap) behavior rather than fixing it silently.

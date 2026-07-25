@@ -2,14 +2,17 @@ use crate::components::{Component, SysdContext};
 use crate::util::to_status;
 use ak_platform::generated::agent::ResponseHeader;
 use ak_platform::generated::agent_platform::{
-    PlatformEndpointRequest, PlatformEndpointResponse, agent_platform_server::AgentPlatform,
+    PlatformEndpointRequest, PlatformEndpointResponse,
+    agent_platform_server::{AgentPlatform, AgentPlatformServer},
 };
+use ak_platform::paths::SysdSocketID;
 use authentik_client::models::DeviceFactsRequest;
 use eyre::{Result, bail};
 use jsonwebtoken::{
     Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, decode_header,
 };
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
@@ -79,6 +82,12 @@ impl Component for DeviceComponent {
 
     async fn stop(&self) -> Result<()> {
         Ok(())
+    }
+
+    fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
+        if matches!(socket, SysdSocketID::Default) {
+            routes.add_service(AgentPlatformServer::from_arc(self));
+        }
     }
 }
 

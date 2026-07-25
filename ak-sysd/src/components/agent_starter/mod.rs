@@ -1,6 +1,8 @@
 use crate::components::{Component, SysdContext};
 use crate::events::SysdEvent;
+use ak_platform::paths::SysdSocketID;
 use eyre::Result;
+use std::sync::Arc;
 
 pub struct AgentStarterComponent {
     ctx: SysdContext,
@@ -43,6 +45,10 @@ impl Component for AgentStarterComponent {
 
     async fn stop(&self) -> Result<()> {
         Ok(())
+    }
+
+    fn register(self: Arc<Self>, _socket: SysdSocketID, _routes: &mut tonic::service::RoutesBuilder) {
+        // No gRPC surface of its own.
     }
 }
 
@@ -142,23 +148,39 @@ mod exec_as_user {
     }
 
     /// On macOS, `path` may be a `.app` bundle directory, which can't be
-    /// exec'd directly — resolve to the single binary under `Contents/MacOS/`.
-    /// A full port would read `CFBundleExecutable` from `Info.plist`; this
-    /// picks the (expected-to-be-only) file in that directory instead.
+    /// exec'd directly — resolve it to the binary named by the bundle's
+    /// `Info.plist` `CFBundleExecutable` key.
+    ///
+    /// `Contents/MacOS/` is not guaranteed to hold a single executable: this
+    /// workspace's own `authentik Agent.app` bundle packages several sibling
+    /// binaries (`ak`, `ak-agent-desktop`, `ak-browser-support`, `ak-sysd`)
+    /// under the same directory, so picking "whichever file `read_dir` finds
+    /// first" is unreliable — verified live on a real build, where it picked
+    /// `ak-sysd` itself instead of `ak-agent-desktop`.
     #[cfg(target_os = "macos")]
     fn resolve_executable(path: &str) -> Result<String> {
         use eyre::bail;
         if !path.ends_with(".app") {
             return Ok(path.to_string());
         }
-        let macos_dir = std::path::Path::new(path).join("Contents/MacOS");
-        for entry in std::fs::read_dir(&macos_dir)? {
-            let entry = entry?;
-            if entry.file_type()?.is_file() {
-                return Ok(entry.path().to_string_lossy().to_string());
-            }
+        let info_plist = std::path::Path::new(path).join("Contents/Info");
+        let out = std::process::Command::new("defaults")
+            .arg("read")
+            .arg(&info_plist)
+            .arg("CFBundleExecutable")
+            .output()?;
+        if !out.status.success() {
+            bail!("failed to read CFBundleExecutable from {}", info_plist.display());
         }
-        bail!("no executable found in {}", macos_dir.display());
+        let exe_name = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        if exe_name.is_empty() {
+            bail!("CFBundleExecutable is empty in {}", info_plist.display());
+        }
+        Ok(std::path::Path::new(path)
+            .join("Contents/MacOS")
+            .join(exe_name)
+            .to_string_lossy()
+            .to_string())
     }
 
     #[cfg(all(unix, not(target_os = "macos")))]

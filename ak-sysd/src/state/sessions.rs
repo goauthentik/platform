@@ -49,7 +49,7 @@ impl SessionStore {
         let conn = Arc::clone(&self.conn);
         let s = s.clone();
         tokio::task::spawn_blocking(move || -> Result<()> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             conn.execute(
                 "INSERT INTO sessions (id, username, token_hash, expires_at, created_at, pid, ppid, local_socket, opened)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -74,7 +74,7 @@ impl SessionStore {
         let conn = Arc::clone(&self.conn);
         let id = id.to_string();
         tokio::task::spawn_blocking(move || -> Result<Option<SessionRecord>> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             let query = format!("SELECT {SELECT_COLS} FROM sessions WHERE id = ?1");
             Ok(conn
                 .query_row(&query, params![id], row_to_record)
@@ -87,7 +87,7 @@ impl SessionStore {
         let conn = Arc::clone(&self.conn);
         let s = s.clone();
         tokio::task::spawn_blocking(move || -> Result<()> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             conn.execute(
                 "INSERT INTO sessions (id, username, token_hash, expires_at, created_at, pid, ppid, local_socket, opened)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
@@ -120,7 +120,7 @@ impl SessionStore {
         let conn = Arc::clone(&self.conn);
         let id = id.to_string();
         tokio::task::spawn_blocking(move || -> Result<()> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             conn.execute("DELETE FROM sessions WHERE id = ?1", params![id])?;
             Ok(())
         })
@@ -130,7 +130,7 @@ impl SessionStore {
     pub async fn all_opened(&self) -> Result<Vec<SessionRecord>> {
         let conn = Arc::clone(&self.conn);
         tokio::task::spawn_blocking(move || -> Result<Vec<SessionRecord>> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             let query = format!("SELECT {SELECT_COLS} FROM sessions WHERE opened != 0");
             let mut stmt = conn.prepare(&query)?;
             let rows = stmt.query_map([], row_to_record)?;

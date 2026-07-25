@@ -68,7 +68,7 @@ impl StateStore {
         let conn = Arc::clone(&self.conn);
         let domain = domain.to_string();
         tokio::task::spawn_blocking(move || -> Result<_> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             let mut stmt = conn.prepare(
                 "SELECT agent_config_json, brand_json, last_updated FROM domain_cache WHERE domain = ?1",
             )?;
@@ -101,7 +101,7 @@ impl StateStore {
         let agent_config_json = agent_config_json.to_string();
         let brand_json = brand_json.to_string();
         tokio::task::spawn_blocking(move || -> Result<()> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             conn.execute(
                 "INSERT INTO domain_cache (domain, agent_config_json, brand_json, last_updated)
                  VALUES (?1, ?2, ?3, ?4)
@@ -129,7 +129,7 @@ impl StateStore {
     pub async fn inspect(&self) -> Result<TroubleshootNode> {
         let conn = Arc::clone(&self.conn);
         tokio::task::spawn_blocking(move || -> Result<TroubleshootNode> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             let mut tables_stmt = conn.prepare(
                 "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
             )?;
@@ -197,7 +197,7 @@ impl ComponentKv {
         let component = self.component.clone();
         let key = key.to_string();
         tokio::task::spawn_blocking(move || -> Result<Option<String>> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             let mut stmt = conn
                 .prepare("SELECT value FROM component_state WHERE component = ?1 AND key = ?2")?;
             let mut rows = stmt.query(rusqlite::params![component, key])?;
@@ -216,7 +216,7 @@ impl ComponentKv {
         let key = key.to_string();
         let value = value.to_string();
         tokio::task::spawn_blocking(move || -> Result<()> {
-            let conn = conn.lock().unwrap();
+            let conn = conn.lock().unwrap_or_else(|e| e.into_inner());
             conn.execute(
                 "INSERT INTO component_state (component, key, value) VALUES (?1, ?2, ?3)
                  ON CONFLICT(component, key) DO UPDATE SET value = excluded.value",

@@ -1,8 +1,10 @@
 use crate::components::{Component, SysdContext};
 use crate::events::SysdEvent;
 use ak_platform::generated::sys_directory::{
-    GetRequest, Group, Groups, User, Users, system_directory_server::SystemDirectory,
+    GetRequest, Group, Groups, User, Users,
+    system_directory_server::{SystemDirectory, SystemDirectoryServer},
 };
+use ak_platform::paths::SysdSocketID;
 use authentik_client::apis::configuration::Configuration;
 use authentik_client::models;
 use eyre::Result;
@@ -12,10 +14,6 @@ use tonic::{Request, Response, Status};
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
 const PAGE_SIZE: i32 = 100;
-
-pub struct DirectoryFetchedEvent {
-    pub domain: String,
-}
 
 pub struct DirectoryComponent {
     ctx: SysdContext,
@@ -209,7 +207,6 @@ impl DirectoryComponent {
         *self.users.write().await = users;
         *self.groups.write().await = groups;
 
-        self.ctx.events.dispatch::<DirectoryFetchedEvent>();
         self.ctx.events.dispatch(SysdEvent::DirectoryFetched {
             domain: domain.cfg.domain.clone(),
         });
@@ -253,6 +250,12 @@ impl Component for DirectoryComponent {
 
     async fn stop(&self) -> Result<()> {
         Ok(())
+    }
+
+    fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
+        if matches!(socket, SysdSocketID::Default) {
+            routes.add_service(SystemDirectoryServer::from_arc(self));
+        }
     }
 }
 

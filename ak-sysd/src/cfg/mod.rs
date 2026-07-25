@@ -2,11 +2,14 @@ use ak_platform::storage::cfgmgr::schema::{Config as ConfigSchema, ConfigChanged
 use eyre::Result;
 use serde::{Deserialize, Serialize};
 
+pub mod domain;
+pub mod managed;
+
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Config {
-    debug: bool,
-    runtime_dir: String,
-    domain_dir: String,
+    pub debug: bool,
+    pub runtime_dir: String,
+    pub domain_dir: String,
 }
 
 impl ConfigSchema for Config {

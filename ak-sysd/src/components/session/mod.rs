@@ -2,12 +2,15 @@ use crate::components::{Component, SysdContext};
 use crate::state::SessionRecord;
 use ak_platform::generated::session::{
     CloseSessionRequest, CloseSessionResponse, OpenSessionRequest, OpenSessionResponse,
-    SessionStatusRequest, SessionStatusResponse, session_manager_server::SessionManager,
+    SessionStatusRequest, SessionStatusResponse,
+    session_manager_server::{SessionManager, SessionManagerServer},
 };
+use ak_platform::paths::SysdSocketID;
 use base64::{Engine, prelude::BASE64_STANDARD};
 use eyre::Result;
 use rand::RngCore;
 use sha2::{Digest, Sha256};
+use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
 mod terminate;
@@ -123,6 +126,12 @@ impl Component for SessionComponent {
 
     async fn stop(&self) -> Result<()> {
         Ok(())
+    }
+
+    fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
+        if matches!(socket, SysdSocketID::Default) {
+            routes.add_service(SessionManagerServer::from_arc(self));
+        }
     }
 }
 

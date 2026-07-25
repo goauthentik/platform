@@ -1,13 +1,15 @@
 use crate::agent::Agent;
 use ak_platform::paths::sysd_config_file;
-use clap::{Error, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use eyre::Result;
 
 pub mod agent;
 pub mod cfg;
 pub mod components;
-pub mod util;
+pub mod context;
 pub mod events;
+pub mod state;
+pub mod util;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik System Daemon")]
@@ -36,6 +38,7 @@ pub async fn main() -> Result<()> {
         Commands::Agent => {
             let ag = Agent::new(cli.config).await?;
             ag.start().await?;
+            ag.wait().await?;
         }
     }
     Ok(())
