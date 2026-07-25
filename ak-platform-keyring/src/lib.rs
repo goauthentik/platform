@@ -55,9 +55,6 @@ pub type DefaultStore = linux::LinuxStore;
 #[cfg(all(not(any(test, debug_assertions)), target_os = "windows"))]
 pub type DefaultStore = windows::WindowsStore;
 
-// A single shared store instance, constructed lazily on first use and reused by every
-// caller. State lives inside each store (behind `Mutex` fields), so sharing one instance
-// keeps that state consistent across calls.
 static INSTANCE: LazyLock<DefaultStore> = LazyLock::new(DefaultStore::new);
 
 /// Returns the [`KeyringStore`] instance for the current build.

@@ -1,15 +1,29 @@
 use std::collections::HashMap;
 
 use secret_service::{EncryptionType, SecretService};
+use tokio::sync::OnceCell;
 
 use super::{Accessibility, KeyringError, KeyringStore};
 
 #[derive(Default)]
-pub struct LinuxStore ;
+pub struct LinuxStore {
+    service: OnceCell<SecretService<'static>>,
+}
 
 impl LinuxStore {
     pub fn new() -> Self {
-        LinuxStore
+        LinuxStore::default()
+    }
+
+    // Returns the shared connection, connecting on first use.
+    async fn service(&self) -> Result<&SecretService<'static>, KeyringError> {
+        self.service
+            .get_or_try_init(|| async {
+                SecretService::connect(EncryptionType::Dh)
+                    .await
+                    .map_err(other)
+            })
+            .await
     }
 }
 
@@ -18,11 +32,9 @@ impl KeyringStore for LinuxStore {
         &self,
         service: &str,
         user: &str,
-        access: Accessibility,
+        _access: Accessibility,
     ) -> Result<String, KeyringError> {
-        let ss = SecretService::connect(EncryptionType::Dh)
-            .await
-            .map_err(other)?;
+        let ss = self.service().await?;
         let collection = ss.get_default_collection().await.map_err(other)?;
         collection.ensure_unlocked().await.map_err(other)?;
 
@@ -48,12 +60,10 @@ impl KeyringStore for LinuxStore {
         &self,
         service: &str,
         user: &str,
-        access: Accessibility,
+        _access: Accessibility,
         data: String,
     ) -> Result<(), KeyringError> {
-        let ss = SecretService::connect(EncryptionType::Dh)
-            .await
-            .map_err(other)?;
+        let ss = self.service().await?;
         let collection = ss.get_default_collection().await.map_err(other)?;
         collection.ensure_unlocked().await.map_err(other)?;
 
@@ -74,11 +84,9 @@ impl KeyringStore for LinuxStore {
         &self,
         service: &str,
         user: &str,
-        access: Accessibility,
+        _access: Accessibility,
     ) -> Result<(), KeyringError> {
-        let ss = SecretService::connect(EncryptionType::Dh)
-            .await
-            .map_err(other)?;
+        let ss = self.service().await?;
         let collection = ss.get_default_collection().await.map_err(other)?;
         collection.ensure_unlocked().await.map_err(other)?;
 
