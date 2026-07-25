@@ -158,20 +158,6 @@ define sign_binary
 		--input $(1)
 endef
 
-define go_generate_resources
-	go tool goversioninfo \
-		-icon="${TOP}/vpkg/windows/resources/icon.ico" \
-		-company="Authentik Security Inc." \
-		-copyright="2025 Authentik Security Inc." \
-		-file-version=${VERSION} \
-		-product-version=${VERSION} \
-		-comment="$(1)" \
-		-description="$(1)" \
-		-product-name="$(1)" \
-		-skip-versioninfo \
-		-64
-endef
-
 define nfpm_package
 	VERSION_PKG=${VERSION_PKG} ARCH=${ARCH} \
 		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \

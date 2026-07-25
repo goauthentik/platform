@@ -58,15 +58,16 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - ak-pam
-          - ak-nss
-          - ak-browser-support
-          - ak-platform
-          - ak-cli
           - ak-agent
-          - ak-api-cli-gen
           - ak-agent-desktop
+          - ak-api-cli-gen
+          - ak-browser-support
+          - ak-cli
+          - ak-nss
+          - ak-pam
+          - ak-platform
           - ak-platform-facts
+          - ak-sysd
         platform:
           - macos-26
           - ubuntu-24.04
@@ -272,13 +273,6 @@ jobs:
           flags: go-integration
           files: ${{ github.workspace }}/junit.xml
           report_type: test_results
-  build_go_e2e:
-    uses: ./.github/workflows/_build-go.yml
-    with:
-      go_build_flags: "-cover"
-      artifact_suffix: "-e2e"
-      platforms: '["ubuntu-24.04"]'
-    secrets: inherit
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
     with:
@@ -287,7 +281,7 @@ jobs:
       platforms: '["ubuntu-24.04"]'
     secrets: inherit
   package_linux_e2e:
-    needs: [build_go_e2e, build_rs_e2e]
+    needs: build_rs_e2e
     uses: ./.github/workflows/_package-linux.yml
     with:
       artifact_suffix: "-e2e"

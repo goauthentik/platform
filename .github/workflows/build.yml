@@ -7,9 +7,6 @@ on:
     branches: ["main"]
 
 jobs:
-  call-build-go:
-    uses: ./.github/workflows/_build-go.yml
-    secrets: inherit
   call-build-js:
     uses: ./.github/workflows/_build-js.yml
     secrets: inherit
@@ -25,28 +22,24 @@ jobs:
 
   call-package-darwin:
     needs:
-      - call-build-go
       - call-build-rs
       - call-build-ee-psso
     uses: ./.github/workflows/_package-darwin.yml
     secrets: inherit
   call-package-windows:
     needs:
-      - call-build-go
       - call-build-rs
       - call-build-ee-wcp
     uses: ./.github/workflows/_package-windows.yml
     secrets: inherit
   call-package-linux:
     needs:
-      - call-build-go
       - call-build-rs
     uses: ./.github/workflows/_package-linux.yml
     secrets: inherit
 
   call-deploy:
     needs:
-      - call-build-go
       - call-build-js
       - call-build-rs
       - call-package-darwin

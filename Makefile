@@ -64,29 +64,9 @@ lint-rs:
 		--workspace \
 		${RS_TEST_FLAGS}
 
-lint-go:
-	golangci-lint run
-
 .PHONY: lint
 lint: $(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-rs
-	"$(MAKE)" lint-go
-
-test:
-	go tool gotest.tools/gotestsum \
-		--junitfile ${PWD}/junit.xml \
-		--jsonfile ${TEST_OUTPUT} \
-		-- \
-		-p 1 \
-		-v \
-		-coverprofile=${PWD}/coverage.txt \
-		-covermode=atomic \
-		-count=${TEST_COUNT} \
-		${GO_TEST_FLAGS} \
-		$(shell go list ${GO_TEST_FLAGS} ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb)
-	go tool cover \
-		-html ${PWD}/coverage.txt \
-		-o ${PWD}/coverage.html
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
@@ -98,19 +78,6 @@ test-e2e-ci:
 	$(call cargo_test,ak-platform-e2e)
 
 test-e2e-convert:
-	GO_COVDIRS=$$(find "${PWD}/ak-platform-e2e/coverage/" -mindepth 1 -maxdepth 1 -type d ! -name rs 2>/dev/null | xargs echo | sed 's/ /,/g'); \
-	if [ -n "$$GO_COVDIRS" ]; then \
-		go tool covdata textfmt \
-			-i "$$GO_COVDIRS" \
-			--pkg "$$(go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g')" \
-			-o "${PWD}/coverage_in_container.txt" && \
-		go tool cover \
-			-html "${PWD}/coverage_in_container.txt" \
-			-o "${PWD}/coverage_in_container.html"; \
-	else \
-		echo "No Go in-container coverage found, skipping Go coverage conversion"; \
-	fi
-	find ${PWD}/ak-platform-e2e/coverage
 	$(call rs_e2e_coverage_convert)
 
 test-setup:

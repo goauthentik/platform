@@ -28,10 +28,11 @@ jobs:
         target:
           - ak-agent
           - ak-agent-desktop
-          - ak-pam
-          - ak-nss
           - ak-browser-support
           - ak-cli
+          - ak-nss
+          - ak-pam
+          - ak-sysd
         platform: ${{ fromJSON(inputs.platforms) }}
         exclude:
           # pam & nss are linux-only targets

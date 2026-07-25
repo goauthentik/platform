@@ -5,11 +5,6 @@ on:
     types: [created, published]
 
 jobs:
-  call-build-go:
-    uses: ./.github/workflows/_build-go.yml
-    secrets: inherit
-    with:
-      is_release: true
   call-build-js:
     uses: ./.github/workflows/_build-js.yml
     secrets: inherit
@@ -33,7 +28,6 @@ jobs:
 
   call-package-darwin:
     needs:
-      - call-build-go
       - call-build-rs
       - call-build-ee-psso
     uses: ./.github/workflows/_package-darwin.yml
@@ -42,7 +36,6 @@ jobs:
       is_release: true
   call-package-windows:
     needs:
-      - call-build-go
       - call-build-rs
       - call-build-ee-wcp
     uses: ./.github/workflows/_package-windows.yml
@@ -51,7 +44,6 @@ jobs:
       is_release: true
   call-package-linux:
     needs:
-      - call-build-go
       - call-build-rs
     uses: ./.github/workflows/_package-linux.yml
     secrets: inherit
@@ -60,7 +52,6 @@ jobs:
 
   call-deploy:
     needs:
-      - call-build-go
       - call-build-js
       - call-build-rs
       - call-package-darwin
