@@ -66,8 +66,7 @@ async fn validate(user: &str, b64key: &str, typ: &str) -> Result<()> {
     Ok(())
 }
 
-/// Reads locally-trusted SSH host public keys, mirroring Go's
-/// `getLocalHostKeys` (`pkg/agent_system/cli/ssh_verify.go`).
+/// Reads locally-trusted SSH host public keys
 fn local_host_keys() -> Result<Vec<Vec<u8>>> {
     let vendor = ak_platform_facts::vendor::gather();
     let Some(serde_json::Value::Array(keys)) = vendor.get("ssh_host_keys") else {
@@ -82,4 +81,15 @@ fn local_host_keys() -> Result<Vec<Vec<u8>>> {
         }
     }
     Ok(out)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_verify() {
+        let local = local_host_keys().unwrap();
+        eprint!("{:?}", local);
+    }
 }

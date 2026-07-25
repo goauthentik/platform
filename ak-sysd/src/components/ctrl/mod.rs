@@ -20,28 +20,28 @@ impl CtrlComponent {
     pub fn new(ctx: SysdContext) -> CtrlComponent {
         CtrlComponent { ctx }
     }
-}
 
-fn validate_domain_name(name: &str) -> Result<(), Status> {
-    let valid = !name.is_empty()
-        && name
-            .chars()
-            .next()
-            .is_some_and(|c| c.is_ascii_alphanumeric())
-        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-');
-    if !valid {
-        return Err(Status::invalid_argument(
-            "domain name must match ^[a-zA-Z0-9][a-zA-Z0-9-]*$",
-        ));
+    fn validate_domain_name(&self, name: &str) -> Result<(), Status> {
+        let valid = !name.is_empty()
+            && name
+                .chars()
+                .next()
+                .is_some_and(|c| c.is_ascii_alphanumeric())
+            && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-');
+        if !valid {
+            return Err(Status::invalid_argument(
+                "domain name must match ^[a-zA-Z0-9][a-zA-Z0-9-]*$",
+            ));
+        }
+        Ok(())
     }
-    Ok(())
-}
 
-fn node_to_response(node: TroubleshootNode) -> TroubleshootInspectResponse {
-    TroubleshootInspectResponse {
-        bucket: node.bucket,
-        kv: node.kv.into_iter().collect(),
-        children: node.children.into_iter().map(node_to_response).collect(),
+    fn node_to_response(&self, node: TroubleshootNode) -> TroubleshootInspectResponse {
+        TroubleshootInspectResponse {
+            bucket: node.bucket,
+            kv: node.kv.into_iter().collect(),
+            children: node.children.into_iter().map(|n| self.node_to_response(n)).collect(),
+        }
     }
 }
 
@@ -90,7 +90,7 @@ impl SystemCtrl for CtrlComponent {
         request: Request<DomainEnrollRequest>,
     ) -> Result<Response<DomainEnrollResponse>, Status> {
         let req = request.into_inner();
-        validate_domain_name(&req.name)?;
+        self.validate_domain_name(&req.name)?;
 
         let cfg = self
             .ctx
@@ -149,6 +149,6 @@ impl SystemCtrl for CtrlComponent {
         _request: Request<()>,
     ) -> Result<Response<TroubleshootInspectResponse>, Status> {
         let node = self.ctx.state.inspect().await.map_err(to_status)?;
-        Ok(Response::new(node_to_response(node)))
+        Ok(Response::new(self.node_to_response(node)))
     }
 }
