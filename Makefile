@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
 
 .PHONY: all
 all: clean gen
@@ -155,6 +155,9 @@ ak-cli/%:
 
 ak-platform/%:
 	"$(MAKE)" -C "${TOP}/ak-platform" $*
+
+ak-sysd/%:
+	"$(MAKE)" -C "${TOP}/ak-sysd" $*
 
 sysd/%:
 	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*

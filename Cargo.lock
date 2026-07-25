@@ -372,6 +372,7 @@ dependencies = [
  "tower-http 0.7.0",
  "tracing",
  "windows 0.62.2",
+ "windows_exe_info",
  "winreg 0.56.0",
 ]
 
