@@ -15,7 +15,9 @@ fn read_token() -> Result<String> {
     }
 
     if std::io::stdin().is_terminal() {
-        Ok(rpassword::prompt_password("Enter authentik enrollment token: ")?)
+        Ok(rpassword::prompt_password(
+            "Enter authentik enrollment token: ",
+        )?)
     } else {
         let mut line = String::new();
         std::io::stdin().read_line(&mut line)?;

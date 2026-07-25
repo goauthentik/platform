@@ -4,7 +4,8 @@ use crate::state::TroubleshootNode;
 use crate::util::to_status;
 use ak_platform::generated::sys_ctrl::{
     Domain, DomainEnrollRequest, DomainEnrollResponse, DomainListResponse,
-    TroubleshootInspectResponse, system_ctrl_server::{SystemCtrl, SystemCtrlServer},
+    TroubleshootInspectResponse,
+    system_ctrl_server::{SystemCtrl, SystemCtrlServer},
 };
 use ak_platform::paths::SysdSocketID;
 use eyre::Result;
@@ -111,9 +112,10 @@ impl SystemCtrl for CtrlComponent {
             .ctx
             .registry
             .get::<crate::components::device::DeviceComponent>("device")
-            && let Err(e) = device.checkin_domain(&cfg.domain).await {
-                tracing::warn!("post-enroll checkin failed: {e:?}");
-            }
+            && let Err(e) = device.checkin_domain(&cfg.domain).await
+        {
+            tracing::warn!("post-enroll checkin failed: {e:?}");
+        }
 
         // Go's response never actually sets device_id (`&pb.DomainEnrollResponse{}`) —
         // porting that literal (likely latent-gap) behavior rather than fixing it silently.

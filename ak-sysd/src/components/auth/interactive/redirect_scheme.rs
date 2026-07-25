@@ -10,7 +10,9 @@ const MAX_HOPS: usize = 10;
 /// Client sharing the flow executor's cookie jar that captures the terminal
 /// `goauthentik.io://` redirect (carrying the auth token) instead of following
 /// it. The captured URL lands in the returned slot.
-pub fn build_finish_client(jar: Arc<CookieStoreMutex>) -> Result<(Client, Arc<Mutex<Option<Url>>>)> {
+pub fn build_finish_client(
+    jar: Arc<CookieStoreMutex>,
+) -> Result<(Client, Arc<Mutex<Option<Url>>>)> {
     let captured: Arc<Mutex<Option<Url>>> = Arc::new(Mutex::new(None));
     let slot = Arc::clone(&captured);
 
@@ -27,6 +29,9 @@ pub fn build_finish_client(jar: Arc<CookieStoreMutex>) -> Result<(Client, Arc<Mu
         attempt.follow()
     });
 
-    let client = Client::builder().cookie_provider(jar).redirect(policy).build()?;
+    let client = Client::builder()
+        .cookie_provider(jar)
+        .redirect(policy)
+        .build()?;
     Ok((client, captured))
 }

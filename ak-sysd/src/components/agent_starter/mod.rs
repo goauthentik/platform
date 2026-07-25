@@ -50,7 +50,11 @@ impl Component for AgentStarterComponent {
         Ok(())
     }
 
-    fn register(self: Arc<Self>, _socket: SysdSocketID, _routes: &mut tonic::service::RoutesBuilder) {
+    fn register(
+        self: Arc<Self>,
+        _socket: SysdSocketID,
+        _routes: &mut tonic::service::RoutesBuilder,
+    ) {
         // No gRPC surface of its own.
     }
 }
@@ -173,7 +177,10 @@ mod exec_as_user {
             .arg("CFBundleExecutable")
             .output()?;
         if !out.status.success() {
-            bail!("failed to read CFBundleExecutable from {}", info_plist.display());
+            bail!(
+                "failed to read CFBundleExecutable from {}",
+                info_plist.display()
+            );
         }
         let exe_name = String::from_utf8_lossy(&out.stdout).trim().to_string();
         if exe_name.is_empty() {

@@ -1,5 +1,6 @@
 use crate::state::StateStore;
 use ak_meta::user_agent;
+use ak_platform_keyring::KeyringStore;
 use authentik_client::apis::configuration::Configuration;
 use authentik_client::models::{AgentConfig, CurrentBrand, EnrollRequest};
 use eyre::{Result, bail, eyre};
@@ -111,12 +112,13 @@ impl DomainManager {
     }
 
     async fn resolve_token(&self, cfg: &DomainConfig) -> String {
-        match ak_platform_keyring::store().get(
-            &keyring_service(),
-            &cfg.domain,
-            ak_platform_keyring::Accessibility::Always,
-        )
-        .await
+        match ak_platform_keyring::store()
+            .get(
+                &keyring_service(),
+                &cfg.domain,
+                ak_platform_keyring::Accessibility::Always,
+            )
+            .await
         {
             Ok(token) => token,
             Err(_) => cfg.fallback_token.clone(),
@@ -142,13 +144,14 @@ impl DomainManager {
 
     pub async fn save_domain(&self, cfg: DomainConfig) -> Result<()> {
         validate_domain_name(&cfg.domain)?;
-        if let Err(e) = ak_platform_keyring::store().set(
-            &keyring_service(),
-            &cfg.domain,
-            ak_platform_keyring::Accessibility::Always,
-            cfg.token.clone(),
-        )
-        .await
+        if let Err(e) = ak_platform_keyring::store()
+            .set(
+                &keyring_service(),
+                &cfg.domain,
+                ak_platform_keyring::Accessibility::Always,
+                cfg.token.clone(),
+            )
+            .await
         {
             tracing::warn!("failed to save domain token to keyring, falling back to file: {e:?}");
         }
@@ -179,12 +182,13 @@ impl DomainManager {
         if path.exists() {
             std::fs::remove_file(&path)?;
         }
-        if let Err(e) = ak_platform_keyring::store().delete(
-            &keyring_service(),
-            name,
-            ak_platform_keyring::Accessibility::Always,
-        )
-        .await
+        if let Err(e) = ak_platform_keyring::store()
+            .delete(
+                &keyring_service(),
+                name,
+                ak_platform_keyring::Accessibility::Always,
+            )
+            .await
         {
             tracing::warn!("failed to delete domain token from keyring: {e:?}");
         }

@@ -1,10 +1,10 @@
 use crate::cfg::domain::DomainManager;
+use crate::components::Component;
 use crate::components::agent_starter::AgentStarterComponent;
 use crate::components::auth::AuthComponent;
 use crate::components::ctrl::CtrlComponent;
 use crate::components::device::DeviceComponent;
 use crate::components::ping::PingComponent;
-use crate::components::Component;
 use crate::context::SysdContext;
 use crate::events::{ConfigChangeKind, SysdEvent};
 use crate::state::StateStore;
@@ -171,7 +171,11 @@ impl Agent {
             SocketPermMode::Everyone,
             self.default_routes.clone(),
         );
-        self.serve(SysdSocketID::CTRL, SocketPermMode::Admin, self.ctrl_routes.clone());
+        self.serve(
+            SysdSocketID::CTRL,
+            SocketPermMode::Admin,
+            self.ctrl_routes.clone(),
+        );
 
         Ok(())
     }
