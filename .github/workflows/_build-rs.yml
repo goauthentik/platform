@@ -113,7 +113,7 @@ jobs:
       - run: |
           make ${{ matrix.target }}/build
         env:
-          RUST_BUILD_FLAGS: ${{ inputs.rust_build_flags }}
+          RUSTFLAGS: ${{ (matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static ' || '' }}${{ inputs.rust_build_flags }}
           AK_IS_RELEASE: ${{ inputs.is_release }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
