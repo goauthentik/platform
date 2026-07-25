@@ -322,7 +322,7 @@ impl DomainManager {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, debug_assertions))]
 pub mod test {
     use std::sync::Arc;
 

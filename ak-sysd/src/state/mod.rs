@@ -228,7 +228,7 @@ impl ComponentKv {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, debug_assertions))]
 pub mod test {
     use tempfile::TempDir;
 
