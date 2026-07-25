@@ -61,7 +61,6 @@ impl Ping for PingComponent {
             capabilities.push(Capability::Debug as i32);
         }
 
-        // Mirrors Go's `InteractiveSupported()` (license status != UNLICENSED).
         if let Ok(active) = self.ctx.domains.active().await
             && let Some(remote) = active.remote.read().await.as_ref()
             && let Some(status) = remote.license_status

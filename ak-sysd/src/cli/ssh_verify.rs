@@ -70,12 +70,14 @@ async fn validate(user: &str, b64key: &str, typ: &str) -> Result<()> {
 fn local_host_keys() -> Result<Vec<Vec<u8>>> {
     let vendor = ak_platform_facts::vendor::gather();
     let Some(serde_json::Value::Array(keys)) = vendor.get("ssh_host_keys") else {
+        tracing::debug!("No ssh_host_keys!");
         return Ok(vec![]);
     };
     let mut out = Vec::with_capacity(keys.len());
     for k in keys {
         let Some(k) = k.as_str() else { continue };
-        match PublicKey::from_openssh(k) {
+        let kk = k.strip_prefix("localhost ").unwrap_or(k);
+        match PublicKey::from_openssh(kk) {
             Ok(pk) => out.push(pk.to_bytes()?),
             Err(e) => tracing::warn!("failed to parse local host key: {e:?}"),
         }
@@ -90,6 +92,6 @@ mod test {
     #[tokio::test]
     async fn test_verify() {
         let local = local_host_keys().unwrap();
-        eprint!("{:?}", local);
+        assert!(local.len() > 0);
     }
 }

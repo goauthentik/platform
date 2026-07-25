@@ -227,3 +227,16 @@ impl ComponentKv {
         .await?
     }
 }
+
+#[cfg(any(test, debug_assertions))]
+pub mod test {
+    use tempfile::TempDir;
+
+    use crate::state::StateStore;
+
+    pub fn test_store() -> StateStore {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("ak-sysd-state.db");
+        StateStore::open(path.to_str().unwrap()).unwrap()
+    }
+}

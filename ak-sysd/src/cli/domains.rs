@@ -5,8 +5,7 @@ use eyre::Result;
 use std::io::IsTerminal;
 
 /// Reads an enrollment token: `AK_SYS_INSECURE_ENV_TOKEN` first, otherwise an
-/// interactive password-style prompt (or a plain stdin line if not a TTY),
-/// mirroring Go's `readPassword` (`pkg/agent_system/cli/domains_join.go`).
+/// interactive password-style prompt (or a plain stdin line if not a TTY)
 fn read_token() -> Result<String> {
     if let Ok(env_token) = std::env::var("AK_SYS_INSECURE_ENV_TOKEN")
         && !env_token.is_empty()

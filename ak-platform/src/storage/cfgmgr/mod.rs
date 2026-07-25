@@ -118,6 +118,27 @@ where
     }
 }
 
+#[cfg(any(test, debug_assertions))]
+pub mod test {
+    use std::sync::Arc;
+
+    use tokio::sync::Notify;
+
+    use super::{Config, ConfigManager};
+
+    pub fn test_config_manager<T>() -> Arc<ConfigManager<T>>
+    where
+        T: Config + 'static,
+    {
+        Arc::new(ConfigManager {
+            path: String::new(),
+            loaded: T::default().into(),
+            reload_notify: Arc::new(Notify::new()),
+            _phantom: std::marker::PhantomData,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::{

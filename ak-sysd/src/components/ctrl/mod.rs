@@ -40,7 +40,11 @@ impl CtrlComponent {
         TroubleshootInspectResponse {
             bucket: node.bucket,
             kv: node.kv.into_iter().collect(),
-            children: node.children.into_iter().map(|n| self.node_to_response(n)).collect(),
+            children: node
+                .children
+                .into_iter()
+                .map(|n| self.node_to_response(n))
+                .collect(),
         }
     }
 }
@@ -150,5 +154,24 @@ impl SystemCtrl for CtrlComponent {
     ) -> Result<Response<TroubleshootInspectResponse>, Status> {
         let node = self.ctx.state.inspect().await.map_err(to_status)?;
         Ok(Response::new(self.node_to_response(node)))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use ak_platform::generated::sys_ctrl::system_ctrl_server::SystemCtrl;
+    use tonic::Request;
+
+    use crate::{components::ctrl::CtrlComponent, context::test::test_context};
+
+    #[tokio::test]
+    async fn test_inspect() {
+        let ctrl = CtrlComponent::new(test_context().await);
+        let res = ctrl
+            .troubleshoot_inspect(Request::new(()))
+            .await
+            .unwrap()
+            .into_inner();
+        assert_eq!(res.bucket, "root");
     }
 }

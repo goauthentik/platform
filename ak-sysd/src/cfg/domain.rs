@@ -321,3 +321,19 @@ impl DomainManager {
         Ok(())
     }
 }
+
+#[cfg(any(test, debug_assertions))]
+pub mod test {
+    use std::sync::Arc;
+
+    use crate::{cfg::domain::DomainManager, state::StateStore};
+    use tempfile::TempDir;
+
+    pub async fn test_manager(state: Arc<StateStore>) -> Arc<DomainManager> {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("ak-sysd-domains");
+        DomainManager::new(path.to_str().unwrap().to_string(), state)
+            .await
+            .unwrap()
+    }
+}

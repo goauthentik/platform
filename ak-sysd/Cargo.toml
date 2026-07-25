@@ -12,38 +12,39 @@ name = "ak-sysd"
 path = "src/main.rs"
 
 [dependencies]
-ak-platform = { path = "../ak-platform" }
-ak-platform-keyring = { path = "../ak-platform-keyring" }
-ak-platform-facts = { path = "../ak-platform-facts" }
-ak-meta = { path = "../ak-meta" }
-authentik-client = { workspace = true }
-tokio = { workspace = true, features = ["time", "signal"] }
-tokio-util = "0.7"
-clap = { version = "4.6.1", features = ["derive"] }
-clap_complete = "4"
-serde = { workspace = true }
-serde_json = { workspace = true }
-tonic = { workspace = true }
-tonic-prost = { workspace = true }
-tracing = { workspace = true }
-sentry = { workspace = true }
-sentry-tower = { version = "0.48.2", features = ["http"] }
-tower-http = { version = "0.7.0", features = ["trace"] }
-eyre = { workspace = true }
-chrono = { workspace = true }
-pbjson-types = { workspace = true }
-rusqlite = { version = "0.32", features = ["bundled"] }
-rand = "0.9"
-sha2 = "0.10"
-hex = "0.4"
-base64 = "0.23.0"
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 ak-agent = { path = "../ak-agent" }
 ak-flow-executor = { path = "../ak-flow-executor" }
+ak-meta = { path = "../ak-meta" }
+ak-platform = { path = "../ak-platform" }
+ak-platform-facts = { path = "../ak-platform-facts" }
+ak-platform-keyring = { path = "../ak-platform-keyring" }
+authentik-client = { workspace = true }
+base64 = "0.23.0"
+chrono = { workspace = true }
+clap = { version = "4.6.1", features = ["derive"] }
+clap_complete = "4"
+eyre = { workspace = true }
+hex = "0.4"
+jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+pbjson-types = { workspace = true }
+rand = "0.9"
 reqwest = { workspace = true }
+rpassword = "7"
+rusqlite = { version = "0.32", features = ["bundled"] }
+sentry = { workspace = true }
+sentry-tower = { version = "0.48.2", features = ["http"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = "0.10"
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
 subtle = "2"
-rpassword = "7"
+tempfile = "3"
+tokio = { workspace = true, features = ["time", "signal"] }
+tokio-util = "0.7"
+tonic = { workspace = true }
+tonic-prost = { workspace = true }
+tower-http = { version = "0.7.0", features = ["trace"] }
+tracing = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2.186"

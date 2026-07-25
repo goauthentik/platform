@@ -23,8 +23,7 @@ pub async fn facts() -> Result<()> {
 }
 
 /// Recursively renders `TroubleshootInspectResponse.children` as nested
-/// subtrees, mirroring Go's `renderInspectAsTree`
-/// (`pkg/agent_system/cli/troubleshoot_inspect.go`).
+/// subtrees
 fn inspect_to_tree_node(r: &TroubleshootInspectResponse) -> TreeNode {
     let mut node = TreeNode::new(r.bucket.clone());
     let mut kv: Vec<_> = r.kv.iter().collect();
@@ -48,9 +47,6 @@ pub async fn inspect() -> Result<()> {
 
     let mut root = inspect_to_tree_node(&inspect);
 
-    // Unlike Go (which fetches Capabilities over the same ctrl-socket client
-    // — that RPC is only ever registered on the default socket, so that call
-    // would fail at runtime), dial the default socket separately here.
     match Client::new(SysdSocketID::Default).await {
         Ok(default_client) => match default_client.ping().capabilities(()).await {
             Ok(caps) => {

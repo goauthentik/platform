@@ -45,7 +45,6 @@ pub struct SysdContext {
 }
 
 impl SysdContext {
-    #[allow(clippy::too_many_arguments)]
     pub fn new(
         cfg: Arc<ConfigManager<Config>>,
         domains: Arc<DomainManager>,
@@ -59,5 +58,25 @@ impl SysdContext {
             cancel: CancellationToken::new(),
             registry: ComponentRegistry::default(),
         })
+    }
+}
+
+#[cfg(any(test, debug_assertions))]
+pub mod test {
+    use std::sync::Arc;
+
+    use ak_platform::storage::cfgmgr::{ConfigManager, test::test_config_manager};
+
+    use crate::{
+        cfg::{Config, domain::test::test_manager},
+        context::SysdContext,
+        state::test::test_store,
+    };
+
+    pub async fn test_context() -> SysdContext {
+        let cm: Arc<ConfigManager<Config>> = test_config_manager();
+        let state = Arc::new(test_store());
+        let domains = test_manager(Arc::clone(&state)).await;
+        SysdContext::new(cm, domains, state).unwrap()
     }
 }
