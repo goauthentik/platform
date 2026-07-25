@@ -109,7 +109,7 @@ async fn interactive_auth_continue(
             txid: cont.txid,
             finished: true,
             result: result as i32,
-            session_id: random_id(48),
+            session_id: random_id(64),
             ..Default::default()
         });
     }
@@ -123,6 +123,11 @@ async fn interactive_auth_continue(
 pub async fn interactive_auth_async(
     ctx: &SysdContext,
 ) -> Result<InteractiveAuthAsyncResponse, Status> {
+    if !interactive_supported(ctx).await {
+        return Err(Status::unavailable(
+            "interactive authentication is not licensed for this domain",
+        ));
+    }
     let active = ctx.domains.active().await.map_err(to_status)?;
     let ia = endpoints_agents_connectors_auth_ia_create(&active.api)
         .await

@@ -97,9 +97,9 @@ impl InteractiveAuthTransaction {
                     }
                     return Box::pin(self.get_next_challenge()).await;
                 }
+                // Combined password field: Go returns a bare challenge here.
                 Ok(InteractiveChallenge {
                     txid: self.id.clone(),
-                    component: "ak-stage-identification".to_string(),
                     ..Default::default()
                 })
             }
@@ -201,6 +201,12 @@ impl InteractiveAuthTransaction {
             .map_err(|_| Status::internal("failed to read captured redirect"))?
             .take()
             .ok_or_else(|| Status::internal("interactive auth did not reach finish redirect"))?;
+
+        if final_url.host_str() != Some("platform") || final_url.path() != "/finished" {
+            return Err(Status::internal(format!(
+                "failed to extract code from final URL: {final_url}"
+            )));
+        }
 
         let token = final_url
             .query_pairs()
