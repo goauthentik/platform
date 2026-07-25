@@ -1,6 +1,7 @@
 use crate::agent::Agent;
 use ak_platform::paths::sysd_config_file;
 use clap::{Parser, Subcommand};
+use clap_complete::Shell;
 use eyre::Result;
 
 pub mod agent;
@@ -44,6 +45,11 @@ enum Commands {
         user: String,
         b64key: String,
         r#type: String,
+    },
+    /// Generate shell completion scripts
+    Completion {
+        /// Shell to generate completions for
+        shell: Shell,
     },
 }
 
@@ -103,6 +109,7 @@ pub async fn main() -> Result<()> {
         } => {
             self::cli::ssh_verify::verify(user, b64key, r#type).await;
         }
+        Commands::Completion { shell } => self::cli::completions::completions(shell).await?,
     }
     Ok(())
 }
