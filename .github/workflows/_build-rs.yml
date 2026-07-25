@@ -78,6 +78,8 @@ jobs:
         with:
           rustflags: ""
           cache: false
+      - if: ${{ matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025' }}
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
       - name: Force real MSVC link.exe
         # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
         # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
