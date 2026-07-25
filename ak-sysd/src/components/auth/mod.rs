@@ -17,15 +17,20 @@ use tonic::{Request, Response, Status};
 
 mod apple;
 mod authz;
+mod interactive;
 mod token;
 
 pub struct AuthComponent {
     ctx: SysdContext,
+    txns: interactive::Txns,
 }
 
 impl AuthComponent {
     pub fn new(ctx: SysdContext) -> AuthComponent {
-        AuthComponent { ctx }
+        AuthComponent {
+            ctx,
+            txns: interactive::new_txns(),
+        }
     }
 }
 
@@ -69,20 +74,20 @@ impl SystemAuthToken for AuthComponent {
 impl SystemAuthInteractive for AuthComponent {
     async fn interactive_auth(
         &self,
-        _request: Request<InteractiveAuthRequest>,
+        request: Request<InteractiveAuthRequest>,
     ) -> Result<Response<InteractiveChallenge>, Status> {
-        Err(Status::unimplemented(
-            "interactive auth flow not yet ported",
-        ))
+        interactive::interactive_auth(&self.ctx, &self.txns, request.into_inner())
+            .await
+            .map(Response::new)
     }
 
     async fn interactive_auth_async(
         &self,
         _request: Request<()>,
     ) -> Result<Response<InteractiveAuthAsyncResponse>, Status> {
-        Err(Status::unimplemented(
-            "interactive auth flow not yet ported",
-        ))
+        interactive::interactive_auth_async(&self.ctx)
+            .await
+            .map(Response::new)
     }
 }
 

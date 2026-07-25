@@ -1,7 +1,7 @@
 use crate::state::StateStore;
 use ak_meta::user_agent;
 use authentik_client::apis::configuration::Configuration;
-use authentik_client::models::{AgentConfig, EnrollRequest};
+use authentik_client::models::{AgentConfig, CurrentBrand, EnrollRequest};
 use eyre::{Result, bail, eyre};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -36,6 +36,9 @@ pub struct LoadedDomain {
     pub cfg: DomainConfig,
     pub api: Configuration,
     pub remote: Arc<RwLock<Option<AgentConfig>>>,
+    /// The domain's brand, cached alongside `remote`. Supplies the
+    /// authentication flow slug the interactive-auth flow executor drives.
+    pub brand: Arc<RwLock<Option<CurrentBrand>>>,
 }
 
 fn build_api_client(authentik_url: &str, token: &str) -> Configuration {
@@ -93,6 +96,7 @@ impl DomainManager {
                 loaded.push(Arc::new(LoadedDomain {
                     api: build_api_client(&cfg.authentik_url, &cfg.token),
                     remote: Arc::new(RwLock::new(None)),
+                    brand: Arc::new(RwLock::new(None)),
                     cfg,
                 }));
             }
@@ -161,6 +165,7 @@ impl DomainManager {
         let loaded = Arc::new(LoadedDomain {
             api: build_api_client(&cfg.authentik_url, &cfg.token),
             remote: Arc::new(RwLock::new(None)),
+            brand: Arc::new(RwLock::new(None)),
             cfg,
         });
         let mut domains = self.domains.write().await;
@@ -252,10 +257,24 @@ impl DomainManager {
         };
         let remote = self.test(&d.cfg).await?;
         let cfg_json = serde_json::to_string(&remote)?;
+
+        // Cache the brand alongside the agent config; its
+        // `flow_authentication` slug drives the interactive-auth flow.
+        let brand = authentik_client::apis::core_api::core_brands_current_retrieve(&d.api)
+            .await
+            .map_err(|e| eyre!("failed to fetch current brand: {e}"))?;
+        let brand_json = serde_json::to_string(&brand)?;
+
         self.state
-            .domain_cache_set(domain_name, &cfg_json, "", chrono::Utc::now().timestamp())
+            .domain_cache_set(
+                domain_name,
+                &cfg_json,
+                &brand_json,
+                chrono::Utc::now().timestamp(),
+            )
             .await?;
         *d.remote.write().await = Some(remote);
+        *d.brand.write().await = Some(brand);
         Ok(())
     }
 

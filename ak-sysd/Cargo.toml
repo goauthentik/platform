@@ -39,6 +39,8 @@ hex = "0.4"
 base64 = "0.23.0"
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 ak-agent = { path = "../ak-agent" }
+ak-flow-executor = { path = "../ak-flow-executor" }
+reqwest = { workspace = true }
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
 subtle = "2"
 rpassword = "7"
@@ -48,3 +50,10 @@ libc = "0.2.186"
 
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.56", features = ["serialization-serde"] }
+windows = { version = "0.62.2", features = [
+    "Win32_System_RemoteDesktop",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_System_Environment",
+    "Win32_Foundation",
+] }

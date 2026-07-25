@@ -339,6 +339,7 @@ name = "ak-sysd"
 version = "0.50.3"
 dependencies = [
  "ak-agent",
+ "ak-flow-executor",
  "ak-meta",
  "ak-platform",
  "ak-platform-facts",
@@ -354,6 +355,7 @@ dependencies = [
  "libc",
  "pbjson-types",
  "rand 0.9.4",
+ "reqwest 0.13.4",
  "rpassword",
  "rusqlite",
  "sentry",
@@ -369,6 +371,7 @@ dependencies = [
  "tonic-prost",
  "tower-http 0.7.0",
  "tracing",
+ "windows 0.62.2",
  "winreg 0.56.0",
 ]
 
