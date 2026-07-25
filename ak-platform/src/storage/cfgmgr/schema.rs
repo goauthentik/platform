@@ -10,7 +10,7 @@ pub trait Config:
     fn post_load(&mut self) -> impl Future<Output = Result<()>> + Send {
         async { Ok(()) }
     }
-    fn pre_save(&self) -> impl Future<Output = Result<()>> + Send {
+    fn pre_save(&mut self) -> impl Future<Output = Result<()>> + Send {
         async { Ok(()) }
     }
     fn post_update(&self, _prev: Self) -> impl Future<Output = Result<ConfigChangedType>> + Send {
