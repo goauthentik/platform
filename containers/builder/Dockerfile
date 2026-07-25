@@ -11,7 +11,7 @@ RUN apt-get update && \
         build-essential \
         pkg-config \
         libssl-dev \
-        curl \
+        curl git \
         ca-certificates \
         libpam0g-dev libudev-dev zstd && \
     rm -rf /var/lib/apt/lists/*
