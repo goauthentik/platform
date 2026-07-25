@@ -111,7 +111,7 @@ impl DomainManager {
     }
 
     async fn resolve_token(&self, cfg: &DomainConfig) -> String {
-        match ak_platform_keyring::get(
+        match ak_platform_keyring::store().get(
             &keyring_service(),
             &cfg.domain,
             ak_platform_keyring::Accessibility::Always,
@@ -142,7 +142,7 @@ impl DomainManager {
 
     pub async fn save_domain(&self, cfg: DomainConfig) -> Result<()> {
         validate_domain_name(&cfg.domain)?;
-        if let Err(e) = ak_platform_keyring::set(
+        if let Err(e) = ak_platform_keyring::store().set(
             &keyring_service(),
             &cfg.domain,
             ak_platform_keyring::Accessibility::Always,
@@ -179,7 +179,7 @@ impl DomainManager {
         if path.exists() {
             std::fs::remove_file(&path)?;
         }
-        if let Err(e) = ak_platform_keyring::delete(
+        if let Err(e) = ak_platform_keyring::store().delete(
             &keyring_service(),
             name,
             ak_platform_keyring::Accessibility::Always,

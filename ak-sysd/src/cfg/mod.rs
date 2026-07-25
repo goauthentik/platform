@@ -17,7 +17,7 @@ impl ConfigSchema for Config {
         Ok(())
     }
 
-    async fn pre_save(&self) -> Result<()> {
+    async fn pre_save(&mut self) -> Result<()> {
         Ok(())
     }
 
