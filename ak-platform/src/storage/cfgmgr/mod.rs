@@ -8,6 +8,8 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::{Notify, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use tokio::task::JoinHandle;
+use tokio_util::sync::CancellationToken;
 
 use crate::storage::cfgmgr::schema::Config;
 use eyre::Result;
@@ -41,19 +43,21 @@ where
             create_dir_all(parent)?;
         }
         cm.load().await?;
+        Ok(Arc::new(cm))
+    }
+
+    /// Spawns the background file watcher that reloads this config on
+    /// external changes. Runs until `cancel` fires; the returned handle
+    /// should be awaited during shutdown to ensure the watcher (and any
+    /// native resources it holds) has actually finished tearing down.
+    pub fn spawn_watch(self: &Arc<Self>, cancel: CancellationToken) -> JoinHandle<()> {
         tracing::debug!("Starting config watch");
-        let shared = Arc::new(cm);
-        let watch_arc = Arc::clone(&shared);
-        let res_arc = Arc::clone(&watch_arc);
+        let watch_arc = Arc::clone(self);
         tokio::spawn(async move {
-            match watch_arc.watch().await {
-                Ok(_) => (),
-                Err(e) => {
-                    tracing::warn!("failed to watch files: {e:?}");
-                }
-            };
-        });
-        Ok(res_arc)
+            if let Err(e) = watch_arc.watch(cancel).await {
+                tracing::warn!("failed to watch files: {e:?}");
+            }
+        })
     }
 
     pub fn get(self) -> T {
@@ -233,6 +237,7 @@ mod tests {
 
         let mgr = ConfigManager::<TestCfg>::new(path.clone()).await.unwrap();
         assert_eq!(mgr.loaded.read().await.field, "foo");
+        mgr.spawn_watch(CancellationToken::new());
 
         // Allow the watcher thread to start and register with the OS.
         std::thread::sleep(Duration::from_millis(500));

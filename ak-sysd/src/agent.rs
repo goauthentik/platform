@@ -14,7 +14,9 @@ use ak_platform::storage::cfgmgr::ConfigManager;
 use eyre::Result;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use tokio::task::JoinHandle;
+use tokio_util::sync::CancellationToken;
 use tonic::service::RoutesBuilder;
 use tonic::transport::Server;
 use tower_http::trace::{DefaultOnFailure, DefaultOnRequest, TraceLayer};
@@ -30,10 +32,15 @@ pub struct Agent {
     components: HashMap<String, Arc<dyn Component>>,
     default_routes: RoutesBuilder,
     ctrl_routes: RoutesBuilder,
+    /// Handles for tasks spawned by this `Agent` (config watcher, gRPC
+    /// servers). Awaited in `stop()` so shutdown doesn't return until
+    /// everything spawned has actually finished.
+    background: Mutex<Vec<JoinHandle<()>>>,
 }
 
 impl Agent {
     pub async fn new(config_path: String) -> Result<Self> {
+        let cancel = CancellationToken::new();
         let cfg = ConfigManager::<crate::cfg::Config>::new(config_path).await?;
         let (runtime_dir, domain_dir) = {
             let read = cfg.read().await;
@@ -43,7 +50,8 @@ impl Agent {
         let state = Arc::new(StateStore::open(&format!("{runtime_dir}/sysd-state.db"))?);
         let domains = DomainManager::new(domain_dir, Arc::clone(&state)).await?;
 
-        let ctx = SysdContext::new(cfg, domains, state)?;
+        let watch_handle = cfg.spawn_watch(cancel.clone());
+        let ctx = SysdContext::new(cfg, domains, state, cancel)?;
 
         let mut default_routes = RoutesBuilder::default();
         let mut ctrl_routes = RoutesBuilder::default();
@@ -55,6 +63,7 @@ impl Agent {
             components,
             default_routes,
             ctrl_routes,
+            background: Mutex::new(vec![watch_handle]),
         };
         ag.watch_config_changes();
         Ok(ag)
@@ -98,7 +107,7 @@ impl Agent {
         let ctx = self.ctx.clone();
         let components = self.components.clone();
         let mut rx = ctx.events.subscribe();
-        tokio::spawn(async move {
+        let handle = tokio::spawn(async move {
             loop {
                 tokio::select! {
                     ev = rx.recv() => {
@@ -131,11 +140,15 @@ impl Agent {
                 }
             }
         });
+        self.background
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(handle);
     }
 
     fn serve(&self, socket: SysdSocketID, perm: SocketPermMode, routes: RoutesBuilder) {
         let cancel = self.ctx.cancel.clone();
-        tokio::spawn(async move {
+        let handle = tokio::spawn(async move {
             let listener = match listen(sysd_socket_path(socket), perm).await {
                 Ok(l) => l,
                 Err(e) => {
@@ -158,6 +171,10 @@ impl Agent {
                 tracing::error!("socket server exited: {e:?}");
             }
         });
+        self.background
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(handle);
     }
 
     pub async fn start(&self) -> Result<()> {
@@ -190,6 +207,17 @@ impl Agent {
             tracing::info!(component = id, "stopping component");
             if let Err(e) = c.stop().await {
                 tracing::warn!("component failed to stop: {e:?}");
+            }
+        }
+
+        // Wait for every task this Agent spawned (config watcher, gRPC
+        // servers) to actually finish, so shutdown doesn't return until
+        // they're really gone.
+        let handles: Vec<_> =
+            std::mem::take(&mut *self.background.lock().unwrap_or_else(|e| e.into_inner()));
+        for h in handles {
+            if let Err(e) = h.await {
+                tracing::warn!("background task panicked: {e:?}");
             }
         }
         Ok(())

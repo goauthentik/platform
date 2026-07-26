@@ -49,13 +49,14 @@ impl SysdContext {
         cfg: Arc<ConfigManager<Config>>,
         domains: Arc<DomainManager>,
         state: Arc<StateStore>,
+        cancel: CancellationToken,
     ) -> Result<Self> {
         Ok(Self {
             cfg,
             domains,
             state,
             events: EventBus::new(),
-            cancel: CancellationToken::new(),
+            cancel,
             registry: ComponentRegistry::default(),
         })
     }
@@ -67,6 +68,7 @@ pub mod testutils {
     use std::sync::Arc;
 
     use ak_platform::storage::cfgmgr::{ConfigManager, testutils::test_config_manager};
+    use tokio_util::sync::CancellationToken;
 
     use crate::{
         cfg::{Config, domain::testutils::test_manager},
@@ -78,6 +80,6 @@ pub mod testutils {
         let cm: Arc<ConfigManager<Config>> = test_config_manager();
         let state = Arc::new(test_store());
         let domains = test_manager(Arc::clone(&state)).await;
-        SysdContext::new(cm, domains, state).unwrap()
+        SysdContext::new(cm, domains, state, CancellationToken::new()).unwrap()
     }
 }
