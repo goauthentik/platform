@@ -3,7 +3,7 @@ use ak_meta::user_agent;
 use ak_platform_keyring::KeyringStore;
 use authentik_client::apis::configuration::Configuration;
 use authentik_client::models::{AgentConfig, CurrentBrand, EnrollRequest};
-use eyre::{Result, bail, eyre};
+use eyre::{Context, Result, bail, eyre};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -219,9 +219,9 @@ impl DomainManager {
         authentik_url: String,
         one_time_token: String,
     ) -> Result<DomainConfig> {
-        let serial = ak_platform_facts::serial().unwrap_or_default();
+        let serial = ak_platform_facts::serial().context("failed to get serial")?;
         let hostname = ak_platform_facts::hostname();
-        let api = build_api_client(&authentik_url, &one_time_token)?;
+        let api = build_api_client(&authentik_url, &one_time_token).context("failed to get API client")?;
         let res = authentik_client::apis::endpoints_api::endpoints_agents_connectors_enroll_create(
             &api,
             EnrollRequest::new(serial, hostname),
