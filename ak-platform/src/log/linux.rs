@@ -4,14 +4,12 @@ use log::Log;
 use simplelog::{Config, WriteLogger};
 use std::fs::File;
 use syslog::BasicLogger;
-use syslog::{Facility, Formatter3164};
+use syslog::Formatter3164;
 
 pub fn init_log(name: &str) -> Result<Box<dyn Log>> {
     let formatter = Formatter3164 {
-        facility: Facility::LOG_USER,
-        hostname: None,
         process: name.into(),
-        pid: std::process::id(),
+        ..Default::default()
     };
     return match syslog::unix(formatter) {
         Ok(logger) => Ok(Box::new(BasicLogger::new(logger))),

@@ -89,7 +89,7 @@ impl LogBuilder {
 
     pub fn enable(&self) {
         let filter = self.build_filter();
-        let inner = match (self.allow_platform && should_switch()) || self.force_stdout {
+        let inner = match (self.allow_platform && env_interactive()) || self.force_stdout {
             true => self.get_stdout_logger(),
             false => match self.get_platform_logger() {
                 Ok(l) => l,
@@ -108,12 +108,12 @@ pub fn set_log_level(level: LevelFilter) {
     log::set_max_level(level);
 }
 
-pub fn should_switch() -> bool {
+pub fn env_interactive() -> bool {
     if stdout().is_terminal() {
-        return false;
+        return true;
     }
     #[cfg(debug_assertions)]
-    return false;
-    #[cfg(not(debug_assertions))]
     return true;
+    #[cfg(not(debug_assertions))]
+    return false;
 }
