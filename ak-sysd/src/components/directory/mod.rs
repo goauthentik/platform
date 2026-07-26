@@ -117,6 +117,7 @@ impl Component for DirectoryComponent {
                 nss_gid_offset,
             };
             let jitter = rand::random::<u64>() % 30;
+            tracing::info!(jitter, "Waiting seconds before fetching...");
             tokio::select! {
                 _ = tokio::time::sleep(Duration::from_secs(jitter)) => {}
                 _ = ctx.cancel.cancelled() => return,

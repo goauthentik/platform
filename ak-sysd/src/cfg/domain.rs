@@ -139,12 +139,12 @@ impl DomainManager {
             }
         }
 
+        tracing::info!("Loaded {} domains", loaded.len());
         *self.domains.write().await = loaded;
 
         if let Err(e) = self.load_managed().await {
             tracing::warn!("failed to load managed domain config: {e:?}");
         }
-
         Ok(())
     }
 
