@@ -4,6 +4,7 @@ use ak_platform_keyring::KeyringStore;
 use authentik_client::apis::configuration::Configuration;
 use authentik_client::models::{AgentConfig, CurrentBrand, EnrollRequest};
 use eyre::{Result, bail, eyre};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -41,13 +42,26 @@ pub struct LoadedDomain {
     pub brand: Arc<RwLock<Option<CurrentBrand>>>,
 }
 
-fn build_api_client(authentik_url: &str, token: &str) -> Configuration {
-    Configuration {
+fn build_api_client(authentik_url: &str, token: &str) -> Result<Configuration> {
+    Ok(Configuration {
         base_path: format!("{}/api/v3", authentik_url.trim_end_matches('/')),
         bearer_access_token: Some(token.to_string()),
         user_agent: Some(user_agent()),
+        client: reqwest_middleware::ClientBuilder::new(
+            Client::builder()
+                .default_headers(
+                    [(
+                        reqwest::header::AUTHORIZATION,
+                        reqwest::header::HeaderValue::from_str(&format!("Bearer {}", token,))?,
+                    )]
+                    .into_iter()
+                    .collect(),
+                )
+                .build()?,
+        )
+        .build(),
         ..Default::default()
-    }
+    })
 }
 
 /// Rejects domain names that would let a saved/deleted file escape
@@ -94,7 +108,7 @@ impl DomainManager {
                 let mut cfg: DomainConfig = serde_json::from_str(&raw)?;
                 cfg.token = self.resolve_token(&cfg).await;
                 loaded.push(Arc::new(LoadedDomain {
-                    api: build_api_client(&cfg.authentik_url, &cfg.token),
+                    api: build_api_client(&cfg.authentik_url, &cfg.token)?,
                     remote: Arc::new(RwLock::new(None)),
                     brand: Arc::new(RwLock::new(None)),
                     cfg,
@@ -165,7 +179,7 @@ impl DomainManager {
         std::fs::write(&path, json)?;
 
         let loaded = Arc::new(LoadedDomain {
-            api: build_api_client(&cfg.authentik_url, &cfg.token),
+            api: build_api_client(&cfg.authentik_url, &cfg.token)?,
             remote: Arc::new(RwLock::new(None)),
             brand: Arc::new(RwLock::new(None)),
             cfg,
@@ -207,7 +221,7 @@ impl DomainManager {
     ) -> Result<DomainConfig> {
         let serial = ak_platform_facts::serial().unwrap_or_default();
         let hostname = ak_platform_facts::hostname();
-        let api = build_api_client(&authentik_url, &one_time_token);
+        let api = build_api_client(&authentik_url, &one_time_token)?;
         let res = authentik_client::apis::endpoints_api::endpoints_agents_connectors_enroll_create(
             &api,
             EnrollRequest::new(serial, hostname),
@@ -227,7 +241,7 @@ impl DomainManager {
 
     /// Verifies connectivity for a domain, mirroring Go's `Test()`.
     pub async fn test(&self, cfg: &DomainConfig) -> Result<AgentConfig> {
-        let api = build_api_client(&cfg.authentik_url, &cfg.token);
+        let api = build_api_client(&cfg.authentik_url, &cfg.token)?;
         let remote = authentik_client::apis::endpoints_api::endpoints_agents_connectors_agent_config_retrieve(&api)
             .await
             .map_err(|e| eyre!("connectivity test failed: {e}"))?;

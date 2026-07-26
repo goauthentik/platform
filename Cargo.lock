@@ -367,6 +367,7 @@ dependencies = [
  "pbjson-types",
  "rand 0.9.4",
  "reqwest 0.13.4",
+ "reqwest-middleware",
  "rpassword",
  "rusqlite",
  "sentry",
