@@ -408,3 +408,85 @@ pub mod testutils {
             .unwrap()
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
+mod tests {
+    use super::*;
+    use crate::state::testutils::test_store;
+    use authentik_client::models::{AgentConfig, CurrentBrand};
+    use std::sync::Arc;
+    use tempfile::TempDir;
+
+    /// Regression test for the domain_cache write/read round trip: a value
+    /// written via `domain_cache_set` must come back out through
+    /// `domain_cache_get` and pre-seed `LoadedDomain.remote`/`.brand` on the
+    /// next `load_all`, without ever touching the network.
+    #[tokio::test]
+    async fn load_all_pre_seeds_remote_and_brand_from_domain_cache() {
+        let state = Arc::new(test_store());
+        let dir = TempDir::new().unwrap();
+
+        let cfg = DomainConfig {
+            enabled: true,
+            authentik_url: "https://authentik.example".to_string(),
+            domain: "cached-domain".to_string(),
+            managed: false,
+            fallback_token: "atoken".to_string(),
+            token: String::new(),
+        };
+        std::fs::write(
+            dir.path().join(cfg.file_name()),
+            serde_json::to_string(&cfg).unwrap(),
+        )
+        .unwrap();
+
+        let remote = AgentConfig {
+            device_id: "device-123".to_string(),
+            ..Default::default()
+        };
+        let brand = CurrentBrand {
+            flow_authentication: Some("default-authentication-flow".to_string()),
+            ..Default::default()
+        };
+
+        state
+            .domain_cache_set(
+                &cfg.domain,
+                &serde_json::to_string(&remote).unwrap(),
+                &serde_json::to_string(&brand).unwrap(),
+                1234,
+            )
+            .await
+            .unwrap();
+
+        let manager = DomainManager::new(dir.path().to_str().unwrap().to_string(), state)
+            .await
+            .unwrap();
+
+        let domains = manager.domains().await;
+        let loaded = domains
+            .iter()
+            .find(|d| d.cfg.domain == "cached-domain")
+            .expect("domain should be loaded");
+
+        let loaded_remote = loaded
+            .remote
+            .read()
+            .await
+            .clone()
+            .expect("remote should be pre-seeded from cache");
+        assert_eq!(loaded_remote.device_id, "device-123");
+
+        let loaded_brand = loaded
+            .brand
+            .read()
+            .await
+            .clone()
+            .expect("brand should be pre-seeded from cache");
+        assert_eq!(
+            loaded_brand.flow_authentication,
+            Some("default-authentication-flow".to_string())
+        );
+    }
+}

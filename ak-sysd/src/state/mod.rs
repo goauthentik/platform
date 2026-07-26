@@ -238,7 +238,7 @@ pub mod testutils {
 
     pub fn test_store() -> StateStore {
         let dir = TempDir::new().unwrap();
-        let path = dir.path().join("ak-sysd-state.db");
+        let path = dir.keep().join("ak-sysd-state.db");
         StateStore::open(path.to_str().unwrap()).unwrap()
     }
 }
