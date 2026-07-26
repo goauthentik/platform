@@ -1,6 +1,7 @@
 use std::{env, path::PathBuf, time::Duration};
 
 use ak_flow_executor::executor::FlowExecutor;
+use ak_platform::log::{LevelFilter, LogBuilder};
 use ak_platform::string::PlatformString;
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
 use eyre::{Context, ContextCompat, Result, bail};
@@ -14,9 +15,10 @@ pub mod test_machine;
 pub use test_machine::TestMachine;
 
 pub fn test_init() {
-    ak_platform::log::LogBuilder::new(PlatformString::new())
+    LogBuilder::new(PlatformString::new())
         .force_stdout(true)
-        .with_filter("warn,ak-platform-e2e=trace")
+        .default_level(LevelFilter::Warn)
+        .with_filter("ak-platform-e2e", LevelFilter::Trace)
         .enable();
 }
 

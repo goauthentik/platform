@@ -1,5 +1,9 @@
 use ak_meta::full_version;
-use ak_platform::{paths::sysd_config_file, string::PlatformString};
+use ak_platform::{
+    log::{LevelFilter, LogBuilder, set_log_level},
+    paths::sysd_config_file,
+    string::PlatformString,
+};
 use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 use eyre::Result;
@@ -80,16 +84,17 @@ enum TroubleshootCommands {
 #[ak_meta::main("ak-sysd")]
 pub async fn main() -> Result<()> {
     let cli = SysdArgs::parse();
-    ak_platform::log::LogBuilder::new(
+    LogBuilder::new(
         PlatformString::new()
             .with_linux("ak-sysd")
             .with_windows("authentik System Service"),
     )
     .allow_platform(true)
-    .with_filter("info,ak-sysd=trace")
+    .default_level(LevelFilter::Info)
+    .with_filter("ak-sysd", LevelFilter::Trace)
     .enable();
     if cli.debug {
-        ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
+        set_log_level(LevelFilter::Debug);
     }
     tracing::trace!("authentik sysd v{}", full_version());
 

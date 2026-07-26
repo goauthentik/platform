@@ -21,7 +21,7 @@ pub mod unix;
 
 pub struct LogBuilder {
     name: PlatformString,
-    filter: Option<String>,
+    filter: Vec<(String, LevelFilter)>,
     allow_platform: bool,
     force_stdout: bool,
     default_level: LevelFilter,
@@ -31,7 +31,7 @@ impl LogBuilder {
     pub fn new(name: PlatformString) -> Self {
         LogBuilder {
             name,
-            filter: None,
+            filter: vec![],
             allow_platform: true,
             force_stdout: false,
             default_level: LevelFilter::Trace,
@@ -48,8 +48,8 @@ impl LogBuilder {
         self
     }
 
-    pub fn with_filter<T: ToString>(mut self, filter: T) -> Self {
-        self.filter = Some(filter.to_string());
+    pub fn with_filter<T: ToString>(mut self, module: T, level: LevelFilter) -> Self {
+        self.filter.push((module.to_string(), level));
         self
     }
 
@@ -60,12 +60,9 @@ impl LogBuilder {
 
     fn build_filter(&self) -> env_filter::Filter {
         let mut builder = env_filter::Builder::new();
-        let src = self
-            .filter
-            .clone()
-            .map(|s| s.to_owned())
-            .unwrap_or_else(|| self.default_level.as_str().to_string());
-        builder.parse(&src);
+        for (_mod, filter) in self.filter.clone() {
+            builder.filter(Some(&_mod), filter);
+        }
         builder.build()
     }
 
