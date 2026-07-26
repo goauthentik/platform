@@ -8,7 +8,9 @@ pub mod managed;
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Config {
     pub debug: bool,
+    #[serde(rename = "runtime")]
     pub runtime_dir: String,
+    #[serde(rename = "domains")]
     pub domain_dir: String,
 }
 
