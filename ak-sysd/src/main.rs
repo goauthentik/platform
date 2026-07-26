@@ -80,11 +80,15 @@ enum TroubleshootCommands {
 #[ak_meta::main("ak-sysd")]
 pub async fn main() -> Result<()> {
     let cli = SysdArgs::parse();
-    ak_platform::log::init_log(
+    ak_platform::log::LogBuilder::new(
         PlatformString::new()
             .with_linux("ak-sysd")
             .with_windows("authentik System Service"),
-    );
+    )
+    .allow_platform(true)
+    .default_level(ak_platform::log::LevelFilter::Info)
+    .with_filter("warn,ak-sysd=trace")
+    .enable();
     if cli.debug {
         ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
     }

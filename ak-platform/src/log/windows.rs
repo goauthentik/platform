@@ -2,7 +2,7 @@ use env_filter::{Filter, FilteredLog};
 use eventlog::EventLog;
 use log::LevelFilter;
 
-pub fn init_log(name: &str, filter: Filter) {
+pub fn init_log(name: &str, filter: Filter) -> Box<dyn Log> {
     match EventLog::new(name, log::Level::Trace) {
         Ok(inner) => {
             log::set_boxed_logger(Box::new(FilteredLog::new(inner, filter)))

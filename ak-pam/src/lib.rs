@@ -10,7 +10,7 @@ use crate::auth::authorize::authenticate_authorize_impl;
 use crate::logger::prelude;
 use crate::session::close_session_impl;
 use crate::session::open_session_impl;
-use ak_platform::log::init_log;
+use ak_platform::log::LogBuilder;
 use ak_platform::log::unix::log_hook;
 use ak_platform::string::PlatformString;
 use ctor::ctor;
@@ -29,7 +29,9 @@ pam::pam_hooks!(PAMAuthentik);
 
 #[ctor(unsafe)]
 fn ctor() {
-    init_log(PlatformString::new_with_default("libpam-authentik"));
+    LogBuilder::new(PlatformString::new_with_default("libpam-authentik"))
+        .allow_platform(true)
+        .enable();
     log_hook("ctor");
 }
 
