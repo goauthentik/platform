@@ -243,3 +243,16 @@ pub mod testutils {
         StateStore::open(path.to_str().unwrap()).unwrap()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::state::testutils;
+
+    #[tokio::test]
+    async fn test_state() {
+        let store = testutils::test_store();
+        let kv = store.component_kv("comp");
+        kv.set("foo", "bar").await.expect("set");
+        assert_eq!(kv.get("foo").await.expect("get not fail").expect("get not empty"), "bar");
+    }
+}
