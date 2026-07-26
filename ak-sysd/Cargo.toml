@@ -12,7 +12,6 @@ name = "ak-sysd"
 path = "src/main.rs"
 
 [dependencies]
-ak-agent = { path = "../ak-agent" }
 ak-flow-executor = { path = "../ak-flow-executor" }
 ak-meta = { path = "../ak-meta" }
 ak-platform = { path = "../ak-platform" }

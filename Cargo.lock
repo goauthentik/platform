@@ -349,7 +349,6 @@ dependencies = [
 name = "ak-sysd"
 version = "0.50.3"
 dependencies = [
- "ak-agent",
  "ak-flow-executor",
  "ak-meta",
  "ak-platform",

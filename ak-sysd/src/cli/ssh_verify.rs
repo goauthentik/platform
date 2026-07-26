@@ -1,9 +1,7 @@
-use ak_agent::ssh::txn_keys::{
-    EXT_AUTHENTIK_PLATFORM_SSH_HOST_KEY, EXT_AUTHENTIK_PLATFORM_SSH_TOKEN,
-};
-use ak_platform::client::sysd::Client;
 use ak_platform::generated::sys_auth::TokenAuthRequest;
 use ak_platform::paths::SysdSocketID;
+use ak_platform::shared::EXT_AUTHENTIK_PLATFORM_SSH_TOKEN;
+use ak_platform::{client::sysd::Client, shared::EXT_AUTHENTIK_PLATFORM_SSH_HOST_KEY};
 use eyre::{Result, bail};
 use ssh_key::{Certificate, PublicKey};
 use subtle::ConstantTimeEq;
