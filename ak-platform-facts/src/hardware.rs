@@ -46,8 +46,20 @@ fn system_info_row() -> Result<SystemInfoRow> {
 }
 
 fn native_serial(row: &SystemInfoRow) -> Result<String> {
-    non_empty(row.hardware_serial.clone())
-        .ok_or_else(|| eyre::eyre!("hardware_serial missing or empty in system_info"))
+    let serial = non_empty(row.hardware_serial.clone())
+        .ok_or_else(|| eyre::eyre!("hardware_serial missing or empty in system_info"));
+
+    // On linux, if we don't have a hardware serial, fallback to machine-id
+    #[cfg(target_os = "linux")]
+    {
+        if serial.is_err() {
+            use std::fs;
+
+            let contents = fs::read_to_string("/etc/machine-id")?;
+            return Ok(contents.trim().to_string())
+        }
+    }
+    serial
 }
 
 pub fn gather() -> Result<HardwareRequest> {
