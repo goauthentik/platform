@@ -131,7 +131,11 @@ impl DomainManager {
                 let mut cfg: DomainConfig = serde_json::from_str(&raw)?;
                 cfg.token = self.resolve_token(&cfg).await;
                 loaded.push(Arc::new(LoadedDomain {
-                    api: build_api_client(&cfg.authentik_url, &cfg.token, TokenFormat::BearerAgent)?,
+                    api: build_api_client(
+                        &cfg.authentik_url,
+                        &cfg.token,
+                        TokenFormat::BearerAgent,
+                    )?,
                     remote: Arc::new(RwLock::new(None)),
                     brand: Arc::new(RwLock::new(None)),
                     cfg,
@@ -159,9 +163,11 @@ impl DomainManager {
         {
             Ok(token) => token,
             Err(e) => {
-                tracing::warn!("failed load domain token from keyring, falling back to file: {e:?}");
+                tracing::warn!(
+                    "failed load domain token from keyring, falling back to file: {e:?}"
+                );
                 cfg.fallback_token.clone()
-            },
+            }
         }
     }
 
@@ -195,11 +201,11 @@ impl DomainManager {
             )
             .await
         {
-            Ok(_) => {
-                on_disk.fallback_token = String::new()
-            },
+            Ok(_) => on_disk.fallback_token = String::new(),
             Err(e) => {
-                tracing::warn!("failed to save domain token to keyring, falling back to file: {e:?}");
+                tracing::warn!(
+                    "failed to save domain token to keyring, falling back to file: {e:?}"
+                );
             }
         }
 

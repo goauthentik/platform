@@ -60,6 +60,7 @@ impl LogBuilder {
 
     fn build_filter(&self) -> env_filter::Filter {
         let mut builder = env_filter::Builder::new();
+        builder.filter_level(self.default_level);
         for (_mod, filter) in self.filter.clone() {
             builder.filter(Some(&_mod), filter);
         }

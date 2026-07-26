@@ -48,7 +48,13 @@ mod unix {
     pub async fn run(config: String) -> Result<()> {
         // Arm the force-exit backstop *before* starting components, so a second
         // signal kills the process even if a component wedges the runtime.
-        install_force_exit_backstop()?;
+        match install_force_exit_backstop() {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("Failed to setup shutdown signals: {e:?}");
+                return Ok(());
+            }
+        };
 
         let agent = Agent::new(config).await?;
         agent.start().await?;
@@ -60,7 +66,9 @@ mod unix {
         match tokio::time::timeout(SHUTDOWN_TIMEOUT, agent.stop()).await {
             Ok(res) => res,
             Err(_) => {
-                tracing::warn!("graceful shutdown timed out after {SHUTDOWN_TIMEOUT:?}, forcing exit");
+                tracing::warn!(
+                    "graceful shutdown timed out after {SHUTDOWN_TIMEOUT:?}, forcing exit"
+                );
                 std::process::exit(FORCE_EXIT_STATUS);
             }
         }
