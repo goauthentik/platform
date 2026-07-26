@@ -25,6 +25,8 @@ contents:
     type: dir
   - dst: /var/lib/authentik
     type: dir
+  - dst: /var/log/authentik
+    type: dir
   - src: ../../bin/browser_support/ak-browser-support
     dst: /usr/bin/ak-browser-support
   - src: ./sysd/browser-host-chrome.json
