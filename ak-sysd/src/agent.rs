@@ -42,10 +42,7 @@ impl Agent {
     pub async fn new(config_path: String) -> Result<Self> {
         let cancel = CancellationToken::new();
         let cfg = ConfigManager::<crate::cfg::Config>::new(config_path).await?;
-        let (runtime_dir, domain_dir) = {
-            let read = cfg.read().await;
-            (read.runtime_dir.clone(), read.domain_dir.clone())
-        };
+        let domain_dir = cfg.read().await.domain_dir.clone();
 
         let state = Arc::new(StateStore::open(&sysd_state_file().for_current())?);
         let domains = DomainManager::new(domain_dir, Arc::clone(&state)).await?;
