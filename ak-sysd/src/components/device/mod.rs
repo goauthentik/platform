@@ -65,6 +65,7 @@ impl Component for DeviceComponent {
                 let domains = ctx.domains.domains().await;
                 for d in domains {
                     let jitter = rand::random::<u64>() % 30;
+                    tracing::info!(jitter, "Waiting seconds before checking in...");
                     tokio::select! {
                         _ = tokio::time::sleep(std::time::Duration::from_secs(jitter)) => {}
                         _ = ctx.cancel.cancelled() => return,

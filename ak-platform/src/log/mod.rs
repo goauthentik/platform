@@ -78,6 +78,8 @@ impl LogBuilder {
         TermLogger::new(
             LevelFilter::Trace,
             ConfigBuilder::new()
+                .set_location_level(LevelFilter::Error)
+                .set_thread_level(LevelFilter::Error)
                 .set_thread_mode(simplelog::ThreadLogMode::Both)
                 .build(),
             simplelog::TerminalMode::Stderr,
