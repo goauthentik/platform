@@ -158,7 +158,10 @@ impl DomainManager {
             .await
         {
             Ok(token) => token,
-            Err(_) => cfg.fallback_token.clone(),
+            Err(e) => {
+                tracing::warn!("failed load domain token from keyring, falling back to file: {e:?}");
+                cfg.fallback_token.clone()
+            },
         }
     }
 
@@ -181,7 +184,9 @@ impl DomainManager {
 
     pub async fn save_domain(&self, cfg: DomainConfig) -> Result<()> {
         validate_domain_name(&cfg.domain)?;
-        if let Err(e) = ak_platform_keyring::store()
+        let mut on_disk = cfg.clone();
+
+        match ak_platform_keyring::store()
             .set(
                 &keyring_service(),
                 &cfg.domain,
@@ -190,14 +195,17 @@ impl DomainManager {
             )
             .await
         {
-            tracing::warn!("failed to save domain token to keyring, falling back to file: {e:?}");
+            Ok(_) => {
+                on_disk.fallback_token = String::new()
+            },
+            Err(e) => {
+                tracing::warn!("failed to save domain token to keyring, falling back to file: {e:?}");
+            }
         }
 
         let path = std::path::Path::new(&self.domain_dir).join(cfg.file_name());
         std::fs::create_dir_all(&self.domain_dir)?;
-        let mut on_disk = cfg.clone();
-        // If the keyring write above failed, keep the token recoverable in the file.
-        on_disk.fallback_token = cfg.token.clone();
+
         let json = serde_json::to_string_pretty(&on_disk)?;
         std::fs::write(&path, json)?;
 
