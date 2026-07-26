@@ -160,7 +160,33 @@ impl Agent {
         });
     }
 
+    /// Arms an out-of-runtime backstop so that a *second* SIGINT/SIGTERM
+    /// force-terminates the process immediately, even if the tokio runtime is
+    /// wedged
+    #[cfg(unix)]
+    fn install_force_exit_backstop() -> Result<()> {
+        use signal_hook::consts::{SIGINT, SIGTERM};
+        let forced = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        for sig in [SIGINT, SIGTERM] {
+            // Order matters: the conditional shutdown must be registered before
+            // the flag setter so the first delivery only arms the flag and the
+            // second delivery triggers the immediate exit.
+            signal_hook::flag::register_conditional_shutdown(
+                sig,
+                130,
+                std::sync::Arc::clone(&forced),
+            )?;
+            signal_hook::flag::register(sig, std::sync::Arc::clone(&forced))?;
+        }
+        Ok(())
+    }
+
     pub async fn start(&self) -> Result<()> {
+        // Arm the force-exit backstop before any component (and its blocking
+        // subprocess calls) can wedge the runtime.
+        #[cfg(unix)]
+        Self::install_force_exit_backstop()?;
+
         for (id, c) in &self.components {
             tracing::info!(component = id, "starting component");
             if let Err(e) = c.start().await {
@@ -185,23 +211,12 @@ impl Agent {
     }
 
     pub async fn wait(&self) -> Result<()> {
-        // Out-of-runtime backstop: a *second* SIGINT/SIGTERM force-terminates the
-        // process immediately, even if the tokio runtime is wedged
+        // Graceful path (first signal): handled by the async runtime when healthy.
+        // The out-of-runtime force-exit backstop for the *second* signal is armed
+        // earlier, in `start()`, so it survives a runtime wedge that happens before
+        // we reach this point.
         #[cfg(unix)]
         {
-            use signal_hook::consts::{SIGINT, SIGTERM};
-            let forced = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-            for sig in [SIGINT, SIGTERM] {
-                // Order matters: the conditional shutdown must be registered before
-                // the flag setter so the first delivery only arms the flag and the
-                // second delivery triggers the immediate exit.
-                signal_hook::flag::register_conditional_shutdown(
-                    sig,
-                    130,
-                    std::sync::Arc::clone(&forced),
-                )?;
-                signal_hook::flag::register(sig, std::sync::Arc::clone(&forced))?;
-            }
             let mut sigterm =
                 tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
             tokio::select! {

@@ -78,6 +78,7 @@ impl DirectoryComponent {
         *self.users.write().await = users;
         *self.groups.write().await = groups;
 
+        tracing::info!("Successfully fetched users & groups");
         self.ctx.events.dispatch(SysdEvent::DirectoryFetched {
             domain: domain.cfg.domain.clone(),
         });
