@@ -31,6 +31,7 @@ pam::pam_hooks!(PAMAuthentik);
 fn ctor() {
     LogBuilder::new(PlatformString::new_with_default("libpam-authentik"))
         .allow_platform(true)
+        .allow_stdout(false)
         .enable();
     log_hook("ctor");
 }

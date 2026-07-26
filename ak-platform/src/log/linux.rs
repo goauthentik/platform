@@ -1,3 +1,4 @@
+use eyre::Context;
 use eyre::Result;
 use log::LevelFilter;
 use log::Log;
@@ -21,7 +22,7 @@ pub fn init_log(name: &str) -> Result<Box<dyn Log>> {
 }
 
 fn build_file_log(path: String) -> Result<Box<dyn Log>> {
-    let file = File::create(path)?;
+    let file = File::create(path.clone()).context(format!("Failed to open {path}"))?;
     Ok(WriteLogger::new(
         LevelFilter::Trace,
         Config::default(),

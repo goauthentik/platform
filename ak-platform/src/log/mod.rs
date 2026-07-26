@@ -23,6 +23,7 @@ pub struct LogBuilder {
     name: PlatformString,
     filter: Vec<(String, LevelFilter)>,
     allow_platform: bool,
+    allow_stdout: bool,
     force_stdout: bool,
     default_level: LevelFilter,
 }
@@ -33,6 +34,7 @@ impl LogBuilder {
             name,
             filter: vec![],
             allow_platform: true,
+            allow_stdout: true,
             force_stdout: false,
             default_level: LevelFilter::Trace,
         }
@@ -40,6 +42,11 @@ impl LogBuilder {
 
     pub fn allow_platform(mut self, allow_platform: bool) -> Self {
         self.allow_platform = allow_platform;
+        self
+    }
+
+    pub fn allow_stdout(mut self, allow_stdout: bool) -> Self {
+        self.allow_stdout = allow_stdout;
         self
     }
 
@@ -89,7 +96,7 @@ impl LogBuilder {
 
     pub fn enable(&self) {
         let filter = self.build_filter();
-        let inner = match (self.allow_platform && env_interactive()) || self.force_stdout {
+        let inner = match (self.allow_platform && env_interactive()) || (self.force_stdout && self.allow_stdout) {
             true => self.get_stdout_logger(),
             false => match self.get_platform_logger() {
                 Ok(l) => l,

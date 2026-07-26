@@ -24,6 +24,8 @@ fn ctor() {
     // we could read it from /etc/authentik
     LogBuilder::new(PlatformString::new_with_default("libnss-authentik"))
         .default_level(LevelFilter::Warn)
+        .allow_platform(true)
+        .allow_stdout(false)
         .enable();
     log_hook("ctor");
 }
