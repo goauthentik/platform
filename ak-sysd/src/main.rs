@@ -86,8 +86,7 @@ pub async fn main() -> Result<()> {
             .with_windows("authentik System Service"),
     )
     .allow_platform(true)
-    .default_level(ak_platform::log::LevelFilter::Info)
-    .with_filter("warn,ak-sysd=trace")
+    .with_filter("info,ak-sysd=trace")
     .enable();
     if cli.debug {
         ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
