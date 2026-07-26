@@ -130,14 +130,34 @@ impl DomainManager {
                 let raw = std::fs::read_to_string(&path)?;
                 let mut cfg: DomainConfig = serde_json::from_str(&raw)?;
                 cfg.token = self.resolve_token(&cfg).await;
+
+                // Pre-seed from the on-disk cache so components have a
+                // last-known-good AgentConfig/brand before healthcheck_all's
+                // network round-trip completes (offline/degraded-network
+                // resilience, mirroring Go's bbolt-backed cache).
+                let (remote, brand) = match self.state.domain_cache_get(&cfg.domain).await {
+                    Ok(Some((cfg_json, brand_json, _))) => (
+                        serde_json::from_str(&cfg_json).ok(),
+                        serde_json::from_str(&brand_json).ok(),
+                    ),
+                    Ok(None) => (None, None),
+                    Err(e) => {
+                        tracing::warn!(
+                            domain = %cfg.domain,
+                            "failed to load cached domain config: {e:?}"
+                        );
+                        (None, None)
+                    }
+                };
+
                 loaded.push(Arc::new(LoadedDomain {
                     api: build_api_client(
                         &cfg.authentik_url,
                         &cfg.token,
                         TokenFormat::BearerAgent,
                     )?,
-                    remote: Arc::new(RwLock::new(None)),
-                    brand: Arc::new(RwLock::new(None)),
+                    remote: Arc::new(RwLock::new(remote)),
+                    brand: Arc::new(RwLock::new(brand)),
                     cfg,
                 }));
             }
@@ -286,19 +306,16 @@ impl DomainManager {
         Ok(remote)
     }
 
-    /// Tests every loaded domain; any that fail are logged and left enabled
-    /// (mirroring the lack of hard-disable behavior actually verified in
-    /// this pass — flagged for confirmation against `SystemAgent.DomainCheck()`).
+    /// Tests every loaded domain, refreshing `remote`/`brand` and persisting
+    /// to the on-disk `domain_cache`; any that fail are logged and left
+    /// enabled (mirroring the lack of hard-disable behavior actually
+    /// verified in this pass — flagged for confirmation against
+    /// `SystemAgent.DomainCheck()`).
     pub async fn healthcheck_all(&self) {
         let domains = self.domains().await;
         for d in domains {
-            match self.test(&d.cfg).await {
-                Ok(remote) => {
-                    *d.remote.write().await = Some(remote);
-                }
-                Err(e) => {
-                    tracing::warn!(domain = d.cfg.domain, "domain healthcheck failed: {e:?}");
-                }
+            if let Err(e) = self.fetch_remote_config(&d.cfg.domain).await {
+                tracing::warn!(domain = d.cfg.domain, "domain healthcheck failed: {e:?}");
             }
         }
     }
@@ -325,7 +342,8 @@ impl DomainManager {
                 &brand_json,
                 chrono::Utc::now().timestamp(),
             )
-            .await?;
+            .await
+            .context("failed to persist domain cache")?;
         *d.remote.write().await = Some(remote);
         *d.brand.write().await = Some(brand);
         Ok(())
