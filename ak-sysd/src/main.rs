@@ -1,4 +1,5 @@
 use crate::agent::Agent;
+use ak_meta::full_version;
 use ak_platform::{paths::sysd_config_file, string::PlatformString};
 use clap::{Parser, Subcommand};
 use clap_complete::Shell;
@@ -76,7 +77,7 @@ enum TroubleshootCommands {
     Inspect,
 }
 
-#[tokio::main]
+#[ak_meta::main("ak-sysd")]
 pub async fn main() -> Result<()> {
     let cli = SysdArgs::parse();
     ak_platform::log::init_log(
@@ -87,6 +88,7 @@ pub async fn main() -> Result<()> {
     if cli.debug {
         ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
     }
+    tracing::trace!("authentik sysd v{}", full_version());
 
     match cli.command {
         Commands::Agent => {
