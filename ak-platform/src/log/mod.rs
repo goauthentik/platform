@@ -98,7 +98,9 @@ impl LogBuilder {
 
     pub fn enable(&self) {
         let filter = self.build_filter();
-        let inner = match (self.allow_platform && env_interactive()) || (self.force_stdout && self.allow_stdout) {
+        let inner = match (self.allow_platform && env_interactive())
+            || (self.force_stdout && self.allow_stdout)
+        {
             true => self.get_stdout_logger(),
             false => match self.get_platform_logger() {
                 Ok(l) => l,

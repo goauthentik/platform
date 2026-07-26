@@ -1,4 +1,5 @@
 use base64::{Engine, prelude::BASE64_STANDARD};
+use eyre::Context;
 use eyre::Result;
 use eyre::bail;
 use std::future::Future;
@@ -24,7 +25,9 @@ pub async fn grpc_endpoint(path: String) -> Result<Channel> {
         .path_and_query("/")
         .build()?;
     let endpoint = Endpoint::from(u);
-    let channel = grpc_dial(endpoint, path).await?;
+    let channel = grpc_dial(endpoint, path.clone())
+        .await
+        .context(format!("failed to connect to {path}"))?;
     Ok(channel)
 }
 

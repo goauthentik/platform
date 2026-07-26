@@ -17,7 +17,7 @@ bump:
 local:
 	$(MAKE) -C "${TOP}" -j \
 		ak-agent-desktop/build \
-		sysd/build \
+		ak-sysd/build \
 		ee/psso/build \
 		ak-browser-support/build \
 		ak-cli/build
