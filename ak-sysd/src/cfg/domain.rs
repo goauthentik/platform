@@ -221,7 +221,8 @@ impl DomainManager {
     ) -> Result<DomainConfig> {
         let serial = ak_platform_facts::serial().context("failed to get serial")?;
         let hostname = ak_platform_facts::hostname();
-        let api = build_api_client(&authentik_url, &one_time_token).context("failed to get API client")?;
+        let api = build_api_client(&authentik_url, &one_time_token)
+            .context("failed to get API client")?;
         let res = authentik_client::apis::endpoints_api::endpoints_agents_connectors_enroll_create(
             &api,
             EnrollRequest::new(serial, hostname),

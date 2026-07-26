@@ -1,13 +1,12 @@
-use std::fs::File;
-
-use env_filter::{Filter, FilteredLog};
+use eyre::Result;
 use log::LevelFilter;
+use log::Log;
 use simplelog::{Config, WriteLogger};
+use std::fs::File;
 use syslog::BasicLogger;
 use syslog::{Facility, Formatter3164};
 
-
-pub fn init_log(name: &str, filter: Filter) -> Result<Box<dyn Log>> {
+pub fn init_log(name: &str) -> Result<Box<dyn Log>> {
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
         hostname: None,
@@ -15,20 +14,17 @@ pub fn init_log(name: &str, filter: Filter) -> Result<Box<dyn Log>> {
         pid: std::process::id(),
     };
     return match syslog::unix(formatter) {
-        Ok(logger) => Box::new(BasicLogger::new(logger)),
+        Ok(logger) => Ok(Box::new(BasicLogger::new(logger))),
         Err(e) => {
             eprintln!("unable to connect to syslog: {e:?}");
-            match build_file_log(format!("/var/log/authentik/{}.log", name)) {
-                Some(logger) => logger,
-                None => return,
-            }
+            return build_file_log(format!("/var/log/authentik/{}.log", name));
         }
     };
 }
 
-fn build_file_log(path: String) -> Option<Box<dyn log::Log>> {
-    let file = File::create(path).ok()?;
-    Some(WriteLogger::new(
+fn build_file_log(path: String) -> Result<Box<dyn Log>> {
+    let file = File::create(path)?;
+    Ok(WriteLogger::new(
         LevelFilter::Trace,
         Config::default(),
         file,

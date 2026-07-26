@@ -29,8 +29,8 @@
     }
   },
   "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/devcontainers/features/rust:1": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.0": {},
+    "ghcr.io/devcontainers/features/rust:1.5.1": {
       "components": "rust-analyzer,rust-src,rustfmt,clippy,llvm-tools-preview"
     },
     "ghcr.io/devcontainers-extra/features/protoc:1": {},

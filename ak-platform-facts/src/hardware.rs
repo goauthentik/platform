@@ -56,7 +56,7 @@ fn native_serial(row: &SystemInfoRow) -> Result<String> {
             use std::fs;
 
             let contents = fs::read_to_string("/etc/machine-id")?;
-            return Ok(contents.trim().to_string())
+            return Ok(contents.trim().to_string());
         }
     }
     serial

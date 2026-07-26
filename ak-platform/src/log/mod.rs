@@ -1,8 +1,8 @@
 use std::io::{IsTerminal, stdout};
 
-use eyre::Result;
 use crate::string::PlatformString;
 use env_filter::FilteredLog;
+use eyre::Result;
 pub use log::LevelFilter;
 use log::Log;
 use simplelog::{Config, TermLogger};
@@ -80,18 +80,23 @@ impl LogBuilder {
 
     fn get_platform_logger(&self) -> Result<Box<dyn Log>> {
         #[cfg(target_os = "macos")]
-        return Ok(macos::init_log(&self.name.clone().for_current().to_owned()));
+        return macos::init_log(&self.name.clone().for_current().to_owned());
         #[cfg(target_os = "linux")]
-        linux::init_log(&self.name.for_current());
+        return linux::init_log(&self.name.clone().for_current());
         #[cfg(target_os = "windows")]
-        windows::init_log(&self.name.for_current());
+        return windows::init_log(&self.name.clone().for_current());
     }
 
     pub fn enable(&self) {
         let filter = self.build_filter();
         let inner = match (self.allow_platform && should_switch()) || self.force_stdout {
             true => self.get_stdout_logger(),
-            false => self.get_platform_logger(),
+            false => match self.get_platform_logger() {
+                Ok(l) => l,
+                Err(e) => {
+                    panic!("Failed to setup logging: {:?}", e);
+                }
+            },
         };
         log::set_boxed_logger(Box::new(FilteredLog::new(inner, filter)))
             .map(|()| log::set_max_level(self.default_level))
