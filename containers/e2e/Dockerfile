@@ -12,7 +12,7 @@ RUN --mount=type=bind,target=/build/bin,src=./bin \
     mkdir -p /etc/systemd/system/ak-sysd.service.d && \
     mkdir -p /etc/systemd/system/ak-agent.service.d && \
     mkdir -p /tmp/ak-coverage/rs && \
-    printf '[Service]\nEnvironment="GOCOVERDIR=/tmp/ak-coverage/ak-sysd"\n' > /etc/systemd/system/ak-sysd.service.d/coverage.conf && \
+    printf '[Service]\nEnvironment="LLVM_PROFILE_FILE=/tmp/ak-coverage/rs/ak-sysd-%%p.profraw"\n' > /etc/systemd/system/ak-sysd.service.d/coverage.conf && \
     cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system && \
     printf '[Service]\nEnvironment="LLVM_PROFILE_FILE=/tmp/ak-coverage/rs/ak-agent-%%p.profraw"\nEnvironment="HOME=/root"\n' > /etc/systemd/system/ak-agent.service.d/coverage.conf && \
     sed -i 's/false/true/g' /etc/authentik/config.json && \
