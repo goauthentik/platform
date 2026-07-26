@@ -9,7 +9,7 @@ workspace = true
 
 [dependencies]
 ak-meta = { path = "../ak-meta" }
-authentik-client = { workspace = true }
+authentik-client = { path = "../authentik-client", default-features = false, features = ["rustls"] }
 eyre = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -12,7 +12,7 @@ panic = "allow"
 [dependencies]
 ak-flow-executor = { path = "../ak-flow-executor" }
 ak-platform = { path = "../ak-platform" }
-authentik-client.workspace = true
+authentik-client = { path = "../authentik-client", default-features = false, features = ["rustls"] }
 eyre.workspace = true
 oauth-device-flows = { workspace = true }
 reqwest.workspace = true

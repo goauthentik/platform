@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-authentik-client = { workspace = true }
+authentik-client = { path = "../authentik-client", default-features = false, features = ["rustls"] }
 eyre = { workspace = true }
 ak-meta = { path = "../ak-meta" }
 reqwest = { workspace = true }

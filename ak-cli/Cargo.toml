@@ -30,7 +30,7 @@ tokio = { workspace = true }
 url = { workspace = true }
 eyre.workspace = true
 color-eyre.workspace = true
-authentik-client.workspace = true
+authentik-client = { path = "../authentik-client", default-features = false, features = ["rustls"] }
 uuid.workspace = true
 sentry.workspace = true
 

@@ -17,7 +17,7 @@ eyre = { workspace = true }
 ak-platform-authz = { path = "../ak-platform-authz" }
 ak-platform-keyring = { path = "../ak-platform-keyring" }
 ak-meta = { path = "../ak-meta" }
-authentik-client = { workspace = true }
+authentik-client = { path = "../authentik-client", default-features = false, features = ["rustls"] }
 tokio = { workspace = true }
 tonic = { workspace = true }
 waitgroup = "0.1.2"
