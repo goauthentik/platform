@@ -9,7 +9,7 @@ use crate::context::SysdContext;
 use crate::events::{ConfigChangeKind, SysdEvent};
 use crate::state::StateStore;
 use ak_platform::net::server::{SocketPermMode, listen};
-use ak_platform::paths::{SysdSocketID, sysd_socket_path};
+use ak_platform::paths::{SysdSocketID, sysd_socket_path, sysd_state_file};
 use ak_platform::storage::cfgmgr::ConfigManager;
 use eyre::Result;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
@@ -47,7 +47,7 @@ impl Agent {
             (read.runtime_dir.clone(), read.domain_dir.clone())
         };
 
-        let state = Arc::new(StateStore::open(&format!("{runtime_dir}/sysd-state.db"))?);
+        let state = Arc::new(StateStore::open(&sysd_state_file().for_current())?);
         let domains = DomainManager::new(domain_dir, Arc::clone(&state)).await?;
 
         let watch_handle = cfg.spawn_watch(cancel.clone());
