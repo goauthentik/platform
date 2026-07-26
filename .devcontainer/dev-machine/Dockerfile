@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu
 RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list && \
     apt-get update && \
     apt-get install -y \
+        libsoup-3.0-dev \
         # Required for PAM development
         libpam0g-dev libudev-dev pamtester \
         # Required for keyring

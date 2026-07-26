@@ -27,6 +27,7 @@ impl StateStore {
         if let Some(parent) = std::path::Path::new(path).parent() {
             std::fs::create_dir_all(parent)?;
         }
+        tracing::info!(path, "Opening state file");
         let conn = Connection::open(path)?;
         conn.execute_batch(
             "

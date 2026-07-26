@@ -42,7 +42,6 @@ impl Agent {
 
         let state = Arc::new(StateStore::open(&format!("{runtime_dir}/sysd-state.db"))?);
         let domains = DomainManager::new(domain_dir, Arc::clone(&state)).await?;
-        domains.load_all().await?;
 
         let ctx = SysdContext::new(cfg, domains, state)?;
 

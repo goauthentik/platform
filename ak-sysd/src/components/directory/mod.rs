@@ -43,6 +43,7 @@ pub fn attr_number(attrs: &Option<HashMap<String, serde_json::Value>>, key: &str
 
 impl DirectoryComponent {
     async fn fetch(&mut self) -> Result<()> {
+        tracing::info!("Fetching users & groups");
         let domain = self.ctx.domains.active().await?;
         self.nss_uid_offset = domain
             .remote

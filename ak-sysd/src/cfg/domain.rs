@@ -102,17 +102,20 @@ pub struct DomainManager {
 
 impl DomainManager {
     pub async fn new(domain_dir: String, state: Arc<StateStore>) -> Result<Arc<Self>> {
-        Ok(Arc::new(Self {
+        let dm = Arc::new(Self {
             domain_dir,
             state,
             domains: RwLock::new(Vec::new()),
-        }))
+        });
+        dm.load_all().await?;
+        Ok(dm)
     }
 
     /// Loads every `*.json` file in `domain_dir`, pulling each domain's token
     /// from the keyring (falling back to the in-file token if the keyring
     /// entry is missing), then loads any MDM-managed domain on top.
     pub async fn load_all(&self) -> Result<()> {
+        tracing::info!("Loading domains...");
         let mut loaded = Vec::new();
 
         if !self.domain_dir.is_empty() {
