@@ -96,23 +96,29 @@ impl LogBuilder {
         return windows::init_log(&self.name.clone().for_current());
     }
 
-    pub fn enable(&self) {
+    pub fn build(&self) -> (Box<dyn Log>, LevelFilter) {
         let filter = self.build_filter();
         let max_level = self
             .filter
             .iter()
             .map(|(_, level)| *level)
             .fold(self.default_level, std::cmp::max);
-        let inner: Box<dyn Log> = {
-            if (env_interactive() && self.allow_stdout) || self.force_stdout {
-                self.get_stdout_logger();
-            }
+        let inner: Box<dyn Log> = if (self.allow_platform && env_interactive())
+            || (self.force_stdout && self.allow_stdout)
+        {
+            self.get_stdout_logger()
+        } else {
             match self.get_platform_logger() {
                 Ok(l) => l,
-                Err(_) => self.get_stdout_logger()
+                Err(_) => self.get_stdout_logger(),
             }
         };
-        log::set_boxed_logger(Box::new(FilteredLog::new(inner, filter)))
+        return (Box::new(FilteredLog::new(inner, filter)), max_level);
+    }
+
+    pub fn enable(&self) {
+        let (logger, max_level) = self.build();
+        log::set_boxed_logger(logger)
             .map(|()| log::set_max_level(max_level))
             .unwrap_or_else(|_| eprintln!("Failed to setup logger"));
     }
@@ -130,4 +136,21 @@ pub fn env_interactive() -> bool {
     return true;
     #[cfg(not(debug_assertions))]
     return false;
+}
+
+#[cfg(test)]
+mod test {
+    use log::{log_enabled};
+
+    use crate::{log::LogBuilder, string::PlatformString};
+
+    #[test]
+    fn test_filter() {
+        LogBuilder::new(PlatformString::new())
+            .force_stdout(true)
+            .default_level(log::LevelFilter::Info)
+            .with_filter("ak_platform::log", log::LevelFilter::Trace)
+            .enable();
+        assert!(log_enabled!(log::Level::Trace));
+    }
 }
