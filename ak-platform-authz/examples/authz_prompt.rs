@@ -1,13 +1,13 @@
 use std::time::Duration;
 
 use ak_platform::{
-    log::init_log_interactive, net::server::creds::ProcCredentials, string::PlatformString,
+    log::LogBuilder, net::server::creds::ProcCredentials, string::PlatformString,
 };
 use ak_platform_authz::AuthorizeAction;
 
 #[tokio::main]
 async fn main() {
-    init_log_interactive();
+    LogBuilder::new(PlatformString::new()).force_stdout(true).enable();
     let creds = ProcCredentials::current();
     let res = AuthorizeAction {
         message: Box::new(|_| Ok(PlatformString::new_with_default("authz prompt"))),

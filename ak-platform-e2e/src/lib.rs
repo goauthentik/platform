@@ -18,7 +18,7 @@ pub fn test_init() {
     LogBuilder::new(PlatformString::new())
         .force_stdout(true)
         .default_level(LevelFilter::Warn)
-        .with_filter("ak-platform-e2e", LevelFilter::Trace)
+        .with_filter("ak_platform_e2e", LevelFilter::Trace)
         .enable();
 }
 

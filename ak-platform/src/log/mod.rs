@@ -98,6 +98,11 @@ impl LogBuilder {
 
     pub fn enable(&self) {
         let filter = self.build_filter();
+        let max_level = self
+            .filter
+            .iter()
+            .map(|(_, level)| *level)
+            .fold(self.default_level, std::cmp::max);
         let inner = match (self.allow_platform && env_interactive())
             || (self.force_stdout && self.allow_stdout)
         {
@@ -110,7 +115,7 @@ impl LogBuilder {
             },
         };
         log::set_boxed_logger(Box::new(FilteredLog::new(inner, filter)))
-            .map(|()| log::set_max_level(self.default_level))
+            .map(|()| log::set_max_level(max_level))
             .unwrap_or_else(|_| eprintln!("Failed to setup logger"));
     }
 }

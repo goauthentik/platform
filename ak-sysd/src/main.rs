@@ -91,7 +91,7 @@ pub async fn main() -> Result<()> {
     )
     .allow_platform(true)
     .default_level(LevelFilter::Info)
-    .with_filter("ak-sysd", LevelFilter::Trace)
+    .with_filter("ak_sysd", LevelFilter::Trace)
     .enable();
     if cli.debug {
         set_log_level(LevelFilter::Debug);
