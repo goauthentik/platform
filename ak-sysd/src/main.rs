@@ -1,5 +1,5 @@
 use crate::agent::Agent;
-use ak_platform::paths::sysd_config_file;
+use ak_platform::{paths::sysd_config_file, string::PlatformString};
 use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 use eyre::Result;
@@ -22,7 +22,9 @@ pub struct SysdArgs {
     /// Config file path
     #[arg(short, long, default_value_t = sysd_config_file().for_current())]
     config: String,
-
+    /// Enable debug logging
+    #[arg(short, default_value_t = false)]
+    debug: bool,
     #[command(subcommand)]
     command: Commands,
 }
@@ -77,6 +79,14 @@ enum TroubleshootCommands {
 #[tokio::main]
 pub async fn main() -> Result<()> {
     let cli = SysdArgs::parse();
+    ak_platform::log::init_log(
+        PlatformString::new()
+            .with_linux("ak-sysd")
+            .with_windows("authentik System Service"),
+    );
+    if cli.debug {
+        ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
+    }
 
     match cli.command {
         Commands::Agent => {
