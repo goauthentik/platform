@@ -233,12 +233,12 @@ jobs:
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
           ./hack/authentik/wait.sh
+      - run: make containers/e2e/ci-build
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
-          make containers/e2e/ci-build
           make test-e2e-ci
       - run: |
           sudo chmod -R 777 ./ak-platform-e2e/coverage
