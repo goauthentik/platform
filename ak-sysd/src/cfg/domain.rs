@@ -59,7 +59,7 @@ fn build_api_client(
     };
     Ok(Configuration {
         base_path: format!("{}/api/v3", authentik_url.trim_end_matches('/')),
-        bearer_access_token: Some(token.to_string()),
+        bearer_access_token: None,
         user_agent: Some(user_agent()),
         client: reqwest_middleware::ClientBuilder::new(
             Client::builder()
