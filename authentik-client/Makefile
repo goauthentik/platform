@@ -18,3 +18,5 @@ build:
 		--additional-properties=packageVersion=$(VERSION)
 	$(SED_INPLACE) 's/models::models::/models::/g' ${PWD}/src/apis/*
 	rm -rf "${PWD}/.openapi-generator" "${PWD}/api/openapi.yaml" "${PWD}/schema.yml"
+	cargo clippy --fix --allow-dirty
+	cargo fmt
