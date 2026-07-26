@@ -225,6 +225,7 @@ impl DomainManager {
         {
             Ok(_) => on_disk.fallback_token = String::new(),
             Err(e) => {
+                on_disk.fallback_token = cfg.token.clone();
                 tracing::warn!(
                     "failed to save domain token to keyring, falling back to file: {e:?}"
                 );
