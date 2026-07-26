@@ -90,6 +90,7 @@ pub async fn main() -> Result<()> {
             .with_windows("authentik System Service"),
     )
     .allow_platform(true)
+    .allow_stdout(true)
     .default_level(LevelFilter::Info)
     .with_filter("ak_sysd", LevelFilter::Trace)
     .enable();

@@ -103,16 +103,14 @@ impl LogBuilder {
             .iter()
             .map(|(_, level)| *level)
             .fold(self.default_level, std::cmp::max);
-        let inner = match (self.allow_platform && env_interactive())
-            || (self.force_stdout && self.allow_stdout)
-        {
-            true => self.get_stdout_logger(),
-            false => match self.get_platform_logger() {
+        let inner: Box<dyn Log> = {
+            if (env_interactive() && self.allow_stdout) || self.force_stdout {
+                self.get_stdout_logger();
+            }
+            match self.get_platform_logger() {
                 Ok(l) => l,
-                Err(e) => {
-                    panic!("Failed to setup logging: {:?}", e);
-                }
-            },
+                Err(_) => self.get_stdout_logger()
+            }
         };
         log::set_boxed_logger(Box::new(FilteredLog::new(inner, filter)))
             .map(|()| log::set_max_level(max_level))

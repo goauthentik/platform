@@ -17,6 +17,12 @@ build:
 	$(call cargo_build,$(TARGET))
 	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 
+build-local:
+	mkdir -p "${TOP}/bin/${TARGET}"
+	mkdir -p "${TOP}/cache/shared"
+	$(call cargo_build_local,$(TARGET))
+	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb
 	$(TME) systemctl restart ssh
