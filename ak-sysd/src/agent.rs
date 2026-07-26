@@ -185,8 +185,23 @@ impl Agent {
     }
 
     pub async fn wait(&self) -> Result<()> {
+        // Out-of-runtime backstop: a *second* SIGINT/SIGTERM force-terminates the
+        // process immediately, even if the tokio runtime is wedged
         #[cfg(unix)]
         {
+            use signal_hook::consts::{SIGINT, SIGTERM};
+            let forced = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            for sig in [SIGINT, SIGTERM] {
+                // Order matters: the conditional shutdown must be registered before
+                // the flag setter so the first delivery only arms the flag and the
+                // second delivery triggers the immediate exit.
+                signal_hook::flag::register_conditional_shutdown(
+                    sig,
+                    130,
+                    std::sync::Arc::clone(&forced),
+                )?;
+                signal_hook::flag::register(sig, std::sync::Arc::clone(&forced))?;
+            }
             let mut sigterm =
                 tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
             tokio::select! {
@@ -198,7 +213,17 @@ impl Agent {
         {
             tokio::signal::ctrl_c().await.ok();
         }
-        self.stop().await
+
+        tracing::info!("shutdown signal received; stopping (send the signal again to force quit)");
+
+        // Bound graceful shutdown so a hung component can't wedge exit forever.
+        match tokio::time::timeout(std::time::Duration::from_secs(15), self.stop()).await {
+            Ok(res) => res,
+            Err(_) => {
+                tracing::warn!("graceful shutdown timed out after 15s, forcing exit");
+                std::process::exit(130);
+            }
+        }
     }
 
     pub async fn stop(&self) -> Result<()> {

@@ -47,6 +47,9 @@ tower-http = { version = "0.7.0", features = ["trace"] }
 tracing = { workspace = true }
 reqwest-middleware = "0.5.2"
 
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.3"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2.186"
 
