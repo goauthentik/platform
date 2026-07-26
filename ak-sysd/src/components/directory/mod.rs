@@ -75,10 +75,11 @@ impl DirectoryComponent {
         groups.extend(synthetic_groups);
         groups.sort_by_key(|g| g.gid);
 
+        tracing::info!("Successfully fetched {} users", users.len());
+        tracing::info!("Successfully fetched {} groups", groups.len());
         *self.users.write().await = users;
         *self.groups.write().await = groups;
 
-        tracing::info!("Successfully fetched users & groups");
         self.ctx.events.dispatch(SysdEvent::DirectoryFetched {
             domain: domain.cfg.domain.clone(),
         });

@@ -34,7 +34,7 @@ impl DeviceComponent {
     /// Runs one checkin cycle for a single domain by name. Exposed
     /// separately from the background loop so `ctrl`'s `domain_enroll` can
     /// trigger an immediate checkin right after enrollment.
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all, fields(domain_name))]
     pub async fn checkin_domain(&self, domain_name: &str) -> Result<()> {
         tracing::info!("Checking in...");
         let domains = self.ctx.domains.domains().await;

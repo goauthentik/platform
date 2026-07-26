@@ -24,6 +24,7 @@ impl DirectoryComponent {
         attr_number(&g.attributes, "gidNumber").unwrap_or((self.nss_gid_offset + g.num_pk) as u32)
     }
 
+    #[tracing::instrument(skip_all)]
     pub async fn fetch_all_groups(&self, api: &Configuration) -> Result<Vec<models::Group>> {
         let mut all = vec![];
         let mut page = 1;

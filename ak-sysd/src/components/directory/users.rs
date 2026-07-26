@@ -40,6 +40,7 @@ impl DirectoryComponent {
         attr_number(&u.attributes, "gidNumber").unwrap_or_else(|| self.user_uid(u))
     }
 
+    #[tracing::instrument(skip_all)]
     pub async fn fetch_all_users(&self, api: &Configuration) -> Result<Vec<models::User>> {
         let mut all = vec![];
         let mut page = 1;

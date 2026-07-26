@@ -15,7 +15,7 @@ pub fn init_log(name: &str) -> Result<Box<dyn Log>> {
     return match syslog::unix(formatter) {
         Ok(logger) => Ok(Box::new(BasicLogger::new(logger))),
         Err(e) => {
-            eprintln!("unable to connect to syslog: {e:?}");
+            log::warn!("unable to connect to syslog: {e:?}");
             return build_file_log(format!("/var/log/authentik/{}.log", name));
         }
     };
