@@ -7,7 +7,7 @@ RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/
         libpam0g-dev libudev-dev pamtester \
         # Required for keyring
         dbus dbus-x11 gnome-keyring \
-        libdbus-1-dev pkg-config && \
+        libdbus-1-dev pkg-config \
         # Required for packaging
         nfpm && \
     echo 'eval $(echo -n "$" | gnome-keyring-daemon --unlock | sed -e "s/^/export /")' >> /home/vscode/.bashrc && \
