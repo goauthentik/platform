@@ -35,6 +35,7 @@ impl DomainConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct LoadedDomain {
     pub cfg: DomainConfig,
     pub api: Configuration,
@@ -94,6 +95,7 @@ fn validate_domain_name(name: &str) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug)]
 pub struct DomainManager {
     domain_dir: String,
     state: Arc<StateStore>,

@@ -15,7 +15,7 @@ use ak_platform::storage::cfgmgr::ConfigManager;
 ///
 /// Backed by a `std::sync::RwLock`, not a tokio lock: callers (`ctrl`,
 /// `auth::token`) look components up synchronously with no `.await`.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct ComponentRegistry {
     inner: Arc<RwLock<HashMap<&'static str, Arc<dyn Any + Send + Sync>>>>,
 }
@@ -34,7 +34,7 @@ impl ComponentRegistry {
 
 /// Shared handles every component needs, mirroring Go's `component.Context`.
 /// Cheap to `Clone` — every field is an `Arc`/handle type.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SysdContext {
     pub cfg: Arc<ConfigManager<Config>>,
     pub domains: Arc<DomainManager>,

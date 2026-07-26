@@ -7,10 +7,7 @@ pub mod sessions;
 pub use sessions::{SessionRecord, SessionStore};
 
 /// Persistent state for ak-sysd, replacing Go's bbolt-backed `*state.State`.
-///
-/// bbolt's nested-bucket model has no direct SQLite equivalent, so state is
-/// stored in flat tables instead. `inspect()` (used by `troubleshoot_inspect`)
-/// documents the resulting shape difference.
+#[derive(Debug)]
 pub struct StateStore {
     conn: Arc<Mutex<Connection>>,
 }

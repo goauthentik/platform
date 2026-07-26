@@ -17,6 +17,7 @@ use tonic::{Request, Response, Status};
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
 
+#[derive(Debug)]
 pub struct DeviceComponent {
     ctx: SysdContext,
 }
@@ -33,7 +34,9 @@ impl DeviceComponent {
     /// Runs one checkin cycle for a single domain by name. Exposed
     /// separately from the background loop so `ctrl`'s `domain_enroll` can
     /// trigger an immediate checkin right after enrollment.
+    #[tracing::instrument]
     pub async fn checkin_domain(&self, domain_name: &str) -> Result<()> {
+        tracing::info!("Checking in...");
         let domains = self.ctx.domains.domains().await;
         let Some(domain) = domains.iter().find(|d| d.cfg.domain == domain_name) else {
             bail!("domain not found: {domain_name}");

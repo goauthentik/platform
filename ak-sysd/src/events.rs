@@ -17,7 +17,7 @@ pub enum ConfigChangeKind {
     Removed,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EventBus {
     tx: broadcast::Sender<SysdEvent>,
 }
