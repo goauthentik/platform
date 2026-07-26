@@ -80,21 +80,24 @@ endif
 
 define cargo_test
 	mkdir -p "${TOP}/cache"
-	cargo llvm-cov \
-		--no-report \
-		--ignore-filename-regex generated \
-		nextest -p $(1) \
-			--no-tests pass \
-			--no-fail-fast \
-			--test-threads 1
-	cargo llvm-cov report \
-		--codecov \
-		--ignore-filename-regex generated \
-		--output-path "${TOP}/cache/llvm-cov-target.json"
-	cargo llvm-cov report \
-		--html \
-		--ignore-filename-regex generated \
-		--output-dir "${TOP}/cache/llvm-cov-html/"
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		cargo llvm-cov \
+			--no-report \
+			--ignore-filename-regex generated \
+			nextest -p $(1) \
+				--no-tests pass \
+				--no-fail-fast \
+				--test-threads 1
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		cargo llvm-cov report \
+			--codecov \
+			--ignore-filename-regex generated \
+			--output-path "${TOP}/cache/llvm-cov-target.json"
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		cargo llvm-cov report \
+			--html \
+			--ignore-filename-regex generated \
+			--output-dir "${TOP}/cache/llvm-cov-html/"
 endef
 
 define rs_e2e_coverage_convert
