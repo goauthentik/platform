@@ -62,6 +62,7 @@ impl StateStore {
         SessionStore::new(Arc::clone(&self.conn))
     }
 
+    #[tracing::instrument(skip_all, fields(domain))]
     pub async fn domain_cache_get(&self, domain: &str) -> Result<Option<(String, String, i64)>> {
         let conn = Arc::clone(&self.conn);
         let domain = domain.to_string();
@@ -87,6 +88,7 @@ impl StateStore {
         .await?
     }
 
+    #[tracing::instrument(skip_all, fields(domain))]
     pub async fn domain_cache_set(
         &self,
         domain: &str,
@@ -190,6 +192,7 @@ pub struct ComponentKv {
 }
 
 impl ComponentKv {
+    #[tracing::instrument(skip_all, fields(key))]
     pub async fn get(&self, key: &str) -> Result<Option<String>> {
         let conn = Arc::clone(&self.conn);
         let component = self.component.clone();
@@ -208,6 +211,7 @@ impl ComponentKv {
         .await?
     }
 
+    #[tracing::instrument(skip_all, fields(key))]
     pub async fn set(&self, key: &str, value: &str) -> Result<()> {
         let conn = Arc::clone(&self.conn);
         let component = self.component.clone();
