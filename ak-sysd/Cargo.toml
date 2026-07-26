@@ -54,6 +54,7 @@ signal-hook = "0.3"
 libc = "0.2.186"
 
 [target.'cfg(windows)'.dependencies]
+windows-service = "0.8"
 winreg = { version = "0.56", features = ["serialization-serde"] }
 windows = { version = "0.62.2", features = [
     "Win32_System_RemoteDesktop",

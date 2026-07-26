@@ -1,4 +1,3 @@
-use crate::agent::Agent;
 use ak_meta::full_version;
 use ak_platform::{paths::sysd_config_file, string::PlatformString};
 use clap::{Parser, Subcommand};
@@ -12,6 +11,7 @@ pub mod cli;
 pub mod components;
 pub mod context;
 pub mod events;
+pub mod runner;
 pub mod state;
 pub mod util;
 
@@ -95,9 +95,7 @@ pub async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Agent => {
-            let ag = Agent::new(cli.config).await?;
-            ag.start().await?;
-            ag.wait().await?;
+            self::runner::run(cli.config).await?;
         }
         Commands::Domains(DomainsCommands::Join {
             domain_name,
