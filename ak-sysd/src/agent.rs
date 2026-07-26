@@ -13,6 +13,7 @@ use ak_platform::paths::{SysdSocketID, sysd_socket_path};
 use ak_platform::storage::cfgmgr::ConfigManager;
 use eyre::Result;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tonic::service::RoutesBuilder;
 use tonic::transport::Server;
@@ -26,7 +27,7 @@ use crate::components::session::SessionComponent;
 
 pub struct Agent {
     ctx: SysdContext,
-    components: Vec<Arc<dyn Component>>,
+    components: HashMap<String, Arc<dyn Component>>,
     default_routes: RoutesBuilder,
     ctrl_routes: RoutesBuilder,
 }
@@ -67,8 +68,8 @@ impl Agent {
         ctx: &SysdContext,
         default_routes: &mut RoutesBuilder,
         ctrl_routes: &mut RoutesBuilder,
-    ) -> Vec<Arc<dyn Component>> {
-        let mut components: Vec<Arc<dyn Component>> = vec![];
+    ) -> HashMap<String, Arc<dyn Component>> {
+        let mut components: HashMap<String, Arc<dyn Component>> = HashMap::new();
 
         macro_rules! register {
             ($ty:ty) => {{
@@ -76,7 +77,8 @@ impl Agent {
                 ctx.registry.insert(<$ty>::id(), Arc::clone(&comp));
                 Arc::clone(&comp).register(SysdSocketID::Default, default_routes);
                 Arc::clone(&comp).register(SysdSocketID::CTRL, ctrl_routes);
-                components.push(comp as Arc<dyn Component>);
+
+                components.insert(<$ty>::id().to_string(), comp as Arc<dyn Component>);
             }};
         }
 
@@ -106,7 +108,8 @@ impl Agent {
                                 kind: ConfigChangeKind::Added | ConfigChangeKind::Removed,
                             }) => {
                                 tracing::info!("domain config changed, restarting components");
-                                for c in &components {
+                                for (id, c) in &components {
+                                    tracing::info!(component = id, "stopping component");
                                     if let Err(e) = c.stop().await {
                                         tracing::warn!("component failed to stop: {e:?}");
                                     }
@@ -114,7 +117,8 @@ impl Agent {
                                 if let Err(e) = ctx.domains.load_all().await {
                                     tracing::warn!("failed to reload domains: {e:?}");
                                 }
-                                for c in &components {
+                                for (id, c) in &components {
+                                    tracing::info!(component = id, "starting component");
                                     if let Err(e) = c.start().await {
                                         tracing::warn!("component failed to start: {e:?}");
                                     }
@@ -158,7 +162,8 @@ impl Agent {
     }
 
     pub async fn start(&self) -> Result<()> {
-        for c in &self.components {
+        for (id, c) in &self.components {
+            tracing::info!(component = id, "starting component");
             if let Err(e) = c.start().await {
                 tracing::warn!("component failed to start: {e:?}");
             }
@@ -199,7 +204,8 @@ impl Agent {
 
     pub async fn stop(&self) -> Result<()> {
         self.ctx.cancel.cancel();
-        for c in &self.components {
+        for (id, c) in &self.components {
+            tracing::info!(component = id, "stopping component");
             if let Err(e) = c.stop().await {
                 tracing::warn!("component failed to stop: {e:?}");
             }
