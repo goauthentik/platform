@@ -5,7 +5,7 @@ use env_filter::FilteredLog;
 use eyre::Result;
 pub use log::LevelFilter;
 use log::Log;
-use simplelog::{Config, TermLogger};
+use simplelog::{ConfigBuilder, TermLogger};
 
 #[cfg(target_os = "macos")]
 pub mod macos;
@@ -72,7 +72,9 @@ impl LogBuilder {
     fn get_stdout_logger(&self) -> Box<dyn Log> {
         TermLogger::new(
             LevelFilter::Trace,
-            Config::default(),
+            ConfigBuilder::new()
+                .set_thread_mode(simplelog::ThreadLogMode::Both)
+                .build(),
             simplelog::TerminalMode::Stderr,
             simplelog::ColorChoice::Auto,
         )
