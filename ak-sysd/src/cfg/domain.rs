@@ -6,6 +6,7 @@ use authentik_client::models::{AgentConfig, CurrentBrand, EnrollRequest};
 use eyre::{Context, Result, bail, eyre};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
@@ -42,7 +43,20 @@ pub struct LoadedDomain {
     pub brand: Arc<RwLock<Option<CurrentBrand>>>,
 }
 
-fn build_api_client(authentik_url: &str, token: &str) -> Result<Configuration> {
+enum TokenFormat {
+    Bearer,
+    BearerAgent,
+}
+
+fn build_api_client(
+    authentik_url: &str,
+    token: &str,
+    format: TokenFormat,
+) -> Result<Configuration> {
+    let header_value = match format {
+        TokenFormat::Bearer => format!("Bearer {}", token,),
+        TokenFormat::BearerAgent => format!("Bearer+agent {}", token,),
+    };
     Ok(Configuration {
         base_path: format!("{}/api/v3", authentik_url.trim_end_matches('/')),
         bearer_access_token: Some(token.to_string()),
@@ -50,10 +64,16 @@ fn build_api_client(authentik_url: &str, token: &str) -> Result<Configuration> {
         client: reqwest_middleware::ClientBuilder::new(
             Client::builder()
                 .default_headers(
-                    [(
-                        reqwest::header::AUTHORIZATION,
-                        reqwest::header::HeaderValue::from_str(&format!("Bearer {}", token,))?,
-                    )]
+                    [
+                        (
+                            reqwest::header::AUTHORIZATION,
+                            reqwest::header::HeaderValue::from_str(&header_value)?,
+                        ),
+                        (
+                            reqwest::header::HeaderName::from_str("X-AK-Platform-Version")?,
+                            reqwest::header::HeaderValue::from_str(&ak_meta::version())?,
+                        ),
+                    ]
                     .into_iter()
                     .collect(),
                 )
@@ -108,7 +128,7 @@ impl DomainManager {
                 let mut cfg: DomainConfig = serde_json::from_str(&raw)?;
                 cfg.token = self.resolve_token(&cfg).await;
                 loaded.push(Arc::new(LoadedDomain {
-                    api: build_api_client(&cfg.authentik_url, &cfg.token)?,
+                    api: build_api_client(&cfg.authentik_url, &cfg.token, TokenFormat::BearerAgent)?,
                     remote: Arc::new(RwLock::new(None)),
                     brand: Arc::new(RwLock::new(None)),
                     cfg,
@@ -179,7 +199,7 @@ impl DomainManager {
         std::fs::write(&path, json)?;
 
         let loaded = Arc::new(LoadedDomain {
-            api: build_api_client(&cfg.authentik_url, &cfg.token)?,
+            api: build_api_client(&cfg.authentik_url, &cfg.token, TokenFormat::BearerAgent)?,
             remote: Arc::new(RwLock::new(None)),
             brand: Arc::new(RwLock::new(None)),
             cfg,
@@ -221,7 +241,7 @@ impl DomainManager {
     ) -> Result<DomainConfig> {
         let serial = ak_platform_facts::serial().context("failed to get serial")?;
         let hostname = ak_platform_facts::hostname();
-        let api = build_api_client(&authentik_url, &one_time_token)
+        let api = build_api_client(&authentik_url, &one_time_token, TokenFormat::Bearer)
             .context("failed to get API client")?;
         let res = authentik_client::apis::endpoints_api::endpoints_agents_connectors_enroll_create(
             &api,
@@ -242,7 +262,7 @@ impl DomainManager {
 
     /// Verifies connectivity for a domain, mirroring Go's `Test()`.
     pub async fn test(&self, cfg: &DomainConfig) -> Result<AgentConfig> {
-        let api = build_api_client(&cfg.authentik_url, &cfg.token)?;
+        let api = build_api_client(&cfg.authentik_url, &cfg.token, TokenFormat::BearerAgent)?;
         let remote = authentik_client::apis::endpoints_api::endpoints_agents_connectors_agent_config_retrieve(&api)
             .await
             .map_err(|e| eyre!("connectivity test failed: {e}"))?;
