@@ -70,12 +70,15 @@ impl Component for DeviceComponent {
                     }
                 }
                 let jitter = rand::random::<u64>() % 30;
-                tracing::info!(
-                    delay = DEFAULT_REFRESH_INTERVAL_SECS + jitter,
-                    "Waiting seconds before next checkin..."
-                );
+                let delay = ctx
+                    .domains
+                    .min_refresh_interval()
+                    .await
+                    .unwrap_or(DEFAULT_REFRESH_INTERVAL_SECS)
+                    + jitter;
+                tracing::info!(delay, "Waiting seconds before next checkin...");
                 tokio::select! {
-                    _ = tokio::time::sleep(std::time::Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS + jitter)) => {}
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(delay)) => {}
                     _ = ctx.cancel.cancelled() => return,
                 }
             }

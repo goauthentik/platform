@@ -197,6 +197,21 @@ impl DomainManager {
         self.domains.read().await.clone()
     }
 
+    pub async fn min_refresh_interval(&self) -> Option<u64> {
+        // Smallest refresh_interval (seconds) across domains that have a
+        // loaded remote config; fall back to the default when none is available.
+        let mut refresh_interval: Option<u64> = None;
+        for d in self.domains().await {
+            if let Some(remote) = d.remote.read().await.as_ref()
+                && remote.refresh_interval > 0
+            {
+                let secs = remote.refresh_interval as u64;
+                refresh_interval = Some(refresh_interval.map_or(secs, |m| m.min(secs)));
+            }
+        }
+        refresh_interval
+    }
+
     /// First enabled domain — mirrors Go's `dom[0]` shortcut for
     /// single-tenant components (ping, auth, directory, device). Do not
     /// invent smarter "current domain" selection here.

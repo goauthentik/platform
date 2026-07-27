@@ -123,12 +123,15 @@ impl Component for DirectoryComponent {
                     tracing::warn!("directory fetch failed: {e:?}");
                 }
                 let jitter = rand::random::<u64>() % 30;
-                tracing::info!(
-                    delay = DEFAULT_REFRESH_INTERVAL_SECS + jitter,
-                    "Waiting seconds before next fetch..."
-                );
+                let delay = ctx
+                    .domains
+                    .min_refresh_interval()
+                    .await
+                    .unwrap_or(DEFAULT_REFRESH_INTERVAL_SECS)
+                    + jitter;
+                tracing::info!(delay, "Waiting seconds before next fetch...");
                 tokio::select! {
-                    _ = tokio::time::sleep(Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS + jitter)) => {}
+                    _ = tokio::time::sleep(Duration::from_secs(delay)) => {}
                     _ = ctx.cancel.cancelled() => return,
                 }
             }
