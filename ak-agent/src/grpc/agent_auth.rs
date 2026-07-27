@@ -159,7 +159,7 @@ impl AgentAuth for AgentGRPCServer {
             token: Some(Token {
                 preferred_username: c.preferred_username,
                 iss: c.iss,
-                sub: c.sub,
+                sub: c.sub.unwrap_or_default(),
                 aud: c.aud,
                 exp: Some(c.exp.into()),
                 nbf: None,

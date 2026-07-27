@@ -169,7 +169,7 @@ impl SystemAuthToken for AuthComponent {
             token: Some(Token {
                 preferred_username: data.claims.preferred_username,
                 iss: data.claims.iss,
-                sub: data.claims.sub,
+                sub: data.claims.sub.unwrap_or_default(),
                 aud: data.claims.aud,
                 exp: Some(data.claims.exp.into()),
                 nbf: None,

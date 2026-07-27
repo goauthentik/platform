@@ -130,6 +130,12 @@ impl Agent {
                                         tracing::warn!("component failed to start: {e:?}");
                                     }
                                 }
+                                // Mirror Agent::start()'s post-startup healthcheck: load_all()
+                                // only pre-seeds `remote` from the on-disk cache, which is empty
+                                // for a newly-joined domain, so interactive-auth/ssh-cert checks
+                                // that depend on `remote` would otherwise stay broken until the
+                                // next full daemon restart.
+                                ctx.domains.healthcheck_all().await;
                             }
                             Ok(_) => {}
                             Err(_) => return,
