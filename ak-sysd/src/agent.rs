@@ -124,11 +124,6 @@ impl Agent {
                                 if let Err(e) = ctx.domains.load_all().await {
                                     tracing::warn!("failed to reload domains: {e:?}");
                                 }
-                                // Fetch each domain's remote AgentConfig (license_status,
-                                // jwks_auth, ...) now — otherwise a domain enrolled at runtime
-                                // has `remote == None` until the next startup, and interactive
-                                // auth is refused as "not licensed".
-                                ctx.domains.healthcheck_all().await;
                                 for (id, c) in &components {
                                     tracing::info!(component = id, "starting component");
                                     if let Err(e) = c.start().await {
