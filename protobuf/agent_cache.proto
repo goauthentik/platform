@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package agent_cache;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "agent.proto";
