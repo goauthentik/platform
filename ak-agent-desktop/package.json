@@ -23,7 +23,7 @@
     },
     "devDependencies": {
         "@goauthentik/eslint-config": "^2.0.3",
-        "@goauthentik/prettier-config": "^4.0.1",
+        "@goauthentik/prettier-config": "^4.0.2",
         "@goauthentik/tsconfig": "^2.0.0",
         "@tauri-apps/cli": "^2",
         "typescript": "^6.0.3",
