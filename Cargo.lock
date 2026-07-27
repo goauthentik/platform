@@ -71,7 +71,7 @@ dependencies = [
  "authentik-client",
  "chrono",
  "eyre",
- "jsonwebtoken",
+ "jsonwebtoken 11.0.0",
  "pbjson-types",
  "reqwest 0.13.4",
  "reqwest-middleware",
@@ -348,7 +348,7 @@ dependencies = [
 
 [[package]]
 name = "ak-sysd"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-flow-executor",
  "ak-meta",
@@ -362,7 +362,7 @@ dependencies = [
  "clap_complete",
  "eyre",
  "hex",
- "jsonwebtoken",
+ "jsonwebtoken 10.4.0",
  "libc",
  "pbjson-types",
  "rand 0.9.4",
@@ -765,9 +765,8 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 
 [[package]]
 name = "authentik-client"
-version = "2026.5.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da70cb52ab6295e86b87171f7f3992a4520a0d3b32918a9838256d12a0086004"
+version = "2026.8.0-rc1"
+source = "git+https://github.com/goauthentik/client-rust#33201238722a70fdbe8c3d34eb54a51e1053d3a8"
 dependencies = [
  "chrono",
  "reqwest 0.13.4",
@@ -4365,6 +4364,30 @@ dependencies = [
 
 [[package]]
 name = "jsonwebtoken"
+version = "10.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eba32bfb4ffdeaca3e34431072faf01745c9b26d25504aa7a6cf5684334fc4fc"
+dependencies = [
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "getrandom 0.2.17",
+ "hmac 0.12.1",
+ "js-sys",
+ "p256",
+ "p384",
+ "pem",
+ "rand 0.8.6",
+ "rsa",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "signature",
+ "simple_asn1",
+ "zeroize",
+]
+
+[[package]]
+name = "jsonwebtoken"
 version = "11.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "881733cbc631fc9e472e24447ce32a64bedf2da498d6d8570b08edc87de71f65"
@@ -4875,7 +4898,7 @@ dependencies = [
 
 [[package]]
 name = "nu-ansi-term"
-version = "0.50.4"
+version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
