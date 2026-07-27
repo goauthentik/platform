@@ -19,3 +19,6 @@ osquery = { git = "https://github.com/BeryJu/osquery-rs", version = "0.2.3" }
 
 [target.'cfg(windows)'.dependencies]
 wmi = "0.18"
+
+[dev-dependencies]
+tempfile = { workspace = true }

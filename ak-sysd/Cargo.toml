@@ -37,7 +37,7 @@ serde_json = { workspace = true }
 sha2 = "0.10"
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
 subtle = "2"
-tempfile = "3"
+tempfile = { workspace = true }
 tokio = { workspace = true, features = ["time", "signal"] }
 tokio-util = "0.7"
 tonic = { workspace = true }

@@ -56,3 +56,4 @@ whoami = "2.1.0"
 oauth-device-flows = "0.1.0"
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls", "cookies"] }
 tracing-subscriber = "0.3"
+tempfile = "3"

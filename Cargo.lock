@@ -182,6 +182,7 @@ dependencies = [
  "authentik-client",
  "cookie_store",
  "eyre",
+ "httptest",
  "regex",
  "reqwest 0.13.4",
  "reqwest-middleware",
@@ -324,6 +325,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sysinfo",
+ "tempfile",
  "tracing",
  "wmi",
 ]
@@ -1417,6 +1419,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf88ba1141d185c399bee5288d850d63b8369520c1eafc32a0430b5b6c287bf4"
 dependencies = [
  "tinyvec",
+]
+
+[[package]]
+name = "bstr"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f7dc094d718f2e1c1559ad110e27eeaae14a5465d3d56dd6dbd793079fbd530"
+dependencies = [
+ "memchr",
+ "regex-automata",
+ "serde_core",
 ]
 
 [[package]]
@@ -3734,6 +3747,30 @@ name = "httpdate"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+
+[[package]]
+name = "httptest"
+version = "0.16.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a422b4c865d103368628ae1247be6159ad8041f803eb9e2176cf69ad7d13da40"
+dependencies = [
+ "bstr",
+ "bytes",
+ "crossbeam-channel",
+ "form_urlencoded",
+ "futures",
+ "http 1.4.2",
+ "http-body-util",
+ "hyper 1.8.1",
+ "hyper-util",
+ "log",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "tokio",
+]
 
 [[package]]
 name = "hybrid-array"
