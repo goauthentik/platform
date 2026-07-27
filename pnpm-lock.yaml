@@ -11,8 +11,8 @@ importers:
   ak-agent-desktop:
     dependencies:
       '@goauthentik/api':
-        specifier: ^2026.5.5
-        version: 2026.5.5
+        specifier: ^2026.5.6
+        version: 2026.5.6
       '@goauthentik/brand-assets':
         specifier: ^2.0.0
         version: 2.0.0
@@ -54,14 +54,14 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(rollup@4.62.2)
       '@goauthentik/api':
-        specifier: ^2026.5.5
-        version: 2026.5.5
+        specifier: ^2026.5.6
+        version: 2026.5.6
       '@goauthentik/eslint-config':
         specifier: ^2.0.3
         version: 2.0.3(@typescript-eslint/parser@8.64.0(eslint@9.39.4)(typescript@6.0.3))(typescript-eslint@8.64.0(eslint@9.39.4)(typescript@6.0.3))(typescript@6.0.3)
       '@goauthentik/prettier-config':
         specifier: ^4.0.1
-        version: 4.0.1(prettier-plugin-packagejson@3.0.2(prettier@3.9.5))(prettier@3.9.5)
+        version: 4.0.1(prettier-plugin-packagejson@3.0.2(prettier@3.9.6))(prettier@3.9.6)
       '@goauthentik/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0
@@ -90,11 +90,11 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       prettier:
-        specifier: ^3.9.5
-        version: 3.9.5
+        specifier: ^3.9.6
+        version: 3.9.6
       prettier-plugin-packagejson:
         specifier: ^3.0.2
-        version: 3.0.2(prettier@3.9.5)
+        version: 3.0.2(prettier@3.9.6)
       rollup:
         specifier: ^4.62.2
         version: 4.62.2
@@ -292,8 +292,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@goauthentik/api@2026.5.5':
-    resolution: {integrity: sha512-7AqGYH9nyPzIBanCb/afnMLwDvLrc0MF37fDHlHm2JZjC5+TwKsfQWwXEY5GH7VwAKw2spZt7vQIeAiwBT4Diw==}
+  '@goauthentik/api@2026.5.6':
+    resolution: {integrity: sha512-B9/ld6Gxt45AwhdxsMl5yQnwDuCRSAoIiBbRWlJExUx1M/iPi34O4HeN9NeQ8gtSVw05/fYe90yUliT8oaE96Q==}
 
   '@goauthentik/brand-assets@2.0.0':
     resolution: {integrity: sha512-yRJrV+KuGrz7MNcRzAkZa4e7LuciuFZBVSyPFRd/EndxgiqcFuFHyn+6tEurKNmianBNURhe2qm5ytoLFgEWFQ==}
@@ -1996,11 +1996,6 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  prettier@3.9.5:
-    resolution: {integrity: sha512-/FVl766LpUfB5vXgCYOYa0MeV/441Ia99AeICQIQFTY/Nw0roZwULcXpku5i1/m5kt/baz+s4Zogspd839HSMg==}
-    engines: {node: '>=14'}
-    hasBin: true
-
   prettier@3.9.6:
     resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
     engines: {node: '>=14'}
@@ -2669,7 +2664,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@goauthentik/api@2026.5.5': {}
+  '@goauthentik/api@2026.5.6': {}
 
   '@goauthentik/brand-assets@2.0.0': {}
 
@@ -2715,11 +2710,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@goauthentik/prettier-config@4.0.1(prettier-plugin-packagejson@3.0.2(prettier@3.9.5))(prettier@3.9.5)':
+  '@goauthentik/prettier-config@4.0.1(prettier-plugin-packagejson@3.0.2(prettier@3.9.6))(prettier@3.9.6)':
     dependencies:
       format-imports: 4.0.8
-      prettier: 3.9.5
-      prettier-plugin-packagejson: 3.0.2(prettier@3.9.5)
+      prettier: 3.9.6
+      prettier-plugin-packagejson: 3.0.2(prettier@3.9.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -4596,15 +4591,13 @@ snapshots:
     optionalDependencies:
       prettier: 3.8.3
 
-  prettier-plugin-packagejson@3.0.2(prettier@3.9.5):
+  prettier-plugin-packagejson@3.0.2(prettier@3.9.6):
     dependencies:
       sort-package-json: 3.7.1
     optionalDependencies:
-      prettier: 3.9.5
+      prettier: 3.9.6
 
   prettier@3.8.3: {}
-
-  prettier@3.9.5: {}
 
   prettier@3.9.6: {}
 

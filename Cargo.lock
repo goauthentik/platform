@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "ak-agent"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-meta",
  "ak-platform",
@@ -97,7 +97,7 @@ dependencies = [
 
 [[package]]
 name = "ak-agent-desktop"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-agent",
  "ak-meta",
@@ -118,18 +118,18 @@ dependencies = [
 
 [[package]]
 name = "ak-api-cli-gen"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "insta",
  "prettyplease 0.3.0",
  "proc-macro2",
  "quote",
- "syn 3.0.1",
+ "syn 3.0.3",
 ]
 
 [[package]]
 name = "ak-browser-support"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-meta",
  "ak-platform",
@@ -147,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "ak-cli"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-api-cli-gen",
  "ak-meta",
@@ -176,7 +176,7 @@ dependencies = [
 
 [[package]]
 name = "ak-flow-executor"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-meta",
  "ak-platform",
@@ -194,7 +194,7 @@ dependencies = [
 
 [[package]]
 name = "ak-meta"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-meta-macros",
  "ak-platform",
@@ -203,19 +203,19 @@ dependencies = [
 
 [[package]]
 name = "ak-meta-macros"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.1",
+ "syn 3.0.3",
 ]
 
 [[package]]
 name = "ak-nss"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-platform",
- "ctor 1.0.10",
+ "ctor 1.0.11",
  "dtor 1.0.5",
  "eyre",
  "libc",
@@ -225,11 +225,11 @@ dependencies = [
 
 [[package]]
 name = "ak-pam"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-platform",
  "ctap-hid-fido2",
- "ctor 1.0.10",
+ "ctor 1.0.11",
  "dtor 1.0.5",
  "eyre",
  "gethostname",
@@ -243,7 +243,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "base64 0.23.0",
  "bytes",
@@ -282,7 +282,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-authz"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-platform",
  "apple-localauthentication",
@@ -296,7 +296,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-e2e"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-flow-executor",
  "ak-platform",
@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-facts"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-meta",
  "authentik-client",
@@ -330,7 +330,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-keyring"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-platform",
  "chrono",
@@ -393,7 +393,7 @@ dependencies = [
 
 [[package]]
 name = "ak_ffi"
-version = "0.50.3"
+version = "0.50.4"
 dependencies = [
  "ak-platform",
  "cxx",
@@ -824,9 +824,9 @@ dependencies = [
 
 [[package]]
 name = "aws-runtime"
-version = "1.9.0"
+version = "1.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6b50a43f3ccdf331521c6d6c68b7cc9668b6e09d439ebda9569df5722324d76"
+checksum = "c9007227e10b5fed2f3e0a2beff489211e2b5604c400b7a9d5d81ca9d64c24bb"
 dependencies = [
  "aws-credential-types",
  "aws-sigv4",
@@ -849,9 +849,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-sts"
-version = "1.109.0"
+version = "1.110.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32d214cdfa5bbe17f117e76a7643fadf32a5234fb597322ef8b1fb4b2f17dbbd"
+checksum = "dd8b14781dfbff48984017d57167b6ea0b6471c6920ec52b44a2677c7feb3c13"
 dependencies = [
  "arc-swap",
  "aws-credential-types",
@@ -997,9 +997,9 @@ dependencies = [
 
 [[package]]
 name = "aws-smithy-runtime"
-version = "1.12.0"
+version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bea94a9ff8464016338c851e24b472d7131c388c88898a502e781815b2ee6045"
+checksum = "07505b34e8f4b3591a4fa69e9792b52289b95488dbbc68c3c0075b7bedb245e1"
 dependencies = [
  "aws-smithy-async",
  "aws-smithy-http",
@@ -1023,9 +1023,9 @@ dependencies = [
 
 [[package]]
 name = "aws-smithy-runtime-api"
-version = "1.13.0"
+version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22ed1ebe6e0a95ea84570225f5a8208dec4b8f77e61a9b0d6f51773fcb4612f0"
+checksum = "3b98f2e1fd67ec06618f9c291e5e495a468e60519e44c9c1979cd0521f3affdb"
 dependencies = [
  "aws-smithy-async",
  "aws-smithy-runtime-api-macros",
@@ -2145,9 +2145,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "1.0.10"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2e30e509674ef0ec91e21a7735766db37d163d46151b6a361d8b83dd79116bd"
+checksum = "e9bb72bb94fdc1bd619f4c18cc91ecf6302aeb333d31b3c6ec0bb841cd920209"
 dependencies = [
  "link-section",
  "linktime-proc-macro",
@@ -2222,7 +2222,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "scratch",
- "syn 3.0.1",
+ "syn 3.0.3",
 ]
 
 [[package]]
@@ -2236,7 +2236,7 @@ dependencies = [
  "indexmap 2.14.0",
  "proc-macro2",
  "quote",
- "syn 3.0.1",
+ "syn 3.0.3",
 ]
 
 [[package]]
@@ -2254,7 +2254,7 @@ dependencies = [
  "indexmap 2.14.0",
  "proc-macro2",
  "quote",
- "syn 3.0.1",
+ "syn 3.0.3",
 ]
 
 [[package]]
@@ -4365,9 +4365,9 @@ dependencies = [
 
 [[package]]
 name = "jsonwebtoken"
-version = "10.4.0"
+version = "11.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eba32bfb4ffdeaca3e34431072faf01745c9b26d25504aa7a6cf5684334fc4fc"
+checksum = "881733cbc631fc9e472e24447ce32a64bedf2da498d6d8570b08edc87de71f65"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -4875,7 +4875,7 @@ dependencies = [
 
 [[package]]
 name = "nu-ansi-term"
-version = "0.50.3"
+version = "0.50.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
@@ -5951,7 +5951,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2bfe0f4c752e450fc2faf62654f1c134747922825d5b04ca717b8874f41a40c0"
 dependencies = [
  "proc-macro2",
- "syn 3.0.1",
+ "syn 3.0.3",
 ]
 
 [[package]]
@@ -7202,7 +7202,7 @@ checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 3.0.1",
+ "syn 3.0.3",
 ]
 
 [[package]]
@@ -7770,9 +7770,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "3.0.1"
+version = "3.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5edbec4ed188954a10c12c038215f8ce7606b2d5c973cd8dc43e8795065c5f2f"
+checksum = "53e9bae58849f64dfa4f5d5ae372c8341f7305f82a3868709269343628b659a3"
 dependencies = [
  "proc-macro2",
  "quote",
