@@ -118,18 +118,17 @@ impl Component for DirectoryComponent {
                 nss_uid_offset,
                 nss_gid_offset,
             };
-            let jitter = rand::random::<u64>() % 30;
-            tracing::info!(jitter, "Waiting seconds before fetching...");
-            tokio::select! {
-                _ = tokio::time::sleep(Duration::from_secs(jitter)) => {}
-                _ = ctx.cancel.cancelled() => return,
-            }
             loop {
                 if let Err(e) = this.fetch().await {
                     tracing::warn!("directory fetch failed: {e:?}");
                 }
+                let jitter = rand::random::<u64>() % 30;
+                tracing::info!(
+                    delay = DEFAULT_REFRESH_INTERVAL_SECS + jitter,
+                    "Waiting seconds before next fetch..."
+                );
                 tokio::select! {
-                    _ = tokio::time::sleep(Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS)) => {}
+                    _ = tokio::time::sleep(Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS + jitter)) => {}
                     _ = ctx.cancel.cancelled() => return,
                 }
             }

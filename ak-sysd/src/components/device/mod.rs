@@ -64,19 +64,18 @@ impl Component for DeviceComponent {
             loop {
                 let domains = ctx.domains.domains().await;
                 for d in domains {
-                    let jitter = rand::random::<u64>() % 30;
-                    tracing::info!(jitter, "Waiting seconds before checking in...");
-                    tokio::select! {
-                        _ = tokio::time::sleep(std::time::Duration::from_secs(jitter)) => {}
-                        _ = ctx.cancel.cancelled() => return,
-                    }
                     let facts = DeviceComponent::gather_facts();
                     if let Err(e) = authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(&d.api, Some(facts)).await {
                         tracing::warn!(domain = d.cfg.domain, "checkin failed: {e:?}");
                     }
                 }
+                let jitter = rand::random::<u64>() % 30;
+                tracing::info!(
+                    delay = DEFAULT_REFRESH_INTERVAL_SECS + jitter,
+                    "Waiting seconds before next checkin..."
+                );
                 tokio::select! {
-                    _ = tokio::time::sleep(std::time::Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS)) => {}
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(DEFAULT_REFRESH_INTERVAL_SECS + jitter)) => {}
                     _ = ctx.cancel.cancelled() => return,
                 }
             }
