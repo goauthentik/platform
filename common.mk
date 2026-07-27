@@ -57,6 +57,8 @@ endef
 
 ifeq ($(PLATFORM),gnu/linux)
 define cargo_build
+	rm -rf "$(CONTAINER_TOP)cache/build-profraw"
+	mkdir -p "$(CONTAINER_TOP)cache/build-profraw"
 	docker run --rm \
 		-i \
 		--volume "$(CONTAINER_TOP):/workspace" \
@@ -65,6 +67,7 @@ define cargo_build
 		--env AK_VERSION="${VERSION}" \
 		--env AK_BUILDHASH="${VERSION_HASH}" \
 		--env AK_TAG="${VERSION_TAG}" \
+		--env LLVM_PROFILE_FILE="/workspace/cache/build-profraw/%m_%p.profraw" \
 		$(DOCKER_BUILDER_IMAGE) \
 		cargo build \
 			--target-dir /workspace/cache/shared \
@@ -103,35 +106,15 @@ define cargo_test
 		--output-dir "${PWD}/cache/llvm-cov-html/"
 endef
 
-define rs_e2e_coverage_convert
+define rs_build_coverage_convert
 	mkdir -p "${PWD}/cache"
-	PROFRAW_FILES=$$(find "${PWD}/ak-platform-e2e/coverage/rs" -name '*.profraw' 2>/dev/null | tr '\n' ' '); \
-	if [ -z "$$PROFRAW_FILES" ]; then \
-		echo "No Rust profraw files found in ak-platform-e2e/coverage/rs, creating empty coverage file"; \
-		touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
-	else \
-		HOST=$$(rustc -vV 2>/dev/null | awk '/^host:/{print $$2}'); \
-		TOOLCHAIN=$$(rustup show active-toolchain 2>/dev/null | awk '{print $$1}'); \
-		LLVM_DIR=$$(rustup show home 2>/dev/null)/toolchains/$$TOOLCHAIN/lib/rustlib/$$HOST/bin; \
-		$$LLVM_DIR/llvm-profdata merge -sparse $$PROFRAW_FILES \
-			-o "${PWD}/cache/rs-e2e-merged.profdata"; \
-		OBJECTS=""; \
-		for bin in "${PWD}/bin/cli/ak" "${PWD}/bin/agent/ak-agent" \
-				"${PWD}/bin/nss/libnss_authentik.so" "${PWD}/bin/pam/libpam_authentik.so"; do \
-			if [ -f "$$bin" ]; then OBJECTS="$$OBJECTS -object $$bin"; fi; \
-		done; \
-		if [ -z "$$OBJECTS" ]; then \
-			echo "No instrumented Rust binaries found in bin/, creating empty coverage file"; \
-			touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
-		else \
-			$$LLVM_DIR/llvm-cov export \
-				-format=lcov \
-				-instr-profile="${PWD}/cache/rs-e2e-merged.profdata" \
-				$$OBJECTS \
-				-ignore-filename-regex='generated|\.cargo' \
-				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
-		fi; \
-	fi
+	docker run --rm \
+		-i \
+		--volume "$(CONTAINER_TOP):/workspace" \
+		--workdir /workspace \
+		$(DOCKER_BUILDER_IMAGE) \
+		bash hack/rs-coverage-convert.sh cache/build-profraw rs-build \
+			"newest:cache/shared/release/build:*/ak-cli-*/build-script-build"
 endef
 
 TME := docker exec authentik-platform_devcontainer-test-machine-1

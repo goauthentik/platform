@@ -48,6 +48,7 @@ jobs:
       CARGO_TERM_COLOR: always
     permissions:
       contents: read
+      id-token: write
     outputs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
@@ -107,6 +108,14 @@ jobs:
         with:
           name: authentik_${{ matrix.platform }}_${{ matrix.target }}${{ inputs.artifact_suffix }}
           path: bin/
+      - if: ${{ contains(inputs.rust_build_flags, 'instrument-coverage') }}
+        run: make rs-build-coverage-convert
+      - if: ${{ contains(inputs.rust_build_flags, 'instrument-coverage') }}
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+        with:
+          use_oidc: true
+          flags: rs-e2e-build-${{ matrix.target }}
+          files: ${{ github.workspace }}/cache/rs-build-coverage.lcov
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         if: always()
         with:

@@ -111,7 +111,12 @@ test-e2e-convert:
 		echo "No Go in-container coverage found, skipping Go coverage conversion"; \
 	fi
 	find ${PWD}/ak-platform-e2e/coverage
-	$(call rs_e2e_coverage_convert)
+	bash hack/rs-coverage-convert.sh "${PWD}/ak-platform-e2e/coverage/rs" rs-e2e \
+		"${PWD}/bin/cli/ak" "${PWD}/bin/agent/ak-agent" \
+		"${PWD}/bin/nss/libnss_authentik.so" "${PWD}/bin/pam/libpam_authentik.so"
+
+rs-build-coverage-convert:
+	$(call rs_build_coverage_convert)
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
