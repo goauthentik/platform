@@ -83,8 +83,11 @@ impl FlowExecutor {
         }
         cfg.client = reqwest_middleware::ClientBuilder::new(
             Client::builder()
+                // NOTE: only `cookie_provider` here — calling `cookie_store(true)`
+                // afterwards would override this shared jar with a throwaway default
+                // one (per reqwest docs), leaving `cookie_jar()` empty so the finish
+                // redirect client can't reuse the authenticated session.
                 .cookie_provider(Arc::clone(&jar))
-                .cookie_store(true)
                 .build()
                 .map_err(|e| FlowError::Other(eyre::eyre!(e)))?,
         )

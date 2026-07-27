@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 mod windows;
 
-use std::{collections::HashMap, ops::Add};
+use std::collections::HashMap;
 
 use serde_json::Value;
 
@@ -30,8 +30,15 @@ fn ssh_host_keys() -> Vec<String> {
                 .is_some_and(|n| n.starts_with("ssh_host_") && n.ends_with("_key.pub"))
         })
         .filter_map(|p| std::fs::read_to_string(p).ok())
-        .map(|s| "localhost ".to_string().add(&s).trim().to_string())
-        .filter(|s| !s.is_empty())
+        // Store as `localhost <type> <key>` (drop the `.pub` file's trailing
+        // comment). authentik's device lookup matches this string exactly against
+        // the comment-less key the agent sends, mirroring Go's `ssh-keyscan` output.
+        .filter_map(|s| {
+            let mut parts = s.split_whitespace();
+            let typ = parts.next()?;
+            let key = parts.next()?;
+            Some(format!("localhost {typ} {key}"))
+        })
         .collect();
     keys.sort();
     keys
