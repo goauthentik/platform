@@ -378,3 +378,48 @@ impl ChallengeCommon for ChallengeTypes {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use httptest::{Expectation, Server, matchers::*, responders::*};
+
+    /// Regression test for the cookie-jar sharing bug: the flow executor's HTTP
+    /// client must persist received cookies into the jar returned by
+    /// `cookie_jar()`, so the interactive-auth finish client (which shares that
+    /// jar) can reuse the authenticated session. Previously the client was built
+    /// with both `.cookie_provider(jar)` and `.cookie_store(true)`; per reqwest's
+    /// docs the latter overrode the shared jar with a throwaway one, leaving
+    /// `cookie_jar()` empty and the finish request unauthenticated.
+    #[tokio::test]
+    async fn client_stores_cookies_in_shared_jar() {
+        let server = Server::run();
+        server.expect(
+            Expectation::matching(request::method_path("GET", "/")).respond_with(
+                status_code(200)
+                    .append_header("Set-Cookie", "authentik_session=shared-jar-token; Path=/"),
+            ),
+        );
+
+        let mut ref_config = Configuration::new();
+        ref_config.base_path = server.url_str("/").trim_end_matches('/').to_string();
+        let fex = FlowExecutor::new("test-flow".to_string(), ref_config, HeaderMap::new())
+            .await
+            .unwrap();
+
+        // Drive one request through the executor's client so the Set-Cookie lands
+        // in the jar.
+        fex.get_client()
+            .get(server.url_str("/"))
+            .send()
+            .await
+            .unwrap();
+
+        let jar = fex.cookie_jar();
+        let store = jar.lock().unwrap();
+        assert!(
+            store.iter_any().any(|c| c.name() == "authentik_session"),
+            "authentik_session cookie must be stored in the shared jar returned by cookie_jar()"
+        );
+    }
+}
