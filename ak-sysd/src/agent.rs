@@ -19,7 +19,9 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use tonic::service::RoutesBuilder;
 use tonic::transport::Server;
-use tower_http::trace::{DefaultOnFailure, DefaultOnRequest, TraceLayer};
+use tower_http::trace::{
+    DefaultMakeSpan, DefaultOnFailure, DefaultOnRequest, DefaultOnResponse, TraceLayer,
+};
 use tracing::Level;
 
 #[cfg(target_os = "linux")]
@@ -158,7 +160,9 @@ impl Agent {
                 .layer(SentryHttpLayer::new().enable_transaction())
                 .layer(
                     TraceLayer::new_for_grpc()
+                        .make_span_with(DefaultMakeSpan::new())
                         .on_request(DefaultOnRequest::new().level(Level::INFO))
+                        .on_response(DefaultOnResponse::new().level(Level::INFO))
                         .on_failure(DefaultOnFailure::new().level(Level::ERROR)),
                 )
                 .add_routes(routes.routes())

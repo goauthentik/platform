@@ -3,7 +3,9 @@ use ak_platform::{log::LogBuilder, string::PlatformString};
 
 #[tokio::test]
 async fn login() {
-    LogBuilder::new(PlatformString::new()).force_stdout(true).enable();
+    LogBuilder::new(PlatformString::new())
+        .force_stdout(true)
+        .enable();
     let mut fe = FlowExecutor::builder()
         .flow("default-authentication-flow")
         .base_url("http://localhost:9000/api/v3")

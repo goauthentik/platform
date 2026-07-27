@@ -9,7 +9,10 @@ import "agent.proto";
 import "agent_auth.proto";
 
 service SystemAuthToken {
+  // Authenticate with purely a token
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
+  // Authenticate with SSH Certificate which contains a token
+  rpc SSHCertAuth(SSHCertAuthRequest) returns (TokenAuthResponse);
 }
 
 service SystemAuthInteractive {
@@ -32,6 +35,12 @@ message TokenAuthResponse {
   bool successful = 1;
   agent.Token token = 2;
   string session_id = 3;
+}
+
+message SSHCertAuthRequest {
+  string user = 1;
+  string b64key = 2;
+  string type = 3;
 }
 
 message InteractiveAuthInitRequest {

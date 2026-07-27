@@ -113,7 +113,7 @@ impl LogBuilder {
                 Err(_) => self.get_stdout_logger(),
             }
         };
-        return (Box::new(FilteredLog::new(inner, filter)), max_level);
+        (Box::new(FilteredLog::new(inner, filter)), max_level)
     }
 
     pub fn enable(&self) {
@@ -140,7 +140,7 @@ pub fn env_interactive() -> bool {
 
 #[cfg(test)]
 mod test {
-    use log::{log_enabled};
+    use log::log_enabled;
 
     use crate::{log::LogBuilder, string::PlatformString};
 
