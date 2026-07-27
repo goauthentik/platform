@@ -1,10 +1,10 @@
 use crate::components::{Component, SysdContext};
 use ak_platform::generated::sys_auth::{
     InteractiveAuthAsyncResponse, InteractiveAuthRequest, InteractiveChallenge,
-    SystemAuthorizeRequest, SystemAuthorizeResponse, TokenAuthRequest, TokenAuthResponse,
+    SystemAuthorizeRequest, SystemAuthorizeResponse,
     system_auth_authorize_server::{SystemAuthAuthorize, SystemAuthAuthorizeServer},
     system_auth_interactive_server::{SystemAuthInteractive, SystemAuthInteractiveServer},
-    system_auth_token_server::{SystemAuthToken, SystemAuthTokenServer},
+    system_auth_token_server::SystemAuthTokenServer,
 };
 use ak_platform::generated::sys_auth_apple::{
     RegisterDeviceRequest, RegisterDeviceResponse, RegisterUserRequest, RegisterUserResponse,
@@ -55,18 +55,6 @@ impl Component for AuthComponent {
             routes.add_service(SystemAuthAuthorizeServer::from_arc(Arc::clone(&self)));
             routes.add_service(SystemAuthAppleServer::from_arc(self));
         }
-    }
-}
-
-#[tonic::async_trait]
-impl SystemAuthToken for AuthComponent {
-    async fn token_auth(
-        &self,
-        request: Request<TokenAuthRequest>,
-    ) -> Result<Response<TokenAuthResponse>, Status> {
-        token::token_auth(&self.ctx, request.into_inner())
-            .await
-            .map(Response::new)
     }
 }
 

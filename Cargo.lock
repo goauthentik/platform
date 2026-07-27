@@ -78,7 +78,6 @@ dependencies = [
  "sentry",
  "sentry-tower",
  "serde",
- "serde_with",
  "signature",
  "ssh-agent-lib",
  "ssh-encoding 0.3.0",
@@ -266,6 +265,7 @@ dependencies = [
  "prost",
  "serde",
  "serde_json",
+ "serde_with",
  "simplelog",
  "ssh-agent-lib",
  "sysinfo",
@@ -350,6 +350,7 @@ dependencies = [
 name = "ak-sysd"
 version = "0.50.4"
 dependencies = [
+ "ak-agent",
  "ak-flow-executor",
  "ak-meta",
  "ak-platform",

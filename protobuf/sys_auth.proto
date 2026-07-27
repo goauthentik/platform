@@ -11,7 +11,7 @@ service SystemAuthToken {
   // Authenticate with purely a token
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
   // Authenticate with SSH Certificate which contains a token
-  rpc SSHCertAuth(SSHCertAuthRequest) returns (TokenAuthResponse);
+  rpc SSHCertAuth(SSHCertAuthRequest) returns (SSHCertAuthResponse);
 }
 
 service SystemAuthInteractive {
@@ -40,6 +40,10 @@ message SSHCertAuthRequest {
   string user = 1;
   string b64key = 2;
   string type = 3;
+}
+
+message SSHCertAuthResponse {
+  repeated string lines = 1;
 }
 
 message InteractiveAuthInitRequest {

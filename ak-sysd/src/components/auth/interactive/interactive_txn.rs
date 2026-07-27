@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use ak_flow_executor::executor::FlowExecutor;
+use ak_platform::generated::sys_auth::system_auth_token_server::SystemAuthToken;
 use ak_platform::generated::sys_auth::{
     InteractiveAuthResult, InteractiveChallenge, TokenAuthRequest,
     interactive_challenge::PromptMeta,
@@ -12,11 +13,12 @@ use authentik_client::models::{
 };
 use hex::encode as hex_encode;
 use sha2::{Digest, Sha256};
-use tonic::Status;
+use tonic::{Request, Status};
 
 use super::{fido, redirect_scheme};
 use crate::cfg::domain::LoadedDomain;
 use crate::components::SysdContext;
+use crate::components::auth::AuthComponent;
 use crate::util::to_status;
 
 const QS_TOKEN: &str = "ak-auth-ia-token";
@@ -214,21 +216,20 @@ impl InteractiveAuthTransaction {
             .map(|(_, v)| v.into_owned())
             .ok_or_else(|| Status::internal("finish redirect missing auth token"))?;
 
-        let res = super::super::token::token_auth(
-            &self.ctx,
-            TokenAuthRequest {
+        let auth = AuthComponent::new(self.ctx.clone());
+        let res = auth
+            .token_auth(Request::new(TokenAuthRequest {
                 username: self.username.clone(),
                 token,
-            },
-        )
-        .await?;
+            }))
+            .await?;
 
         self.result = Some(InteractiveAuthResult::PamSuccess);
         Ok(InteractiveChallenge {
             txid: self.id.clone(),
             finished: true,
             result: InteractiveAuthResult::PamSuccess as i32,
-            session_id: res.session_id,
+            session_id: res.into_inner().session_id,
             ..Default::default()
         })
     }

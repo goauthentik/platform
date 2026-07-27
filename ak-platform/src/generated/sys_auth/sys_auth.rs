@@ -26,6 +26,11 @@ pub struct SshCertAuthRequest {
     pub r#type: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SshCertAuthResponse {
+    #[prost(string, repeated, tag="1")]
+    pub lines: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct InteractiveAuthInitRequest {
     #[prost(string, tag="1")]
     pub username: ::prost::alloc::string::String,

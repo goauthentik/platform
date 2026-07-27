@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use ak_meta::user_agent;
+use ak_platform::shared::AuthentikClaims;
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use tokio::sync::{Notify, RwLock};
@@ -10,7 +11,7 @@ use ak_platform::storage::cfgmgr::ConfigManager;
 use eyre::{Result, bail};
 
 use crate::config::ConfigV1;
-use crate::token::{AuthentikClaims, Token};
+use crate::token::Token;
 
 pub struct ProfileTokenManager {
     profile_name: String,

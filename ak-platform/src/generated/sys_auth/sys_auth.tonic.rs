@@ -118,7 +118,7 @@ pub mod system_auth_token_client {
             &mut self,
             request: impl tonic::IntoRequest<super::SshCertAuthRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::TokenAuthResponse>,
+            tonic::Response<super::SshCertAuthResponse>,
             tonic::Status,
         > {
             self.inner
@@ -164,7 +164,7 @@ pub mod system_auth_token_server {
             &self,
             request: tonic::Request<super::SshCertAuthRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::TokenAuthResponse>,
+            tonic::Response<super::SshCertAuthResponse>,
             tonic::Status,
         >;
     }
@@ -296,7 +296,7 @@ pub mod system_auth_token_server {
                         T: SystemAuthToken,
                     > tonic::server::UnaryService<super::SshCertAuthRequest>
                     for SSHCertAuthSvc<T> {
-                        type Response = super::TokenAuthResponse;
+                        type Response = super::SshCertAuthResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
