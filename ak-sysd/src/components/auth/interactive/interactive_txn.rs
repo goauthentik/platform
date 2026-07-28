@@ -10,7 +10,6 @@ use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_ia_c
 use authentik_client::models::{
     ChallengeTypes, DeviceClassesEnum, FlowChallengeResponseRequest,
     IdentificationChallengeResponseRequest, PasswordChallengeResponseRequest,
-    UserLoginChallengeResponseRequest,
 };
 use hex::encode as hex_encode;
 use sha2::{Digest, Sha256};
@@ -348,7 +347,10 @@ mod tests {
         let challenge = txn.get_next_challenge().await.unwrap();
 
         assert!(challenge.finished);
-        assert_eq!(challenge.result, InteractiveAuthResult::PamPermDenied as i32);
+        assert_eq!(
+            challenge.result,
+            InteractiveAuthResult::PamPermDenied as i32
+        );
         assert_eq!(challenge.prompt, "Invalid credentials");
         assert_eq!(challenge.prompt_meta, PromptMeta::PamErrorMsg as i32);
     }
