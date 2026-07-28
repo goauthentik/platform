@@ -145,13 +145,15 @@ impl App {
 async fn main() -> std::result::Result<(), Error> {
     let cli = CliArgs::parse();
 
+    let default_level = if cli.verbose {
+        LevelFilter::Trace
+    } else {
+        LevelFilter::Warn
+    };
     LogBuilder::new(PlatformString::new())
         .force_stdout(true)
-        .default_level(LevelFilter::Warn)
+        .default_level(default_level)
         .enable();
-    if cli.verbose {
-        set_log_level(LevelFilter::Trace);
-    }
 
     let app = App::new(cli.clone());
 
