@@ -162,7 +162,10 @@ impl SystemAuthToken for AuthComponent {
                     .await
                 {
                     Ok(rec) => session_id = rec.id,
-                    Err(e) => tracing::warn!("failed to create session: {e:?}"),
+                    Err(e) => {
+                        tracing::warn!("failed to create session: {e:?}");
+                        return Err(Status::not_found("unable to create session"));
+                    }
                 }
             } else {
                 tracing::debug!("session component not registered, skipping session creation");
