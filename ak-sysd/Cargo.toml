@@ -24,7 +24,7 @@ clap = { version = "4.6.1", features = ["derive"] }
 clap_complete = "4"
 eyre = { workspace = true }
 hex = "0.4"
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 pbjson-types = { workspace = true }
 rand = "0.9"
 reqwest = { workspace = true }
