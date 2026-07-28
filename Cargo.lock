@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "ak-sysd"
-version = "0.50.4"
+version = "0.50.5"
 dependencies = [
  "ak-agent",
  "ak-flow-executor",
@@ -368,7 +368,7 @@ dependencies = [
  "jsonwebtoken 10.4.0",
  "libc",
  "pbjson-types",
- "rand 0.9.4",
+ "rand 0.9.5",
  "reqwest 0.13.4",
  "reqwest-middleware",
  "rpassword",
@@ -3758,7 +3758,7 @@ dependencies = [
  "futures",
  "http 1.4.2",
  "http-body-util",
- "hyper 1.8.1",
+ "hyper 1.11.0",
  "hyper-util",
  "log",
  "once_cell",
@@ -4403,7 +4403,7 @@ dependencies = [
  "p256",
  "p384",
  "pem",
- "rand 0.8.6",
+ "rand 0.8.7",
  "rsa",
  "serde",
  "serde_json",
@@ -6706,7 +6706,7 @@ version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7753b721174eb8ff87a9a0e799e2d7bc3749323e773db92e0984debb00019d6e"
 dependencies = [
- "bitflags 2.13.0",
+ "bitflags 2.13.1",
  "fallible-iterator",
  "fallible-streaming-iterator",
  "hashlink",
@@ -9770,7 +9770,7 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "857224b3b211c6f3616921f081ee54721ee3ad2ace2fac6a6337e032f7b4dcf2"
 dependencies = [
- "bitflags 2.13.0",
+ "bitflags 2.13.1",
  "widestring",
  "windows-sys 0.61.2",
 ]

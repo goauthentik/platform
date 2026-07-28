@@ -85,14 +85,16 @@ impl SystemAuthToken for AuthComponent {
         };
 
         let pubkey_line = PublicKey::from(cert.signature_key().clone())
-            .to_openssh().map_err(|e| Status::from_error(e.into()))?
+            .to_openssh()
+            .map_err(|e| Status::from_error(e.into()))?
             .trim()
             .to_string();
 
         let mut lines = vec![];
-        lines.push(
-            format!("cert-authority,principals=\"{}\" {pubkey_line}", token.preferred_username),
-        );
+        lines.push(format!(
+            "cert-authority,principals=\"{}\" {pubkey_line}",
+            token.preferred_username
+        ));
         Ok(Response::new(SshCertAuthResponse { lines }))
     }
 

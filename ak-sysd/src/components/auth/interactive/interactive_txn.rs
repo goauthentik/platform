@@ -10,6 +10,7 @@ use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_ia_c
 use authentik_client::models::{
     ChallengeTypes, DeviceClassesEnum, FlowChallengeResponseRequest,
     IdentificationChallengeResponseRequest, PasswordChallengeResponseRequest,
+    UserLoginChallengeResponseRequest,
 };
 use hex::encode as hex_encode;
 use sha2::{Digest, Sha256};
@@ -73,10 +74,12 @@ impl InteractiveAuthTransaction {
 
     /// Advances the flow, auto-solving identification/password where possible,
     /// until it produces a challenge for the client (or finishes).
+    #[tracing::instrument(fields(self.id), skip_all)]
     pub async fn get_next_challenge(&mut self) -> Result<InteractiveChallenge, Status> {
         let Some(ch) = self.fex.challenge() else {
             return Err(Status::internal("no current flow challenge"));
         };
+        tracing::trace!(challenge = ?ch, "challenge");
         match ch {
             ChallengeTypes::XakFlowRedirect(_) => self.finish_success().await,
             ChallengeTypes::AkStageAccessDenied(c) => {
@@ -128,6 +131,15 @@ impl InteractiveAuthTransaction {
                     .ok_or_else(|| Status::internal("no webauthn device challenge available"))?;
                 fido::parse_webauthn_request(&self.id, dc, &self.domain.cfg.authentik_url)
             }
+            // "Empty challenge" per authentik's own docs — finalizes the session
+            // after password validation and needs no user input, just an
+            // auto-submitted response like identification/password above.
+            ChallengeTypes::AkStageUserLogin(_) => {
+                if let Some(err) = self.solve_challenge(String::new()).await? {
+                    return Ok(err);
+                }
+                Box::pin(self.get_next_challenge()).await
+            }
             _ => {
                 tracing::warn!("unsupported interactive auth stage");
                 Ok(InteractiveChallenge {
@@ -140,6 +152,7 @@ impl InteractiveAuthTransaction {
 
     /// Submits `value` for the current stage. `Ok(None)` on success;
     /// `Ok(Some(challenge))` carries a flow error back as an error prompt.
+    #[tracing::instrument(fields(self.id), skip_all)]
     pub(super) async fn solve_challenge(
         &mut self,
         value: String,
@@ -147,6 +160,7 @@ impl InteractiveAuthTransaction {
         let Some(ch) = self.fex.challenge() else {
             return Err(Status::internal("no current flow challenge"));
         };
+        tracing::trace!(challenge = ?ch, "challenge");
         let req = match &ch {
             ChallengeTypes::AkStageIdentification(_) => {
                 FlowChallengeResponseRequest::AkStageIdentification(
@@ -167,6 +181,9 @@ impl InteractiveAuthTransaction {
                     .ok_or_else(|| Status::internal("no webauthn device challenge available"))?;
                 fido::parse_webauthn_response(&value, dc, &self.domain.cfg.authentik_url)?
             }
+            ChallengeTypes::AkStageUserLogin(_) => FlowChallengeResponseRequest::AkStageUserLogin(
+                UserLoginChallengeResponseRequest::new(false),
+            ),
             _ => return Err(Status::internal("cannot solve unsupported flow stage")),
         };
         match self.fex.solve_flow_challenge(Some(req)).await {
