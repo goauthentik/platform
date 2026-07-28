@@ -164,7 +164,7 @@ impl AgentAuth for AgentGRPCServer {
                 exp: Some(c.exp.into()),
                 nbf: None,
                 iat: Some(c.iat.into()),
-                jti: c.jti,
+                jti: c.jti.unwrap_or_default(),
             }),
             raw: token.access_token,
             url: profile.authentik_url.to_string(),

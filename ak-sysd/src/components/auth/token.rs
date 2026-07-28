@@ -174,7 +174,7 @@ impl SystemAuthToken for AuthComponent {
                 exp: Some(data.claims.exp.into()),
                 nbf: None,
                 iat: Some(data.claims.iat.into()),
-                jti: data.claims.jti,
+                jti: data.claims.jti.unwrap_or_default(),
             }),
             session_id,
         }))

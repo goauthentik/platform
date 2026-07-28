@@ -21,6 +21,9 @@ pub struct AuthentikClaims {
     pub exp: DateTime<Utc>,
     #[serde(with = "chrono::serde::ts_seconds")]
     pub iat: DateTime<Utc>,
-    pub jti: String,
+    // Also absent on the same handoff tokens as `sub` above — decorative
+    // (only ever forwarded into the outgoing `Token`, never checked).
+    #[serde(default)]
+    pub jti: Option<String>,
     pub preferred_username: String,
 }
