@@ -174,7 +174,7 @@ jobs:
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
     with:
-      rust_build_flags: "-C instrument-coverage"
+      rust_build_flags: "-C instrument-coverage -C codegen-units=1"
       artifact_suffix: "-e2e"
       platforms: '["ubuntu-24.04"]'
     secrets: inherit

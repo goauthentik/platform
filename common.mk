@@ -112,23 +112,21 @@ define rs_e2e_coverage_convert
 		LLVM_DIR=$$(rustup show home 2>/dev/null)/toolchains/$$TOOLCHAIN/lib/rustlib/$$HOST/bin; \
 		$$LLVM_DIR/llvm-profdata merge -sparse $$PROFRAW_FILES \
 			-o "${PWD}/cache/rs-e2e-merged.profdata"; \
-		: > "${PWD}/cache/rs-e2e-coverage.lcov"; \
-		FOUND_BIN=""; \
+		OBJECTS=""; \
 		for bin in "${PWD}/bin/cli/ak" "${PWD}/bin/agent/ak-agent" \
 				"${PWD}/bin/nss/libnss_authentik.so" "${PWD}/bin/pam/libpam_authentik.so"; do \
-			if [ -f "$$bin" ]; then \
-				FOUND_BIN=1; \
-				$$LLVM_DIR/llvm-cov export \
-					-format=lcov \
-					-instr-profile="${PWD}/cache/rs-e2e-merged.profdata" \
-					-object "$$bin" \
-					-ignore-filename-regex='generated|\.cargo' \
-					>> "${PWD}/cache/rs-e2e-coverage.lcov" \
-					|| echo "warning: llvm-cov export failed for $$bin, skipping"; \
-			fi; \
+			if [ -f "$$bin" ]; then OBJECTS="$$OBJECTS -object $$bin"; fi; \
 		done; \
-		if [ -z "$$FOUND_BIN" ]; then \
+		if [ -z "$$OBJECTS" ]; then \
 			echo "No instrumented Rust binaries found in bin/, creating empty coverage file"; \
+			touch "${PWD}/cache/rs-e2e-coverage.lcov"; \
+		else \
+			$$LLVM_DIR/llvm-cov export \
+				-format=lcov \
+				-instr-profile="${PWD}/cache/rs-e2e-merged.profdata" \
+				$$OBJECTS \
+				-ignore-filename-regex='generated|\.cargo' \
+				> "${PWD}/cache/rs-e2e-coverage.lcov"; \
 		fi; \
 	fi
 endef
