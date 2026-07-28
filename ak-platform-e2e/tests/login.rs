@@ -21,17 +21,28 @@ async fn test_local_login_success() {
     .expect("exec pamtester");
 
     if exit_code != 0 {
-        // ak-sysd logs to the systemd journal, not the container's stdout, so
-        // pull it out here rather than leaving CI to guess at pamtester's
-        // generic "Authentication failure" from the client side.
-        let (_, journal) = exec_command(
+        // ak-sysd logs to the systemd journal, but ak-pam (the client-side PAM
+        // module loaded into pamtester's own process) logs separately via
+        // syslog under its own identifier, not the ak-sysd unit — a
+        // client-side failure after a successful server response would be
+        // invisible if we only dumped the former, so grab both.
+        let (_, sysd_journal) = exec_command(
             &tm.container,
             "journalctl -u ak-sysd --no-pager -n 200",
             &[],
         )
         .await
         .unwrap_or_default();
-        panic!("pamtester authenticate failed: {output}\n--- ak-sysd journal ---\n{journal}");
+        let (_, pam_journal) = exec_command(
+            &tm.container,
+            "journalctl -t libpam-authentik --no-pager -n 200",
+            &[],
+        )
+        .await
+        .unwrap_or_default();
+        panic!(
+            "pamtester authenticate failed: {output}\n--- ak-sysd journal ---\n{sysd_journal}\n--- libpam-authentik journal ---\n{pam_journal}"
+        );
     }
 
     assert!(
