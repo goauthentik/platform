@@ -1,5 +1,5 @@
 use ak_platform_e2e::{
-    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, must_exec, test_init,
+    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, test_init,
 };
 
 /// Verifies that a real local (non-SSH) login via the `login` PAM service is
@@ -12,13 +12,27 @@ async fn test_local_login_success() {
     join_domain(&tm).await.expect("join domain");
 
     let (_, password) = authentik_creds();
-    let output = must_exec(
+    let (exit_code, output) = exec_command(
         &tm.container,
         "printf '%s\\n' \"$AK_LOGIN_PW\" | pamtester login akadmin authenticate",
         &[("AK_LOGIN_PW", &password)],
     )
     .await
-    .expect("pamtester authenticate");
+    .expect("exec pamtester");
+
+    if exit_code != 0 {
+        // ak-sysd logs to the systemd journal, not the container's stdout, so
+        // pull it out here rather than leaving CI to guess at pamtester's
+        // generic "Authentication failure" from the client side.
+        let (_, journal) = exec_command(
+            &tm.container,
+            "journalctl -u ak-sysd --no-pager -n 200",
+            &[],
+        )
+        .await
+        .unwrap_or_default();
+        panic!("pamtester authenticate failed: {output}\n--- ak-sysd journal ---\n{journal}");
+    }
 
     assert!(
         output.contains("successfully authenticated"),
