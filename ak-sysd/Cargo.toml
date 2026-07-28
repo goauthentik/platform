@@ -34,7 +34,7 @@ sentry = { workspace = true }
 sentry-tower = { version = "0.48.2", features = ["http"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sha2 = "0.10"
+sha2 = "0.11"
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
 subtle = "2"
 tempfile = { workspace = true }
