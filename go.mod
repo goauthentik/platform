@@ -3,7 +3,7 @@ module goauthentik.io/platform
 go 1.26.0
 
 require (
-	github.com/MicahParks/jwkset v0.11.1
+	github.com/MicahParks/jwkset v0.11.2
 	github.com/MicahParks/keyfunc/v3 v3.8.1
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/adrg/xdg v0.5.3
