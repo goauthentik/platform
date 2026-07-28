@@ -125,6 +125,7 @@ impl SystemAuthToken for AuthComponent {
 
         let mut validation = Validation::new(header.alg);
         validation.validate_aud = false;
+        validation.validate_nbf = true;
         let data = decode::<AuthentikClaims>(&req.token, &key, &validation).map_err(to_status)?;
 
         if !data
