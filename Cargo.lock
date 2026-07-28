@@ -369,7 +369,7 @@ dependencies = [
  "jsonwebtoken",
  "libc",
  "pbjson-types",
- "rand 0.9.5",
+ "rand 0.10.2",
  "reqwest 0.13.4",
  "reqwest-middleware",
  "rpassword",
