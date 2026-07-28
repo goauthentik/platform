@@ -86,15 +86,30 @@ impl DirectoryComponent {
         Ok(())
     }
 
-    /// NSS-safe username cleaning: lowercase, `@`/`:` replaced with `-`. The
-    /// exact regex Go uses (`pkg/agent_system/directory/user.go`, not read in
-    /// this pass) may differ in edge cases — this is a best-effort approximation.
+    /// NSS-safe username cleaning, mirroring Go's `cleanName`
+    /// (`pkg/agent_system/directory/user.go`): names already matching
+    /// `^[a-z][-a-z0-9_]*\$?$` are returned verbatim; otherwise the name is
+    /// lowercased and `@`, `/`, `:` are replaced with `-`. No other characters
+    /// (e.g. `.`) are stripped, so distinct usernames stay distinct.
     pub fn clean_name(&self, name: &str) -> String {
-        name.to_lowercase()
-            .replace(['@', ':'], "-")
-            .chars()
-            .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
-            .collect()
+        fn is_already_clean(name: &str) -> bool {
+            let mut chars = name.chars();
+            let Some(first) = chars.next() else {
+                return false;
+            };
+            if !first.is_ascii_lowercase() {
+                return false;
+            }
+            // Optional single trailing `$` (Go's regexp allows it).
+            let body = name.strip_suffix('$').unwrap_or(name);
+            body.chars()
+                .skip(1)
+                .all(|c| c == '-' || c == '_' || c.is_ascii_lowercase() || c.is_ascii_digit())
+        }
+        if is_already_clean(name) {
+            return name.to_string();
+        }
+        name.to_lowercase().replace(['@', '/', ':'], "-")
     }
 }
 
