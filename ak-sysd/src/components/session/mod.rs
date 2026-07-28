@@ -26,10 +26,9 @@ impl SessionComponent {
 
     /// Creates a new session record, mirroring Go's `NewSession`.
     ///
-    /// `expires_at` (unix seconds): the active domain's
-    /// `auth_terminate_session_on_expiry` flag reads backwards from its
-    /// name in the Go source — ported literally rather than "fixed" without
-    /// confirming actual running behavior first.
+    /// `expires_at` (unix seconds) is only recorded when the active domain's
+    /// `auth_terminate_session_on_expiry` flag is set; otherwise the session
+    /// has no expiry and is never auto-terminated.
     pub async fn new_session(
         &self,
         username: String,
@@ -48,17 +47,16 @@ impl SessionComponent {
             hex::encode(hasher.finalize())
         };
 
-        let terminate_on_expiry = self
-            .ctx
-            .domains
-            .active()
-            .await
-            .ok()
-            .and_then(|d| {
-                let remote = d.remote.try_read().ok()?;
-                remote.as_ref().map(|r| r.auth_terminate_session_on_expiry)
-            })
-            .unwrap_or(false);
+        let terminate_on_expiry = match self.ctx.domains.active().await {
+            Ok(d) => d
+                .remote
+                .read()
+                .await
+                .as_ref()
+                .map(|r| r.auth_terminate_session_on_expiry)
+                .unwrap_or(false),
+            Err(_) => false,
+        };
 
         let record = SessionRecord {
             id: id.clone(),
