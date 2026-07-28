@@ -6,7 +6,7 @@ use ak_platform::generated::session::{
     session_manager_server::{SessionManager, SessionManagerServer},
 };
 use ak_platform::paths::SysdSocketID;
-use base64::{Engine, prelude::BASE64_STANDARD};
+use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use eyre::Result;
 use rand::RngCore;
 use sha2::{Digest, Sha256};
@@ -38,7 +38,9 @@ impl SessionComponent {
     ) -> Result<SessionRecord> {
         let mut id_bytes = [0u8; 48];
         rand::rng().fill_bytes(&mut id_bytes);
-        let id = BASE64_STANDARD.encode(id_bytes);
+        // URL-safe alphabet: ak-pam embeds this id verbatim into a filesystem
+        // path (session_data.rs), so it must never contain '/' or '+'.
+        let id = BASE64_URL_SAFE_NO_PAD.encode(id_bytes);
 
         let token_hash = {
             let mut hasher = Sha256::new();
@@ -216,5 +218,34 @@ impl SessionManager for SessionComponent {
             .await
             .map_err(crate::util::to_status)?;
         Ok(Response::new(CloseSessionResponse { success: true }))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::context::testutils::test_context;
+
+    // ak-pam embeds the session id verbatim into a filesystem path
+    // (`/tmp/.aksm-{id}`); a standard-alphabet base64 id can contain '/' or
+    // '+', which previously broke that file creation intermittently
+    // (~63% of the time, since 48 random bytes -> 64 base64 chars).
+    #[tokio::test]
+    async fn test_session_id_is_filesystem_safe() {
+        let session = SessionComponent::new(test_context().await);
+        for _ in 0..100 {
+            let record = session
+                .new_session("akadmin".to_string(), "token".to_string(), None)
+                .await
+                .expect("create session");
+            assert!(
+                record
+                    .id
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'),
+                "session id contains filesystem-unsafe characters: {}",
+                record.id
+            );
+        }
     }
 }

@@ -1,5 +1,5 @@
 use ak_platform_e2e::{
-    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, test_init,
+    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, must_exec, test_init
 };
 
 /// Verifies that a real local (non-SSH) login via the `login` PAM service is
@@ -12,7 +12,7 @@ async fn test_local_login_success() {
     join_domain(&tm).await.expect("join domain");
 
     let (_, password) = authentik_creds();
-    let (exit_code, output) = exec_command(
+    let output = must_exec(
         &tm.container,
         "printf '%s\\n' \"$AK_LOGIN_PW\" | pamtester login akadmin authenticate",
         &[("AK_LOGIN_PW", &password)],
@@ -20,12 +20,6 @@ async fn test_local_login_success() {
     .await
     .expect("exec pamtester");
 
-    let (_, journal) = exec_command(&tm.container, "journalctl --no-pager -n 500", &[])
-        .await
-        .unwrap_or_default();
-    eprintln!("{journal}");
-
-    assert_eq!(exit_code, 0);
     assert!(
         output.contains("successfully authenticated"),
         "expected successful local login, got: {output}"
