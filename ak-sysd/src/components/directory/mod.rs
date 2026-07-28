@@ -175,10 +175,11 @@ impl SystemDirectory for DirectoryComponent {
 
     async fn get_user(&self, request: Request<GetRequest>) -> Result<Response<User>, Status> {
         let req = request.into_inner();
+        let cleaned = req.name.as_ref().map(|n| self.clean_name(n));
         let users = self.users.read().await;
         let found = users
             .iter()
-            .find(|u| Some(u.uid) == req.id || Some(&u.name) == req.name.as_ref());
+            .find(|u| Some(u.uid) == req.id || Some(&u.name) == cleaned.as_ref());
         found
             .cloned()
             .map(Response::new)
@@ -193,13 +194,35 @@ impl SystemDirectory for DirectoryComponent {
 
     async fn get_group(&self, request: Request<GetRequest>) -> Result<Response<Group>, Status> {
         let req = request.into_inner();
+        let cleaned = req.name.as_ref().map(|n| self.clean_name(n));
         let groups = self.groups.read().await;
         let found = groups
             .iter()
-            .find(|g| Some(g.gid) == req.id || Some(&g.name) == req.name.as_ref());
+            .find(|g| Some(g.gid) == req.id || Some(&g.name) == cleaned.as_ref());
         found
             .cloned()
             .map(Response::new)
             .ok_or_else(|| Status::not_found("group not found"))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::context::testutils::test_context;
+
+    /// clean_name must match Go's cleanName: already-clean names pass through
+    /// verbatim, `@`/`/`/`:` become `-`, and nothing else (e.g. `.`) is stripped
+    /// — so distinct usernames stay distinct.
+    #[tokio::test]
+    async fn clean_name_matches_go() {
+        let dir = DirectoryComponent::new(test_context().await);
+        assert_eq!(dir.clean_name("johndoe"), "johndoe");
+        assert_eq!(dir.clean_name("john.doe"), "john.doe");
+        assert_ne!(dir.clean_name("john.doe"), dir.clean_name("johndoe"));
+        assert_eq!(dir.clean_name("Jens"), "jens");
+        assert_eq!(dir.clean_name("jens@corp"), "jens-corp");
+        assert_eq!(dir.clean_name("a/b"), "a-b");
+        assert_eq!(dir.clean_name("svc$"), "svc$");
     }
 }
