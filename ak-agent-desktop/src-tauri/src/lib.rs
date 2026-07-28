@@ -1,5 +1,5 @@
 use ak_meta::full_version;
-use ak_platform::{log::init_log, string::PlatformString};
+use ak_platform::{log::LogBuilder, string::PlatformString};
 use eyre::Result;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
@@ -10,11 +10,12 @@ mod ui;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let _guard = sentry::init(ak_meta::sentry_options("ak-agent-desktop"));
-    init_log(
+    LogBuilder::new(
         PlatformString::new()
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
-    );
+    )
+    .enable();
     tracing::trace!("authentik Agent Desktop v{}", full_version());
 
     match start_tauri() {

@@ -2,9 +2,10 @@ use crate::commands::{auth::AuthCommands, config::ConfigCommands};
 use ak_platform::grpc::assert_response_valid;
 use ak_platform::log::LevelFilter;
 use ak_platform::paths::DEFAULT_PROFILE;
+use ak_platform::string::PlatformString;
 use ak_platform::{
     client::user::{AnyService, Client},
-    log::{init_log_interactive, set_log_level},
+    log::{LogBuilder, set_log_level},
 };
 use clap::{Error, Parser, Subcommand};
 use clap_complete::Shell;
@@ -144,8 +145,10 @@ impl App {
 async fn main() -> std::result::Result<(), Error> {
     let cli = CliArgs::parse();
 
-    init_log_interactive();
-    set_log_level(LevelFilter::Warn);
+    LogBuilder::new(PlatformString::new())
+        .force_stdout(true)
+        .default_level(LevelFilter::Warn)
+        .enable();
     if cli.verbose {
         set_log_level(LevelFilter::Trace);
     }

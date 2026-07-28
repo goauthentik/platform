@@ -53,7 +53,7 @@ pub struct FlowExecutor {
     api_config: Configuration,
     nc: Option<ChallengeTypes>,
 
-    pub(crate) solvers: Vec<Box<dyn Solver>>,
+    pub(crate) solvers: Vec<Box<dyn Solver + Send + Sync>>,
     pub(crate) answers: HashMap<String, String>,
 
     jar: Arc<CookieStoreMutex>,
@@ -83,8 +83,11 @@ impl FlowExecutor {
         }
         cfg.client = reqwest_middleware::ClientBuilder::new(
             Client::builder()
+                // NOTE: only `cookie_provider` here — calling `cookie_store(true)`
+                // afterwards would override this shared jar with a throwaway default
+                // one (per reqwest docs), leaving `cookie_jar()` empty so the finish
+                // redirect client can't reuse the authenticated session.
                 .cookie_provider(Arc::clone(&jar))
-                .cookie_store(true)
                 .build()
                 .map_err(|e| FlowError::Other(eyre::eyre!(e)))?,
         )
@@ -104,11 +107,15 @@ impl FlowExecutor {
         })
     }
 
-    pub fn challenge(self) -> Option<ChallengeTypes> {
+    pub fn challenge(&self) -> Option<ChallengeTypes> {
         self.nc.clone()
     }
 
-    pub fn get_session(self) -> Result<Cookie<'static>, FlowError> {
+    pub fn cookie_jar(&self) -> Arc<CookieStoreMutex> {
+        Arc::clone(&self.jar)
+    }
+
+    pub fn get_session(&self) -> Result<Cookie<'static>, FlowError> {
         let url = url::Url::parse(&self.api_config.base_path)
             .map_err(|e| FlowError::Other(eyre::eyre!(e)))?;
         let Some(domain) = url.domain() else {
@@ -125,7 +132,7 @@ impl FlowExecutor {
         Err(FlowError::Other(eyre::eyre!("No cookie found")))
     }
 
-    pub fn get_client(self) -> Client {
+    pub fn get_client(&self) -> Client {
         self.api_config.client.as_ref().clone()
     }
 
@@ -369,5 +376,50 @@ impl ChallengeCommon for ChallengeTypes {
                 user_login_challenge.response_errors.clone()
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use httptest::{Expectation, Server, matchers::*, responders::*};
+
+    /// Regression test for the cookie-jar sharing bug: the flow executor's HTTP
+    /// client must persist received cookies into the jar returned by
+    /// `cookie_jar()`, so the interactive-auth finish client (which shares that
+    /// jar) can reuse the authenticated session. Previously the client was built
+    /// with both `.cookie_provider(jar)` and `.cookie_store(true)`; per reqwest's
+    /// docs the latter overrode the shared jar with a throwaway one, leaving
+    /// `cookie_jar()` empty and the finish request unauthenticated.
+    #[tokio::test]
+    async fn client_stores_cookies_in_shared_jar() {
+        let server = Server::run();
+        server.expect(
+            Expectation::matching(request::method_path("GET", "/")).respond_with(
+                status_code(200)
+                    .append_header("Set-Cookie", "authentik_session=shared-jar-token; Path=/"),
+            ),
+        );
+
+        let mut ref_config = Configuration::new();
+        ref_config.base_path = server.url_str("/").trim_end_matches('/').to_string();
+        let fex = FlowExecutor::new("test-flow".to_string(), ref_config, HeaderMap::new())
+            .await
+            .unwrap();
+
+        // Drive one request through the executor's client so the Set-Cookie lands
+        // in the jar.
+        fex.get_client()
+            .get(server.url_str("/"))
+            .send()
+            .await
+            .unwrap();
+
+        let jar = fex.cookie_jar();
+        let store = jar.lock().unwrap();
+        assert!(
+            store.iter_any().any(|c| c.name() == "authentik_session"),
+            "authentik_session cookie must be stored in the shared jar returned by cookie_jar()"
+        );
     }
 }

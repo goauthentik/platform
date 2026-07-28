@@ -164,8 +164,8 @@ impl Config for ConfigV1 {
                 .await
             {
                 Ok(v) => val._access_token = v,
-                Err(ak_platform_keyring::KeyringError::NotAvailable()) |
-                Err(ak_platform_keyring::KeyringError::NotFound()) => {
+                Err(ak_platform_keyring::KeyringError::NotAvailable())
+                | Err(ak_platform_keyring::KeyringError::NotFound()) => {
                     val._access_token = val.fallback_access_token.clone()
                 }
                 Err(e) => return Err(e.into()),
@@ -180,8 +180,8 @@ impl Config for ConfigV1 {
                 .await
             {
                 Ok(v) => val._refresh_token = v,
-                Err(ak_platform_keyring::KeyringError::NotAvailable()) |
-                Err(ak_platform_keyring::KeyringError::NotFound()) => {
+                Err(ak_platform_keyring::KeyringError::NotAvailable())
+                | Err(ak_platform_keyring::KeyringError::NotFound()) => {
                     val._refresh_token = val.fallback_refresh_token.clone()
                 }
                 Err(e) => return Err(e.into()),
@@ -199,13 +199,14 @@ impl Config for ConfigV1 {
                     ak_platform_keyring::Accessibility::User,
                     val._access_token.clone(),
                 )
-                .await {
-                    Ok(_) => {},
-                    Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
-                        val.fallback_access_token = val._access_token.clone();
-                    }
-                    Err(e) => return Err(e.into()),
-                };
+                .await
+            {
+                Ok(_) => {}
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                    val.fallback_access_token = val._access_token.clone();
+                }
+                Err(e) => return Err(e.into()),
+            };
             match ak_platform_keyring::store()
                 .set(
                     &ak_platform_keyring::service("refresh_token"),
@@ -213,13 +214,14 @@ impl Config for ConfigV1 {
                     ak_platform_keyring::Accessibility::User,
                     val._refresh_token.clone(),
                 )
-                .await {
-                    Ok(_) => {},
-                    Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
-                        val.fallback_refresh_token = val._refresh_token.clone();
-                    }
-                    Err(e) => return Err(e.into()),
-                };
+                .await
+            {
+                Ok(_) => {}
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                    val.fallback_refresh_token = val._refresh_token.clone();
+                }
+                Err(e) => return Err(e.into()),
+            };
         }
         Ok(())
     }

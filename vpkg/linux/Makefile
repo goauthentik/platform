@@ -8,22 +8,22 @@ export DEB_BUILD_GNU_TYPE
 package:
 	mkdir -p "${TOP}/bin/${TARGET}"
 	mkdir -p "${TOP}/bin/cli/completions"
-	mkdir -p "${TOP}/bin/agent_system/completions"
+	mkdir -p "${TOP}/bin/sysd/completions"
 	chmod +x "${TOP}/bin/cli/ak"
-	chmod +x "${TOP}/bin/agent_system/ak-sysd"
+	chmod +x "${TOP}/bin/sysd/ak-sysd"
 	chmod +x "${TOP}/bin/agent/ak-agent"
 	chmod +x "${TOP}/bin/agent-desktop/ak-agent-desktop"
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
 	"${TOP}/hack/completions.sh" \
-		"${TOP}/bin/agent_system/ak-sysd" \
-		"${TOP}/bin/agent_system/completions" \
-		"agent_system"
+		"${TOP}/bin/sysd/ak-sysd" \
+		"${TOP}/bin/sysd/completions" \
+		"sysd"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/cli/ak" \
 		"${TOP}/bin/cli/completions" \
 		"ak"
 	$(call nfpm_package,${TOP}/vpkg/linux/cli/nfpm.yaml,cli)
-	$(call nfpm_package,${TOP}/vpkg/linux/sysd/nfpm.yaml,agent_system)
+	$(call nfpm_package,${TOP}/vpkg/linux/sysd/nfpm.yaml,sysd)
 	$(call nfpm_package,${TOP}/vpkg/linux/agent/nfpm.yaml,agent)
 	$(call nfpm_package,${TOP}/vpkg/linux/nss/nfpm.yaml,nss)
 	$(call nfpm_package,${TOP}/vpkg/linux/pam/nfpm.yaml,pam)

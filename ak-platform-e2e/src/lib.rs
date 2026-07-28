@@ -1,6 +1,8 @@
 use std::{env, path::PathBuf, time::Duration};
 
 use ak_flow_executor::executor::FlowExecutor;
+use ak_platform::log::{LevelFilter, LogBuilder};
+use ak_platform::string::PlatformString;
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
 use eyre::{Context, ContextCompat, Result, bail};
 use oauth_device_flows::provider::GenericProviderConfig;
@@ -13,8 +15,11 @@ pub mod test_machine;
 pub use test_machine::TestMachine;
 
 pub fn test_init() {
-    ak_platform::log::init_log_interactive_with_filter(Some("warn,ak_platform_e2e=trace"));
-    ak_platform::log::set_log_level(ak_platform::log::LevelFilter::Debug);
+    LogBuilder::new(PlatformString::new())
+        .force_stdout(true)
+        .default_level(LevelFilter::Warn)
+        .with_filter("ak_platform_e2e", LevelFilter::Trace)
+        .enable();
 }
 
 pub fn local_authentik_url() -> String {

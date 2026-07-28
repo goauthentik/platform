@@ -5,7 +5,7 @@ TARGET := vpkg/windows
 .PHONY: package
 package:
 ifeq ($(AK_IS_RELEASE),true)
-	$(call sign_binary,"${TOP}/bin/agent_system/ak-sysd.exe")
+	$(call sign_binary,"${TOP}/bin/sysd/ak-sysd.exe")
 	$(call sign_binary,"${TOP}/bin/agent-desktop/ak-agent-desktop.exe")
 	$(call sign_binary,"${TOP}/bin/cli/ak.exe")
 	$(call sign_binary,"${TOP}/bin/browser_support/ak-browser-support.exe")

@@ -1,5 +1,5 @@
 use ak_platform_e2e::{
-    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, must_exec, test_init,
+    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, must_exec, test_init
 };
 
 /// Verifies that a real local (non-SSH) login via the `login` PAM service is
@@ -18,7 +18,7 @@ async fn test_local_login_success() {
         &[("AK_LOGIN_PW", &password)],
     )
     .await
-    .expect("pamtester authenticate");
+    .expect("exec pamtester");
 
     assert!(
         output.contains("successfully authenticated"),

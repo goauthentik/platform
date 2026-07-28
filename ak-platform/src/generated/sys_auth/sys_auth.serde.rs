@@ -813,6 +813,222 @@ impl<'de> serde::Deserialize<'de> for interactive_challenge::PromptMeta {
         deserializer.deserialize_any(GeneratedVisitor)
     }
 }
+impl serde::Serialize for SshCertAuthRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.user.is_empty() {
+            len += 1;
+        }
+        if !self.b64key.is_empty() {
+            len += 1;
+        }
+        if !self.r#type.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("sys_auth.SSHCertAuthRequest", len)?;
+        if !self.user.is_empty() {
+            struct_ser.serialize_field("user", &self.user)?;
+        }
+        if !self.b64key.is_empty() {
+            struct_ser.serialize_field("b64key", &self.b64key)?;
+        }
+        if !self.r#type.is_empty() {
+            struct_ser.serialize_field("type", &self.r#type)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for SshCertAuthRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "user",
+            "b64key",
+            "type",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            User,
+            B64key,
+            Type,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "user" => Ok(GeneratedField::User),
+                            "b64key" => Ok(GeneratedField::B64key),
+                            "type" => Ok(GeneratedField::Type),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = SshCertAuthRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct sys_auth.SSHCertAuthRequest")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<SshCertAuthRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut user__ = None;
+                let mut b64key__ = None;
+                let mut r#type__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::User => {
+                            if user__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("user"));
+                            }
+                            user__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::B64key => {
+                            if b64key__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("b64key"));
+                            }
+                            b64key__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::Type => {
+                            if r#type__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("type"));
+                            }
+                            r#type__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(SshCertAuthRequest {
+                    user: user__.unwrap_or_default(),
+                    b64key: b64key__.unwrap_or_default(),
+                    r#type: r#type__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("sys_auth.SSHCertAuthRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for SshCertAuthResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.lines.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("sys_auth.SSHCertAuthResponse", len)?;
+        if !self.lines.is_empty() {
+            struct_ser.serialize_field("lines", &self.lines)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for SshCertAuthResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "lines",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Lines,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "lines" => Ok(GeneratedField::Lines),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = SshCertAuthResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct sys_auth.SSHCertAuthResponse")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<SshCertAuthResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut lines__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Lines => {
+                            if lines__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("lines"));
+                            }
+                            lines__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(SshCertAuthResponse {
+                    lines: lines__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("sys_auth.SSHCertAuthResponse", FIELDS, GeneratedVisitor)
+    }
+}
 impl serde::Serialize for SystemAuthorizeRequest {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>

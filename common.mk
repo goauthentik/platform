@@ -28,12 +28,6 @@ endif
 TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
 
-_LD_FLAGS = ${LD_FLAGS} \
-	-X goauthentik.io/platform/pkg/meta.Version=${VERSION} \
-	-X goauthentik.io/platform/pkg/meta.BuildHash=${VERSION_HASH} \
-	-X goauthentik.io/platform/pkg/meta.Tag=${VERSION_TAG}
-GO_BUILD_FLAGS = -ldflags "${_LD_FLAGS}" -v ${AK_GO_BUILD_FLAGS}
-
 RUST_BUILD_FLAGS ?=
 DOCKER_BUILDER_IMAGE ?= authentik/ak-builder
 CARGO_CRATE_DIR := $(subst $(TOP),,$(CURDIR))
@@ -85,22 +79,25 @@ endef
 endif
 
 define cargo_test
-	mkdir -p "${PWD}/cache"
-	cargo llvm-cov \
-		--no-report \
-		--ignore-filename-regex generated \
-		nextest -p $(1) \
-			--no-tests pass \
-			--no-fail-fast \
-			--test-threads 1
-	cargo llvm-cov report \
-		--codecov \
-		--ignore-filename-regex generated \
-		--output-path "${PWD}/cache/llvm-cov-target.json"
-	cargo llvm-cov report \
-		--html \
-		--ignore-filename-regex generated \
-		--output-dir "${PWD}/cache/llvm-cov-html/"
+	mkdir -p "${TOP}/cache"
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		cargo llvm-cov \
+			--no-report \
+			--ignore-filename-regex generated \
+			nextest -p $(1) \
+				--no-tests pass \
+				--no-fail-fast \
+				--test-threads 1
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		cargo llvm-cov report \
+			--codecov \
+			--ignore-filename-regex generated \
+			--output-path "${TOP}/cache/llvm-cov-target.json"
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		cargo llvm-cov report \
+			--html \
+			--ignore-filename-regex generated \
+			--output-dir "${TOP}/cache/llvm-cov-html/"
 endef
 
 define rs_e2e_coverage_convert
@@ -158,29 +155,15 @@ define sign_binary
 		--input $(1)
 endef
 
-define go_generate_resources
-	go tool goversioninfo \
-		-icon="${TOP}/vpkg/windows/resources/icon.ico" \
-		-company="Authentik Security Inc." \
-		-copyright="2025 Authentik Security Inc." \
-		-file-version=${VERSION} \
-		-product-version=${VERSION} \
-		-comment="$(1)" \
-		-description="$(1)" \
-		-product-name="$(1)" \
-		-skip-versioninfo \
-		-64
-endef
-
 define nfpm_package
 	VERSION_PKG=${VERSION_PKG} ARCH=${ARCH} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+		nfpm \
 			package \
 			-p deb \
 			-t ${TOP}/bin/$(2) \
 			-f $(1)
 	VERSION_PKG=${VERSION_PKG} ARCH=${ARCH} \
-		go tool github.com/goreleaser/nfpm/v2/cmd/nfpm \
+		nfpm \
 			package \
 			-p rpm \
 			-t ${TOP}/bin/$(2) \

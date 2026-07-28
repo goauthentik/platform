@@ -14,59 +14,22 @@ permissions:
   id-token: write
 
 jobs:
-  test_go:
-    name: Test (go)
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - macos-26
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - windows-2025
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-      - run: |
-          make test
-      - uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
-        if: ${{ always() }}
-        with:
-          paths: ${{ github.workspace }}/junit.xml
-          show: "fail"
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-${{ matrix.platform }}
-          files: ${{ github.workspace }}/coverage.txt
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-${{ matrix.platform }}
-          files: ${{ github.workspace }}/junit.xml
-          report_type: test_results
   test_rs:
     name: Test (rust)
     strategy:
       fail-fast: false
       matrix:
         target:
-          - ak-pam
-          - ak-nss
-          - ak-browser-support
-          - ak-platform
-          - ak-cli
           - ak-agent
-          - ak-api-cli-gen
           - ak-agent-desktop
+          - ak-api-cli-gen
+          - ak-browser-support
+          - ak-cli
+          - ak-nss
+          - ak-pam
+          - ak-platform
           - ak-platform-facts
+          - ak-sysd
         platform:
           - macos-26
           - ubuntu-24.04
@@ -90,29 +53,22 @@ jobs:
       - uses: taiki-e/install-action@41049aa56687c35e0afa74eed4f09cec4f9afabf # v2
         with:
           tool: cargo-llvm-cov nextest
-      # ak-platform-facts/tests/facts_parity.rs shells out to `go run ...
-      # troubleshoot facts` to cross-check against the Rust gatherer.
-      - if: ${{ matrix.target == 'ak-platform-facts' }}
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
       - name: Install osquery-toolchain
-        if: ${{ matrix.target == 'ak-platform-facts' && (matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm') }}
+        if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && (matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm') }}
         run: |
           ARCH=$(uname -m)
           curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
             "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-${ARCH}.tar.xz"
           sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
           rm /tmp/osquery-toolchain.tar.xz
-      - if: ${{ matrix.target == 'ak-platform-facts' && matrix.platform == 'windows-2025' }}
+      - if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025' }}
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
       - name: Force real MSVC link.exe
         # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
         # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
         # PATH resolution on this runner image, breaking cargo's link step
         # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.
-        if: ${{ matrix.target == 'ak-platform-facts' && matrix.platform == 'windows-2025' }}
+        if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025' }}
         shell: pwsh
         run: |
           $linkExe = (Get-Command link.exe -All | Where-Object { $_.Source -notlike '*\Git\*' } | Select-Object -First 1).Source
@@ -120,7 +76,7 @@ jobs:
       - run: |
           make ${{ matrix.target }}/test
         env:
-          RUSTFLAGS: ${{ (matrix.target == 'ak-platform-facts' && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
+          RUST_BUILD_FLAGS: ${{ ((matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
@@ -166,18 +122,6 @@ jobs:
           flags: swift
           files: ${{ github.workspace }}/cache/psso/junit.xml
           report_type: test_results
-  lint_go:
-    name: Lint (go)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v8
-        with:
-          args: --timeout 5000s
   lint_rs:
     name: Lint (rust)
     runs-on: ubuntu-latest
@@ -227,58 +171,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: make ${{ matrix.target }}/lint
-  test_go_int:
-    name: Test (integration)
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-      - uses: goauthentik/action-setup-authentik@3e55d49b89bd7fc1bd6f2b714b4bd311549aaa97 # v3.0
-        id: setup
-        with:
-          version: beta
-          sentry_env: goauthentik-platform-ci
-          blueprints_path: ./hack/authentik/blueprints
-          wait: true
-          enterprise_license: true
-          enterprise_license_users_internal: 100
-          enterprise_license_users_external: 100
-      - env:
-          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
-          AK_URL: ${{ steps.setup.outputs.http_url }}
-        run: |
-          ./hack/authentik/wait.sh
-      - run: |
-          make test-integration
-      - uses: test-summary/action@37b508cfee6d4d080eedd00b5bb240a6a784a6a5 # v2
-        if: ${{ always() }}
-        with:
-          paths: ${{ github.workspace }}/junit.xml
-          show: "fail"
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-integration
-          files: ${{ github.workspace }}/target/llvm-cov-target/rust.json
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
-        if: ${{ always() }}
-        with:
-          use_oidc: true
-          flags: go-integration
-          files: ${{ github.workspace }}/junit.xml
-          report_type: test_results
-  build_go_e2e:
-    uses: ./.github/workflows/_build-go.yml
-    with:
-      go_build_flags: "-cover"
-      artifact_suffix: "-e2e"
-      platforms: '["ubuntu-24.04"]'
-    secrets: inherit
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
     with:
@@ -287,7 +179,7 @@ jobs:
       platforms: '["ubuntu-24.04"]'
     secrets: inherit
   package_linux_e2e:
-    needs: [build_go_e2e, build_rs_e2e]
+    needs: build_rs_e2e
     uses: ./.github/workflows/_package-linux.yml
     with:
       artifact_suffix: "-e2e"
@@ -299,10 +191,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
@@ -329,7 +217,7 @@ jobs:
         with:
           name: authentik_ubuntu-24.04_ak-pam-e2e
           path: bin/
-      - run: chmod +x bin/agent/ak-agent bin/cli/ak
+      - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd
       - uses: goauthentik/action-setup-authentik@3e55d49b89bd7fc1bd6f2b714b4bd311549aaa97 # v3.0
         id: setup
         with:
@@ -345,12 +233,12 @@ jobs:
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
           ./hack/authentik/wait.sh
+      - run: make containers/e2e/ci-build
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
-          make containers/e2e/ci-build
           make test-e2e-ci
       - run: |
           sudo chmod -R 777 ./ak-platform-e2e/coverage
