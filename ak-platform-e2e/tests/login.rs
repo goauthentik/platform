@@ -1,5 +1,5 @@
 use ak_platform_e2e::{
-    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, must_exec, test_init
+    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, must_exec, test_init,
 };
 
 /// Verifies that a real local (non-SSH) login via the `login` PAM service is

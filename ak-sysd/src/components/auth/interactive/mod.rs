@@ -103,13 +103,15 @@ async fn interactive_auth_continue(
     };
     let mut txn = txn.lock().await;
 
-    // Already finished: re-return success with a fresh session id, as Go does.
+    // Already finished: re-return the outcome with the real session id (empty
+    // for non-success results, which never mint a session). Go returns a fresh
+    // random id here, which is useless to a retrying client; we diverge.
     if let Some(result) = txn.result {
         return Ok(InteractiveChallenge {
             txid: cont.txid,
             finished: true,
             result: result as i32,
-            session_id: random_id(64),
+            session_id: txn.session_id.clone().unwrap_or_default(),
             ..Default::default()
         });
     }

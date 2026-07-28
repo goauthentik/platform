@@ -41,6 +41,42 @@ impl Component for AuthComponent {
     }
 
     async fn start(&self) -> Result<()> {
+        // Reap interactive-auth transactions so the map does not grow without
+        // bound (each entry pins a FlowExecutor, cookie jar and domain handle).
+        let txns = Arc::clone(&self.txns);
+        let cancel = self.ctx.cancel.clone();
+        tokio::spawn(async move {
+            use std::time::Duration;
+            // Unfinished txns time out; finished ones linger briefly so a
+            // retrying client can still fetch the result, then get evicted.
+            const TICK: Duration = Duration::from_secs(60);
+            const TTL: Duration = Duration::from_secs(600);
+            const FINISHED_GRACE: Duration = Duration::from_secs(60);
+            loop {
+                tokio::select! {
+                    _ = cancel.cancelled() => return,
+                    _ = tokio::time::sleep(TICK) => {}
+                }
+                let now = tokio::time::Instant::now();
+                let mut map = txns.write().await;
+                let mut stale = vec![];
+                for (id, txn) in map.iter() {
+                    let txn = txn.lock().await;
+                    let age = now.duration_since(txn.created_at);
+                    let expired = if txn.result.is_some() {
+                        age > FINISHED_GRACE
+                    } else {
+                        age > TTL
+                    };
+                    if expired {
+                        stale.push(id.clone());
+                    }
+                }
+                for id in stale {
+                    map.remove(&id);
+                }
+            }
+        });
         Ok(())
     }
 

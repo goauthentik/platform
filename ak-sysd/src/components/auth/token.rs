@@ -90,11 +90,13 @@ impl SystemAuthToken for AuthComponent {
             .trim()
             .to_string();
 
-        let mut lines = vec![];
-        lines.push(format!(
-            "cert-authority,principals=\"{}\" {pubkey_line}",
-            token.preferred_username
-        ));
+        let principal = &token.preferred_username;
+        if principal.contains(['"', '\n', '\r', '\\']) {
+            return Err(Status::invalid_argument("invalid characters in username"));
+        }
+        let lines = vec![format!(
+            "cert-authority,principals=\"{principal}\" {pubkey_line}"
+        )];
         Ok(Response::new(SshCertAuthResponse { lines }))
     }
 
@@ -123,6 +125,7 @@ impl SystemAuthToken for AuthComponent {
 
         let mut validation = Validation::new(header.alg);
         validation.validate_aud = false;
+        validation.validate_nbf = true;
         let data = decode::<AuthentikClaims>(&req.token, &key, &validation).map_err(to_status)?;
 
         if !data
@@ -159,7 +162,10 @@ impl SystemAuthToken for AuthComponent {
                     .await
                 {
                     Ok(rec) => session_id = rec.id,
-                    Err(e) => tracing::warn!("failed to create session: {e:?}"),
+                    Err(e) => {
+                        tracing::warn!("failed to create session: {e:?}");
+                        return Err(Status::not_found("unable to create session"));
+                    }
                 }
             } else {
                 tracing::debug!("session component not registered, skipping session creation");

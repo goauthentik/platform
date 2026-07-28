@@ -172,15 +172,10 @@ async fn check_nss_direct() -> CheckResult {
     };
 
     match attempt.await {
-        Ok(count) if count >= 1 => CheckResult {
+        Ok(count) => CheckResult {
             category: "NSS".to_string(),
-            message: "Successfully able to list authentik users".to_string(),
+            message: format!("Successfully listed {count} authentik users"),
             success: true,
-        },
-        Ok(_) => CheckResult {
-            category: "NSS".to_string(),
-            message: "Failed to list authentik users".to_string(),
-            success: false,
         },
         Err(e) => result_from_error("NSS", e),
     }

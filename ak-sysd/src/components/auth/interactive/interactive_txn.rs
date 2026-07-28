@@ -10,7 +10,6 @@ use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_ia_c
 use authentik_client::models::{
     ChallengeTypes, DeviceClassesEnum, FlowChallengeResponseRequest,
     IdentificationChallengeResponseRequest, PasswordChallengeResponseRequest,
-    UserLoginChallengeResponseRequest,
 };
 use hex::encode as hex_encode;
 use sha2::{Digest, Sha256};
@@ -35,6 +34,8 @@ pub(super) fn device_token_hash(token: &str) -> String {
 pub struct InteractiveAuthTransaction {
     pub id: String,
     pub result: Option<InteractiveAuthResult>,
+    pub session_id: Option<String>,
+    pub created_at: tokio::time::Instant,
     ctx: SysdContext,
     domain: Arc<LoadedDomain>,
     fex: FlowExecutor,
@@ -64,6 +65,8 @@ impl InteractiveAuthTransaction {
         Ok(Self {
             id,
             result: None,
+            session_id: None,
+            created_at: tokio::time::Instant::now(),
             ctx,
             domain,
             fex,
@@ -229,12 +232,14 @@ impl InteractiveAuthTransaction {
             }))
             .await?;
 
+        let session_id = res.into_inner().session_id;
         self.result = Some(InteractiveAuthResult::PamSuccess);
+        self.session_id = Some(session_id.clone());
         Ok(InteractiveChallenge {
             txid: self.id.clone(),
             finished: true,
             result: InteractiveAuthResult::PamSuccess as i32,
-            session_id: res.into_inner().session_id,
+            session_id,
             ..Default::default()
         })
     }
@@ -342,7 +347,10 @@ mod tests {
         let challenge = txn.get_next_challenge().await.unwrap();
 
         assert!(challenge.finished);
-        assert_eq!(challenge.result, InteractiveAuthResult::PamPermDenied as i32);
+        assert_eq!(
+            challenge.result,
+            InteractiveAuthResult::PamPermDenied as i32
+        );
         assert_eq!(challenge.prompt, "Invalid credentials");
         assert_eq!(challenge.prompt_meta, PromptMeta::PamErrorMsg as i32);
     }
