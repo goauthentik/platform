@@ -108,6 +108,16 @@ impl SystemCtrl for CtrlComponent {
             .save_domain(cfg.clone())
             .await
             .map_err(to_status)?;
+
+        // ConfigChanged is dispatched fire-and-forget (watch_config_changes
+        // processes it on a separate spawned task), so without this, callers
+        // of domain_enroll (e.g. `ak-sysd domains join`) return before
+        // `remote`/`brand` are populated, racing any immediate auth attempt
+        // against interactive_auth/token_auth's `active.remote` reads.
+        if let Err(e) = self.ctx.domains.fetch_remote_config(&cfg.domain).await {
+            tracing::warn!(domain = cfg.domain, "post-enroll healthcheck failed: {e:?}");
+        }
+
         self.ctx.events.dispatch(SysdEvent::ConfigChanged {
             kind: ConfigChangeKind::Added,
         });
