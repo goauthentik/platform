@@ -131,15 +131,6 @@ impl InteractiveAuthTransaction {
                     .ok_or_else(|| Status::internal("no webauthn device challenge available"))?;
                 fido::parse_webauthn_request(&self.id, dc, &self.domain.cfg.authentik_url)
             }
-            // "Empty challenge" per authentik's own docs — finalizes the session
-            // after password validation and needs no user input, just an
-            // auto-submitted response like identification/password above.
-            ChallengeTypes::AkStageUserLogin(_) => {
-                if let Some(err) = self.solve_challenge(String::new()).await? {
-                    return Ok(err);
-                }
-                Box::pin(self.get_next_challenge()).await
-            }
             _ => {
                 tracing::warn!("unsupported interactive auth stage");
                 Ok(InteractiveChallenge {
@@ -181,9 +172,6 @@ impl InteractiveAuthTransaction {
                     .ok_or_else(|| Status::internal("no webauthn device challenge available"))?;
                 fido::parse_webauthn_response(&value, dc, &self.domain.cfg.authentik_url)?
             }
-            ChallengeTypes::AkStageUserLogin(_) => FlowChallengeResponseRequest::AkStageUserLogin(
-                UserLoginChallengeResponseRequest::new(false),
-            ),
             _ => return Err(Status::internal("cannot solve unsupported flow stage")),
         };
         match self.fex.solve_flow_challenge(Some(req)).await {
