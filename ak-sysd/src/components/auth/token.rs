@@ -90,11 +90,13 @@ impl SystemAuthToken for AuthComponent {
             .trim()
             .to_string();
 
-        let mut lines = vec![];
-        lines.push(format!(
-            "cert-authority,principals=\"{}\" {pubkey_line}",
-            token.preferred_username
-        ));
+        let principal = &token.preferred_username;
+        if principal.contains(['"', '\n', '\r', '\\']) {
+            return Err(Status::invalid_argument("invalid characters in username"));
+        }
+        let lines = vec![format!(
+            "cert-authority,principals=\"{principal}\" {pubkey_line}"
+        )];
         Ok(Response::new(SshCertAuthResponse { lines }))
     }
 
