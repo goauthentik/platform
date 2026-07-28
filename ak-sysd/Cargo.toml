@@ -47,7 +47,7 @@ tracing = { workspace = true }
 reqwest-middleware = "0.5.2"
 
 [target.'cfg(unix)'.dependencies]
-signal-hook = "0.3"
+signal-hook = "0.4"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2.186"
