@@ -71,7 +71,7 @@ dependencies = [
  "authentik-client",
  "chrono",
  "eyre",
- "jsonwebtoken 11.0.0",
+ "jsonwebtoken",
  "pbjson-types",
  "reqwest 0.13.4",
  "reqwest-middleware",
@@ -366,7 +366,7 @@ dependencies = [
  "eyre",
  "hex",
  "httptest",
- "jsonwebtoken 10.4.0",
+ "jsonwebtoken",
  "libc",
  "pbjson-types",
  "rand 0.9.5",
@@ -4388,30 +4388,6 @@ checksum = "5dea2b27dd239b2556ed7a25ba842fe47fd602e7fc7433c2a8d6106d4d9edd70"
 dependencies = [
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "jsonwebtoken"
-version = "10.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eba32bfb4ffdeaca3e34431072faf01745c9b26d25504aa7a6cf5684334fc4fc"
-dependencies = [
- "base64 0.22.1",
- "ed25519-dalek",
- "getrandom 0.2.17",
- "hmac 0.12.1",
- "js-sys",
- "p256",
- "p384",
- "pem",
- "rand 0.8.7",
- "rsa",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "signature",
- "simple_asn1",
- "zeroize",
 ]
 
 [[package]]
