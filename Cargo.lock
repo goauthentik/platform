@@ -365,6 +365,7 @@ dependencies = [
  "clap_complete",
  "eyre",
  "hex",
+ "httptest",
  "jsonwebtoken 10.4.0",
  "libc",
  "pbjson-types",

@@ -68,3 +68,4 @@ windows_exe_info = "0.5.2"
 
 [dev-dependencies]
 ak-agent = { path = "../ak-agent" }
+httptest = "0.16"

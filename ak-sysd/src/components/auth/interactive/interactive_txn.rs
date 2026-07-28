@@ -251,3 +251,161 @@ impl InteractiveAuthTransaction {
         })
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use std::collections::HashMap;
+
+    use authentik_client::apis::configuration::Configuration;
+    use authentik_client::models::{
+        AccessDeniedChallenge, AuthenticatorValidationChallenge, ChallengeTypes, DeviceChallenge,
+        DeviceClassesEnum, IdentificationChallenge, PasswordChallenge,
+    };
+    use httptest::{Expectation, Server, matchers::*, responders::json_encoded};
+    use tokio::sync::RwLock;
+
+    use super::*;
+    use crate::cfg::domain::DomainConfig;
+    use crate::context::testutils::test_context;
+
+    fn test_domain(server: &Server) -> Arc<LoadedDomain> {
+        let mut api = Configuration::new();
+        api.base_path = server.url_str("/").trim_end_matches('/').to_string();
+        Arc::new(LoadedDomain {
+            cfg: DomainConfig {
+                enabled: true,
+                authentik_url: server.url_str("/").trim_end_matches('/').to_string(),
+                domain: "test-domain".to_string(),
+                managed: false,
+                fallback_token: String::new(),
+                token: "test-token".to_string(),
+            },
+            api,
+            remote: Arc::new(RwLock::new(None)),
+            brand: Arc::new(RwLock::new(None)),
+        })
+    }
+
+    async fn new_txn(server: &Server, password: &str) -> InteractiveAuthTransaction {
+        InteractiveAuthTransaction::new(
+            "test-txid".to_string(),
+            test_context().await,
+            test_domain(server),
+            "test-flow".to_string(),
+            "akadmin".to_string(),
+            password.to_string(),
+        )
+        .await
+        .unwrap()
+    }
+
+    fn expect_flow_get(server: &Server, challenge: ChallengeTypes) {
+        server.expect(
+            Expectation::matching(request::method_path("GET", "/flows/executor/test-flow/"))
+                .respond_with(json_encoded(challenge)),
+        );
+    }
+
+    /// Mocks a POST solving the stage whose request body contains
+    /// `component`, e.g. `"ak-stage-identification"` or `"ak-stage-password"`
+    /// (the component tag of `FlowChallengeResponseRequest`) — needed since
+    /// both submissions share the same method/path and must be disambiguated
+    /// to avoid matching out of submission order.
+    fn expect_flow_solve(server: &Server, component: &str, challenge: ChallengeTypes) {
+        server.expect(
+            Expectation::matching(all_of![
+                request::method_path("POST", "/flows/executor/test-flow/"),
+                request::body(matches(component)),
+            ])
+            .respond_with(json_encoded(challenge)),
+        );
+    }
+
+    fn identification_challenge(password_fields: bool) -> ChallengeTypes {
+        ChallengeTypes::AkStageIdentification(IdentificationChallenge {
+            password_fields,
+            ..Default::default()
+        })
+    }
+
+    fn password_challenge() -> ChallengeTypes {
+        ChallengeTypes::AkStagePassword(PasswordChallenge::new(
+            "akadmin".to_string(),
+            String::new(),
+        ))
+    }
+
+    #[tokio::test]
+    async fn get_next_challenge_maps_access_denied_to_perm_denied() {
+        let server = Server::run();
+        expect_flow_get(&server, identification_challenge(false));
+        expect_flow_solve(&server, "ak-stage-identification", password_challenge());
+        expect_flow_solve(
+            &server,
+            "ak-stage-password",
+            ChallengeTypes::AkStageAccessDenied(AccessDeniedChallenge {
+                error_message: Some("Invalid credentials".to_string()),
+                ..AccessDeniedChallenge::new("akadmin".to_string(), String::new())
+            }),
+        );
+
+        let mut txn = new_txn(&server, "hunter2").await;
+        let challenge = txn.get_next_challenge().await.unwrap();
+
+        assert!(challenge.finished);
+        assert_eq!(challenge.result, InteractiveAuthResult::PamPermDenied as i32);
+        assert_eq!(challenge.prompt, "Invalid credentials");
+        assert_eq!(challenge.prompt_meta, PromptMeta::PamErrorMsg as i32);
+    }
+
+    #[tokio::test]
+    async fn get_next_challenge_surfaces_webauthn_as_binary_prompt() {
+        let server = Server::run();
+        expect_flow_get(&server, identification_challenge(false));
+        expect_flow_solve(&server, "ak-stage-identification", password_challenge());
+
+        let mut device_challenge = HashMap::new();
+        device_challenge.insert(
+            "challenge".to_string(),
+            serde_json::Value::String("test-challenge".to_string()),
+        );
+        device_challenge.insert(
+            "rpId".to_string(),
+            serde_json::Value::String("example.com".to_string()),
+        );
+        expect_flow_solve(
+            &server,
+            "ak-stage-password",
+            ChallengeTypes::AkStageAuthenticatorValidate(AuthenticatorValidationChallenge::new(
+                "akadmin".to_string(),
+                String::new(),
+                vec![DeviceChallenge::new(
+                    DeviceClassesEnum::Webauthn,
+                    "test-device".to_string(),
+                    device_challenge,
+                    None,
+                )],
+                vec![],
+            )),
+        );
+
+        let mut txn = new_txn(&server, "hunter2").await;
+        let challenge = txn.get_next_challenge().await.unwrap();
+
+        assert!(!challenge.finished);
+        assert_eq!(challenge.prompt_meta, PromptMeta::PamBinaryPrompt as i32);
+    }
+
+    #[tokio::test]
+    async fn get_next_challenge_returns_bare_challenge_for_combined_password_field() {
+        let server = Server::run();
+        expect_flow_get(&server, identification_challenge(true));
+
+        let mut txn = new_txn(&server, "hunter2").await;
+        let challenge = txn.get_next_challenge().await.unwrap();
+
+        assert!(!challenge.finished);
+        assert!(challenge.prompt.is_empty());
+    }
+}
