@@ -15,7 +15,7 @@ RUN apt-get update && \
         ca-certificates \
         libpam0g-dev libudev-dev zstd \
         libdbus-1-dev \
-        libtss2-sys1t64 && \
+        libtss2-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ARCH=$(uname -m) && \
