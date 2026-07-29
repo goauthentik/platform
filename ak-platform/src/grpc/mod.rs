@@ -15,6 +15,7 @@ use crate::string::PlatformString;
 
 pub mod method_caller;
 pub mod ssh;
+pub mod log;
 
 pub async fn grpc_endpoint(path: String) -> Result<Channel> {
     // Dummy URI to satisfy Endpoint::from() type requirements
