@@ -40,7 +40,7 @@ jobs:
           languages: ${{ matrix.language-platform.language }}
       - name: Install libraries
         if: ${{ matrix.language-platform.platform == 'ubuntu-24.04' }}
-        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev pkg-config libdbus-1-dev libtss2-sys1t64
+        run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev pkg-config libdbus-1-dev libtss2-dev
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4.37.4
       - name: Perform CodeQL Analysis

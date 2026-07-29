@@ -9,7 +9,7 @@ RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/
         libpam0g-dev libudev-dev pamtester \
         # Required for keyring
         dbus dbus-x11 gnome-keyring \
-        libdbus-1-dev pkg-config libtss2-sys1t64 \
+        libdbus-1-dev pkg-config libtss2-dev \
         # Required for packaging
         nfpm \
         # Required for OSquery

@@ -29,7 +29,7 @@ brew install gmake rustup swift
 ### Linux Dependencies
 
 ```shell
-sudo apt-get install libpam0g-dev libudev-dev pkg-config libdbus-1-dev libtss2-sys1t64
+sudo apt-get install libpam0g-dev libudev-dev pkg-config libdbus-1-dev libtss2-dev
 ```
 
 ### Windows Dependencies
