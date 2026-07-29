@@ -19,9 +19,9 @@ pub fn sysd_config_file() -> PlatformString {
 
 pub fn sysd_state_file() -> PlatformString {
     PlatformString::new()
-        .with_darwin("/opt/authentik/sysd-state.db")
-        .with_linux("/var/lib/authentik/sysd-state.db")
-        .with_windows(r"C:\ProgramData\Authentik Security Inc\sysd-state.db")
+        .with_darwin("/opt/authentik/sysd-state-v2.db")
+        .with_linux("/var/lib/authentik/sysd-state-v2.db")
+        .with_windows(r"C:\ProgramData\Authentik Security Inc\sysd-state-v2.db")
 }
 
 pub fn sysd_socket_path(id: SysdSocketID) -> PlatformString {
