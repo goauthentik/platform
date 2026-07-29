@@ -113,7 +113,7 @@ define rs_e2e_coverage_convert
 		$$LLVM_DIR/llvm-profdata merge -sparse $$PROFRAW_FILES \
 			-o "${PWD}/cache/rs-e2e-merged.profdata"; \
 		OBJECTS=""; \
-		for bin in "${PWD}/bin/cli/ak" "${PWD}/bin/agent/ak-agent" \
+		for bin in "${PWD}/bin/cli/ak" "${PWD}/bin/agent/ak-agent" "${PWD}/bin/sysd/ak-sysd" \
 				"${PWD}/bin/nss/libnss_authentik.so" "${PWD}/bin/pam/libpam_authentik.so"; do \
 			if [ -f "$$bin" ]; then OBJECTS="$$OBJECTS -object $$bin"; fi; \
 		done; \
