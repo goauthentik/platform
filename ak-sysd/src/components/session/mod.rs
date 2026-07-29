@@ -8,7 +8,7 @@ use ak_platform::generated::session::{
 use ak_platform::paths::SysdSocketID;
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use eyre::Result;
-use rand::RngCore;
+use rand::Rng;
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tonic::{Request, Response, Status};

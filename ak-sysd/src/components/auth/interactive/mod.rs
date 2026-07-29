@@ -12,7 +12,7 @@ use ak_platform::generated::sys_auth::{
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_ia_create;
 use authentik_client::models::LicenseStatusEnum;
 use base64::{Engine, prelude::BASE64_STANDARD};
-use rand::RngCore;
+use rand::Rng;
 use tokio::sync::{Mutex, RwLock};
 use tonic::Status;
 
