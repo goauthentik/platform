@@ -1,13 +1,15 @@
+use ak_platform::dpop::{DpopKeyPair, DpopSigner};
 use ak_platform::generated::{
     agent::{RequestHeader, ResponseHeader},
     agent_ctrl::{
-        CurrentProfileResponse, ListProfilesResponse, Profile, SetupRequest, SetupResponse,
-        agent_ctrl_server::AgentCtrl,
+        CurrentProfileResponse, ListProfilesResponse, PrepareDpopKeyRequest,
+        PrepareDpopKeyResponse, Profile, SetupRequest, SetupResponse, agent_ctrl_server::AgentCtrl,
     },
 };
+use ak_platform_keyring::hardware::{HardwareKeyError, HardwareSigningKey};
 use tonic::{Request, Response, Status};
 
-use crate::config::ConfigV1Profile;
+use crate::config::{ConfigV1Profile, DpopKeyBackend, dpop_hardware_app_name};
 use crate::grpc::AgentGRPCServer;
 
 #[tonic::async_trait]
@@ -56,17 +58,32 @@ impl AgentCtrl for AgentGRPCServer {
             .profile;
         {
             let mut cfg = self.agent.cfg.write().await;
-            cfg.profiles.insert(
-                profile_name.clone(),
-                ConfigV1Profile::from_tokens(
-                    req.authentik_url,
-                    req.app_slug,
-                    req.client_id,
-                    req.access_token,
-                    req.refresh_token,
-                    req.dpop_private_key,
-                ),
-            );
+            // A DPoP-bound profile already exists at this point — created by
+            // `prepare_dpop_key` before the device flow started — so only its
+            // tokens need filling in, preserving `dpop_key_backend` and any
+            // key material. The non-DPoP case (no prior PrepareDpopKey call)
+            // creates the profile fresh, as before.
+            match cfg.profiles.get_mut(&profile_name) {
+                Some(profile) => {
+                    profile.authentik_url = req.authentik_url;
+                    profile.app_slug = req.app_slug;
+                    profile.client_id = req.client_id;
+                    profile.set_access_token(req.access_token);
+                    profile.set_refresh_token(req.refresh_token);
+                }
+                None => {
+                    cfg.profiles.insert(
+                        profile_name.clone(),
+                        ConfigV1Profile::from_tokens(
+                            req.authentik_url,
+                            req.app_slug,
+                            req.client_id,
+                            req.access_token,
+                            req.refresh_token,
+                        ),
+                    );
+                }
+            }
             if cfg.active_profile.is_empty() {
                 cfg.active_profile = profile_name.clone();
             }
@@ -79,6 +96,96 @@ impl AgentCtrl for AgentGRPCServer {
         tracing::info!(profile = profile_name, "setup new profile");
         Ok(Response::new(SetupResponse {
             header: Some(ResponseHeader { successful: true }),
+        }))
+    }
+
+    async fn prepare_dpop_key(
+        &self,
+        request: Request<PrepareDpopKeyRequest>,
+    ) -> Result<Response<PrepareDpopKeyResponse>, Status> {
+        let req = request.into_inner();
+        let profile_name = req
+            .header
+            .ok_or(Status::invalid_argument("missing header"))?
+            .profile;
+
+        let (signer, dpop_key_backend, dpop_private_key, hardware_backed) =
+            match HardwareSigningKey::open_or_generate(&dpop_hardware_app_name(), &profile_name) {
+                Ok(hw) => (
+                    DpopSigner::Hardware(hw),
+                    DpopKeyBackend::Hardware,
+                    String::new(),
+                    true,
+                ),
+                Err(HardwareKeyError::NotAvailable) => {
+                    tracing::info!(
+                        profile = profile_name,
+                        "no hardware key storage available on this device, using a software DPoP key"
+                    );
+                    let kp = DpopKeyPair::generate();
+                    let pem = kp
+                        .to_pkcs8_pem()
+                        .map_err(|e| Status::from_error(e.into()))?;
+                    (
+                        DpopSigner::Software(kp),
+                        DpopKeyBackend::Software,
+                        pem,
+                        false,
+                    )
+                }
+                Err(HardwareKeyError::Other(e)) => {
+                    tracing::warn!(
+                        profile = profile_name,
+                        error = %e,
+                        "hardware DPoP key generation failed, falling back to a software key"
+                    );
+                    let kp = DpopKeyPair::generate();
+                    let pem = kp
+                        .to_pkcs8_pem()
+                        .map_err(|e| Status::from_error(e.into()))?;
+                    (
+                        DpopSigner::Software(kp),
+                        DpopKeyBackend::Software,
+                        pem,
+                        false,
+                    )
+                }
+            };
+        let dpop_jkt = signer
+            .thumbprint()
+            .map_err(|e| Status::from_error(e.into()))?;
+
+        {
+            let mut cfg = self.agent.cfg.write().await;
+            let profile = cfg.profiles.entry(profile_name.clone()).or_insert_with(|| {
+                ConfigV1Profile::from_tokens(
+                    req.authentik_url.clone(),
+                    req.app_slug.clone(),
+                    req.client_id.clone(),
+                    String::new(),
+                    String::new(),
+                )
+            });
+            profile.authentik_url = req.authentik_url;
+            profile.app_slug = req.app_slug;
+            profile.client_id = req.client_id;
+            profile.dpop_key_backend = dpop_key_backend;
+            profile.set_dpop_private_key(dpop_private_key);
+        }
+        if let Err(e) = self.agent.cfg.save().await {
+            tracing::warn!("failed to save config: {e:?}");
+            return Err(Status::from_error(e.into()));
+        }
+
+        tracing::info!(
+            profile = profile_name,
+            hardware_backed,
+            "prepared DPoP key for profile"
+        );
+        Ok(Response::new(PrepareDpopKeyResponse {
+            header: Some(ResponseHeader { successful: true }),
+            dpop_jkt,
+            hardware_backed,
         }))
     }
 

@@ -135,6 +135,30 @@ pub mod agent_ctrl_client {
                 .insert(GrpcMethod::new("agent_ctrl.AgentCtrl", "Setup"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn prepare_dpop_key(
+            &mut self,
+            request: impl tonic::IntoRequest<super::PrepareDpopKeyRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::PrepareDpopKeyResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_ctrl.AgentCtrl/PrepareDpopKey",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_ctrl.AgentCtrl", "PrepareDpopKey"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn switch_profile(
             &mut self,
             request: impl tonic::IntoRequest<super::super::agent::RequestHeader>,
@@ -209,6 +233,13 @@ pub mod agent_ctrl_server {
             &self,
             request: tonic::Request<super::SetupRequest>,
         ) -> std::result::Result<tonic::Response<super::SetupResponse>, tonic::Status>;
+        async fn prepare_dpop_key(
+            &self,
+            request: tonic::Request<super::PrepareDpopKeyRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::PrepareDpopKeyResponse>,
+            tonic::Status,
+        >;
         async fn switch_profile(
             &self,
             request: tonic::Request<super::super::agent::RequestHeader>,
@@ -368,6 +399,51 @@ pub mod agent_ctrl_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = SetupSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/agent_ctrl.AgentCtrl/PrepareDpopKey" => {
+                    #[allow(non_camel_case_types)]
+                    struct PrepareDpopKeySvc<T: AgentCtrl>(pub Arc<T>);
+                    impl<
+                        T: AgentCtrl,
+                    > tonic::server::UnaryService<super::PrepareDpopKeyRequest>
+                    for PrepareDpopKeySvc<T> {
+                        type Response = super::PrepareDpopKeyResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::PrepareDpopKeyRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as AgentCtrl>::prepare_dpop_key(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = PrepareDpopKeySvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

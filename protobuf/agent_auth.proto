@@ -11,6 +11,7 @@ service AgentAuth {
   rpc CachedTokenExchange(TokenExchangeRequest) returns (TokenExchangeResponse);
   rpc DeviceTokenExchange(DeviceTokenExchangeRequest) returns (TokenExchangeResponse);
   rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+  rpc SignDpopProof(SignDpopProofRequest) returns (SignDpopProofResponse);
 }
 
 message WhoAmIRequest {
@@ -63,4 +64,21 @@ message AuthorizeRequest {
 
 message AuthorizeResponse {
   agent.ResponseHeader header = 1;
+}
+
+// Signs an RFC 9449 DPoP proof for a request using the calling profile's DPoP
+// key. The key itself (which may be hardware-backed and non-exportable) never
+// leaves ak-agent; only the resulting signed proof is returned.
+message SignDpopProofRequest {
+  agent.RequestHeader header = 1;
+  string htm = 2;
+  string htu = 3;
+  // Set only for authorization_code/device_code exchanges (c_s256 over the
+  // raw code); omitted for refresh_token proofs.
+  optional string code_for_c_s256 = 4;
+}
+
+message SignDpopProofResponse {
+  agent.ResponseHeader header = 1;
+  string proof = 2;
 }

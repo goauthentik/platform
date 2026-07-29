@@ -207,6 +207,30 @@ pub mod agent_auth_client {
                 .insert(GrpcMethod::new("agent_auth.AgentAuth", "Authorize"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn sign_dpop_proof(
+            &mut self,
+            request: impl tonic::IntoRequest<super::SignDpopProofRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::SignDpopProofResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/agent_auth.AgentAuth/SignDpopProof",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("agent_auth.AgentAuth", "SignDpopProof"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -252,6 +276,13 @@ pub mod agent_auth_server {
             request: tonic::Request<super::AuthorizeRequest>,
         ) -> std::result::Result<
             tonic::Response<super::AuthorizeResponse>,
+            tonic::Status,
+        >;
+        async fn sign_dpop_proof(
+            &self,
+            request: tonic::Request<super::SignDpopProofRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::SignDpopProofResponse>,
             tonic::Status,
         >;
     }
@@ -541,6 +572,51 @@ pub mod agent_auth_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = AuthorizeSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/agent_auth.AgentAuth/SignDpopProof" => {
+                    #[allow(non_camel_case_types)]
+                    struct SignDpopProofSvc<T: AgentAuth>(pub Arc<T>);
+                    impl<
+                        T: AgentAuth,
+                    > tonic::server::UnaryService<super::SignDpopProofRequest>
+                    for SignDpopProofSvc<T> {
+                        type Response = super::SignDpopProofResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::SignDpopProofRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as AgentAuth>::sign_dpop_proof(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = SignDpopProofSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

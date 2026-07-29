@@ -215,6 +215,278 @@ impl<'de> serde::Deserialize<'de> for ListProfilesResponse {
         deserializer.deserialize_struct("agent_ctrl.ListProfilesResponse", FIELDS, GeneratedVisitor)
     }
 }
+impl serde::Serialize for PrepareDpopKeyRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.header.is_some() {
+            len += 1;
+        }
+        if !self.authentik_url.is_empty() {
+            len += 1;
+        }
+        if !self.app_slug.is_empty() {
+            len += 1;
+        }
+        if !self.client_id.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("agent_ctrl.PrepareDpopKeyRequest", len)?;
+        if let Some(v) = self.header.as_ref() {
+            struct_ser.serialize_field("header", v)?;
+        }
+        if !self.authentik_url.is_empty() {
+            struct_ser.serialize_field("authentikUrl", &self.authentik_url)?;
+        }
+        if !self.app_slug.is_empty() {
+            struct_ser.serialize_field("appSlug", &self.app_slug)?;
+        }
+        if !self.client_id.is_empty() {
+            struct_ser.serialize_field("clientId", &self.client_id)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for PrepareDpopKeyRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "header",
+            "authentik_url",
+            "authentikUrl",
+            "app_slug",
+            "appSlug",
+            "client_id",
+            "clientId",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Header,
+            AuthentikUrl,
+            AppSlug,
+            ClientId,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "header" => Ok(GeneratedField::Header),
+                            "authentikUrl" | "authentik_url" => Ok(GeneratedField::AuthentikUrl),
+                            "appSlug" | "app_slug" => Ok(GeneratedField::AppSlug),
+                            "clientId" | "client_id" => Ok(GeneratedField::ClientId),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = PrepareDpopKeyRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct agent_ctrl.PrepareDpopKeyRequest")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<PrepareDpopKeyRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut header__ = None;
+                let mut authentik_url__ = None;
+                let mut app_slug__ = None;
+                let mut client_id__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Header => {
+                            if header__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("header"));
+                            }
+                            header__ = map_.next_value()?;
+                        }
+                        GeneratedField::AuthentikUrl => {
+                            if authentik_url__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("authentikUrl"));
+                            }
+                            authentik_url__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::AppSlug => {
+                            if app_slug__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("appSlug"));
+                            }
+                            app_slug__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::ClientId => {
+                            if client_id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("clientId"));
+                            }
+                            client_id__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(PrepareDpopKeyRequest {
+                    header: header__,
+                    authentik_url: authentik_url__.unwrap_or_default(),
+                    app_slug: app_slug__.unwrap_or_default(),
+                    client_id: client_id__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("agent_ctrl.PrepareDpopKeyRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for PrepareDpopKeyResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.header.is_some() {
+            len += 1;
+        }
+        if !self.dpop_jkt.is_empty() {
+            len += 1;
+        }
+        if self.hardware_backed {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("agent_ctrl.PrepareDpopKeyResponse", len)?;
+        if let Some(v) = self.header.as_ref() {
+            struct_ser.serialize_field("header", v)?;
+        }
+        if !self.dpop_jkt.is_empty() {
+            struct_ser.serialize_field("dpopJkt", &self.dpop_jkt)?;
+        }
+        if self.hardware_backed {
+            struct_ser.serialize_field("hardwareBacked", &self.hardware_backed)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for PrepareDpopKeyResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "header",
+            "dpop_jkt",
+            "dpopJkt",
+            "hardware_backed",
+            "hardwareBacked",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Header,
+            DpopJkt,
+            HardwareBacked,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "header" => Ok(GeneratedField::Header),
+                            "dpopJkt" | "dpop_jkt" => Ok(GeneratedField::DpopJkt),
+                            "hardwareBacked" | "hardware_backed" => Ok(GeneratedField::HardwareBacked),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = PrepareDpopKeyResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct agent_ctrl.PrepareDpopKeyResponse")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<PrepareDpopKeyResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut header__ = None;
+                let mut dpop_jkt__ = None;
+                let mut hardware_backed__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Header => {
+                            if header__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("header"));
+                            }
+                            header__ = map_.next_value()?;
+                        }
+                        GeneratedField::DpopJkt => {
+                            if dpop_jkt__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("dpopJkt"));
+                            }
+                            dpop_jkt__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::HardwareBacked => {
+                            if hardware_backed__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("hardwareBacked"));
+                            }
+                            hardware_backed__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(PrepareDpopKeyResponse {
+                    header: header__,
+                    dpop_jkt: dpop_jkt__.unwrap_or_default(),
+                    hardware_backed: hardware_backed__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("agent_ctrl.PrepareDpopKeyResponse", FIELDS, GeneratedVisitor)
+    }
+}
 impl serde::Serialize for Profile {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -421,9 +693,6 @@ impl serde::Serialize for SetupRequest {
         if !self.refresh_token.is_empty() {
             len += 1;
         }
-        if !self.dpop_private_key.is_empty() {
-            len += 1;
-        }
         let mut struct_ser = serializer.serialize_struct("agent_ctrl.SetupRequest", len)?;
         if let Some(v) = self.header.as_ref() {
             struct_ser.serialize_field("header", v)?;
@@ -442,9 +711,6 @@ impl serde::Serialize for SetupRequest {
         }
         if !self.refresh_token.is_empty() {
             struct_ser.serialize_field("refreshToken", &self.refresh_token)?;
-        }
-        if !self.dpop_private_key.is_empty() {
-            struct_ser.serialize_field("dpopPrivateKey", &self.dpop_private_key)?;
         }
         struct_ser.end()
     }
@@ -467,8 +733,6 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
             "accessToken",
             "refresh_token",
             "refreshToken",
-            "dpop_private_key",
-            "dpopPrivateKey",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -479,7 +743,6 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
             ClientId,
             AccessToken,
             RefreshToken,
-            DpopPrivateKey,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -507,7 +770,6 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                             "clientId" | "client_id" => Ok(GeneratedField::ClientId),
                             "accessToken" | "access_token" => Ok(GeneratedField::AccessToken),
                             "refreshToken" | "refresh_token" => Ok(GeneratedField::RefreshToken),
-                            "dpopPrivateKey" | "dpop_private_key" => Ok(GeneratedField::DpopPrivateKey),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -533,7 +795,6 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                 let mut client_id__ = None;
                 let mut access_token__ = None;
                 let mut refresh_token__ = None;
-                let mut dpop_private_key__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Header => {
@@ -572,12 +833,6 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                             }
                             refresh_token__ = Some(map_.next_value()?);
                         }
-                        GeneratedField::DpopPrivateKey => {
-                            if dpop_private_key__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("dpopPrivateKey"));
-                            }
-                            dpop_private_key__ = Some(map_.next_value()?);
-                        }
                     }
                 }
                 Ok(SetupRequest {
@@ -587,7 +842,6 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                     client_id: client_id__.unwrap_or_default(),
                     access_token: access_token__.unwrap_or_default(),
                     refresh_token: refresh_token__.unwrap_or_default(),
-                    dpop_private_key: dpop_private_key__.unwrap_or_default(),
                 })
             }
         }

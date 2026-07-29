@@ -14,14 +14,37 @@ pub struct SetupRequest {
     pub access_token: ::prost::alloc::string::String,
     #[prost(string, tag="6")]
     pub refresh_token: ::prost::alloc::string::String,
-    /// PKCS#8 PEM DPoP private key; empty if this profile is not key-bound.
-    #[prost(string, tag="7")]
-    pub dpop_private_key: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SetupResponse {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
+}
+/// Establishes (generating if needed) the DPoP key for a profile before the
+/// device flow starts, since the resulting thumbprint must ride the initial
+/// device-authorization request. header.profile names the profile being
+/// enrolled; it need not exist yet — this call creates it.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PrepareDpopKeyRequest {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::RequestHeader>,
+    #[prost(string, tag="2")]
+    pub authentik_url: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub app_slug: ::prost::alloc::string::String,
+    #[prost(string, tag="4")]
+    pub client_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PrepareDpopKeyResponse {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::ResponseHeader>,
+    #[prost(string, tag="2")]
+    pub dpop_jkt: ::prost::alloc::string::String,
+    /// True if backed by the platform Secure Enclave/TPM; false if this device
+    /// had no usable hardware backend and a software key was used instead.
+    #[prost(bool, tag="3")]
+    pub hardware_backed: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Profile {
