@@ -33,6 +33,7 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: Some(claims.iat.into()),
             next_renew: Some(claims.exp.into()),
+            dpop_bound: c_prof.dpop_enabled(),
         };
         profiles.push(o_prof);
     }

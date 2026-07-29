@@ -168,7 +168,8 @@ async fn main() -> std::result::Result<(), Error> {
                 authentik_url,
                 client_id,
                 app_slug,
-            } => commands::config::setup(app, authentik_url, client_id, app_slug).await,
+                dpop,
+            } => commands::config::setup(app, authentik_url, client_id, app_slug, *dpop).await,
         },
         Commands::Auth { command } => {
             // If not in verbose, set a higher default log level as the output matters

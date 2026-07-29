@@ -35,6 +35,7 @@ impl AgentCtrl for AgentGRPCServer {
                 authentik_url: c_prof.authentik_url.clone(),
                 last_renewed: Some(claims.iat.into()),
                 next_renew: Some(claims.exp.into()),
+                dpop_bound: c_prof.dpop_enabled(),
             };
             profiles.push(o_prof);
         }
@@ -63,6 +64,7 @@ impl AgentCtrl for AgentGRPCServer {
                     req.client_id,
                     req.access_token,
                     req.refresh_token,
+                    req.dpop_private_key,
                 ),
             );
             if cfg.active_profile.is_empty() {
