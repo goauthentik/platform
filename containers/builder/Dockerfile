@@ -14,7 +14,8 @@ RUN apt-get update && \
         curl git \
         ca-certificates \
         libpam0g-dev libudev-dev zstd \
-        libdbus-1-dev && \
+        libdbus-1-dev \
+        libtss2-sys1t64 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ARCH=$(uname -m) && \
