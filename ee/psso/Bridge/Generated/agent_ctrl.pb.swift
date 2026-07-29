@@ -82,8 +82,9 @@ nonisolated struct SetupRequest: Sendable {
 
   var refreshToken: String = String()
 
-  /// PKCS#8 PEM DPoP private key; empty if this profile is not key-bound.
-  var dpopPrivateKey: String = String()
+  /// Whether the server bound the tokens to the key from PrepareDpopKey. When
+  /// false, the prepared key is discarded and the profile is not key-bound.
+  var dpopBound: Bool = false
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -105,6 +106,64 @@ nonisolated struct SetupResponse: Sendable {
   var hasHeader: Bool {self._header != nil}
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _header: ResponseHeader? = nil
+}
+
+/// Establishes (generating if needed) the DPoP key for a profile before the
+/// device flow starts, since the resulting thumbprint must ride the initial
+/// device-authorization request. header.profile names the profile being
+/// enrolled; it need not exist yet — this call creates it.
+nonisolated struct PrepareDpopKeyRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var header: RequestHeader {
+    get {_header ?? RequestHeader()}
+    set {_header = newValue}
+  }
+  /// Returns true if `header` has been explicitly set.
+  var hasHeader: Bool {self._header != nil}
+  /// Clears the value of `header`. Subsequent reads from it will return its default value.
+  mutating func clearHeader() {self._header = nil}
+
+  var authentikURL: String = String()
+
+  var appSlug: String = String()
+
+  var clientID: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _header: RequestHeader? = nil
+}
+
+nonisolated struct PrepareDpopKeyResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var header: ResponseHeader {
+    get {_header ?? ResponseHeader()}
+    set {_header = newValue}
+  }
+  /// Returns true if `header` has been explicitly set.
+  var hasHeader: Bool {self._header != nil}
+  /// Clears the value of `header`. Subsequent reads from it will return its default value.
+  mutating func clearHeader() {self._header = nil}
+
+  var dpopJkt: String = String()
+
+  /// True if backed by the platform Secure Enclave/TPM; false if this device
+  /// had no usable hardware backend and a software key was used instead.
+  var hardwareBacked: Bool = false
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -210,7 +269,7 @@ nonisolated extension ProfileStatus: SwiftProtobuf._ProtoNameProviding {
 
 nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SetupRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}authentik_url\0\u{3}app_slug\0\u{3}client_id\0\u{3}access_token\0\u{3}refresh_token\0\u{3}dpop_private_key\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}authentik_url\0\u{3}app_slug\0\u{3}client_id\0\u{3}access_token\0\u{3}refresh_token\0\u{4}\u{2}dpop_bound\0\u{c}\u{7}\u{1}")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -224,7 +283,7 @@ nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
       case 4: try { try decoder.decodeSingularStringField(value: &self.clientID) }()
       case 5: try { try decoder.decodeSingularStringField(value: &self.accessToken) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.refreshToken) }()
-      case 7: try { try decoder.decodeSingularStringField(value: &self.dpopPrivateKey) }()
+      case 8: try { try decoder.decodeSingularBoolField(value: &self.dpopBound) }()
       default: break
       }
     }
@@ -253,8 +312,8 @@ nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if !self.refreshToken.isEmpty {
       try visitor.visitSingularStringField(value: self.refreshToken, fieldNumber: 6)
     }
-    if !self.dpopPrivateKey.isEmpty {
-      try visitor.visitSingularStringField(value: self.dpopPrivateKey, fieldNumber: 7)
+    if self.dpopBound != false {
+      try visitor.visitSingularBoolField(value: self.dpopBound, fieldNumber: 8)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -266,7 +325,7 @@ nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if lhs.clientID != rhs.clientID {return false}
     if lhs.accessToken != rhs.accessToken {return false}
     if lhs.refreshToken != rhs.refreshToken {return false}
-    if lhs.dpopPrivateKey != rhs.dpopPrivateKey {return false}
+    if lhs.dpopBound != rhs.dpopBound {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -301,6 +360,99 @@ nonisolated extension SetupResponse: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
   static func ==(lhs: SetupResponse, rhs: SetupResponse) -> Bool {
     if lhs._header != rhs._header {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension PrepareDpopKeyRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PrepareDpopKeyRequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}authentik_url\0\u{3}app_slug\0\u{3}client_id\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.authentikURL) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.appSlug) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.clientID) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._header {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.authentikURL.isEmpty {
+      try visitor.visitSingularStringField(value: self.authentikURL, fieldNumber: 2)
+    }
+    if !self.appSlug.isEmpty {
+      try visitor.visitSingularStringField(value: self.appSlug, fieldNumber: 3)
+    }
+    if !self.clientID.isEmpty {
+      try visitor.visitSingularStringField(value: self.clientID, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: PrepareDpopKeyRequest, rhs: PrepareDpopKeyRequest) -> Bool {
+    if lhs._header != rhs._header {return false}
+    if lhs.authentikURL != rhs.authentikURL {return false}
+    if lhs.appSlug != rhs.appSlug {return false}
+    if lhs.clientID != rhs.clientID {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension PrepareDpopKeyResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PrepareDpopKeyResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}dpop_jkt\0\u{3}hardware_backed\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.dpopJkt) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.hardwareBacked) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._header {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.dpopJkt.isEmpty {
+      try visitor.visitSingularStringField(value: self.dpopJkt, fieldNumber: 2)
+    }
+    if self.hardwareBacked != false {
+      try visitor.visitSingularBoolField(value: self.hardwareBacked, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: PrepareDpopKeyResponse, rhs: PrepareDpopKeyResponse) -> Bool {
+    if lhs._header != rhs._header {return false}
+    if lhs.dpopJkt != rhs.dpopJkt {return false}
+    if lhs.hardwareBacked != rhs.hardwareBacked {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

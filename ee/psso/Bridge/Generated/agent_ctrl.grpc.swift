@@ -47,6 +47,19 @@ internal enum AgentCtrl: Sendable {
                 type: .unary
             )
         }
+        /// Namespace for "PrepareDpopKey" metadata.
+        internal enum PrepareDpopKey: Sendable {
+            /// Request type for "PrepareDpopKey".
+            internal typealias Input = PrepareDpopKeyRequest
+            /// Response type for "PrepareDpopKey".
+            internal typealias Output = PrepareDpopKeyResponse
+            /// Descriptor for "PrepareDpopKey".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_ctrl.AgentCtrl"),
+                method: "PrepareDpopKey",
+                type: .unary
+            )
+        }
         /// Namespace for "SwitchProfile" metadata.
         internal enum SwitchProfile: Sendable {
             /// Request type for "SwitchProfile".
@@ -90,6 +103,7 @@ internal enum AgentCtrl: Sendable {
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             ListProfiles.descriptor,
             Setup.descriptor,
+            PrepareDpopKey.descriptor,
             SwitchProfile.descriptor,
             CurrentProfile.descriptor,
             DeleteProfile.descriptor
@@ -148,6 +162,25 @@ extension AgentCtrl {
             deserializer: some GRPCCore.MessageDeserializer<SetupResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SetupResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "PrepareDpopKey" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `PrepareDpopKeyRequest` message.
+        ///   - serializer: A serializer for `PrepareDpopKeyRequest` messages.
+        ///   - deserializer: A deserializer for `PrepareDpopKeyResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func prepareDpopKey<Result>(
+            request: GRPCCore.ClientRequest<PrepareDpopKeyRequest>,
+            serializer: some GRPCCore.MessageSerializer<PrepareDpopKeyRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<PrepareDpopKeyResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PrepareDpopKeyResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
 
         /// Call the "SwitchProfile" method.
@@ -277,6 +310,36 @@ extension AgentCtrl {
             try await self.client.unary(
                 request: request,
                 descriptor: AgentCtrl.Method.Setup.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
+        /// Call the "PrepareDpopKey" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `PrepareDpopKeyRequest` message.
+        ///   - serializer: A serializer for `PrepareDpopKeyRequest` messages.
+        ///   - deserializer: A deserializer for `PrepareDpopKeyResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func prepareDpopKey<Result>(
+            request: GRPCCore.ClientRequest<PrepareDpopKeyRequest>,
+            serializer: some GRPCCore.MessageSerializer<PrepareDpopKeyRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<PrepareDpopKeyResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PrepareDpopKeyResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: AgentCtrl.Method.PrepareDpopKey.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -429,6 +492,31 @@ extension AgentCtrl.ClientProtocol {
         )
     }
 
+    /// Call the "PrepareDpopKey" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `PrepareDpopKeyRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func prepareDpopKey<Result>(
+        request: GRPCCore.ClientRequest<PrepareDpopKeyRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PrepareDpopKeyResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.prepareDpopKey(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<PrepareDpopKeyRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<PrepareDpopKeyResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
     /// Call the "SwitchProfile" method.
     ///
     /// - Parameters:
@@ -560,6 +648,35 @@ extension AgentCtrl.ClientProtocol {
             metadata: metadata
         )
         return try await self.setup(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "PrepareDpopKey" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func prepareDpopKey<Result>(
+        _ message: PrepareDpopKeyRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<PrepareDpopKeyResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<PrepareDpopKeyRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.prepareDpopKey(
             request: request,
             options: options,
             onResponse: handleResponse

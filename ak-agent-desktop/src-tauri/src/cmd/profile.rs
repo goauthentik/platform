@@ -1,5 +1,6 @@
 use ak_agent::{Agent, config::ConfigV1Profile};
 use ak_platform::{
+    dpop::LocalDpopProver,
     generated::agent_ctrl::{Profile, ProfileStatus},
     setup,
 };
@@ -96,6 +97,15 @@ pub async fn setup_profile(
     client_id: String,
     app_slug: String,
 ) -> Result<()> {
+    let (signer, _) = state
+        .prepare_dpop_key(
+            &name,
+            authentik_url.clone(),
+            app_slug.clone(),
+            client_id.clone(),
+        )
+        .await
+        .map_err(|e| format!("failed to prepare DPoP key: {e:#}"))?;
     let prof = setup::setup(
         setup::Options {
             authentik_url: Url::parse(&authentik_url)
@@ -103,6 +113,10 @@ pub async fn setup_profile(
             app_slug: app_slug.clone(),
             client_id: client_id.clone(),
             user_agent: ak_meta::user_agent(),
+        },
+        setup::DpopKey {
+            jkt: signer.thumbprint().map_err(|e| e.to_string())?,
+            prover: &LocalDpopProver(&signer),
         },
         // Frontend opens the URL and shows it as a fallback link.
         |url| Ok(app.emit("ak-setup-url", url.to_string())?),
@@ -115,14 +129,8 @@ pub async fn setup_profile(
     state
         .setup_profile(
             &name,
-            ConfigV1Profile::from_tokens(
-                authentik_url,
-                app_slug,
-                client_id,
-                at,
-                rt,
-                prof.dpop_private_key_pem.unwrap_or_default(),
-            ),
+            ConfigV1Profile::from_tokens(authentik_url, app_slug, client_id, at, rt),
+            prof.dpop_bound,
         )
         .await
         .map_err(|e| format!("failed to save profile: {e:#}"))

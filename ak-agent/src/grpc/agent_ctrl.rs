@@ -1,8 +1,9 @@
 use ak_platform::generated::{
     agent::{RequestHeader, ResponseHeader},
     agent_ctrl::{
-        CurrentProfileResponse, ListProfilesResponse, Profile, ProfileStatus, SetupRequest,
-        SetupResponse, agent_ctrl_server::AgentCtrl,
+        CurrentProfileResponse, ListProfilesResponse, PrepareDpopKeyRequest,
+        PrepareDpopKeyResponse, Profile, ProfileStatus, SetupRequest, SetupResponse,
+        agent_ctrl_server::AgentCtrl,
     },
 };
 use tonic::{Request, Response, Status};
@@ -95,8 +96,8 @@ impl AgentCtrl for AgentGRPCServer {
                     req.client_id,
                     req.access_token,
                     req.refresh_token,
-                    req.dpop_private_key,
                 ),
+                req.dpop_bound,
             )
             .await
         {
@@ -105,6 +106,35 @@ impl AgentCtrl for AgentGRPCServer {
         }
         Ok(Response::new(SetupResponse {
             header: Some(ResponseHeader { successful: true }),
+        }))
+    }
+
+    async fn prepare_dpop_key(
+        &self,
+        request: Request<PrepareDpopKeyRequest>,
+    ) -> Result<Response<PrepareDpopKeyResponse>, Status> {
+        let req = request.into_inner();
+        let profile_name = req
+            .header
+            .ok_or(Status::invalid_argument("missing header"))?
+            .profile;
+        let (signer, hardware_backed) = self
+            .agent
+            .prepare_dpop_key(
+                &profile_name,
+                req.authentik_url,
+                req.app_slug,
+                req.client_id,
+            )
+            .await
+            .map_err(|e| Status::from_error(e.into()))?;
+        let dpop_jkt = signer
+            .thumbprint()
+            .map_err(|e| Status::from_error(e.into()))?;
+        Ok(Response::new(PrepareDpopKeyResponse {
+            header: Some(ResponseHeader { successful: true }),
+            dpop_jkt,
+            hardware_backed,
         }))
     }
 
@@ -198,7 +228,6 @@ mod tests {
                 "client".to_string(),
                 fake_access_token("alice"),
                 "refresh".to_string(),
-                "".to_string(),
             ),
         );
 
@@ -216,7 +245,6 @@ mod tests {
                 "client".to_string(),
                 "access".to_string(),
                 "refresh".to_string(),
-                "".to_string(),
             ),
         );
 
@@ -264,7 +292,6 @@ mod tests {
                         "client".to_string(),
                         "access".to_string(),
                         "refresh".to_string(),
-                        "".to_string(),
                     ),
                 );
             }

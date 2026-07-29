@@ -15,6 +15,7 @@ pub mod windows;
 pub mod memory;
 
 pub mod cache;
+pub mod hardware;
 
 /// A backend capable of storing, retrieving and deleting credentials.
 ///

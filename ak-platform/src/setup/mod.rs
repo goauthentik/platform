@@ -1,4 +1,4 @@
-use crate::dpop::DpopKeyPair;
+use crate::dpop::DpopProver;
 use crate::oauth::device_flow::{OAuthError, poll_for_device_token, request_device_authorization};
 use crate::setup::ak::urls_for_profile;
 use eyre::Result;
@@ -21,8 +21,16 @@ pub struct Profile {
     pub client_id: String,
     pub access_token: Option<String>,
     pub refresh_token: Option<String>,
-    /// PKCS#8 PEM DPoP private key, when the server bound the tokens to it.
-    pub dpop_private_key_pem: Option<String>,
+    /// Whether the server bound the tokens to the DPoP key passed to [`setup`].
+    pub dpop_bound: bool,
+}
+
+/// The DPoP key to attempt binding to. The key itself stays with its owner
+/// (ak-agent; it may be hardware-backed and non-exportable), so only its
+/// thumbprint and a way to sign proofs are passed in.
+pub struct DpopKey<'a> {
+    pub jkt: String,
+    pub prover: &'a dyn DpopProver,
 }
 
 impl Profile {
@@ -33,14 +41,18 @@ impl Profile {
             client_id,
             access_token: None,
             refresh_token: None,
-            dpop_private_key_pem: None,
+            dpop_bound: false,
         }
     }
 }
 
 /// Run the OAuth device flow. `url_callback` receives the verification URL
 /// the user must open to authorize the device.
-pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) -> Result<Profile> {
+pub async fn setup(
+    opts: Options,
+    dpop: DpopKey<'_>,
+    url_callback: impl FnOnce(Url) -> Result<()>,
+) -> Result<Profile> {
     let urls = urls_for_profile(Profile::new(
         opts.authentik_url.clone(),
         opts.app_slug.clone(),
@@ -51,8 +63,6 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
     // >= 2026.8 rejects `dpop_jkt` when the provider has no `bound_key` scope
     // mapping, and older versions silently drop the scope. Either way the
     // granted scopes in the token response tell us whether binding happened.
-    let dpop_keypair = DpopKeyPair::generate();
-    let dpop_jkt = dpop_keypair.thumbprint()?;
     let mut scopes = vec![
         "openid",
         "profile",
@@ -67,7 +77,7 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
         &urls.device_code_url,
         &opts.client_id,
         &scopes,
-        Some(&dpop_jkt),
+        Some(&dpop.jkt),
         &opts.user_agent,
     )
     .await
@@ -101,7 +111,7 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
         &urls.token_url,
         &opts.client_id,
         &auth,
-        dpop_requested.then_some(&dpop_keypair),
+        dpop_requested.then_some(dpop.prover),
         &opts.user_agent,
     )
     .await?;
@@ -110,18 +120,12 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
         .scope
         .as_deref()
         .is_some_and(|s| s.split_whitespace().any(|s| s == SCOPE_BOUND_KEY));
-    let dpop_private_key_pem = if dpop_bound {
-        Some(dpop_keypair.to_pkcs8_pem()?)
-    } else {
-        None
-    };
-
     Ok(Profile {
         authentik_url: opts.authentik_url.clone(),
         app_slug: opts.app_slug.clone(),
         client_id: opts.client_id.clone(),
         access_token: Some(token_response.access_token),
         refresh_token: token_response.refresh_token,
-        dpop_private_key_pem,
+        dpop_bound,
     })
 }

@@ -72,12 +72,26 @@ internal enum AgentAuth: Sendable {
                 type: .unary
             )
         }
+        /// Namespace for "SignDpopProof" metadata.
+        internal enum SignDpopProof: Sendable {
+            /// Request type for "SignDpopProof".
+            internal typealias Input = SignDpopProofRequest
+            /// Response type for "SignDpopProof".
+            internal typealias Output = SignDpopProofResponse
+            /// Descriptor for "SignDpopProof".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_auth.AgentAuth"),
+                method: "SignDpopProof",
+                type: .unary
+            )
+        }
         /// Descriptors for all methods in the "agent_auth.AgentAuth" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             WhoAmI.descriptor,
             GetCurrentToken.descriptor,
             CachedTokenExchange.descriptor,
-            Authorize.descriptor
+            Authorize.descriptor,
+            SignDpopProof.descriptor
         ]
     }
 }
@@ -171,6 +185,25 @@ extension AgentAuth {
             deserializer: some GRPCCore.MessageDeserializer<AuthorizeResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<AuthorizeResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "SignDpopProof" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SignDpopProofRequest` message.
+        ///   - serializer: A serializer for `SignDpopProofRequest` messages.
+        ///   - deserializer: A deserializer for `SignDpopProofResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func signDpopProof<Result>(
+            request: GRPCCore.ClientRequest<SignDpopProofRequest>,
+            serializer: some GRPCCore.MessageSerializer<SignDpopProofRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<SignDpopProofResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SignDpopProofResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -309,6 +342,36 @@ extension AgentAuth {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "SignDpopProof" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SignDpopProofRequest` message.
+        ///   - serializer: A serializer for `SignDpopProofRequest` messages.
+        ///   - deserializer: A deserializer for `SignDpopProofResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func signDpopProof<Result>(
+            request: GRPCCore.ClientRequest<SignDpopProofRequest>,
+            serializer: some GRPCCore.MessageSerializer<SignDpopProofRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<SignDpopProofResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SignDpopProofResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: AgentAuth.Method.SignDpopProof.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -410,6 +473,31 @@ extension AgentAuth.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<AuthorizeRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<AuthorizeResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "SignDpopProof" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `SignDpopProofRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func signDpopProof<Result>(
+        request: GRPCCore.ClientRequest<SignDpopProofRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SignDpopProofResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.signDpopProof(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<SignDpopProofRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<SignDpopProofResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -529,6 +617,35 @@ extension AgentAuth.ClientProtocol {
             metadata: metadata
         )
         return try await self.authorize(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "SignDpopProof" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func signDpopProof<Result>(
+        _ message: SignDpopProofRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SignDpopProofResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<SignDpopProofRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.signDpopProof(
             request: request,
             options: options,
             onResponse: handleResponse
