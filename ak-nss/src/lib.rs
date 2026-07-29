@@ -1,4 +1,5 @@
 pub mod backend;
+mod error;
 mod group;
 pub mod mapping;
 mod passwd;

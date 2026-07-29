@@ -5,6 +5,7 @@ use libnss::passwd::{Passwd, PasswdHooks};
 
 use crate::AuthentikNSS;
 use crate::backend::{DirectoryBridge, GrpcDirectoryBridge};
+use crate::error::response_for_error;
 use crate::mapping::user_to_passwd_entry;
 
 impl PasswdHooks for AuthentikNSS {
@@ -27,10 +28,7 @@ impl PasswdHooks for AuthentikNSS {
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Passwd>> {
     match bridge.list_users() {
         Ok(users) => Response::Success(users.into_iter().map(user_to_passwd_entry).collect()),
-        Err(e) => {
-            tracing::warn!("error getting users: {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error("error getting users", &e),
     }
 }
 
@@ -40,10 +38,7 @@ fn get_entry_by_uid_with(bridge: &impl DirectoryBridge, uid: uid_t) -> Response<
         name: None,
     }) {
         Ok(user) => Response::Success(user_to_passwd_entry(user)),
-        Err(e) => {
-            tracing::warn!("error when getting user by ID '{uid}': {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error(&format!("error when getting user by ID '{uid}'"), &e),
     }
 }
 
@@ -58,10 +53,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
         id: None,
     }) {
         Ok(user) => Response::Success(user_to_passwd_entry(user)),
-        Err(e) => {
-            tracing::warn!("error when getting user by name '{name}': {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error(&format!("error when getting user by name '{name}'"), &e),
     }
 }
 
@@ -104,6 +96,22 @@ mod tests {
         }
         fn get_user(&self, _: GetRequest) -> Result<User> {
             Err(eyre::eyre!("unavailable"))
+        }
+        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+            unreachable!()
+        }
+        fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
+            unreachable!()
+        }
+    }
+
+    struct NotFoundBridge;
+    impl DirectoryBridge for NotFoundBridge {
+        fn list_users(&self) -> Result<Vec<User>> {
+            unreachable!()
+        }
+        fn get_user(&self, _: GetRequest) -> Result<User> {
+            Err(tonic::Status::not_found("no such user").into())
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
             unreachable!()
@@ -183,6 +191,22 @@ mod tests {
         assert!(matches!(
             get_entry_by_name_with(&ErrorBridge, "alice".to_owned()),
             Response::Unavail
+        ));
+    }
+
+    #[test]
+    fn get_entry_by_uid_not_found_on_grpc_not_found() {
+        assert!(matches!(
+            get_entry_by_uid_with(&NotFoundBridge, 1000),
+            Response::NotFound
+        ));
+    }
+
+    #[test]
+    fn get_entry_by_name_not_found_on_grpc_not_found() {
+        assert!(matches!(
+            get_entry_by_name_with(&NotFoundBridge, "alice".to_owned()),
+            Response::NotFound
         ));
     }
 
