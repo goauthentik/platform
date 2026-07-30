@@ -5,6 +5,7 @@ use libnss::interop::Response;
 
 use crate::AuthentikNSS;
 use crate::backend::{DirectoryBridge, GrpcDirectoryBridge};
+use crate::error::response_for_error;
 use crate::mapping::ak_group_to_group_entry;
 
 impl GroupHooks for AuthentikNSS {
@@ -27,10 +28,7 @@ impl GroupHooks for AuthentikNSS {
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Group>> {
     match bridge.list_groups() {
         Ok(groups) => Response::Success(groups.into_iter().map(ak_group_to_group_entry).collect()),
-        Err(e) => {
-            tracing::warn!("Failed to get groups: {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error("Failed to get groups", &e),
     }
 }
 
@@ -40,10 +38,7 @@ fn get_entry_by_gid_with(bridge: &impl DirectoryBridge, gid: gid_t) -> Response<
         id: Some(gid),
     }) {
         Ok(group) => Response::Success(ak_group_to_group_entry(group)),
-        Err(e) => {
-            tracing::warn!("error when getting group by ID '{gid}': {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error(&format!("error when getting group by ID '{gid}'"), &e),
     }
 }
 
@@ -53,10 +48,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
         id: None,
     }) {
         Ok(group) => Response::Success(ak_group_to_group_entry(group)),
-        Err(e) => {
-            tracing::warn!("error when getting group by name '{name}': {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error(&format!("error when getting group by name '{name}'"), &e),
     }
 }
 
@@ -105,6 +97,22 @@ mod tests {
         }
         fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
             Err(eyre::eyre!("unavailable"))
+        }
+    }
+
+    struct NotFoundBridge;
+    impl DirectoryBridge for NotFoundBridge {
+        fn list_users(&self) -> Result<Vec<User>> {
+            unreachable!()
+        }
+        fn get_user(&self, _: GetRequest) -> Result<User> {
+            unreachable!()
+        }
+        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+            unreachable!()
+        }
+        fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
+            Err(tonic::Status::not_found("no such group").into())
         }
     }
 
@@ -176,6 +184,22 @@ mod tests {
         assert!(matches!(
             get_entry_by_name_with(&ErrorBridge, "admins".to_owned()),
             Response::Unavail
+        ));
+    }
+
+    #[test]
+    fn get_entry_by_gid_not_found_on_grpc_not_found() {
+        assert!(matches!(
+            get_entry_by_gid_with(&NotFoundBridge, 200),
+            Response::NotFound
+        ));
+    }
+
+    #[test]
+    fn get_entry_by_name_not_found_on_grpc_not_found() {
+        assert!(matches!(
+            get_entry_by_name_with(&NotFoundBridge, "admins".to_owned()),
+            Response::NotFound
         ));
     }
 }

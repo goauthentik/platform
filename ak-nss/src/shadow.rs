@@ -4,6 +4,7 @@ use libnss::shadow::{Shadow, ShadowHooks};
 
 use crate::AuthentikNSS;
 use crate::backend::{DirectoryBridge, GrpcDirectoryBridge};
+use crate::error::response_for_error;
 use crate::mapping::shadow_entry;
 
 impl ShadowHooks for AuthentikNSS {
@@ -24,10 +25,7 @@ fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Shadow>> 
             let entries = users.into_iter().map(|u| shadow_entry(u.name)).collect();
             Response::Success(entries)
         }
-        Err(e) => {
-            tracing::warn!("Failed to get users: {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error("Failed to get users", &e),
     }
 }
 
@@ -37,10 +35,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
         id: None,
     }) {
         Ok(user) => Response::Success(shadow_entry(user.name)),
-        Err(e) => {
-            tracing::warn!("Failed to get user by name '{name}': {e:?}");
-            Response::Unavail
-        }
+        Err(e) => response_for_error(&format!("Failed to get user by name '{name}'"), &e),
     }
 }
 
@@ -80,6 +75,22 @@ mod tests {
         }
         fn get_user(&self, _: GetRequest) -> Result<User> {
             Err(eyre::eyre!("unavailable"))
+        }
+        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+            unreachable!()
+        }
+        fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
+            unreachable!()
+        }
+    }
+
+    struct NotFoundBridge;
+    impl DirectoryBridge for NotFoundBridge {
+        fn list_users(&self) -> Result<Vec<User>> {
+            unreachable!()
+        }
+        fn get_user(&self, _: GetRequest) -> Result<User> {
+            Err(tonic::Status::not_found("no such user").into())
         }
         fn list_groups(&self) -> Result<Vec<AKGroup>> {
             unreachable!()
@@ -143,6 +154,14 @@ mod tests {
         assert!(matches!(
             get_entry_by_name_with(&ErrorBridge, "alice".to_owned()),
             Response::Unavail
+        ));
+    }
+
+    #[test]
+    fn get_entry_by_name_not_found_on_grpc_not_found() {
+        assert!(matches!(
+            get_entry_by_name_with(&NotFoundBridge, "alice".to_owned()),
+            Response::NotFound
         ));
     }
 }
