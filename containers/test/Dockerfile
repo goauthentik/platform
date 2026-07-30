@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 ARG AK_PLATFORM_ARCH
 ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
