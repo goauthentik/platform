@@ -16,7 +16,6 @@ clean:
 
 .PHONY: gen
 gen: rs-gen-proto ee/psso/gen
-	go generate ./...
 
 rs-gen-proto:
 	cargo install protoc-gen-prost
@@ -73,7 +72,7 @@ test-e2e-convert:
 	$(call rs_e2e_coverage_convert)
 
 test-setup:
-	cargo run -p ak-cli -v setup -v http://authentik:9000
+	cargo run -p ak-cli -v config setup --authentik-url http://authentik:9000
 
 test-ssh:
 	ssh -i akadmin@ak-platform-test-machine

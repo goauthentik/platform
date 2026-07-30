@@ -29,7 +29,8 @@ brew install gmake rustup swift
 ### Linux Dependencies
 
 ```shell
-sudo apt-get install libpam0g-dev libudev-dev pkg-config libdbus-1-dev libtss2-dev
+sudo apt-get install libpam0g-dev libudev-dev pkg-config libdbus-1-dev libtss2-dev \
+    libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 ```
 
 ### Windows Dependencies
@@ -68,17 +69,17 @@ CLI tool (`ak`), built in Rust. Used to interact with the agent. Runs on macOS, 
 
 Requirements: Rust toolchain.
 
-#### `sysd/%`
+#### `ak-sysd/%`
 
 System agent daemon (`ak-sysd`), built in Go. Runs on macOS, Linux, and Windows.
 
-Requirements: Go (version from `go.mod`). On Windows, `goversioninfo` is invoked automatically as a Go tool to embed version resources.
+Requirements: Rust toolchain.
 
-#### `agent/%`
+#### `ak-agent/%`
 
 Local agent / systray app (`ak-agent`), built in Go. Runs on macOS, Linux, and Windows. On Windows, built with `-H=windowsgui` so it runs as a true background systray process.
 
-Requirements: Go (version from `go.mod`). On Windows, also uses `goversioninfo` (Go tool) to embed version resources.
+Requirements: Rust toolchain.
 
 #### `browser-ext/%`
 
