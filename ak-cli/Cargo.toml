@@ -33,6 +33,7 @@ color-eyre.workspace = true
 authentik-client.workspace = true
 uuid.workspace = true
 sentry.workspace = true
+rmcp = { version = "3.0.1", features = ["transport-io"] }
 
 [build-dependencies]
 ak-api-cli-gen.workspace = true
