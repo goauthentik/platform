@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use tonic::Code;
 use tower::{Layer, Service};
-use tracing::{Instrument, Level, Span, span};
+use tracing::Span;
 
 use crate::net::server::creds::ProcCredentials;
 
