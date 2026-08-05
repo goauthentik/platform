@@ -19,6 +19,7 @@ pub mod windows;
 #[cfg(unix)]
 pub mod unix;
 
+pub mod void;
 pub struct LogBuilder {
     name: PlatformString,
     filter: Vec<(String, LevelFilter)>,
@@ -110,7 +111,7 @@ impl LogBuilder {
         } else {
             match self.get_platform_logger() {
                 Ok(l) => l,
-                Err(_) => self.get_stdout_logger(),
+                Err(_) => void::VoidLogger::new(),
             }
         };
         (Box::new(FilteredLog::new(inner, filter)), max_level)
