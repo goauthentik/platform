@@ -104,14 +104,19 @@ impl LogBuilder {
             .iter()
             .map(|(_, level)| *level)
             .fold(self.default_level, std::cmp::max);
-        let inner: Box<dyn Log> = if (self.allow_platform && env_interactive())
-            || (self.force_stdout && self.allow_stdout)
+        let inner: Box<dyn Log> = if self.allow_stdout && (env_interactive() || self.force_stdout)
         {
             self.get_stdout_logger()
         } else {
             match self.get_platform_logger() {
                 Ok(l) => l,
-                Err(_) => void::VoidLogger::new(),
+                Err(_) => {
+                    if self.allow_stdout {
+                        self.get_stdout_logger()
+                    } else {
+                        void::VoidLogger::new()
+                    }
+                }
             }
         };
         (Box::new(FilteredLog::new(inner, filter)), max_level)
