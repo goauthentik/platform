@@ -10,7 +10,7 @@ ifeq ($(CI),true)
 	ifeq ($(AK_IS_RELEASE),true)
 		VERSION_PKG = ${VERSION}
 	else
-		VERSION_PKG = ${VERSION}+ak-${shell git rev-parse HEAD | head -c 8}
+		VERSION_PKG = ${VERSION}+ak-${shell git rev-parse HEAD | head -c 8}-$(GITHUB_RUN_ID)
 	endif
 else
 	VERSION_PKG = ${VERSION}
