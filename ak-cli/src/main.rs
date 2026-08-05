@@ -47,10 +47,7 @@ enum Commands {
     Version,
     /// Switch to a different active profile
     #[command(alias = "s")]
-    SwitchProfile {
-        #[arg(required = true)]
-        profile: String,
-    },
+    SwitchProfile { profile: Option<String> },
 
     /// Configure authentik CLI
     Config {

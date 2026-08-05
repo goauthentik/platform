@@ -123,34 +123,30 @@ pub async fn setup(
     Ok(())
 }
 
-pub async fn current_profile(app: App) -> Result<()> {
-    let res = app
-        .user()
-        .await?
-        .clone()
-        .ctrl()
-        .current_profile(())
-        .await
-        .wrap_err("failed to get current profile")?
-        .into_inner();
-    assert_response_valid(res.header)?;
-    println!("{}", res.profile);
-    Ok(())
-}
-
-pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
-    let res = app
-        .user()
-        .await?
-        .clone()
-        .ctrl()
-        .switch_profile(RequestHeader {
-            profile: profile.to_string(),
-        })
-        .await
-        .wrap_err("failed to switch profile")?
-        .into_inner();
-    assert_response_valid(Some(res))?;
-    println!("Successfully switched to profile '{profile}'!");
-    Ok(())
+pub async fn switch_profile(app: App, profile: &Option<String>) -> Result<()> {
+    let mut ctrl = app.user().await?.clone().ctrl();
+    match profile {
+        Some(p) => {
+            let res = ctrl
+                .switch_profile(RequestHeader {
+                    profile: p.to_string(),
+                })
+                .await
+                .wrap_err("failed to switch profile")?
+                .into_inner();
+            assert_response_valid(Some(res))?;
+            println!("Successfully switched to profile '{p}'!");
+            Ok(())
+        }
+        None => {
+            let res = ctrl
+                .current_profile(())
+                .await
+                .wrap_err("failed to get current profile")?
+                .into_inner();
+            assert_response_valid(res.header)?;
+            println!("{}", res.profile);
+            Ok(())
+        }
+    }
 }
