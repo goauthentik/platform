@@ -19,11 +19,6 @@ pub mod agent_ctrl {
     include!("agent_ctrl/agent_ctrl.rs");
     // @@protoc_insertion_point(agent_ctrl)
 }
-// @@protoc_insertion_point(attribute:agent_platform)
-pub mod agent_platform {
-    include!("agent_platform/agent_platform.rs");
-    // @@protoc_insertion_point(agent_platform)
-}
 // @@protoc_insertion_point(attribute:ic_pam_fido)
 pub mod ic_pam_fido {
     include!("ic_pam_fido/ic_pam_fido.rs");
@@ -63,4 +58,9 @@ pub mod sys_ctrl {
 pub mod sys_directory {
     include!("sys_directory/sys_directory.rs");
     // @@protoc_insertion_point(sys_directory)
+}
+// @@protoc_insertion_point(attribute:sys_platform)
+pub mod sys_platform {
+    include!("sys_platform/sys_platform.rs");
+    // @@protoc_insertion_point(sys_platform)
 }
