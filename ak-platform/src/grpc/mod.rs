@@ -13,9 +13,9 @@ use crate::generated::agent::ResponseHeader;
 use crate::net;
 use crate::string::PlatformString;
 
+pub mod log;
 pub mod method_caller;
 pub mod ssh;
-pub mod log;
 
 pub async fn grpc_endpoint(path: String) -> Result<Channel> {
     // Dummy URI to satisfy Endpoint::from() type requirements

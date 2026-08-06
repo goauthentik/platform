@@ -1,6 +1,6 @@
 // @generated
 /// Generated client implementations.
-pub mod agent_platform_client {
+pub mod system_platform_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -11,10 +11,10 @@ pub mod agent_platform_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct AgentPlatformClient<T> {
+    pub struct SystemPlatformClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl AgentPlatformClient<tonic::transport::Channel> {
+    impl SystemPlatformClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -25,7 +25,7 @@ pub mod agent_platform_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> AgentPlatformClient<T>
+    impl<T> SystemPlatformClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
@@ -43,7 +43,7 @@ pub mod agent_platform_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> AgentPlatformClient<InterceptedService<T, F>>
+        ) -> SystemPlatformClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -57,7 +57,7 @@ pub mod agent_platform_client {
                 http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            AgentPlatformClient::new(InterceptedService::new(inner, interceptor))
+            SystemPlatformClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -107,13 +107,13 @@ pub mod agent_platform_client {
                 })?;
             let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/agent_platform.AgentPlatform/SignedEndpointHeader",
+                "/sys_platform.SystemPlatform/SignedEndpointHeader",
             );
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(
                     GrpcMethod::new(
-                        "agent_platform.AgentPlatform",
+                        "sys_platform.SystemPlatform",
                         "SignedEndpointHeader",
                     ),
                 );
@@ -122,7 +122,7 @@ pub mod agent_platform_client {
     }
 }
 /// Generated server implementations.
-pub mod agent_platform_server {
+pub mod system_platform_server {
     #![allow(
         unused_variables,
         dead_code,
@@ -131,9 +131,9 @@ pub mod agent_platform_server {
         clippy::let_unit_value,
     )]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with AgentPlatformServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with SystemPlatformServer.
     #[async_trait]
-    pub trait AgentPlatform: std::marker::Send + std::marker::Sync + 'static {
+    pub trait SystemPlatform: std::marker::Send + std::marker::Sync + 'static {
         async fn signed_endpoint_header(
             &self,
             request: tonic::Request<super::PlatformEndpointRequest>,
@@ -143,14 +143,14 @@ pub mod agent_platform_server {
         >;
     }
     #[derive(Debug)]
-    pub struct AgentPlatformServer<T> {
+    pub struct SystemPlatformServer<T> {
         inner: Arc<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
         max_decoding_message_size: Option<usize>,
         max_encoding_message_size: Option<usize>,
     }
-    impl<T> AgentPlatformServer<T> {
+    impl<T> SystemPlatformServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -201,9 +201,9 @@ pub mod agent_platform_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for AgentPlatformServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for SystemPlatformServer<T>
     where
-        T: AgentPlatform,
+        T: SystemPlatform,
         B: Body + std::marker::Send + 'static,
         B::Error: Into<StdError> + std::marker::Send + 'static,
     {
@@ -218,11 +218,11 @@ pub mod agent_platform_server {
         }
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             match req.uri().path() {
-                "/agent_platform.AgentPlatform/SignedEndpointHeader" => {
+                "/sys_platform.SystemPlatform/SignedEndpointHeader" => {
                     #[allow(non_camel_case_types)]
-                    struct SignedEndpointHeaderSvc<T: AgentPlatform>(pub Arc<T>);
+                    struct SignedEndpointHeaderSvc<T: SystemPlatform>(pub Arc<T>);
                     impl<
-                        T: AgentPlatform,
+                        T: SystemPlatform,
                     > tonic::server::UnaryService<super::PlatformEndpointRequest>
                     for SignedEndpointHeaderSvc<T> {
                         type Response = super::PlatformEndpointResponse;
@@ -236,7 +236,7 @@ pub mod agent_platform_server {
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as AgentPlatform>::signed_endpoint_header(
+                                <T as SystemPlatform>::signed_endpoint_header(
                                         &inner,
                                         request,
                                     )
@@ -289,7 +289,7 @@ pub mod agent_platform_server {
             }
         }
     }
-    impl<T> Clone for AgentPlatformServer<T> {
+    impl<T> Clone for SystemPlatformServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -302,8 +302,8 @@ pub mod agent_platform_server {
         }
     }
     /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "agent_platform.AgentPlatform";
-    impl<T> tonic::server::NamedService for AgentPlatformServer<T> {
+    pub const SERVICE_NAME: &str = "sys_platform.SystemPlatform";
+    impl<T> tonic::server::NamedService for SystemPlatformServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }
 }

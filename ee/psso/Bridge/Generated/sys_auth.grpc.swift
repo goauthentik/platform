@@ -34,9 +34,23 @@ internal enum SystemAuthToken: Sendable {
                 type: .unary
             )
         }
+        /// Namespace for "SSHCertAuth" metadata.
+        internal enum SSHCertAuth: Sendable {
+            /// Request type for "SSHCertAuth".
+            internal typealias Input = SSHCertAuthRequest
+            /// Response type for "SSHCertAuth".
+            internal typealias Output = SSHCertAuthResponse
+            /// Descriptor for "SSHCertAuth".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth.SystemAuthToken"),
+                method: "SSHCertAuth",
+                type: .unary
+            )
+        }
         /// Descriptors for all methods in the "sys_auth.SystemAuthToken" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
-            TokenAuth.descriptor
+            TokenAuth.descriptor,
+            SSHCertAuth.descriptor
         ]
     }
 }
@@ -58,6 +72,10 @@ extension SystemAuthToken {
     internal protocol ClientProtocol: Sendable {
         /// Call the "TokenAuth" method.
         ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Authenticate with purely a token
+        ///
         /// - Parameters:
         ///   - request: A request containing a single `TokenAuthRequest` message.
         ///   - serializer: A serializer for `TokenAuthRequest` messages.
@@ -73,6 +91,29 @@ extension SystemAuthToken {
             deserializer: some GRPCCore.MessageDeserializer<TokenAuthResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<TokenAuthResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "SSHCertAuth" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Authenticate with SSH Certificate which contains a token
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SSHCertAuthRequest` message.
+        ///   - serializer: A serializer for `SSHCertAuthRequest` messages.
+        ///   - deserializer: A deserializer for `SSHCertAuthResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func sshCertAuth<Result>(
+            request: GRPCCore.ClientRequest<SSHCertAuthRequest>,
+            serializer: some GRPCCore.MessageSerializer<SSHCertAuthRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<SSHCertAuthResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SSHCertAuthResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -93,6 +134,10 @@ extension SystemAuthToken {
         }
 
         /// Call the "TokenAuth" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Authenticate with purely a token
         ///
         /// - Parameters:
         ///   - request: A request containing a single `TokenAuthRequest` message.
@@ -121,6 +166,40 @@ extension SystemAuthToken {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "SSHCertAuth" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Authenticate with SSH Certificate which contains a token
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SSHCertAuthRequest` message.
+        ///   - serializer: A serializer for `SSHCertAuthRequest` messages.
+        ///   - deserializer: A deserializer for `SSHCertAuthResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func sshCertAuth<Result>(
+            request: GRPCCore.ClientRequest<SSHCertAuthRequest>,
+            serializer: some GRPCCore.MessageSerializer<SSHCertAuthRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<SSHCertAuthResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SSHCertAuthResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SystemAuthToken.Method.SSHCertAuth.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -128,6 +207,10 @@ extension SystemAuthToken {
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension SystemAuthToken.ClientProtocol {
     /// Call the "TokenAuth" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Authenticate with purely a token
     ///
     /// - Parameters:
     ///   - request: A request containing a single `TokenAuthRequest` message.
@@ -151,12 +234,45 @@ extension SystemAuthToken.ClientProtocol {
             onResponse: handleResponse
         )
     }
+
+    /// Call the "SSHCertAuth" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Authenticate with SSH Certificate which contains a token
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `SSHCertAuthRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func sshCertAuth<Result>(
+        request: GRPCCore.ClientRequest<SSHCertAuthRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SSHCertAuthResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.sshCertAuth(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<SSHCertAuthRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<SSHCertAuthResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
 }
 
 // Helpers providing sugared APIs for 'ClientProtocol' methods.
 @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
 extension SystemAuthToken.ClientProtocol {
     /// Call the "TokenAuth" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Authenticate with purely a token
     ///
     /// - Parameters:
     ///   - message: request message to send.
@@ -179,6 +295,39 @@ extension SystemAuthToken.ClientProtocol {
             metadata: metadata
         )
         return try await self.tokenAuth(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "SSHCertAuth" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Authenticate with SSH Certificate which contains a token
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func sshCertAuth<Result>(
+        _ message: SSHCertAuthRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SSHCertAuthResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<SSHCertAuthRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.sshCertAuth(
             request: request,
             options: options,
             onResponse: handleResponse

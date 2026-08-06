@@ -35,10 +35,7 @@ pub struct TraceService<S> {
 
 impl<S, ReqBody, ResBody> Service<http::Request<ReqBody>> for TraceService<S>
 where
-    S: Service<http::Request<ReqBody>, Response = http::Response<ResBody>>
-        + Clone
-        + Send
-        + 'static,
+    S: Service<http::Request<ReqBody>, Response = http::Response<ResBody>> + Clone + Send + 'static,
     S::Future: Send + 'static,
     ReqBody: Send + 'static,
 {
