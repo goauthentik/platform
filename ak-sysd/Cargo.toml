@@ -23,7 +23,7 @@ chrono = { workspace = true }
 clap = { version = "4.6.1", features = ["derive"] }
 clap_complete = "4"
 eyre = { workspace = true }
-hex = "0.4"
+hex = { workspace = true }
 jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 pbjson-types = { workspace = true }
 rand = "0.10"
@@ -34,7 +34,7 @@ sentry = { workspace = true }
 sentry-tower = { version = "0.49.0", features = ["http"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sha2 = "0.11"
+sha2 = { workspace = true }
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
 subtle = "2"
 tempfile = { workspace = true }

@@ -15,10 +15,13 @@ use ak_platform_authz::AuthorizeAction;
 use ak_platform_keyring::cache::Cache;
 use ak_platform_keyring::cache::CacheData;
 use chrono::{DateTime, Utc};
+use hex::encode as hex_encode;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{fmt::Debug, time::Duration};
 use tonic::{Request, Response, Status};
+use url::form_urlencoded;
 
 #[derive(Clone, Serialize, Deserialize)]
 struct CachedExchangeToken {
@@ -184,7 +187,7 @@ impl AgentAuth for AgentGRPCServer {
             .profile
             .clone();
         let profile = self.profile_for_request(inner.header).await?;
-        let client_id = inner.client_id;
+        let client_id = inner.audience.clone();
 
         let cid1 = client_id.clone();
         let cid2 = client_id.clone();
@@ -212,10 +215,17 @@ impl AgentAuth for AgentGRPCServer {
         .prompt_grpc(pc)
         .await?;
 
-        let cache = Cache::<CachedExchangeToken>::new(
-            profile_name.clone(),
-            vec!["token-cache".to_string(), client_id.clone()],
-        );
+        let mut cache_key = vec!["token-cache".to_string(), client_id.clone()];
+        if !inner.scopes.is_empty() {
+            cache_key.extend(inner.scopes.clone());
+        }
+        if let Some(at) = inner.actor_token.clone() {
+            let mut hasher = Sha256::new();
+            hasher.update(at.as_bytes());
+            cache_key.push(hex_encode(hasher.finalize())[..8].to_owned())
+        }
+
+        let cache = Cache::<CachedExchangeToken>::new(profile_name.clone(), cache_key);
         if let Ok(cached) = cache.get().await {
             tracing::debug!(client_id, "cached_token_exchange: returning cached token");
             return Ok(Response::new(TokenExchangeResponse {
@@ -225,17 +235,36 @@ impl AgentAuth for AgentGRPCServer {
             }));
         }
 
+        let scope_string = if inner.scopes.is_empty() {
+            "openid email profile".to_string()
+        } else {
+            inner.scopes.join(" ")
+        };
+
         let token_url = format!("{}/application/o/token/", profile.authentik_url);
-        let body = url::form_urlencoded::Serializer::new(String::new())
-            .append_pair("grant_type", "client_credentials")
-            .append_pair("client_id", &client_id)
-            .append_pair(
-                "client_assertion_type",
-                "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+        let body = {
+            let mut body = form_urlencoded::Serializer::new(String::new());
+            body.append_pair(
+                "grant_type",
+                "urn:ietf:params:oauth:grant-type:token-exchange",
             )
-            .append_pair("client_assertion", &profile.access_token())
-            .append_pair("scope", "openid email profile")
-            .finish();
+            .append_pair("client_id", &profile.client_id)
+            .append_pair("subject_token", &profile.access_token())
+            .append_pair(
+                "subject_token_type",
+                "urn:ietf:params:oauth:token-type:access_token",
+            )
+            .append_pair("audience", &inner.audience)
+            .append_pair("scope", &scope_string);
+            if let Some(at) = inner.actor_token {
+                body.append_pair("actor_token", &at);
+                let Some(at_type) = inner.actor_token_type else {
+                    return Err(Status::invalid_argument("Missing actor_token_type"));
+                };
+                body.append_pair("actor_token_type", &at_type);
+            }
+            body.finish()
+        };
 
         let res = reqwest::Client::new()
             .post(&token_url)

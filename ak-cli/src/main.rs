@@ -16,6 +16,7 @@ pub mod auth;
 pub mod cache;
 pub mod commands;
 pub mod format;
+pub mod mcp;
 pub mod setup;
 
 #[derive(Parser, Clone)]
@@ -72,6 +73,8 @@ enum Commands {
         #[command(subcommand)]
         command: api::ApiCommand,
     },
+    /// Run an MCP (Model Context Protocol) server over stdio
+    Mcp,
 }
 
 #[derive(Clone)]
@@ -188,6 +191,7 @@ async fn main() -> std::result::Result<(), Error> {
             }
         }
         Commands::Api { command } => api::exec_api_command(app, command).await,
+        Commands::Mcp => commands::mcp::mcp(app).await,
     };
     match res {
         Ok(_) => Ok(()),

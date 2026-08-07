@@ -40,7 +40,10 @@ message CurrentTokenResponse {
 
 message TokenExchangeRequest {
   agent.RequestHeader header = 1;
-  string client_id = 2;
+  string audience = 2;
+  repeated string scopes = 3;
+  optional string actor_token = 4;
+  optional string actor_token_type = 5;
 }
 
 message TokenExchangeResponse {
