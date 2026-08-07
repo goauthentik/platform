@@ -24,12 +24,21 @@ pub async fn token_exchange(
     audience: &str,
 ) -> reqwest::Result<TokenResponse> {
     let params = [
-        ("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange"),
+        (
+            "grant_type",
+            "urn:ietf:params:oauth:grant-type:token-exchange",
+        ),
         ("subject_token", subject_token),
-        ("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+        (
+            "subject_token_type",
+            "urn:ietf:params:oauth:token-type:access_token",
+        ),
         ("audience", audience),
         ("actor_token", actor_tolen),
-        ("actor_token_type", "goauthentik.io/oauth/token-type/authentik_token"),
+        (
+            "actor_token_type",
+            "goauthentik.io/oauth/token-type/authentik_token",
+        ),
     ];
 
     client

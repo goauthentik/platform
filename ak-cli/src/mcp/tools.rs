@@ -1,5 +1,7 @@
 use crate::mcp::AuthentikMcp;
 use crate::mcp::obo::token_exchange;
+use ak_platform::generated::agent::RequestHeader;
+use ak_platform::generated::agent_auth::TokenExchangeRequest;
 use authentik_client::models::AgentCreateRequest;
 use authentik_client::{
     apis::{
@@ -8,7 +10,7 @@ use authentik_client::{
     },
     models::AgentGrantRequestCreateRequest,
 };
-use rmcp::{ErrorData as McpError, handler::server::wrapper::Parameters, model::*, schemars};
+use rmcp::{ErrorData as McpError, model::*, schemars};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -44,6 +46,9 @@ pub struct RequestAccessArgs {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct TokenExchangeArgs {
+    /// PBM UUID/Client ID of target application
+    #[serde(default)]
+    pub target_id: String,
     /// Token of the agent user
     #[serde(default)]
     pub agent_token: String,
@@ -136,20 +141,28 @@ impl AuthentikMcp {
         &self,
         args: TokenExchangeArgs,
     ) -> Result<CallToolResult, McpError> {
-        // todo: implement OBO token exchange
-        let user_token = self.get_user_token(args.profile).await?;
-        let agent_token = args.agent_token;
-        token_exchange(
-            &reqwest::Client::new(),
-            "",
-            "",
-            "",
-            &user_token.raw,
-            &agent_token,
-            "",
-        )
-        .await
-        .map_err(|e| McpError::internal_error(format!("token exchange failed: {e}"), None))?;
+        let mut app = self.app.clone();
+        let _profile = match args.profile {
+            Some(p) => p,
+            None => app.profile().await,
+        };
+        let res = app
+            .user()
+            .await
+            .map_err(|e| McpError::internal_error(format!("agent connection failed: {e}"), None))?
+            .auth()
+            .cached_token_exchange(TokenExchangeRequest {
+                header: Some(RequestHeader { profile: _profile }),
+                scopes: vec![],
+                audience: args.target_id,
+                actor_token: Some(args.agent_token),
+                actor_token_type: Some(
+                    "goauthentik.io/oauth/token-type/authentik_token".to_owned(),
+                ),
+            })
+            .await
+            .map_err(|e| McpError::internal_error(format!("failed to exchange token: {e}"), None))?
+            .into_inner();
         Ok(CallToolResult::success(vec![]))
     }
 }

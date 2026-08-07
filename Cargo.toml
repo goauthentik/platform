@@ -32,8 +32,7 @@ expect_used = "deny"
 
 [workspace.dependencies]
 ak-api-cli-gen = { path = "ak-api-cli-gen" }
-# authentik-client = { git = "https://github.com/goauthentik/client-rust", version = "2026.8.0-rc1" , default-features = false, features = ["rustls"] }
-authentik-client = { path = "../ak/client-rust", default-features = false, features = ["rustls"] }
+authentik-client = { version = "2026.8.0-rc7" , default-features = false, features = ["rustls"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 color-eyre = "= 0.6.5"
 eyre = "= 0.6.12"

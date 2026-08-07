@@ -1,4 +1,7 @@
-use crate::{App, mcp::tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs}};
+use crate::{
+    App,
+    mcp::tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs},
+};
 use ak_meta::user_agent;
 use ak_platform::generated::{
     agent::RequestHeader,
@@ -8,11 +11,12 @@ use authentik_client::apis::configuration::Configuration;
 use rmcp::{
     ErrorData as McpError, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
-    model::*, tool, tool_handler, tool_router,
+    model::*,
+    tool, tool_handler, tool_router,
 };
 
-pub mod tools;
 pub mod obo;
+pub mod tools;
 
 #[derive(Clone)]
 pub struct AuthentikMcp {
@@ -29,7 +33,10 @@ impl AuthentikMcp {
         }
     }
 
-    async fn get_user_token(&self, profile: Option<String>) -> Result<CurrentTokenResponse, McpError> {
+    async fn get_user_token(
+        &self,
+        profile: Option<String>,
+    ) -> Result<CurrentTokenResponse, McpError> {
         let mut app = self.app.clone();
         let _profile = match profile {
             Some(p) => p,
