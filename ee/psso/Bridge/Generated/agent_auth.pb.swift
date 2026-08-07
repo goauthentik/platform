@@ -174,13 +174,35 @@ nonisolated struct TokenExchangeRequest: Sendable {
   /// Clears the value of `header`. Subsequent reads from it will return its default value.
   mutating func clearHeader() {self._header = nil}
 
-  var clientID: String = String()
+  var audience: String = String()
+
+  var scopes: [String] = []
+
+  var actorToken: String {
+    get {_actorToken ?? String()}
+    set {_actorToken = newValue}
+  }
+  /// Returns true if `actorToken` has been explicitly set.
+  var hasActorToken: Bool {self._actorToken != nil}
+  /// Clears the value of `actorToken`. Subsequent reads from it will return its default value.
+  mutating func clearActorToken() {self._actorToken = nil}
+
+  var actorTokenType: String {
+    get {_actorTokenType ?? String()}
+    set {_actorTokenType = newValue}
+  }
+  /// Returns true if `actorTokenType` has been explicitly set.
+  var hasActorTokenType: Bool {self._actorTokenType != nil}
+  /// Clears the value of `actorTokenType`. Subsequent reads from it will return its default value.
+  mutating func clearActorTokenType() {self._actorTokenType = nil}
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _header: RequestHeader? = nil
+  fileprivate var _actorToken: String? = nil
+  fileprivate var _actorTokenType: String? = nil
 }
 
 nonisolated struct TokenExchangeResponse: Sendable {
@@ -425,7 +447,7 @@ nonisolated extension CurrentTokenResponse: SwiftProtobuf.Message, SwiftProtobuf
 
 nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TokenExchangeRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}client_id\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}audience\0\u{1}scopes\0\u{3}actor_token\0\u{3}actor_token_type\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -434,7 +456,10 @@ nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.clientID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.audience) }()
+      case 3: try { try decoder.decodeRepeatedStringField(value: &self.scopes) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self._actorToken) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self._actorTokenType) }()
       default: break
       }
     }
@@ -448,15 +473,27 @@ nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf
     try { if let v = self._header {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     } }()
-    if !self.clientID.isEmpty {
-      try visitor.visitSingularStringField(value: self.clientID, fieldNumber: 2)
+    if !self.audience.isEmpty {
+      try visitor.visitSingularStringField(value: self.audience, fieldNumber: 2)
     }
+    if !self.scopes.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.scopes, fieldNumber: 3)
+    }
+    try { if let v = self._actorToken {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 4)
+    } }()
+    try { if let v = self._actorTokenType {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: TokenExchangeRequest, rhs: TokenExchangeRequest) -> Bool {
     if lhs._header != rhs._header {return false}
-    if lhs.clientID != rhs.clientID {return false}
+    if lhs.audience != rhs.audience {return false}
+    if lhs.scopes != rhs.scopes {return false}
+    if lhs._actorToken != rhs._actorToken {return false}
+    if lhs._actorTokenType != rhs._actorTokenType {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
