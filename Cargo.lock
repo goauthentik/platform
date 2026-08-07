@@ -152,6 +152,7 @@ dependencies = [
  "open",
  "pbjson-types",
  "ratatui",
+ "reqwest 0.13.4",
  "rmcp",
  "sentry",
  "serde",
