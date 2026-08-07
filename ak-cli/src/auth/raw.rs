@@ -24,7 +24,10 @@ pub async fn get_credentials(
             header: Some(RequestHeader {
                 profile: opts.profile,
             }),
-            client_id: opts.client_id,
+            audience: opts.client_id,
+            scopes: vec![],
+            actor_token: None,
+            actor_token_type: None,
         })
         .await
         .wrap_err("failed to exchange token")?

@@ -14,10 +14,13 @@ use ak_platform_authz::grpc::AuthPeer;
 use ak_platform_keyring::cache::Cache;
 use ak_platform_keyring::cache::CacheData;
 use chrono::{DateTime, Utc};
+use hex::encode as hex_encode;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{fmt::Debug, time::Duration};
 use tonic::{Request, Response, Status};
+use url::form_urlencoded;
 
 #[derive(Clone, Serialize, Deserialize)]
 struct CachedExchangeToken {
@@ -50,7 +53,7 @@ struct OAuthTokenResponse {
     expires_in: Option<i64>,
 }
 
-use crate::grpc::AgentGRPCServer;
+use crate::{config::ConfigV1Profile, grpc::AgentGRPCServer};
 
 #[tonic::async_trait]
 impl AgentAuth for AgentGRPCServer {
@@ -180,10 +183,10 @@ impl AgentAuth for AgentGRPCServer {
             .profile
             .clone();
         let profile = self.profile_for_request(inner.clone().header).await?;
-        let client_id = inner.client_id.clone();
+        let audience = inner.audience.clone();
 
-        let cid1 = client_id.clone();
-        let cid2 = client_id.clone();
+        let cid1 = audience.clone();
+        let cid2 = audience.clone();
         request
             .auth_peer()
             .with_message(move |c| {
@@ -208,12 +211,19 @@ impl AgentAuth for AgentGRPCServer {
             .finish()
             .await?;
 
-        let cache = Cache::<CachedExchangeToken>::new(
-            profile_name.clone(),
-            vec!["token-cache".to_string(), client_id.clone()],
-        );
+        let mut cache_key = vec!["token-cache".to_string(), audience.clone()];
+        if !inner.scopes.is_empty() {
+            cache_key.extend(inner.scopes.clone());
+        }
+        if let Some(at) = inner.actor_token.clone() {
+            let mut hasher = Sha256::new();
+            hasher.update(at.as_bytes());
+            cache_key.push(hex_encode(hasher.finalize())[..8].to_owned())
+        }
+
+        let cache = Cache::<CachedExchangeToken>::new(profile_name.clone(), cache_key);
         if let Ok(cached) = cache.get().await {
-            tracing::debug!(client_id, "cached_token_exchange: returning cached token");
+            tracing::debug!(audience, "cached_token_exchange: returning cached token");
             return Ok(Response::new(TokenExchangeResponse {
                 header: Some(ResponseHeader { successful: true }),
                 access_token: cached.access_token,
@@ -222,16 +232,7 @@ impl AgentAuth for AgentGRPCServer {
         }
 
         let token_url = format!("{}/application/o/token/", profile.authentik_url);
-        let body = url::form_urlencoded::Serializer::new(String::new())
-            .append_pair("grant_type", "client_credentials")
-            .append_pair("client_id", &client_id)
-            .append_pair(
-                "client_assertion_type",
-                "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-            )
-            .append_pair("client_assertion", &profile.access_token())
-            .append_pair("scope", "openid email profile")
-            .finish();
+        let body = self._token_exchange_request(inner.clone(), &profile)?;
 
         let res = reqwest::Client::new()
             .post(&token_url)
@@ -261,13 +262,13 @@ impl AgentAuth for AgentGRPCServer {
         };
         let cache = Cache::<CachedExchangeToken>::new(
             profile_name,
-            vec!["token-cache".to_string(), client_id.clone()],
+            vec!["token-cache".to_string(), audience.clone()],
         );
         if let Err(e) = cache.set(cached).await {
             tracing::warn!("cached_token_exchange: failed to write cache: {e:?}");
         }
 
-        tracing::debug!(client_id, "cached_token_exchange: exchanged new token");
+        tracing::debug!(audience, "cached_token_exchange: exchanged new token");
         Ok(Response::new(TokenExchangeResponse {
             header: Some(ResponseHeader { successful: true }),
             access_token: new_token.access_token,
@@ -297,5 +298,51 @@ impl AgentAuth for AgentGRPCServer {
         Ok(Response::new(AuthorizeResponse {
             header: Some(ResponseHeader { successful: true }),
         }))
+    }
+}
+
+impl AgentGRPCServer {
+    pub fn _token_exchange_request(
+        &self,
+        request: TokenExchangeRequest,
+        profile: &ConfigV1Profile,
+    ) -> Result<String, Status> {
+        let scope_string = if request.scopes.is_empty() {
+            "openid email profile".to_string()
+        } else {
+            request.scopes.join(" ")
+        };
+        let mut body = form_urlencoded::Serializer::new(String::new());
+        body.append_pair("scope", &scope_string);
+
+        // Since token-exchange (especially with actor & targeting) was only added in 2026.8
+        // fallback to client_credentials if we don't need targeting
+        if let Some(at) = request.actor_token {
+            body.append_pair(
+                "grant_type",
+                "urn:ietf:params:oauth:grant-type:token-exchange",
+            )
+            .append_pair("client_id", &profile.client_id)
+            .append_pair("subject_token", &profile.access_token())
+            .append_pair(
+                "subject_token_type",
+                "urn:ietf:params:oauth:token-type:access_token",
+            )
+            .append_pair("audience", &request.audience)
+            .append_pair("actor_token", &at);
+            let Some(at_type) = request.actor_token_type else {
+                return Err(Status::invalid_argument("Missing actor_token_type"));
+            };
+            body.append_pair("actor_token_type", &at_type);
+        } else {
+            body.append_pair("grant_type", "client_credentials")
+                .append_pair("client_id", &request.audience)
+                .append_pair(
+                    "client_assertion_type",
+                    "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+                )
+                .append_pair("client_assertion", &profile.access_token());
+        }
+        Ok(body.finish())
     }
 }
