@@ -35,13 +35,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4.37.5
+        uses: github/codeql-action/init@v4.37.6
         with:
           languages: ${{ matrix.language-platform.language }}
       - name: Install libraries
         if: ${{ matrix.language-platform.language == 'ubuntu-24.04' }}
         run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v4.37.5
+        uses: github/codeql-action/autobuild@v4.37.6
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4.37.5
+        uses: github/codeql-action/analyze@v4.37.6
