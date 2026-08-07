@@ -10,8 +10,7 @@ service SystemPlatform {
 }
 
 message PlatformEndpointRequest {
-  agent.RequestHeader header = 1;
-  string challenge = 2;
+  string challenge = 1;
 }
 
 message PlatformEndpointResponse {

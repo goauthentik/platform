@@ -4,8 +4,8 @@ use ak_platform::{
         agent::{ResponseHeader, Token},
         agent_auth::{
             AuthorizeRequest, AuthorizeResponse, CurrentTokenRequest, CurrentTokenResponse,
-            TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest,
-            WhoAmIResponse, agent_auth_server::AgentAuth, current_token_request::Type,
+            TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest, WhoAmIResponse,
+            agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
     net::server::creds::ProcCredentials,
