@@ -4,8 +4,8 @@ use ak_platform::{
         agent::{ResponseHeader, Token},
         agent_auth::{
             AuthorizeRequest, AuthorizeResponse, CurrentTokenRequest, CurrentTokenResponse,
-            DeviceTokenExchangeRequest, TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest,
-            WhoAmIResponse, agent_auth_server::AgentAuth, current_token_request::Type,
+            TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest, WhoAmIResponse,
+            agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
     net::server::creds::ProcCredentials,
@@ -276,61 +276,6 @@ impl AgentAuth for AgentGRPCServer {
             header: Some(ResponseHeader { successful: true }),
             access_token: new_token.access_token,
             expires_in,
-        }))
-    }
-
-    async fn device_token_exchange(
-        &self,
-        request: Request<DeviceTokenExchangeRequest>,
-    ) -> Result<Response<TokenExchangeResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
-        let inner = request.into_inner();
-        let profile = self.profile_for_request(inner.header).await?;
-        let device_name = inner.device_name;
-
-        let dn1 = device_name.clone();
-        let dn2 = device_name.clone();
-        AuthorizeAction {
-            message: Box::new(move |c| {
-                let cmd = c.clone().proc_info()?.parent_cmdline()?;
-                Ok(PlatformString::new()
-                    .with_darwin(format!("authorize access device '{dn1}' in '{cmd}'"))
-                    .with_windows(format!("'{dn1}' is attempting to access '{cmd}'"))
-                    .with_linux(format!("'{dn1}' is attempting to access '{cmd}'")))
-            }),
-            uid: Box::new(move |c| {
-                let pid = c.clone().proc_info()?.unique_process_id()?;
-                Ok(format!("{dn2}:{pid}"))
-            }),
-            timeout_success: Duration::from_secs(30 * 60),
-            timeout_denied: Duration::from_secs(5 * 60),
-        }
-        .prompt_grpc(pc)
-        .await?;
-
-        let api_config = authentik_client::apis::configuration::Configuration {
-            base_path: format!("{}/api/v3", profile.authentik_url),
-            bearer_access_token: Some(profile.access_token()),
-            user_agent: Some(user_agent()),
-            ..Default::default()
-        };
-
-        let dt =
-            authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create(
-                &api_config,
-                &device_name,
-            )
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        tracing::debug!(
-            device = device_name,
-            "device_token_exchange: exchanged token for device"
-        );
-        Ok(Response::new(TokenExchangeResponse {
-            header: Some(ResponseHeader { successful: true }),
-            access_token: dt.token,
-            expires_in: dt.expires_in.unwrap_or(0) as i64,
         }))
     }
 
