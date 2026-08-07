@@ -12,7 +12,7 @@ use eyre::{Result, bail, eyre};
 use serde::Deserialize;
 use url::Url;
 
-use crate::dpop::{DpopKeyPair, build_proof};
+use crate::dpop::DpopProver;
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(5);
 const SLOW_DOWN_INCREMENT: Duration = Duration::from_secs(5);
@@ -114,13 +114,13 @@ struct TokenErrorResponse {
 /// Poll the token endpoint until the user completes authorization (RFC 8628
 /// section 3.4/3.5), or bail out on denial/expiry.
 ///
-/// `dpop_keypair`, when set, attaches a fresh `DPoP` proof header (with
+/// `dpop_prover`, when set, attaches a fresh `DPoP` proof header (with
 /// `c_s256` bound to `auth.device_code`) to every poll attempt.
 pub async fn poll_for_device_token(
     token_url: &Url,
     client_id: &str,
     auth: &DeviceAuthorization,
-    dpop_keypair: Option<&DpopKeyPair>,
+    dpop_prover: Option<&dyn DpopProver>,
     user_agent: &str,
 ) -> Result<DeviceTokenResult> {
     let mut interval = auth.interval;
@@ -146,8 +146,10 @@ pub async fn poll_for_device_token(
             )
             .header(reqwest::header::USER_AGENT, user_agent);
 
-        if let Some(kp) = dpop_keypair {
-            let proof = build_proof(kp, "POST", token_url.as_str(), Some(&auth.device_code))?;
+        if let Some(prover) = dpop_prover {
+            let proof = prover
+                .prove("POST", token_url.as_str(), Some(&auth.device_code))
+                .await?;
             req = req.header("DPoP", proof);
         }
 
@@ -184,6 +186,7 @@ pub async fn poll_for_device_token(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dpop::{DpopKeyPair, DpopSigner, LocalDpopProver};
     use serde_json::json;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -295,9 +298,10 @@ mod tests {
 
         let url = Url::parse(&format!("{}/token/", server.uri()))?;
         let auth = test_auth(Duration::from_millis(10))?;
-        let keypair = DpopKeyPair::generate();
+        let signer = DpopSigner::Software(DpopKeyPair::generate());
+        let prover = LocalDpopProver(&signer);
         let result =
-            poll_for_device_token(&url, "client-id", &auth, Some(&keypair), "test-agent").await?;
+            poll_for_device_token(&url, "client-id", &auth, Some(&prover), "test-agent").await?;
 
         assert_eq!(result.access_token, "at123");
 

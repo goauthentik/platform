@@ -11,6 +11,7 @@ name = "log"
 name = "grpc_client"
 
 [dependencies]
+ak-platform-keyring = { path = "../ak-platform-keyring" }
 base64 = "0.23.0"
 jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 p256 = { version = "0.13", features = ["pkcs8", "jwk"] }

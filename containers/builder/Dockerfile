@@ -13,7 +13,9 @@ RUN apt-get update && \
         libssl-dev \
         curl git \
         ca-certificates \
-        libpam0g-dev libudev-dev zstd && \
+        libpam0g-dev libudev-dev zstd \
+        libdbus-1-dev \
+        libtss2-dev && \
     rm -rf /var/lib/apt/lists/*
 
 RUN ARCH=$(uname -m) && \

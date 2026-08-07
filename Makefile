@@ -16,7 +16,6 @@ clean:
 
 .PHONY: gen
 gen: rs-gen-proto ee/psso/gen
-	go generate ./...
 
 rs-gen-proto:
 	cargo install protoc-gen-prost
@@ -42,7 +41,8 @@ ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+		libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf \
+		pkg-config libdbus-1-dev libtss2-dev
 endif
 endif
 
@@ -72,7 +72,7 @@ test-e2e-convert:
 	$(call rs_e2e_coverage_convert)
 
 test-setup:
-	go run -v ./cmd/cli setup -v http://authentik:9000
+	cargo run -p ak-cli -v config setup --authentik-url http://authentik:9000
 
 test-ssh:
 	ssh -i akadmin@ak-platform-test-machine

@@ -99,6 +99,29 @@ pub struct AuthorizeResponse {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
 }
+/// Signs an RFC 9449 DPoP proof for a request using the calling profile's DPoP
+/// key. The key itself (which may be hardware-backed and non-exportable) never
+/// leaves ak-agent; only the resulting signed proof is returned.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SignDpopProofRequest {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::RequestHeader>,
+    #[prost(string, tag="2")]
+    pub htm: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub htu: ::prost::alloc::string::String,
+    /// Set only for authorization_code/device_code exchanges (c_s256 over the
+    /// raw code); omitted for refresh_token proofs.
+    #[prost(string, optional, tag="4")]
+    pub code_for_c_s256: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SignDpopProofResponse {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::ResponseHeader>,
+    #[prost(string, tag="2")]
+    pub proof: ::prost::alloc::string::String,
+}
 include!("agent_auth.tonic.rs");
 include!("agent_auth.serde.rs");
 // @@protoc_insertion_point(module)

@@ -69,7 +69,6 @@ pub async fn setup(
 ) -> Result<()> {
     let access_token: String;
     let refresh_token: String;
-    let mut dpop_private_key = String::new();
     if let Ok(at) = env::var("AK_CLI_ACCESS_TOKEN")
         && let Ok(rt) = env::var("AK_CLI_REFRESH_TOKEN")
     {
@@ -82,6 +81,7 @@ pub async fn setup(
             app_slug: app_slug.to_owned(),
             client_id: client_id.to_owned(),
             dpop_enabled: dpop,
+            agent: app.clone().user().await?,
             url_callback: None,
         })
         .await
@@ -93,9 +93,6 @@ pub async fn setup(
             refresh_token = rt;
         } else {
             bail!("Device-flow setup did not return access/refresh token");
-        }
-        if let Some(key) = prof.dpop_private_key_pem {
-            dpop_private_key = key;
         }
     }
 
@@ -113,7 +110,6 @@ pub async fn setup(
             client_id: client_id.to_owned(),
             access_token: access_token.clone(),
             refresh_token: refresh_token.clone(),
-            dpop_private_key,
         })
         .await
         .wrap_err("failed to register profile with agent")?
