@@ -4,8 +4,8 @@ use ak_platform::{
         agent::{ResponseHeader, Token},
         agent_auth::{
             AuthorizeRequest, AuthorizeResponse, CurrentTokenRequest, CurrentTokenResponse,
-            DeviceTokenExchangeRequest, TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest,
-            WhoAmIResponse, agent_auth_server::AgentAuth, current_token_request::Type,
+            TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest, WhoAmIResponse,
+            agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
     net::server::creds::ProcCredentials,
@@ -64,20 +64,19 @@ impl AgentAuth for AgentGRPCServer {
             .profile_for_request(request.into_inner().header)
             .await?;
 
-        AuthorizeAction {
-            message: Box::new(|c| {
+        AuthorizeAction::build()
+            .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!("authorize access to your account info in '{cmd}'"))
                     .with_windows(format!("'{cmd}' is attempting to access your account info"))
                     .with_linux(format!("'{cmd}' is attempting to access your account info")))
-            }),
-            uid: Box::new(|c| c.clone().proc_info()?.unique_process_id()),
-            timeout_success: Duration::from_secs(0),
-            timeout_denied: Duration::from_secs(0),
-        }
-        .prompt_grpc(pc)
-        .await?;
+            })
+            .with_uid(|c| c.clone().proc_info()?.unique_process_id())
+            .with_success_timeout(Duration::from_secs(0))
+            .with_denied_timeout(Duration::from_secs(0))
+            .prompt_grpc(pc)
+            .await?;
 
         let req = match profile
             .clone()
@@ -126,20 +125,19 @@ impl AgentAuth for AgentGRPCServer {
             .await
             .ok_or(Status::invalid_argument("profile not found"))?;
 
-        AuthorizeAction {
-            message: Box::new(|c| {
+        AuthorizeAction::build()
+            .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!("authorize access to your account in '{cmd}'"))
                     .with_windows(format!("'{cmd}' is attempting to access your account"))
                     .with_linux(format!("'{cmd}' is attempting to access your account")))
-            }),
-            uid: Box::new(move |c| c.clone().proc_info()?.unique_process_id()),
-            timeout_success: Duration::from_secs(0),
-            timeout_denied: Duration::from_secs(0),
-        }
-        .prompt_grpc(proc_creds)
-        .await?;
+            })
+            .with_uid(move |c| c.clone().proc_info()?.unique_process_id())
+            .with_success_timeout(Duration::from_secs(0))
+            .with_denied_timeout(Duration::from_secs(0))
+            .prompt_grpc(proc_creds)
+            .await?;
 
         let token = match inner_req.r#type() {
             Type::Unspecified => Err(Status::invalid_argument("unsupported token type")),
@@ -188,8 +186,8 @@ impl AgentAuth for AgentGRPCServer {
 
         let cid1 = client_id.clone();
         let cid2 = client_id.clone();
-        AuthorizeAction {
-            message: Box::new(move |c| {
+        AuthorizeAction::build()
+            .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!(
@@ -201,16 +199,15 @@ impl AgentAuth for AgentGRPCServer {
                     .with_linux(format!(
                         "'{cid1}' is attempting to access your account in '{cmd}'"
                     )))
-            }),
-            uid: Box::new(move |c| {
+            })
+            .with_uid(move |c| {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{cid2}:{pid}"))
-            }),
-            timeout_success: Duration::from_secs(30 * 60),
-            timeout_denied: Duration::from_secs(1),
-        }
-        .prompt_grpc(pc)
-        .await?;
+            })
+            .with_success_timeout(Duration::from_secs(30 * 60))
+            .with_denied_timeout(Duration::from_secs(1))
+            .prompt_grpc(pc)
+            .await?;
 
         let cache = Cache::<CachedExchangeToken>::new(
             profile_name.clone(),
@@ -279,61 +276,6 @@ impl AgentAuth for AgentGRPCServer {
         }))
     }
 
-    async fn device_token_exchange(
-        &self,
-        request: Request<DeviceTokenExchangeRequest>,
-    ) -> Result<Response<TokenExchangeResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
-        let inner = request.into_inner();
-        let profile = self.profile_for_request(inner.header).await?;
-        let device_name = inner.device_name;
-
-        let dn1 = device_name.clone();
-        let dn2 = device_name.clone();
-        AuthorizeAction {
-            message: Box::new(move |c| {
-                let cmd = c.clone().proc_info()?.parent_cmdline()?;
-                Ok(PlatformString::new()
-                    .with_darwin(format!("authorize access device '{dn1}' in '{cmd}'"))
-                    .with_windows(format!("'{dn1}' is attempting to access '{cmd}'"))
-                    .with_linux(format!("'{dn1}' is attempting to access '{cmd}'")))
-            }),
-            uid: Box::new(move |c| {
-                let pid = c.clone().proc_info()?.unique_process_id()?;
-                Ok(format!("{dn2}:{pid}"))
-            }),
-            timeout_success: Duration::from_secs(30 * 60),
-            timeout_denied: Duration::from_secs(5 * 60),
-        }
-        .prompt_grpc(pc)
-        .await?;
-
-        let api_config = authentik_client::apis::configuration::Configuration {
-            base_path: format!("{}/api/v3", profile.authentik_url),
-            bearer_access_token: Some(profile.access_token()),
-            user_agent: Some(user_agent()),
-            ..Default::default()
-        };
-
-        let dt =
-            authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create(
-                &api_config,
-                &device_name,
-            )
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?;
-
-        tracing::debug!(
-            device = device_name,
-            "device_token_exchange: exchanged token for device"
-        );
-        Ok(Response::new(TokenExchangeResponse {
-            header: Some(ResponseHeader { successful: true }),
-            access_token: dt.token,
-            expires_in: dt.expires_in.unwrap_or(0) as i64,
-        }))
-    }
-
     async fn authorize(
         &self,
         request: Request<AuthorizeRequest>,
@@ -343,16 +285,15 @@ impl AgentAuth for AgentGRPCServer {
         let service = inner.service.clone();
         let uid = inner.uid.clone();
 
-        AuthorizeAction {
-            message: Box::new(move |_c| {
+        AuthorizeAction::build()
+            .with_message(move |_c| {
                 Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
-            }),
-            uid: Box::new(move |_c| Ok(uid.clone())),
-            timeout_success: Duration::from_hours(2),
-            timeout_denied: Duration::from_mins(5),
-        }
-        .prompt_grpc(pc)
-        .await?;
+            })
+            .with_uid(move |_c| Ok(uid.clone()))
+            .with_success_timeout(Duration::from_hours(2))
+            .with_denied_timeout(Duration::from_mins(5))
+            .prompt_grpc(pc)
+            .await?;
 
         Ok(Response::new(AuthorizeResponse {
             header: Some(ResponseHeader { successful: true }),
