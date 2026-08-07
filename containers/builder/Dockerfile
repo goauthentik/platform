@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM docker.io/library/debian:bullseye-slim
 
 ENV DEBIAN_FRONTEND=noninteractive \
     RUSTUP_HOME=/usr/local/rustup \
@@ -11,10 +11,16 @@ RUN apt-get update && \
         build-essential \
         pkg-config \
         libssl-dev \
-        curl \
+        curl git \
         ca-certificates \
-        libpam0g-dev libudev-dev && \
+        libpam0g-dev libudev-dev zstd && \
     rm -rf /var/lib/apt/lists/*
+
+RUN ARCH=$(uname -m) && \
+    curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
+        "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-${ARCH}.tar.xz" && \
+    tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local && \
+    rm /tmp/osquery-toolchain.tar.xz
 
 RUN --mount=type=bind,target=rust-toolchain.toml,src=rust-toolchain.toml \
     curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain none && \

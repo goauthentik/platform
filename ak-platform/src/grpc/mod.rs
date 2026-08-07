@@ -1,4 +1,5 @@
 use base64::{Engine, prelude::BASE64_STANDARD};
+use eyre::Context;
 use eyre::Result;
 use eyre::bail;
 use std::future::Future;
@@ -12,26 +13,36 @@ use crate::generated::agent::ResponseHeader;
 use crate::net;
 use crate::string::PlatformString;
 
+pub mod log;
 pub mod method_caller;
 pub mod ssh;
 
 pub async fn grpc_endpoint(path: String) -> Result<Channel> {
+    // Dummy URI to satisfy Endpoint::from() type requirements
+    // The connector ignores this and uses the socket_path parameter directly
     let u = Uri::builder()
         .scheme("http")
         .authority(":123")
-        .path_and_query(path.replace(" ", "%20"))
+        .path_and_query("/")
         .build()?;
     let endpoint = Endpoint::from(u);
-    let channel = grpc_dial(endpoint).await?;
+    let channel = grpc_dial(endpoint, path.clone())
+        .await
+        .context(format!("failed to connect to {path}"))?;
     Ok(channel)
 }
 
-async fn grpc_dial(ep: Endpoint) -> std::result::Result<Channel, tonic::transport::Error> {
+async fn grpc_dial(
+    ep: Endpoint,
+    socket_path: String,
+) -> std::result::Result<Channel, tonic::transport::Error> {
     return ep
-        .connect_with_connector(service_fn(async move |p: Uri| {
-            let path = p.path().replace("%20", " ");
-            tracing::debug!(path = path, "Connecting to GRPC socket");
-            net::client::connect(PlatformString::new_with_default(&path)).await
+        .connect_with_connector(service_fn(move |_p: Uri| {
+            let path = socket_path.clone();
+            async move {
+                tracing::debug!(path = path, "Connecting to GRPC socket");
+                net::client::connect(PlatformString::new_with_default(&path)).await
+            }
         }))
         .await;
 }

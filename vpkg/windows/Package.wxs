@@ -46,7 +46,7 @@
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="domains" />
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="runtime" />
         <File Id="ak_sysd"
-              Source="$(env.ROOT)/bin/agent_system/ak-sysd.exe"
+              Source="$(env.ROOT)/bin/sysd/ak-sysd.exe"
               KeyPath="true" />
         <File Id="ak_sysd_config"
               Source="$(env.PWD)/config.json" />

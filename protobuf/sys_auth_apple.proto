@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package sys_auth_apple;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 service SystemAuthApple {

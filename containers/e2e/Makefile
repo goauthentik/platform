@@ -29,7 +29,7 @@ ci-build:
 build-packages:
 	$(MAKE) -C "${TOP}" ak-agent/build
 	$(MAKE) -C "${TOP}" -j$(shell nproc) \
-		sysd/build \
+		ak-sysd/build \
 		ak-nss/build \
 		ak-pam/build \
 		ak-cli/build \
