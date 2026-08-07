@@ -1,9 +1,9 @@
 use crate::components::{Component, SysdContext};
 use crate::util::to_status;
 use ak_platform::generated::agent::ResponseHeader;
-use ak_platform::generated::agent_platform::{
+use ak_platform::generated::sys_platform::{
     PlatformEndpointRequest, PlatformEndpointResponse,
-    agent_platform_server::{AgentPlatform, AgentPlatformServer},
+    system_platform_server::{SystemPlatform, SystemPlatformServer},
 };
 use ak_platform::paths::SysdSocketID;
 use authentik_client::models::DeviceFactsRequest;
@@ -92,7 +92,7 @@ impl Component for DeviceComponent {
 
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
-            routes.add_service(AgentPlatformServer::from_arc(self));
+            routes.add_service(SystemPlatformServer::from_arc(self));
         }
     }
 }
@@ -107,7 +107,7 @@ struct EndpointClaims {
 }
 
 #[tonic::async_trait]
-impl AgentPlatform for DeviceComponent {
+impl SystemPlatform for DeviceComponent {
     async fn signed_endpoint_header(
         &self,
         request: Request<PlatformEndpointRequest>,

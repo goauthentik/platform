@@ -13,7 +13,7 @@ impl serde::Serialize for PlatformEndpointRequest {
         if !self.challenge.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("agent_platform.PlatformEndpointRequest", len)?;
+        let mut struct_ser = serializer.serialize_struct("sys_platform.PlatformEndpointRequest", len)?;
         if let Some(v) = self.header.as_ref() {
             struct_ser.serialize_field("header", v)?;
         }
@@ -73,7 +73,7 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointRequest {
             type Value = PlatformEndpointRequest;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct agent_platform.PlatformEndpointRequest")
+                formatter.write_str("struct sys_platform.PlatformEndpointRequest")
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<PlatformEndpointRequest, V::Error>
@@ -104,7 +104,7 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointRequest {
                 })
             }
         }
-        deserializer.deserialize_struct("agent_platform.PlatformEndpointRequest", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("sys_platform.PlatformEndpointRequest", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for PlatformEndpointResponse {
@@ -121,7 +121,7 @@ impl serde::Serialize for PlatformEndpointResponse {
         if !self.message.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("agent_platform.PlatformEndpointResponse", len)?;
+        let mut struct_ser = serializer.serialize_struct("sys_platform.PlatformEndpointResponse", len)?;
         if let Some(v) = self.header.as_ref() {
             struct_ser.serialize_field("header", v)?;
         }
@@ -181,7 +181,7 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointResponse {
             type Value = PlatformEndpointResponse;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct agent_platform.PlatformEndpointResponse")
+                formatter.write_str("struct sys_platform.PlatformEndpointResponse")
             }
 
             fn visit_map<V>(self, mut map_: V) -> std::result::Result<PlatformEndpointResponse, V::Error>
@@ -212,6 +212,6 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointResponse {
                 })
             }
         }
-        deserializer.deserialize_struct("agent_platform.PlatformEndpointResponse", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("sys_platform.PlatformEndpointResponse", FIELDS, GeneratedVisitor)
     }
 }

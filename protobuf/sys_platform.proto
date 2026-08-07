@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package agent_platform;
+package sys_platform;
 option swift_prefix = "";
 
 import "agent.proto";
 
-service AgentPlatform {
+service SystemPlatform {
   rpc SignedEndpointHeader(PlatformEndpointRequest) returns (PlatformEndpointResponse);
 }
 
