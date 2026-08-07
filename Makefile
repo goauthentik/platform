@@ -16,7 +16,6 @@ clean:
 
 .PHONY: gen
 gen: rs-gen-proto ee/psso/gen
-	go generate ./...
 
 rs-gen-proto:
 	cargo install protoc-gen-prost
