@@ -128,23 +128,22 @@ impl SSHAgentTransaction {
         let hk1 = host_key_str.to_string();
         let hk2 = host_key_str.to_string();
 
-        let result = AuthorizeAction {
-            message: Box::new(move |c| {
+        let result = AuthorizeAction::build()
+            .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!("authorize access device '{hk1}' in '{cmd}'"))
                     .with_windows(format!("'{hk1}' is attempting to access '{cmd}'"))
                     .with_linux(format!("'{hk1}' is attempting to access '{cmd}'")))
-            }),
-            uid: Box::new(move |c| {
+            })
+            .with_uid(move |c| {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{hk2}:{pid}"))
-            }),
-            timeout_success: Duration::from_secs(30 * 60),
-            timeout_denied: Duration::from_secs(5 * 60),
-        }
-        .prompt(self.creds.clone())
-        .await?;
+            })
+            .with_success_timeout(Duration::from_secs(30 * 60))
+            .with_denied_timeout(Duration::from_secs(5 * 60))
+            .prompt(self.creds.clone())
+            .await?;
 
         if !result {
             bail!("authorization denied by user");
