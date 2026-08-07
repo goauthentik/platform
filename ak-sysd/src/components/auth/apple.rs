@@ -50,9 +50,11 @@ pub async fn register_device(
         jwks_endpoint: res.jwks_endpoint,
         audience: res.audience,
         nonce_endpoint: res.nonce_endpoint,
-        // If the regenerated client types this as Option<bool>, use
-        // res.require_biometrics.unwrap_or(false).
-        require_biometrics: res.require_biometrics,
+        // TEMPORARY: hardcoded for testing. The server-side field exists but is not
+        // yet in a released authentik-client, so reading `res.require_biometrics`
+        // does not compile against the pinned client. Swap back to
+        // `res.require_biometrics` once the API change lands upstream.
+        require_biometrics: true,
         // Not part of the API response — the domain's own stored token,
         // mirroring Go's `device_token: dc.Token`.
         device_token: active.cfg.token.clone(),
