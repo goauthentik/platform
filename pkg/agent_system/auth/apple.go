@@ -50,5 +50,8 @@ func (auth *Server) RegisterDevice(ctx context.Context, req *pb.RegisterDeviceRe
 		Audience:      d.Audience,
 		NonceEndpoint: d.NonceEndpoint,
 		DeviceToken:   dom.Token,
+		// Confirm the generated accessor after regenerating goauthentik.io/api/v3
+		// from the updated schema (likely d.RequireBiometrics or d.GetRequireBiometrics()).
+		RequireBiometrics: d.RequireBiometrics,
 	}, nil
 }
