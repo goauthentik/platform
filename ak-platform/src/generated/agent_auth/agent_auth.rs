@@ -67,7 +67,13 @@ pub struct TokenExchangeRequest {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::RequestHeader>,
     #[prost(string, tag="2")]
-    pub client_id: ::prost::alloc::string::String,
+    pub audience: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag="3")]
+    pub scopes: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="4")]
+    pub actor_token: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="5")]
+    pub actor_token_type: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct TokenExchangeResponse {
