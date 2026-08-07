@@ -4,11 +4,14 @@ use ak_platform::generated::{
     agent::RequestHeader,
     agent_auth::{CurrentTokenRequest, current_token_request::Type},
 };
-use authentik_client::apis::{
-    agents_api::agents_agents_create, configuration::Configuration,
-    core_api::core_applications_list,
-};
 use authentik_client::models::AgentCreateRequest;
+use authentik_client::{
+    apis::{
+        agents_api::agents_agents_create, configuration::Configuration,
+        core_api::core_applications_list, requests_api::requests_grant_requests_agent_create,
+    },
+    models::AgentGrantRequestCreateRequest,
+};
 use rmcp::{
     ErrorData as McpError, ServerHandler, ServiceExt,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
@@ -34,12 +37,16 @@ pub struct CreateAgentArgs {
     /// Human-readable label for the agent
     #[serde(default)]
     pub label: Option<String>,
-    /// UUIDs of applications to grant the agent access to
-    #[serde(default)]
-    pub applications: Option<Vec<String>>,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
     pub profile: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct RequestAccessArgs {
+    /// UUIDs of applications to grant the agent access to
+    #[serde(default)]
+    pub applications: Option<Vec<String>>,
 }
 
 #[derive(Clone)]
@@ -63,7 +70,7 @@ impl AuthentikMcp {
         let mut app = self.app.clone();
         let _profile = match profile {
             Some(p) => p,
-            None => app.profile().await
+            None => app.profile().await,
         };
         let res = app
             .user()
@@ -117,13 +124,13 @@ impl AuthentikMcp {
         Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
     }
 
-    #[tool(description = "Create an agent (delegate identity) for a parent user")]
-    async fn create_agent(
+    #[tool(description = "Request access to an application")]
+    async fn request_access(
         &self,
-        Parameters(args): Parameters<CreateAgentArgs>,
+        Parameters(args): Parameters<RequestAccessArgs>,
     ) -> Result<CallToolResult, McpError> {
         let config = self.configuration(args.profile).await?;
-        let applications = args
+        let Some(pbms) = args
             .applications
             .map(|v| {
                 v.into_iter()
@@ -131,10 +138,35 @@ impl AuthentikMcp {
                     .collect::<Result<Vec<_>, _>>()
             })
             .transpose()
-            .map_err(|e| McpError::invalid_params(format!("invalid application UUID: {e}"), None))?;
+            .map_err(|e| {
+                McpError::invalid_params(format!("invalid application UUID: {e}"), None)
+            })?
+        else {
+            return Err(McpError::invalid_params(
+                "Empty or invalid applications",
+                None,
+            ));
+        };
+        let res = requests_grant_requests_agent_create(
+            &config,
+            AgentGrantRequestCreateRequest { pbms: pbms },
+        )
+        .await?;
+        let cbs = vec![
+            // ContentBlock::text(""),
+            ContentBlock::resource_link(Resource::new(res.fulfill_url, "Fulfillment URL")),
+        ];
+        Ok(CallToolResult::success(cbs))
+    }
+
+    #[tool(description = "Create an agent (delegate identity) for a parent user")]
+    async fn create_agent(
+        &self,
+        Parameters(args): Parameters<CreateAgentArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        let config = self.configuration(args.profile).await?;
         let req = AgentCreateRequest {
             label: args.label,
-            applications,
             ..Default::default()
         };
         let result = agents_agents_create(&config, Some(req))
@@ -150,7 +182,10 @@ impl AuthentikMcp {
 impl ServerHandler for AuthentikMcp {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
-            .with_server_info(Implementation::from_build_env())
+            .with_server_info(
+                Implementation::new("authentik Agent", ak_meta::full_version())
+                    .with_website_url("https://goauthentik.io"),
+            )
             .with_instructions(
                 "authentik CLI MCP server. Tools: list_applications (applications available \
                  to the current), create_agent (create a delegate agent \
