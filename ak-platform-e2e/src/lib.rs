@@ -2,11 +2,10 @@ use std::{env, path::PathBuf, time::Duration};
 
 use ak_flow_executor::executor::FlowExecutor;
 use ak_platform::log::{LevelFilter, LogBuilder};
+use ak_platform::oauth::device_flow::{poll_for_device_token, request_device_authorization};
 use ak_platform::string::PlatformString;
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
 use eyre::{Context, ContextCompat, Result, bail};
-use oauth_device_flows::provider::GenericProviderConfig;
-use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
 use testcontainers::core::CmdWaitFor;
 use testcontainers::{ContainerAsync, GenericImage, core::ExecCommand};
 use url::Url;
@@ -104,38 +103,33 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
         base.set_path(&format!("{}/", base.path()));
     }
 
-    let config = DeviceFlowConfig::new()
-        .client_id("authentik-cli")
-        .scopes(vec![
-            "openid",
-            "profile",
-            "email",
-            "offline_access",
-            "goauthentik.io/api",
-        ])
-        .poll_interval(Duration::from_secs(5))
-        .generic_provider(GenericProviderConfig::new(
-            base.join("application/o/device/")
-                .wrap_err("invalid device URL")?,
-            base.join("application/o/token/")
-                .wrap_err("invalid token URL")?,
-            "authentik".to_owned(),
-        ))
-        .max_attempts(12);
+    let device_code_url = base
+        .join("application/o/device/")
+        .wrap_err("invalid device URL")?;
+    let token_url = base
+        .join("application/o/token/")
+        .wrap_err("invalid token URL")?;
+    let scopes = [
+        "openid",
+        "profile",
+        "email",
+        "offline_access",
+        "goauthentik.io/api",
+    ];
 
-    let mut device_flow =
-        DeviceFlow::new(Provider::Generic, config).wrap_err("failed to create device flow")?;
-
-    let verification_uri = {
-        let auth_response = device_flow
-            .initialize()
-            .await
-            .wrap_err("device flow initialization failed")?;
-        auth_response
-            .verification_uri_complete()
-            .unwrap_or_else(|| auth_response.verification_uri())
-            .clone()
-    };
+    let auth = request_device_authorization(
+        &device_code_url,
+        "authentik-cli",
+        &scopes,
+        None,
+        "ak-platform-e2e",
+    )
+    .await
+    .wrap_err("device flow initialization failed")?;
+    let verification_uri = auth
+        .verification_uri_complete
+        .clone()
+        .unwrap_or_else(|| auth.verification_uri.clone());
 
     // Auto-approve: visit the verification URI with an authenticated session,
     // then submit the implicit consent form.
@@ -161,14 +155,14 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
             .await;
     }
 
-    let token_response = device_flow
-        .poll_for_token()
-        .await
-        .wrap_err("device flow polling failed")?;
+    let token_response =
+        poll_for_device_token(&token_url, "authentik-cli", &auth, None, "ak-platform-e2e")
+            .await
+            .wrap_err("device flow polling failed")?;
 
     let ak_url = container_authentik_url();
-    let access_token = token_response.access_token().to_owned();
-    let refresh_token = token_response.refresh_token().unwrap_or("").to_owned();
+    let access_token = token_response.access_token;
+    let refresh_token = token_response.refresh_token.unwrap_or_default();
     must_exec(
         &tm.container,
         &format!("ak config setup -a {}", ak_url),
