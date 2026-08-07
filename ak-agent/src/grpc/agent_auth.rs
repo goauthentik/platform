@@ -8,10 +8,9 @@ use ak_platform::{
             agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
-    net::server::creds::ProcCredentials,
     string::PlatformString,
 };
-use ak_platform_authz::AuthorizeAction;
+use ak_platform_authz::grpc::AuthPeer;
 use ak_platform_keyring::cache::Cache;
 use ak_platform_keyring::cache::CacheData;
 use chrono::{DateTime, Utc};
@@ -59,12 +58,12 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<WhoAmIRequest>,
     ) -> Result<Response<WhoAmIResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
         let profile = self
-            .profile_for_request(request.into_inner().header)
+            .profile_for_request(request.get_ref().header.clone())
             .await?;
 
-        AuthorizeAction::build()
+        request
+            .auth_peer()
             .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
@@ -75,7 +74,7 @@ impl AgentAuth for AgentGRPCServer {
             .with_uid(|c| c.clone().proc_info()?.unique_process_id())
             .with_success_timeout(Duration::from_secs(0))
             .with_denied_timeout(Duration::from_secs(0))
-            .prompt_grpc(pc)
+            .finish()
             .await?;
 
         let req = match profile
@@ -109,23 +108,23 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<CurrentTokenRequest>,
     ) -> Result<Response<CurrentTokenResponse>, Status> {
-        let proc_creds = request.extensions().get::<ProcCredentials>().cloned();
-        let inner_req = request.into_inner().clone();
+        let inner_req = request.get_ref();
         let profile = self.profile_for_request(inner_req.header.clone()).await?;
         let token_manager = self
             .agent
             .gtm
             .for_profile(
                 &inner_req
-                    .clone()
                     .header
+                    .as_ref()
                     .ok_or(Status::invalid_argument("missing header"))?
                     .profile,
             )
             .await
             .ok_or(Status::invalid_argument("profile not found"))?;
 
-        AuthorizeAction::build()
+        request
+            .auth_peer()
             .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
@@ -136,7 +135,7 @@ impl AgentAuth for AgentGRPCServer {
             .with_uid(move |c| c.clone().proc_info()?.unique_process_id())
             .with_success_timeout(Duration::from_secs(0))
             .with_denied_timeout(Duration::from_secs(0))
-            .prompt_grpc(proc_creds)
+            .finish()
             .await?;
 
         let token = match inner_req.r#type() {
@@ -173,20 +172,20 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<TokenExchangeRequest>,
     ) -> Result<Response<TokenExchangeResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
-        let inner = request.into_inner();
+        let inner = request.get_ref();
         let profile_name = inner
             .header
             .as_ref()
             .ok_or(Status::invalid_argument("missing header"))?
             .profile
             .clone();
-        let profile = self.profile_for_request(inner.header).await?;
-        let client_id = inner.client_id;
+        let profile = self.profile_for_request(inner.clone().header).await?;
+        let client_id = inner.client_id.clone();
 
         let cid1 = client_id.clone();
         let cid2 = client_id.clone();
-        AuthorizeAction::build()
+        request
+            .auth_peer()
             .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
@@ -206,7 +205,7 @@ impl AgentAuth for AgentGRPCServer {
             })
             .with_success_timeout(Duration::from_secs(30 * 60))
             .with_denied_timeout(Duration::from_secs(1))
-            .prompt_grpc(pc)
+            .finish()
             .await?;
 
         let cache = Cache::<CachedExchangeToken>::new(
@@ -280,19 +279,19 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<AuthorizeRequest>,
     ) -> Result<Response<AuthorizeResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
-        let inner = request.into_inner();
+        let inner = request.get_ref();
         let service = inner.service.clone();
         let uid = inner.uid.clone();
 
-        AuthorizeAction::build()
+        request
+            .auth_peer()
             .with_message(move |_c| {
                 Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
             })
             .with_uid(move |_c| Ok(uid.clone()))
             .with_success_timeout(Duration::from_hours(2))
             .with_denied_timeout(Duration::from_mins(5))
-            .prompt_grpc(pc)
+            .finish()
             .await?;
 
         Ok(Response::new(AuthorizeResponse {
