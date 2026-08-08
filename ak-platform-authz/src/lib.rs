@@ -11,6 +11,7 @@ use tonic::Status;
 type MessageFn = dyn (Fn(&ProcCredentials) -> Result<PlatformString>) + Send + Sync;
 type UidFn = dyn (Fn(&ProcCredentials) -> Result<String>) + Send + Sync;
 
+pub mod grpc;
 pub mod sys;
 
 pub struct AuthorizeAction {
@@ -18,14 +19,7 @@ pub struct AuthorizeAction {
     uid: Box<UidFn>,
     timeout_success: Duration,
     timeout_denied: Duration,
-}
-
-#[derive(Default)]
-pub struct AuthorizeActionBuilder {
-    message: Option<Box<MessageFn>>,
-    uid: Option<Box<UidFn>>,
-    timeout_success: Duration,
-    timeout_denied: Duration,
+    creds: Option<ProcCredentials>,
 }
 
 struct AuthState {
@@ -93,15 +87,12 @@ impl AuthorizeAction {
         Ok(res)
     }
 
-    pub async fn prompt_grpc(
-        self,
-        creds: Option<ProcCredentials>,
-    ) -> std::result::Result<(), Status> {
-        let creds = match creds {
+    pub async fn prompt_grpc(self) -> std::result::Result<(), Status> {
+        let creds = match self.creds.clone() {
             Some(c) => c,
             None => return Err(Status::permission_denied("No credentials")),
         };
-        match self.prompt(creds.clone()).await {
+        match self.prompt(creds).await {
             Ok(r) => match r {
                 true => Ok(()),
                 false => Err(Status::permission_denied("user denied")),
@@ -109,6 +100,15 @@ impl AuthorizeAction {
             Err(e) => Err(Status::from_error(e.into())),
         }
     }
+}
+
+#[derive(Default)]
+pub struct AuthorizeActionBuilder {
+    message: Option<Box<MessageFn>>,
+    uid: Option<Box<UidFn>>,
+    timeout_success: Duration,
+    timeout_denied: Duration,
+    creds: Option<ProcCredentials>,
 }
 
 impl AuthorizeActionBuilder {
@@ -134,6 +134,10 @@ impl AuthorizeActionBuilder {
         self.timeout_denied = timeout;
         self
     }
+    pub fn with_creds(mut self, creds: Option<ProcCredentials>) -> Self {
+        self.creds = creds;
+        self
+    }
     pub fn build(self) -> Result<AuthorizeAction> {
         let Some(m) = self.message else {
             bail!("Missing message function");
@@ -146,6 +150,7 @@ impl AuthorizeActionBuilder {
             uid: u,
             timeout_success: self.timeout_success,
             timeout_denied: self.timeout_denied,
+            creds: self.creds,
         })
     }
 
@@ -153,13 +158,10 @@ impl AuthorizeActionBuilder {
         self.build()?.prompt(creds).await
     }
 
-    pub async fn prompt_grpc(
-        self,
-        creds: Option<ProcCredentials>,
-    ) -> std::result::Result<(), Status> {
+    pub async fn finish(self) -> std::result::Result<(), Status> {
         self.build()
             .map_err(|e| Status::from_error(e.into()))?
-            .prompt_grpc(creds)
+            .prompt_grpc()
             .await
     }
 }
