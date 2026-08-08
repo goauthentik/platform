@@ -1,7 +1,9 @@
 use base64::{Engine, prelude::BASE64_STANDARD};
-use eyre::Context;
+use eyre::Report;
 use eyre::Result;
 use eyre::bail;
+use std::fmt::Display;
+use std::fmt::Formatter;
 use std::future::Future;
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
@@ -17,18 +19,49 @@ pub mod log;
 pub mod method_caller;
 pub mod ssh;
 
-pub async fn grpc_endpoint(path: String) -> Result<Channel> {
+pub type GrpcResult<T> = std::result::Result<T, GrpcError>;
+
+#[derive(Debug)]
+pub enum GrpcError {
+    NotFound,
+    InvalidArgument,
+    PermissionDenied,
+    Internal,
+    Unavailable,
+    Transport(tonic::transport::Error, String),
+    Other(Report),
+}
+
+impl Display for GrpcError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            GrpcError::NotFound => write!(f, "Not found"),
+            GrpcError::InvalidArgument => write!(f, "invalid argument"),
+            GrpcError::PermissionDenied => write!(f, "permission denied"),
+            GrpcError::Internal => write!(f, "internal"),
+            GrpcError::Unavailable => write!(f, "unavailable"),
+            GrpcError::Transport(error, path) => {
+                write!(f, "error connecting to {}: {:?}", path, error)
+            }
+            GrpcError::Other(report) => report.fmt(f),
+        }
+    }
+}
+impl std::error::Error for GrpcError {}
+
+pub async fn grpc_endpoint(path: String) -> GrpcResult<Channel> {
     // Dummy URI to satisfy Endpoint::from() type requirements
     // The connector ignores this and uses the socket_path parameter directly
     let u = Uri::builder()
         .scheme("http")
         .authority(":123")
         .path_and_query("/")
-        .build()?;
+        .build()
+        .map_err(|e| GrpcError::Other(e.into()))?;
     let endpoint = Endpoint::from(u);
     let channel = grpc_dial(endpoint, path.clone())
         .await
-        .context(format!("failed to connect to {path}"))?;
+        .map_err(|e| GrpcError::Transport(e, path))?;
     Ok(channel)
 }
 
@@ -47,17 +80,22 @@ async fn grpc_dial(
         .await;
 }
 
-pub fn grpc_request<T, F: Future<Output = Result<T>>>(future: impl Fn(Channel) -> F) -> Result<T> {
+pub fn grpc_request<T, F: Future<Output = GrpcResult<T>>>(
+    future: impl Fn(Channel) -> F,
+) -> GrpcResult<T> {
     let config = Config::get();
 
     grpc_request_path(config.socket_default.for_current().to_owned(), future)
 }
 
-pub fn grpc_request_path<T, F: Future<Output = Result<T>>>(
+pub fn grpc_request_path<T, F: Future<Output = GrpcResult<T>>>(
     path: String,
     future: impl Fn(Channel) -> F,
-) -> Result<T> {
-    let rt = Builder::new_current_thread().enable_all().build()?;
+) -> GrpcResult<T> {
+    let rt = Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| GrpcError::Other(e.into()))?;
 
     rt.block_on(async {
         let channel = grpc_endpoint(path).await?;
@@ -66,15 +104,15 @@ pub fn grpc_request_path<T, F: Future<Output = Result<T>>>(
 }
 
 pub trait SysdBridge {
-    fn grpc_request<T, F: Future<Output = Result<T>>>(
+    fn grpc_request<T, F: Future<Output = GrpcResult<T>>>(
         &self,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T>;
-    fn grpc_request_path<T, F: Future<Output = Result<T>>>(
+    ) -> GrpcResult<T>;
+    fn grpc_request_path<T, F: Future<Output = GrpcResult<T>>>(
         &self,
         path: String,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T>;
+    ) -> GrpcResult<T>;
 }
 
 pub struct Bridge {
@@ -89,20 +127,20 @@ impl Bridge {
 }
 
 impl SysdBridge for Bridge {
-    fn grpc_request<T, F: Future<Output = Result<T>>>(
+    fn grpc_request<T, F: Future<Output = GrpcResult<T>>>(
         &self,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T> {
+    ) -> GrpcResult<T> {
         let config = Config::get();
 
         self.grpc_request_path(config.socket_default.for_current().to_owned(), future)
     }
 
-    fn grpc_request_path<T, F: Future<Output = Result<T>>>(
+    fn grpc_request_path<T, F: Future<Output = GrpcResult<T>>>(
         &self,
         path: String,
         future: impl Fn(Channel) -> F,
-    ) -> Result<T> {
+    ) -> GrpcResult<T> {
         self.rt.block_on(async {
             tracing::debug!("creating grpc client");
             let channel = grpc_endpoint(path).await?;
