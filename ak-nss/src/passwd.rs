@@ -4,6 +4,7 @@ use libnss::interop::Response;
 use libnss::passwd::{Passwd, PasswdHooks};
 
 use crate::AuthentikNSS;
+use crate::backend::ErrMap;
 use crate::backend::{DirectoryBridge, GrpcDirectoryBridge};
 use crate::mapping::user_to_passwd_entry;
 
@@ -25,28 +26,20 @@ impl PasswdHooks for AuthentikNSS {
 }
 
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Passwd>> {
-    match bridge.list_users() {
-        Ok(users) => Response::Success(users.into_iter().map(user_to_passwd_entry).collect()),
-        Err(GrpcError::NotFound) => Response::NotFound,
-        Err(e) => {
-            tracing::warn!("error getting users: {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .list_users()
+        .map(|users| users.into_iter().map(user_to_passwd_entry).collect())
+        .to_response("failed to list users")
 }
 
 fn get_entry_by_uid_with(bridge: &impl DirectoryBridge, uid: uid_t) -> Response<Passwd> {
-    match bridge.get_user(GetRequest {
-        id: Some(uid),
-        name: None,
-    }) {
-        Ok(user) => Response::Success(user_to_passwd_entry(user)),
-        Err(GrpcError::NotFound) => Response::NotFound,
-        Err(e) => {
-            tracing::warn!("error when getting user by ID '{uid}': {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .get_user(GetRequest {
+            id: Some(uid),
+            name: None,
+        })
+        .map(user_to_passwd_entry)
+        .to_response(format!("failed to get user by ID '{uid}'"))
 }
 
 fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Response<Passwd> {
@@ -55,34 +48,30 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
     if name == "pam_unix_non_existent:" {
         return Response::NotFound;
     }
-    match bridge.get_user(GetRequest {
-        name: Some(name.clone()),
-        id: None,
-    }) {
-        Ok(user) => Response::Success(user_to_passwd_entry(user)),
-        Err(GrpcError::NotFound) => Response::NotFound,
-        Err(e) => {
-            tracing::warn!("error when getting user by name '{name}': {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .get_user(GetRequest {
+            name: Some(name.clone()),
+            id: None,
+        })
+        .map(user_to_passwd_entry)
+        .to_response(format!("failed to get user by name '{name}'"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use ak_platform::generated::sys_directory::{Group as AKGroup, User};
-    use eyre::Result;
+    use ak_platform::grpc::{GrpcResult, Status};
 
     struct MockBridge {
         users: Vec<User>,
     }
 
     impl DirectoryBridge for MockBridge {
-        fn list_users(&self) -> Result<Vec<User>> {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
             Ok(self.users.clone())
         }
-        fn get_user(&self, req: GetRequest) -> Result<User> {
+        fn get_user(&self, req: GetRequest) -> GrpcResult<User> {
             self.users
                 .iter()
                 .find(|u| {
@@ -90,29 +79,46 @@ mod tests {
                         || req.name.as_deref().map_or(false, |n| n == u.name)
                 })
                 .cloned()
-                .ok_or_else(|| eyre::eyre!("not found"))
+                .ok_or_else(|| Status::not_found("no such entry").into())
         }
-        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
             unreachable!()
         }
-        fn get_group(&self, _req: GetRequest) -> Result<AKGroup> {
+        fn get_group(&self, _req: GetRequest) -> GrpcResult<AKGroup> {
             unreachable!()
         }
     }
 
-    struct ErrorBridge;
-    impl DirectoryBridge for ErrorBridge {
-        fn list_users(&self) -> Result<Vec<User>> {
-            Err(eyre::eyre!("unavailable"))
+    struct UnavailBridge;
+    impl DirectoryBridge for UnavailBridge {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
+            Err(Status::unavailable("connect failed").into())
         }
-        fn get_user(&self, _: GetRequest) -> Result<User> {
-            Err(eyre::eyre!("unavailable"))
+        fn get_user(&self, _: GetRequest) -> GrpcResult<User> {
+            Err(Status::unavailable("connect failed").into())
         }
-        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
             unreachable!()
         }
-        fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
+        fn get_group(&self, _: GetRequest) -> GrpcResult<AKGroup> {
             unreachable!()
+        }
+    }
+
+    /// sysd answered, and there is no such entry.
+    struct NotFoundBridge;
+    impl DirectoryBridge for NotFoundBridge {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn get_user(&self, _: GetRequest) -> GrpcResult<User> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn get_group(&self, _: GetRequest) -> GrpcResult<AKGroup> {
+            Err(Status::not_found("no such entry").into())
         }
     }
 
@@ -146,7 +152,7 @@ mod tests {
     #[test]
     fn get_all_entries_unavail_on_error() {
         assert!(matches!(
-            get_all_entries_with(&ErrorBridge),
+            get_all_entries_with(&UnavailBridge),
             Response::Unavail
         ));
     }
@@ -165,7 +171,7 @@ mod tests {
     #[test]
     fn get_entry_by_uid_unavail_on_error() {
         assert!(matches!(
-            get_entry_by_uid_with(&ErrorBridge, 1000),
+            get_entry_by_uid_with(&UnavailBridge, 1000),
             Response::Unavail
         ));
     }
@@ -184,7 +190,7 @@ mod tests {
     #[test]
     fn get_entry_by_name_unavail_on_error() {
         assert!(matches!(
-            get_entry_by_name_with(&ErrorBridge, "alice".to_owned()),
+            get_entry_by_name_with(&UnavailBridge, "alice".to_owned()),
             Response::Unavail
         ));
     }
@@ -193,21 +199,54 @@ mod tests {
     fn pam_unix_non_existent_short_circuits_before_bridge() {
         struct PanicBridge;
         impl DirectoryBridge for PanicBridge {
-            fn list_users(&self) -> Result<Vec<User>> {
+            fn list_users(&self) -> GrpcResult<Vec<User>> {
                 panic!("bridge must not be called")
             }
-            fn get_user(&self, _: GetRequest) -> Result<User> {
+            fn get_user(&self, _: GetRequest) -> GrpcResult<User> {
                 panic!("bridge must not be called")
             }
-            fn list_groups(&self) -> Result<Vec<AKGroup>> {
+            fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
                 panic!("bridge must not be called")
             }
-            fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
+            fn get_group(&self, _: GetRequest) -> GrpcResult<AKGroup> {
                 panic!("bridge must not be called")
             }
         }
         assert!(matches!(
             get_entry_by_name_with(&PanicBridge, "pam_unix_non_existent:".to_owned()),
+            Response::NotFound
+        ));
+    }
+
+    /// A uid that simply isn't in the directory is NOTFOUND, not UNAVAIL.
+    #[test]
+    fn get_entry_by_uid_notfound_when_missing() {
+        let bridge = MockBridge {
+            users: vec![alice()],
+        };
+        assert!(matches!(
+            get_entry_by_uid_with(&bridge, 4242),
+            Response::NotFound
+        ));
+        assert!(matches!(
+            get_entry_by_uid_with(&NotFoundBridge, 4242),
+            Response::NotFound
+        ));
+    }
+
+    /// A name that simply isn't in the directory is NOTFOUND, not UNAVAIL — the
+    /// case that used to be misreported as a backend outage.
+    #[test]
+    fn get_entry_by_name_notfound_when_missing() {
+        let bridge = MockBridge {
+            users: vec![alice()],
+        };
+        assert!(matches!(
+            get_entry_by_name_with(&bridge, "bob".to_owned()),
+            Response::NotFound
+        ));
+        assert!(matches!(
+            get_entry_by_name_with(&NotFoundBridge, "bob".to_owned()),
             Response::NotFound
         ));
     }

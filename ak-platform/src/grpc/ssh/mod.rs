@@ -35,7 +35,7 @@ impl SSHTunnel {
             std::env::var("SSH_AUTH_SOCK").map_err(|_| eyre::eyre!("SSH_AUTH_SOCK is not set"))?;
         let st = match connect(PlatformString::new_with_default(&sock_path)).await {
             Ok(s) => s,
-            Err(e) => return Err(e),
+            Err(e) => return Err(e.into()),
         };
         let client = Client::new(st.into_inner());
         Ok(SSHTunnel {
