@@ -24,6 +24,7 @@ fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Shadow>> 
             let entries = users.into_iter().map(|u| shadow_entry(u.name)).collect();
             Response::Success(entries)
         }
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("Failed to get users: {e:?}");
             Response::Unavail
@@ -37,6 +38,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
         id: None,
     }) {
         Ok(user) => Response::Success(shadow_entry(user.name)),
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("Failed to get user by name '{name}': {e:?}");
             Response::Unavail

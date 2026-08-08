@@ -1,4 +1,5 @@
 use ak_platform::generated::sys_directory::GetRequest;
+use ak_platform::grpc::GrpcError;
 use libc::gid_t;
 use libnss::group::{Group, GroupHooks};
 use libnss::interop::Response;
@@ -27,6 +28,7 @@ impl GroupHooks for AuthentikNSS {
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Group>> {
     match bridge.list_groups() {
         Ok(groups) => Response::Success(groups.into_iter().map(ak_group_to_group_entry).collect()),
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("Failed to get groups: {e:?}");
             Response::Unavail
@@ -40,6 +42,7 @@ fn get_entry_by_gid_with(bridge: &impl DirectoryBridge, gid: gid_t) -> Response<
         id: Some(gid),
     }) {
         Ok(group) => Response::Success(ak_group_to_group_entry(group)),
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("error when getting group by ID '{gid}': {e:?}");
             Response::Unavail
@@ -53,6 +56,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
         id: None,
     }) {
         Ok(group) => Response::Success(ak_group_to_group_entry(group)),
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("error when getting group by name '{name}': {e:?}");
             Response::Unavail

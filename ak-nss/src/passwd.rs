@@ -27,6 +27,7 @@ impl PasswdHooks for AuthentikNSS {
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Passwd>> {
     match bridge.list_users() {
         Ok(users) => Response::Success(users.into_iter().map(user_to_passwd_entry).collect()),
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("error getting users: {e:?}");
             Response::Unavail
@@ -40,6 +41,7 @@ fn get_entry_by_uid_with(bridge: &impl DirectoryBridge, uid: uid_t) -> Response<
         name: None,
     }) {
         Ok(user) => Response::Success(user_to_passwd_entry(user)),
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("error when getting user by ID '{uid}': {e:?}");
             Response::Unavail
@@ -58,6 +60,7 @@ fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Respon
         id: None,
     }) {
         Ok(user) => Response::Success(user_to_passwd_entry(user)),
+        Err(GrpcError::NotFound) => Response::NotFound,
         Err(e) => {
             tracing::warn!("error when getting user by name '{name}': {e:?}");
             Response::Unavail
