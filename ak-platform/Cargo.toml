@@ -12,6 +12,12 @@ name = "grpc_client"
 
 [dependencies]
 base64 = "0.23.0"
+jsonwebtoken = { version = "11", features = ["rust_crypto"] }
+p256 = { version = "0.13", features = ["pkcs8", "jwk"] }
+sha2 = "0.10"
+uuid = { workspace = true }
+reqwest = { workspace = true }
+url = { workspace = true }
 hyper-util = { workspace = true }
 log = { workspace = true }
 pbjson = { workspace = true }
@@ -53,5 +59,6 @@ libc = "0.2.186"
 eventlog = "0.4.0"
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["macros", "io-util"] }
+tokio = { workspace = true, features = ["macros", "io-util", "time"] }
 tempfile = { workspace = true }
+wiremock = "0.6"
