@@ -21,13 +21,17 @@ chmod -R 700 "$DAEMON_DIR"
 
 cp -n ./sysd-config.json "$DAEMON_DIR/config/config.json" || true
 
-sudo launchctl unload -w $DAEMON_PLIST_PATH
+# `bootout` rather than `unload`: on an upgrade, `unload`/`load` leaves launchd
+# holding the *previous* job definition, so an edited plist (e.g. changed
+# ProgramArguments) is silently ignored and the daemon keeps respawning with
+# stale arguments. Fails when the job isn't loaded, hence `|| true` under `set -e`.
+sudo launchctl bootout system/io.goauthentik.platform.sysd || true
 
 sleep 1
 cp -f "./daemon.plist" $DAEMON_PLIST_PATH
 /usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 ${INSTALL_DIR}/authentik\ Agent.app/Contents/MacOS/ak-sysd" $DAEMON_PLIST_PATH
 
-sudo launchctl load -w $DAEMON_PLIST_PATH
+sudo launchctl bootstrap system $DAEMON_PLIST_PATH
 
 echo "Finished loading authentik sysd daemon."
 

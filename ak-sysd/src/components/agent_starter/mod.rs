@@ -127,7 +127,43 @@ mod gui_user {
 mod exec_as_user {
     use eyre::Result;
 
-    #[cfg(unix)]
+    /// macOS: hand the launch to the *user's* launchd domain via
+    /// `launchctl asuser <uid> open -a`, instead of forking from this daemon
+    /// and dropping privileges with `Command::uid()`.
+    ///
+    /// A plain fork/exec sets the right uid but leaves the child in sysd's
+    /// **system** launchd domain, with no Aqua session attached. Such a process
+    /// has no login keychain, so securityd falls back to
+    /// `/Library/Keychains/System.keychain` (it logs "Enabling System Keychain
+    /// Always due to platform"). The agent doesn't run as root, that write is
+    /// denied, and every credential save fails with errSecWrPerm — surfacing to
+    /// the user as `ak config setup` dying with "Write permissions error".
+    ///
+    /// `launchctl asuser` puts the agent in the GUI session's domain, where the
+    /// login keychain is available. `open -a` also handles the `.app` bundle
+    /// natively, so the bundle path needs no resolving.
+    #[cfg(target_os = "macos")]
+    pub fn run(path: &str, user: &str, debug: bool) -> Result<()> {
+        use eyre::bail;
+        use std::process::Command;
+
+        let uid = shell_id(user, "-u")?;
+
+        let mut cmd = Command::new("launchctl");
+        cmd.args(["asuser", &uid.to_string(), "open", "-a", path]);
+        cmd.args(["--env", "AK_AGENT_SUPERVISED=true"]);
+        if debug {
+            cmd.args(["--env", "AK_AGENT_DEBUG=true"]);
+        }
+
+        let status = cmd.status()?;
+        if !status.success() {
+            bail!("failed to launch agent via `launchctl asuser`: {status}");
+        }
+        Ok(())
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
     pub fn run(path: &str, user: &str, debug: bool) -> Result<()> {
         use std::process::Command;
 
@@ -154,44 +190,9 @@ mod exec_as_user {
         Ok(String::from_utf8_lossy(&out.stdout).trim().parse()?)
     }
 
-    /// On macOS, `path` may be a `.app` bundle directory, which can't be
-    /// exec'd directly — resolve it to the binary named by the bundle's
-    /// `Info.plist` `CFBundleExecutable` key.
-    ///
-    /// `Contents/MacOS/` is not guaranteed to hold a single executable: this
-    /// workspace's own `authentik Agent.app` bundle packages several sibling
-    /// binaries (`ak`, `ak-agent-desktop`, `ak-browser-support`, `ak-sysd`)
-    /// under the same directory, so picking "whichever file `read_dir` finds
-    /// first" is unreliable — verified live on a real build, where it picked
-    /// `ak-sysd` itself instead of `ak-agent-desktop`.
-    #[cfg(target_os = "macos")]
-    fn resolve_executable(path: &str) -> Result<String> {
-        use eyre::bail;
-        if !path.ends_with(".app") {
-            return Ok(path.to_string());
-        }
-        let info_plist = std::path::Path::new(path).join("Contents/Info");
-        let out = std::process::Command::new("defaults")
-            .arg("read")
-            .arg(&info_plist)
-            .arg("CFBundleExecutable")
-            .output()?;
-        if !out.status.success() {
-            bail!(
-                "failed to read CFBundleExecutable from {}",
-                info_plist.display()
-            );
-        }
-        let exe_name = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if exe_name.is_empty() {
-            bail!("CFBundleExecutable is empty in {}", info_plist.display());
-        }
-        Ok(std::path::Path::new(path)
-            .join("Contents/MacOS")
-            .join(exe_name)
-            .to_string_lossy()
-            .to_string())
-    }
+    // No macOS `resolve_executable`: `open -a` launches the `.app` bundle
+    // directly, so the bundle path never has to be resolved to the inner
+    // `CFBundleExecutable` binary.
 
     #[cfg(all(unix, not(target_os = "macos")))]
     fn resolve_executable(path: &str) -> Result<String> {

@@ -14,8 +14,15 @@
 	<array>
 		<string>group.232G855Y8N.io.goauthentik.platform.shared</string>
 	</array>
+	<!-- The App Sandbox matches *resolved* paths, and /var is a symlink to
+	     private/var. A rule naming only /var/run/... never matches the socket
+	     the extension actually connects to, so every gRPC call to sysd failed
+	     to connect (surfacing as GRPCCore.RPCError code 1 / cancelled, with
+	     nothing at all reaching sysd). /private/var/... is the entry that
+	     takes effect; /var/... is kept for readability and does no harm. -->
 	<key>com.apple.security.temporary-exception.files.absolute-path.read-write</key>
 	<array>
+		<string>/private/var/run/authentik-sysd.sock</string>
 		<string>/var/run/authentik-sysd.sock</string>
 	</array>
 </dict>
