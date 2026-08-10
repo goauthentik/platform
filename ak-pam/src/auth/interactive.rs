@@ -12,7 +12,6 @@ use pam::{
     conv::Conv,
 };
 
-use crate::auth::PW_PROMPT;
 use crate::auth::fido::fido2;
 
 const MAX_ITER: i8 = 30;
@@ -40,7 +39,6 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
 
 pub fn auth_interactive(
     username: String,
-    password: String,
     conv: &Conv<'_>,
     bridge: impl SysdBridge,
 ) -> Result<InteractiveChallenge, PamResultCode> {
@@ -50,7 +48,6 @@ pub fn auth_interactive(
             .interactive_auth(InteractiveAuthRequest {
                 interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
                     username: username.to_owned(),
-                    password: password.to_owned(),
                 })),
             })
             .await?);
@@ -61,14 +58,11 @@ pub fn auth_interactive(
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
-    // We always prompt for password to distinguish between token/interactive
-    // so at this point we've always statically prompted for password.
-    // In case this initial prompt from the server fails, re-attempt the password challenge
     let mut prev_challenge = InteractiveChallenge {
         txid: challenge.txid.to_owned(),
         finished: false,
         result: 0,
-        prompt: PW_PROMPT.to_owned(),
+        prompt: "".to_owned(),
         prompt_meta: PAM_PROMPT_ECHO_OFF,
         debug_info: "".to_owned(),
         session_id: "".to_owned(),
