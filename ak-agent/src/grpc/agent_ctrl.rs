@@ -1,8 +1,8 @@
 use ak_platform::generated::{
     agent::{RequestHeader, ResponseHeader},
     agent_ctrl::{
-        CurrentProfileResponse, ListProfilesResponse, Profile, SetupRequest, SetupResponse,
-        agent_ctrl_server::AgentCtrl,
+        CurrentProfileResponse, ListProfilesResponse, Profile, ProfileStatus, SetupRequest,
+        SetupResponse, agent_ctrl_server::AgentCtrl,
     },
 };
 use tonic::{Request, Response, Status};
@@ -18,25 +18,55 @@ impl AgentCtrl for AgentGRPCServer {
     ) -> Result<Response<ListProfilesResponse>, Status> {
         let mut profiles = vec![];
         for (key, c_prof) in self.agent.cfg.read().await.profiles.iter() {
-            let ptm = self
-                .agent
-                .gtm
-                .for_profile(key)
-                .await
-                .ok_or(Status::invalid_argument("profile not found"))?;
-            let token = ptm
-                .unverified()
-                .await
-                .map_err(|e| Status::from_error(e.into()))?;
-            let claims = token.claims().map_err(|e| Status::from_error(e.into()))?;
-            let o_prof = Profile {
+            let failed_profile = || Profile {
+                name: key.clone(),
+                username: String::new(),
+                authentik_url: c_prof.authentik_url.clone(),
+                last_renewed: None,
+                next_renew: None,
+                status: ProfileStatus::Failed as i32,
+            };
+
+            let Some(ptm) = self.agent.gtm.for_profile(key).await else {
+                let reason = self.agent.gtm.creation_failure(key).await;
+                tracing::warn!(profile = key, "no token manager for profile: {reason:?}");
+                profiles.push(failed_profile());
+                continue;
+            };
+
+            let token = match ptm.unverified().await {
+                Ok(t) => t,
+                Err(e) => {
+                    tracing::warn!(profile = key, "failed to read token: {e:?}");
+                    profiles.push(failed_profile());
+                    continue;
+                }
+            };
+            let claims = match token.claims() {
+                Ok(c) => c,
+                Err(e) => {
+                    tracing::warn!(profile = key, "failed to parse claims: {e:?}");
+                    profiles.push(failed_profile());
+                    continue;
+                }
+            };
+
+            let status = match ptm.is_failed().await {
+                Some(e) => {
+                    tracing::warn!(profile = key, "last renewal failed: {e}");
+                    ProfileStatus::Failed
+                }
+                None => ProfileStatus::Active,
+            };
+
+            profiles.push(Profile {
                 name: key.clone(),
                 username: claims.preferred_username,
                 authentik_url: c_prof.authentik_url.clone(),
                 last_renewed: Some(claims.iat.into()),
                 next_renew: Some(claims.exp.into()),
-            };
-            profiles.push(o_prof);
+                status: status as i32,
+            });
         }
         Ok(Response::new(ListProfilesResponse {
             header: Some(ResponseHeader { successful: true }),

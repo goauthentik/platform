@@ -15,6 +15,10 @@ static GLOBAL_CREATED: AtomicBool = AtomicBool::new(false);
 pub struct GlobalTokenManager {
     cfg: Arc<ConfigManager<ConfigV1>>,
     managers: Arc<RwLock<HashMap<String, Arc<ProfileTokenManager>>>>,
+    /// Profiles whose manager failed to be created (e.g. JWKS fetch failed
+    /// because the authentik instance was unreachable), keyed by profile
+    /// name with the error that caused creation to fail.
+    failed: Arc<RwLock<HashMap<String, String>>>,
     reconcile_notify: Arc<Notify>,
 }
 
@@ -26,6 +30,7 @@ impl GlobalTokenManager {
         let gtm = GlobalTokenManager {
             cfg: Arc::clone(&cfg),
             managers: Arc::new(RwLock::new(HashMap::new())),
+            failed: Arc::new(RwLock::new(HashMap::new())),
             reconcile_notify: Arc::new(Notify::new()),
         };
         gtm.start().await;
@@ -40,12 +45,17 @@ impl GlobalTokenManager {
                 match ProfileTokenManager::new_verified(name.clone(), Arc::clone(&self.cfg)).await {
                     Ok(m) => {
                         managers.insert(name.clone(), Arc::new(m));
+                        self.failed.write().await.remove(name);
                     }
                     Err(e) => {
                         tracing::warn!(
                             profile = name,
                             "failed to create manager for profile: {e:?}"
                         );
+                        self.failed
+                            .write()
+                            .await
+                            .insert(name.clone(), e.to_string());
                     }
                 }
             }
@@ -53,15 +63,17 @@ impl GlobalTokenManager {
 
         let cfg_bg = Arc::clone(&self.cfg);
         let managers_bg = Arc::clone(&self.managers);
+        let failed_bg = Arc::clone(&self.failed);
         let reconcile_notify_bg = Arc::clone(&self.reconcile_notify);
         tokio::spawn(async move {
-            Self::watch_config_changes(cfg_bg, managers_bg, reconcile_notify_bg).await;
+            Self::watch_config_changes(cfg_bg, managers_bg, failed_bg, reconcile_notify_bg).await;
         });
     }
 
     async fn watch_config_changes(
         cfg: Arc<ConfigManager<ConfigV1>>,
         managers: Arc<RwLock<HashMap<String, Arc<ProfileTokenManager>>>>,
+        failed: Arc<RwLock<HashMap<String, String>>>,
         reconcile_notify: Arc<Notify>,
     ) {
         let notify = cfg.on_reload();
@@ -76,12 +88,14 @@ impl GlobalTokenManager {
                 match ProfileTokenManager::new_verified(name.clone(), Arc::clone(&cfg)).await {
                     Ok(m) => {
                         managers.write().await.insert(name.clone(), Arc::new(m));
+                        failed.write().await.remove(name);
                     }
                     Err(e) => {
                         tracing::warn!(
                             profile = name,
                             "failed to create manager for profile: {e:?}"
                         );
+                        failed.write().await.insert(name.clone(), e.to_string());
                     }
                 }
             }
@@ -91,6 +105,7 @@ impl GlobalTokenManager {
                 if let Some(m) = managers.write().await.remove(name) {
                     m.stop();
                 }
+                failed.write().await.remove(name);
             }
 
             reconcile_notify.notify_waiters();
@@ -116,6 +131,13 @@ impl GlobalTokenManager {
 
     pub async fn for_profile<T: ToString>(&self, name: T) -> Option<Arc<ProfileTokenManager>> {
         self.managers.read().await.get(&name.to_string()).cloned()
+    }
+
+    /// Returns the error that caused manager creation to fail for a profile
+    /// that has no live `ProfileTokenManager` (e.g. its JWKS fetch failed
+    /// because the authentik instance was unreachable at startup).
+    pub async fn creation_failure(&self, name: &str) -> Option<String> {
+        self.failed.read().await.get(name).cloned()
     }
 }
 
