@@ -35,7 +35,7 @@ impl SSHTunnel {
             std::env::var("SSH_AUTH_SOCK").map_err(|_| eyre::eyre!("SSH_AUTH_SOCK is not set"))?;
         let st = match connect(PlatformString::new_with_default(&sock_path)).await {
             Ok(s) => s,
-            Err(e) => return Err(e),
+            Err(e) => return Err(e.into()),
         };
         let client = Client::new(st.into_inner());
         Ok(SSHTunnel {
@@ -128,11 +128,17 @@ where
                 }
             };
 
-            // Required as the inner message is also SSH encoded as a whole
-            let mut raw_bytes = raw_res.details.into_bytes();
-            raw_bytes.drain(0..4);
+            // Response wire (ext_ak.rs `handle_agent_tunnel`): a single type-tag
+            // byte, then the ExtAuthentikAgentTunnelData payload. The server also
+            // legitimately answers with an *empty* response on its failure paths
+            // (decode/gRPC-server/call failures), so check length before slicing
+            // off the tag instead of unconditionally draining a fixed prefix.
+            let raw_bytes = raw_res.details.into_bytes();
+            let Some(inner) = raw_bytes.get(1..) else {
+                return Err(Box::from("empty tunnel response"));
+            };
 
-            let res = match ExtAuthentikAgentTunnelData::deserialize(&raw_bytes) {
+            let res = match ExtAuthentikAgentTunnelData::deserialize(inner) {
                 Some(d) => d,
                 None => return Err(Box::from("failed to parse response")),
             };
@@ -172,6 +178,11 @@ mod tests {
 
     // --- Integration test: full gRPC-over-SSH-tunnel flow ---
 
+    /// The real response-type tag `ak-agent/src/ssh/ext_ak.rs` (`handle_agent_tunnel`)
+    /// prepends to every non-empty response, ahead of the ExtAuthentikAgentTunnelData
+    /// payload.
+    const SSH_AGENT_EXT_RESPONSE_TYPE: u8 = 29;
+
     #[derive(Clone, Default)]
     struct MockTunnelAgent;
 
@@ -187,16 +198,32 @@ mod tests {
             }
             .serialize();
 
-            // mod.rs drains the first 4 bytes of the response before deserializing,
-            // matching the SSH encoding convention where extension bodies carry a
-            // u32 length prefix.
-            let mut prefixed = Vec::with_capacity(4 + serialized.len());
-            prefixed.extend_from_slice(&(serialized.len() as u32).to_be_bytes());
+            // Mirrors the real server's wire format: a single type-tag byte
+            // ahead of the payload, not a length prefix over the whole thing.
+            let mut prefixed = Vec::with_capacity(1 + serialized.len());
+            prefixed.push(SSH_AGENT_EXT_RESPONSE_TYPE);
             prefixed.extend_from_slice(&serialized);
 
             Ok(Some(Extension {
                 name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
                 details: Unparsed::from(prefixed),
+            }))
+        }
+    }
+
+    /// Mirrors `ext_ak.rs`'s `handle_agent_tunnel` on any of its failure paths
+    /// (request-decode failure, gRPC-server-creation failure, method-call
+    /// failure): it always answers with an empty `details`, not a shorter
+    /// valid payload.
+    #[derive(Clone, Default)]
+    struct EmptyResponseAgent;
+
+    #[ssh_agent_lib::async_trait]
+    impl Session for EmptyResponseAgent {
+        async fn extension(&mut self, _ext: Extension) -> Result<Option<Extension>, AgentError> {
+            Ok(Some(Extension {
+                name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
+                details: Unparsed::from(Vec::new()),
             }))
         }
     }
@@ -248,6 +275,52 @@ mod tests {
         let body_bytes = resp.into_body().collect().await?.to_bytes();
         let stripped = grpc_unframe(&body_bytes)?;
         assert_eq!(stripped, proto_payload);
+
+        server_handle.abort();
+        let _ = server_handle.await;
+        let _ = std::fs::remove_file(sock_path);
+
+        Ok(())
+    }
+
+    /// Regression test: an empty tunnel response (what the real server sends
+    /// on every one of its failure paths) used to panic with "range end index
+    /// 4 out of range for slice of length 0" from an unconditional
+    /// `Vec::drain(0..4)`. It must surface as an `Err` instead.
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn ssh_service_errors_instead_of_panicking_on_empty_response()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use interprocess::local_socket::{
+            GenericFilePath,
+            tokio::{Stream as LocalSocketStream, prelude::*},
+        };
+        use ssh_agent_lib::client::Client;
+        use tokio::net::UnixListener;
+
+        let sock_path = "/tmp/ak-test-grpc-ssh-empty-response.sock";
+        let _ = std::fs::remove_file(sock_path);
+
+        let listener = UnixListener::bind(sock_path)?;
+        let server_handle =
+            tokio::spawn(async move { ssh_listen(listener, EmptyResponseAgent).await });
+
+        let name = sock_path.to_fs_name::<GenericFilePath>()?;
+        let stream = LocalSocketStream::connect(name).await?;
+        let client = Client::new(stream);
+
+        let tunnel = SSHTunnel {
+            client: Arc::new(Mutex::new(client)),
+        };
+        let mut svc = tunnel.service(());
+
+        let req = Request::builder()
+            .method("POST")
+            .uri("/some.Service/Method")
+            .header("content-type", "application/grpc+proto")
+            .body(Full::new(Bytes::from(grpc_frame(&[0x01]))))?;
+
+        assert!(svc.call(req).await.is_err());
 
         server_handle.abort();
         let _ = server_handle.await;
