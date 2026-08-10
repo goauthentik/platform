@@ -146,3 +146,56 @@ impl Drop for GlobalTokenManager {
         GLOBAL_CREATED.store(false, Ordering::SeqCst);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use ak_platform::storage::cfgmgr::testutils::test_config_manager;
+
+    use super::*;
+    use crate::config::ConfigV1Profile;
+    use crate::token::testutils::spawn_http_once;
+
+    #[tokio::test]
+    async fn one_profile_failing_does_not_block_others() {
+        let _guard = crate::token::testutils::gtm_test_lock()
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+
+        let jwks_url = spawn_http_once("HTTP/1.1 200 OK", r#"{"keys":[]}"#).await;
+
+        let cfg = test_config_manager::<ConfigV1>();
+        {
+            let mut c = cfg.write().await;
+            c.profiles.insert(
+                "good".to_string(),
+                ConfigV1Profile::from_tokens(
+                    jwks_url,
+                    "app".to_string(),
+                    "client".to_string(),
+                    "access".to_string(),
+                    "refresh".to_string(),
+                ),
+            );
+            c.profiles.insert(
+                "bad".to_string(),
+                ConfigV1Profile::from_tokens(
+                    // Nothing listens on port 1 on loopback: instant
+                    // ConnectionRefused, simulating an unreachable instance.
+                    "http://127.0.0.1:1".to_string(),
+                    "app".to_string(),
+                    "client".to_string(),
+                    "access".to_string(),
+                    "refresh".to_string(),
+                ),
+            );
+        }
+
+        let gtm = GlobalTokenManager::new(cfg).await.unwrap();
+
+        assert!(gtm.for_profile("good").await.is_some());
+        assert!(gtm.creation_failure("good").await.is_none());
+
+        assert!(gtm.for_profile("bad").await.is_none());
+        assert!(gtm.creation_failure("bad").await.is_some());
+    }
+}

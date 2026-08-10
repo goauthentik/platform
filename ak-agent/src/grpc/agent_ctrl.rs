@@ -138,3 +138,94 @@ impl AgentCtrl for AgentGRPCServer {
         }))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use ak_platform::shared::AuthentikClaims;
+    use ak_platform::storage::cfgmgr::testutils::test_config_manager;
+    use chrono::{TimeDelta, Utc};
+    use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
+
+    use super::*;
+    use crate::Agent;
+    use crate::config::ConfigV1;
+    use crate::token::global::GlobalTokenManager;
+    use crate::token::testutils::{gtm_test_lock, spawn_http_once};
+
+    fn fake_access_token(username: &str) -> String {
+        let claims = AuthentikClaims {
+            iss: "https://authentik.example".to_string(),
+            sub: None,
+            aud: vec!["client".to_string()],
+            exp: Utc::now() + TimeDelta::hours(1),
+            iat: Utc::now(),
+            jti: None,
+            preferred_username: username.to_string(),
+        };
+        encode(
+            &Header::new(Algorithm::HS256),
+            &claims,
+            &EncodingKey::from_secret(b"test"),
+        )
+        .unwrap()
+    }
+
+    #[tokio::test]
+    async fn list_profiles_reports_failed_profile_without_aborting() {
+        let _guard = gtm_test_lock().lock().unwrap_or_else(|e| e.into_inner());
+
+        let jwks_url = spawn_http_once("HTTP/1.1 200 OK", r#"{"keys":[]}"#).await;
+
+        let cfg = test_config_manager::<ConfigV1>();
+        cfg.write().await.profiles.insert(
+            "good".to_string(),
+            ConfigV1Profile::from_tokens(
+                jwks_url,
+                "app".to_string(),
+                "client".to_string(),
+                fake_access_token("alice"),
+                "refresh".to_string(),
+            ),
+        );
+
+        let gtm = GlobalTokenManager::new(Arc::clone(&cfg)).await.unwrap();
+
+        // Added *after* the manager was built, bypassing new_verified
+        // entirely: reproduces "profile in config with no live manager" the
+        // same way a failed JWKS fetch at startup would, without needing a
+        // second mock server that deliberately refuses the connection.
+        cfg.write().await.profiles.insert(
+            "bad".to_string(),
+            ConfigV1Profile::from_tokens(
+                "http://127.0.0.1:1".to_string(),
+                "app".to_string(),
+                "client".to_string(),
+                "access".to_string(),
+                "refresh".to_string(),
+            ),
+        );
+
+        let agent = Arc::new(Agent {
+            cfg,
+            gtm: Arc::new(gtm),
+        });
+        let server = AgentGRPCServer::new(agent).await.unwrap();
+
+        let resp = server
+            .list_profiles(Request::new(()))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert_eq!(resp.profiles.len(), 2);
+
+        let good = resp.profiles.iter().find(|p| p.name == "good").unwrap();
+        assert_eq!(good.status, ProfileStatus::Active as i32);
+        assert_eq!(good.username, "alice");
+
+        let bad = resp.profiles.iter().find(|p| p.name == "bad").unwrap();
+        assert_eq!(bad.status, ProfileStatus::Failed as i32);
+    }
+}
