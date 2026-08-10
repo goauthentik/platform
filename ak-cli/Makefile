@@ -16,6 +16,9 @@ build:
 	mkdir -p "${TOP}/cache/shared"
 	$(call cargo_build,$(TARGET))
 	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+ifdef SENTRY_AUTH_TOKEN
+	@$(call sentry_upload_symbols,"${TOP}/cache/shared/release")
+endif
 
 build-local:
 	mkdir -p "${TOP}/bin/${TARGET}"
