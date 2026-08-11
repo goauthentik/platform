@@ -248,7 +248,36 @@ impl DomainManager {
             )
             .await
         {
-            Ok(_) => on_disk.fallback_token = String::new(),
+            // A write that cannot be read back is no use to us, so confirm the
+            // value is retrievable before dropping the on-disk copy. On macOS
+            // the write succeeds from a launchd daemon but the read fails with
+            // errSecInteractionNotAllowed, because retrieving the item wants an
+            // ACL prompt and there is no UI session to show one. Clearing the
+            // fallback on the strength of the write alone leaves the token
+            // somewhere sysd can never reach, and every subsequent request goes
+            // out as `Bearer+agent ` and comes back 403.
+            Ok(_) => match ak_platform_keyring::store()
+                .get(
+                    &keyring_service(),
+                    &cfg.domain,
+                    ak_platform_keyring::Accessibility::Always,
+                )
+                .await
+            {
+                Ok(stored) if stored == cfg.token => on_disk.fallback_token = String::new(),
+                Ok(_) => {
+                    on_disk.fallback_token = cfg.token.clone();
+                    tracing::warn!(
+                        "keyring returned a different token than was written, keeping file fallback"
+                    );
+                }
+                Err(e) => {
+                    on_disk.fallback_token = cfg.token.clone();
+                    tracing::warn!(
+                        "saved domain token to keyring but could not read it back ({e:?}), keeping file fallback"
+                    );
+                }
+            },
             Err(e) => {
                 on_disk.fallback_token = cfg.token.clone();
                 tracing::warn!(
