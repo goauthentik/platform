@@ -25,7 +25,7 @@ async fn test_packaging_deb() {
         for pkg in &[
             "/tmp/ak-bin/cli/*.deb",
             "/tmp/ak-bin/agent/*.deb",
-            "/tmp/ak-bin/agent_system/*.deb",
+            "/tmp/ak-bin/sysd/*.deb",
             "/tmp/ak-bin/pam/*.deb",
             "/tmp/ak-bin/nss/*.deb",
         ] {
@@ -44,13 +44,14 @@ async fn test_packaging_rpm() {
     for (image, tag) in &[
         ("docker.io/redhat/ubi10", "latest"),
         ("docker.io/library/almalinux", "10"),
+        ("docker.io/library/amazonlinux", "2023"),
     ] {
         let container = pkg_container(image, tag, &bin_dir).await;
 
         for pkg in &[
             "/tmp/ak-bin/cli/*.rpm",
             "/tmp/ak-bin/agent/*.rpm",
-            "/tmp/ak-bin/agent_system/*.rpm",
+            "/tmp/ak-bin/sysd/*.rpm",
             "/tmp/ak-bin/nss/*.rpm",
             "/tmp/ak-bin/pam/*.rpm",
         ] {

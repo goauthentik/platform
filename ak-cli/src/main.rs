@@ -2,9 +2,10 @@ use crate::commands::{auth::AuthCommands, config::ConfigCommands};
 use ak_platform::grpc::assert_response_valid;
 use ak_platform::log::LevelFilter;
 use ak_platform::paths::DEFAULT_PROFILE;
+use ak_platform::string::PlatformString;
 use ak_platform::{
     client::user::{AnyService, Client},
-    log::{init_log_interactive, set_log_level},
+    log::{LogBuilder, set_log_level},
 };
 use clap::{Error, Parser, Subcommand};
 use clap_complete::Shell;
@@ -77,23 +78,27 @@ enum Commands {
 pub struct App {
     args: CliArgs,
     client: Option<Client<AnyService>>,
-    active_profile: String,
+    active_profile: Option<String>,
 }
 
 impl App {
-    pub async fn new(args: CliArgs) -> Self {
-        let mut app = App {
+    pub fn new(args: CliArgs) -> Self {
+        App {
             args,
             client: None,
-            active_profile: "".to_string(),
-        };
-        let active_profile = app.lookup_profile().await;
-        app.active_profile = active_profile;
-        app
+            active_profile: None,
+        }
     }
 
-    pub fn profile(&self) -> String {
-        self.active_profile.clone()
+    pub async fn profile(&mut self) -> String {
+        match self.active_profile.as_ref() {
+            Some(p) => p.clone(),
+            None => {
+                let p = self.lookup_profile().await;
+                self.active_profile = Some(p.clone());
+                p.clone()
+            }
+        }
     }
 
     async fn lookup_profile(&self) -> String {
@@ -140,13 +145,17 @@ impl App {
 async fn main() -> std::result::Result<(), Error> {
     let cli = CliArgs::parse();
 
-    init_log_interactive();
-    set_log_level(LevelFilter::Warn);
-    if cli.verbose {
-        set_log_level(LevelFilter::Trace);
-    }
+    let default_level = if cli.verbose {
+        LevelFilter::Trace
+    } else {
+        LevelFilter::Warn
+    };
+    LogBuilder::new(PlatformString::new())
+        .force_stdout(true)
+        .default_level(default_level)
+        .enable();
 
-    let app = App::new(cli.clone()).await;
+    let app = App::new(cli.clone());
 
     let res = match &cli.command {
         Commands::Completion { shell } => commands::completions::completions(*shell).await,

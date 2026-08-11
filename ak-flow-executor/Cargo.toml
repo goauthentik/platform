@@ -19,3 +19,4 @@ regex = "1.13.0"
 [dev-dependencies]
 tokio = { workspace = true, features = ["time"] }
 ak-platform = { path = "../ak-platform" }
+httptest = "0.16"

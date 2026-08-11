@@ -20,8 +20,6 @@ pub mod authorize;
 pub mod fido;
 pub mod interactive;
 
-pub const PW_PROMPT: &str = "authentik Password: ";
-
 pub fn authenticate_impl(
     pamh: &mut PamHandle,
     _args: Vec<&CStr>,
@@ -62,22 +60,6 @@ pub fn authenticate_impl(
         }
     };
     log::debug!("Started conv");
-    let password = match pam_try_log!(
-        conv.send(PAM_PROMPT_ECHO_OFF, PW_PROMPT),
-        "failed to send prompt"
-    ) {
-        Some(password) => match password.as_str() {
-            Ok(t) => t.to_owned(),
-            Err(_) => {
-                log::warn!("failed to convert password");
-                return PamResultCode::PAM_AUTH_ERR;
-            }
-        },
-        None => {
-            log::warn!("No password!");
-            return PamResultCode::PAM_AUTH_ERR;
-        }
-    };
 
     let session_data = SessionData {
         username: username.to_string(),
@@ -93,7 +75,7 @@ pub fn authenticate_impl(
     };
 
     log::debug!("Interactive authentication");
-    let int_res = match auth_interactive(username, password.to_owned(), &conv, bridge) {
+    let int_res = match auth_interactive(username, &conv, bridge) {
         Ok(ss) => ss,
         Err(code) => return code,
     };

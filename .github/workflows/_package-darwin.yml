@@ -13,11 +13,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: authentik_macos-26_ak-agent-desktop
@@ -28,7 +24,7 @@ jobs:
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_macos-26_sysd
+          name: authentik_macos-26_ak-sysd
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
@@ -39,7 +35,18 @@ jobs:
           name: authentik_macos-26_psso
           path: bin/
 
+      - id: check
+        env:
+          CERT: ${{ secrets.APPLE_SIGN_CERT }}
+        run: |
+          if [ -n "$CERT" ]; then
+            echo "has-signing-cert=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-signing-cert=false" >> $GITHUB_OUTPUT
+          fi
+          echo 'XCB_EXTRA_ARGS=' >> $GITHUB_ENV
       - uses: ./.github/actions/macos-signing
+        if: steps.check.outputs.has-signing-cert == 'true'
         with:
           p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
           p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}

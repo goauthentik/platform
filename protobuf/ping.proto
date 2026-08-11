@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package ping;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "google/protobuf/empty.proto";

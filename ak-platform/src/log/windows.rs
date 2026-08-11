@@ -1,14 +1,11 @@
 use env_filter::{Filter, FilteredLog};
 use eventlog::EventLog;
-use log::LevelFilter;
+use eyre::Result;
+use log::Log;
 
-pub fn init_log(name: &str, filter: Filter) {
+pub fn init_log(name: &str) -> Result<Box<dyn Log>> {
     match EventLog::new(name, log::Level::Trace) {
-        Ok(inner) => {
-            log::set_boxed_logger(Box::new(FilteredLog::new(inner, filter)))
-                .map(|()| log::set_max_level(LevelFilter::Trace))
-                .unwrap_or_else(|_| eprintln!("Failed to initialize Windows Event Log"));
-        }
-        Err(e) => eprintln!("Failed to initialize Windows Event Log: {e:?}"),
+        Ok(l) => Ok(Box::new(l)),
+        Err(e) => Err(e.into()),
     }
 }

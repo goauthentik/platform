@@ -5,11 +5,6 @@ on:
     types: [created, published]
 
 jobs:
-  call-build-go:
-    uses: ./.github/workflows/_build-go.yml
-    secrets: inherit
-    with:
-      is_release: true
   call-build-js:
     uses: ./.github/workflows/_build-js.yml
     secrets: inherit
@@ -33,7 +28,6 @@ jobs:
 
   call-package-darwin:
     needs:
-      - call-build-go
       - call-build-rs
       - call-build-ee-psso
     uses: ./.github/workflows/_package-darwin.yml
@@ -42,7 +36,6 @@ jobs:
       is_release: true
   call-package-windows:
     needs:
-      - call-build-go
       - call-build-rs
       - call-build-ee-wcp
     uses: ./.github/workflows/_package-windows.yml
@@ -51,7 +44,6 @@ jobs:
       is_release: true
   call-package-linux:
     needs:
-      - call-build-go
       - call-build-rs
     uses: ./.github/workflows/_package-linux.yml
     secrets: inherit
@@ -60,7 +52,6 @@ jobs:
 
   call-deploy:
     needs:
-      - call-build-go
       - call-build-js
       - call-build-rs
       - call-package-darwin
@@ -115,10 +106,10 @@ jobs:
           - containers/selenium
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
       - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
-      - uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

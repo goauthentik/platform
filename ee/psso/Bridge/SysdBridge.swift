@@ -106,13 +106,10 @@ public class SysdBridge {
 
     public func platformSignedEndpointHeader(challenge: String) async throws -> String {
         return try await self.withClient { client in
-            let agentPlatform = AgentPlatform.Client(wrapping: client)
+            let agentPlatform = SystemPlatform.Client(wrapping: client)
             let reply = try await agentPlatform.signedEndpointHeader(
                 request: ClientRequest(
                     message: PlatformEndpointRequest.with {
-                        $0.header = RequestHeader.with {
-                            $0.profile = "default"
-                        }
                         $0.challenge = challenge
                     })
             )

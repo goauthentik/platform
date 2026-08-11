@@ -11,7 +11,7 @@ name = "log"
 name = "grpc_client"
 
 [dependencies]
-base64 = "0.22.1"
+base64 = "0.23.0"
 hyper-util = { workspace = true }
 log = { workspace = true }
 pbjson = { workspace = true }
@@ -32,12 +32,15 @@ http-body-util = "0.1.3"
 http-body = "1.0.1"
 simplelog = "0.12.2"
 tokio-stream = "0.1.18"
+tokio-util = "0.7"
 interprocess = { version = "2", features = ["tokio"] }
 chrono = { workspace = true }
 notify = "8.2.0"
 sysinfo = { version = "0.39.3", default-features = false, features = ["system"] }
 tracing = { workspace = true }
 env_filter = "2.0.0"
+serde_with = "3.21.0"
+tower-http = { version = "0.7.0", features = ["trace"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 oslog = "0.2.0"
@@ -51,4 +54,4 @@ eventlog = "0.4.0"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "io-util"] }
-tempfile = "3"
+tempfile = { workspace = true }

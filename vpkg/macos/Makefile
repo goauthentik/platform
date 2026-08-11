@@ -17,7 +17,7 @@ bump:
 local:
 	$(MAKE) -C "${TOP}" -j \
 		ak-agent-desktop/build \
-		sysd/build \
+		ak-sysd/build \
 		ee/psso/build \
 		ak-browser-support/build \
 		ak-cli/build
@@ -30,13 +30,13 @@ build-app:
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources"
 	chmod +x "${TOP}/bin/cli/ak"
-	chmod +x "${TOP}/bin/agent_system/ak-sysd"
+	chmod +x "${TOP}/bin/sysd/ak-sysd"
 	chmod +x "${TOP}/bin/agent-desktop/ak-agent-desktop"
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
 	"${TOP}/hack/completions.sh" \
-		"${TOP}/bin/agent_system/ak-sysd" \
+		"${TOP}/bin/sysd/ak-sysd" \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
-		"agent_system"
+		"sysd"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/cli/ak" \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
@@ -45,7 +45,7 @@ build-app:
 	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${TOP}/bin/sysd/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*

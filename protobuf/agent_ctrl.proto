@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package agent_ctrl;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "agent.proto";
@@ -28,12 +27,19 @@ message SetupResponse {
   agent.ResponseHeader header = 1;
 }
 
+enum ProfileStatus {
+  UNSPECIFIED = 0;
+  ACTIVE = 1;
+  FAILED = 2;
+}
+
 message Profile {
   string name = 1;
   string username = 2;
   string authentik_url = 3;
   google.protobuf.Timestamp last_renewed = 4;
   google.protobuf.Timestamp next_renew = 5;
+  ProfileStatus status = 6;
 }
 
 message ListProfilesResponse {

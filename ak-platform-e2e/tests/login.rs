@@ -18,7 +18,7 @@ async fn test_local_login_success() {
         &[("AK_LOGIN_PW", &password)],
     )
     .await
-    .expect("pamtester authenticate");
+    .expect("exec pamtester");
 
     assert!(
         output.contains("successfully authenticated"),

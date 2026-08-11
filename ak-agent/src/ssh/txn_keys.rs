@@ -1,3 +1,4 @@
+use ak_platform::shared::{EXT_AUTHENTIK_PLATFORM_SSH_HOST_KEY, EXT_AUTHENTIK_PLATFORM_SSH_TOKEN};
 use ssh_key::{
     Algorithm, PrivateKey,
     certificate::{Builder, CertType},
@@ -6,9 +7,6 @@ use ssh_key::{
 };
 
 use eyre::{Result, WrapErr};
-
-pub const EXT_AUTHENTIK_PLATFORM_SSH_TOKEN: &str = "goauthentik.io/platform/ssh/ssh/token";
-pub const EXT_AUTHENTIK_PLATFORM_SSH_HOST_KEY: &str = "goauthentik.io/platform/ssh/host-key";
 
 pub fn generate_ssh_private_key() -> Result<PrivateKey> {
     PrivateKey::random(&mut OsRng, Algorithm::Ed25519)

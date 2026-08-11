@@ -5,7 +5,7 @@ use ak_platform::{
 };
 use eyre::{Result, WrapErr};
 
-pub async fn whoami(app: App) -> Result<()> {
+pub async fn whoami(mut app: App) -> Result<()> {
     let res = app
         .clone()
         .user()
@@ -13,7 +13,7 @@ pub async fn whoami(app: App) -> Result<()> {
         .auth()
         .who_am_i(WhoAmIRequest {
             header: Some(RequestHeader {
-                profile: app.profile(),
+                profile: app.profile().await,
             }),
         })
         .await

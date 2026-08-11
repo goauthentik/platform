@@ -35,7 +35,6 @@ impl TestMachine {
         let host_coverage_str = host_coverage_dir.to_string_lossy().into_owned();
 
         let container = GenericImage::new("xghcr.io/goauthentik/platform-e2e", "local")
-            .with_env_var("GOCOVERDIR", "/tmp/ak-coverage/ak-sysd")
             .with_env_var(
                 "LLVM_PROFILE_FILE",
                 "/tmp/ak-coverage/rs/default_%m_%p.profraw",

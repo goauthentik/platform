@@ -23,11 +23,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v5
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version-file: go.mod
-          cache: true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
           name: authentik_${{ matrix.platform }}_ak-cli${{ inputs.artifact_suffix }}
@@ -42,7 +38,7 @@ jobs:
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_${{ matrix.platform }}_sysd${{ inputs.artifact_suffix }}
+          name: authentik_${{ matrix.platform }}_ak-sysd${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
@@ -56,6 +52,10 @@ jobs:
         with:
           name: authentik_${{ matrix.platform }}_ak-pam${{ inputs.artifact_suffix }}
           path: bin/
+      - run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt update
+          sudo apt install nfpm -y
       - shell: bash
         run: make vpkg/linux/package
         env:
