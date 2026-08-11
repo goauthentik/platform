@@ -212,17 +212,27 @@ impl DomainManager {
         refresh_interval
     }
 
-    /// First enabled domain — mirrors Go's `dom[0]` shortcut for
-    /// single-tenant components (ping, auth, directory, device). Do not
+    /// First enabled domain that has a token — mirrors Go's `dom[0]` shortcut
+    /// for single-tenant components (ping, auth, directory, device). Do not
     /// invent smarter "current domain" selection here.
+    ///
+    /// The token check matters because `load_managed` adds an MDM-managed
+    /// domain alongside any user-enrolled ones. If its enrollment produced no
+    /// token, it is still `enabled`, and returning it means every request goes
+    /// out as `Bearer+agent ` and comes back 403 "Authentication credentials
+    /// were not provided" — while a perfectly good domain sits further down the
+    /// list.
     pub async fn active(&self) -> Result<Arc<LoadedDomain>> {
-        self.domains
+        let selected = self
+            .domains
             .read()
             .await
             .iter()
-            .find(|d| d.cfg.enabled)
+            .find(|d| d.cfg.enabled && !d.cfg.token.is_empty())
             .cloned()
-            .ok_or_else(|| eyre!("no enabled domain configured"))
+            .ok_or_else(|| eyre!("no enabled domain with a token configured"))?;
+        tracing::debug!(domain = %selected.cfg.domain, "selected active domain");
+        Ok(selected)
     }
 
     pub async fn save_domain(&self, cfg: DomainConfig) -> Result<()> {
