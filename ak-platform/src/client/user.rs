@@ -1,7 +1,6 @@
 use eyre::Result;
 use std::error::Error;
 use std::future::Future;
-use std::io::ErrorKind;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -17,7 +16,7 @@ use crate::{
         agent_ctrl::agent_ctrl_client::AgentCtrlClient, ping::ping_client::PingClient,
     },
     grpc::{
-        grpc_endpoint,
+        GrpcError, grpc_endpoint,
         ssh::{SSHService, SSHTunnel},
     },
     paths::{AgentSocketID, agent_socket_path},
@@ -94,32 +93,26 @@ impl Service<http::Request<tonic::body::Body>> for AnyService {
 
 impl Client<AnyService> {
     pub async fn new(path: Option<String>) -> Result<Self> {
-        let mut _path: String;
-        if let Some(_p) = path.clone() {
-            _path = _p;
-        } else {
-            _path = agent_socket_path(AgentSocketID::Default)?.for_current();
-        }
-        match grpc_endpoint(_path).await {
+        let socket = match &path {
+            Some(p) => p.clone(),
+            None => agent_socket_path(AgentSocketID::Default)?.for_current(),
+        };
+        match grpc_endpoint(socket).await {
             Ok(t) => Ok(Client {
                 c: AnyService(AnyServiceInner::Socket(t)),
             }),
-            Err(e) => {
-                // If we can't open the socket due to an IO Error of file not found,
-                // and we're trying to use the default socket path, attempt SSH connection
-                // If the user specified a path, then we return the error
-                if let Some(io_err) = e.downcast_ref::<std::io::Error>()
-                    && io_err.kind() == ErrorKind::NotFound
-                    && let None = path
-                    && std::env::var("SSH_AUTH_SOCK").is_ok()
-                {
-                    let service = SSHTunnel::new().await?.service(());
-                    return Ok(Client {
-                        c: AnyService(AnyServiceInner::Ssh(service)),
-                    });
-                }
-                Err(e)
+            // There is no socket at the default path, so the agent may still be
+            // reachable over a forwarded SSH agent socket. A path the caller
+            // asked for explicitly is taken at face value: its errors propagate.
+            Err(GrpcError::SocketNotFound())
+                if path.is_none() && std::env::var("SSH_AUTH_SOCK").is_ok() =>
+            {
+                let service = SSHTunnel::new().await?.service(());
+                Ok(Client {
+                    c: AnyService(AnyServiceInner::Ssh(service)),
+                })
             }
+            Err(e) => Err(e.into()),
         }
     }
 
@@ -163,5 +156,59 @@ where
 
     pub fn ping(self) -> PingClient<C> {
         PingClient::new(self.c)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MISSING: &str = "/nonexistent/ak-platform-test/agent.sock";
+
+    /// Guards the classification the SSH fallback depends on: dialing a path with
+    /// no socket must come back as `SocketNotFound`, which means the connector's
+    /// ENOENT really is reachable through `tonic::transport::Error`'s source
+    /// chain. If this regresses, `Client::new` never sees `SocketNotFound` and the
+    /// fallback goes quietly dead — which is exactly what it did while the error
+    /// passed through `eyre::Report`.
+    #[tokio::test]
+    async fn missing_socket_is_classified_as_socket_not_found() {
+        let err = grpc_endpoint(MISSING.to_string())
+            .await
+            .err()
+            .expect("dialing a missing socket must fail");
+        assert!(
+            matches!(err, GrpcError::SocketNotFound()),
+            "expected SocketNotFound, got {err:?}"
+        );
+    }
+
+    /// A dial that fails for some *other* reason must stay a `Transport` error and
+    /// keep the path in its message — the `From` impl can't supply one, so
+    /// `grpc_endpoint` has to classify with `from_dial`.
+    #[tokio::test]
+    async fn other_dial_failures_keep_the_path() {
+        // A directory is not a socket: connect(2) fails, but not with ENOENT.
+        let err = grpc_endpoint("/tmp".to_string())
+            .await
+            .err()
+            .expect("dialing a directory must fail");
+        match err {
+            GrpcError::Transport(_, path) => assert_eq!(path, "/tmp"),
+            GrpcError::SocketNotFound() => panic!("ENOENT misreported for an existing path"),
+            other => panic!("expected Transport, got {other:?}"),
+        }
+    }
+
+    /// A path the caller asked for explicitly must surface its own error rather
+    /// than diverting to SSH — including on a dev machine where SSH_AUTH_SOCK is
+    /// set, which is why the guard checks `path.is_none()` first.
+    #[tokio::test]
+    async fn explicit_path_does_not_fall_back_to_ssh() {
+        assert!(
+            Client::<AnyService>::new(Some(MISSING.to_string()))
+                .await
+                .is_err()
+        );
     }
 }
