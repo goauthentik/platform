@@ -217,6 +217,14 @@ public class SysdBridge {
                                 withAllowedCharacters: .alphanumerics)
                         )
                     )
+                // Require Touch ID / Apple Watch for the user Secure Enclave key when the
+                // authentik connector requests it. userSecureEnclaveKeyBiometricPolicy is an
+                // OptionSet (AuthenticationServices, macOS 14.4+); .touchIDOrWatchCurrentSet
+                // invalidates the key if the enrolled biometrics change. Other options:
+                // .touchIDOrWatchAny, .reuseDuringUnlock, .passwordFallback.
+                if res.requireBiometrics {
+                    cfg.userSecureEnclaveKeyBiometricPolicy = .touchIDOrWatchCurrentSet
+                }
                 return cfg
             }
         }
