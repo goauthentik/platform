@@ -43,6 +43,16 @@ pub async fn register_device(
     let res = endpoints_agents_psso_register_device_create(&active.api, body)
         .await
         .map_err(|e| Status::internal(format!("psso register_device failed: {e}")))?;
+    // `res.require_biometrics` can't be logged yet — the field isn't in the
+    // generated authentik-client, so the hardcoded value below is what actually
+    // reaches PSSO. Log that instead, and switch to the response value together
+    // with the `require_biometrics` field below once the client has it.
+    tracing::info!(
+        domain = %active.cfg.domain,
+        require_biometrics = true,
+        client_id = %res.client_id,
+        "psso register_device response"
+    );
     Ok(RegisterDeviceResponse {
         client_id: res.client_id,
         issuer: res.issuer,
