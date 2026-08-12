@@ -1,6 +1,10 @@
+use std::{collections::HashMap, sync::Arc};
+
+use tokio::sync::Mutex;
+
 use crate::{
     App,
-    mcp::tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs},
+    mcp::tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
 };
 use ak_meta::user_agent;
 use ak_platform::generated::{
@@ -15,13 +19,13 @@ use rmcp::{
     tool, tool_handler, tool_router,
 };
 
-pub mod obo;
 pub mod tools;
 
 #[derive(Clone)]
 pub struct AuthentikMcp {
     app: App,
     tool_router: ToolRouter<AuthentikMcp>,
+    pub(crate) agent_tokens: Arc<Mutex<HashMap<String, String>>>,
 }
 
 #[tool_router]
@@ -30,6 +34,7 @@ impl AuthentikMcp {
         Self {
             app,
             tool_router: Self::tool_router(),
+            agent_tokens: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -93,9 +98,17 @@ impl AuthentikMcp {
     ) -> Result<CallToolResult, McpError> {
         self._create_agent(args).await
     }
+
+    #[tool(description = "Exchange an agent identity token for an OIDC On-behalf-of token")]
+    async fn token_exchange(
+        &self,
+        Parameters(args): Parameters<TokenExchangeArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._token_exchange(args).await
+    }
 }
 
-#[tool_handler]
+#[tool_handler(router = self.tool_router)]
 impl ServerHandler for AuthentikMcp {
     fn get_info(&self) -> ServerInfo {
         ServerInfo::new(ServerCapabilities::builder().enable_tools().build())

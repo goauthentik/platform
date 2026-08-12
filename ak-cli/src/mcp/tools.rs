@@ -1,5 +1,4 @@
 use crate::mcp::AuthentikMcp;
-use crate::mcp::obo::token_exchange;
 use ak_platform::generated::agent::RequestHeader;
 use ak_platform::generated::agent_auth::TokenExchangeRequest;
 use authentik_client::models::AgentCreateRequest;
@@ -39,6 +38,9 @@ pub struct RequestAccessArgs {
     /// UUIDs of applications to grant the agent access to
     #[serde(default)]
     pub applications: Option<Vec<String>>,
+    /// Identifier of the agent user, returned by `create_agent`
+    #[serde(default)]
+    pub agent_identifier: String,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
     pub profile: Option<String>,
@@ -49,12 +51,15 @@ pub struct TokenExchangeArgs {
     /// PBM UUID/Client ID of target application
     #[serde(default)]
     pub target_id: String,
-    /// Token of the agent user
+    /// Identifier of the agent user, returned by `create_agent`
     #[serde(default)]
-    pub agent_token: String,
+    pub agent_identifier: String,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
     pub profile: Option<String>,
+    /// Scopes to request
+    #[serde(default)]
+    pub scopes: Option<Vec<String>>,
 }
 
 impl AuthentikMcp {
@@ -92,7 +97,11 @@ impl AuthentikMcp {
         &self,
         args: RequestAccessArgs,
     ) -> Result<CallToolResult, McpError> {
-        let config = self.configuration(args.profile).await?;
+        let mut config = self.configuration(args.profile).await?;
+        let Some(agent_token) = self.agent_token(&args.agent_identifier).await else {
+            return Err(McpError::invalid_params("Agent identity not found", None));
+        };
+        config.bearer_access_token = Some(agent_token);
         let Some(pbms) = args
             .applications
             .map(|v| {
@@ -116,11 +125,16 @@ impl AuthentikMcp {
                 .map_err(|e| {
                     McpError::internal_error(format!("list applications failed: {e}"), None)
                 })?;
-        let cbs = vec![
-            // ContentBlock::text(""),
-            ContentBlock::resource_link(Resource::new(res.fulfill_url, "Fulfillment URL")),
-        ];
+        let cbs = vec![ContentBlock::resource_link(Resource::new(
+            res.fulfill_url,
+            "Fulfillment URL",
+        ))];
         Ok(CallToolResult::success(cbs))
+    }
+
+    /// Look up the token of an agent identity created earlier in this session.
+    async fn agent_token(&self, identifier: &str) -> Option<String> {
+        self.agent_tokens.lock().await.get(identifier).cloned()
     }
 
     pub async fn _create_agent(&self, args: CreateAgentArgs) -> Result<CallToolResult, McpError> {
@@ -132,9 +146,14 @@ impl AuthentikMcp {
         let result = agents_agents_create(&config, Some(req))
             .await
             .map_err(|e| McpError::internal_error(format!("create agent failed: {e}"), None))?;
-        let json = serde_json::to_string_pretty(&result)
-            .map_err(|e| McpError::internal_error(format!("serialize failed: {e}"), None))?;
-        Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
+        self.agent_tokens
+            .lock()
+            .await
+            .insert(result.agent.username.clone(), result.token);
+        Ok(CallToolResult::success(vec![ContentBlock::text(format!(
+            "The agent identity was successfully created. Use {} in future tool calls to use its identity.",
+            result.agent.username
+        ))]))
     }
 
     pub async fn _token_exchange(
@@ -146,16 +165,19 @@ impl AuthentikMcp {
             Some(p) => p,
             None => app.profile().await,
         };
-        let res = app
+        let Some(agent_token) = self.agent_token(&args.agent_identifier).await else {
+            return Err(McpError::invalid_params("Agent identity not found", None));
+        };
+        let _res = app
             .user()
             .await
             .map_err(|e| McpError::internal_error(format!("agent connection failed: {e}"), None))?
             .auth()
             .cached_token_exchange(TokenExchangeRequest {
                 header: Some(RequestHeader { profile: _profile }),
-                scopes: vec![],
+                scopes: args.scopes.unwrap_or_default(),
                 audience: args.target_id,
-                actor_token: Some(args.agent_token),
+                actor_token: Some(agent_token.clone()),
                 actor_token_type: Some(
                     "goauthentik.io/oauth/token-type/authentik_token".to_owned(),
                 ),
