@@ -17,7 +17,7 @@ pub mod ssh;
 pub fn open_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let username = username(pamh)?;
     if let Some(ssh_auth_info) = pam_get_env(pamh, SSH_AUTH_INFO_0) {
-        return open_session_ssh(username, ssh_auth_info);
+        return open_session_ssh(pamh, username, ssh_auth_info);
     }
 
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {

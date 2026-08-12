@@ -3,11 +3,17 @@ use ak_platform::{
     grpc::grpc_request,
 };
 use eyre::{Context, Result};
-use pam::constants::PamResultCode;
+use pam::{constants::PamResultCode, module::PamHandle};
+
+use crate::{ENV_SESSION_ID, pam_env::pam_put_env};
 
 pub const SSH_AUTH_INFO_0: &str = "SSH_AUTH_INFO_0";
 
-pub fn open_session_ssh(username: String, ssh_auth: String) -> Result<PamResultCode> {
+pub fn open_session_ssh(
+    pamh: &mut PamHandle,
+    username: String,
+    ssh_auth: String,
+) -> Result<PamResultCode> {
     let ssh_cert = ssh_auth.strip_prefix("publickey ").unwrap_or(&ssh_auth);
     let session_info = grpc_request(async |ch| {
         return Ok(SessionManagerClient::new(ch)
@@ -27,6 +33,13 @@ pub fn open_session_ssh(username: String, ssh_auth: String) -> Result<PamResultC
         tracing::warn!("failed to add session");
         return Ok(PamResultCode::PAM_SESSION_ERR);
     }
+
+    pam_put_env(
+        pamh,
+        ENV_SESSION_ID,
+        &session_info.session_id.to_owned().as_str(),
+    )
+    .context("failed to set session_id env")?;
 
     Ok(PamResultCode::PAM_SUCCESS)
 }
