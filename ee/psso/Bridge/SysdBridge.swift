@@ -224,13 +224,34 @@ public class SysdBridge {
                                 withAllowedCharacters: .alphanumerics)
                         )
                     )
-                // Require Touch ID / Apple Watch for the user Secure Enclave key when the
-                // authentik connector requests it. userSecureEnclaveKeyBiometricPolicy is an
-                // OptionSet (AuthenticationServices, macOS 14.4+); .touchIDOrWatchCurrentSet
-                // invalidates the key if the enrolled biometrics change. Other options:
-                // .touchIDOrWatchAny, .reuseDuringUnlock, .passwordFallback.
+                // Biometric policy for the user Secure Enclave key.
+                // userSecureEnclaveKeyBiometricPolicy is an OptionSet
+                // (AuthenticationServices, macOS 14.4+) with one requirement plus two
+                // independent modifiers:
+                //
+                //   .touchIDOrWatchCurrentSet  requirement; key is invalidated if the
+                //                              enrolled biometrics change
+                //   .touchIDOrWatchAny         requirement; any enrolment
+                //   .passwordFallback          prompt for the IdP password when Touch ID is
+                //                              cancelled, fails, or was never enrolled
+                //   .reuseDuringUnlock         reuse the Touch ID presented at unlock
+                //
+                // TEMPORARY: authentik now models this as a requirement plus those two
+                // modifiers, but the wire format still carries a single bool and the
+                // generated authentik-client has no field for the list, so the set is
+                // hardcoded here. Edit these lines to test a combination; replace the whole
+                // block with the values from the response once the proto and client catch up.
+                //
+                // Note .passwordFallback is included deliberately. Without it a user whose
+                // Touch ID is cancelled, failing, or never enrolled cannot use the key at
+                // all — which is every Mac with no Touch ID hardware.
                 if res.requireBiometrics {
-                    cfg.userSecureEnclaveKeyBiometricPolicy = .touchIDOrWatchCurrentSet
+                    var policy:
+                        ASAuthorizationProviderExtensionLoginConfiguration
+                        .UserSecureEnclaveKeyBiometricPolicy = []
+                    policy.insert(.touchIDOrWatchCurrentSet)
+                    policy.insert(.passwordFallback)
+                    cfg.userSecureEnclaveKeyBiometricPolicy = policy
                 }
                 return cfg
             }
