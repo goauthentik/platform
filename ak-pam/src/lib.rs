@@ -166,11 +166,11 @@ pub fn username(pamh: &mut PamHandle) -> Result<String, PamError> {
             })?),
         Ok(None) => {
             tracing::warn!("No user");
-            return Err(PamResultCode::PAM_SERVICE_ERR.into());
+            Err(PamResultCode::PAM_SERVICE_ERR.into())
         }
         Err(e) => {
             tracing::warn!("failed to get user");
-            return Err(e.into());
+            Err(e.into())
         }
     }
 }

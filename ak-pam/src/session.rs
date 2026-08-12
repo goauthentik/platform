@@ -6,10 +6,8 @@ use ak_platform::generated::session::session_manager_client::SessionManagerClien
 use ak_platform::generated::session::{CloseSessionRequest, CreateSessionRequest};
 use ak_platform::grpc::grpc_request;
 use eyre::{Context, ContextCompat, Result};
-use pam::constants::PamFlag;
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
-use std::ffi::CStr;
 
 pub const SSH_AUTH_INFO_0: &str = "SSH_AUTH_INFO_0";
 

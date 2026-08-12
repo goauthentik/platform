@@ -1,11 +1,9 @@
 use ak_platform::grpc::Bridge;
 use pam::{
-    constants::{PamFlag, PamResultCode},
+    constants::PamResultCode,
     conv::Conv,
-    items::User,
     module::PamHandle,
 };
-use std::ffi::CStr;
 
 use crate::{
     ENV_SESSION_ID,

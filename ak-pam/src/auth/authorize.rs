@@ -5,17 +5,14 @@ use ak_platform::generated::sys_auth::system_auth_authorize_client::SystemAuthAu
 use ak_platform::grpc::grpc_request;
 use eyre::{Context, Result};
 use gethostname::gethostname;
-use pam::{constants::PamResultCode, module::PamHandle};
-use std::ffi::CStr;
+use pam::constants::PamResultCode;
 use whoami::username;
 
 use crate::ENV_SESSION_ID;
 use crate::auth::interactive::result_to_pam_result;
 use crate::dir::check_user_exists;
 
-pub fn authenticate_authorize_impl(
-    service: &str,
-) -> Result<PamResultCode> {
+pub fn authenticate_authorize_impl(service: &str) -> Result<PamResultCode> {
     let binding = gethostname();
     let host = match binding.to_str() {
         Some(t) => t,
