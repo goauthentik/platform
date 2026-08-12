@@ -1,7 +1,7 @@
 use std::{env, ffi::CStr};
 
-use ak_platform::log::{set_log_level, LevelFilter};
 use ak_platform::log::unix::log_hook;
+use ak_platform::log::{LevelFilter, set_log_level};
 use pam::{constants::PamFlag, module::PamHandle};
 
 use crate::pam_env::pam_list_env;

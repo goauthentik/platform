@@ -15,10 +15,12 @@ use ak_platform::log::unix::log_hook;
 use ak_platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
+use eyre::Context;
 use pam::constants::PAM_TEXT_INFO;
 use pam::constants::{PamFlag, PamResultCode};
 use pam::conv::Conv;
 use pam::items::Service;
+use pam::items::User;
 use pam::module::{PamHandle, PamHooks};
 use std::ffi::CStr;
 use std::fmt::Display;
@@ -153,3 +155,22 @@ impl From<PamResultCode> for PamError {
 }
 
 impl std::error::Error for PamError {}
+
+pub fn username(pamh: &mut PamHandle) -> Result<String, PamError> {
+    match pamh.get_item::<User>() {
+        Ok(Some(u)) => Ok(String::from_utf8(u.to_bytes().to_vec())
+            .context("failed to decode user")
+            .map_err(|e| {
+                tracing::warn!("failed to convert username to utf8: {e:?}");
+                PamError::from(PamResultCode::PAM_SESSION_ERR)
+            })?),
+        Ok(None) => {
+            tracing::warn!("No user");
+            return Err(PamResultCode::PAM_SERVICE_ERR.into());
+        }
+        Err(e) => {
+            tracing::warn!("failed to get user");
+            return Err(e.into());
+        }
+    }
+}

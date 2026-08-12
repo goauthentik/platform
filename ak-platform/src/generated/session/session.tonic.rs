@@ -114,11 +114,11 @@ pub mod session_manager_client {
                 .insert(GrpcMethod::new("session.SessionManager", "SessionStatus"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn open_session(
+        pub async fn create_session(
             &mut self,
-            request: impl tonic::IntoRequest<super::OpenSessionRequest>,
+            request: impl tonic::IntoRequest<super::CreateSessionRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::OpenSessionResponse>,
+            tonic::Response<super::CreateSessionResponse>,
             tonic::Status,
         > {
             self.inner
@@ -131,11 +131,11 @@ pub mod session_manager_client {
                 })?;
             let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/session.SessionManager/OpenSession",
+                "/session.SessionManager/CreateSession",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("session.SessionManager", "OpenSession"));
+                .insert(GrpcMethod::new("session.SessionManager", "CreateSession"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn close_session(
@@ -184,11 +184,11 @@ pub mod session_manager_server {
             tonic::Response<super::SessionStatusResponse>,
             tonic::Status,
         >;
-        async fn open_session(
+        async fn create_session(
             &self,
-            request: tonic::Request<super::OpenSessionRequest>,
+            request: tonic::Request<super::CreateSessionRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::OpenSessionResponse>,
+            tonic::Response<super::CreateSessionResponse>,
             tonic::Status,
         >;
         async fn close_session(
@@ -320,25 +320,25 @@ pub mod session_manager_server {
                     };
                     Box::pin(fut)
                 }
-                "/session.SessionManager/OpenSession" => {
+                "/session.SessionManager/CreateSession" => {
                     #[allow(non_camel_case_types)]
-                    struct OpenSessionSvc<T: SessionManager>(pub Arc<T>);
+                    struct CreateSessionSvc<T: SessionManager>(pub Arc<T>);
                     impl<
                         T: SessionManager,
-                    > tonic::server::UnaryService<super::OpenSessionRequest>
-                    for OpenSessionSvc<T> {
-                        type Response = super::OpenSessionResponse;
+                    > tonic::server::UnaryService<super::CreateSessionRequest>
+                    for CreateSessionSvc<T> {
+                        type Response = super::CreateSessionResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::OpenSessionRequest>,
+                            request: tonic::Request<super::CreateSessionRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as SessionManager>::open_session(&inner, request).await
+                                <T as SessionManager>::create_session(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -349,7 +349,7 @@ pub mod session_manager_server {
                     let max_encoding_message_size = self.max_encoding_message_size;
                     let inner = self.inner.clone();
                     let fut = async move {
-                        let method = OpenSessionSvc(inner);
+                        let method = CreateSessionSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

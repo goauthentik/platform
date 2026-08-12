@@ -1,7 +1,7 @@
 use crate::components::{Component, SysdContext};
 use crate::state::SessionRecord;
 use ak_platform::generated::session::{
-    CloseSessionRequest, CloseSessionResponse, OpenSessionRequest, OpenSessionResponse,
+    CloseSessionRequest, CloseSessionResponse, CreateSessionRequest, CreateSessionResponse,
     SessionStatusRequest, SessionStatusResponse,
     session_manager_server::{SessionManager, SessionManagerServer},
 };
@@ -24,7 +24,7 @@ impl SessionComponent {
         SessionComponent { ctx }
     }
 
-    /// Creates a new session record, mirroring Go's `NewSession`.
+    /// Creates a new session record
     ///
     /// `expires_at` (unix seconds) is only recorded when the active domain's
     /// `auth_terminate_session_on_expiry` flag is set; otherwise the session
@@ -166,24 +166,51 @@ impl SessionManager for SessionComponent {
         }
     }
 
-    async fn open_session(
+    async fn create_session(
         &self,
-        request: Request<OpenSessionRequest>,
-    ) -> Result<Response<OpenSessionResponse>, Status> {
+        request: Request<CreateSessionRequest>,
+    ) -> Result<Response<CreateSessionResponse>, Status> {
         let req = request.into_inner();
-        let mut session = self
+
+        let Some(auth) = self
             .ctx
-            .state
-            .sessions()
-            .get(&req.session_id)
+            .registry
+            .get::<crate::components::auth::AuthComponent>("auth")
+        else {
+            return Err(Status::invalid_argument("no auth component"));
+        };
+
+        let token = match (req.ssh_auth, req.token) {
+            (Some(ssh), None) => {
+                let (_, auth) = auth.extract_ssh_cert_token(ssh)?;
+                auth
+            }
+            (None, Some(token)) => token,
+            _ => {
+                return Err(Status::invalid_argument(
+                    "only one of ssh_auth or token allowed/required",
+                ));
+            }
+        };
+
+        let validated_token = auth
+            .validate_token(token.clone(), None)
             .await
-            .map_err(crate::util::to_status)?
-            .ok_or_else(|| Status::not_found("session not found"))?;
+            .map_err(|e| Status::from_error(e.into()))?;
+
+        let mut session = self
+            .new_session(
+                req.username.clone(),
+                token.clone(),
+                Some(validated_token.claims.exp.timestamp()),
+            )
+            .await
+            .map_err(|e| Status::from_error(e.into()))?;
 
         session.opened = true;
         session.pid = Some(req.pid);
         session.ppid = Some(req.ppid);
-        session.local_socket = Some(req.local_socket);
+        session.local_socket = None;
         self.ctx
             .state
             .sessions()
@@ -198,7 +225,7 @@ impl SessionManager for SessionComponent {
                 pid: req.pid,
             });
 
-        Ok(Response::new(OpenSessionResponse {
+        Ok(Response::new(CreateSessionResponse {
             success: true,
             session_id: session.id,
         }))

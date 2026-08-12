@@ -13,6 +13,7 @@ use crate::{
     dir::check_user_exists,
     pam_env::pam_put_env,
     session_data::{_write_session_data, SessionData},
+    username,
 };
 use eyre::{Context, Result};
 
@@ -25,17 +26,7 @@ pub fn authenticate_impl(
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> Result<PamResultCode> {
-    let username = match pamh.get_item::<User>() {
-        Ok(Some(u)) => String::from_utf8(u.to_bytes().to_vec()).context("failed to decode user")?,
-        Ok(None) => {
-            tracing::warn!("No user");
-            return Ok(PamResultCode::PAM_AUTH_ERR);
-        }
-        Err(e) => {
-            tracing::warn!("failed to get user");
-            return Ok(e);
-        }
-    };
+    let username = username(pamh)?;
     tracing::debug!("got username: '{username}'");
     // Check if user actually exists in authentik
     check_user_exists(username.clone())?;

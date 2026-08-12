@@ -1,43 +1,38 @@
 extern crate pam;
 
-use crate::ENV_SESSION_ID;
 use crate::pam_env::pam_get_env;
-use crate::session_data::{_delete_session_data, _read_session_data};
+use crate::username;
 use ak_platform::generated::session::session_manager_client::SessionManagerClient;
-use ak_platform::generated::session::{CloseSessionRequest, OpenSessionRequest};
+use ak_platform::generated::session::{CloseSessionRequest, CreateSessionRequest};
 use ak_platform::grpc::grpc_request;
-use eyre::{Context, Result};
+use eyre::{Context, ContextCompat, Result};
 use pam::constants::PamFlag;
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
 use std::ffi::CStr;
+
+pub const SSH_AUTH_INFO_0: &str = "SSH_AUTH_INFO_0";
 
 pub fn open_session_impl(
     pamh: &mut PamHandle,
     _args: Vec<&CStr>,
     _flags: PamFlag,
 ) -> Result<PamResultCode> {
-    let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
-        Some(t) => t,
-        None => {
-            tracing::warn!("failed to get session id");
-            return Ok(PamResultCode::PAM_IGNORE);
-        }
-    };
-    let sd = _read_session_data(sid.clone()).context("failed to get session data")?;
-    _delete_session_data(sid.clone()).context("failed to delete session data")?;
+    let username = username(pamh)?;
+    let ssh_auth_info = pam_get_env(pamh, SSH_AUTH_INFO_0).context("failed to get auth info")?;
 
     let session_info = grpc_request(async |ch| {
         return Ok(SessionManagerClient::new(ch)
-            .open_session(OpenSessionRequest {
-                session_id: sid.clone(),
+            .create_session(CreateSessionRequest {
+                username: username.clone(),
+                token: None,
+                ssh_auth: Some(ssh_auth_info.clone()),
                 pid: std::process::id(),
                 ppid: std::os::unix::process::parent_id(),
-                local_socket: sd.local_socket.clone(),
             })
             .await?);
     })
-    .context("failed to register session")?
+    .context("failed to create session")?
     .into_inner();
 
     if !session_info.success {

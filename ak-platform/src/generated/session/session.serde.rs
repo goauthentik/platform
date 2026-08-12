@@ -201,7 +201,7 @@ impl<'de> serde::Deserialize<'de> for CloseSessionResponse {
         deserializer.deserialize_struct("session.CloseSessionResponse", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for OpenSessionRequest {
+impl serde::Serialize for CreateSessionRequest {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -209,7 +209,13 @@ impl serde::Serialize for OpenSessionRequest {
     {
         use serde::ser::SerializeStruct;
         let mut len = 0;
-        if !self.session_id.is_empty() {
+        if !self.username.is_empty() {
+            len += 1;
+        }
+        if self.token.is_some() {
+            len += 1;
+        }
+        if self.ssh_auth.is_some() {
             len += 1;
         }
         if self.pid != 0 {
@@ -218,12 +224,15 @@ impl serde::Serialize for OpenSessionRequest {
         if self.ppid != 0 {
             len += 1;
         }
-        if !self.local_socket.is_empty() {
-            len += 1;
+        let mut struct_ser = serializer.serialize_struct("session.CreateSessionRequest", len)?;
+        if !self.username.is_empty() {
+            struct_ser.serialize_field("username", &self.username)?;
         }
-        let mut struct_ser = serializer.serialize_struct("session.OpenSessionRequest", len)?;
-        if !self.session_id.is_empty() {
-            struct_ser.serialize_field("sessionId", &self.session_id)?;
+        if let Some(v) = self.token.as_ref() {
+            struct_ser.serialize_field("token", v)?;
+        }
+        if let Some(v) = self.ssh_auth.as_ref() {
+            struct_ser.serialize_field("sshAuth", v)?;
         }
         if self.pid != 0 {
             struct_ser.serialize_field("pid", &self.pid)?;
@@ -231,33 +240,31 @@ impl serde::Serialize for OpenSessionRequest {
         if self.ppid != 0 {
             struct_ser.serialize_field("ppid", &self.ppid)?;
         }
-        if !self.local_socket.is_empty() {
-            struct_ser.serialize_field("localSocket", &self.local_socket)?;
-        }
         struct_ser.end()
     }
 }
-impl<'de> serde::Deserialize<'de> for OpenSessionRequest {
+impl<'de> serde::Deserialize<'de> for CreateSessionRequest {
     #[allow(deprecated)]
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         const FIELDS: &[&str] = &[
-            "session_id",
-            "sessionId",
+            "username",
+            "token",
+            "ssh_auth",
+            "sshAuth",
             "pid",
             "ppid",
-            "local_socket",
-            "localSocket",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
-            SessionId,
+            Username,
+            Token,
+            SshAuth,
             Pid,
             Ppid,
-            LocalSocket,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -279,10 +286,11 @@ impl<'de> serde::Deserialize<'de> for OpenSessionRequest {
                         E: serde::de::Error,
                     {
                         match value {
-                            "sessionId" | "session_id" => Ok(GeneratedField::SessionId),
+                            "username" => Ok(GeneratedField::Username),
+                            "token" => Ok(GeneratedField::Token),
+                            "sshAuth" | "ssh_auth" => Ok(GeneratedField::SshAuth),
                             "pid" => Ok(GeneratedField::Pid),
                             "ppid" => Ok(GeneratedField::Ppid),
-                            "localSocket" | "local_socket" => Ok(GeneratedField::LocalSocket),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -292,27 +300,40 @@ impl<'de> serde::Deserialize<'de> for OpenSessionRequest {
         }
         struct GeneratedVisitor;
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = OpenSessionRequest;
+            type Value = CreateSessionRequest;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct session.OpenSessionRequest")
+                formatter.write_str("struct session.CreateSessionRequest")
             }
 
-            fn visit_map<V>(self, mut map_: V) -> std::result::Result<OpenSessionRequest, V::Error>
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<CreateSessionRequest, V::Error>
                 where
                     V: serde::de::MapAccess<'de>,
             {
-                let mut session_id__ = None;
+                let mut username__ = None;
+                let mut token__ = None;
+                let mut ssh_auth__ = None;
                 let mut pid__ = None;
                 let mut ppid__ = None;
-                let mut local_socket__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
-                        GeneratedField::SessionId => {
-                            if session_id__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("sessionId"));
+                        GeneratedField::Username => {
+                            if username__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("username"));
                             }
-                            session_id__ = Some(map_.next_value()?);
+                            username__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::Token => {
+                            if token__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("token"));
+                            }
+                            token__ = map_.next_value()?;
+                        }
+                        GeneratedField::SshAuth => {
+                            if ssh_auth__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("sshAuth"));
+                            }
+                            ssh_auth__ = map_.next_value()?;
                         }
                         GeneratedField::Pid => {
                             if pid__.is_some() {
@@ -330,26 +351,21 @@ impl<'de> serde::Deserialize<'de> for OpenSessionRequest {
                                 Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
                             ;
                         }
-                        GeneratedField::LocalSocket => {
-                            if local_socket__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("localSocket"));
-                            }
-                            local_socket__ = Some(map_.next_value()?);
-                        }
                     }
                 }
-                Ok(OpenSessionRequest {
-                    session_id: session_id__.unwrap_or_default(),
+                Ok(CreateSessionRequest {
+                    username: username__.unwrap_or_default(),
+                    token: token__,
+                    ssh_auth: ssh_auth__,
                     pid: pid__.unwrap_or_default(),
                     ppid: ppid__.unwrap_or_default(),
-                    local_socket: local_socket__.unwrap_or_default(),
                 })
             }
         }
-        deserializer.deserialize_struct("session.OpenSessionRequest", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("session.CreateSessionRequest", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for OpenSessionResponse {
+impl serde::Serialize for CreateSessionResponse {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -363,7 +379,7 @@ impl serde::Serialize for OpenSessionResponse {
         if !self.session_id.is_empty() {
             len += 1;
         }
-        let mut struct_ser = serializer.serialize_struct("session.OpenSessionResponse", len)?;
+        let mut struct_ser = serializer.serialize_struct("session.CreateSessionResponse", len)?;
         if self.success {
             struct_ser.serialize_field("success", &self.success)?;
         }
@@ -373,7 +389,7 @@ impl serde::Serialize for OpenSessionResponse {
         struct_ser.end()
     }
 }
-impl<'de> serde::Deserialize<'de> for OpenSessionResponse {
+impl<'de> serde::Deserialize<'de> for CreateSessionResponse {
     #[allow(deprecated)]
     fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
     where
@@ -421,13 +437,13 @@ impl<'de> serde::Deserialize<'de> for OpenSessionResponse {
         }
         struct GeneratedVisitor;
         impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = OpenSessionResponse;
+            type Value = CreateSessionResponse;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct session.OpenSessionResponse")
+                formatter.write_str("struct session.CreateSessionResponse")
             }
 
-            fn visit_map<V>(self, mut map_: V) -> std::result::Result<OpenSessionResponse, V::Error>
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<CreateSessionResponse, V::Error>
                 where
                     V: serde::de::MapAccess<'de>,
             {
@@ -449,13 +465,13 @@ impl<'de> serde::Deserialize<'de> for OpenSessionResponse {
                         }
                     }
                 }
-                Ok(OpenSessionResponse {
+                Ok(CreateSessionResponse {
                     success: success__.unwrap_or_default(),
                     session_id: session_id__.unwrap_or_default(),
                 })
             }
         }
-        deserializer.deserialize_struct("session.OpenSessionResponse", FIELDS, GeneratedVisitor)
+        deserializer.deserialize_struct("session.CreateSessionResponse", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for SessionStatusRequest {
