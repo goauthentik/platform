@@ -1,7 +1,6 @@
-use pam::constants::PamResultCode;
-
 use serde::{Deserialize, Serialize};
 
+use eyre::{Context, Result};
 use std::fs::{File, OpenOptions, remove_file};
 use std::io::Write;
 use std::os::unix::fs::OpenOptionsExt;
@@ -16,64 +15,32 @@ pub fn _session_file(id: String) -> String {
     format!("/tmp/.aksm-{id}")
 }
 
-pub fn _read_session_data(id: String) -> Result<SessionData, PamResultCode> {
+pub fn _read_session_data(id: String) -> Result<SessionData> {
     let path = _session_file(id);
-    let file = match File::open(path) {
-        Ok(f) => f,
-        Err(e) => {
-            log::warn!("failed to open file: {e}");
-            return Err(PamResultCode::PAM_SESSION_ERR);
-        }
-    };
+    let file = File::open(path)?;
 
-    match serde_json::from_reader(file) {
-        Ok(t) => Ok(t),
-        Err(e) => {
-            log::warn!("failed to read session data: {e}");
-            Err(PamResultCode::PAM_AUTH_ERR)
-        }
-    }
+    let sd: SessionData = serde_json::from_reader(file)?;
+    Ok(sd)
 }
 
-pub fn _delete_session_data(id: String) -> Result<(), PamResultCode> {
+pub fn _delete_session_data(id: String) -> Result<()> {
     let path = _session_file(id);
-    match remove_file(path) {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::warn!("Failed to remove session data: {e}");
-            Err(PamResultCode::PAM_SESSION_ERR)
-        }
-    }
+    remove_file(path)?;
+    Ok(())
 }
 
-pub fn _write_session_data(id: String, data: SessionData) -> Result<(), PamResultCode> {
-    let json_data = match serde_json::to_string(&data) {
-        Ok(j) => j,
-        Err(e) => {
-            log::warn!("failed to json encode: {e}");
-            return Err(PamResultCode::PAM_SESSION_ERR);
-        }
-    };
+pub fn _write_session_data(id: String, data: SessionData) -> Result<()> {
+    let json_data = serde_json::to_string(&data).context("failed to json encode")?;
     let path = _session_file(id);
     // create_new(true) sets O_EXCL, preventing symlink attacks on the predictable path.
-    let mut file = match OpenOptions::new()
+    let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
         .mode(0o400)
         .open(&path)
-    {
-        Ok(f) => f,
-        Err(e) => {
-            log::warn!("failed to create file: {e}");
-            return Err(PamResultCode::PAM_SESSION_ERR);
-        }
-    };
+        .context("failed to create file")?;
 
-    match file.write_all(json_data.as_bytes()) {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::warn!("failed to write session data: {e}");
-            Err(PamResultCode::PAM_AUTH_ERR)
-        }
-    }
+    file.write_all(json_data.as_bytes())
+        .context("failed to write session data")?;
+    Ok(())
 }
