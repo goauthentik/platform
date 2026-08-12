@@ -354,6 +354,8 @@ dependencies = [
  "chrono",
  "clap",
  "clap_complete",
+ "core-foundation",
+ "core-foundation-sys",
  "eyre",
  "hex",
  "httptest",
