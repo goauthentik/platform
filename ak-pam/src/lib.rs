@@ -52,9 +52,9 @@ impl PamHooks for PAMAuthentik {
             Err(c) => return c.code,
         };
         match svc.as_str() {
-            "sudo" => authenticate_authorize_impl(pamh, args, "sudo"),
-            "sudo-i" => authenticate_authorize_impl(pamh, args, "sudo-i"),
-            _ => authenticate_impl(pamh, args, flags),
+            "sudo" => authenticate_authorize_impl("sudo"),
+            "sudo-i" => authenticate_authorize_impl("sudo-i"),
+            _ => authenticate_impl(pamh),
         }
         .map_err(|e| {
             tracing::warn!("Error in sm_authenticate: {e:?}");
@@ -64,7 +64,7 @@ impl PamHooks for PAMAuthentik {
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         prelude("sm_open_session", pamh, args.clone(), flags);
-        open_session_impl(pamh, args, flags)
+        open_session_impl(pamh)
             .map_err(|e| {
                 tracing::warn!("Error in sm_open_session: {e:?}");
             })
@@ -73,7 +73,7 @@ impl PamHooks for PAMAuthentik {
 
     fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         prelude("sm_close_session", pamh, args.clone(), flags);
-        close_session_impl(pamh, args, flags)
+        close_session_impl(pamh)
             .map_err(|e| {
                 tracing::warn!("Error in sm_close_session: {e:?}");
             })

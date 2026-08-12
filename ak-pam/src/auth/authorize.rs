@@ -14,8 +14,6 @@ use crate::auth::interactive::result_to_pam_result;
 use crate::dir::check_user_exists;
 
 pub fn authenticate_authorize_impl(
-    _pamh: &mut PamHandle,
-    _args: Vec<&CStr>,
     service: &str,
 ) -> Result<PamResultCode> {
     let binding = gethostname();

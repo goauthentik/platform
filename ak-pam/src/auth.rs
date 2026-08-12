@@ -21,11 +21,7 @@ pub mod authorize;
 pub mod fido;
 pub mod interactive;
 
-pub fn authenticate_impl(
-    pamh: &mut PamHandle,
-    _args: Vec<&CStr>,
-    _flags: PamFlag,
-) -> Result<PamResultCode> {
+pub fn authenticate_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let username = username(pamh)?;
     tracing::debug!("got username: '{username}'");
     // Check if user actually exists in authentik

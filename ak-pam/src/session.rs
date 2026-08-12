@@ -1,7 +1,7 @@
 extern crate pam;
 
 use crate::pam_env::pam_get_env;
-use crate::username;
+use crate::{ENV_SESSION_ID, username};
 use ak_platform::generated::session::session_manager_client::SessionManagerClient;
 use ak_platform::generated::session::{CloseSessionRequest, CreateSessionRequest};
 use ak_platform::grpc::grpc_request;
@@ -13,11 +13,7 @@ use std::ffi::CStr;
 
 pub const SSH_AUTH_INFO_0: &str = "SSH_AUTH_INFO_0";
 
-pub fn open_session_impl(
-    pamh: &mut PamHandle,
-    _args: Vec<&CStr>,
-    _flags: PamFlag,
-) -> Result<PamResultCode> {
+pub fn open_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let username = username(pamh)?;
     let ssh_auth_info = pam_get_env(pamh, SSH_AUTH_INFO_0).context("failed to get auth info")?;
 
@@ -43,11 +39,7 @@ pub fn open_session_impl(
     Ok(PamResultCode::PAM_SUCCESS)
 }
 
-pub fn close_session_impl(
-    pamh: &mut PamHandle,
-    _args: Vec<&CStr>,
-    _flags: PamFlag,
-) -> Result<PamResultCode> {
+pub fn close_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
         None => {
