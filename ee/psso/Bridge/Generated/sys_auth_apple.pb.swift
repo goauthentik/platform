@@ -85,9 +85,59 @@ nonisolated struct RegisterDeviceResponse: Sendable {
 
   var deviceToken: String = String()
 
-  var requireBiometrics: Bool = false
+  var biometricPolicies: [RegisterDeviceResponse.BiometricPolicy] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Biometric requirements for the user Secure Enclave key. Mirrors the members
+  /// of Apple's userSecureEnclaveKeyBiometricPolicy OptionSet: one requirement
+  /// (CURRENT_SET or ANY) plus any number of modifiers. Empty means no biometric
+  /// policy is applied.
+  nonisolated enum BiometricPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+    typealias RawValue = Int
+    case unspecified // = 0
+    case touchIDOrWatchCurrentSet // = 1
+    case touchIDOrWatchAny // = 2
+    case reuseDuringUnlock // = 3
+    case passwordFallback // = 4
+    case UNRECOGNIZED(Int)
+
+    init() {
+      self = .unspecified
+    }
+
+    init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .unspecified
+      case 1: self = .touchIDOrWatchCurrentSet
+      case 2: self = .touchIDOrWatchAny
+      case 3: self = .reuseDuringUnlock
+      case 4: self = .passwordFallback
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    var rawValue: Int {
+      switch self {
+      case .unspecified: return 0
+      case .touchIDOrWatchCurrentSet: return 1
+      case .touchIDOrWatchAny: return 2
+      case .reuseDuringUnlock: return 3
+      case .passwordFallback: return 4
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    static let allCases: [RegisterDeviceResponse.BiometricPolicy] = [
+      .unspecified,
+      .touchIDOrWatchCurrentSet,
+      .touchIDOrWatchAny,
+      .reuseDuringUnlock,
+      .passwordFallback,
+    ]
+
+  }
 
   init() {}
 }
@@ -213,7 +263,7 @@ nonisolated extension RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobu
 
 nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0\u{3}device_token\0\u{3}require_biometrics\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0\u{3}device_token\0\u{3}biometric_policies\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -228,7 +278,7 @@ nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtob
       case 5: try { try decoder.decodeSingularStringField(value: &self.audience) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.nonceEndpoint) }()
       case 7: try { try decoder.decodeSingularStringField(value: &self.deviceToken) }()
-      case 8: try { try decoder.decodeSingularBoolField(value: &self.requireBiometrics) }()
+      case 8: try { try decoder.decodeRepeatedEnumField(value: &self.biometricPolicies) }()
       default: break
       }
     }
@@ -256,8 +306,8 @@ nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtob
     if !self.deviceToken.isEmpty {
       try visitor.visitSingularStringField(value: self.deviceToken, fieldNumber: 7)
     }
-    if self.requireBiometrics != false {
-      try visitor.visitSingularBoolField(value: self.requireBiometrics, fieldNumber: 8)
+    if !self.biometricPolicies.isEmpty {
+      try visitor.visitPackedEnumField(value: self.biometricPolicies, fieldNumber: 8)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -270,8 +320,12 @@ nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtob
     if lhs.audience != rhs.audience {return false}
     if lhs.nonceEndpoint != rhs.nonceEndpoint {return false}
     if lhs.deviceToken != rhs.deviceToken {return false}
-    if lhs.requireBiometrics != rhs.requireBiometrics {return false}
+    if lhs.biometricPolicies != rhs.biometricPolicies {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
+}
+
+nonisolated extension RegisterDeviceResponse.BiometricPolicy: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}TOUCH_ID_OR_WATCH_CURRENT_SET\0\u{1}TOUCH_ID_OR_WATCH_ANY\0\u{1}REUSE_DURING_UNLOCK\0\u{1}PASSWORD_FALLBACK\0")
 }

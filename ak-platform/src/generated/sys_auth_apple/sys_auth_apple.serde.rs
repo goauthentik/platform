@@ -70,7 +70,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceRequest {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", FIELDS)
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
                     #[allow(unused_variables)]
@@ -174,7 +174,7 @@ impl serde::Serialize for RegisterDeviceResponse {
         if !self.device_token.is_empty() {
             len += 1;
         }
-        if self.require_biometrics {
+        if !self.biometric_policies.is_empty() {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("sys_auth_apple.RegisterDeviceResponse", len)?;
@@ -199,8 +199,12 @@ impl serde::Serialize for RegisterDeviceResponse {
         if !self.device_token.is_empty() {
             struct_ser.serialize_field("deviceToken", &self.device_token)?;
         }
-        if self.require_biometrics {
-            struct_ser.serialize_field("requireBiometrics", &self.require_biometrics)?;
+        if !self.biometric_policies.is_empty() {
+            let v = self.biometric_policies.iter().cloned().map(|v| {
+                register_device_response::BiometricPolicy::try_from(v)
+                    .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", v)))
+                }).collect::<std::result::Result<Vec<_>, _>>()?;
+            struct_ser.serialize_field("biometricPolicies", &v)?;
         }
         struct_ser.end()
     }
@@ -224,8 +228,8 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             "nonceEndpoint",
             "device_token",
             "deviceToken",
-            "require_biometrics",
-            "requireBiometrics",
+            "biometric_policies",
+            "biometricPolicies",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -237,7 +241,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             Audience,
             NonceEndpoint,
             DeviceToken,
-            RequireBiometrics,
+            BiometricPolicies,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -250,7 +254,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", FIELDS)
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
                     #[allow(unused_variables)]
@@ -266,7 +270,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             "audience" => Ok(GeneratedField::Audience),
                             "nonceEndpoint" | "nonce_endpoint" => Ok(GeneratedField::NonceEndpoint),
                             "deviceToken" | "device_token" => Ok(GeneratedField::DeviceToken),
-                            "requireBiometrics" | "require_biometrics" => Ok(GeneratedField::RequireBiometrics),
+                            "biometricPolicies" | "biometric_policies" => Ok(GeneratedField::BiometricPolicies),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -293,7 +297,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                 let mut audience__ = None;
                 let mut nonce_endpoint__ = None;
                 let mut device_token__ = None;
-                let mut require_biometrics__ = None;
+                let mut biometric_policies__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::ClientId => {
@@ -338,11 +342,11 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             }
                             device_token__ = Some(map_.next_value()?);
                         }
-                        GeneratedField::RequireBiometrics => {
-                            if require_biometrics__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("requireBiometrics"));
+                        GeneratedField::BiometricPolicies => {
+                            if biometric_policies__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("biometricPolicies"));
                             }
-                            require_biometrics__ = Some(map_.next_value()?);
+                            biometric_policies__ = Some(map_.next_value::<Vec<register_device_response::BiometricPolicy>>()?.into_iter().map(|x| x as i32).collect());
                         }
                     }
                 }
@@ -354,11 +358,91 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                     audience: audience__.unwrap_or_default(),
                     nonce_endpoint: nonce_endpoint__.unwrap_or_default(),
                     device_token: device_token__.unwrap_or_default(),
-                    require_biometrics: require_biometrics__.unwrap_or_default(),
+                    biometric_policies: biometric_policies__.unwrap_or_default(),
                 })
             }
         }
         deserializer.deserialize_struct("sys_auth_apple.RegisterDeviceResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for register_device_response::BiometricPolicy {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let variant = match self {
+            Self::Unspecified => "UNSPECIFIED",
+            Self::TouchIdOrWatchCurrentSet => "TOUCH_ID_OR_WATCH_CURRENT_SET",
+            Self::TouchIdOrWatchAny => "TOUCH_ID_OR_WATCH_ANY",
+            Self::ReuseDuringUnlock => "REUSE_DURING_UNLOCK",
+            Self::PasswordFallback => "PASSWORD_FALLBACK",
+        };
+        serializer.serialize_str(variant)
+    }
+}
+impl<'de> serde::Deserialize<'de> for register_device_response::BiometricPolicy {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "UNSPECIFIED",
+            "TOUCH_ID_OR_WATCH_CURRENT_SET",
+            "TOUCH_ID_OR_WATCH_ANY",
+            "REUSE_DURING_UNLOCK",
+            "PASSWORD_FALLBACK",
+        ];
+
+        struct GeneratedVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = register_device_response::BiometricPolicy;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(formatter, "expected one of: {:?}", &FIELDS)
+            }
+
+            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+                    })
+            }
+
+            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+                    })
+            }
+
+            fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "UNSPECIFIED" => Ok(register_device_response::BiometricPolicy::Unspecified),
+                    "TOUCH_ID_OR_WATCH_CURRENT_SET" => Ok(register_device_response::BiometricPolicy::TouchIdOrWatchCurrentSet),
+                    "TOUCH_ID_OR_WATCH_ANY" => Ok(register_device_response::BiometricPolicy::TouchIdOrWatchAny),
+                    "REUSE_DURING_UNLOCK" => Ok(register_device_response::BiometricPolicy::ReuseDuringUnlock),
+                    "PASSWORD_FALLBACK" => Ok(register_device_response::BiometricPolicy::PasswordFallback),
+                    _ => Err(serde::de::Error::unknown_variant(value, FIELDS)),
+                }
+            }
+        }
+        deserializer.deserialize_any(GeneratedVisitor)
     }
 }
 impl serde::Serialize for RegisterUserRequest {
@@ -423,7 +507,7 @@ impl<'de> serde::Deserialize<'de> for RegisterUserRequest {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", FIELDS)
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
                     #[allow(unused_variables)]
@@ -532,7 +616,7 @@ impl<'de> serde::Deserialize<'de> for RegisterUserResponse {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", FIELDS)
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
                     }
 
                     #[allow(unused_variables)]

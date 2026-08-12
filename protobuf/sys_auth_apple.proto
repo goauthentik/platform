@@ -33,5 +33,17 @@ message RegisterDeviceResponse {
   string audience = 5;
   string nonce_endpoint = 6;
   string device_token = 7;
-  bool require_biometrics = 8;
+
+  // Biometric requirements for the user Secure Enclave key. Mirrors the members
+  // of Apple's userSecureEnclaveKeyBiometricPolicy OptionSet: one requirement
+  // (CURRENT_SET or ANY) plus any number of modifiers. Empty means no biometric
+  // policy is applied.
+  enum BiometricPolicy {
+    UNSPECIFIED = 0;
+    TOUCH_ID_OR_WATCH_CURRENT_SET = 1;
+    TOUCH_ID_OR_WATCH_ANY = 2;
+    REUSE_DURING_UNLOCK = 3;
+    PASSWORD_FALLBACK = 4;
+  }
+  repeated BiometricPolicy biometric_policies = 8;
 }

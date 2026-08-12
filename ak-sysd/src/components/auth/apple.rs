@@ -1,5 +1,6 @@
 use crate::components::SysdContext;
 use crate::util::to_status;
+use ak_platform::generated::sys_auth_apple::register_device_response::BiometricPolicy;
 use ak_platform::generated::sys_auth_apple::{
     RegisterDeviceRequest, RegisterDeviceResponse, RegisterUserRequest, RegisterUserResponse,
 };
@@ -43,13 +44,21 @@ pub async fn register_device(
     let res = endpoints_agents_psso_register_device_create(&active.api, body)
         .await
         .map_err(|e| Status::internal(format!("psso register_device failed: {e}")))?;
-    // `res.require_biometrics` can't be logged yet — the field isn't in the
-    // generated authentik-client, so the hardcoded value below is what actually
-    // reaches PSSO. Log that instead, and switch to the response value together
-    // with the `require_biometrics` field below once the client has it.
+    // TEMPORARY: authentik returns `biometric_policies` on this endpoint, but the
+    // generated authentik-client has no field for it, so `res.biometric_policies`
+    // does not compile against the pinned client. Hardcode the set the connector
+    // is expected to send until the client is regenerated, then replace this with
+    // the response value and delete the constant.
+    //
+    // PasswordFallback is included deliberately: without it a user whose Touch ID
+    // is cancelled, failing, or never enrolled cannot use the key at all.
+    let biometric_policies = vec![
+        BiometricPolicy::TouchIdOrWatchCurrentSet as i32,
+        BiometricPolicy::PasswordFallback as i32,
+    ];
     tracing::info!(
         domain = %active.cfg.domain,
-        require_biometrics = true,
+        biometric_policies = ?biometric_policies,
         client_id = %res.client_id,
         "psso register_device response"
     );
@@ -60,11 +69,7 @@ pub async fn register_device(
         jwks_endpoint: res.jwks_endpoint,
         audience: res.audience,
         nonce_endpoint: res.nonce_endpoint,
-        // TEMPORARY: hardcoded for testing. The server-side field exists but is not
-        // yet in a released authentik-client, so reading `res.require_biometrics`
-        // does not compile against the pinned client. Swap back to
-        // `res.require_biometrics` once the API change lands upstream.
-        require_biometrics: true,
+        biometric_policies,
         // Not part of the API response — the domain's own stored token,
         // mirroring Go's `device_token: dc.Token`.
         device_token: active.cfg.token.clone(),
