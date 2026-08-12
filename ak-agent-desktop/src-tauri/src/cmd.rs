@@ -1,6 +1,9 @@
 use ak_agent::Agent;
 use ak_platform::{
-    generated::{agent_ctrl::Profile, ping::ping_client::PingClient},
+    generated::{
+        agent_ctrl::{Profile, ProfileStatus},
+        ping::ping_client::PingClient,
+    },
     grpc::grpc_endpoint,
     paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
     string::PlatformString,
@@ -20,21 +23,46 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
     };
     let mut profiles = vec![];
     for (key, c_prof) in snapshot {
-        let ptm = state
-            .gtm
-            .for_profile(&key)
-            .await
-            .ok_or("profile not found")?;
-        let token = ptm.token().await.map_err(|e| e.to_string())?;
-        let claims = token.claims().map_err(|e| e.to_string())?;
-        let o_prof = Profile {
+        let failed_profile = || Profile {
+            name: key.clone(),
+            username: String::new(),
+            authentik_url: c_prof.authentik_url.clone(),
+            last_renewed: None,
+            next_renew: None,
+            status: ProfileStatus::Failed as i32,
+        };
+
+        let Some(ptm) = state.gtm.for_profile(&key).await else {
+            tracing::warn!(profile = key, "no token manager for profile");
+            profiles.push(failed_profile());
+            continue;
+        };
+
+        let token = match ptm.token().await {
+            Ok(t) => t,
+            Err(e) => {
+                tracing::warn!(profile = key, "failed to renew token: {e:?}");
+                profiles.push(failed_profile());
+                continue;
+            }
+        };
+        let claims = match token.claims() {
+            Ok(c) => c,
+            Err(e) => {
+                tracing::warn!(profile = key, "failed to parse claims: {e:?}");
+                profiles.push(failed_profile());
+                continue;
+            }
+        };
+
+        profiles.push(Profile {
             name: key.clone(),
             username: claims.preferred_username,
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: Some(claims.iat.into()),
             next_renew: Some(claims.exp.into()),
-        };
-        profiles.push(o_prof);
+            status: ProfileStatus::Active as i32,
+        });
     }
     Ok(profiles)
 }

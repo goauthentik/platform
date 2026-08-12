@@ -44,6 +44,7 @@ async fn test_packaging_rpm() {
     for (image, tag) in &[
         ("docker.io/redhat/ubi10", "latest"),
         ("docker.io/library/almalinux", "10"),
+        ("docker.io/library/amazonlinux", "2023"),
     ] {
         let container = pkg_container(image, tag, &bin_dir).await;
 

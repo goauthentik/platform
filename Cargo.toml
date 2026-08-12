@@ -30,6 +30,11 @@ panic = "deny"
 unwrap_used = "deny"
 expect_used = "deny"
 
+[profile.release]
+debug = "limited"
+split-debuginfo = "packed"
+strip = "debuginfo"
+
 [workspace.dependencies]
 ak-api-cli-gen = { path = "ak-api-cli-gen" }
 authentik-client = { version = "2026.8.0-rc7" , default-features = false, features = ["rustls"] }
