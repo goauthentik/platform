@@ -1,6 +1,6 @@
 use ak_platform::grpc::Bridge;
 use pam::{
-    constants::{PAM_PROMPT_ECHO_OFF, PamFlag, PamResultCode},
+    constants::{PamFlag, PamResultCode},
     conv::Conv,
     items::User,
     module::PamHandle,

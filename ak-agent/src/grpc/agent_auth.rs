@@ -182,8 +182,8 @@ impl AgentAuth for AgentGRPCServer {
             .ok_or(Status::invalid_argument("missing header"))?
             .profile
             .clone();
-        let profile = self.profile_for_request(inner.header).await?;
-        let client_id = inner.audience.clone();
+        let profile = self.profile_for_request(inner.clone().header).await?;
+        let audience = inner.audience.clone();
 
         let cid1 = audience.clone();
         let cid2 = audience.clone();
@@ -230,12 +230,6 @@ impl AgentAuth for AgentGRPCServer {
                 expires_in: cached.expires_in,
             }));
         }
-
-        let scope_string = if inner.scopes.is_empty() {
-            "openid email profile".to_string()
-        } else {
-            inner.scopes.join(" ")
-        };
 
         let token_url = format!("{}/application/o/token/", profile.authentik_url);
         let body = self._token_exchange_request(inner.clone(), &profile)?;
