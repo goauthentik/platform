@@ -224,10 +224,10 @@ dependencies = [
  "eyre",
  "gethostname",
  "libc",
- "log",
  "pam-bindings",
  "serde",
  "serde_json",
+ "tracing",
  "whoami",
 ]
 

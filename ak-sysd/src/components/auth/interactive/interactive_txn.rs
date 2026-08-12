@@ -107,15 +107,13 @@ impl InteractiveAuthTransaction {
                     ..Default::default()
                 })
             }
-            ChallengeTypes::AkStagePassword(_) => {
-                Ok(InteractiveChallenge {
-                    txid: self.id.clone(),
-                    prompt: PASSWORD_PROMPT.to_string(),
-                    prompt_meta: PromptMeta::PamPromptEchoOff as i32,
-                    component: "ak-stage-password".to_string(),
-                    ..Default::default()
-                })
-            }
+            ChallengeTypes::AkStagePassword(_) => Ok(InteractiveChallenge {
+                txid: self.id.clone(),
+                prompt: PASSWORD_PROMPT.to_string(),
+                prompt_meta: PromptMeta::PamPromptEchoOff as i32,
+                component: "ak-stage-password".to_string(),
+                ..Default::default()
+            }),
             ChallengeTypes::AkStageAuthenticatorValidate(c) => {
                 let dc = c
                     .device_challenges
