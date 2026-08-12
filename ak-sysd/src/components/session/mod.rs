@@ -2,7 +2,7 @@ use crate::components::{Component, SysdContext};
 use crate::state::SessionRecord;
 use ak_platform::generated::session::{
     CloseSessionRequest, CloseSessionResponse, CreateSessionRequest, CreateSessionResponse,
-    SessionStatusRequest, SessionStatusResponse,
+    OpenSessionRequest, SessionStatusRequest, SessionStatusResponse,
     session_manager_server::{SessionManager, SessionManagerServer},
 };
 use ak_platform::paths::SysdSocketID;
@@ -164,6 +164,44 @@ impl SessionManager for SessionComponent {
                 expiry: None,
             })),
         }
+    }
+
+    async fn open_session(
+        &self,
+        request: Request<OpenSessionRequest>,
+    ) -> Result<Response<CreateSessionResponse>, Status> {
+        let req = request.into_inner();
+        let mut session = self
+            .ctx
+            .state
+            .sessions()
+            .get(&req.session_id)
+            .await
+            .map_err(crate::util::to_status)?
+            .ok_or_else(|| Status::not_found("session not found"))?;
+
+        session.opened = true;
+        session.pid = Some(req.pid);
+        session.ppid = Some(req.ppid);
+        session.local_socket = Some(req.local_socket);
+        self.ctx
+            .state
+            .sessions()
+            .update(&session)
+            .await
+            .map_err(crate::util::to_status)?;
+
+        self.ctx
+            .events
+            .dispatch(crate::events::SysdEvent::SessionOpened {
+                session_id: session.id.clone(),
+                pid: req.pid,
+            });
+
+        Ok(Response::new(CreateSessionResponse {
+            success: true,
+            session_id: session.id,
+        }))
     }
 
     async fn create_session(

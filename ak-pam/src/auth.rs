@@ -1,9 +1,5 @@
 use ak_platform::grpc::Bridge;
-use pam::{
-    constants::PamResultCode,
-    conv::Conv,
-    module::PamHandle,
-};
+use pam::{constants::PamResultCode, conv::Conv, module::PamHandle};
 
 use crate::{
     ENV_SESSION_ID,

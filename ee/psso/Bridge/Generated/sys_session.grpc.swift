@@ -46,6 +46,19 @@ internal enum SessionManager: Sendable {
                 type: .unary
             )
         }
+        /// Namespace for "OpenSession" metadata.
+        internal enum OpenSession: Sendable {
+            /// Request type for "OpenSession".
+            internal typealias Input = OpenSessionRequest
+            /// Response type for "OpenSession".
+            internal typealias Output = CreateSessionResponse
+            /// Descriptor for "OpenSession".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "session.SessionManager"),
+                method: "OpenSession",
+                type: .unary
+            )
+        }
         /// Namespace for "CloseSession" metadata.
         internal enum CloseSession: Sendable {
             /// Request type for "CloseSession".
@@ -63,6 +76,7 @@ internal enum SessionManager: Sendable {
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             SessionStatus.descriptor,
             CreateSession.descriptor,
+            OpenSession.descriptor,
             CloseSession.descriptor
         ]
     }
@@ -108,6 +122,10 @@ extension SessionManager {
 
         /// Call the "CreateSession" method.
         ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Create a new session (for example SSH login)
+        ///
         /// - Parameters:
         ///   - request: A request containing a single `CreateSessionRequest` message.
         ///   - serializer: A serializer for `CreateSessionRequest` messages.
@@ -120,6 +138,29 @@ extension SessionManager {
         func createSession<Result>(
             request: GRPCCore.ClientRequest<CreateSessionRequest>,
             serializer: some GRPCCore.MessageSerializer<CreateSessionRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<CreateSessionResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CreateSessionResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "OpenSession" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Open a previously created session and associate a pid/ppid with it
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `OpenSessionRequest` message.
+        ///   - serializer: A serializer for `OpenSessionRequest` messages.
+        ///   - deserializer: A deserializer for `CreateSessionResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func openSession<Result>(
+            request: GRPCCore.ClientRequest<OpenSessionRequest>,
+            serializer: some GRPCCore.MessageSerializer<OpenSessionRequest>,
             deserializer: some GRPCCore.MessageDeserializer<CreateSessionResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CreateSessionResponse>) async throws -> Result
@@ -197,6 +238,10 @@ extension SessionManager {
 
         /// Call the "CreateSession" method.
         ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Create a new session (for example SSH login)
+        ///
         /// - Parameters:
         ///   - request: A request containing a single `CreateSessionRequest` message.
         ///   - serializer: A serializer for `CreateSessionRequest` messages.
@@ -218,6 +263,40 @@ extension SessionManager {
             try await self.client.unary(
                 request: request,
                 descriptor: SessionManager.Method.CreateSession.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
+        /// Call the "OpenSession" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Open a previously created session and associate a pid/ppid with it
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `OpenSessionRequest` message.
+        ///   - serializer: A serializer for `OpenSessionRequest` messages.
+        ///   - deserializer: A deserializer for `CreateSessionResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func openSession<Result>(
+            request: GRPCCore.ClientRequest<OpenSessionRequest>,
+            serializer: some GRPCCore.MessageSerializer<OpenSessionRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<CreateSessionResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CreateSessionResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SessionManager.Method.OpenSession.descriptor,
                 serializer: serializer,
                 deserializer: deserializer,
                 options: options,
@@ -287,6 +366,10 @@ extension SessionManager.ClientProtocol {
 
     /// Call the "CreateSession" method.
     ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Create a new session (for example SSH login)
+    ///
     /// - Parameters:
     ///   - request: A request containing a single `CreateSessionRequest` message.
     ///   - options: Options to apply to this RPC.
@@ -304,6 +387,35 @@ extension SessionManager.ClientProtocol {
         try await self.createSession(
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<CreateSessionRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<CreateSessionResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "OpenSession" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Open a previously created session and associate a pid/ppid with it
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `OpenSessionRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func openSession<Result>(
+        request: GRPCCore.ClientRequest<OpenSessionRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CreateSessionResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.openSession(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<OpenSessionRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<CreateSessionResponse>(),
             options: options,
             onResponse: handleResponse
@@ -370,6 +482,10 @@ extension SessionManager.ClientProtocol {
 
     /// Call the "CreateSession" method.
     ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Create a new session (for example SSH login)
+    ///
     /// - Parameters:
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
@@ -391,6 +507,39 @@ extension SessionManager.ClientProtocol {
             metadata: metadata
         )
         return try await self.createSession(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "OpenSession" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Open a previously created session and associate a pid/ppid with it
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func openSession<Result>(
+        _ message: OpenSessionRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CreateSessionResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<OpenSessionRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.openSession(
             request: request,
             options: options,
             onResponse: handleResponse

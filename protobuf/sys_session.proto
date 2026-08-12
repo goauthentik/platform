@@ -8,8 +8,18 @@ import "google/protobuf/timestamp.proto";
 // SessionManager for creating/closing sessions
 service SessionManager {
   rpc SessionStatus(SessionStatusRequest) returns (SessionStatusResponse);
+  // Create a new session (for example SSH login)
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  // Open a previously created session and associate a pid/ppid with it
+  rpc OpenSession(OpenSessionRequest) returns (CreateSessionResponse);
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
+}
+
+message OpenSessionRequest {
+  string session_id = 1;
+  uint32 pid = 2;
+  uint32 ppid = 3;
+  string local_socket = 4;
 }
 
 message CreateSessionRequest {

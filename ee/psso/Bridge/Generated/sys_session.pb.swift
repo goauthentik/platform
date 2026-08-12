@@ -20,6 +20,24 @@ fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobu
   typealias Version = _2
 }
 
+nonisolated struct OpenSessionRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var sessionID: String = String()
+
+  var pid: UInt32 = 0
+
+  var ppid: UInt32 = 0
+
+  var localSocket: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
 nonisolated struct CreateSessionRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -137,6 +155,51 @@ nonisolated struct CloseSessionResponse: Sendable {
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate nonisolated let _protobuf_package = "session"
+
+nonisolated extension OpenSessionRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".OpenSessionRequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}session_id\0\u{1}pid\0\u{1}ppid\0\u{3}local_socket\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.sessionID) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.pid) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.ppid) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.localSocket) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.sessionID.isEmpty {
+      try visitor.visitSingularStringField(value: self.sessionID, fieldNumber: 1)
+    }
+    if self.pid != 0 {
+      try visitor.visitSingularUInt32Field(value: self.pid, fieldNumber: 2)
+    }
+    if self.ppid != 0 {
+      try visitor.visitSingularUInt32Field(value: self.ppid, fieldNumber: 3)
+    }
+    if !self.localSocket.isEmpty {
+      try visitor.visitSingularStringField(value: self.localSocket, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: OpenSessionRequest, rhs: OpenSessionRequest) -> Bool {
+    if lhs.sessionID != rhs.sessionID {return false}
+    if lhs.pid != rhs.pid {return false}
+    if lhs.ppid != rhs.ppid {return false}
+    if lhs.localSocket != rhs.localSocket {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
 
 nonisolated extension CreateSessionRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CreateSessionRequest"
