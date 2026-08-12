@@ -156,7 +156,7 @@ impl SystemAuthToken for AuthComponent {
             })?;
 
         let token = self
-            .validate_token(req.token, Some(remote.clone()))
+            .validate_token(req.token.clone(), Some(remote.clone()))
             .await
             .map_err(|e| Status::from_error(e.into()))?;
         if !token
@@ -186,9 +186,9 @@ impl SystemAuthToken for AuthComponent {
             {
                 match session
                     .new_session(
-                        data.claims.preferred_username.clone(),
+                        token.claims.preferred_username.clone(),
                         req.token.clone(),
-                        Some(data.claims.exp.timestamp()),
+                        Some(token.claims.exp.timestamp()),
                     )
                     .await
                 {
