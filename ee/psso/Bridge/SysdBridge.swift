@@ -216,6 +216,14 @@ public class SysdBridge {
                     audience: res.audience
                 )
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
+                // Required for Platform SSO 2.0, alongside protocolVersion() returning
+                // .version2_0: Apple gates the version on both, and without this the device
+                // registers as protocolVersion 1. macOS still sends key requests -- they
+                // fall back to the token endpoint -- and the IdP answers them, but the
+                // device never enters 2.0 and token binding fails locally afterwards.
+                // authentik serves key requests from the token endpoint rather than a
+                // separate one, so this points at the same URL.
+                cfg.keyEndpointURL = URL(string: res.tokenEndpoint)!
                 cfg.customNonceRequestValues
                     .append(
                         URLQueryItem(
