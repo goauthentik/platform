@@ -1,32 +1,46 @@
 extern crate pam;
 
 use crate::pam_env::pam_get_env;
+use crate::session::session_data::SessionData;
+use crate::session::ssh::{SSH_AUTH_INFO_0, open_session_ssh};
 use crate::{ENV_SESSION_ID, username};
 use ak_platform::generated::session::session_manager_client::SessionManagerClient;
-use ak_platform::generated::session::{CloseSessionRequest, CreateSessionRequest};
+use ak_platform::generated::session::{CloseSessionRequest, OpenSessionRequest};
 use ak_platform::grpc::grpc_request;
-use eyre::{Context, ContextCompat, Result};
+use eyre::{Context, Result};
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
 
-pub const SSH_AUTH_INFO_0: &str = "SSH_AUTH_INFO_0";
+pub mod session_data;
+pub mod ssh;
 
 pub fn open_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let username = username(pamh)?;
-    let ssh_auth_info = pam_get_env(pamh, SSH_AUTH_INFO_0).context("failed to get auth info")?;
+    if let Some(ssh_auth_info) = pam_get_env(pamh, SSH_AUTH_INFO_0) {
+        return open_session_ssh(username, ssh_auth_info);
+    }
+
+    let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
+        Some(t) => t,
+        None => {
+            tracing::warn!("failed to get session id");
+            return Ok(PamResultCode::PAM_IGNORE);
+        }
+    };
+    let sd = SessionData::read(sid.clone()).context("failed to get session data")?;
+    SessionData::delete(sid.clone()).context("failed to delete session data")?;
 
     let session_info = grpc_request(async |ch| {
         return Ok(SessionManagerClient::new(ch)
-            .create_session(CreateSessionRequest {
-                username: username.clone(),
-                token: None,
-                ssh_auth: Some(ssh_auth_info.clone()),
+            .open_session(OpenSessionRequest {
+                session_id: sid.clone(),
                 pid: std::process::id(),
                 ppid: std::os::unix::process::parent_id(),
+                local_socket: sd.local_socket.clone(),
             })
             .await?);
     })
-    .context("failed to create session")?
+    .context("failed to register session")?
     .into_inner();
 
     if !session_info.success {

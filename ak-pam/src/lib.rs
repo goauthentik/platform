@@ -3,7 +3,6 @@ mod dir;
 mod logger;
 mod pam_env;
 mod session;
-mod session_data;
 
 use crate::auth::authenticate_impl;
 use crate::auth::authorize::authenticate_authorize_impl;
