@@ -50,11 +50,24 @@ pub async fn register_device(
     // is expected to send until the client is regenerated, then replace this with
     // the response value and delete the constant.
     //
-    // PasswordFallback is included deliberately: without it a user whose Touch ID
-    // is cancelled, failing, or never enrolled cannot use the key at all.
+    // Every member of Apple's OptionSet is listed so a test run is a matter of
+    // commenting lines in and out rather than looking the variants up again. Keep at
+    // most one requirement live: TouchIdOrWatchCurrentSet invalidates the key when the
+    // enrolled biometrics change, TouchIdOrWatchAny does not, and the two together are
+    // contradictory. The rest are independent modifiers.
+    //
+    // Live set below is the Secure Enclave configuration. It is inert while the
+    // profile asks for the password method -- macOS only reads this policy when there
+    // is a user Secure Enclave key to guard -- so it can stay put across both tests.
     let biometric_policies = vec![
+        // Requirement -- pick one.
         BiometricPolicy::TouchIdOrWatchCurrentSet as i32,
+        // BiometricPolicy::TouchIdOrWatchAny as i32,
+        //
+        // Modifiers. PasswordFallback is live deliberately: without it a user whose
+        // Touch ID is cancelled, failing, or never enrolled cannot use the key at all.
         BiometricPolicy::PasswordFallback as i32,
+        // BiometricPolicy::ReuseDuringUnlock as i32,
     ];
     tracing::info!(
         domain = %active.cfg.domain,
