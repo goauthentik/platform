@@ -10,12 +10,13 @@ use whoami::username;
 
 use crate::ENV_SESSION_ID;
 use crate::auth::interactive::result_to_pam_result;
+use crate::auth::ssh::{SSH_AUTH_SOCK, authenticate_authorize_ssh};
 use crate::dir::check_user_exists;
 
-pub fn authenticate_authorize_impl(service: &str) -> Result<PamResultCode> {
+pub fn authenticate_authorize_impl(service: String) -> Result<PamResultCode> {
     let binding = gethostname();
     let host = match binding.to_str() {
-        Some(t) => t,
+        Some(t) => t.to_string(),
         None => {
             tracing::warn!("failed to get hostname");
             return Ok(PamResultCode::PAM_IGNORE);
@@ -24,14 +25,15 @@ pub fn authenticate_authorize_impl(service: &str) -> Result<PamResultCode> {
     let user = username().context("Couldn't get username")?;
     // Check if user actually exists in authentik
     check_user_exists(user.clone())?;
-    let ak = std::env::vars().find(|k| k.0 == ENV_SESSION_ID);
-    let session_id = match ak {
-        Some(s) => s.1,
-        None => {
-            tracing::warn!("Couldn't find session ID");
-            return Ok(PamResultCode::PAM_IGNORE);
-        }
+    let Ok(session_id) = std::env::var(ENV_SESSION_ID) else {
+        tracing::warn!("Couldn't find session ID");
+        return Ok(PamResultCode::PAM_IGNORE);
     };
+
+    if let Ok(ssh) = std::env::var(SSH_AUTH_SOCK) {
+        return authenticate_authorize_ssh(ssh, service, host, user, session_id);
+    }
+
     let res = grpc_request(async |ch| {
         return Ok(SystemAuthAuthorizeClient::new(ch)
             .authorize(SystemAuthorizeRequest {

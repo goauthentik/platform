@@ -37,7 +37,7 @@ pub fn open_session_ssh(
     pam_put_env(
         pamh,
         ENV_SESSION_ID,
-        &session_info.session_id.to_owned().as_str(),
+        session_info.session_id.to_owned().as_str(),
     )
     .context("failed to set session_id env")?;
 

@@ -10,6 +10,7 @@ use eyre::{Context, Result};
 pub mod authorize;
 pub mod fido;
 pub mod interactive;
+pub mod ssh;
 
 pub fn authenticate_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let username = username(pamh)?;
