@@ -15,6 +15,7 @@ use ak_platform::string::PlatformString;
 use ctor::ctor;
 use dtor::dtor;
 use eyre::Context;
+use eyre::Report;
 use pam::constants::PAM_TEXT_INFO;
 use pam::constants::{PamFlag, PamResultCode};
 use pam::conv::Conv;
@@ -55,28 +56,17 @@ impl PamHooks for PAMAuthentik {
             "sudo-i" => authenticate_authorize_impl(pamh, "sudo-i".to_string()),
             _ => authenticate_impl(pamh),
         }
-        .map_err(|e| {
-            tracing::warn!("Error in sm_authenticate: {e:?}");
-        })
-        .unwrap_or(PamResultCode::PAM_AUTH_ERR)
+        .to_pam_code("sm_authenticate".to_string())
     }
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         prelude("sm_open_session", pamh, args.clone(), flags);
-        open_session_impl(pamh)
-            .map_err(|e| {
-                tracing::warn!("Error in sm_open_session: {e:?}");
-            })
-            .unwrap_or(PamResultCode::PAM_SESSION_ERR)
+        open_session_impl(pamh).to_pam_code("sm_open_session".to_string())
     }
 
     fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
         prelude("sm_close_session", pamh, args.clone(), flags);
-        close_session_impl(pamh)
-            .map_err(|e| {
-                tracing::warn!("Error in sm_close_session: {e:?}");
-            })
-            .unwrap_or(PamResultCode::PAM_SESSION_ERR)
+        close_session_impl(pamh).to_pam_code("sm_close_session".to_string())
     }
 
     fn sm_setcred(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
@@ -170,6 +160,46 @@ pub fn username(pamh: &mut PamHandle) -> Result<String, PamError> {
         Err(e) => {
             tracing::warn!("failed to get user");
             Err(e.into())
+        }
+    }
+}
+
+/// Result codes that indicate a genuine failure and are worth logging.
+static PAM_ERROR_CODES: [PamResultCode; 11] = [
+    PamResultCode::PAM_OPEN_ERR,
+    PamResultCode::PAM_SYMBOL_ERR,
+    PamResultCode::PAM_SERVICE_ERR,
+    PamResultCode::PAM_SYSTEM_ERR,
+    PamResultCode::PAM_BUF_ERR,
+    PamResultCode::PAM_AUTH_ERR,
+    PamResultCode::PAM_SESSION_ERR,
+    PamResultCode::PAM_CRED_ERR,
+    PamResultCode::PAM_CONV_ERR,
+    PamResultCode::PAM_AUTHTOK_ERR,
+    PamResultCode::PAM_AUTHTOK_RECOVERY_ERR,
+];
+
+trait PamResult {
+    fn to_pam_code(self, func: String) -> PamResultCode;
+}
+
+impl PamResult for Result<PamResultCode, Report> {
+    fn to_pam_code(self, func: String) -> PamResultCode {
+        let report = match self {
+            Ok(code) => return code,
+            Err(report) => report,
+        };
+        // Borrow the code first so the full report is still available for logging.
+        let should_log = match report.downcast_ref::<PamError>() {
+            Some(p) => PAM_ERROR_CODES.contains(&p.code),
+            None => true,
+        };
+        if should_log {
+            tracing::warn!("PAM Error in {func}: {report:?}");
+        }
+        match report.downcast::<PamError>() {
+            Ok(p) => p.code,
+            Err(_) => PamResultCode::PAM_SYSTEM_ERR,
         }
     }
 }
