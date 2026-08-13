@@ -205,7 +205,7 @@ name = "ak-nss"
 version = "0.50.5"
 dependencies = [
  "ak-platform",
- "ctor 1.0.12",
+ "ctor 1.0.13",
  "dtor 1.0.6",
  "eyre",
  "libc",
@@ -219,7 +219,7 @@ version = "0.50.5"
 dependencies = [
  "ak-platform",
  "ctap-hid-fido2",
- "ctor 1.0.12",
+ "ctor 1.0.13",
  "dtor 1.0.6",
  "eyre",
  "gethostname",
@@ -2153,9 +2153,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "1.0.12"
+version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d83cb7e7a873830708d6b02a78cd36a592c6fa14bf267b68725103b85c0d77f"
+checksum = "914a755b7c2d4af2bdcff7ce1739e2db9a1b81a9b07123d8015786ae03c0980d"
 dependencies = [
  "link-section",
  "linktime-proc-macro",
@@ -4660,9 +4660,9 @@ dependencies = [
 
 [[package]]
 name = "link-section"
-version = "0.19.2"
+version = "0.19.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ee1a0d6e252afe82e7bc2db42fba60e02ddf3b1accaf8cb21d96e34ba61f3d4"
+checksum = "39c29a617ce3df32c08497bdc1ab6e2376e0b17948ac166a2fbe5977c5954cd9"
 
 [[package]]
 name = "linktime-proc-macro"
