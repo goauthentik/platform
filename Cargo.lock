@@ -206,7 +206,7 @@ version = "0.50.5"
 dependencies = [
  "ak-platform",
  "ctor 1.0.12",
- "dtor 1.0.5",
+ "dtor 1.0.6",
  "eyre",
  "libc",
  "libnss",
@@ -220,7 +220,7 @@ dependencies = [
  "ak-platform",
  "ctap-hid-fido2",
  "ctor 1.0.12",
- "dtor 1.0.5",
+ "dtor 1.0.6",
  "eyre",
  "gethostname",
  "libc",
@@ -2599,9 +2599,9 @@ dependencies = [
 
 [[package]]
 name = "dtor"
-version = "1.0.5"
+version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d738e43aa64edab57c983d56de890d65fea7dc05605490c74451ce721dfd84b"
+checksum = "cd3f6c362b2bbd7063090886afd78978f5dbf1f11da7efcc40f81d32c943fac1"
 dependencies = [
  "linktime-proc-macro",
 ]
@@ -4582,9 +4582,9 @@ checksum = "5ee1a0d6e252afe82e7bc2db42fba60e02ddf3b1accaf8cb21d96e34ba61f3d4"
 
 [[package]]
 name = "linktime-proc-macro"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "348d0075b1fc163b26d72a7f75fc5141daf2fd1bdf128d873cbaf6785d495bdf"
+checksum = "7e57c38c1e860fd37c604281cdfb1dd2216977fd76a50f85ba2f388ef3219616"
 
 [[package]]
 name = "linux-raw-sys"
