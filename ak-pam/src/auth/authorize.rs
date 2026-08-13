@@ -25,12 +25,12 @@ pub fn authenticate_authorize_impl(pamh: &mut PamHandle, service: String) -> Res
     let user = username(pamh).context("Couldn't get username")?;
     // Check if user actually exists in authentik
     check_user_exists(user.clone())?;
-    let Ok(session_id) = std::env::var(ENV_SESSION_ID) else {
+    let Some((_, session_id)) = std::env::vars().find(|k| k.0 == ENV_SESSION_ID) else {
         tracing::warn!("Couldn't find session ID");
         return Ok(PamResultCode::PAM_IGNORE);
     };
 
-    if let Ok(ssh) = std::env::var(SSH_AUTH_SOCK) {
+    if let Some((_, ssh)) = std::env::vars().find(|k| k.0 == SSH_AUTH_SOCK) {
         return authenticate_authorize_ssh(ssh, service, host, user, session_id);
     }
 
