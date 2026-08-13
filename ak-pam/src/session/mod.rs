@@ -23,7 +23,7 @@ pub fn open_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
         None => {
-            tracing::warn!("failed to get session id");
+            tracing::debug!("failed to get session id");
             return Ok(PamResultCode::PAM_IGNORE);
         }
     };
@@ -55,7 +55,7 @@ pub fn close_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
         None => {
-            tracing::warn!("failed to get session id");
+            tracing::debug!("failed to get session id");
             return Ok(PamResultCode::PAM_IGNORE);
         }
     };
