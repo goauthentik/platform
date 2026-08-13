@@ -51,8 +51,8 @@ impl PamHooks for PAMAuthentik {
             Err(c) => return c.code,
         };
         match svc.as_str() {
-            "sudo" => authenticate_authorize_impl("sudo".to_string()),
-            "sudo-i" => authenticate_authorize_impl("sudo-i".to_string()),
+            "sudo" => authenticate_authorize_impl(pamh, "sudo".to_string()),
+            "sudo-i" => authenticate_authorize_impl(pamh, "sudo-i".to_string()),
             _ => authenticate_impl(pamh),
         }
         .map_err(|e| {

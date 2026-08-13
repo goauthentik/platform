@@ -6,14 +6,14 @@ use ak_platform::grpc::grpc_request;
 use eyre::{Context, Result};
 use gethostname::gethostname;
 use pam::constants::PamResultCode;
-use whoami::username;
+use pam::module::PamHandle;
 
-use crate::ENV_SESSION_ID;
+use crate::{ENV_SESSION_ID, username};
 use crate::auth::interactive::result_to_pam_result;
 use crate::auth::ssh::{SSH_AUTH_SOCK, authenticate_authorize_ssh};
 use crate::dir::check_user_exists;
 
-pub fn authenticate_authorize_impl(service: String) -> Result<PamResultCode> {
+pub fn authenticate_authorize_impl(pamh: &mut PamHandle, service: String) -> Result<PamResultCode> {
     let binding = gethostname();
     let host = match binding.to_str() {
         Some(t) => t.to_string(),
@@ -22,7 +22,7 @@ pub fn authenticate_authorize_impl(service: String) -> Result<PamResultCode> {
             return Ok(PamResultCode::PAM_IGNORE);
         }
     };
-    let user = username().context("Couldn't get username")?;
+    let user = username(pamh).context("Couldn't get username")?;
     // Check if user actually exists in authentik
     check_user_exists(user.clone())?;
     let Ok(session_id) = std::env::var(ENV_SESSION_ID) else {
