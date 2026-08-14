@@ -18,6 +18,3 @@ ak-platform = { workspace = true }
 log = { workspace = true }
 windows = { workspace = true }
 cef = { version = "151.4.0", features = ["build-util"] }
-
-[build-dependencies]
-embed-resource = "3"

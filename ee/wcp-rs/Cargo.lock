@@ -363,7 +363,6 @@ dependencies = [
  "ak-platform",
  "ak_ffi",
  "cef",
- "embed-resource",
  "log",
  "windows 0.61.3",
  "wire",
