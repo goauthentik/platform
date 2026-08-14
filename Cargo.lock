@@ -339,6 +339,8 @@ dependencies = [
  "tokio",
  "tracing",
  "windows-native-keyring-store",
+ "zbus",
+ "zbus_names",
 ]
 
 [[package]]
