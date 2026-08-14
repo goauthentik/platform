@@ -14,15 +14,18 @@ use ssh_agent_lib::{
     proto::{Extension, Unparsed},
 };
 use tokio::sync::Mutex;
+use tonic::{Code, Status};
 use tower::{Layer, Service};
 
 use interprocess::local_socket::tokio::Stream as LocalSocketStream;
 
 use crate::grpc::ssh::ext::EXT_AUTHENTIK_AGENT_TUNNEL;
 use crate::grpc::ssh::ext::ExtAuthentikAgentTunnelData;
+use crate::grpc::ssh::ext::ExtAuthentikAgentTunnelResponse;
 use crate::net::client::connect;
 use crate::string::PlatformString;
 
+pub mod dispatch;
 pub mod ext;
 
 pub struct SSHTunnel {
@@ -33,7 +36,12 @@ impl SSHTunnel {
     pub async fn new() -> Result<Self> {
         let sock_path =
             std::env::var("SSH_AUTH_SOCK").map_err(|_| eyre::eyre!("SSH_AUTH_SOCK is not set"))?;
-        let st = match connect(PlatformString::new_with_default(&sock_path)).await {
+        Self::connect_to(&sock_path).await
+    }
+
+    /// Connect to an SSH agent socket by path, rather than through `SSH_AUTH_SOCK`.
+    pub async fn connect_to(sock_path: &str) -> Result<Self> {
+        let st = match connect(PlatformString::new_with_default(sock_path)).await {
             Ok(s) => s,
             Err(e) => return Err(e.into()),
         };
@@ -104,8 +112,10 @@ where
                 .map_err(Into::into)?
                 .to_bytes();
 
+            // The full path, slash included: the agent feeds it to `MethodCaller`, which
+            // puts it in a request URI, and a relative path is not a valid URI.
             let payload = ExtAuthentikAgentTunnelData {
-                method: method.trim_start_matches("/").to_string(),
+                method,
                 data: grpc_unframe(&body_bytes)?,
             };
 
@@ -128,28 +138,35 @@ where
                 }
             };
 
-            // Response wire (ext_ak.rs `handle_agent_tunnel`): a single type-tag
-            // byte, then the ExtAuthentikAgentTunnelData payload. The server also
-            // legitimately answers with an *empty* response on its failure paths
-            // (decode/gRPC-server/call failures), so check length before slicing
-            // off the tag instead of unconditionally draining a fixed prefix.
+            // An empty payload means the agent could not say anything at all — either it
+            // predates the status fields and hit one of its old bail-out paths, or the
+            // wire is out of sync. Everything else, failures included, parses.
             let raw_bytes = raw_res.details.into_bytes();
-            let Some(inner) = raw_bytes.get(1..) else {
+            if raw_bytes.is_empty() {
                 return Err(Box::from("empty tunnel response"));
-            };
+            }
 
-            let res = match ExtAuthentikAgentTunnelData::deserialize(inner) {
+            let res = match ExtAuthentikAgentTunnelResponse::deserialize(&raw_bytes) {
                 Some(d) => d,
                 None => return Err(Box::from("failed to parse response")),
             };
 
-            let framed = grpc_frame(&res.data);
-            let body = tonic::body::Body::new(Full::new(Bytes::from(framed)));
-            let response = Response::builder()
+            let status = Status::new(Code::from_i32(res.status), res.message);
+            // A non-OK status carries no message frame; sending an empty body keeps this
+            // a trailers-only response, which is what tonic expects for an error.
+            let body = if status.code() == Code::Ok {
+                Full::new(Bytes::from(grpc_frame(&res.data)))
+            } else {
+                Full::new(Bytes::new())
+            };
+
+            let mut response = Response::builder()
                 .status(200)
                 .header("content-type", "application/grpc+proto")
-                .header("grpc-status", "0")
-                .body(body)
+                .body(tonic::body::Body::new(body))
+                .map_err(|e| -> BoxError { Box::new(e) })?;
+            status
+                .add_header(response.headers_mut())
                 .map_err(|e| -> BoxError { Box::new(e) })?;
 
             Ok(response)
@@ -170,21 +187,31 @@ mod tests {
         proto::{Extension, Unparsed},
     };
     use tokio::sync::Mutex;
+    use tonic::{Code, Status};
     use tower::Service;
 
     use super::SSHTunnel;
-    use crate::grpc::method_caller::{grpc_frame, grpc_unframe};
-    use crate::grpc::ssh::ext::{EXT_AUTHENTIK_AGENT_TUNNEL, ExtAuthentikAgentTunnelData};
+    use crate::generated::ping::{
+        CapabilitiesResponse, PingResponse,
+        ping_server::{Ping, PingServer},
+    };
+    use crate::grpc::method_caller::{MethodCaller, grpc_frame, grpc_unframe};
+    use crate::grpc::ssh::dispatch::dispatch_tunnel_request;
+    use crate::grpc::ssh::ext::{
+        EXT_AUTHENTIK_AGENT_TUNNEL, ExtAuthentikAgentTunnelData, ExtAuthentikAgentTunnelResponse,
+    };
+    use crate::net::server::creds::ProcCredentials;
 
     // --- Integration test: full gRPC-over-SSH-tunnel flow ---
 
-    /// The real response-type tag `ak-agent/src/ssh/ext_ak.rs` (`handle_agent_tunnel`)
-    /// prepends to every non-empty response, ahead of the ExtAuthentikAgentTunnelData
-    /// payload.
-    const SSH_AGENT_EXT_RESPONSE_TYPE: u8 = 29;
-
+    /// Echoes the request back and records the method it was asked for, so a test can
+    /// assert what actually went over the wire. `ak-agent` feeds that method straight
+    /// into an HTTP request URI, so anything but a full `/pkg.Service/Method` path fails
+    /// there — which is invisible from this side unless the mock checks.
     #[derive(Clone, Default)]
-    struct MockTunnelAgent;
+    struct MockTunnelAgent {
+        seen: Arc<std::sync::Mutex<Vec<String>>>,
+    }
 
     #[ssh_agent_lib::async_trait]
     impl Session for MockTunnelAgent {
@@ -192,29 +219,45 @@ mod tests {
             let req = ExtAuthentikAgentTunnelData::deserialize(&ext.details.into_bytes())
                 .ok_or(AgentError::Failure)?;
 
-            let serialized = ExtAuthentikAgentTunnelData {
-                method: req.method,
-                data: req.data,
-            }
-            .serialize();
-
-            // Mirrors the real server's wire format: a single type-tag byte
-            // ahead of the payload, not a length prefix over the whole thing.
-            let mut prefixed = Vec::with_capacity(1 + serialized.len());
-            prefixed.push(SSH_AGENT_EXT_RESPONSE_TYPE);
-            prefixed.extend_from_slice(&serialized);
+            self.seen.lock().unwrap().push(req.method.clone());
 
             Ok(Some(Extension {
                 name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
-                details: Unparsed::from(prefixed),
+                details: Unparsed::from(
+                    ExtAuthentikAgentTunnelResponse::ok(req.method, req.data).serialize(),
+                ),
             }))
         }
     }
 
-    /// Mirrors `ext_ak.rs`'s `handle_agent_tunnel` on any of its failure paths
-    /// (request-decode failure, gRPC-server-creation failure, method-call
-    /// failure): it always answers with an empty `details`, not a shorter
-    /// valid payload.
+    /// Answers every request with a non-OK gRPC status and no payload, the way
+    /// `ext_ak.rs` reports a handler that returned a `Status`.
+    #[derive(Clone, Default)]
+    struct FailingTunnelAgent;
+
+    #[ssh_agent_lib::async_trait]
+    impl Session for FailingTunnelAgent {
+        async fn extension(&mut self, ext: Extension) -> Result<Option<Extension>, AgentError> {
+            let req = ExtAuthentikAgentTunnelData::deserialize(&ext.details.into_bytes())
+                .ok_or(AgentError::Failure)?;
+
+            Ok(Some(Extension {
+                name: EXT_AUTHENTIK_AGENT_TUNNEL.to_string(),
+                details: Unparsed::from(
+                    ExtAuthentikAgentTunnelResponse::error(
+                        req.method,
+                        Code::NotFound as i32,
+                        "no such user",
+                    )
+                    .serialize(),
+                ),
+            }))
+        }
+    }
+
+    /// What every failure path in `ext_ak.rs` used to answer with, and what an agent
+    /// older than the status fields still answers with when it bails out. There is
+    /// nothing to parse, so this has to be an error — and, once upon a time, a panic.
     #[derive(Clone, Default)]
     struct EmptyResponseAgent;
 
@@ -243,8 +286,9 @@ mod tests {
         let _ = std::fs::remove_file(sock_path);
 
         let listener = UnixListener::bind(sock_path)?;
-        let server_handle =
-            tokio::spawn(async move { ssh_listen(listener, MockTunnelAgent).await });
+        let agent = MockTunnelAgent::default();
+        let seen = Arc::clone(&agent.seen);
+        let server_handle = tokio::spawn(async move { ssh_listen(listener, agent).await });
 
         let name = sock_path.to_fs_name::<GenericFilePath>()?;
         let stream = LocalSocketStream::connect(name).await?;
@@ -275,6 +319,62 @@ mod tests {
         let body_bytes = resp.into_body().collect().await?.to_bytes();
         let stripped = grpc_unframe(&body_bytes)?;
         assert_eq!(stripped, proto_payload);
+
+        // Regression: the method used to go out with its leading slash stripped, which
+        // the agent could not turn back into a request URI.
+        assert_eq!(seen.lock().unwrap().as_slice(), ["/some.Service/Method"]);
+
+        server_handle.abort();
+        let _ = server_handle.await;
+        let _ = std::fs::remove_file(sock_path);
+
+        Ok(())
+    }
+
+    /// A gRPC status from the far end has to arrive as that status. Before the tunnel
+    /// carried one, every failure came back as an empty payload and the caller could
+    /// only report "empty tunnel response".
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn ssh_service_surfaces_non_ok_status()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use interprocess::local_socket::{
+            GenericFilePath,
+            tokio::{Stream as LocalSocketStream, prelude::*},
+        };
+        use ssh_agent_lib::client::Client;
+        use tokio::net::UnixListener;
+
+        let sock_path = "/tmp/ak-test-grpc-ssh-status.sock";
+        let _ = std::fs::remove_file(sock_path);
+
+        let listener = UnixListener::bind(sock_path)?;
+        let server_handle =
+            tokio::spawn(async move { ssh_listen(listener, FailingTunnelAgent).await });
+
+        let name = sock_path.to_fs_name::<GenericFilePath>()?;
+        let stream = LocalSocketStream::connect(name).await?;
+        let client = Client::new(stream);
+
+        let tunnel = SSHTunnel {
+            client: Arc::new(Mutex::new(client)),
+        };
+        let mut svc = tunnel.service(());
+
+        let req = Request::builder()
+            .method("POST")
+            .uri("/some.Service/Method")
+            .header("content-type", "application/grpc+proto")
+            .body(Full::new(Bytes::from(grpc_frame(&[0x01]))))?;
+
+        let resp = svc.call(req).await?;
+
+        let status = Status::from_header_map(resp.headers()).expect("status must be present");
+        assert_eq!(status.code(), Code::NotFound);
+        assert_eq!(status.message(), "no such user");
+
+        // Trailers-only: an error response carries no message frame.
+        assert!(resp.into_body().collect().await?.to_bytes().is_empty());
 
         server_handle.abort();
         let _ = server_handle.await;
@@ -321,6 +421,163 @@ mod tests {
             .body(Full::new(Bytes::from(grpc_frame(&[0x01]))))?;
 
         assert!(svc.call(req).await.is_err());
+
+        server_handle.abort();
+        let _ = server_handle.await;
+        let _ = std::fs::remove_file(sock_path);
+
+        Ok(())
+    }
+
+    // --- End-to-end: real client encoder against the real agent-side dispatcher ---
+
+    /// Runs the tunnel's real agent-side handler, so the request this client encodes has
+    /// to survive everything the agent does with it — including being turned back into
+    /// an HTTP request URI, which is where a path without its leading slash dies.
+    #[derive(Clone, Default)]
+    struct RealDispatchAgent;
+
+    #[ssh_agent_lib::async_trait]
+    impl Session for RealDispatchAgent {
+        async fn extension(&mut self, ext: Extension) -> Result<Option<Extension>, AgentError> {
+            let mut caller = MethodCaller::new(ProcCredentials::new(None));
+            caller.add_service(PingServer::new(TestPing));
+
+            Ok(Some(
+                dispatch_tunnel_request(&mut caller, ext.details.as_ref()).await,
+            ))
+        }
+    }
+
+    struct TestPing;
+
+    #[tonic::async_trait]
+    impl Ping for TestPing {
+        async fn ping(
+            &self,
+            _req: tonic::Request<()>,
+        ) -> std::result::Result<tonic::Response<PingResponse>, Status> {
+            Ok(tonic::Response::new(PingResponse {
+                component: "tunnel".into(),
+                version: "1.0".into(),
+                server_version: String::new(),
+            }))
+        }
+
+        async fn capabilities(
+            &self,
+            _req: tonic::Request<()>,
+        ) -> std::result::Result<tonic::Response<CapabilitiesResponse>, Status> {
+            Err(Status::permission_denied("nope"))
+        }
+    }
+
+    /// The test that was missing: every earlier tunnel test mocked one side, so a
+    /// client/agent disagreement about the method path could not show up. Here the real
+    /// encoder talks to the real dispatcher over a real socket.
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn tunnel_round_trips_through_the_real_dispatcher()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use prost::Message;
+        use tokio::net::UnixListener;
+
+        let sock_path = "/tmp/ak-test-grpc-ssh-dispatch.sock";
+        let _ = std::fs::remove_file(sock_path);
+
+        let listener = UnixListener::bind(sock_path)?;
+        let server_handle =
+            tokio::spawn(async move { ssh_listen(listener, RealDispatchAgent).await });
+
+        let mut svc = SSHTunnel::connect_to(sock_path).await?.service(());
+
+        let req = Request::builder()
+            .method("POST")
+            .uri("/ping.Ping/Ping")
+            .header("content-type", "application/grpc+proto")
+            .body(Full::new(Bytes::from(grpc_frame(&[]))))?;
+
+        let resp = svc.call(req).await?;
+        assert_eq!(
+            Status::from_header_map(resp.headers()).map(|s| s.code()),
+            Some(Code::Ok)
+        );
+
+        let body_bytes = resp.into_body().collect().await?.to_bytes();
+        let ping = PingResponse::decode(&*grpc_unframe(&body_bytes)?)?;
+        assert_eq!(ping.component, "tunnel");
+
+        server_handle.abort();
+        let _ = server_handle.await;
+        let _ = std::fs::remove_file(sock_path);
+
+        Ok(())
+    }
+
+    /// What `ak` actually does: a generated tonic client on top of the tunnel service.
+    /// Driving `SSHService::call` by hand skips tonic's own response handling, which is
+    /// picky about what a response with a `grpc-status` header may contain.
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn tonic_client_round_trips_over_the_tunnel()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use crate::generated::ping::ping_client::PingClient;
+        use tokio::net::UnixListener;
+
+        let sock_path = "/tmp/ak-test-grpc-ssh-tonic-client.sock";
+        let _ = std::fs::remove_file(sock_path);
+
+        let listener = UnixListener::bind(sock_path)?;
+        let server_handle =
+            tokio::spawn(async move { ssh_listen(listener, RealDispatchAgent).await });
+
+        let svc = SSHTunnel::connect_to(sock_path).await?.service(());
+        let mut client = PingClient::new(svc);
+
+        let resp = client.ping(()).await?;
+        assert_eq!(resp.into_inner().component, "tunnel");
+
+        let err = client
+            .capabilities(())
+            .await
+            .expect_err("the handler returns a status");
+        assert_eq!(err.code(), Code::PermissionDenied);
+        assert_eq!(err.message(), "nope");
+
+        server_handle.abort();
+        let _ = server_handle.await;
+        let _ = std::fs::remove_file(sock_path);
+
+        Ok(())
+    }
+
+    /// The same path for a handler that fails: the status has to cross the tunnel intact
+    /// rather than collapsing into "empty tunnel response".
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn tunnel_carries_handler_status_through_the_real_dispatcher()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use tokio::net::UnixListener;
+
+        let sock_path = "/tmp/ak-test-grpc-ssh-dispatch-status.sock";
+        let _ = std::fs::remove_file(sock_path);
+
+        let listener = UnixListener::bind(sock_path)?;
+        let server_handle =
+            tokio::spawn(async move { ssh_listen(listener, RealDispatchAgent).await });
+
+        let mut svc = SSHTunnel::connect_to(sock_path).await?.service(());
+
+        let req = Request::builder()
+            .method("POST")
+            .uri("/ping.Ping/Capabilities")
+            .header("content-type", "application/grpc+proto")
+            .body(Full::new(Bytes::from(grpc_frame(&[]))))?;
+
+        let resp = svc.call(req).await?;
+        let status = Status::from_header_map(resp.headers()).expect("status must be present");
+        assert_eq!(status.code(), Code::PermissionDenied);
+        assert_eq!(status.message(), "nope");
 
         server_handle.abort();
         let _ = server_handle.await;

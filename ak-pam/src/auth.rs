@@ -12,9 +12,9 @@ use crate::{
     auth::interactive::auth_interactive,
     dir::check_user_exists,
     pam_env::pam_put_env,
-    pam_try_log,
     session_data::{_write_session_data, SessionData},
 };
+use eyre::{Context, Result};
 
 pub mod authorize;
 pub mod fido;
@@ -24,42 +24,32 @@ pub fn authenticate_impl(
     pamh: &mut PamHandle,
     _args: Vec<&CStr>,
     _flags: PamFlag,
-) -> PamResultCode {
+) -> Result<PamResultCode> {
     let username = match pamh.get_item::<User>() {
-        Ok(u) => match u {
-            Some(u) => match String::from_utf8(u.to_bytes().to_vec()) {
-                Ok(uu) => uu,
-                Err(e) => {
-                    log::warn!("failed to decode user: {e}");
-                    return PamResultCode::PAM_AUTH_ERR;
-                }
-            },
-            None => {
-                log::warn!("No user");
-                return PamResultCode::PAM_AUTH_ERR;
-            }
-        },
+        Ok(Some(u)) => String::from_utf8(u.to_bytes().to_vec()).context("failed to decode user")?,
+        Ok(None) => {
+            tracing::warn!("No user");
+            return Ok(PamResultCode::PAM_AUTH_ERR);
+        }
         Err(e) => {
-            log::warn!("failed to get user");
-            return e;
+            tracing::warn!("failed to get user");
+            return Ok(e);
         }
     };
-    log::debug!("got username: '{username}'");
+    tracing::debug!("got username: '{username}'");
     // Check if user actually exists in authentik
-    if let Err(code) = check_user_exists(username.clone()) {
-        return code;
-    }
+    check_user_exists(username.clone())?;
     let conv = match pamh.get_item::<Conv>() {
         Ok(Some(conv)) => conv,
         Ok(None) => {
             unreachable!("No conv available");
         }
         Err(err) => {
-            log::debug!("Couldn't get pam_conv");
-            return err;
+            tracing::debug!("Couldn't get pam_conv");
+            return Ok(err);
         }
     };
-    log::debug!("Started conv");
+    tracing::debug!("Started conv");
 
     let session_data = SessionData {
         username: username.to_string(),
@@ -69,34 +59,28 @@ pub fn authenticate_impl(
     let bridge = match Bridge::new() {
         Ok(b) => b,
         Err(e) => {
-            log::warn!("Failed to get runtime {}", e);
-            return PamResultCode::PAM_ABORT;
+            tracing::warn!("Failed to get runtime {}", e);
+            return Ok(PamResultCode::PAM_ABORT);
         }
     };
 
-    log::debug!("Interactive authentication");
+    tracing::debug!("Interactive authentication");
     let int_res = match auth_interactive(username, &conv, bridge) {
         Ok(ss) => ss,
-        Err(code) => return code,
+        Err(code) => return Ok(code),
     };
     let session_id: String = int_res.session_id;
     if !session_data.local_socket.is_empty() {
-        pam_try_log!(
-            pam_put_env(
-                pamh,
-                "AUTHENTIK_CLI_SOCKET",
-                session_data.local_socket.to_owned().as_str(),
-            ),
-            "Failed to set env"
-        );
+        pam_put_env(
+            pamh,
+            "AUTHENTIK_CLI_SOCKET",
+            session_data.local_socket.to_owned().as_str(),
+        )
+        .context("Failed to set env")?;
     }
-    pam_try_log!(
-        _write_session_data(session_id.clone(), session_data),
-        "failed to write session data"
-    );
-    pam_try_log!(
-        pam_put_env(pamh, ENV_SESSION_ID, session_id.to_owned().as_str()),
-        "failed to set session_id env"
-    );
-    PamResultCode::PAM_SUCCESS
+    _write_session_data(session_id.clone(), session_data)
+        .context("failed to write session data")?;
+    pam_put_env(pamh, ENV_SESSION_ID, session_id.to_owned().as_str())
+        .context("failed to set session_id env")?;
+    Ok(PamResultCode::PAM_SUCCESS)
 }
