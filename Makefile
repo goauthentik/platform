@@ -13,6 +13,7 @@ all: clean gen
 .PHONY: clean
 clean:
 	rm -rf ${PWD}/bin/*
+	rm -rf ${PWD}/cache/*
 
 .PHONY: gen
 gen: rs-gen-proto ee/psso/gen

@@ -124,12 +124,19 @@ void Provider::SetCefApp(sHookData* pData) {
     // Initialize the CEF browser process. May return false if initialization
     // fails or if early exit is desired (for example, due to process singleton
     // relaunch behavior).
-    if (!CefInitialize(main_args, settings, m_pCefApp.get(), sandbox_info)) {
-      spdlog::debug("CefGetExitCode");
-      // return CefGetExitCode();
-      m_pCefApp = nullptr;
+    if (m_pCefApp)
+    {
+      if (!CefInitialize(main_args, settings, m_pCefApp.get(), sandbox_info)) {
+        spdlog::debug("CefGetExitCode");
+        // return CefGetExitCode();
+        m_pCefApp = nullptr;
+      }
+      spdlog::debug("CefInitialize");
     }
-    spdlog::debug("CefInitialize");
+    else
+    {
+      spdlog::debug("SetCefApp: Could not instantiate SimpleApp. CEF app setup failed.");
+    }
     // Run the CEF message loop. This will block until CefQuitMessageLoop() is
     // called.
     // CefRunMessageLoop();
