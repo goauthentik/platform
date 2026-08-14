@@ -1,0 +1,23 @@
+[package]
+name = "cef-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "ak_cef"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+wire = { workspace = true }
+ak_ffi = { workspace = true }
+ak-platform = { workspace = true }
+log = { workspace = true }
+windows = { workspace = true }
+cef = { version = "151.4.0", features = ["build-util"] }
+
+[build-dependencies]
+embed-resource = "3"

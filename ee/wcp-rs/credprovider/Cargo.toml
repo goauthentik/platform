@@ -1,0 +1,23 @@
+[package]
+name = "credprovider"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "ak_cred_provider"
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+wire = { workspace = true }
+ak_ffi = { workspace = true }
+ak-platform = { workspace = true }
+log = { workspace = true }
+windows = { workspace = true }
+windows-core = { workspace = true }
+
+[build-dependencies]
+embed-resource = "3"
