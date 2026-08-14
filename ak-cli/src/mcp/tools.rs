@@ -1,14 +1,16 @@
-use crate::mcp::AuthentikMcp;
+use crate::mcp::{AuthentikMcp, Grant, origin::AllowedOrigin};
 use ak_platform::generated::agent::RequestHeader;
 use ak_platform::generated::agent_auth::TokenExchangeRequest;
+use ak_platform::grpc::assert_response_valid;
 use authentik_client::models::AgentCreateRequest;
 use authentik_client::{
     apis::{
         agents_api::agents_agents_create, core_api::core_applications_list,
         requests_api::requests_grant_requests_agent_create,
     },
-    models::AgentGrantRequestCreateRequest,
+    models::{AgentGrantRequestCreateRequest, Application},
 };
+use chrono::{TimeDelta, Utc};
 use rmcp::{ErrorData as McpError, model::*, schemars};
 use serde::Deserialize;
 use uuid::Uuid;
@@ -168,14 +170,14 @@ impl AuthentikMcp {
         args: TokenExchangeArgs,
     ) -> Result<CallToolResult, McpError> {
         let mut app = self.app.clone();
-        let _profile = match args.profile {
+        let _profile = match args.profile.clone() {
             Some(p) => p,
             None => app.profile().await,
         };
         let Some(agent_token) = self.agent_token(&args.agent_identifier).await else {
             return Err(McpError::invalid_params("Agent identity not found", None));
         };
-        let _res = app
+        let res = app
             .user()
             .await
             .map_err(|e| McpError::internal_error(format!("agent connection failed: {e}"), None))?
@@ -183,7 +185,7 @@ impl AuthentikMcp {
             .cached_token_exchange(TokenExchangeRequest {
                 header: Some(RequestHeader { profile: _profile }),
                 scopes: args.scopes.unwrap_or_default(),
-                audience: args.target_id,
+                audience: args.target_id.clone(),
                 actor_token: Some(agent_token.clone()),
                 actor_token_type: Some(
                     "goauthentik.io/oauth/token-type/authentik_token".to_owned(),
@@ -192,6 +194,88 @@ impl AuthentikMcp {
             .await
             .map_err(|e| McpError::internal_error(format!("failed to exchange token: {e}"), None))?
             .into_inner();
-        Ok(CallToolResult::success(vec![]))
+        assert_response_valid(res.header)
+            .map_err(|e| McpError::internal_error(format!("token exchange failed: {e}"), None))?;
+
+        let application = self.application_for(&args.target_id, args.profile).await?;
+        let origins = application
+            .as_ref()
+            .map(origins_for_application)
+            .unwrap_or_default();
+        let expires_at = Utc::now() + TimeDelta::seconds(res.expires_in);
+
+        let mut cb = vec![ContentBlock::text(format!(
+            "Exchanged a token for {}, valid until {expires_at}.",
+            args.target_id
+        ))];
+        cb.push(ContentBlock::text(if origins.is_empty() {
+            // Without an origin there is nothing to check requests against, so
+            // the HTTP tools refuse rather than fall back to allowing anything.
+            format!(
+                "No launch URL could be resolved for {}, so http_fetch and http_send cannot be \
+                 used with this token.",
+                args.target_id
+            )
+        } else {
+            format!(
+                "http_fetch and http_send may now use agent {} against: {}.",
+                args.agent_identifier,
+                origins
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        }));
+
+        self.grants
+            .lock()
+            .await
+            .entry(args.agent_identifier)
+            .or_default()
+            .push(Grant {
+                target_id: args.target_id,
+                access_token: res.access_token,
+                expires_at,
+                origins,
+            });
+        Ok(CallToolResult::success(cb))
     }
+
+    /// Resolve a token exchange audience to the application it belongs to.
+    /// `Application.pk` and `Application.pbm_uuid` hold the same value server
+    /// side, so a PBM UUID identifies the application on its own.
+    async fn application_for(
+        &self,
+        target_id: &str,
+        profile: Option<String>,
+    ) -> Result<Option<Application>, McpError> {
+        let config = self.configuration(profile).await?;
+        let result = core_applications_list(
+            &config, None, None, None, None, None, None, None, None, None, None, None, None, None,
+        )
+        .await
+        .map_err(|e| McpError::internal_error(format!("list applications failed: {e}"), None))?;
+        Ok(result
+            .results
+            .into_iter()
+            .find(|app| app.pbm_uuid.to_string() == target_id))
+    }
+}
+
+/// Origins an agent may reach once it holds a token for `application`, derived
+/// from the URLs the application is reachable under.
+fn origins_for_application(application: &Application) -> Vec<AllowedOrigin> {
+    let mut origins = Vec::new();
+    for url in [&application.launch_url, &application.meta_launch_url]
+        .into_iter()
+        .flatten()
+    {
+        if let Some(origin) = AllowedOrigin::from_url(url)
+            && !origins.contains(&origin)
+        {
+            origins.push(origin);
+        }
+    }
+    origins
 }

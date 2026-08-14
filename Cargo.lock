@@ -153,6 +153,7 @@ dependencies = [
  "oauth-device-flows",
  "open",
  "pbjson-types",
+ "psl",
  "ratatui",
  "reqwest 0.13.4",
  "rmcp",
@@ -6181,6 +6182,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f94967dc7688f3054c7fac87473ffae4cc4c3904800e2d9f5b857246d8963b0a"
 dependencies = [
  "prost",
+]
+
+[[package]]
+name = "psl"
+version = "2.1.223"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0dedad316e05de220cbf3fd8bfb69f3df8755dde2d7d479211827b595168a93"
+dependencies = [
+ "psl-types",
 ]
 
 [[package]]

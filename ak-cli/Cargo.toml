@@ -23,6 +23,7 @@ tracing = { workspace = true }
 oauth-device-flows = { workspace = true }
 open = "5.3.5"
 pbjson-types = { workspace = true }
+psl = { workspace = true }
 ratatui = "0.30.1"
 serde = { workspace = true }
 serde_json = { workspace = true }
