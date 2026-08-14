@@ -150,10 +150,17 @@ impl AuthentikMcp {
             .lock()
             .await
             .insert(result.agent.username.clone(), result.token);
-        Ok(CallToolResult::success(vec![ContentBlock::text(format!(
+        let mut cb = vec![ContentBlock::text(format!(
             "The agent identity was successfully created. Use {} in future tool calls to use its identity.",
             result.agent.username
-        ))]))
+        ))];
+        if let Some(Some(exp)) = result.agent.expires {
+            ch.push(ContentBlock::text(format!(
+                "The agent identity will auto-expire at {}. After this time has passed, re-request a new identity.",
+                    exp
+            )));
+        }
+        Ok(CallToolResult::success(cb))
     }
 
     pub async fn _token_exchange(
