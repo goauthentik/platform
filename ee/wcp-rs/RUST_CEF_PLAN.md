@@ -112,9 +112,12 @@ the control pipe for cancellation.
 
 ## Build & packaging
 
-- `platform/ee/wcp/Makefile`/`build.ps1` build the workspace and copy
+- `platform/ee/wcp-rs/Makefile` builds the workspace and copies
   `ak_cred_provider.dll`, `ak_cef.exe`, and CEF's runtime deps into the
-  output shape `platform/vpkg/windows/Package.wxs` expects.
+  output shape `platform/vpkg/windows/Package.wxs` expects. Unlike
+  `ee/wcp`, there is deliberately no `build.ps1` — the Makefile is the only
+  build entry point (Windows CI already runs `make` from a bash-compatible
+  shell for the rest of this repo).
 - CLSID and registry contract stay unchanged; the MSI installer is
   responsible for writing them (see `credprovider` notes above).
 - Old C++/vendored-CEF-SDK removal happens only after the Rust build is
