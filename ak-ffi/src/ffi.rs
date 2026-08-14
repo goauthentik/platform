@@ -48,6 +48,34 @@ mod ffi {
     }
 }
 
+pub use ffi::{AuthStartAsync, Capabilities, TokenResponse};
+
+/// Plain-Rust entry points for callers outside the cxx bridge (the bridge
+/// above exists for the C++ credential provider; Rust callers can use these
+/// directly without depending on the `cxx` crate).
+pub fn sys_caps() -> Result<Capabilities> {
+    ak_sys_caps()
+}
+
+pub fn sys_auth_start_async() -> Result<AuthStartAsync> {
+    let mut res = AuthStartAsync {
+        url: String::new(),
+        header_token: String::new(),
+    };
+    ak_sys_auth_start_async(&mut res)?;
+    Ok(res)
+}
+
+pub fn sys_auth_url(url: &str) -> Result<Option<TokenResponse>> {
+    let_cxx_string!(raw_url = url);
+    let mut token = TokenResponse {
+        username: String::new(),
+        session_id: String::new(),
+    };
+    let ok = ak_sys_auth_url(&raw_url, &mut token)?;
+    Ok(ok.then_some(token))
+}
+
 fn ak_sys_ping(res: Pin<&mut CxxString>) {
     let resp = match grpc_request(async |ch| {
         return Ok(PingClient::new(ch).ping(()).await?);

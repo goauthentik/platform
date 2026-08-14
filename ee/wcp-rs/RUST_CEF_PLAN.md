@@ -78,6 +78,10 @@ Single source of truth shared by `credprovider`, `cef-host`, and `e2e`:
 - Windows syscalls with real side effects (`NetUserSetInfo`,
   `LsaLookupAuthenticationPackage`, process spawn) sit behind narrow traits
   so the surrounding logic is unit-testable with fakes.
+- No `DllRegisterServer`/`DllUnregisterServer` — the MSI installer owns all
+  registry setup (`InprocServer32`, `ThreadingModel`, the Winlogon
+  credential-providers key); the DLL only ever needs `DllGetClassObject`/
+  `DllCanUnloadNow`.
 
 ### `cef-host` (bin, output `ak_cef.exe`)
 
@@ -111,6 +115,23 @@ the control pipe for cancellation.
 - `platform/ee/wcp/Makefile`/`build.ps1` build the workspace and copy
   `ak_cred_provider.dll`, `ak_cef.exe`, and CEF's runtime deps into the
   output shape `platform/vpkg/windows/Package.wxs` expects.
-- CLSID and registry contract stay unchanged.
+- CLSID and registry contract stay unchanged; the MSI installer is
+  responsible for writing them (see `credprovider` notes above).
 - Old C++/vendored-CEF-SDK removal happens only after the Rust build is
   verified end-to-end (`cargo test`, manual tile/window/logon check).
+
+## Cleanup: `ak-ffi`'s cxx bridge
+
+`ak-ffi`'s `#[cxx::bridge] mod ffi { ... }` in `ak-ffi/src/ffi.rs` exists
+only to expose `sys_caps`/`sys_auth_start_async`/`sys_auth_url`/etc. to the
+C++ credential provider and CEF browser-process code
+(`ak_ffi_bridge`/`cxx-build` wiring in `ee/wcp/CMakeLists.txt`). Once that
+C++ code is deleted, `credprovider` and `cef-host` are the only remaining
+callers, and they use the plain-Rust `pub fn sys_caps()`/
+`sys_auth_start_async()`/`sys_auth_url()` wrappers added alongside the
+bridge (not the `extern "Rust"` bridge functions themselves). At that point,
+remove the `#[cxx::bridge] mod ffi { ... }` block, the `cxx` dependency, and
+the `ak_ffi_bridge`/corrosion/cxx-build wiring in the top-level
+`ee/wcp/CMakeLists.txt`, keeping only the plain functions and the
+`Capabilities`/`TokenResponse`/`AuthStartAsync` structs (as ordinary Rust
+structs, no longer needing cxx-bridge derives).

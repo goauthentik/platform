@@ -31,7 +31,6 @@ windows = { version = "0.61", features = [
     "Win32_Security",
     "Win32_UI_Shell",
     "Win32_Security_Credentials",
-    "Win32_System_Registry",
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_RemoteDesktop",
     "Win32_System_Threading",
@@ -41,6 +40,7 @@ windows = { version = "0.61", features = [
     "Win32_Security_Cryptography",
     "Win32_NetworkManagement_NetManagement",
     "Win32_System_SystemInformation",
+    "Win32_Storage_EnhancedStorage",
 ] }
 windows-core = "0.61"
 
