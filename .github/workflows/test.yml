@@ -160,17 +160,6 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
       - run: make ${{ matrix.target }}/lint
-  lint_cpp:
-    name: Lint
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - ee/wcp
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - run: make ${{ matrix.target }}/lint
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
     with:

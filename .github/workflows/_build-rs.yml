@@ -33,6 +33,7 @@ jobs:
           - ak-nss
           - ak-pam
           - ak-sysd
+          - ee/wcp-rs
         platform: ${{ fromJSON(inputs.platforms) }}
         exclude:
           # pam & nss are linux-only targets
@@ -44,6 +45,19 @@ jobs:
             platform: macos-26
           - target: ak-nss
             platform: windows-2025
+          # wcp is a windows-only credential provider
+          - target: ee/wcp-rs
+            platform: macos-26
+          - target: ee/wcp-rs
+            platform: ubuntu-24.04
+          - target: ee/wcp-rs
+            platform: ubuntu-24.04-arm
+        include:
+          # keep the artifact name "wcp" for compatibility with the
+          # packaging workflow that consumes it
+          - target: ee/wcp-rs
+            platform: windows-2025
+            artifact_name: wcp
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -78,14 +92,14 @@ jobs:
         with:
           rustflags: ""
           cache: false
-      - if: ${{ matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025' }}
+      - if: ${{ (matrix.target == 'ak-sysd' || matrix.target == 'ee/wcp-rs') && matrix.platform == 'windows-2025' }}
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
       - name: Force real MSVC link.exe
         # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
         # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
         # PATH resolution on this runner image, breaking cargo's link step
         # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.
-        if: ${{ matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025' }}
+        if: ${{ (matrix.target == 'ak-sysd' || matrix.target == 'ee/wcp-rs') && matrix.platform == 'windows-2025' }}
         shell: pwsh
         run: |
           $linkExe = (Get-Command link.exe -All | Where-Object { $_.Source -notlike '*\Git\*' } | Select-Object -First 1).Source
@@ -119,7 +133,7 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.target }}${{ inputs.artifact_suffix }}
+          name: authentik_${{ matrix.platform }}_${{ matrix.artifact_name || matrix.target }}${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         if: always()

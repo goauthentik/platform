@@ -19,6 +19,10 @@ cef-runtime:
 build: cef-runtime
 	mkdir -p "${TOP}bin/${OUT_TARGET}"
 	CEF_PATH="${CEF_PATH}" \
+		RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
+		AK_VERSION=${VERSION} \
+		AK_BUILDHASH=${VERSION_HASH} \
+		AK_TAG=${VERSION_TAG} \
 		cargo build --release \
 			--target-dir "${TOP}cache/wcp-rs" \
 			--manifest-path "${PWD}/Cargo.toml"
@@ -40,3 +44,9 @@ endif
 .PHONY: test
 test:
 	cargo test --manifest-path "${PWD}/Cargo.toml"
+
+.PHONY: lint
+lint:
+	cargo fmt --all --manifest-path "${PWD}/Cargo.toml"
+	cargo clippy --workspace --manifest-path "${PWD}/Cargo.toml"
+	cargo clippy --fix --allow-dirty --workspace --manifest-path "${PWD}/Cargo.toml"

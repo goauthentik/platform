@@ -1,7 +1,6 @@
-use cxx::{CxxString, let_cxx_string};
 use eyre::Result;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::pin::Pin;
 use url::Url;
 use winreg::enums::HKEY_LOCAL_MACHINE;
 
@@ -14,152 +13,84 @@ use ak_platform::grpc::grpc_request;
 
 const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 
-#[cxx::bridge]
-#[allow(clippy::module_inception)]
-mod ffi {
-    struct AuthStartAsync {
-        pub url: String,
-        pub header_token: String,
-    }
-
-    struct TokenResponse {
-        pub username: String,
-        pub session_id: String,
-    }
-
-    #[derive(Debug, Serialize, Deserialize, PartialEq)]
-    struct Capabilities {
-        pub interactive_auth_available: bool,
-        pub debug: bool,
-    }
-
-    extern "Rust" {
-        fn ak_sys_ping(res: Pin<&mut CxxString>);
-
-        fn ak_sys_caps() -> Result<Capabilities>;
-        fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>)
-        -> Result<()>;
-        fn ak_sys_auth_url(url: &CxxString, token: &mut TokenResponse) -> Result<bool>;
-        fn ak_sys_auth_token_validate(
-            raw_token: &CxxString,
-            token: &mut TokenResponse,
-        ) -> Result<bool>;
-        fn ak_sys_auth_start_async(res: &mut AuthStartAsync) -> Result<bool>;
-    }
+pub struct AuthStartAsync {
+    pub url: String,
+    pub header_token: String,
 }
 
-pub use ffi::{AuthStartAsync, Capabilities, TokenResponse};
+pub struct TokenResponse {
+    pub username: String,
+    pub session_id: String,
+}
 
-/// Plain-Rust entry points for callers outside the cxx bridge (the bridge
-/// above exists for the C++ credential provider; Rust callers can use these
-/// directly without depending on the `cxx` crate).
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Capabilities {
+    pub interactive_auth_available: bool,
+    pub debug: bool,
+}
+
 pub fn sys_caps() -> Result<Capabilities> {
-    ak_sys_caps()
-}
-
-pub fn sys_auth_start_async() -> Result<AuthStartAsync> {
-    let mut res = AuthStartAsync {
-        url: String::new(),
-        header_token: String::new(),
-    };
-    ak_sys_auth_start_async(&mut res)?;
-    Ok(res)
-}
-
-pub fn sys_auth_url(url: &str) -> Result<Option<TokenResponse>> {
-    let_cxx_string!(raw_url = url);
-    let mut token = TokenResponse {
-        username: String::new(),
-        session_id: String::new(),
-    };
-    let ok = ak_sys_auth_url(&raw_url, &mut token)?;
-    Ok(ok.then_some(token))
-}
-
-fn ak_sys_ping(res: Pin<&mut CxxString>) {
-    let resp = match grpc_request(async |ch| {
-        return Ok(PingClient::new(ch).ping(()).await?);
-    }) {
-        Ok(r) => r.into_inner().version,
-        Err(e) => e.to_string(),
-    };
-    res.push_str(&resp);
-}
-
-fn ak_sys_auth_url_extract_token(url: &CxxString, token: Pin<&mut CxxString>) -> Result<()> {
-    let p = Url::parse(url.to_str()?)?;
-    let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
-    let raw_token = qm
-        .get(TOKEN_QUERY_PARAM)
-        .ok_or_else(|| eyre::eyre!("failed to get token from URL"))?;
-    token.push_str(&raw_token);
-    Ok(())
-}
-
-fn ak_sys_auth_url(url: &CxxString, token: &mut ffi::TokenResponse) -> Result<bool> {
-    let p = Url::parse(url.to_str()?)?;
-    let qm: HashMap<_, _> = p.query_pairs().into_owned().collect();
-    let raw_token = qm
-        .get(TOKEN_QUERY_PARAM)
-        .ok_or_else(|| eyre::eyre!("failed to get token from URL"))?;
-    let_cxx_string!(crt = raw_token);
-    ak_sys_auth_token_validate(&crt, token)
-}
-
-fn ak_sys_auth_token_validate(
-    raw_token: &CxxString,
-    token: &mut ffi::TokenResponse,
-) -> Result<bool> {
-    let p = raw_token.to_str()?;
-    let response = grpc_request(async |ch| {
-        return Ok(SystemAuthTokenClient::new(ch)
-            .token_auth(TokenAuthRequest {
-                username: "".to_string(),
-                token: p.to_owned(),
-            })
-            .await?);
-    })?
-    .into_inner();
-
-    if let Some(pt) = response.token {
-        token.username = pt.preferred_username;
-    }
-    token.session_id = response.session_id;
-    Ok(response.successful)
-}
-
-fn ak_sys_auth_start_async(res: &mut ffi::AuthStartAsync) -> Result<bool> {
-    let response = grpc_request(async |ch| {
-        return Ok(SystemAuthInteractiveClient::new(ch)
-            .interactive_auth_async(())
-            .await?);
-    })?
-    .into_inner();
-    res.url = response.url;
-    res.header_token = response.header_token;
-    Ok(true)
-}
-
-fn ak_sys_caps() -> Result<ffi::Capabilities> {
     let hkcu = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
     let (key, _disp) =
         hkcu.create_subkey("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
 
-    let caps: ffi::Capabilities = match key.decode() {
-        Ok(t) => t,
-        Err(_) => {
-            let response = grpc_request(async |ch| {
-                return Ok(PingClient::new(ch).capabilities(()).await?);
-            })?
-            .into_inner();
-            let authia = Capability::AuthInteractive as i32;
-            let new_config = ffi::Capabilities {
-                interactive_auth_available: response.capabilities.contains(&authia),
-                debug: false,
-            };
-            key.encode(&new_config)?;
-            return Ok(new_config);
-        }
+    if let Ok(caps) = key.decode() {
+        return Ok(caps);
+    }
+
+    let response = grpc_request(async |ch| Ok(PingClient::new(ch).capabilities(()).await?))?
+        .into_inner();
+    let authia = Capability::AuthInteractive as i32;
+    let caps = Capabilities {
+        interactive_auth_available: response.capabilities.contains(&authia),
+        debug: false,
     };
-    return Ok(caps);
+    key.encode(&caps)?;
+    Ok(caps)
+}
+
+pub fn sys_auth_start_async() -> Result<AuthStartAsync> {
+    let response = grpc_request(async |ch| {
+        Ok(SystemAuthInteractiveClient::new(ch)
+            .interactive_auth_async(())
+            .await?)
+    })?
+    .into_inner();
+    Ok(AuthStartAsync {
+        url: response.url,
+        header_token: response.header_token,
+    })
+}
+
+pub fn sys_auth_url(url: &str) -> Result<Option<TokenResponse>> {
+    let raw_token = extract_token(url)?;
+    sys_auth_token_validate(&raw_token)
+}
+
+fn extract_token(url: &str) -> Result<String> {
+    let parsed = Url::parse(url)?;
+    let qm: HashMap<_, _> = parsed.query_pairs().into_owned().collect();
+    qm.get(TOKEN_QUERY_PARAM)
+        .cloned()
+        .ok_or_else(|| eyre::eyre!("failed to get token from URL"))
+}
+
+fn sys_auth_token_validate(raw_token: &str) -> Result<Option<TokenResponse>> {
+    let response = grpc_request(async |ch| {
+        Ok(SystemAuthTokenClient::new(ch)
+            .token_auth(TokenAuthRequest {
+                username: String::new(),
+                token: raw_token.to_owned(),
+            })
+            .await?)
+    })?
+    .into_inner();
+
+    if !response.successful {
+        return Ok(None);
+    }
+    Ok(Some(TokenResponse {
+        username: response.token.map(|t| t.preferred_username).unwrap_or_default(),
+        session_id: response.session_id,
+    }))
 }

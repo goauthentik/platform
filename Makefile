@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp ee/wcp-rs vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp-rs vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
 
 .PHONY: all
 all: clean gen
@@ -96,7 +96,6 @@ bump:
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" ee/psso/bump || true
-	"$(MAKE)" ee/wcp/bump || true
 
 ak-pam/%:
 	"$(MAKE)" -C "${TOP}/ak-pam" $*
@@ -133,9 +132,6 @@ browser-ext/%:
 
 ee/psso/%:
 	"$(MAKE)" -C "${TOP}/ee/psso/" $*
-
-ee/wcp/%:
-	"$(MAKE)" -C "${TOP}/ee/wcp/" $*
 
 ee/wcp-rs/%:
 	"$(MAKE)" -C "${TOP}/ee/wcp-rs/" $*
