@@ -123,7 +123,7 @@ impl AuthentikMcp {
             requests_grant_requests_agent_create(&config, AgentGrantRequestCreateRequest { pbms })
                 .await
                 .map_err(|e| {
-                    McpError::internal_error(format!("list applications failed: {e}"), None)
+                    McpError::internal_error(format!("request access failed: {e}"), None)
                 })?;
         let cbs = vec![ContentBlock::resource_link(Resource::new(
             res.fulfill_url,
