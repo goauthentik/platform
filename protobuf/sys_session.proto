@@ -5,10 +5,13 @@ option swift_prefix = "";
 
 import "google/protobuf/timestamp.proto";
 
-// SessionManager for opening/closing sessions
+// SessionManager for creating/closing sessions
 service SessionManager {
   rpc SessionStatus(SessionStatusRequest) returns (SessionStatusResponse);
-  rpc OpenSession(OpenSessionRequest) returns (OpenSessionResponse);
+  // Create a new session (for example SSH login)
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  // Open a previously created session and associate a pid/ppid with it
+  rpc OpenSession(OpenSessionRequest) returns (CreateSessionResponse);
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
 }
 
@@ -19,7 +22,15 @@ message OpenSessionRequest {
   string local_socket = 4;
 }
 
-message OpenSessionResponse {
+message CreateSessionRequest {
+  string username = 1;
+  optional string token = 2;
+  optional string ssh_auth = 3;
+  uint32 pid = 10;
+  uint32 ppid = 11;
+}
+
+message CreateSessionResponse {
   bool success = 1;
   string session_id = 2;
 }

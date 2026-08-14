@@ -127,7 +127,9 @@ pub fn auth_interactive(
                         Some(c) => match c.as_str() {
                             Ok(cc) => cc.to_owned(),
                             Err(_) => {
-                                tracing::warn!("failed to convert PAM Conversation response to string");
+                                tracing::warn!(
+                                    "failed to convert PAM Conversation response to string"
+                                );
                                 return Err(PamResultCode::PAM_ABORT);
                             }
                         },

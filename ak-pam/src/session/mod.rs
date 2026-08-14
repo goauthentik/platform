@@ -1,31 +1,34 @@
 extern crate pam;
 
-use crate::ENV_SESSION_ID;
 use crate::pam_env::pam_get_env;
-use crate::session_data::{_delete_session_data, _read_session_data};
+use crate::session::session_data::SessionData;
+use crate::session::ssh::{SSH_AUTH_INFO_0, open_session_ssh};
+use crate::{ENV_SESSION_ID, username};
 use ak_platform::generated::session::session_manager_client::SessionManagerClient;
 use ak_platform::generated::session::{CloseSessionRequest, OpenSessionRequest};
 use ak_platform::grpc::grpc_request;
 use eyre::{Context, Result};
-use pam::constants::PamFlag;
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
-use std::ffi::CStr;
 
-pub fn open_session_impl(
-    pamh: &mut PamHandle,
-    _args: Vec<&CStr>,
-    _flags: PamFlag,
-) -> Result<PamResultCode> {
+pub mod session_data;
+pub mod ssh;
+
+pub fn open_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
+    let username = username(pamh)?;
+    if let Some(ssh_auth_info) = pam_get_env(pamh, SSH_AUTH_INFO_0) {
+        return open_session_ssh(pamh, username, ssh_auth_info);
+    }
+
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
         None => {
-            tracing::warn!("failed to get session id");
+            tracing::debug!("failed to get session id");
             return Ok(PamResultCode::PAM_IGNORE);
         }
     };
-    let sd = _read_session_data(sid.clone()).context("failed to get session data")?;
-    _delete_session_data(sid.clone()).context("failed to delete session data")?;
+    let sd = SessionData::read(sid.clone()).context("failed to get session data")?;
+    SessionData::delete(sid.clone()).context("failed to delete session data")?;
 
     let session_info = grpc_request(async |ch| {
         return Ok(SessionManagerClient::new(ch)
@@ -48,15 +51,11 @@ pub fn open_session_impl(
     Ok(PamResultCode::PAM_SUCCESS)
 }
 
-pub fn close_session_impl(
-    pamh: &mut PamHandle,
-    _args: Vec<&CStr>,
-    _flags: PamFlag,
-) -> Result<PamResultCode> {
+pub fn close_session_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     let sid = match pam_get_env(pamh, ENV_SESSION_ID) {
         Some(t) => t,
         None => {
-            tracing::warn!("failed to get session id");
+            tracing::debug!("failed to get session id");
             return Ok(PamResultCode::PAM_IGNORE);
         }
     };

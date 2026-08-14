@@ -8,7 +8,9 @@ use ak_platform::generated::sys_auth::{
 use ak_platform::shared::{
     AuthentikClaims, EXT_AUTHENTIK_PLATFORM_SSH_HOST_KEY, EXT_AUTHENTIK_PLATFORM_SSH_TOKEN,
 };
+use authentik_client::models::AgentConfig;
 use eyre::Result;
+use jsonwebtoken::TokenData;
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use ssh_key::{Certificate, PublicKey};
 use subtle::ConstantTimeEq;
@@ -48,17 +50,46 @@ impl AuthComponent {
         }
         Ok(out)
     }
-}
 
-#[tonic::async_trait]
-impl SystemAuthToken for AuthComponent {
-    async fn ssh_cert_auth(
+    pub async fn validate_token(
         &self,
-        request: Request<SshCertAuthRequest>,
-    ) -> Result<Response<SshCertAuthResponse>, Status> {
-        let req = request.into_inner();
-        let cert = Certificate::from_openssh(&format!("{} {}", req.r#type, req.b64key))
-            .map_err(to_status)?;
+        raw_token: String,
+        remote: Option<AgentConfig>,
+    ) -> Result<TokenData<AuthentikClaims>> {
+        let remote = match remote {
+            Some(r) => r,
+            None => {
+                let active = self.ctx.domains.active().await.map_err(to_status)?;
+                active.remote.read().await.clone().ok_or_else(|| {
+                    Status::failed_precondition("domain remote config not loaded yet")
+                })?
+            }
+        };
+
+        let jwks_value = serde_json::to_value(&remote.jwks_auth).map_err(to_status)?;
+        let jwks: JwkSet = serde_json::from_value(jwks_value).map_err(to_status)?;
+
+        let header = decode_header(&raw_token).map_err(to_status)?;
+        let kid = header
+            .kid
+            .ok_or_else(|| Status::invalid_argument("token is missing a kid"))?;
+        let jwk = jwks
+            .find(&kid)
+            .ok_or_else(|| Status::invalid_argument("unknown signing key"))?;
+        let key = DecodingKey::from_jwk(jwk).map_err(to_status)?;
+
+        let mut validation = Validation::new(header.alg);
+        validation.validate_aud = false;
+        validation.validate_nbf = true;
+        let data = decode::<AuthentikClaims>(&raw_token, &key, &validation).map_err(to_status)?;
+        Ok(data)
+    }
+
+    pub fn extract_ssh_cert_token(
+        &self,
+        ssh_auth: String,
+    ) -> Result<(Certificate, String), Status> {
+        let cert = Certificate::from_openssh(&ssh_auth).map_err(to_status)?;
 
         let ext_token = cert
             .extensions()
@@ -70,6 +101,19 @@ impl SystemAuthToken for AuthComponent {
         if !self.verify_cert_host_key(&cert).map_err(to_status)? {
             return Err(Status::permission_denied("certificate has wrong host-key"));
         }
+        Ok((cert, ext_token))
+    }
+}
+
+#[tonic::async_trait]
+impl SystemAuthToken for AuthComponent {
+    async fn ssh_cert_auth(
+        &self,
+        request: Request<SshCertAuthRequest>,
+    ) -> Result<Response<SshCertAuthResponse>, Status> {
+        let req = request.into_inner();
+        let (cert, ext_token) =
+            self.extract_ssh_cert_token(format!("{} {}", req.r#type, req.b64key))?;
 
         let res = self
             .token_auth(Request::new(TokenAuthRequest {
@@ -111,24 +155,11 @@ impl SystemAuthToken for AuthComponent {
                 Status::failed_precondition("domain remote config not loaded yet")
             })?;
 
-        let jwks_value = serde_json::to_value(&remote.jwks_auth).map_err(to_status)?;
-        let jwks: JwkSet = serde_json::from_value(jwks_value).map_err(to_status)?;
-
-        let header = decode_header(&req.token).map_err(to_status)?;
-        let kid = header
-            .kid
-            .ok_or_else(|| Status::invalid_argument("token is missing a kid"))?;
-        let jwk = jwks
-            .find(&kid)
-            .ok_or_else(|| Status::invalid_argument("unknown signing key"))?;
-        let key = DecodingKey::from_jwk(jwk).map_err(to_status)?;
-
-        let mut validation = Validation::new(header.alg);
-        validation.validate_aud = false;
-        validation.validate_nbf = true;
-        let data = decode::<AuthentikClaims>(&req.token, &key, &validation).map_err(to_status)?;
-
-        if !data
+        let token = self
+            .validate_token(req.token.clone(), Some(remote.clone()))
+            .await
+            .map_err(|e| Status::from_error(e.into()))?;
+        if !token
             .claims
             .aud
             .clone()
@@ -137,7 +168,7 @@ impl SystemAuthToken for AuthComponent {
         {
             return Err(Status::permission_denied("token audience mismatch"));
         }
-        if !req.username.is_empty() && req.username != data.claims.preferred_username {
+        if !req.username.is_empty() && req.username != token.claims.preferred_username {
             return Err(Status::permission_denied("token username mismatch"));
         }
 
@@ -155,9 +186,9 @@ impl SystemAuthToken for AuthComponent {
             {
                 match session
                     .new_session(
-                        data.claims.preferred_username.clone(),
+                        token.claims.preferred_username.clone(),
                         req.token.clone(),
-                        Some(data.claims.exp.timestamp()),
+                        Some(token.claims.exp.timestamp()),
                     )
                     .await
                 {
@@ -175,14 +206,14 @@ impl SystemAuthToken for AuthComponent {
         Ok(Response::new(TokenAuthResponse {
             successful: true,
             token: Some(Token {
-                preferred_username: data.claims.preferred_username,
-                iss: data.claims.iss,
-                sub: data.claims.sub.unwrap_or_default(),
-                aud: data.claims.aud,
-                exp: Some(data.claims.exp.into()),
+                preferred_username: token.claims.preferred_username,
+                iss: token.claims.iss,
+                sub: token.claims.sub.unwrap_or_default(),
+                aud: token.claims.aud,
+                exp: Some(token.claims.exp.into()),
                 nbf: None,
-                iat: Some(data.claims.iat.into()),
-                jti: data.claims.jti.unwrap_or_default(),
+                iat: Some(token.claims.iat.into()),
+                jti: token.claims.jti.unwrap_or_default(),
             }),
             session_id,
         }))
