@@ -155,7 +155,7 @@ impl AuthentikMcp {
             result.agent.username
         ))];
         if let Some(Some(exp)) = result.agent.expires {
-            ch.push(ContentBlock::text(format!(
+            cb.push(ContentBlock::text(format!(
                 "The agent identity will auto-expire at {}. After this time has passed, re-request a new identity.",
                     exp
             )));
