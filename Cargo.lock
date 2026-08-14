@@ -767,9 +767,8 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 
 [[package]]
 name = "authentik-client"
-version = "2026.8.0-rc7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3c83e9b337cfb19dea791691c5446626b63e9674c15236ce4d212b8ac8792ec"
+version = "2026.11.0-rc1"
+source = "git+https://github.com/goauthentik/client-rust#529d7b8a5018ee030d6ad254acfa021469f27f20"
 dependencies = [
  "chrono",
  "reqwest 0.13.4",
