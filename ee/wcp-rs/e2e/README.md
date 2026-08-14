@@ -18,6 +18,11 @@ workspace member's artifacts in one place — see `dll::build_output_dir()`),
 so `cargo test` after `cargo build` is enough; no separate packaging step is
 required for local runs.
 
+Stopping a real `ak_sysd` service to free the pipe requires an elevated
+(admin) shell — `Stop-Service`/`Stop-Process` against it both fail with
+access denied from a normal user session, so this isn't something CI or a
+dev script can silently work around from a standard account.
+
 ## Manual / secure-desktop checklist
 
 Not automatable in CI — the secure winlogon desktop only exists at a real
