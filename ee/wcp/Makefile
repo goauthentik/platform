@@ -8,7 +8,7 @@ CEF_PATH := $(TOP)cache/cef
 
 .PHONY: clean
 clean:
-	cd "${TOP}" && rm -rf "bin/${OUT_TARGET}" "cache/wcp-rs"
+	cd "${TOP}" && rm -rf "bin/${OUT_TARGET}" "cache/wcp"
 
 .PHONY: cef-runtime
 cef-runtime:
@@ -24,13 +24,13 @@ build: cef-runtime
 		AK_BUILDHASH=${VERSION_HASH} \
 		AK_TAG=${VERSION_TAG} \
 		cargo build --release \
-			--target-dir "${TOP}cache/wcp-rs" \
+			--target-dir "${TOP}cache/wcp" \
 			--manifest-path "${PWD}/Cargo.toml"
-	cp "${TOP}cache/wcp-rs/release/ak_cred_provider.dll" "${TOP}bin/${OUT_TARGET}/"
-	cp "${TOP}cache/wcp-rs/release/ak_cred_provider.pdb" "${TOP}bin/${OUT_TARGET}/" || true
-	cp "${TOP}cache/wcp-rs/release/ak_cred_provider.dll.lib" "${TOP}bin/${OUT_TARGET}/ak_cred_provider.lib"
-	cp "${TOP}cache/wcp-rs/release/ak_cef.exe" "${TOP}bin/${OUT_TARGET}/"
-	cp "${TOP}cache/wcp-rs/release/ak_cef.pdb" "${TOP}bin/${OUT_TARGET}/" || true
+	cp "${TOP}cache/wcp/release/ak_cred_provider.dll" "${TOP}bin/${OUT_TARGET}/"
+	cp "${TOP}cache/wcp/release/ak_cred_provider.pdb" "${TOP}bin/${OUT_TARGET}/" || true
+	cp "${TOP}cache/wcp/release/ak_cred_provider.dll.lib" "${TOP}bin/${OUT_TARGET}/ak_cred_provider.lib"
+	cp "${TOP}cache/wcp/release/ak_cef.exe" "${TOP}bin/${OUT_TARGET}/"
+	cp "${TOP}cache/wcp/release/ak_cef.pdb" "${TOP}bin/${OUT_TARGET}/" || true
 	cp "${CEF_PATH}"/*.dll "${TOP}bin/${OUT_TARGET}/"
 	cp "${CEF_PATH}"/*.pak "${TOP}bin/${OUT_TARGET}/"
 	cp "${CEF_PATH}/icudtl.dat" "${TOP}bin/${OUT_TARGET}/"

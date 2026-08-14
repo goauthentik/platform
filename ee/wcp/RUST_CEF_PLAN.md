@@ -1,4 +1,4 @@
-# wcp-rs implementation plan
+# wcp implementation plan
 
 ## Context
 
@@ -22,13 +22,13 @@ This directory holds the replacement:
 
 ## Crate layout
 
-Own Cargo workspace at `platform/ee/wcp-rs/Cargo.toml`, not a member of the
+Own Cargo workspace at `platform/ee/wcp/Cargo.toml`, not a member of the
 root `platform/Cargo.toml` workspace — `ak-ffi`/`ak-platform` are consumed
 as ordinary path dependencies from outside their workspace, so Windows-only
 crates don't end up in the Linux-based root workspace CI.
 
 ```
-platform/ee/wcp-rs/
+platform/ee/wcp/
   Cargo.toml                 # workspace root
   wire/                      # lib: shared IPC protocol + tile/window constants
   credprovider/              # cdylib -> ak_cred_provider.dll
@@ -102,14 +102,14 @@ control pipe for cancellation.
 
 ## Build & packaging
 
-- `platform/ee/wcp-rs/Makefile` builds the workspace and copies
+- `platform/ee/wcp/Makefile` builds the workspace and copies
   `ak_cred_provider.dll`, `ak_cef.exe`, and CEF's runtime deps into the
   `bin/wcp/` output shape `platform/vpkg/windows/Package.wxs` expects.
   There is deliberately no `build.ps1` — the Makefile is the only build
   entry point.
 - CLSID and registry contract stay unchanged; the MSI installer is
   responsible for writing them (see `credprovider` notes above).
-- CI: `ee/wcp-rs` is a target in the standard `_build-rs.yml` matrix
+- CI: `ee/wcp` is a target in the standard `_build-rs.yml` matrix
   (windows-2025 only), producing an artifact still named `wcp` for
   compatibility with `_package-windows.yml`. There is no more
   wcp-specific build workflow.

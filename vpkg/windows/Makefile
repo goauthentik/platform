@@ -9,7 +9,7 @@ local:
 		ak-agent-desktop/build \
 		ak-cli/build \
 		ak-browser-support/build \
-		ee/wcp-rs/build
+		ee/wcp/build
 	$(MAKE) -C "${TOP}" vpkg/windows/package
 
 .PHONY: package
