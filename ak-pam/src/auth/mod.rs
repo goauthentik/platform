@@ -1,41 +1,19 @@
 use ak_platform::grpc::Bridge;
-use pam::{
-    constants::{PamFlag, PamResultCode},
-    conv::Conv,
-    items::User,
-    module::PamHandle,
-};
-use std::ffi::CStr;
+use pam::{constants::PamResultCode, conv::Conv, module::PamHandle};
 
 use crate::{
-    ENV_SESSION_ID,
-    auth::interactive::auth_interactive,
-    dir::check_user_exists,
-    pam_env::pam_put_env,
-    session_data::{_write_session_data, SessionData},
+    ENV_SESSION_ID, auth::interactive::auth_interactive, dir::check_user_exists,
+    pam_env::pam_put_env, session::session_data::SessionData, username,
 };
 use eyre::{Context, Result};
 
 pub mod authorize;
 pub mod fido;
 pub mod interactive;
+pub mod ssh;
 
-pub fn authenticate_impl(
-    pamh: &mut PamHandle,
-    _args: Vec<&CStr>,
-    _flags: PamFlag,
-) -> Result<PamResultCode> {
-    let username = match pamh.get_item::<User>() {
-        Ok(Some(u)) => String::from_utf8(u.to_bytes().to_vec()).context("failed to decode user")?,
-        Ok(None) => {
-            tracing::warn!("No user");
-            return Ok(PamResultCode::PAM_AUTH_ERR);
-        }
-        Err(e) => {
-            tracing::warn!("failed to get user");
-            return Ok(e);
-        }
-    };
+pub fn authenticate_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
+    let username = username(pamh)?;
     tracing::debug!("got username: '{username}'");
     // Check if user actually exists in authentik
     check_user_exists(username.clone())?;
@@ -78,7 +56,8 @@ pub fn authenticate_impl(
         )
         .context("Failed to set env")?;
     }
-    _write_session_data(session_id.clone(), session_data)
+    session_data
+        .write(session_id.clone())
         .context("failed to write session data")?;
     pam_put_env(pamh, ENV_SESSION_ID, session_id.to_owned().as_str())
         .context("failed to set session_id env")?;

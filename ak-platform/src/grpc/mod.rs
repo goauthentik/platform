@@ -14,6 +14,7 @@ use tower::service_fn;
 
 use crate::config::Config;
 use crate::generated::agent::ResponseHeader;
+use crate::grpc::ssh::SSHService;
 use crate::net;
 use crate::string::PlatformString;
 
@@ -135,6 +136,23 @@ pub fn grpc_request_path<T, F: Future<Output = GrpcResult<T>>>(
     rt.block_on(async {
         let channel = grpc_endpoint(path).await?;
         future(channel).await
+    })
+}
+
+pub fn grpc_request_tunnel<T, F: Future<Output = GrpcResult<T>>>(
+    path: String,
+    future: impl Fn(SSHService) -> F,
+) -> GrpcResult<T> {
+    let rt = Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| GrpcError::Other(e.into()))?;
+
+    rt.block_on(async {
+        let sock = ssh::SSHTunnel::connect_to(&path)
+            .await
+            .map_err(GrpcError::Other)?;
+        future(sock.service(())).await
     })
 }
 

@@ -1,10 +1,11 @@
 use std::{env, ffi::CStr};
 
-use ak_platform::log::{set_log_level, LevelFilter};
 use ak_platform::log::unix::log_hook;
+use ak_platform::log::{LevelFilter, set_log_level};
 use pam::{constants::PamFlag, module::PamHandle};
 
 use crate::pam_env::pam_list_env;
+use crate::username;
 
 pub fn prelude(name: &str, pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) {
     let args: Vec<_> = args
@@ -26,6 +27,11 @@ pub fn prelude(name: &str, pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFl
         "\tPAM env: {}",
         Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", ")
     );
+    if let Ok(user)  = username(pamh) {
+        tracing::debug!(
+            "\tPAM user: {user}"
+        );
+    }
     tracing::debug!(
         "\tProc env: {}",
         Vec::from_iter(env::vars().map(|(k, v)| format!("{k}={v}"))).join(", ")

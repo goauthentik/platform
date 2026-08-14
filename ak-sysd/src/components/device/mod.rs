@@ -27,8 +27,16 @@ impl DeviceComponent {
         DeviceComponent { ctx }
     }
 
-    fn gather_facts() -> DeviceFactsRequest {
-        ak_platform_facts::gather()
+    /// Gathers device facts off the async runtime.
+    ///
+    /// `ak_platform_facts::gather` drives the in-process osquery engine over
+    /// blocking C++ FFI and routinely takes several seconds (it runs ten
+    /// tables, including the `processes`/`users`/`groups` ones), so calling it
+    /// directly from a task stalls every other task on that worker thread.
+    async fn gather_facts() -> Result<DeviceFactsRequest> {
+        tokio::task::spawn_blocking(ak_platform_facts::gather)
+            .await
+            .map_err(|e| eyre::eyre!("gathering device facts failed: {e}"))
     }
 
     /// Runs one checkin cycle for a single domain by name. Exposed
@@ -41,7 +49,7 @@ impl DeviceComponent {
         let Some(domain) = domains.iter().find(|d| d.cfg.domain == domain_name) else {
             bail!("domain not found: {domain_name}");
         };
-        let facts = Self::gather_facts();
+        let facts = Self::gather_facts().await?;
         authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(
             &domain.api,
             Some(facts),
@@ -64,7 +72,13 @@ impl Component for DeviceComponent {
             loop {
                 let domains = ctx.domains.domains().await;
                 for d in domains {
-                    let facts = DeviceComponent::gather_facts();
+                    let facts = match DeviceComponent::gather_facts().await {
+                        Ok(facts) => facts,
+                        Err(e) => {
+                            tracing::warn!(domain = d.cfg.domain, "{e:?}");
+                            continue;
+                        }
+                    };
                     if let Err(e) = authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(&d.api, Some(facts)).await {
                         tracing::warn!(domain = d.cfg.domain, "checkin failed: {e:?}");
                     }
