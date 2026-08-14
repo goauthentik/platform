@@ -50,7 +50,7 @@ dependencies = [
 
 [[package]]
 name = "ak-agent"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-meta",
  "ak-platform",
@@ -86,7 +86,7 @@ dependencies = [
 
 [[package]]
 name = "ak-agent-desktop"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-agent",
  "ak-meta",
@@ -107,7 +107,7 @@ dependencies = [
 
 [[package]]
 name = "ak-api-cli-gen"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "insta",
  "prettyplease 0.3.0",
@@ -118,7 +118,7 @@ dependencies = [
 
 [[package]]
 name = "ak-browser-support"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-meta",
  "ak-platform",
@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "ak-cli"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-api-cli-gen",
  "ak-meta",
@@ -165,7 +165,7 @@ dependencies = [
 
 [[package]]
 name = "ak-flow-executor"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-meta",
  "ak-platform",
@@ -184,7 +184,7 @@ dependencies = [
 
 [[package]]
 name = "ak-meta"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-meta-macros",
  "ak-platform",
@@ -193,7 +193,7 @@ dependencies = [
 
 [[package]]
 name = "ak-meta-macros"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -202,7 +202,7 @@ dependencies = [
 
 [[package]]
 name = "ak-nss"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-platform",
  "ctor 1.0.13",
@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "ak-pam"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-platform",
  "ctap-hid-fido2",
@@ -233,7 +233,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "base64 0.23.1",
  "bytes",
@@ -274,7 +274,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-authz"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-platform",
  "apple-localauthentication",
@@ -288,7 +288,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-e2e"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-flow-executor",
  "ak-platform",
@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-facts"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-meta",
  "authentik-client",
@@ -323,7 +323,7 @@ dependencies = [
 
 [[package]]
 name = "ak-platform-keyring"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-platform",
  "chrono",
@@ -343,7 +343,7 @@ dependencies = [
 
 [[package]]
 name = "ak-sysd"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-agent",
  "ak-flow-executor",
@@ -393,7 +393,7 @@ dependencies = [
 
 [[package]]
 name = "ak_ffi"
-version = "0.50.5"
+version = "0.60.0"
 dependencies = [
  "ak-platform",
  "cxx",
