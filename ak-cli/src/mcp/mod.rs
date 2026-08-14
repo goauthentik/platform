@@ -130,7 +130,8 @@ impl AuthentikMcp {
         description = "Send a read-only HTTP request (GET/HEAD) as an agent identity. Only hosts \
                        sharing a registrable domain with an application the agent exchanged a token \
                        for can be reached; that token is attached automatically. Redirects are not \
-                       followed, 3xx responses are returned as-is.",
+                       followed, 3xx responses are returned as-is. Set insecure only after a \
+                       request has actually failed TLS validation, never up front.",
         annotations(
             title = "HTTP request (read-only)",
             read_only_hint = true,
@@ -146,7 +147,8 @@ impl AuthentikMcp {
 
     #[tool(
         description = "Send a modifying HTTP request (POST/PUT/PATCH/DELETE) as an agent identity. \
-                       Subject to the same origin restrictions as http_fetch.",
+                       Subject to the same origin restrictions as http_fetch, and the same caveat \
+                       about insecure.",
         annotations(
             title = "HTTP request (modifying)",
             read_only_hint = false,

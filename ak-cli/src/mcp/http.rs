@@ -78,6 +78,10 @@ pub struct HttpFetchArgs {
     /// Additional request headers
     #[serde(default)]
     pub headers: Option<HashMap<String, String>>,
+    /// Skip TLS certificate validation. Only for hosts with a self-signed or
+    /// expired certificate; the request becomes open to interception.
+    #[serde(default)]
+    pub insecure: bool,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -98,6 +102,10 @@ pub struct HttpSendArgs {
     /// Content type of the body, defaults to application/json
     #[serde(default)]
     pub content_type: Option<String>,
+    /// Skip TLS certificate validation. Only for hosts with a self-signed or
+    /// expired certificate; the request becomes open to interception.
+    #[serde(default)]
+    pub insecure: bool,
 }
 
 impl AuthentikMcp {
@@ -108,6 +116,7 @@ impl AuthentikMcp {
             args.method.unwrap_or_default().into(),
             args.headers,
             None,
+            args.insecure,
         )
         .await
     }
@@ -123,6 +132,7 @@ impl AuthentikMcp {
             args.method.into(),
             args.headers,
             body,
+            args.insecure,
         )
         .await
     }
@@ -134,6 +144,7 @@ impl AuthentikMcp {
         method: Method,
         headers: Option<HashMap<String, String>>,
         body: Option<(String, String)>,
+        insecure: bool,
     ) -> Result<CallToolResult, McpError> {
         let url = Url::parse(raw_url)
             .map_err(|e| McpError::invalid_params(format!("invalid URL: {e}"), None))?;
@@ -148,6 +159,13 @@ impl AuthentikMcp {
         }
         let headers = build_headers(headers)?;
         let token = self.token_for(agent_identifier, &url).await?;
+        if insecure {
+            tracing::warn!(
+                url = %url,
+                agent = agent_identifier,
+                "sending the agent's token without validating the TLS certificate"
+            );
+        }
 
         // Redirects are not followed: a 3xx from an allowed host would otherwise
         // be able to pull the agent's token to an origin it may not reach.
@@ -156,6 +174,7 @@ impl AuthentikMcp {
             .timeout(REQUEST_TIMEOUT)
             .user_agent(user_agent())
             .default_headers(headers)
+            .tls_danger_accept_invalid_certs(insecure)
             .build()
             .map_err(|e| {
                 McpError::internal_error(format!("failed to build HTTP client: {e}"), None)
@@ -315,6 +334,29 @@ mod tests {
         assert!(build_headers(Some(name)).is_err());
         let value = HashMap::from([("x-test".to_owned(), "bad\nvalue".to_owned())]);
         assert!(build_headers(Some(value)).is_err());
+    }
+
+    /// Certificate validation stays on unless the caller explicitly asks for it
+    /// to be skipped.
+    #[test]
+    fn test_insecure_defaults_off() {
+        let fetch: HttpFetchArgs = serde_json::from_value(serde_json::json!({
+            "url": "https://example.com/"
+        }))
+        .expect("args should deserialize");
+        assert!(!fetch.insecure);
+
+        let send: HttpSendArgs = serde_json::from_value(serde_json::json!({
+            "url": "https://example.com/", "method": "POST"
+        }))
+        .expect("args should deserialize");
+        assert!(!send.insecure);
+
+        let fetch: HttpFetchArgs = serde_json::from_value(serde_json::json!({
+            "url": "https://example.com/", "insecure": true
+        }))
+        .expect("args should deserialize");
+        assert!(fetch.insecure);
     }
 
     /// An MCP server holding a single grant for `agent`, expiring in `ttl`.
