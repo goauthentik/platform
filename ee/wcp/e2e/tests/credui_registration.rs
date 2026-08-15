@@ -27,13 +27,21 @@ const HEADER_TOKEN: &str = "credui-registration-header-token";
 const VALID_TOKEN: &str = "credui-registration-valid-token";
 const USERNAME: &str = "credui-registration-user";
 
-/// `current_thread` on purpose: real activation makes the DLL an STA object
-/// (registered `ThreadingModel=Apartment`), so every call into it must stay
-/// on the one OS thread that called `CoInitializeEx`. A `multi_thread`
-/// runtime is free to resume this task on a different worker after any
-/// `.await`, which would hand the interface pointer to a thread COM never
-/// blessed for it.
-#[tokio::test(flavor = "current_thread")]
+/// `multi_thread`, deliberately, even though real activation makes the DLL an
+/// STA object (registered `ThreadingModel=Apartment`): `mock_sysd::start`
+/// spawns the mock server as its own tokio task, and `Connect()` below blocks
+/// synchronously (no `.await` anywhere under it) for as long as `ak_cef.exe`
+/// takes to complete its round trip against that mock. On a `current_thread`
+/// runtime that block starves the only OS thread the runtime has, so the mock
+/// server's task can never be polled again to answer `ak_cef.exe`'s real gRPC
+/// calls — a full deadlock, not a slow test. (This was tried and hung in CI
+/// for 30+ minutes before this fix.)
+///
+/// Apartment safety instead comes from ordering: the one `.await` in this
+/// test (`mock_sysd::start`) happens *before* `CoInitializeEx`, so by the
+/// time the COM apartment exists there is nothing left to yield on, and
+/// nothing after it can move this task to a different worker thread.
+#[tokio::test(flavor = "multi_thread")]
 async fn registered_provider_completes_sign_in_via_real_com_activation() {
     if !harness::opted_in("registered_provider_completes_sign_in_via_real_com_activation") {
         return;
@@ -50,18 +58,6 @@ async fn registered_provider_completes_sign_in_via_real_com_activation() {
         "expected {cef_exe:?} to exist — build the workspace first"
     );
 
-    // Declared before any COM interface below: Rust drops locals in reverse
-    // declaration order, so this runs CoUninitialize only after every
-    // interface obtained under it has been released. Registry cleanup
-    // (`_registration`) is declared earlier still, so it runs last of all —
-    // harmless, since deleting the CLSID registration doesn't affect an
-    // already-activated in-process instance.
-    let _registration = RegisteredProvider::register(&dll_path)
-        .expect("register ak_cred_provider.dll — needs an elevated shell");
-    let _com = ComGuard::new().expect("CoInitializeEx");
-    let _caps = harness::DebugCapabilities::enable()
-        .expect("seed the Capabilities registry key — needs an elevated shell");
-
     let server = RedirectServer::start(VALID_TOKEN).expect("start local redirect server");
     let _mock = mock_sysd::start(mock_sysd::MockConfig {
         interactive_auth_url: server.url.clone(),
@@ -71,6 +67,19 @@ async fn registered_provider_completes_sign_in_via_real_com_activation() {
     })
     .await
     .expect("start mock ak-sysd — is a real ak-sysd already bound to the pipe?");
+
+    // Declared before any COM interface below: Rust drops locals in reverse
+    // declaration order, so this runs CoUninitialize only after every
+    // interface obtained under it has been released. Registry cleanup
+    // (`_registration`) is declared earlier still, so it runs last of all —
+    // harmless, since deleting the CLSID registration doesn't affect an
+    // already-activated in-process instance. Nothing from here on awaits, so
+    // nothing can move this task off the thread `_com` initialised.
+    let _registration = RegisteredProvider::register(&dll_path)
+        .expect("register ak_cred_provider.dll — needs an elevated shell");
+    let _com = ComGuard::new().expect("CoInitializeEx");
+    let _caps = harness::DebugCapabilities::enable()
+        .expect("seed the Capabilities registry key — needs an elevated shell");
 
     // The activation this test exists for: found via the registry, loaded and
     // instantiated by ole32 itself, not by us calling DllGetClassObject.
