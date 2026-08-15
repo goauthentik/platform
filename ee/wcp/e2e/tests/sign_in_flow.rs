@@ -9,15 +9,17 @@
 
 use e2e::query_continue::query_continue;
 use e2e::user_array::{TestUser, user_array};
-use e2e::{dll::LoadedProvider, harness, mock_sysd, redirect_server::RedirectServer};
+use e2e::{
+    dll::{LoadedProvider, get_serialization},
+    harness, mock_sysd,
+    redirect_server::RedirectServer,
+};
 
 use windows::Win32::UI::Shell::{
     CPGSR_NO_CREDENTIAL_FINISHED, CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_SUCCESS, CPSI_WARNING,
-    CPUS_CREDUI, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
-    CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE, CREDENTIAL_PROVIDER_STATUS_ICON,
-    IConnectableCredentialProviderCredential, ICredentialProviderSetUserArray,
+    CPUS_CREDUI, IConnectableCredentialProviderCredential, ICredentialProviderSetUserArray,
 };
-use windows::core::{Interface, PWSTR};
+use windows::core::Interface;
 
 const HEADER_TOKEN: &str = "header-token-under-test";
 const VALID_TOKEN: &str = "valid-token-under-test";
@@ -79,45 +81,6 @@ async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
         server,
         provider,
     }
-}
-
-/// Calls `GetSerialization` and returns the response code, status icon and
-/// serialization struct.
-unsafe fn get_serialization(
-    credential: &windows::Win32::UI::Shell::ICredentialProviderCredential,
-) -> (
-    CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE,
-    CREDENTIAL_PROVIDER_STATUS_ICON,
-    CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
-    String,
-) {
-    let mut response = CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE::default();
-    let mut serialization = CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION::default();
-    let mut status_text = PWSTR::null();
-    let mut status_icon = CREDENTIAL_PROVIDER_STATUS_ICON::default();
-
-    unsafe {
-        credential
-            .GetSerialization(
-                &mut response,
-                &mut serialization,
-                &mut status_text,
-                &mut status_icon,
-            )
-            .expect("GetSerialization");
-    }
-
-    let text = if status_text.is_null() {
-        String::new()
-    } else {
-        let s = unsafe { status_text.to_string() }.unwrap_or_default();
-        unsafe {
-            windows::Win32::System::Com::CoTaskMemFree(Some(status_text.0 as *const _));
-        }
-        s
-    };
-
-    (response, status_icon, serialization, text)
 }
 
 /// Looks up the Negotiate authentication package the same way the DLL does.

@@ -10,12 +10,16 @@ use windows::{
     Win32::{
         Foundation::{E_FAIL, FreeLibrary, HMODULE},
         System::{
-            Com::IClassFactory,
+            Com::{CoTaskMemFree, IClassFactory},
             LibraryLoader::{GetProcAddress, LoadLibraryW},
         },
-        UI::Shell::ICredentialProvider,
+        UI::Shell::{
+            CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+            CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE, CREDENTIAL_PROVIDER_STATUS_ICON,
+            ICredentialProvider, ICredentialProviderCredential,
+        },
     },
-    core::{GUID, HRESULT, Interface, PCWSTR, s},
+    core::{GUID, HRESULT, Interface, PCWSTR, PWSTR, s},
 };
 
 pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E_8E0A_1D0F8E73577A);
@@ -93,4 +97,50 @@ impl Drop for LoadedProvider {
             let _ = FreeLibrary(self.module);
         }
     }
+}
+
+/// Calls `GetSerialization` and returns the response code, status icon and
+/// serialization struct, shared by every test that drives a `Connect()`ed
+/// credential to completion regardless of how the provider was activated.
+///
+/// # Safety
+/// `credential` must be a live `ICredentialProviderCredential` whose
+/// `Connect()` has already run (or that has no outcome recorded — a valid
+/// call in production, always answered with `CPGSR_NO_CREDENTIAL_FINISHED`).
+pub unsafe fn get_serialization(
+    credential: &ICredentialProviderCredential,
+) -> (
+    CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE,
+    CREDENTIAL_PROVIDER_STATUS_ICON,
+    CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+    String,
+) {
+    let mut response = CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE::default();
+    let mut serialization = CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION::default();
+    let mut status_text = PWSTR::null();
+    let mut status_icon = CREDENTIAL_PROVIDER_STATUS_ICON::default();
+
+    unsafe {
+        #[allow(clippy::expect_used)]
+        credential
+            .GetSerialization(
+                &mut response,
+                &mut serialization,
+                &mut status_text,
+                &mut status_icon,
+            )
+            .expect("GetSerialization");
+    }
+
+    let text = if status_text.is_null() {
+        String::new()
+    } else {
+        let s = unsafe { status_text.to_string() }.unwrap_or_default();
+        unsafe {
+            CoTaskMemFree(Some(status_text.0 as *const _));
+        }
+        s
+    };
+
+    (response, status_icon, serialization, text)
 }

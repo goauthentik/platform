@@ -53,9 +53,9 @@ and usage-scenario tests, and `redirect_server`'s own test.
    This is needed because `SetUsageScenario` only accepts `CPUS_CREDUI` —
    the one scenario that works on an ordinary interactive desktop rather
    than LogonUI's secure desktop — when the cached capabilities carry
-   `debug`. `sysd_client::sys_caps` only ever writes `debug: false` (it has
-   no transport to learn otherwise), so nothing sets that flag in normal
-   operation and the harness has to seed it.
+   `debug`. `credprovider::sysd::sys_caps` only ever writes `debug: false`
+   (it has no transport to learn otherwise), so nothing sets that flag in
+   normal operation and the harness has to seed it.
 
 3. **An interactive desktop session.** The sign-in flow spawns a real
    `ak_cef.exe` which opens a real CEF window; it will appear and disappear
@@ -66,6 +66,17 @@ and usage-scenario tests, and `redirect_server`'s own test.
    token — the test process is not SYSTEM and so holds no `SE_TCB_NAME`.
    The real logon scenarios never take that fallback; see
    `ipc::may_launch_in_current_session`.
+
+4. **No existing registration of the credential provider**, for
+   `credui_registration.rs` specifically. That test writes the real
+   `HKLM\SOFTWARE\Classes\CLSID\{7BCC7941-...}` and `...\Credential
+   Providers\{7BCC7941-...}` keys the MSI installer would, so it can activate
+   the DLL through real `CoCreateInstance` — the path LogonUI/CredUI actually
+   use — rather than `LoadLibraryW`/`DllGetClassObject`. It refuses to run
+   (rather than overwrite) if the CLSID key already exists, since that means
+   the product is actually installed on this machine and clobbering its
+   registration — then deleting it on `Drop` — would break that install
+   rather than merely fail a test.
 
 ## Manual / secure-desktop checklist
 
