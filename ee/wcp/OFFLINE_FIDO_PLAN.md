@@ -66,13 +66,26 @@ The whole record is additionally sealed to the machine (DPAPI machine scope,
 or `ak-platform-keyring`'s Windows store) so it cannot be lifted to another
 box and attacked there.
 
-**Payload = the local account's current Windows password.** This is the part
-that makes (2) work: the online flow already rotates that password on every
-logon (`credprovider::helpers::generate_random_password` +
-`LocalAccountPasswordReset`). If the online flow also seals it, then offline
-we decrypt it and hand it straight to the existing
-`pack_kerb_interactive_unlock_logon` path — no `NetUserSetInfo` call offline
-at all, and no new credential-serialization code.
+**Payload = a random 32-byte `offline_root`, generated once at enrolment.**
+Not the live Windows password. Sealing the password would force enrolment to
+coincide with a password rotation, which means the key has to be present at a
+*logon* — and that is the one moment we cannot rely on it being plugged in.
+Decoupling them lets enrolment happen once, anywhere, at a time of the user's
+choosing.
+
+Offline then: unseal `offline_root` (which requires key + PIN), derive a
+fresh password from it, `NetUserSetInfo` it onto the local account, and hand
+that to the existing `pack_kerb_interactive_unlock_logon` path. The password
+reset works offline for local accounts because `ak-sysd` runs as SYSTEM and no
+DC is involved — the same call the online flow already makes today.
+
+Worth verifying early: `NetUserSetInfo` level 1003 is an *administrative
+reset*, not a user-initiated change, and Windows cannot re-protect a local
+profile's DPAPI master key across one. Saved Credential Manager entries, Wi-Fi
+secrets and EFS certificates may be lost each time. The current online flow
+already does this on every logon, so this is a pre-existing property rather
+than something offline introduces — but if it turns out to bite users, it
+affects both paths and should be settled before offline multiplies it.
 
 ### Account types
 
@@ -84,6 +97,43 @@ at all, and no new credential-serialization code.
   logon, which the current browser-based flow structurally cannot do. Anyone
   planning domain coverage should treat it as a separate design, not a
   follow-up ticket.
+
+## Enrolment
+
+**The key must be physically present to enrol, and there is no way around
+it.** `hmac-secret` only works against a credential created on that
+authenticator, so enrolment is a real `authenticatorMakeCredential` ceremony:
+key inserted, PIN entered, touch. Nothing the backend holds can substitute —
+that is the cost of not trusting a cached public key, and it is the right
+trade.
+
+So "automatic" means *automatically prompted, and retried until it takes* —
+not silent. Concretely:
+
+- **Primary trigger: in the user's desktop session, via the agent.** When
+  policy enables offline and no active record exists, the agent prompts
+  ("Set up offline sign-in — insert your security key"). This is the right
+  place: the key can be plugged in comfortably, the user can decline and be
+  asked again, there is a real window for messaging and errors, and none of
+  the secure-desktop constraints apply.
+- **Secondary, opportunistic: at the logon screen.** After a successful online
+  logon, if an authenticator is *already* present, offer enrolment inline.
+  Cheap to add once the tile is a state machine, and catches users who keep a
+  key permanently plugged in.
+- **Never block the online logon.** A user who declines, or has no key on
+  them, signs in exactly as before.
+- **Surface "not enrolled" before it matters.** The failure mode to avoid is a
+  user discovering on a plane that they never enrolled. `OfflineStatus`
+  already reports this; the agent should nag on it, and the tile should say so
+  while still online — not the first time it is offline and stuck.
+
+Do *not* try to guarantee presence by forcing the online logon through
+authentik's WebAuthn stage. Beyond being user-hostile, it likely does not even
+work: that stage runs in the CEF window, Chromium's WebAuthn goes through
+`webauthn.dll`, and that wants a foreground window in an interactive session —
+which LogonUI's secure desktop is not. Whether browser WebAuthn functions at
+all inside `ak_cef.exe` is an open question in its own right, and this design
+deliberately does not depend on the answer.
 
 ## Backend (authentik)
 
@@ -207,11 +257,13 @@ has no YubiKey, so:
 1. Move local-password rotation into `ak-sysd`; add the seal/unseal helper.
    No user-visible change.
 2. Backend model, API, policy and revocation plumbing.
-3. Enrolment while online; write the offline record; `OfflineStatus`
-   reporting. Still no offline logon.
+3. Enrolment in-session via the agent, plus `OfflineStatus` reporting and the
+   "not enrolled" nag. Writes the record; still no offline logon, so this
+   ships safely on its own.
 4. Tile state machine and the offline `Connect()` path.
-5. Audit queue and reconnect sync.
-6. Optional, separate design: domain accounts.
+5. Opportunistic enrolment at the logon screen (needs step 4's state machine).
+6. Audit queue and reconnect sync.
+7. Optional, separate design: domain accounts.
 
 ## Open questions
 
@@ -220,9 +272,13 @@ has no YubiKey, so:
 - Keys with no PIN set cannot do UV. With `require_uv` on (the default) these
   must be refused at enrolment.
 - Multiple credentials per user (a backup key) — the record should hold a set,
-  not one.
+  not one. This matters more than it looks: a single enrolled key is a single
+  point of failure that only manifests when the user is already offline and
+  cannot self-serve a recovery. Prompt for a second key once the first
+  succeeds.
 - Platform authenticators / Windows Hello are deliberately out of scope;
   Windows already ships a credential provider for those.
-- Whether enrolment should be automatic on first successful online logon or an
-  explicit admin/user action. Automatic is friendlier; explicit is easier to
-  govern. Needs a product call.
+- Does browser WebAuthn work at all inside `ak_cef.exe` on the secure desktop?
+  Nothing in this design depends on it, but it determines whether security
+  keys are usable for *online* logon too, which users will reasonably expect
+  once they have enrolled one for offline.
