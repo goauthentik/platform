@@ -52,8 +52,16 @@ endif
 # but clippy can only build them on Windows -- `make ee/wcp/lint` covers them
 # there.
 ifneq ($(OS),Windows_NT)
-RS_LINT_EXCLUDE := --exclude credprovider --exclude cef-host --exclude e2e
+RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-cef-host --exclude ak-ee-wcp-e2e
 endif
+
+format:
+	cargo fmt
+	cargo clippy \
+		--fix \
+		--allow-dirty \
+		--workspace \
+		$(RS_LINT_EXCLUDE)
 
 lint-rs:
 	cargo fmt --all

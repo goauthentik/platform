@@ -21,8 +21,8 @@ fn disks_base() -> Vec<DiskRequest> {
                 name = mountpoint.clone();
             }
             DiskRequest {
-                name: name,
-                mountpoint: mountpoint,
+                name,
+                mountpoint,
                 label: None,
                 capacity_total_bytes: Some(total as i64),
                 capacity_used_bytes: Some(total.saturating_sub(available) as i64),
