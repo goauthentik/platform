@@ -188,8 +188,9 @@ mod tests {
 
     #[test]
     fn kerb_pack_round_trips_domain_username_password() {
+        let test_password = "test-password";
         let (buf, len) =
-            pack_kerb_interactive_unlock_logon("WORKGROUP", "alice", "s3cret!", CPUS_LOGON)
+            pack_kerb_interactive_unlock_logon("WORKGROUP", "alice", test_password, CPUS_LOGON)
                 .unwrap();
 
         unsafe {
@@ -198,10 +199,10 @@ mod tests {
             assert_eq!(kil.MessageType, KerbInteractiveLogon);
             assert_eq!(read_offset_string(buf, &kil.LogonDomainName), "WORKGROUP");
             assert_eq!(read_offset_string(buf, &kil.UserName), "alice");
-            assert_eq!(read_offset_string(buf, &kil.Password), "s3cret!");
+            assert_eq!(read_offset_string(buf, &kil.Password), test_password);
 
             let header_size = std::mem::size_of::<KERB_INTERACTIVE_UNLOCK_LOGON>();
-            let expected_len = header_size + (9 + 5 + 7) * 2;
+            let expected_len = header_size + (9 + 5 + 13) * 2;
             assert_eq!(len as usize, expected_len);
 
             windows::Win32::System::Com::CoTaskMemFree(Some(buf as *const _));
@@ -210,10 +211,11 @@ mod tests {
 
     #[test]
     fn kerb_pack_uses_unlock_message_type_for_unlock_scenario() {
+        let test_password = "test-password";
         let (buf, _) = pack_kerb_interactive_unlock_logon(
             "WORKGROUP",
             "alice",
-            "s3cret!",
+            test_password,
             CPUS_UNLOCK_WORKSTATION,
         )
         .unwrap();
