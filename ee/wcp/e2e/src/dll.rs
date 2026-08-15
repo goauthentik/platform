@@ -37,7 +37,11 @@ pub fn build_output_dir() -> PathBuf {
 
 pub struct LoadedProvider {
     module: HMODULE,
-    pub provider: ICredentialProvider,
+    /// `Option` so `Drop` can release it *before* `FreeLibrary`. Every COM
+    /// pointer here is backed by vtable code inside the DLL, so releasing one
+    /// after the module is unmapped jumps into freed pages —
+    /// `STATUS_ACCESS_VIOLATION`.
+    provider: Option<ICredentialProvider>,
 }
 
 impl LoadedProvider {
@@ -66,12 +70,28 @@ impl LoadedProvider {
 
         let provider: ICredentialProvider = unsafe { factory.CreateInstance(None) }?;
 
-        Ok(Self { module, provider })
+        Ok(Self {
+            module,
+            provider: Some(provider),
+        })
+    }
+
+    /// The provider instance. Borrowed rather than exposed as a field so it
+    /// cannot outlive the `LoadedProvider` that keeps the DLL mapped.
+    pub fn provider(&self) -> &ICredentialProvider {
+        #[allow(clippy::expect_used)]
+        self.provider
+            .as_ref()
+            .expect("provider is only taken in Drop")
     }
 }
 
 impl Drop for LoadedProvider {
     fn drop(&mut self) {
+        // Order matters: `Drop::drop` runs before fields are dropped, so
+        // releasing the interface has to happen explicitly here. Leaving it to
+        // the field drop would run it after `FreeLibrary` below.
+        drop(self.provider.take());
         unsafe {
             let _ = FreeLibrary(self.module);
         }

@@ -60,12 +60,12 @@ async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
 
     unsafe {
         provider
-            .provider
+            .provider()
             .SetUsageScenario(CPUS_CREDUI, 0)
             .expect("SetUsageScenario(CPUS_CREDUI) under the debug capability");
 
         let set_users: ICredentialProviderSetUserArray = provider
-            .provider
+            .provider()
             .cast()
             .expect("provider must implement ICredentialProviderSetUserArray");
         set_users
@@ -132,7 +132,7 @@ async fn completed_sign_in_serializes_a_credential() {
     let server = RedirectServer::start(VALID_TOKEN).expect("start local redirect server");
     let fixture = setup(TestUser::non_local(USERNAME), server).await;
 
-    let credential = unsafe { fixture.provider.provider.GetCredentialAt(0) }
+    let credential = unsafe { fixture.provider.provider().GetCredentialAt(0) }
         .expect("GetCredentialAt(0) — SetUserArray should have produced one credential");
     let connectable: IConnectableCredentialProviderCredential = credential
         .cast()
@@ -204,7 +204,7 @@ async fn cancelling_mid_flow_yields_no_credential() {
     let fixture = setup(TestUser::non_local(USERNAME), server).await;
 
     let credential =
-        unsafe { fixture.provider.provider.GetCredentialAt(0) }.expect("GetCredentialAt(0)");
+        unsafe { fixture.provider.provider().GetCredentialAt(0) }.expect("GetCredentialAt(0)");
     let connectable: IConnectableCredentialProviderCredential = credential
         .cast()
         .expect("credential must implement IConnectableCredentialProviderCredential");
