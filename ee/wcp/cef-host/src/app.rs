@@ -16,30 +16,6 @@ wrap_app! {
         fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
             Some(HostBrowserProcessHandler::new(self.result_pipe, self.cancel_pipe))
         }
-
-        // `add_child_view` is where CEF attaches the browser to the widget and
-        // brings up its compositor, and that is the frame that dies on the
-        // secure desktop while the same call succeeds under `CPUS_CREDUI` in
-        // CI. The secure desktop has no usable accelerated path — Chromium's
-        // own log shows DirectComposition degrading there — and this window is
-        // a small login form that software rendering serves fine. Applied in
-        // every scenario so what CI exercises is what ships.
-        fn on_before_command_line_processing(
-            &self,
-            _process_type: Option<&CefString>,
-            command_line: Option<&mut CommandLine>,
-        ) {
-            let Some(command_line) = command_line else {
-                return;
-            };
-            for switch in [
-                "disable-gpu",
-                "disable-gpu-compositing",
-                "disable-direct-composition",
-            ] {
-                command_line.append_switch(Some(&CefString::from(switch)));
-            }
-        }
     }
 }
 
