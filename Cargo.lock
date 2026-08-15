@@ -318,6 +318,7 @@ dependencies = [
  "sysinfo",
  "tempfile",
  "tracing",
+ "winreg 0.56.0",
  "wmi",
 ]
 
