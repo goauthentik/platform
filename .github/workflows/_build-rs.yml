@@ -52,12 +52,6 @@ jobs:
             platform: ubuntu-24.04
           - target: ee/wcp
             platform: ubuntu-24.04-arm
-        include:
-          # keep the artifact name "wcp" for compatibility with the
-          # packaging workflow that consumes it
-          - target: ee/wcp
-            platform: windows-2025
-            artifact_name: wcp
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -121,10 +115,20 @@ jobs:
           RUST_BUILD_FLAGS: ${{ (matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static ' || '' }}${{ inputs.rust_build_flags }}
           AK_IS_RELEASE: ${{ inputs.is_release }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      # Artifact names cannot contain "/", so nested targets like ee/wcp need
+      # a slug. Doing it here rather than via a matrix `include` is deliberate:
+      # an include that matches no base combination *adds* a job, so pinning a
+      # name for ee/wcp+windows-2025 resurrected it even for ubuntu-only
+      # callers like the e2e build.
+      - id: slug
+        shell: bash
+        run: echo "target=${TARGET//\//-}" >> "$GITHUB_OUTPUT"
+        env:
+          TARGET: ${{ matrix.target }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.artifact_name || matrix.target }}${{ inputs.artifact_suffix }}
+          name: authentik_${{ matrix.platform }}_${{ steps.slug.outputs.target }}${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         if: always()

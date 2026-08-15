@@ -157,9 +157,12 @@ A manual/nightly secure-desktop checklist covers true winlogon verification
 - CLSID and registry contract stay unchanged; the MSI installer is
   responsible for writing them (see `credprovider` notes above).
 - CI: `ee/wcp` is a target in the standard `_build-rs.yml` matrix
-  (windows-2025 only), producing an artifact still named `wcp` for
-  compatibility with `_package-windows.yml`. There is no more
-  wcp-specific build workflow.
+  (windows-2025 only); there is no more wcp-specific build workflow. Its
+  artifact is `authentik_windows-2025_ee-wcp`, slugged from the target name
+  because artifact names cannot contain `/`. That slug is computed in a step
+  rather than pinned via a matrix `include`: an `include` matching no base
+  combination *adds* a job, so it re-created a windows `ee/wcp` build even
+  for ubuntu-only callers of the workflow.
 
 ## `ak_lsa` and `ak-ffi` are gone
 
