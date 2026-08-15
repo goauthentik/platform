@@ -61,7 +61,9 @@ fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
             let mut pipe = file_from_raw_handle(result_pipe);
             let _ = wire::write_auth_result(
                 &mut pipe,
-                &wire::AuthResult::Failed { reason: e.to_string() },
+                &wire::AuthResult::Failed {
+                    reason: e.to_string(),
+                },
             );
             quit_message_loop();
             return;

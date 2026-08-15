@@ -31,8 +31,7 @@ const ROOT_CACHE_PATH: &str = r"C:\ProgramData\Authentik Security Inc\wcp-cache"
 /// provider as nothing but exit code `0x80000003`. Its own stderr goes nowhere:
 /// this is a GUI-subsystem binary with no console, and the platform log never
 /// sees a message Chromium raises below the Rust layer.
-const CHROMIUM_LOG_PATH: &str =
-    r"C:\ProgramData\Authentik Security Inc\logs\ak_cef_chromium.log";
+const CHROMIUM_LOG_PATH: &str = r"C:\ProgramData\Authentik Security Inc\logs\ak_cef_chromium.log";
 
 fn arg_value(flag: &str) -> Option<String> {
     let mut args = std::env::args();
@@ -44,22 +43,18 @@ fn arg_value(flag: &str) -> Option<String> {
     None
 }
 
-/// Every sign-in starts from an empty profile. The window is shown on a shared
-/// logon screen, so one person's authentik session must not still be sitting
-/// there for whoever is at the machine next.
+/// Every sign-in starts from an empty profile — the window is shown on a
+/// shared logon screen, so one person's session must not linger for the next.
+/// Called browser-process-side, before `initialize`, since the renderer/GPU
+/// re-execs share this directory with an already-running browser.
 ///
-/// Browser process only, and before `initialize`: the renderer/GPU re-execs
-/// share this directory with a browser that is already using it, and CEF holds
-/// files open under it once it has started.
+/// Clears the contents, not the directory itself: the installer creates it
+/// under `ProgramData` with `CREATOR OWNER` full control, so deleting it would
+/// let any standard user re-create and own the directory this SYSTEM process
+/// is about to write a profile into.
 ///
-/// Clears the contents rather than the directory. The installer creates it, and
-/// `ProgramData` grants `CREATOR OWNER` full control over what gets created
-/// beneath it — so deleting it would leave a window in which any standard user
-/// on the machine could re-create it and own the directory that this process,
-/// running as a service account, is about to write a browser profile into.
-///
-/// A failure here is logged rather than fatal: a stale cache is worth
-/// reporting, but not worth refusing to let someone log in over.
+/// Logged rather than fatal — a stale cache is worth reporting, not worth
+/// blocking a logon over.
 fn wipe_browser_state(path: &Path) {
     if let Err(e) = std::fs::create_dir_all(path) {
         log::warn!("could not create {}: {e}", path.display());
@@ -87,7 +82,10 @@ fn wipe_browser_state(path: &Path) {
             Err(e) => log::warn!("could not remove {}: {e}", entry_path.display()),
         }
     }
-    log::info!("cleared {removed} entries of browser state in {}", path.display());
+    log::info!(
+        "cleared {removed} entries of browser state in {}",
+        path.display()
+    );
 }
 
 /// Identifies the sign-in window to authentik. Matches what the C++ credential
@@ -199,7 +197,10 @@ mod tests {
             .flatten()
             .map(|e| e.file_name())
             .collect();
-        assert!(left.is_empty(), "expected an empty directory, found {left:?}");
+        assert!(
+            left.is_empty(),
+            "expected an empty directory, found {left:?}"
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
