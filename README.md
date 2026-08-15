@@ -116,6 +116,14 @@ Linux DEB and RPM packages, produced via `nfpm` (invoked as a Go tool). **Linux 
 
 Requirements: Pre-built outputs from `ak-cli/build`, `sysd/build`, `ak-agent/build`, `ak-browser-support/build`, `nss/build`, and `pam/build`. Go (used to run `nfpm`). Packages produced: `authentik-cli`, `authentik-sysd`, `authentik-agent`, `libnss-authentik`, `libpam-authentik`.
 
+#### `containers/builder/%`
+
+Linux build environment, published to `ghcr.io/goauthentik/platform-builder`. CI uses it as the runtime for the Linux build, package and test jobs; it pins the Rust toolchain, the osquery toolchain, `nfpm` and the coverage tooling, and its Debian bullseye base is what keeps the shipped binaries' glibc requirement at 2.31.
+
+The tag is a hash of `Dockerfile` + `rust-toolchain.toml` (`make containers/builder/ci-container-tag`), so CI only rebuilds and pushes when one of those changes.
+
+Requirements: Docker.
+
 #### `containers/selenium/%`
 
 Selenium test Docker container.

@@ -14,12 +14,18 @@ on:
         default: '["ubuntu-24.04","ubuntu-24.04-arm"]'
 
 jobs:
+  builder:
+    uses: ./.github/workflows/_builder-image.yml
+
   package:
+    needs: builder
     strategy:
       fail-fast: false
       matrix:
         platform: ${{ fromJSON(inputs.platforms) }}
     runs-on: ${{ matrix.platform }}
+    # nfpm and dpkg-dev are baked into the builder image.
+    container: ${{ needs.builder.outputs.image }}
     permissions:
       contents: read
     steps:
@@ -52,10 +58,6 @@ jobs:
         with:
           name: authentik_${{ matrix.platform }}_ak-pam${{ inputs.artifact_suffix }}
           path: bin/
-      - run: |
-          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
-          sudo apt update
-          sudo apt install nfpm -y
       - shell: bash
         run: make vpkg/linux/package
         env:

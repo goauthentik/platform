@@ -12,10 +12,17 @@ env:
 permissions:
   contents: read
   id-token: write
+  # Workflow-level permissions cap what called workflows can request, and
+  # _builder-image.yml needs to push to GHCR.
+  packages: write
 
 jobs:
+  builder:
+    uses: ./.github/workflows/_builder-image.yml
+
   test_rs:
     name: Test (rust)
+    needs: builder
     strategy:
       fail-fast: false
       matrix:
@@ -45,22 +52,21 @@ jobs:
           - platform: macos-26
             target: ak-nss
     runs-on: ${{ matrix.platform }}
+    # Linux tests run inside the builder image, which bakes in the pinned
+    # toolchain, cargo-llvm-cov/nextest and the osquery toolchain.
+    # ak-agent-desktop needs webkit2gtk-4.1, which bullseye doesn't have, so it
+    # stays on the runner. An empty string means "no container".
+    container: ${{ startsWith(matrix.platform, 'ubuntu') && matrix.target != 'ak-agent-desktop' && needs.builder.outputs.image || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+      - if: ${{ !startsWith(matrix.platform, 'ubuntu') || matrix.target == 'ak-agent-desktop' }}
+        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2
+      - if: ${{ !startsWith(matrix.platform, 'ubuntu') || matrix.target == 'ak-agent-desktop' }}
+        uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2
         with:
           tool: cargo-llvm-cov nextest
-      - name: Install osquery-toolchain
-        if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && (matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm') }}
-        run: |
-          ARCH=$(uname -m)
-          curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
-            "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-${ARCH}.tar.xz"
-          sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
-          rm /tmp/osquery-toolchain.tar.xz
       - if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025' }}
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
       - name: Force real MSVC link.exe
