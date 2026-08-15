@@ -6,11 +6,11 @@ use eyre::Result;
 use std::collections::HashMap;
 use url::Url;
 
+use ak_ee_wcp_wire::TOKEN_QUERY_PARAM;
 use ak_platform::generated::sys_auth::TokenAuthRequest;
 use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use ak_platform::grpc::grpc_request;
-use wire::TOKEN_QUERY_PARAM;
 
 pub struct AuthStartAsync {
     pub url: String,
@@ -78,7 +78,7 @@ mod tests {
     fn extracts_token_from_a_redirect_url() {
         let url = format!(
             "{}callback?{TOKEN_QUERY_PARAM}=abc123",
-            wire::REDIRECT_PREFIX
+            ak_ee_wcp_wire::REDIRECT_PREFIX
         );
         assert_eq!(extract_token(&url).unwrap(), "abc123");
     }
@@ -87,14 +87,14 @@ mod tests {
     fn extracts_token_alongside_other_query_params() {
         let url = format!(
             "{}callback?state=xyz&{TOKEN_QUERY_PARAM}=abc123&code=9",
-            wire::REDIRECT_PREFIX
+            ak_ee_wcp_wire::REDIRECT_PREFIX
         );
         assert_eq!(extract_token(&url).unwrap(), "abc123");
     }
 
     #[test]
     fn errors_when_the_token_param_is_absent() {
-        let url = format!("{}callback?state=xyz", wire::REDIRECT_PREFIX);
+        let url = format!("{}callback?state=xyz", ak_ee_wcp_wire::REDIRECT_PREFIX);
         assert!(extract_token(&url).is_err());
     }
 

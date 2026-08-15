@@ -30,7 +30,7 @@ use crate::ipc::AuthFlow;
 use crate::strings::cotask_pwstr;
 use crate::syscalls::{AuthPackageLookup, LocalAccountPasswordReset};
 use crate::tile;
-use wire::{AuthResult, FieldKind, TILE_FIELDS};
+use ak_ee_wcp_wire::{AuthResult, FieldKind, TILE_FIELDS};
 
 /// Outcome of `Connect`'s browser flow, consumed by `GetSerialization` —
 /// mirrors the original design where `Connect` always succeeds and defers

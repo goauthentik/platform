@@ -9,7 +9,7 @@ use ak_platform::generated::ping::capabilities_response::Capability;
 use ak_platform::generated::ping::ping_client::PingClient;
 use ak_platform::grpc::grpc_request;
 
-/// `e2e::harness` seeds this same key to turn on `debug`; keep the name and
+/// `ak_ee_wcp_e2e::harness` seeds this same key to turn on `debug`; keep the name and
 /// the `Capabilities` fields in step with it.
 pub const CAPABILITIES_KEY: &str = "SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities";
 
