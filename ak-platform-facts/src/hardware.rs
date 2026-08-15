@@ -59,7 +59,30 @@ fn native_serial(row: &SystemInfoRow) -> Result<String> {
             return Ok(contents.trim().to_string());
         }
     }
+
+    // On windows, fall back to the cryptography MachineGuid, which is generated
+    // at install time and stable for the lifetime of that OS install.
+    #[cfg(target_os = "windows")]
+    {
+        if serial.is_err() {
+            return machine_guid();
+        }
+    }
     serial
+}
+
+#[cfg(target_os = "windows")]
+fn machine_guid() -> Result<String> {
+    use winreg::RegKey;
+    use winreg::enums::{HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_64KEY};
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    // KEY_WOW64_64KEY so a 32-bit build isn't redirected into Wow6432Node,
+    // where MachineGuid doesn't exist.
+    let key = hklm
+        .open_subkey_with_flags(r"SOFTWARE\Microsoft\Cryptography", KEY_READ | KEY_WOW64_64KEY)?;
+    let guid: String = key.get_value("MachineGuid")?;
+    non_empty(guid.trim().to_string()).ok_or_else(|| eyre::eyre!("MachineGuid missing or empty"))
 }
 
 pub fn gather() -> Result<HardwareRequest> {
@@ -103,5 +126,13 @@ mod tests {
         assert!(hw.memory_bytes.is_some_and(|b| b > 0));
         assert!(hw.cpu_count.is_some_and(|c| c > 0));
         assert!(!hw.serial.is_empty());
+    }
+
+    /// Every Windows install has this key, so the serial fallback is always
+    /// available there.
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn machine_guid_is_readable() {
+        assert!(!machine_guid().unwrap_or_default().is_empty());
     }
 }
