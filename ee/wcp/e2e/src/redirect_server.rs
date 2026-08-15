@@ -1,35 +1,27 @@
-//! A local stand-in for the authentik sign-in page: serves one HTML document
-//! that immediately navigates to the `goauthentik.io://` redirect carrying a
-//! token, which is what `cef-host`'s resource-request handler is watching for.
-//!
-//! It also records the `X-Authentik-Platform-Auth-DTH` header value on every
-//! request it serves, so tests can assert `cef-host` really injects it rather
-//! than only checking the end-to-end outcome.
+//! Local stand-in for the authentik sign-in page. Serves one HTML document
+//! that navigates to the `goauthentik.io://` redirect `cef-host`'s
+//! resource-request handler watches for, and records the auth header on every
+//! request so tests can assert `cef-host` injects it, not just that the flow
+//! ended well.
 
 use std::io::{BufRead, BufReader, Write};
+
 use std::net::{TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
-/// What `cef-host` should end up navigating to. Kept as a whole-URL builder
-/// so the token and the query-parameter name stay in one place.
-fn redirect_url(token: &str) -> String {
-    format!(
-        "{}callback?{}={token}",
-        wire::REDIRECT_PREFIX,
-        wire::TOKEN_QUERY_PARAM
-    )
-}
-
 fn page(token: Option<&str>) -> String {
-    // A plain top-level navigation, the same shape the real flow ends with.
-    let script = match token {
-        Some(token) => {
-            let target = redirect_url(token);
+    // A plain top-level navigation, the shape the real flow ends with.
+    let script = token
+        .map(|token| {
+            let target = format!(
+                "{}callback?{}={token}",
+                wire::REDIRECT_PREFIX,
+                wire::TOKEN_QUERY_PARAM
+            );
             format!("<script>location.href={target:?};</script>")
-        }
-        None => String::new(),
-    };
+        })
+        .unwrap_or_default();
     format!(
         "<!doctype html><html><head><meta charset=\"utf-8\"><title>mock sign-in</title></head>\
          <body>mock sign-in{script}</body></html>"
@@ -37,7 +29,7 @@ fn page(token: Option<&str>) -> String {
 }
 
 pub struct RedirectServer {
-    /// The URL to hand back from the mock `interactive_auth_async`.
+    /// What the mock `interactive_auth_async` hands back.
     pub url: String,
     auth_headers: Arc<Mutex<Vec<Option<String>>>>,
     shutdown: Arc<AtomicBool>,
@@ -45,14 +37,13 @@ pub struct RedirectServer {
 }
 
 impl RedirectServer {
-    /// Serves a page that immediately navigates to the `goauthentik.io://`
-    /// redirect carrying `token`, completing the sign-in.
+    /// Redirects immediately with `token`, completing the sign-in.
     pub fn start(token: &str) -> std::io::Result<Self> {
         Self::serve(Some(token))
     }
 
-    /// Serves a page that never redirects, leaving the sign-in window open —
-    /// the state a user sits in until they authenticate or back out.
+    /// Never redirects — the state a user sits in until they authenticate or
+    /// back out.
     pub fn start_inert() -> std::io::Result<Self> {
         Self::serve(None)
     }
@@ -111,20 +102,17 @@ fn serve_one(
     body: &str,
     auth_headers: &Arc<Mutex<Vec<Option<String>>>>,
 ) -> std::io::Result<()> {
-    let mut reader = BufReader::new(stream.try_clone()?);
+    let mut lines = BufReader::new(stream.try_clone()?).lines();
 
-    let mut request_line = String::new();
-    if reader.read_line(&mut request_line)? == 0 {
+    // Request line. Absent on the speculative sockets Chromium opens and
+    // never writes to.
+    if lines.next().transpose()?.is_none() {
         return Ok(());
     }
 
     let mut auth_header = None;
-    loop {
-        let mut line = String::new();
-        if reader.read_line(&mut line)? == 0 {
-            break;
-        }
-        let line = line.trim_end();
+    for line in lines {
+        let line = line?;
         if line.is_empty() {
             break;
         }

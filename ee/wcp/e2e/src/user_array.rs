@@ -1,7 +1,6 @@
-//! A stand-in for the `ICredentialProviderUserArray` LogonUI hands the
-//! provider through `SetUserArray`. Building one here lets tests pin the SID,
-//! qualified username and provider ID a `Credential` is constructed from,
-//! instead of depending on whichever accounts exist on the test machine.
+//! Stand-in for the `ICredentialProviderUserArray` LogonUI passes to
+//! `SetUserArray`, so tests pin the SID, qualified username and provider ID a
+//! `Credential` is built from instead of depending on the machine's accounts.
 
 use std::cell::RefCell;
 
@@ -19,13 +18,12 @@ use windows::{
     core::{GUID, PWSTR, Result, implement},
 };
 
-/// Any provider ID that isn't `Identity_LocalUserProvider` makes the provider
-/// treat the account as non-local, which is the only distinction it draws.
+/// Anything but `Identity_LocalUserProvider` reads as non-local, the only
+/// distinction the provider draws.
 pub const NON_LOCAL_USER_PROVIDER: GUID = GUID::from_u128(0x2a1b3c4d_5e6f_4a8b_9c0d_1e2f3a4b5c6d);
 
-/// Copies `value` into a `CoTaskMemAlloc` buffer, the allocator every
-/// `PWSTR`-returning credential-provider method is required to use — the
-/// caller (here, the real DLL) frees it with `CoTaskMemFree`.
+/// `CoTaskMemAlloc` is the allocator every `PWSTR`-returning provider method
+/// must use; the caller (here, the real DLL) frees it.
 fn cotask_pwstr(value: &str) -> PWSTR {
     let wide: Vec<u16> = value.encode_utf16().chain(std::iter::once(0)).collect();
     let bytes = wide.len() * 2;
@@ -45,8 +43,7 @@ pub struct TestUser {
 }
 
 impl TestUser {
-    /// A local account, as `Identity_LocalUserProvider` would report it —
-    /// qualified as `COMPUTER\name`.
+    /// A local account, qualified `COMPUTER\name`.
     pub fn local(computer: &str, name: &str) -> Self {
         Self {
             sid: "S-1-5-21-0-0-0-1001".to_string(),
@@ -55,8 +52,8 @@ impl TestUser {
         }
     }
 
-    /// A non-local (domain/UPN) account, which skips the local password reset
-    /// and serializes through `CredPackAuthenticationBufferW`.
+    /// Domain/UPN account: skips the local password reset and serializes
+    /// through `CredPackAuthenticationBufferW`.
     pub fn non_local(upn: &str) -> Self {
         Self {
             sid: "S-1-5-21-0-0-0-1002".to_string(),

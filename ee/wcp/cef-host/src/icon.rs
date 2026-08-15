@@ -22,9 +22,8 @@ pub fn load() -> Option<Image> {
     Some(image)
 }
 
-/// Minimal uncompressed 24-bit BMP decoder, sufficient for the one asset
-/// this ships: reads width/height/pixel offset from the file+DIB headers,
-/// undoes BMP's bottom-up row order and 4-byte row padding, and expands
+/// Minimal uncompressed 24-bit BMP decoder, enough for the one asset we
+/// ship: undoes BMP's bottom-up row order and 4-byte row padding, and expands
 /// each BGR pixel to opaque BGRA.
 fn decode_bmp(data: &[u8]) -> Option<(i32, i32, Vec<u8>)> {
     if data.len() < 54 || &data[0..2] != b"BM" {

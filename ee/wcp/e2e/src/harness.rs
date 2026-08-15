@@ -7,12 +7,10 @@
 use serde::{Deserialize, Serialize};
 use winreg::enums::HKEY_LOCAL_MACHINE;
 
-/// Mirrors `credprovider`'s `sysd::CAPABILITIES_KEY` / `sysd::Capabilities`.
-/// They can't be imported: `credprovider` is a cdylib, and this harness talks
-/// to it through `LoadLibraryW` rather than by linking it. Drift is caught
-/// rather than silent — a mismatched field name makes `sys_caps` fail to
-/// decode what we wrote, so `SetUsageScenario` rejects `CPUS_CREDUI` and the
-/// tests fail.
+/// Mirrors `credprovider`'s `sysd::CAPABILITIES_KEY` / `sysd::Capabilities`,
+/// which can't be imported: it's a cdylib we reach through `LoadLibraryW`.
+/// Drift fails loudly, not silently — a renamed field makes `sys_caps` fail
+/// to decode what we wrote, so `SetUsageScenario` rejects `CPUS_CREDUI`.
 const CAPABILITIES_KEY: &str = "SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities";
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -24,9 +22,9 @@ struct Capabilities {
 /// Set this to any non-empty value to run the process-level tests.
 pub const OPT_IN_VAR: &str = "AK_WCP_E2E";
 
-/// Returns `false` (after explaining why on stderr) when the process-level
-/// tests should not run here. Tests call this and return early rather than
-/// failing, so `make test` stays meaningful on a normal dev machine.
+/// `false` (explaining why on stderr) when the process-level tests should not
+/// run here. Callers return early rather than fail, so a plain `cargo test`
+/// stays meaningful on a dev machine.
 pub fn opted_in(test_name: &str) -> bool {
     if std::env::var_os(OPT_IN_VAR).is_none_or(|v| v.is_empty()) {
         eprintln!(
@@ -39,13 +37,11 @@ pub fn opted_in(test_name: &str) -> bool {
     true
 }
 
-/// Seeds the capability cache `ICredentialProvider::SetUsageScenario` reads,
-/// with `debug` set so it accepts `CPUS_CREDUI` — the only usage scenario
-/// that works outside LogonUI's secure desktop.
-///
-/// `sys_caps` itself only ever writes `debug: false` (it has no transport to
-/// learn otherwise), so without this the provider refuses every scenario a
-/// test can drive. Restores the previous state on drop.
+/// Seeds the capability cache `SetUsageScenario` reads with `debug` set, so
+/// it accepts `CPUS_CREDUI` — the only scenario that works outside LogonUI's
+/// secure desktop. `sys_caps` only ever writes `debug: false`, so without
+/// this the provider refuses every scenario a test can drive. Restored on
+/// drop.
 pub struct DebugCapabilities {
     previous: Option<Capabilities>,
 }

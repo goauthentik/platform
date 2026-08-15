@@ -1,6 +1,6 @@
-//! The two `ak-sysd` calls the browser host makes: starting an interactive
-//! sign-in (which yields the URL to open and the header token to inject), and
-//! validating the token the `goauthentik.io://` redirect comes back with.
+//! The two `ak-sysd` calls the browser host makes: start an interactive
+//! sign-in (yielding the URL to open and the header token to inject), and
+//! validate the token the `goauthentik.io://` redirect returns.
 
 use eyre::Result;
 use std::collections::HashMap;

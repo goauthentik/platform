@@ -1,6 +1,5 @@
-//! The one `ak-sysd` call this DLL makes: capability discovery, cached in
-//! HKLM so `SetUsageScenario` doesn't need the daemon reachable on every
-//! logon-screen paint.
+//! The one `ak-sysd` call this DLL makes. Cached in HKLM so
+//! `SetUsageScenario` doesn't need the daemon on every logon-screen paint.
 
 use eyre::Result;
 use serde::{Deserialize, Serialize};
@@ -10,9 +9,8 @@ use ak_platform::generated::ping::capabilities_response::Capability;
 use ak_platform::generated::ping::ping_client::PingClient;
 use ak_platform::grpc::grpc_request;
 
-/// HKLM key `sys_caps` caches its answer in. `e2e`'s harness seeds this same
-/// key to turn on `debug`; keep the name and the `Capabilities` field names
-/// in step with `e2e::harness`.
+/// `e2e::harness` seeds this same key to turn on `debug`; keep the name and
+/// the `Capabilities` fields in step with it.
 pub const CAPABILITIES_KEY: &str = "SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities";
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]

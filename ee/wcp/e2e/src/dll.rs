@@ -1,7 +1,6 @@
-//! Drives the real built `ak_cred_provider.dll` directly via
-//! `LoadLibraryW`/`DllGetClassObject` — no registry entry needed, since
-//! `CPUS_CREDUI` (used together with the `debug` capability flag) works on
-//! an ordinary interactive desktop.
+//! Drives the real `ak_cred_provider.dll` via `LoadLibraryW`/
+//! `DllGetClassObject`. No registry entry needed: `CPUS_CREDUI` plus the
+//! `debug` capability works on an ordinary interactive desktop.
 
 use std::ffi::c_void;
 use std::os::windows::ffi::OsStrExt;
@@ -24,10 +23,8 @@ pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E
 type DllGetClassObjectFn =
     unsafe extern "system" fn(*const GUID, *const GUID, *mut *mut c_void) -> HRESULT;
 
-/// Locates the `.dll`/`.exe` build artifacts sitting next to this test
-/// binary: `cargo`'s configured `target-dir` puts every workspace member's
-/// output in the same profile directory, and this test binary lands one
-/// level down, in `deps/`.
+/// The build artifacts next to this test binary: cargo puts every workspace
+/// member's output in one profile directory, with test binaries in `deps/`.
 pub fn build_output_dir() -> PathBuf {
     std::env::current_exe()
         .ok()

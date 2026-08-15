@@ -11,7 +11,10 @@ use std::path::Path;
 
 use windows::{
     Win32::{
-        Foundation::{CloseHandle, E_FAIL, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS},
+        Foundation::{
+            CloseHandle, E_FAIL, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, SetHandleInformation,
+            WAIT_OBJECT_0,
+        },
         Security::SECURITY_ATTRIBUTES,
         System::Pipes::CreatePipe,
         System::Threading::{
@@ -28,10 +31,9 @@ use windows::{
 use crate::syscalls::acquire_interactive_token;
 use wire::AuthResult;
 
-/// Runs the full sign-in flow: spawns `ak_cef.exe`, waits for its result,
-/// and returns it. `should_continue` is polled while waiting so LogonUI's
-/// own cancellation (e.g. the user backing out of the tile) can tear the
-/// browser process down instead of leaving it orphaned.
+/// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
+/// while waiting, so LogonUI cancelling (the user backing out of the tile)
+/// tears the browser process down instead of orphaning it.
 pub trait AuthFlow {
     fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult;
 }
@@ -47,17 +49,11 @@ impl AuthFlow for CefAuthFlow {
     }
 }
 
-/// Whether a failure to obtain an interactive-session token may fall back to
-/// launching `ak_cef.exe` in the caller's own session.
-///
-/// Only `CPUS_CREDUI` — which `SetUsageScenario` accepts solely under the
-/// `debug` capability, and which runs on an ordinary interactive desktop
-/// rather than under LogonUI — is allowed to do so. There, the caller is
-/// already the interactive user, so there is no session to cross into and no
-/// `SE_TCB_NAME` to query a user token with. The real logon paths
-/// (`CPUS_LOGON`/`CPUS_UNLOCK_WORKSTATION`) must never take this fallback:
-/// they run as SYSTEM under LogonUI, and spawning the browser there would put
-/// a Chromium process on the secure desktop with SYSTEM's token.
+/// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
+/// It is debug-gated and runs on an ordinary desktop, where the caller is
+/// already the interactive user and holds no `SE_TCB_NAME`. The logon
+/// scenarios must never take it: they run as SYSTEM under LogonUI, so it
+/// would put Chromium on the secure desktop with SYSTEM's token.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
 }
@@ -69,6 +65,8 @@ struct DuplexPipes {
     cancel_read_inheritable: HANDLE,
 }
 
+/// One inheritable pipe pair each way. Our own end of each is marked
+/// non-inheritable so the child can't hold it open and mask an EOF.
 fn create_duplex_pipes() -> windows::core::Result<DuplexPipes> {
     let sa = SECURITY_ATTRIBUTES {
         nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,
@@ -76,33 +74,28 @@ fn create_duplex_pipes() -> windows::core::Result<DuplexPipes> {
         bInheritHandle: true.into(),
     };
 
-    let mut result_read = HANDLE::default();
-    let mut result_write = HANDLE::default();
-    unsafe { CreatePipe(&mut result_read, &mut result_write, Some(&sa), 0) }?;
-    unsafe {
-        windows::Win32::Foundation::SetHandleInformation(
-            result_read,
-            HANDLE_FLAG_INHERIT.0,
-            HANDLE_FLAGS(0),
-        )
-    }?;
+    // Returns (ours, child's) for a pipe flowing in the given direction.
+    let pipe = |ours_reads: bool| -> windows::core::Result<(HANDLE, HANDLE)> {
+        let mut read = HANDLE::default();
+        let mut write = HANDLE::default();
+        unsafe { CreatePipe(&mut read, &mut write, Some(&sa), 0) }?;
+        let (ours, theirs) = if ours_reads {
+            (read, write)
+        } else {
+            (write, read)
+        };
+        unsafe { SetHandleInformation(ours, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }?;
+        Ok((ours, theirs))
+    };
 
-    let mut cancel_read = HANDLE::default();
-    let mut cancel_write = HANDLE::default();
-    unsafe { CreatePipe(&mut cancel_read, &mut cancel_write, Some(&sa), 0) }?;
-    unsafe {
-        windows::Win32::Foundation::SetHandleInformation(
-            cancel_write,
-            HANDLE_FLAG_INHERIT.0,
-            HANDLE_FLAGS(0),
-        )
-    }?;
+    let (result_read, result_write_inheritable) = pipe(true)?;
+    let (cancel_write, cancel_read_inheritable) = pipe(false)?;
 
     Ok(DuplexPipes {
         result_read,
-        result_write_inheritable: result_write,
+        result_write_inheritable,
         cancel_write,
-        cancel_read_inheritable: cancel_read,
+        cancel_read_inheritable,
     })
 }
 
@@ -157,9 +150,8 @@ fn run_cef_host(
     result
 }
 
-/// Polls the result pipe in short slices so `should_continue` gets a chance
-/// to run; on cancellation, signals `ak_cef.exe` to close via the control
-/// pipe rather than killing it outright.
+/// Polls in short slices so `should_continue` gets a turn. On cancellation it
+/// asks `ak_cef.exe` to close over the control pipe rather than killing it.
 fn wait_for_result(
     result_read: HANDLE,
     cancel_write: HANDLE,
@@ -188,10 +180,8 @@ fn wait_for_result(
                 if !should_continue() {
                     signal_cancel(cancel_write);
                 }
-                if unsafe { WaitForSingleObject(process, 0) }
-                    == windows::Win32::Foundation::WAIT_OBJECT_0
-                {
-                    // Host exited without sending a result.
+                // Host exited without sending a result.
+                if unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0 {
                     return AuthResult::Cancelled;
                 }
             }

@@ -1,10 +1,8 @@
-//! A stand-in for the `IQueryContinueWithStatus` LogonUI passes to
-//! `Connect`, so tests can drive both the "let it finish" and the "user
-//! backed out of the tile" paths.
+//! Stand-in for the `IQueryContinueWithStatus` LogonUI passes to `Connect`,
+//! covering both "let it finish" and "user backed out of the tile".
 
-use std::sync::Arc;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{Arc, Mutex};
 
 use windows::{
     Win32::{
@@ -14,24 +12,22 @@ use windows::{
     core::{PCWSTR, Result, implement},
 };
 
-/// Handle onto the state of a live `SharedQueryContinue`, since the interface
-/// itself hands out no way back to the implementation.
-#[derive(Clone)]
-pub struct QueryContinueProbe {
-    inner: Arc<Shared>,
-}
-
 #[derive(Default)]
-struct Shared {
+struct State {
     polls: AtomicU32,
     cancelled: AtomicBool,
     status: Mutex<Vec<String>>,
 }
 
+/// Reads the state of a live `FakeQueryContinue`; the interface itself hands
+/// out no way back to the implementation.
+#[derive(Clone)]
+pub struct QueryContinueProbe(Arc<State>);
+
 impl QueryContinueProbe {
-    /// Status messages `Connect` pushed through `SetStatusMessage`.
+    /// Messages `Connect` pushed through `SetStatusMessage`.
     pub fn status_messages(&self) -> Vec<String> {
-        self.inner
+        self.0
             .status
             .lock()
             .unwrap_or_else(|e| e.into_inner())
@@ -39,42 +35,38 @@ impl QueryContinueProbe {
     }
 
     pub fn polls(&self) -> u32 {
-        self.inner.polls.load(Ordering::SeqCst)
+        self.0.polls.load(Ordering::SeqCst)
     }
 
     pub fn cancelled(&self) -> bool {
-        self.inner.cancelled.load(Ordering::SeqCst)
+        self.0.cancelled.load(Ordering::SeqCst)
     }
 }
 
 #[implement(IQueryContinueWithStatus)]
-pub struct SharedQueryContinue {
+struct FakeQueryContinue {
     cancel_after: Option<u32>,
-    inner: Arc<Shared>,
+    state: Arc<State>,
 }
 
-/// Builds an `IQueryContinueWithStatus` plus a probe onto its state.
-/// `cancel_after` is the number of `QueryContinue` calls to allow before
-/// reporting cancellation; `None` lets the flow run to completion.
+/// `cancel_after` is how many `QueryContinue` calls to allow before reporting
+/// cancellation; `None` runs to completion.
 pub fn query_continue(cancel_after: Option<u32>) -> (IQueryContinueWithStatus, QueryContinueProbe) {
-    let inner = Arc::new(Shared::default());
-    let probe = QueryContinueProbe {
-        inner: inner.clone(),
-    };
-    let com: IQueryContinueWithStatus = SharedQueryContinue {
+    let state = Arc::new(State::default());
+    let com = FakeQueryContinue {
         cancel_after,
-        inner,
+        state: state.clone(),
     }
     .into();
-    (com, probe)
+    (com, QueryContinueProbe(state))
 }
 
-impl IQueryContinue_Impl for SharedQueryContinue_Impl {
+impl IQueryContinue_Impl for FakeQueryContinue_Impl {
     fn QueryContinue(&self) -> Result<()> {
-        let seen = self.inner.polls.fetch_add(1, Ordering::SeqCst) + 1;
+        let seen = self.state.polls.fetch_add(1, Ordering::SeqCst) + 1;
         match self.cancel_after {
             Some(limit) if seen > limit => {
-                self.inner.cancelled.store(true, Ordering::SeqCst);
+                self.state.cancelled.store(true, Ordering::SeqCst);
                 Err(E_ABORT.into())
             }
             _ => Ok(()),
@@ -82,14 +74,14 @@ impl IQueryContinue_Impl for SharedQueryContinue_Impl {
     }
 }
 
-impl IQueryContinueWithStatus_Impl for SharedQueryContinue_Impl {
+impl IQueryContinueWithStatus_Impl for FakeQueryContinue_Impl {
     fn SetStatusMessage(&self, psz: &PCWSTR) -> Result<()> {
         let message = if psz.is_null() {
             String::new()
         } else {
             unsafe { psz.to_string() }.unwrap_or_default()
         };
-        self.inner
+        self.state
             .status
             .lock()
             .unwrap_or_else(|e| e.into_inner())

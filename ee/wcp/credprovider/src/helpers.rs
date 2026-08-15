@@ -22,9 +22,8 @@ use windows::{
 
 const WIN_PASS_LEN: usize = 50;
 
-/// Generate a cryptographically random password, used only as a throwaway
-/// local-account credential the caller immediately submits via `Negotiate` —
-/// never shown to or typed by the user.
+/// Throwaway local-account credential, submitted immediately via `Negotiate`
+/// and never shown to or typed by the user.
 pub fn generate_random_password() -> String {
     const CHARSET: &[u8] =
         b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -49,28 +48,22 @@ fn kerb_message_type(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> KERB_LOGON_SUB
     }
 }
 
-/// Build a `CoTaskMemAlloc`-allocated flat `KERB_INTERACTIVE_UNLOCK_LOGON`
-/// buffer for a local account: `[header][domain utf-16][username utf-16][password utf-16]`.
+/// Flat `KERB_INTERACTIVE_UNLOCK_LOGON` for a local account, laid out as
+/// `[header][domain][username][password]` in UTF-16.
 ///
-/// The `LSA_UNICODE_STRING.Buffer` fields carry byte offsets from the start
-/// of the allocation rather than real pointers — LogonUI patches them to
-/// real pointers before handing the buffer to LSA. Returns `(ptr, byte_len)`;
-/// LogonUI frees the buffer with `CoTaskMemFree`.
+/// Each `LSA_UNICODE_STRING.Buffer` holds a byte offset from the start of the
+/// allocation, not a real pointer; LogonUI patches them before passing the
+/// buffer to LSA. Returns `(ptr, byte_len)`, freed by LogonUI with
+/// `CoTaskMemFree`.
 pub fn pack_kerb_interactive_unlock_logon(
     domain: &str,
     username: &str,
     password: &str,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
 ) -> windows::core::Result<(*mut u8, u32)> {
-    let domain_wide: Vec<u16> = domain.encode_utf16().collect();
-    let username_wide: Vec<u16> = username.encode_utf16().collect();
-    let password_wide: Vec<u16> = password.encode_utf16().collect();
-
-    let domain_bytes = domain_wide.len() * 2;
-    let username_bytes = username_wide.len() * 2;
-    let password_bytes = password_wide.len() * 2;
-    let header_size = std::mem::size_of::<KERB_INTERACTIVE_UNLOCK_LOGON>();
-    let total = header_size + domain_bytes + username_bytes + password_bytes;
+    let parts: [Vec<u16>; 3] = [domain, username, password].map(|s| s.encode_utf16().collect());
+    let header_size = size_of::<KERB_INTERACTIVE_UNLOCK_LOGON>();
+    let total = header_size + parts.iter().map(|p| p.len() * 2).sum::<usize>();
 
     let buf = unsafe { CoTaskMemAlloc(total) } as *mut u8;
     if buf.is_null() {
@@ -80,53 +73,31 @@ pub fn pack_kerb_interactive_unlock_logon(
     unsafe {
         std::ptr::write_bytes(buf, 0, total);
 
-        let kiul = buf as *mut KERB_INTERACTIVE_UNLOCK_LOGON;
-        let kil = &mut (*kiul).Logon;
+        let mut offset = header_size;
+        let [domain, username, password] = parts.map(|wide| {
+            let bytes = wide.len() * 2;
+            std::ptr::copy_nonoverlapping(wide.as_ptr() as *const u8, buf.add(offset), bytes);
+            let packed = LSA_UNICODE_STRING {
+                Length: bytes as u16,
+                MaximumLength: bytes as u16,
+                Buffer: PWSTR(offset as *mut u16),
+            };
+            offset += bytes;
+            packed
+        });
+
+        let kil = &mut (*(buf as *mut KERB_INTERACTIVE_UNLOCK_LOGON)).Logon;
         kil.MessageType = kerb_message_type(cpus);
-
-        let domain_offset = header_size;
-        std::ptr::copy_nonoverlapping(
-            domain_wide.as_ptr() as *const u8,
-            buf.add(domain_offset),
-            domain_bytes,
-        );
-        kil.LogonDomainName = LSA_UNICODE_STRING {
-            Length: domain_bytes as u16,
-            MaximumLength: domain_bytes as u16,
-            Buffer: PWSTR(domain_offset as *mut u16),
-        };
-
-        let username_offset = domain_offset + domain_bytes;
-        std::ptr::copy_nonoverlapping(
-            username_wide.as_ptr() as *const u8,
-            buf.add(username_offset),
-            username_bytes,
-        );
-        kil.UserName = LSA_UNICODE_STRING {
-            Length: username_bytes as u16,
-            MaximumLength: username_bytes as u16,
-            Buffer: PWSTR(username_offset as *mut u16),
-        };
-
-        let password_offset = username_offset + username_bytes;
-        std::ptr::copy_nonoverlapping(
-            password_wide.as_ptr() as *const u8,
-            buf.add(password_offset),
-            password_bytes,
-        );
-        kil.Password = LSA_UNICODE_STRING {
-            Length: password_bytes as u16,
-            MaximumLength: password_bytes as u16,
-            Buffer: PWSTR(password_offset as *mut u16),
-        };
+        kil.LogonDomainName = domain;
+        kil.UserName = username;
+        kil.Password = password;
     }
 
     Ok((buf, total as u32))
 }
 
-/// Pack a domain/non-local account's credentials via
-/// `CredPackAuthenticationBufferW`, the buffer shape LogonUI expects for
-/// accounts that aren't resolved as local Windows users.
+/// The buffer shape LogonUI expects for accounts that don't resolve as local
+/// Windows users.
 pub fn pack_authentication_buffer(
     username: &str,
     password: &str,
