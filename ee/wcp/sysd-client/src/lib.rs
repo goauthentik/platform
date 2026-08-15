@@ -1,3 +1,12 @@
+//! The three `ak-sysd` gRPC calls the credential provider needs:
+//! capability discovery, starting an interactive sign-in, and validating the
+//! token the sign-in redirects back with.
+//!
+//! This used to be the root workspace's `ak_ffi` crate, which existed to
+//! expose these over a `#[cxx::bridge]` to the old C++ provider. With that
+//! tree gone, `credprovider`/`cef-host` are the only callers left, so it
+//! lives here as an ordinary Rust library.
+
 use eyre::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -11,7 +20,11 @@ use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuth
 use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use ak_platform::grpc::grpc_request;
 
-const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
+use wire::TOKEN_QUERY_PARAM;
+
+/// HKLM key `sys_caps` caches its answer in, so a second call doesn't need
+/// `ak-sysd` to be reachable. Public so `e2e` can seed it.
+pub const CAPABILITIES_KEY: &str = "SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities";
 
 pub struct AuthStartAsync {
     pub url: String,
@@ -30,16 +43,15 @@ pub struct Capabilities {
 }
 
 pub fn sys_caps() -> Result<Capabilities> {
-    let hkcu = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
-    let (key, _disp) =
-        hkcu.create_subkey("SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities")?;
+    let hklm = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
+    let (key, _disp) = hklm.create_subkey(CAPABILITIES_KEY)?;
 
     if let Ok(caps) = key.decode() {
         return Ok(caps);
     }
 
-    let response = grpc_request(async |ch| Ok(PingClient::new(ch).capabilities(()).await?))?
-        .into_inner();
+    let response =
+        grpc_request(async |ch| Ok(PingClient::new(ch).capabilities(()).await?))?.into_inner();
     let authia = Capability::AuthInteractive as i32;
     let caps = Capabilities {
         interactive_auth_available: response.capabilities.contains(&authia),
@@ -90,7 +102,45 @@ fn sys_auth_token_validate(raw_token: &str) -> Result<Option<TokenResponse>> {
         return Ok(None);
     }
     Ok(Some(TokenResponse {
-        username: response.token.map(|t| t.preferred_username).unwrap_or_default(),
+        username: response
+            .token
+            .map(|t| t.preferred_username)
+            .unwrap_or_default(),
         session_id: response.session_id,
     }))
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extracts_token_from_a_redirect_url() {
+        let url = format!(
+            "{}callback?{TOKEN_QUERY_PARAM}=abc123",
+            wire::REDIRECT_PREFIX
+        );
+        assert_eq!(extract_token(&url).unwrap(), "abc123");
+    }
+
+    #[test]
+    fn extracts_token_alongside_other_query_params() {
+        let url = format!(
+            "{}callback?state=xyz&{TOKEN_QUERY_PARAM}=abc123&code=9",
+            wire::REDIRECT_PREFIX
+        );
+        assert_eq!(extract_token(&url).unwrap(), "abc123");
+    }
+
+    #[test]
+    fn errors_when_the_token_param_is_absent() {
+        let url = format!("{}callback?state=xyz", wire::REDIRECT_PREFIX);
+        assert!(extract_token(&url).is_err());
+    }
+
+    #[test]
+    fn errors_on_an_unparseable_url() {
+        assert!(extract_token("not a url").is_err());
+    }
 }

@@ -201,6 +201,10 @@ pub const WINDOW_HEIGHT: i32 = 670;
 /// `redirect_uri` prefix the sign-in flow completes on.
 pub const REDIRECT_PREFIX: &str = "goauthentik.io://";
 
+/// Query parameter on that redirect carrying the token `sysd-client`
+/// validates to turn a finished browser sign-in into a username.
+pub const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
+
 /// Header carrying the interactive-auth session token, injected on every
 /// request the sign-in window makes.
 pub const AUTH_HEADER_NAME: &str = "X-Authentik-Platform-Auth-DTH";

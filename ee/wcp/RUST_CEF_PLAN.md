@@ -31,6 +31,7 @@ crates don't end up in the Linux-based root workspace CI.
 platform/ee/wcp/
   Cargo.toml                 # workspace root
   wire/                      # lib: shared IPC protocol + tile/window constants
+  sysd-client/               # lib: the three ak-sysd gRPC calls (ex-ak_ffi)
   credprovider/              # cdylib -> ak_cred_provider.dll
   cef-host/                  # bin -> ak_cef.exe
   e2e/                       # test harness crate (tests/ + mock ak-sysd)
@@ -42,6 +43,15 @@ Single source of truth shared by `credprovider`, `cef-host`, and `e2e`:
 - `AuthResult` enum (`Completed { username }`, `Cancelled`,
   `Failed { reason }`) with a length-prefixed protobuf encode/decode frame.
 - Tile field text/order and window geometry constants.
+- The redirect contract the sign-in completes on: `REDIRECT_PREFIX`,
+  `TOKEN_QUERY_PARAM` and `AUTH_HEADER_NAME`.
+
+### `sysd-client` (lib)
+
+`sys_caps()` / `sys_auth_start_async()` / `sys_auth_url()` — the only three
+`ak-sysd` gRPC calls the provider needs, plus the HKLM capability cache
+`sys_caps` reads and writes. This is the former root-workspace `ak_ffi`
+crate, moved here wholesale (see the last section).
 
 ### `credprovider` (cdylib, output `ak_cred_provider.dll`)
 
@@ -63,7 +73,14 @@ Single source of truth shared by `credprovider`, `cef-host`, and `e2e`:
 - Process launch: `CreatePipe` + `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` handle
   inheritance + `CreateProcessAsUserW`, with `WTSQueryUserToken` /
   winlogon-token-duplication fallback for fresh logons, over a duplex pipe
-  pair (result pipe host→DLL, control pipe DLL→host).
+  pair (result pipe host→DLL, control pipe DLL→host). Under `CPUS_CREDUI`
+  only — the debug-gated scenario that runs on an ordinary desktop, where
+  the caller is already the interactive user and holds no `SE_TCB_NAME` —
+  failing to get an interactive-session token falls back to a plain
+  `CreateProcessW` in the caller's own session. `CPUS_LOGON`/
+  `CPUS_UNLOCK_WORKSTATION` must never take that fallback: they run as
+  SYSTEM under LogonUI, where it would put Chromium on the secure desktop
+  with SYSTEM's token.
 - Windows syscalls with real side effects (`NetUserSetInfo`,
   `LsaLookupAuthenticationPackage`, process spawn) sit behind narrow traits
   so the surrounding logic is unit-testable with fakes.
@@ -75,6 +92,8 @@ Single source of truth shared by `credprovider`, `cef-host`, and `e2e`:
 ### `cef-host` (bin, output `ak_cef.exe`)
 
 Built on the `cef`/`cef-dll-sys` crates (github.com/tauri-apps/cef-rs).
+Links as a GUI-subsystem binary (`#![windows_subsystem = "windows"]`) so
+neither it nor CEF's re-execed helper processes get a console window.
 `main()` branches immediately on `--type=...` (CEF's own helper re-exec for
 renderer/GPU/utility roles) vs. the top-level host launch from
 `credprovider`. As host: reads the inherited pipes, calls
@@ -87,18 +106,32 @@ control pipe for cancellation.
 
 ### `e2e`
 
-- Unit tests: wire frame round-trips, serialization buffer byte layout,
-  field descriptor table content, window-centering math.
-- Process-level e2e: a local mock of `ak-sysd`'s `Ping`/
-  `SystemAuthInteractive`/`SystemAuthToken` gRPC services on the real
-  named pipe path, driving the real built DLL (`LoadLibraryW` +
-  `DllGetClassObject`) under `CPUS_CREDUI`, through a real `Connect()`/
-  `ak_cef.exe` spawn against a local redirect page, down to
-  `GetSerialization` against a throwaway local Windows account. Requires a
-  machine without a real `ak-sysd`/authentik Agent already running — see
-  `e2e/README.md`.
-- A manual/nightly secure-desktop checklist for true winlogon verification,
-  not automated in CI.
+Hermetic unit tests (always run) live next to the code they cover: wire
+frame round-trips and tile layout in `wire`, redirect-URL token extraction
+in `sysd-client`, serialization buffer byte layout and username matching in
+`credprovider`, the usage-scenario spawn gate in `credprovider::ipc`. Window
+centering is `CefWindow::center_window`'s job, so there is no geometry math
+of ours left to test.
+
+Process-level e2e (`e2e/tests/sign_in_flow.rs`) runs a local mock of
+`ak-sysd`'s `Ping`/`SystemAuthInteractive`/`SystemAuthToken` gRPC services
+on the real named pipe path, and drives the real built DLL (`LoadLibraryW` +
+`DllGetClassObject`) under `CPUS_CREDUI` with a synthetic
+`ICredentialProviderUserArray`, through a real `Connect()`/`ak_cef.exe`
+spawn against a local redirect page, down to `GetSerialization` — covering
+both a completed sign-in and a `QueryContinue` cancellation, and asserting
+`cef-host` injects `AUTH_HEADER_NAME` on every request.
+
+These take over machine-wide resources (the `ak-sysd` pipe, the HKLM
+capability cache) so they are opt-in behind `AK_WCP_E2E=1` and need an
+elevated shell on a machine with no real Agent running; `e2e/README.md`
+documents the preconditions. The completed-sign-in case uses a non-local
+(UPN) account, which skips `NetUserSetInfo` and so needs no throwaway
+Windows account; the local-account password-reset path is still only covered
+by the manual checklist below.
+
+A manual/nightly secure-desktop checklist covers true winlogon verification
+(including a fresh logon, not just unlock), not automated in CI.
 
 ## Build & packaging
 
@@ -114,14 +147,17 @@ control pipe for cancellation.
   compatibility with `_package-windows.yml`. There is no more
   wcp-specific build workflow.
 
-## `ak_lsa` and `ak-ffi`'s cxx bridge are gone
+## `ak_lsa` and `ak-ffi` are gone
 
 `ee/wcp/ak_lsa` (a separate LSA package, not invoked by the credential
 provider's logon path) has been deleted along with the rest of the C++
 tree, including `ak_common` (which existed only to serve `ak_cred_provider`
-and `ak_lsa`). With no C++ consumer left, `ak-ffi`'s `#[cxx::bridge] mod
-ffi { ... }` — which existed only to expose `sys_caps`/
-`sys_auth_start_async`/`sys_auth_url` to C++ — has also been removed. Those
-three functions are now plain `pub fn`s in `ak-ffi/src/ffi.rs`, used
-directly by `credprovider`/`cef-host`; `ak_ffi`'s `cxx` dependency and
-`staticlib` crate-type are gone too.
+and `ak_lsa`).
+
+`ak-ffi` existed only to expose `sys_caps`/`sys_auth_start_async`/
+`sys_auth_url` to that C++ through a `#[cxx::bridge]`. The bridge went
+first, leaving a root-workspace crate whose only consumers were
+`credprovider` and `cef-host`; the crate has now been deleted outright and
+its three functions live in `ee/wcp/sysd-client`. `platform/Cargo.toml` no
+longer lists `ak-ffi` as a member, and nothing outside `ee/wcp` referenced
+it.

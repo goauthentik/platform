@@ -58,17 +58,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ak_ffi"
-version = "0.60.0"
-dependencies = [
- "ak-platform",
- "eyre",
- "serde",
- "url",
- "winreg 0.56.0",
-]
-
-[[package]]
 name = "android_system_properties"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -360,9 +349,9 @@ name = "cef-host"
 version = "0.1.0"
 dependencies = [
  "ak-platform",
- "ak_ffi",
  "cef",
  "log",
+ "sysd-client",
  "windows 0.61.3",
  "wire",
 ]
@@ -528,9 +517,9 @@ name = "credprovider"
 version = "0.1.0"
 dependencies = [
  "ak-platform",
- "ak_ffi",
  "embed-resource",
  "log",
+ "sysd-client",
  "windows 0.61.3",
  "windows-core 0.61.2",
  "wire",
@@ -773,9 +762,12 @@ dependencies = [
  "ak-platform",
  "eyre",
  "log",
+ "sysd-client",
  "tokio",
  "tonic",
  "windows 0.61.3",
+ "windows-core 0.61.2",
+ "winreg 0.56.0",
  "wire",
 ]
 
@@ -2830,6 +2822,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "sysd-client"
+version = "0.1.0"
+dependencies = [
+ "ak-platform",
+ "eyre",
+ "serde",
+ "url",
+ "winreg 0.56.0",
+ "wire",
 ]
 
 [[package]]

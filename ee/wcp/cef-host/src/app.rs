@@ -27,7 +27,7 @@ wrap_browser_process_handler! {
 
     impl BrowserProcessHandler {
         fn on_context_initialized(&self) {
-            let start = match ak_ffi::ffi::sys_auth_start_async() {
+            let start = match sysd_client::sys_auth_start_async() {
                 Ok(s) => s,
                 Err(e) => {
                     log::error!("sys_auth_start_async failed: {e}");

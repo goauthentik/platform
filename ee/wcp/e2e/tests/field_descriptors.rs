@@ -3,11 +3,15 @@
 //! mock `ak-sysd`, and checks the tile matches `wire::TILE_FIELDS` exactly.
 #![allow(clippy::expect_used, clippy::panic)]
 
-use e2e::{dll::LoadedProvider, mock_sysd};
+use e2e::{dll::LoadedProvider, harness, mock_sysd};
 use windows::Win32::{System::Com::CoTaskMemFree, UI::Shell::CPUS_CREDUI};
 
 #[tokio::test(flavor = "multi_thread")]
 async fn tile_fields_match_wire_layout() {
+    if !harness::opted_in("tile_fields_match_wire_layout") {
+        return;
+    }
+
     let _mock = mock_sysd::start(mock_sysd::MockConfig {
         interactive_auth_url: "http://127.0.0.1:0/unused".to_string(),
         header_token: "unused".to_string(),
@@ -22,6 +26,9 @@ async fn tile_fields_match_wire_layout() {
         dll_path.exists(),
         "expected {dll_path:?} to exist — build the workspace first"
     );
+
+    let _caps = harness::DebugCapabilities::enable()
+        .expect("seed the Capabilities registry key — needs an elevated shell");
 
     let loaded = LoadedProvider::load(&dll_path).expect("load ak_cred_provider.dll");
 

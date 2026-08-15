@@ -15,11 +15,12 @@ use windows::{
         Security::SECURITY_ATTRIBUTES,
         System::Pipes::CreatePipe,
         System::Threading::{
-            CreateProcessAsUserW, DeleteProcThreadAttributeList, EXTENDED_STARTUPINFO_PRESENT,
-            InitializeProcThreadAttributeList, LPPROC_THREAD_ATTRIBUTE_LIST,
-            PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION, STARTUPINFOEXW,
-            UpdateProcThreadAttribute, WaitForSingleObject,
+            CreateProcessAsUserW, CreateProcessW, DeleteProcThreadAttributeList,
+            EXTENDED_STARTUPINFO_PRESENT, InitializeProcThreadAttributeList,
+            LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION,
+            STARTUPINFOEXW, UpdateProcThreadAttribute, WaitForSingleObject,
         },
+        UI::Shell::{CPUS_CREDUI, CREDENTIAL_PROVIDER_USAGE_SCENARIO},
     },
     core::{PCWSTR, PWSTR},
 };
@@ -37,12 +38,28 @@ pub trait AuthFlow {
 
 pub struct CefAuthFlow {
     pub cef_exe: std::path::PathBuf,
+    pub cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
 }
 
 impl AuthFlow for CefAuthFlow {
     fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
-        run_cef_host(&self.cef_exe, should_continue)
+        run_cef_host(&self.cef_exe, self.cpus, should_continue)
     }
+}
+
+/// Whether a failure to obtain an interactive-session token may fall back to
+/// launching `ak_cef.exe` in the caller's own session.
+///
+/// Only `CPUS_CREDUI` — which `SetUsageScenario` accepts solely under the
+/// `debug` capability, and which runs on an ordinary interactive desktop
+/// rather than under LogonUI — is allowed to do so. There, the caller is
+/// already the interactive user, so there is no session to cross into and no
+/// `SE_TCB_NAME` to query a user token with. The real logon paths
+/// (`CPUS_LOGON`/`CPUS_UNLOCK_WORKSTATION`) must never take this fallback:
+/// they run as SYSTEM under LogonUI, and spawning the browser there would put
+/// a Chromium process on the secure desktop with SYSTEM's token.
+fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
+    cpus == CPUS_CREDUI
 }
 
 struct DuplexPipes {
@@ -62,12 +79,24 @@ fn create_duplex_pipes() -> windows::core::Result<DuplexPipes> {
     let mut result_read = HANDLE::default();
     let mut result_write = HANDLE::default();
     unsafe { CreatePipe(&mut result_read, &mut result_write, Some(&sa), 0) }?;
-    unsafe { windows::Win32::Foundation::SetHandleInformation(result_read, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }?;
+    unsafe {
+        windows::Win32::Foundation::SetHandleInformation(
+            result_read,
+            HANDLE_FLAG_INHERIT.0,
+            HANDLE_FLAGS(0),
+        )
+    }?;
 
     let mut cancel_read = HANDLE::default();
     let mut cancel_write = HANDLE::default();
     unsafe { CreatePipe(&mut cancel_read, &mut cancel_write, Some(&sa), 0) }?;
-    unsafe { windows::Win32::Foundation::SetHandleInformation(cancel_write, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }?;
+    unsafe {
+        windows::Win32::Foundation::SetHandleInformation(
+            cancel_write,
+            HANDLE_FLAG_INHERIT.0,
+            HANDLE_FLAGS(0),
+        )
+    }?;
 
     Ok(DuplexPipes {
         result_read,
@@ -77,7 +106,11 @@ fn create_duplex_pipes() -> windows::core::Result<DuplexPipes> {
     })
 }
 
-fn run_cef_host(cef_exe: &Path, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
+fn run_cef_host(
+    cef_exe: &Path,
+    cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    should_continue: &mut dyn FnMut() -> bool,
+) -> AuthResult {
     let pipes = match create_duplex_pipes() {
         Ok(p) => p,
         Err(e) => {
@@ -88,7 +121,7 @@ fn run_cef_host(cef_exe: &Path, should_continue: &mut dyn FnMut() -> bool) -> Au
         }
     };
 
-    let spawn = spawn_cef_host(cef_exe, &pipes);
+    let spawn = spawn_cef_host(cef_exe, &pipes, cpus);
     unsafe {
         let _ = CloseHandle(pipes.result_write_inheritable);
         let _ = CloseHandle(pipes.cancel_read_inheritable);
@@ -108,7 +141,12 @@ fn run_cef_host(cef_exe: &Path, should_continue: &mut dyn FnMut() -> bool) -> Au
         }
     };
 
-    let result = wait_for_result(pipes.result_read, pipes.cancel_write, process.hProcess, should_continue);
+    let result = wait_for_result(
+        pipes.result_read,
+        pipes.cancel_write,
+        process.hProcess,
+        should_continue,
+    );
 
     unsafe {
         let _ = WaitForSingleObject(process.hProcess, 5_000);
@@ -150,7 +188,9 @@ fn wait_for_result(
                 if !should_continue() {
                     signal_cancel(cancel_write);
                 }
-                if unsafe { WaitForSingleObject(process, 0) } == windows::Win32::Foundation::WAIT_OBJECT_0 {
+                if unsafe { WaitForSingleObject(process, 0) }
+                    == windows::Win32::Foundation::WAIT_OBJECT_0
+                {
                     // Host exited without sending a result.
                     return AuthResult::Cancelled;
                 }
@@ -169,6 +209,7 @@ fn signal_cancel(cancel_write: HANDLE) {
 fn spawn_cef_host(
     cef_exe: &Path,
     pipes: &DuplexPipes,
+    cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
 ) -> windows::core::Result<PROCESS_INFORMATION> {
     let cmdline = format!(
         "\"{}\" --result-pipe {} --cancel-pipe {}",
@@ -186,7 +227,10 @@ fn spawn_cef_host(
     let attr_list = LPPROC_THREAD_ATTRIBUTE_LIST(attr_buf.as_mut_ptr() as *mut c_void);
     unsafe { InitializeProcThreadAttributeList(Some(attr_list), 1, Some(0), &mut attr_size) }?;
 
-    let inherit_handles = [pipes.result_write_inheritable, pipes.cancel_read_inheritable];
+    let inherit_handles = [
+        pipes.result_write_inheritable,
+        pipes.cancel_read_inheritable,
+    ];
     let update = unsafe {
         UpdateProcThreadAttribute(
             attr_list,
@@ -210,29 +254,72 @@ fn spawn_cef_host(
     si.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
     let mut pi = PROCESS_INFORMATION::default();
 
-    let token = acquire_interactive_token()?;
+    let token = match acquire_interactive_token() {
+        Ok(token) => Some(token),
+        Err(e) if may_launch_in_current_session(cpus) => {
+            log::debug!("no interactive-session token ({e}); launching in the current session");
+            None
+        }
+        Err(e) => {
+            unsafe { DeleteProcThreadAttributeList(attr_list) };
+            return Err(e);
+        }
+    };
 
     let spawned = unsafe {
-        CreateProcessAsUserW(
-            Some(token),
-            PCWSTR::null(),
-            Some(PWSTR(cmdline_wide.as_mut_ptr())),
-            None,
-            None,
-            true,
-            EXTENDED_STARTUPINFO_PRESENT,
-            None,
-            PCWSTR::null(),
-            &si.StartupInfo,
-            &mut pi,
-        )
+        match token {
+            Some(token) => CreateProcessAsUserW(
+                Some(token),
+                PCWSTR::null(),
+                Some(PWSTR(cmdline_wide.as_mut_ptr())),
+                None,
+                None,
+                true,
+                EXTENDED_STARTUPINFO_PRESENT,
+                None,
+                PCWSTR::null(),
+                &si.StartupInfo,
+                &mut pi,
+            ),
+            None => CreateProcessW(
+                PCWSTR::null(),
+                Some(PWSTR(cmdline_wide.as_mut_ptr())),
+                None,
+                None,
+                true,
+                EXTENDED_STARTUPINFO_PRESENT,
+                None,
+                PCWSTR::null(),
+                &si.StartupInfo,
+                &mut pi,
+            ),
+        }
     };
 
     unsafe {
         DeleteProcThreadAttributeList(attr_list);
-        let _ = CloseHandle(token);
+        if let Some(token) = token {
+            let _ = CloseHandle(token);
+        }
     }
 
     spawned?;
     Ok(pi)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use windows::Win32::UI::Shell::{CPUS_CHANGE_PASSWORD, CPUS_LOGON, CPUS_UNLOCK_WORKSTATION};
+
+    #[test]
+    fn only_credui_may_fall_back_to_the_current_session() {
+        assert!(may_launch_in_current_session(CPUS_CREDUI));
+        for cpus in [CPUS_LOGON, CPUS_UNLOCK_WORKSTATION, CPUS_CHANGE_PASSWORD] {
+            assert!(
+                !may_launch_in_current_session(cpus),
+                "{cpus:?} must require a real interactive-session token"
+            );
+        }
+    }
 }

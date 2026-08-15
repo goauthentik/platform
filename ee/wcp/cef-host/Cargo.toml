@@ -13,7 +13,7 @@ workspace = true
 
 [dependencies]
 wire = { workspace = true }
-ak_ffi = { workspace = true }
+sysd-client = { workspace = true }
 ak-platform = { workspace = true }
 log = { workspace = true }
 windows = { workspace = true }

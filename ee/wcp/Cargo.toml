@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["wire", "credprovider", "cef-host", "e2e"]
+members = ["wire", "sysd-client", "credprovider", "cef-host", "e2e"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,11 +14,13 @@ expect_used = "deny"
 
 [workspace.dependencies]
 wire = { path = "wire" }
-ak_ffi = { path = "../../ak-ffi" }
+sysd-client = { path = "sysd-client" }
 ak-platform = { path = "../../ak-platform" }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 eyre = "0.6"
+url = "2.5"
+winreg = { version = "0.56", features = ["serialization-serde"] }
 tokio = { version = "1", features = ["rt", "net", "time"] }
 tonic = "0.14"
 windows = { version = "0.61", features = [
@@ -41,6 +43,10 @@ windows = { version = "0.61", features = [
     "Win32_NetworkManagement_NetManagement",
     "Win32_System_SystemInformation",
     "Win32_Storage_EnhancedStorage",
+    # `ICredentialProviderUser::GetValue` returns a PROPVARIANT, so the e2e
+    # harness needs these to implement that interface for `SetUserArray`.
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Variant",
 ] }
 windows-core = "0.61"
 

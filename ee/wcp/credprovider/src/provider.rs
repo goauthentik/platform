@@ -81,7 +81,7 @@ fn credential_from_user(
         qualified_username,
         is_local_user,
         cpus,
-        Box::new(CefAuthFlow { cef_exe }),
+        Box::new(CefAuthFlow { cef_exe, cpus }),
         Box::new(RealSyscalls),
         Box::new(RealSyscalls),
     )
@@ -93,7 +93,7 @@ impl ICredentialProvider_Impl for CredentialProvider_Impl {
         cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
         _dwflags: u32,
     ) -> Result<()> {
-        let caps = match ak_ffi::ffi::sys_caps() {
+        let caps = match sysd_client::sys_caps() {
             Ok(c) => c,
             Err(e) => {
                 log::warn!("sys_caps failed: {e}");

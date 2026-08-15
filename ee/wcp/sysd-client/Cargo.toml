@@ -1,5 +1,5 @@
 [package]
-name = "ak_ffi"
+name = "sysd-client"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,10 +8,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-ak-platform = { path = "../ak-platform" }
+wire = { workspace = true }
+ak-platform = { workspace = true }
 eyre = { workspace = true }
 url = { workspace = true }
 serde = { workspace = true }
-
-[target.'cfg(windows)'.dependencies]
-winreg = { version = "0.56", features = ["serialization-serde"] }
+winreg = { workspace = true }
