@@ -27,6 +27,7 @@ mod ipc;
 mod provider;
 mod strings;
 mod syscalls;
+mod sysd;
 mod tile;
 
 use factory::CredentialProviderFactory;

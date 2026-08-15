@@ -93,7 +93,7 @@ impl ICredentialProvider_Impl for CredentialProvider_Impl {
         cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
         _dwflags: u32,
     ) -> Result<()> {
-        let caps = match sysd_client::sys_caps() {
+        let caps = match crate::sysd::sys_caps() {
             Ok(c) => c,
             Err(e) => {
                 log::warn!("sys_caps failed: {e}");

@@ -13,8 +13,9 @@ workspace = true
 
 [dependencies]
 wire = { workspace = true }
-sysd-client = { workspace = true }
 ak-platform = { workspace = true }
 log = { workspace = true }
 windows = { workspace = true }
+eyre = { workspace = true }
+url = { workspace = true }
 cef = { version = "151.4.0", features = ["build-util"] }

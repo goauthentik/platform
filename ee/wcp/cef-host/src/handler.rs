@@ -200,7 +200,7 @@ wrap_resource_request_handler! {
                 return ReturnValue::CONTINUE;
             }
 
-            let result = match sysd_client::sys_auth_url(&url) {
+            let result = match crate::sysd::sys_auth_url(&url) {
                 Ok(Some(token)) => AuthResult::Completed {
                     username: token.username,
                 },

@@ -13,11 +13,13 @@ workspace = true
 
 [dependencies]
 wire = { workspace = true }
-sysd-client = { workspace = true }
 ak-platform = { workspace = true }
 log = { workspace = true }
 windows = { workspace = true }
 windows-core = { workspace = true }
+eyre = { workspace = true }
+serde = { workspace = true }
+winreg = { workspace = true }
 
 [build-dependencies]
 embed-resource = "3"

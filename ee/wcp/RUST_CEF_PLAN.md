@@ -31,7 +31,6 @@ crates don't end up in the Linux-based root workspace CI.
 platform/ee/wcp/
   Cargo.toml                 # workspace root
   wire/                      # lib: shared IPC protocol + tile/window constants
-  sysd-client/               # lib: the three ak-sysd gRPC calls (ex-ak_ffi)
   credprovider/              # cdylib -> ak_cred_provider.dll
   cef-host/                  # bin -> ak_cef.exe
   e2e/                       # test harness crate (tests/ + mock ak-sysd)
@@ -46,12 +45,16 @@ Single source of truth shared by `credprovider`, `cef-host`, and `e2e`:
 - The redirect contract the sign-in completes on: `REDIRECT_PREFIX`,
   `TOKEN_QUERY_PARAM` and `AUTH_HEADER_NAME`.
 
-### `sysd-client` (lib)
+### `ak-sysd` calls
 
-`sys_caps()` / `sys_auth_start_async()` / `sys_auth_url()` — the only three
-`ak-sysd` gRPC calls the provider needs, plus the HKLM capability cache
-`sys_caps` reads and writes. This is the former root-workspace `ak_ffi`
-crate, moved here wholesale (see the last section).
+The three gRPC calls the provider needs live in whichever binary makes them,
+as a `sysd` module — there is no shared client crate:
+- `credprovider::sysd` — `sys_caps()` and the HKLM capability cache it reads
+  and writes.
+- `cef-host::sysd` — `sys_auth_start_async()` and `sys_auth_url()`.
+
+They share no code beyond `ak_platform::grpc::grpc_request` and `wire`'s
+redirect constants.
 
 ### `credprovider` (cdylib, output `ak_cred_provider.dll`)
 
@@ -157,7 +160,11 @@ and `ak_lsa`).
 `ak-ffi` existed only to expose `sys_caps`/`sys_auth_start_async`/
 `sys_auth_url` to that C++ through a `#[cxx::bridge]`. The bridge went
 first, leaving a root-workspace crate whose only consumers were
-`credprovider` and `cef-host`; the crate has now been deleted outright and
-its three functions live in `ee/wcp/sysd-client`. `platform/Cargo.toml` no
-longer lists `ak-ffi` as a member, and nothing outside `ee/wcp` referenced
-it.
+`credprovider` and `cef-host`; the crate has now been deleted outright.
+`platform/Cargo.toml` no longer lists `ak-ffi` as a member, and nothing
+outside `ee/wcp` referenced it.
+
+Its three functions were briefly a shared `sysd-client` crate, but that was
+a crate for two callers with nothing in common — `sys_caps` is only ever
+called by the DLL and the other two only by the browser host. They now sit
+in a `sysd` module inside each of those two crates instead.

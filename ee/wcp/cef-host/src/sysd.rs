@@ -1,30 +1,16 @@
-//! The three `ak-sysd` gRPC calls the credential provider needs:
-//! capability discovery, starting an interactive sign-in, and validating the
-//! token the sign-in redirects back with.
-//!
-//! This used to be the root workspace's `ak_ffi` crate, which existed to
-//! expose these over a `#[cxx::bridge]` to the old C++ provider. With that
-//! tree gone, `credprovider`/`cef-host` are the only callers left, so it
-//! lives here as an ordinary Rust library.
+//! The two `ak-sysd` calls the browser host makes: starting an interactive
+//! sign-in (which yields the URL to open and the header token to inject), and
+//! validating the token the `goauthentik.io://` redirect comes back with.
 
 use eyre::Result;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use url::Url;
-use winreg::enums::HKEY_LOCAL_MACHINE;
 
-use ak_platform::generated::ping::capabilities_response::Capability;
-use ak_platform::generated::ping::ping_client::PingClient;
 use ak_platform::generated::sys_auth::TokenAuthRequest;
 use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use ak_platform::grpc::grpc_request;
-
 use wire::TOKEN_QUERY_PARAM;
-
-/// HKLM key `sys_caps` caches its answer in, so a second call doesn't need
-/// `ak-sysd` to be reachable. Public so `e2e` can seed it.
-pub const CAPABILITIES_KEY: &str = "SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities";
 
 pub struct AuthStartAsync {
     pub url: String,
@@ -34,31 +20,6 @@ pub struct AuthStartAsync {
 pub struct TokenResponse {
     pub username: String,
     pub session_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
-pub struct Capabilities {
-    pub interactive_auth_available: bool,
-    pub debug: bool,
-}
-
-pub fn sys_caps() -> Result<Capabilities> {
-    let hklm = winreg::RegKey::predef(HKEY_LOCAL_MACHINE);
-    let (key, _disp) = hklm.create_subkey(CAPABILITIES_KEY)?;
-
-    if let Ok(caps) = key.decode() {
-        return Ok(caps);
-    }
-
-    let response =
-        grpc_request(async |ch| Ok(PingClient::new(ch).capabilities(()).await?))?.into_inner();
-    let authia = Capability::AuthInteractive as i32;
-    let caps = Capabilities {
-        interactive_auth_available: response.capabilities.contains(&authia),
-        debug: false,
-    };
-    key.encode(&caps)?;
-    Ok(caps)
 }
 
 pub fn sys_auth_start_async() -> Result<AuthStartAsync> {

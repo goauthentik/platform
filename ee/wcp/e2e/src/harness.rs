@@ -4,8 +4,22 @@
 //! write the real `Capabilities` registry key, so they are opt-in rather than
 //! part of a plain `cargo test`. See `e2e/README.md`.
 
-use sysd_client::{CAPABILITIES_KEY, Capabilities};
+use serde::{Deserialize, Serialize};
 use winreg::enums::HKEY_LOCAL_MACHINE;
+
+/// Mirrors `credprovider`'s `sysd::CAPABILITIES_KEY` / `sysd::Capabilities`.
+/// They can't be imported: `credprovider` is a cdylib, and this harness talks
+/// to it through `LoadLibraryW` rather than by linking it. Drift is caught
+/// rather than silent — a mismatched field name makes `sys_caps` fail to
+/// decode what we wrote, so `SetUsageScenario` rejects `CPUS_CREDUI` and the
+/// tests fail.
+const CAPABILITIES_KEY: &str = "SOFTWARE\\authentik Security Inc.\\Platform\\Capabilities";
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+struct Capabilities {
+    interactive_auth_available: bool,
+    debug: bool,
+}
 
 /// Set this to any non-empty value to run the process-level tests.
 pub const OPT_IN_VAR: &str = "AK_WCP_E2E";

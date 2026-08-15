@@ -350,8 +350,9 @@ version = "0.1.0"
 dependencies = [
  "ak-platform",
  "cef",
+ "eyre",
  "log",
- "sysd-client",
+ "url",
  "windows 0.61.3",
  "wire",
 ]
@@ -518,10 +519,12 @@ version = "0.1.0"
 dependencies = [
  "ak-platform",
  "embed-resource",
+ "eyre",
  "log",
- "sysd-client",
+ "serde",
  "windows 0.61.3",
  "windows-core 0.61.2",
+ "winreg 0.56.0",
  "wire",
 ]
 
@@ -762,7 +765,7 @@ dependencies = [
  "ak-platform",
  "eyre",
  "log",
- "sysd-client",
+ "serde",
  "tokio",
  "tonic",
  "windows 0.61.3",
@@ -2822,18 +2825,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "sysd-client"
-version = "0.1.0"
-dependencies = [
- "ak-platform",
- "eyre",
- "serde",
- "url",
- "winreg 0.56.0",
- "wire",
 ]
 
 [[package]]

@@ -12,6 +12,7 @@
 mod app;
 mod handler;
 mod icon;
+mod sysd;
 mod window;
 
 use cef::*;

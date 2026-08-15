@@ -9,9 +9,9 @@ workspace = true
 
 [dependencies]
 wire = { workspace = true }
-sysd-client = { workspace = true }
 ak-platform = { workspace = true }
 winreg = { workspace = true }
+serde = { workspace = true }
 log = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }
