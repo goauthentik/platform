@@ -1643,10 +1643,12 @@ dependencies = [
 name = "cef-host"
 version = "0.60.0"
 dependencies = [
+ "ak-meta",
  "ak-platform",
  "cef",
  "eyre",
  "log",
+ "sentry",
  "url",
  "windows 0.61.3",
  "wire",

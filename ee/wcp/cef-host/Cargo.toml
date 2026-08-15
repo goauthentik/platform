@@ -13,8 +13,10 @@ workspace = true
 
 [dependencies]
 wire = { path = "../wire" }
+ak-meta = { path = "../../../ak-meta" }
 ak-platform = { path = "../../../ak-platform" }
 log = { workspace = true }
+sentry = { workspace = true }
 windows = { workspace = true }
 eyre = { workspace = true }
 url = { workspace = true }

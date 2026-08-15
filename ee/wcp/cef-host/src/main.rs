@@ -91,7 +91,9 @@ fn wipe_browser_state(path: &Path) {
 }
 
 /// Identifies the sign-in window to authentik. Matches what the C++ credential
-/// provider sent, so anything keying on it server-side keeps working.
+/// provider sent, so anything keying on it server-side keeps working, with the
+/// version coming from `ak-meta` rather than the crate — it is the build's own
+/// version, and it carries the build hash the rest of the platform reports.
 fn user_agent() -> String {
     let cef_version = std::ffi::CStr::from_bytes_with_nul(sys::CEF_VERSION)
         .ok()
@@ -99,11 +101,17 @@ fn user_agent() -> String {
         .unwrap_or("unknown");
     format!(
         "authentik Platform/WCP/CredProvider@{} (CEF {cef_version})",
-        env!("CARGO_PKG_VERSION")
+        ak_meta::full_version()
     )
 }
 
 fn main() {
+    // Held for the whole of `main` so the client is still alive to flush when
+    // the process exits. Initialised before the `--type` branch below, so the
+    // renderer/GPU/utility re-execs report too — a crash in one of those is
+    // otherwise invisible, which is exactly the position this flow was in.
+    let _sentry = sentry::init(ak_meta::sentry_options("ak-cef"));
+
     ak_platform::log::LogBuilder::new(ak_platform::string::PlatformString::new_with_default(
         "ak_cef",
     ))
@@ -205,16 +213,23 @@ mod tests {
     }
 
     /// authentik may key on this server-side, so the shape is part of the
-    /// contract rather than a cosmetic string.
+    /// contract rather than a cosmetic string. The product version is whatever
+    /// `ak-meta` was built with — `make ee/wcp/test` does not set `AK_VERSION`
+    /// the way `make ee/wcp/build` does, so assert it is reported faithfully
+    /// rather than asserting it is non-empty.
     #[test]
     fn user_agent_carries_the_product_and_cef_versions() {
         let ua = user_agent();
+        let rest = ua
+            .strip_prefix("authentik Platform/WCP/CredProvider@")
+            .expect("the C++ user-agent prefix");
+        let (version, cef) = rest.split_once(" (CEF ").expect("a CEF section");
+
+        assert_eq!(version, ak_meta::full_version(), "not ak-meta's version");
+        let cef = cef.strip_suffix(')').expect("a closing parenthesis");
         assert!(
-            ua.starts_with("authentik Platform/WCP/CredProvider@"),
-            "unexpected user agent: {ua}"
+            cef.starts_with(|c: char| c.is_ascii_digit()),
+            "CEF version did not decode: {ua}"
         );
-        assert!(ua.contains(env!("CARGO_PKG_VERSION")), "{ua}");
-        assert!(ua.contains("(CEF 1"), "{ua}");
-        assert!(!ua.contains("unknown"), "CEF version did not decode: {ua}");
     }
 }
