@@ -161,6 +161,11 @@ Disabling GPU acceleration and DirectComposition was tried against the secure
 desktop crash and made no difference; neither implementation sets those
 switches.
 
+Neither this implementation nor the C++ has ever run the browser sandboxed, and
+on a fresh logon both run it as SYSTEM. `BROWSER_PRIVILEGE.md` covers what to do
+about that: enabling the CEF sandbox, and launching as a dedicated account the
+installer creates.
+
 ## Gaps against the C++ implementation
 
 The C++ build ran on the secure desktop, so it is the reference for anything
