@@ -22,7 +22,9 @@ use windows::{
         System::RemoteDesktop::{
             ProcessIdToSessionId, WTSGetActiveConsoleSessionId, WTSQueryUserToken,
         },
-        System::Threading::{OpenProcess, OpenProcessToken, PROCESS_QUERY_INFORMATION},
+        System::Threading::{
+            GetCurrentProcessId, OpenProcess, OpenProcessToken, PROCESS_QUERY_INFORMATION,
+        },
     },
     core::{PCWSTR, PSTR},
 };
@@ -107,6 +109,7 @@ pub fn acquire_interactive_token() -> windows::core::Result<HANDLE> {
     unsafe {
         let session = WTSGetActiveConsoleSessionId();
         if session == 0xFFFF_FFFF {
+            log::error!("no active console session");
             return Err(windows::core::Error::from(E_FAIL));
         }
 
@@ -115,10 +118,27 @@ pub fn acquire_interactive_token() -> windows::core::Result<HANDLE> {
             return Ok(token);
         }
 
+        // This provider is loaded into the process drawing the logon UI, so its
+        // own session is the one the person is signing in to. That should be
+        // the console session; log it when it is not, because then the console
+        // session is the wrong thing to be looking for winlogon in.
+        let mut own_session = 0u32;
+        if ProcessIdToSessionId(GetCurrentProcessId(), &mut own_session).is_ok()
+            && own_session != session
+        {
+            log::warn!(
+                "console session is {session} but this provider is in session {own_session}"
+            );
+        }
+
         winlogon_token_for_session(session)
     }
 }
 
+/// There is one `winlogon.exe` per session, so the snapshot has to be searched
+/// to the end: stopping at the first one found gives up as soon as the
+/// enumeration happens to reach another session's copy first, which is what a
+/// logoff/logon cycle produces once the console session id has moved on.
 fn winlogon_token_for_session(session_id: u32) -> windows::core::Result<HANDLE> {
     unsafe {
         let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)?;
@@ -129,6 +149,7 @@ fn winlogon_token_for_session(session_id: u32) -> windows::core::Result<HANDLE> 
         };
 
         let mut result = Err(windows::core::Error::from(E_FAIL));
+        let mut sessions_seen = Vec::new();
 
         if Process32FirstW(snap, &mut entry).is_ok() {
             loop {
@@ -141,13 +162,24 @@ fn winlogon_token_for_session(session_id: u32) -> windows::core::Result<HANDLE> 
 
                 if name.eq_ignore_ascii_case("winlogon.exe") {
                     let mut proc_session = 0u32;
-                    if ProcessIdToSessionId(entry.th32ProcessID, &mut proc_session).is_ok()
-                        && proc_session == session_id
-                        && let Ok(dup) = duplicate_process_primary_token(entry.th32ProcessID)
-                    {
-                        result = Ok(dup);
+                    if ProcessIdToSessionId(entry.th32ProcessID, &mut proc_session).is_ok() {
+                        sessions_seen.push(proc_session);
+                        if proc_session == session_id {
+                            match duplicate_process_primary_token(entry.th32ProcessID) {
+                                Ok(dup) => {
+                                    result = Ok(dup);
+                                    break;
+                                }
+                                // Keep looking: another instance in the same
+                                // session may still hand one over.
+                                Err(e) => log::warn!(
+                                    "could not duplicate the token of winlogon.exe \
+                                     (pid {}, session {proc_session}): {e}",
+                                    entry.th32ProcessID
+                                ),
+                            }
+                        }
                     }
-                    break;
                 }
 
                 if Process32NextW(snap, &mut entry).is_err() {
@@ -157,6 +189,12 @@ fn winlogon_token_for_session(session_id: u32) -> windows::core::Result<HANDLE> 
         }
 
         let _ = CloseHandle(snap);
+        if result.is_err() {
+            log::warn!(
+                "no usable winlogon.exe token for console session {session_id}; \
+                 saw winlogon in sessions {sessions_seen:?}"
+            );
+        }
         result
     }
 }
