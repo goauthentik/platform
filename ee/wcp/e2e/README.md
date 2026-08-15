@@ -20,14 +20,17 @@ resources — so they are skipped unless `AK_WCP_E2E` is set to a non-empty
 value:
 
 ```pwsh
-$env:AK_WCP_E2E = '1'; cargo test --manifest-path ee/wcp/Cargo.toml
+$env:AK_WCP_E2E = '1'; cargo test -p wire -p credprovider -p cef-host -p e2e
 ```
 
-Without it they print a skip line and pass, which keeps `make test` (and
-CI) meaningful on an ordinary dev machine. Everything else in the workspace
-— the `wire` frame/tile tests, `sysd-client`'s URL parsing, `credprovider`'s
-credential-packing and usage-scenario tests, `redirect_server`'s own test —
-is hermetic and always runs.
+`make ee/wcp/test` sets it, and CI runs that on a `windows-2025` runner. A
+bare `cargo test` from the repo root does not, so the tests print a skip
+line and pass — which keeps a plain workspace test run meaningful on an
+ordinary dev machine that has the real Agent installed.
+
+Everything else here is hermetic and always runs: the `wire` frame/tile
+tests, `cef-host`'s redirect-URL parsing, `credprovider`'s credential-packing
+and usage-scenario tests, and `redirect_server`'s own test.
 
 ### What opting in requires
 

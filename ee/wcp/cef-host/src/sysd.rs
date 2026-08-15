@@ -19,7 +19,6 @@ pub struct AuthStartAsync {
 
 pub struct TokenResponse {
     pub username: String,
-    pub session_id: String,
 }
 
 pub fn sys_auth_start_async() -> Result<AuthStartAsync> {
@@ -67,7 +66,6 @@ fn sys_auth_token_validate(raw_token: &str) -> Result<Option<TokenResponse>> {
             .token
             .map(|t| t.preferred_username)
             .unwrap_or_default(),
-        session_id: response.session_id,
     }))
 }
 

@@ -119,9 +119,7 @@ pub fn write_frame<T: prost::Message, W: Write>(w: &mut W, msg: &T) -> Result<()
 /// arrive (the pipe's write end closed cleanly, e.g. the writer process
 /// exited without sending a result) — callers treat that the same as an
 /// explicit cancellation.
-pub fn read_frame<T: prost::Message + Default, R: Read>(
-    r: &mut R,
-) -> Result<Option<T>, WireError> {
+pub fn read_frame<T: prost::Message + Default, R: Read>(r: &mut R) -> Result<Option<T>, WireError> {
     let mut len_buf = [0u8; 4];
     let mut read = 0usize;
     while read < 4 {
@@ -201,8 +199,8 @@ pub const WINDOW_HEIGHT: i32 = 670;
 /// `redirect_uri` prefix the sign-in flow completes on.
 pub const REDIRECT_PREFIX: &str = "goauthentik.io://";
 
-/// Query parameter on that redirect carrying the token `sysd-client`
-/// validates to turn a finished browser sign-in into a username.
+/// Query parameter on that redirect carrying the token `cef-host` validates
+/// against `ak-sysd` to turn a finished browser sign-in into a username.
 pub const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 
 /// Header carrying the interactive-auth session token, injected on every

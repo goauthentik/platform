@@ -18,7 +18,11 @@ pub struct SignInHandler {
 }
 
 impl SignInHandler {
-    pub fn new(header_token: String, result_pipe: File, cancel_pipe: Option<File>) -> Arc<Mutex<Self>> {
+    pub fn new(
+        header_token: String,
+        result_pipe: File,
+        cancel_pipe: Option<File>,
+    ) -> Arc<Mutex<Self>> {
         let handler = Arc::new_cyclic(|weak| {
             Mutex::new(Self {
                 header_token,
@@ -43,10 +47,11 @@ impl SignInHandler {
 
     fn on_before_close(&mut self, browser: Option<&mut Browser>) {
         let mut browser = browser.cloned();
-        if let Some(pos) = browser
-            .as_mut()
-            .and_then(|b| self.browser_list.iter().position(|e| e.is_same(Some(b)) != 0))
-        {
+        if let Some(pos) = browser.as_mut().and_then(|b| {
+            self.browser_list
+                .iter()
+                .position(|e| e.is_same(Some(b)) != 0)
+        }) {
             self.browser_list.remove(pos);
         }
         if self.browser_list.is_empty() {

@@ -49,7 +49,10 @@ fn main() {
     if is_subprocess {
         return;
     }
-    debug_assert_eq!(ret, -1, "browser process must not be handled by execute_process");
+    debug_assert_eq!(
+        ret, -1,
+        "browser process must not be handled by execute_process"
+    );
 
     let Some(result_pipe) = arg_value("--result-pipe").and_then(|s| s.parse::<usize>().ok()) else {
         log::error!("missing --result-pipe argument");

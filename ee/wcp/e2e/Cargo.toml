@@ -8,16 +8,16 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-wire = { workspace = true }
-ak-platform = { workspace = true }
-winreg = { workspace = true }
-serde = { workspace = true }
+wire = { path = "../wire" }
+ak-platform = { path = "../../../ak-platform" }
 log = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }
 windows = { workspace = true }
 # Required in scope by the `#[implement]` macro's expansion.
 windows-core = { workspace = true }
+winreg = { workspace = true }
+serde = { workspace = true }
 eyre = { workspace = true }
 
 [dev-dependencies]

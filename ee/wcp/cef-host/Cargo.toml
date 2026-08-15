@@ -12,8 +12,8 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
-wire = { workspace = true }
-ak-platform = { workspace = true }
+wire = { path = "../wire" }
+ak-platform = { path = "../../../ak-platform" }
 log = { workspace = true }
 windows = { workspace = true }
 eyre = { workspace = true }

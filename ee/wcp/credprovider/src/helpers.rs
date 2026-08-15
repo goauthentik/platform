@@ -133,9 +133,8 @@ pub fn pack_authentication_buffer(
 ) -> windows::core::Result<(*mut u8, u32)> {
     let username_wide: Vec<u16> = username.encode_utf16().chain(std::iter::once(0)).collect();
     let password_wide: Vec<u16> = password.encode_utf16().chain(std::iter::once(0)).collect();
-    let flags = CRED_PACK_FLAGS(
-        CRED_PACK_PROTECTED_CREDENTIALS.0 | CRED_PACK_ID_PROVIDER_CREDENTIALS.0,
-    );
+    let flags =
+        CRED_PACK_FLAGS(CRED_PACK_PROTECTED_CREDENTIALS.0 | CRED_PACK_ID_PROVIDER_CREDENTIALS.0);
 
     let mut size = 0u32;
     unsafe {

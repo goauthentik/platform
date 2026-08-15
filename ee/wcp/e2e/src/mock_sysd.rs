@@ -11,8 +11,8 @@ use ak_platform::generated::ping::{
     ping_server::{Ping, PingServer},
 };
 use ak_platform::generated::sys_auth::{
-    InteractiveAuthAsyncResponse, InteractiveAuthRequest, InteractiveChallenge,
-    SshCertAuthRequest, SshCertAuthResponse, TokenAuthRequest, TokenAuthResponse,
+    InteractiveAuthAsyncResponse, InteractiveAuthRequest, InteractiveChallenge, SshCertAuthRequest,
+    SshCertAuthResponse, TokenAuthRequest, TokenAuthResponse,
     system_auth_interactive_server::{SystemAuthInteractive, SystemAuthInteractiveServer},
     system_auth_token_server::{SystemAuthToken, SystemAuthTokenServer},
 };
@@ -120,10 +120,16 @@ impl Drop for MockSysd {
 }
 
 pub async fn start(config: MockConfig) -> eyre::Result<MockSysd> {
-    let listener = listen(sysd_socket_path(SysdSocketID::Default), SocketPermMode::Everyone).await?;
+    let listener = listen(
+        sysd_socket_path(SysdSocketID::Default),
+        SocketPermMode::Everyone,
+    )
+    .await?;
 
     let ping = PingServer::new(MockPing);
-    let interactive = SystemAuthInteractiveServer::new(MockSystemAuthInteractive { config: config.clone() });
+    let interactive = SystemAuthInteractiveServer::new(MockSystemAuthInteractive {
+        config: config.clone(),
+    });
     let token = SystemAuthTokenServer::new(MockSystemAuthToken { config });
 
     let task = tokio::spawn(async move {

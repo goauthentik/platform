@@ -2,28 +2,30 @@
 //! effects, so the logic that decides *when* to call them can be unit
 //! tested against a fake instead of the OS.
 
+use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::{
     Win32::{
         Foundation::E_FAIL,
         NetworkManagement::NetManagement::{NetUserSetInfo, USER_INFO_1003},
         Security::{
-            DuplicateTokenEx, SecurityImpersonation, TOKEN_ACCESS_MASK, TOKEN_ALL_ACCESS,
-            TOKEN_ASSIGN_PRIMARY, TOKEN_DUPLICATE, TOKEN_QUERY, TokenPrimary,
             Authentication::Identity::{
                 LSA_STRING, LsaConnectUntrusted, LsaDeregisterLogonProcess,
                 LsaLookupAuthenticationPackage,
             },
+            DuplicateTokenEx, SecurityImpersonation, TOKEN_ACCESS_MASK, TOKEN_ALL_ACCESS,
+            TOKEN_ASSIGN_PRIMARY, TOKEN_DUPLICATE, TOKEN_QUERY, TokenPrimary,
         },
         System::Diagnostics::ToolHelp::{
             CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW,
             TH32CS_SNAPPROCESS,
         },
-        System::RemoteDesktop::{ProcessIdToSessionId, WTSGetActiveConsoleSessionId, WTSQueryUserToken},
+        System::RemoteDesktop::{
+            ProcessIdToSessionId, WTSGetActiveConsoleSessionId, WTSQueryUserToken,
+        },
         System::Threading::{OpenProcess, OpenProcessToken, PROCESS_QUERY_INFORMATION},
     },
     core::{PCWSTR, PSTR},
 };
-use windows::Win32::Foundation::{CloseHandle, HANDLE};
 
 pub trait AuthPackageLookup {
     fn negotiate_package(&self) -> windows::core::Result<u32>;

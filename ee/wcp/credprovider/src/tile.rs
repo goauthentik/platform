@@ -6,8 +6,8 @@ use windows::{
     Win32::{
         Graphics::Gdi::HBITMAP,
         UI::Shell::{
-            CPFG_CREDENTIAL_PROVIDER_LOGO, CPFG_CREDENTIAL_PROVIDER_LABEL,
-            CPFG_STANDALONE_SUBMIT_BUTTON, CPFIS_NONE, CPFIS_FOCUSED, CPFS_DISPLAY_IN_BOTH,
+            CPFG_CREDENTIAL_PROVIDER_LABEL, CPFG_CREDENTIAL_PROVIDER_LOGO,
+            CPFG_STANDALONE_SUBMIT_BUTTON, CPFIS_FOCUSED, CPFIS_NONE, CPFS_DISPLAY_IN_BOTH,
             CPFS_DISPLAY_IN_SELECTED_TILE, CPFS_HIDDEN, CPFT_LARGE_TEXT, CPFT_SMALL_TEXT,
             CPFT_SUBMIT_BUTTON, CPFT_TILE_IMAGE, CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR,
             CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE, CREDENTIAL_PROVIDER_FIELD_STATE,
@@ -46,10 +46,14 @@ fn field_group_guid(kind: FieldKind) -> GUID {
     }
 }
 
-pub fn field_descriptor_at(index: u32) -> windows::core::Result<CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR> {
+pub fn field_descriptor_at(
+    index: u32,
+) -> windows::core::Result<CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR> {
     let field = TILE_FIELDS
         .get(index as usize)
-        .ok_or(windows::core::Error::from(windows::Win32::Foundation::E_INVALIDARG))?;
+        .ok_or(windows::core::Error::from(
+            windows::Win32::Foundation::E_INVALIDARG,
+        ))?;
 
     Ok(CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR {
         dwFieldID: index,
@@ -71,7 +75,9 @@ pub fn field_state_at(
 )> {
     let field = TILE_FIELDS
         .get(index as usize)
-        .ok_or(windows::core::Error::from(windows::Win32::Foundation::E_INVALIDARG))?;
+        .ok_or(windows::core::Error::from(
+            windows::Win32::Foundation::E_INVALIDARG,
+        ))?;
 
     Ok(match field.kind {
         FieldKind::TileImage => (CPFS_DISPLAY_IN_BOTH, CPFIS_FOCUSED),

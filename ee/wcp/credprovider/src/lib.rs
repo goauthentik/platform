@@ -1,8 +1,8 @@
 use std::{
     ffi::c_void,
     mem, ptr,
-    sync::atomic::{AtomicUsize, Ordering},
     sync::OnceLock,
+    sync::atomic::{AtomicUsize, Ordering},
 };
 
 use windows::{

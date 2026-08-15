@@ -22,14 +22,23 @@ This directory holds the replacement:
 
 ## Crate layout
 
-Own Cargo workspace at `platform/ee/wcp/Cargo.toml`, not a member of the
-root `platform/Cargo.toml` workspace — `ak-ffi`/`ak-platform` are consumed
-as ordinary path dependencies from outside their workspace, so Windows-only
-crates don't end up in the Linux-based root workspace CI.
+All four crates are members of the root `platform/Cargo.toml` workspace, so
+there is one lockfile and one dependency graph for the repo. They are the
+only Windows-only members, which costs two accommodations:
+
+- `make lint-rs` runs `cargo clippy --workspace` on Linux, so it passes
+  `--exclude credprovider --exclude cef-host --exclude e2e` off Windows
+  (`credprovider` is written against Win32 APIs that don't exist there, and
+  `cef-host`'s build script fetches and compiles CEF). `wire` is pure
+  `prost` and stays linted everywhere. `make ee/wcp/lint` covers all four on
+  Windows.
+- `windows`/`windows-core` are pinned at 0.61 in `[workspace.dependencies]`
+  for these crates, while `ak-sysd` pins 0.62 inline. Both resolve side by
+  side; unifying them means porting the provider to 0.62's `#[implement]`
+  and `UI::Shell` surface, which is not worth coupling to this move.
 
 ```
 platform/ee/wcp/
-  Cargo.toml                 # workspace root
   wire/                      # lib: shared IPC protocol + tile/window constants
   credprovider/              # cdylib -> ak_cred_provider.dll
   cef-host/                  # bin -> ak_cef.exe
@@ -128,7 +137,9 @@ both a completed sign-in and a `QueryContinue` cancellation, and asserting
 These take over machine-wide resources (the `ak-sysd` pipe, the HKLM
 capability cache) so they are opt-in behind `AK_WCP_E2E=1` and need an
 elevated shell on a machine with no real Agent running; `e2e/README.md`
-documents the preconditions. The completed-sign-in case uses a non-local
+documents the preconditions. `make ee/wcp/test` sets that variable, and
+`ee/wcp` is a `windows-2025`-only target in `test.yml`'s rust matrix, so CI
+runs them and reports coverage to codecov like every other rust target. The completed-sign-in case uses a non-local
 (UPN) account, which skips `NetUserSetInfo` and so needs no throwaway
 Windows account; the local-account password-reset path is still only covered
 by the manual checklist below.
@@ -138,7 +149,7 @@ A manual/nightly secure-desktop checklist covers true winlogon verification
 
 ## Build & packaging
 
-- `platform/ee/wcp/Makefile` builds the workspace and copies
+- `platform/ee/wcp/Makefile` builds the wcp packages and copies
   `ak_cred_provider.dll`, `ak_cef.exe`, and CEF's runtime deps into the
   `bin/wcp/` output shape `platform/vpkg/windows/Package.wxs` expects.
   There is deliberately no `build.ps1` — the Makefile is the only build

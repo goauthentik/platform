@@ -189,7 +189,11 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         ppszoptionalstatustext: *mut PWSTR,
         pcpsioptionalstatusicon: *mut CREDENTIAL_PROVIDER_STATUS_ICON,
     ) -> Result<()> {
-        let outcome = self.outcome.lock().unwrap_or_else(|e| e.into_inner()).take();
+        let outcome = self
+            .outcome
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
 
         unsafe {
             *ppszoptionalstatustext = PWSTR::null();

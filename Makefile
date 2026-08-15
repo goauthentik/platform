@@ -45,13 +45,25 @@ ifeq ($(CI),true)
 endif
 endif
 
+# credprovider and cef-host are Windows-only workspace members: the first is
+# written against Win32 APIs that don't exist off Windows, the second pulls in
+# a build script that fetches and compiles CEF. e2e drives both. They stay
+# workspace members so one lockfile and one cargo invocation cover the repo,
+# but clippy can only build them on Windows -- `make ee/wcp/lint` covers them
+# there.
+ifneq ($(OS),Windows_NT)
+RS_LINT_EXCLUDE := --exclude credprovider --exclude cef-host --exclude e2e
+endif
+
 lint-rs:
 	cargo fmt --all
 	cargo clippy --workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 	cargo clippy --fix \
 		--allow-dirty \
 		--workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 
 .PHONY: lint
