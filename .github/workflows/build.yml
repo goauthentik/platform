@@ -13,9 +13,6 @@ jobs:
   call-build-rs:
     uses: ./.github/workflows/_build-rs.yml
     secrets: inherit
-  call-build-ee-wcp:
-    uses: ./.github/workflows/_build-ee-wcp.yml
-    secrets: inherit
   call-build-ee-psso:
     uses: ./.github/workflows/_build-ee-psso.yml
     secrets: inherit
@@ -29,7 +26,6 @@ jobs:
   call-package-windows:
     needs:
       - call-build-rs
-      - call-build-ee-wcp
     uses: ./.github/workflows/_package-windows.yml
     secrets: inherit
   call-package-linux:
