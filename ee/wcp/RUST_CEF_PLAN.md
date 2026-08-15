@@ -93,6 +93,18 @@ redirect constants.
   `CPUS_UNLOCK_WORKSTATION` must never take that fallback: they run as
   SYSTEM under LogonUI, where it would put Chromium on the secure desktop
   with SYSTEM's token.
+- Desktop: the logon scenarios pass `lpDesktop = WinSta0\Winlogon`
+  explicitly. `CreateProcessAsUserW` with a NULL `lpDesktop` does not put the
+  child on the caller's desktop — it lands on the window station's default
+  desktop (`WinSta0\Default`), where a sign-in window is fully functional and
+  invisible to the person at the logon screen. `CPUS_CREDUI` keeps `lpDesktop`
+  NULL: it runs on the ordinary interactive desktop already.
+  Naming the secure desktop means the token must be allowed onto it. The
+  fresh-logon path duplicates `winlogon.exe`'s (SYSTEM) token, which is; the
+  unlock path's `WTSQueryUserToken` result is not, and fails the spawn loudly
+  rather than opening an invisible window. Closing that gap needs a decision —
+  run the logon scenarios on winlogon's token throughout, or add the user's
+  logon SID to the window station and desktop DACLs.
 - Windows syscalls with real side effects (`NetUserSetInfo`,
   `LsaLookupAuthenticationPackage`, process spawn) sit behind narrow traits
   so the surrounding logic is unit-testable with fakes.
@@ -116,14 +128,53 @@ on every request, intercepts `goauthentik.io://` navigations via
 `ak_ffi::sys_auth_url()`, writes the result to the pipe, and watches the
 control pipe for cancellation.
 
+`Settings.log_file` points Chromium's own log at
+`%ProgramData%\Authentik Security Inc\logs\ak_cef_chromium.log`. Without it a
+failed `CHECK()` is undiagnosable: Chromium prints the file, line and message
+to stderr and then executes an `int 3`, and a GUI-subsystem binary launched by
+LogonUI has nowhere for stderr to go — the credential provider sees only exit
+code `0x80000003`, and the platform log never sees a message raised below the
+Rust layer.
+
+GPU acceleration and DirectComposition are switched off for every scenario.
+`CefWindow::add_child_view` is where CEF attaches the browser to the widget and
+starts its compositor, and that is the frame that breaks on the secure desktop
+while the identical call succeeds under `CPUS_CREDUI` in CI. Keeping the switch
+unconditional means the configuration CI exercises is the one that ships, and a
+login form loses nothing to software rendering.
+
+## Gaps against the C++ implementation
+
+The C++ build ran on the secure desktop, so it is the reference for anything
+this one gets wrong there. Carried over deliberately: `root_cache_path` with
+`cache_path` left empty (an incognito session every time), `no_sandbox`,
+single-threaded message loop. Not yet carried over:
+
+- **CEF version.** The C++ pinned CEF 134.3.2 / Chromium 134; this pins
+  151.3.17 / Chromium 151. Seventeen Chromium majors, changed as a side effect
+  of the rewrite rather than as a decision, and the only known-good version on
+  the secure desktop is the old one.
+- **Window centering.** `SimpleWindowDelegate::OnWindowCreated` deliberately
+  avoided `CefWindow::CenterWindow`, with the comment that it "considers
+  taskbar which is not present in logon UI", and positioned the window by hand
+  from `CefDisplay::GetPrimaryDisplay()->GetBounds()`. `window.rs` calls
+  `center_window`.
+- **Cookie wipe.** The C++ ran `CefCookieManager::DeleteCookies` over every
+  cookie and only loaded the URL and showed the window from that callback, so
+  each logon started clean. Without it one person's authentik session survives
+  on the shared logon screen for whoever is at the machine next.
+- **User agent.** `authentik Platform/WCP/CredProvider@<ver> (CEF <ver>)`;
+  `cef-host` sends stock Chrome.
+- **`log_severity`.** The C++ set `LOGSEVERITY_DEBUG` alongside `log_file`.
+- **Status text.** The C++ switched the tile to "Authenticating, please
+  wait..." on intercepting the redirect, before validating the token.
+
 ### `e2e`
 
 Hermetic unit tests (always run) live next to the code they cover: wire
 frame round-trips and tile layout in `wire`, redirect-URL token extraction
 in `sysd-client`, serialization buffer byte layout and username matching in
-`credprovider`, the usage-scenario spawn gate in `credprovider::ipc`. Window
-centering is `CefWindow::center_window`'s job, so there is no geometry math
-of ours left to test.
+`credprovider`, the usage-scenario spawn gate in `credprovider::ipc`.
 
 Process-level e2e (`e2e/tests/sign_in_flow.rs`) runs a local mock of
 `ak-sysd`'s `Ping`/`SystemAuthInteractive`/`SystemAuthToken` gRPC services
