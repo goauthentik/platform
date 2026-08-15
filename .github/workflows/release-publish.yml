@@ -11,6 +11,10 @@ jobs:
     with:
       is_release: true
   call-build-rs:
+    # packages: write for the builder image it publishes to GHCR.
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/_build-rs.yml
     secrets: inherit
     with:

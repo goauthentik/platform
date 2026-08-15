@@ -14,8 +14,23 @@ on:
         default: '["ubuntu-24.04","ubuntu-24.04-arm"]'
 
 jobs:
+  # Packaging only ever pulls the builder image - it runs after _build-rs.yml,
+  # which is what publishes it - so this just derives the tag from the repo
+  # contents rather than calling _builder-image.yml and needing packages: write.
   builder:
-    uses: ./.github/workflows/_builder-image.yml
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - id: meta
+        run: |
+          cd containers/builder
+          echo "tag<<EOF" >> $GITHUB_OUTPUT
+          make ci-container-tag >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   package:
     needs: builder

@@ -12,13 +12,25 @@ env:
 permissions:
   contents: read
   id-token: write
-  # Workflow-level permissions cap what called workflows can request, and
-  # _builder-image.yml needs to push to GHCR.
-  packages: write
 
 jobs:
+  # Read-only: _build-rs.yml is the only thing that publishes the builder image
+  # (via build_rs_e2e below, and via the build workflow). This just derives the
+  # same tag from the repo contents so the test jobs can pull it.
   builder:
-    uses: ./.github/workflows/_builder-image.yml
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - id: meta
+        run: |
+          cd containers/builder
+          echo "tag<<EOF" >> $GITHUB_OUTPUT
+          make ci-container-tag >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   test_rs:
     name: Test (rust)
@@ -178,6 +190,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: make ${{ matrix.target }}/lint
   build_rs_e2e:
+    # packages: write for the builder image it publishes to GHCR.
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/_build-rs.yml
     with:
       rust_build_flags: "-C instrument-coverage -C codegen-units=1"

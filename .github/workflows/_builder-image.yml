@@ -3,6 +3,11 @@ name: _builder-image
 # Publishes the Linux build environment to GHCR and hands the tag back to the
 # caller, which uses it as the `container:` runtime for its Linux jobs.
 #
+# This is the ONLY place the builder image is pushed, and it is called from
+# _build-rs.yml only. Everything else that needs the image (_package-linux.yml,
+# test.yml) just re-derives the same tag with `make ci-container-tag` and pulls
+# it - the package is public, so no credentials or packages: read are needed.
+#
 # The tag is a hash of the image's inputs (see containers/builder/Makefile), so
 # this is a no-op on almost every run: it only builds when that exact tag is
 # missing from the registry, which happens the first time a Dockerfile or

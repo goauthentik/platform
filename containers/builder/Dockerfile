@@ -39,16 +39,17 @@ RUN --mount=type=bind,target=rust-toolchain.toml,src=rust-toolchain.toml \
     rustc --version && \
     cargo --version
 
-# Test tooling, so CI jobs don't have to install it per-job. Prebuilt archives
-# rather than `cargo install`, which would be painfully slow under QEMU on the
-# arm64 leg of the image build.
-RUN curl -fsSL "https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-$(uname -m)-unknown-linux-gnu.tar.gz" \
-        | tar xzf - -C "${CARGO_HOME}/bin" && \
-    case "$(uname -m)" in \
-        x86_64) NEXTEST_URL=https://get.nexte.st/latest/linux ;; \
-        aarch64) NEXTEST_URL=https://get.nexte.st/latest/linux-arm ;; \
+# Test tooling, so CI jobs don't have to install it per-job. Both are the
+# statically linked musl builds on purpose: the gnu ones are built against
+# glibc 2.34 and will not run on bullseye. (This is also why
+# taiki-e/install-action can't just be used inside this image.)
+RUN case "$(uname -m)" in \
+        x86_64) NEXTEST_URL=https://get.nexte.st/latest/linux-musl ;; \
+        aarch64) NEXTEST_URL=https://get.nexte.st/latest/linux-arm-musl ;; \
         *) echo "unsupported arch $(uname -m)" >&2; exit 1 ;; \
     esac && \
+    curl -fsSL "https://github.com/taiki-e/cargo-llvm-cov/releases/latest/download/cargo-llvm-cov-$(uname -m)-unknown-linux-musl.tar.gz" \
+        | tar xzf - -C "${CARGO_HOME}/bin" && \
     curl -fsSL "${NEXTEST_URL}" | tar xzf - -C "${CARGO_HOME}/bin" && \
     cargo llvm-cov --version && \
     cargo nextest --version

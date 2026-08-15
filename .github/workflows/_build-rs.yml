@@ -21,6 +21,11 @@ on:
 
 jobs:
   builder:
+    # Reusable workflows can't request more than their caller was granted, so
+    # packages: write has to be declared at every level of the chain.
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/_builder-image.yml
 
   build:
