@@ -126,7 +126,7 @@ jobs:
       - run: make ci-install-deps
       - uses: ./.github/actions/setup-toolchain
         with:
-          platform: ${{ matrix.platform }}
+          platform: ubuntu
       - run: make lint-rs
   lint_js:
     name: Lint
