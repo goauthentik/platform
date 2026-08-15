@@ -24,16 +24,23 @@ const WIN_PASS_LEN: usize = 50;
 
 /// Throwaway local-account credential, submitted immediately via `Negotiate`
 /// and never shown to or typed by the user.
-pub fn generate_random_password() -> String {
+///
+/// Errors rather than falling back: `buf` starts zeroed, so a discarded RNG
+/// failure would yield the fixed string `"AAAA…"` and `GetSerialization`
+/// would then set *that* as the account's real Windows password. Only
+/// `STATUS_SUCCESS` means the buffer was written.
+pub fn generate_random_password() -> windows::core::Result<String> {
     const CHARSET: &[u8] =
         b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
     let mut buf = [0u8; WIN_PASS_LEN];
-    unsafe {
-        let _ = BCryptGenRandom(None, &mut buf, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+    let status = unsafe { BCryptGenRandom(None, &mut buf, BCRYPT_USE_SYSTEM_PREFERRED_RNG) };
+    if status.0 != 0 {
+        return Err(status.into());
     }
-    buf.iter()
+    Ok(buf
+        .iter()
         .map(|&b| CHARSET[b as usize % CHARSET.len()] as char)
-        .collect()
+        .collect())
 }
 
 pub fn computer_name() -> String {
@@ -199,8 +206,14 @@ mod tests {
 
     #[test]
     fn random_password_meets_length_and_charset() {
-        let pw = generate_random_password();
+        let pw = generate_random_password().unwrap();
         assert_eq!(pw.chars().count(), WIN_PASS_LEN);
         assert!(pw.chars().all(|c| c.is_ascii_graphic()));
+        // Would still hold for the all-zero buffer a discarded RNG failure
+        // leaves behind, so pin that it isn't a single repeated character.
+        assert!(
+            pw.chars().collect::<std::collections::HashSet<_>>().len() > 1,
+            "password should not be a constant run: {pw}"
+        );
     }
 }

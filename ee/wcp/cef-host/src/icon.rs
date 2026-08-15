@@ -59,3 +59,26 @@ fn decode_bmp(data: &[u8]) -> Option<(i32, i32, Vec<u8>)> {
 
     Some((width, height, bgra))
 }
+
+#[cfg(test)]
+#[allow(clippy::expect_used)]
+mod tests {
+    use super::*;
+
+    /// The shipped asset has to stay a bottom-up 24-bit `BI_RGB` BMP. A
+    /// 32-bit `BITMAPV5HEADER`/`BI_BITFIELDS` export decodes to `None` here,
+    /// silently dropping the window icon — and for the same asset in
+    /// `credprovider` it makes `LoadImage` fail outright, rendering the logon
+    /// tile blank.
+    #[test]
+    fn decodes_the_shipped_asset() {
+        let (width, height, bgra) =
+            decode_bmp(ICON_BYTES).expect("icon.bmp must be a bottom-up 24-bit BI_RGB BMP");
+        assert_eq!((width, height), (128, 128));
+        assert_eq!(bgra.len(), 128 * 128 * 4);
+        assert!(
+            bgra.chunks_exact(4).all(|px| px[3] == 0xFF),
+            "every pixel should be opaque"
+        );
+    }
+}

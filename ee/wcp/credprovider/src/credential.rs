@@ -340,7 +340,13 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
                     return Err(E_FAIL.into());
                 }
 
-                let password = helpers::generate_random_password();
+                let password = match helpers::generate_random_password() {
+                    Ok(password) => password,
+                    Err(e) => {
+                        log::error!("Connect: failed to generate a password: {e}");
+                        return Err(E_FAIL.into());
+                    }
+                };
                 if self.is_local_user
                     && let Err(e) = self.password_reset.reset(&username, &password)
                 {
