@@ -19,7 +19,7 @@ use windows::{
         System::Pipes::CreatePipe,
         System::Threading::{
             CreateProcessAsUserW, CreateProcessW, DeleteProcThreadAttributeList,
-            EXTENDED_STARTUPINFO_PRESENT, InitializeProcThreadAttributeList,
+            EXTENDED_STARTUPINFO_PRESENT, GetExitCodeProcess, InitializeProcThreadAttributeList,
             LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION,
             STARTUPINFOEXW, UpdateProcThreadAttribute, WaitForSingleObject,
         },
@@ -56,6 +56,27 @@ impl AuthFlow for CefAuthFlow {
 /// would put Chromium on the secure desktop with SYSTEM's token.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
+}
+
+/// The desktop LogonUI draws on. A window created on any other desktop of the
+/// same window station is fully functional but invisible to the person signing
+/// in, so the logon scenarios have to name it: with `lpDesktop` left NULL,
+/// `CreateProcess*` gives the child whichever desktop the caller happens to be
+/// on, which is only incidentally the right one.
+const SECURE_DESKTOP: &str = r"WinSta0\Winlogon";
+
+/// `CPUS_CREDUI` is the debug-gated scenario that runs on the ordinary
+/// interactive desktop, so it keeps `lpDesktop` NULL and inherits it.
+fn desktop_for(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> Option<Vec<u16>> {
+    if may_launch_in_current_session(cpus) {
+        return None;
+    }
+    Some(
+        SECURE_DESKTOP
+            .encode_utf16()
+            .chain(std::iter::once(0))
+            .collect(),
+    )
 }
 
 struct DuplexPipes {
@@ -142,6 +163,7 @@ fn run_cef_host(
     );
 
     unsafe {
+        let _ = CloseHandle(pipes.cancel_write);
         let _ = WaitForSingleObject(process.hProcess, 5_000);
         let _ = CloseHandle(process.hProcess);
         let _ = CloseHandle(process.hThread);
@@ -150,8 +172,22 @@ fn run_cef_host(
     result
 }
 
+/// What the result-pipe reader thread saw. `Eof` and `Error` both end up as a
+/// cancellation for the user, but they mean very different things — the host
+/// died vs. the pipe misbehaved — so they stay separate long enough to be
+/// logged.
+enum PipeOutcome {
+    Result(AuthResult),
+    Eof,
+    Error(String),
+}
+
 /// Polls in short slices so `should_continue` gets a turn. On cancellation it
 /// asks `ak_cef.exe` to close over the control pipe rather than killing it.
+///
+/// Every route out of here other than a real `AuthResult` looks identical to
+/// the user ("Login attempt cancelled"), so each one logs why: a silent
+/// cancellation is indistinguishable from the sign-in window never appearing.
 fn wait_for_result(
     result_read: HANDLE,
     cancel_write: HANDLE,
@@ -161,33 +197,70 @@ fn wait_for_result(
     let mut result_file = unsafe { File::from_raw_handle(result_read.0) };
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
-        let outcome = wire::read_auth_result(&mut result_file)
-            .ok()
-            .flatten()
-            .unwrap_or(AuthResult::Cancelled);
+        let outcome = match wire::read_auth_result(&mut result_file) {
+            Ok(Some(result)) => PipeOutcome::Result(result),
+            Ok(None) => PipeOutcome::Eof,
+            Err(e) => PipeOutcome::Error(e.to_string()),
+        };
         let _ = tx.send(outcome);
     });
 
+    let mut cancel_signalled = false;
     loop {
         match rx.recv_timeout(std::time::Duration::from_millis(200)) {
-            Ok(outcome) => {
-                unsafe {
-                    let _ = CloseHandle(cancel_write);
-                }
+            Ok(PipeOutcome::Result(outcome)) => {
+                log::info!("sign-in window reported {outcome:?}");
                 return outcome;
             }
+            Ok(PipeOutcome::Eof) => {
+                log::warn!(
+                    "sign-in window closed the result pipe without sending a result ({}); \
+                     treating as cancelled",
+                    describe_exit(process)
+                );
+                return AuthResult::Cancelled;
+            }
+            Ok(PipeOutcome::Error(e)) => {
+                log::error!("failed to read the sign-in result: {e}; treating as cancelled");
+                return AuthResult::Cancelled;
+            }
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-                if !should_continue() {
+                if !cancel_signalled && !should_continue() {
+                    log::info!("LogonUI withdrew the sign-in; asking the window to close");
+                    cancel_signalled = true;
                     signal_cancel(cancel_write);
                 }
                 // Host exited without sending a result.
                 if unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0 {
+                    log::warn!(
+                        "sign-in window exited without sending a result ({})",
+                        describe_exit(process)
+                    );
                     return AuthResult::Cancelled;
                 }
             }
-            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return AuthResult::Cancelled,
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+                log::error!("the result-pipe reader thread died; treating as cancelled");
+                return AuthResult::Cancelled;
+            }
         }
     }
+}
+
+/// Exit code of `ak_cef.exe` rendered for a log line. The value is the whole
+/// diagnosis when the host dies before it can say anything: `0xC0000005` is a
+/// crash, `0xC0000142` is a `DLL_INIT_FAILED` from a desktop the process has no
+/// access to, and `0` is a clean exit that simply skipped the result.
+fn describe_exit(process: HANDLE) -> String {
+    let mut code = 0u32;
+    if unsafe { GetExitCodeProcess(process, &mut code) }.is_err() {
+        return "exit code unavailable".to_string();
+    }
+    // 259 is STILL_ACTIVE.
+    if code == 259 {
+        return "still running".to_string();
+    }
+    format!("exit code {code:#010x}")
 }
 
 fn signal_cancel(cancel_write: HANDLE) {
@@ -242,6 +315,11 @@ fn spawn_cef_host(
         ..Default::default()
     };
     si.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
+    // Outlives every `CreateProcess*` call below; `lpDesktop` borrows it.
+    let mut desktop = desktop_for(cpus);
+    if let Some(desktop) = desktop.as_mut() {
+        si.StartupInfo.lpDesktop = PWSTR(desktop.as_mut_ptr());
+    }
     let mut pi = PROCESS_INFORMATION::default();
 
     let token = match acquire_interactive_token() {
@@ -251,10 +329,24 @@ fn spawn_cef_host(
             None
         }
         Err(e) => {
+            log::error!("could not acquire an interactive-session token: {e}");
             unsafe { DeleteProcThreadAttributeList(attr_list) };
             return Err(e);
         }
     };
+    log::info!(
+        "launching {} on desktop {} with {} token",
+        cef_exe.display(),
+        desktop
+            .as_ref()
+            .map(|_| SECURE_DESKTOP)
+            .unwrap_or("<inherited>"),
+        if token.is_some() {
+            "an interactive-session"
+        } else {
+            "the caller's own"
+        }
+    );
 
     let mut spawned = match token {
         Some(token) => unsafe {

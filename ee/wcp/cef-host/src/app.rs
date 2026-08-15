@@ -56,9 +56,15 @@ wrap_browser_process_handler! {
                 None,
                 None,
             );
+            // A `None` here leaves the window empty and never shown, which the
+            // credential provider only ever sees as a bare cancellation.
+            if browser_view.is_none() {
+                log::error!("browser_view_create returned no view");
+            }
 
             let mut delegate = SignInWindowDelegate::new(std::cell::RefCell::new(browser_view));
             window_create_top_level(Some(&mut delegate));
+            log::info!("sign-in window requested");
         }
     }
 }

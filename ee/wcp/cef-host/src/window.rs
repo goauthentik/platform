@@ -23,6 +23,7 @@ wrap_window_delegate! {
         fn on_window_created(&self, window: Option<&mut Window>) {
             let browser_view = self.browser_view.borrow();
             let (Some(window), Some(browser_view)) = (window, browser_view.as_ref()) else {
+                log::error!("sign-in window created without a window or a browser view");
                 return;
             };
             let mut view = View::from(browser_view);
@@ -38,9 +39,11 @@ wrap_window_delegate! {
             }
 
             window.show();
+            log::info!("sign-in window shown");
         }
 
         fn on_window_destroyed(&self, _window: Option<&mut Window>) {
+            log::info!("sign-in window destroyed");
             *self.browser_view.borrow_mut() = None;
         }
 

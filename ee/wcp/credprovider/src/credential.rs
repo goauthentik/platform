@@ -202,7 +202,20 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
         let (username, password) = match outcome {
             Some(Outcome::Completed { username, password }) => (username, password),
-            Some(Outcome::Cancelled) | None => {
+            Some(Outcome::Cancelled) => {
+                log::info!("GetSerialization: sign-in was cancelled");
+                unsafe {
+                    *pcpgsr = CPGSR_NO_CREDENTIAL_FINISHED;
+                    *ppszoptionalstatustext = cotask_pwstr("Login attempt cancelled");
+                    *pcpsioptionalstatusicon = CPSI_WARNING;
+                }
+                return Ok(());
+            }
+            // No outcome at all means `Connect` never ran (or `SetDeselected`
+            // cleared it first), which reaches the user as the same "cancelled"
+            // string but is a different bug entirely.
+            None => {
+                log::warn!("GetSerialization: no outcome recorded; Connect did not run");
                 unsafe {
                     *pcpgsr = CPGSR_NO_CREDENTIAL_FINISHED;
                     *ppszoptionalstatustext = cotask_pwstr("Login attempt cancelled");
@@ -312,6 +325,11 @@ impl ICredentialProviderCredentialWithFieldOptions_Impl for Credential_Impl {
 
 impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
     fn Connect(&self, pqcws: Ref<'_, IQueryContinueWithStatus>) -> Result<()> {
+        log::info!(
+            "Connect: starting sign-in for '{}' (local: {})",
+            self.qualified_username,
+            self.is_local_user
+        );
         if let Some(q) = pqcws.as_ref() {
             unsafe {
                 let _ = q.SetStatusMessage(w!("Please sign in to your authentik account..."));

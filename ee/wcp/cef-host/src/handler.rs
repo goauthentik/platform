@@ -55,6 +55,7 @@ impl SignInHandler {
             self.browser_list.remove(pos);
         }
         if self.browser_list.is_empty() {
+            log::info!("last browser closed; shutting the sign-in window down");
             signal_if_unsent(&self.result_pipe, AuthResult::Cancelled);
             quit_message_loop();
         }
@@ -115,7 +116,14 @@ wrap_task! {
 fn watch_cancel_pipe(mut pipe: File, handler: Arc<Mutex<SignInHandler>>) {
     std::thread::spawn(move || {
         let mut buf = [0u8; 1];
-        let _ = pipe.read(&mut buf);
+        // All three cases cancel, but only one of them is the provider asking
+        // us to: a bad handle reads as an immediate error and would otherwise
+        // tear the window down the instant it opens.
+        match pipe.read(&mut buf) {
+            Ok(0) => log::warn!("control pipe closed; cancelling"),
+            Ok(_) => log::info!("credential provider asked the window to close"),
+            Err(e) => log::error!("control pipe read failed ({e}); cancelling"),
+        }
         let inner = handler.lock().unwrap_or_else(|e| e.into_inner());
         inner.complete(AuthResult::Cancelled);
     });
