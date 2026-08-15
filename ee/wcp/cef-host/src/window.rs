@@ -6,6 +6,7 @@ use cef::*;
 wrap_window_delegate! {
     pub struct SignInWindowDelegate {
         browser_view: std::cell::RefCell<Option<BrowserView>>,
+        url: String,
     }
 
     impl ViewDelegate {
@@ -40,6 +41,16 @@ wrap_window_delegate! {
 
             window.show();
             log::info!("sign-in window shown");
+
+            // The browser only exists once the view is parented, so this is the
+            // earliest the sign-in URL can be loaded.
+            match browser_view.browser().and_then(|b| b.main_frame()) {
+                Some(frame) => {
+                    frame.load_url(Some(&CefString::from(self.url.as_str())));
+                    log::info!("loading the sign-in URL");
+                }
+                None => log::error!("no main frame to load the sign-in URL into"),
+            }
         }
 
         fn on_window_destroyed(&self, _window: Option<&mut Window>) {

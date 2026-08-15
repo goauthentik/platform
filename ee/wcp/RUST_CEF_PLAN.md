@@ -136,12 +136,19 @@ LogonUI has nowhere for stderr to go — the credential provider sees only exit
 code `0x80000003`, and the platform log never sees a message raised below the
 Rust layer.
 
-GPU acceleration and DirectComposition are switched off for every scenario.
-`CefWindow::add_child_view` is where CEF attaches the browser to the widget and
-starts its compositor, and that is the frame that breaks on the secure desktop
-while the identical call succeeds under `CPUS_CREDUI` in CI. Keeping the switch
-unconditional means the configuration CI exercises is the one that ships, and a
-login form loses nothing to software rendering.
+The sandbox is off, matching the C++: `no_sandbox` set and a null
+`sandbox_info`. The C++ looked like it might enable it — it has both a
+`CefScopedSandboxInfo` block and `settings.no_sandbox = true`, each guarded on
+`CEF_USE_SANDBOX` — but that define only ever reaches a target through CEF's
+`SET_EXECUTABLE_TARGET_PROPERTIES`/`SET_LIBRARY_TARGET_PROPERTIES` macros, and
+the one call site was commented out while `ak_cred_provider` never invoked
+either. So `Provider.cpp` compiled with the sandbox disabled, even though
+`cefsimple/CMakeLists.txt` still linked `cef_sandbox_lib` and applied
+`SET_LPAC_ACLS` under `if(USE_SANDBOX)`. Ruled out as a difference.
+
+Disabling GPU acceleration and DirectComposition was tried against the secure
+desktop crash and made no difference; neither implementation sets those
+switches.
 
 ## Gaps against the C++ implementation
 
@@ -151,9 +158,10 @@ this one gets wrong there. Carried over deliberately: `root_cache_path` with
 single-threaded message loop. Not yet carried over:
 
 - **CEF version.** The C++ pinned CEF 134.3.2 / Chromium 134; this pins
-  151.3.17 / Chromium 151. Seventeen Chromium majors, changed as a side effect
-  of the rewrite rather than as a decision, and the only known-good version on
-  the secure desktop is the old one.
+  151.3.17 / Chromium 151. Worth knowing when comparing behaviour against the
+  C++, but staying on 151 — the `wrap_*!` macros this crate is written against
+  do not exist in the 134 or 138 crates, so moving back is a rewrite of every
+  handler rather than a version bump.
 - **Window centering.** `SimpleWindowDelegate::OnWindowCreated` deliberately
   avoided `CefWindow::CenterWindow`, with the comment that it "considers
   taskbar which is not present in logon UI", and positioned the window by hand
