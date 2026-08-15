@@ -42,20 +42,31 @@ impl AuthPackageLookup for RealSyscalls {
         let mut lsa_handle = HANDLE::default();
         unsafe { LsaConnectUntrusted(&mut lsa_handle) }.ok()?;
 
-        let name = b"Negotiate";
+        // `LSA_STRING` is counted, but `MaximumLength` is expected to cover a
+        // trailing NUL — that is what `LsaInitString` produces for a C literal.
+        // Claiming `len + 1` over a buffer that has no terminator overruns it.
+        let name = b"Negotiate\0";
         let lsa_name = LSA_STRING {
-            Length: name.len() as u16,
-            MaximumLength: (name.len() + 1) as u16,
+            Length: (name.len() - 1) as u16,
+            MaximumLength: name.len() as u16,
             Buffer: PSTR(name.as_ptr() as *mut u8),
         };
 
         let mut auth_package = 0u32;
-        let result =
+        let status =
             unsafe { LsaLookupAuthenticationPackage(lsa_handle, &lsa_name, &mut auth_package) };
         unsafe {
             let _ = LsaDeregisterLogonProcess(lsa_handle);
         }
-        result.ok()?;
+
+        // `NTSTATUS::ok()` is only a sign test, so any informational status
+        // would pass while leaving `auth_package` at the 0 it was initialised
+        // to, and we would hand LogonUI a package id that LSA never wrote.
+        // Only STATUS_SUCCESS means the out-param is meaningful.
+        if status.0 != 0 {
+            return Err(status.to_hresult().into());
+        }
+        log::debug!("LSA resolved the Negotiate authentication package to {auth_package}");
         Ok(auth_package)
     }
 }

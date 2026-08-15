@@ -120,6 +120,44 @@ unsafe fn get_serialization(
     (response, status_icon, serialization, text)
 }
 
+/// Looks up the Negotiate authentication package the same way the DLL does.
+///
+/// The DLL is loaded in-process, so this runs under the same token and session
+/// and must observe the same answer. Asserting equality rather than "non-zero"
+/// matters: `LsaLookupAuthenticationPackage` hands back an index into lsass's
+/// authentication package table, assigned at load order, and 0 is a legal id —
+/// nothing about the runner's package table is ours to assume.
+fn negotiate_package() -> u32 {
+    use windows::Win32::Foundation::HANDLE;
+    use windows::Win32::Security::Authentication::Identity::{
+        LSA_STRING, LsaConnectUntrusted, LsaDeregisterLogonProcess, LsaLookupAuthenticationPackage,
+    };
+    use windows::core::PSTR;
+
+    let mut lsa_handle = HANDLE::default();
+    unsafe { LsaConnectUntrusted(&mut lsa_handle) }
+        .ok()
+        .expect("LsaConnectUntrusted");
+
+    let name = b"Negotiate\0";
+    let lsa_name = LSA_STRING {
+        Length: (name.len() - 1) as u16,
+        MaximumLength: name.len() as u16,
+        Buffer: PSTR(name.as_ptr() as *mut u8),
+    };
+
+    let mut package = 0u32;
+    let status = unsafe { LsaLookupAuthenticationPackage(lsa_handle, &lsa_name, &mut package) };
+    unsafe {
+        let _ = LsaDeregisterLogonProcess(lsa_handle);
+    }
+    assert_eq!(
+        status.0, 0,
+        "LsaLookupAuthenticationPackage(\"Negotiate\") should succeed"
+    );
+    package
+}
+
 /// A completed sign-in for a non-local (domain/UPN) account: no local
 /// password reset, so this needs no account on the machine and serializes
 /// through `CredPackAuthenticationBufferW`.
@@ -160,9 +198,10 @@ async fn completed_sign_in_serializes_a_credential() {
         serialization.cbSerialization > 0 && !serialization.rgbSerialization.is_null(),
         "serialization buffer should be populated"
     );
-    assert_ne!(
-        serialization.ulAuthenticationPackage, 0,
-        "Negotiate auth package should have been resolved"
+    assert_eq!(
+        serialization.ulAuthenticationPackage,
+        negotiate_package(),
+        "the serialization should carry the Negotiate package LSA resolves for this process"
     );
     assert_eq!(
         serialization.clsidCredentialProvider,
