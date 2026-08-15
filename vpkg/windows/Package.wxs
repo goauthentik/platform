@@ -117,10 +117,10 @@
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
         <util:EventSource Log="authentik"
                           Name="ak_cred_provider"
-                          EventMessageFile="C:\Windows\System32\mscoree.dll"/>
+                          EventMessageFile="[System64Folder]EventCreate.exe"/>
         <util:EventSource Log="authentik"
-                          Name="ak_cefexe"
-                          EventMessageFile="C:\Windows\System32\mscoree.dll"/>
+                          Name="ak_cef"
+                          EventMessageFile="[System64Folder]EventCreate.exe"/>
 
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-sentry" />
