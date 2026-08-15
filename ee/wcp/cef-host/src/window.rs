@@ -39,7 +39,16 @@ wrap_window_delegate! {
                 window.set_window_app_icon(Some(&mut icon));
             }
 
+            // `show()` alone only makes the window visible; on Windows it
+            // does not reliably take the foreground, especially once
+            // credprovider's spawn and CEF's own multi-process startup have
+            // put enough time between process launch and this callback for
+            // the OS to stop treating it as belonging to that launch.
+            // `activate()` is CEF's dedicated bring-to-front-and-focus call,
+            // paired with `credprovider` granting this process foreground
+            // rights via `AllowSetForegroundWindow` right after spawning it.
             window.show();
+            window.activate();
             log::info!("sign-in window shown");
 
             // The browser only exists once the view is parented, so this is the

@@ -105,6 +105,17 @@ redirect constants.
   rather than opening an invisible window. Closing that gap needs a decision —
   run the logon scenarios on winlogon's token throughout, or add the user's
   logon SID to the window station and desktop DACLs.
+- Foreground activation: a spawned process is only allowed to bring its own
+  window to the foreground within a short window of the launch that
+  triggered it — past that, `SetForegroundWindow`-equivalent calls silently
+  no-op and the window opens behind whatever already has focus. CEF's own
+  multi-process startup, plus everything else `credprovider` does before and
+  after the spawn, routinely takes longer than that grace period, so
+  `spawn_cef_host` calls `AllowSetForegroundWindow(pi.dwProcessId)` right
+  after a successful launch — the standard Win32 mechanism for a parent to
+  grant a child that right regardless of elapsed time — and `cef-host`'s
+  window delegate calls `Window::activate()` alongside `show()`, since
+  `show()` alone only makes the window visible, not focused.
 - Windows syscalls with real side effects (`NetUserSetInfo`,
   `LsaLookupAuthenticationPackage`, process spawn) sit behind narrow traits
   so the surrounding logic is unit-testable with fakes.

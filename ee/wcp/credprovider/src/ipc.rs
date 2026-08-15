@@ -24,6 +24,7 @@ use windows::{
             STARTUPINFOEXW, UpdateProcThreadAttribute, WaitForSingleObject,
         },
         UI::Shell::{CPUS_CREDUI, CREDENTIAL_PROVIDER_USAGE_SCENARIO},
+        UI::WindowsAndMessaging::AllowSetForegroundWindow,
     },
     core::{PCWSTR, PWSTR},
 };
@@ -388,6 +389,17 @@ fn spawn_cef_host(
     }
 
     spawned?;
+
+    // A freshly spawned process is not automatically allowed to bring its own
+    // window to the foreground — Windows only grants that if the window
+    // appears within a short window of the launch that triggered it, and CEF's
+    // own multi-process startup plus this app's spawn path routinely take
+    // longer than that. Without this, `ak_cef.exe` still opens, just behind
+    // whatever already had focus, with no visible sign it exists.
+    if let Err(e) = unsafe { AllowSetForegroundWindow(pi.dwProcessId) } {
+        log::warn!("AllowSetForegroundWindow({}) failed: {e}", pi.dwProcessId);
+    }
+
     Ok(pi)
 }
 
