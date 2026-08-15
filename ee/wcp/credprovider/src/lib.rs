@@ -102,7 +102,12 @@ extern "system" fn DllGetClassObject(
             "ak_cred_provider",
         ))
         .allow_platform(true)
-        .allow_stdout(false)
+        // A shipped provider is loaded by LogonUI, which has no console, so
+        // release builds log only to the platform log. Debug builds also log
+        // to stdout: that is what `e2e` runs, and it is the only way a
+        // failure inside the DLL (which reports one generic string to the
+        // user) shows up in a test runner's captured output.
+        .allow_stdout(cfg!(debug_assertions))
         .enable();
     });
 

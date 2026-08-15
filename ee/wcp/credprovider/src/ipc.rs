@@ -266,9 +266,9 @@ fn spawn_cef_host(
         }
     };
 
-    let spawned = unsafe {
-        match token {
-            Some(token) => CreateProcessAsUserW(
+    let mut spawned = match token {
+        Some(token) => unsafe {
+            CreateProcessAsUserW(
                 Some(token),
                 PCWSTR::null(),
                 Some(PWSTR(cmdline_wide.as_mut_ptr())),
@@ -280,21 +280,23 @@ fn spawn_cef_host(
                 PCWSTR::null(),
                 &si.StartupInfo,
                 &mut pi,
-            ),
-            None => CreateProcessW(
-                PCWSTR::null(),
-                Some(PWSTR(cmdline_wide.as_mut_ptr())),
-                None,
-                None,
-                true,
-                EXTENDED_STARTUPINFO_PRESENT,
-                None,
-                PCWSTR::null(),
-                &si.StartupInfo,
-                &mut pi,
-            ),
-        }
+            )
+        },
+        None => spawn_in_current_session(&cmdline, &si.StartupInfo, &mut pi),
     };
+
+    // Holding a token is not the same as being allowed to assign it: without
+    // SE_ASSIGNPRIMARYTOKEN/SE_INCREASE_QUOTA, `CreateProcessAsUserW` fails
+    // even though a plain `CreateProcessW` in this session would work. Under
+    // `CPUS_CREDUI` that is still the right outcome, so retry rather than
+    // failing the whole flow. Never reached for the real logon scenarios.
+    if let Err(e) = spawned.as_ref()
+        && token.is_some()
+        && may_launch_in_current_session(cpus)
+    {
+        log::debug!("CreateProcessAsUserW failed ({e}); retrying in the current session");
+        spawned = spawn_in_current_session(&cmdline, &si.StartupInfo, &mut pi);
+    }
 
     unsafe {
         DeleteProcThreadAttributeList(attr_list);
@@ -307,10 +309,69 @@ fn spawn_cef_host(
     Ok(pi)
 }
 
+/// `CreateProcessW` may write into the command-line buffer it is handed, so
+/// each attempt gets a fresh copy.
+fn spawn_in_current_session(
+    cmdline: &str,
+    startup_info: &windows::Win32::System::Threading::STARTUPINFOW,
+    pi: &mut PROCESS_INFORMATION,
+) -> windows::core::Result<()> {
+    let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
+    unsafe {
+        CreateProcessW(
+            PCWSTR::null(),
+            Some(PWSTR(cmdline_wide.as_mut_ptr())),
+            None,
+            None,
+            true,
+            EXTENDED_STARTUPINFO_PRESENT,
+            None,
+            PCWSTR::null(),
+            startup_info,
+            pi,
+        )
+    }
+}
+
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
     use windows::Win32::UI::Shell::{CPUS_CHANGE_PASSWORD, CPUS_LOGON, CPUS_UNLOCK_WORKSTATION};
+
+    /// Exercises the real attribute-list / handle-inheritance / CreateProcess
+    /// machinery against a throwaway target, without needing an interactive
+    /// token, elevation, or anything listening on the `ak-sysd` pipe. A
+    /// failure here means `Connect` can never launch the sign-in window,
+    /// which otherwise only surfaces as one generic "Sign-in failed" string.
+    #[test]
+    fn credui_spawn_succeeds_without_an_interactive_token() {
+        let pipes = create_duplex_pipes().expect("create duplex pipes");
+
+        // Any real executable will do: this asserts the process is created,
+        // not what it does. It exits immediately on the unknown arguments.
+        let exe = std::path::PathBuf::from(
+            std::env::var("COMSPEC").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string()),
+        );
+
+        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI);
+
+        unsafe {
+            let _ = CloseHandle(pipes.result_read);
+            let _ = CloseHandle(pipes.result_write_inheritable);
+            let _ = CloseHandle(pipes.cancel_write);
+            let _ = CloseHandle(pipes.cancel_read_inheritable);
+        }
+
+        match spawned {
+            Ok(pi) => unsafe {
+                let _ = windows::Win32::System::Threading::TerminateProcess(pi.hProcess, 0);
+                let _ = CloseHandle(pi.hProcess);
+                let _ = CloseHandle(pi.hThread);
+            },
+            Err(e) => panic!("spawn_cef_host under CPUS_CREDUI failed: {e}"),
+        }
+    }
 
     #[test]
     fn only_credui_may_fall_back_to_the_current_session() {
