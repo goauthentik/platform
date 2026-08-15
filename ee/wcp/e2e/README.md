@@ -20,7 +20,7 @@ resources — so they are skipped unless `AK_WCP_E2E` is set to a non-empty
 value:
 
 ```pwsh
-$env:AK_WCP_E2E = '1'; cargo test -p wire -p credprovider -p cef-host -p e2e
+$env:AK_WCP_E2E = '1'; cargo test -p ak-ee-wcp-wire -p ak-ee-wcp -p ak-ee-wcp-cef-host -p ak-ee-wcp-e2e
 ```
 
 `make ee/wcp/test` sets it, and CI runs that on a `windows-2025` runner. A
@@ -53,7 +53,7 @@ and usage-scenario tests, and `redirect_server`'s own test.
    This is needed because `SetUsageScenario` only accepts `CPUS_CREDUI` —
    the one scenario that works on an ordinary interactive desktop rather
    than LogonUI's secure desktop — when the cached capabilities carry
-   `debug`. `credprovider::sysd::sys_caps` only ever writes `debug: false`
+   `debug`. `ak_cred_provider::sysd::sys_caps` only ever writes `debug: false`
    (it has no transport to learn otherwise), so nothing sets that flag in
    normal operation and the harness has to seed it.
 

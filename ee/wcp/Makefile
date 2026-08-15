@@ -5,7 +5,8 @@ include ../../common.mk
 OUT_TARGET := wcp
 # These crates are members of the root workspace, so every cargo invocation
 # here runs from the workspace root and selects them by package name.
-WCP_PACKAGES := -p wire -p credprovider -p cef-host -p e2e
+WCP_PACKAGES := -p ak-ee-wcp-wire -p ak-ee-wcp -p ak-ee-wcp-cef-host -p ak-ee-wcp-e2e
+WCP_BUILD_PACKAGES := -p ak-ee-wcp -p ak-ee-wcp-cef-host
 WCP_MANIFEST := "${TOP}Cargo.toml"
 WCP_TARGET_DIR := "${TOP}cache/wcp"
 CEF_PIN := $(shell grep -A1 '^name = "cef-dll-sys"' ${TOP}Cargo.lock | grep version | sed -E 's/.*"([0-9.]+)\+.*/\1/')
@@ -31,7 +32,7 @@ build: cef-runtime
 		cargo build --release \
 			--target-dir ${WCP_TARGET_DIR} \
 			--manifest-path ${WCP_MANIFEST} \
-			-p credprovider -p cef-host
+			${WCP_BUILD_PACKAGES}
 	cp "${TOP}cache/wcp/release/ak_cred_provider.dll" "${TOP}bin/${OUT_TARGET}/"
 	cp "${TOP}cache/wcp/release/ak_cred_provider.pdb" "${TOP}bin/${OUT_TARGET}/" || true
 	cp "${TOP}cache/wcp/release/ak_cred_provider.dll.lib" "${TOP}bin/${OUT_TARGET}/ak_cred_provider.lib"
@@ -69,7 +70,7 @@ test: cef-runtime
 		export AK_WCP_E2E=1 && \
 		source <(cargo llvm-cov show-env --export-prefix) && \
 		cargo llvm-cov clean --workspace && \
-		cargo build -p credprovider -p cef-host && \
+		cargo build ${WCP_BUILD_PACKAGES} && \
 		cargo nextest run ${WCP_PACKAGES} --no-tests pass --no-fail-fast --test-threads 1 && \
 		cargo llvm-cov report --codecov --ignore-filename-regex generated \
 			--output-path "${TOP}cache/llvm-cov-target.json" && \
