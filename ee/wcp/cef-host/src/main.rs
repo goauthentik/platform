@@ -111,7 +111,7 @@ fn main() {
     let _sentry = sentry::init(ak_meta::sentry_options("ak-cef"));
 
     ak_platform::log::LogBuilder::new(ak_platform::string::PlatformString::new_with_default(
-        "ak_cef",
+        "authentik Credential Provider (CEF)",
     ))
     .allow_platform(true)
     .allow_stdout(false)

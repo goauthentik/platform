@@ -116,10 +116,10 @@
       </Component>
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
         <util:EventSource Log="authentik"
-                          Name="ak_cred_provider"
+                          Name="authentik Credential Provider"
                           EventMessageFile="[System64Folder]EventCreate.exe"/>
         <util:EventSource Log="authentik"
-                          Name="ak_cef"
+                          Name="authentik Credential Provider (CEF)"
                           EventMessageFile="[System64Folder]EventCreate.exe"/>
 
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />

@@ -99,7 +99,7 @@ extern "system" fn DllGetClassObject(
     static LOG_INIT: std::sync::Once = std::sync::Once::new();
     LOG_INIT.call_once(|| {
         ak_platform::log::LogBuilder::new(ak_platform::string::PlatformString::new_with_default(
-            "ak_cred_provider",
+            "authentik Credential Provider",
         ))
         .allow_platform(true)
         // A shipped provider is loaded by LogonUI, which has no console, so
