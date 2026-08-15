@@ -48,6 +48,7 @@ wrap_browser_process_handler! {
 
             let browser_settings = BrowserSettings::default();
             let url = CefString::from(start.url.as_str());
+            log::info!("creating the browser view");
             let browser_view = browser_view_create(
                 Some(&mut client),
                 Some(&url),
@@ -62,6 +63,7 @@ wrap_browser_process_handler! {
                 log::error!("browser_view_create returned no view");
             }
 
+            log::info!("creating the top-level window");
             let mut delegate = SignInWindowDelegate::new(std::cell::RefCell::new(browser_view));
             window_create_top_level(Some(&mut delegate));
             log::info!("sign-in window requested");

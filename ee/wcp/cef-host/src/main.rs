@@ -63,6 +63,13 @@ fn main() {
     let settings = Settings {
         no_sandbox: 1,
         root_cache_path: CefString::from(r"C:\ProgramData\Authentik Security Inc\wcp-cache"),
+        // Chromium reports a failed CHECK() by writing the file, line and
+        // message here and then executing an `int 3`, which surfaces to the
+        // credential provider as nothing but exit code 0x80000003. Its own
+        // stderr goes nowhere: this is a GUI-subsystem binary with no console,
+        // and the platform log never sees a message Chromium raises below the
+        // Rust layer.
+        log_file: CefString::from(r"C:\ProgramData\Authentik Security Inc\logs\ak_cef_chromium.log"),
         ..Default::default()
     };
     let mut app = app::HostApp::new(result_pipe, cancel_pipe);
