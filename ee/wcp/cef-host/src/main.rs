@@ -3,6 +3,12 @@
 //! from `credprovider` (carrying `--result-pipe`/`--cancel-pipe`) becomes
 //! the browser-process host that opens the sign-in window.
 
+// Logging goes to the platform log, never stdout (see `allow_stdout(false)`
+// below), so nothing needs a console. Without this the binary links as a
+// console subsystem app and Windows allocates a console window for it — once
+// for the host and again for every CEF renderer/GPU/utility re-exec.
+#![windows_subsystem = "windows"]
+
 mod app;
 mod handler;
 mod icon;
