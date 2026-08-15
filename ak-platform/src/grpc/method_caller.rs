@@ -4,6 +4,7 @@ use std::convert::Infallible;
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use tonic::server::NamedService;
+use tonic::{Code, Status};
 use tower::ServiceExt;
 use tower::util::BoxCloneService;
 
@@ -56,11 +57,14 @@ impl MethodCaller {
         self.services.keys().map(String::as_str)
     }
 
-    /// Call a gRPC method by its full path (e.g. `/ping.Ping/Ping`).
+    /// Call a gRPC method by its path (e.g. `/ping.Ping/Ping`).
     /// `data` is the raw serialised proto request (no gRPC framing).
-    /// Returns the raw serialised proto response on success.
+    ///
+    /// A non-OK gRPC status is a successful call that returned an error, so it comes
+    /// back in the [`MethodResponse`]. The `Err` variant is reserved for the call not
+    /// happening at all — unknown service, unroutable path, a body that won't collect.
     #[tracing::instrument]
-    pub async fn call(&mut self, method: &str, data: &[u8]) -> Result<Vec<u8>> {
+    pub async fn call(&mut self, method: &str, data: &[u8]) -> Result<MethodResponse> {
         let service_name = parse_service_name(method)?;
 
         let svc = self
@@ -69,9 +73,12 @@ impl MethodCaller {
             .ok_or_else(|| eyre!("unknown service: {service_name}"))?
             .clone();
 
+        // The path goes into a request URI, and a relative path is not a valid URI, so
+        // the leading slash is not optional here even though `parse_service_name`
+        // tolerates its absence.
         let mut req = http::Request::builder()
             .method("POST")
-            .uri(method)
+            .uri(format!("/{}", method.trim_start_matches('/')))
             .header("content-type", "application/grpc+proto")
             .header("te", "trailers")
             .body(Full::new(Bytes::from(grpc_frame(data))))
@@ -90,24 +97,35 @@ impl MethodCaller {
         // direct (non-transport) calls where they may be merged.
         let status = collected
             .trailers()
-            .and_then(|t| t.get("grpc-status"))
-            .or_else(|| parts.headers.get("grpc-status"))
-            .and_then(|v| v.to_str().ok())
-            .and_then(|s| s.parse::<i32>().ok())
-            .unwrap_or(0);
+            .and_then(Status::from_header_map)
+            .or_else(|| Status::from_header_map(&parts.headers));
 
-        if status != 0 {
-            let msg = collected
-                .trailers()
-                .and_then(|t| t.get("grpc-message"))
-                .or_else(|| parts.headers.get("grpc-message"))
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("gRPC call failed");
-            bail!("gRPC status {status}: {msg}");
+        if let Some(status) = status.filter(|s| s.code() != Code::Ok) {
+            // An error response carries no message frame, so there is nothing to unframe.
+            return Ok(MethodResponse {
+                status: status.code() as i32,
+                message: status.message().to_string(),
+                data: Vec::new(),
+            });
         }
 
-        grpc_unframe(&collected.to_bytes())
+        Ok(MethodResponse {
+            status: Code::Ok as i32,
+            message: String::new(),
+            data: grpc_unframe(&collected.to_bytes())?,
+        })
     }
+}
+
+/// Outcome of a [`MethodCaller::call`]: the raw serialised proto response, or the gRPC
+/// status the handler returned instead.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MethodResponse {
+    /// gRPC status code, as `tonic::Code as i32`. Zero means OK.
+    pub status: i32,
+    pub message: String,
+    /// Empty whenever `status` is non-zero.
+    pub data: Vec<u8>,
 }
 
 fn parse_service_name(method: &str) -> Result<&str> {
@@ -170,6 +188,25 @@ mod tests {
         }
     }
 
+    struct FailingPing;
+
+    #[tonic::async_trait]
+    impl Ping for FailingPing {
+        async fn ping(
+            &self,
+            _req: tonic::Request<()>,
+        ) -> std::result::Result<tonic::Response<PingResponse>, tonic::Status> {
+            Err(tonic::Status::not_found("no such thing"))
+        }
+
+        async fn capabilities(
+            &self,
+            _req: tonic::Request<()>,
+        ) -> std::result::Result<tonic::Response<CapabilitiesResponse>, tonic::Status> {
+            unimplemented!()
+        }
+    }
+
     fn make_caller() -> MethodCaller {
         let mut caller = MethodCaller::new(ProcCredentials::new(None));
         caller.add_service(PingServer::new(TestPing));
@@ -179,8 +216,9 @@ mod tests {
     #[tokio::test]
     async fn call_known_method_returns_decoded_response() {
         let mut caller = make_caller();
-        let bytes = caller.call("/ping.Ping/Ping", &[]).await.unwrap();
-        let resp = PingResponse::decode(&*bytes).unwrap();
+        let res = caller.call("/ping.Ping/Ping", &[]).await.unwrap();
+        assert_eq!(res.status, 0);
+        let resp = PingResponse::decode(&*res.data).unwrap();
         assert_eq!(resp.component, "test");
         assert_eq!(resp.version, "1.0");
     }
@@ -188,9 +226,43 @@ mod tests {
     #[tokio::test]
     async fn call_second_method_on_same_service() {
         let mut caller = make_caller();
-        let bytes = caller.call("/ping.Ping/Capabilities", &[]).await.unwrap();
-        let resp = CapabilitiesResponse::decode(&*bytes).unwrap();
+        let res = caller.call("/ping.Ping/Capabilities", &[]).await.unwrap();
+        let resp = CapabilitiesResponse::decode(&*res.data).unwrap();
         assert!(resp.capabilities.is_empty());
+    }
+
+    /// Regression: the SSH tunnel used to send the path with its leading slash stripped.
+    /// `parse_service_name` accepted that, but the URI built from it did not — the call
+    /// failed before reaching the service, and the agent could only answer with an empty
+    /// response, which surfaced on the client as "empty tunnel response".
+    #[tokio::test]
+    async fn call_without_leading_slash_still_routes() {
+        let mut caller = make_caller();
+        let res = caller.call("ping.Ping/Ping", &[]).await.unwrap();
+        assert_eq!(res.status, 0);
+        assert_eq!(PingResponse::decode(&*res.data).unwrap().component, "test");
+    }
+
+    /// A handler that returns a `Status` is a call that happened and failed, not a
+    /// plumbing failure — the code has to survive so the tunnel can forward it.
+    #[tokio::test]
+    async fn non_ok_status_is_returned_not_raised() {
+        let mut caller = MethodCaller::new(ProcCredentials::new(None));
+        caller.add_service(PingServer::new(FailingPing));
+
+        let res = caller.call("/ping.Ping/Ping", &[]).await.unwrap();
+        assert_eq!(res.status, Code::NotFound as i32);
+        assert_eq!(res.message, "no such thing");
+        assert!(res.data.is_empty());
+    }
+
+    /// tonic answers an unroutable path with `Unimplemented` rather than an error, and
+    /// that too has to come back as a status.
+    #[tokio::test]
+    async fn unknown_method_on_known_service_is_unimplemented() {
+        let mut caller = make_caller();
+        let res = caller.call("/ping.Ping/Nope", &[]).await.unwrap();
+        assert_eq!(res.status, Code::Unimplemented as i32);
     }
 
     #[tokio::test]

@@ -48,7 +48,6 @@ message SSHCertAuthResponse {
 
 message InteractiveAuthInitRequest {
   string username = 1;
-  string password = 2;
 }
 
 message InteractiveAuthContinueRequest {

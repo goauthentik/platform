@@ -40,8 +40,6 @@ pub struct InteractiveAuthTransaction {
     domain: Arc<LoadedDomain>,
     fex: FlowExecutor,
     username: String,
-    // Init password, submitted once then cleared.
-    password: Option<String>,
 }
 
 impl InteractiveAuthTransaction {
@@ -51,7 +49,6 @@ impl InteractiveAuthTransaction {
         domain: Arc<LoadedDomain>,
         flow_slug: String,
         username: String,
-        password: String,
     ) -> Result<Self, Status> {
         let mut fex = FlowExecutor::builder()
             .flow(flow_slug)
@@ -71,7 +68,6 @@ impl InteractiveAuthTransaction {
             domain,
             fex,
             username,
-            password: Some(password).filter(|p| !p.is_empty()),
         })
     }
 
@@ -111,21 +107,13 @@ impl InteractiveAuthTransaction {
                     ..Default::default()
                 })
             }
-            ChallengeTypes::AkStagePassword(_) => {
-                if let Some(password) = self.password.take() {
-                    if let Some(err) = self.solve_challenge(password).await? {
-                        return Ok(err);
-                    }
-                    return Box::pin(self.get_next_challenge()).await;
-                }
-                Ok(InteractiveChallenge {
-                    txid: self.id.clone(),
-                    prompt: PASSWORD_PROMPT.to_string(),
-                    prompt_meta: PromptMeta::PamPromptEchoOff as i32,
-                    component: "ak-stage-password".to_string(),
-                    ..Default::default()
-                })
-            }
+            ChallengeTypes::AkStagePassword(_) => Ok(InteractiveChallenge {
+                txid: self.id.clone(),
+                prompt: PASSWORD_PROMPT.to_string(),
+                prompt_meta: PromptMeta::PamPromptEchoOff as i32,
+                component: "ak-stage-password".to_string(),
+                ..Default::default()
+            }),
             ChallengeTypes::AkStageAuthenticatorValidate(c) => {
                 let dc = c
                     .device_challenges
@@ -280,14 +268,13 @@ mod tests {
         })
     }
 
-    async fn new_txn(server: &Server, password: &str) -> InteractiveAuthTransaction {
+    async fn new_txn(server: &Server) -> InteractiveAuthTransaction {
         InteractiveAuthTransaction::new(
             "test-txid".to_string(),
             test_context().await,
             test_domain(server),
             "test-flow".to_string(),
             "akadmin".to_string(),
-            password.to_string(),
         )
         .await
         .unwrap()
@@ -343,7 +330,17 @@ mod tests {
             }),
         );
 
-        let mut txn = new_txn(&server, "hunter2").await;
+        let mut txn = new_txn(&server).await;
+        let challenge = txn.get_next_challenge().await.unwrap();
+
+        assert!(!challenge.finished);
+        assert_eq!(challenge.component, "ak-stage-password");
+        assert_eq!(challenge.prompt, PASSWORD_PROMPT);
+        assert_eq!(challenge.prompt_meta, PromptMeta::PamPromptEchoOff as i32);
+
+        let err = txn.solve_challenge("hunter2".to_string()).await.unwrap();
+        assert!(err.is_none());
+
         let challenge = txn.get_next_challenge().await.unwrap();
 
         assert!(challenge.finished);
@@ -386,7 +383,17 @@ mod tests {
             )),
         );
 
-        let mut txn = new_txn(&server, "hunter2").await;
+        let mut txn = new_txn(&server).await;
+        let challenge = txn.get_next_challenge().await.unwrap();
+
+        assert!(!challenge.finished);
+        assert_eq!(challenge.component, "ak-stage-password");
+        assert_eq!(challenge.prompt, PASSWORD_PROMPT);
+        assert_eq!(challenge.prompt_meta, PromptMeta::PamPromptEchoOff as i32);
+
+        let err = txn.solve_challenge("hunter2".to_string()).await.unwrap();
+        assert!(err.is_none());
+
         let challenge = txn.get_next_challenge().await.unwrap();
 
         assert!(!challenge.finished);
@@ -398,10 +405,25 @@ mod tests {
         let server = Server::run();
         expect_flow_get(&server, identification_challenge(true));
 
-        let mut txn = new_txn(&server, "hunter2").await;
+        let mut txn = new_txn(&server).await;
         let challenge = txn.get_next_challenge().await.unwrap();
 
         assert!(!challenge.finished);
         assert!(challenge.prompt.is_empty());
+    }
+
+    #[tokio::test]
+    async fn get_next_challenge_returns_password_prompt_for_password_stage() {
+        let server = Server::run();
+        expect_flow_get(&server, identification_challenge(false));
+        expect_flow_solve(&server, "ak-stage-identification", password_challenge());
+
+        let mut txn = new_txn(&server).await;
+        let challenge = txn.get_next_challenge().await.unwrap();
+
+        assert!(!challenge.finished);
+        assert_eq!(challenge.component, "ak-stage-password");
+        assert_eq!(challenge.prompt, PASSWORD_PROMPT);
+        assert_eq!(challenge.prompt_meta, PromptMeta::PamPromptEchoOff as i32);
     }
 }

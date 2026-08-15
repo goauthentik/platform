@@ -34,8 +34,6 @@ pub struct SshCertAuthResponse {
 pub struct InteractiveAuthInitRequest {
     #[prost(string, tag="1")]
     pub username: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
-    pub password: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct InteractiveAuthContinueRequest {

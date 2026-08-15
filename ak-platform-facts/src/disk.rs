@@ -15,9 +15,14 @@ fn disks_base() -> Vec<DiskRequest> {
         .map(|disk| {
             let total = disk.total_space();
             let available = disk.available_space();
+            let mountpoint = disk.mount_point().to_string_lossy().to_string();
+            let mut name = disk.name().to_string_lossy().to_string();
+            if name.is_empty() {
+                name = mountpoint.clone();
+            }
             DiskRequest {
-                name: disk.name().to_string_lossy().to_string(),
-                mountpoint: disk.mount_point().to_string_lossy().to_string(),
+                name: name,
+                mountpoint: mountpoint,
                 label: None,
                 capacity_total_bytes: Some(total as i64),
                 capacity_used_bytes: Some(total.saturating_sub(available) as i64),

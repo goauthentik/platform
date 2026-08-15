@@ -21,7 +21,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.50.5"
+version = "0.60.1"
 edition = "2024"
 license = "MIT"
 
@@ -29,6 +29,11 @@ license = "MIT"
 panic = "deny"
 unwrap_used = "deny"
 expect_used = "deny"
+
+[profile.release]
+debug = "limited"
+split-debuginfo = "packed"
+strip = "debuginfo"
 
 [workspace.dependencies]
 ak-api-cli-gen = { path = "ak-api-cli-gen" }

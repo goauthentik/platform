@@ -84,7 +84,6 @@ async fn interactive_auth_init(
         Arc::clone(&active),
         flow_slug,
         init.username,
-        init.password,
     )
     .await?;
 
