@@ -166,6 +166,10 @@ on a fresh logon both run it as SYSTEM. `BROWSER_PRIVILEGE.md` covers what to do
 about that: enabling the CEF sandbox, and launching as a dedicated account the
 installer creates.
 
+`PASSWORDLESS_LOGON.md` covers why `Connect` randomises the local account's
+password, and why the alternative — the `ak_lsa` authentication package that
+used to live here — is closed rather than merely unfinished.
+
 ## Gaps against the C++ implementation
 
 The C++ build ran on the secure desktop, so it is the reference for anything

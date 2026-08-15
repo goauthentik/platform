@@ -84,6 +84,10 @@ means a secret at rest and a rotation story.
 for a local account with no credentials, given `SE_TCB_NAME`, which LogonUI
 already holds. Nothing to store, nothing to rotate.
 
+S4U is usable *here*, for launching a process as a service account. It is not
+usable for the user's own logon — see `PASSWORDLESS_LOGON.md` before reaching
+for it there.
+
 **The catch, and the decision:** an S4U token carries no network credentials.
 That is fine for reaching authentik over HTTPS with the
 `X-Authentik-Platform-Auth-DTH` bearer header. It is not fine if the sign-in
