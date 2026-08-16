@@ -10,11 +10,12 @@ wrap_app! {
     pub struct HostApp {
         result_pipe: usize,
         cancel_pipe: Option<usize>,
+        login_hint: Option<String>,
     }
 
     impl App {
         fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
-            Some(HostBrowserProcessHandler::new(self.result_pipe, self.cancel_pipe))
+            Some(HostBrowserProcessHandler::new(self.result_pipe, self.cancel_pipe, self.login_hint.clone()))
         }
     }
 }
@@ -23,6 +24,7 @@ wrap_browser_process_handler! {
     struct HostBrowserProcessHandler {
         result_pipe: usize,
         cancel_pipe: Option<usize>,
+        login_hint: Option<String>,
     }
 
     impl BrowserProcessHandler {
@@ -34,7 +36,7 @@ wrap_browser_process_handler! {
         // re-entrantly, which also keeps a blocking gRPC call out of
         // `CefInitialize`.
         fn on_context_initialized(&self) {
-            let mut task = OpenSignInWindow::new(self.result_pipe, self.cancel_pipe);
+            let mut task = OpenSignInWindow::new(self.result_pipe, self.cancel_pipe, self.login_hint.clone());
             post_task(ThreadId::UI, Some(&mut task));
         }
     }
@@ -44,22 +46,27 @@ wrap_task! {
     struct OpenSignInWindow {
         result_pipe: usize,
         cancel_pipe: Option<usize>,
+        login_hint: Option<String>,
     }
 
     impl Task {
         fn execute(&self) {
-            open_sign_in_window(self.result_pipe, self.cancel_pipe);
+            open_sign_in_window(self.result_pipe, self.cancel_pipe, self.login_hint.clone());
         }
     }
 }
 
-fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
+fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>, login_hint: Option<String>) {
     // Most of the gap between the spawn and a window existing is spent here —
     // a named-pipe round trip to `ak-sysd` and, behind it, a live call out to
     // the authentik API. That gap is what the foreground grant issued at spawn
     // has to survive, so it is worth knowing how long it actually was.
     let started = std::time::Instant::now();
-    let start = match crate::sysd::sys_auth_start_async() {
+    log::info!(
+        "starting interactive auth with login hint {}",
+        login_hint.as_deref().unwrap_or("<none>")
+    );
+    let start = match crate::sysd::sys_auth_start_async(login_hint) {
         Ok(s) => s,
         Err(e) => {
             log::error!("sys_auth_start_async failed: {e}");

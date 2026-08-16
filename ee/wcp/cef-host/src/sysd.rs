@@ -7,9 +7,9 @@ use std::collections::HashMap;
 use url::Url;
 
 use ak_ee_wcp_wire::TOKEN_QUERY_PARAM;
-use ak_platform::generated::sys_auth::TokenAuthRequest;
 use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
+use ak_platform::generated::sys_auth::{InteractiveAuthAsyncRequest, TokenAuthRequest};
 use ak_platform::grpc::grpc_request;
 
 pub struct AuthStartAsync {
@@ -21,10 +21,15 @@ pub struct TokenResponse {
     pub username: String,
 }
 
-pub fn sys_auth_start_async() -> Result<AuthStartAsync> {
+/// `login_hint` is the username of the tile that was selected, so the sign-in
+/// page can skip the identification stage. It is only ever a hint: what the
+/// flow authenticates as is whatever `sys_auth_url` reports back.
+pub fn sys_auth_start_async(login_hint: Option<String>) -> Result<AuthStartAsync> {
     let response = grpc_request(async |ch| {
         Ok(SystemAuthInteractiveClient::new(ch)
-            .interactive_auth_async(())
+            .interactive_auth_async(InteractiveAuthAsyncRequest {
+                username: login_hint.clone(),
+            })
             .await?)
     })?
     .into_inner();

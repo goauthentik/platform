@@ -32,11 +32,17 @@ use windows::{
 use crate::syscalls::{self, ForegroundControl, acquire_interactive_token};
 use ak_ee_wcp_wire::AuthResult;
 
-/// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
-/// while waiting, so LogonUI cancelling (the user backing out of the tile)
-/// tears the browser process down instead of orphaning it.
+/// Spawns `ak_cef.exe` and waits for its result. `login_hint` is the username
+/// of the selected tile, passed on so the sign-in page can skip asking who is
+/// signing in. `should_continue` is polled while waiting, so LogonUI
+/// cancelling (the user backing out of the tile) tears the browser process
+/// down instead of orphaning it.
 pub trait AuthFlow {
-    fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult;
+    fn run(
+        &self,
+        login_hint: Option<&str>,
+        should_continue: &mut dyn FnMut() -> bool,
+    ) -> AuthResult;
 }
 
 pub struct CefAuthFlow {
@@ -45,8 +51,12 @@ pub struct CefAuthFlow {
 }
 
 impl AuthFlow for CefAuthFlow {
-    fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
-        run_cef_host(&self.cef_exe, self.cpus, should_continue)
+    fn run(
+        &self,
+        login_hint: Option<&str>,
+        should_continue: &mut dyn FnMut() -> bool,
+    ) -> AuthResult {
+        run_cef_host(&self.cef_exe, self.cpus, login_hint, should_continue)
     }
 }
 
@@ -124,6 +134,7 @@ fn create_duplex_pipes() -> windows::core::Result<DuplexPipes> {
 fn run_cef_host(
     cef_exe: &Path,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    login_hint: Option<&str>,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
     let pipes = match create_duplex_pipes() {
@@ -136,7 +147,7 @@ fn run_cef_host(
         }
     };
 
-    let spawn = spawn_cef_host(cef_exe, &pipes, cpus);
+    let spawn = spawn_cef_host(cef_exe, &pipes, cpus, login_hint);
     unsafe {
         let _ = CloseHandle(pipes.result_write_inheritable);
         let _ = CloseHandle(pipes.cancel_read_inheritable);
@@ -352,17 +363,57 @@ fn signal_cancel(cancel_write: HANDLE) {
     std::mem::forget(f);
 }
 
+/// Quotes one command-line argument so `ak_cef.exe` reads back exactly what
+/// was passed. `CreateProcess*` takes a single string, and the child splits it
+/// again with the `CommandLineToArgvW` rules `std::env::args` follows: a
+/// backslash run is only special before a quote, where it has to be doubled,
+/// and a value ending in one would otherwise escape its own closing quote.
+/// Account names reach here straight from LogonUI, so they are quoted rather
+/// than trusted to be free of spaces.
+fn quote_arg(value: &str) -> String {
+    let mut quoted = String::with_capacity(value.len() + 2);
+    quoted.push('"');
+    let mut backslashes = 0usize;
+    for c in value.chars() {
+        match c {
+            '\\' => {
+                backslashes += 1;
+                quoted.push(c);
+            }
+            // Double the run this quote follows, then escape the quote itself.
+            '"' => {
+                quoted.extend(std::iter::repeat_n('\\', backslashes + 1));
+                backslashes = 0;
+                quoted.push(c);
+            }
+            _ => {
+                backslashes = 0;
+                quoted.push(c);
+            }
+        }
+    }
+    // Trailing run: doubled so it stays literal against the closing quote.
+    quoted.extend(std::iter::repeat_n('\\', backslashes));
+    quoted.push('"');
+    quoted
+}
+
 fn spawn_cef_host(
     cef_exe: &Path,
     pipes: &DuplexPipes,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    login_hint: Option<&str>,
 ) -> windows::core::Result<PROCESS_INFORMATION> {
-    let cmdline = format!(
-        "\"{}\" --result-pipe {} --cancel-pipe {}",
-        cef_exe.display(),
+    let mut cmdline = format!(
+        "{} --result-pipe {} --cancel-pipe {}",
+        quote_arg(&cef_exe.display().to_string()),
         pipes.result_write_inheritable.0 as usize,
         pipes.cancel_read_inheritable.0 as usize
     );
+    if let Some(login_hint) = login_hint {
+        cmdline.push_str(" --login-hint ");
+        cmdline.push_str(&quote_arg(login_hint));
+    }
     let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
 
     let mut attr_size = 0usize;
@@ -701,7 +752,7 @@ mod tests {
             std::env::var("COMSPEC").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string()),
         );
 
-        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI);
+        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI, Some("alice"));
 
         unsafe {
             let _ = CloseHandle(pipes.result_read);
@@ -717,6 +768,48 @@ mod tests {
                 let _ = CloseHandle(pi.hThread);
             },
             Err(e) => panic!("spawn_cef_host under CPUS_CREDUI failed: {e}"),
+        }
+    }
+
+    /// Round-trips through the same parser `ak_cef.exe`'s `std::env::args`
+    /// uses, since the point of the quoting is what the child reads back —
+    /// asserting the escaped string only restates the implementation.
+    fn argv(cmdline: &str) -> Vec<String> {
+        use windows::Win32::Foundation::{HLOCAL, LocalFree};
+        use windows::Win32::UI::Shell::CommandLineToArgvW;
+
+        let wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
+        let mut count = 0i32;
+        let argv = unsafe { CommandLineToArgvW(PCWSTR(wide.as_ptr()), &mut count) };
+        assert!(!argv.is_null(), "CommandLineToArgvW rejected {cmdline:?}");
+
+        let args = (0..count as usize)
+            .map(|i| unsafe { (*argv.add(i)).to_string() }.expect("an argument in valid UTF-16"))
+            .collect();
+        unsafe { LocalFree(Some(HLOCAL(argv as *mut c_void))) };
+        args
+    }
+
+    /// A username reaches this straight from LogonUI. A space would otherwise
+    /// split it into two arguments, and the trailing backslash of a domain
+    /// name would escape its own closing quote and swallow the rest.
+    #[test]
+    fn quoted_arguments_survive_the_childs_own_parser() {
+        for value in [
+            "alice",
+            "alice smith",
+            r"CORP\alice",
+            r"trailing\\",
+            "quote\"inside",
+            r#"both\"mixed"#,
+            "",
+        ] {
+            let quoted = quote_arg(value);
+            assert_eq!(
+                argv(&format!("prog {quoted}")),
+                vec!["prog".to_string(), value.to_string()],
+                "{value:?} quoted as {quoted:?}"
+            );
         }
     }
 

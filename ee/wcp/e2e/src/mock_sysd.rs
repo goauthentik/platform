@@ -10,9 +10,12 @@ use ak_platform::generated::ping::{
     capabilities_response::Capability,
     ping_server::{Ping, PingServer},
 };
+use std::sync::{Arc, Mutex};
+
 use ak_platform::generated::sys_auth::{
-    InteractiveAuthAsyncResponse, InteractiveAuthRequest, InteractiveChallenge, SshCertAuthRequest,
-    SshCertAuthResponse, TokenAuthRequest, TokenAuthResponse,
+    InteractiveAuthAsyncRequest, InteractiveAuthAsyncResponse, InteractiveAuthRequest,
+    InteractiveChallenge, SshCertAuthRequest, SshCertAuthResponse, TokenAuthRequest,
+    TokenAuthResponse,
     system_auth_interactive_server::{SystemAuthInteractive, SystemAuthInteractiveServer},
     system_auth_token_server::{SystemAuthToken, SystemAuthTokenServer},
 };
@@ -53,8 +56,25 @@ impl Ping for MockPing {
     }
 }
 
+/// Every login hint `interactive_auth_async` was called with, so a test can
+/// assert what the selected tile carried all the way through `ak_cef.exe`'s
+/// command line into the gRPC call.
+#[derive(Clone, Default)]
+pub struct ObservedLoginHints(Arc<Mutex<Vec<Option<String>>>>);
+
+impl ObservedLoginHints {
+    pub fn get(&self) -> Vec<Option<String>> {
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    fn record(&self, hint: Option<String>) {
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).push(hint);
+    }
+}
+
 struct MockSystemAuthInteractive {
     config: MockConfig,
+    login_hints: ObservedLoginHints,
 }
 
 #[tonic::async_trait]
@@ -68,8 +88,9 @@ impl SystemAuthInteractive for MockSystemAuthInteractive {
 
     async fn interactive_auth_async(
         &self,
-        _request: Request<()>,
+        request: Request<InteractiveAuthAsyncRequest>,
     ) -> Result<Response<InteractiveAuthAsyncResponse>, Status> {
+        self.login_hints.record(request.into_inner().username);
         Ok(Response::new(InteractiveAuthAsyncResponse {
             url: self.config.interactive_auth_url.clone(),
             header_token: self.config.header_token.clone(),
@@ -111,6 +132,7 @@ impl SystemAuthToken for MockSystemAuthToken {
 /// of a test.
 pub struct MockSysd {
     task: tokio::task::JoinHandle<()>,
+    pub login_hints: ObservedLoginHints,
 }
 
 impl Drop for MockSysd {
@@ -126,9 +148,11 @@ pub async fn start(config: MockConfig) -> eyre::Result<MockSysd> {
     )
     .await?;
 
+    let login_hints = ObservedLoginHints::default();
     let ping = PingServer::new(MockPing);
     let interactive = SystemAuthInteractiveServer::new(MockSystemAuthInteractive {
         config: config.clone(),
+        login_hints: login_hints.clone(),
     });
     let token = SystemAuthTokenServer::new(MockSystemAuthToken { config });
 
@@ -144,5 +168,5 @@ pub async fn start(config: MockConfig) -> eyre::Result<MockSysd> {
         }
     });
 
-    Ok(MockSysd { task })
+    Ok(MockSysd { task, login_hints })
 }

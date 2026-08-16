@@ -143,6 +143,9 @@ fn main() {
         return;
     };
     let cancel_pipe = arg_value("--cancel-pipe").and_then(|s| s.parse::<usize>().ok());
+    // Absent whenever the credential provider had no username to offer; the
+    // sign-in page then asks for one as it always did.
+    let login_hint = arg_value("--login-hint").filter(|hint| !hint.is_empty());
 
     wipe_browser_state(Path::new(ROOT_CACHE_PATH));
 
@@ -154,7 +157,7 @@ fn main() {
         log_severity: LogSeverity::VERBOSE,
         ..Default::default()
     };
-    let mut app = app::HostApp::new(result_pipe, cancel_pipe);
+    let mut app = app::HostApp::new(result_pipe, cancel_pipe, login_hint);
     let initialized = initialize(
         Some(cef_args.as_main_args()),
         Some(&settings),
