@@ -122,9 +122,27 @@
                           Name="authentik Credential Provider (CEF)"
                           EventMessageFile="[System64Folder]EventCreate.exe"/>
 
+        <!-- ak_cef.exe runs as this account instead of SYSTEM (see
+             ee/wcp/BROWSER_PRIVILEGE.md). util:User has no "generate a
+             random password" attribute, so this one is a fixed placeholder;
+             credprovider resets it to a random, never-stored value the
+             first time it loads after install, and the account is denied
+             interactive/network/RDP logon throughout, so the placeholder
+             is never a usable credential. Keep "Name" in step with
+             credprovider::syscalls::SERVICE_ACCOUNT_NAME. -->
+        <util:User Id="wcp_service_account"
+                    Name="ak-wcp-browser"
+                    Password="Ak!Wcp#Svc$Placeholder1"
+                    PasswordNeverExpires="yes"
+                    CanNotChangePassword="yes"
+                    UpdateIfExists="yes"
+                    RemoveOnUninstall="yes" />
+
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-sentry" />
-        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache" />
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache">
+          <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
+        </CreateFolder>
 
         <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
