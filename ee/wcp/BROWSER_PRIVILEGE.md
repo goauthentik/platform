@@ -35,24 +35,30 @@ one call site in `cefsimple/CMakeLists.txt` was commented out, and
 disabled while `if(USE_SANDBOX)` still linked `cef_sandbox_lib` and applied
 `SET_LPAC_ACLS` — a build that looks sandboxed and is not.
 
-**Identity — SYSTEM on the path that matters.** `credprovider::syscalls::
-acquire_interactive_token` tries `WTSQueryUserToken` first and falls back to
-duplicating `winlogon.exe`'s token:
+**Identity — was SYSTEM on the path that matters; fixed on this branch.**
+Before this branch, `credprovider::syscalls::acquire_interactive_token` tried
+`WTSQueryUserToken` first and fell back to duplicating `winlogon.exe`'s
+token:
 
-| Scenario | Token | Runs as |
+| Scenario | Token | Ran as |
 | --- | --- | --- |
-| `CPUS_LOGON` (fresh logon) | winlogon duplicate — nobody is signed in yet, so there is no user token to get | **SYSTEM** |
-| `CPUS_UNLOCK_WORKSTATION` | `WTSQueryUserToken` | the locked-out user — but the spawn then fails, that token has no access to `WinSta0\Winlogon` |
-| `CPUS_CREDUI` (debug) | none; the caller holds no `SE_TCB_NAME`, so it falls through to `CreateProcessW` | the interactive user |
+| `CPUS_LOGON` (fresh logon) | winlogon duplicate — nobody is signed in yet, so there was no user token to get | **SYSTEM** |
+| `CPUS_UNLOCK_WORKSTATION` | `WTSQueryUserToken` | the locked-out user — but the spawn then failed, that token had no access to `WinSta0\Winlogon` |
+| `CPUS_CREDUI` (debug) | none; the caller holds no `SE_TCB_NAME`, so it fell through to `CreateProcessW` | the interactive user |
 
 The C++ ran CEF in-process inside `ak_cred_provider.dll`, i.e. inside LogonUI,
 so the browser process *was* LogonUI: SYSTEM, with helper processes inheriting
 that token. It never chose an identity because it never spawned anything.
 
-So the existing token machinery buys nothing on fresh logon (it works hard to
-arrive at the same SYSTEM the C++ got for free) and is broken on unlock. It is
-not load-bearing for the sign-in flow; it is an unfinished attempt at this
-document's goal.
+So the old token machinery bought nothing on fresh logon (it worked hard to
+arrive at the same SYSTEM the C++ got for free) and was broken on unlock —
+not load-bearing for the sign-in flow, an unfinished attempt at this
+document's goal. Replaced entirely: `credprovider::syscalls::
+service_account_token` now mints an S4U token for the dedicated account
+(`SERVICE_ACCOUNT_NAME`, see Option B below) for both `CPUS_LOGON` and
+`CPUS_UNLOCK_WORKSTATION` — one path, no per-scenario branching, no
+`WTSQueryUserToken`/winlogon-scanning left in `syscalls.rs` at all.
+`CPUS_CREDUI` is unchanged.
 
 ## Option A — enable the CEF sandbox
 
@@ -110,9 +116,20 @@ means a secret at rest and a rotation story.
 
 `LsaLogonUser` with `MSV1_0_S4U_LOGON` avoids that entirely: it mints a token
 for a local account with no credentials, given `SE_TCB_NAME`, which LogonUI
-already holds. Nothing to store, nothing to rotate. The installer still gives
-`<util:User>` a `GeneratePassword="yes"` password, because the account needs
-one to exist — it is simply never read back by anything.
+already holds. Nothing to store, nothing to rotate.
+
+One correction against the plan as first written here: WiX's `util:User` has
+no `GeneratePassword` attribute — it only takes a literal `Password` (or one
+read from a `Property` via `PasswordAttribute`), so the installer cannot mint
+a random one itself. The account is created with a fixed placeholder
+instead, and `credprovider::syscalls::ensure_service_account_password_rotated`
+resets it to a random value the first time the DLL loads after install,
+via the same `NetUserSetInfo` reset `LocalAccountPassword::reset` already
+does for the interactive user's account — then never touches it again
+(tracked by an `HKLM` marker). The placeholder is live for, at most, the
+gap between install finishing and the first logon attempt; the account is
+also denied interactive/network/RDP logon throughout, so even a known
+placeholder cannot be used to sign anyone in.
 
 **The catch that made this a decision:** an S4U token carries no network
 credentials. That is fine for reaching authentik over HTTPS with the
@@ -123,23 +140,33 @@ out of scope for this account**, so S4U stands.
 
 ### The rest of the work
 
-- **Secure desktop ACL.** A non-SYSTEM token has no access to
-  `WinSta0\Winlogon`; add the account's SID to the window station and desktop
-  DACLs (`GetUserObjectSecurity`/`SetUserObjectSecurity`). Weigh it honestly:
-  this grants a service account the right to create windows on the desktop
-  where credentials are typed. Still a large net win — a compromised renderer
-  no longer yields SYSTEM — but a deliberate expansion of what can reach the
-  logon desktop, not a free improvement.
+- **Secure desktop ACL — done.** `credprovider::syscalls::
+  ensure_desktop_access` grants the account's SID `GENERIC_ALL` on both
+  `WinSta0` and its `Winlogon` desktop, merged onto the existing DACL via
+  `GetSecurityInfo`/`SetEntriesInAclW`/`SetSecurityInfo` rather than
+  replacing it. Weigh it honestly: this grants a service account the right
+  to create windows on the desktop where credentials are typed. Still a
+  large net win — a compromised renderer no longer yields SYSTEM — but a
+  deliberate expansion of what can reach the logon desktop, not a free
+  improvement. `GENERIC_ALL` is broader than this account strictly needs;
+  narrowing it to the specific window-station/desktop rights CEF actually
+  uses is a reasonable follow-up once real hardware confirms what those are.
 - **Profile and cache.** `root_cache_path` is explicit already, but Chromium
   also wants temp, fonts and crashpad paths. Without `LoadUserProfile` the
-  account gets the default profile. The MSI must also grant it write access to
-  `wcp-cache`, which currently just inherits ProgramData defaults.
-- **Harden the account.** Deny interactive logon — it must not be usable to
-  sign in at the very screen it serves — plus deny network and RDP logon,
-  minimal group membership, no privileges. `RemoveOnUninstall`, and handle the
-  account already existing on upgrade.
+  account gets the default profile. The MSI grants the account write access
+  to `wcp-cache` (previously ProgramData defaults only); temp/fonts/crashpad
+  are not yet addressed and are the most likely source of first-run failures
+  on real hardware.
+- **Harden the account — mostly done.** `credprovider::syscalls::
+  deny_interactive_and_network_logon` denies `SeDenyInteractiveLogonRight`,
+  `SeDenyNetworkLogonRight` and `SeDenyRemoteInteractiveLogonRight` via
+  `LsaAddAccountRights`, called on every load (idempotent). The installer
+  creates the account with `RemoveOnUninstall="yes"`/`UpdateIfExists="yes"`
+  and no group membership beyond the default. Minimal-privilege trimming
+  beyond that is not yet done.
 - **Deployment friction.** GPO blocking local account creation, endpoint
-  monitoring flagging a new local account, no local accounts on a DC.
+  monitoring flagging a new local account, no local accounts on a DC — still
+  open, not addressable from this codebase.
 
 ## Decisions — resolved for this branch
 
