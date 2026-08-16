@@ -175,7 +175,7 @@ dependencies = [
  "log",
  "serde",
  "windows 0.61.3",
- "windows-core 0.61.2",
+ "windows-core 0.62.2",
  "winreg 0.56.0",
 ]
 
@@ -206,7 +206,7 @@ dependencies = [
  "tokio",
  "tonic",
  "windows 0.61.3",
- "windows-core 0.61.2",
+ "windows-core 0.62.2",
  "winreg 0.56.0",
 ]
 
