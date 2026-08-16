@@ -30,7 +30,7 @@ use windows::{
 };
 
 use crate::syscalls::acquire_interactive_token;
-use wire::AuthResult;
+use ak_ee_wcp_wire::AuthResult;
 
 /// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
 /// while waiting, so LogonUI cancelling (the user backing out of the tile)
@@ -198,7 +198,7 @@ fn wait_for_result(
     let mut result_file = unsafe { File::from_raw_handle(result_read.0) };
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
-        let outcome = match wire::read_auth_result(&mut result_file) {
+        let outcome = match ak_ee_wcp_wire::read_auth_result(&mut result_file) {
             Ok(Some(result)) => PipeOutcome::Result(result),
             Ok(None) => PipeOutcome::Eof,
             Err(e) => PipeOutcome::Error(e.to_string()),
@@ -266,7 +266,7 @@ fn describe_exit(process: HANDLE) -> String {
 
 fn signal_cancel(cancel_write: HANDLE) {
     let mut f = unsafe { File::from_raw_handle(cancel_write.0) };
-    let _ = wire::write_frame(&mut f, &wire::CancelSignal {});
+    let _ = ak_ee_wcp_wire::write_frame(&mut f, &ak_ee_wcp_wire::CancelSignal {});
     std::mem::forget(f);
 }
 

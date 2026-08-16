@@ -12,8 +12,8 @@ wrap_window_delegate! {
     impl ViewDelegate {
         fn preferred_size(&self, _view: Option<&mut View>) -> Size {
             Size {
-                width: wire::WINDOW_WIDTH,
-                height: wire::WINDOW_HEIGHT,
+                width: ak_ee_wcp_wire::WINDOW_WIDTH,
+                height: ak_ee_wcp_wire::WINDOW_HEIGHT,
             }
         }
     }
@@ -30,8 +30,8 @@ wrap_window_delegate! {
             let mut view = View::from(browser_view);
             window.add_child_view(Some(&mut view));
             window.center_window(Some(&Size {
-                width: wire::WINDOW_WIDTH,
-                height: wire::WINDOW_HEIGHT,
+                width: ak_ee_wcp_wire::WINDOW_WIDTH,
+                height: ak_ee_wcp_wire::WINDOW_HEIGHT,
             }));
 
             if let Some(mut icon) = crate::icon::load() {

@@ -52,8 +52,16 @@ endif
 # but clippy can only build them on Windows -- `make ee/wcp/lint` covers them
 # there.
 ifneq ($(OS),Windows_NT)
-RS_LINT_EXCLUDE := --exclude credprovider --exclude cef-host --exclude e2e
+RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-cef-host --exclude ak-ee-wcp-e2e
 endif
+
+format:
+	cargo fmt
+	cargo clippy \
+		--fix \
+		--allow-dirty \
+		--workspace \
+		$(RS_LINT_EXCLUDE)
 
 lint-rs:
 	cargo fmt --all
@@ -98,7 +106,7 @@ test-join:
 		authentik-platform_devcontainer-test-machine-1 \
 		ak-sysd domains join ak -a http://authentik:9000
 
-test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deployak-nss/test-deployak-pam/test-deploy test-ssh
+test-full: clean ak-agent/test-deploy ak-sysd/test-deploy ak-cli/test-deploy ak-nss/test-deploy ak-pam/test-deploy test-ssh
 
 dev--initialize: containers/test/local-build
 

@@ -59,9 +59,9 @@ fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
         Err(e) => {
             log::error!("sys_auth_start_async failed: {e}");
             let mut pipe = file_from_raw_handle(result_pipe);
-            let _ = wire::write_auth_result(
+            let _ = ak_ee_wcp_wire::write_auth_result(
                 &mut pipe,
-                &wire::AuthResult::Failed {
+                &ak_ee_wcp_wire::AuthResult::Failed {
                     reason: e.to_string(),
                 },
             );

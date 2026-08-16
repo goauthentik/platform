@@ -16,8 +16,8 @@ fn page(token: Option<&str>) -> String {
         .map(|token| {
             let target = format!(
                 "{}callback?{}={token}",
-                wire::REDIRECT_PREFIX,
-                wire::TOKEN_QUERY_PARAM
+                ak_ee_wcp_wire::REDIRECT_PREFIX,
+                ak_ee_wcp_wire::TOKEN_QUERY_PARAM
             );
             format!("<script>location.href={target:?};</script>")
         })
@@ -117,7 +117,9 @@ fn serve_one(
             break;
         }
         if let Some((name, value)) = line.split_once(':')
-            && name.trim().eq_ignore_ascii_case(wire::AUTH_HEADER_NAME)
+            && name
+                .trim()
+                .eq_ignore_ascii_case(ak_ee_wcp_wire::AUTH_HEADER_NAME)
         {
             auth_header = Some(value.trim().to_string());
         }
@@ -153,7 +155,7 @@ mod tests {
         write!(
             stream,
             "GET / HTTP/1.1\r\nHost: localhost\r\n{}: header-abc\r\n\r\n",
-            wire::AUTH_HEADER_NAME
+            ak_ee_wcp_wire::AUTH_HEADER_NAME
         )
         .unwrap();
         let mut response = String::new();

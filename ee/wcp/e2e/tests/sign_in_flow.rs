@@ -7,9 +7,9 @@
 //! Opt-in; see `e2e/harness.rs` and `e2e/README.md` for the preconditions.
 #![allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
 
-use e2e::query_continue::query_continue;
-use e2e::user_array::{TestUser, user_array};
-use e2e::{
+use ak_ee_wcp_e2e::query_continue::query_continue;
+use ak_ee_wcp_e2e::user_array::{TestUser, user_array};
+use ak_ee_wcp_e2e::{
     dll::{LoadedProvider, get_serialization},
     harness, mock_sysd,
     redirect_server::RedirectServer,
@@ -47,12 +47,12 @@ async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
     let caps = harness::DebugCapabilities::enable()
         .expect("seed the Capabilities registry key — needs an elevated shell");
 
-    let dll_path = e2e::dll::build_output_dir().join("ak_cred_provider.dll");
+    let dll_path = ak_ee_wcp_e2e::dll::build_output_dir().join("ak_cred_provider.dll");
     assert!(
         dll_path.exists(),
         "expected {dll_path:?} to exist — build the workspace first"
     );
-    let cef_exe = e2e::dll::build_output_dir().join("ak_cef.exe");
+    let cef_exe = ak_ee_wcp_e2e::dll::build_output_dir().join("ak_cef.exe");
     assert!(
         cef_exe.exists(),
         "expected {cef_exe:?} to exist — build the workspace first"
@@ -168,7 +168,7 @@ async fn completed_sign_in_serializes_a_credential() {
     );
     assert_eq!(
         serialization.clsidCredentialProvider,
-        e2e::dll::CLSID_CREDENTIAL_PROVIDER
+        ak_ee_wcp_e2e::dll::CLSID_CREDENTIAL_PROVIDER
     );
 
     unsafe {
@@ -187,7 +187,7 @@ async fn completed_sign_in_serializes_a_credential() {
     assert!(
         headers.iter().all(|h| h.as_deref() == Some(HEADER_TOKEN)),
         "every request should carry {}: {HEADER_TOKEN}, got {headers:?}",
-        wire::AUTH_HEADER_NAME
+        ak_ee_wcp_wire::AUTH_HEADER_NAME
     );
 }
 

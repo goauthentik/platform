@@ -79,8 +79,10 @@ fn machine_guid() -> Result<String> {
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     // KEY_WOW64_64KEY so a 32-bit build isn't redirected into Wow6432Node,
     // where MachineGuid doesn't exist.
-    let key = hklm
-        .open_subkey_with_flags(r"SOFTWARE\Microsoft\Cryptography", KEY_READ | KEY_WOW64_64KEY)?;
+    let key = hklm.open_subkey_with_flags(
+        r"SOFTWARE\Microsoft\Cryptography",
+        KEY_READ | KEY_WOW64_64KEY,
+    )?;
     let guid: String = key.get_value("MachineGuid")?;
     non_empty(guid.trim().to_string()).ok_or_else(|| eyre::eyre!("MachineGuid missing or empty"))
 }

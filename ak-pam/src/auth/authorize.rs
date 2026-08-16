@@ -8,10 +8,10 @@ use gethostname::gethostname;
 use pam::constants::PamResultCode;
 use pam::module::PamHandle;
 
-use crate::{ENV_SESSION_ID, username};
 use crate::auth::interactive::result_to_pam_result;
 use crate::auth::ssh::{SSH_AUTH_SOCK, authenticate_authorize_ssh};
 use crate::dir::check_user_exists;
+use crate::{ENV_SESSION_ID, username};
 
 pub fn authenticate_authorize_impl(pamh: &mut PamHandle, service: String) -> Result<PamResultCode> {
     let binding = gethostname();

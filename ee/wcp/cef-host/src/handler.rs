@@ -7,8 +7,8 @@ use std::io::Read;
 use std::os::windows::io::FromRawHandle;
 use std::sync::{Arc, Mutex, Weak};
 
+use ak_ee_wcp_wire::AuthResult;
 use cef::*;
-use wire::AuthResult;
 
 pub struct SignInHandler {
     header_token: String,
@@ -93,7 +93,7 @@ fn close_all_browsers(handler: &Arc<Mutex<SignInHandler>>) {
 fn signal_if_unsent(result_pipe: &Mutex<Option<File>>, result: AuthResult) {
     let mut guard = result_pipe.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(mut file) = guard.take()
-        && let Err(e) = wire::write_auth_result(&mut file, &result)
+        && let Err(e) = ak_ee_wcp_wire::write_auth_result(&mut file, &result)
     {
         log::error!("failed to write result to pipe: {e}");
     }
@@ -203,13 +203,13 @@ wrap_resource_request_handler! {
 
             let inner = self.inner.lock().unwrap_or_else(|e| e.into_inner());
             request.set_header_by_name(
-                Some(&CefString::from(wire::AUTH_HEADER_NAME)),
+                Some(&CefString::from(ak_ee_wcp_wire::AUTH_HEADER_NAME)),
                 Some(&CefString::from(inner.header_token.as_str())),
                 1,
             );
 
             let url = CefString::from(&request.url()).to_string();
-            if !url.starts_with(wire::REDIRECT_PREFIX) {
+            if !url.starts_with(ak_ee_wcp_wire::REDIRECT_PREFIX) {
                 return ReturnValue::CONTINUE;
             }
 

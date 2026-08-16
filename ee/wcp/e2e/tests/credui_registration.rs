@@ -10,11 +10,11 @@
 //! plus `registration::RegisteredProvider` for what it needs beyond those.
 #![allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
 
-use e2e::dll::{CLSID_CREDENTIAL_PROVIDER, build_output_dir, get_serialization};
-use e2e::query_continue::query_continue;
-use e2e::registration::{ComGuard, RegisteredProvider};
-use e2e::user_array::{TestUser, user_array};
-use e2e::{harness, mock_sysd, redirect_server::RedirectServer};
+use ak_ee_wcp_e2e::dll::{CLSID_CREDENTIAL_PROVIDER, build_output_dir, get_serialization};
+use ak_ee_wcp_e2e::query_continue::query_continue;
+use ak_ee_wcp_e2e::registration::{ComGuard, RegisteredProvider};
+use ak_ee_wcp_e2e::user_array::{TestUser, user_array};
+use ak_ee_wcp_e2e::{harness, mock_sysd, redirect_server::RedirectServer};
 
 use windows::Win32::System::Com::{CLSCTX_INPROC_SERVER, CoCreateInstance};
 use windows::Win32::UI::Shell::{

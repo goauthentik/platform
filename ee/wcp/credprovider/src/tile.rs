@@ -1,4 +1,4 @@
-//! Maps the shared `wire::TILE_FIELDS` table onto the actual COM field
+//! Maps the shared `ak_ee_wcp_wire::TILE_FIELDS` table onto the actual COM field
 //! descriptor/state types LogonUI expects, and loads the tile bitmap
 //! embedded as a Win32 resource.
 
@@ -19,7 +19,7 @@ use windows::{
 };
 
 use crate::strings::cotask_pwstr;
-use wire::{FieldKind, TILE_FIELDS};
+use ak_ee_wcp_wire::{FieldKind, TILE_FIELDS};
 
 /// The tile-image resource ID embedded via `res/resource.rc`.
 const TILE_IMAGE_RESOURCE_ID: u16 = 101;
