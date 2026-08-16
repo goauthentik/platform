@@ -28,7 +28,7 @@ use windows::{
 use crate::helpers;
 use crate::ipc::AuthFlow;
 use crate::strings::cotask_pwstr;
-use crate::syscalls::{AuthPackageLookup, LocalAccountPasswordReset};
+use crate::syscalls::{AuthPackageLookup, LocalAccountPassword, PasswordCheck, PasswordStore};
 use crate::tile;
 use ak_ee_wcp_wire::{AuthResult, FieldKind, TILE_FIELDS};
 
@@ -39,6 +39,15 @@ enum Outcome {
     Completed { username: String, password: String },
     Cancelled,
     Failed { reason: String },
+}
+
+/// The seams a `Credential` reaches the outside world through, so tests can
+/// drive the sign-in logic without touching LSA or the account database.
+pub struct CredentialDeps {
+    pub auth_flow: Box<dyn AuthFlow>,
+    pub password: Box<dyn LocalAccountPassword>,
+    pub auth_package: Box<dyn AuthPackageLookup>,
+    pub store: Box<dyn PasswordStore>,
 }
 
 #[implement(
@@ -52,10 +61,11 @@ pub struct Credential {
     qualified_username: String,
     is_local_user: bool,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
-    auth_flow: Box<dyn AuthFlow>,
-    password_reset: Box<dyn LocalAccountPasswordReset>,
-    auth_package: Box<dyn AuthPackageLookup>,
+    deps: CredentialDeps,
     outcome: Mutex<Option<Outcome>>,
+    /// The credential actually handed to LSA, kept past `GetSerialization` so
+    /// `ReportResult` can rotate it once the logon has succeeded.
+    serialized: Mutex<Option<(String, String)>>,
 }
 
 impl Credential {
@@ -64,20 +74,116 @@ impl Credential {
         qualified_username: String,
         is_local_user: bool,
         cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
-        auth_flow: Box<dyn AuthFlow>,
-        password_reset: Box<dyn LocalAccountPasswordReset>,
-        auth_package: Box<dyn AuthPackageLookup>,
+        deps: CredentialDeps,
     ) -> Self {
         Self {
             sid,
             qualified_username,
             is_local_user,
             cpus,
-            auth_flow,
-            password_reset,
-            auth_package,
+            deps,
             outcome: Mutex::new(None),
+            serialized: Mutex::new(None),
         }
+    }
+}
+
+impl Credential_Impl {
+    /// The password to hand LSA for this account.
+    ///
+    /// Domain accounts keep the throwaway password they have always had. For a
+    /// local account the password is established once and then reused, because
+    /// the only way to set a password we do not already know is an
+    /// administrative reset, and that orphans the account's DPAPI master key —
+    /// stored credentials, EFS files and personal certificates — every time it
+    /// runs.
+    fn account_password(&self, username: &str) -> Result<String> {
+        if !self.is_local_user {
+            return helpers::generate_random_password();
+        }
+
+        match self.stored_password(username) {
+            // Correct, just no longer accepted for logon. Knowing it means a
+            // change still works, so the master key survives; only a failed
+            // change falls through to a reset.
+            Some((stored, PasswordCheck::Expired)) => {
+                log::info!("Connect: stored password has expired; changing it");
+                if let Some(new) = self.replace_password(username, &stored) {
+                    return Ok(new);
+                }
+            }
+            Some((stored, _)) => return Ok(stored),
+            None => {}
+        }
+
+        let password = helpers::generate_random_password()?;
+        self.deps.password.reset(username, &password)?;
+        // A vault we cannot write to costs another reset next time. Bad, but
+        // not worth failing a sign-in over.
+        if let Err(e) = self.deps.store.save(&self.sid, &password) {
+            log::error!("Connect: could not store the account password: {e}");
+        }
+        Ok(password)
+    }
+
+    /// The stored password and what the account thinks of it, or `None` when
+    /// there is nothing usable to reuse.
+    fn stored_password(&self, username: &str) -> Option<(String, PasswordCheck)> {
+        let stored = match self.deps.store.load(&self.sid) {
+            Ok(Some(stored)) => stored,
+            Ok(None) => return None,
+            // A broken vault is a miss, not a failure: sign-in still works,
+            // it just costs a reset.
+            Err(e) => {
+                log::error!("Connect: could not read the stored password: {e}");
+                return None;
+            }
+        };
+
+        match self.deps.password.validate(username, &stored) {
+            Ok(PasswordCheck::Rejected) => {
+                log::info!("Connect: stored password was rejected; resetting the account");
+                None
+            }
+            Ok(check) => Some((stored, check)),
+            // Inconclusive. Resetting on the strength of a guess would destroy
+            // the master key we are here to protect; submitting the stored
+            // password costs at worst one failed logon, after which `validate`
+            // has a definite answer.
+            Err(e) => {
+                log::warn!("Connect: could not verify the stored password ({e}); using it anyway");
+                Some((stored, PasswordCheck::Valid))
+            }
+        }
+    }
+
+    /// Swap `old` for a freshly generated password, returning the new one.
+    ///
+    /// `NetUserChangePassword` rather than a reset: supplying the old password
+    /// lets LSA re-encrypt the DPAPI master key instead of orphaning it. It
+    /// also works on an expired password, which is why that path lands here
+    /// too. Best-effort — a minimum-password-age policy rejects this on every
+    /// logon, and the stored password stays valid either way.
+    fn replace_password(&self, username: &str, old: &str) -> Option<String> {
+        let new = match helpers::generate_random_password() {
+            Ok(new) => new,
+            Err(e) => {
+                log::error!("failed to generate a replacement password: {e}");
+                return None;
+            }
+        };
+
+        if let Err(e) = self.deps.password.change(username, old, &new) {
+            log::warn!("password change failed ({e}); keeping the current one");
+            return None;
+        }
+
+        // The account now has a password the vault does not know. `validate`
+        // catches that on the next sign-in, at the cost of one reset.
+        if let Err(e) = self.deps.store.save(&self.sid, &new) {
+            log::error!("changed the account password but could not store it: {e}");
+        }
+        Some(new)
     }
 }
 
@@ -96,6 +202,7 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
     fn SetDeselected(&self) -> Result<()> {
         *self.outcome.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        *self.serialized.lock().unwrap_or_else(|e| e.into_inner()) = None;
         Ok(())
     }
 
@@ -250,7 +357,7 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
             }
         };
 
-        let auth_package = match self.auth_package.negotiate_package() {
+        let auth_package = match self.deps.auth_package.negotiate_package() {
             Ok(pkg) => pkg,
             Err(e) => {
                 log::error!("failed to resolve Negotiate auth package: {e}");
@@ -271,6 +378,9 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
             *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
         }
         log::info!("GetSerialization: packed credential for '{username}'");
+        // Only a credential that was actually submitted is eligible for
+        // rotation, so this is recorded here rather than in `Connect`.
+        *self.serialized.lock().unwrap_or_else(|e| e.into_inner()) = Some((username, password));
         Ok(())
     }
 
@@ -281,6 +391,21 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         ppszoptionalstatustext: *mut PWSTR,
         pcpsioptionalstatusicon: *mut CREDENTIAL_PROVIDER_STATUS_ICON,
     ) -> Result<()> {
+        let submitted = self
+            .serialized
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
+
+        // STATUS_SUCCESS; the logon session exists, so the password we
+        // submitted is now cached in it and can be changed rather than reset.
+        if ntsstatus.0 == 0
+            && self.is_local_user
+            && let Some((username, old)) = submitted
+        {
+            let _ = self.replace_password(&username, &old);
+        }
+
         let (text, icon) = match ntsstatus {
             STATUS_LOGON_FAILURE => (Some("Incorrect password or username."), CPSI_ERROR),
             STATUS_ACCOUNT_RESTRICTION | STATUS_ACCOUNT_DISABLED => {
@@ -343,7 +468,7 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
             }
         };
 
-        let result = self.auth_flow.run(&mut should_continue);
+        let result = self.deps.auth_flow.run(&mut should_continue);
 
         let outcome = match result {
             AuthResult::Completed { username } => {
@@ -358,19 +483,13 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
                     return Err(E_FAIL.into());
                 }
 
-                let password = match helpers::generate_random_password() {
+                let password = match self.account_password(&username) {
                     Ok(password) => password,
                     Err(e) => {
-                        log::error!("Connect: failed to generate a password: {e}");
+                        log::error!("Connect: could not establish a password: {e}");
                         return Err(E_FAIL.into());
                     }
                 };
-                if self.is_local_user
-                    && let Err(e) = self.password_reset.reset(&username, &password)
-                {
-                    log::error!("Connect: failed to reset local password: {e}");
-                    return Err(E_FAIL.into());
-                }
 
                 Outcome::Completed { username, password }
             }

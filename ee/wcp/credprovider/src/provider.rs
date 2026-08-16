@@ -17,10 +17,10 @@ use windows::{
     core::{BOOL, Ref, Result, implement},
 };
 
-use crate::credential::Credential;
+use crate::credential::{Credential, CredentialDeps};
 use crate::ipc::CefAuthFlow;
 use crate::strings::take_pwstr;
-use crate::syscalls::RealSyscalls;
+use crate::syscalls::{KeyringPasswordStore, RealSyscalls};
 use crate::tile;
 
 #[implement(ICredentialProvider, ICredentialProviderSetUserArray)]
@@ -81,9 +81,12 @@ fn credential_from_user(
         qualified_username,
         is_local_user,
         cpus,
-        Box::new(CefAuthFlow { cef_exe, cpus }),
-        Box::new(RealSyscalls),
-        Box::new(RealSyscalls),
+        CredentialDeps {
+            auth_flow: Box::new(CefAuthFlow { cef_exe, cpus }),
+            password: Box::new(RealSyscalls),
+            auth_package: Box::new(RealSyscalls),
+            store: Box::new(KeyringPasswordStore::new()),
+        },
     )
 }
 
