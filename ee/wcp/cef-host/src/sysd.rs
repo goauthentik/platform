@@ -21,9 +21,8 @@ pub struct TokenResponse {
     pub username: String,
 }
 
-/// `login_hint` is the username of the tile that was selected, so the sign-in
-/// page can skip the identification stage. It is only ever a hint: what the
-/// flow authenticates as is whatever `sys_auth_url` reports back.
+/// `login_hint` is the selected tile's username, prefilled into the sign-in
+/// page. Only a hint: who actually authenticated comes back via `sys_auth_url`.
 pub fn sys_auth_start_async(login_hint: Option<String>) -> Result<AuthStartAsync> {
     let response = grpc_request(async |ch| {
         Ok(SystemAuthInteractiveClient::new(ch)

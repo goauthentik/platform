@@ -442,10 +442,8 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
             self.qualified_username,
             self.is_local_user
         );
-        // The tile names who is signing in, so the sign-in page is told up
-        // front rather than asking again. Only a hint: the flow still reports
-        // whoever actually authenticated, and `usernames_match` below is what
-        // decides whether that is this tile's user.
+        // Only a hint: `usernames_match` below is what decides whether whoever
+        // authenticated is this tile's user.
         let login_hint = expected_username(&self.qualified_username, self.is_local_user);
         let login_hint = (!login_hint.is_empty()).then(|| login_hint.to_string());
         if let Some(q) = pqcws.as_ref() {
@@ -502,13 +500,12 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
     }
 }
 
-/// The username the browser flow is expected to authenticate as. The tile's
-/// qualified name is `domain\username` for a local account, of which only the
-/// username portion is what authentik knows the person by; a domain account
-/// is already qualified the way it signs in.
+/// The username the browser flow is expected to authenticate as: a local
+/// account's tile is qualified `domain\username`, and only the username
+/// portion is what authentik knows the person by.
 ///
 /// Both the hint sent into the flow and the check on the way back out come
-/// from here, so a tile can never suggest one username and accept another.
+/// from here, so a tile cannot suggest one username and accept another.
 fn expected_username(qualified: &str, is_local_user: bool) -> &str {
     if is_local_user {
         qualified.rsplit('\\').next().unwrap_or(qualified)
@@ -517,9 +514,6 @@ fn expected_username(qualified: &str, is_local_user: bool) -> &str {
     }
 }
 
-/// The browser flow authenticates against the qualified username shown on
-/// the tile; for local accounts that's `domain\username`, so compare only
-/// the username portion.
 fn usernames_match(authenticated: &str, qualified: &str, is_local_user: bool) -> bool {
     expected_username(qualified, is_local_user).eq_ignore_ascii_case(authenticated)
 }
@@ -545,8 +539,7 @@ mod tests {
     #[derive(Clone)]
     struct FakeAuthFlow {
         result: AuthResult,
-        /// The hint each `run` was handed, so tests can assert what the tile
-        /// offered the sign-in page.
+        /// The hint each `run` was handed.
         hints: Arc<Mutex<Vec<Option<String>>>>,
     }
 
@@ -933,8 +926,8 @@ mod tests {
         assert!(password.state().changes.is_empty());
     }
 
-    /// The hint has to be the bare username: `COMPUTER\alice` is a Windows
-    /// account name, and authentik would not recognise the person by it.
+    /// `COMPUTER\alice` is a Windows account name; authentik would not
+    /// recognise the person by it.
     #[test]
     fn a_local_tile_hints_the_username_without_the_computer_name() {
         let flow = FakeAuthFlow::completed("alice");
@@ -967,8 +960,7 @@ mod tests {
         assert_eq!(flow.hints(), vec![Some("alice@example.com".to_string())]);
     }
 
-    /// LogonUI can hand over a user with no qualified name at all; hinting an
-    /// empty username would leave the sign-in page prefilled with nothing.
+    /// LogonUI can hand over a user with no qualified name at all.
     #[test]
     fn a_tile_with_no_username_sends_no_hint() {
         let flow = FakeAuthFlow::completed("");

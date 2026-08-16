@@ -178,11 +178,10 @@ async fn completed_sign_in_serializes_a_credential() {
         ));
     }
 
-    // The tile's username has to reach `ak-sysd` as the login hint: it goes
-    // out over `ak_cef.exe`'s command line, so nothing short of the real
-    // spawn shows whether it survived the trip.
+    // The login hint travels over `ak_cef.exe`'s command line, so only the
+    // real spawn shows whether it survived the trip.
     assert_eq!(
-        fixture.mock.login_hints.get(),
+        *fixture.mock.login_hints.lock().unwrap(),
         vec![Some(USERNAME.to_string())],
         "interactive_auth_async should have been called once, hinting the tile's user"
     );

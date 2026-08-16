@@ -57,20 +57,8 @@ impl Ping for MockPing {
 }
 
 /// Every login hint `interactive_auth_async` was called with, so a test can
-/// assert what the selected tile carried all the way through `ak_cef.exe`'s
-/// command line into the gRPC call.
-#[derive(Clone, Default)]
-pub struct ObservedLoginHints(Arc<Mutex<Vec<Option<String>>>>);
-
-impl ObservedLoginHints {
-    pub fn get(&self) -> Vec<Option<String>> {
-        self.0.lock().unwrap_or_else(|e| e.into_inner()).clone()
-    }
-
-    fn record(&self, hint: Option<String>) {
-        self.0.lock().unwrap_or_else(|e| e.into_inner()).push(hint);
-    }
-}
+/// assert what the selected tile carried through `ak_cef.exe`'s command line.
+pub type ObservedLoginHints = Arc<Mutex<Vec<Option<String>>>>;
 
 struct MockSystemAuthInteractive {
     config: MockConfig,
@@ -90,7 +78,10 @@ impl SystemAuthInteractive for MockSystemAuthInteractive {
         &self,
         request: Request<InteractiveAuthAsyncRequest>,
     ) -> Result<Response<InteractiveAuthAsyncResponse>, Status> {
-        self.login_hints.record(request.into_inner().username);
+        self.login_hints
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(request.into_inner().username);
         Ok(Response::new(InteractiveAuthAsyncResponse {
             url: self.config.interactive_auth_url.clone(),
             header_token: self.config.header_token.clone(),

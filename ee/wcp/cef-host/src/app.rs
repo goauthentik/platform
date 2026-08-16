@@ -15,7 +15,11 @@ wrap_app! {
 
     impl App {
         fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
-            Some(HostBrowserProcessHandler::new(self.result_pipe, self.cancel_pipe, self.login_hint.clone()))
+            Some(HostBrowserProcessHandler::new(
+                self.result_pipe,
+                self.cancel_pipe,
+                self.login_hint.clone(),
+            ))
         }
     }
 }
@@ -36,7 +40,11 @@ wrap_browser_process_handler! {
         // re-entrantly, which also keeps a blocking gRPC call out of
         // `CefInitialize`.
         fn on_context_initialized(&self) {
-            let mut task = OpenSignInWindow::new(self.result_pipe, self.cancel_pipe, self.login_hint.clone());
+            let mut task = OpenSignInWindow::new(
+                self.result_pipe,
+                self.cancel_pipe,
+                self.login_hint.clone(),
+            );
             post_task(ThreadId::UI, Some(&mut task));
         }
     }

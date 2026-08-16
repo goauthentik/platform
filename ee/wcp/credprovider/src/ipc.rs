@@ -32,11 +32,10 @@ use windows::{
 use crate::syscalls::{self, ForegroundControl, acquire_interactive_token};
 use ak_ee_wcp_wire::AuthResult;
 
-/// Spawns `ak_cef.exe` and waits for its result. `login_hint` is the username
-/// of the selected tile, passed on so the sign-in page can skip asking who is
-/// signing in. `should_continue` is polled while waiting, so LogonUI
-/// cancelling (the user backing out of the tile) tears the browser process
-/// down instead of orphaning it.
+/// Spawns `ak_cef.exe` and waits for its result. `login_hint` is the selected
+/// tile's username, prefilled into the sign-in page. `should_continue` is
+/// polled while waiting, so LogonUI cancelling (the user backing out of the
+/// tile) tears the browser process down instead of orphaning it.
 pub trait AuthFlow {
     fn run(
         &self,
@@ -363,13 +362,10 @@ fn signal_cancel(cancel_write: HANDLE) {
     std::mem::forget(f);
 }
 
-/// Quotes one command-line argument so `ak_cef.exe` reads back exactly what
-/// was passed. `CreateProcess*` takes a single string, and the child splits it
-/// again with the `CommandLineToArgvW` rules `std::env::args` follows: a
-/// backslash run is only special before a quote, where it has to be doubled,
-/// and a value ending in one would otherwise escape its own closing quote.
-/// Account names reach here straight from LogonUI, so they are quoted rather
-/// than trusted to be free of spaces.
+/// Quotes one argument the way `CommandLineToArgvW` — and so the child's own
+/// `std::env::args` — splits it back out. Account names come straight from
+/// LogonUI, and a backslash run before a quote has to be doubled or it escapes
+/// the quote instead.
 fn quote_arg(value: &str) -> String {
     let mut quoted = String::with_capacity(value.len() + 2);
     quoted.push('"');
@@ -380,7 +376,7 @@ fn quote_arg(value: &str) -> String {
                 backslashes += 1;
                 quoted.push(c);
             }
-            // Double the run this quote follows, then escape the quote itself.
+            // Double the run this quote follows, then escape the quote.
             '"' => {
                 quoted.extend(std::iter::repeat_n('\\', backslashes + 1));
                 backslashes = 0;
@@ -392,7 +388,7 @@ fn quote_arg(value: &str) -> String {
             }
         }
     }
-    // Trailing run: doubled so it stays literal against the closing quote.
+    // Trailing run: doubled, or it escapes the closing quote.
     quoted.extend(std::iter::repeat_n('\\', backslashes));
     quoted.push('"');
     quoted
@@ -406,7 +402,7 @@ fn spawn_cef_host(
 ) -> windows::core::Result<PROCESS_INFORMATION> {
     let mut cmdline = format!(
         "{} --result-pipe {} --cancel-pipe {}",
-        quote_arg(&cef_exe.display().to_string()),
+        quote_arg(&cef_exe.to_string_lossy()),
         pipes.result_write_inheritable.0 as usize,
         pipes.cancel_read_inheritable.0 as usize
     );
@@ -771,28 +767,25 @@ mod tests {
         }
     }
 
-    /// Round-trips through the same parser `ak_cef.exe`'s `std::env::args`
-    /// uses, since the point of the quoting is what the child reads back —
-    /// asserting the escaped string only restates the implementation.
+    /// Splits a command line the way `ak_cef.exe`'s own `std::env::args` does.
     fn argv(cmdline: &str) -> Vec<String> {
         use windows::Win32::Foundation::{HLOCAL, LocalFree};
         use windows::Win32::UI::Shell::CommandLineToArgvW;
 
         let wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
         let mut count = 0i32;
-        let argv = unsafe { CommandLineToArgvW(PCWSTR(wide.as_ptr()), &mut count) };
-        assert!(!argv.is_null(), "CommandLineToArgvW rejected {cmdline:?}");
+        let parsed = unsafe { CommandLineToArgvW(PCWSTR(wide.as_ptr()), &mut count) };
+        assert!(!parsed.is_null(), "CommandLineToArgvW rejected {cmdline:?}");
 
         let args = (0..count as usize)
-            .map(|i| unsafe { (*argv.add(i)).to_string() }.expect("an argument in valid UTF-16"))
+            .map(|i| unsafe { (*parsed.add(i)).to_string() }.expect("an argument in valid UTF-16"))
             .collect();
-        unsafe { LocalFree(Some(HLOCAL(argv as *mut c_void))) };
+        let _ = unsafe { LocalFree(Some(HLOCAL(parsed as *mut c_void))) };
         args
     }
 
-    /// A username reaches this straight from LogonUI. A space would otherwise
-    /// split it into two arguments, and the trailing backslash of a domain
-    /// name would escape its own closing quote and swallow the rest.
+    /// Asserted through the real parser rather than against the escaped
+    /// string: what matters is what the child reads back out.
     #[test]
     fn quoted_arguments_survive_the_childs_own_parser() {
         for value in [
