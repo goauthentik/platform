@@ -51,13 +51,10 @@ impl AuthFlow for CefAuthFlow {
 }
 
 /// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
-/// It is debug-gated and runs on an ordinary desktop, where the caller is
-/// already the interactive user and holds no `SE_TCB_NAME` — so it cannot
-/// reach `acquire_service_account_token`'s S4U logon in the first place. The
-/// logon scenarios must never take this fallback: they always have that
-/// privilege, and taking it would put Chromium on the secure desktop with
-/// this process's own token (SYSTEM, since this DLL is loaded into LogonUI)
-/// rather than the service account's.
+/// It is debug-gated and runs on an ordinary desktop, where the caller holds
+/// no `SE_TCB_NAME` and so cannot reach the S4U logon anyway. The logon
+/// scenarios must never take this fallback, or Chromium ends up on the
+/// secure desktop with this process's own SYSTEM token instead.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
 }
@@ -274,16 +271,10 @@ fn signal_cancel(cancel_write: HANDLE) {
 }
 
 /// Gets `ak_cef.exe` a token for the dedicated service account rather than
-/// SYSTEM (`BROWSER_PRIVILEGE.md`). The account exists from install time
-/// (`vpkg/windows/Package.wxs`), so unlike the old `WTSQueryUserToken` /
-/// winlogon-duplication fallback this needs no session-dependent branching:
-/// logon and unlock both end up here.
-///
-/// Password rotation and the account-hardening calls are best-effort and
-/// only logged on failure — each is idempotent, so a transient failure here
-/// just means the next call tries again, and none of them being fatal keeps
-/// a permissions hiccup on one from blocking `service_account_token` from
-/// still being attempted.
+/// SYSTEM (`BROWSER_PRIVILEGE.md`), the same way for both logon and unlock.
+/// Password rotation and account-hardening are best-effort and only logged
+/// on failure — each is idempotent, so a transient failure just costs a
+/// retry next time, and none of them block the token mint that follows.
 fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
     if let Err(e) =
         syscalls::ensure_service_account_password_rotated(syscalls::SERVICE_ACCOUNT_NAME)

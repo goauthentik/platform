@@ -295,14 +295,9 @@ fn lsa_unicode_string(wide: &[u16]) -> LSA_UNICODE_STRING {
 }
 
 /// Mints a primary token for the service account via an S4U logon — no
-/// password needed, only `SE_TCB_NAME`, which LogonUI already holds. Nothing
-/// to store, nothing to rotate: unlike the interactive user's own account,
-/// this account's credential never has to survive being handed to LSA a
-/// second time.
-///
-/// `Service` is the logon type, deliberately: it is the one type this
-/// account is not denied by `deny_interactive_and_network_logon`, so
-/// hardening the account does not also lock this call out.
+/// password needed, only `SE_TCB_NAME`, which LogonUI already holds.
+/// `Service` is the logon type deliberately: it is the one type
+/// `deny_interactive_and_network_logon` does not deny.
 pub fn service_account_token(username: &str) -> windows::core::Result<HANDLE> {
     unsafe {
         let process_name = lsa_string(b"ak_cred_provider\0");
@@ -445,15 +440,10 @@ unsafe fn grant_generic_all(
 }
 
 /// Grants the service account's SID access to the secure desktop — a
-/// non-SYSTEM token has none by default. Deliberate, per
-/// `BROWSER_PRIVILEGE.md`: a large net win (a compromised renderer no longer
-/// yields SYSTEM) but a real expansion of what can reach the desktop
-/// credentials are typed on, scoped to only this one account.
-///
-/// Idempotent, and only correct when called from inside LogonUI's own
-/// process: `GetProcessWindowStation`/`OpenDesktopW` resolve relative to the
-/// *caller's* window station, which is `WinSta0` for the real logon
-/// scenarios `ipc.rs` targets.
+/// non-SYSTEM token has none by default. Deliberate; see `BROWSER_PRIVILEGE.md`
+/// for the tradeoff. Idempotent, and only correct when called from inside
+/// LogonUI's own process: `GetProcessWindowStation`/`OpenDesktopW` resolve
+/// relative to the *caller's* window station, `WinSta0` here.
 pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
     unsafe {
         let winsta = GetProcessWindowStation()?;
@@ -470,11 +460,9 @@ pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
 }
 
 /// Denies the service account the logon types that would let it sign someone
-/// in — it must not be usable at the very screen it serves. `Service`, what
-/// `service_account_token` uses, is deliberately not among these.
-///
-/// `LsaAddAccountRights` is itself idempotent: granting an already-held
-/// right is a no-op, so this is safe to call on every load.
+/// in — it must not be usable at the very screen it serves. `Service`,
+/// what `service_account_token` uses, is deliberately not among these.
+/// `LsaAddAccountRights` is itself idempotent, so this is safe on every load.
 pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<()> {
     const RIGHTS: [&str; 3] = [
         "SeDenyInteractiveLogonRight",
@@ -503,13 +491,10 @@ pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<(
 }
 
 /// Rotates the service account's password to a random value the first time
-/// this runs, then never again. Nothing ever needs it back —
-/// `service_account_token` mints tokens via S4U, not `LogonUserW` — so
-/// unlike the interactive user's stored password, this one is generated and
-/// immediately discarded. The installer's `<util:User>` gives the account a
-/// fixed password only so the account can be created at all; this is what
-/// turns that into a real secret, exactly once, and the `HKLM` marker is
-/// what keeps it from happening again on every logon.
+/// this runs, then never again — nothing needs it back, since
+/// `service_account_token` mints tokens via S4U, not `LogonUserW`. Turns the
+/// installer's fixed placeholder password into a real secret exactly once;
+/// the `HKLM` marker is what stops it happening again on every logon.
 pub fn ensure_service_account_password_rotated(username: &str) -> eyre::Result<()> {
     let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
     let (key, _disp) = hklm.create_subkey(SERVICE_ACCOUNT_STATE_KEY)?;
