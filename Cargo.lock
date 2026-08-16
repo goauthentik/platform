@@ -174,7 +174,7 @@ dependencies = [
  "eyre",
  "log",
  "serde",
- "windows 0.61.3",
+ "windows 0.62.2",
  "windows-core 0.61.2",
  "winreg 0.56.0",
 ]
@@ -191,7 +191,7 @@ dependencies = [
  "log",
  "sentry",
  "url",
- "windows 0.61.3",
+ "windows 0.62.2",
 ]
 
 [[package]]
@@ -205,7 +205,7 @@ dependencies = [
  "serde",
  "tokio",
  "tonic",
- "windows 0.61.3",
+ "windows 0.62.2",
  "windows-core 0.61.2",
  "winreg 0.56.0",
 ]

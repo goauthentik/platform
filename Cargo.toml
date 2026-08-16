@@ -75,7 +75,7 @@ winreg = { version = "0.56", features = ["serialization-serde"] }
 # ak-sysd pins inline: the credential-provider code is written against 0.61's
 # `#[implement]` and UI::Shell surface. Both resolve side by side.
 windows-core = "0.61"
-windows = { version = "0.61", features = [
+windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_System_Com",
     "Win32_System_LibraryLoader",
