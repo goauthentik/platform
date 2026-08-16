@@ -9,9 +9,7 @@ use windows::{
         Foundation::{
             E_FAIL, ERROR_LOGON_FAILURE, ERROR_PASSWORD_EXPIRED, ERROR_PASSWORD_MUST_CHANGE,
         },
-        NetworkManagement::NetManagement::{
-            NetUserChangePassword, NetUserSetInfo, USER_INFO_1003,
-        },
+        NetworkManagement::NetManagement::{NetUserChangePassword, NetUserSetInfo, USER_INFO_1003},
         Security::{
             Authentication::Identity::{
                 LSA_STRING, LsaConnectUntrusted, LsaDeregisterLogonProcess,

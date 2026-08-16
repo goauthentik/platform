@@ -526,12 +526,12 @@ mod tests {
     use std::collections::HashMap;
     use std::sync::Arc;
     use windows::Win32::Security::Authentication::Identity::KERB_INTERACTIVE_UNLOCK_LOGON;
-    use windows::core::Interface;
     use windows::Win32::System::Com::CoTaskMemFree;
     use windows::Win32::UI::Shell::{
         CPGSR_RETURN_CREDENTIAL_FINISHED, CPUS_LOGON, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
         CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE, CREDENTIAL_PROVIDER_STATUS_ICON,
     };
+    use windows::core::Interface;
 
     const SID: &str = "S-1-5-21-1-2-3-1001";
     const AUTH_PACKAGE: u32 = 7;
