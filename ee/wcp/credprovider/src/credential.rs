@@ -519,8 +519,374 @@ fn usernames_match(authenticated: &str, qualified: &str, is_local_user: bool) ->
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
+    use crate::syscalls::PasswordCheck;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+    use windows::Win32::Security::Authentication::Identity::KERB_INTERACTIVE_UNLOCK_LOGON;
+    use windows::core::Interface;
+    use windows::Win32::System::Com::CoTaskMemFree;
+    use windows::Win32::UI::Shell::{
+        CPGSR_RETURN_CREDENTIAL_FINISHED, CPUS_LOGON, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
+        CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE, CREDENTIAL_PROVIDER_STATUS_ICON,
+    };
+
+    const SID: &str = "S-1-5-21-1-2-3-1001";
+    const AUTH_PACKAGE: u32 = 7;
+
+    struct FakeAuthFlow(AuthResult);
+
+    impl AuthFlow for FakeAuthFlow {
+        fn run(&self, _should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
+            match &self.0 {
+                AuthResult::Completed { username } => AuthResult::Completed {
+                    username: username.clone(),
+                },
+                AuthResult::Cancelled => AuthResult::Cancelled,
+                AuthResult::Failed { reason } => AuthResult::Failed {
+                    reason: reason.clone(),
+                },
+            }
+        }
+    }
+
+    struct FakeAuthPackage;
+
+    impl AuthPackageLookup for FakeAuthPackage {
+        fn negotiate_package(&self) -> Result<u32> {
+            Ok(AUTH_PACKAGE)
+        }
+    }
+
+    /// Tracks the account's password and how each call was made, so tests can
+    /// assert that a rotation went through `change` rather than `reset`.
+    #[derive(Default)]
+    struct AccountState {
+        password: Option<String>,
+        check: Option<PasswordCheck>,
+        change_fails: bool,
+        resets: Vec<String>,
+        changes: Vec<(String, String)>,
+    }
+
+    #[derive(Clone, Default)]
+    struct FakePassword(Arc<Mutex<AccountState>>);
+
+    impl FakePassword {
+        fn state(&self) -> std::sync::MutexGuard<'_, AccountState> {
+            self.0.lock().unwrap_or_else(|e| e.into_inner())
+        }
+    }
+
+    impl LocalAccountPassword for FakePassword {
+        fn reset(&self, _username: &str, password: &str) -> Result<()> {
+            let mut state = self.state();
+            state.resets.push(password.to_string());
+            state.password = Some(password.to_string());
+            Ok(())
+        }
+
+        fn change(&self, _username: &str, old: &str, new: &str) -> Result<()> {
+            let mut state = self.state();
+            if state.change_fails {
+                return Err(E_FAIL.into());
+            }
+            state.changes.push((old.to_string(), new.to_string()));
+            state.password = Some(new.to_string());
+            Ok(())
+        }
+
+        fn validate(&self, _username: &str, password: &str) -> Result<PasswordCheck> {
+            let state = self.state();
+            match state.check {
+                // Inconclusive, the case that must not trigger a reset.
+                None => Err(E_FAIL.into()),
+                Some(PasswordCheck::Valid) if state.password.as_deref() == Some(password) => {
+                    Ok(PasswordCheck::Valid)
+                }
+                Some(PasswordCheck::Valid) => Ok(PasswordCheck::Rejected),
+                Some(PasswordCheck::Expired) => Ok(PasswordCheck::Expired),
+                Some(PasswordCheck::Rejected) => Ok(PasswordCheck::Rejected),
+            }
+        }
+    }
+
+    #[derive(Clone, Default)]
+    struct FakeStore {
+        entries: Arc<Mutex<HashMap<String, String>>>,
+        load_fails: bool,
+        save_fails: bool,
+    }
+
+    impl FakeStore {
+        fn get(&self, sid: &str) -> Option<String> {
+            self.entries
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .get(sid)
+                .cloned()
+        }
+    }
+
+    impl PasswordStore for FakeStore {
+        fn load(&self, sid: &str) -> eyre::Result<Option<String>> {
+            if self.load_fails {
+                return Err(eyre::eyre!("vault unreachable"));
+            }
+            Ok(self.get(sid))
+        }
+
+        fn save(&self, sid: &str, password: &str) -> eyre::Result<()> {
+            if self.save_fails {
+                return Err(eyre::eyre!("vault read-only"));
+            }
+            self.entries
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .insert(sid.to_string(), password.to_string());
+            Ok(())
+        }
+    }
+
+    fn credential(
+        is_local_user: bool,
+        password: &FakePassword,
+        store: &FakeStore,
+    ) -> ICredentialProviderCredential {
+        let qualified = if is_local_user {
+            r"COMPUTER\alice".to_string()
+        } else {
+            "alice".to_string()
+        };
+        Credential::new(
+            SID.to_string(),
+            qualified,
+            is_local_user,
+            CPUS_LOGON,
+            CredentialDeps {
+                auth_flow: Box::new(FakeAuthFlow(AuthResult::Completed {
+                    username: "alice".to_string(),
+                })),
+                password: Box::new(password.clone()),
+                auth_package: Box::new(FakeAuthPackage),
+                store: Box::new(store.clone()),
+            },
+        )
+        .into()
+    }
+
+    /// Drives `Connect` then `GetSerialization`. The returned buffer is the
+    /// caller's to free.
+    fn submit(
+        credential: &ICredentialProviderCredential,
+    ) -> Option<CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION> {
+        let connectable: IConnectableCredentialProviderCredential = credential.cast().unwrap();
+        unsafe { connectable.Connect(None) }.unwrap();
+
+        let mut response = CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE::default();
+        let mut serialization = CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION::default();
+        let mut status_text = PWSTR::null();
+        let mut status_icon = CREDENTIAL_PROVIDER_STATUS_ICON::default();
+        unsafe {
+            credential
+                .GetSerialization(
+                    &mut response,
+                    &mut serialization,
+                    &mut status_text,
+                    &mut status_icon,
+                )
+                .unwrap();
+        }
+        (response == CPGSR_RETURN_CREDENTIAL_FINISHED).then_some(serialization)
+    }
+
+    /// The password packed for LSA. Local accounts only — domain accounts use
+    /// `CredPackAuthenticationBufferW`, which is not this layout. Reads the
+    /// `LSA_UNICODE_STRING` offsets back out of the flat buffer the same way
+    /// `helpers`' packing tests do.
+    fn sign_in(credential: &ICredentialProviderCredential) -> Option<String> {
+        let buf = submit(credential)?.rgbSerialization;
+        let password = unsafe {
+            let logon = &(*(buf as *const KERB_INTERACTIVE_UNLOCK_LOGON)).Logon;
+            let ptr = buf.add(logon.Password.Buffer.0 as usize) as *const u16;
+            let chars = std::slice::from_raw_parts(ptr, logon.Password.Length as usize / 2);
+            String::from_utf16_lossy(chars)
+        };
+        unsafe { CoTaskMemFree(Some(buf as *const _)) };
+        Some(password)
+    }
+
+    fn report_result(credential: &ICredentialProviderCredential, status: NTSTATUS) {
+        let mut status_text = PWSTR::null();
+        let mut status_icon = CREDENTIAL_PROVIDER_STATUS_ICON::default();
+        unsafe {
+            credential
+                .ReportResult(status, NTSTATUS(0), &mut status_text, &mut status_icon)
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn first_sign_in_resets_the_account_and_stores_the_password() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        let cred = credential(true, &password, &store);
+
+        let serialized = sign_in(&cred).unwrap();
+
+        assert_eq!(password.state().resets, vec![serialized.clone()]);
+        assert_eq!(store.get(SID).as_deref(), Some(serialized.as_str()));
+    }
+
+    #[test]
+    fn a_valid_stored_password_is_reused_without_a_reset() {
+        let password = FakePassword::default();
+        password.state().password = Some("stored".to_string());
+        password.state().check = Some(PasswordCheck::Valid);
+        let store = FakeStore::default();
+        store.save(SID, "stored").unwrap();
+
+        let serialized = sign_in(&credential(true, &password, &store)).unwrap();
+
+        assert_eq!(serialized, "stored");
+        assert!(password.state().resets.is_empty());
+    }
+
+    #[test]
+    fn a_rejected_stored_password_triggers_a_reset() {
+        let password = FakePassword::default();
+        password.state().password = Some("current".to_string());
+        password.state().check = Some(PasswordCheck::Valid);
+        let store = FakeStore::default();
+        store.save(SID, "stale").unwrap();
+
+        let serialized = sign_in(&credential(true, &password, &store)).unwrap();
+
+        assert_ne!(serialized, "stale");
+        assert_eq!(password.state().resets, vec![serialized.clone()]);
+        assert_eq!(store.get(SID).as_deref(), Some(serialized.as_str()));
+    }
+
+    #[test]
+    fn an_expired_stored_password_is_changed_rather_than_reset() {
+        let password = FakePassword::default();
+        password.state().password = Some("stored".to_string());
+        password.state().check = Some(PasswordCheck::Expired);
+        let store = FakeStore::default();
+        store.save(SID, "stored").unwrap();
+
+        let serialized = sign_in(&credential(true, &password, &store)).unwrap();
+
+        assert!(password.state().resets.is_empty());
+        assert_eq!(
+            password.state().changes,
+            vec![("stored".to_string(), serialized.clone())]
+        );
+        assert_eq!(store.get(SID).as_deref(), Some(serialized.as_str()));
+    }
+
+    #[test]
+    fn an_unverifiable_stored_password_is_used_without_a_reset() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        store.save(SID, "stored").unwrap();
+
+        // `check` is None, so `validate` errors: we cannot tell, and resetting
+        // would orphan the master key on a guess.
+        let serialized = sign_in(&credential(true, &password, &store)).unwrap();
+
+        assert_eq!(serialized, "stored");
+        assert!(password.state().resets.is_empty());
+    }
+
+    #[test]
+    fn a_broken_vault_still_signs_in() {
+        let password = FakePassword::default();
+        let store = FakeStore {
+            load_fails: true,
+            save_fails: true,
+            ..FakeStore::default()
+        };
+
+        let serialized = sign_in(&credential(true, &password, &store)).unwrap();
+
+        assert_eq!(password.state().resets, vec![serialized]);
+    }
+
+    #[test]
+    fn a_domain_user_touches_neither_the_store_nor_the_account() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+
+        let serialization = submit(&credential(false, &password, &store)).unwrap();
+        unsafe { CoTaskMemFree(Some(serialization.rgbSerialization as *const _)) };
+
+        assert_eq!(serialization.ulAuthenticationPackage, AUTH_PACKAGE);
+        assert!(password.state().resets.is_empty());
+        assert!(password.state().changes.is_empty());
+        assert_eq!(store.get(SID), None);
+    }
+
+    #[test]
+    fn a_successful_logon_rotates_the_password_with_a_change() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        let cred = credential(true, &password, &store);
+
+        let serialized = sign_in(&cred).unwrap();
+        report_result(&cred, NTSTATUS(0));
+
+        let state = password.state();
+        assert_eq!(state.changes.len(), 1);
+        assert_eq!(state.changes[0].0, serialized);
+        let rotated = state.changes[0].1.clone();
+        assert_ne!(rotated, serialized);
+        drop(state);
+        assert_eq!(store.get(SID).as_deref(), Some(rotated.as_str()));
+        assert_eq!(password.state().resets.len(), 1);
+    }
+
+    #[test]
+    fn a_failed_logon_rotates_nothing() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        let cred = credential(true, &password, &store);
+
+        let serialized = sign_in(&cred).unwrap();
+        report_result(&cred, STATUS_LOGON_FAILURE);
+
+        assert!(password.state().changes.is_empty());
+        assert_eq!(store.get(SID).as_deref(), Some(serialized.as_str()));
+    }
+
+    #[test]
+    fn a_failed_rotation_leaves_the_stored_password_intact() {
+        let password = FakePassword::default();
+        password.state().change_fails = true;
+        let store = FakeStore::default();
+        let cred = credential(true, &password, &store);
+
+        let serialized = sign_in(&cred).unwrap();
+        report_result(&cred, NTSTATUS(0));
+
+        assert!(password.state().changes.is_empty());
+        assert_eq!(store.get(SID).as_deref(), Some(serialized.as_str()));
+    }
+
+    #[test]
+    fn deselecting_the_tile_cancels_a_pending_rotation() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        let cred = credential(true, &password, &store);
+
+        sign_in(&cred).unwrap();
+        unsafe { cred.SetDeselected() }.unwrap();
+        report_result(&cred, NTSTATUS(0));
+
+        assert!(password.state().changes.is_empty());
+    }
 
     #[test]
     fn local_user_matches_on_username_portion_only() {
