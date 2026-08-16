@@ -10,6 +10,7 @@
 #![windows_subsystem = "windows"]
 
 mod app;
+mod foreground;
 mod handler;
 mod icon;
 mod sysd;

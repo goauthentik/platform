@@ -54,6 +54,11 @@ wrap_task! {
 }
 
 fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
+    // Most of the gap between the spawn and a window existing is spent here —
+    // a named-pipe round trip to `ak-sysd` and, behind it, a live call out to
+    // the authentik API. That gap is what the foreground grant issued at spawn
+    // has to survive, so it is worth knowing how long it actually was.
+    let started = std::time::Instant::now();
     let start = match crate::sysd::sys_auth_start_async() {
         Ok(s) => s,
         Err(e) => {
@@ -69,6 +74,11 @@ fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
             return;
         }
     };
+
+    log::info!(
+        "got the sign-in URL after {}ms",
+        started.elapsed().as_millis()
+    );
 
     let result_pipe = file_from_raw_handle(result_pipe);
     let cancel_pipe = cancel_pipe.map(file_from_raw_handle);
@@ -95,7 +105,11 @@ fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
     }
 
     log::info!("creating the top-level window");
-    let mut delegate = SignInWindowDelegate::new(std::cell::RefCell::new(browser_view), start.url);
+    let mut delegate = SignInWindowDelegate::new(
+        std::cell::RefCell::new(browser_view),
+        start.url,
+        std::rc::Rc::new(std::cell::Cell::new(false)),
+    );
     window_create_top_level(Some(&mut delegate));
     log::info!("sign-in window requested");
 }

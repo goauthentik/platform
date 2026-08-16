@@ -97,6 +97,15 @@ logon/unlock/lock-screen prompt. After the automated tests pass:
 5. Confirm a **fresh logon** (not just unlock) also works — that path has no
    existing user token, so it exercises the winlogon-token-duplication
    fallback in `syscalls::acquire_interactive_token`.
+6. Sign in **three times in a row**, not once. The window has come to the
+   front on the first authentication after an install and stayed behind
+   LogonUI on every one after it, so a single sign-in passes with that bug
+   fully present.
+7. On each, **type before clicking**. The characters have to land in the
+   sign-in window, not LogonUI. The window is topmost whether or not it holds
+   the foreground, so visible no longer implies focused. When it does not,
+   `ak_cef.exe` logs `visible but never took focus` to the Application event
+   log under **authentik Credential Provider (CEF)**.
 
 ### DPAPI survival
 

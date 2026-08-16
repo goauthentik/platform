@@ -3,10 +3,17 @@
 
 use cef::*;
 
+use crate::foreground;
+
 wrap_window_delegate! {
     pub struct SignInWindowDelegate {
         browser_view: std::cell::RefCell<Option<BrowserView>>,
         url: String,
+        // Whether the window has ever held the foreground. Shared through an
+        // `Rc` because `wrap_window_delegate!` derives a `Clone` that clones
+        // every field, so a bare `Cell` would fork the moment CEF took a
+        // second reference to the delegate.
+        ever_activated: std::rc::Rc<std::cell::Cell<bool>>,
     }
 
     impl ViewDelegate {
@@ -39,17 +46,17 @@ wrap_window_delegate! {
                 window.set_window_app_icon(Some(&mut icon));
             }
 
-            // `show()` alone only makes the window visible; on Windows it
-            // does not reliably take the foreground, especially once
-            // credprovider's spawn and CEF's own multi-process startup have
-            // put enough time between process launch and this callback for
-            // the OS to stop treating it as belonging to that launch.
-            // `activate()` is CEF's dedicated bring-to-front-and-focus call,
-            // paired with `credprovider` granting this process foreground
-            // rights via `AllowSetForegroundWindow` right after spawning it.
+            // Topmost before the first paint, so the window is never behind
+            // LogonUI even for a frame. `activate()` asks for focus, which is
+            // a separate and much less certain thing — see `foreground`.
+            window.set_always_on_top(1);
             window.show();
             window.activate();
-            log::info!("sign-in window shown");
+            // So focus, whenever it arrives, lands in the web content rather
+            // than on the frame.
+            view.request_focus();
+            log::info!("sign-in window shown, foreground_pid={:?}", foreground::foreground_pid());
+            foreground::schedule_reactivation(window, 0, &self.ever_activated);
 
             // The browser only exists once the view is parented, so this is the
             // earliest the sign-in URL can be loaded.
@@ -60,6 +67,18 @@ wrap_window_delegate! {
                 }
                 None => log::error!("no main frame to load the sign-in URL into"),
             }
+        }
+
+        /// Separates "never took focus" from "took it and lost it again":
+        /// same symptom, different fixes, and `activate()` reports neither.
+        fn on_window_activation_changed(&self, _window: Option<&mut Window>, active: ::std::os::raw::c_int) {
+            if active != 0 {
+                self.ever_activated.set(true);
+            }
+            log::info!(
+                "sign-in window activation changed: active={active} foreground_pid={:?}",
+                foreground::foreground_pid()
+            );
         }
 
         fn on_window_destroyed(&self, _window: Option<&mut Window>) {
