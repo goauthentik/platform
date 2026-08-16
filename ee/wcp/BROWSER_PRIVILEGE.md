@@ -130,8 +130,11 @@ read from a `Property` via `PasswordAttribute`), so the installer cannot mint
 a random one itself. The account is created with a fixed placeholder
 instead, and `credprovider::syscalls::ensure_service_account_password_rotated`
 resets it to a random value the first time the DLL loads after install, via
-`NetUserSetInfo` through the existing `LocalAccountPasswordReset::reset` —
-then never touches it again (tracked by an `HKLM` marker). The placeholder is
+`NetUserSetInfo` through the existing `LocalAccountPassword::reset` — the
+same call the interactive user's own account uses for its first-use/
+out-of-band-change reset — then never touches it again (tracked by an
+`HKLM` marker, not the credential-manager vault that account's password
+lives in, since nothing here ever needs this one back). The placeholder is
 live for, at most, the gap between install finishing and the first logon
 attempt; the account is also denied interactive/network/RDP logon
 throughout, so even a known placeholder cannot be used to sign anyone in.
