@@ -129,10 +129,17 @@
              first time it loads after install, and the account is denied
              interactive/network/RDP logon throughout, so the placeholder
              is never a usable credential. Keep "Name" in step with
-             credprovider::syscalls::SERVICE_ACCOUNT_NAME. -->
+             credprovider::syscalls::SERVICE_ACCOUNT_NAME.
+
+             No "$" here (or elsewhere in this value): that is the WiX
+             preprocessor's variable substitution leader ("$(var.X)",
+             "$(env.X)"), and this file is preprocessed before the XML is
+             parsed. Long and mixed case/digit/symbol on purpose, to clear
+             a stricter than default local or domain minimum length policy
+             without needing to know what it is. -->
         <util:User Id="wcp_service_account"
                     Name="ak-wcp-browser"
-                    Password="Ak!Wcp#Svc$Placeholder1"
+                    Password="Ak!Wcp#Svc-Placeholder-2026"
                     PasswordNeverExpires="yes"
                     CanNotChangePassword="yes"
                     UpdateIfExists="yes"
