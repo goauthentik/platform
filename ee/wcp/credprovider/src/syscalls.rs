@@ -129,8 +129,9 @@ impl LocalAccountPassword for RealSyscalls {
             )
         };
 
+        // `NET_API_STATUS` is a Win32 error code, so it stays readable.
         if status != 0 {
-            return Err(net_api_error(status));
+            return Err(HRESULT::from_win32(status).into());
         }
         Ok(())
     }
@@ -150,7 +151,7 @@ impl LocalAccountPassword for RealSyscalls {
         };
 
         if status != 0 {
-            return Err(net_api_error(status));
+            return Err(HRESULT::from_win32(status).into());
         }
         Ok(())
     }
@@ -196,20 +197,12 @@ impl LocalAccountPassword for RealSyscalls {
     }
 }
 
-/// `NET_API_STATUS` codes are Win32 error codes, so they survive the trip
-/// through `HRESULT` and stay readable in the log.
-fn net_api_error(status: u32) -> windows::core::Error {
-    windows::core::Error::from_hresult(HRESULT::from_win32(status))
-}
-
 /// Keyring-backed [`PasswordStore`], keyed by SID so renaming the account does
 /// not orphan the entry.
 ///
-/// This reaches for [`WindowsStore`] rather than `ak_platform_keyring::store()`
-/// because the latter resolves to the in-memory store under `debug_assertions`,
-/// which would silently lose the password between LogonUI processes in every
-/// development build. Local-machine persistence keeps a secret that is
-/// meaningless off this box from roaming to a domain.
+/// Uses [`WindowsStore`] directly rather than `ak_platform_keyring::store()`,
+/// which resolves to the in-memory store under `debug_assertions` and would
+/// lose the password between LogonUI processes in every development build.
 pub struct KeyringPasswordStore {
     store: WindowsStore,
     service: String,

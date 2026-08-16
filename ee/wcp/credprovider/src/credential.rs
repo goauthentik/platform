@@ -89,23 +89,17 @@ impl Credential {
 }
 
 impl Credential_Impl {
-    /// The password to hand LSA for this account.
-    ///
-    /// Domain accounts keep the throwaway password they have always had. For a
-    /// local account the password is established once and then reused, because
-    /// the only way to set a password we do not already know is an
-    /// administrative reset, and that orphans the account's DPAPI master key —
-    /// stored credentials, EFS files and personal certificates — every time it
-    /// runs.
+    /// The password to hand LSA for this account: established once and reused
+    /// for a local account, throwaway for a domain one. `LOCAL_PASSWORD.md`
+    /// covers why it is not simply regenerated every time.
     fn account_password(&self, username: &str) -> Result<String> {
         if !self.is_local_user {
             return helpers::generate_random_password();
         }
 
         match self.stored_password(username) {
-            // Correct, just no longer accepted for logon. Knowing it means a
-            // change still works, so the master key survives; only a failed
-            // change falls through to a reset.
+            // Correct but no longer accepted for logon. Knowing it means a
+            // change still works, so the master key survives.
             Some((stored, PasswordCheck::Expired)) => {
                 log::info!("Connect: stored password has expired; changing it");
                 if let Some(new) = self.replace_password(username, &stored) {
@@ -118,8 +112,7 @@ impl Credential_Impl {
 
         let password = helpers::generate_random_password()?;
         self.deps.password.reset(username, &password)?;
-        // A vault we cannot write to costs another reset next time. Bad, but
-        // not worth failing a sign-in over.
+        // Costs another reset next time, but not worth failing a sign-in over.
         if let Err(e) = self.deps.store.save(&self.sid, &password) {
             log::error!("Connect: could not store the account password: {e}");
         }
@@ -132,8 +125,7 @@ impl Credential_Impl {
         let stored = match self.deps.store.load(&self.sid) {
             Ok(Some(stored)) => stored,
             Ok(None) => return None,
-            // A broken vault is a miss, not a failure: sign-in still works,
-            // it just costs a reset.
+            // A broken vault is a miss, not a failure.
             Err(e) => {
                 log::error!("Connect: could not read the stored password: {e}");
                 return None;
@@ -146,10 +138,9 @@ impl Credential_Impl {
                 None
             }
             Ok(check) => Some((stored, check)),
-            // Inconclusive. Resetting on the strength of a guess would destroy
-            // the master key we are here to protect; submitting the stored
-            // password costs at worst one failed logon, after which `validate`
-            // has a definite answer.
+            // Inconclusive, not wrong. Resetting on a guess destroys the master
+            // key; reusing costs at worst one failed logon, after which
+            // `validate` has a definite answer.
             Err(e) => {
                 log::warn!("Connect: could not verify the stored password ({e}); using it anyway");
                 Some((stored, PasswordCheck::Valid))
@@ -158,12 +149,8 @@ impl Credential_Impl {
     }
 
     /// Swap `old` for a freshly generated password, returning the new one.
-    ///
-    /// `NetUserChangePassword` rather than a reset: supplying the old password
-    /// lets LSA re-encrypt the DPAPI master key instead of orphaning it. It
-    /// also works on an expired password, which is why that path lands here
-    /// too. Best-effort — a minimum-password-age policy rejects this on every
-    /// logon, and the stored password stays valid either way.
+    /// Best-effort: a minimum-password-age policy rejects this on every logon,
+    /// and the stored password stays valid either way.
     fn replace_password(&self, username: &str, old: &str) -> Option<String> {
         let new = match helpers::generate_random_password() {
             Ok(new) => new,
@@ -178,8 +165,8 @@ impl Credential_Impl {
             return None;
         }
 
-        // The account now has a password the vault does not know. `validate`
-        // catches that on the next sign-in, at the cost of one reset.
+        // Leaves the account with a password the vault does not know;
+        // `validate` catches that next sign-in, at the cost of one reset.
         if let Err(e) = self.deps.store.save(&self.sid, &new) {
             log::error!("changed the account password but could not store it: {e}");
         }
@@ -540,15 +527,7 @@ mod tests {
 
     impl AuthFlow for FakeAuthFlow {
         fn run(&self, _should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
-            match &self.0 {
-                AuthResult::Completed { username } => AuthResult::Completed {
-                    username: username.clone(),
-                },
-                AuthResult::Cancelled => AuthResult::Cancelled,
-                AuthResult::Failed { reason } => AuthResult::Failed {
-                    reason: reason.clone(),
-                },
-            }
+            self.0.clone()
         }
     }
 

@@ -63,10 +63,9 @@ impl WindowsStore {
             .map_err(map_kc)
     }
 
-    /// Credential Manager is a synchronous API, so these are the real
-    /// implementations and the [`KeyringStore`] futures are thin wrappers.
-    /// Callers without an async runtime — the credential provider DLL, which is
-    /// loaded into LogonUI — use these directly.
+    /// Credential Manager is synchronous, so these are the real
+    /// implementations and the [`KeyringStore`] futures wrap them. Callers
+    /// without an async runtime use these directly.
     pub fn get_blocking(&self, service: &str, user: &str) -> Result<String, KeyringError> {
         match self.entry(service, user)?.get_password() {
             Ok(p) => Ok(p),
