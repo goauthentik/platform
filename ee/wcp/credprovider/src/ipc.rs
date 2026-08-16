@@ -29,7 +29,7 @@ use windows::{
     core::{PCWSTR, PWSTR},
 };
 
-use crate::syscalls::acquire_interactive_token;
+use crate::syscalls;
 use ak_ee_wcp_wire::AuthResult;
 
 /// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
@@ -270,6 +270,36 @@ fn signal_cancel(cancel_write: HANDLE) {
     std::mem::forget(f);
 }
 
+/// Gets `ak_cef.exe` a token for the dedicated service account rather than
+/// SYSTEM (`BROWSER_PRIVILEGE.md`). The account exists from install time
+/// (`vpkg/windows/Package.wxs`), so unlike the old `WTSQueryUserToken` /
+/// winlogon-duplication fallback this needs no session-dependent branching:
+/// logon and unlock both end up here.
+///
+/// Password rotation and the account-hardening calls are best-effort and
+/// only logged on failure — each is idempotent, so a transient failure here
+/// just means the next call tries again, and none of them being fatal keeps
+/// a permissions hiccup on one from blocking `service_account_token` from
+/// still being attempted.
+fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
+    if let Err(e) =
+        syscalls::ensure_service_account_password_rotated(syscalls::SERVICE_ACCOUNT_NAME)
+    {
+        log::warn!("could not rotate the service account's password: {e}");
+    }
+
+    let sid = syscalls::account_sid(syscalls::SERVICE_ACCOUNT_NAME)?;
+
+    if let Err(e) = syscalls::deny_interactive_and_network_logon(&sid) {
+        log::warn!("could not deny the service account interactive/network logon: {e}");
+    }
+    if let Err(e) = syscalls::ensure_desktop_access(&sid) {
+        log::warn!("could not grant the service account secure-desktop access: {e}");
+    }
+
+    syscalls::service_account_token(syscalls::SERVICE_ACCOUNT_NAME)
+}
+
 fn spawn_cef_host(
     cef_exe: &Path,
     pipes: &DuplexPipes,
@@ -323,16 +353,16 @@ fn spawn_cef_host(
     }
     let mut pi = PROCESS_INFORMATION::default();
 
-    let token = match acquire_interactive_token() {
-        Ok(token) => Some(token),
-        Err(e) if may_launch_in_current_session(cpus) => {
-            log::debug!("no interactive-session token ({e}); launching in the current session");
-            None
-        }
-        Err(e) => {
-            log::error!("could not acquire an interactive-session token: {e}");
-            unsafe { DeleteProcThreadAttributeList(attr_list) };
-            return Err(e);
+    let token = if may_launch_in_current_session(cpus) {
+        None
+    } else {
+        match acquire_service_account_token() {
+            Ok(token) => Some(token),
+            Err(e) => {
+                log::error!("could not acquire the service account's token: {e}");
+                unsafe { DeleteProcThreadAttributeList(attr_list) };
+                return Err(e);
+            }
         }
     };
     log::info!(
@@ -343,7 +373,7 @@ fn spawn_cef_host(
             .map(|_| SECURE_DESKTOP)
             .unwrap_or("<inherited>"),
         if token.is_some() {
-            "an interactive-session"
+            "the service account's"
         } else {
             "the caller's own"
         }
