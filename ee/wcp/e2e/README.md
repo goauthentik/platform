@@ -97,3 +97,22 @@ logon/unlock/lock-screen prompt. After the automated tests pass:
 5. Confirm a **fresh logon** (not just unlock) also works — that path has no
    existing user token, so it exercises the winlogon-token-duplication
    fallback in `syscalls::acquire_interactive_token`.
+
+### DPAPI survival
+
+The one thing the unit tests cannot answer: whether signing in through the
+tile keeps the account's DPAPI master key intact. See `LOCAL_PASSWORD.md` for
+why this is the whole point of the stored-password design. Sign in **twice** —
+the first sign-in still resets, and the second is the first to exercise the
+reuse-and-change path.
+
+1. As the tile user, save a credential (`cmdkey /generic:dpapi-probe
+   /user:probe /pass:probe`) and encrypt a file (`cipher /e` on a scratch
+   file in the profile).
+2. Sign out, sign in through the authentik tile, and confirm both survive
+   (`cmdkey /list` shows `dpapi-probe`; the encrypted file still opens).
+3. Repeat step 2 once more.
+
+Then, from an elevated shell, `PsExec -s cmdkey /list` should show exactly one
+`*.io.goauthentik.agent.wcp-account-password` entry in SYSTEM's vault — one per
+account, not one per sign-in.
