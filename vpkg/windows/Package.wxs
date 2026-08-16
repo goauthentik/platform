@@ -124,19 +124,13 @@
 
         <!-- ak_cef.exe runs as this account instead of SYSTEM (see
              ee/wcp/BROWSER_PRIVILEGE.md). util:User has no "generate a
-             random password" attribute, so this one is a fixed placeholder;
-             credprovider resets it to a random, never-stored value the
-             first time it loads after install, and the account is denied
-             interactive/network/RDP logon throughout, so the placeholder
-             is never a usable credential. Keep "Name" in step with
-             credprovider::syscalls::SERVICE_ACCOUNT_NAME.
-
-             No "$" here (or elsewhere in this value): that is the WiX
-             preprocessor's variable substitution leader ("$(var.X)",
-             "$(env.X)"), and this file is preprocessed before the XML is
-             parsed. Long and mixed case/digit/symbol on purpose, to clear
-             a stricter than default local or domain minimum length policy
-             without needing to know what it is. -->
+             random password" attribute, so this is a fixed placeholder that
+             credprovider rotates away on first load; the account is denied
+             all interactive/network/RDP logon regardless. No "$" in the
+             value: that is the WiX preprocessor's substitution leader
+             ("$(var.X)"), and this file is preprocessed before the XML is
+             parsed. Keep "Name" in step with
+             credprovider::syscalls::SERVICE_ACCOUNT_NAME. -->
         <util:User Id="wcp_service_account"
                     Name="ak-wcp-browser"
                     Password="Ak!Wcp#Svc-Placeholder-2026"
