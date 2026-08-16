@@ -101,6 +101,7 @@ extern "system" fn DllGetClassObject(
         ak_platform::log::LogBuilder::new(ak_platform::string::PlatformString::new_with_default(
             "authentik Credential Provider",
         ))
+        .with_default_filters()
         .allow_platform(true)
         // A shipped provider is loaded by LogonUI, which has no console, so
         // release builds log only to the platform log. Debug builds also log
