@@ -2,15 +2,11 @@
 //! effects, so the logic that decides *when* to call them can be unit
 //! tested against a fake instead of the OS.
 
-use ak_platform_keyring::{KeyringError, windows::WindowsStore};
-use windows::Win32::Foundation::{CloseHandle, HANDLE};
+use windows::Win32::Foundation::HANDLE;
 use windows::{
     Win32::{
-        Foundation::{
-            ERROR_LOGON_FAILURE, ERROR_PASSWORD_EXPIRED, ERROR_PASSWORD_MUST_CHANGE, GENERIC_ALL,
-            HLOCAL, LUID, LocalFree,
-        },
-        NetworkManagement::NetManagement::{NetUserChangePassword, NetUserSetInfo, USER_INFO_1003},
+        Foundation::{E_FAIL, GENERIC_ALL, HLOCAL, LUID, LocalFree},
+        NetworkManagement::NetManagement::{NetUserSetInfo, USER_INFO_1003},
         Security::{
             ACL, AllocateLocallyUniqueId,
             Authentication::Identity::{
@@ -25,16 +21,15 @@ use windows::{
                 SE_WINDOW_OBJECT, SET_ACCESS, SetEntriesInAclW, SetSecurityInfo, TRUSTEE_IS_SID,
                 TRUSTEE_IS_USER, TRUSTEE_W,
             },
-            DACL_SECURITY_INFORMATION, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, LogonUserW,
-            LookupAccountNameW, NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID, QUOTA_LIMITS,
-            SID_NAME_USE, TOKEN_SOURCE,
+            DACL_SECURITY_INFORMATION, LookupAccountNameW, NO_INHERITANCE, PSECURITY_DESCRIPTOR,
+            PSID, QUOTA_LIMITS, SID_NAME_USE, TOKEN_SOURCE,
         },
         Storage::FileSystem::{READ_CONTROL, WRITE_DAC},
         System::StationsAndDesktops::{
             DESKTOP_CONTROL_FLAGS, GetProcessWindowStation, OpenDesktopW,
         },
     },
-    core::{HRESULT, PCWSTR, PSTR, PWSTR, w},
+    core::{PCWSTR, PSTR, PWSTR, w},
 };
 
 const SERVICE_ACCOUNT_STATE_KEY: &str =
@@ -44,37 +39,8 @@ pub trait AuthPackageLookup {
     fn negotiate_package(&self) -> windows::core::Result<u32>;
 }
 
-pub trait LocalAccountPassword {
-    /// Administrative reset. Orphans the account's DPAPI master key — stored
-    /// passwords, EFS files and personal certificates become unreadable — so
-    /// this is only for first use and for recovering an account whose password
-    /// we no longer know.
+pub trait LocalAccountPasswordReset {
     fn reset(&self, username: &str, password: &str) -> windows::core::Result<()>;
-
-    /// Self-service change. Supplying the old password lets LSA re-encrypt the
-    /// DPAPI master key instead of orphaning it, which is why rotation goes
-    /// through here and not through `reset`.
-    fn change(&self, username: &str, old: &str, new: &str) -> windows::core::Result<()>;
-
-    /// Whether `password` is still this account's password. Only codes that
-    /// say something definite about the credential produce an `Ok`; anything
-    /// else is `Err`, because "could not tell" must not be read as "wrong
-    /// password".
-    fn validate(&self, username: &str, password: &str) -> windows::core::Result<PasswordCheck>;
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum PasswordCheck {
-    Valid,
-    /// Correct, but the account will not accept it for logon until it changes.
-    Expired,
-    Rejected,
-}
-
-/// Where the local account's password is kept between sign-ins.
-pub trait PasswordStore {
-    fn load(&self, sid: &str) -> eyre::Result<Option<String>>;
-    fn save(&self, sid: &str, password: &str) -> eyre::Result<()>;
 }
 
 pub struct RealSyscalls;
@@ -120,7 +86,7 @@ impl AuthPackageLookup for RealSyscalls {
     }
 }
 
-impl LocalAccountPassword for RealSyscalls {
+impl LocalAccountPasswordReset for RealSyscalls {
     fn reset(&self, username: &str, password: &str) -> windows::core::Result<()> {
         let username_wide = wide(username);
         let password_wide = wide(password);
@@ -140,119 +106,9 @@ impl LocalAccountPassword for RealSyscalls {
         };
 
         if status != 0 {
-            return Err(net_api_error(status));
+            return Err(windows::core::Error::from(E_FAIL));
         }
         Ok(())
-    }
-
-    fn change(&self, username: &str, old: &str, new: &str) -> windows::core::Result<()> {
-        let username_wide = wide(username);
-        let old_wide = wide(old);
-        let new_wide = wide(new);
-
-        let status = unsafe {
-            NetUserChangePassword(
-                PCWSTR::null(),
-                PCWSTR(username_wide.as_ptr()),
-                PCWSTR(old_wide.as_ptr()),
-                PCWSTR(new_wide.as_ptr()),
-            )
-        };
-
-        if status != 0 {
-            return Err(net_api_error(status));
-        }
-        Ok(())
-    }
-
-    fn validate(&self, username: &str, password: &str) -> windows::core::Result<PasswordCheck> {
-        let username_wide = wide(username);
-        let password_wide = wide(password);
-
-        // A network logon validates the credential without building a session,
-        // and `.` scopes the lookup to this machine's account database.
-        let mut token = HANDLE::default();
-        let result = unsafe {
-            LogonUserW(
-                PCWSTR(username_wide.as_ptr()),
-                w!("."),
-                PCWSTR(password_wide.as_ptr()),
-                LOGON32_LOGON_NETWORK,
-                LOGON32_PROVIDER_DEFAULT,
-                &mut token,
-            )
-        };
-
-        match result {
-            Ok(()) => {
-                unsafe {
-                    let _ = CloseHandle(token);
-                }
-                Ok(PasswordCheck::Valid)
-            }
-            // Anything not listed here — a policy denying network logons, a
-            // locked-out or disabled account — means the check was
-            // inconclusive, not that the password is wrong, and the caller
-            // must not reset on the strength of it.
-            Err(e) if e.code() == ERROR_LOGON_FAILURE.to_hresult() => Ok(PasswordCheck::Rejected),
-            Err(e)
-                if e.code() == ERROR_PASSWORD_EXPIRED.to_hresult()
-                    || e.code() == ERROR_PASSWORD_MUST_CHANGE.to_hresult() =>
-            {
-                Ok(PasswordCheck::Expired)
-            }
-            Err(e) => Err(e),
-        }
-    }
-}
-
-/// `NET_API_STATUS` codes are Win32 error codes, so they survive the trip
-/// through `HRESULT` and stay readable in the log.
-fn net_api_error(status: u32) -> windows::core::Error {
-    windows::core::Error::from_hresult(HRESULT::from_win32(status))
-}
-
-/// Keyring-backed [`PasswordStore`], keyed by SID so renaming the account does
-/// not orphan the entry.
-///
-/// This reaches for [`WindowsStore`] rather than `ak_platform_keyring::store()`
-/// because the latter resolves to the in-memory store under `debug_assertions`,
-/// which would silently lose the password between LogonUI processes in every
-/// development build. Local-machine persistence keeps a secret that is
-/// meaningless off this box from roaming to a domain.
-pub struct KeyringPasswordStore {
-    store: WindowsStore,
-    service: String,
-}
-
-impl Default for KeyringPasswordStore {
-    fn default() -> Self {
-        KeyringPasswordStore::new()
-    }
-}
-
-impl KeyringPasswordStore {
-    pub fn new() -> Self {
-        KeyringPasswordStore {
-            store: WindowsStore::new_local_machine(),
-            service: ak_platform_keyring::service("wcp-account-password"),
-        }
-    }
-}
-
-impl PasswordStore for KeyringPasswordStore {
-    fn load(&self, sid: &str) -> eyre::Result<Option<String>> {
-        match self.store.get_blocking(&self.service, sid) {
-            Ok(password) => Ok(Some(password)),
-            Err(KeyringError::NotFound()) => Ok(None),
-            Err(e) => Err(eyre::eyre!("{e}")),
-        }
-    }
-
-    fn save(&self, sid: &str, password: &str) -> eyre::Result<()> {
-        self.store
-            .set_blocking(&self.service, sid, password)
-            .map_err(|e| eyre::eyre!("{e}"))
     }
 }
 
@@ -303,9 +159,9 @@ fn lsa_unicode_string(wide: &[u16]) -> LSA_UNICODE_STRING {
 
 /// Mints a primary token for the service account via an S4U logon — no
 /// password needed, only `SE_TCB_NAME`, which LogonUI already holds. Nothing
-/// to store, nothing to rotate: unlike the interactive user's account
-/// (`credential.rs`, `LOCAL_PASSWORD.md`), this account's credential never
-/// has to survive being handed to LSA a second time.
+/// to store, nothing to rotate: unlike the interactive user's own account,
+/// this account's credential never has to survive being handed to LSA a
+/// second time.
 ///
 /// `Service` is the logon type, deliberately: it is the one type this
 /// account is not denied by `deny_interactive_and_network_logon`, so
@@ -512,11 +368,11 @@ pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<(
 /// Rotates the service account's password to a random value the first time
 /// this runs, then never again. Nothing ever needs it back —
 /// `service_account_token` mints tokens via S4U, not `LogonUserW` — so
-/// unlike the interactive user's stored password (`credential.rs`), this one
-/// is generated and immediately discarded. The installer's `<util:User>`
-/// gives the account a fixed password only so the account can be created at
-/// all; this is what turns that into a real secret, exactly once, and the
-/// `HKLM` marker is what keeps it from happening again on every logon.
+/// unlike the interactive user's stored password, this one is generated and
+/// immediately discarded. The installer's `<util:User>` gives the account a
+/// fixed password only so the account can be created at all; this is what
+/// turns that into a real secret, exactly once, and the `HKLM` marker is
+/// what keeps it from happening again on every logon.
 pub fn ensure_service_account_password_rotated(username: &str) -> eyre::Result<()> {
     let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
     let (key, _disp) = hklm.create_subkey(SERVICE_ACCOUNT_STATE_KEY)?;
