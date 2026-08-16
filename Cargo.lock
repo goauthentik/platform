@@ -808,8 +808,8 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 
 [[package]]
 name = "authentik-client"
-version = "2026.8.0-rc1"
-source = "git+https://github.com/goauthentik/client-rust#33201238722a70fdbe8c3d34eb54a51e1053d3a8"
+version = "2026.11.0-rc1"
+source = "git+https://github.com/goauthentik/client-rust#529d7b8a5018ee030d6ad254acfa021469f27f20"
 dependencies = [
  "chrono",
  "reqwest 0.13.4",

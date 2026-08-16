@@ -100,7 +100,8 @@ fn is_cef_host(pid: u32) -> bool {
     if pid == 0 {
         return false;
     }
-    let Ok(process) = (unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) }) else {
+    let Ok(process) = (unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) })
+    else {
         return false;
     };
 

@@ -645,7 +645,10 @@ mod tests {
             nudge.poll(&fake);
         }
         assert_eq!(
-            fake.calls().iter().filter(|c| c.starts_with("set(")).count(),
+            fake.calls()
+                .iter()
+                .filter(|c| c.starts_with("set("))
+                .count(),
             2,
             "a refused push should be retried"
         );
@@ -654,7 +657,11 @@ mod tests {
         for _ in 0..NUDGE_INTERVAL_TICKS * 2 {
             nudge.poll(&fake);
         }
-        let pushes = fake.calls().iter().filter(|c| c.starts_with("set(")).count();
+        let pushes = fake
+            .calls()
+            .iter()
+            .filter(|c| c.starts_with("set("))
+            .count();
 
         assert!(nudge.settled, "should stop once the child is foreground");
         assert_eq!(pushes, 3, "no further pushes after the child has focus");
@@ -671,7 +678,10 @@ mod tests {
         }
 
         assert_eq!(
-            fake.calls().iter().filter(|c| c.starts_with("set(")).count() as u32,
+            fake.calls()
+                .iter()
+                .filter(|c| c.starts_with("set("))
+                .count() as u32,
             NUDGE_BUDGET_TICKS / NUDGE_INTERVAL_TICKS,
         );
     }

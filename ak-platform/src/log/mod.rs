@@ -59,9 +59,11 @@ impl LogBuilder {
     pub fn with_default_filters(mut self) -> Self {
         self.filter.push(("h2".to_owned(), LevelFilter::Warn));
         self.filter.push(("tonic".to_owned(), LevelFilter::Warn));
-        self.filter.push(("hyper_util".to_owned(), LevelFilter::Warn));
+        self.filter
+            .push(("hyper_util".to_owned(), LevelFilter::Warn));
         self.filter.push(("reqwest".to_owned(), LevelFilter::Warn));
-        self.filter.push(("tracing::span".to_owned(), LevelFilter::Warn));
+        self.filter
+            .push(("tracing::span".to_owned(), LevelFilter::Warn));
         self
     }
 

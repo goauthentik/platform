@@ -10,7 +10,6 @@ use windows::Win32::UI::WindowsAndMessaging::{
     AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetWindowRect,
     GetWindowThreadProcessId, IsWindowVisible, SetForegroundWindow,
 };
-use windows_core::BOOL;
 use windows::{
     Win32::{
         Foundation::{
@@ -39,6 +38,7 @@ use windows::{
     },
     core::{HRESULT, PCWSTR, PSTR, w},
 };
+use windows_core::BOOL;
 
 pub trait AuthPackageLookup {
     fn negotiate_package(&self) -> windows::core::Result<u32>;
