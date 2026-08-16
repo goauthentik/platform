@@ -169,6 +169,7 @@ version = "0.60.1"
 dependencies = [
  "ak-ee-wcp-wire",
  "ak-platform",
+ "ak-platform-keyring",
  "embed-resource",
  "eyre",
  "log",

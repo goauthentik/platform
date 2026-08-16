@@ -103,3 +103,22 @@ logon/unlock/lock-screen prompt. After the automated tests pass:
    worth checking separately from unlock; now both scenarios go through the
    same `syscalls::service_account_token` S4U logon, so this step mainly
    confirms the secure-desktop ACL grant actually holds on real hardware.
+
+### DPAPI survival
+
+The one thing the unit tests cannot answer: whether signing in through the
+tile keeps the account's DPAPI master key intact. See `LOCAL_PASSWORD.md` for
+why this is the whole point of the stored-password design. Sign in **twice** —
+the first sign-in still resets, and the second is the first to exercise the
+reuse-and-change path.
+
+1. As the tile user, save a credential (`cmdkey /generic:dpapi-probe
+   /user:probe /pass:probe`) and encrypt a file (`cipher /e` on a scratch
+   file in the profile).
+2. Sign out, sign in through the authentik tile, and confirm both survive
+   (`cmdkey /list` shows `dpapi-probe`; the encrypted file still opens).
+3. Repeat step 2 once more.
+
+Then, from an elevated shell, `PsExec -s cmdkey /list` should show exactly one
+`*.io.goauthentik.agent.wcp-account-password` entry in SYSTEM's vault — one per
+account, not one per sign-in.

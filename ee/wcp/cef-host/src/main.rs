@@ -113,6 +113,7 @@ fn main() {
     ak_platform::log::LogBuilder::new(ak_platform::string::PlatformString::new_with_default(
         "authentik Credential Provider (CEF)",
     ))
+    .with_default_filters()
     .allow_platform(true)
     .allow_stdout(false)
     .enable();

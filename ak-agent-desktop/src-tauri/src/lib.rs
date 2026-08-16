@@ -15,6 +15,7 @@ pub fn run() {
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
     )
+    .with_default_filters()
     .enable();
     tracing::trace!("authentik Agent Desktop v{}", full_version());
 
