@@ -14,6 +14,12 @@ Option A turned out to need more than this doc assumed — see the note at the
 end of that section — so it stayed out of scope rather than being folded in
 here.
 
+**Verified on a VM** against the manual checklist in `e2e/README.md`: the
+tile appears, the sign-in window opens on the secure desktop, and both fresh
+logon and unlock complete. So the two things CI cannot reach — the
+`WinSta0\Winlogon` ACL grant actually holding, and the S4U service-account
+token being usable for both scenarios — hold outside a test harness.
+
 This file previously lived on `ee/wcp/rs-cef-fresh` and was deleted there in
 a "cleanup" commit an hour after being written, along with three sibling
 design docs; nothing indicates that was deliberate. Restored from
@@ -148,15 +154,17 @@ out of scope for this account**, so S4U stands.
   to create windows on the desktop where credentials are typed. Still a
   large net win — a compromised renderer no longer yields SYSTEM — but a
   deliberate expansion of what can reach the logon desktop, not a free
-  improvement. `GENERIC_ALL` is broader than this account strictly needs;
-  narrowing it to the specific window-station/desktop rights CEF actually
-  uses is a reasonable follow-up once real hardware confirms what those are.
+  improvement. Confirmed working on a VM. `GENERIC_ALL` is broader than this
+  account strictly needs; narrowing it to the specific window-station/desktop
+  rights CEF actually uses is still open — the VM run proves the grant is
+  sufficient, not that it is minimal.
 - **Profile and cache.** `root_cache_path` is explicit already, but Chromium
   also wants temp, fonts and crashpad paths. Without `LoadUserProfile` the
   account gets the default profile. The MSI grants the account write access
   to `wcp-cache` (previously ProgramData defaults only); temp/fonts/crashpad
-  are not yet addressed and are the most likely source of first-run failures
-  on real hardware.
+  are still not addressed. They were the expected source of first-run
+  failures, and the VM run did not hit them — but "did not fail on one VM" is
+  weaker than "handled", so leave this open.
 - **Harden the account — mostly done.** `credprovider::syscalls::
   deny_interactive_and_network_logon` denies `SeDenyInteractiveLogonRight`,
   `SeDenyNetworkLogonRight` and `SeDenyRemoteInteractiveLogonRight` via
