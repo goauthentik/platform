@@ -46,7 +46,7 @@ ak-api-cli-gen = { path = "ak-api-cli-gen" }
 authentik-client = { git = "https://github.com/goauthentik/client-rust", version = "2026.11.0-rc1" , default-features = false, features = ["rustls"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 color-eyre = "= 0.6.5"
-eyre = "= 0.6.12"
+eyre = "= 0.6.14"
 hyper-util = "0.1.20"
 log = { version = "0.4.32", features = ["kv"] }
 pbjson = "0.9.0"
