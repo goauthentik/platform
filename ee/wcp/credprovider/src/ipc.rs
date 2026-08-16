@@ -52,9 +52,12 @@ impl AuthFlow for CefAuthFlow {
 
 /// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
 /// It is debug-gated and runs on an ordinary desktop, where the caller is
-/// already the interactive user and holds no `SE_TCB_NAME`. The logon
-/// scenarios must never take it: they run as SYSTEM under LogonUI, so it
-/// would put Chromium on the secure desktop with SYSTEM's token.
+/// already the interactive user and holds no `SE_TCB_NAME` — so it cannot
+/// reach `acquire_service_account_token`'s S4U logon in the first place. The
+/// logon scenarios must never take this fallback: they always have that
+/// privilege, and taking it would put Chromium on the secure desktop with
+/// this process's own token (SYSTEM, since this DLL is loaded into LogonUI)
+/// rather than the service account's.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
 }
