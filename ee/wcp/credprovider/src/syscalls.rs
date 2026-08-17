@@ -2,8 +2,14 @@
 //! effects, so the logic that decides *when* to call them can be unit
 //! tested against a fake instead of the OS.
 
+use std::ffi::c_void;
+
 use ak_platform_keyring::{KeyringError, windows::WindowsStore};
-use windows::Win32::Foundation::{CloseHandle, HANDLE};
+use windows::Win32::Foundation::{CloseHandle, HANDLE, HWND, LPARAM, RECT};
+use windows::Win32::UI::WindowsAndMessaging::{
+    AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetWindowRect,
+    GetWindowThreadProcessId, IsWindowVisible, SetForegroundWindow,
+};
 use windows::{
     Win32::{
         Foundation::{
@@ -36,6 +42,7 @@ use windows::{
     },
     core::{HRESULT, PCWSTR, PSTR, PWSTR, w},
 };
+use windows_core::BOOL;
 
 const SERVICE_ACCOUNT_STATE_KEY: &str =
     "SOFTWARE\\authentik Security Inc.\\Platform\\WcpServiceAccount";
@@ -77,6 +84,16 @@ pub trait PasswordStore {
     fn save(&self, sid: &str, password: &str) -> eyre::Result<()>;
 }
 
+/// The window-manager calls behind pushing `ak_cef.exe`'s window to the front.
+/// Windows are a bare `isize` rather than an `HWND` so the policy driving these
+/// can be tested against a fake without a desktop to enumerate.
+pub trait ForegroundControl {
+    fn foreground_pid(&self) -> Option<u32>;
+    fn visible_top_level_window(&self, pid: u32) -> Option<isize>;
+    fn allow_set_foreground(&self, pid: u32) -> bool;
+    fn set_foreground(&self, window: isize) -> bool;
+}
+
 pub struct RealSyscalls;
 
 fn wide(s: &str) -> Vec<u16> {
@@ -93,6 +110,77 @@ fn lsa_string(name: &'static [u8]) -> LSA_STRING {
         MaximumLength: name.len() as u16,
         Buffer: PSTR(name.as_ptr() as *mut u8),
     }
+}
+
+impl ForegroundControl for RealSyscalls {
+    fn foreground_pid(&self) -> Option<u32> {
+        let hwnd = unsafe { GetForegroundWindow() };
+        if hwnd.is_invalid() {
+            return None;
+        }
+        let mut pid = 0u32;
+        unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
+        (pid != 0).then_some(pid)
+    }
+
+    fn visible_top_level_window(&self, pid: u32) -> Option<isize> {
+        let mut search = WindowSearch { pid, found: 0 };
+        // `EnumWindows` walks the *calling thread's* desktop, so this only
+        // works from one of LogonUI's own threads. It reports failure when the
+        // callback stops the walk early, which is what finding a match does,
+        // so `found` is the answer rather than the result.
+        let _ = unsafe {
+            EnumWindows(
+                Some(find_window_of_process),
+                LPARAM(std::ptr::from_mut(&mut search) as isize),
+            )
+        };
+        (search.found != 0).then_some(search.found)
+    }
+
+    fn allow_set_foreground(&self, pid: u32) -> bool {
+        match unsafe { AllowSetForegroundWindow(pid) } {
+            Ok(()) => true,
+            Err(e) => {
+                log::debug!("AllowSetForegroundWindow({pid}) failed: {e}");
+                false
+            }
+        }
+    }
+
+    fn set_foreground(&self, window: isize) -> bool {
+        unsafe { SetForegroundWindow(HWND(window as *mut c_void)) }.as_bool()
+    }
+}
+
+struct WindowSearch {
+    pid: u32,
+    found: isize,
+}
+
+/// Stops at the first window a person could see. Chromium opens several
+/// message-only and zero-size helpers first, and handing one of those to
+/// `SetForegroundWindow` would look like success while leaving the real window
+/// where it was.
+unsafe extern "system" fn find_window_of_process(hwnd: HWND, lparam: LPARAM) -> BOOL {
+    let search = unsafe { &mut *(lparam.0 as *mut WindowSearch) };
+
+    let mut pid = 0u32;
+    unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
+    if pid != search.pid || !unsafe { IsWindowVisible(hwnd) }.as_bool() {
+        return true.into();
+    }
+
+    let mut rect = RECT::default();
+    if unsafe { GetWindowRect(hwnd, &mut rect) }.is_err()
+        || rect.right <= rect.left
+        || rect.bottom <= rect.top
+    {
+        return true.into();
+    }
+
+    search.found = hwnd.0 as isize;
+    false.into()
 }
 
 impl AuthPackageLookup for RealSyscalls {

@@ -160,6 +160,7 @@ fn run_cef_host(
         pipes.result_read,
         pipes.cancel_write,
         process.hProcess,
+        process.dwProcessId,
         should_continue,
     );
 
@@ -171,6 +172,81 @@ fn run_cef_host(
     }
 
     result
+}
+
+/// `wait_for_result` polls every 200 ms, but the browser takes seconds to open
+/// a window, so nudge on every fifth poll rather than enumerating an empty
+/// desktop five times a second.
+const NUDGE_INTERVAL_TICKS: u32 = 5;
+
+/// Ten seconds of polls. Past that the window has either appeared or is not
+/// going to, and the sign-in has no deadline this should compete with.
+const NUDGE_BUDGET_TICKS: u32 = 50;
+
+fn nudge_due(tick: u32, settled: bool) -> bool {
+    !settled && tick < NUDGE_BUDGET_TICKS && tick.is_multiple_of(NUDGE_INTERVAL_TICKS)
+}
+
+/// Pushes `ak_cef.exe`'s window to the front from inside LogonUI.
+///
+/// The child asks for the foreground itself, but a freshly spawned process is
+/// rarely allowed to take it, and the single `AllowSetForegroundWindow` issued
+/// at spawn is spent by the time CEF has a window to apply it to. This process
+/// is the one that can: right desktop, normally the foreground process
+/// already, and exempt from a foreground lock it took itself.
+///
+/// Settles on the child *being* the foreground rather than on a call
+/// succeeding, so a window that takes it and immediately loses it again to a
+/// LogonUI repaint gets pushed back rather than counted as done.
+struct ForegroundNudge {
+    child_pid: u32,
+    tick: u32,
+    settled: bool,
+    spawned: std::time::Instant,
+    window_seen: bool,
+}
+
+impl ForegroundNudge {
+    fn new(child_pid: u32) -> Self {
+        Self {
+            child_pid,
+            tick: 0,
+            settled: false,
+            spawned: std::time::Instant::now(),
+            window_seen: false,
+        }
+    }
+
+    fn poll(&mut self, fg: &dyn syscalls::ForegroundControl) {
+        let due = nudge_due(self.tick, self.settled);
+        self.tick += 1;
+        if !due {
+            return;
+        }
+
+        if fg.foreground_pid() == Some(self.child_pid) {
+            log::info!("the sign-in window holds the foreground");
+            self.settled = true;
+            return;
+        }
+
+        let Some(window) = fg.visible_top_level_window(self.child_pid) else {
+            return;
+        };
+        if !self.window_seen {
+            self.window_seen = true;
+            // The run that works is the slow one, so how wide this gap is says
+            // whether the grant at spawn had any chance of surviving it.
+            log::info!(
+                "the sign-in window appeared {}ms after the spawn",
+                self.spawned.elapsed().as_millis()
+            );
+        }
+
+        let allowed = fg.allow_set_foreground(self.child_pid);
+        let taken = fg.set_foreground(window);
+        log::info!("nudged the sign-in window ({window:#x}): re-armed={allowed} took={taken}");
+    }
 }
 
 /// What the result-pipe reader thread saw. `Eof` and `Error` both end up as a
@@ -193,6 +269,7 @@ fn wait_for_result(
     result_read: HANDLE,
     cancel_write: HANDLE,
     process: HANDLE,
+    child_pid: u32,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
     let mut result_file = unsafe { File::from_raw_handle(result_read.0) };
@@ -207,6 +284,10 @@ fn wait_for_result(
     });
 
     let mut cancel_signalled = false;
+    // This loop runs on the thread LogonUI called `Connect` on, so it is on
+    // the desktop the browser's window appears on — which `EnumWindows` and
+    // `SetForegroundWindow` both need, and which no other thread here has.
+    let mut nudge = ForegroundNudge::new(child_pid);
     loop {
         match rx.recv_timeout(std::time::Duration::from_millis(200)) {
             Ok(PipeOutcome::Result(outcome)) => {
@@ -226,6 +307,7 @@ fn wait_for_result(
                 return AuthResult::Cancelled;
             }
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                nudge.poll(&syscalls::RealSyscalls);
                 if !cancel_signalled && !should_continue() {
                     log::info!("LogonUI withdrew the sign-in; asking the window to close");
                     cancel_signalled = true;
@@ -414,15 +496,21 @@ fn spawn_cef_host(
 
     spawned?;
 
-    // A freshly spawned process is not automatically allowed to bring its own
-    // window to the foreground — Windows only grants that if the window
-    // appears within a short window of the launch that triggered it, and CEF's
-    // own multi-process startup plus this app's spawn path routinely take
-    // longer than that. Without this, `ak_cef.exe` still opens, just behind
-    // whatever already had focus, with no visible sign it exists.
+    // A freshly spawned process may not bring its own window forward without
+    // this. On its own it is not enough and never was: the grant is
+    // single-shot, and the window it applies to does not exist for several
+    // seconds yet, by which time any foreground change has spent it —
+    // `ForegroundNudge` re-arms it once there is something to push. A failure
+    // is about this process rather than the child, since the call is refused
+    // when the caller is not itself entitled to the foreground.
     if let Err(e) = unsafe { AllowSetForegroundWindow(pi.dwProcessId) } {
         log::warn!("AllowSetForegroundWindow({}) failed: {e}", pi.dwProcessId);
     }
+    log::info!(
+        "spawned the sign-in window as pid {}, foreground_pid={:?}",
+        pi.dwProcessId,
+        syscalls::RealSyscalls.foreground_pid(),
+    );
 
     Ok(pi)
 }
@@ -455,7 +543,172 @@ fn spawn_in_current_session(
 #[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
+    use std::cell::{Cell, RefCell};
     use windows::Win32::UI::Shell::{CPUS_CHANGE_PASSWORD, CPUS_LOGON, CPUS_UNLOCK_WORKSTATION};
+
+    const CHILD: u32 = 4242;
+    const LOGONUI: u32 = 7;
+    const CHILD_WINDOW: isize = 0xBEEF;
+
+    #[derive(Default)]
+    struct FakeForeground {
+        /// `None` until the browser has opened a window a person could see.
+        window: Cell<Option<isize>>,
+        foreground: Cell<Option<u32>>,
+        /// Stands in for the foreground rules refusing the call.
+        grant_works: Cell<bool>,
+        calls: RefCell<Vec<String>>,
+    }
+
+    impl FakeForeground {
+        fn with_window_up() -> Self {
+            let fake = Self {
+                foreground: Cell::new(Some(LOGONUI)),
+                grant_works: Cell::new(true),
+                ..Self::default()
+            };
+            fake.window.set(Some(CHILD_WINDOW));
+            fake
+        }
+
+        fn calls(&self) -> Vec<String> {
+            self.calls.borrow().clone()
+        }
+    }
+
+    impl syscalls::ForegroundControl for FakeForeground {
+        fn foreground_pid(&self) -> Option<u32> {
+            self.foreground.get()
+        }
+
+        fn visible_top_level_window(&self, pid: u32) -> Option<isize> {
+            self.calls.borrow_mut().push(format!("find({pid})"));
+            self.window.get()
+        }
+
+        fn allow_set_foreground(&self, pid: u32) -> bool {
+            self.calls.borrow_mut().push(format!("allow({pid})"));
+            true
+        }
+
+        fn set_foreground(&self, window: isize) -> bool {
+            self.calls.borrow_mut().push(format!("set({window:#x})"));
+            if self.grant_works.get() {
+                self.foreground.set(Some(CHILD));
+                return true;
+            }
+            false
+        }
+    }
+
+    /// Nudging on every poll would enumerate the desktop five times a second,
+    /// on the thread LogonUI is waiting on, for the seconds before there is
+    /// anything to find.
+    #[test]
+    fn nudges_on_an_interval_rather_than_every_poll() {
+        let due: Vec<u32> = (0..NUDGE_INTERVAL_TICKS * 3)
+            .filter(|tick| nudge_due(*tick, false))
+            .collect();
+
+        assert_eq!(
+            due,
+            vec![0, NUDGE_INTERVAL_TICKS, NUDGE_INTERVAL_TICKS * 2],
+            "should nudge once per interval, starting immediately"
+        );
+    }
+
+    /// There is nothing to hand the foreground to until the window exists.
+    #[test]
+    fn does_not_touch_the_foreground_before_a_window_exists() {
+        let fake = FakeForeground {
+            foreground: Cell::new(Some(LOGONUI)),
+            ..FakeForeground::default()
+        };
+        let mut nudge = ForegroundNudge::new(CHILD);
+
+        for _ in 0..NUDGE_INTERVAL_TICKS * 3 {
+            nudge.poll(&fake);
+        }
+
+        assert!(
+            fake.calls().iter().all(|c| c.starts_with("find(")),
+            "expected only window lookups, got {:?}",
+            fake.calls()
+        );
+    }
+
+    /// The grant issued at spawn is single-shot and spent long before the
+    /// window turns up, so every push re-arms it first.
+    #[test]
+    fn re_arms_the_grant_before_every_push() {
+        let fake = FakeForeground::with_window_up();
+        fake.grant_works.set(false);
+        let mut nudge = ForegroundNudge::new(CHILD);
+
+        nudge.poll(&fake);
+
+        assert_eq!(
+            fake.calls(),
+            vec![
+                format!("find({CHILD})"),
+                format!("allow({CHILD})"),
+                format!("set({CHILD_WINDOW:#x})"),
+            ]
+        );
+    }
+
+    /// Stopping on a successful call rather than on the child holding the
+    /// foreground would miss LogonUI taking it straight back again.
+    #[test]
+    fn keeps_pushing_until_the_child_holds_the_foreground() {
+        let fake = FakeForeground::with_window_up();
+        fake.grant_works.set(false);
+        let mut nudge = ForegroundNudge::new(CHILD);
+
+        for _ in 0..NUDGE_INTERVAL_TICKS * 2 {
+            nudge.poll(&fake);
+        }
+        assert_eq!(
+            fake.calls()
+                .iter()
+                .filter(|c| c.starts_with("set("))
+                .count(),
+            2,
+            "a refused push should be retried"
+        );
+
+        fake.grant_works.set(true);
+        for _ in 0..NUDGE_INTERVAL_TICKS * 2 {
+            nudge.poll(&fake);
+        }
+        let pushes = fake
+            .calls()
+            .iter()
+            .filter(|c| c.starts_with("set("))
+            .count();
+
+        assert!(nudge.settled, "should stop once the child is foreground");
+        assert_eq!(pushes, 3, "no further pushes after the child has focus");
+    }
+
+    #[test]
+    fn gives_up_after_the_budget() {
+        let fake = FakeForeground::with_window_up();
+        fake.grant_works.set(false);
+        let mut nudge = ForegroundNudge::new(CHILD);
+
+        for _ in 0..NUDGE_BUDGET_TICKS * 2 {
+            nudge.poll(&fake);
+        }
+
+        assert_eq!(
+            fake.calls()
+                .iter()
+                .filter(|c| c.starts_with("set("))
+                .count() as u32,
+            NUDGE_BUDGET_TICKS / NUDGE_INTERVAL_TICKS,
+        );
+    }
 
     /// Exercises the real attribute-list / handle-inheritance / CreateProcess
     /// machinery against a throwaway target, without needing an interactive

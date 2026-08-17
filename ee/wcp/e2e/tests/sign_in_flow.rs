@@ -19,6 +19,7 @@ use windows::Win32::UI::Shell::{
     CPGSR_NO_CREDENTIAL_FINISHED, CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_SUCCESS, CPSI_WARNING,
     CPUS_CREDUI, IConnectableCredentialProviderCredential, ICredentialProviderSetUserArray,
 };
+use windows::Win32::UI::WindowsAndMessaging::WS_EX_TOPMOST;
 use windows::core::Interface;
 
 const HEADER_TOKEN: &str = "header-token-under-test";
@@ -188,6 +189,50 @@ async fn completed_sign_in_serializes_a_credential() {
         headers.iter().all(|h| h.as_deref() == Some(HEADER_TOKEN)),
         "every request should carry {}: {HEADER_TOKEN}, got {headers:?}",
         ak_ee_wcp_wire::AUTH_HEADER_NAME
+    );
+}
+
+/// At a real logon the window opens behind LogonUI unless it is put in the
+/// topmost band explicitly, with no sign it exists short of an alt-tab.
+///
+/// Only the z-order is asserted. Taking the foreground is a race, and a race
+/// asserted on a CI desktop is a test that gets disabled. `CPUS_CREDUI` is the
+/// only scenario reachable outside a real logon prompt, so the secure desktop
+/// stays on the manual checklist in `e2e/README.md`.
+#[tokio::test(flavor = "multi_thread")]
+async fn the_sign_in_window_opens_topmost() {
+    if !harness::opted_in("the_sign_in_window_opens_topmost") {
+        return;
+    }
+
+    // Never redirects, so the window is still up while it is being looked at.
+    let server = RedirectServer::start_inert().expect("start local redirect server");
+    let fixture = setup(TestUser::non_local(USERNAME), server).await;
+
+    let credential =
+        unsafe { fixture.provider.provider().GetCredentialAt(0) }.expect("GetCredentialAt(0)");
+    let connectable: IConnectableCredentialProviderCredential = credential
+        .cast()
+        .expect("credential must implement IConnectableCredentialProviderCredential");
+
+    let sighting = ak_ee_wcp_e2e::sign_in_window::watch(std::time::Duration::from_secs(30));
+
+    // `Connect` blocks until the flow ends, so the window can only be observed
+    // from the watcher thread. `QueryContinue` is polled every 200ms while it
+    // waits, so this gives the window ~20s to appear before backing out.
+    let (qcws, _probe) = query_continue(Some(100));
+    unsafe { connectable.Connect(&qcws) }.expect("Connect returns Ok even when cancelled");
+
+    let observed = sighting
+        .recv()
+        .expect("the window watcher thread should report")
+        .expect("ak_cef.exe never opened a visible window");
+
+    assert!(
+        observed.extended_style & WS_EX_TOPMOST.0 != 0,
+        "the sign-in window should be topmost, got ex-style {:#x} after {:?}",
+        observed.extended_style,
+        observed.appeared_after
     );
 }
 

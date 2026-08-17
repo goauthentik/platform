@@ -130,7 +130,7 @@ pub async fn interactive_auth_async(
         ));
     }
     let active = ctx.domains.active().await.map_err(to_status)?;
-    let ia = endpoints_agents_connectors_auth_ia_create(&active.api)
+    let ia = endpoints_agents_connectors_auth_ia_create(&active.api, None)
         .await
         .map_err(|e| Status::internal(format!("failed to start interactive auth: {e}")))?;
     Ok(InteractiveAuthAsyncResponse {
