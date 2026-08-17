@@ -384,19 +384,17 @@ fn lsa_unicode_string(wide: &[u16]) -> LSA_UNICODE_STRING {
     }
 }
 
-/// `SeTcbPrivilege` is in SYSTEM's token, but — like every privilege that
-/// isn't `SE_PRIVILEGE_ENABLED_BY_DEFAULT` — held disabled until asked for.
-/// `LsaRegisterLogonProcess` checks it as active, not merely present, and
-/// without this first it fails the ALPC connect outright with
-/// `STATUS_PORT_CONNECTION_REFUSED` before ever reaching a logon check.
-fn enable_tcb_privilege() -> windows::core::Result<()> {
+/// SYSTEM's token holds every privilege this file needs, but — like any
+/// privilege not `SE_PRIVILEGE_ENABLED_BY_DEFAULT` — disabled until asked
+/// for; the APIs that need one check it as active, not merely present.
+pub fn enable_privilege(name: PCWSTR) -> windows::core::Result<()> {
     unsafe {
         let mut token = HANDLE::default();
         OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &mut token)?;
 
         let mut luid = LUID::default();
         let result = (|| {
-            LookupPrivilegeValueW(PCWSTR::null(), SE_TCB_NAME, &mut luid)?;
+            LookupPrivilegeValueW(PCWSTR::null(), name, &mut luid)?;
             let privileges = TOKEN_PRIVILEGES {
                 PrivilegeCount: 1,
                 Privileges: [LUID_AND_ATTRIBUTES {
@@ -427,7 +425,7 @@ fn enable_tcb_privilege() -> windows::core::Result<()> {
 /// does not deny.
 pub fn service_account_token(username: &str) -> windows::core::Result<HANDLE> {
     unsafe {
-        enable_tcb_privilege()?;
+        enable_privilege(SE_TCB_NAME)?;
 
         let process_name = lsa_string(b"ak_cred_provider\0");
         let mut lsa_handle = HANDLE::default();

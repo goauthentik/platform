@@ -15,7 +15,7 @@ use windows::{
             CloseHandle, E_FAIL, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, SetHandleInformation,
             WAIT_OBJECT_0,
         },
-        Security::SECURITY_ATTRIBUTES,
+        Security::{SE_ASSIGNPRIMARYTOKEN_NAME, SE_INCREASE_QUOTA_NAME, SECURITY_ATTRIBUTES},
         System::Pipes::CreatePipe,
         System::Threading::{
             CreateProcessAsUserW, CreateProcessW, DeleteProcThreadAttributeList,
@@ -457,6 +457,15 @@ fn spawn_cef_host(
 
     let mut spawned = match token {
         Some(token) => unsafe {
+            // Disabled by default like `SE_TCB_NAME` before it; without
+            // enabling them, `CreateProcessAsUserW` fails with
+            // `ERROR_NOT_ALL_ASSIGNED` even though `token` is valid.
+            if let Err(e) = syscalls::enable_privilege(SE_ASSIGNPRIMARYTOKEN_NAME) {
+                log::warn!("could not enable SeAssignPrimaryTokenPrivilege: {e}");
+            }
+            if let Err(e) = syscalls::enable_privilege(SE_INCREASE_QUOTA_NAME) {
+                log::warn!("could not enable SeIncreaseQuotaPrivilege: {e}");
+            }
             CreateProcessAsUserW(
                 Some(token),
                 PCWSTR::null(),
@@ -474,11 +483,9 @@ fn spawn_cef_host(
         None => spawn_in_current_session(&cmdline, &si.StartupInfo, &mut pi),
     };
 
-    // Holding a token is not the same as being allowed to assign it: without
-    // SE_ASSIGNPRIMARYTOKEN/SE_INCREASE_QUOTA, `CreateProcessAsUserW` fails
-    // even though a plain `CreateProcessW` in this session would work. Under
-    // `CPUS_CREDUI` that is still the right outcome, so retry rather than
-    // failing the whole flow. Never reached for the real logon scenarios.
+    // Belt and braces on top of the privilege-enabling above. Under
+    // `CPUS_CREDUI` the fallback is the right outcome anyway, so retry
+    // rather than failing outright if this still comes up.
     if let Err(e) = spawned.as_ref()
         && token.is_some()
         && may_launch_in_current_session(cpus)
