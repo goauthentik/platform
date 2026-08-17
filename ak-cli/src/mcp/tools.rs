@@ -198,6 +198,7 @@ impl AuthentikMcp {
             .map_err(|e| McpError::internal_error(format!("token exchange failed: {e}"), None))?;
 
         let application = self.application_for(&args.target_id, args.profile).await?;
+        tracing::debug!("Application for target: {:?}", application);
         let origins = application
             .as_ref()
             .map(origins_for_application)
@@ -252,14 +253,27 @@ impl AuthentikMcp {
     ) -> Result<Option<Application>, McpError> {
         let config = self.configuration(profile).await?;
         let result = core_applications_list(
-            &config, None, None, None, None, None, None, None, None, None, None, None, None, None,
+            &config,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(100),
+            None,
+            None,
+            None,
         )
         .await
         .map_err(|e| McpError::internal_error(format!("list applications failed: {e}"), None))?;
         Ok(result
             .results
             .into_iter()
-            .find(|app| app.pbm_uuid.to_string() == target_id))
+            .find(|app| app.pbm_uuid.to_string().to_lowercase() == target_id))
     }
 }
 
