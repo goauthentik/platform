@@ -94,7 +94,10 @@ impl AuthentikMcp {
         })
     }
 
-    #[tool(description = "List applications available to the current user")]
+    #[tool(
+        description = "List applications available to the current user",
+        annotations(title = "List available applications")
+    )]
     async fn list_applications(
         &self,
         Parameters(args): Parameters<ListApplicationsArgs>,
@@ -102,7 +105,10 @@ impl AuthentikMcp {
         self._list_applications(args).await
     }
 
-    #[tool(description = "Request access to an application")]
+    #[tool(
+        description = "Request access to an application",
+        annotations(title = "Request application access")
+    )]
     async fn request_access(
         &self,
         Parameters(args): Parameters<RequestAccessArgs>,
@@ -110,7 +116,10 @@ impl AuthentikMcp {
         self._request_access(args).await
     }
 
-    #[tool(description = "Create an agent (delegate identity) for a parent user")]
+    #[tool(
+        description = "Create an agent (delegate identity) for a parent user",
+        annotations(title = "Create agent identity")
+    )]
     async fn create_agent(
         &self,
         Parameters(args): Parameters<CreateAgentArgs>,
@@ -118,7 +127,10 @@ impl AuthentikMcp {
         self._create_agent(args).await
     }
 
-    #[tool(description = "Exchange an agent identity token for an OIDC On-behalf-of token")]
+    #[tool(
+        description = "Exchange an agent identity token for an OIDC On-behalf-of token",
+        annotations(title = "Exchange token")
+    )]
     async fn token_exchange(
         &self,
         Parameters(args): Parameters<TokenExchangeArgs>,

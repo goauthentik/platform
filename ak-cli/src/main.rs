@@ -154,8 +154,8 @@ async fn main() -> std::result::Result<(), Error> {
         LevelFilter::Warn
     };
     LogBuilder::new(PlatformString::new().with_darwin("ak-cli"))
-        .force_stdout(true)
         .allow_platform(true)
+        .with_default_filters()
         .default_level(default_level)
         .enable();
 
