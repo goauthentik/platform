@@ -179,7 +179,7 @@ impl InteractiveAuthTransaction {
     /// Exchanges the authenticated flow session for a one-time token via the
     /// finish redirect, then mints a real session from it.
     async fn finish_success(&mut self) -> Result<InteractiveChallenge, Status> {
-        let ia = endpoints_agents_connectors_auth_ia_create(&self.domain.api)
+        let ia = endpoints_agents_connectors_auth_ia_create(&self.domain.api, None)
             .await
             .map_err(|e| Status::internal(format!("failed to start interactive auth: {e}")))?;
 
