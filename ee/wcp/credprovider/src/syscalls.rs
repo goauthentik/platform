@@ -13,12 +13,12 @@ use windows::Win32::UI::WindowsAndMessaging::{
 use windows::{
     Win32::{
         Foundation::{
-            ERROR_LOGON_FAILURE, ERROR_PASSWORD_EXPIRED, ERROR_PASSWORD_MUST_CHANGE, GENERIC_ALL,
-            HLOCAL, LUID, LocalFree,
+            ERROR_LOGON_FAILURE, ERROR_NOT_ALL_ASSIGNED, ERROR_PASSWORD_EXPIRED,
+            ERROR_PASSWORD_MUST_CHANGE, GENERIC_ALL, GetLastError, HLOCAL, LUID, LocalFree,
         },
         NetworkManagement::NetManagement::{NetUserChangePassword, NetUserSetInfo, USER_INFO_1003},
         Security::{
-            ACL, AllocateLocallyUniqueId,
+            ACL, AdjustTokenPrivileges, AllocateLocallyUniqueId,
             Authentication::Identity::{
                 LSA_HANDLE, LSA_OBJECT_ATTRIBUTES, LSA_STRING, LSA_UNICODE_STRING,
                 LsaAddAccountRights, LsaClose, LsaConnectUntrusted, LsaDeregisterLogonProcess,
@@ -31,14 +31,16 @@ use windows::{
                 SE_WINDOW_OBJECT, SET_ACCESS, SetEntriesInAclW, SetSecurityInfo, TRUSTEE_IS_SID,
                 TRUSTEE_IS_USER, TRUSTEE_W,
             },
-            DACL_SECURITY_INFORMATION, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, LogonUserW,
-            LookupAccountNameW, NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID, QUOTA_LIMITS,
-            SID_NAME_USE, TOKEN_SOURCE,
+            DACL_SECURITY_INFORMATION, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT,
+            LUID_AND_ATTRIBUTES, LogonUserW, LookupAccountNameW, LookupPrivilegeValueW,
+            NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID, QUOTA_LIMITS, SE_PRIVILEGE_ENABLED,
+            SE_TCB_NAME, SID_NAME_USE, TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES, TOKEN_SOURCE,
         },
         Storage::FileSystem::{READ_CONTROL, WRITE_DAC},
         System::StationsAndDesktops::{
             DESKTOP_CONTROL_FLAGS, GetProcessWindowStation, OpenDesktopW,
         },
+        System::Threading::{GetCurrentProcess, OpenProcessToken},
     },
     core::{HRESULT, PCWSTR, PSTR, PWSTR, w},
 };
@@ -382,12 +384,51 @@ fn lsa_unicode_string(wide: &[u16]) -> LSA_UNICODE_STRING {
     }
 }
 
+/// `SeTcbPrivilege` is in SYSTEM's token, but — like every privilege that
+/// isn't `SE_PRIVILEGE_ENABLED_BY_DEFAULT` — held disabled until asked for.
+/// `LsaRegisterLogonProcess` checks it as active, not merely present, and
+/// without this first it fails the ALPC connect outright with
+/// `STATUS_PORT_CONNECTION_REFUSED` before ever reaching a logon check.
+fn enable_tcb_privilege() -> windows::core::Result<()> {
+    unsafe {
+        let mut token = HANDLE::default();
+        OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &mut token)?;
+
+        let mut luid = LUID::default();
+        let result = (|| {
+            LookupPrivilegeValueW(PCWSTR::null(), SE_TCB_NAME, &mut luid)?;
+            let privileges = TOKEN_PRIVILEGES {
+                PrivilegeCount: 1,
+                Privileges: [LUID_AND_ATTRIBUTES {
+                    Luid: luid,
+                    Attributes: SE_PRIVILEGE_ENABLED,
+                }],
+            };
+            AdjustTokenPrivileges(token, false, Some(&privileges), 0, None, None)?;
+            // The call above reports success even when the privilege was not
+            // actually held to enable — a classic trap, and indistinguishable
+            // from a real success without this check.
+            if GetLastError() == ERROR_NOT_ALL_ASSIGNED {
+                return Err(windows::core::Error::from(HRESULT::from_win32(
+                    ERROR_NOT_ALL_ASSIGNED.0,
+                )));
+            }
+            Ok(())
+        })();
+
+        let _ = CloseHandle(token);
+        result
+    }
+}
+
 /// Mints a primary token for the service account via an S4U logon — no
-/// password needed, only `SE_TCB_NAME`, which LogonUI already holds.
-/// `Service` is the logon type deliberately: it is the one type
-/// `deny_interactive_and_network_logon` does not deny.
+/// password needed, only `SE_TCB_NAME`. `Service` is the logon type
+/// deliberately: it is the one type `deny_interactive_and_network_logon`
+/// does not deny.
 pub fn service_account_token(username: &str) -> windows::core::Result<HANDLE> {
     unsafe {
+        enable_tcb_privilege()?;
+
         let process_name = lsa_string(b"ak_cred_provider\0");
         let mut lsa_handle = HANDLE::default();
         let mut security_mode = 0u32;
