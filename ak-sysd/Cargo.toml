@@ -20,7 +20,7 @@ ak-platform-keyring = { path = "../ak-platform-keyring" }
 authentik-client = { workspace = true }
 base64 = "0.23.0"
 chrono = { workspace = true }
-clap = { version = "4.6.1", features = ["derive"] }
+clap = { workspace = true }
 clap_complete = "4"
 eyre = { workspace = true }
 hex = { workspace = true }
