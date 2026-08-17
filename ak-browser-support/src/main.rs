@@ -18,6 +18,8 @@ async fn main() {
             .with_linux("ak-browser-support")
             .with_darwin("io.goauthentik.platform.browser-support"),
     )
+    .with_default_filters()
+    .allow_stdout(false)
     .enable();
     let path_handler = match PathHandler::new().await {
         Ok(ph) => ph,

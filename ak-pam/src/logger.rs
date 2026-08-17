@@ -27,10 +27,8 @@ pub fn prelude(name: &str, pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFl
         "\tPAM env: {}",
         Vec::from_iter(pam_list_env(pamh).iter().map(|i| i.to_string())).join(", ")
     );
-    if let Ok(user)  = username(pamh) {
-        tracing::debug!(
-            "\tPAM user: {user}"
-        );
+    if let Ok(user) = username(pamh) {
+        tracing::debug!("\tPAM user: {user}");
     }
     tracing::debug!(
         "\tProc env: {}",

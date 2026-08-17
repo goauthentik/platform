@@ -6,7 +6,6 @@ members = [
     "ak-api-cli-gen",
     "ak-browser-support",
     "ak-cli",
-    "ak-ffi",
     "ak-flow-executor",
     "ak-meta",
     "ak-meta-macros",
@@ -18,10 +17,17 @@ members = [
     "ak-platform-keyring",
     "ak-platform",
     "ak-sysd",
+    # Windows-only. `make lint-rs` excludes these off Windows, since
+    # credprovider is Win32-only and cef-host's build script fetches and
+    # compiles CEF.
+    "ee/wcp/wire",
+    "ee/wcp/credprovider",
+    "ee/wcp/cef-host",
+    "ee/wcp/e2e",
 ]
 
 [workspace.package]
-version = "0.50.5"
+version = "0.60.1"
 edition = "2024"
 license = "MIT"
 
@@ -40,7 +46,7 @@ ak-api-cli-gen = { path = "ak-api-cli-gen" }
 authentik-client = { git = "https://github.com/goauthentik/client-rust", version = "2026.11.0-rc1" , default-features = false, features = ["rustls"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 color-eyre = "= 0.6.5"
-eyre = "= 0.6.12"
+eyre = "= 0.6.14"
 hyper-util = "0.1.20"
 log = { version = "0.4.32", features = ["kv"] }
 pbjson = "0.9.0"
@@ -65,3 +71,33 @@ tracing-subscriber = "0.3"
 tempfile = "3"
 sha2 = "0.11"
 hex = "0.4"
+winreg = { version = "0.56", features = ["serialization-serde"] }
+# Shared by the ee/wcp crates only. Deliberately older than the 0.62 that
+# ak-sysd pins inline: the credential-provider code is written against 0.61's
+# `#[implement]` and UI::Shell surface. Both resolve side by side.
+windows-core = "0.62"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_System_Com",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Pipes",
+    "Win32_System_IO",
+    "Win32_Storage_FileSystem",
+    "Win32_Security",
+    "Win32_UI_Shell",
+    "Win32_Security_Credentials",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_RemoteDesktop",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+    "Win32_Security_Authentication_Identity",
+    "Win32_Security_Cryptography",
+    "Win32_NetworkManagement_NetManagement",
+    "Win32_System_SystemInformation",
+    "Win32_Storage_EnhancedStorage",
+    # `ICredentialProviderUser::GetValue` returns a PROPVARIANT, so the e2e
+    # harness needs these to implement that interface for `SetUserArray`.
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Variant",
+] }

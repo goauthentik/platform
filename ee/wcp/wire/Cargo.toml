@@ -1,0 +1,11 @@
+[package]
+name = "ak-ee-wcp-wire"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+prost = "0.14"

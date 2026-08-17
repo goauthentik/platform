@@ -30,6 +30,7 @@ jobs:
           - ak-platform
           - ak-platform-facts
           - ak-sysd
+          - ee/wcp
         platform:
           - macos-26
           - ubuntu-24.04
@@ -44,38 +45,30 @@ jobs:
             target: ak-pam
           - platform: macos-26
             target: ak-nss
+          # wcp is a windows-only credential provider
+          - platform: macos-26
+            target: ee/wcp
+          - platform: ubuntu-24.04
+            target: ee/wcp
+          - platform: ubuntu-24.04-arm
+            target: ee/wcp
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2
+      - uses: taiki-e/install-action@82cd3e7658a6f96c86c0234aeeda1748937cb0a1 # v2
         with:
           tool: cargo-llvm-cov nextest
-      - name: Install osquery-toolchain
-        if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && (matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm') }}
-        run: |
-          ARCH=$(uname -m)
-          curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
-            "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-${ARCH}.tar.xz"
-          sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
-          rm /tmp/osquery-toolchain.tar.xz
-      - if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025' }}
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
-      - name: Force real MSVC link.exe
-        # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
-        # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
-        # PATH resolution on this runner image, breaking cargo's link step
-        # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.
-        if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025' }}
-        shell: pwsh
-        run: |
-          $linkExe = (Get-Command link.exe -All | Where-Object { $_.Source -notlike '*\Git\*' } | Select-Object -First 1).Source
-          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linkExe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          platform: ${{ matrix.platform }}
       - run: |
           make ${{ matrix.target }}/test
         env:
+          # ee/wcp is deliberately absent: it links CEF dynamically and
+          # _build-rs.yml ships it without crt-static, so tests must match.
           RUST_BUILD_FLAGS: ${{ ((matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
@@ -130,16 +123,10 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config
       - run: make ci-install-deps
-      - name: Install osquery-toolchain
-        run: |
-          curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
-            "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-x86_64.tar.xz"
-          sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
-          rm /tmp/osquery-toolchain.tar.xz
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          platform: ubuntu
       - run: make lint-rs
   lint_js:
     name: Lint
@@ -159,17 +146,6 @@ jobs:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
-      - run: make ${{ matrix.target }}/lint
-  lint_cpp:
-    name: Lint
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - ee/wcp
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: make ${{ matrix.target }}/lint
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
@@ -194,7 +170,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2
+      - uses: taiki-e/install-action@82cd3e7658a6f96c86c0234aeeda1748937cb0a1 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6

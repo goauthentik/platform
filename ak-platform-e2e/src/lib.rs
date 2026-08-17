@@ -17,8 +17,8 @@ pub use test_machine::TestMachine;
 pub fn test_init() {
     LogBuilder::new(PlatformString::new())
         .force_stdout(true)
-        .default_level(LevelFilter::Warn)
-        .with_filter("ak_platform_e2e", LevelFilter::Trace)
+        .default_level(LevelFilter::Trace)
+        .with_default_filters()
         .enable();
 }
 
