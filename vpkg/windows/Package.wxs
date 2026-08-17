@@ -54,7 +54,7 @@
         <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\authentik" />
         <util:EventSource Log="authentik"
                           Name="authentik System Service"
-                          EventMessageFile="[System64Folder]EventCreate.exe"/>
+                          EventMessageFile="[sysd]"/>
 
         <ServiceInstall Id="ServiceInstaller"
                         Type="ownProcess"
@@ -75,14 +75,18 @@
       <Component Id="agent" Bitness="always64" Directory="agent">
         <util:EventSource Log="authentik"
                           Name="authentik User Service"
-                          EventMessageFile="[System64Folder]EventCreate.exe"/>
+                          EventMessageFile="[agent]"/>
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent-desktop/ak-agent-desktop.exe"
               KeyPath="true" />
       </Component>
       <Component Id="cli" Bitness="always64" Directory="cli">
+        <util:EventSource Log="authentik"
+                          Name="authentik CLI"
+                          EventMessageFile="[cli]"/>
         <File Id="ak_cli"
-              Source="$(env.ROOT)/bin/cli/ak.exe" />
+              Source="$(env.ROOT)/bin/cli/ak.exe"
+              KeyPath="true" />
       </Component>
       <Component Id="cli_path" Bitness="always64" Guid="b7367ded-3915-4c37-a468-5a58618e37fd">
         <Environment Id="PATH"
@@ -117,10 +121,10 @@
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
         <util:EventSource Log="authentik"
                           Name="authentik Credential Provider"
-                          EventMessageFile="[System64Folder]EventCreate.exe"/>
+                          EventMessageFile="[credential_provider]"/>
         <util:EventSource Log="authentik"
                           Name="authentik Credential Provider (CEF)"
-                          EventMessageFile="[System64Folder]EventCreate.exe"/>
+                          EventMessageFile="[credential_provider]ak_cef.exe"/>
 
         <!-- ak_cef.exe runs as this account instead of SYSTEM (see
              ee/wcp/BROWSER_PRIVILEGE.md). util:User has no "generate a
@@ -142,12 +146,15 @@
                     RemoveOnUninstall="yes" />
 
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
-        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-sentry" />
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache">
           <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
         </CreateFolder>
 
         <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
+        <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />
+        <File Id="wcp_ak_cred_provider_lib" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.lib" />
+        <File Id="wcp_ak_cred_provider_pdb" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.pdb" />
+
         <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
         <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />
         <File Id="wcp_chrome_elf_dll" Source="$(env.ROOT)/bin/wcp/chrome_elf.dll" />
@@ -156,9 +163,6 @@
         <File Id="wcp_dxil_dll" Source="$(env.ROOT)/bin/wcp/dxil.dll" />
         <File Id="wcp_icudtl_dat" Source="$(env.ROOT)/bin/wcp/icudtl.dat" />
         <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" />
-        <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />
-        <File Id="wcp_ak_cred_provider_lib" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.lib" />
-        <File Id="wcp_ak_cred_provider_pdb" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.pdb" />
         <File Id="wcp_libEGL_dll" Source="$(env.ROOT)/bin/wcp/libEGL.dll" />
         <File Id="wcp_libGLESv2_dll" Source="$(env.ROOT)/bin/wcp/libGLESv2.dll" />
         <File Id="wcp_resources_pak" Source="$(env.ROOT)/bin/wcp/resources.pak" />
