@@ -106,6 +106,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ak-api-cli"
+version = "0.60.1"
+dependencies = [
+ "ak-api-cli-gen",
+ "authentik-client",
+ "cargo_metadata 0.23.1",
+ "chrono",
+ "clap",
+ "eyre",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "ak-api-cli-gen"
 version = "0.60.1"
 dependencies = [
@@ -138,13 +152,12 @@ dependencies = [
 name = "ak-cli"
 version = "0.60.1"
 dependencies = [
- "ak-api-cli-gen",
+ "ak-api-cli",
  "ak-meta",
  "ak-platform",
  "authentik-client",
  "aws-sdk-sts",
  "aws-types",
- "cargo_metadata 0.23.1",
  "chrono",
  "clap",
  "clap_complete",
@@ -812,7 +825,7 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 [[package]]
 name = "authentik-client"
 version = "2026.11.0-rc1"
-source = "git+https://github.com/goauthentik/client-rust#529d7b8a5018ee030d6ad254acfa021469f27f20"
+source = "git+https://github.com/goauthentik/client-rust?rev=24c227964b05ff1c3cc9487ccdd40751ac89f6b9#24c227964b05ff1c3cc9487ccdd40751ac89f6b9"
 dependencies = [
  "chrono",
  "reqwest 0.13.4",
