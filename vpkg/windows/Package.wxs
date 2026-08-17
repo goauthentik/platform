@@ -85,7 +85,8 @@
                           Name="authentik CLI"
                           EventMessageFile="#ak_cli"/>
         <File Id="ak_cli"
-              Source="$(env.ROOT)/bin/cli/ak.exe" />
+              Source="$(env.ROOT)/bin/cli/ak.exe"
+              KeyPath="true" />
       </Component>
       <Component Id="cli_path" Bitness="always64" Guid="b7367ded-3915-4c37-a468-5a58618e37fd">
         <Environment Id="PATH"
