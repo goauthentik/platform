@@ -29,7 +29,7 @@ use windows::{
     core::{PCWSTR, PWSTR},
 };
 
-use crate::syscalls;
+use crate::syscalls::{self, ForegroundControl};
 use ak_ee_wcp_wire::AuthResult;
 
 /// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
