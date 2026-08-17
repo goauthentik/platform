@@ -54,7 +54,7 @@
         <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\authentik" />
         <util:EventSource Log="authentik"
                           Name="authentik System Service"
-                          EventMessageFile="[sysd]"/>
+                          EventMessageFile="[#ak_sysd]"/>
 
         <ServiceInstall Id="ServiceInstaller"
                         Type="ownProcess"
@@ -75,7 +75,7 @@
       <Component Id="agent" Bitness="always64" Directory="agent">
         <util:EventSource Log="authentik"
                           Name="authentik User Service"
-                          EventMessageFile="[agent]"/>
+                          EventMessageFile="[#ak_agent]"/>
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent-desktop/ak-agent-desktop.exe"
               KeyPath="true" />
@@ -83,7 +83,7 @@
       <Component Id="cli" Bitness="always64" Directory="cli">
         <util:EventSource Log="authentik"
                           Name="authentik CLI"
-                          EventMessageFile="[cli]"/>
+                          EventMessageFile="[#ak_cli]"/>
         <File Id="ak_cli"
               Source="$(env.ROOT)/bin/cli/ak.exe"
               KeyPath="true" />
@@ -121,10 +121,10 @@
       <Component Id="credential_provider" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e1" Bitness="always64" Directory="wcp">
         <util:EventSource Log="authentik"
                           Name="authentik Credential Provider"
-                          EventMessageFile="[credential_provider]"/>
+                          EventMessageFile="[#wcp_ak_cred_provider_dll]"/>
         <util:EventSource Log="authentik"
                           Name="authentik Credential Provider (CEF)"
-                          EventMessageFile="[credential_provider]ak_cef.exe"/>
+                          EventMessageFile="[#wcp_ak_cef_exe]"/>
 
         <!-- ak_cef.exe runs as this account instead of SYSTEM (see
              ee/wcp/BROWSER_PRIVILEGE.md). util:User has no "generate a
