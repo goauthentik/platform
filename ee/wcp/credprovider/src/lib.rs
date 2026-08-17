@@ -44,7 +44,7 @@ pub(crate) fn own_module() -> HMODULE {
     HMODULE(*DLL_MODULE.get_or_init(|| resolve_own_module().0 as usize) as *mut c_void)
 }
 
-/// Directory this DLL was loaded from — `ak_cef.exe` lives next to it.
+/// Directory this DLL was loaded from — `ak_browser.exe` lives next to it.
 pub(crate) fn dll_dir() -> &'static std::path::Path {
     DLL_DIR.get_or_init(|| {
         module_file_name(own_module())

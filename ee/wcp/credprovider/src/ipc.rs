@@ -1,4 +1,4 @@
-//! Spawns `ak_cef.exe` in the interactive session and exchanges
+//! Spawns `ak_browser.exe` in the interactive session and exchanges
 //! `wire`-framed messages with it over its inherited standard handles: it
 //! writes its result to stdout, and reads a cancel signal from stdin.
 //! Anonymous, inherited pipes rather than named ones with a custom DACL —
@@ -37,27 +37,27 @@ use crate::syscalls::{self, ForegroundControl};
 use crate::sysd;
 use ak_ee_wcp_wire::{AuthResult, HostReport};
 
-/// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
+/// Spawns `ak_browser.exe` and waits for its result. `should_continue` is polled
 /// while waiting, so LogonUI cancelling (the user backing out of the tile)
 /// tears the browser process down instead of orphaning it.
 pub trait AuthFlow {
     fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult;
 }
 
-pub struct CefAuthFlow {
-    pub cef_exe: std::path::PathBuf,
+pub struct BrowserAuthFlow {
+    pub browser_exe: std::path::PathBuf,
     pub cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
 }
 
-impl AuthFlow for CefAuthFlow {
+impl AuthFlow for BrowserAuthFlow {
     fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
-        run_cef_host(&self.cef_exe, self.cpus, should_continue)
+        run_browser_host(&self.browser_exe, self.cpus, should_continue)
     }
 }
 
 /// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
 /// It is debug-gated and runs on an ordinary desktop; the logon scenarios
-/// must never take this fallback, or Chromium ends up on the secure desktop
+/// must never take this fallback, or the browser ends up on the secure desktop
 /// with this process's own SYSTEM token instead of the service account's.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
@@ -146,12 +146,12 @@ fn create_std_pipes() -> windows::core::Result<StdPipes> {
     })
 }
 
-fn run_cef_host(
-    cef_exe: &Path,
+fn run_browser_host(
+    browser_exe: &Path,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
-    // Fetched here, not by `ak_cef.exe` itself: the service account it runs
+    // Fetched here, not by `ak_browser.exe` itself: the service account it runs
     // as has no access to `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). Doing
     // this before the pipes/spawn also means a failure here costs nothing
     // beyond the round trip itself, rather than a spawned window that can
@@ -176,7 +176,7 @@ fn run_cef_host(
         }
     };
 
-    let spawn = spawn_cef_host(cef_exe, &pipes, cpus, &start.url, &start.header_token);
+    let spawn = spawn_browser_host(browser_exe, &pipes, cpus, &start.url, &start.header_token);
     // Our copies of the child's ends are only needed up to the spawn call,
     // which duplicates them into the child's own handle table (or fails,
     // in which case there is no child to hold them at all either way).
@@ -187,7 +187,7 @@ fn run_cef_host(
     let process = match spawn {
         Ok(p) => p,
         Err(e) => {
-            log::error!("failed to launch {}: {e}", cef_exe.display());
+            log::error!("failed to launch {}: {e}", browser_exe.display());
             unsafe {
                 let _ = CloseHandle(pipes.result_read);
                 let _ = CloseHandle(pipes.cancel_write);
@@ -229,11 +229,11 @@ fn nudge_due(tick: u32, settled: bool) -> bool {
     !settled && tick < NUDGE_BUDGET_TICKS && tick.is_multiple_of(NUDGE_INTERVAL_TICKS)
 }
 
-/// Pushes `ak_cef.exe`'s window to the front from inside LogonUI.
+/// Pushes `ak_browser.exe`'s window to the front from inside LogonUI.
 ///
 /// The child asks for the foreground itself, but a freshly spawned process is
 /// rarely allowed to take it, and the single `AllowSetForegroundWindow` issued
-/// at spawn is spent by the time CEF has a window to apply it to. This process
+/// at spawn is spent by the time the browser has a window to apply it to. This process
 /// is the one that can: right desktop, normally the foreground process
 /// already, and exempt from a foreground lock it took itself.
 ///
@@ -302,7 +302,7 @@ enum PipeOutcome {
 }
 
 /// Turns the sign-in redirect's URL into a real outcome by validating its
-/// token against `ak-sysd` — the one step `ak_cef.exe` cannot do itself
+/// token against `ak-sysd` — the one step `ak_browser.exe` cannot do itself
 /// (`BROWSER_PRIVILEGE.md`). Runs on the result-pipe reader thread, not the
 /// thread LogonUI called `Connect` on, so this blocking round trip does not
 /// stall `should_continue` polling or the foreground nudge.
@@ -319,7 +319,7 @@ fn auth_result_for(url: &str) -> AuthResult {
 }
 
 /// Polls in short slices so `should_continue` gets a turn. On cancellation it
-/// asks `ak_cef.exe` to close over the control pipe rather than killing it.
+/// asks `ak_browser.exe` to close over the control pipe rather than killing it.
 ///
 /// Every route out of here other than a real `AuthResult` looks identical to
 /// the user ("Login attempt cancelled"), so each one logs why — including a
@@ -395,7 +395,7 @@ fn wait_for_result(
     }
 }
 
-/// Exit code of `ak_cef.exe` rendered for a log line. The value is the whole
+/// Exit code of `ak_browser.exe` rendered for a log line. The value is the whole
 /// diagnosis when the host dies before it can say anything: `0xC0000005` is a
 /// crash, `0xC0000142` is a `DLL_INIT_FAILED` from a desktop the process has no
 /// access to, and `0` is a clean exit that simply skipped the result.
@@ -411,7 +411,7 @@ fn describe_exit(process: HANDLE) -> String {
     format!("exit code {code:#010x}")
 }
 
-/// Gets `ak_cef.exe` a token for the dedicated service account rather than
+/// Gets `ak_browser.exe` a token for the dedicated service account rather than
 /// SYSTEM (`BROWSER_PRIVILEGE.md`), the same way for both logon and unlock.
 /// Account-hardening is best-effort and only logged on failure — it is
 /// idempotent, so a transient failure just costs a retry next time, and
@@ -447,8 +447,8 @@ fn quote_arg(s: &str) -> String {
     format!("\"{}\"", s.replace('"', "\\\""))
 }
 
-fn spawn_cef_host(
-    cef_exe: &Path,
+fn spawn_browser_host(
+    browser_exe: &Path,
     pipes: &StdPipes,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     sign_in_url: &str,
@@ -456,7 +456,7 @@ fn spawn_cef_host(
 ) -> windows::core::Result<PROCESS_INFORMATION> {
     let cmdline = format!(
         "\"{}\" --sign-in-url {} --header-token {}",
-        cef_exe.display(),
+        browser_exe.display(),
         quote_arg(sign_in_url),
         quote_arg(header_token),
     );
@@ -493,7 +493,7 @@ fn spawn_cef_host(
     };
     log::info!(
         "launching {} on desktop {} with {} token",
-        cef_exe.display(),
+        browser_exe.display(),
         desktop
             .as_ref()
             .map(|_| SECURE_DESKTOP)
@@ -817,7 +817,7 @@ mod tests {
             std::env::var("COMSPEC").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string()),
         );
 
-        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI, "https://example.com", "token");
+        let spawned = spawn_browser_host(&exe, &pipes, CPUS_CREDUI, "https://example.com", "token");
 
         unsafe {
             let _ = CloseHandle(pipes.child_stdin);
@@ -832,7 +832,7 @@ mod tests {
                 let _ = CloseHandle(pi.hProcess);
                 let _ = CloseHandle(pi.hThread);
             },
-            Err(e) => panic!("spawn_cef_host under CPUS_CREDUI failed: {e}"),
+            Err(e) => panic!("spawn_browser_host under CPUS_CREDUI failed: {e}"),
         }
     }
 

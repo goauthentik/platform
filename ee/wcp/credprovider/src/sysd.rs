@@ -1,7 +1,7 @@
 //! The `ak-sysd` calls this DLL makes. `sys_caps` is cached in HKLM so
 //! `SetUsageScenario` doesn't need the daemon on every logon-screen paint;
 //! `sys_auth_start_async`/`sys_auth_validate` are the interactive sign-in
-//! calls `ak_cef.exe` used to make itself, moved here because the service
+//! calls `ak_browser.exe` used to make itself, moved here because the service
 //! account it now runs as has no access to `ak-sysd`'s pipe
 //! (`BROWSER_PRIVILEGE.md`).
 
@@ -50,7 +50,7 @@ pub struct AuthStartAsync {
     pub header_token: String,
 }
 
-/// Starts an interactive sign-in: `url` is what `ak_cef.exe` opens, and
+/// Starts an interactive sign-in: `url` is what `ak_browser.exe` opens, and
 /// `header_token` is what it injects on every request that page makes, so
 /// the backend can tie them back to this one session.
 pub fn sys_auth_start_async() -> Result<AuthStartAsync> {

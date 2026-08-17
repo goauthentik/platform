@@ -69,8 +69,8 @@ jobs:
       - run: |
           make ${{ matrix.target }}/test
         env:
-          # ee/wcp is deliberately absent: it links CEF dynamically and
-          # _build-rs.yml ships it without crt-static, so tests must match.
+          # ee/wcp is deliberately absent: _build-rs.yml ships it without
+          # crt-static, so its tests have to be built the same way.
           RUST_BUILD_FLAGS: ${{ ((matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}

@@ -1,8 +1,8 @@
 //! Local stand-in for the authentik sign-in page. Serves one HTML document
-//! that navigates to the `goauthentik.io://` redirect `cef-host`'s
-//! resource-request handler watches for, and records the auth header on every
-//! request so tests can assert `cef-host` injects it, not just that the flow
-//! ended well.
+//! that navigates to the `goauthentik.io://` redirect `browser-host`'s
+//! navigation handler watches for, and records the auth header on every
+//! request so tests can assert `browser-host` injects it, not just that the
+//! flow ended well.
 
 use std::io::{BufRead, BufReader, Write};
 

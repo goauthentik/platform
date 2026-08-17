@@ -2,7 +2,7 @@
 //! named pipe the real daemon uses (`ak-platform`'s `Config` falls back to
 //! that fixed path whenever the production config file isn't present, which
 //! is always true on a test machine). Lets `e2e` tests drive the real
-//! `credprovider`/`cef-host` binaries against a fully deterministic backend
+//! `credprovider`/`browser-host` binaries against a fully deterministic backend
 //! with no Docker or real authentik server involved.
 
 use ak_platform::generated::ping::{
@@ -20,7 +20,7 @@ use ak_platform::net::server::{SocketPermMode, listen};
 use ak_platform::paths::{SysdSocketID, sysd_socket_path};
 use tonic::{Request, Response, Status};
 
-/// What the mock hands back for a completed sign-in: the URL `cef-host`
+/// What the mock hands back for a completed sign-in: the URL `browser-host`
 /// opens, and the token embedded in its `goauthentik.io://` redirect that
 /// `token_auth` is expected to validate.
 #[derive(Clone)]
@@ -63,7 +63,9 @@ impl SystemAuthInteractive for MockSystemAuthInteractive {
         &self,
         _request: Request<InteractiveAuthRequest>,
     ) -> Result<Response<InteractiveChallenge>, Status> {
-        Err(Status::unimplemented("not used by credprovider/cef-host"))
+        Err(Status::unimplemented(
+            "not used by credprovider/browser-host",
+        ))
     }
 
     async fn interactive_auth_async(
@@ -102,7 +104,9 @@ impl SystemAuthToken for MockSystemAuthToken {
         &self,
         _request: Request<SshCertAuthRequest>,
     ) -> Result<Response<SshCertAuthResponse>, Status> {
-        Err(Status::unimplemented("not used by credprovider/cef-host"))
+        Err(Status::unimplemented(
+            "not used by credprovider/browser-host",
+        ))
     }
 }
 

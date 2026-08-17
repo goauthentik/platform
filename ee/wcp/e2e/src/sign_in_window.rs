@@ -1,4 +1,5 @@
-//! Finds the real `ak_cef.exe` window while `Connect` is still blocked on it.
+//! Finds the real `ak_browser.exe` window while `Connect` is still blocked on
+//! it.
 //!
 //! `Connect` does not return until the sign-in is over and the window is gone,
 //! so anything asserted about it has to be seen from another thread. Windows
@@ -28,8 +29,8 @@ pub struct Observation {
     pub appeared_after: Duration,
 }
 
-/// Watches for `ak_cef.exe`'s window in the background and reports the first
-/// sighting, or `None` after `timeout`.
+/// Watches for `ak_browser.exe`'s window in the background and reports the
+/// first sighting, or `None` after `timeout`.
 pub fn watch(timeout: Duration) -> mpsc::Receiver<Option<Observation>> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
@@ -56,7 +57,7 @@ struct Search {
 }
 
 /// The first visible, non-degenerate top-level window owned by an
-/// `ak_cef.exe`. Chromium opens several message-only and zero-size helpers
+/// `ak_browser.exe`. WebView2 opens several message-only and zero-size helpers
 /// first, and matching one of those would pass while the sign-in window itself
 /// was still misbehaving.
 fn find() -> Option<HWND> {
@@ -88,7 +89,7 @@ unsafe extern "system" fn visit(hwnd: HWND, lparam: LPARAM) -> BOOL {
 
     let mut pid = 0u32;
     unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
-    if !is_cef_host(pid) {
+    if !is_browser_host(pid) {
         return true.into();
     }
 
@@ -96,7 +97,7 @@ unsafe extern "system" fn visit(hwnd: HWND, lparam: LPARAM) -> BOOL {
     false.into()
 }
 
-fn is_cef_host(pid: u32) -> bool {
+fn is_browser_host(pid: u32) -> bool {
     if pid == 0 {
         return false;
     }
@@ -124,5 +125,5 @@ fn is_cef_host(pid: u32) -> bool {
 
     String::from_utf16_lossy(&buf[..len as usize])
         .to_ascii_lowercase()
-        .ends_with("ak_cef.exe")
+        .ends_with("ak_browser.exe")
 }

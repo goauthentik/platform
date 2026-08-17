@@ -21,6 +21,11 @@ access` grants that SID rights on `WinSta0` and its `Winlogon` desktop — see
 `BROWSER_PRIVILEGE.md`. A real account is what WebView2 wanted in the first
 place.
 
+That design doc no longer exists in the tree: it was dropped when the privilege
+work was squash-merged as `cd6eb1b7` (#1380). Several files still cite it by
+name, which is stale in `main` rather than anything this branch did; read it
+with `git show ee/wcp/browser-privilege:ee/wcp/BROWSER_PRIVILEGE.md`.
+
 So this branch retries Tauri on top of the service account. If it holds, the win
 is large:
 
@@ -28,7 +33,7 @@ is large:
 - the `cef-runtime` / `export-cef-dir` build step and the CEF download disappear
 - the `--type=` re-exec machinery disappears — WebView2 manages its own children
 - **the renderer becomes sandboxed by default.** Today `main.rs` sets
-  `no_sandbox: 1`, and `BROWSER_PRIVILEGE.md` "Option A" established that the
+  `no_sandbox: 1`, and the privilege doc's "Option A" established that the
   `cef` crate cannot enable the Windows sandbox at all without an upstream C++
   shim. WebView2 renderers run in an AppContainer with no work from us.
 
@@ -60,7 +65,8 @@ bottom of this file and `ee/wcp/browser-privilege` remains the shipping path.
 | `on_before_close` → last browser gone → `Cancelled` + `quit_message_loop` | `on_window_event` → `WindowEvent::Destroyed` |
 | `foreground.rs` `post_delayed_task(ThreadId::UI)` ladder | same ladder, plain thread, raw Win32 on the `HWND` |
 | `icon.rs` → `cef::Image` (BGRA) | same BMP decoder → `tauri::image::Image` (RGBA) |
-| `sysd.rs`, `wire`, `credprovider` IPC | unchanged |
+| `sysd.rs` | **deleted** — the host no longer reaches `ak-sysd` at all (see below) |
+| `identity.rs`, `wire`, `credprovider` IPC | unchanged |
 
 ## Things that are easy to get wrong
 
@@ -94,7 +100,8 @@ matching the first window found would pass while the real one misbehaved.
 
 1. **The core hypothesis.** WebView2 coming up at all under the `ak-wcp-browser`
    S4U token on `WinSta0\Winlogon`. The account has no loaded profile and an S4U
-   token carries no network credentials (fine here, per `BROWSER_PRIVILEGE.md`).
+   token carries no network credentials (fine here — the bearer header is all
+   the flow needs).
    `.data_directory()` should cover the user-data folder, but WebView2's crashpad
    and temp paths may not follow it. The symptom would be
    `CreateCoreWebView2EnvironmentWithOptions` failing — that error is surfaced as
@@ -111,8 +118,53 @@ matching the first window found would pass while the real one misbehaved.
    logic ports unchanged. This is why `e2e/README.md` says sign in three times and
    type before clicking each time.
 
+## The contract with credprovider (changed under this branch)
+
+Rebasing onto `main` picked up a split that did not exist when the port was
+first written, and it simplified the host considerably:
+
+- The host **never talks to `ak-sysd`**. `credprovider` resolves the sign-in URL
+  and header token before spawning, and passes them as `--sign-in-url` /
+  `--header-token`. `sysd.rs` is gone from the host entirely.
+- The host reports `HostReport::Redirected { url }` or `HostReport::Cancelled`;
+  `credprovider` extracts and validates the token and builds the `AuthResult`.
+  The host has no opinion about whether a sign-in succeeded.
+- IPC is over **inherited stdin/stdout**, not handle integers on the command
+  line. This is why `main.rs` sets `allow_stdout(false)` — stdout *is* the
+  result pipe, and a stray log line would corrupt the frame being parsed.
+- Each run gets its **own user-data folder** under `wcp-cache`, removed on the
+  way out. A WebView2 user-data folder is single-writer, so this matters for the
+  same reason Chromium's `ProcessSingleton` did.
+
+## What the port changed beyond a straight translation
+
+- **`Completion::send` is send-once**, replacing the CEF `Option<File>` take.
+  Reaching the redirect closes the window, so the close handler runs on that
+  path too and would otherwise overwrite `Redirected` with `Cancelled`. There is
+  a unit test for exactly that.
+- **The retry ladder runs on its own thread**, not the UI thread, since the
+  Win32 calls it makes are all safe against another thread's window.
+
 ## Findings log
 
 Append as things are learned. Date, what was run, what happened.
 
-- _2026-08-17_ — branch created off `ee/wcp/browser-privilege`; port begun.
+- _2026-08-17_ — branch created off `ee/wcp/browser-privilege`; port written
+  against the then-current host, which called `ak-sysd` itself.
+- _2026-08-21_ — rebased onto `main` (`cd6eb1b7`, the squash-merged privilege
+  separation). Not a replay: the host/provider split above landed in between, so
+  `main.rs` and `signin.rs` were rewritten against it, `sysd.rs` was dropped and
+  `identity.rs` was taken from the CEF host as-is. Notably `identity.rs`
+  compiles unchanged against the `windows` 0.61 pin this crate needs.
+  `cargo clippy` clean, 52 tests green — 10 of them in `ak_browser` (retry
+  ladder 3, state dir 3, user agent 1, log redaction 1, icon 1, send-once 1).
+  **This says the port compiles and its pure logic holds; it says nothing about
+  the hypothesis.** Nothing has yet run against a real WebView2 window.
+- _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
+  host's file-based Chromium log. `ak_browser.exe` writes no such file. The
+  grant is retained pending a VM run that confirms nothing under the service
+  account writes there any more.
+- _Next_: the `AK_WCP_E2E=1` run (elevated shell, no real `ak-sysd` bound to the
+  pipe), which is the first thing that opens an actual window and exercises
+  header injection and redirect interception end to end. Then the VM checklist
+  in `e2e/README.md`.

@@ -1,17 +1,18 @@
 # e2e
 
 Automated tests here drive the real built `ak_cred_provider.dll` (and, for
-the full sign-in flow, the real `ak_cef.exe` it spawns) against a mock of
+the full sign-in flow, the real `ak_browser.exe` it spawns) against a mock of
 `ak-sysd`'s gRPC endpoints (`mock_sysd`) rather than a real authentik
 server.
 
-Tests locate `ak_cred_provider.dll`/`ak_cef.exe` next to the test binary's
+Tests locate `ak_cred_provider.dll`/`ak_browser.exe` next to the test binary's
 own build output directory (`cargo`'s configured `target-dir` puts every
 workspace member's artifacts in one place — see `dll::build_output_dir()`),
 so `cargo test` after `cargo build` is enough; no separate packaging step is
-required for local runs. The CEF runtime (`libcef.dll`, `*.pak`,
-`icudtl.dat`, `locales/`) is staged into that same directory by
-`cef-dll-sys`'s build script, so `ak_cef.exe` runs from there as-is.
+required for local runs. `ak_browser.exe` renders through the machine's
+Microsoft Edge WebView2 runtime, so there is nothing to stage next to it — but
+a machine without that runtime installed will fail the process-level tests, and
+say so in the Application event log rather than merely cancelling.
 
 ## Opting in
 
@@ -20,7 +21,7 @@ resources — so they are skipped unless `AK_WCP_E2E` is set to a non-empty
 value:
 
 ```pwsh
-$env:AK_WCP_E2E = '1'; cargo test -p ak-ee-wcp-wire -p ak-ee-wcp -p ak-ee-wcp-cef-host -p ak-ee-wcp-e2e
+$env:AK_WCP_E2E = '1'; cargo test -p ak-ee-wcp-wire -p ak-ee-wcp -p ak-ee-wcp-browser-host -p ak-ee-wcp-e2e
 ```
 
 `make ee/wcp/test` sets it, and CI runs that on a `windows-2025` runner. A
@@ -29,7 +30,7 @@ line and pass — which keeps a plain workspace test run meaningful on an
 ordinary dev machine that has the real Agent installed.
 
 Everything else here is hermetic and always runs: the `wire` frame/tile
-tests, `cef-host`'s redirect-URL parsing, `credprovider`'s credential-packing
+tests, `browser-host`'s redirect-URL parsing, `credprovider`'s credential-packing
 and usage-scenario tests, and `redirect_server`'s own test.
 
 ### What opting in requires
@@ -58,10 +59,10 @@ and usage-scenario tests, and `redirect_server`'s own test.
    normal operation and the harness has to seed it.
 
 3. **An interactive desktop session.** The sign-in flow spawns a real
-   `ak_cef.exe` which opens a real CEF window; it will appear and disappear
-   while the test runs.
+   `ak_browser.exe` which opens a real WebView2 window; it will appear and
+   disappear while the test runs.
 
-   Under `CPUS_CREDUI`, `credprovider` falls back to launching `ak_cef.exe`
+   Under `CPUS_CREDUI`, `credprovider` falls back to launching `ak_browser.exe`
    in the caller's own session when it cannot get an interactive-session
    token — the test process is not SYSTEM and so holds no `SE_TCB_NAME`.
    The real logon scenarios never take that fallback; see
@@ -84,14 +85,15 @@ Not automatable in CI — the secure winlogon desktop only exists at a real
 logon/unlock/lock-screen prompt. After the automated tests pass:
 
 1. Build the workspace in release mode.
-2. Copy `ak_cred_provider.dll`, `ak_cef.exe`, and the CEF runtime files into
-   `C:\Program Files\Authentik Security Inc.\wcp\`.
+2. Copy `ak_cred_provider.dll` and `ak_browser.exe` into
+   `C:\Program Files\Authentik Security Inc.\wcp\`. Nothing else needs staging;
+   the window renders through the machine's WebView2 runtime.
 3. Register the credential provider (the MSI installer does this in
    production; for manual testing, add the registry entries under
    `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential
    Providers\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}` and
    `HKCR\CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}\InprocServer32`). This
-   skips the MSI's `util:User`, though, so `ak_cef.exe` now also needs the
+   skips the MSI's `util:User`, though, so `ak_browser.exe` now also needs the
    dedicated service account (`BROWSER_PRIVILEGE.md`) to exist for logon and
    unlock to work — either run the real MSI once first, or create it by hand
    to match `credprovider::syscalls::SERVICE_ACCOUNT_NAME`.
@@ -110,8 +112,8 @@ logon/unlock/lock-screen prompt. After the automated tests pass:
 7. On each, **type before clicking**. The characters have to land in the
    sign-in window, not LogonUI. The window is topmost whether or not it holds
    the foreground, so visible no longer implies focused. When it does not,
-   `ak_cef.exe` logs `visible but never took focus` to the Application event
-   log under **authentik Credential Provider (CEF)**.
+   `ak_browser.exe` logs `visible but never took focus` to the Application event
+   log under **authentik Credential Provider (Browser)**.
 
 ### DPAPI survival
 

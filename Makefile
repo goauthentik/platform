@@ -45,14 +45,13 @@ ifeq ($(CI),true)
 endif
 endif
 
-# credprovider and cef-host are Windows-only workspace members: the first is
-# written against Win32 APIs that don't exist off Windows, the second pulls in
-# a build script that fetches and compiles CEF. e2e drives both. They stay
-# workspace members so one lockfile and one cargo invocation cover the repo,
-# but clippy can only build them on Windows -- `make ee/wcp/lint` covers them
-# there.
+# credprovider and browser-host are Windows-only workspace members: the first
+# is written against Win32 APIs that don't exist off Windows, the second
+# renders through WebView2. e2e drives both. They stay workspace members so one
+# lockfile and one cargo invocation cover the repo, but clippy can only build
+# them on Windows -- `make ee/wcp/lint` covers them there.
 ifneq ($(OS),Windows_NT)
-RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-cef-host --exclude ak-ee-wcp-e2e
+RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-browser-host --exclude ak-ee-wcp-e2e
 endif
 
 format:

@@ -1,6 +1,6 @@
 //! The full process-level flow: the real `ak_cred_provider.dll` loaded via
 //! `LoadLibraryW`, handed a user array, driven through `Connect()` — which
-//! spawns the real `ak_cef.exe`, which loads a local page, follows its
+//! spawns the real `ak_browser.exe`, which loads a local page, follows its
 //! `goauthentik.io://` redirect and validates the token against a mock
 //! `ak-sysd` — down to the buffer `GetSerialization` hands back.
 //!
@@ -53,10 +53,10 @@ async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
         dll_path.exists(),
         "expected {dll_path:?} to exist — build the workspace first"
     );
-    let cef_exe = ak_ee_wcp_e2e::dll::build_output_dir().join("ak_cef.exe");
+    let browser_exe = ak_ee_wcp_e2e::dll::build_output_dir().join("ak_browser.exe");
     assert!(
-        cef_exe.exists(),
-        "expected {cef_exe:?} to exist — build the workspace first"
+        browser_exe.exists(),
+        "expected {browser_exe:?} to exist — build the workspace first"
     );
 
     let provider = LoadedProvider::load(&dll_path).expect("load ak_cred_provider.dll");
@@ -178,7 +178,7 @@ async fn completed_sign_in_serializes_a_credential() {
         ));
     }
 
-    // `cef-host` must put the interactive-auth header on every request it
+    // `browser-host` must put the interactive-auth header on every request it
     // makes, which is what let the (mock) backend hand back a sign-in page.
     let headers = fixture.server.observed_auth_headers();
     assert!(
@@ -226,7 +226,7 @@ async fn the_sign_in_window_opens_topmost() {
     let observed = sighting
         .recv()
         .expect("the window watcher thread should report")
-        .expect("ak_cef.exe never opened a visible window");
+        .expect("ak_browser.exe never opened a visible window");
 
     assert!(
         observed.extended_style & WS_EX_TOPMOST.0 != 0,
@@ -237,7 +237,7 @@ async fn the_sign_in_window_opens_topmost() {
 }
 
 /// LogonUI withdrawing consent mid-flow: `QueryContinue` starts failing, the
-/// provider signals `ak_cef.exe` over the control pipe, and the flow reports
+/// provider signals `ak_browser.exe` over the control pipe, and the flow reports
 /// a cancellation rather than a credential.
 #[tokio::test(flavor = "multi_thread")]
 async fn cancelling_mid_flow_yields_no_credential() {

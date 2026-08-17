@@ -23,9 +23,7 @@
       <Directory Id="INSTALLFOLDER" Name="$(var.Manufacturer)">
         <Directory Id="sysd" Name="sysd" />
         <Directory Id="browser_support" Name="browser_support" />
-        <Directory Id="wcp" Name="wcp">
-          <Directory Id="wcp_locale" Name="locales" />
-        </Directory>
+        <Directory Id="wcp" Name="wcp" />
         <Directory Id="cli" Name="cli" />
         <Directory Id="agent" Name="agent" />
       </Directory>
@@ -123,10 +121,10 @@
                           Name="authentik Credential Provider"
                           EventMessageFile="[#wcp_ak_cred_provider_dll]"/>
         <util:EventSource Log="authentik"
-                          Name="authentik Credential Provider (CEF)"
-                          EventMessageFile="[#wcp_ak_cef_exe]"/>
+                          Name="authentik Credential Provider (Browser)"
+                          EventMessageFile="[#wcp_ak_browser_exe]"/>
 
-        <!-- ak_cef.exe runs as this account instead of SYSTEM (see
+        <!-- ak_browser.exe runs as this account instead of SYSTEM (see
              ee/wcp/BROWSER_PRIVILEGE.md). credprovider logs it on with
              LogonUserW and a stored password (syscalls::service_account_password,
              same pattern as LOCAL_PASSWORD.md) rather than the SE_TCB_NAME-only
@@ -141,7 +139,7 @@
              ProcessSingleton; see the comment on
              credprovider::syscalls::service_account_token. The account is
              denied all interactive/network/RDP logon regardless, and the
-             token credprovider actually hands ak_cef.exe has every
+             token credprovider actually hands ak_browser.exe has every
              privilege stripped via CreateRestrictedToken on top of that. No
              dictionary words and no "$" in the initial password below:
              NetUserAdd folds complexity/banned-word LSA filter rejections
@@ -158,11 +156,14 @@
                     UpdateIfExists="yes"
                     RemoveOnUninstall="yes" />
 
-        <!-- ak_cef.exe's own file-based log (Chromium doesn't understand
-             the Windows Event Log ak_platform::log routes everything else
-             to) needs the service account to actually be able to write it;
-             nothing else uses this directory, so this is not a broader
-             grant than the wcp-cache one below. -->
+        <!-- Kept from the CEF host, which wrote a file-based Chromium log
+             here because Chromium did not understand the Windows Event Log
+             ak_platform::log routes everything else to. ak_browser.exe has
+             no such log: it reports through ak_platform::log only, and
+             WebView2 keeps its own diagnostics inside the user-data folder
+             granted below. Retained until a VM run confirms nothing under
+             the service account still writes here -- see
+             ee/wcp/TAURI_MIGRATION.md. -->
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs">
           <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
         </CreateFolder>
@@ -170,26 +171,16 @@
           <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
         </CreateFolder>
 
-        <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
+        <!-- The sign-in window renders through the machine's Microsoft Edge
+             WebView2 runtime, which ships with Windows 10 22H2 and Windows 11,
+             so there is no browser runtime here to install. ak_browser.exe
+             checks for it at startup and reports its absence rather than
+             failing as a bare cancellation. -->
+        <File Id="wcp_ak_browser_exe" Source="$(env.ROOT)/bin/wcp/ak_browser.exe" />
         <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />
         <File Id="wcp_ak_cred_provider_lib" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.lib" />
         <File Id="wcp_ak_cred_provider_pdb" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.pdb" />
 
-        <File Id="wcp_chrome_100_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_100_percent.pak" />
-        <File Id="wcp_chrome_200_percent_pak" Source="$(env.ROOT)/bin/wcp/chrome_200_percent.pak" />
-        <File Id="wcp_chrome_elf_dll" Source="$(env.ROOT)/bin/wcp/chrome_elf.dll" />
-        <File Id="wcp_d3dcompiler_47_dll" Source="$(env.ROOT)/bin/wcp/d3dcompiler_47.dll" />
-        <File Id="wcp_dxcompiler_dll" Source="$(env.ROOT)/bin/wcp/dxcompiler.dll" />
-        <File Id="wcp_dxil_dll" Source="$(env.ROOT)/bin/wcp/dxil.dll" />
-        <File Id="wcp_icudtl_dat" Source="$(env.ROOT)/bin/wcp/icudtl.dat" />
-        <File Id="wcp_libcef_dll" Source="$(env.ROOT)/bin/wcp/libcef.dll" />
-        <File Id="wcp_libEGL_dll" Source="$(env.ROOT)/bin/wcp/libEGL.dll" />
-        <File Id="wcp_libGLESv2_dll" Source="$(env.ROOT)/bin/wcp/libGLESv2.dll" />
-        <File Id="wcp_resources_pak" Source="$(env.ROOT)/bin/wcp/resources.pak" />
-        <File Id="wcp_v8_context_snapshot_bin" Source="$(env.ROOT)/bin/wcp/v8_context_snapshot.bin" />
-        <File Id="wcp_vk_swiftshader_dll" Source="$(env.ROOT)/bin/wcp/vk_swiftshader.dll" />
-        <File Id="wcp_vk_swiftshader_icd_json" Source="$(env.ROOT)/bin/wcp/vk_swiftshader_icd.json" />
-        <File Id="wcp_vulkan_1_dll" Source="$(env.ROOT)/bin/wcp/vulkan-1.dll" />
         <RegistryKey Root="HKLM"
                     Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}">
           <RegistryValue Type="string" Value="authentik Credential Provider" />
@@ -200,63 +191,6 @@
           <RegistryValue Key="InprocServer32" Type="string" Value="[wcp]ak_cred_provider.dll" />
           <RegistryValue Key="InprocServer32" Type="string" Name="ThreadingModel" Value="Apartment" />
         </RegistryKey>
-      </Component>
-      <Component Id="credential_provider_locales" Guid="4e4c21de-2c3e-4dc0-9a10-42fcd0fd68e2" Bitness="always64" Directory="wcp_locale">
-        <File Id="wcp_locales_af_pak" Source="$(env.ROOT)/bin/wcp/locales/af.pak" />
-        <File Id="wcp_locales_am_pak" Source="$(env.ROOT)/bin/wcp/locales/am.pak" />
-        <File Id="wcp_locales_ar_pak" Source="$(env.ROOT)/bin/wcp/locales/ar.pak" />
-        <File Id="wcp_locales_bg_pak" Source="$(env.ROOT)/bin/wcp/locales/bg.pak" />
-        <File Id="wcp_locales_bn_pak" Source="$(env.ROOT)/bin/wcp/locales/bn.pak" />
-        <File Id="wcp_locales_ca_pak" Source="$(env.ROOT)/bin/wcp/locales/ca.pak" />
-        <File Id="wcp_locales_cs_pak" Source="$(env.ROOT)/bin/wcp/locales/cs.pak" />
-        <File Id="wcp_locales_da_pak" Source="$(env.ROOT)/bin/wcp/locales/da.pak" />
-        <File Id="wcp_locales_de_pak" Source="$(env.ROOT)/bin/wcp/locales/de.pak" />
-        <File Id="wcp_locales_el_pak" Source="$(env.ROOT)/bin/wcp/locales/el.pak" />
-        <File Id="wcp_locales_en_GB_pak" Source="$(env.ROOT)/bin/wcp/locales/en-GB.pak" />
-        <File Id="wcp_locales_en_US_pak" Source="$(env.ROOT)/bin/wcp/locales/en-US.pak" />
-        <File Id="wcp_locales_es_419_pak" Source="$(env.ROOT)/bin/wcp/locales/es-419.pak" />
-        <File Id="wcp_locales_es_pak" Source="$(env.ROOT)/bin/wcp/locales/es.pak" />
-        <File Id="wcp_locales_et_pak" Source="$(env.ROOT)/bin/wcp/locales/et.pak" />
-        <File Id="wcp_locales_fa_pak" Source="$(env.ROOT)/bin/wcp/locales/fa.pak" />
-        <File Id="wcp_locales_fi_pak" Source="$(env.ROOT)/bin/wcp/locales/fi.pak" />
-        <File Id="wcp_locales_fil_pak" Source="$(env.ROOT)/bin/wcp/locales/fil.pak" />
-        <File Id="wcp_locales_fr_pak" Source="$(env.ROOT)/bin/wcp/locales/fr.pak" />
-        <File Id="wcp_locales_gu_pak" Source="$(env.ROOT)/bin/wcp/locales/gu.pak" />
-        <File Id="wcp_locales_he_pak" Source="$(env.ROOT)/bin/wcp/locales/he.pak" />
-        <File Id="wcp_locales_hi_pak" Source="$(env.ROOT)/bin/wcp/locales/hi.pak" />
-        <File Id="wcp_locales_hr_pak" Source="$(env.ROOT)/bin/wcp/locales/hr.pak" />
-        <File Id="wcp_locales_hu_pak" Source="$(env.ROOT)/bin/wcp/locales/hu.pak" />
-        <File Id="wcp_locales_id_pak" Source="$(env.ROOT)/bin/wcp/locales/id.pak" />
-        <File Id="wcp_locales_it_pak" Source="$(env.ROOT)/bin/wcp/locales/it.pak" />
-        <File Id="wcp_locales_ja_pak" Source="$(env.ROOT)/bin/wcp/locales/ja.pak" />
-        <File Id="wcp_locales_kn_pak" Source="$(env.ROOT)/bin/wcp/locales/kn.pak" />
-        <File Id="wcp_locales_ko_pak" Source="$(env.ROOT)/bin/wcp/locales/ko.pak" />
-        <File Id="wcp_locales_lt_pak" Source="$(env.ROOT)/bin/wcp/locales/lt.pak" />
-        <File Id="wcp_locales_lv_pak" Source="$(env.ROOT)/bin/wcp/locales/lv.pak" />
-        <File Id="wcp_locales_ml_pak" Source="$(env.ROOT)/bin/wcp/locales/ml.pak" />
-        <File Id="wcp_locales_mr_pak" Source="$(env.ROOT)/bin/wcp/locales/mr.pak" />
-        <File Id="wcp_locales_ms_pak" Source="$(env.ROOT)/bin/wcp/locales/ms.pak" />
-        <File Id="wcp_locales_nb_pak" Source="$(env.ROOT)/bin/wcp/locales/nb.pak" />
-        <File Id="wcp_locales_nl_pak" Source="$(env.ROOT)/bin/wcp/locales/nl.pak" />
-        <File Id="wcp_locales_pl_pak" Source="$(env.ROOT)/bin/wcp/locales/pl.pak" />
-        <File Id="wcp_locales_pt_BR_pak" Source="$(env.ROOT)/bin/wcp/locales/pt-BR.pak" />
-        <File Id="wcp_locales_pt_PT_pak" Source="$(env.ROOT)/bin/wcp/locales/pt-PT.pak" />
-        <File Id="wcp_locales_ro_pak" Source="$(env.ROOT)/bin/wcp/locales/ro.pak" />
-        <File Id="wcp_locales_ru_pak" Source="$(env.ROOT)/bin/wcp/locales/ru.pak" />
-        <File Id="wcp_locales_sk_pak" Source="$(env.ROOT)/bin/wcp/locales/sk.pak" />
-        <File Id="wcp_locales_sl_pak" Source="$(env.ROOT)/bin/wcp/locales/sl.pak" />
-        <File Id="wcp_locales_sr_pak" Source="$(env.ROOT)/bin/wcp/locales/sr.pak" />
-        <File Id="wcp_locales_sv_pak" Source="$(env.ROOT)/bin/wcp/locales/sv.pak" />
-        <File Id="wcp_locales_sw_pak" Source="$(env.ROOT)/bin/wcp/locales/sw.pak" />
-        <File Id="wcp_locales_ta_pak" Source="$(env.ROOT)/bin/wcp/locales/ta.pak" />
-        <File Id="wcp_locales_te_pak" Source="$(env.ROOT)/bin/wcp/locales/te.pak" />
-        <File Id="wcp_locales_th_pak" Source="$(env.ROOT)/bin/wcp/locales/th.pak" />
-        <File Id="wcp_locales_tr_pak" Source="$(env.ROOT)/bin/wcp/locales/tr.pak" />
-        <File Id="wcp_locales_uk_pak" Source="$(env.ROOT)/bin/wcp/locales/uk.pak" />
-        <File Id="wcp_locales_ur_pak" Source="$(env.ROOT)/bin/wcp/locales/ur.pak" />
-        <File Id="wcp_locales_vi_pak" Source="$(env.ROOT)/bin/wcp/locales/vi.pak" />
-        <File Id="wcp_locales_zh_CN_pak" Source="$(env.ROOT)/bin/wcp/locales/zh-CN.pak" />
-        <File Id="wcp_locales_zh_TW_pak" Source="$(env.ROOT)/bin/wcp/locales/zh-TW.pak" />
       </Component>
     </DirectoryRef>
 
@@ -300,7 +234,6 @@
                AllowAbsent="yes"
                Description="Log into Windows using authentik.">
         <ComponentRef Id="credential_provider" />
-        <ComponentRef Id="credential_provider_locales" />
       </Feature>
     </Feature>
   </Package>

@@ -18,7 +18,7 @@ use windows::{
 };
 
 use crate::credential::{Credential, CredentialDeps};
-use crate::ipc::CefAuthFlow;
+use crate::ipc::BrowserAuthFlow;
 use crate::strings::take_pwstr;
 use crate::syscalls::{KeyringPasswordStore, RealSyscalls};
 use crate::tile;
@@ -75,14 +75,14 @@ fn credential_from_user(
         .unwrap_or_default();
     let sid = unsafe { user.GetSid() }.map(take_pwstr).unwrap_or_default();
 
-    let cef_exe = crate::dll_dir().join("ak_cef.exe");
+    let browser_exe = crate::dll_dir().join("ak_browser.exe");
     Credential::new(
         sid,
         qualified_username,
         is_local_user,
         cpus,
         CredentialDeps {
-            auth_flow: Box::new(CefAuthFlow { cef_exe, cpus }),
+            auth_flow: Box::new(BrowserAuthFlow { browser_exe, cpus }),
             password: Box::new(RealSyscalls),
             auth_package: Box::new(RealSyscalls),
             store: Box::new(KeyringPasswordStore::new()),

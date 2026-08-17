@@ -83,7 +83,7 @@ pub trait PasswordStore {
     fn save(&self, sid: &str, password: &str) -> eyre::Result<()>;
 }
 
-/// The window-manager calls behind pushing `ak_cef.exe`'s window to the front.
+/// The window-manager calls behind pushing `ak_browser.exe`'s window to the front.
 /// Windows are a bare `isize` rather than an `HWND` so the policy driving these
 /// can be tested against a fake without a desktop to enumerate.
 pub trait ForegroundControl {
@@ -336,7 +336,7 @@ impl PasswordStore for KeyringPasswordStore {
     }
 }
 
-/// Name of the dedicated local account `ak_cef.exe` runs as instead of
+/// Name of the dedicated local account `ak_browser.exe` runs as instead of
 /// SYSTEM. Created by the installer (`vpkg/windows/Package.wxs`'s
 /// `util:User`) — keep this in step with that element's `Name` attribute.
 pub const SERVICE_ACCOUNT_NAME: &str = "ak-wcp-browser";

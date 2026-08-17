@@ -30,10 +30,10 @@ const USERNAME: &str = "credui-registration-user";
 /// `multi_thread`, deliberately, even though real activation makes the DLL an
 /// STA object (registered `ThreadingModel=Apartment`): `mock_sysd::start`
 /// spawns the mock server as its own tokio task, and `Connect()` below blocks
-/// synchronously (no `.await` anywhere under it) for as long as `ak_cef.exe`
+/// synchronously (no `.await` anywhere under it) for as long as `ak_browser.exe`
 /// takes to complete its round trip against that mock. On a `current_thread`
 /// runtime that block starves the only OS thread the runtime has, so the mock
-/// server's task can never be polled again to answer `ak_cef.exe`'s real gRPC
+/// server's task can never be polled again to answer `ak_browser.exe`'s real gRPC
 /// calls — a full deadlock, not a slow test. (This was tried and hung in CI
 /// for 30+ minutes before this fix.)
 ///
@@ -52,10 +52,10 @@ async fn registered_provider_completes_sign_in_via_real_com_activation() {
         dll_path.exists(),
         "expected {dll_path:?} to exist — build the workspace first"
     );
-    let cef_exe = build_output_dir().join("ak_cef.exe");
+    let browser_exe = build_output_dir().join("ak_browser.exe");
     assert!(
-        cef_exe.exists(),
-        "expected {cef_exe:?} to exist — build the workspace first"
+        browser_exe.exists(),
+        "expected {browser_exe:?} to exist — build the workspace first"
     );
 
     let server = RedirectServer::start(VALID_TOKEN).expect("start local redirect server");
