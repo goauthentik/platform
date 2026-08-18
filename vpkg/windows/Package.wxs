@@ -127,11 +127,18 @@
                           EventMessageFile="[#wcp_ak_cef_exe]"/>
 
         <!-- ak_cef.exe runs as this account instead of SYSTEM (see
-             ee/wcp/BROWSER_PRIVILEGE.md). util:User has no "generate a
-             random password" attribute, so this is a fixed placeholder that
-             credprovider rotates away on first load; the account is denied
-             all interactive/network/RDP logon regardless. No dictionary
-             words and no "$": NetUserAdd folds complexity/banned-word LSA
+             ee/wcp/BROWSER_PRIVILEGE.md). credprovider logs it on with
+             LogonUserW and a stored password (syscalls::service_account_password,
+             same pattern as LOCAL_PASSWORD.md) rather than the SE_TCB_NAME-only
+             S4U route: LogonUI's own token does not carry SE_TCB_NAME, the
+             same wall Chromium's own credential provider hits and answers
+             the same way (chrome/credential_provider/gaiacp/gcp_utils.cc,
+             CreateLogonToken). LogonAsBatchJob grants the SeBatchLogonRight
+             that needs. The account is denied all interactive/network/RDP
+             logon regardless, and the token credprovider actually hands
+             ak_cef.exe has every privilege stripped via CreateRestrictedToken
+             on top of that. No dictionary words and no "$" in the initial
+             password below: NetUserAdd folds complexity/banned-word LSA
              filter rejections into the same NERR_PasswordTooShort a real
              length failure would give, and "$" is the WiX preprocessor's
              substitution leader ("$(var.X)"), live before the XML is
@@ -142,6 +149,7 @@
                     Password="qX9m!K2pR7z#VtL4"
                     PasswordNeverExpires="yes"
                     CanNotChangePassword="yes"
+                    LogonAsBatchJob="yes"
                     UpdateIfExists="yes"
                     RemoveOnUninstall="yes" />
 

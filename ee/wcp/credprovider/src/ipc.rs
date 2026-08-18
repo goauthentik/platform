@@ -354,15 +354,15 @@ fn signal_cancel(cancel_write: HANDLE) {
 
 /// Gets `ak_cef.exe` a token for the dedicated service account rather than
 /// SYSTEM (`BROWSER_PRIVILEGE.md`), the same way for both logon and unlock.
-/// Password rotation and account-hardening are best-effort and only logged
-/// on failure — each is idempotent, so a transient failure just costs a
-/// retry next time, and none of them block the token mint that follows.
+/// Account-hardening is best-effort and only logged on failure — it is
+/// idempotent, so a transient failure just costs a retry next time, and
+/// does not block the token mint that follows. The password is not: a
+/// broken keyring here means no way to log the account on at all.
 fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
-    if let Err(e) =
-        syscalls::ensure_service_account_password_rotated(syscalls::SERVICE_ACCOUNT_NAME)
-    {
-        log::warn!("could not rotate the service account's password: {e}");
-    }
+    let password = syscalls::service_account_password().map_err(|e| {
+        log::error!("could not establish the service account's password: {e}");
+        windows::core::Error::from(E_FAIL)
+    })?;
 
     let sid = syscalls::account_sid(syscalls::SERVICE_ACCOUNT_NAME)?;
 
@@ -373,7 +373,7 @@ fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
         log::warn!("could not grant the service account secure-desktop access: {e}");
     }
 
-    syscalls::service_account_token(syscalls::SERVICE_ACCOUNT_NAME)
+    syscalls::service_account_token(syscalls::SERVICE_ACCOUNT_NAME, &password)
 }
 
 fn spawn_cef_host(

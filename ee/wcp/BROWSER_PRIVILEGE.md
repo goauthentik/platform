@@ -7,18 +7,33 @@ the Windows logon screen, and on the path that matters most it runs as
 ## Status
 
 Branch `ee/wcp/browser-privilege` is building Option B, the dedicated
-service account. Both open decisions below are settled: integrated auth
-(Kerberos/SPNEGO) is not in scope, so S4U needs no stored credential; the
-`WinSta0\Winlogon` ACL grant is accepted as the cost of getting off SYSTEM.
-Option A turned out to need more than this doc assumed — see the note at the
-end of that section — so it stayed out of scope rather than being folded in
-here.
+service account. The `WinSta0\Winlogon` ACL grant is accepted as the cost of
+getting off SYSTEM. Option A turned out to need more than this doc assumed —
+see the note at the end of that section — so it stayed out of scope rather
+than being folded in here.
 
-**Verified on a VM** against the manual checklist in `e2e/README.md`: the
-tile appears, the sign-in window opens on the secure desktop, and both fresh
-logon and unlock complete. So the two things CI cannot reach — the
-`WinSta0\Winlogon` ACL grant actually holding, and the S4U service-account
-token being usable for both scenarios — hold outside a test harness.
+**S4U turned out not to work and was replaced.** The first version of this
+branch minted the service account's token via `LsaLogonUser`/
+`MSV1_0_S4U_LOGON`, on the assumption that LogonUI's own token carries
+`SE_TCB_NAME` (see "Getting a token" below for what actually happens). A real
+install on a Windows Server test box proved that assumption wrong:
+`LsaRegisterLogonProcess` failed outright, and enabling the privilege
+first — which should not have been necessary, and was itself a sign
+something was off — surfaced that `SE_TCB_NAME` is not held by that token at
+all, confirmed by dumping the token's own account identity in the same log
+line. Chromium's own credential provider hits the identical wall for the
+identical reason and has never used S4U to begin with; see "Getting a token"
+below. The service account now gets its token the same way GCPW does:
+`LogonUserW` with a stored password, then `CreateRestrictedToken` to strip
+every privilege before the token is ever used.
+
+**Verified on a VM** (before the S4U replacement) against the manual
+checklist in `e2e/README.md`: the tile appeared, the sign-in window opened on
+the secure desktop, and both fresh logon and unlock completed. That VM run
+predates the S4U failure above and does not carry over to the current
+`LogonUserW`-based code — the `WinSta0\Winlogon` ACL grant holding is still
+good evidence, since that part is unchanged, but the token-acquisition path
+it exercised no longer exists. Needs a fresh VM run.
 
 This file previously lived on `ee/wcp/rs-cef-fresh` and was deleted there in
 a "cleanup" commit an hour after being written, along with three sibling
@@ -60,11 +75,11 @@ So the old token machinery bought nothing on fresh logon (it worked hard to
 arrive at the same SYSTEM the C++ got for free) and was broken on unlock —
 not load-bearing for the sign-in flow, an unfinished attempt at this
 document's goal. Replaced entirely: `credprovider::syscalls::
-service_account_token` now mints an S4U token for the dedicated account
-(`SERVICE_ACCOUNT_NAME`, see Option B below) for both `CPUS_LOGON` and
-`CPUS_UNLOCK_WORKSTATION` — one path, no per-scenario branching, no
-`WTSQueryUserToken`/winlogon-scanning left in `syscalls.rs` at all.
-`CPUS_CREDUI` is unchanged.
+service_account_token` now logs the dedicated account
+(`SERVICE_ACCOUNT_NAME`, see Option B below) on with `LogonUserW` and its
+stored password for both `CPUS_LOGON` and `CPUS_UNLOCK_WORKSTATION` — one
+path, no per-scenario branching, no `WTSQueryUserToken`/winlogon-scanning
+left in `syscalls.rs` at all. `CPUS_CREDUI` is unchanged.
 
 ## Option A — enable the CEF sandbox
 
@@ -115,36 +130,74 @@ deleted rather than fixed.
 `vpkg/windows/authentik Agent Installer.wixproj` and `Package.wxs` already uses
 the `util:` namespace, so `<util:User>` needs no new dependency.
 
-### Getting a token without storing a password — decided
+### Getting a token — S4U looked free, wasn't
 
 `<util:User>` wants a password and `LogonUser` would want it back later, which
-means a secret at rest and a rotation story.
+means a secret at rest and a rotation story. `LsaLogonUser` with
+`MSV1_0_S4U_LOGON` looked like it avoided that entirely: mint a token for a
+local account with no credentials, given `SE_TCB_NAME`, which the doc assumed
+LogonUI already holds. That assumption is wrong, and the branch's history
+still has the wreckage: `LsaRegisterLogonProcess` failed with
+`STATUS_PORT_CONNECTION_REFUSED` on a real install. Explicitly enabling
+`SE_TCB_NAME` first (`AdjustTokenPrivileges`) made that failure go away —
+which itself should have been the warning sign, since a token that legitimately
+holds a privilege does not usually need it force-enabled — and once the code
+started checking `AdjustTokenPrivileges`'s own success/failure properly
+(`ERROR_NOT_ALL_ASSIGNED` is reported as success by the underlying Win32 call;
+only `GetLastError` after the fact tells you it lied), the real answer came
+back: `SE_TCB_NAME` is not held by LogonUI's token *at all*, on a real
+install, full stop. Not disabled — absent. `PsExec -s whoami /priv` on the
+same box shows SYSTEM holding it fine; the credential-provider-hosting
+process's token is evidently not that same generic SYSTEM token.
 
-`LsaLogonUser` with `MSV1_0_S4U_LOGON` avoids that entirely: it mints a token
-for a local account with no credentials, given `SE_TCB_NAME`, which LogonUI
-already holds. Nothing to store, nothing to rotate.
+In hindsight this is exactly what the credential-provider model since Vista
+is *for*: `LogonUI.exe` is a separate, deliberately more sandboxed process
+from `winlogon.exe`/LSASS precisely so that third-party code loaded into it —
+credential providers — does not get TCB-level trust. The built-in providers
+never call LSA logon APIs directly; they hand LSA a serialized credential
+blob via `GetSerialization` and let LSASS, which does have TCB, do the
+privileged part (this codebase already does exactly that for the
+interactive user's own logon — see `LOCAL_PASSWORD.md`,
+`pack_kerb_interactive_unlock_logon`). Calling `LsaRegisterLogonProcess`
+directly from inside a credential provider was never going to be supported.
 
-One correction against the plan as first written here: WiX's `util:User` has
-no `GeneratePassword` attribute — it only takes a literal `Password` (or one
-read from a `Property` via `PasswordAttribute`), so the installer cannot mint
-a random one itself. The account is created with a fixed placeholder
-instead, and `credprovider::syscalls::ensure_service_account_password_rotated`
-resets it to a random value the first time the DLL loads after install, via
-`NetUserSetInfo` through the existing `LocalAccountPassword::reset` — the
-same call the interactive user's own account uses for its first-use/
-out-of-band-change reset — then never touches it again (tracked by an
-`HKLM` marker, not the credential-manager vault that account's password
-lives in, since nothing here ever needs this one back). The placeholder is
-live for, at most, the gap between install finishing and the first logon
-attempt; the account is also denied interactive/network/RDP logon
-throughout, so even a known placeholder cannot be used to sign anyone in.
+Chromium's own credential provider (Google Credential Provider for Windows,
+GCPW) solves the identical problem — a Chromium-based sign-in UI hosted in
+LogonUI, needing a token for a helper identity — and has never used S4U or
+any LSA-direct call for it. `CreateLogonToken` in
+`chrome/credential_provider/gaiacp/gcp_utils.cc` calls plain `LogonUserW`
+with a real password (`LOGON32_LOGON_BATCH` for the non-interactive case),
+then wraps the result in `CreateRestrictedToken(..., DISABLE_MAX_PRIVILEGE,
+...)` before using it — stripping every privilege from the token rather than
+relying on the account having few to begin with. `service_account_token`
+now does exactly this. `LogonUserW` needs no special privilege for a
+non-admin account (confirmed independently: `RealSyscalls::validate` already
+called it successfully for the interactive user's password check, with no
+privilege-enabling, before any of this).
 
-**The catch that made this a decision:** an S4U token carries no network
-credentials. That is fine for reaching authentik over HTTPS with the
-`X-Authentik-Platform-Auth-DTH` bearer header. It would not be fine if the
-sign-in flow ever chained to an IdP doing Kerberos/SPNEGO — authentik
-supports that, and in an AD environment it would be plausible. **Confirmed
-out of scope for this account**, so S4U stands.
+This puts the service account's password handling on the same footing as
+the interactive user's: a real secret has to exist and be kept somewhere.
+`credprovider::syscalls::service_account_password` is the same state
+machine as `credential.rs::account_password` (`LOCAL_PASSWORD.md`) —
+established once, validated and reused on every subsequent call, changed
+rather than reset once known — stored in the same `KeyringPasswordStore`
+vault, keyed by this account's own SID instead of a signed-in user's. WiX's
+`util:User` has no `GeneratePassword` attribute — it only takes a literal
+`Password` (or one read from a `Property` via `PasswordAttribute`) — so the
+installer creates the account with a fixed placeholder, and the first call
+to `service_account_password` resets it to a real, stored value. `LogonAsBatchJob="yes"`
+on `<util:User>` grants the `SeBatchLogonRight` that `LOGON32_LOGON_BATCH`
+needs; the account is still denied interactive/network/RDP logon throughout,
+and the *token `ak_cef.exe` actually runs with* has every privilege stripped
+by `CreateRestrictedToken` regardless of what the logon itself produced.
+
+**The Kerberos/SPNEGO question this used to raise for S4U does not apply
+here.** `LogonUserW` is a real password-based logon; the resulting token (net
+of `CreateRestrictedToken`'s privilege stripping, which is unrelated to
+network credentials) carries the account's actual credentials the same way
+any normal interactive or batch logon does. Nothing about this design rules
+out integrated auth for this account if it were ever needed — the question
+in the original "Decisions" list is moot, not settled in either direction.
 
 ### The rest of the work
 
@@ -181,7 +234,8 @@ out of scope for this account**, so S4U stands.
 ## Decisions — resolved for this branch
 
 1. ~~Is integrated auth (Kerberos/SPNEGO to an upstream IdP) ever in scope?~~
-   **No.** S4U stands; no stored credential for this account.
+   **Moot.** This account no longer uses S4U, so the concern that raised this
+   question does not apply — see "Getting a token" above.
 2. ~~Is granting a non-SYSTEM account access to `WinSta0\Winlogon`
    acceptable?~~ **Yes**, scoped to this one account only.
 3. Does the browser process need to be non-SYSTEM at all once renderers are

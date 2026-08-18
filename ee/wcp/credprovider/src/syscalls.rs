@@ -18,24 +18,23 @@ use windows::{
         },
         NetworkManagement::NetManagement::{NetUserChangePassword, NetUserSetInfo, USER_INFO_1003},
         Security::{
-            ACL, AdjustTokenPrivileges, AllocateLocallyUniqueId,
+            ACL, AdjustTokenPrivileges,
             Authentication::Identity::{
                 LSA_HANDLE, LSA_OBJECT_ATTRIBUTES, LSA_STRING, LSA_UNICODE_STRING,
                 LsaAddAccountRights, LsaClose, LsaConnectUntrusted, LsaDeregisterLogonProcess,
-                LsaFreeReturnBuffer, LsaLogonUser, LsaLookupAuthenticationPackage, LsaOpenPolicy,
-                LsaRegisterLogonProcess, MSV1_0_S4U_LOGON, MsV1_0S4ULogon, POLICY_CREATE_ACCOUNT,
-                SECURITY_LOGON_TYPE,
+                LsaLookupAuthenticationPackage, LsaOpenPolicy, POLICY_CREATE_ACCOUNT,
             },
             Authorization::{
-                EXPLICIT_ACCESS_W, GetSecurityInfo, NO_MULTIPLE_TRUSTEE, SE_OBJECT_TYPE,
-                SE_WINDOW_OBJECT, SET_ACCESS, SetEntriesInAclW, SetSecurityInfo, TRUSTEE_IS_SID,
-                TRUSTEE_IS_USER, TRUSTEE_W,
+                ConvertSidToStringSidW, EXPLICIT_ACCESS_W, GetSecurityInfo, NO_MULTIPLE_TRUSTEE,
+                SE_OBJECT_TYPE, SE_WINDOW_OBJECT, SET_ACCESS, SetEntriesInAclW, SetSecurityInfo,
+                TRUSTEE_IS_SID, TRUSTEE_IS_USER, TRUSTEE_W,
             },
-            DACL_SECURITY_INFORMATION, GetTokenInformation, LOGON32_LOGON_NETWORK,
+            CreateRestrictedToken, DACL_SECURITY_INFORMATION, DISABLE_MAX_PRIVILEGE,
+            GetTokenInformation, LOGON32_LOGON_BATCH, LOGON32_LOGON_NETWORK,
             LOGON32_PROVIDER_DEFAULT, LUID_AND_ATTRIBUTES, LogonUserW, LookupAccountNameW,
             LookupAccountSidW, LookupPrivilegeValueW, NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID,
-            QUOTA_LIMITS, SE_PRIVILEGE_ENABLED, SE_TCB_NAME, SID_NAME_USE, TOKEN_ADJUST_PRIVILEGES,
-            TOKEN_PRIVILEGES, TOKEN_QUERY, TOKEN_SOURCE, TOKEN_USER, TokenUser,
+            SE_PRIVILEGE_ENABLED, SID_NAME_USE, TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES,
+            TOKEN_QUERY, TOKEN_USER, TokenUser,
         },
         Storage::FileSystem::{READ_CONTROL, WRITE_DAC},
         System::StationsAndDesktops::{
@@ -46,9 +45,6 @@ use windows::{
     core::{HRESULT, PCWSTR, PSTR, PWSTR, w},
 };
 use windows_core::BOOL;
-
-const SERVICE_ACCOUNT_STATE_KEY: &str =
-    "SOFTWARE\\authentik Security Inc.\\Platform\\WcpServiceAccount";
 
 pub trait AuthPackageLookup {
     fn negotiate_package(&self) -> windows::core::Result<u32>;
@@ -345,10 +341,6 @@ impl PasswordStore for KeyringPasswordStore {
 /// `util:User`) — keep this in step with that element's `Name` attribute.
 pub const SERVICE_ACCOUNT_NAME: &str = "ak-wcp-browser";
 
-const TOKEN_SOURCE_NAME: [i8; 8] = [
-    b'A' as i8, b'k' as i8, b'W' as i8, b'c' as i8, b'p' as i8, b'S' as i8, b'4' as i8, b'U' as i8,
-];
-
 /// Resolves the service account's name to a SID: both `LsaAddAccountRights`
 /// and the desktop ACL grant below want one, and a name is all the installer
 /// leaves behind.
@@ -483,87 +475,64 @@ pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()
     }
 }
 
-/// Mints a primary token for the service account via an S4U logon — no
-/// password needed, only `SE_TCB_NAME`. `Service` is the logon type
-/// deliberately: it is the one type `deny_interactive_and_network_logon`
-/// does not deny.
-pub fn service_account_token(username: &str) -> windows::core::Result<HANDLE> {
+/// Mints a primary token for the service account by logging it on with its
+/// stored password, then strips every privilege from the result. S4U
+/// (`LsaLogonUser`) needs `SE_TCB_NAME`, and LogonUI's token does not carry
+/// it — Google's own credential provider hits the same wall for the same
+/// reason (a credential provider hosted in LogonUI, rendering its own
+/// Chromium-based sign-in UI) and answers it the same way: see
+/// `CreateLogonToken` in
+/// `chrome/credential_provider/gaiacp/gcp_utils.cc` in the Chromium source.
+/// Password-based `LogonUserW` needs no special privilege for a non-admin
+/// account, and `CreateRestrictedToken` with `DISABLE_MAX_PRIVILEGE` is what
+/// keeps a compromised renderer from being able to do anything with a token
+/// that would otherwise still be a fully-privileged one for its account.
+pub fn service_account_token(username: &str, password: &str) -> windows::core::Result<HANDLE> {
+    let username_wide = wide(username);
+    let password_wide = wide(password);
+
+    let mut primary = HANDLE::default();
     unsafe {
-        enable_privilege(SE_TCB_NAME, "SeTcbPrivilege")?;
-
-        let process_name = lsa_string(b"ak_cred_provider\0");
-        let mut lsa_handle = HANDLE::default();
-        let mut security_mode = 0u32;
-        LsaRegisterLogonProcess(&process_name, &mut lsa_handle, &mut security_mode).ok()?;
-
-        let result = s4u_logon(lsa_handle, username);
-        let _ = LsaDeregisterLogonProcess(lsa_handle);
-        result
+        LogonUserW(
+            PCWSTR(username_wide.as_ptr()),
+            w!("."),
+            PCWSTR(password_wide.as_ptr()),
+            LOGON32_LOGON_BATCH,
+            LOGON32_PROVIDER_DEFAULT,
+            &mut primary,
+        )?;
     }
+
+    let mut restricted = HANDLE::default();
+    let result = unsafe {
+        CreateRestrictedToken(
+            primary,
+            DISABLE_MAX_PRIVILEGE,
+            None,
+            None,
+            None,
+            &mut restricted,
+        )
+    };
+    unsafe {
+        let _ = CloseHandle(primary);
+    }
+    result?;
+    Ok(restricted)
 }
 
-unsafe fn s4u_logon(lsa_handle: HANDLE, username: &str) -> windows::core::Result<HANDLE> {
+/// String form of a SID, for the keyring's `sid` key. `account_sid` returns
+/// raw bytes for the Win32 calls that want a `PSID`; the keyring store
+/// (like the interactive user's, `credential.rs`) is keyed by the string
+/// form instead.
+fn sid_to_string(sid: &[u8]) -> windows::core::Result<String> {
     unsafe {
-        let package_name = lsa_string(b"MICROSOFT_AUTHENTICATION_PACKAGE_V1_0\0");
-        let mut auth_package = 0u32;
-        LsaLookupAuthenticationPackage(lsa_handle, &package_name, &mut auth_package).ok()?;
-
-        // S4U wants these as `LSA_UNICODE_STRING`s with no trailing NUL,
-        // unlike the `LSA_STRING`s above — keep the backing buffers alive
-        // for the whole call, `lsa_unicode_string` only borrows them.
-        let username_wide: Vec<u16> = username.encode_utf16().collect();
-        let domain_wide: Vec<u16> = ".".encode_utf16().collect();
-        let s4u = MSV1_0_S4U_LOGON {
-            MessageType: MsV1_0S4ULogon,
-            Flags: 0,
-            UserPrincipalName: lsa_unicode_string(&username_wide),
-            DomainName: lsa_unicode_string(&domain_wide),
-        };
-
-        let origin_name = lsa_string(b"ak_cred_provider\0");
-        let mut token_source = TOKEN_SOURCE {
-            SourceName: TOKEN_SOURCE_NAME,
-            ..Default::default()
-        };
-        AllocateLocallyUniqueId(&mut token_source.SourceIdentifier)?;
-
-        let mut profile_buffer: *mut std::ffi::c_void = std::ptr::null_mut();
-        let mut profile_buffer_len = 0u32;
-        let mut logon_id = LUID::default();
-        let mut token = HANDLE::default();
-        let mut quotas = QUOTA_LIMITS::default();
-        let mut sub_status = 0i32;
-
-        let status = LsaLogonUser(
-            lsa_handle,
-            &origin_name,
-            SECURITY_LOGON_TYPE::Service,
-            auth_package,
-            &s4u as *const MSV1_0_S4U_LOGON as *const std::ffi::c_void,
-            std::mem::size_of::<MSV1_0_S4U_LOGON>() as u32,
-            None,
-            &token_source,
-            &mut profile_buffer,
-            &mut profile_buffer_len,
-            &mut logon_id,
-            &mut token,
-            &mut quotas,
-            &mut sub_status,
-        );
-
-        if !profile_buffer.is_null() {
-            let _ = LsaFreeReturnBuffer(profile_buffer);
-        }
-
-        // As with `negotiate_package`, `NTSTATUS::ok()` is only a sign test;
-        // `sub_status` carries the more specific reason (e.g. an account
-        // that does not exist yet because the installer has not run) and is
-        // only meaningful once `status` itself is an error.
-        if status.0 != 0 {
-            log::error!("S4U logon for {username} failed: {status:?} (substatus {sub_status:#x})");
-            return Err(status.to_hresult().into());
-        }
-        Ok(token)
+        let mut wide_sid = PWSTR(std::ptr::null_mut());
+        ConvertSidToStringSidW(PSID(sid.as_ptr() as *mut _), &mut wide_sid)?;
+        let len = (0..).take_while(|&i| *wide_sid.0.add(i) != 0).count();
+        let result = String::from_utf16_lossy(std::slice::from_raw_parts(wide_sid.0, len));
+        let _ = LocalFree(Some(HLOCAL(wide_sid.0 as *mut c_void)));
+        Ok(result)
     }
 }
 
@@ -681,30 +650,58 @@ pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<(
     }
 }
 
-/// Rotates the service account's password to a random value the first time
-/// this runs, then never again — nothing needs it back, since
-/// `service_account_token` mints tokens via S4U, not `LogonUserW`. Turns the
-/// installer's fixed placeholder password into a real secret exactly once;
-/// the `HKLM` marker is what stops it happening again on every logon.
-pub fn ensure_service_account_password_rotated(username: &str) -> eyre::Result<()> {
-    let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
-    let (key, _disp) = hklm.create_subkey(SERVICE_ACCOUNT_STATE_KEY)?;
+/// The service account's password: established once and reused after that,
+/// same state machine and same reasoning as the interactive user's own
+/// account (`credential.rs::account_password`, `LOCAL_PASSWORD.md`) — an
+/// administrative reset orphans the DPAPI master key, so once a password is
+/// known, only `change` touches the account again. That reasoning is about
+/// DPAPI survival, which does not apply to an account nothing ever signs
+/// into interactively; kept anyway; there is no reason to churn the account
+/// on every logon when reuse costs nothing.
+pub fn service_account_password() -> eyre::Result<String> {
+    let sid = account_sid(SERVICE_ACCOUNT_NAME).map_err(|e| eyre::eyre!("{e}"))?;
+    let sid = sid_to_string(&sid).map_err(|e| eyre::eyre!("{e}"))?;
+    let store = KeyringPasswordStore::new();
 
-    if key.get_value::<u32, _>("PasswordRotated").unwrap_or(0) == 1 {
-        return Ok(());
+    if let Some(stored) = store.load(&sid)? {
+        match RealSyscalls.validate(SERVICE_ACCOUNT_NAME, &stored) {
+            Ok(PasswordCheck::Valid) => return Ok(stored),
+            Ok(PasswordCheck::Expired) => {
+                let new =
+                    crate::helpers::generate_random_password().map_err(|e| eyre::eyre!("{e}"))?;
+                if RealSyscalls
+                    .change(SERVICE_ACCOUNT_NAME, &stored, &new)
+                    .is_ok()
+                {
+                    let _ = store.save(&sid, &new);
+                    return Ok(new);
+                }
+            }
+            // Changed out of band; fall through to a reset.
+            Ok(PasswordCheck::Rejected) => {}
+            // Inconclusive, not wrong — see credential.rs::stored_password.
+            Err(e) => {
+                log::warn!(
+                    "could not verify the service account's stored password ({e}); using it anyway"
+                );
+                return Ok(stored);
+            }
+        }
     }
 
     let password = crate::helpers::generate_random_password().map_err(|e| eyre::eyre!("{e}"))?;
     RealSyscalls
-        .reset(username, &password)
+        .reset(SERVICE_ACCOUNT_NAME, &password)
         .map_err(|e| eyre::eyre!("{e}"))?;
-    key.set_value("PasswordRotated", &1u32)?;
-    Ok(())
+    if let Err(e) = store.save(&sid, &password) {
+        log::error!("could not store the service account's password: {e}");
+    }
+    Ok(password)
 }
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
-mod s4u_tests {
+mod byte_layout_tests {
     use super::*;
 
     /// `MaximumLength` must cover the trailing NUL while `Length` excludes
@@ -719,8 +716,9 @@ mod s4u_tests {
         assert_eq!(bytes, b"Negotiate");
     }
 
-    /// Unlike `LSA_STRING`, S4U's `LSA_UNICODE_STRING`s carry no NUL at all —
-    /// `Length`/`MaximumLength` are both the exact UTF-16 byte count.
+    /// Unlike `LSA_STRING`, `deny_interactive_and_network_logon`'s rights
+    /// list carries no NUL at all — `Length`/`MaximumLength` are both the
+    /// exact UTF-16 byte count.
     #[test]
     fn lsa_unicode_string_round_trips_without_a_nul() {
         let wide: Vec<u16> = "ak-wcp-browser".encode_utf16().collect();
