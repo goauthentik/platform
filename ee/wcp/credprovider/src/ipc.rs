@@ -460,10 +460,15 @@ fn spawn_cef_host(
             // Disabled by default like `SE_TCB_NAME` before it; without
             // enabling them, `CreateProcessAsUserW` fails with
             // `ERROR_NOT_ALL_ASSIGNED` even though `token` is valid.
-            if let Err(e) = syscalls::enable_privilege(SE_ASSIGNPRIMARYTOKEN_NAME) {
+            if let Err(e) = syscalls::enable_privilege(
+                SE_ASSIGNPRIMARYTOKEN_NAME,
+                "SeAssignPrimaryTokenPrivilege",
+            ) {
                 log::warn!("could not enable SeAssignPrimaryTokenPrivilege: {e}");
             }
-            if let Err(e) = syscalls::enable_privilege(SE_INCREASE_QUOTA_NAME) {
+            if let Err(e) =
+                syscalls::enable_privilege(SE_INCREASE_QUOTA_NAME, "SeIncreaseQuotaPrivilege")
+            {
                 log::warn!("could not enable SeIncreaseQuotaPrivilege: {e}");
             }
             CreateProcessAsUserW(

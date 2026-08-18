@@ -31,10 +31,11 @@ use windows::{
                 SE_WINDOW_OBJECT, SET_ACCESS, SetEntriesInAclW, SetSecurityInfo, TRUSTEE_IS_SID,
                 TRUSTEE_IS_USER, TRUSTEE_W,
             },
-            DACL_SECURITY_INFORMATION, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT,
-            LUID_AND_ATTRIBUTES, LogonUserW, LookupAccountNameW, LookupPrivilegeValueW,
-            NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID, QUOTA_LIMITS, SE_PRIVILEGE_ENABLED,
-            SE_TCB_NAME, SID_NAME_USE, TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES, TOKEN_SOURCE,
+            DACL_SECURITY_INFORMATION, GetTokenInformation, LOGON32_LOGON_NETWORK,
+            LOGON32_PROVIDER_DEFAULT, LUID_AND_ATTRIBUTES, LogonUserW, LookupAccountNameW,
+            LookupAccountSidW, LookupPrivilegeValueW, NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID,
+            QUOTA_LIMITS, SE_PRIVILEGE_ENABLED, SE_TCB_NAME, SID_NAME_USE, TOKEN_ADJUST_PRIVILEGES,
+            TOKEN_PRIVILEGES, TOKEN_QUERY, TOKEN_SOURCE, TOKEN_USER, TokenUser,
         },
         Storage::FileSystem::{READ_CONTROL, WRITE_DAC},
         System::StationsAndDesktops::{
@@ -384,10 +385,69 @@ fn lsa_unicode_string(wide: &[u16]) -> LSA_UNICODE_STRING {
     }
 }
 
+/// Best-effort "who are we actually running as" for the log line right
+/// before a privilege-enable failure. A privilege can be missing either
+/// because policy genuinely denies it to this account, or because the
+/// token isn't the SYSTEM token this whole design assumes it is — those
+/// need different fixes, and the log line otherwise can't tell them apart.
+fn current_token_identity() -> String {
+    unsafe {
+        let mut token = HANDLE::default();
+        if OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token).is_err() {
+            return "<could not open process token>".to_string();
+        }
+
+        let mut buf = [0u8; 256];
+        let mut ret_len = 0u32;
+        let got_user = GetTokenInformation(
+            token,
+            TokenUser,
+            Some(buf.as_mut_ptr() as *mut c_void),
+            buf.len() as u32,
+            &mut ret_len,
+        );
+
+        let identity = if got_user.is_ok() {
+            let sid = (*(buf.as_ptr() as *const TOKEN_USER)).User.Sid;
+            let mut name = [0u16; 256];
+            let mut name_len = name.len() as u32;
+            let mut domain = [0u16; 256];
+            let mut domain_len = domain.len() as u32;
+            let mut use_ = SID_NAME_USE::default();
+            if LookupAccountSidW(
+                PCWSTR::null(),
+                sid,
+                Some(PWSTR(name.as_mut_ptr())),
+                &mut name_len,
+                Some(PWSTR(domain.as_mut_ptr())),
+                &mut domain_len,
+                &mut use_,
+            )
+            .is_ok()
+            {
+                format!(
+                    "{}\\{}",
+                    String::from_utf16_lossy(&domain[..domain_len as usize]),
+                    String::from_utf16_lossy(&name[..name_len as usize])
+                )
+            } else {
+                "<could not resolve the token's account name>".to_string()
+            }
+        } else {
+            "<could not read the token's user>".to_string()
+        };
+
+        let _ = CloseHandle(token);
+        identity
+    }
+}
+
 /// SYSTEM's token holds every privilege this file needs, but — like any
 /// privilege not `SE_PRIVILEGE_ENABLED_BY_DEFAULT` — disabled until asked
 /// for; the APIs that need one check it as active, not merely present.
-pub fn enable_privilege(name: PCWSTR) -> windows::core::Result<()> {
+/// `display` is only for the log line on failure — `AdjustTokenPrivileges`
+/// doesn't say which of the (here, always one) privileges it couldn't grant.
+pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()> {
     unsafe {
         let mut token = HANDLE::default();
         OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &mut token)?;
@@ -407,6 +467,10 @@ pub fn enable_privilege(name: PCWSTR) -> windows::core::Result<()> {
             // actually held to enable — a classic trap, and indistinguishable
             // from a real success without this check.
             if GetLastError() == ERROR_NOT_ALL_ASSIGNED {
+                log::error!(
+                    "{display} is not held by this token at all (running as {})",
+                    current_token_identity()
+                );
                 return Err(windows::core::Error::from(HRESULT::from_win32(
                     ERROR_NOT_ALL_ASSIGNED.0,
                 )));
@@ -425,7 +489,7 @@ pub fn enable_privilege(name: PCWSTR) -> windows::core::Result<()> {
 /// does not deny.
 pub fn service_account_token(username: &str) -> windows::core::Result<HANDLE> {
     unsafe {
-        enable_privilege(SE_TCB_NAME)?;
+        enable_privilege(SE_TCB_NAME, "SeTcbPrivilege")?;
 
         let process_name = lsa_string(b"ak_cred_provider\0");
         let mut lsa_handle = HANDLE::default();
