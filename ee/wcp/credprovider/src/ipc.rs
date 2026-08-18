@@ -98,12 +98,12 @@ struct DuplexPipes {
     cancel_server: HANDLE,
 }
 
-/// A security descriptor granting the pipe server (this process, SYSTEM)
-/// full control and `sid` — the only other identity that will ever try to
-/// open the pipe, the child this is created for — the one direction it
-/// needs. A named pipe created with no explicit DACL is reachable only by
-/// its creator's own identity, which the service account is not.
-/// `access` is an SDDL generic-rights token: `"GR"` or `"GW"`.
+/// A security descriptor granting the pipe server (this process, SYSTEM on
+/// the real logon scenarios) full control and `sid` — the service account,
+/// the only other identity that will ever try to open the pipe — the one
+/// direction it needs. A named pipe created with no explicit DACL is
+/// reachable only by its creator's own identity, which the service account
+/// is not. `access` is an SDDL generic-rights token: `"GR"` or `"GW"`.
 struct PipeSecurityDescriptor(PSECURITY_DESCRIPTOR);
 
 impl PipeSecurityDescriptor {
@@ -134,14 +134,14 @@ impl Drop for PipeSecurityDescriptor {
 fn create_named_pipe(
     name: &str,
     open_mode: FILE_FLAGS_AND_ATTRIBUTES,
-    sd: &PipeSecurityDescriptor,
+    sd: Option<&PipeSecurityDescriptor>,
 ) -> windows::core::Result<HANDLE> {
     let name_wide: Vec<u16> = name.encode_utf16().chain(std::iter::once(0)).collect();
-    let sa = SECURITY_ATTRIBUTES {
+    let sa = sd.map(|sd| SECURITY_ATTRIBUTES {
         nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,
         lpSecurityDescriptor: sd.0.0,
         bInheritHandle: false.into(),
-    };
+    });
     let handle = unsafe {
         CreateNamedPipeW(
             PCWSTR(name_wide.as_ptr()),
@@ -151,7 +151,7 @@ fn create_named_pipe(
             4096,
             4096,
             0,
-            Some(&sa),
+            sa.as_ref().map(std::ptr::from_ref),
         )
     };
     if handle.is_invalid() {
@@ -163,33 +163,42 @@ fn create_named_pipe(
 }
 
 /// One named pipe pair, one instance each, scoped to `connecting_sid` — the
-/// service account for the real logon scenarios, or `None` under
-/// `CPUS_CREDUI`, where the child runs as this same caller and needs no
-/// extra grant. A fresh, random name per launch: nothing else should ever
-/// connect to either end, and a fixed name would let a second sign-in
-/// attempt (or anything else) race this one for it.
+/// service account for the real logon scenarios. `None` under `CPUS_CREDUI`
+/// means the child inherits this same caller's own token (`spawn_in_current_
+/// session` passes no token at all), whatever identity that happens to be —
+/// not necessarily literally SYSTEM, so it must not be hardcoded into the
+/// DACL. `CreateNamedPipeW` with no explicit security descriptor applies the
+/// default one derived from the creating thread's own token instead, which
+/// always grants that same token's identity full control — exactly the
+/// access the same-identity child needs, without naming it.
+///
+/// A fresh, random name per launch: nothing else should ever connect to
+/// either end, and a fixed name would let a second sign-in attempt (or
+/// anything else) race this one for it.
 fn create_duplex_pipes(connecting_sid: Option<&str>) -> windows::core::Result<DuplexPipes> {
     let id = uuid::Uuid::new_v4();
     let result_name = format!(r"\\.\pipe\authentik\wcp-{id}-result");
     let cancel_name = format!(r"\\.\pipe\authentik\wcp-{id}-cancel");
 
-    // `SY` (SYSTEM) is always granted; the child only needs an extra ACE
-    // when it is a different identity from this process.
-    let sid = connecting_sid.unwrap_or("SY");
     // The child writes the result and reads the cancel signal.
-    let result_sd = PipeSecurityDescriptor::new(sid, "GW")?;
-    let cancel_sd = PipeSecurityDescriptor::new(sid, "GR")?;
+    let result_sd = connecting_sid
+        .map(|sid| PipeSecurityDescriptor::new(sid, "GW"))
+        .transpose()?;
+    let cancel_sd = connecting_sid
+        .map(|sid| PipeSecurityDescriptor::new(sid, "GR"))
+        .transpose()?;
 
-    let result_server = create_named_pipe(&result_name, PIPE_ACCESS_INBOUND, &result_sd)?;
-    let cancel_server = match create_named_pipe(&cancel_name, PIPE_ACCESS_OUTBOUND, &cancel_sd) {
-        Ok(h) => h,
-        Err(e) => {
-            unsafe {
-                let _ = CloseHandle(result_server);
+    let result_server = create_named_pipe(&result_name, PIPE_ACCESS_INBOUND, result_sd.as_ref())?;
+    let cancel_server =
+        match create_named_pipe(&cancel_name, PIPE_ACCESS_OUTBOUND, cancel_sd.as_ref()) {
+            Ok(h) => h,
+            Err(e) => {
+                unsafe {
+                    let _ = CloseHandle(result_server);
+                }
+                return Err(e);
             }
-            return Err(e);
-        }
-    };
+        };
 
     Ok(DuplexPipes {
         result_name,
@@ -200,12 +209,21 @@ fn create_duplex_pipes(connecting_sid: Option<&str>) -> windows::core::Result<Du
 }
 
 /// Connects both ends within `timeout`, or gives up rather than hang
-/// `Connect` forever if the child never reaches the code that opens them
-/// (e.g. it crashed first). Blocking `ConnectNamedPipe` runs on a
-/// background thread; on a timeout, closing our own handles is what
-/// unblocks it — not clean, but nothing is listening on the far end of
-/// that thread's channel send by then either.
-fn connect_duplex_pipes(pipes: &DuplexPipes, timeout: Duration) -> windows::core::Result<()> {
+/// `Connect` forever if the child never reaches the code that opens them.
+/// Polled in short slices rather than one long wait, so a child that exits
+/// early — a crash, or (what this was written for) CEF's own
+/// `ContentMainRun`/`ProcessSingleton` failing before any of the code that
+/// opens these pipes ever runs — is noticed within one poll interval instead
+/// of costing the full timeout for nothing. Blocking `ConnectNamedPipe` runs
+/// on a background thread; giving up here — on a timeout or an early exit —
+/// leaves it blocked forever on a handle this function's caller is about to
+/// close, but nothing is listening on the far end of that thread's channel
+/// send by then either.
+fn connect_duplex_pipes(
+    pipes: &DuplexPipes,
+    process: HANDLE,
+    timeout: Duration,
+) -> windows::core::Result<()> {
     fn connect_one(pipe: HANDLE) -> windows::core::Result<()> {
         match unsafe { ConnectNamedPipe(pipe, None) } {
             // The client connected between CreateNamedPipeW and this call —
@@ -213,6 +231,10 @@ fn connect_duplex_pipes(pipes: &DuplexPipes, timeout: Duration) -> windows::core
             Err(e) if e.code() == ERROR_PIPE_CONNECTED.to_hresult() => Ok(()),
             other => other,
         }
+    }
+
+    fn timed_out() -> windows::core::Error {
+        windows::core::Error::from(windows::core::HRESULT::from_win32(ERROR_TIMEOUT.0))
     }
 
     // `HANDLE` wraps a raw pointer and so is not `Send`; the pointer value
@@ -228,11 +250,27 @@ fn connect_duplex_pipes(pipes: &DuplexPipes, timeout: Duration) -> windows::core
         let _ = tx.send(outcome);
     });
 
-    rx.recv_timeout(timeout).unwrap_or_else(|_| {
-        Err(windows::core::Error::from(
-            windows::core::HRESULT::from_win32(ERROR_TIMEOUT.0),
-        ))
-    })
+    const POLL_INTERVAL: Duration = Duration::from_millis(100);
+    let deadline = std::time::Instant::now() + timeout;
+    loop {
+        let remaining = deadline.saturating_duration_since(std::time::Instant::now());
+        if remaining.is_zero() {
+            return Err(timed_out());
+        }
+        match rx.recv_timeout(POLL_INTERVAL.min(remaining)) {
+            Ok(outcome) => return outcome,
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return Err(timed_out()),
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                if unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0 {
+                    log::error!(
+                        "sign-in window exited before connecting its IPC pipes ({})",
+                        describe_exit(process)
+                    );
+                    return Err(timed_out());
+                }
+            }
+        }
+    }
 }
 
 /// Bounded so a child that never opens the pipes (crashed before reaching
@@ -288,7 +326,7 @@ fn run_cef_host(
         }
     };
 
-    if let Err(e) = connect_duplex_pipes(&pipes, PIPE_CONNECT_TIMEOUT) {
+    if let Err(e) = connect_duplex_pipes(&pipes, process.hProcess, PIPE_CONNECT_TIMEOUT) {
         log::error!("sign-in window never connected its IPC pipes: {e}");
         unsafe {
             let _ = CloseHandle(pipes.result_server);
