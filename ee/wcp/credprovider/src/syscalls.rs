@@ -525,7 +525,7 @@ pub fn service_account_token(username: &str, password: &str) -> windows::core::R
 /// raw bytes for the Win32 calls that want a `PSID`; the keyring store
 /// (like the interactive user's, `credential.rs`) is keyed by the string
 /// form instead.
-fn sid_to_string(sid: &[u8]) -> windows::core::Result<String> {
+pub(crate) fn sid_to_string(sid: &[u8]) -> windows::core::Result<String> {
     unsafe {
         let mut wide_sid = PWSTR(std::ptr::null_mut());
         ConvertSidToStringSidW(PSID(sid.as_ptr() as *mut _), &mut wide_sid)?;

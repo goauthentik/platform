@@ -1,27 +1,38 @@
 //! Spawns `ak_cef.exe` in the interactive session and exchanges
-//! `wire`-framed messages with it over a duplex pair of anonymous pipes: a
+//! `wire`-framed messages with it over a duplex pair of named pipes: a
 //! result pipe it writes to, and a control pipe this process writes a
-//! cancel signal to.
+//! cancel signal to. Named rather than anonymous-and-inherited because
+//! `CreateProcessWithTokenW` — needed to launch as the service account
+//! without privileges LogonUI's own token does not hold — has no handle
+//! inheritance mechanism at all.
 
 use std::ffi::c_void;
 use std::fs::File;
 use std::mem::size_of;
 use std::os::windows::io::FromRawHandle;
 use std::path::Path;
+use std::time::Duration;
 
 use windows::{
     Win32::{
         Foundation::{
-            CloseHandle, E_FAIL, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, SetHandleInformation,
-            WAIT_OBJECT_0,
+            CloseHandle, E_FAIL, ERROR_PIPE_CONNECTED, ERROR_TIMEOUT, GetLastError, HANDLE, HLOCAL,
+            LocalFree, WAIT_OBJECT_0,
         },
-        Security::{SE_ASSIGNPRIMARYTOKEN_NAME, SE_INCREASE_QUOTA_NAME, SECURITY_ATTRIBUTES},
-        System::Pipes::CreatePipe,
+        Security::{
+            Authorization::{
+                ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1,
+            },
+            PSECURITY_DESCRIPTOR, SE_IMPERSONATE_NAME, SECURITY_ATTRIBUTES,
+        },
+        Storage::FileSystem::{
+            FILE_FLAGS_AND_ATTRIBUTES, PIPE_ACCESS_INBOUND, PIPE_ACCESS_OUTBOUND,
+        },
+        System::Pipes::{ConnectNamedPipe, CreateNamedPipeW, NAMED_PIPE_MODE},
         System::Threading::{
-            CreateProcessAsUserW, CreateProcessW, DeleteProcThreadAttributeList,
-            EXTENDED_STARTUPINFO_PRESENT, GetExitCodeProcess, InitializeProcThreadAttributeList,
-            LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION,
-            STARTUPINFOEXW, UpdateProcThreadAttribute, WaitForSingleObject,
+            CreateProcessW, CreateProcessWithTokenW, GetExitCodeProcess, LOGON_WITH_PROFILE,
+            PROCESS_CREATION_FLAGS, PROCESS_INFORMATION, STARTUPINFOW, TerminateProcess,
+            WaitForSingleObject,
         },
         UI::Shell::{CPUS_CREDUI, CREDENTIAL_PROVIDER_USAGE_SCENARIO},
         UI::WindowsAndMessaging::AllowSetForegroundWindow,
@@ -81,52 +92,178 @@ fn desktop_for(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> Option<Vec<u16>> {
 }
 
 struct DuplexPipes {
-    result_read: HANDLE,
-    result_write_inheritable: HANDLE,
-    cancel_write: HANDLE,
-    cancel_read_inheritable: HANDLE,
+    result_name: String,
+    result_server: HANDLE,
+    cancel_name: String,
+    cancel_server: HANDLE,
 }
 
-/// One inheritable pipe pair each way. Our own end of each is marked
-/// non-inheritable so the child can't hold it open and mask an EOF.
-fn create_duplex_pipes() -> windows::core::Result<DuplexPipes> {
+/// A security descriptor granting the pipe server (this process, SYSTEM)
+/// full control and `sid` — the only other identity that will ever try to
+/// open the pipe, the child this is created for — the one direction it
+/// needs. A named pipe created with no explicit DACL is reachable only by
+/// its creator's own identity, which the service account is not.
+/// `access` is an SDDL generic-rights token: `"GR"` or `"GW"`.
+struct PipeSecurityDescriptor(PSECURITY_DESCRIPTOR);
+
+impl PipeSecurityDescriptor {
+    fn new(sid: &str, access: &str) -> windows::core::Result<Self> {
+        let sddl = format!("D:(A;;GA;;;SY)(A;;{access};;;{sid})");
+        let sddl_wide: Vec<u16> = sddl.encode_utf16().chain(std::iter::once(0)).collect();
+        let mut sd = PSECURITY_DESCRIPTOR::default();
+        unsafe {
+            ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                PCWSTR(sddl_wide.as_ptr()),
+                SDDL_REVISION_1,
+                &mut sd,
+                None,
+            )?;
+        }
+        Ok(Self(sd))
+    }
+}
+
+impl Drop for PipeSecurityDescriptor {
+    fn drop(&mut self) {
+        unsafe {
+            let _ = LocalFree(Some(HLOCAL(self.0.0)));
+        }
+    }
+}
+
+fn create_named_pipe(
+    name: &str,
+    open_mode: FILE_FLAGS_AND_ATTRIBUTES,
+    sd: &PipeSecurityDescriptor,
+) -> windows::core::Result<HANDLE> {
+    let name_wide: Vec<u16> = name.encode_utf16().chain(std::iter::once(0)).collect();
     let sa = SECURITY_ATTRIBUTES {
         nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,
-        lpSecurityDescriptor: std::ptr::null_mut(),
-        bInheritHandle: true.into(),
+        lpSecurityDescriptor: sd.0.0,
+        bInheritHandle: false.into(),
     };
-
-    // Returns (ours, child's) for a pipe flowing in the given direction.
-    let pipe = |ours_reads: bool| -> windows::core::Result<(HANDLE, HANDLE)> {
-        let mut read = HANDLE::default();
-        let mut write = HANDLE::default();
-        unsafe { CreatePipe(&mut read, &mut write, Some(&sa), 0) }?;
-        let (ours, theirs) = if ours_reads {
-            (read, write)
-        } else {
-            (write, read)
-        };
-        unsafe { SetHandleInformation(ours, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }?;
-        Ok((ours, theirs))
+    let handle = unsafe {
+        CreateNamedPipeW(
+            PCWSTR(name_wide.as_ptr()),
+            open_mode,
+            NAMED_PIPE_MODE(0), // byte-mode, blocking — PIPE_TYPE_BYTE|PIPE_READMODE_BYTE|PIPE_WAIT
+            1,
+            4096,
+            4096,
+            0,
+            Some(&sa),
+        )
     };
+    if handle.is_invalid() {
+        return Err(windows::core::Error::from_hresult(
+            windows::core::HRESULT::from_win32(unsafe { GetLastError().0 }),
+        ));
+    }
+    Ok(handle)
+}
 
-    let (result_read, result_write_inheritable) = pipe(true)?;
-    let (cancel_write, cancel_read_inheritable) = pipe(false)?;
+/// One named pipe pair, one instance each, scoped to `connecting_sid` — the
+/// service account for the real logon scenarios, or `None` under
+/// `CPUS_CREDUI`, where the child runs as this same caller and needs no
+/// extra grant. A fresh, random name per launch: nothing else should ever
+/// connect to either end, and a fixed name would let a second sign-in
+/// attempt (or anything else) race this one for it.
+fn create_duplex_pipes(connecting_sid: Option<&str>) -> windows::core::Result<DuplexPipes> {
+    let id = uuid::Uuid::new_v4();
+    let result_name = format!(r"\\.\pipe\authentik\wcp-{id}-result");
+    let cancel_name = format!(r"\\.\pipe\authentik\wcp-{id}-cancel");
+
+    // `SY` (SYSTEM) is always granted; the child only needs an extra ACE
+    // when it is a different identity from this process.
+    let sid = connecting_sid.unwrap_or("SY");
+    // The child writes the result and reads the cancel signal.
+    let result_sd = PipeSecurityDescriptor::new(sid, "GW")?;
+    let cancel_sd = PipeSecurityDescriptor::new(sid, "GR")?;
+
+    let result_server = create_named_pipe(&result_name, PIPE_ACCESS_INBOUND, &result_sd)?;
+    let cancel_server = match create_named_pipe(&cancel_name, PIPE_ACCESS_OUTBOUND, &cancel_sd) {
+        Ok(h) => h,
+        Err(e) => {
+            unsafe {
+                let _ = CloseHandle(result_server);
+            }
+            return Err(e);
+        }
+    };
 
     Ok(DuplexPipes {
-        result_read,
-        result_write_inheritable,
-        cancel_write,
-        cancel_read_inheritable,
+        result_name,
+        result_server,
+        cancel_name,
+        cancel_server,
     })
 }
+
+/// Connects both ends within `timeout`, or gives up rather than hang
+/// `Connect` forever if the child never reaches the code that opens them
+/// (e.g. it crashed first). Blocking `ConnectNamedPipe` runs on a
+/// background thread; on a timeout, closing our own handles is what
+/// unblocks it — not clean, but nothing is listening on the far end of
+/// that thread's channel send by then either.
+fn connect_duplex_pipes(pipes: &DuplexPipes, timeout: Duration) -> windows::core::Result<()> {
+    fn connect_one(pipe: HANDLE) -> windows::core::Result<()> {
+        match unsafe { ConnectNamedPipe(pipe, None) } {
+            // The client connected between CreateNamedPipeW and this call —
+            // already connected, not a failure.
+            Err(e) if e.code() == ERROR_PIPE_CONNECTED.to_hresult() => Ok(()),
+            other => other,
+        }
+    }
+
+    // `HANDLE` wraps a raw pointer and so is not `Send`; the pointer value
+    // itself is fine to hand to another thread; only `ConnectNamedPipe`'s
+    // synchronous wait needs to happen off this one.
+    let result_server = pipes.result_server.0 as usize;
+    let cancel_server = pipes.cancel_server.0 as usize;
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let result_server = HANDLE(result_server as *mut c_void);
+        let cancel_server = HANDLE(cancel_server as *mut c_void);
+        let outcome = connect_one(result_server).and_then(|()| connect_one(cancel_server));
+        let _ = tx.send(outcome);
+    });
+
+    rx.recv_timeout(timeout).unwrap_or_else(|_| {
+        Err(windows::core::Error::from(
+            windows::core::HRESULT::from_win32(ERROR_TIMEOUT.0),
+        ))
+    })
+}
+
+/// Bounded so a child that never opens the pipes (crashed before reaching
+/// that code, or was somehow refused the ACL grant) fails cleanly rather
+/// than hanging `Connect`. Generous because CEF's own startup, plus the
+/// `ak-sysd` round trip `open_sign_in_window` makes first, routinely takes
+/// longer than a person would guess.
+const PIPE_CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
 
 fn run_cef_host(
     cef_exe: &Path,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
-    let pipes = match create_duplex_pipes() {
+    let connecting_sid = if may_launch_in_current_session(cpus) {
+        None
+    } else {
+        match syscalls::account_sid(syscalls::SERVICE_ACCOUNT_NAME)
+            .and_then(|sid| syscalls::sid_to_string(&sid))
+        {
+            Ok(sid) => Some(sid),
+            Err(e) => {
+                log::error!("could not resolve the service account's SID: {e}");
+                return AuthResult::Failed {
+                    reason: "failed to create IPC pipes".to_string(),
+                };
+            }
+        }
+    };
+
+    let pipes = match create_duplex_pipes(connecting_sid.as_deref()) {
         Ok(p) => p,
         Err(e) => {
             log::error!("failed to create IPC pipes: {e}");
@@ -137,18 +274,13 @@ fn run_cef_host(
     };
 
     let spawn = spawn_cef_host(cef_exe, &pipes, cpus);
-    unsafe {
-        let _ = CloseHandle(pipes.result_write_inheritable);
-        let _ = CloseHandle(pipes.cancel_read_inheritable);
-    }
-
     let process = match spawn {
         Ok(p) => p,
         Err(e) => {
             log::error!("failed to launch {}: {e}", cef_exe.display());
             unsafe {
-                let _ = CloseHandle(pipes.result_read);
-                let _ = CloseHandle(pipes.cancel_write);
+                let _ = CloseHandle(pipes.result_server);
+                let _ = CloseHandle(pipes.cancel_server);
             }
             return AuthResult::Failed {
                 reason: "failed to launch sign-in window".to_string(),
@@ -156,16 +288,30 @@ fn run_cef_host(
         }
     };
 
+    if let Err(e) = connect_duplex_pipes(&pipes, PIPE_CONNECT_TIMEOUT) {
+        log::error!("sign-in window never connected its IPC pipes: {e}");
+        unsafe {
+            let _ = CloseHandle(pipes.result_server);
+            let _ = CloseHandle(pipes.cancel_server);
+            let _ = TerminateProcess(process.hProcess, 1);
+            let _ = CloseHandle(process.hProcess);
+            let _ = CloseHandle(process.hThread);
+        }
+        return AuthResult::Failed {
+            reason: "sign-in window did not respond".to_string(),
+        };
+    }
+
     let result = wait_for_result(
-        pipes.result_read,
-        pipes.cancel_write,
+        pipes.result_server,
+        pipes.cancel_server,
         process.hProcess,
         process.dwProcessId,
         should_continue,
     );
 
     unsafe {
-        let _ = CloseHandle(pipes.cancel_write);
+        let _ = CloseHandle(pipes.cancel_server);
         let _ = WaitForSingleObject(process.hProcess, 5_000);
         let _ = CloseHandle(process.hProcess);
         let _ = CloseHandle(process.hThread);
@@ -384,48 +530,18 @@ fn spawn_cef_host(
     let cmdline = format!(
         "\"{}\" --result-pipe {} --cancel-pipe {}",
         cef_exe.display(),
-        pipes.result_write_inheritable.0 as usize,
-        pipes.cancel_read_inheritable.0 as usize
+        pipes.result_name,
+        pipes.cancel_name
     );
-    let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
 
-    let mut attr_size = 0usize;
-    unsafe {
-        let _ = InitializeProcThreadAttributeList(None, 1, Some(0), &mut attr_size);
-    }
-    let mut attr_buf = vec![0u8; attr_size];
-    let attr_list = LPPROC_THREAD_ATTRIBUTE_LIST(attr_buf.as_mut_ptr() as *mut c_void);
-    unsafe { InitializeProcThreadAttributeList(Some(attr_list), 1, Some(0), &mut attr_size) }?;
-
-    let inherit_handles = [
-        pipes.result_write_inheritable,
-        pipes.cancel_read_inheritable,
-    ];
-    let update = unsafe {
-        UpdateProcThreadAttribute(
-            attr_list,
-            0,
-            PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
-            Some(inherit_handles.as_ptr() as *const c_void),
-            size_of::<[HANDLE; 2]>(),
-            None,
-            None,
-        )
-    };
-    if update.is_err() {
-        unsafe { DeleteProcThreadAttributeList(attr_list) };
-        return Err(windows::core::Error::from(E_FAIL));
-    }
-
-    let mut si = STARTUPINFOEXW {
-        lpAttributeList: attr_list,
+    let mut si = STARTUPINFOW {
+        cb: size_of::<STARTUPINFOW>() as u32,
         ..Default::default()
     };
-    si.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
     // Outlives every `CreateProcess*` call below; `lpDesktop` borrows it.
     let mut desktop = desktop_for(cpus);
     if let Some(desktop) = desktop.as_mut() {
-        si.StartupInfo.lpDesktop = PWSTR(desktop.as_mut_ptr());
+        si.lpDesktop = PWSTR(desktop.as_mut_ptr());
     }
     let mut pi = PROCESS_INFORMATION::default();
 
@@ -436,7 +552,6 @@ fn spawn_cef_host(
             Ok(token) => Some(token),
             Err(e) => {
                 log::error!("could not acquire the service account's token: {e}");
-                unsafe { DeleteProcThreadAttributeList(attr_list) };
                 return Err(e);
             }
         }
@@ -455,57 +570,24 @@ fn spawn_cef_host(
         }
     );
 
-    let mut spawned = match token {
-        Some(token) => unsafe {
-            // Disabled by default like `SE_TCB_NAME` before it; without
-            // enabling them, `CreateProcessAsUserW` fails with
-            // `ERROR_NOT_ALL_ASSIGNED` even though `token` is valid.
-            if let Err(e) = syscalls::enable_privilege(
-                SE_ASSIGNPRIMARYTOKEN_NAME,
-                "SeAssignPrimaryTokenPrivilege",
-            ) {
-                log::warn!("could not enable SeAssignPrimaryTokenPrivilege: {e}");
-            }
+    let spawned = match token {
+        Some(token) => {
+            // Confirmed enabled on the test box, but `SE_TCB_NAME` looked
+            // that way too until it turned out not to be held at all —
+            // enable it defensively rather than trust the default.
             if let Err(e) =
-                syscalls::enable_privilege(SE_INCREASE_QUOTA_NAME, "SeIncreaseQuotaPrivilege")
+                syscalls::enable_privilege(SE_IMPERSONATE_NAME, "SeImpersonatePrivilege")
             {
-                log::warn!("could not enable SeIncreaseQuotaPrivilege: {e}");
+                log::warn!("could not enable SeImpersonatePrivilege: {e}");
             }
-            CreateProcessAsUserW(
-                Some(token),
-                PCWSTR::null(),
-                Some(PWSTR(cmdline_wide.as_mut_ptr())),
-                None,
-                None,
-                true,
-                EXTENDED_STARTUPINFO_PRESENT,
-                None,
-                PCWSTR::null(),
-                &si.StartupInfo,
-                &mut pi,
-            )
-        },
-        None => spawn_in_current_session(&cmdline, &si.StartupInfo, &mut pi),
-    };
-
-    // Belt and braces on top of the privilege-enabling above. Under
-    // `CPUS_CREDUI` the fallback is the right outcome anyway, so retry
-    // rather than failing outright if this still comes up.
-    if let Err(e) = spawned.as_ref()
-        && token.is_some()
-        && may_launch_in_current_session(cpus)
-    {
-        log::debug!("CreateProcessAsUserW failed ({e}); retrying in the current session");
-        spawned = spawn_in_current_session(&cmdline, &si.StartupInfo, &mut pi);
-    }
-
-    unsafe {
-        DeleteProcThreadAttributeList(attr_list);
-        if let Some(token) = token {
-            let _ = CloseHandle(token);
+            let result = spawn_with_token(token, &cmdline, &si, &mut pi);
+            unsafe {
+                let _ = CloseHandle(token);
+            }
+            result
         }
-    }
-
+        None => spawn_in_current_session(&cmdline, &si, &mut pi),
+    };
     spawned?;
 
     // A freshly spawned process may not bring its own window forward without
@@ -527,11 +609,41 @@ fn spawn_cef_host(
     Ok(pi)
 }
 
+/// Brokered through the Secondary Logon service rather than done directly,
+/// which is why this needs only `SE_IMPERSONATE_NAME` where
+/// `CreateProcessAsUserW` needed `SE_ASSIGNPRIMARYTOKEN_NAME` and
+/// `SE_INCREASE_QUOTA_NAME` — both of them confirmed absent from LogonUI's
+/// token. `LOGON_WITH_PROFILE` loads the service account's profile, same as
+/// a real interactive logon would; without it `%TEMP%` and the rest of the
+/// per-user environment CEF wants resolve to nothing.
+fn spawn_with_token(
+    token: HANDLE,
+    cmdline: &str,
+    si: &STARTUPINFOW,
+    pi: &mut PROCESS_INFORMATION,
+) -> windows::core::Result<()> {
+    let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
+    unsafe {
+        CreateProcessWithTokenW(
+            token,
+            LOGON_WITH_PROFILE,
+            PCWSTR::null(),
+            Some(PWSTR(cmdline_wide.as_mut_ptr())),
+            PROCESS_CREATION_FLAGS(0),
+            None,
+            PCWSTR::null(),
+            si,
+            pi,
+        )
+    }
+}
+
 /// `CreateProcessW` may write into the command-line buffer it is handed, so
-/// each attempt gets a fresh copy.
+/// each attempt gets a fresh copy. No handles to inherit — the pipes are
+/// named, not anonymous — so `bInheritHandles` is `false`.
 fn spawn_in_current_session(
     cmdline: &str,
-    startup_info: &windows::Win32::System::Threading::STARTUPINFOW,
+    startup_info: &STARTUPINFOW,
     pi: &mut PROCESS_INFORMATION,
 ) -> windows::core::Result<()> {
     let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
@@ -541,8 +653,8 @@ fn spawn_in_current_session(
             Some(PWSTR(cmdline_wide.as_mut_ptr())),
             None,
             None,
-            true,
-            EXTENDED_STARTUPINFO_PRESENT,
+            false,
+            PROCESS_CREATION_FLAGS(0),
             None,
             PCWSTR::null(),
             startup_info,
@@ -729,7 +841,9 @@ mod tests {
     /// which otherwise only surfaces as one generic "Sign-in failed" string.
     #[test]
     fn credui_spawn_succeeds_without_an_interactive_token() {
-        let pipes = create_duplex_pipes().expect("create duplex pipes");
+        // `None`: `CPUS_CREDUI` runs the child in this same session, so it
+        // needs no extra ACE beyond the SYSTEM one every pipe already gets.
+        let pipes = create_duplex_pipes(None).expect("create duplex pipes");
 
         // Any real executable will do: this asserts the process is created,
         // not what it does. It exits immediately on the unknown arguments.
@@ -740,15 +854,13 @@ mod tests {
         let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI);
 
         unsafe {
-            let _ = CloseHandle(pipes.result_read);
-            let _ = CloseHandle(pipes.result_write_inheritable);
-            let _ = CloseHandle(pipes.cancel_write);
-            let _ = CloseHandle(pipes.cancel_read_inheritable);
+            let _ = CloseHandle(pipes.result_server);
+            let _ = CloseHandle(pipes.cancel_server);
         }
 
         match spawned {
             Ok(pi) => unsafe {
-                let _ = windows::Win32::System::Threading::TerminateProcess(pi.hProcess, 0);
+                let _ = TerminateProcess(pi.hProcess, 0);
                 let _ = CloseHandle(pi.hProcess);
                 let _ = CloseHandle(pi.hThread);
             },

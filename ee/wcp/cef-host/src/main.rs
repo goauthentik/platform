@@ -138,11 +138,11 @@ fn main() {
         "browser process must not be handled by execute_process"
     );
 
-    let Some(result_pipe) = arg_value("--result-pipe").and_then(|s| s.parse::<usize>().ok()) else {
+    let Some(result_pipe) = arg_value("--result-pipe") else {
         log::error!("missing --result-pipe argument");
         return;
     };
-    let cancel_pipe = arg_value("--cancel-pipe").and_then(|s| s.parse::<usize>().ok());
+    let cancel_pipe = arg_value("--cancel-pipe");
 
     wipe_browser_state(Path::new(ROOT_CACHE_PATH));
 

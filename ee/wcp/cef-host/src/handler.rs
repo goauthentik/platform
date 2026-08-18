@@ -9,6 +9,12 @@ use std::sync::{Arc, Mutex, Weak};
 
 use ak_ee_wcp_wire::AuthResult;
 use cef::*;
+use windows::Win32::Foundation::{ERROR_PIPE_BUSY, GENERIC_READ, GENERIC_WRITE};
+use windows::Win32::Storage::FileSystem::{
+    CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_MODE, OPEN_EXISTING,
+};
+use windows::Win32::System::Pipes::WaitNamedPipeW;
+use windows::core::PCWSTR;
 
 pub struct SignInHandler {
     header_token: String,
@@ -230,8 +236,47 @@ wrap_resource_request_handler! {
     }
 }
 
-/// Wraps an inherited raw pipe handle as an owned `File`. Called once at
-/// startup for each of the two pipes this process was handed.
-pub fn file_from_raw_handle(handle: usize) -> File {
-    unsafe { File::from_raw_handle(handle as *mut std::ffi::c_void) }
+/// Opens `name` — created and already listening server-side before this
+/// process was even spawned — and retries on `ERROR_PIPE_BUSY` rather than
+/// failing immediately. That should not happen: this process is the pipe's
+/// only client, so nothing else can be holding its one instance. Bounded to
+/// ~10s so a bug here fails visibly instead of hanging the message loop
+/// forever; the credential provider's own wait on the far end gives up
+/// sooner than that anyway.
+fn connect_named_pipe(name: &str, access: u32) -> windows::core::Result<File> {
+    let name_wide: Vec<u16> = name.encode_utf16().chain(std::iter::once(0)).collect();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    loop {
+        let opened = unsafe {
+            CreateFileW(
+                PCWSTR(name_wide.as_ptr()),
+                access,
+                FILE_SHARE_MODE(0),
+                None,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                None,
+            )
+        };
+        match opened {
+            Ok(handle) => return Ok(unsafe { File::from_raw_handle(handle.0) }),
+            Err(e)
+                if e.code() == windows::core::HRESULT::from_win32(ERROR_PIPE_BUSY.0)
+                    && std::time::Instant::now() < deadline =>
+            unsafe {
+                let _ = WaitNamedPipeW(PCWSTR(name_wide.as_ptr()), 1000);
+            },
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+/// The child writes the result, so it opens for writing.
+pub fn connect_result_pipe(name: &str) -> windows::core::Result<File> {
+    connect_named_pipe(name, GENERIC_WRITE.0)
+}
+
+/// The child reads the cancel signal, so it opens for reading.
+pub fn connect_cancel_pipe(name: &str) -> windows::core::Result<File> {
+    connect_named_pipe(name, GENERIC_READ.0)
 }

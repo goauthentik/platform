@@ -27,13 +27,26 @@ below. The service account now gets its token the same way GCPW does:
 `LogonUserW` with a stored password, then `CreateRestrictedToken` to strip
 every privilege before the token is ever used.
 
-**Verified on a VM** (before the S4U replacement) against the manual
+**Assigning that token hit the same wall one layer deeper, and was also
+replaced.** `CreateProcessAsUserW` needs the caller to hold
+`SE_ASSIGNPRIMARYTOKEN_NAME`/`SE_INCREASE_QUOTA_NAME`; a real install
+returned `ERROR_PRIVILEGE_NOT_HELD` (0x80070522), and — same lesson as
+`SE_TCB_NAME` — those privileges are absent from LogonUI's token, not merely
+disabled. Replaced with `CreateProcessWithTokenW`, which needs only
+`SE_IMPERSONATE_NAME` (confirmed present and enabled on the test box via
+`PsExec -s whoami /priv`) because it is brokered through the Secondary Logon
+service rather than assigning the token directly. See "Assigning the token"
+below. That API has no handle-inheritance mechanism at all, which forced the
+IPC redesign described there too: the result/cancel pipe pair is now named
+rather than anonymous-and-inherited.
+
+**Verified on a VM** (before either replacement above) against the manual
 checklist in `e2e/README.md`: the tile appeared, the sign-in window opened on
 the secure desktop, and both fresh logon and unlock completed. That VM run
-predates the S4U failure above and does not carry over to the current
-`LogonUserW`-based code — the `WinSta0\Winlogon` ACL grant holding is still
-good evidence, since that part is unchanged, but the token-acquisition path
-it exercised no longer exists. Needs a fresh VM run.
+predates both failures above and does not carry over to the current code —
+the `WinSta0\Winlogon` ACL grant holding is still good evidence, since that
+part is unchanged, but the token-acquisition and process-launch paths it
+exercised no longer exist. Needs a fresh VM run.
 
 This file previously lived on `ee/wcp/rs-cef-fresh` and was deleted there in
 a "cleanup" commit an hour after being written, along with three sibling
@@ -198,6 +211,41 @@ network credentials) carries the account's actual credentials the same way
 any normal interactive or batch logon does. Nothing about this design rules
 out integrated auth for this account if it were ever needed — the question
 in the original "Decisions" list is moot, not settled in either direction.
+
+### Assigning the token — `CreateProcessAsUserW` needed privileges LogonUI didn't have either
+
+Minting the token was only half the problem. `CreateProcessAsUserW` — the
+call that actually launches `ak_cef.exe` with it — requires the *caller* to
+hold `SE_ASSIGNPRIMARYTOKEN_NAME` and `SE_INCREASE_QUOTA_NAME`. A real
+install produced `ERROR_PRIVILEGE_NOT_HELD` (0x80070522), and checking
+`AdjustTokenPrivileges`'s actual result (not just its optimistic return
+value, the same trap `SE_TCB_NAME` hit) confirmed the same story: both
+privileges are absent from LogonUI's token, not disabled.
+
+`CreateProcessWithTokenW` sidesteps this. It is not a direct syscall — it
+asks the Secondary Logon (`seclogon`) service to do the launch on its
+behalf — so the caller only needs `SE_IMPERSONATE_NAME`, which `PsExec -s
+whoami /priv` confirmed is present and enabled for SYSTEM on the same box.
+`ipc.rs::spawn_with_token` enables it defensively before the call anyway,
+on the now-established principle that "looks enabled by default" is not
+something to trust without checking.
+
+The cost is that `CreateProcessWithTokenW` takes a plain `STARTUPINFOW`, not
+`STARTUPINFOEXW`, and has no handle-inheritance mechanism at all — there is
+no attribute list to hand it a set of handles to pass down, the way
+`CreateProcessAsUserW` had. The result/cancel pipe pair that `ak_cef.exe`
+uses to report its outcome back therefore could not stay anonymous-and-
+inherited; `ipc.rs` now creates a **named** pipe pair instead
+(`create_duplex_pipes`), with a random UUID in the name so nothing else can
+guess and connect to either end, and an SDDL DACL
+(`ConvertStringSecurityDescriptorToSecurityDescriptorW`) scoping access to
+SYSTEM plus the service account's own SID — the only two identities that
+should ever be able to open them. The child is handed the pipe *names* on
+its command line instead of inherited handle values, and opens them itself
+with `CreateFileW`
+(`cef-host/src/handler.rs::connect_result_pipe`/`connect_cancel_pipe`); the
+parent blocks on `ConnectNamedPipe` (`connect_duplex_pipes`, bounded to 15s)
+before trusting the pipes are live on the other end.
 
 ### The rest of the work
 
