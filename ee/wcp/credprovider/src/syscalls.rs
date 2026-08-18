@@ -620,9 +620,10 @@ pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
 }
 
 /// Denies the service account the logon types that would let it sign someone
-/// in — it must not be usable at the very screen it serves. `Service`,
-/// what `service_account_token` uses, is deliberately not among these.
-/// `LsaAddAccountRights` is itself idempotent, so this is safe on every load.
+/// in — it must not be usable at the very screen it serves. `Batch`, what
+/// `service_account_token` uses (`LOGON32_LOGON_BATCH`), is deliberately not
+/// among these. `LsaAddAccountRights` is itself idempotent, so this is safe
+/// on every load.
 pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<()> {
     const RIGHTS: [&str; 3] = [
         "SeDenyInteractiveLogonRight",
