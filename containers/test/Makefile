@@ -1,6 +1,6 @@
 include ../../common.mk
 
-base_ver := $(shell cat Dockerfile | grep FROM | awk '{print $$2}' | awk -F: '{print $$2}')
+base_ver := ${UBUNTU_VERSION}
 container_ver := ${base_ver}-ak-${VERSION}
 
 .PHONY: ci-container-tag
@@ -17,7 +17,9 @@ local-build:
 	mkdir -p ${TOP}/bin
 	docker build \
 		-t ghcr.io/goauthentik/platform-test:${container_ver} \
+		-t xghcr.io/goauthentik/platform-test:local-${UBUNTU_VERSION} \
 		-t xghcr.io/goauthentik/platform-test:local \
 		--build-arg="AK_PLATFORM_ARCH=${ARCH}" \
+		--build-arg="UBUNTU_VERSION=${UBUNTU_VERSION}" \
 		-f "${PWD}/Dockerfile" \
 		.

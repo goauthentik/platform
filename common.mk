@@ -16,6 +16,10 @@ else
 	VERSION_PKG = ${VERSION}
 endif
 VERSION_TS = $(shell date +%s)
+# Ubuntu release the e2e test machine is built from. The full set under test is
+# enumerated in .github/workflows/test.yml's e2e matrix.
+UBUNTU_VERSION ?= 24.04
+export AK_E2E_UBUNTU_VERSION := $(UBUNTU_VERSION)
 PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)

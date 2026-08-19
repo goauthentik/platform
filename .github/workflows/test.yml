@@ -162,9 +162,18 @@ jobs:
       platforms: '["ubuntu-24.04"]'
     secrets: inherit
   test_rs_e2e:
-    name: Test (e2e)
+    name: Test (e2e ${{ matrix.ubuntu_version }})
     needs: [package_linux_e2e]
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu_version:
+          - "24.04"
+          - "25.10"
+          - "26.04"
     runs-on: ubuntu-24.04
+    env:
+      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
@@ -223,18 +232,18 @@ jobs:
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov
