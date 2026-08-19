@@ -92,9 +92,7 @@ impl Drop for TestMachine {
             tracing::info!("Test machine cleanup");
             tokio::runtime::Handle::current().block_on(async {
                 for cmd in [
-                    "journalctl -u ak-sysd",
-                    "journalctl -u ak-agent",
-                    "journalctl -u ssh",
+                    "journalctl",
                     "systemctl stop ak-sysd",
                     "systemctl stop ak-agent",
                 ] {
