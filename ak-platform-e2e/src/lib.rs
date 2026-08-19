@@ -22,8 +22,12 @@ pub fn test_init() {
         .enable();
 }
 
+pub fn is_ci() -> bool {
+    env::var("CI").as_deref() == Ok("true")
+}
+
 pub fn local_authentik_url() -> String {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         env::var("AK_URL").unwrap_or_else(|_| "http://localhost:9000".to_string())
     } else {
         "http://host.docker.internal:9123".to_string()
@@ -31,7 +35,7 @@ pub fn local_authentik_url() -> String {
 }
 
 pub fn container_authentik_url() -> String {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         "http://host.docker.internal:9000".to_string()
     } else {
         "http://host.docker.internal:9123".to_string()
@@ -39,7 +43,7 @@ pub fn container_authentik_url() -> String {
 }
 
 pub fn authentik_creds() -> (String, String) {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         (
             "akadmin".to_string(),
             env::var("AK_PASSWORD").unwrap_or_default(),
@@ -53,7 +57,7 @@ pub fn authentik_creds() -> (String, String) {
 }
 
 pub fn authentik_token() -> String {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         env::var("AK_TOKEN").unwrap_or_default()
     } else {
         "this-token-is-for-testing-dont-use".to_string()
@@ -260,7 +264,9 @@ pub async fn exec_command(
     cmd: &str,
     env_vars: &[(&str, &str)],
 ) -> Result<(i64, String)> {
-    tracing::info!("[exec] {}", cmd);
+    if !is_ci() {
+        tracing::info!("[exec] {}", cmd);
+    }
     let exec_cmd = ExecCommand::new(["sh", "-c", cmd])
         .with_env_vars(env_vars.iter().map(|(k, v)| (k.to_string(), v.to_string())))
         .with_cmd_ready_condition(CmdWaitFor::Exit { code: None });
@@ -271,7 +277,11 @@ pub async fn exec_command(
         .wrap_err(format!("exec failed: '{}'", cmd))?;
 
     let exit_code = result.exit_code().await.unwrap().unwrap();
-    tracing::info!("[exec] {} exit={}", cmd, exit_code);
+    if is_ci() {
+        println!("::group::{cmd} (Exit code {exit_code}");
+    } else {
+        tracing::info!("[exec] {} exit={}", cmd, exit_code);
+    }
     let stdout_str = String::from_utf8_lossy(&result.stdout_to_vec().await?).into_owned();
     let stderr_str = String::from_utf8_lossy(&result.stderr_to_vec().await?).into_owned();
     stdout_str
@@ -281,6 +291,9 @@ pub async fn exec_command(
         .lines()
         .for_each(|l| tracing::warn!("[stderr] {}", l));
 
+    if is_ci() {
+        println!("::endgroup::");
+    }
     let output = format!("{}{}", stdout_str, stderr_str);
 
     Ok((exit_code, output))
