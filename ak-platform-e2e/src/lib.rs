@@ -278,7 +278,7 @@ pub async fn exec_command(
 
     let exit_code = result.exit_code().await.unwrap().unwrap();
     if is_ci() {
-        println!("::group::{cmd} (Exit code {exit_code}");
+        eprintln!("::group::{cmd} (Exit code {exit_code})");
     } else {
         tracing::info!("[exec] {} exit={}", cmd, exit_code);
     }
@@ -292,7 +292,7 @@ pub async fn exec_command(
         .for_each(|l| tracing::warn!("[stderr] {}", l));
 
     if is_ci() {
-        println!("::endgroup::");
+        eprintln!("::endgroup::");
     }
     let output = format!("{}{}", stdout_str, stderr_str);
 
