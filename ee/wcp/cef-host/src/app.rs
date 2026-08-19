@@ -53,6 +53,20 @@ wrap_task! {
     }
 }
 
+wrap_browser_view_delegate! {
+    struct AlloyBrowserView {}
+
+    impl ViewDelegate {}
+
+    impl BrowserViewDelegate {
+        // See `SignInWindowDelegate::window_runtime_style` (window.rs) for why
+        // this must be Alloy rather than the Chrome-style default.
+        fn browser_runtime_style(&self) -> RuntimeStyle {
+            RuntimeStyle::ALLOY
+        }
+    }
+}
+
 fn open_sign_in_window(result_pipe: String, cancel_pipe: Option<String>) {
     // Most of the gap between the spawn and a window existing is spent here —
     // a named-pipe round trip to `ak-sysd` and, behind it, a live call out to
@@ -111,13 +125,14 @@ fn open_sign_in_window(result_pipe: String, cancel_pipe: Option<String>) {
     // Created with no URL, as the C++ did. Passing the sign-in URL here starts
     // the navigation from inside `add_child_view`, which is where the browser
     // itself gets created; the window delegate loads it once that has finished.
+    let mut browser_view_delegate = AlloyBrowserView::new();
     let browser_view = browser_view_create(
         Some(&mut client),
         None,
         Some(&browser_settings),
         None,
         None,
-        None,
+        Some(&mut browser_view_delegate),
     );
     // A `None` here leaves the window empty and never shown, which the
     // credential provider only ever sees as a bare cancellation.

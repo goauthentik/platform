@@ -61,24 +61,39 @@ kill for never responding, or one that never got as far as `CefInitialize`
 succeeding, leaves its directory behind on purpose, as the only record of
 what that run's environment looked like).
 
-**The unique directory alone did not fix `ProcessSingleton` — the real cause
-was the environment block, not the path.** A fresh, guaranteed-unique
-`root_cache_path` still failed the identical way on a real install, and the
-directory was empty afterwards (expected — see the paragraph above — but it
-meant nothing had gone wrong with the path itself). `CreateProcessWithTokenW`
-was being called with `lpEnvironment: None`, which reuses *this* process's —
-SYSTEM's/LogonUI's — own environment for the child, not the token's.
-`LOGON_WITH_PROFILE` only loads the account's registry hive; it does not
-touch the environment block, which is a separate thing the caller builds.
-So `%TEMP%`/`%LOCALAPPDATA%`/etc. in the child still pointed at
-`system32\config\systemprofile`, which the restricted service-account token
-cannot write to — and Chromium touches those paths during startup
-independent of `root_cache_path`, surfacing through the same generic
-`ProcessSingleton` error. Fixed with `CreateEnvironmentBlock(token)` in
-`ipc.rs::spawn_with_token`, falling back to the caller's environment (the
-previous, broken behavior) only if that call itself fails — expected to be
-possible on the account's very first ever launch, before `LOGON_WITH_PROFILE`
-has created its profile directory on disk.
+**The unique directory did not fix `ProcessSingleton` either — nor did an
+explicit environment block; the real cause was CEF's Chrome-style runtime.**
+A fresh, guaranteed-unique `root_cache_path` still failed the identical way
+on a real install, and the directory was empty afterwards (expected — see
+the paragraph above — but it meant nothing had gone wrong with the path
+itself). The next suspect was `CreateProcessWithTokenW`'s `lpEnvironment:
+None` — plausible, since `LOGON_WITH_PROFILE` only loads the account's
+registry hive and does not itself touch the environment block. That was
+fixed with `CreateEnvironmentBlock(token)` in `ipc.rs::spawn_with_token`
+regardless (it is more explicit and does not depend on an
+easy-to-misremember default), but it was not the actual cause: MSDN
+documents that `CreateProcessWithTokenW` specifically (unlike
+`CreateProcessAsUserW`) already builds a correct per-token environment when
+`lpEnvironment` is `NULL` — confirmed by checking Google Credential Provider
+for Windows's own equivalent call (`OSProcessManager::CreateProcessWithToken`
+in `chrome/credential_provider/gaiacp/os_process_manager.cc`), which passes
+`nullptr` and ships in production. Comparing GCPW's token
+(`LogonUserW`+`CreateRestrictedToken(DISABLE_MAX_PRIVILEGE)`, identical to
+ours), desktop (`WinSta0\Winlogon`, identical), and spawn API
+(`CreateProcessWithTokenW`+`LOGON_WITH_PROFILE`, identical) turned up no
+difference — because GCPW's "sign-in UI helper" is not a Chromium browser
+process at all. `ForkGaiaLogonStub` launches `rundll32.exe` reloading the
+credential provider's own DLL through an entrypoint; it never runs
+`chrome_main_delegate.cc` or `ProcessSingleton` in the first place. The
+actual fix: CEF (151.x) supports both a **Chrome style** runtime (the full
+Chrome UI/browser layer — extensions, profile manager, `ProcessSingleton`)
+and a lighter **Alloy style** runtime built for embedding, and windowed
+browsers default to Chrome style unless told otherwise.
+`SignInWindowDelegate::window_runtime_style` (`window.rs`) and the new
+`AlloyBrowserView::browser_runtime_style` (`app.rs`) both now return
+`RuntimeStyle::ALLOY` — a Chrome style top-level `Window` can only host one
+Chrome style `BrowserView`, so both had to change together or it's a style
+mismatch, not a free mix.
 
 **Verified on a VM** (before either replacement above) against the manual
 checklist in `e2e/README.md`: the tile appeared, the sign-in window opened on
