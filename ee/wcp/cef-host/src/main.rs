@@ -148,7 +148,7 @@ fn main() {
 
     let settings = Settings {
         no_sandbox: 1,
-        root_cache_path: CefString::from(ROOT_CACHE_PATH),
+        // root_cache_path: CefString::from(ROOT_CACHE_PATH),
         user_agent: CefString::from(user_agent().as_str()),
         log_file: CefString::from(CHROMIUM_LOG_PATH),
         log_severity: LogSeverity::VERBOSE,
