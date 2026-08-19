@@ -278,7 +278,7 @@ pub async fn exec_command(
 
     let exit_code = result.exit_code().await.unwrap().unwrap();
     if is_ci() {
-        println!("::group::{cmd} (Exit code {exit_code}");
+        eprintln!("::group::{cmd} (Exit code {exit_code})");
     } else {
         tracing::info!("[exec] {} exit={}", cmd, exit_code);
     }
@@ -292,7 +292,7 @@ pub async fn exec_command(
         .for_each(|l| tracing::warn!("[stderr] {}", l));
 
     if is_ci() {
-        println!("::endgroup::");
+        eprintln!("::endgroup::");
     }
     let output = format!("{}{}", stdout_str, stderr_str);
 
@@ -316,6 +316,22 @@ pub async fn must_exec(
         );
     }
     Ok(output)
+}
+
+/// Fails if the kernel logged an AppArmor denial for an authentik path
+pub async fn assert_no_apparmor_denials(container: &ContainerAsync<GenericImage>) -> Result<()> {
+    // Scoped to authentik paths so unrelated host denials don't fail the test.
+    let (exit_code, output) = exec_command(
+        container,
+        r#"journalctl --no-pager | grep 'apparmor="DENIED"' \
+            | grep -E 'name="(/att/[^"]*)?/(etc|run)/authentik/'"#,
+        &[],
+    )
+    .await?;
+    if exit_code == 0 {
+        bail!("AppArmor denied access to authentik paths:\n{}", output);
+    }
+    Ok(())
 }
 
 /// A single parameterized command test case.
