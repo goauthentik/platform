@@ -20,4 +20,5 @@ sentry = { workspace = true }
 windows = { workspace = true }
 eyre = { workspace = true }
 url = { workspace = true }
+uuid = { workspace = true }
 cef = { version = "151.4.0", features = ["build-util"] }

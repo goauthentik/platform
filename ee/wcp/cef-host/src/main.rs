@@ -20,12 +20,20 @@ use std::path::Path;
 
 use cef::*;
 
-/// Chromium's on-disk state. `cache_path` is deliberately left unset so the
-/// profile itself is in-memory, but this directory still accumulates state
-/// across runs, and it has to be named explicitly — otherwise it lands in
-/// `system32\config\systemprofile`, since the browser runs under a service
-/// account at the logon screen.
-const ROOT_CACHE_PATH: &str = r"C:\ProgramData\Authentik Security Inc\wcp-cache";
+/// Parent of Chromium's on-disk state. `cache_path` is deliberately left
+/// unset so the profile itself is in-memory, but `root_cache_path` still
+/// accumulates state across runs, and it has to be named explicitly —
+/// otherwise it lands in `system32\config\systemprofile`, since the browser
+/// runs under a service account at the logon screen.
+///
+/// Never passed to CEF directly — see `browser_state_dir`. `root_cache_path`
+/// doubles as Chromium's user-data directory, which is what
+/// `ProcessSingleton` derives its cross-process lock from; sharing one fixed
+/// path across launches means a second sign-in attempt starting before the
+/// first one's process has fully torn down — or any leftover instance from
+/// an earlier run — fails `CefInitialize` outright rather than opening a
+/// second window (`ProcessSingleton` exists specifically to prevent that).
+const CACHE_ROOT: &str = r"C:\ProgramData\Authentik Security Inc\wcp-cache";
 
 /// Chromium reports a failed `CHECK()` by writing the file, line and message
 /// here and then executing an `int 3`, which surfaces to the credential
@@ -44,49 +52,35 @@ fn arg_value(flag: &str) -> Option<String> {
     None
 }
 
-/// Every sign-in starts from an empty profile — the window is shown on a
-/// shared logon screen, so one person's session must not linger for the next.
-/// Called browser-process-side, before `initialize`, since the renderer/GPU
-/// re-execs share this directory with an already-running browser.
-///
-/// Clears the contents, not the directory itself: the installer creates it
-/// under `ProgramData` with `CREATOR OWNER` full control, so deleting it would
-/// let any standard user re-create and own the directory this SYSTEM process
-/// is about to write a profile into.
-///
-/// Logged rather than fatal — a stale cache is worth reporting, not worth
-/// blocking a logon over.
-fn wipe_browser_state(path: &Path) {
-    if let Err(e) = std::fs::create_dir_all(path) {
+/// A fresh, unique directory under `root` for exactly this run's
+/// `root_cache_path` — see `CACHE_ROOT`'s doc for why it cannot be `root`
+/// itself. Owned outright by this process (nothing pre-creates it the way
+/// the installer pre-creates `root`), so `wipe_browser_state` can remove it
+/// entirely once this run is done, rather than only clearing its contents.
+fn browser_state_dir(root: &Path) -> std::path::PathBuf {
+    let path = root.join(uuid::Uuid::new_v4().to_string());
+    if let Err(e) = std::fs::create_dir_all(&path) {
         log::warn!("could not create {}: {e}", path.display());
-        return;
     }
+    path
+}
 
-    let entries = match std::fs::read_dir(path) {
-        Ok(entries) => entries,
-        Err(e) => {
-            log::warn!("could not read {}: {e}", path.display());
-            return;
-        }
-    };
-
-    let mut removed = 0usize;
-    for entry in entries.flatten() {
-        let entry_path = entry.path();
-        let result = if entry.file_type().is_ok_and(|t| t.is_dir()) {
-            std::fs::remove_dir_all(&entry_path)
-        } else {
-            std::fs::remove_file(&entry_path)
-        };
-        match result {
-            Ok(()) => removed += 1,
-            Err(e) => log::warn!("could not remove {}: {e}", entry_path.display()),
-        }
+/// Every sign-in starts from an empty profile, and none should linger on disk
+/// once its window has closed — the logon screen is shared, so one person's
+/// session must not leak into the next.
+///
+/// Best-effort and only called on the way out, never at the top of `main`:
+/// this run's directory is unique to it (`browser_state_dir`), so there is
+/// nothing to clear before starting, only this run's own directory to remove
+/// once it is done with it. If `ak_cef.exe` is killed rather than exiting
+/// normally — the credential provider gives up and terminates it when the
+/// sign-in window never responds — this never runs and the directory is
+/// simply left behind; logged, not fatal, the same as any other cleanup
+/// failure here.
+fn wipe_browser_state(path: &Path) {
+    if let Err(e) = std::fs::remove_dir_all(path) {
+        log::warn!("could not remove {}: {e}", path.display());
     }
-    log::info!(
-        "cleared {removed} entries of browser state in {}",
-        path.display()
-    );
 }
 
 /// Identifies the sign-in window to authentik. Matches what the C++ credential
@@ -144,11 +138,11 @@ fn main() {
     };
     let cancel_pipe = arg_value("--cancel-pipe");
 
-    wipe_browser_state(Path::new(ROOT_CACHE_PATH));
+    let cache_path = browser_state_dir(Path::new(CACHE_ROOT));
 
     let settings = Settings {
         no_sandbox: 1,
-        // root_cache_path: CefString::from(ROOT_CACHE_PATH),
+        root_cache_path: CefString::from(cache_path.to_string_lossy().as_ref()),
         user_agent: CefString::from(user_agent().as_str()),
         log_file: CefString::from(CHROMIUM_LOG_PATH),
         log_severity: LogSeverity::VERBOSE,
@@ -163,11 +157,13 @@ fn main() {
     );
     if initialized != 1 {
         log::error!("CefInitialize failed");
+        wipe_browser_state(&cache_path);
         return;
     }
 
     run_message_loop();
     shutdown();
+    wipe_browser_state(&cache_path);
 }
 
 #[cfg(test)]
@@ -182,10 +178,13 @@ mod tests {
     }
 
     /// A session left behind by the last person at the logon screen is the
-    /// thing this is here to remove, so "mostly cleared" is not good enough:
+    /// thing this is here to remove, so a real recursive remove is required —
     /// nested directories are where Chromium keeps cookies and local storage.
+    /// Unlike the old shared-directory design, the directory itself goes too:
+    /// each run owns its own (`browser_state_dir`), so there is nothing else
+    /// that still needs it to exist afterwards.
     #[test]
-    fn clears_nested_state_but_keeps_the_directory() {
+    fn removes_a_populated_directory_entirely() {
         let dir = scratch_dir("wipe");
         std::fs::create_dir_all(dir.join("Default/Local Storage")).expect("seed nested state");
         std::fs::write(dir.join("Default/Cookies"), b"session").expect("seed a cookie jar");
@@ -193,26 +192,34 @@ mod tests {
 
         wipe_browser_state(&dir);
 
-        assert!(dir.is_dir(), "the directory itself must survive the wipe");
-        let left: Vec<_> = std::fs::read_dir(&dir)
-            .expect("read the wiped directory")
-            .flatten()
-            .map(|e| e.file_name())
-            .collect();
-        assert!(
-            left.is_empty(),
-            "expected an empty directory, found {left:?}"
-        );
-
-        let _ = std::fs::remove_dir_all(&dir);
+        assert!(!dir.exists(), "the directory itself should be gone");
     }
 
+    /// Reached whenever `ak_cef.exe` exits before ever creating its own
+    /// directory (e.g. a missing `--result-pipe` argument) — must not panic.
     #[test]
-    fn creates_the_directory_when_it_is_missing() {
+    fn tolerates_a_directory_that_is_already_gone() {
         let dir = scratch_dir("missing");
         wipe_browser_state(&dir);
-        assert!(dir.is_dir());
-        let _ = std::fs::remove_dir_all(&dir);
+        assert!(!dir.exists());
+    }
+
+    /// A shared, unchanging `root_cache_path` is what let one leftover
+    /// process's `ProcessSingleton` lock fail every subsequent launch — the
+    /// whole reason each run gets its own directory instead of reusing
+    /// `root` directly.
+    #[test]
+    fn each_call_gets_its_own_directory() {
+        let root = scratch_dir("state_dir");
+
+        let first = browser_state_dir(&root);
+        let second = browser_state_dir(&root);
+
+        assert_ne!(first, second, "each launch must get a distinct directory");
+        assert!(first.is_dir());
+        assert!(second.is_dir());
+
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     /// authentik may key on this server-side, so the shape is part of the

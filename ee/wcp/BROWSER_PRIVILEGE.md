@@ -40,6 +40,25 @@ below. That API has no handle-inheritance mechanism at all, which forced the
 IPC redesign described there too: the result/cancel pipe pair is now named
 rather than anonymous-and-inherited.
 
+**Two more real-install failures, both fixed.** The named-pipe DACL
+hardcoded `SY` (SYSTEM) as the fallback identity when no connecting SID was
+given — wrong for `CPUS_CREDUI`, whose child inherits the *caller's* own
+token rather than SYSTEM's; fixed by dropping the explicit DACL in that case
+and letting `CreateNamedPipeW` apply the default one derived from the
+creating token instead. Separately, a real install hit `CefInitialize`
+failing with Chromium's own `ProcessSingleton` error
+("Failed to create a ProcessSingleton for your profile directory ...
+Aborting now to avoid profile corruption") — `root_cache_path` doubled as
+Chromium's user-data directory, which is what `ProcessSingleton` locks
+against, and every launch shared one fixed path
+(`C:\ProgramData\Authentik Security Inc\wcp-cache`). A second sign-in
+attempt starting before the first one's process had fully torn down (or any
+leftover instance) made every subsequent launch fail outright. Fixed by
+giving each launch its own unique subdirectory (`cef-host/src/main.rs::
+browser_state_dir`) instead, removed again once that run is done
+(`wipe_browser_state`, best-effort — a launch the credential provider had to
+kill for never responding leaves its directory behind, logged, not fatal).
+
 **Verified on a VM** (before either replacement above) against the manual
 checklist in `e2e/README.md`: the tile appeared, the sign-in window opened on
 the secure desktop, and both fresh logon and unlock completed. That VM run
