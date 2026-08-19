@@ -38,6 +38,30 @@ const CACHE_ROOT: &str = r"C:\ProgramData\Authentik Security Inc\wcp-cache";
 /// sees a message Chromium raises below the Rust layer.
 const CHROMIUM_LOG_PATH: &str = r"C:\ProgramData\Authentik Security Inc\logs\ak_cef_chromium.log";
 
+/// Asks the exact question CEF's own `ProcessSingleton::Create()` asks —
+/// `::CreateMutex(NULL, FALSE, "Local\ChromeProcessSingletonStartup!")` —
+/// through a logging channel already confirmed to work, rather than relying
+/// on Chromium's own diagnostic for it: that failure is logged only via
+/// `DPLOG(FATAL)`, which compiles to nothing in a release build, so it would
+/// stay silent regardless of log verbosity.
+fn diagnose_process_singleton_mutex() {
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::CreateMutexW;
+    use windows::core::w;
+
+    match unsafe { CreateMutexW(None, false, w!("Local\\ChromeProcessSingletonStartup!")) } {
+        Ok(handle) => {
+            log::info!("diagnostic: CreateMutex(ChromeProcessSingletonStartup!) succeeded");
+            unsafe {
+                let _ = CloseHandle(handle);
+            }
+        }
+        Err(e) => {
+            log::error!("diagnostic: CreateMutex(ChromeProcessSingletonStartup!) failed: {e}")
+        }
+    }
+}
+
 fn arg_value(flag: &str) -> Option<String> {
     let mut args = std::env::args();
     while let Some(a) = args.next() {
@@ -139,6 +163,8 @@ fn main() {
         return;
     };
     let cancel_pipe = arg_value("--cancel-pipe");
+
+    diagnose_process_singleton_mutex();
 
     let cache_path = browser_state_dir(Path::new(CACHE_ROOT));
 
