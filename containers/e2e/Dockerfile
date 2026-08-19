@@ -1,4 +1,5 @@
-FROM xghcr.io/goauthentik/platform-test:local
+ARG UBUNTU_VERSION=24.04
+FROM xghcr.io/goauthentik/platform-test:local-${UBUNTU_VERSION}
 
 ARG AK_PLATFORM_VER
 ARG AK_PLATFORM_ARCH
