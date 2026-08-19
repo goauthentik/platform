@@ -36,6 +36,9 @@ updates:
       - /
       - .github/actions/apt/
       - .github/actions/macos-signing/
+      - .github/actions/repo/
+      - .github/actions/rpm/
+      - .github/actions/setup-toolchain/
     schedule:
       interval: daily
       time: "04:00"
