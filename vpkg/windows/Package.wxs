@@ -153,7 +153,14 @@
                     UpdateIfExists="yes"
                     RemoveOnUninstall="yes" />
 
-        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
+        <!-- ak_cef.exe's own file-based log (Chromium doesn't understand
+             the Windows Event Log ak_platform::log routes everything else
+             to) needs the service account to actually be able to write it;
+             nothing else uses this directory, so this is not a broader
+             grant than the wcp-cache one below. -->
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs">
+          <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
+        </CreateFolder>
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache">
           <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
         </CreateFolder>
