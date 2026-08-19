@@ -38,27 +38,138 @@ const CACHE_ROOT: &str = r"C:\ProgramData\Authentik Security Inc\wcp-cache";
 /// sees a message Chromium raises below the Rust layer.
 const CHROMIUM_LOG_PATH: &str = r"C:\ProgramData\Authentik Security Inc\logs\ak_cef_chromium.log";
 
-/// Asks the exact question CEF's own `ProcessSingleton::Create()` asks —
-/// `::CreateMutex(NULL, FALSE, "Local\ChromeProcessSingletonStartup!")` —
-/// through a logging channel already confirmed to work, rather than relying
-/// on Chromium's own diagnostic for it: that failure is logged only via
-/// `DPLOG(FATAL)`, which compiles to nothing in a release build, so it would
-/// stay silent regardless of log verbosity.
-fn diagnose_process_singleton_mutex() {
+/// `::CreateMutex(NULL, FALSE, name)`, logging the result through a channel
+/// already confirmed to work — Chromium's own diagnostic for this exact call
+/// (inside `ProcessSingleton::Create()`) is `DPLOG(FATAL)`, which compiles to
+/// nothing in a release build, so it stays silent regardless of log
+/// verbosity.
+fn try_create_mutex(label: &str, name: &str) {
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Threading::CreateMutexW;
-    use windows::core::w;
+    use windows::core::PCWSTR;
 
-    match unsafe { CreateMutexW(None, false, w!("Local\\ChromeProcessSingletonStartup!")) } {
+    let name_wide: Vec<u16> = name.encode_utf16().chain(std::iter::once(0)).collect();
+    match unsafe { CreateMutexW(None, false, PCWSTR(name_wide.as_ptr())) } {
         Ok(handle) => {
-            log::info!("diagnostic: CreateMutex(ChromeProcessSingletonStartup!) succeeded");
+            log::info!("diagnostic: CreateMutex({label}) succeeded");
             unsafe {
                 let _ = CloseHandle(handle);
             }
         }
-        Err(e) => {
-            log::error!("diagnostic: CreateMutex(ChromeProcessSingletonStartup!) failed: {e}")
-        }
+        Err(e) => log::error!("diagnostic: CreateMutex({label}) failed: {e}"),
+    }
+}
+
+/// The exact call CEF's `ProcessSingleton::Create()` makes, confirmed
+/// failing with `ERROR_ACCESS_DENIED` against a real install, on a fresh
+/// create with nothing pre-existing (`handle.exe` found no stale object).
+/// The three follow-up calls narrow down why: a random name under the same
+/// `Local\` session namespace tells apart "this token cannot create named
+/// mutexes in the session namespace at all" from "this specific,
+/// publicly-documented name is blocked" (endpoint security software is the
+/// leading suspect for the latter — it is exactly the kind of string a
+/// malware/injection heuristic keys on); a `Global\` name checks whether the
+/// restriction is specific to the per-session namespace; a name containing
+/// "Chrome" but not the exact reserved string checks whether the block
+/// matches on the literal known string or more loosely on the product name.
+fn diagnose_process_singleton_mutex() {
+    try_create_mutex(
+        "ChromeProcessSingletonStartup!",
+        "Local\\ChromeProcessSingletonStartup!",
+    );
+    try_create_mutex(
+        "random, Local",
+        &format!("Local\\ak-cef-diagnostic-{}", uuid::Uuid::new_v4()),
+    );
+    try_create_mutex(
+        "random, Global",
+        &format!("Global\\ak-cef-diagnostic-{}", uuid::Uuid::new_v4()),
+    );
+    try_create_mutex(
+        "Chrome-ish but not the reserved string",
+        &format!("Local\\ChromeDiagnosticProbe-{}", uuid::Uuid::new_v4()),
+    );
+}
+
+/// Logs this process's own token identity, mandatory integrity level,
+/// session id, and whether Windows considers it a *restricted* token
+/// (`IsTokenRestricted`, true only if `CreateRestrictedToken` was given SIDs
+/// to disable or restrict — `service_account_token` gives it neither, only
+/// `DISABLE_MAX_PRIVILEGE`, so this is expected to read false; confirming
+/// that rules out the double access-check restricted tokens get as an
+/// explanation for the `CreateMutex` failure above).
+fn diagnose_token() {
+    use std::ffi::c_void;
+    use windows::Win32::Foundation::{CloseHandle, HANDLE};
+    use windows::Win32::Security::{
+        GetSidSubAuthority, GetSidSubAuthorityCount, GetTokenInformation, IsTokenRestricted,
+        TOKEN_MANDATORY_LABEL, TOKEN_QUERY, TokenIntegrityLevel, TokenSessionId,
+    };
+    use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
+
+    let mut token = HANDLE::default();
+    if unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) }.is_err() {
+        log::error!("diagnostic: could not open this process's own token");
+        return;
+    }
+
+    let mut label_buf = [0u8; 64];
+    let mut ret_len = 0u32;
+    let got_label = unsafe {
+        GetTokenInformation(
+            token,
+            TokenIntegrityLevel,
+            Some(label_buf.as_mut_ptr() as *mut c_void),
+            label_buf.len() as u32,
+            &mut ret_len,
+        )
+    };
+    if got_label.is_ok() {
+        let label = unsafe { &*(label_buf.as_ptr() as *const TOKEN_MANDATORY_LABEL) };
+        let sid = label.Label.Sid;
+        let rid = unsafe {
+            let count = *GetSidSubAuthorityCount(sid);
+            *GetSidSubAuthority(sid, (count - 1) as u32)
+        };
+        let level = match rid {
+            0x0000 => "Untrusted",
+            0x1000 => "Low",
+            0x2000 => "Medium",
+            0x2100 => "Medium Plus",
+            0x3000 => "High",
+            0x4000 => "System",
+            _ => "Unknown",
+        };
+        log::info!("diagnostic: token integrity level = {level} (rid {rid:#06x})");
+    } else {
+        log::error!("diagnostic: could not read token integrity level");
+    }
+
+    let mut session_id: u32 = u32::MAX;
+    let mut ret_len2 = 0u32;
+    let got_session = unsafe {
+        GetTokenInformation(
+            token,
+            TokenSessionId,
+            Some(std::ptr::from_mut(&mut session_id).cast()),
+            size_of::<u32>() as u32,
+            &mut ret_len2,
+        )
+    };
+    if got_session.is_ok() {
+        log::info!("diagnostic: token session id = {session_id}");
+    } else {
+        log::error!("diagnostic: could not read token session id");
+    }
+
+    // `IsTokenRestricted` reports via Result rather than a bool: Ok means the
+    // token carries a restricted-SIDs list (the raw BOOL was TRUE), Err means
+    // it does not.
+    let restricted = unsafe { IsTokenRestricted(token) }.is_ok();
+    log::info!("diagnostic: IsTokenRestricted = {restricted}");
+
+    unsafe {
+        let _ = CloseHandle(token);
     }
 }
 
@@ -164,6 +275,7 @@ fn main() {
     };
     let cancel_pipe = arg_value("--cancel-pipe");
 
+    diagnose_token();
     diagnose_process_singleton_mutex();
 
     let cache_path = browser_state_dir(Path::new(CACHE_ROOT));
