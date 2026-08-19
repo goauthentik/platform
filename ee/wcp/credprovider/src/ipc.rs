@@ -28,11 +28,12 @@ use windows::{
         Storage::FileSystem::{
             FILE_FLAGS_AND_ATTRIBUTES, PIPE_ACCESS_INBOUND, PIPE_ACCESS_OUTBOUND,
         },
+        System::Environment::{CreateEnvironmentBlock, DestroyEnvironmentBlock},
         System::Pipes::{ConnectNamedPipe, CreateNamedPipeW, NAMED_PIPE_MODE},
         System::Threading::{
-            CreateProcessW, CreateProcessWithTokenW, GetExitCodeProcess, LOGON_WITH_PROFILE,
-            PROCESS_CREATION_FLAGS, PROCESS_INFORMATION, STARTUPINFOW, TerminateProcess,
-            WaitForSingleObject,
+            CREATE_UNICODE_ENVIRONMENT, CreateProcessW, CreateProcessWithTokenW,
+            GetExitCodeProcess, LOGON_WITH_PROFILE, PROCESS_CREATION_FLAGS, PROCESS_INFORMATION,
+            STARTUPINFOW, TerminateProcess, WaitForSingleObject,
         },
         UI::Shell::{CPUS_CREDUI, CREDENTIAL_PROVIDER_USAGE_SCENARIO},
         UI::WindowsAndMessaging::AllowSetForegroundWindow,
@@ -652,8 +653,18 @@ fn spawn_cef_host(
 /// `CreateProcessAsUserW` needed `SE_ASSIGNPRIMARYTOKEN_NAME` and
 /// `SE_INCREASE_QUOTA_NAME` — both of them confirmed absent from LogonUI's
 /// token. `LOGON_WITH_PROFILE` loads the service account's profile, same as
-/// a real interactive logon would; without it `%TEMP%` and the rest of the
-/// per-user environment CEF wants resolve to nothing.
+/// a real interactive logon would. `LOGON_WITH_PROFILE` only loads the
+/// account's registry hive, though — it does not touch the *environment
+/// block* handed to the new process, which is a separate thing the caller
+/// builds. Passing none (as `CreateProcessWithTokenW` allows) makes the
+/// child reuse this process's own — SYSTEM's/LogonUI's — so `%TEMP%`,
+/// `%LOCALAPPDATA%` and the rest still point at `system32\config\
+/// systemprofile` despite the child actually running as the service
+/// account, whose restricted token cannot write there. Chromium touches
+/// those paths during startup independent of `root_cache_path`, so this
+/// silently broke CEF's own profile-lock bootstrap
+/// (`ProcessSingleton`) even after every launch got its own unique
+/// `root_cache_path`. `CreateEnvironmentBlock(token)` builds the real one.
 fn spawn_with_token(
     token: HANDLE,
     cmdline: &str,
@@ -661,19 +672,51 @@ fn spawn_with_token(
     pi: &mut PROCESS_INFORMATION,
 ) -> windows::core::Result<()> {
     let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
-    unsafe {
+
+    // Best-effort: on this account's very first ever launch its profile may
+    // not exist on disk yet — only `LOGON_WITH_PROFILE` below creates it —
+    // so `CreateEnvironmentBlock` can fail here. Falling back to this
+    // process's own environment rather than refusing the spawn entirely
+    // matches every other "logged, not fatal" cleanup/setup step in this
+    // file; the spawn is still worth attempting either way.
+    let mut env_block: *mut c_void = std::ptr::null_mut();
+    let has_env = unsafe { CreateEnvironmentBlock(&mut env_block, Some(token), false) }.is_ok();
+    if !has_env {
+        log::warn!(
+            "could not build an environment block for the service account; \
+             falling back to this process's own"
+        );
+    }
+    let (creation_flags, environment) = if has_env {
+        (
+            PROCESS_CREATION_FLAGS(CREATE_UNICODE_ENVIRONMENT.0),
+            Some(env_block as *const c_void),
+        )
+    } else {
+        (PROCESS_CREATION_FLAGS(0), None)
+    };
+
+    let result = unsafe {
         CreateProcessWithTokenW(
             token,
             LOGON_WITH_PROFILE,
             PCWSTR::null(),
             Some(PWSTR(cmdline_wide.as_mut_ptr())),
-            PROCESS_CREATION_FLAGS(0),
-            None,
+            creation_flags,
+            environment,
             PCWSTR::null(),
             si,
             pi,
         )
+    };
+
+    if has_env {
+        unsafe {
+            let _ = DestroyEnvironmentBlock(env_block);
+        }
     }
+
+    result
 }
 
 /// `CreateProcessW` may write into the command-line buffer it is handed, so

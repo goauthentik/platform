@@ -57,7 +57,28 @@ leftover instance) made every subsequent launch fail outright. Fixed by
 giving each launch its own unique subdirectory (`cef-host/src/main.rs::
 browser_state_dir`) instead, removed again once that run is done
 (`wipe_browser_state`, best-effort — a launch the credential provider had to
-kill for never responding leaves its directory behind, logged, not fatal).
+kill for never responding, or one that never got as far as `CefInitialize`
+succeeding, leaves its directory behind on purpose, as the only record of
+what that run's environment looked like).
+
+**The unique directory alone did not fix `ProcessSingleton` — the real cause
+was the environment block, not the path.** A fresh, guaranteed-unique
+`root_cache_path` still failed the identical way on a real install, and the
+directory was empty afterwards (expected — see the paragraph above — but it
+meant nothing had gone wrong with the path itself). `CreateProcessWithTokenW`
+was being called with `lpEnvironment: None`, which reuses *this* process's —
+SYSTEM's/LogonUI's — own environment for the child, not the token's.
+`LOGON_WITH_PROFILE` only loads the account's registry hive; it does not
+touch the environment block, which is a separate thing the caller builds.
+So `%TEMP%`/`%LOCALAPPDATA%`/etc. in the child still pointed at
+`system32\config\systemprofile`, which the restricted service-account token
+cannot write to — and Chromium touches those paths during startup
+independent of `root_cache_path`, surfacing through the same generic
+`ProcessSingleton` error. Fixed with `CreateEnvironmentBlock(token)` in
+`ipc.rs::spawn_with_token`, falling back to the caller's environment (the
+previous, broken behavior) only if that call itself fails — expected to be
+possible on the account's very first ever launch, before `LOGON_WITH_PROFILE`
+has created its profile directory on disk.
 
 **Verified on a VM** (before either replacement above) against the manual
 checklist in `e2e/README.md`: the tile appeared, the sign-in window opened on

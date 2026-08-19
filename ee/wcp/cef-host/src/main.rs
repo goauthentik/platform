@@ -59,8 +59,9 @@ fn arg_value(flag: &str) -> Option<String> {
 /// entirely once this run is done, rather than only clearing its contents.
 fn browser_state_dir(root: &Path) -> std::path::PathBuf {
     let path = root.join(uuid::Uuid::new_v4().to_string());
-    if let Err(e) = std::fs::create_dir_all(&path) {
-        log::warn!("could not create {}: {e}", path.display());
+    match std::fs::create_dir_all(&path) {
+        Ok(()) => log::info!("using {} as this run's root_cache_path", path.display()),
+        Err(e) => log::warn!("could not create {}: {e}", path.display()),
     }
     path
 }
@@ -69,14 +70,16 @@ fn browser_state_dir(root: &Path) -> std::path::PathBuf {
 /// once its window has closed — the logon screen is shared, so one person's
 /// session must not leak into the next.
 ///
-/// Best-effort and only called on the way out, never at the top of `main`:
-/// this run's directory is unique to it (`browser_state_dir`), so there is
-/// nothing to clear before starting, only this run's own directory to remove
-/// once it is done with it. If `ak_cef.exe` is killed rather than exiting
-/// normally — the credential provider gives up and terminates it when the
-/// sign-in window never responds — this never runs and the directory is
-/// simply left behind; logged, not fatal, the same as any other cleanup
-/// failure here.
+/// Only called after a *successful* run, never at the top of `main` and
+/// never after `CefInitialize` itself fails: this run's directory is unique
+/// to it (`browser_state_dir`), so there is nothing to clear before
+/// starting, and a directory `CefInitialize` never got to use is left in
+/// place deliberately, as the only record of what that run's environment
+/// actually looked like when it failed. If `ak_cef.exe` is killed rather
+/// than exiting normally — the credential provider gives up and terminates
+/// it when the sign-in window never responds — this never runs either, and
+/// the directory is simply left behind; logged, not fatal, the same as any
+/// other cleanup failure here.
 fn wipe_browser_state(path: &Path) {
     if let Err(e) = std::fs::remove_dir_all(path) {
         log::warn!("could not remove {}: {e}", path.display());
@@ -156,8 +159,10 @@ fn main() {
         sandbox_info,
     );
     if initialized != 1 {
-        log::error!("CefInitialize failed");
-        wipe_browser_state(&cache_path);
+        log::error!(
+            "CefInitialize failed; leaving {} in place for inspection",
+            cache_path.display()
+        );
         return;
     }
 
