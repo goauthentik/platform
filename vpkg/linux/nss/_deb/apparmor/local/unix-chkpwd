@@ -1,0 +1,15 @@
+# Included by /etc/apparmor.d/unix-chkpwd via `include if exists <local/unix-chkpwd>`.
+# unix_chkpwd loads libnss_authentik.so.2 during NSS lookups, which reads the
+# authentik config and connects to the ak-sysd socket.
+
+# Allow unix-chkpwd to read the Authentik configuration file
+/etc/authentik/config.json r,
+
+# Allow unix-chkpwd to read and write to the Authentik UNIX socket
+/run/authentik/sys.sock rw,
+
+# Disconnected-path variants, for when unix_chkpwd runs in a mount namespace
+# (nspawn/containers). apparmor >= 5.0 declares the profile with
+# flags=(attach_disconnected.path=/att/unix-chkpwd/); inert on apparmor 4.0.x.
+/att/unix-chkpwd/etc/authentik/config.json r,
+/att/unix-chkpwd/run/authentik/sys.sock rw,

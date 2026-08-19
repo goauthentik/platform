@@ -1,0 +1,9 @@
+# Drop-in for <abstractions/nameservice>, which is included by every profile
+# that performs user/group lookups. glibc loads libnss_authentik.so.2 into
+# those processes, and it reads the authentik config and dials ak-sysd.
+
+# Allow NSS lookups to read the Authentik configuration file
+/etc/authentik/config.json r,
+
+# Allow NSS lookups to read and write the Authentik UNIX socket.
+@{run}/authentik/sys.sock rw,
