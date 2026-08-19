@@ -27,8 +27,34 @@ insert_nss_entry() {
     ' /etc/nsswitch.conf
 }
 
+# Reload AppArmor so it picks up the drop-in we ship under /etc/apparmor.d.
+# The apparmor package registers no dpkg trigger on that directory, so this only
+# shortcuts the wait until the next apparmor reload or reboot.
+reload_apparmor() {
+    log "Checking AppArmor setup..."
+    if ! command -v apparmor_parser >/dev/null 2>&1; then
+        log "apparmor_parser not found, skipping."
+        return
+    fi
+    if ! aa-enabled --quiet 2>/dev/null; then
+        log "AppArmor is not enabled, skipping."
+        return
+    fi
+    if systemctl reload apparmor.service >/dev/null 2>&1; then
+        return
+    fi
+    log "Could not reload apparmor.service, falling back to unix-chkpwd only."
+    if ! [ -f /etc/apparmor.d/unix-chkpwd ]; then
+        log "Could not find /etc/apparmor.d/unix-chkpwd."
+        return
+    fi
+    apparmor_parser -r -T -W /etc/apparmor.d/unix-chkpwd \
+        || log "Failed to reload the unix-chkpwd profile, changes apply after reboot."
+}
+
 action="$1"
 
 if [ configure = "$action" ]; then
     insert_nss_entry
+    reload_apparmor
 fi

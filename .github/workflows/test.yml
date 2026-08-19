@@ -55,10 +55,12 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@82cd3e7658a6f96c86c0234aeeda1748937cb0a1 # v2
+      - uses: taiki-e/install-action@288e746965032cfcc232e09af2daf5f23c14d780 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: ./.github/actions/setup-toolchain
@@ -93,6 +95,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: cache/
@@ -120,6 +124,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
@@ -138,6 +144,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@v6.0.10
         with:
           run_install: false
@@ -162,15 +170,26 @@ jobs:
       platforms: '["ubuntu-24.04"]'
     secrets: inherit
   test_rs_e2e:
-    name: Test (e2e)
+    name: Test (e2e ${{ matrix.ubuntu_version }})
     needs: [package_linux_e2e]
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu_version:
+          - "24.04"
+          - "25.10"
+          - "26.04"
     runs-on: ubuntu-24.04
+    env:
+      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@82cd3e7658a6f96c86c0234aeeda1748937cb0a1 # v2
+      - uses: taiki-e/install-action@288e746965032cfcc232e09af2daf5f23c14d780 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
@@ -210,6 +229,15 @@ jobs:
         run: |
           ./hack/authentik/wait.sh
       - run: make containers/e2e/ci-build
+      # AppArmor policy is host-global: and the container cannot load policy of
+      # its own (no securityfs during docker build)
+      - name: Load authentik AppArmor drop-in
+        run: |
+          sudo install -m 0644 -D \
+            vpkg/linux/nss/_deb/apparmor/abstractions/nameservice.d/authentik \
+            /etc/apparmor.d/abstractions/nameservice.d/authentik
+          sudo systemctl reload apparmor.service
+          sudo aa-status | grep -q unix-chkpwd
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
@@ -223,18 +251,18 @@ jobs:
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov
