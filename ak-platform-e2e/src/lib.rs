@@ -318,10 +318,7 @@ pub async fn must_exec(
     Ok(output)
 }
 
-/// Fails if the kernel logged an AppArmor denial for an authentik path, which
-/// means a confined process (typically unix_chkpwd) could not use the NSS
-/// module. The policy is loaded on the CI host, not by the container, since
-/// AppArmor policy is host-global -- see the e2e job in test.yml.
+/// Fails if the kernel logged an AppArmor denial for an authentik path
 pub async fn assert_no_apparmor_denials(container: &ContainerAsync<GenericImage>) -> Result<()> {
     // Scoped to authentik paths so unrelated host denials don't fail the test.
     let (exit_code, output) = exec_command(
