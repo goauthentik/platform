@@ -27,11 +27,17 @@ insert_nss_entry() {
     ' /etc/nsswitch.conf
 }
 
-# reload AppArmor so it picks up the policy we ship under /etc/apparmor.d.
-# The apparmor package registers no dpkg trigger on that directory, so without
-# this the new rules only take effect after a reboot. Reload the whole policy
-# rather than a single profile: the abstractions/nameservice.d drop-in is
-# included by every profile that performs user/group lookups.
+# Reload AppArmor so it picks up the drop-in we ship under /etc/apparmor.d.
+# The apparmor package registers no dpkg trigger on that directory, so this only
+# shortcuts the wait until the next apparmor reload or reboot; the rules
+# themselves are picked up either way. Reload the whole policy rather than a
+# single profile: the abstractions/nameservice.d drop-in is included by every
+# profile that performs user/group lookups.
+#
+# Expected to no-op inside build containers: apparmor_parser is usually absent,
+# and even when present /sys/kernel/security is not mounted during a container
+# build, so no policy can be loaded. Note that AppArmor policy is host-global,
+# so a container never confines its own processes -- the host's profiles do.
 reload_apparmor() {
     log "Checking AppArmor setup..."
     if ! command -v apparmor_parser >/dev/null 2>&1; then

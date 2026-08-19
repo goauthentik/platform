@@ -219,6 +219,17 @@ jobs:
         run: |
           ./hack/authentik/wait.sh
       - run: make containers/e2e/ci-build
+      # AppArmor policy is host-global: the runner's unix-chkpwd profile confines
+      # unix_chkpwd inside the container, and the container cannot load policy of
+      # its own (no securityfs during docker build). Install the same drop-in the
+      # deb ships so the e2e run exercises it.
+      - name: Load authentik AppArmor drop-in
+        run: |
+          sudo install -m 0644 -D \
+            vpkg/linux/nss/_deb/apparmor/abstractions/nameservice.d/authentik \
+            /etc/apparmor.d/abstractions/nameservice.d/authentik
+          sudo systemctl reload apparmor.service
+          sudo aa-status | grep -q unix-chkpwd
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}

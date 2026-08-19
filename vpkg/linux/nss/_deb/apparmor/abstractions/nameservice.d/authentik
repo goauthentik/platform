@@ -1,9 +1,17 @@
-# Drop-in for <abstractions/nameservice>, which is included by every profile
-# that performs user/group lookups. glibc loads libnss_authentik.so.2 into
-# those processes, and it reads the authentik config and dials ak-sysd.
+# Drop-in for <abstractions/nameservice>, which is included by every profile that
+# performs user/group lookups (unix-chkpwd, sshd, cron, ...). glibc loads
+# libnss_authentik.so.2 into those processes, and it reads the authentik config
+# and dials ak-sysd.
 
-# Allow NSS lookups to read the Authentik configuration file
+# Config file, read to discover the socket path.
 /etc/authentik/config.json r,
 
-# Allow NSS lookups to read and write the Authentik UNIX socket.
+# The ak-sysd control socket. AF_UNIX pathname sockets are mediated as files.
 @{run}/authentik/sys.sock rw,
+
+# Disconnected-path variants: apparmor >= 4.1 declares unix-chkpwd with
+# flags=(attach_disconnected.path=/att/unix-chkpwd/), so paths resolved inside a
+# mount namespace are reported under that prefix. Inert elsewhere. Upstream does
+# the same for authd's socket.
+/att/unix-chkpwd/etc/authentik/config.json r,
+/att/unix-chkpwd/run/authentik/sys.sock rw,
