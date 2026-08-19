@@ -116,6 +116,15 @@ fn main() {
     .allow_stdout(false)
     .enable();
 
+    // First line out, before anything else can fail: which exact commit this
+    // binary was built from, so a real-install log can be matched against
+    // the source rather than assumed.
+    log::info!(
+        "ak_cef.exe {} (build {})",
+        ak_meta::full_version(),
+        ak_meta::build_hash()
+    );
+
     let _ = api_hash(sys::CEF_API_VERSION_LAST, 0);
 
     let cef_args = args::Args::new();
