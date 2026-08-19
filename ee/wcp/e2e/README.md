@@ -101,7 +101,7 @@ logon/unlock/lock-screen prompt. After the automated tests pass:
 5. Confirm a **fresh logon** (not just unlock) also works — that path used
    to have no existing user token to fall back to, which is what made it
    worth checking separately from unlock; now both scenarios go through the
-   same `syscalls::service_account_token` S4U logon, so this step mainly
+   same `syscalls::service_account_token` logon, so this step mainly
    confirms the secure-desktop ACL grant actually holds on real hardware.
 6. Sign in **three times in a row**, not once. The window has come to the
    front on the first authentication after an install and stayed behind

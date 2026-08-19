@@ -476,17 +476,12 @@ pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()
 }
 
 /// Mints a primary token for the service account by logging it on with its
-/// stored password, then strips every privilege from the result. S4U
-/// (`LsaLogonUser`) needs `SE_TCB_NAME`, and LogonUI's token does not carry
-/// it — Google's own credential provider hits the same wall for the same
-/// reason (a credential provider hosted in LogonUI, rendering its own
-/// Chromium-based sign-in UI) and answers it the same way: see
-/// `CreateLogonToken` in
-/// `chrome/credential_provider/gaiacp/gcp_utils.cc` in the Chromium source.
-/// Password-based `LogonUserW` needs no special privilege for a non-admin
-/// account, and `CreateRestrictedToken` with `DISABLE_MAX_PRIVILEGE` is what
-/// keeps a compromised renderer from being able to do anything with a token
-/// that would otherwise still be a fully-privileged one for its account.
+/// stored password, then strips every privilege from the result — the same
+/// pattern GCPW uses for its own LogonUI-hosted sign-in UI (`CreateLogonToken`
+/// in `chrome/credential_provider/gaiacp/gcp_utils.cc`). `CreateRestrictedToken`
+/// with `DISABLE_MAX_PRIVILEGE` is what keeps a compromised renderer from
+/// doing anything with a token that would otherwise be fully privileged for
+/// its account.
 pub fn service_account_token(username: &str, password: &str) -> windows::core::Result<HANDLE> {
     let username_wide = wide(username);
     let password_wide = wide(password);

@@ -113,17 +113,12 @@ wrap_window_delegate! {
             0
         }
 
-        /// Chrome style pulls in the full Chrome UI/browser layer — extensions,
-        /// profile manager, and `ProcessSingleton` among them — none of which
-        /// this single-purpose, no-chrome sign-in window needs, and the last
-        /// of which cannot be made to succeed running as a restricted service
-        /// account on the secure desktop (confirmed against a real install).
-        /// Alloy is CEF's own lighter embedding-oriented runtime and does not
-        /// carry any of that baggage. `open_sign_in_window` sets the matching
-        /// style on the `BrowserView` itself — a Chrome style top-level Window
-        /// can only host one Chrome style `BrowserView`, so leaving this at
-        /// the default while the view below is Alloy would be a style
-        /// mismatch, not a free mix.
+        /// Chrome style pulls in the full Chrome UI/browser layer —
+        /// extensions, profile manager, tabs — none of which this
+        /// single-purpose sign-in window needs. Alloy is CEF's lighter
+        /// embedding-oriented runtime. `open_sign_in_window` sets the same
+        /// style on the `BrowserView` — a Chrome style Window can only host
+        /// one Chrome style `BrowserView`, so both had to move together.
         fn window_runtime_style(&self) -> RuntimeStyle {
             RuntimeStyle::ALLOY
         }

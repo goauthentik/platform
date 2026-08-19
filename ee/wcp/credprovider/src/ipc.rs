@@ -63,10 +63,9 @@ impl AuthFlow for CefAuthFlow {
 }
 
 /// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
-/// It is debug-gated and runs on an ordinary desktop, where the caller holds
-/// no `SE_TCB_NAME` and so cannot reach the S4U logon anyway. The logon
-/// scenarios must never take this fallback, or Chromium ends up on the
-/// secure desktop with this process's own SYSTEM token instead.
+/// It is debug-gated and runs on an ordinary desktop; the logon scenarios
+/// must never take this fallback, or Chromium ends up on the secure desktop
+/// with this process's own SYSTEM token instead of the service account's.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
 }
@@ -164,18 +163,14 @@ fn create_named_pipe(
 }
 
 /// One named pipe pair, one instance each, scoped to `connecting_sid` — the
-/// service account for the real logon scenarios. `None` under `CPUS_CREDUI`
-/// means the child inherits this same caller's own token (`spawn_in_current_
-/// session` passes no token at all), whatever identity that happens to be —
-/// not necessarily literally SYSTEM, so it must not be hardcoded into the
-/// DACL. `CreateNamedPipeW` with no explicit security descriptor applies the
-/// default one derived from the creating thread's own token instead, which
-/// always grants that same token's identity full control — exactly the
-/// access the same-identity child needs, without naming it.
+/// service account for the real logon scenarios, or `None` under
+/// `CPUS_CREDUI`, whose child inherits the caller's own (not necessarily
+/// SYSTEM) identity instead. `CreateNamedPipeW` with no explicit security
+/// descriptor applies the default one derived from the creating thread's own
+/// token, which already grants that identity full control.
 ///
-/// A fresh, random name per launch: nothing else should ever connect to
-/// either end, and a fixed name would let a second sign-in attempt (or
-/// anything else) race this one for it.
+/// A fresh, random name per launch, so nothing else can race a second
+/// sign-in attempt for either end.
 fn create_duplex_pipes(connecting_sid: Option<&str>) -> windows::core::Result<DuplexPipes> {
     let id = uuid::Uuid::new_v4();
     let result_name = format!(r"\\.\pipe\authentik\wcp-{id}-result");
@@ -211,15 +206,11 @@ fn create_duplex_pipes(connecting_sid: Option<&str>) -> windows::core::Result<Du
 
 /// Connects both ends within `timeout`, or gives up rather than hang
 /// `Connect` forever if the child never reaches the code that opens them.
-/// Polled in short slices rather than one long wait, so a child that exits
-/// early — a crash, or (what this was written for) CEF's own
-/// `ContentMainRun`/`ProcessSingleton` failing before any of the code that
-/// opens these pipes ever runs — is noticed within one poll interval instead
-/// of costing the full timeout for nothing. Blocking `ConnectNamedPipe` runs
-/// on a background thread; giving up here — on a timeout or an early exit —
-/// leaves it blocked forever on a handle this function's caller is about to
-/// close, but nothing is listening on the far end of that thread's channel
-/// send by then either.
+/// Polled in short slices rather than one long wait, so an early exit (a
+/// crash, or CEF's own `ProcessSingleton` failing before it ever gets here)
+/// is noticed within one interval instead of costing the full timeout.
+/// `ConnectNamedPipe` still blocks its background thread forever on giving
+/// up, but nothing is listening on its channel send by then either.
 fn connect_duplex_pipes(
     pipes: &DuplexPipes,
     process: HANDLE,
@@ -649,22 +640,12 @@ fn spawn_cef_host(
 }
 
 /// Brokered through the Secondary Logon service rather than done directly,
-/// which is why this needs only `SE_IMPERSONATE_NAME` where
-/// `CreateProcessAsUserW` needed `SE_ASSIGNPRIMARYTOKEN_NAME` and
-/// `SE_INCREASE_QUOTA_NAME` — both of them confirmed absent from LogonUI's
-/// token. `LOGON_WITH_PROFILE` loads the service account's profile, same as
-/// a real interactive logon would. `LOGON_WITH_PROFILE` only loads the
-/// account's registry hive, though — it does not touch the *environment
-/// block* handed to the new process, which is a separate thing the caller
-/// builds. Passing none (as `CreateProcessWithTokenW` allows) makes the
-/// child reuse this process's own — SYSTEM's/LogonUI's — so `%TEMP%`,
-/// `%LOCALAPPDATA%` and the rest still point at `system32\config\
-/// systemprofile` despite the child actually running as the service
-/// account, whose restricted token cannot write there. Chromium touches
-/// those paths during startup independent of `root_cache_path`, so this
-/// silently broke CEF's own profile-lock bootstrap
-/// (`ProcessSingleton`) even after every launch got its own unique
-/// `root_cache_path`. `CreateEnvironmentBlock(token)` builds the real one.
+/// which is why this needs only `SE_IMPERSONATE_NAME` — `CreateProcessAsUserW`
+/// needed `SE_ASSIGNPRIMARYTOKEN_NAME`/`SE_INCREASE_QUOTA_NAME`, both
+/// confirmed absent from LogonUI's token. `LOGON_WITH_PROFILE` loads the
+/// account's registry hive but not its environment block; building one
+/// explicitly is what makes `%TEMP%`/`%LOCALAPPDATA%` resolve to the service
+/// account's own profile instead of SYSTEM's (see `BROWSER_PRIVILEGE.md`).
 fn spawn_with_token(
     token: HANDLE,
     cmdline: &str,
@@ -915,11 +896,11 @@ mod tests {
         );
     }
 
-    /// Exercises the real attribute-list / handle-inheritance / CreateProcess
-    /// machinery against a throwaway target, without needing an interactive
-    /// token, elevation, or anything listening on the `ak-sysd` pipe. A
-    /// failure here means `Connect` can never launch the sign-in window,
-    /// which otherwise only surfaces as one generic "Sign-in failed" string.
+    /// Exercises the real named-pipe / `CreateProcessW` machinery against a
+    /// throwaway target, without needing an interactive token, elevation, or
+    /// anything listening on the `ak-sysd` pipe. A failure here means
+    /// `Connect` can never launch the sign-in window, which otherwise only
+    /// surfaces as one generic "Sign-in failed" string.
     #[test]
     fn credui_spawn_succeeds_without_an_interactive_token() {
         // `None`: `CPUS_CREDUI` runs the child in this same session, so it

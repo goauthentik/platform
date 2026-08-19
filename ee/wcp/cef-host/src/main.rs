@@ -26,13 +26,9 @@ use cef::*;
 /// otherwise it lands in `system32\config\systemprofile`, since the browser
 /// runs under a service account at the logon screen.
 ///
-/// Never passed to CEF directly — see `browser_state_dir`. `root_cache_path`
-/// doubles as Chromium's user-data directory, which is what
-/// `ProcessSingleton` derives its cross-process lock from; sharing one fixed
-/// path across launches means a second sign-in attempt starting before the
-/// first one's process has fully torn down — or any leftover instance from
-/// an earlier run — fails `CefInitialize` outright rather than opening a
-/// second window (`ProcessSingleton` exists specifically to prevent that).
+/// Never passed to CEF directly — see `browser_state_dir`. Sharing one fixed
+/// `root_cache_path` across launches would let an overlapping or leftover
+/// instance block every subsequent one via `ProcessSingleton`.
 const CACHE_ROOT: &str = r"C:\ProgramData\Authentik Security Inc\wcp-cache";
 
 /// Chromium reports a failed `CHECK()` by writing the file, line and message
@@ -66,20 +62,14 @@ fn browser_state_dir(root: &Path) -> std::path::PathBuf {
     path
 }
 
-/// Every sign-in starts from an empty profile, and none should linger on disk
-/// once its window has closed — the logon screen is shared, so one person's
-/// session must not leak into the next.
-///
-/// Only called after a *successful* run, never at the top of `main` and
-/// never after `CefInitialize` itself fails: this run's directory is unique
-/// to it (`browser_state_dir`), so there is nothing to clear before
-/// starting, and a directory `CefInitialize` never got to use is left in
-/// place deliberately, as the only record of what that run's environment
-/// actually looked like when it failed. If `ak_cef.exe` is killed rather
-/// than exiting normally — the credential provider gives up and terminates
-/// it when the sign-in window never responds — this never runs either, and
-/// the directory is simply left behind; logged, not fatal, the same as any
-/// other cleanup failure here.
+/// Every sign-in starts from an empty profile, and none should linger on
+/// disk once its window closes — the logon screen is shared. Only called
+/// after a successful run: this run's directory is unique to it
+/// (`browser_state_dir`), so there is nothing to clear before starting, and
+/// a directory `CefInitialize` never got to use is left in place
+/// deliberately, as the only record of what that run looked like when it
+/// failed. Also skipped if the credential provider has to kill this process
+/// for never responding — logged, not fatal, like any other cleanup here.
 fn wipe_browser_state(path: &Path) {
     if let Err(e) = std::fs::remove_dir_all(path) {
         log::warn!("could not remove {}: {e}", path.display());
