@@ -13,6 +13,7 @@ mod app;
 mod foreground;
 mod handler;
 mod icon;
+mod identity;
 mod window;
 
 use std::path::Path;
@@ -109,9 +110,10 @@ fn main() {
     // binary was built from, so a real-install log can be matched against
     // the source rather than assumed.
     log::info!(
-        "ak_cef.exe {} (build {})",
+        "ak_cef.exe {} (build {}), running as {}",
         ak_meta::full_version(),
-        ak_meta::build_hash()
+        ak_meta::build_hash(),
+        identity::current_token_identity()
     );
 
     let _ = api_hash(sys::CEF_API_VERSION_LAST, 0);

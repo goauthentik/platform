@@ -110,6 +110,11 @@ struct PipeSecurityDescriptor(PSECURITY_DESCRIPTOR);
 impl PipeSecurityDescriptor {
     fn new(sid: &str, access: &str) -> windows::core::Result<Self> {
         let sddl = format!("D:(A;;GA;;;SY)(A;;{access};;;{sid})");
+        // This exact string is what the connecting process's SID has to match
+        // — logged unconditionally rather than only on a connect failure, so
+        // a failure on the far end can be diagnosed from this process's own
+        // log without a second, correlated capture.
+        log::info!("granting pipe access via {sddl}");
         let sddl_wide: Vec<u16> = sddl.encode_utf16().chain(std::iter::once(0)).collect();
         let mut sd = PSECURITY_DESCRIPTOR::default();
         unsafe {
