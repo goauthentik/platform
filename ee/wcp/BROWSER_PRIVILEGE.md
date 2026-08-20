@@ -26,10 +26,13 @@ current code.
 - **Spawn**: `CreateProcessWithTokenW`, brokered through the Secondary
   Logon service — the only API of the three tried that actually works from
   inside LogonUI (see "Roads not taken").
-- **IPC**: named pipes, not anonymous-and-inherited —
-  `CreateProcessWithTokenW` has no handle-inheritance mechanism at all. A
-  random UUID name per launch; an SDDL DACL scopes access to SYSTEM plus
-  the service account's own SID.
+- **IPC**: anonymous pipes, inherited via `STARTUPINFOW`'s `hStdInput`/
+  `hStdOutput` — matching GCPW's own `CreatePipeForChildProcess`
+  (`gcp_utils.cc`). `ak_cef.exe` never opens anything by name at all: both
+  ends are opened by `credprovider` (SYSTEM) before the spawn, and an
+  *inherited* handle is a duplicate of one already validated at that point,
+  so the child's own low-privilege token is never consulted. See "Roads not
+  taken" for the named-pipe/DACL approach this replaced.
 - **Desktop**: `syscalls::ensure_desktop_access` grants the account's SID
   `GENERIC_ALL` on `WinSta0` and its `Winlogon` desktop.
 - **`BaseNamedObjects`**: `syscalls::ensure_base_named_objects_access`
@@ -106,6 +109,23 @@ confirmed against real installs rather than documentation alone:
   `ProcessSingleton` runs during `CefInitialize` regardless of
   `runtime_style`. Kept Alloy anyway, since it's still the right choice for
   a single-purpose window with no Chrome UI.
+- **Named pipes with a per-pipe SDDL DACL** (`(A;;FW;;;<sid>)`) looked
+  right and, on inspection, *was* right — read back after creation, the
+  DACL matched exactly, on the exact SID the connecting token carried — yet
+  `ak_cef.exe` still got `ERROR_ACCESS_DENIED` opening it by name. Granting
+  the same SID `FILE_ALL_ACCESS` on the Named Pipe File System's own
+  namespace object (`\\.\pipe\`) didn't change the outcome either. The
+  actual fix wasn't a wider grant at all: GCPW never opens a named pipe by
+  path from its low-privilege side in the first place
+  (`CreatePipeForChildProcess`, `gcp_utils.cc`) — it opens both ends itself
+  and lets the child *inherit* one, which needs no DACL to agree with
+  anything, since inheritance duplicates a handle instead of re-checking
+  access against the child's own token. The earlier belief that
+  `CreateProcessWithTokenW` cannot inherit handles at all was also wrong:
+  it has no `bInheritHandles` parameter, but does honor inheritable
+  `hStdInput`/`hStdOutput` in `STARTUPINFOW` — confirmed against GCPW's own
+  equivalent call (`OSProcessManager::CreateProcessWithToken`,
+  `os_process_manager.cc`).
 
 ## Option A — enable the CEF sandbox
 
@@ -149,6 +169,12 @@ upstream-shaped work, independent of this branch.
   `credprovider` cannot get wrong is which process the `ak-sysd` pipe trusts,
   but it does mean the window appears after both round trips added together
   rather than the slower of the two.
+- **CEF's own renderer/GPU/utility re-execs inheriting the IPC pipe
+  handles** is unverified. Chromium is normally careful about handle
+  hygiene for its own child processes (explicit handle lists, not blanket
+  inheritance), so this is expected to be harmless — at worst, an extra
+  process holding the pipe open a little longer — but it has not been
+  confirmed on a real install.
 - **The account's own password validation is a no-op**:
   `RealSyscalls::validate` uses `LOGON32_LOGON_NETWORK`, but the account is
   denied network logon by design (`deny_interactive_and_network_logon`), so

@@ -1,7 +1,8 @@
 //! CEF's own multi-process machinery re-execs this same binary with a
 //! `--type=...` switch for renderer/GPU/utility roles; only the invocation
-//! from `credprovider` (carrying `--result-pipe`/`--cancel-pipe`) becomes
-//! the browser-process host that opens the sign-in window.
+//! from `credprovider` (carrying `--sign-in-url`/`--header-token`, and its
+//! inherited stdin/stdout as the IPC channel) becomes the browser-process
+//! host that opens the sign-in window.
 
 // Logging goes to the platform log, never stdout (see `allow_stdout(false)`
 // below), so nothing needs a console. Without this the binary links as a
@@ -135,11 +136,6 @@ fn main() {
         "browser process must not be handled by execute_process"
     );
 
-    let Some(result_pipe) = arg_value("--result-pipe") else {
-        log::error!("missing --result-pipe argument");
-        return;
-    };
-    let cancel_pipe = arg_value("--cancel-pipe");
     let Some(sign_in_url) = arg_value("--sign-in-url") else {
         log::error!("missing --sign-in-url argument");
         return;
@@ -159,7 +155,7 @@ fn main() {
         log_severity: LogSeverity::VERBOSE,
         ..Default::default()
     };
-    let mut app = app::HostApp::new(result_pipe, cancel_pipe, sign_in_url, header_token);
+    let mut app = app::HostApp::new(sign_in_url, header_token);
     let initialized = initialize(
         Some(cef_args.as_main_args()),
         Some(&settings),
@@ -209,7 +205,7 @@ mod tests {
     }
 
     /// Reached whenever `ak_cef.exe` exits before ever creating its own
-    /// directory (e.g. a missing `--result-pipe` argument) — must not panic.
+    /// directory (e.g. a missing `--sign-in-url` argument) — must not panic.
     #[test]
     fn tolerates_a_directory_that_is_already_gone() {
         let dir = scratch_dir("missing");
