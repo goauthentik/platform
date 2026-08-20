@@ -1,9 +1,8 @@
 //! One diagnostic: which account and SID this process's own token actually
-//! carries. Logged unconditionally at startup rather than only on an ACL
-//! failure — the pipe DACL `credprovider` grants is keyed on this exact SID
-//! string, so having both sides in the log is what turns "access denied" into
-//! either "the grant is wrong" or "the grant is right and something else is
-//! going on" without another slow rebuild-and-retest round trip.
+//! carries. Logged unconditionally at startup, next to the build hash — this
+//! process only ever runs as SYSTEM or the dedicated service account
+//! (`BROWSER_PRIVILEGE.md`), and confirming which one needs no separate,
+//! correlated capture on the far end.
 
 use std::ffi::c_void;
 

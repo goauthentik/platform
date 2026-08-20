@@ -50,9 +50,6 @@ step rather than a fresh open question.
   `wcp-cache` (`cef-host::browser_state_dir`), not a shared fixed path —
   removed after a successful run, left behind after a failed one for
   inspection.
-- **CEF runtime style**: `RuntimeStyle::ALLOY`, not the Chrome-style
-  default — this window needs no Chrome UI (tabs, extensions, profile
-  manager).
 - **`ak-sysd`**: `ak_cef.exe` no longer talks to it at all — the service
   account has no access to its pipe, and granting that would widen a pipe
   every other platform/consumer shares for the sake of one caller.
@@ -103,14 +100,16 @@ confirmed against real installs rather than documentation alone:
   `LOGON32_LOGON_SERVICE` is the fix: batch logons carry the
   `NT AUTHORITY\BATCH` well-known SID rather than `INTERACTIVE`, and
   hardened `BaseNamedObjects` ACLs commonly key on logon-type SID.
-- **CEF's Chrome-vs-Alloy runtime style** looked like it might also explain
-  the `ProcessSingleton` failure (Chrome style pulls in that whole
-  subsystem), but doesn't: the choice only selects a *style* layered on top
-  of an always-Chrome *bootstrap* (confirmed via CEF's own architecture
-  docs and the "Delete Alloy bootstrap" change in M128) —
-  `ProcessSingleton` runs during `CefInitialize` regardless of
-  `runtime_style`. Kept Alloy anyway, since it's still the right choice for
-  a single-purpose window with no Chrome UI.
+- **CEF's Chrome-vs-Alloy runtime style** looked like it might explain the
+  `ProcessSingleton` failure (Chrome style pulls in that whole subsystem),
+  but doesn't: the choice only selects a *style* layered on top of an
+  always-Chrome *bootstrap* (confirmed via CEF's own architecture docs and
+  the "Delete Alloy bootstrap" change in M128) — `ProcessSingleton` runs
+  during `CefInitialize` regardless of `runtime_style`. Tried anyway, on the
+  theory that a lighter embedding-oriented runtime suited a single-purpose
+  window with no Chrome UI better than the default — reverted once it
+  turned out to fix nothing and cost a `BrowserView`/`Window` delegate pair
+  agreeing on a non-default style for no benefit.
 - **Named pipes with a per-pipe SDDL DACL** (`(A;;FW;;;<sid>)`) looked
   right and, on inspection, *was* right — read back after creation, the
   DACL matched exactly, on the exact SID the connecting token carried — yet

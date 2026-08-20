@@ -112,15 +112,5 @@ wrap_window_delegate! {
         fn is_frameless(&self, _window: Option<&mut Window>) -> i32 {
             0
         }
-
-        /// Chrome style pulls in the full Chrome UI/browser layer —
-        /// extensions, profile manager, tabs — none of which this
-        /// single-purpose sign-in window needs. Alloy is CEF's lighter
-        /// embedding-oriented runtime. `open_sign_in_window` sets the same
-        /// style on the `BrowserView` — a Chrome style Window can only host
-        /// one Chrome style `BrowserView`, so both had to move together.
-        fn window_runtime_style(&self) -> RuntimeStyle {
-            RuntimeStyle::ALLOY
-        }
     }
 }
