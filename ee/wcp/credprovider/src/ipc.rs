@@ -26,7 +26,8 @@ use windows::{
             PSECURITY_DESCRIPTOR, SE_IMPERSONATE_NAME, SECURITY_ATTRIBUTES,
         },
         Storage::FileSystem::{
-            FILE_FLAGS_AND_ATTRIBUTES, PIPE_ACCESS_INBOUND, PIPE_ACCESS_OUTBOUND,
+            FILE_ALL_ACCESS, FILE_FLAGS_AND_ATTRIBUTES, FILE_GENERIC_READ, FILE_GENERIC_WRITE,
+            PIPE_ACCESS_INBOUND, PIPE_ACCESS_OUTBOUND,
         },
         System::Environment::{CreateEnvironmentBlock, DestroyEnvironmentBlock},
         System::Pipes::{ConnectNamedPipe, CreateNamedPipeW, NAMED_PIPE_MODE},
@@ -104,12 +105,25 @@ struct DuplexPipes {
 /// the only other identity that will ever try to open the pipe — the one
 /// direction it needs. A named pipe created with no explicit DACL is
 /// reachable only by its creator's own identity, which the service account
-/// is not. `access` is an SDDL generic-rights token: `"GR"` or `"GW"`.
+/// is not.
+///
+/// `access` must be an already object-specific mask (`FILE_GENERIC_READ`/
+/// `FILE_GENERIC_WRITE`), not a bare `GENERIC_READ`/`GENERIC_WRITE` — SDDL's
+/// `GR`/`GW`/`GA` letters land in the ACE as the literal, unmapped
+/// `GENERIC_*` bit. `CreateFileW(GENERIC_WRITE)` gets that *request* mapped
+/// to `FILE_GENERIC_WRITE` before the check, but the ACE is never put
+/// through the same mapping, so a raw `GENERIC_WRITE` ACE and a
+/// `GENERIC_WRITE` request share no bits and the check fails even though the
+/// SID matches exactly. Passing the mapped mask up front sidesteps the
+/// mismatch entirely.
 struct PipeSecurityDescriptor(PSECURITY_DESCRIPTOR);
 
 impl PipeSecurityDescriptor {
-    fn new(sid: &str, access: &str) -> windows::core::Result<Self> {
-        let sddl = format!("D:(A;;GA;;;SY)(A;;{access};;;{sid})");
+    fn new(sid: &str, access: u32) -> windows::core::Result<Self> {
+        let sddl = format!(
+            "D:(A;;{:#x};;;SY)(A;;{access:#x};;;{sid})",
+            FILE_ALL_ACCESS.0
+        );
         // This exact string is what the connecting process's SID has to match
         // — logged unconditionally rather than only on a connect failure, so
         // a failure on the far end can be diagnosed from this process's own
@@ -184,10 +198,10 @@ fn create_duplex_pipes(connecting_sid: Option<&str>) -> windows::core::Result<Du
 
     // The child writes the result and reads the cancel signal.
     let result_sd = connecting_sid
-        .map(|sid| PipeSecurityDescriptor::new(sid, "GW"))
+        .map(|sid| PipeSecurityDescriptor::new(sid, FILE_GENERIC_WRITE.0))
         .transpose()?;
     let cancel_sd = connecting_sid
-        .map(|sid| PipeSecurityDescriptor::new(sid, "GR"))
+        .map(|sid| PipeSecurityDescriptor::new(sid, FILE_GENERIC_READ.0))
         .transpose()?;
 
     let result_server = create_named_pipe(&result_name, PIPE_ACCESS_INBOUND, result_sd.as_ref())?;
