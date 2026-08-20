@@ -478,19 +478,10 @@ pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()
 /// Mints a primary token for the service account by logging it on with its
 /// stored password, then strips every privilege from the result — the same
 /// pattern GCPW uses for its own LogonUI-hosted sign-in UI (`CreateLogonToken`
-/// in `chrome/credential_provider/gaiacp/gcp_utils.cc`). `CreateRestrictedToken`
-/// with `DISABLE_MAX_PRIVILEGE` is what keeps a compromised renderer from
-/// doing anything with a token that would otherwise be fully privileged for
-/// its account.
-///
-/// `LOGON32_LOGON_SERVICE`, not `_BATCH`: confirmed against a real install
-/// that a batch-logon token here cannot create *any* named synchronization
-/// object (`CreateMutex` denied even for random names, in both `Local\` and
-/// `Global\`, while the same token creates named pipes/files/registry keys
-/// fine) — Chromium's own `ProcessSingleton` needs exactly that and fails.
-/// Batch logons carry the `NT AUTHORITY\BATCH` well-known SID rather than
-/// `INTERACTIVE`; a hardened `BaseNamedObjects` ACL that grants creation
-/// rights by logon-type SID rather than a broad "Everyone" excludes it.
+/// in `chrome/credential_provider/gaiacp/gcp_utils.cc`). `LOGON32_LOGON_SERVICE`,
+/// not `_BATCH`: a batch-logon token cannot create named synchronization
+/// objects, fatal to Chromium's own `ProcessSingleton` — see
+/// `BROWSER_PRIVILEGE.md`'s "Roads not taken" for why.
 pub fn service_account_token(username: &str, password: &str) -> windows::core::Result<HANDLE> {
     let username_wide = wide(username);
     let password_wide = wide(password);
@@ -540,14 +531,15 @@ pub(crate) fn sid_to_string(sid: &[u8]) -> windows::core::Result<String> {
     }
 }
 
-/// Adds `sid` to `handle`'s DACL with `GENERIC_ALL`, preserving every
+/// Adds `sid` to `handle`'s DACL with `access_mask`, preserving every
 /// existing entry — `SetEntriesInAclW` merges onto `old_dacl` rather than
 /// replacing it, which matters here: replacing outright would drop
 /// SYSTEM/Administrators access to the object this process itself needs.
-unsafe fn grant_generic_all(
+unsafe fn grant_access(
     handle: HANDLE,
     object_type: SE_OBJECT_TYPE,
     sid: &[u8],
+    access_mask: u32,
 ) -> windows::core::Result<()> {
     unsafe {
         let mut old_dacl: *mut ACL = std::ptr::null_mut();
@@ -572,7 +564,7 @@ unsafe fn grant_generic_all(
             ptstrName: PWSTR(sid.as_ptr() as *mut u16),
         };
         let entry = EXPLICIT_ACCESS_W {
-            grfAccessPermissions: GENERIC_ALL.0,
+            grfAccessPermissions: access_mask,
             grfAccessMode: SET_ACCESS,
             grfInheritance: NO_INHERITANCE,
             Trustee: trustee,
@@ -611,7 +603,7 @@ unsafe fn grant_generic_all(
 pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
     unsafe {
         let winsta = GetProcessWindowStation()?;
-        grant_generic_all(HANDLE(winsta.0), SE_WINDOW_OBJECT, sid)?;
+        grant_access(HANDLE(winsta.0), SE_WINDOW_OBJECT, sid, GENERIC_ALL.0)?;
 
         let desktop = OpenDesktopW(
             w!("Winlogon"),
@@ -619,7 +611,68 @@ pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
             false,
             (READ_CONTROL | WRITE_DAC).0,
         )?;
-        grant_generic_all(HANDLE(desktop.0), SE_WINDOW_OBJECT, sid)
+        grant_access(HANDLE(desktop.0), SE_WINDOW_OBJECT, sid, GENERIC_ALL.0)
+    }
+}
+
+/// Grants the service account's SID rights to create objects in this
+/// session's `BaseNamedObjects` — the Object Manager directory Windows
+/// resolves `Local\`-prefixed names into. No Win32 wrapper exists for
+/// opening an arbitrary Object Manager directory the way `OpenDesktopW`
+/// does for desktops, hence the native `NtOpenDirectoryObject` call.
+/// Mirrors GCPW's own `AllowLogonSIDOnLocalBasedNamedObjects`
+/// (`chrome/credential_provider/gaiacp/os_process_manager.cc`), including
+/// its narrower-than-`GENERIC_ALL` mask — see `BROWSER_PRIVILEGE.md`.
+pub fn ensure_base_named_objects_access(sid: &[u8]) -> windows::core::Result<()> {
+    use windows::Wdk::Foundation::OBJECT_ATTRIBUTES;
+    use windows::Wdk::Storage::FileSystem::NtOpenDirectoryObject;
+    use windows::Wdk::System::SystemServices::{
+        DIRECTORY_CREATE_OBJECT, DIRECTORY_CREATE_SUBDIRECTORY, DIRECTORY_QUERY, DIRECTORY_TRAVERSE,
+    };
+    use windows::Win32::Foundation::UNICODE_STRING;
+    use windows::Win32::System::RemoteDesktop::ProcessIdToSessionId;
+    use windows::Win32::System::Threading::GetCurrentProcessId;
+
+    let mut session_id = 0u32;
+    unsafe { ProcessIdToSessionId(GetCurrentProcessId(), &mut session_id)? };
+
+    let path = if session_id == 0 {
+        r"\BaseNamedObjects".to_string()
+    } else {
+        format!(r"\Sessions\{session_id}\BaseNamedObjects")
+    };
+    let path_wide = wide(&path);
+    let mut name = UNICODE_STRING {
+        Length: ((path_wide.len() - 1) * 2) as u16,
+        MaximumLength: (path_wide.len() * 2) as u16,
+        Buffer: PWSTR(path_wide.as_ptr() as *mut u16),
+    };
+    let object_attributes = OBJECT_ATTRIBUTES {
+        Length: size_of::<OBJECT_ATTRIBUTES>() as u32,
+        ObjectName: &mut name,
+        ..Default::default()
+    };
+
+    unsafe {
+        let mut directory = HANDLE::default();
+        NtOpenDirectoryObject(
+            &mut directory,
+            DIRECTORY_TRAVERSE | READ_CONTROL.0 | WRITE_DAC.0,
+            &object_attributes,
+        )
+        .ok()?;
+
+        let result = grant_access(
+            directory,
+            SE_WINDOW_OBJECT,
+            sid,
+            DIRECTORY_QUERY
+                | DIRECTORY_TRAVERSE
+                | DIRECTORY_CREATE_OBJECT
+                | DIRECTORY_CREATE_SUBDIRECTORY,
+        );
+        let _ = CloseHandle(directory);
+        result
     }
 }
 

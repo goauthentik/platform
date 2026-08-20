@@ -548,6 +548,9 @@ fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
     if let Err(e) = syscalls::ensure_desktop_access(&sid) {
         log::warn!("could not grant the service account secure-desktop access: {e}");
     }
+    if let Err(e) = syscalls::ensure_base_named_objects_access(&sid) {
+        log::warn!("could not grant the service account BaseNamedObjects access: {e}");
+    }
 
     syscalls::service_account_token(syscalls::SERVICE_ACCOUNT_NAME, &password)
 }
