@@ -25,9 +25,10 @@ use windows::{
                 LsaLookupAuthenticationPackage, LsaOpenPolicy, POLICY_CREATE_ACCOUNT,
             },
             Authorization::{
-                ConvertSidToStringSidW, EXPLICIT_ACCESS_W, GetSecurityInfo, NO_MULTIPLE_TRUSTEE,
-                SE_OBJECT_TYPE, SE_WINDOW_OBJECT, SET_ACCESS, SetEntriesInAclW, SetSecurityInfo,
-                TRUSTEE_IS_SID, TRUSTEE_IS_USER, TRUSTEE_W,
+                ConvertSidToStringSidW, EXPLICIT_ACCESS_W, GetNamedSecurityInfoW, GetSecurityInfo,
+                NO_MULTIPLE_TRUSTEE, SE_FILE_OBJECT, SE_OBJECT_TYPE, SE_WINDOW_OBJECT, SET_ACCESS,
+                SetEntriesInAclW, SetNamedSecurityInfoW, SetSecurityInfo, TRUSTEE_IS_SID,
+                TRUSTEE_IS_USER, TRUSTEE_W,
             },
             CreateRestrictedToken, DACL_SECURITY_INFORMATION, DISABLE_MAX_PRIVILEGE,
             GetTokenInformation, LOGON32_LOGON_NETWORK, LOGON32_LOGON_SERVICE,
@@ -36,7 +37,7 @@ use windows::{
             SE_PRIVILEGE_ENABLED, SID_NAME_USE, TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES,
             TOKEN_QUERY, TOKEN_USER, TokenUser,
         },
-        Storage::FileSystem::{READ_CONTROL, WRITE_DAC},
+        Storage::FileSystem::{FILE_ALL_ACCESS, READ_CONTROL, WRITE_DAC},
         System::StationsAndDesktops::{
             DESKTOP_CONTROL_FLAGS, GetProcessWindowStation, OpenDesktopW,
         },
@@ -673,6 +674,73 @@ pub fn ensure_base_named_objects_access(sid: &[u8]) -> windows::core::Result<()>
         );
         let _ = CloseHandle(directory);
         result
+    }
+}
+
+/// Grants the service account's SID access to the Named Pipe File System's
+/// own namespace object (`\\.\pipe\`) — separate from, and checked before,
+/// any individual pipe's own DACL. Confirmed via a read-back
+/// (`ipc::log_effective_dacl`) that the per-pipe grant on the result/cancel
+/// pipes is exactly right and the SID matches the connecting token exactly,
+/// yet the connect still fails — the remaining candidate is this
+/// device-level check, the same two-tier shape as `BaseNamedObjects`
+/// hardening (`ensure_base_named_objects_access`) just for a different
+/// namespace. `FILE_ALL_ACCESS` rather than a narrower mask because it is
+/// not yet known which specific right this device-level check wants; narrow
+/// once that's confirmed (see `BROWSER_PRIVILEGE.md`'s "Known gaps").
+pub fn ensure_named_pipe_namespace_access(sid: &[u8]) -> windows::core::Result<()> {
+    let path = wide(r"\\.\pipe\");
+    unsafe {
+        let mut old_dacl: *mut ACL = std::ptr::null_mut();
+        let mut sd = PSECURITY_DESCRIPTOR::default();
+        GetNamedSecurityInfoW(
+            PCWSTR(path.as_ptr()),
+            SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION,
+            None,
+            None,
+            Some(&mut old_dacl),
+            None,
+            &mut sd,
+        )
+        .ok()?;
+
+        let trustee = TRUSTEE_W {
+            pMultipleTrustee: std::ptr::null_mut(),
+            MultipleTrusteeOperation: NO_MULTIPLE_TRUSTEE,
+            TrusteeForm: TRUSTEE_IS_SID,
+            TrusteeType: TRUSTEE_IS_USER,
+            ptstrName: PWSTR(sid.as_ptr() as *mut u16),
+        };
+        let entry = EXPLICIT_ACCESS_W {
+            grfAccessPermissions: FILE_ALL_ACCESS.0,
+            grfAccessMode: SET_ACCESS,
+            grfInheritance: NO_INHERITANCE,
+            Trustee: trustee,
+        };
+
+        let mut new_dacl: *mut ACL = std::ptr::null_mut();
+        let entries_result = SetEntriesInAclW(Some(&[entry]), Some(old_dacl), &mut new_dacl);
+        let set_result = if entries_result.is_ok() {
+            SetNamedSecurityInfoW(
+                PCWSTR(path.as_ptr()),
+                SE_FILE_OBJECT,
+                DACL_SECURITY_INFORMATION,
+                None,
+                None,
+                Some(new_dacl),
+                None,
+            )
+        } else {
+            entries_result
+        };
+
+        let _ = LocalFree(Some(HLOCAL(sd.0)));
+        if !new_dacl.is_null() {
+            let _ = LocalFree(Some(HLOCAL(new_dacl as *mut std::ffi::c_void)));
+        }
+
+        set_result.ok()
     }
 }
 
