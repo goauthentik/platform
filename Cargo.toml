@@ -45,7 +45,7 @@ strip = "debuginfo"
 [workspace.dependencies]
 ak-api-cli = { path = "ak-api-cli" }
 ak-api-cli-gen = { path = "ak-api-cli-gen" }
-authentik-client = { git = "https://github.com/goauthentik/client-rust", rev="24c227964b05ff1c3cc9487ccdd40751ac89f6b9", version = "2026.11.0-rc1" , default-features = false, features = ["rustls"] }
+authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "2756af5cf2a715f3bb8e703162a98d869c57679f", version = "2026.11.0-rc1" , default-features = false, features = ["rustls"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 clap = { version = "4.6.1", features = ["derive"] }
 color-eyre = "= 0.6.5"
