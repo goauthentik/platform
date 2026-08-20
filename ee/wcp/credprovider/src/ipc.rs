@@ -42,7 +42,8 @@ use windows::{
 };
 
 use crate::syscalls::{self, ForegroundControl};
-use ak_ee_wcp_wire::AuthResult;
+use crate::sysd;
+use ak_ee_wcp_wire::{AuthResult, HostReport};
 
 /// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
 /// while waiting, so LogonUI cancelling (the user backing out of the tile)
@@ -277,6 +278,21 @@ fn run_cef_host(
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
+    // Fetched here, not by `ak_cef.exe` itself: the service account it runs
+    // as has no access to `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). Doing
+    // this before the pipes/spawn also means a failure here costs nothing
+    // beyond the round trip itself, rather than a spawned window that can
+    // never load anything.
+    let start = match sysd::sys_auth_start_async() {
+        Ok(s) => s,
+        Err(e) => {
+            log::error!("sys_auth_start_async failed: {e}");
+            return AuthResult::Failed {
+                reason: e.to_string(),
+            };
+        }
+    };
+
     let connecting_sid = if may_launch_in_current_session(cpus) {
         None
     } else {
@@ -303,7 +319,7 @@ fn run_cef_host(
         }
     };
 
-    let spawn = spawn_cef_host(cef_exe, &pipes, cpus);
+    let spawn = spawn_cef_host(cef_exe, &pipes, cpus, &start.url, &start.header_token);
     let process = match spawn {
         Ok(p) => p,
         Err(e) => {
@@ -435,6 +451,23 @@ enum PipeOutcome {
     Error(String),
 }
 
+/// Turns the sign-in redirect's URL into a real outcome by validating its
+/// token against `ak-sysd` — the one step `ak_cef.exe` cannot do itself
+/// (`BROWSER_PRIVILEGE.md`). Runs on the result-pipe reader thread, not the
+/// thread LogonUI called `Connect` on, so this blocking round trip does not
+/// stall `should_continue` polling or the foreground nudge.
+fn auth_result_for(url: &str) -> AuthResult {
+    match sysd::sys_auth_validate(url) {
+        Ok(Some(username)) => AuthResult::Completed { username },
+        Ok(None) => AuthResult::Failed {
+            reason: "token validation failed".to_string(),
+        },
+        Err(e) => AuthResult::Failed {
+            reason: e.to_string(),
+        },
+    }
+}
+
 /// Polls in short slices so `should_continue` gets a turn. On cancellation it
 /// asks `ak_cef.exe` to close over the control pipe rather than killing it.
 ///
@@ -451,8 +484,9 @@ fn wait_for_result(
     let mut result_file = unsafe { File::from_raw_handle(result_read.0) };
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
-        let outcome = match ak_ee_wcp_wire::read_auth_result(&mut result_file) {
-            Ok(Some(result)) => PipeOutcome::Result(result),
+        let outcome = match ak_ee_wcp_wire::read_host_report(&mut result_file) {
+            Ok(Some(HostReport::Redirected { url })) => PipeOutcome::Result(auth_result_for(&url)),
+            Ok(Some(HostReport::Cancelled)) => PipeOutcome::Result(AuthResult::Cancelled),
             Ok(None) => PipeOutcome::Eof,
             Err(e) => PipeOutcome::Error(e.to_string()),
         };
@@ -555,16 +589,29 @@ fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
     syscalls::service_account_token(syscalls::SERVICE_ACCOUNT_NAME, &password)
 }
 
+/// Minimal Windows command-line quoting: wraps `s` in quotes and escapes any
+/// embedded ones, so `CommandLineToArgvW` (what `std::env::args()` on the
+/// far end is built on) sees it as a single argument. Neither a URL nor an
+/// opaque token legitimately contains the backslash-before-quote sequence
+/// the full algorithm exists to handle.
+fn quote_arg(s: &str) -> String {
+    format!("\"{}\"", s.replace('"', "\\\""))
+}
+
 fn spawn_cef_host(
     cef_exe: &Path,
     pipes: &DuplexPipes,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    sign_in_url: &str,
+    header_token: &str,
 ) -> windows::core::Result<PROCESS_INFORMATION> {
     let cmdline = format!(
-        "\"{}\" --result-pipe {} --cancel-pipe {}",
+        "\"{}\" --result-pipe {} --cancel-pipe {} --sign-in-url {} --header-token {}",
         cef_exe.display(),
         pipes.result_name,
-        pipes.cancel_name
+        pipes.cancel_name,
+        quote_arg(sign_in_url),
+        quote_arg(header_token),
     );
 
     let mut si = STARTUPINFOW {
@@ -916,7 +963,7 @@ mod tests {
             std::env::var("COMSPEC").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string()),
         );
 
-        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI);
+        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI, "https://example.com", "token");
 
         unsafe {
             let _ = CloseHandle(pipes.result_server);

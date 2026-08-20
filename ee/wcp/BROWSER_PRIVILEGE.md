@@ -48,6 +48,14 @@ current code.
 - **CEF runtime style**: `RuntimeStyle::ALLOY`, not the Chrome-style
   default — this window needs no Chrome UI (tabs, extensions, profile
   manager).
+- **`ak-sysd`**: `ak_cef.exe` no longer talks to it at all — the service
+  account has no access to its pipe, and granting that would widen a pipe
+  every other platform/consumer shares for the sake of one caller.
+  `credprovider` fetches the sign-in URL and header token before spawning
+  (passed on the command line) and validates the redirect's token once
+  `ak_cef.exe` reports it over the result pipe (`ipc::auth_result_for`) —
+  `ak_cef.exe`'s own job shrinks to "open this URL, inject this header,
+  report what came back."
 
 Previously, a fresh logon ran the browser as SYSTEM outright (no
 interactive-user token existed yet to duplicate) and unlock used the
@@ -136,6 +144,11 @@ upstream-shaped work, independent of this branch.
 - **Deployment friction** — GPO blocking local account creation, endpoint
   monitoring flagging a new local account, no local accounts on a domain
   controller — isn't addressable from this codebase.
+- **The `ak-sysd` start call is now serialized before the spawn** rather than
+  overlapping `ak_cef.exe`'s own startup — simpler, and the one thing
+  `credprovider` cannot get wrong is which process the `ak-sysd` pipe trusts,
+  but it does mean the window appears after both round trips added together
+  rather than the slower of the two.
 - **The account's own password validation is a no-op**:
   `RealSyscalls::validate` uses `LOGON32_LOGON_NETWORK`, but the account is
   denied network logon by design (`deny_interactive_and_network_logon`), so

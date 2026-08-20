@@ -204,10 +204,8 @@ dependencies = [
  "ak-meta",
  "ak-platform",
  "cef",
- "eyre",
  "log",
  "sentry",
- "url",
  "uuid",
  "windows 0.62.2",
 ]
@@ -233,6 +231,7 @@ name = "ak-ee-wcp-wire"
 version = "0.60.1"
 dependencies = [
  "prost",
+ "url",
 ]
 
 [[package]]

@@ -13,7 +13,6 @@ mod app;
 mod foreground;
 mod handler;
 mod icon;
-mod sysd;
 mod window;
 
 use std::path::Path;
@@ -139,6 +138,14 @@ fn main() {
         return;
     };
     let cancel_pipe = arg_value("--cancel-pipe");
+    let Some(sign_in_url) = arg_value("--sign-in-url") else {
+        log::error!("missing --sign-in-url argument");
+        return;
+    };
+    let Some(header_token) = arg_value("--header-token") else {
+        log::error!("missing --header-token argument");
+        return;
+    };
 
     let cache_path = browser_state_dir(Path::new(CACHE_ROOT));
 
@@ -150,7 +157,7 @@ fn main() {
         log_severity: LogSeverity::VERBOSE,
         ..Default::default()
     };
-    let mut app = app::HostApp::new(result_pipe, cancel_pipe);
+    let mut app = app::HostApp::new(result_pipe, cancel_pipe, sign_in_url, header_token);
     let initialized = initialize(
         Some(cef_args.as_main_args()),
         Some(&settings),

@@ -1,5 +1,6 @@
-//! CEF app/browser-process handler: on context init, fetches the sign-in
-//! URL and opens the browser window.
+//! CEF app/browser-process handler: on context init, opens the sign-in
+//! window at the URL `credprovider` already resolved before spawning this
+//! process.
 
 use cef::*;
 
@@ -10,11 +11,18 @@ wrap_app! {
     pub struct HostApp {
         result_pipe: String,
         cancel_pipe: Option<String>,
+        sign_in_url: String,
+        header_token: String,
     }
 
     impl App {
         fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
-            Some(HostBrowserProcessHandler::new(self.result_pipe.clone(), self.cancel_pipe.clone()))
+            Some(HostBrowserProcessHandler::new(
+                self.result_pipe.clone(),
+                self.cancel_pipe.clone(),
+                self.sign_in_url.clone(),
+                self.header_token.clone(),
+            ))
         }
     }
 }
@@ -23,6 +31,8 @@ wrap_browser_process_handler! {
     struct HostBrowserProcessHandler {
         result_pipe: String,
         cancel_pipe: Option<String>,
+        sign_in_url: String,
+        header_token: String,
     }
 
     impl BrowserProcessHandler {
@@ -31,10 +41,14 @@ wrap_browser_process_handler! {
         // frames below the window creation. The C++ never built the browser
         // there: it only flagged the context as ready and created the window
         // later, once the loop was pumping. Post the work instead of doing it
-        // re-entrantly, which also keeps a blocking gRPC call out of
-        // `CefInitialize`.
+        // re-entrantly.
         fn on_context_initialized(&self) {
-            let mut task = OpenSignInWindow::new(self.result_pipe.clone(), self.cancel_pipe.clone());
+            let mut task = OpenSignInWindow::new(
+                self.result_pipe.clone(),
+                self.cancel_pipe.clone(),
+                self.sign_in_url.clone(),
+                self.header_token.clone(),
+            );
             post_task(ThreadId::UI, Some(&mut task));
         }
     }
@@ -44,11 +58,18 @@ wrap_task! {
     struct OpenSignInWindow {
         result_pipe: String,
         cancel_pipe: Option<String>,
+        sign_in_url: String,
+        header_token: String,
     }
 
     impl Task {
         fn execute(&self) {
-            open_sign_in_window(self.result_pipe.clone(), self.cancel_pipe.clone());
+            open_sign_in_window(
+                self.result_pipe.clone(),
+                self.cancel_pipe.clone(),
+                self.sign_in_url.clone(),
+                self.header_token.clone(),
+            );
         }
     }
 }
@@ -67,39 +88,12 @@ wrap_browser_view_delegate! {
     }
 }
 
-fn open_sign_in_window(result_pipe: String, cancel_pipe: Option<String>) {
-    // Most of the gap between the spawn and a window existing is spent here —
-    // a named-pipe round trip to `ak-sysd` and, behind it, a live call out to
-    // the authentik API. That gap is what the foreground grant issued at spawn
-    // has to survive, so it is worth knowing how long it actually was.
-    let started = std::time::Instant::now();
-    let start = match crate::sysd::sys_auth_start_async() {
-        Ok(s) => s,
-        Err(e) => {
-            log::error!("sys_auth_start_async failed: {e}");
-            match connect_result_pipe(&result_pipe) {
-                Ok(mut pipe) => {
-                    let _ = ak_ee_wcp_wire::write_auth_result(
-                        &mut pipe,
-                        &ak_ee_wcp_wire::AuthResult::Failed {
-                            reason: e.to_string(),
-                        },
-                    );
-                }
-                Err(conn_err) => {
-                    log::error!("could not connect the result pipe either: {conn_err}");
-                }
-            }
-            quit_message_loop();
-            return;
-        }
-    };
-
-    log::info!(
-        "got the sign-in URL after {}ms",
-        started.elapsed().as_millis()
-    );
-
+fn open_sign_in_window(
+    result_pipe: String,
+    cancel_pipe: Option<String>,
+    sign_in_url: String,
+    header_token: String,
+) {
     let result_pipe = match connect_result_pipe(&result_pipe) {
         Ok(pipe) => pipe,
         Err(e) => {
@@ -117,7 +111,7 @@ fn open_sign_in_window(result_pipe: String, cancel_pipe: Option<String>) {
             None
         }
     });
-    let inner = SignInHandler::new(start.header_token, result_pipe, cancel_pipe);
+    let inner = SignInHandler::new(header_token, result_pipe, cancel_pipe);
     let mut client = SignInClient::new(inner);
 
     let browser_settings = BrowserSettings::default();
@@ -143,7 +137,7 @@ fn open_sign_in_window(result_pipe: String, cancel_pipe: Option<String>) {
     log::info!("creating the top-level window");
     let mut delegate = SignInWindowDelegate::new(
         std::cell::RefCell::new(browser_view),
-        start.url,
+        sign_in_url,
         std::rc::Rc::new(std::cell::Cell::new(false)),
     );
     window_create_top_level(Some(&mut delegate));
