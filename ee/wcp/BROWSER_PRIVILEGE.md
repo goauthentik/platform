@@ -85,17 +85,50 @@ difference — because GCPW's "sign-in UI helper" is not a Chromium browser
 process at all. `ForkGaiaLogonStub` launches `rundll32.exe` reloading the
 credential provider's own DLL through an entrypoint; it never runs
 `chrome_main_delegate.cc` or `ProcessSingleton` in the first place. The
-actual fix: CEF (151.x) supports both a **Chrome style** runtime (the full
-Chrome UI/browser layer — extensions, profile manager, `ProcessSingleton`)
-and a lighter **Alloy style** runtime built for embedding, and windowed
-browsers default to Chrome style unless told otherwise.
-`SignInWindowDelegate::window_runtime_style` (`window.rs`) and the new
-`AlloyBrowserView::browser_runtime_style` (`app.rs`) both now return
-`RuntimeStyle::ALLOY` — a Chrome style top-level `Window` can only host one
-Chrome style `BrowserView`, so both had to change together or it's a style
-mismatch, not a free mix.
+next candidate: CEF (151.x) supports both a **Chrome style** runtime (the
+full Chrome UI/browser layer — extensions, profile manager,
+`ProcessSingleton`) and a lighter **Alloy style** runtime built for
+embedding, and windowed browsers default to Chrome style unless told
+otherwise. `SignInWindowDelegate::window_runtime_style` (`window.rs`) and
+`AlloyBrowserView::browser_runtime_style` (`app.rs`) now return
+`RuntimeStyle::ALLOY` for exactly that reason, and it is still correct to
+keep — this window genuinely needs no Chrome UI — but it turned out **not**
+to be what was failing: CEF's own architecture docs (and the "Delete Alloy
+bootstrap" change in M128, well before 151.x) confirm the Chrome-vs-Alloy
+choice only selects a *style* layered on top of an always-Chrome
+*bootstrap* — `ProcessSingleton` runs during `CefInitialize` unconditionally,
+before any window or `BrowserView` (and therefore any `runtime_style`) is
+ever created.
 
-**Verified on a VM** (before either replacement above) against the manual
+**The real cause: `LOGON32_LOGON_BATCH` tokens cannot create named
+synchronization objects in the session namespace at all.** With no more
+plausible CEF-level explanation left, `ak_cef.exe` was changed to ask the
+same `::CreateMutex` question `ProcessSingleton::Create()` asks, directly,
+logging through `ak_platform::log` (Chromium's own diagnostic for this exact
+failure is `DPLOG(FATAL)`, compiled to nothing in a release build — silent
+regardless of log verbosity). Confirmed against a real install:
+`CreateMutex(Local\ChromeProcessSingletonStartup!)` fails with
+`ERROR_ACCESS_DENIED`, and so does `CreateMutex` with a random UUID name
+under both `Local\` and `Global\` — ruling out both a stale wrong-owner
+object (`handle.exe` found nothing pre-existing) and a name-specific block
+(endpoint security software targeting the well-known Chrome string was the
+leading suspect until the random names failed identically too). The same
+token's token identity is unremarkable — Medium integrity, session 1, not
+`IsTokenRestricted` — and it creates named pipes, files and registry keys
+under this exact token with no issue; only named synchronization objects
+(mutex/event/semaphore) fail. The distinguishing factor: `LOGON32_LOGON_BATCH`
+tokens carry the `NT AUTHORITY\BATCH` well-known SID rather than
+`INTERACTIVE`, and it is a documented Windows security-hardening pattern
+(CIS/STIG-style baselines) to scope `BaseNamedObjects` object-creation
+rights to interactive/service identities specifically, excluding batch
+logons — plausible on a baselined Windows Server test box. Fixed by
+switching to `LOGON32_LOGON_SERVICE` (`SeServiceLogonRight`/
+`LogonAsService="yes"` instead of `SeBatchLogonRight`/`LogonAsBatchJob="yes"`)
+— unverified as of this writing whether that alone resolves it or whether
+`BaseNamedObjects` also needs an explicit ACL grant for the account, the
+same way `ensure_desktop_access` already does for `WinSta0\Winlogon`.
+
+**Verified on a VM** (before any of the replacements above) against the manual
 checklist in `e2e/README.md`: the tile appeared, the sign-in window opened on
 the secure desktop, and both fresh logon and unlock completed. That VM run
 predates both failures above and does not carry over to the current code —
@@ -238,10 +271,14 @@ with a real password (`LOGON32_LOGON_BATCH` for the non-interactive case),
 then wraps the result in `CreateRestrictedToken(..., DISABLE_MAX_PRIVILEGE,
 ...)` before using it — stripping every privilege from the token rather than
 relying on the account having few to begin with. `service_account_token`
-now does exactly this. `LogonUserW` needs no special privilege for a
-non-admin account (confirmed independently: `RealSyscalls::validate` already
-called it successfully for the interactive user's password check, with no
-privilege-enabling, before any of this).
+follows the same pattern but with `LOGON32_LOGON_SERVICE` instead — see
+"Assigning the token" below for why BATCH specifically does not work here.
+GCPW never hits this: its own sign-in UI helper is not a browser process
+(see "Assigning the token"), so it never calls anything like
+`ProcessSingleton` that would expose the difference. `LogonUserW` needs no
+special privilege for a non-admin account (confirmed independently:
+`RealSyscalls::validate` already called it successfully for the interactive
+user's password check, with no privilege-enabling, before any of this).
 
 This puts the service account's password handling on the same footing as
 the interactive user's: a real secret has to exist and be kept somewhere.
@@ -253,8 +290,8 @@ vault, keyed by this account's own SID instead of a signed-in user's. WiX's
 `util:User` has no `GeneratePassword` attribute — it only takes a literal
 `Password` (or one read from a `Property` via `PasswordAttribute`) — so the
 installer creates the account with a fixed placeholder, and the first call
-to `service_account_password` resets it to a real, stored value. `LogonAsBatchJob="yes"`
-on `<util:User>` grants the `SeBatchLogonRight` that `LOGON32_LOGON_BATCH`
+to `service_account_password` resets it to a real, stored value. `LogonAsService="yes"`
+on `<util:User>` grants the `SeServiceLogonRight` that `LOGON32_LOGON_SERVICE`
 needs; the account is still denied interactive/network/RDP logon throughout,
 and the *token `ak_cef.exe` actually runs with* has every privilege stripped
 by `CreateRestrictedToken` regardless of what the logon itself produced.

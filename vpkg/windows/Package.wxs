@@ -133,23 +133,28 @@
              S4U route: LogonUI's own token does not carry SE_TCB_NAME, the
              same wall Chromium's own credential provider hits and answers
              the same way (chrome/credential_provider/gaiacp/gcp_utils.cc,
-             CreateLogonToken). LogonAsBatchJob grants the SeBatchLogonRight
-             that needs. The account is denied all interactive/network/RDP
-             logon regardless, and the token credprovider actually hands
-             ak_cef.exe has every privilege stripped via CreateRestrictedToken
-             on top of that. No dictionary words and no "$" in the initial
-             password below: NetUserAdd folds complexity/banned-word LSA
-             filter rejections into the same NERR_PasswordTooShort a real
-             length failure would give, and "$" is the WiX preprocessor's
-             substitution leader ("$(var.X)"), live before the XML is
-             parsed. Keep "Name" in step with
-             credprovider::syscalls::SERVICE_ACCOUNT_NAME. -->
+             CreateLogonToken). LogonAsService grants the SeServiceLogonRight
+             that LOGON32_LOGON_SERVICE needs — not LogonAsBatchJob/BATCH: a
+             batch-logon token could not create any named synchronization
+             object on a real install (confirmed: CreateMutex denied even
+             for random names), which is fatal to Chromium's own
+             ProcessSingleton; see the comment on
+             credprovider::syscalls::service_account_token. The account is
+             denied all interactive/network/RDP logon regardless, and the
+             token credprovider actually hands ak_cef.exe has every
+             privilege stripped via CreateRestrictedToken on top of that. No
+             dictionary words and no "$" in the initial password below:
+             NetUserAdd folds complexity/banned-word LSA filter rejections
+             into the same NERR_PasswordTooShort a real length failure
+             would give, and "$" is the WiX preprocessor's substitution
+             leader ("$(var.X)"), live before the XML is parsed. Keep
+             "Name" in step with credprovider::syscalls::SERVICE_ACCOUNT_NAME. -->
         <util:User Id="wcp_service_account"
                     Name="ak-wcp-browser"
                     Password="qX9m!K2pR7z#VtL4"
                     PasswordNeverExpires="yes"
                     CanNotChangePassword="yes"
-                    LogonAsBatchJob="yes"
+                    LogonAsService="yes"
                     UpdateIfExists="yes"
                     RemoveOnUninstall="yes" />
 

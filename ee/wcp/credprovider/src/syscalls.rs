@@ -30,7 +30,7 @@ use windows::{
                 TRUSTEE_IS_SID, TRUSTEE_IS_USER, TRUSTEE_W,
             },
             CreateRestrictedToken, DACL_SECURITY_INFORMATION, DISABLE_MAX_PRIVILEGE,
-            GetTokenInformation, LOGON32_LOGON_BATCH, LOGON32_LOGON_NETWORK,
+            GetTokenInformation, LOGON32_LOGON_NETWORK, LOGON32_LOGON_SERVICE,
             LOGON32_PROVIDER_DEFAULT, LUID_AND_ATTRIBUTES, LogonUserW, LookupAccountNameW,
             LookupAccountSidW, LookupPrivilegeValueW, NO_INHERITANCE, PSECURITY_DESCRIPTOR, PSID,
             SE_PRIVILEGE_ENABLED, SID_NAME_USE, TOKEN_ADJUST_PRIVILEGES, TOKEN_PRIVILEGES,
@@ -482,6 +482,15 @@ pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()
 /// with `DISABLE_MAX_PRIVILEGE` is what keeps a compromised renderer from
 /// doing anything with a token that would otherwise be fully privileged for
 /// its account.
+///
+/// `LOGON32_LOGON_SERVICE`, not `_BATCH`: confirmed against a real install
+/// that a batch-logon token here cannot create *any* named synchronization
+/// object (`CreateMutex` denied even for random names, in both `Local\` and
+/// `Global\`, while the same token creates named pipes/files/registry keys
+/// fine) — Chromium's own `ProcessSingleton` needs exactly that and fails.
+/// Batch logons carry the `NT AUTHORITY\BATCH` well-known SID rather than
+/// `INTERACTIVE`; a hardened `BaseNamedObjects` ACL that grants creation
+/// rights by logon-type SID rather than a broad "Everyone" excludes it.
 pub fn service_account_token(username: &str, password: &str) -> windows::core::Result<HANDLE> {
     let username_wide = wide(username);
     let password_wide = wide(password);
@@ -492,7 +501,7 @@ pub fn service_account_token(username: &str, password: &str) -> windows::core::R
             PCWSTR(username_wide.as_ptr()),
             w!("."),
             PCWSTR(password_wide.as_ptr()),
-            LOGON32_LOGON_BATCH,
+            LOGON32_LOGON_SERVICE,
             LOGON32_PROVIDER_DEFAULT,
             &mut primary,
         )?;
@@ -615,10 +624,10 @@ pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
 }
 
 /// Denies the service account the logon types that would let it sign someone
-/// in — it must not be usable at the very screen it serves. `Batch`, what
-/// `service_account_token` uses (`LOGON32_LOGON_BATCH`), is deliberately not
-/// among these. `LsaAddAccountRights` is itself idempotent, so this is safe
-/// on every load.
+/// in — it must not be usable at the very screen it serves. `Service`, what
+/// `service_account_token` uses (`LOGON32_LOGON_SERVICE`), is deliberately
+/// not among these. `LsaAddAccountRights` is itself idempotent, so this is
+/// safe on every load.
 pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<()> {
     const RIGHTS: [&str; 3] = [
         "SeDenyInteractiveLogonRight",
