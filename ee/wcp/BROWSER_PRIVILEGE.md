@@ -12,9 +12,11 @@ as instead of SYSTEM. Option A (sandbox the CEF renderer/GPU processes
 instead) needs real upstream-shaped work — see that section — so it's out of
 scope here; the two are complementary, not exclusive.
 
-Verified on a VM against the manual checklist in `e2e/README.md` on an
-earlier version of the token/spawn path; needs a fresh run against the
-current code.
+Confirmed working end-to-end on a real Windows Server test box: the service
+account signs in, the sign-in window opens on the secure desktop, and the
+flow completes. The manual checklist in `e2e/README.md` hasn't been run
+against this exact code yet, so treat that as the remaining verification
+step rather than a fresh open question.
 
 ### The design
 
