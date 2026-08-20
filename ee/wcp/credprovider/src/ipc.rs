@@ -20,10 +20,14 @@ use windows::{
             LocalFree, WAIT_OBJECT_0,
         },
         Security::{
+            ACL,
             Authorization::{
-                ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1,
+                ConvertSecurityDescriptorToStringSecurityDescriptorW,
+                ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo,
+                SDDL_REVISION_1, SE_FILE_OBJECT,
             },
-            PSECURITY_DESCRIPTOR, SE_IMPERSONATE_NAME, SECURITY_ATTRIBUTES,
+            DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, SE_IMPERSONATE_NAME,
+            SECURITY_ATTRIBUTES,
         },
         Storage::FileSystem::{
             FILE_ALL_ACCESS, FILE_FLAGS_AND_ATTRIBUTES, FILE_GENERIC_READ, FILE_GENERIC_WRITE,
@@ -179,7 +183,57 @@ fn create_named_pipe(
             windows::core::HRESULT::from_win32(unsafe { GetLastError().0 }),
         ));
     }
+    if sd.is_some() {
+        log_effective_dacl(handle);
+    }
     Ok(handle)
+}
+
+/// Reads back the DACL the kernel actually attached to `handle`, rather than
+/// trusting that what was passed to `CreateNamedPipeW` is what stuck — the
+/// two SIDs already match exactly (logged separately, on each side of the
+/// pipe) and the connect still fails, so the next thing worth ruling out is
+/// whether the grant even survived pipe creation at all.
+fn log_effective_dacl(handle: HANDLE) {
+    unsafe {
+        let mut dacl: *mut ACL = std::ptr::null_mut();
+        let mut sd = PSECURITY_DESCRIPTOR::default();
+        if GetSecurityInfo(
+            handle,
+            SE_FILE_OBJECT,
+            DACL_SECURITY_INFORMATION,
+            None,
+            None,
+            Some(&mut dacl),
+            None,
+            Some(&mut sd),
+        )
+        .is_err()
+        {
+            log::warn!("could not read back the pipe's own DACL");
+            return;
+        }
+
+        let mut string_sd = PWSTR::null();
+        if ConvertSecurityDescriptorToStringSecurityDescriptorW(
+            sd,
+            SDDL_REVISION_1,
+            DACL_SECURITY_INFORMATION,
+            &mut string_sd,
+            None,
+        )
+        .is_ok()
+        {
+            let len = (0..).take_while(|&i| *string_sd.0.add(i) != 0).count();
+            let rendered = String::from_utf16_lossy(std::slice::from_raw_parts(string_sd.0, len));
+            log::info!("pipe's actual DACL is {rendered}");
+            let _ = LocalFree(Some(HLOCAL(string_sd.0 as *mut c_void)));
+        } else {
+            log::warn!("could not render the pipe's DACL back to a string");
+        }
+
+        let _ = LocalFree(Some(HLOCAL(sd.0)));
+    }
 }
 
 /// One named pipe pair, one instance each, scoped to `connecting_sid` — the
