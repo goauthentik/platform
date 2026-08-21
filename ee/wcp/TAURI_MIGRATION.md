@@ -64,7 +64,7 @@ bottom of this file and `ee/wcp/browser-privilege` remains the shipping path.
 | that same hook's URL prefix check → `ReturnValue::CANCEL` | `.on_navigation()` returning `false` (wry hooks `add_NavigationStarting` and calls `args.SetCancel(!allow)`) |
 | `on_before_close` → last browser gone → `Cancelled` + `quit_message_loop` | `on_window_event` → `WindowEvent::Destroyed` |
 | `foreground.rs` `post_delayed_task(ThreadId::UI)` ladder | same ladder, plain thread, raw Win32 on the `HWND` |
-| `icon.rs` → `cef::Image` (BGRA) | same BMP decoder → `tauri::image::Image` (RGBA) |
+| `icon.rs` → `cef::Image` (BGRA) | **deleted** — `generate_context!` embeds `bundle.icon` as the default window icon, so no decoder is needed |
 | `sysd.rs` | **deleted** — the host no longer reaches `ak-sysd` at all (see below) |
 | `identity.rs`, `wire`, `credprovider` IPC | unchanged |
 
@@ -186,6 +186,28 @@ Append as things are learned. Date, what was run, what happened.
   Note what this run does *not* show. CI logs `on desktop <inherited> with the
   caller's own token` — that is `CPUS_CREDUI`, not the service account on the
   secure desktop. The privilege hypothesis is still unverified.
+- _2026-08-21_ — the window is now built with `.decorations(false)`. Decorated,
+  it drew the classic non-composited caption on the logon desktop, which looks
+  like Windows 9x beside LogonUI's own chrome. Nothing depended on the frame:
+  the window is fixed-size and centered, and backing out goes through LogonUI's
+  cancel over the control pipe, not a close button.
+
+  Careful with the obvious assertion here — **tao keeps `WS_CAPTION` set on an
+  undecorated window on purpose** (it strips it only for `AdjustWindowRectEx`
+  and child windows) so the window still gets snapping and shadow, and removes
+  the frame through `WM_NCCALCSIZE` instead. A test asserting `WS_CAPTION` is
+  clear would fail against a window that has no title bar at all. Measured
+  instead: client origin sits 1px below the window top, and the outer rect is
+  573x678 around a 560x670 client — an invisible resize/shadow border, no
+  caption. `WS_EX_TOPMOST` is still set, so the e2e z-order assertion is safe.
+- _2026-08-21_ — dropped `icon.rs` and `res/icon.bmp` with the title bar. The
+  hand-rolled 24-bit BMP decoder existed to hand CEF an image for a caption
+  that no longer exists; Tauri embeds `bundle.icon` from `tauri.conf.json` as
+  the context's default window icon, so the window still has an authentik icon
+  in alt-tab and the taskbar with no parsing code at all. `credprovider` keeps
+  its own `res/icon.bmp` + `resource.rc` for the logon tile — a separate copy,
+  untouched. Note the decoder's test only ever guarded the host's own copy of
+  the asset, so nothing that covered `credprovider` was lost.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service

@@ -14,7 +14,6 @@
 #![windows_subsystem = "windows"]
 
 mod foreground;
-mod icon;
 mod identity;
 mod signin;
 mod webview2;
@@ -148,7 +147,7 @@ fn run(
             // header injection is actually registered. See its doc comment —
             // pointing the builder at the sign-in URL races the handler and
             // sends the document request bare.
-            let mut builder =
+            let builder =
                 WebviewWindowBuilder::new(app, "sign-in", WebviewUrl::App("index.html".into()))
                     .title("Sign in with authentik")
                     .inner_size(
@@ -159,6 +158,16 @@ fn run(
                     .resizable(false)
                     .minimizable(false)
                     .maximizable(false)
+                    // No frame at all. The logon desktop gets the classic
+                    // non-composited caption — DWM is not drawing there — so
+                    // a decorated window turns up looking like Windows 9x
+                    // next to LogonUI's own chrome. Nothing is lost by
+                    // dropping it: the window is fixed-size and centered, so
+                    // there is nothing to drag or resize, and backing out of
+                    // the sign-in goes through LogonUI's own cancel, which
+                    // reaches this process over the control pipe rather than
+                    // through a close button.
+                    .decorations(false)
                     // Topmost before the first paint, so the window is never
                     // behind LogonUI even for a frame. Asking for focus is a
                     // separate and much less certain thing — see `foreground`.
@@ -187,11 +196,6 @@ fn run(
                         // window the person is still looking at.
                         false
                     });
-
-            match icon::load() {
-                Some(image) => builder = builder.icon(image)?,
-                None => log::warn!("the window icon did not decode; opening without one"),
-            }
 
             let window = builder.build()?;
             log::info!(
