@@ -127,10 +127,13 @@ impl AuthentikMcp {
                 .map_err(|e| {
                     McpError::internal_error(format!("request access failed: {e}"), None)
                 })?;
-        let cbs = vec![ContentBlock::resource_link(Resource::new(
-            res.fulfill_url,
-            "Fulfillment URL",
-        ))];
+        let cbs = vec![
+            ContentBlock::text("Show this link to the user and ask them to open it and approve or deny access."),
+            ContentBlock::resource_link(Resource::new(
+                res.fulfill_url,
+                "Fulfillment URL",
+            )),
+        ];
         Ok(CallToolResult::success(cbs))
     }
 
