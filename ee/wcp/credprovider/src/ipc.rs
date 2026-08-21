@@ -67,22 +67,9 @@ fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bo
 /// same window station is fully functional but invisible to the person signing
 /// in, so the logon scenarios have to name it: with `lpDesktop` left NULL,
 /// `CreateProcess*` gives the child whichever desktop the caller happens to be
-/// on, which is only incidentally the right one.
+/// on, which is only incidentally the right one. `CPUS_CREDUI` keeps it NULL
+/// and inherits the ordinary interactive desktop instead.
 const SECURE_DESKTOP: &str = r"WinSta0\Winlogon";
-
-/// `CPUS_CREDUI` is the debug-gated scenario that runs on the ordinary
-/// interactive desktop, so it keeps `lpDesktop` NULL and inherits it.
-fn desktop_for(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> Option<Vec<u16>> {
-    if may_launch_in_current_session(cpus) {
-        return None;
-    }
-    Some(
-        SECURE_DESKTOP
-            .encode_utf16()
-            .chain(std::iter::once(0))
-            .collect(),
-    )
-}
 
 struct StdPipes {
     /// This process's own ends, read/written after the child is spawned.
@@ -95,11 +82,10 @@ struct StdPipes {
     child_stdin: HANDLE,
 }
 
-/// One anonymous, inheritable pipe. `CreatePipe`'s `SECURITY_ATTRIBUTES`
-/// marks *both* handles it returns as inheritable, so the caller is
-/// responsible for clearing that flag on whichever end it keeps for
-/// itself — otherwise this process's own copy would leak into every future
-/// child it spawns, not just this one.
+/// One anonymous pipe, both ends inheritable — `CreatePipe` has no way to
+/// mark just one. `keep_private` clears it on whichever end the caller keeps
+/// for itself, or that copy leaks into every future child this process
+/// spawns, not just this one.
 fn create_inherited_pipe() -> windows::core::Result<(HANDLE, HANDLE)> {
     let sa = SECURITY_ATTRIBUTES {
         nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,
@@ -336,12 +322,9 @@ fn auth_result_for(url: &str) -> AuthResult {
 /// asks `ak_cef.exe` to close over the control pipe rather than killing it.
 ///
 /// Every route out of here other than a real `AuthResult` looks identical to
-/// the user ("Login attempt cancelled"), so each one logs why: a silent
-/// cancellation is indistinguishable from the sign-in window never appearing.
-/// A crash before the child ever gets to send anything now surfaces as a
-/// plain EOF (its inherited stdout closes when the process dies) rather than
-/// a separate "never connected" error — there is no longer a separate
-/// connect step to fail.
+/// the user ("Login attempt cancelled"), so each one logs why — including a
+/// crash before the child sends anything, which just surfaces as a plain EOF
+/// once its inherited stdout closes.
 fn wait_for_result(
     result_read: HANDLE,
     cancel_write: HANDLE,
@@ -389,7 +372,11 @@ fn wait_for_result(
                 if !cancel_signalled && !should_continue() {
                     log::info!("LogonUI withdrew the sign-in; asking the window to close");
                     cancel_signalled = true;
-                    signal_cancel(cancel_write);
+                    // `cancel_write` stays owned by the caller, closed once
+                    // this function returns — wrap it without taking that.
+                    let mut f = unsafe { File::from_raw_handle(cancel_write.0) };
+                    let _ = ak_ee_wcp_wire::write_frame(&mut f, &ak_ee_wcp_wire::CancelSignal {});
+                    std::mem::forget(f);
                 }
                 // Host exited without sending a result.
                 if unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0 {
@@ -422,12 +409,6 @@ fn describe_exit(process: HANDLE) -> String {
         return "still running".to_string();
     }
     format!("exit code {code:#010x}")
-}
-
-fn signal_cancel(cancel_write: HANDLE) {
-    let mut f = unsafe { File::from_raw_handle(cancel_write.0) };
-    let _ = ak_ee_wcp_wire::write_frame(&mut f, &ak_ee_wcp_wire::CancelSignal {});
-    std::mem::forget(f);
 }
 
 /// Gets `ak_cef.exe` a token for the dedicated service account rather than
@@ -488,7 +469,12 @@ fn spawn_cef_host(
         ..Default::default()
     };
     // Outlives every `CreateProcess*` call below; `lpDesktop` borrows it.
-    let mut desktop = desktop_for(cpus);
+    let mut desktop = (!may_launch_in_current_session(cpus)).then(|| {
+        SECURE_DESKTOP
+            .encode_utf16()
+            .chain([0])
+            .collect::<Vec<u16>>()
+    });
     if let Some(desktop) = desktop.as_mut() {
         si.lpDesktop = PWSTR(desktop.as_mut_ptr());
     }
@@ -558,18 +544,13 @@ fn spawn_cef_host(
     Ok(pi)
 }
 
-/// Brokered through the Secondary Logon service rather than done directly,
-/// which is why this needs only `SE_IMPERSONATE_NAME` — `CreateProcessAsUserW`
-/// needed `SE_ASSIGNPRIMARYTOKEN_NAME`/`SE_INCREASE_QUOTA_NAME`, both
-/// confirmed absent from LogonUI's token. `LOGON_WITH_PROFILE` loads the
-/// account's registry hive but not its environment block; building one
-/// explicitly is what makes `%TEMP%`/`%LOCALAPPDATA%` resolve to the service
-/// account's own profile instead of SYSTEM's (see `BROWSER_PRIVILEGE.md`).
-/// `CreateProcessWithTokenW` has no `bInheritHandles` parameter at all
-/// (unlike `CreateProcessW`/`CreateProcessAsUserW`), but it does honor
-/// `si`'s inheritable `hStdInput`/`hStdOutput` — confirmed against GCPW's
-/// own equivalent call (`OSProcessManager::CreateProcessWithToken`,
-/// `os_process_manager.cc`), which relies on exactly this.
+/// Brokered through the Secondary Logon service, needing only
+/// `SE_IMPERSONATE_NAME` where `CreateProcessAsUserW` would need
+/// `SE_ASSIGNPRIMARYTOKEN_NAME`/`SE_INCREASE_QUOTA_NAME` — both absent from
+/// LogonUI's token. Has no `bInheritHandles` parameter, but does honor `si`'s
+/// inheritable `hStdInput`/`hStdOutput` regardless (`BROWSER_PRIVILEGE.md`'s
+/// "Roads not taken"). `LOGON_WITH_PROFILE` loads the account's registry hive
+/// but not its environment block, hence building one explicitly below.
 fn spawn_with_token(
     token: HANDLE,
     cmdline: &str,
