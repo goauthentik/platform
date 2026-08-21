@@ -28,6 +28,16 @@
         <Directory Id="agent" Name="agent" />
       </Directory>
     </StandardDirectory>
+    <!-- Every binary in this package links the MSVC runtime dynamically: the
+         Rust standard library already needs vcruntime140.dll, and aws-lc-sys
+         compiles BoringSSL's C++ with FH4 exception handling, which is what
+         adds vcruntime140_1.dll on top. -->
+    <StandardDirectory Id="TARGETDIR">
+      <Merge Id="VCRedistCRT"
+             SourceFile="$(env.VC_REDIST_MSM)"
+             DiskId="1"
+             Language="0" />
+    </StandardDirectory>
     <StandardDirectory Id="CommonAppDataFolder">
       <Directory Id="ak_ProgramDataRoot" Name="$(var.Manufacturer)">
       </Directory>
@@ -124,24 +134,7 @@
                           Name="authentik Credential Provider (Browser)"
                           EventMessageFile="[#wcp_ak_browser_exe]"/>
 
-        <!-- ak_browser.exe runs as this account instead of SYSTEM (see
-             ee/wcp/BROWSER_PRIVILEGE.md). credprovider logs it on with
-             LogonUserW and a stored password (syscalls::service_account_password,
-             same pattern as LOCAL_PASSWORD.md) rather than the SE_TCB_NAME-only
-             S4U route: LogonUI's own token does not carry SE_TCB_NAME, the
-             same wall Chromium's own credential provider hits and answers
-             the same way (chrome/credential_provider/gaiacp/gcp_utils.cc,
-             CreateLogonToken). LogonAsService grants the SeServiceLogonRight
-             that LOGON32_LOGON_SERVICE needs — not LogonAsBatchJob/BATCH: a
-             batch-logon token could not create any named synchronization
-             object on a real install (confirmed: CreateMutex denied even
-             for random names), which is fatal to Chromium's own
-             ProcessSingleton; see the comment on
-             credprovider::syscalls::service_account_token. The account is
-             denied all interactive/network/RDP logon regardless, and the
-             token credprovider actually hands ak_browser.exe has every
-             privilege stripped via CreateRestrictedToken on top of that. No
-             dictionary words and no "$" in the initial password below:
+        <!-- ak_browser.exe runs as this account instead of SYSTEM.
              NetUserAdd folds complexity/banned-word LSA filter rejections
              into the same NERR_PasswordTooShort a real length failure
              would give, and "$" is the WiX preprocessor's substitution
@@ -190,6 +183,7 @@
                Description="System and User agents, required.">
         <ComponentRef Id="sysd" />
         <ComponentRef Id="agent" />
+        <MergeRef Id="VCRedistCRT" />
       </Feature>
       <Feature Id="cli"
                Title="authentik CLI"
