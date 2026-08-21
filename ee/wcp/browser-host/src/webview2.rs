@@ -50,24 +50,38 @@ pub fn runtime_version() -> Option<String> {
     })
 }
 
-/// Registers a `WebResourceRequested` handler that sets the interactive-auth
-/// header on every outgoing request.
+/// Registers the header-injection handler and *then* starts the sign-in
+/// navigation, in that order, on the webview's own thread.
 ///
-/// This is the WebView2 equivalent of the CEF host's `on_before_resource_load`
-/// calling `set_header_by_name`. The closure is dispatched to the UI thread by
-/// Tauri, so this returns before the handler is actually installed.
+/// The order is the whole point. `with_webview` dispatches its closure to the
+/// main thread rather than running it inline, so anything the webview was
+/// already loading is in flight before the handler exists. Building the window
+/// straight onto the sign-in URL therefore raced — and lost: the document
+/// request went out bare, and the only request the flow makes carried no
+/// header at all. The CEF host had the same hazard and answered it the same
+/// way, creating the browser with no URL and loading it once the client was
+/// attached (`browser_view_create(.., None, ..)` and the window delegate's
+/// `load_url`).
 ///
-/// Every failure is logged rather than fatal: a window that loads without the
-/// header gets a comprehensible error from authentik, where a dead process
-/// gets the user a bare cancellation.
-pub fn inject_header(window: &tauri::WebviewWindow, header_token: String) {
-    log::debug!("registering the WebResourceRequested filter for header injection");
-
+/// So the window is built on the bundled placeholder page and the real
+/// navigation happens here, after `add_WebResourceRequested` has returned.
+///
+/// Failing closed: if any step fails there is no way to authenticate the
+/// requests, so the window is closed rather than pointed at authentik without
+/// the header, which would only fail further along and less legibly.
+pub fn navigate_with_header(
+    window: &tauri::WebviewWindow,
+    app: tauri::AppHandle,
+    header_token: String,
+    sign_in_url: String,
+) {
+    let on_failure = app.clone();
     if let Err(e) = window.with_webview(move |webview| {
         let core = match unsafe { webview.controller().CoreWebView2() } {
             Ok(core) => core,
             Err(e) => {
-                log::error!("CoreWebView2 failed; requests will go out unauthenticated: {e}");
+                log::error!("CoreWebView2 failed; cannot authenticate the sign-in requests: {e}");
+                crate::signin::close(&app);
                 return;
             }
         };
@@ -79,6 +93,7 @@ pub fn inject_header(window: &tauri::WebviewWindow, header_token: String) {
             )
         } {
             log::error!("AddWebResourceRequestedFilter failed: {e}");
+            crate::signin::close(&app);
             return;
         }
 
@@ -99,11 +114,17 @@ pub fn inject_header(window: &tauri::WebviewWindow, header_token: String) {
             )
         } {
             log::error!("add_WebResourceRequested failed: {e}");
+            crate::signin::close(&app);
             return;
         }
 
-        log::debug!("header injection registered on all requests");
+        log::debug!("header injection registered; starting the sign-in navigation");
+        if let Err(e) = unsafe { core.Navigate(&HSTRING::from(sign_in_url.as_str())) } {
+            log::error!("could not navigate to the sign-in URL: {e}");
+            crate::signin::close(&app);
+        }
     }) {
         log::error!("could not reach the webview to register header injection: {e}");
+        crate::signin::close(&on_failure);
     }
 }

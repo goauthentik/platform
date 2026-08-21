@@ -118,13 +118,13 @@ fn run(
     };
     log::info!("WebView2 runtime {runtime_version} found");
 
-    let url = match sign_in_url.parse::<tauri::Url>() {
-        Ok(url) => url,
-        Err(e) => {
-            log::error!("the sign-in URL from credprovider does not parse: {e}");
-            return HostReport::Cancelled;
-        }
-    };
+    // Parsed only to reject a malformed URL before a window is ever shown;
+    // the navigation itself is started from the raw string by
+    // `navigate_with_header`.
+    if let Err(e) = sign_in_url.parse::<tauri::Url>() {
+        log::error!("the sign-in URL from credprovider does not parse: {e}");
+        return HostReport::Cancelled;
+    }
     log::info!("sign-in URL: {}", origin_of(&sign_in_url));
 
     // Whether the window has ever held the foreground, which separates "never
@@ -143,8 +143,13 @@ fn run(
             let nav_completion = setup_completion.clone();
             let nav_handle = handle.clone();
 
+            // Built on the bundled placeholder rather than the sign-in URL:
+            // the real navigation is started by `navigate_with_header` once
+            // header injection is actually registered. See its doc comment —
+            // pointing the builder at the sign-in URL races the handler and
+            // sends the document request bare.
             let mut builder =
-                WebviewWindowBuilder::new(app, "sign-in", WebviewUrl::External(url.clone()))
+                WebviewWindowBuilder::new(app, "sign-in", WebviewUrl::App("index.html".into()))
                     .title("Sign in with authentik")
                     .inner_size(
                         f64::from(ak_ee_wcp_wire::WINDOW_WIDTH),
@@ -194,7 +199,12 @@ fn run(
                 foreground::foreground_pid()
             );
 
-            webview2::inject_header(&window, header_token.clone());
+            webview2::navigate_with_header(
+                &window,
+                handle.clone(),
+                header_token.clone(),
+                sign_in_url.clone(),
+            );
 
             match window.hwnd() {
                 Ok(hwnd) => foreground::watch(hwnd.0 as isize, setup_activated.clone()),

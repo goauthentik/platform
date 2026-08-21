@@ -160,6 +160,32 @@ Append as things are learned. Date, what was run, what happened.
   ladder 3, state dir 3, user agent 1, log redaction 1, icon 1, send-once 1).
   **This says the port compiles and its pure logic holds; it says nothing about
   the hypothesis.** Nothing has yet run against a real WebView2 window.
+- _2026-08-21_ — **CI caught a real bug the hermetic suite could not.**
+  `completed_sign_in_serializes_a_credential` failed with
+  `every request should carry X-Authentik-Platform-Auth-DTH ... got [None]`,
+  while the rest of the flow passed: the window opened, the redirect was
+  intercepted, the credential was packed. So WebView2 renders and the IPC
+  works — only the header was missing.
+
+  Cause: `with_webview` dispatches its closure to the main thread instead of
+  running it inline, so building the window on `WebviewUrl::External(sign_in_url)`
+  starts the document request before `add_WebResourceRequested` exists. The CEF
+  host had the same hazard and deliberately avoided it, creating the browser
+  with no URL and loading it from the window delegate afterwards; that intent
+  was lost in the port. Fixed by building on the bundled placeholder page and
+  navigating from inside the `with_webview` closure, after registration —
+  `webview2::navigate_with_header`. It now fails closed: if the handler cannot
+  be installed, the window closes rather than reaching authentik bare.
+
+  Confirmed both ways by driving the real `ak_browser.exe` against a local
+  page (the host needs nothing but a URL and a token now, so this needs no
+  `ak-sysd` and no elevation): with the fix the server sees exactly
+  `['header-token-under-test']`; with `WebviewUrl::External` restored it sees
+  `[None, 'header-token-under-test']` — the first request bare, matching CI.
+
+  Note what this run does *not* show. CI logs `on desktop <inherited> with the
+  caller's own token` — that is `CPUS_CREDUI`, not the service account on the
+  secure desktop. The privilege hypothesis is still unverified.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service
