@@ -67,10 +67,75 @@ impl TryFrom<HostReportProto> for HostReport {
     }
 }
 
-/// Sent from `credprovider` to `cef-host` over the control pipe to request
-/// that the browser window close without completing the flow.
-#[derive(Clone, Copy, PartialEq, prost::Message)]
-pub struct CancelSignal {}
+/// Sent from `credprovider` to the browser host over the control pipe.
+///
+/// The control pipe is a command channel rather than a bare cancel signal
+/// because the host is started before there is anything for it to load: the
+/// tile being selected is enough to spawn it and let it pay WebView2's startup
+/// cost, and only submitting produces a URL. `StartSignIn` is what turns a
+/// waiting host into a sign-in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HostCommand {
+    /// Load `url`, injecting `header_token` on every request, and show the
+    /// window once the page is up.
+    StartSignIn { url: String, header_token: String },
+    /// Close without completing the flow.
+    Cancel,
+}
+
+#[derive(Clone, PartialEq, prost::Message)]
+struct HostCommandProto {
+    #[prost(oneof = "CommandKind", tags = "1, 2")]
+    command: Option<CommandKind>,
+}
+
+#[derive(Clone, PartialEq, prost::Oneof)]
+enum CommandKind {
+    #[prost(message, tag = "1")]
+    StartSignIn(StartSignInProto),
+    #[prost(bool, tag = "2")]
+    Cancel(bool),
+}
+
+#[derive(Clone, PartialEq, prost::Message)]
+struct StartSignInProto {
+    #[prost(string, tag = "1")]
+    url: String,
+    #[prost(string, tag = "2")]
+    header_token: String,
+}
+
+impl From<&HostCommand> for HostCommandProto {
+    fn from(c: &HostCommand) -> Self {
+        let command = match c {
+            HostCommand::StartSignIn { url, header_token } => {
+                CommandKind::StartSignIn(StartSignInProto {
+                    url: url.clone(),
+                    header_token: header_token.clone(),
+                })
+            }
+            HostCommand::Cancel => CommandKind::Cancel(true),
+        };
+        HostCommandProto {
+            command: Some(command),
+        }
+    }
+}
+
+impl TryFrom<HostCommandProto> for HostCommand {
+    type Error = WireError;
+
+    fn try_from(p: HostCommandProto) -> Result<Self, WireError> {
+        match p.command {
+            Some(CommandKind::StartSignIn(start)) => Ok(HostCommand::StartSignIn {
+                url: start.url,
+                header_token: start.header_token,
+            }),
+            Some(CommandKind::Cancel(_)) => Ok(HostCommand::Cancel),
+            None => Err(WireError::MissingOutcome),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum WireError {
@@ -157,6 +222,20 @@ pub fn read_frame<T: prost::Message + Default, R: Read>(r: &mut R) -> Result<Opt
 /// Write a `HostReport` over the result pipe.
 pub fn write_host_report<W: Write>(w: &mut W, report: &HostReport) -> Result<(), WireError> {
     write_frame(w, &HostReportProto::from(report))
+}
+
+/// Write a `HostCommand` over the control pipe.
+pub fn write_host_command<W: Write>(w: &mut W, command: &HostCommand) -> Result<(), WireError> {
+    write_frame(w, &HostCommandProto::from(command))
+}
+
+/// Read a `HostCommand` from the control pipe. See [`read_frame`] for EOF
+/// handling — the host treats a closed control pipe as a cancellation.
+pub fn read_host_command<R: Read>(r: &mut R) -> Result<Option<HostCommand>, WireError> {
+    match read_frame::<HostCommandProto, R>(r)? {
+        Some(proto) => Ok(Some(HostCommand::try_from(proto)?)),
+        None => Ok(None),
+    }
 }
 
 /// Read a `HostReport` from the result pipe. See [`read_frame`] for EOF
@@ -296,13 +375,28 @@ mod tests {
         assert_eq!(extract_token("not a url"), None);
     }
 
+    /// The sign-in URL and its header token only exist on the `credprovider`
+    /// side, so this frame is the only way a preloaded host ever learns them.
     #[test]
-    fn cancel_signal_round_trips() {
-        let mut buf = Vec::new();
-        write_frame(&mut buf, &CancelSignal {}).unwrap();
-        let mut cursor = io::Cursor::new(buf);
-        let decoded: Option<CancelSignal> = read_frame(&mut cursor).unwrap();
-        assert_eq!(decoded, Some(CancelSignal {}));
+    fn host_commands_round_trip() {
+        for command in [
+            HostCommand::StartSignIn {
+                url: "https://authentik.company/if/flow/default/".to_string(),
+                header_token: "header-token".to_string(),
+            },
+            HostCommand::Cancel,
+        ] {
+            let mut buf = Vec::new();
+            write_host_command(&mut buf, &command).unwrap();
+            let mut cursor = io::Cursor::new(buf);
+            assert_eq!(read_host_command(&mut cursor).unwrap(), Some(command));
+        }
+    }
+
+    #[test]
+    fn a_closed_control_pipe_reads_as_no_command() {
+        let mut cursor = io::Cursor::new(Vec::<u8>::new());
+        assert_eq!(read_host_command(&mut cursor).unwrap(), None);
     }
 
     #[test]

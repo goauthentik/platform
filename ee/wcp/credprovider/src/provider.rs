@@ -82,7 +82,7 @@ fn credential_from_user(
         is_local_user,
         cpus,
         CredentialDeps {
-            auth_flow: Box::new(BrowserAuthFlow { browser_exe, cpus }),
+            auth_flow: Box::new(BrowserAuthFlow::new(browser_exe, cpus)),
             password: Box::new(RealSyscalls),
             auth_package: Box::new(RealSyscalls),
             store: Box::new(KeyringPasswordStore::new()),

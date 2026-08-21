@@ -183,11 +183,16 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         Ok(())
     }
 
+    /// Starts the browser host now, so WebView2's several seconds of startup
+    /// happen while the person is still deciding to click rather than after
+    /// they have. No sign-in begins here — see `AuthFlow::preload`.
     fn SetSelected(&self) -> Result<BOOL> {
+        self.deps.auth_flow.preload();
         Ok(FALSE)
     }
 
     fn SetDeselected(&self) -> Result<()> {
+        self.deps.auth_flow.discard();
         *self.outcome.lock().unwrap_or_else(|e| e.into_inner()) = None;
         *self.serialized.lock().unwrap_or_else(|e| e.into_inner()) = None;
         Ok(())
@@ -531,6 +536,38 @@ mod tests {
         }
     }
 
+    /// Counts the preload/discard calls the tile's selection drives.
+    #[derive(Default)]
+    struct CountingAuthFlow {
+        preloads: std::sync::atomic::AtomicUsize,
+        discards: std::sync::atomic::AtomicUsize,
+    }
+
+    impl CountingAuthFlow {
+        fn counts(&self) -> (usize, usize) {
+            (
+                self.preloads.load(std::sync::atomic::Ordering::SeqCst),
+                self.discards.load(std::sync::atomic::Ordering::SeqCst),
+            )
+        }
+    }
+
+    impl AuthFlow for std::sync::Arc<CountingAuthFlow> {
+        fn run(&self, _should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
+            AuthResult::Cancelled
+        }
+
+        fn preload(&self) {
+            self.preloads
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }
+
+        fn discard(&self) {
+            self.discards
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+
     struct FakeAuthPackage;
 
     impl AuthPackageLookup for FakeAuthPackage {
@@ -654,6 +691,70 @@ mod tests {
             },
         )
         .into()
+    }
+
+    /// A credential whose only interesting dependency is its `AuthFlow`.
+    fn credential_with_auth_flow(flow: impl AuthFlow + 'static) -> Credential {
+        Credential::new(
+            SID.to_string(),
+            "alice".to_string(),
+            false,
+            CPUS_LOGON,
+            CredentialDeps {
+                auth_flow: Box::new(flow),
+                password: Box::new(FakePassword::default()),
+                auth_package: Box::new(FakeAuthPackage),
+                store: Box::new(FakeStore::default()),
+            },
+        )
+    }
+
+    /// Selecting the tile is what buys the sign-in its head start: WebView2
+    /// takes seconds to build an environment, and doing it on submit is the
+    /// whole delay this exists to remove.
+    #[test]
+    fn selecting_the_tile_preloads_the_browser() {
+        let flow = std::sync::Arc::new(CountingAuthFlow::default());
+        let credential: ICredentialProviderCredential =
+            credential_with_auth_flow(flow.clone()).into();
+
+        let auto_submit = unsafe { credential.SetSelected() }.unwrap();
+
+        assert_eq!(flow.counts(), (1, 0));
+        assert_eq!(
+            auto_submit, FALSE,
+            "preloading must not make the tile submit itself"
+        );
+    }
+
+    /// Backing out of the tile must not leave a browser running on the logon
+    /// screen waiting for a sign-in that is never coming.
+    #[test]
+    fn deselecting_the_tile_discards_the_preloaded_browser() {
+        let flow = std::sync::Arc::new(CountingAuthFlow::default());
+        let credential: ICredentialProviderCredential =
+            credential_with_auth_flow(flow.clone()).into();
+
+        let _ = unsafe { credential.SetSelected() }.unwrap();
+        unsafe { credential.SetDeselected() }.unwrap();
+
+        assert_eq!(flow.counts(), (1, 1));
+    }
+
+    /// Selecting, backing out and selecting again is ordinary behaviour at a
+    /// logon screen, and each round has to leave exactly one browser warming.
+    #[test]
+    fn reselecting_the_tile_preloads_again() {
+        let flow = std::sync::Arc::new(CountingAuthFlow::default());
+        let credential: ICredentialProviderCredential =
+            credential_with_auth_flow(flow.clone()).into();
+
+        for _ in 0..3 {
+            let _ = unsafe { credential.SetSelected() }.unwrap();
+            unsafe { credential.SetDeselected() }.unwrap();
+        }
+
+        assert_eq!(flow.counts(), (3, 3));
     }
 
     /// Drives `Connect` then `GetSerialization`. The returned buffer is the

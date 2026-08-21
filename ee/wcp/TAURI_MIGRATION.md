@@ -66,7 +66,8 @@ bottom of this file and `ee/wcp/browser-privilege` remains the shipping path.
 | `foreground.rs` `post_delayed_task(ThreadId::UI)` ladder | same ladder, plain thread, raw Win32 on the `HWND` |
 | `icon.rs` → `cef::Image` (BGRA) | **deleted** — `generate_context!` embeds `bundle.icon` as the default window icon, so no decoder is needed |
 | `sysd.rs` | **deleted** — the host no longer reaches `ak-sysd` at all (see below) |
-| `identity.rs`, `wire`, `credprovider` IPC | unchanged |
+| `identity.rs` | unchanged |
+| control pipe carries a bare cancel | now a `HostCommand` channel, so a host can be started before there is a URL |
 
 ## Things that are easy to get wrong
 
@@ -255,6 +256,33 @@ Append as things are learned. Date, what was run, what happened.
   cannot be wrapped in an iframe. Staying frameless is the third option and
   costs nothing: LogonUI is chromeless itself, so a bare card does not look out
   of place beside it.
+- _2026-08-22_ — **the browser is now preloaded when the tile is selected.**
+  `ICredentialProviderCredential::SetSelected` spawns `ak_browser.exe` with no
+  arguments; it builds its window and WebView2 environment and blocks on the
+  control pipe. `Connect` fetches the URL from `ak-sysd` as before and sends
+  `HostCommand::StartSignIn { url, header_token }` down that pipe.
+  `SetDeselected` (and `BrowserAuthFlow`'s `Drop`) send `Cancel`.
+
+  Deliberately **no sign-in is begun at selection**: `ak-sysd` is not called and
+  no session exists until submit. Only the browser is warmed. That is why the
+  URL travels over the pipe instead of the command line, and why the control
+  pipe became a command channel rather than a bare cancel signal.
+
+  Measured, click to visible window, against a page that does not redirect:
+  cold spawn 3.31s, preloaded 0.35s. The saving is exactly the WebView2 startup
+  described in the entry above, moved off the visible path.
+
+  Fallbacks kept, because `Connect` can arrive without `SetSelected` — the e2e
+  tests do exactly that, and `CPUS_CREDUI` may too. If there is no preloaded
+  host, or it died while waiting (checked with `WaitForSingleObject`), the
+  provider spawns one with `--sign-in-url`/`--header-token` as before. Both
+  paths are exercised: the e2e suite covers the cold one.
+
+  Verified against the real binary: over the preloaded path the header is on
+  the request and the redirect is reported; an idle preloaded host exits
+  cleanly both on an explicit `Cancel` and on the control pipe closing, so
+  backing out of the tile — or the provider going away — cannot strand a
+  browser on the logon screen.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service

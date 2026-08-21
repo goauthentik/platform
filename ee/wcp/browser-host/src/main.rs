@@ -19,8 +19,8 @@ mod signin;
 mod webview2;
 
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use ak_ee_wcp_wire::HostReport;
 use tauri::webview::PageLoadEvent;
@@ -175,6 +175,45 @@ fn reveal_after_timeout(
     });
 }
 
+/// The handful of things a sign-in needs to reach once it starts, which is
+/// after the window already exists.
+#[derive(Clone)]
+struct SignInState {
+    /// Origin of the sign-in URL, empty until a sign-in has been asked for.
+    /// The page-load handler compares against it to tell the real page from
+    /// the placeholder, and an empty string matches neither.
+    origin: Arc<Mutex<String>>,
+    shown: Arc<AtomicBool>,
+    ever_activated: Arc<AtomicBool>,
+}
+
+/// Points the already-built window at the sign-in URL and arms the reveal.
+///
+/// Everything slow has happened before this runs — the window exists and
+/// WebView2's environment is up — so when the host was preloaded at tile
+/// selection, this is very nearly the whole cost of a sign-in.
+fn start_sign_in(app: &tauri::AppHandle, state: &SignInState, url: String, header_token: String) {
+    let Some(window) = app.get_webview_window(SIGN_IN_WINDOW) else {
+        log::error!("no sign-in window to start the flow in");
+        signin::close(app);
+        return;
+    };
+    if let Err(e) = url.parse::<tauri::Url>() {
+        log::error!("the sign-in URL from credprovider does not parse: {e}");
+        signin::close(app);
+        return;
+    }
+    log::info!("starting the sign-in at {}", origin_of(&url));
+
+    *state.origin.lock().unwrap_or_else(|e| e.into_inner()) = origin_of(&url);
+    webview2::navigate_with_header(&window, app.clone(), header_token, url);
+    reveal_after_timeout(
+        app.clone(),
+        state.shown.clone(),
+        state.ever_activated.clone(),
+    );
+}
+
 /// Opens the window and runs the message loop until the flow ends.
 ///
 /// Returns the report to fall back on rather than sending it: `main` sends
@@ -182,9 +221,8 @@ fn reveal_after_timeout(
 /// already answered — a redirect, a cancellation — wins over this.
 fn run(
     completion: &Arc<signin::Completion>,
-    cancel_pipe: Option<std::fs::File>,
-    sign_in_url: String,
-    header_token: String,
+    control_pipe: Option<std::fs::File>,
+    sign_in: Option<(String, String)>,
     cache_path: &Path,
 ) -> HostReport {
     let Some(runtime_version) = webview2::runtime_version() else {
@@ -196,15 +234,6 @@ fn run(
     };
     log::info!("WebView2 runtime {runtime_version} found");
 
-    // Parsed only to reject a malformed URL before a window is ever shown;
-    // the navigation itself is started from the raw string by
-    // `navigate_with_header`.
-    if let Err(e) = sign_in_url.parse::<tauri::Url>() {
-        log::error!("the sign-in URL from credprovider does not parse: {e}");
-        return HostReport::Cancelled;
-    }
-    log::info!("sign-in URL: {}", origin_of(&sign_in_url));
-
     // Whether the window has ever held the foreground, which separates "never
     // took focus" from "took it and lost it again". Fed by the `Focused`
     // events below and read by the retry ladder when it gives up.
@@ -214,9 +243,12 @@ fn run(
     let shown = Arc::new(AtomicBool::new(false));
 
     let setup_completion = completion.clone();
-    let setup_activated = ever_activated.clone();
-    let setup_shown = shown.clone();
-    let sign_in_origin = origin_of(&sign_in_url);
+    let state = SignInState {
+        origin: Arc::new(Mutex::new(String::new())),
+        shown: shown.clone(),
+        ever_activated: ever_activated.clone(),
+    };
+    let setup_state = state.clone();
     let event_completion = completion.clone();
     let data_directory = cache_path.to_path_buf();
 
@@ -225,9 +257,7 @@ fn run(
             let handle = app.handle().clone();
             let nav_completion = setup_completion.clone();
             let nav_handle = handle.clone();
-            let page_shown = setup_shown.clone();
-            let page_ever_activated = setup_activated.clone();
-            let page_origin = sign_in_origin.clone();
+            let page_state = setup_state.clone();
 
             // Built on the bundled placeholder rather than the sign-in URL:
             // the real navigation is started by `navigate_with_header` once
@@ -308,36 +338,53 @@ fn run(
                 // placeholder's own load completes, so such a flag is already
                 // set when it arrives — which revealed an empty window every
                 // time.
+                let origin = page_state
+                    .origin
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .clone();
                 if !matches!(payload.event(), PageLoadEvent::Finished)
-                    || origin_of(payload.url().as_str()) != page_origin
+                    || origin.is_empty()
+                    || origin_of(payload.url().as_str()) != origin
                 {
                     return;
                 }
                 reveal(
                     &window,
-                    &page_shown,
-                    &page_ever_activated,
+                    &page_state.shown,
+                    &page_state.ever_activated,
                     "the sign-in page finished loading",
                 );
             });
 
-            let window = builder.build()?;
+            builder.build()?;
+            // The expensive part is behind us: the window exists and WebView2
+            // has an environment. When the credential provider preloaded this
+            // process at tile selection, that cost was paid while the person
+            // was still deciding to click.
             log::info!(
-                "sign-in window built, foreground_pid={:?}",
+                "sign-in window ready, foreground_pid={:?}",
                 foreground::foreground_pid()
             );
 
-            webview2::navigate_with_header(
-                &window,
-                handle.clone(),
-                header_token.clone(),
-                sign_in_url.clone(),
-            );
+            if let Some(control_pipe) = control_pipe {
+                let start_app = handle.clone();
+                let start_state = setup_state.clone();
+                signin::watch_control_pipe(
+                    control_pipe,
+                    handle.clone(),
+                    setup_completion.clone(),
+                    move |url, header_token| {
+                        start_sign_in(&start_app, &start_state, url, header_token);
+                    },
+                );
+            }
 
-            reveal_after_timeout(handle.clone(), setup_shown.clone(), setup_activated.clone());
-
-            if let Some(cancel_pipe) = cancel_pipe {
-                signin::watch_cancel_pipe(cancel_pipe, handle, setup_completion.clone());
+            // Handed the sign-in on the command line rather than over the
+            // pipe: the provider had no preloaded host to reuse and spawned
+            // one on the spot.
+            if let Some((url, header_token)) = sign_in {
+                start_sign_in(&handle, &setup_state, url, header_token);
             }
 
             Ok(())
@@ -396,26 +443,22 @@ fn main() {
     };
     let completion = Arc::new(signin::Completion::new(pipes.result));
 
-    let Some(sign_in_url) = arg_value("--sign-in-url") else {
-        log::error!("missing --sign-in-url argument");
-        completion.send(HostReport::Cancelled);
-        return;
-    };
-    let Some(header_token) = arg_value("--header-token") else {
-        log::error!("missing --header-token argument");
-        completion.send(HostReport::Cancelled);
-        return;
+    // Both optional. A host preloaded when the tile was selected is started
+    // later, by a `StartSignIn` over the control pipe; only a host spawned at
+    // submit time is handed them here.
+    let sign_in = match (arg_value("--sign-in-url"), arg_value("--header-token")) {
+        (Some(url), Some(header_token)) => Some((url, header_token)),
+        (None, None) => None,
+        _ => {
+            log::error!("--sign-in-url and --header-token must be given together");
+            completion.send(HostReport::Cancelled);
+            return;
+        }
     };
 
     let cache_path = browser_state_dir(Path::new(CACHE_ROOT));
 
-    let report = run(
-        &completion,
-        pipes.cancel,
-        sign_in_url,
-        header_token,
-        &cache_path,
-    );
+    let report = run(&completion, pipes.cancel, sign_in, &cache_path);
     // Whatever happened, the credential provider gets exactly one answer.
     completion.send(report);
     wipe_browser_state(&cache_path);

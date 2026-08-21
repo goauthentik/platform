@@ -35,24 +35,138 @@ use windows::{
 
 use crate::syscalls::{self, ForegroundControl};
 use crate::sysd;
-use ak_ee_wcp_wire::{AuthResult, HostReport};
+use ak_ee_wcp_wire::{AuthResult, HostCommand, HostReport};
 
 /// Spawns `ak_browser.exe` and waits for its result. `should_continue` is polled
 /// while waiting, so LogonUI cancelling (the user backing out of the tile)
 /// tears the browser process down instead of orphaning it.
 pub trait AuthFlow {
     fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult;
+
+    /// Start the browser host early, before there is anything for it to load.
+    ///
+    /// Called when the tile is selected. Most of the delay between clicking
+    /// submit and seeing a window is WebView2 building an environment, which
+    /// needs no URL, so doing it while the person is still deciding takes it
+    /// off the visible path entirely. No sign-in is begun here: `ak-sysd` is
+    /// not called and no session exists until [`AuthFlow::run`].
+    fn preload(&self) {}
+
+    /// Tear down anything [`AuthFlow::preload`] started. Called when the tile
+    /// is deselected, so backing out does not leave a browser running on the
+    /// logon screen.
+    fn discard(&self) {}
+}
+
+/// A browser host started ahead of a sign-in and waiting for a `StartSignIn`.
+///
+/// Handles are held as raw integers rather than `HANDLE`s so this stays `Send`
+/// and `Sync` inside the COM object that owns it; they are wrapped back up at
+/// the point of use, which is the same trick `ForegroundControl` plays with
+/// `HWND`.
+struct Preloaded {
+    process: usize,
+    thread: usize,
+    pid: u32,
+    result_read: usize,
+    cancel_write: usize,
+}
+
+impl Preloaded {
+    /// Whether the host is still running. A preloaded process can die while
+    /// waiting — a missing WebView2 runtime is enough — and reusing its pipes
+    /// would hang the sign-in until the whole flow timed out.
+    fn alive(&self) -> bool {
+        unsafe { WaitForSingleObject(HANDLE(self.process as *mut c_void), 0) != WAIT_OBJECT_0 }
+    }
+
+    /// Asks the host to close, then releases everything. Best-effort
+    /// throughout: this runs on paths where there is nothing useful to do
+    /// about a failure.
+    fn shut_down(self) {
+        let cancel_write = HANDLE(self.cancel_write as *mut c_void);
+        send_command(cancel_write, &HostCommand::Cancel);
+        unsafe {
+            let _ = CloseHandle(cancel_write);
+            let process = HANDLE(self.process as *mut c_void);
+            let _ = WaitForSingleObject(process, 5_000);
+            let _ = CloseHandle(process);
+            let _ = CloseHandle(HANDLE(self.thread as *mut c_void));
+            let _ = CloseHandle(HANDLE(self.result_read as *mut c_void));
+        }
+    }
 }
 
 pub struct BrowserAuthFlow {
-    pub browser_exe: std::path::PathBuf,
-    pub cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    browser_exe: std::path::PathBuf,
+    cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    preloaded: std::sync::Mutex<Option<Preloaded>>,
+}
+
+impl BrowserAuthFlow {
+    pub fn new(browser_exe: std::path::PathBuf, cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> Self {
+        Self {
+            browser_exe,
+            cpus,
+            preloaded: std::sync::Mutex::new(None),
+        }
+    }
+
+    fn take_preloaded(&self) -> Option<Preloaded> {
+        self.preloaded
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take()
+    }
 }
 
 impl AuthFlow for BrowserAuthFlow {
     fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
-        run_browser_host(&self.browser_exe, self.cpus, should_continue)
+        run_browser_host(
+            &self.browser_exe,
+            self.cpus,
+            self.take_preloaded(),
+            should_continue,
+        )
     }
+
+    fn preload(&self) {
+        let mut slot = self.preloaded.lock().unwrap_or_else(|e| e.into_inner());
+        // Selecting an already-selected tile, or selecting it again after
+        // backing out, must not leave a second browser running.
+        if slot.as_ref().is_some_and(Preloaded::alive) {
+            return;
+        }
+        if let Some(dead) = slot.take() {
+            dead.shut_down();
+        }
+        *slot = preload_browser_host(&self.browser_exe, self.cpus);
+    }
+
+    fn discard(&self) {
+        if let Some(preloaded) = self.take_preloaded() {
+            log::info!("tile deselected; shutting the preloaded sign-in window down");
+            preloaded.shut_down();
+        }
+    }
+}
+
+/// A preloaded host outlives the credential only if nobody tidies up, and it
+/// is sitting on the logon screen holding a window station handle.
+impl Drop for BrowserAuthFlow {
+    fn drop(&mut self) {
+        self.discard();
+    }
+}
+
+/// Writes one command to the host's control pipe, leaving the handle owned by
+/// the caller.
+fn send_command(cancel_write: HANDLE, command: &HostCommand) {
+    let mut pipe = unsafe { File::from_raw_handle(cancel_write.0) };
+    if let Err(e) = ak_ee_wcp_wire::write_host_command(&mut pipe, command) {
+        log::warn!("could not send {command:?} to the sign-in window: {e}");
+    }
+    std::mem::forget(pipe);
 }
 
 /// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
@@ -146,71 +260,177 @@ fn create_std_pipes() -> windows::core::Result<StdPipes> {
     })
 }
 
+/// Spawns a host with no sign-in attached, for [`AuthFlow::preload`].
+///
+/// Deliberately quiet on failure: this runs on tile selection, where there is
+/// nobody to tell and nothing yet at stake. A sign-in that finds no preloaded
+/// host just spawns one the slow way.
+fn preload_browser_host(
+    browser_exe: &Path,
+    cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+) -> Option<Preloaded> {
+    let pipes = match create_std_pipes() {
+        Ok(p) => p,
+        Err(e) => {
+            log::warn!("could not create IPC pipes to preload the sign-in window: {e}");
+            return None;
+        }
+    };
+
+    let spawn = spawn_browser_host(browser_exe, &pipes, cpus, None);
+    unsafe {
+        let _ = CloseHandle(pipes.child_stdin);
+        let _ = CloseHandle(pipes.child_stdout);
+    }
+    match spawn {
+        Ok(process) => {
+            log::info!(
+                "preloaded the sign-in window as pid {} while the tile is selected",
+                process.dwProcessId
+            );
+            Some(Preloaded {
+                process: process.hProcess.0 as usize,
+                thread: process.hThread.0 as usize,
+                pid: process.dwProcessId,
+                result_read: pipes.result_read.0 as usize,
+                cancel_write: pipes.cancel_write.0 as usize,
+            })
+        }
+        Err(e) => {
+            log::warn!("could not preload the sign-in window: {e}");
+            unsafe {
+                let _ = CloseHandle(pipes.result_read);
+                let _ = CloseHandle(pipes.cancel_write);
+            }
+            None
+        }
+    }
+}
+
+/// The pipes and process a sign-in runs against, however it was started.
+struct RunningHost {
+    process: HANDLE,
+    thread: HANDLE,
+    pid: u32,
+    result_read: HANDLE,
+    cancel_write: HANDLE,
+}
+
 fn run_browser_host(
     browser_exe: &Path,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    preloaded: Option<Preloaded>,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
+    // A preloaded host that died while waiting is worse than none: its pipes
+    // would never answer.
+    let preloaded = preloaded.filter(|p| {
+        let alive = p.alive();
+        if !alive {
+            log::warn!("the preloaded sign-in window is gone; starting one now");
+        }
+        alive
+    });
+
     // Fetched here, not by `ak_browser.exe` itself: the service account it runs
-    // as has no access to `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). Doing
-    // this before the pipes/spawn also means a failure here costs nothing
-    // beyond the round trip itself, rather than a spawned window that can
-    // never load anything.
+    // as has no access to `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). Fetched
+    // now rather than at preload time too — selecting a tile must not start an
+    // authentication session, only warm up a browser.
     let start = match sysd::sys_auth_start_async() {
         Ok(s) => s,
         Err(e) => {
             log::error!("sys_auth_start_async failed: {e}");
+            if let Some(preloaded) = preloaded {
+                preloaded.shut_down();
+            }
             return AuthResult::Failed {
                 reason: e.to_string(),
             };
         }
     };
 
-    let pipes = match create_std_pipes() {
-        Ok(p) => p,
-        Err(e) => {
-            log::error!("failed to create IPC pipes: {e}");
-            return AuthResult::Failed {
-                reason: "failed to create IPC pipes".to_string(),
+    let host = match preloaded {
+        Some(preloaded) => {
+            log::info!(
+                "reusing the preloaded sign-in window (pid {})",
+                preloaded.pid
+            );
+            let host = RunningHost {
+                process: HANDLE(preloaded.process as *mut c_void),
+                thread: HANDLE(preloaded.thread as *mut c_void),
+                pid: preloaded.pid,
+                result_read: HANDLE(preloaded.result_read as *mut c_void),
+                cancel_write: HANDLE(preloaded.cancel_write as *mut c_void),
             };
+            send_command(
+                host.cancel_write,
+                &HostCommand::StartSignIn {
+                    url: start.url.clone(),
+                    header_token: start.header_token.clone(),
+                },
+            );
+            host
         }
-    };
-
-    let spawn = spawn_browser_host(browser_exe, &pipes, cpus, &start.url, &start.header_token);
-    // Our copies of the child's ends are only needed up to the spawn call,
-    // which duplicates them into the child's own handle table (or fails,
-    // in which case there is no child to hold them at all either way).
-    unsafe {
-        let _ = CloseHandle(pipes.child_stdin);
-        let _ = CloseHandle(pipes.child_stdout);
-    }
-    let process = match spawn {
-        Ok(p) => p,
-        Err(e) => {
-            log::error!("failed to launch {}: {e}", browser_exe.display());
-            unsafe {
-                let _ = CloseHandle(pipes.result_read);
-                let _ = CloseHandle(pipes.cancel_write);
-            }
-            return AuthResult::Failed {
-                reason: "failed to launch sign-in window".to_string(),
+        None => {
+            let pipes = match create_std_pipes() {
+                Ok(p) => p,
+                Err(e) => {
+                    log::error!("failed to create IPC pipes: {e}");
+                    return AuthResult::Failed {
+                        reason: "failed to create IPC pipes".to_string(),
+                    };
+                }
             };
+
+            let spawn = spawn_browser_host(
+                browser_exe,
+                &pipes,
+                cpus,
+                Some((&start.url, &start.header_token)),
+            );
+            // Our copies of the child's ends are only needed up to the spawn
+            // call, which duplicates them into the child's own handle table
+            // (or fails, in which case there is no child to hold them either
+            // way).
+            unsafe {
+                let _ = CloseHandle(pipes.child_stdin);
+                let _ = CloseHandle(pipes.child_stdout);
+            }
+            match spawn {
+                Ok(process) => RunningHost {
+                    process: process.hProcess,
+                    thread: process.hThread,
+                    pid: process.dwProcessId,
+                    result_read: pipes.result_read,
+                    cancel_write: pipes.cancel_write,
+                },
+                Err(e) => {
+                    log::error!("failed to launch {}: {e}", browser_exe.display());
+                    unsafe {
+                        let _ = CloseHandle(pipes.result_read);
+                        let _ = CloseHandle(pipes.cancel_write);
+                    }
+                    return AuthResult::Failed {
+                        reason: "failed to launch sign-in window".to_string(),
+                    };
+                }
+            }
         }
     };
 
     let result = wait_for_result(
-        pipes.result_read,
-        pipes.cancel_write,
-        process.hProcess,
-        process.dwProcessId,
+        host.result_read,
+        host.cancel_write,
+        host.process,
+        host.pid,
         should_continue,
     );
 
     unsafe {
-        let _ = CloseHandle(pipes.cancel_write);
-        let _ = WaitForSingleObject(process.hProcess, 5_000);
-        let _ = CloseHandle(process.hProcess);
-        let _ = CloseHandle(process.hThread);
+        let _ = CloseHandle(host.cancel_write);
+        let _ = WaitForSingleObject(host.process, 5_000);
+        let _ = CloseHandle(host.process);
+        let _ = CloseHandle(host.thread);
     }
 
     result
@@ -372,11 +592,7 @@ fn wait_for_result(
                 if !cancel_signalled && !should_continue() {
                     log::info!("LogonUI withdrew the sign-in; asking the window to close");
                     cancel_signalled = true;
-                    // `cancel_write` stays owned by the caller, closed once
-                    // this function returns — wrap it without taking that.
-                    let mut f = unsafe { File::from_raw_handle(cancel_write.0) };
-                    let _ = ak_ee_wcp_wire::write_frame(&mut f, &ak_ee_wcp_wire::CancelSignal {});
-                    std::mem::forget(f);
+                    send_command(cancel_write, &HostCommand::Cancel);
                 }
                 // Host exited without sending a result.
                 if unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0 {
@@ -447,19 +663,23 @@ fn quote_arg(s: &str) -> String {
     format!("\"{}\"", s.replace('"', "\\\""))
 }
 
+/// `sign_in` is `None` when preloading: the host comes up, builds its window
+/// and waits for a `StartSignIn` on the control pipe instead.
 fn spawn_browser_host(
     browser_exe: &Path,
     pipes: &StdPipes,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
-    sign_in_url: &str,
-    header_token: &str,
+    sign_in: Option<(&str, &str)>,
 ) -> windows::core::Result<PROCESS_INFORMATION> {
-    let cmdline = format!(
-        "\"{}\" --sign-in-url {} --header-token {}",
-        browser_exe.display(),
-        quote_arg(sign_in_url),
-        quote_arg(header_token),
-    );
+    let cmdline = match sign_in {
+        Some((url, header_token)) => format!(
+            "\"{}\" --sign-in-url {} --header-token {}",
+            browser_exe.display(),
+            quote_arg(url),
+            quote_arg(header_token),
+        ),
+        None => format!("\"{}\"", browser_exe.display()),
+    };
 
     let mut si = STARTUPINFOW {
         cb: size_of::<STARTUPINFOW>() as u32,
@@ -817,7 +1037,12 @@ mod tests {
             std::env::var("COMSPEC").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string()),
         );
 
-        let spawned = spawn_browser_host(&exe, &pipes, CPUS_CREDUI, "https://example.com", "token");
+        let spawned = spawn_browser_host(
+            &exe,
+            &pipes,
+            CPUS_CREDUI,
+            Some(("https://example.com", "token")),
+        );
 
         unsafe {
             let _ = CloseHandle(pipes.child_stdin);

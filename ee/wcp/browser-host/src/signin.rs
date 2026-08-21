@@ -8,11 +8,10 @@
 //! `AuthResult` on the other side.
 
 use std::fs::File;
-use std::io::Read;
 use std::os::windows::io::FromRawHandle;
 use std::sync::{Arc, Mutex};
 
-use ak_ee_wcp_wire::HostReport;
+use ak_ee_wcp_wire::{HostCommand, HostReport};
 use tauri::{AppHandle, Manager};
 use windows::Win32::System::Console::{GetStdHandle, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE};
 
@@ -103,18 +102,43 @@ pub fn close(app: &AppHandle) {
     }
 }
 
-/// Blocks on the control pipe in a background thread; on any signal (or the
-/// pipe closing), reports a cancellation and closes the sign-in window.
-pub fn watch_cancel_pipe(mut pipe: File, app: AppHandle, completion: Arc<Completion>) {
+/// Reads commands off the control pipe in a background thread for as long as
+/// the flow lasts.
+///
+/// `on_start` runs for a `StartSignIn`; anything else ends the flow. A closed
+/// pipe and a read error both cancel, and only one of the three is the provider
+/// actually asking — a bad handle reads as an immediate error and would
+/// otherwise tear the window down the instant it opens, so they stay
+/// distinguishable in the log.
+pub fn watch_control_pipe(
+    mut pipe: File,
+    app: AppHandle,
+    completion: Arc<Completion>,
+    on_start: impl Fn(String, String) + Send + 'static,
+) {
     std::thread::spawn(move || {
-        let mut buf = [0u8; 1];
-        // All three cases cancel, but only one of them is the provider asking
-        // us to: a bad handle reads as an immediate error and would otherwise
-        // tear the window down the instant it opens.
-        match pipe.read(&mut buf) {
-            Ok(0) => log::warn!("control pipe closed; cancelling"),
-            Ok(_) => log::info!("credential provider asked the window to close"),
-            Err(e) => log::error!("control pipe read failed ({e}); cancelling"),
+        loop {
+            match ak_ee_wcp_wire::read_host_command(&mut pipe) {
+                Ok(Some(HostCommand::StartSignIn { url, header_token })) => {
+                    log::info!("credential provider asked the window to start signing in");
+                    on_start(url, header_token);
+                    // Keep reading: until the redirect fires, a cancellation
+                    // over this pipe is the only way the provider can call the
+                    // flow off.
+                }
+                Ok(Some(HostCommand::Cancel)) => {
+                    log::info!("credential provider asked the window to close");
+                    break;
+                }
+                Ok(None) => {
+                    log::warn!("control pipe closed; cancelling");
+                    break;
+                }
+                Err(e) => {
+                    log::error!("control pipe read failed ({e}); cancelling");
+                    break;
+                }
+            }
         }
         completion.send(HostReport::Cancelled);
         close(&app);
