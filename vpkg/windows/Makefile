@@ -36,6 +36,8 @@ ifeq ($(AK_IS_RELEASE),true)
 	$(call sign_binary,"${TOP}/bin/agent-desktop/ak-agent-desktop.exe")
 	$(call sign_binary,"${TOP}/bin/cli/ak.exe")
 	$(call sign_binary,"${TOP}/bin/browser_support/ak-browser-support.exe")
+	$(call sign_binary,"${TOP}/bin/wcp/ak_cred_provider.dll")
+	$(call sign_binary,"${TOP}/bin/wcp/ak_browser.exe")
 else
 	@echo "Skipping code sign for non-release build"
 endif
