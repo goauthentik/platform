@@ -1,0 +1,21 @@
+[package]
+name = "ak-sysd-ctrl-relay"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "ak-sysd-ctrl-relay"
+path = "src/main.rs"
+
+[dependencies]
+ak-platform = { path = "../ak-platform" }
+eyre = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true, features = ["io-std"] }
+
+[target.'cfg(windows)'.dependencies]
+tokio = { workspace = true, features = ["net"] }

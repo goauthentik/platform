@@ -24,6 +24,16 @@ impl Client {
         Ok(Client { c })
     }
 
+    /// Connects to the CTRL socket via [`crate::net::elevate`] instead of
+    /// dialing it directly — for unprivileged callers (the desktop app) that
+    /// can't open `SysdSocketID::CTRL` themselves. Triggers the platform's
+    /// native elevation prompt (or, on macOS, requires the helper daemon to
+    /// already be registered/approved — see `net::elevate::macos`).
+    pub async fn new_elevated_ctrl() -> Result<Self> {
+        let c = crate::net::elevate::elevated_sysd_ctrl_channel().await?;
+        Ok(Client { c })
+    }
+
     pub fn new_channel(c: Channel) -> Self {
         Client { c }
     }
