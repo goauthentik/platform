@@ -232,6 +232,29 @@ Append as things are learned. Date, what was run, what happened.
   per-run folders are what stop a leftover process locking out the next launch
   (single-writer, the same hazard as Chromium's `ProcessSingleton`), so it is a
   real trade, not a free win. Left alone.
+- _2026-08-21_ — **correction to the title-bar reasoning.** The commit that
+  made the window frameless said the logon desktop gets a classic caption
+  because "DWM is not drawing there". That was a guess and it is at best
+  imprecise. Measured since: in an ordinary session a decorated window from
+  this crate gets a proper DWM-composited frame —
+  `DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS)` returns bounds inset
+  11px from the window rect, which only happens when DWM draws the frame, and
+  `DwmIsCompositionEnabled` is true. So **Tauri is not the limitation**, and
+  switching frameworks would not have changed this either way.
+
+  The real variable is the token. The CEF window had modern chrome until it
+  stopped running as SYSTEM; the classic caption arrived with the privilege
+  separation, not with the Tauri port. The likely mechanism is that the
+  restricted service-account token cannot reach DWM for that session, so the
+  window falls back to legacy non-client painting. **Still unverified on the
+  secure desktop** — confirming it needs a VM run as `ak-wcp-browser`.
+
+  If modern chrome is wanted back, the options are: loosen the token (undoes
+  what #1380 bought), or draw the chrome ourselves — Tauri v2 can host a second
+  webview for a title bar behind its `unstable` feature, since authentik's page
+  cannot be wrapped in an iframe. Staying frameless is the third option and
+  costs nothing: LogonUI is chromeless itself, so a bare card does not look out
+  of place beside it.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service

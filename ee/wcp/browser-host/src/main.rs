@@ -248,15 +248,26 @@ fn run(
             .resizable(false)
             .minimizable(false)
             .maximizable(false)
-            // No frame at all. The logon desktop gets the classic
-            // non-composited caption — DWM is not drawing there — so
-            // a decorated window turns up looking like Windows 9x
-            // next to LogonUI's own chrome. Nothing is lost by
-            // dropping it: the window is fixed-size and centered, so
-            // there is nothing to drag or resize, and backing out of
-            // the sign-in goes through LogonUI's own cancel, which
-            // reaches this process over the control pipe rather than
-            // through a close button.
+            // No frame at all, because the frame this process gets on
+            // the logon desktop is the classic pre-Aero caption, which
+            // looks like Windows 9x next to LogonUI's own chrome.
+            //
+            // Not a Tauri limitation: measured in an ordinary session,
+            // a decorated window here gets a proper DWM-composited
+            // frame (`DwmGetWindowAttribute`'s extended frame bounds
+            // come back inset from the window rect, which only happens
+            // when DWM is drawing it). The CEF window had modern chrome
+            // too, until it stopped running as SYSTEM. What changed is
+            // the token, so the likely cause is that the restricted
+            // service-account token cannot reach DWM for that session
+            // and the window falls back to legacy non-client painting.
+            // Unverified on the secure desktop — see TAURI_MIGRATION.md.
+            //
+            // Nothing is lost by dropping it: the window is fixed-size
+            // and centered, so there is nothing to drag or resize, and
+            // backing out of the sign-in goes through LogonUI's own
+            // cancel, which reaches this process over the control pipe
+            // rather than through a close button.
             .decorations(false)
             // Topmost before the first paint, so the window is never
             // behind LogonUI even for a frame. Asking for focus is a
