@@ -208,6 +208,30 @@ Append as things are learned. Date, what was run, what happened.
   its own `res/icon.bmp` + `resource.rc` for the logon tile — a separate copy,
   untouched. Note the decoder's test only ever guarded the host's own copy of
   the asset, so nothing that covered `credprovider` was lost.
+- _2026-08-21_ — the window is now built `.visible(false)` and revealed by
+  `reveal()` once the sign-in page has finished loading; frameless or not, an
+  empty window sat on the logon screen for seconds before there was anything in
+  it.
+
+  The first attempt got this wrong in an instructive way. Discriminating the
+  real page from the bundled placeholder with a "navigation has started" flag
+  does **not** work: `Navigate` is called from the event loop before the
+  placeholder's own load completes, so the flag is already set when the
+  placeholder's `Finished` arrives, and the window was revealed empty every
+  time. Measuring caught it — all three scenarios, including one where the page
+  never responded at all, revealed at the same ~3.2s. The reveal now compares
+  the finished page's origin against the sign-in URL's.
+
+  Measured, warm dev machine, from spawn to a visible window:
+  page immediate 4.5s, page delayed 2s 5.1s, page never responds 8.2s (the
+  fallback). Note the first two barely differ: **the wait is WebView2 creating
+  an environment, not the network.** Building the window alone costs ~3s, which
+  is also when `REVEAL_TIMEOUT` starts counting.
+- _Open question_: that ~3s startup is paid on every launch because every run
+  gets a fresh user-data folder. Reusing one would likely remove most of it, but
+  per-run folders are what stop a leftover process locking out the next launch
+  (single-writer, the same hazard as Chromium's `ProcessSingleton`), so it is a
+  real trade, not a free win. Left alone.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service

@@ -23,7 +23,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use ak_ee_wcp_wire::HostReport;
-use tauri::{WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::webview::PageLoadEvent;
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 /// Parent of WebView2's on-disk state. Named explicitly because the browser
 /// runs under a service account at the logon screen: left to itself WebView2
@@ -96,6 +97,84 @@ fn origin_of(url: &str) -> String {
         .unwrap_or_else(|| "<unparseable URL>".to_string())
 }
 
+/// Label the sign-in window is created with and looked up by.
+const SIGN_IN_WINDOW: &str = "sign-in";
+
+/// How long the window stays hidden waiting for the sign-in page, timed from
+/// the moment it is built.
+///
+/// Has to clear WebView2's own startup or the fallback fires first and shows
+/// the empty window this exists to avoid. Measured on a warm dev machine:
+/// building the window costs about three seconds on its own, and the sign-in
+/// page is up about two seconds after that. Delaying the page itself by two
+/// seconds barely moves the total, so the cost is WebView2 creating an
+/// environment rather than anything on the network — every run gets a fresh
+/// user-data folder (`browser_state_dir`), so every run pays first-run
+/// initialisation.
+///
+/// Bounded all the same, because an invisible window is worse than an empty
+/// one: if authentik is unreachable the person at the logon screen would
+/// otherwise be left with nothing at all and no sign a sign-in was attempted.
+/// Five seconds here is about eight from the spawn, still inside the ten
+/// `credprovider`'s foreground nudge spends looking for this window.
+const REVEAL_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// Shows the window, once, and starts the foreground ladder with it.
+///
+/// The window is built hidden and revealed here rather than shown immediately,
+/// so nobody sees an empty frame while WebView2 starts up and the sign-in page
+/// loads. There is nothing to fight the foreground for until then either, so
+/// the ladder starts from here too.
+fn reveal(
+    window: &tauri::WebviewWindow,
+    shown: &AtomicBool,
+    ever_activated: &Arc<AtomicBool>,
+    why: &str,
+) {
+    if shown.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    log::info!("showing the sign-in window ({why})");
+    if let Err(e) = window.show() {
+        log::error!("could not show the sign-in window: {e}");
+    }
+    if let Err(e) = window.set_focus() {
+        log::debug!("could not focus the sign-in window: {e}");
+    }
+    match window.hwnd() {
+        Ok(hwnd) => foreground::watch(hwnd.0 as isize, ever_activated.clone()),
+        Err(e) => log::error!("no window handle to keep in the foreground: {e}"),
+    }
+}
+
+/// Reveals the window after [`REVEAL_TIMEOUT`] whether or not a page ever
+/// loaded, so a slow or unreachable authentik degrades to the empty window
+/// this is trying to avoid rather than to no window at all.
+///
+/// A no-op once the page-load handler has already shown it — `reveal` is
+/// guarded by the same flag.
+fn reveal_after_timeout(
+    app: tauri::AppHandle,
+    shown: Arc<AtomicBool>,
+    ever_activated: Arc<AtomicBool>,
+) {
+    std::thread::spawn(move || {
+        std::thread::sleep(REVEAL_TIMEOUT);
+        if shown.load(Ordering::SeqCst) {
+            return;
+        }
+        match app.get_webview_window(SIGN_IN_WINDOW) {
+            Some(window) => reveal(
+                &window,
+                &shown,
+                &ever_activated,
+                "the sign-in page did not load in time",
+            ),
+            None => log::warn!("no sign-in window to show after the reveal timeout"),
+        }
+    });
+}
+
 /// Opens the window and runs the message loop until the flow ends.
 ///
 /// Returns the report to fall back on rather than sending it: `main` sends
@@ -130,9 +209,14 @@ fn run(
     // took focus" from "took it and lost it again". Fed by the `Focused`
     // events below and read by the retry ladder when it gives up.
     let ever_activated = Arc::new(AtomicBool::new(false));
+    // Whether the window has been revealed, so the page-load handler and the
+    // timeout fallback cannot both show it (and both start a foreground ladder).
+    let shown = Arc::new(AtomicBool::new(false));
 
     let setup_completion = completion.clone();
     let setup_activated = ever_activated.clone();
+    let setup_shown = shown.clone();
+    let sign_in_origin = origin_of(&sign_in_url);
     let event_completion = completion.clone();
     let data_directory = cache_path.to_path_buf();
 
@@ -141,61 +225,90 @@ fn run(
             let handle = app.handle().clone();
             let nav_completion = setup_completion.clone();
             let nav_handle = handle.clone();
+            let page_shown = setup_shown.clone();
+            let page_ever_activated = setup_activated.clone();
+            let page_origin = sign_in_origin.clone();
 
             // Built on the bundled placeholder rather than the sign-in URL:
             // the real navigation is started by `navigate_with_header` once
             // header injection is actually registered. See its doc comment —
             // pointing the builder at the sign-in URL races the handler and
             // sends the document request bare.
-            let builder =
-                WebviewWindowBuilder::new(app, "sign-in", WebviewUrl::App("index.html".into()))
-                    .title("Sign in with authentik")
-                    .inner_size(
-                        f64::from(ak_ee_wcp_wire::WINDOW_WIDTH),
-                        f64::from(ak_ee_wcp_wire::WINDOW_HEIGHT),
-                    )
-                    .center()
-                    .resizable(false)
-                    .minimizable(false)
-                    .maximizable(false)
-                    // No frame at all. The logon desktop gets the classic
-                    // non-composited caption — DWM is not drawing there — so
-                    // a decorated window turns up looking like Windows 9x
-                    // next to LogonUI's own chrome. Nothing is lost by
-                    // dropping it: the window is fixed-size and centered, so
-                    // there is nothing to drag or resize, and backing out of
-                    // the sign-in goes through LogonUI's own cancel, which
-                    // reaches this process over the control pipe rather than
-                    // through a close button.
-                    .decorations(false)
-                    // Topmost before the first paint, so the window is never
-                    // behind LogonUI even for a frame. Asking for focus is a
-                    // separate and much less certain thing — see `foreground`.
-                    .always_on_top(true)
-                    .focused(true)
-                    .user_agent(&user_agent(&runtime_version))
-                    .data_directory(data_directory.clone())
-                    .incognito(true)
-                    .on_navigation(move |url| {
-                        let url = url.as_str();
-                        if !url.starts_with(ak_ee_wcp_wire::REDIRECT_PREFIX) {
-                            log::debug!("navigating to {}", origin_of(url));
-                            return true;
-                        }
+            let builder = WebviewWindowBuilder::new(
+                app,
+                SIGN_IN_WINDOW,
+                WebviewUrl::App("index.html".into()),
+            )
+            .title("Sign in with authentik")
+            .inner_size(
+                f64::from(ak_ee_wcp_wire::WINDOW_WIDTH),
+                f64::from(ak_ee_wcp_wire::WINDOW_HEIGHT),
+            )
+            .center()
+            .resizable(false)
+            .minimizable(false)
+            .maximizable(false)
+            // No frame at all. The logon desktop gets the classic
+            // non-composited caption — DWM is not drawing there — so
+            // a decorated window turns up looking like Windows 9x
+            // next to LogonUI's own chrome. Nothing is lost by
+            // dropping it: the window is fixed-size and centered, so
+            // there is nothing to drag or resize, and backing out of
+            // the sign-in goes through LogonUI's own cancel, which
+            // reaches this process over the control pipe rather than
+            // through a close button.
+            .decorations(false)
+            // Topmost before the first paint, so the window is never
+            // behind LogonUI even for a frame. Asking for focus is a
+            // separate and much less certain thing — see `foreground`.
+            .always_on_top(true)
+            // Built hidden; `reveal` shows it once there is a page to
+            // look at. Shown immediately, it is an empty frame for the
+            // second or so WebView2 takes to start and load.
+            .visible(false)
+            .user_agent(&user_agent(&runtime_version))
+            .data_directory(data_directory.clone())
+            .incognito(true)
+            .on_navigation(move |url| {
+                let url = url.as_str();
+                if !url.starts_with(ak_ee_wcp_wire::REDIRECT_PREFIX) {
+                    log::debug!("navigating to {}", origin_of(url));
+                    return true;
+                }
 
-                        // Validating the token in this URL needs `ak-sysd`,
-                        // which this process has no access to; `credprovider`
-                        // does it once this reaches the result pipe.
-                        log::info!("redirect detected; reporting it for validation");
-                        nav_completion.send(HostReport::Redirected {
-                            url: url.to_string(),
-                        });
-                        signin::close(&nav_handle);
-                        // WebView2 cannot navigate to `goauthentik.io://`
-                        // anyway; cancelling keeps it from saying so in the
-                        // window the person is still looking at.
-                        false
-                    });
+                // Validating the token in this URL needs `ak-sysd`,
+                // which this process has no access to; `credprovider`
+                // does it once this reaches the result pipe.
+                log::info!("redirect detected; reporting it for validation");
+                nav_completion.send(HostReport::Redirected {
+                    url: url.to_string(),
+                });
+                signin::close(&nav_handle);
+                // WebView2 cannot navigate to `goauthentik.io://`
+                // anyway; cancelling keeps it from saying so in the
+                // window the person is still looking at.
+                false
+            })
+            .on_page_load(move |window, payload| {
+                // Only the sign-in page counts. The placeholder this window
+                // is built on finishes loading too, and a flag saying "the
+                // real navigation has started" does not separate them:
+                // `Navigate` is called from the event loop before the
+                // placeholder's own load completes, so such a flag is already
+                // set when it arrives — which revealed an empty window every
+                // time.
+                if !matches!(payload.event(), PageLoadEvent::Finished)
+                    || origin_of(payload.url().as_str()) != page_origin
+                {
+                    return;
+                }
+                reveal(
+                    &window,
+                    &page_shown,
+                    &page_ever_activated,
+                    "the sign-in page finished loading",
+                );
+            });
 
             let window = builder.build()?;
             log::info!(
@@ -210,10 +323,7 @@ fn run(
                 sign_in_url.clone(),
             );
 
-            match window.hwnd() {
-                Ok(hwnd) => foreground::watch(hwnd.0 as isize, setup_activated.clone()),
-                Err(e) => log::error!("no window handle to keep in the foreground: {e}"),
-            }
+            reveal_after_timeout(handle.clone(), setup_shown.clone(), setup_activated.clone());
 
             if let Some(cancel_pipe) = cancel_pipe {
                 signin::watch_cancel_pipe(cancel_pipe, handle, setup_completion.clone());
