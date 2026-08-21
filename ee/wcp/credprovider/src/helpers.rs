@@ -6,8 +6,8 @@ use windows::{
     Win32::{
         Foundation::E_OUTOFMEMORY,
         Security::Authentication::Identity::{
-            KERB_INTERACTIVE_UNLOCK_LOGON, KERB_LOGON_SUBMIT_TYPE, KerbInteractiveLogon,
-            KerbWorkstationUnlockLogon, LSA_UNICODE_STRING,
+            KERB_INTERACTIVE_UNLOCK_LOGON, KerbInteractiveLogon, KerbWorkstationUnlockLogon,
+            LSA_UNICODE_STRING,
         },
         Security::Credentials::{
             CRED_PACK_FLAGS, CRED_PACK_ID_PROVIDER_CREDENTIALS, CRED_PACK_PROTECTED_CREDENTIALS,
@@ -41,18 +41,6 @@ pub fn generate_random_password() -> windows::core::Result<String> {
         .iter()
         .map(|&b| CHARSET[b as usize % CHARSET.len()] as char)
         .collect())
-}
-
-pub fn computer_name() -> String {
-    std::env::var("COMPUTERNAME").unwrap_or_else(|_| ".".to_string())
-}
-
-fn kerb_message_type(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> KERB_LOGON_SUBMIT_TYPE {
-    if cpus == CPUS_UNLOCK_WORKSTATION {
-        KerbWorkstationUnlockLogon
-    } else {
-        KerbInteractiveLogon
-    }
 }
 
 /// Flat `KERB_INTERACTIVE_UNLOCK_LOGON` for a local account, laid out as
@@ -94,7 +82,11 @@ pub fn pack_kerb_interactive_unlock_logon(
         });
 
         let kil = &mut (*(buf as *mut KERB_INTERACTIVE_UNLOCK_LOGON)).Logon;
-        kil.MessageType = kerb_message_type(cpus);
+        kil.MessageType = if cpus == CPUS_UNLOCK_WORKSTATION {
+            KerbWorkstationUnlockLogon
+        } else {
+            KerbInteractiveLogon
+        };
         kil.LogonDomainName = domain;
         kil.UserName = username;
         kil.Password = password;
