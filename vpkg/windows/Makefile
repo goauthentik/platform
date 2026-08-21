@@ -5,13 +5,19 @@ TARGET := vpkg/windows
 # Package.wxs merges Microsoft's Visual C++ CRT redistributable module so a
 # machine that has never had Visual Studio or a redistributable on it can still
 # resolve vcruntime140.dll and vcruntime140_1.dll.
-VSWHERE := "C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
+VSWHERE := C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe
 VC_REDIST_MSM = $(shell "$(VSWHERE)" -latest -products '*' -property installationPath 2>/dev/null \
 	| tr -d '\r' \
 	| tr '\\' '/' \
 	| xargs -I{} find "{}/VC/Redist/MSVC" -name 'Microsoft_VC*_CRT_x64.msm' 2>/dev/null \
 	| sort -V \
 	| tail -n1)
+
+# Package.wxs embeds the Evergreen WebView2 bootstrapper and runs it when the
+# runtime is missing. This is Microsoft's documented download link for it; the
+# stub is versionless and always pulls the current runtime, so nothing to bump.
+WEBVIEW2_BOOTSTRAPPER_URL := https://go.microsoft.com/fwlink/p/?LinkId=2124703
+WEBVIEW2_BOOTSTRAPPER := ${TOP}/cache/${TARGET}/MicrosoftEdgeWebview2Setup.exe
 
 .PHONY: local
 local:
@@ -39,10 +45,17 @@ endif
 		exit 1; \
 	}
 	mkdir -p "${TOP}/cache/${TARGET}"
+	test -f "$(WEBVIEW2_BOOTSTRAPPER)" || \
+		curl --fail --silent --show-error --location --retry 3 \
+			--output "$(WEBVIEW2_BOOTSTRAPPER)" \
+			"$(WEBVIEW2_BOOTSTRAPPER_URL)"
 	dotnet restore \
 		--packages "${TOP}/cache/${TARGET}" \
 		"${PWD}/"
-	ROOT=${TOP} VERSION=${VERSION} VC_REDIST_MSM="$(VC_REDIST_MSM)" dotnet build \
+	ROOT=${TOP} VERSION=${VERSION} \
+		VC_REDIST_MSM="$(VC_REDIST_MSM)" \
+		WEBVIEW2_BOOTSTRAPPER="$(WEBVIEW2_BOOTSTRAPPER)" \
+		dotnet build \
 		--packages "${TOP}/cache/${TARGET}" \
 		--artifacts-path "${TOP}/cache/${TARGET}" \
 		--output "${TOP}/bin/${TARGET}" \
