@@ -7,7 +7,7 @@ use std::ffi::c_void;
 use ak_platform_keyring::{KeyringError, windows::WindowsStore};
 use windows::Win32::Foundation::{CloseHandle, HANDLE, HWND, LPARAM, RECT};
 use windows::Win32::UI::WindowsAndMessaging::{
-    AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetWindowRect,
+    AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW,
     GetWindowThreadProcessId, IsWindowVisible, SetForegroundWindow,
 };
 use windows::{
@@ -157,10 +157,12 @@ struct WindowSearch {
     found: isize,
 }
 
-/// Stops at the first window a person could see. Chromium opens several
-/// message-only and zero-size helpers first, and handing one of those to
-/// `SetForegroundWindow` would look like success while leaving the real window
-/// where it was.
+/// Stops at the sign-in window, matched on its title.
+///
+/// Not the first visible window in the process: WebView2 puts up a
+/// `WS_EX_NOACTIVATE` tool window long before the sign-in window is revealed,
+/// and `SetForegroundWindow` can never activate that one, so nudging it spends
+/// the `AllowSetForegroundWindow` grant for nothing.
 unsafe extern "system" fn find_window_of_process(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let search = unsafe { &mut *(lparam.0 as *mut WindowSearch) };
 
@@ -174,6 +176,13 @@ unsafe extern "system" fn find_window_of_process(hwnd: HWND, lparam: LPARAM) -> 
     if unsafe { GetWindowRect(hwnd, &mut rect) }.is_err()
         || rect.right <= rect.left
         || rect.bottom <= rect.top
+    {
+        return true.into();
+    }
+
+    let mut title = [0u16; 128];
+    let len = unsafe { GetWindowTextW(hwnd, &mut title) };
+    if len <= 0 || String::from_utf16_lossy(&title[..len as usize]) != ak_ee_wcp_wire::WINDOW_TITLE
     {
         return true.into();
     }

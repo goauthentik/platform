@@ -219,6 +219,12 @@ pub struct TileField {
 pub const WINDOW_WIDTH: i32 = 560;
 pub const WINDOW_HEIGHT: i32 = 670;
 
+/// Undecorated, so nobody reads this — it is how the sign-in window is told
+/// apart from the helper windows WebView2 opens in the same process.
+/// `CreateWindowExW` records it, so `GetWindowTextW` reads it cross-process
+/// without the window needing a caption.
+pub const WINDOW_TITLE: &str = "Sign in with authentik";
+
 /// `redirect_uri` prefix the sign-in flow completes on.
 pub const REDIRECT_PREFIX: &str = "goauthentik.io://";
 
