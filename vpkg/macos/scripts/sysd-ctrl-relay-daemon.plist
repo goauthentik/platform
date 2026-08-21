@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>io.goauthentik.platform.sysd-ctrl-relay</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Applications/authentik Agent.app/Contents/MacOS/ak-sysd-ctrl-relay</string>
+	</array>
+	<key>UserName</key>
+	<string>root</string>
+	<!-- No RunAtLoad/KeepAlive: this only needs to run when ak-agent-desktop
+	     actually reaches for the CTRL socket, so launchd starts it lazily
+	     the first time something connects to the Mach service below and
+	     lets it exit between uses, rather than keeping a root process
+	     resident for a helper this occasional. -->
+	<key>MachServices</key>
+	<dict>
+		<key>io.goauthentik.platform.sysd-ctrl-relay</key>
+		<true/>
+	</dict>
+    <key>StandardOutPath</key>
+    <string>/Library/Logs/io.goauthentik/sysd-ctrl-relay.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Library/Logs/io.goauthentik/sysd-ctrl-relay.log</string>
+</dict>
+</plist>

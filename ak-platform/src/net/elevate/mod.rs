@@ -33,6 +33,12 @@ mod macos;
 #[cfg(windows)]
 mod windows;
 
+/// Registers the privileged CTRL relay daemon via `SMAppService` — call once
+/// at desktop app startup. A no-op on other platforms, where elevation is
+/// per-session rather than a one-time registration; see `macos` for why.
+#[cfg(target_os = "macos")]
+pub use macos::ensure_registered;
+
 use eyre::Result;
 use hyper::rt::{Read as HyperRead, Write as HyperWrite};
 use std::future::Future;

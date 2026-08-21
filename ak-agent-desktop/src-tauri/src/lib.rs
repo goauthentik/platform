@@ -71,6 +71,15 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             #[cfg(target_os = "macos")]
             ui::macos::setup_app(app)?;
 
+            // Registers (or confirms registration of) the privileged CTRL
+            // relay daemon. Best-effort: a failure here (e.g. not yet
+            // approved in System Settings) shouldn't block the rest of the
+            // app — it just means elevated CTRL actions aren't available yet.
+            #[cfg(target_os = "macos")]
+            if let Err(e) = ak_platform::net::elevate::ensure_registered() {
+                tracing::warn!("failed to register sysd CTRL relay daemon: {e:?}");
+            }
+
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .icon_as_template(true)
