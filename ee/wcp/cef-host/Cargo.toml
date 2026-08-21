@@ -18,6 +18,5 @@ ak-platform = { path = "../../../ak-platform" }
 log = { workspace = true }
 sentry = { workspace = true }
 windows = { workspace = true }
-eyre = { workspace = true }
-url = { workspace = true }
+uuid = { workspace = true }
 cef = { version = "151.4.0", features = ["build-util"] }

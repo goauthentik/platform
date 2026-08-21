@@ -4,9 +4,10 @@
 
 use std::io::{self, Read, Write};
 
-/// Result of the browser sign-in flow, sent from `cef-host` to `credprovider`
-/// over the result pipe. The public shape stays a plain enum; wire encoding
-/// goes through `AuthResultProto` below.
+/// Outcome `credprovider` hands back from the sign-in flow. Built entirely
+/// on the `credprovider` side of the pipe (from a [`HostReport`] plus, for
+/// `Redirected`, a validation call to `ak-sysd` that only `credprovider` can
+/// reach) — never sent over the wire itself.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AuthResult {
     Completed { username: String },
@@ -14,43 +15,53 @@ pub enum AuthResult {
     Failed { reason: String },
 }
 
+/// Sent from `cef-host` to `credprovider` over the result pipe once the
+/// sign-in flow reaches an end state `cef-host` cannot itself resolve:
+/// validating the redirect's token needs `ak-sysd`, which only
+/// `credprovider` has access to (`BROWSER_PRIVILEGE.md`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HostReport {
+    /// The sign-in redirect fired; here is the full callback URL to extract
+    /// and validate the token from.
+    Redirected { url: String },
+    /// The window closed — or the provider asked it to — without ever
+    /// reaching the redirect.
+    Cancelled,
+}
+
 #[derive(Clone, PartialEq, prost::Message)]
-struct AuthResultProto {
-    #[prost(oneof = "AuthOutcome", tags = "1, 2, 3")]
-    outcome: Option<AuthOutcome>,
+struct HostReportProto {
+    #[prost(oneof = "HostOutcome", tags = "1, 2")]
+    outcome: Option<HostOutcome>,
 }
 
 #[derive(Clone, PartialEq, prost::Oneof)]
-enum AuthOutcome {
+enum HostOutcome {
     #[prost(string, tag = "1")]
-    Completed(String),
+    Redirected(String),
     #[prost(bool, tag = "2")]
     Cancelled(bool),
-    #[prost(string, tag = "3")]
-    Failed(String),
 }
 
-impl From<&AuthResult> for AuthResultProto {
-    fn from(r: &AuthResult) -> Self {
+impl From<&HostReport> for HostReportProto {
+    fn from(r: &HostReport) -> Self {
         let outcome = match r {
-            AuthResult::Completed { username } => AuthOutcome::Completed(username.clone()),
-            AuthResult::Cancelled => AuthOutcome::Cancelled(true),
-            AuthResult::Failed { reason } => AuthOutcome::Failed(reason.clone()),
+            HostReport::Redirected { url } => HostOutcome::Redirected(url.clone()),
+            HostReport::Cancelled => HostOutcome::Cancelled(true),
         };
-        AuthResultProto {
+        HostReportProto {
             outcome: Some(outcome),
         }
     }
 }
 
-impl TryFrom<AuthResultProto> for AuthResult {
+impl TryFrom<HostReportProto> for HostReport {
     type Error = WireError;
 
-    fn try_from(p: AuthResultProto) -> Result<Self, WireError> {
+    fn try_from(p: HostReportProto) -> Result<Self, WireError> {
         match p.outcome {
-            Some(AuthOutcome::Completed(username)) => Ok(AuthResult::Completed { username }),
-            Some(AuthOutcome::Cancelled(_)) => Ok(AuthResult::Cancelled),
-            Some(AuthOutcome::Failed(reason)) => Ok(AuthResult::Failed { reason }),
+            Some(HostOutcome::Redirected(url)) => Ok(HostReport::Redirected { url }),
+            Some(HostOutcome::Cancelled(_)) => Ok(HostReport::Cancelled),
             None => Err(WireError::MissingOutcome),
         }
     }
@@ -87,7 +98,7 @@ impl std::fmt::Display for WireError {
             WireError::Io(e) => write!(f, "pipe I/O error: {e}"),
             WireError::Decoding(e) => write!(f, "frame decoding error: {e}"),
             WireError::FrameTooLarge(n) => write!(f, "frame of {n} bytes exceeds limit"),
-            WireError::MissingOutcome => write!(f, "AuthResult frame had no outcome set"),
+            WireError::MissingOutcome => write!(f, "HostReport frame had no outcome set"),
         }
     }
 }
@@ -143,18 +154,30 @@ pub fn read_frame<T: prost::Message + Default, R: Read>(r: &mut R) -> Result<Opt
     Ok(Some(T::decode(payload.as_slice())?))
 }
 
-/// Write an `AuthResult` over the result pipe.
-pub fn write_auth_result<W: Write>(w: &mut W, result: &AuthResult) -> Result<(), WireError> {
-    write_frame(w, &AuthResultProto::from(result))
+/// Write a `HostReport` over the result pipe.
+pub fn write_host_report<W: Write>(w: &mut W, report: &HostReport) -> Result<(), WireError> {
+    write_frame(w, &HostReportProto::from(report))
 }
 
-/// Read an `AuthResult` from the result pipe. See [`read_frame`] for EOF
+/// Read a `HostReport` from the result pipe. See [`read_frame`] for EOF
 /// handling.
-pub fn read_auth_result<R: Read>(r: &mut R) -> Result<Option<AuthResult>, WireError> {
-    match read_frame::<AuthResultProto, R>(r)? {
-        Some(proto) => Ok(Some(AuthResult::try_from(proto)?)),
+pub fn read_host_report<R: Read>(r: &mut R) -> Result<Option<HostReport>, WireError> {
+    match read_frame::<HostReportProto, R>(r)? {
+        Some(proto) => Ok(Some(HostReport::try_from(proto)?)),
         None => Ok(None),
     }
+}
+
+/// Pulls the interactive-auth token out of the sign-in redirect's query
+/// string. `None` covers both an unparseable URL and a well-formed one
+/// missing the parameter — `credprovider` treats either the same way, as a
+/// failed validation.
+pub fn extract_token(url: &str) -> Option<String> {
+    let parsed = url::Url::parse(url).ok()?;
+    parsed
+        .query_pairs()
+        .find(|(k, _)| k == TOKEN_QUERY_PARAM)
+        .map(|(_, v)| v.into_owned())
 }
 
 /// The four credential-provider tile fields, in display order. Field IDs are
@@ -213,38 +236,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn round_trips_completed_through_a_stream() {
-        let msg = AuthResult::Completed {
-            username: "jdoe".to_string(),
+    fn round_trips_redirected_through_a_stream() {
+        let msg = HostReport::Redirected {
+            url: format!("{}callback?state=xyz", REDIRECT_PREFIX),
         };
         let mut buf = Vec::new();
-        write_auth_result(&mut buf, &msg).unwrap();
+        write_host_report(&mut buf, &msg).unwrap();
 
         let mut cursor = io::Cursor::new(buf);
-        let decoded = read_auth_result(&mut cursor).unwrap().unwrap();
+        let decoded = read_host_report(&mut cursor).unwrap().unwrap();
         assert_eq!(msg, decoded);
     }
 
     #[test]
-    fn round_trips_cancelled_and_failed() {
-        for msg in [
-            AuthResult::Cancelled,
-            AuthResult::Failed {
-                reason: "token validation failed".to_string(),
-            },
-        ] {
-            let mut buf = Vec::new();
-            write_auth_result(&mut buf, &msg).unwrap();
-            let mut cursor = io::Cursor::new(buf);
-            let decoded = read_auth_result(&mut cursor).unwrap().unwrap();
-            assert_eq!(msg, decoded);
-        }
+    fn round_trips_cancelled() {
+        let mut buf = Vec::new();
+        write_host_report(&mut buf, &HostReport::Cancelled).unwrap();
+        let mut cursor = io::Cursor::new(buf);
+        let decoded = read_host_report(&mut cursor).unwrap().unwrap();
+        assert_eq!(HostReport::Cancelled, decoded);
     }
 
     #[test]
     fn read_frame_reports_clean_eof_as_none() {
         let mut cursor = io::Cursor::new(Vec::<u8>::new());
-        let decoded = read_auth_result(&mut cursor).unwrap();
+        let decoded = read_host_report(&mut cursor).unwrap();
         assert!(decoded.is_none());
     }
 
@@ -253,8 +269,31 @@ mod tests {
         let mut buf = Vec::new();
         buf.extend_from_slice(&(MAX_FRAME_BYTES + 1).to_le_bytes());
         let mut cursor = io::Cursor::new(buf);
-        let result = read_auth_result(&mut cursor);
+        let result = read_host_report(&mut cursor);
         assert!(matches!(result, Err(WireError::FrameTooLarge(_))));
+    }
+
+    #[test]
+    fn extracts_token_from_a_redirect_url() {
+        let url = format!("{REDIRECT_PREFIX}callback?{TOKEN_QUERY_PARAM}=abc123");
+        assert_eq!(extract_token(&url), Some("abc123".to_string()));
+    }
+
+    #[test]
+    fn extracts_token_alongside_other_query_params() {
+        let url = format!("{REDIRECT_PREFIX}callback?state=xyz&{TOKEN_QUERY_PARAM}=abc123&code=9");
+        assert_eq!(extract_token(&url), Some("abc123".to_string()));
+    }
+
+    #[test]
+    fn extract_token_is_none_when_the_param_is_absent() {
+        let url = format!("{REDIRECT_PREFIX}callback?state=xyz");
+        assert_eq!(extract_token(&url), None);
+    }
+
+    #[test]
+    fn extract_token_is_none_for_an_unparseable_url() {
+        assert_eq!(extract_token("not a url"), None);
     }
 
     #[test]

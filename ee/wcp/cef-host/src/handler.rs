@@ -4,10 +4,9 @@
 
 use std::fs::File;
 use std::io::Read;
-use std::os::windows::io::FromRawHandle;
 use std::sync::{Arc, Mutex, Weak};
 
-use ak_ee_wcp_wire::AuthResult;
+use ak_ee_wcp_wire::HostReport;
 use cef::*;
 
 pub struct SignInHandler {
@@ -56,7 +55,7 @@ impl SignInHandler {
         }
         if self.browser_list.is_empty() {
             log::info!("last browser closed; shutting the sign-in window down");
-            signal_if_unsent(&self.result_pipe, AuthResult::Cancelled);
+            signal_if_unsent(&self.result_pipe, HostReport::Cancelled);
             quit_message_loop();
         }
     }
@@ -70,9 +69,9 @@ impl SignInHandler {
     }
 
     /// Sends the sign-in outcome once, then closes the window. Safe to call
-    /// more than once — only the first call's result is sent.
-    fn complete(&self, result: AuthResult) {
-        signal_if_unsent(&self.result_pipe, result);
+    /// more than once — only the first call's report is sent.
+    fn complete(&self, report: HostReport) {
+        signal_if_unsent(&self.result_pipe, report);
         let Some(this) = self.weak_self.upgrade() else {
             return;
         };
@@ -90,10 +89,10 @@ fn close_all_browsers(handler: &Arc<Mutex<SignInHandler>>) {
     inner.close_all_browsers();
 }
 
-fn signal_if_unsent(result_pipe: &Mutex<Option<File>>, result: AuthResult) {
+fn signal_if_unsent(result_pipe: &Mutex<Option<File>>, report: HostReport) {
     let mut guard = result_pipe.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(mut file) = guard.take()
-        && let Err(e) = ak_ee_wcp_wire::write_auth_result(&mut file, &result)
+        && let Err(e) = ak_ee_wcp_wire::write_host_report(&mut file, &report)
     {
         log::error!("failed to write result to pipe: {e}");
     }
@@ -125,7 +124,7 @@ fn watch_cancel_pipe(mut pipe: File, handler: Arc<Mutex<SignInHandler>>) {
             Err(e) => log::error!("control pipe read failed ({e}); cancelling"),
         }
         let inner = handler.lock().unwrap_or_else(|e| e.into_inner());
-        inner.complete(AuthResult::Cancelled);
+        inner.complete(HostReport::Cancelled);
     });
 }
 
@@ -213,25 +212,11 @@ wrap_resource_request_handler! {
                 return ReturnValue::CONTINUE;
             }
 
-            let result = match crate::sysd::sys_auth_url(&url) {
-                Ok(Some(token)) => AuthResult::Completed {
-                    username: token.username,
-                },
-                Ok(None) => AuthResult::Failed {
-                    reason: "token validation failed".to_string(),
-                },
-                Err(e) => AuthResult::Failed {
-                    reason: e.to_string(),
-                },
-            };
-            inner.complete(result);
+            // Validating the token needs `ak-sysd`, which this process has no
+            // access to (`BROWSER_PRIVILEGE.md`) — `credprovider` does it once
+            // this reaches the result pipe.
+            inner.complete(HostReport::Redirected { url });
             ReturnValue::CANCEL
         }
     }
-}
-
-/// Wraps an inherited raw pipe handle as an owned `File`. Called once at
-/// startup for each of the two pipes this process was handed.
-pub fn file_from_raw_handle(handle: usize) -> File {
-    unsafe { File::from_raw_handle(handle as *mut std::ffi::c_void) }
 }

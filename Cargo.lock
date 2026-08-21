@@ -190,6 +190,7 @@ dependencies = [
  "eyre",
  "log",
  "serde",
+ "uuid",
  "windows 0.62.2",
  "windows-core 0.62.2",
  "winreg 0.56.0",
@@ -203,10 +204,9 @@ dependencies = [
  "ak-meta",
  "ak-platform",
  "cef",
- "eyre",
  "log",
  "sentry",
- "url",
+ "uuid",
  "windows 0.62.2",
 ]
 
@@ -231,6 +231,7 @@ name = "ak-ee-wcp-wire"
 version = "0.60.1"
 dependencies = [
  "prost",
+ "url",
 ]
 
 [[package]]

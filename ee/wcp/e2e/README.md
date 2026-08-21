@@ -90,13 +90,19 @@ logon/unlock/lock-screen prompt. After the automated tests pass:
    production; for manual testing, add the registry entries under
    `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential
    Providers\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}` and
-   `HKCR\CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}\InprocServer32`).
+   `HKCR\CLSID\{7BCC7941-18BA-4A8E-8E0A-1D0F8E73577A}\InprocServer32`). This
+   skips the MSI's `util:User`, though, so `ak_cef.exe` now also needs the
+   dedicated service account (`BROWSER_PRIVILEGE.md`) to exist for logon and
+   unlock to work — either run the real MSI once first, or create it by hand
+   to match `credprovider::syscalls::SERVICE_ACCOUNT_NAME`.
 4. Lock the machine (Win+L) and confirm the tile appears with the expected
    icon/text, opens the sign-in window on Submit at the expected size, and
    that completing/cancelling sign-in behaves as expected.
-5. Confirm a **fresh logon** (not just unlock) also works — that path has no
-   existing user token, so it exercises the winlogon-token-duplication
-   fallback in `syscalls::acquire_interactive_token`.
+5. Confirm a **fresh logon** (not just unlock) also works — that path used
+   to have no existing user token to fall back to, which is what made it
+   worth checking separately from unlock; now both scenarios go through the
+   same `syscalls::service_account_token` logon, so this step mainly
+   confirms the secure-desktop ACL grant actually holds on real hardware.
 6. Sign in **three times in a row**, not once. The window has come to the
    front on the first authentication after an install and stayed behind
    LogonUI on every one after it, so a single sign-in passes with that bug

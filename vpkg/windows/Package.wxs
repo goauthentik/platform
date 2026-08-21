@@ -126,8 +126,49 @@
                           Name="authentik Credential Provider (CEF)"
                           EventMessageFile="[#wcp_ak_cef_exe]"/>
 
-        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs" />
-        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache" />
+        <!-- ak_cef.exe runs as this account instead of SYSTEM (see
+             ee/wcp/BROWSER_PRIVILEGE.md). credprovider logs it on with
+             LogonUserW and a stored password (syscalls::service_account_password,
+             same pattern as LOCAL_PASSWORD.md) rather than the SE_TCB_NAME-only
+             S4U route: LogonUI's own token does not carry SE_TCB_NAME, the
+             same wall Chromium's own credential provider hits and answers
+             the same way (chrome/credential_provider/gaiacp/gcp_utils.cc,
+             CreateLogonToken). LogonAsService grants the SeServiceLogonRight
+             that LOGON32_LOGON_SERVICE needs — not LogonAsBatchJob/BATCH: a
+             batch-logon token could not create any named synchronization
+             object on a real install (confirmed: CreateMutex denied even
+             for random names), which is fatal to Chromium's own
+             ProcessSingleton; see the comment on
+             credprovider::syscalls::service_account_token. The account is
+             denied all interactive/network/RDP logon regardless, and the
+             token credprovider actually hands ak_cef.exe has every
+             privilege stripped via CreateRestrictedToken on top of that. No
+             dictionary words and no "$" in the initial password below:
+             NetUserAdd folds complexity/banned-word LSA filter rejections
+             into the same NERR_PasswordTooShort a real length failure
+             would give, and "$" is the WiX preprocessor's substitution
+             leader ("$(var.X)"), live before the XML is parsed. Keep
+             "Name" in step with credprovider::syscalls::SERVICE_ACCOUNT_NAME. -->
+        <util:User Id="wcp_service_account"
+                    Name="ak-wcp-browser"
+                    Password="qX9m!K2pR7z#VtL4"
+                    PasswordNeverExpires="yes"
+                    CanNotChangePassword="yes"
+                    LogonAsService="yes"
+                    UpdateIfExists="yes"
+                    RemoveOnUninstall="yes" />
+
+        <!-- ak_cef.exe's own file-based log (Chromium doesn't understand
+             the Windows Event Log ak_platform::log routes everything else
+             to) needs the service account to actually be able to write it;
+             nothing else uses this directory, so this is not a broader
+             grant than the wcp-cache one below. -->
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs">
+          <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
+        </CreateFolder>
+        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache">
+          <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
+        </CreateFolder>
 
         <File Id="wcp_ak_cef_exe" Source="$(env.ROOT)/bin/wcp/ak_cef.exe" />
         <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />

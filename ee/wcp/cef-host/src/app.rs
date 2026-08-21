@@ -1,28 +1,36 @@
-//! CEF app/browser-process handler: on context init, fetches the sign-in
-//! URL and opens the browser window.
+//! CEF app/browser-process handler: on context init, opens the sign-in
+//! window at the URL `credprovider` already resolved before spawning this
+//! process.
+
+use std::fs::File;
+use std::os::windows::io::FromRawHandle;
 
 use cef::*;
+use windows::Win32::System::Console::{GetStdHandle, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE};
 
-use crate::handler::{SignInClient, SignInHandler, file_from_raw_handle};
+use crate::handler::{SignInClient, SignInHandler};
 use crate::window::SignInWindowDelegate;
 
 wrap_app! {
     pub struct HostApp {
-        result_pipe: usize,
-        cancel_pipe: Option<usize>,
+        sign_in_url: String,
+        header_token: String,
     }
 
     impl App {
         fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
-            Some(HostBrowserProcessHandler::new(self.result_pipe, self.cancel_pipe))
+            Some(HostBrowserProcessHandler::new(
+                self.sign_in_url.clone(),
+                self.header_token.clone(),
+            ))
         }
     }
 }
 
 wrap_browser_process_handler! {
     struct HostBrowserProcessHandler {
-        result_pipe: usize,
-        cancel_pipe: Option<usize>,
+        sign_in_url: String,
+        header_token: String,
     }
 
     impl BrowserProcessHandler {
@@ -31,10 +39,9 @@ wrap_browser_process_handler! {
         // frames below the window creation. The C++ never built the browser
         // there: it only flagged the context as ready and created the window
         // later, once the loop was pumping. Post the work instead of doing it
-        // re-entrantly, which also keeps a blocking gRPC call out of
-        // `CefInitialize`.
+        // re-entrantly.
         fn on_context_initialized(&self) {
-            let mut task = OpenSignInWindow::new(self.result_pipe, self.cancel_pipe);
+            let mut task = OpenSignInWindow::new(self.sign_in_url.clone(), self.header_token.clone());
             post_task(ThreadId::UI, Some(&mut task));
         }
     }
@@ -42,47 +49,41 @@ wrap_browser_process_handler! {
 
 wrap_task! {
     struct OpenSignInWindow {
-        result_pipe: usize,
-        cancel_pipe: Option<usize>,
+        sign_in_url: String,
+        header_token: String,
     }
 
     impl Task {
         fn execute(&self) {
-            open_sign_in_window(self.result_pipe, self.cancel_pipe);
+            open_sign_in_window(self.sign_in_url.clone(), self.header_token.clone());
         }
     }
 }
 
-fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
-    // Most of the gap between the spawn and a window existing is spent here —
-    // a named-pipe round trip to `ak-sysd` and, behind it, a live call out to
-    // the authentik API. That gap is what the foreground grant issued at spawn
-    // has to survive, so it is worth knowing how long it actually was.
-    let started = std::time::Instant::now();
-    let start = match crate::sysd::sys_auth_start_async() {
-        Ok(s) => s,
+fn open_sign_in_window(sign_in_url: String, header_token: String) {
+    // Both handles were already open and access-checked in `credprovider`
+    // (running as SYSTEM on the real logon scenarios) before this process
+    // even existed — inherited via `STARTUPINFOW`, not opened by this
+    // process's own (low-privilege) token (`BROWSER_PRIVILEGE.md`'s "Roads
+    // not taken").
+    let result_pipe = match unsafe { GetStdHandle(STD_OUTPUT_HANDLE) } {
+        Ok(h) => unsafe { File::from_raw_handle(h.0) },
         Err(e) => {
-            log::error!("sys_auth_start_async failed: {e}");
-            let mut pipe = file_from_raw_handle(result_pipe);
-            let _ = ak_ee_wcp_wire::write_auth_result(
-                &mut pipe,
-                &ak_ee_wcp_wire::AuthResult::Failed {
-                    reason: e.to_string(),
-                },
-            );
+            log::error!("could not get the inherited result pipe: {e}");
             quit_message_loop();
             return;
         }
     };
-
-    log::info!(
-        "got the sign-in URL after {}ms",
-        started.elapsed().as_millis()
-    );
-
-    let result_pipe = file_from_raw_handle(result_pipe);
-    let cancel_pipe = cancel_pipe.map(file_from_raw_handle);
-    let inner = SignInHandler::new(start.header_token, result_pipe, cancel_pipe);
+    // Best-effort: no way left to report a result at all if this fails, but
+    // the sign-in itself does not depend on cancellation working.
+    let cancel_pipe = match unsafe { GetStdHandle(STD_INPUT_HANDLE) } {
+        Ok(h) => Some(unsafe { File::from_raw_handle(h.0) }),
+        Err(e) => {
+            log::error!("could not get the inherited cancel pipe: {e}");
+            None
+        }
+    };
+    let inner = SignInHandler::new(header_token, result_pipe, cancel_pipe);
     let mut client = SignInClient::new(inner);
 
     let browser_settings = BrowserSettings::default();
@@ -107,7 +108,7 @@ fn open_sign_in_window(result_pipe: usize, cancel_pipe: Option<usize>) {
     log::info!("creating the top-level window");
     let mut delegate = SignInWindowDelegate::new(
         std::cell::RefCell::new(browser_view),
-        start.url,
+        sign_in_url,
         std::rc::Rc::new(std::cell::Cell::new(false)),
     );
     window_create_top_level(Some(&mut delegate));

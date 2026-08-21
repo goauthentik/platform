@@ -84,13 +84,17 @@ windows = { version = "0.62", features = [
     "Win32_System_Com",
     "Win32_System_LibraryLoader",
     "Win32_System_Pipes",
+    "Win32_System_Console",
+    "Win32_System_Environment",
     "Win32_System_IO",
     "Win32_Storage_FileSystem",
     "Win32_Security",
+    "Win32_Security_Authorization",
     "Win32_UI_Shell",
     "Win32_Security_Credentials",
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_RemoteDesktop",
+    "Win32_System_StationsAndDesktops",
     "Win32_System_Threading",
     "Win32_UI_WindowsAndMessaging",
     "Win32_Graphics_Gdi",
@@ -99,6 +103,12 @@ windows = { version = "0.62", features = [
     "Win32_NetworkManagement_NetManagement",
     "Win32_System_SystemInformation",
     "Win32_Storage_EnhancedStorage",
+    # `NtOpenDirectoryObject` — no Win32 wrapper exists for opening an
+    # arbitrary Object Manager directory (`BaseNamedObjects`) the way
+    # `OpenDesktopW` does for desktops.
+    "Wdk_Foundation",
+    "Wdk_Storage_FileSystem",
+    "Wdk_System_SystemServices",
     # `ICredentialProviderUser::GetValue` returns a PROPVARIANT, so the e2e
     # harness needs these to implement that interface for `SetUserArray`.
     "Win32_System_Com_StructuredStorage",

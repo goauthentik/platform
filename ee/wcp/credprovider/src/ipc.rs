@@ -1,7 +1,11 @@
 //! Spawns `ak_cef.exe` in the interactive session and exchanges
-//! `wire`-framed messages with it over a duplex pair of anonymous pipes: a
-//! result pipe it writes to, and a control pipe this process writes a
-//! cancel signal to.
+//! `wire`-framed messages with it over its inherited standard handles: it
+//! writes its result to stdout, and reads a cancel signal from stdin.
+//! Anonymous, inherited pipes rather than named ones with a custom DACL —
+//! matching GCPW's own approach (`CreatePipeForChildProcess`,
+//! `gcp_utils.cc`) — because the child never opens anything by name at all,
+//! so there is no DACL for a hardened box's Object Manager namespace to
+//! disagree with. See `BROWSER_PRIVILEGE.md`'s "Roads not taken".
 
 use std::ffi::c_void;
 use std::fs::File;
@@ -15,13 +19,13 @@ use windows::{
             CloseHandle, E_FAIL, HANDLE, HANDLE_FLAG_INHERIT, HANDLE_FLAGS, SetHandleInformation,
             WAIT_OBJECT_0,
         },
-        Security::SECURITY_ATTRIBUTES,
+        Security::{SE_IMPERSONATE_NAME, SECURITY_ATTRIBUTES},
+        System::Environment::{CreateEnvironmentBlock, DestroyEnvironmentBlock},
         System::Pipes::CreatePipe,
         System::Threading::{
-            CreateProcessAsUserW, CreateProcessW, DeleteProcThreadAttributeList,
-            EXTENDED_STARTUPINFO_PRESENT, GetExitCodeProcess, InitializeProcThreadAttributeList,
-            LPPROC_THREAD_ATTRIBUTE_LIST, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, PROCESS_INFORMATION,
-            STARTUPINFOEXW, UpdateProcThreadAttribute, WaitForSingleObject,
+            CREATE_UNICODE_ENVIRONMENT, CreateProcessW, CreateProcessWithTokenW,
+            GetExitCodeProcess, LOGON_WITH_PROFILE, PROCESS_CREATION_FLAGS, PROCESS_INFORMATION,
+            STARTF_USESTDHANDLES, STARTUPINFOW, WaitForSingleObject,
         },
         UI::Shell::{CPUS_CREDUI, CREDENTIAL_PROVIDER_USAGE_SCENARIO},
         UI::WindowsAndMessaging::AllowSetForegroundWindow,
@@ -29,8 +33,9 @@ use windows::{
     core::{PCWSTR, PWSTR},
 };
 
-use crate::syscalls::{self, ForegroundControl, acquire_interactive_token};
-use ak_ee_wcp_wire::AuthResult;
+use crate::syscalls::{self, ForegroundControl};
+use crate::sysd;
+use ak_ee_wcp_wire::{AuthResult, HostReport};
 
 /// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
 /// while waiting, so LogonUI cancelling (the user backing out of the tile)
@@ -51,10 +56,9 @@ impl AuthFlow for CefAuthFlow {
 }
 
 /// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
-/// It is debug-gated and runs on an ordinary desktop, where the caller is
-/// already the interactive user and holds no `SE_TCB_NAME`. The logon
-/// scenarios must never take it: they run as SYSTEM under LogonUI, so it
-/// would put Chromium on the secure desktop with SYSTEM's token.
+/// It is debug-gated and runs on an ordinary desktop; the logon scenarios
+/// must never take this fallback, or Chromium ends up on the secure desktop
+/// with this process's own SYSTEM token instead of the service account's.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
 }
@@ -63,61 +67,82 @@ fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bo
 /// same window station is fully functional but invisible to the person signing
 /// in, so the logon scenarios have to name it: with `lpDesktop` left NULL,
 /// `CreateProcess*` gives the child whichever desktop the caller happens to be
-/// on, which is only incidentally the right one.
+/// on, which is only incidentally the right one. `CPUS_CREDUI` keeps it NULL
+/// and inherits the ordinary interactive desktop instead.
 const SECURE_DESKTOP: &str = r"WinSta0\Winlogon";
 
-/// `CPUS_CREDUI` is the debug-gated scenario that runs on the ordinary
-/// interactive desktop, so it keeps `lpDesktop` NULL and inherits it.
-fn desktop_for(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> Option<Vec<u16>> {
-    if may_launch_in_current_session(cpus) {
-        return None;
-    }
-    Some(
-        SECURE_DESKTOP
-            .encode_utf16()
-            .chain(std::iter::once(0))
-            .collect(),
-    )
-}
-
-struct DuplexPipes {
+struct StdPipes {
+    /// This process's own ends, read/written after the child is spawned.
     result_read: HANDLE,
-    result_write_inheritable: HANDLE,
     cancel_write: HANDLE,
-    cancel_read_inheritable: HANDLE,
+    /// The child's ends, handed off via `STARTUPINFOW`'s `hStdOutput`/
+    /// `hStdInput` and closed here once the child has its own inherited
+    /// copies.
+    child_stdout: HANDLE,
+    child_stdin: HANDLE,
 }
 
-/// One inheritable pipe pair each way. Our own end of each is marked
-/// non-inheritable so the child can't hold it open and mask an EOF.
-fn create_duplex_pipes() -> windows::core::Result<DuplexPipes> {
+/// One anonymous pipe, both ends inheritable — `CreatePipe` has no way to
+/// mark just one. `keep_private` clears it on whichever end the caller keeps
+/// for itself, or that copy leaks into every future child this process
+/// spawns, not just this one.
+fn create_inherited_pipe() -> windows::core::Result<(HANDLE, HANDLE)> {
     let sa = SECURITY_ATTRIBUTES {
         nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,
         lpSecurityDescriptor: std::ptr::null_mut(),
         bInheritHandle: true.into(),
     };
+    let mut read = HANDLE::default();
+    let mut write = HANDLE::default();
+    unsafe { CreatePipe(&mut read, &mut write, Some(&sa), 0)? };
+    Ok((read, write))
+}
 
-    // Returns (ours, child's) for a pipe flowing in the given direction.
-    let pipe = |ours_reads: bool| -> windows::core::Result<(HANDLE, HANDLE)> {
-        let mut read = HANDLE::default();
-        let mut write = HANDLE::default();
-        unsafe { CreatePipe(&mut read, &mut write, Some(&sa), 0) }?;
-        let (ours, theirs) = if ours_reads {
-            (read, write)
-        } else {
-            (write, read)
-        };
-        unsafe { SetHandleInformation(ours, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }?;
-        Ok((ours, theirs))
+fn keep_private(handle: HANDLE) -> windows::core::Result<()> {
+    unsafe { SetHandleInformation(handle, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }
+}
+
+/// Two anonymous pipes: the child reads the cancel signal from its inherited
+/// stdin and writes its result to its inherited stdout. An *inherited*
+/// handle is a duplicate of one this process (SYSTEM on the real logon
+/// scenarios) already opened and validated — the child's own, low-privilege
+/// token is never consulted at all, unlike a named pipe it has to open by
+/// path itself.
+fn create_std_pipes() -> windows::core::Result<StdPipes> {
+    let (child_stdin, cancel_write) = create_inherited_pipe()?;
+    if let Err(e) = keep_private(cancel_write) {
+        unsafe {
+            let _ = CloseHandle(child_stdin);
+            let _ = CloseHandle(cancel_write);
+        }
+        return Err(e);
+    }
+
+    let (result_read, child_stdout) = match create_inherited_pipe() {
+        Ok(p) => p,
+        Err(e) => {
+            unsafe {
+                let _ = CloseHandle(child_stdin);
+                let _ = CloseHandle(cancel_write);
+            }
+            return Err(e);
+        }
     };
+    if let Err(e) = keep_private(result_read) {
+        unsafe {
+            let _ = CloseHandle(child_stdin);
+            let _ = CloseHandle(cancel_write);
+            let _ = CloseHandle(result_read);
+            let _ = CloseHandle(child_stdout);
+        }
+        return Err(e);
+    }
 
-    let (result_read, result_write_inheritable) = pipe(true)?;
-    let (cancel_write, cancel_read_inheritable) = pipe(false)?;
-
-    Ok(DuplexPipes {
+    Ok(StdPipes {
         result_read,
-        result_write_inheritable,
         cancel_write,
-        cancel_read_inheritable,
+        child_stdout,
+        child_stdin,
     })
 }
 
@@ -126,7 +151,22 @@ fn run_cef_host(
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
-    let pipes = match create_duplex_pipes() {
+    // Fetched here, not by `ak_cef.exe` itself: the service account it runs
+    // as has no access to `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). Doing
+    // this before the pipes/spawn also means a failure here costs nothing
+    // beyond the round trip itself, rather than a spawned window that can
+    // never load anything.
+    let start = match sysd::sys_auth_start_async() {
+        Ok(s) => s,
+        Err(e) => {
+            log::error!("sys_auth_start_async failed: {e}");
+            return AuthResult::Failed {
+                reason: e.to_string(),
+            };
+        }
+    };
+
+    let pipes = match create_std_pipes() {
         Ok(p) => p,
         Err(e) => {
             log::error!("failed to create IPC pipes: {e}");
@@ -136,12 +176,14 @@ fn run_cef_host(
         }
     };
 
-    let spawn = spawn_cef_host(cef_exe, &pipes, cpus);
+    let spawn = spawn_cef_host(cef_exe, &pipes, cpus, &start.url, &start.header_token);
+    // Our copies of the child's ends are only needed up to the spawn call,
+    // which duplicates them into the child's own handle table (or fails,
+    // in which case there is no child to hold them at all either way).
     unsafe {
-        let _ = CloseHandle(pipes.result_write_inheritable);
-        let _ = CloseHandle(pipes.cancel_read_inheritable);
+        let _ = CloseHandle(pipes.child_stdin);
+        let _ = CloseHandle(pipes.child_stdout);
     }
-
     let process = match spawn {
         Ok(p) => p,
         Err(e) => {
@@ -259,12 +301,30 @@ enum PipeOutcome {
     Error(String),
 }
 
+/// Turns the sign-in redirect's URL into a real outcome by validating its
+/// token against `ak-sysd` — the one step `ak_cef.exe` cannot do itself
+/// (`BROWSER_PRIVILEGE.md`). Runs on the result-pipe reader thread, not the
+/// thread LogonUI called `Connect` on, so this blocking round trip does not
+/// stall `should_continue` polling or the foreground nudge.
+fn auth_result_for(url: &str) -> AuthResult {
+    match sysd::sys_auth_validate(url) {
+        Ok(Some(username)) => AuthResult::Completed { username },
+        Ok(None) => AuthResult::Failed {
+            reason: "token validation failed".to_string(),
+        },
+        Err(e) => AuthResult::Failed {
+            reason: e.to_string(),
+        },
+    }
+}
+
 /// Polls in short slices so `should_continue` gets a turn. On cancellation it
 /// asks `ak_cef.exe` to close over the control pipe rather than killing it.
 ///
 /// Every route out of here other than a real `AuthResult` looks identical to
-/// the user ("Login attempt cancelled"), so each one logs why: a silent
-/// cancellation is indistinguishable from the sign-in window never appearing.
+/// the user ("Login attempt cancelled"), so each one logs why — including a
+/// crash before the child sends anything, which just surfaces as a plain EOF
+/// once its inherited stdout closes.
 fn wait_for_result(
     result_read: HANDLE,
     cancel_write: HANDLE,
@@ -275,8 +335,9 @@ fn wait_for_result(
     let mut result_file = unsafe { File::from_raw_handle(result_read.0) };
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
-        let outcome = match ak_ee_wcp_wire::read_auth_result(&mut result_file) {
-            Ok(Some(result)) => PipeOutcome::Result(result),
+        let outcome = match ak_ee_wcp_wire::read_host_report(&mut result_file) {
+            Ok(Some(HostReport::Redirected { url })) => PipeOutcome::Result(auth_result_for(&url)),
+            Ok(Some(HostReport::Cancelled)) => PipeOutcome::Result(AuthResult::Cancelled),
             Ok(None) => PipeOutcome::Eof,
             Err(e) => PipeOutcome::Error(e.to_string()),
         };
@@ -311,7 +372,11 @@ fn wait_for_result(
                 if !cancel_signalled && !should_continue() {
                     log::info!("LogonUI withdrew the sign-in; asking the window to close");
                     cancel_signalled = true;
-                    signal_cancel(cancel_write);
+                    // `cancel_write` stays owned by the caller, closed once
+                    // this function returns — wrap it without taking that.
+                    let mut f = unsafe { File::from_raw_handle(cancel_write.0) };
+                    let _ = ak_ee_wcp_wire::write_frame(&mut f, &ak_ee_wcp_wire::CancelSignal {});
+                    std::mem::forget(f);
                 }
                 // Host exited without sending a result.
                 if unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0 {
@@ -346,75 +411,84 @@ fn describe_exit(process: HANDLE) -> String {
     format!("exit code {code:#010x}")
 }
 
-fn signal_cancel(cancel_write: HANDLE) {
-    let mut f = unsafe { File::from_raw_handle(cancel_write.0) };
-    let _ = ak_ee_wcp_wire::write_frame(&mut f, &ak_ee_wcp_wire::CancelSignal {});
-    std::mem::forget(f);
+/// Gets `ak_cef.exe` a token for the dedicated service account rather than
+/// SYSTEM (`BROWSER_PRIVILEGE.md`), the same way for both logon and unlock.
+/// Account-hardening is best-effort and only logged on failure — it is
+/// idempotent, so a transient failure just costs a retry next time, and
+/// does not block the token mint that follows. The password is not: a
+/// broken keyring here means no way to log the account on at all.
+fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
+    let password = syscalls::service_account_password().map_err(|e| {
+        log::error!("could not establish the service account's password: {e}");
+        windows::core::Error::from(E_FAIL)
+    })?;
+
+    let sid = syscalls::account_sid(syscalls::SERVICE_ACCOUNT_NAME)?;
+
+    if let Err(e) = syscalls::deny_interactive_and_network_logon(&sid) {
+        log::warn!("could not deny the service account interactive/network logon: {e}");
+    }
+    if let Err(e) = syscalls::ensure_desktop_access(&sid) {
+        log::warn!("could not grant the service account secure-desktop access: {e}");
+    }
+    if let Err(e) = syscalls::ensure_base_named_objects_access(&sid) {
+        log::warn!("could not grant the service account BaseNamedObjects access: {e}");
+    }
+
+    syscalls::service_account_token(syscalls::SERVICE_ACCOUNT_NAME, &password)
+}
+
+/// Minimal Windows command-line quoting: wraps `s` in quotes and escapes any
+/// embedded ones, so `CommandLineToArgvW` (what `std::env::args()` on the
+/// far end is built on) sees it as a single argument. Neither a URL nor an
+/// opaque token legitimately contains the backslash-before-quote sequence
+/// the full algorithm exists to handle.
+fn quote_arg(s: &str) -> String {
+    format!("\"{}\"", s.replace('"', "\\\""))
 }
 
 fn spawn_cef_host(
     cef_exe: &Path,
-    pipes: &DuplexPipes,
+    pipes: &StdPipes,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    sign_in_url: &str,
+    header_token: &str,
 ) -> windows::core::Result<PROCESS_INFORMATION> {
     let cmdline = format!(
-        "\"{}\" --result-pipe {} --cancel-pipe {}",
+        "\"{}\" --sign-in-url {} --header-token {}",
         cef_exe.display(),
-        pipes.result_write_inheritable.0 as usize,
-        pipes.cancel_read_inheritable.0 as usize
+        quote_arg(sign_in_url),
+        quote_arg(header_token),
     );
-    let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
 
-    let mut attr_size = 0usize;
-    unsafe {
-        let _ = InitializeProcThreadAttributeList(None, 1, Some(0), &mut attr_size);
-    }
-    let mut attr_buf = vec![0u8; attr_size];
-    let attr_list = LPPROC_THREAD_ATTRIBUTE_LIST(attr_buf.as_mut_ptr() as *mut c_void);
-    unsafe { InitializeProcThreadAttributeList(Some(attr_list), 1, Some(0), &mut attr_size) }?;
-
-    let inherit_handles = [
-        pipes.result_write_inheritable,
-        pipes.cancel_read_inheritable,
-    ];
-    let update = unsafe {
-        UpdateProcThreadAttribute(
-            attr_list,
-            0,
-            PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
-            Some(inherit_handles.as_ptr() as *const c_void),
-            size_of::<[HANDLE; 2]>(),
-            None,
-            None,
-        )
-    };
-    if update.is_err() {
-        unsafe { DeleteProcThreadAttributeList(attr_list) };
-        return Err(windows::core::Error::from(E_FAIL));
-    }
-
-    let mut si = STARTUPINFOEXW {
-        lpAttributeList: attr_list,
+    let mut si = STARTUPINFOW {
+        cb: size_of::<STARTUPINFOW>() as u32,
+        dwFlags: STARTF_USESTDHANDLES,
+        hStdInput: pipes.child_stdin,
+        hStdOutput: pipes.child_stdout,
         ..Default::default()
     };
-    si.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;
     // Outlives every `CreateProcess*` call below; `lpDesktop` borrows it.
-    let mut desktop = desktop_for(cpus);
+    let mut desktop = (!may_launch_in_current_session(cpus)).then(|| {
+        SECURE_DESKTOP
+            .encode_utf16()
+            .chain([0])
+            .collect::<Vec<u16>>()
+    });
     if let Some(desktop) = desktop.as_mut() {
-        si.StartupInfo.lpDesktop = PWSTR(desktop.as_mut_ptr());
+        si.lpDesktop = PWSTR(desktop.as_mut_ptr());
     }
     let mut pi = PROCESS_INFORMATION::default();
 
-    let token = match acquire_interactive_token() {
-        Ok(token) => Some(token),
-        Err(e) if may_launch_in_current_session(cpus) => {
-            log::debug!("no interactive-session token ({e}); launching in the current session");
-            None
-        }
-        Err(e) => {
-            log::error!("could not acquire an interactive-session token: {e}");
-            unsafe { DeleteProcThreadAttributeList(attr_list) };
-            return Err(e);
+    let token = if may_launch_in_current_session(cpus) {
+        None
+    } else {
+        match acquire_service_account_token() {
+            Ok(token) => Some(token),
+            Err(e) => {
+                log::error!("could not acquire the service account's token: {e}");
+                return Err(e);
+            }
         }
     };
     log::info!(
@@ -425,51 +499,30 @@ fn spawn_cef_host(
             .map(|_| SECURE_DESKTOP)
             .unwrap_or("<inherited>"),
         if token.is_some() {
-            "an interactive-session"
+            "the service account's"
         } else {
             "the caller's own"
         }
     );
 
-    let mut spawned = match token {
-        Some(token) => unsafe {
-            CreateProcessAsUserW(
-                Some(token),
-                PCWSTR::null(),
-                Some(PWSTR(cmdline_wide.as_mut_ptr())),
-                None,
-                None,
-                true,
-                EXTENDED_STARTUPINFO_PRESENT,
-                None,
-                PCWSTR::null(),
-                &si.StartupInfo,
-                &mut pi,
-            )
-        },
-        None => spawn_in_current_session(&cmdline, &si.StartupInfo, &mut pi),
-    };
-
-    // Holding a token is not the same as being allowed to assign it: without
-    // SE_ASSIGNPRIMARYTOKEN/SE_INCREASE_QUOTA, `CreateProcessAsUserW` fails
-    // even though a plain `CreateProcessW` in this session would work. Under
-    // `CPUS_CREDUI` that is still the right outcome, so retry rather than
-    // failing the whole flow. Never reached for the real logon scenarios.
-    if let Err(e) = spawned.as_ref()
-        && token.is_some()
-        && may_launch_in_current_session(cpus)
-    {
-        log::debug!("CreateProcessAsUserW failed ({e}); retrying in the current session");
-        spawned = spawn_in_current_session(&cmdline, &si.StartupInfo, &mut pi);
-    }
-
-    unsafe {
-        DeleteProcThreadAttributeList(attr_list);
-        if let Some(token) = token {
-            let _ = CloseHandle(token);
+    let spawned = match token {
+        Some(token) => {
+            // Confirmed enabled on the test box, but `SE_TCB_NAME` looked
+            // that way too until it turned out not to be held at all —
+            // enable it defensively rather than trust the default.
+            if let Err(e) =
+                syscalls::enable_privilege(SE_IMPERSONATE_NAME, "SeImpersonatePrivilege")
+            {
+                log::warn!("could not enable SeImpersonatePrivilege: {e}");
+            }
+            let result = spawn_with_token(token, &cmdline, &si, &mut pi);
+            unsafe {
+                let _ = CloseHandle(token);
+            }
+            result
         }
-    }
-
+        None => spawn_in_current_session(&cmdline, &si, &mut pi),
+    };
     spawned?;
 
     // A freshly spawned process may not bring its own window forward without
@@ -491,11 +544,73 @@ fn spawn_cef_host(
     Ok(pi)
 }
 
+/// Brokered through the Secondary Logon service, needing only
+/// `SE_IMPERSONATE_NAME` where `CreateProcessAsUserW` would need
+/// `SE_ASSIGNPRIMARYTOKEN_NAME`/`SE_INCREASE_QUOTA_NAME` — both absent from
+/// LogonUI's token. Has no `bInheritHandles` parameter, but does honor `si`'s
+/// inheritable `hStdInput`/`hStdOutput` regardless (`BROWSER_PRIVILEGE.md`'s
+/// "Roads not taken"). `LOGON_WITH_PROFILE` loads the account's registry hive
+/// but not its environment block, hence building one explicitly below.
+fn spawn_with_token(
+    token: HANDLE,
+    cmdline: &str,
+    si: &STARTUPINFOW,
+    pi: &mut PROCESS_INFORMATION,
+) -> windows::core::Result<()> {
+    let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
+
+    // Best-effort: on this account's very first ever launch its profile may
+    // not exist on disk yet — only `LOGON_WITH_PROFILE` below creates it —
+    // so `CreateEnvironmentBlock` can fail here. Falling back to this
+    // process's own environment rather than refusing the spawn entirely
+    // matches every other "logged, not fatal" cleanup/setup step in this
+    // file; the spawn is still worth attempting either way.
+    let mut env_block: *mut c_void = std::ptr::null_mut();
+    let has_env = unsafe { CreateEnvironmentBlock(&mut env_block, Some(token), false) }.is_ok();
+    if !has_env {
+        log::warn!(
+            "could not build an environment block for the service account; \
+             falling back to this process's own"
+        );
+    }
+    let (creation_flags, environment) = if has_env {
+        (
+            PROCESS_CREATION_FLAGS(CREATE_UNICODE_ENVIRONMENT.0),
+            Some(env_block as *const c_void),
+        )
+    } else {
+        (PROCESS_CREATION_FLAGS(0), None)
+    };
+
+    let result = unsafe {
+        CreateProcessWithTokenW(
+            token,
+            LOGON_WITH_PROFILE,
+            PCWSTR::null(),
+            Some(PWSTR(cmdline_wide.as_mut_ptr())),
+            creation_flags,
+            environment,
+            PCWSTR::null(),
+            si,
+            pi,
+        )
+    };
+
+    if has_env {
+        unsafe {
+            let _ = DestroyEnvironmentBlock(env_block);
+        }
+    }
+
+    result
+}
+
 /// `CreateProcessW` may write into the command-line buffer it is handed, so
-/// each attempt gets a fresh copy.
+/// each attempt gets a fresh copy. `bInheritHandles` is `true` so the child
+/// picks up `si`'s `hStdInput`/`hStdOutput`.
 fn spawn_in_current_session(
     cmdline: &str,
-    startup_info: &windows::Win32::System::Threading::STARTUPINFOW,
+    startup_info: &STARTUPINFOW,
     pi: &mut PROCESS_INFORMATION,
 ) -> windows::core::Result<()> {
     let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
@@ -506,7 +621,7 @@ fn spawn_in_current_session(
             None,
             None,
             true,
-            EXTENDED_STARTUPINFO_PRESENT,
+            PROCESS_CREATION_FLAGS(0),
             None,
             PCWSTR::null(),
             startup_info,
@@ -520,6 +635,7 @@ fn spawn_in_current_session(
 mod tests {
     use super::*;
     use std::cell::{Cell, RefCell};
+    use windows::Win32::System::Threading::TerminateProcess;
     use windows::Win32::UI::Shell::{CPUS_CHANGE_PASSWORD, CPUS_LOGON, CPUS_UNLOCK_WORKSTATION};
 
     const CHILD: u32 = 4242;
@@ -686,14 +802,14 @@ mod tests {
         );
     }
 
-    /// Exercises the real attribute-list / handle-inheritance / CreateProcess
-    /// machinery against a throwaway target, without needing an interactive
-    /// token, elevation, or anything listening on the `ak-sysd` pipe. A
-    /// failure here means `Connect` can never launch the sign-in window,
-    /// which otherwise only surfaces as one generic "Sign-in failed" string.
+    /// Exercises the real inherited-pipe / `CreateProcessW` machinery against
+    /// a throwaway target, without needing an interactive token, elevation,
+    /// or anything listening on the `ak-sysd` pipe. A failure here means
+    /// `Connect` can never launch the sign-in window, which otherwise only
+    /// surfaces as one generic "Sign-in failed" string.
     #[test]
     fn credui_spawn_succeeds_without_an_interactive_token() {
-        let pipes = create_duplex_pipes().expect("create duplex pipes");
+        let pipes = create_std_pipes().expect("create std pipes");
 
         // Any real executable will do: this asserts the process is created,
         // not what it does. It exits immediately on the unknown arguments.
@@ -701,18 +817,18 @@ mod tests {
             std::env::var("COMSPEC").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string()),
         );
 
-        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI);
+        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI, "https://example.com", "token");
 
         unsafe {
+            let _ = CloseHandle(pipes.child_stdin);
+            let _ = CloseHandle(pipes.child_stdout);
             let _ = CloseHandle(pipes.result_read);
-            let _ = CloseHandle(pipes.result_write_inheritable);
             let _ = CloseHandle(pipes.cancel_write);
-            let _ = CloseHandle(pipes.cancel_read_inheritable);
         }
 
         match spawned {
             Ok(pi) => unsafe {
-                let _ = windows::Win32::System::Threading::TerminateProcess(pi.hProcess, 0);
+                let _ = TerminateProcess(pi.hProcess, 0);
                 let _ = CloseHandle(pi.hProcess);
                 let _ = CloseHandle(pi.hThread);
             },
