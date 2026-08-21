@@ -156,26 +156,10 @@
                     UpdateIfExists="yes"
                     RemoveOnUninstall="yes" />
 
-        <!-- Kept from the CEF host, which wrote a file-based Chromium log
-             here because Chromium did not understand the Windows Event Log
-             ak_platform::log routes everything else to. ak_browser.exe has
-             no such log: it reports through ak_platform::log only, and
-             WebView2 keeps its own diagnostics inside the user-data folder
-             granted below. Retained until a VM run confirms nothing under
-             the service account still writes here -- see
-             ee/wcp/TAURI_MIGRATION.md. -->
-        <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="logs">
-          <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
-        </CreateFolder>
         <CreateFolder Directory="ak_ProgramDataRoot" Subdirectory="wcp-cache">
           <util:PermissionEx User="ak-wcp-browser" GenericAll="yes" />
         </CreateFolder>
 
-        <!-- The sign-in window renders through the machine's Microsoft Edge
-             WebView2 runtime, which ships with Windows 10 22H2 and Windows 11,
-             so there is no browser runtime here to install. ak_browser.exe
-             checks for it at startup and reports its absence rather than
-             failing as a bare cancellation. -->
         <File Id="wcp_ak_browser_exe" Source="$(env.ROOT)/bin/wcp/ak_browser.exe" />
         <File Id="wcp_ak_cred_provider_dll" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.dll" KeyPath="true" />
         <File Id="wcp_ak_cred_provider_lib" Source="$(env.ROOT)/bin/wcp/ak_cred_provider.lib" />
