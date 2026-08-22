@@ -147,9 +147,7 @@ fn js_string(s: &str) -> String {
 
 /// The script that runs on every document the sign-in window loads.
 ///
-/// Two jobs, both hanging off `window.fetch`:
-///
-/// **A cancel link.** The window is frameless (see the builder below), so
+/// One job: a cancel link. The window is frameless (see the builder below), so
 /// there is no system close button, and LogonUI's own cancel sits behind a
 /// topmost window. `/api/v3/core/brands/current/` carries `ui_footer_links`,
 /// which the flow executor renders in its footer, so appending one entry there
@@ -158,35 +156,23 @@ fn js_string(s: &str) -> String {
 /// same job without any of this and is what GCPW relies on; this is the
 /// visible affordance on top.
 ///
-/// **The interactive-auth header**, on `fetch` calls back to authentik. The
-/// host already sets it at the WebView2 layer for every request, which is
-/// where it belongs; this repeats it for the requests that layer does not see,
-/// a service worker's being the ones that matter.
-///
-/// Scoped to `origin` on purpose. A token that only ever needs to reach
-/// authentik should not be added to a request the page makes somewhere else,
-/// and the flow can hand off to an upstream IdP mid-sign-in.
-///
-/// **This hands the token to page script, and that is an accepted cost rather
-/// than a mitigated one.** Passing it as an argument keeps it out of
-/// `fetch.toString()`, but the wrapper has to call `headers.set(HEADER, TOKEN)`
-/// in the page's own context, and `Headers.prototype.set` belongs to the page:
-/// overriding it reads the token. Demonstrated, not theorised — see
+/// **No credential passes through here.** This once also set the
+/// interactive-auth header on `fetch`, which meant handing the token to page
+/// script: the wrapper had to call `headers.set` in the page's own context,
+/// and a page overriding `Headers.prototype.set` read it — demonstrated, not
+/// theorised. The WebView2 layer sets that header on every request to
+/// authentik's origin anyway, `fetch` included, from outside the page's reach,
+/// so the JavaScript bought only the requests that layer cannot see (a service
+/// worker's) and cost the token. See `webview2::navigate_with_header` and
 /// `TAURI_MIGRATION.md`.
 ///
-/// Tauri's IPC does not solve this. Fetching the token per request would
-/// shorten the window and change nothing about that hook, and exposing the
-/// command bridge to a remote origin — which the flow may hand off to an
-/// upstream IdP — is a larger surface than the token it would protect.
-///
-/// The alternative is to drop this block and leave the header to the WebView2
-/// layer alone, where it stays in this process; the cost there is requests
-/// that layer never sees, a service worker's being the ones that matter. That
-/// trade was weighed and this side of it chosen deliberately.
-fn page_script(origin: &str, token: &str) -> String {
+/// Runs through WebView2's execute-on-document-created, so it is not an inline
+/// `<script>` and a strict `script-src` does not stop it. Clicking the link
+/// navigates to [`CANCEL_URL`], which the navigation handler below intercepts.
+fn page_script(origin: &str) -> String {
     format!(
         r#"
-(function (ORIGIN, HEADER, TOKEN, CANCEL) {{
+(function (ORIGIN, CANCEL) {{
   if (window.__akWcpInstalled) return;
   window.__akWcpInstalled = true;
 
@@ -204,20 +190,8 @@ fn page_script(origin: &str, token: &str) -> String {
 
   window.fetch = function (input, init) {{
     var url = typeof input === 'string' ? input : (input && input.url) || '';
-    var args = arguments;
-    if (toAuthentik(url)) {{
-      try {{
-        var request = new Request(input, init);
-        request.headers.set(HEADER, TOKEN);
-        args = [request];
-      }} catch (e) {{
-        // A request we cannot copy is better sent without the header than
-        // not sent at all: the WebView2 layer still adds it.
-      }}
-    }}
-
-    var pending = inner.apply(this, args);
-    if (url.indexOf(BRAND) === -1) return pending;
+    var pending = inner.apply(this, arguments);
+    if (url.indexOf(BRAND) === -1 || !toAuthentik(url)) return pending;
 
     return pending.then(function (response) {{
       if (!response || !response.ok) return response;
@@ -243,11 +217,9 @@ fn page_script(origin: &str, token: &str) -> String {
       }});
     }});
   }};
-}})({origin}, {header}, {token}, {cancel});
+}})({origin}, {cancel});
 "#,
         origin = js_string(origin),
-        header = js_string(ak_ee_wcp_wire::AUTH_HEADER_NAME),
-        token = js_string(token),
         cancel = js_string(CANCEL_URL),
     )
 }
@@ -366,7 +338,7 @@ fn start_sign_in(app: &tauri::AppHandle, state: &SignInState, url: String, heade
         return;
     };
     *state.origin.lock().unwrap_or_else(|e| e.into_inner()) = origin.clone();
-    let script = page_script(&origin, &header_token);
+    let script = page_script(&origin);
     webview2::navigate_with_header(&window, app.clone(), header_token, url, origin, script);
     reveal_after_timeout(
         app.clone(),
@@ -715,25 +687,34 @@ mod tests {
         assert_eq!(js_string("</script>"), "\"\\u003c/script>\"");
     }
 
-    /// The whole script is generated, so a malformed origin or token has to
-    /// come out as data rather than as code.
+    /// The script is generated, so a hostile origin has to come out as data
+    /// rather than as code.
     #[test]
     fn the_page_script_quotes_what_it_is_given() {
-        let token = "tok\");alert(1);//";
-        let script = page_script("https://authentik.company", token);
+        let origin = "https://a.example\");alert(1);//";
+        let script = page_script(origin);
         assert!(
-            script.contains(&js_string(token)),
-            "the token should appear escaped: {script}"
+            script.contains(&js_string(origin)),
+            "the origin should appear escaped: {script}"
         );
         assert!(
-            !script.contains(token),
-            "the raw token would close the literal and run as code"
+            !script.contains(origin),
+            "the raw origin would close the literal and run as code"
         );
-        // The header name and the cancel URL come from the constants rather
-        // than being written out a second time in JavaScript.
-        assert!(script.contains(&js_string(ak_ee_wcp_wire::AUTH_HEADER_NAME)));
+        // The cancel URL comes from the constant rather than being written
+        // out a second time in JavaScript.
         assert!(script.contains(&js_string(CANCEL_URL)));
-        assert!(script.contains(&js_string("https://authentik.company")));
+    }
+
+    /// The header is set below the JavaScript layer, where the page cannot
+    /// reach it. A token appearing in this script would be a regression.
+    #[test]
+    fn the_page_script_carries_no_credential() {
+        let script = page_script("https://authentik.company");
+        assert!(
+            !script.contains(ak_ee_wcp_wire::AUTH_HEADER_NAME),
+            "the auth header has no business in page script"
+        );
     }
 
     /// Sign-in URLs carry tokens in the path and query, so only the origin is

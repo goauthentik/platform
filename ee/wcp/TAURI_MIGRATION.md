@@ -375,33 +375,28 @@ Append as things are learned. Date, what was run, what happened.
   to authentik's own origin — but that is mitigation, not equivalence. It
   buys the requests the native layer never sees, a service worker's being the
   ones that matter.
-- _2026-08-22_ — **the token in the page script is readable by the page, and
-  that is now a recorded decision rather than an oversight.** The previous entry
-  claimed passing it as a function argument kept it away from
-  `fetch.toString()`; true, and much weaker than it sounds. The wrapper calls
-  `headers.set(HEADER, TOKEN)` in the page's own context, so a page script that
-  overrides `Headers.prototype.set` reads it. Demonstrated with a hostile test
-  page, which captured the token verbatim.
+- _2026-08-22_ — **no credential passes through page script.** The header is
+  set by the WebView2 layer alone, which already covered `fetch` to authentik's
+  origin without any JavaScript — so the script's own header block was buying
+  only the requests that layer cannot see (a service worker's) and paying for
+  them with the token.
 
-  **Tauri's IPC was considered and does not fix it.** Fetching the token per
-  request would narrow the exposure to the moment of use and leave that same
-  hook working, because the script still has to hand the value to `Headers` in
-  the page's context. Exposing Tauri's command bridge to a remote origin
-  (`capabilities` with `remote.urls`) would also be a larger surface than the
-  token it protects — the flow can hand off to an upstream IdP, and this
-  process runs on the logon screen.
+  Paying, because it was readable: the wrapper had to call
+  `headers.set(HEADER, TOKEN)` in the page's context, and a page overriding
+  `Headers.prototype.set` read it. Demonstrated with a hostile test page, which
+  captured the token verbatim. Tauri's IPC would not have helped — fetching the
+  token per request narrows the window and leaves that hook working, and
+  exposing the command bridge to a remote origin is a larger surface than the
+  token it protects.
 
-  The alternative that does work is dropping the header block from the script
-  and leaving the header to the WebView2 layer, which sits below JS. Verified:
-  with the block removed the same hostile page captures nothing and requests
-  still carry the header. Its cost is requests that layer never sees — a
-  service worker's — and no evidence was found that authentik's flow executor
-  uses one; it drives `/api/v3/flows/executor/:slug` with ordinary fetch.
+  Measured after removing it, two local servers, one standing in for authentik
+  and one for a third party: every request to authentik carries the header —
+  document, both `fetch` calls, favicon — the third party gets none, and the
+  hostile page captures nothing. The cancel link and the redirect flow both
+  still work.
 
-  **Decision: keep the script's header injection**, accepting that any script
-  on the sign-in page can read the interactive-auth token. Revisit if the flow
-  ever renders content from a source less trusted than authentik itself. The
-  removal is a three-line revert of the `toAuthentik` block in `page_script`.
+  The script keeps one job, needs no token for it, and a test now fails if the
+  header name ever reappears in it.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service
