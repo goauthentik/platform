@@ -1,13 +1,12 @@
 //! IPC protocol and shared appearance constants between `credprovider` and
-//! `cef-host`, kept in one place so the two processes and the `e2e` harness
-//! can't drift out of sync.
+//! `browser-host`, kept in one place so the two processes and the `e2e`
+//! harness cannot drift apart.
 
 use std::io::{self, Read, Write};
 
-/// Outcome `credprovider` hands back from the sign-in flow. Built entirely
-/// on the `credprovider` side of the pipe (from a [`HostReport`] plus, for
-/// `Redirected`, a validation call to `ak-sysd` that only `credprovider` can
-/// reach) — never sent over the wire itself.
+/// Outcome `credprovider` hands back from the sign-in flow. Never sent over
+/// the wire: it is built from a [`HostReport`] plus, for `Redirected`, an
+/// `ak-sysd` validation call only `credprovider` can reach.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AuthResult {
     Completed { username: String },
@@ -15,17 +14,17 @@ pub enum AuthResult {
     Failed { reason: String },
 }
 
-/// Sent from `cef-host` to `credprovider` over the result pipe once the
-/// sign-in flow reaches an end state `cef-host` cannot itself resolve:
-/// validating the redirect's token needs `ak-sysd`, which only
-/// `credprovider` has access to (`BROWSER_PRIVILEGE.md`).
+/// Sent from the browser host to `credprovider` over the result pipe once the
+/// flow reaches an end state the host cannot resolve itself: validating the
+/// redirect's token needs `ak-sysd`, which only `credprovider` can reach
+/// (`BROWSER_PRIVILEGE.md`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HostReport {
-    /// The sign-in redirect fired; here is the full callback URL to extract
+    /// The sign-in redirect fired; `url` is the full callback URL to extract
     /// and validate the token from.
     Redirected { url: String },
-    /// The window closed — or the provider asked it to — without ever
-    /// reaching the redirect.
+    /// The window closed — or the provider asked it to — without reaching the
+    /// redirect.
     Cancelled,
 }
 
@@ -69,11 +68,10 @@ impl TryFrom<HostReportProto> for HostReport {
 
 /// Sent from `credprovider` to the browser host over the control pipe.
 ///
-/// The control pipe is a command channel rather than a bare cancel signal
-/// because the host is started before there is anything for it to load: the
-/// tile being selected is enough to spawn it and let it pay WebView2's startup
-/// cost, and only submitting produces a URL. `StartSignIn` is what turns a
-/// waiting host into a sign-in.
+/// A command channel rather than a bare cancel signal because the host is
+/// spawned at tile selection, to pay WebView2's startup cost early, and only
+/// submitting produces a URL. `StartSignIn` turns a waiting host into a
+/// sign-in.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HostCommand {
     /// Load `url`, injecting `header_token` on every request, and show the
@@ -170,9 +168,8 @@ impl std::fmt::Display for WireError {
 
 impl std::error::Error for WireError {}
 
-/// Frames larger than this are refused; every real message here is a short
-/// username/reason string, so this only guards against a corrupt length
-/// prefix turning into an unbounded allocation.
+/// Every real message here is a short URL or token, so this only guards
+/// against a corrupt length prefix becoming an unbounded allocation.
 const MAX_FRAME_BYTES: u32 = 64 * 1024;
 
 fn frame(payload: &[u8]) -> Vec<u8> {
@@ -191,10 +188,9 @@ pub fn write_frame<T: prost::Message, W: Write>(w: &mut W, msg: &T) -> Result<()
 
 /// Read exactly one length-prefixed protobuf frame from `r`.
 ///
-/// Returns `Ok(None)` if `r` is at EOF before any bytes of a new frame
-/// arrive (the pipe's write end closed cleanly, e.g. the writer process
-/// exited without sending a result) — callers treat that the same as an
-/// explicit cancellation.
+/// `Ok(None)` means EOF before any bytes of a new frame arrived — the write end
+/// closed cleanly, e.g. the writer exited without sending a result — which
+/// callers treat the same as an explicit cancellation.
 pub fn read_frame<T: prost::Message + Default, R: Read>(r: &mut R) -> Result<Option<T>, WireError> {
     let mut len_buf = [0u8; 4];
     let mut read = 0usize;
@@ -248,9 +244,8 @@ pub fn read_host_report<R: Read>(r: &mut R) -> Result<Option<HostReport>, WireEr
 }
 
 /// Pulls the interactive-auth token out of the sign-in redirect's query
-/// string. `None` covers both an unparseable URL and a well-formed one
-/// missing the parameter — `credprovider` treats either the same way, as a
-/// failed validation.
+/// string. `None` covers both an unparseable URL and a well-formed one missing
+/// the parameter; `credprovider` fails validation either way.
 pub fn extract_token(url: &str) -> Option<String> {
     let parsed = url::Url::parse(url).ok()?;
     parsed
@@ -294,21 +289,21 @@ pub struct TileField {
     pub text: &'static str,
 }
 
-/// Fixed size of the sign-in window, matching the current CEF window.
+/// Fixed size of the sign-in window.
 pub const WINDOW_WIDTH: i32 = 560;
 pub const WINDOW_HEIGHT: i32 = 670;
 
 /// Undecorated, so nobody reads this — it is how the sign-in window is told
 /// apart from the helper windows WebView2 opens in the same process.
-/// `CreateWindowExW` records it, so `GetWindowTextW` reads it cross-process
-/// without the window needing a caption.
+/// `CreateWindowExW` records it either way, so `GetWindowTextW` can read it
+/// cross-process without the window having a caption.
 pub const WINDOW_TITLE: &str = "Sign in with authentik";
 
 /// `redirect_uri` prefix the sign-in flow completes on.
 pub const REDIRECT_PREFIX: &str = "goauthentik.io://";
 
-/// Query parameter on that redirect carrying the token `cef-host` validates
-/// against `ak-sysd` to turn a finished browser sign-in into a username.
+/// Query parameter on that redirect carrying the token `credprovider`
+/// validates against `ak-sysd` to turn a finished sign-in into a username.
 pub const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 
 /// Header carrying the interactive-auth session token, injected on every
@@ -382,7 +377,7 @@ mod tests {
     }
 
     /// The sign-in URL and its header token only exist on the `credprovider`
-    /// side, so this frame is the only way a preloaded host ever learns them.
+    /// side, so this frame is the only way a preloaded host learns them.
     #[test]
     fn host_commands_round_trip() {
         for command in [

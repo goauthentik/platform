@@ -1,16 +1,9 @@
 //! The sign-in window the credential provider opens on the Windows logon
-//! screen, hosted on WebView2 through Tauri.
-//!
-//! Spawned by `credprovider` with the sign-in URL and header token it already
-//! resolved (`--sign-in-url`/`--header-token`), and with its inherited
-//! stdin/stdout as the IPC channel. Unlike the CEF host this replaces there is
-//! no re-exec of this binary for renderer/GPU roles — WebView2 runs its own
-//! `msedgewebview2.exe` children — so every invocation is the browser host.
+//! screen, hosted on WebView2 through Tauri. Spawned by `credprovider` with
+//! its inherited stdin/stdout as the IPC channel.
 
-// Logging goes to the platform log, never stdout: stdout *is* the result pipe
-// here, so anything written to it would corrupt the frame the credential
-// provider is parsing. Without the subsystem attribute the binary links as a
-// console app and Windows allocates a console window for it.
+// Otherwise the binary links as a console app and Windows allocates a console
+// window. Nothing may write to stdout either: it is the result pipe.
 #![windows_subsystem = "windows"]
 
 mod foreground;
@@ -26,13 +19,11 @@ use ak_ee_wcp_wire::HostReport;
 use tauri::webview::PageLoadEvent;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
-/// Parent of WebView2's on-disk state. Named explicitly because the browser
-/// runs under a service account at the logon screen: left to itself WebView2
-/// puts its user-data folder next to the executable in `Program Files`, which
-/// that account cannot write to. The installer grants the account full control
-/// of this directory (`vpkg/windows/Package.wxs`), so keep the two in step.
-///
-/// Never used directly as the user-data folder — see `browser_state_dir`.
+/// Parent of WebView2's on-disk state. Named explicitly because the service
+/// account this runs as cannot write next to the executable, where WebView2
+/// would otherwise put its user-data folder. The installer grants that account
+/// full control of this directory (`vpkg/windows/Package.wxs`), so keep the two
+/// in step. The folder itself is a child of this — see `browser_state_dir`.
 const CACHE_ROOT: &str = r"C:\ProgramData\Authentik Security Inc\wcp-cache";
 
 fn arg_value(flag: &str) -> Option<String> {
@@ -45,15 +36,10 @@ fn arg_value(flag: &str) -> Option<String> {
     None
 }
 
-/// A fresh, unique directory under `root` for exactly this run's user-data
-/// folder. Owned outright by this process — nothing pre-creates it the way the
-/// installer pre-creates `root` — so `wipe_browser_state` can remove it
-/// entirely afterwards rather than only clearing its contents.
-///
-/// A single fixed folder shared across launches is what let one leftover
-/// process lock out every subsequent one under CEF, and WebView2 is no
-/// friendlier: a user-data folder is single-writer, and an environment pointed
-/// at one another process still holds fails to create at all.
+/// A fresh directory per run, owned outright by this process so
+/// `wipe_browser_state` can remove it entirely afterwards. A WebView2
+/// user-data folder is single-writer, so one folder shared across launches
+/// lets a leftover process lock out every subsequent one.
 fn browser_state_dir(root: &Path) -> std::path::PathBuf {
     let path = root.join(uuid::Uuid::new_v4().to_string());
     match std::fs::create_dir_all(&path) {
@@ -63,10 +49,8 @@ fn browser_state_dir(root: &Path) -> std::path::PathBuf {
     path
 }
 
-/// Every sign-in starts from an empty profile, and none should linger on disk
-/// once its window closes — the logon screen is shared. This run's directory
-/// is unique to it (`browser_state_dir`), so there is nothing to clear
-/// beforehand. Logged, not fatal.
+/// The logon screen is shared, so no profile may linger on disk once its
+/// window closes. Logged, not fatal.
 fn wipe_browser_state(path: &Path) {
     if let Err(e) = std::fs::remove_dir_all(path) {
         log::warn!("could not remove {}: {e}", path.display());
@@ -74,9 +58,9 @@ fn wipe_browser_state(path: &Path) {
 }
 
 /// Identifies the sign-in window to authentik. Matches what the C++ credential
-/// provider sent, so anything keying on it server-side keeps working, with the
-/// version coming from `ak-meta` rather than the crate — it is the build's own
-/// version, and it carries the build hash the rest of the platform reports.
+/// provider sent, so anything keying on it server-side keeps working. The
+/// version comes from `ak-meta` rather than the crate: it is the build's own,
+/// and carries the build hash the rest of the platform reports.
 fn user_agent(runtime_version: &str) -> String {
     format!(
         "authentik Platform/WCP/CredProvider@{} (WebView2 {runtime_version})",
@@ -84,14 +68,13 @@ fn user_agent(runtime_version: &str) -> String {
     )
 }
 
-/// The URL's origin exactly as a browser computes it — `scheme://host[:port]`,
-/// with a default port omitted — matching JavaScript's `location.origin`.
+/// The origin as a browser computes it, port included — JavaScript's
+/// `location.origin`.
 ///
-/// Deliberately not [`origin_of`], which exists to redact log lines and drops
-/// the port. This value is compared against what the page reports and is
-/// pasted into a WebView2 URI filter, so dropping the port makes both silently
-/// wrong: the filter matches nothing and the script's own origin check never
-/// fires. That is exactly what happened when this reused `origin_of`.
+/// Deliberately not [`origin_of`], which drops the port to redact log lines.
+/// This value goes into a WebView2 URI filter and is compared against what the
+/// page reports, and a missing port makes both silently wrong: the filter
+/// matches nothing and no error is raised anywhere.
 pub(crate) fn url_origin(url: &str) -> Option<String> {
     url.parse::<tauri::Url>()
         .ok()
@@ -118,27 +101,18 @@ const SIGN_IN_WINDOW: &str = "sign-in";
 /// the moment it is built.
 ///
 /// Has to clear WebView2's own startup or the fallback fires first and shows
-/// the empty window this exists to avoid. Measured on a warm dev machine:
-/// building the window costs about three seconds on its own, and the sign-in
-/// page is up about two seconds after that. Delaying the page itself by two
-/// seconds barely moves the total, so the cost is WebView2 creating an
-/// environment rather than anything on the network — every run gets a fresh
-/// user-data folder (`browser_state_dir`), so every run pays first-run
-/// initialisation.
-///
-/// Bounded all the same, because an invisible window is worse than an empty
-/// one: if authentik is unreachable the person at the logon screen would
-/// otherwise be left with nothing at all and no sign a sign-in was attempted.
-/// Five seconds here is about eight from the spawn, still inside the ten
-/// `credprovider`'s foreground nudge spends looking for this window.
+/// the empty window this exists to avoid: on a warm dev machine the window
+/// costs about three seconds to build and the page is up two seconds later,
+/// nearly all of it WebView2 creating an environment for a fresh user-data
+/// folder. Bounded anyway — an invisible window is worse than an empty one —
+/// and five seconds here is still inside the ten `credprovider`'s foreground
+/// nudge spends looking for this window.
 const REVEAL_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 
 /// Shows the window, once, and starts the foreground ladder with it.
 ///
-/// The window is built hidden and revealed here rather than shown immediately,
-/// so nobody sees an empty frame while WebView2 starts up and the sign-in page
-/// loads. There is nothing to fight the foreground for until then either, so
-/// the ladder starts from here too.
+/// Built hidden so nobody sees an empty frame while WebView2 starts and the
+/// page loads; there is nothing to fight the foreground for until then either.
 fn reveal(
     window: &tauri::WebviewWindow,
     shown: &AtomicBool,
@@ -161,12 +135,9 @@ fn reveal(
     }
 }
 
-/// Reveals the window after [`REVEAL_TIMEOUT`] whether or not a page ever
-/// loaded, so a slow or unreachable authentik degrades to the empty window
-/// this is trying to avoid rather than to no window at all.
-///
-/// A no-op once the page-load handler has already shown it — `reveal` is
-/// guarded by the same flag.
+/// Reveals the window after [`REVEAL_TIMEOUT`] whether or not a page loaded, so
+/// an unreachable authentik degrades to an empty window rather than to none at
+/// all. A no-op once the page-load handler has shown it — same flag.
 fn reveal_after_timeout(
     app: tauri::AppHandle,
     shown: Arc<AtomicBool>,
@@ -189,13 +160,13 @@ fn reveal_after_timeout(
     });
 }
 
-/// The handful of things a sign-in needs to reach once it starts, which is
-/// after the window already exists.
+/// The handful of things a sign-in needs once it starts, which is after the
+/// window already exists.
 #[derive(Clone)]
 struct SignInState {
-    /// Origin of the sign-in URL, empty until a sign-in has been asked for.
-    /// The page-load handler compares against it to tell the real page from
-    /// the placeholder, and an empty string matches neither.
+    /// Origin of the sign-in URL, empty until a sign-in has been asked for —
+    /// which is how the page-load handler tells the real page from the
+    /// placeholder.
     origin: Arc<Mutex<String>>,
     shown: Arc<AtomicBool>,
     ever_activated: Arc<AtomicBool>,
@@ -203,9 +174,8 @@ struct SignInState {
 
 /// Points the already-built window at the sign-in URL and arms the reveal.
 ///
-/// Everything slow has happened before this runs — the window exists and
-/// WebView2's environment is up — so when the host was preloaded at tile
-/// selection, this is very nearly the whole cost of a sign-in.
+/// Everything slow has already happened, so on a host preloaded at tile
+/// selection this is very nearly the whole cost of a sign-in.
 fn start_sign_in(app: &tauri::AppHandle, state: &SignInState, url: String, header_token: String) {
     let Some(window) = app.get_webview_window(SIGN_IN_WINDOW) else {
         log::error!("no sign-in window to start the flow in");
@@ -235,9 +205,8 @@ fn start_sign_in(app: &tauri::AppHandle, state: &SignInState, url: String, heade
 
 /// Opens the window and runs the message loop until the flow ends.
 ///
-/// Returns the report to fall back on rather than sending it: `main` sends
-/// whatever comes back, and `Completion::send` is send-once, so a route that
-/// already answered — a redirect, a cancellation — wins over this.
+/// Returns a fallback report rather than sending it: `Completion::send` is
+/// send-once, so a route that already answered wins over this.
 fn run(
     completion: &Arc<signin::Completion>,
     control_pipe: Option<std::fs::File>,
@@ -253,12 +222,11 @@ fn run(
     };
     log::info!("WebView2 runtime {runtime_version} found");
 
-    // Whether the window has ever held the foreground, which separates "never
-    // took focus" from "took it and lost it again". Fed by the `Focused`
-    // events below and read by the retry ladder when it gives up.
+    // Separates "never took focus" from "took it and lost it again", which the
+    // retry ladder reports differently when it gives up.
     let ever_activated = Arc::new(AtomicBool::new(false));
-    // Whether the window has been revealed, so the page-load handler and the
-    // timeout fallback cannot both show it (and both start a foreground ladder).
+    // So the page-load handler and the timeout fallback cannot both reveal the
+    // window, and both start a foreground ladder.
     let shown = Arc::new(AtomicBool::new(false));
 
     let setup_completion = completion.clone();
@@ -278,11 +246,9 @@ fn run(
             let nav_handle = handle.clone();
             let page_state = setup_state.clone();
 
-            // Built on the bundled placeholder rather than the sign-in URL:
-            // the real navigation is started by `navigate_with_header` once
-            // header injection is actually registered. See its doc comment —
-            // pointing the builder at the sign-in URL races the handler and
-            // sends the document request bare.
+            // The placeholder, not the sign-in URL: pointing the builder at
+            // the real one races header injection and sends the document
+            // request bare. `navigate_with_header` starts it instead.
             let builder = WebviewWindowBuilder::new(
                 app,
                 SIGN_IN_WINDOW,
@@ -297,37 +263,21 @@ fn run(
             .resizable(false)
             .minimizable(false)
             .maximizable(false)
-            // No frame at all, because the frame this process gets on
-            // the logon desktop is the classic pre-Aero caption, which
-            // looks like Windows 9x next to LogonUI's own chrome.
-            //
-            // Not a Tauri limitation: measured in an ordinary session,
-            // a decorated window here gets a proper DWM-composited
-            // frame (`DwmGetWindowAttribute`'s extended frame bounds
-            // come back inset from the window rect, which only happens
-            // when DWM is drawing it). The CEF window had modern chrome
-            // too, until it stopped running as SYSTEM. What changed is
-            // the token, so the likely cause is that the restricted
-            // service-account token cannot reach DWM for that session
-            // and the window falls back to legacy non-client painting.
-            // Unverified on the secure desktop — see TAURI_MIGRATION.md.
-            //
-            // The window is fixed-size and centered, so there is nothing
-            // to drag or resize. Cancelling is the one thing the frame
-            // did carry: LogonUI's own cancel is behind a topmost window
-            // and the system close button goes with the caption, which
-            // left a sign-in with no way out short of the credential
-            // provider giving up. Escape, handled in `webview2`, is
-            // what replaces it — the same key GCPW uses, and the only
-            // affordance here that does not depend on the page.
+            // The frame this process gets on the logon desktop is the
+            // classic pre-Aero caption, which looks like Windows 9x next
+            // to LogonUI's own chrome — not a Tauri limitation, since a
+            // decorated window in an ordinary session is DWM-composited.
+            // The likely cause is the restricted service-account token
+            // being unable to reach DWM for that session; unverified on
+            // the secure desktop, see TAURI_MIGRATION.md. Nothing is
+            // lost but the close button, which escape replaces (see
+            // `webview2`), as the window is fixed-size and centered.
             .decorations(false)
             // Topmost before the first paint, so the window is never
-            // behind LogonUI even for a frame. Asking for focus is a
-            // separate and much less certain thing — see `foreground`.
+            // behind LogonUI even for a frame. Focus is a separate and
+            // much less certain thing — see `foreground`.
             .always_on_top(true)
-            // Built hidden; `reveal` shows it once there is a page to
-            // look at. Shown immediately, it is an empty frame for the
-            // second or so WebView2 takes to start and load.
+            // `reveal` shows it once there is a page to look at.
             .visible(false)
             .user_agent(&user_agent(&runtime_version))
             .data_directory(data_directory.clone())
@@ -339,27 +289,22 @@ fn run(
                     return true;
                 }
 
-                // Validating the token in this URL needs `ak-sysd`,
-                // which this process has no access to; `credprovider`
-                // does it once this reaches the result pipe.
+                // Validating this URL's token needs `ak-sysd`, which
+                // this process cannot reach; `credprovider` does it.
                 log::info!("redirect detected; reporting it for validation");
                 nav_completion.send(HostReport::Redirected {
                     url: url.to_string(),
                 });
                 signin::close(&nav_handle);
                 // WebView2 cannot navigate to `goauthentik.io://`
-                // anyway; cancelling keeps it from saying so in the
-                // window the person is still looking at.
+                // anyway, and would say so in the window.
                 false
             })
             .on_page_load(move |window, payload| {
-                // Only the sign-in page counts. The placeholder this window
-                // is built on finishes loading too, and a flag saying "the
-                // real navigation has started" does not separate them:
-                // `Navigate` is called from the event loop before the
-                // placeholder's own load completes, so such a flag is already
-                // set when it arrives — which revealed an empty window every
-                // time.
+                // Only the sign-in page counts, and a "navigation started"
+                // flag does not separate it from the placeholder: `Navigate`
+                // runs before the placeholder's own load completes, so such a
+                // flag is already set when it arrives.
                 let origin = page_state
                     .origin
                     .lock()
@@ -380,10 +325,8 @@ fn run(
             });
 
             builder.build()?;
-            // The expensive part is behind us: the window exists and WebView2
-            // has an environment. When the credential provider preloaded this
-            // process at tile selection, that cost was paid while the person
-            // was still deciding to click.
+            // The expensive part is behind us; on a preloaded host it was paid
+            // while the person was still deciding to click.
             log::info!(
                 "sign-in window ready, foreground_pid={:?}",
                 foreground::foreground_pid()
@@ -402,9 +345,8 @@ fn run(
                 );
             }
 
-            // Handed the sign-in on the command line rather than over the
-            // pipe: the provider had no preloaded host to reuse and spawned
-            // one on the spot.
+            // On the command line rather than over the pipe: the provider had
+            // no preloaded host to reuse.
             if let Some((url, header_token)) = sign_in {
                 start_sign_in(&handle, &setup_state, url, header_token);
             }
@@ -423,8 +365,8 @@ fn run(
             }
             WindowEvent::Destroyed => {
                 log::info!("sign-in window destroyed");
-                // A no-op on every route that already reported; the one it
-                // exists for is the person closing the window.
+                // A no-op on every route that already reported; this is for
+                // the person closing the window.
                 event_completion.send(HostReport::Cancelled);
             }
             _ => {}
@@ -438,8 +380,7 @@ fn run(
 }
 
 fn main() {
-    // Held for the whole of `main` so the client is still alive to flush when
-    // the process exits.
+    // Held for all of `main` so the client can still flush at exit.
     let _sentry = sentry::init(ak_meta::sentry_options("ak-browser"));
 
     ak_platform::log::LogBuilder::new(ak_platform::string::PlatformString::new_with_default(
@@ -450,9 +391,8 @@ fn main() {
     .allow_stdout(false)
     .enable();
 
-    // First line out, before anything else can fail: which exact commit this
-    // binary was built from and which account it is running as, so a real
-    // install's log can be matched against the source rather than assumed.
+    // First line out, before anything else can fail: which commit this was
+    // built from and which account it runs as.
     log::info!(
         "ak_browser.exe {} (build {}), running as {}",
         ak_meta::full_version(),
@@ -465,9 +405,8 @@ fn main() {
     };
     let completion = Arc::new(signin::Completion::new(pipes.result));
 
-    // Both optional. A host preloaded when the tile was selected is started
-    // later, by a `StartSignIn` over the control pipe; only a host spawned at
-    // submit time is handed them here.
+    // Both optional: a host preloaded at tile selection is started later by a
+    // `StartSignIn` over the control pipe.
     let sign_in = match (arg_value("--sign-in-url"), arg_value("--header-token")) {
         (Some(url), Some(header_token)) => Some((url, header_token)),
         (None, None) => None,
@@ -497,11 +436,9 @@ mod tests {
         dir
     }
 
-    /// A session left behind by the last person at the logon screen is the
-    /// thing this is here to remove, so a real recursive remove is required —
-    /// nested directories are where a browser keeps cookies and local storage.
-    /// The directory itself goes too: each run owns its own
-    /// (`browser_state_dir`), so nothing else still needs it afterwards.
+    /// Cookies and local storage live in nested directories, and each run owns
+    /// its directory outright, so the remove has to be recursive and take the
+    /// directory with it.
     #[test]
     fn removes_a_populated_directory_entirely() {
         let dir = scratch_dir("wipe");
@@ -514,8 +451,7 @@ mod tests {
         assert!(!dir.exists(), "the directory itself should be gone");
     }
 
-    /// Reached whenever the host exits before ever creating its own directory
-    /// (e.g. a missing `--sign-in-url`) — must not panic.
+    /// Reached whenever the host exits before creating its own directory.
     #[test]
     fn tolerates_a_directory_that_is_already_gone() {
         let dir = scratch_dir("missing");
@@ -523,9 +459,8 @@ mod tests {
         assert!(!dir.exists());
     }
 
-    /// A WebView2 user-data folder is single-writer: pointing an environment
-    /// at one another process still holds fails to create at all, which is the
-    /// whole reason each run gets its own.
+    /// A WebView2 user-data folder is single-writer, so a shared one would
+    /// lock out every launch after the first.
     #[test]
     fn each_call_gets_its_own_directory() {
         let root = scratch_dir("state_dir");
@@ -541,10 +476,9 @@ mod tests {
     }
 
     /// authentik may key on this server-side, so the shape is part of the
-    /// contract rather than a cosmetic string. The product version is whatever
-    /// `ak-meta` was built with — `make ee/wcp/test` does not set `AK_VERSION`
-    /// the way `make ee/wcp/build` does, so assert it is reported faithfully
-    /// rather than asserting it is non-empty.
+    /// contract. `make ee/wcp/test` does not set `AK_VERSION` the way
+    /// `make ee/wcp/build` does, hence asserting the version is reported
+    /// faithfully rather than that it is non-empty.
     #[test]
     fn user_agent_carries_the_product_and_runtime_versions() {
         let ua = user_agent("120.0.2210.91");
@@ -557,8 +491,7 @@ mod tests {
         assert_eq!(runtime, "120.0.2210.91)");
     }
 
-    /// Sign-in URLs carry tokens in the path and query, so only the origin is
-    /// ever safe to put in a log line.
+    /// Sign-in URLs carry tokens in the path and query.
     #[test]
     fn only_the_origin_is_logged() {
         assert_eq!(

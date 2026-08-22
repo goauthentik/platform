@@ -1,10 +1,9 @@
 //! Full activation through the real Windows COM registration path: registers
 //! `ak_cred_provider.dll` the way the MSI installer does, then reaches it via
 //! `CoCreateInstance` under `CPUS_CREDUI` rather than the direct
-//! `LoadLibraryW`/`DllGetClassObject` call `dll::LoadedProvider` uses. That is
-//! the path LogonUI and CredUI actually use to find and load credential
-//! providers — the rest of this suite bypasses the registry entirely, so this
-//! is the only test that would catch a wrong or missing registry value.
+//! `LoadLibraryW`/`DllGetClassObject` call `dll::LoadedProvider` uses. The rest
+//! of this suite bypasses the registry, so this is the only test that would
+//! catch a wrong or missing registry value.
 //!
 //! Opt-in; see `e2e/harness.rs` and `e2e/README.md` for the preconditions,
 //! plus `registration::RegisteredProvider` for what it needs beyond those.
@@ -28,19 +27,16 @@ const VALID_TOKEN: &str = "credui-registration-valid-token";
 const USERNAME: &str = "credui-registration-user";
 
 /// `multi_thread`, deliberately, even though real activation makes the DLL an
-/// STA object (registered `ThreadingModel=Apartment`): `mock_sysd::start`
-/// spawns the mock server as its own tokio task, and `Connect()` below blocks
-/// synchronously (no `.await` anywhere under it) for as long as `ak_browser.exe`
-/// takes to complete its round trip against that mock. On a `current_thread`
-/// runtime that block starves the only OS thread the runtime has, so the mock
-/// server's task can never be polled again to answer `ak_browser.exe`'s real gRPC
-/// calls — a full deadlock, not a slow test. (This was tried and hung in CI
-/// for 30+ minutes before this fix.)
+/// STA object (registered `ThreadingModel=Apartment`). `Connect()` below blocks
+/// synchronously for as long as `ak_browser.exe`'s round trip against the mock
+/// takes, and on a `current_thread` runtime that starves the only OS thread the
+/// runtime has, so the mock server's task is never polled again to answer it —
+/// a full deadlock, which hung CI for 30+ minutes.
 ///
-/// Apartment safety instead comes from ordering: the one `.await` in this
-/// test (`mock_sysd::start`) happens *before* `CoInitializeEx`, so by the
-/// time the COM apartment exists there is nothing left to yield on, and
-/// nothing after it can move this task to a different worker thread.
+/// Apartment safety comes from ordering instead: the one `.await` here
+/// (`mock_sysd::start`) happens *before* `CoInitializeEx`, so once the COM
+/// apartment exists there is nothing left to yield on and nothing that could
+/// move this task to another worker thread.
 #[tokio::test(flavor = "multi_thread")]
 async fn registered_provider_completes_sign_in_via_real_com_activation() {
     if !harness::opted_in("registered_provider_completes_sign_in_via_real_com_activation") {
@@ -68,13 +64,11 @@ async fn registered_provider_completes_sign_in_via_real_com_activation() {
     .await
     .expect("start mock ak-sysd — is a real ak-sysd already bound to the pipe?");
 
-    // Declared before any COM interface below: Rust drops locals in reverse
-    // declaration order, so this runs CoUninitialize only after every
-    // interface obtained under it has been released. Registry cleanup
-    // (`_registration`) is declared earlier still, so it runs last of all —
-    // harmless, since deleting the CLSID registration doesn't affect an
-    // already-activated in-process instance. Nothing from here on awaits, so
-    // nothing can move this task off the thread `_com` initialised.
+    // Before any COM interface below: Rust drops locals in reverse declaration
+    // order, so `CoUninitialize` runs only once every interface obtained under
+    // it has been released. `_registration` is earlier still and so runs last,
+    // harmlessly — deleting the CLSID registration does not affect an
+    // already-activated in-process instance.
     let _registration = RegisteredProvider::register(&dll_path)
         .expect("register ak_cred_provider.dll — needs an elevated shell");
     let _com = ComGuard::new().expect("CoInitializeEx");
@@ -82,7 +76,7 @@ async fn registered_provider_completes_sign_in_via_real_com_activation() {
         .expect("seed the Capabilities registry key — needs an elevated shell");
 
     // The activation this test exists for: found via the registry, loaded and
-    // instantiated by ole32 itself, not by us calling DllGetClassObject.
+    // instantiated by ole32 itself rather than by us.
     let provider: ICredentialProvider =
         unsafe { CoCreateInstance(&CLSID_CREDENTIAL_PROVIDER, None, CLSCTX_INPROC_SERVER) }
             .expect("CoCreateInstance(CLSID_CREDENTIAL_PROVIDER) — is InprocServer32 registered?");

@@ -1,10 +1,10 @@
 //! Finds the real `ak_browser.exe` window while `Connect` is still blocked on
 //! it.
 //!
-//! `Connect` does not return until the sign-in is over and the window is gone,
-//! so anything asserted about it has to be seen from another thread. Windows
-//! belong to a desktop rather than a thread, and under `CPUS_CREDUI` the child
-//! is spawned into this same session, so any thread here can see it.
+//! `Connect` does not return until the window is gone, so anything asserted
+//! about it has to be seen from another thread. Windows belong to a desktop
+//! rather than a thread, and under `CPUS_CREDUI` the child is spawned into this
+//! same session, so any thread here can see it.
 
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
@@ -29,8 +29,8 @@ pub struct Observation {
     pub appeared_after: Duration,
 }
 
-/// Watches for `ak_browser.exe`'s window in the background and reports the
-/// first sighting, or `None` after `timeout`.
+/// Reports the first sighting of `ak_browser.exe`'s window, or `None` after
+/// `timeout`.
 pub fn watch(timeout: Duration) -> mpsc::Receiver<Option<Observation>> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
@@ -56,16 +56,14 @@ struct Search {
     found: isize,
 }
 
-/// The visible sign-in window of an `ak_browser.exe`.
-///
 /// Matched on the title rather than on enumeration order: the window is only
 /// revealed seconds after the spawn, and the WebView2 helper that beats it to
 /// the desktop is neither message-only nor zero-size, so the visibility and
 /// size filters do not rule that one out.
 fn find() -> Option<HWND> {
     let mut search = Search { found: 0 };
-    // Reports failure when the callback stops the walk early, which is what
-    // finding a match does, so `found` is the answer rather than the result.
+    // Reports failure when the callback stops the walk early — which is what a
+    // match does — so `found` is the answer rather than the result.
     let _ = unsafe {
         EnumWindows(
             Some(visit),

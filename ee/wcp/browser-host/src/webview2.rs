@@ -1,8 +1,7 @@
-//! Where this host talks to WebView2 directly: finding out whether the runtime
-//! is installed at all, and then everything that has to be in place before the
-//! sign-in page loads — the interactive-auth header on every request, the page
-//! script, escape-to-cancel, and refusing popups — with the navigation started
-//! last, from inside that setup, so none of it races the first document.
+//! Where this host talks to WebView2 directly: whether the runtime is
+//! installed, and everything that has to be in place before the sign-in page
+//! loads — the interactive-auth header, escape-to-cancel, refusing popups —
+//! with the navigation started last so none of it races the first document.
 
 use webview2_com::{
     AcceleratorKeyPressedEventHandler,
@@ -28,16 +27,10 @@ const RUNTIME_CLIENT_KEY_WOW64: &str =
 /// Installed Evergreen runtime version, or `None` if the runtime is missing.
 ///
 /// Checked before the window is built purely so the *log* says which of the
-/// many ways to reach a cancellation this was. The person signing in still
-/// sees a bare "Login attempt cancelled": `HostReport` carries no failure
-/// reason, deliberately, since the host is not the side that decides whether a
-/// sign-in succeeded. Without this check the event log would be just as silent
-/// as the CEF host's `0x80000003` exits were.
-///
-/// The `HKCU` fallback is checked last and is close to useless here: this
-/// process runs as the `ak-wcp-browser` service account, so a per-user install
-/// belonging to the person signing in is in a hive we cannot see. It costs one
-/// registry read and covers running the host by hand as an ordinary user.
+/// many ways to reach a cancellation this was; `HostReport` deliberately
+/// carries no failure reason. The `HKCU` fallback is near-useless under the
+/// service account, whose hive is not the signing-in user's, but costs one
+/// registry read and covers running the host by hand.
 pub fn runtime_version() -> Option<String> {
     let candidates = [
         (HKEY_LOCAL_MACHINE, RUNTIME_CLIENT_KEY_WOW64),
@@ -57,22 +50,14 @@ pub fn runtime_version() -> Option<String> {
 /// Registers the header-injection handler and *then* starts the sign-in
 /// navigation, in that order, on the webview's own thread.
 ///
-/// The order is the whole point. `with_webview` dispatches its closure to the
-/// main thread rather than running it inline, so anything the webview was
-/// already loading is in flight before the handler exists. Building the window
-/// straight onto the sign-in URL therefore raced — and lost: the document
-/// request went out bare, and the only request the flow makes carried no
-/// header at all. The CEF host had the same hazard and answered it the same
-/// way, creating the browser with no URL and loading it once the client was
-/// attached (`browser_view_create(.., None, ..)` and the window delegate's
-/// `load_url`).
+/// The order is the whole point: `with_webview` dispatches to the main thread
+/// rather than running inline, so a window built straight onto the sign-in URL
+/// has its document request in flight before the handler exists — and it goes
+/// out bare. Hence the bundled placeholder page, with the real navigation
+/// started here once `add_WebResourceRequested` has returned.
 ///
-/// So the window is built on the bundled placeholder page and the real
-/// navigation happens here, after `add_WebResourceRequested` has returned.
-///
-/// Failing closed: if any step fails there is no way to authenticate the
-/// requests, so the window is closed rather than pointed at authentik without
-/// the header, which would only fail further along and less legibly.
+/// Fails closed: without the header there is no way to authenticate the
+/// requests, so the window closes rather than failing further along.
 pub fn navigate_with_header(
     window: &tauri::WebviewWindow,
     app: tauri::AppHandle,
@@ -91,19 +76,17 @@ pub fn navigate_with_header(
             }
         };
 
-        // Scoped to authentik's own origin, not `*`. The header is an
-        // `ak-sysd` interactive-auth token; a filter of `*` put it on every
-        // request the page made, including to third-party origins, which is
-        // how the CEF host behaved too — a flow that hands off to an upstream
-        // IdP, or a page that loads anything from a CDN, handed that token
-        // over with it. Confirmed by watching a second local server receive it.
+        // Scoped to authentik's own origin, not `*`: the header is an
+        // interactive-auth token, and under `*` a flow handing off to an
+        // upstream IdP or a page loading from a CDN sent it there too.
         let origin_filter = format!("{origin}/*");
-        // Logged because everything about this is invisible when it goes
-        // wrong: a filter that matches nothing registers just as successfully
-        // as one that matches, the handler simply never runs, and the first
-        // sign anyone gets is authentik rejecting the session. The filter is
-        // the value most likely to be wrong, so it goes in the log verbatim.
-        log::info!("injecting {} on requests matching {origin_filter}", ak_ee_wcp_wire::AUTH_HEADER_NAME);
+        // Verbatim, because a filter matching nothing registers just as
+        // successfully as one that matches: the handler simply never runs, and
+        // the first sign of it is authentik rejecting the session.
+        log::info!(
+            "injecting {} on requests matching {origin_filter}",
+            ak_ee_wcp_wire::AUTH_HEADER_NAME
+        );
         if let Err(e) = unsafe {
             core.AddWebResourceRequestedFilter(
                 &HSTRING::from(origin_filter.as_str()),
@@ -117,9 +100,8 @@ pub fn navigate_with_header(
 
         let header = HSTRING::from(ak_ee_wcp_wire::AUTH_HEADER_NAME);
         let token = HSTRING::from(header_token.as_str());
-        // Counts requests the filter actually matched. Zero is the interesting
-        // number: it means the filter and the requests disagree, which no
-        // error anywhere reports.
+        // Zero means the filter and the requests disagree, which nothing else
+        // reports.
         let injected = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let injected_handler = injected.clone();
         let mut registration = 0i64;
@@ -142,9 +124,8 @@ pub fn navigate_with_header(
                             let n = injected_handler
                                 .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
                                 + 1;
-                            // The first one at info, so a working flow says so
-                            // once; the rest at debug, since a sign-in page
-                            // makes a great many requests.
+                            // Only the first at info: a sign-in page makes a
+                            // great many requests.
                             if n == 1 {
                                 log::info!(
                                     "header injected on the first matching request ({})",
@@ -166,8 +147,7 @@ pub fn navigate_with_header(
             return;
         }
 
-        // If nothing ever matched, say so plainly rather than leaving the
-        // reader to infer it from an absence of log lines.
+        // Said plainly rather than left to infer from absent log lines.
         let injected_report = injected.clone();
         let reported_filter = origin_filter.clone();
         std::thread::spawn(move || {
@@ -175,7 +155,10 @@ pub fn navigate_with_header(
             let n = injected_report.load(std::sync::atomic::Ordering::SeqCst);
             if n == 0 {
                 log::warn!(
-                    "no request matched {reported_filter} after 15s — the sign-in page is                      loading without {}, so authentik will not associate it with this                      session. The filter and the page's own URLs disagree.",
+                    "no request matched {reported_filter} after 15s — the \
+                     sign-in page is loading without {}, so authentik will not \
+                     associate it with this session. The filter and the page's \
+                     own URLs disagree.",
                     ak_ee_wcp_wire::AUTH_HEADER_NAME
                 );
             } else {
@@ -183,10 +166,9 @@ pub fn navigate_with_header(
             }
         });
 
-        // Escape is the other way out of a frameless window, and the one
-        // that still works if the injected cancel button never makes it into
-        // the page. Registered on the controller rather than the page, so no
-        // amount of the page's own key handling can swallow it.
+        // The only way out of a frameless window that does not depend on the
+        // page. On the controller rather than the page, so the page's own key
+        // handling cannot swallow it.
         let escape_app = app.clone();
         let mut escape_registration = 0i64;
         if let Err(e) = unsafe {
@@ -213,9 +195,7 @@ pub fn navigate_with_header(
             log::warn!("could not register the escape-to-cancel handler: {e}");
         }
 
-        // Nothing in this window has any business opening another one: it is
-        // a single sign-in page on a logon screen, and a popup there would be
-        // a window nobody can close on a desktop with no taskbar.
+        // A popup on a desktop with no taskbar is a window nobody can close.
         let mut popup_registration = 0i64;
         if let Err(e) = unsafe {
             core.add_NewWindowRequested(

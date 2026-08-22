@@ -1,18 +1,14 @@
 //! Getting the sign-in window in front of LogonUI.
 //!
-//! Z-order and input focus are separate problems and conflating them is what
-//! left the window behind LogonUI on every logon but the first. Putting the
-//! window in the topmost band is `SetWindowPos(HWND_TOPMOST, ...,
-//! SWP_NOACTIVATE)`, which no foreground rule applies to, so visibility is
-//! settled outright. Focus is a race a freshly spawned process routinely
-//! loses, so it gets the bounded retry below — and `credprovider` pushing from
-//! inside LogonUI, which is the side that can actually win it.
+//! Z-order and input focus are separate problems, and conflating them is what
+//! left the window behind LogonUI on every logon but the first. Z-order is
+//! settled outright by `SetWindowPos(HWND_TOPMOST, .., SWP_NOACTIVATE)`, which
+//! no foreground rule applies to. Focus is a race a freshly spawned process
+//! routinely loses, so it gets the bounded retry below — and `credprovider`
+//! pushing from inside LogonUI, which is the side that can win it.
 //!
-//! Unlike the CEF host this replaces, the retries run on their own thread
-//! rather than on the browser's UI thread: `SetWindowPos`, `BringWindowToTop`
-//! and `SetForegroundWindow` may all be called against another thread's window,
-//! and keeping them off the UI thread means a stuck renderer cannot swallow the
-//! schedule.
+//! The retries run on their own thread so a stuck renderer cannot swallow the
+//! schedule; all three calls may target another thread's window.
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -24,10 +20,9 @@ use windows::Win32::UI::WindowsAndMessaging::{
     SetForegroundWindow, SetWindowPos, WS_EX_TOPMOST,
 };
 
-/// Milliseconds to wait before each re-activation attempt. Front-loaded
-/// because what this exists for is losing the foreground to a LogonUI repaint
-/// that settles in a few hundred milliseconds, and finite because a window
-/// nobody is fighting over should stop being fought over.
+/// Front-loaded because what this exists for is losing the foreground to a
+/// LogonUI repaint that settles in a few hundred milliseconds, and finite
+/// because a window nobody is fighting over should stop being fought over.
 const RETRY_SCHEDULE_MS: [u64; 5] = [150, 400, 900, 1800, 3000];
 
 /// The delay before retry `attempt`, 0-based, or `None` once spent.
@@ -35,8 +30,8 @@ fn retry_delay_ms(attempt: u32) -> Option<u64> {
     RETRY_SCHEDULE_MS.get(attempt as usize).copied()
 }
 
-/// A window that already holds focus needs nothing more, and one that is gone
-/// must not be touched again.
+/// A window that holds focus needs nothing more, and one that is gone must not
+/// be touched again.
 fn next_retry(active: bool, closed: bool, attempt: u32) -> Option<u64> {
     if active || closed {
         return None;
@@ -44,9 +39,8 @@ fn next_retry(active: bool, closed: bool, attempt: u32) -> Option<u64> {
     retry_delay_ms(attempt)
 }
 
-/// The process owning the foreground window on this thread's desktop — the
-/// one thing that says whether the window never took focus or took it and had
-/// it taken straight back.
+/// The process owning the foreground window on this thread's desktop — the one
+/// thing that separates never taking focus from having it taken straight back.
 pub fn foreground_pid() -> Option<u32> {
     let hwnd = unsafe { GetForegroundWindow() };
     if hwnd.is_invalid() {
@@ -96,13 +90,10 @@ fn push(hwnd: HWND) {
 /// Runs the retry ladder against `hwnd` on its own thread until the window
 /// holds the foreground, is closed, or the schedule runs out.
 ///
-/// `hwnd` is passed as an integer because `HWND` is not `Send`; the window
-/// belongs to a desktop rather than to a thread, so the handle is just as
-/// valid here as it is on the UI thread.
-///
-/// `ever_activated` is fed by the app's `Focused` window events and separates
-/// "never took focus" from "took it and lost it again": same symptom, different
-/// fixes, and none of the calls above report either.
+/// `hwnd` is an integer because `HWND` is not `Send`; the window belongs to a
+/// desktop rather than a thread, so the handle is valid here either way.
+/// `ever_activated`, fed by the app's `Focused` events, separates "never took
+/// focus" from "took it and lost it again" — same symptom, different fixes.
 pub fn watch(hwnd: isize, ever_activated: Arc<AtomicBool>) {
     std::thread::spawn(move || {
         let hwnd = HWND(hwnd as *mut std::ffi::c_void);
@@ -127,8 +118,8 @@ pub fn watch(hwnd: isize, ever_activated: Arc<AtomicBool>) {
             attempt += 1;
         }
 
-        // Worth a warning rather than an info: the window is on top and
-        // readable, so someone will type into it.
+        // A warning rather than an info: the window is on top and readable, so
+        // someone will type into it.
         if !is_closed(hwnd) && !is_active(hwnd) && !ever_activated.load(Ordering::SeqCst) {
             log::warn!(
                 "sign-in window is visible but never took focus — keystrokes are going elsewhere: {}",
@@ -152,8 +143,8 @@ fn describe(hwnd: HWND) -> String {
 mod tests {
     use super::*;
 
-    /// A schedule that never ran out would keep poking at the foreground for
-    /// as long as the sign-in window is open, on the logon screen.
+    /// A schedule that never ran out would poke at the foreground for as long
+    /// as the sign-in window is open.
     #[test]
     fn the_retry_schedule_terminates_and_never_busy_loops() {
         let delays: Vec<u64> = (0..).map_while(retry_delay_ms).collect();
@@ -163,7 +154,7 @@ mod tests {
         assert!(delays.first().is_some_and(|d| *d > 0), "{delays:?}");
     }
 
-    /// Re-activating a closed window would use a handle the watcher outlived.
+    /// Re-activating a closed window uses a handle the watcher outlived.
     #[test]
     fn no_retry_once_active_or_closed() {
         assert_eq!(next_retry(true, false, 0), None, "already active");

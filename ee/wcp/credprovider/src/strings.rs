@@ -1,8 +1,7 @@
 use windows::{Win32::System::Com::CoTaskMemAlloc, core::PWSTR};
 
-/// Allocate a NUL-terminated wide string with `CoTaskMemAlloc` so it can be
-/// handed back to LogonUI through an out-param; LogonUI frees it with
-/// `CoTaskMemFree`.
+/// `CoTaskMemAlloc` so it can be handed back to LogonUI through an out-param,
+/// which LogonUI then frees with `CoTaskMemFree`.
 pub fn cotask_pwstr(s: &str) -> PWSTR {
     let wide: Vec<u16> = s.encode_utf16().chain(std::iter::once(0)).collect();
     unsafe {
@@ -16,7 +15,7 @@ pub fn cotask_pwstr(s: &str) -> PWSTR {
 }
 
 /// Reads a `CoTaskMemAlloc`-owned `PWSTR` the shell handed us (e.g. from
-/// `ICredentialProviderUser::GetSid`) and frees it.
+/// `ICredentialProviderUser::GetSid`), and frees it.
 pub fn take_pwstr(s: windows::core::PWSTR) -> String {
     if s.is_null() {
         return String::new();

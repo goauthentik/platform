@@ -14,9 +14,9 @@ WCP_TARGET_DIR := "${TOP}cache/wcp"
 clean:
 	cd "${TOP}" && rm -rf "bin/${OUT_TARGET}" "cache/wcp"
 
-# The sign-in window renders through the machine's Microsoft Edge WebView2
-# runtime, so unlike the CEF host this replaced there is no browser runtime to
-# fetch, stage or ship — `ak_browser.exe` and the DLL are the whole payload.
+# `ak_browser.exe` and the DLL are the whole payload: the sign-in window renders
+# through the machine's Microsoft Edge WebView2 runtime, so there is no browser
+# runtime to fetch, stage or ship.
 .PHONY: build
 build:
 	mkdir -p "${TOP}bin/${OUT_TARGET}"
@@ -37,20 +37,15 @@ ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}bin/${OUT_TARGET}/")
 endif
 
-# Coverage uses llvm-cov's manual (show-env) flow rather than
-# `$(call cargo_test,...)`, because the e2e tests LoadLibraryW the real
-# ak_cred_provider.dll and spawn the real ak_browser.exe: `cargo test`/nextest
-# on their own only ever build test harnesses, never the cdylib and bin
-# artifacts. Exporting llvm-cov's env first lets an explicit `cargo build`
-# place both -- instrumented, so their coverage counts -- in the same
-# directory the test binary resolves them from.
-# AK_WCP_E2E opts in to the process-level tests: a CI runner has no real
-# ak-sysd bound to the pipe and is elevated enough to seed the HKLM
-# capability cache. See e2e/README.md for what that turns on.
+# llvm-cov's manual show-env flow rather than `$(call cargo_test,...)`, because
+# the e2e tests LoadLibraryW the real ak_cred_provider.dll and spawn the real
+# ak_browser.exe, and cargo test/nextest only ever build test harnesses.
+# Exporting llvm-cov's env first lets an explicit `cargo build` place both --
+# instrumented -- where the test binary resolves them from. AK_WCP_E2E opts in
+# to the process-level tests; see e2e/README.md.
 #
-# One chained shell command on purpose: `.ONESHELL:` is a no-op on the GNU
-# Make 3.81 that ships in GnuWin32, so `cd`/`export`/`source` would not carry
-# across separate recipe lines.
+# One chained shell command on purpose: `.ONESHELL:` is a no-op on the GNU Make
+# 3.81 in GnuWin32, so `cd`/`export`/`source` would not carry across lines.
 .PHONY: test
 test:
 	mkdir -p "${TOP}cache"

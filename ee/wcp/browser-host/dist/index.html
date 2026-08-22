@@ -1,10 +1,9 @@
 <!doctype html>
 <!--
-  Shown for the instant between the window appearing and the sign-in
-  navigation starting. The window is deliberately built on this page rather
-  than on the sign-in URL: header injection has to be registered before the
-  first request goes out, and only then does `webview2::navigate_with_header`
-  navigate. Blank on purpose — anything here would flash on the logon screen.
+  The window is built on this page rather than on the sign-in URL because header
+  injection has to be registered before the first request goes out; only then
+  does `webview2::navigate_with_header` navigate. Blank on purpose — anything
+  here would flash on the logon screen.
 -->
 <html lang="en">
   <head>
