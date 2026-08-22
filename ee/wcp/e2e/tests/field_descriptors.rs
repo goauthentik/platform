@@ -1,10 +1,9 @@
 //! Loads the real built `ak_cred_provider.dll` and checks the tile: the field
-//! table matches `ak_ee_wcp_wire::TILE_FIELDS`, and the tile image actually loads.
+//! table matches `ak_ee_wcp_wire::TILE_FIELDS`, and the tile image loads.
 //!
-//! Hermetic, and deliberately so: none of these paths consult the usage
-//! scenario, so no `SetUsageScenario` call is needed — and therefore no mock
-//! `ak-sysd` to answer `sys_caps` and no HKLM capability seeding. They run on
-//! every `cargo test`, unlike the opt-in tests in `sign_in_flow.rs`.
+//! Hermetic, deliberately: none of these paths consult the usage scenario, so
+//! there is no `SetUsageScenario` call and hence no mock `ak-sysd` and no HKLM
+//! seeding. Unlike `sign_in_flow.rs`, these run on every `cargo test`.
 #![allow(clippy::expect_used, clippy::panic)]
 
 use ak_ee_wcp_e2e::dll::LoadedProvider;
@@ -50,11 +49,11 @@ fn tile_fields_match_wire_layout() {
     }
 }
 
-/// The blank-tile regression: `GetBitmapValue` is what LogonUI calls to paint
-/// the tile, and it fails whenever the embedded BMP isn't something
-/// `LoadImage` accepts — a 32-bit `BITMAPV5HEADER`/`BI_BITFIELDS` export makes
-/// it fail for every flag combination, and the tile renders blank with no
-/// other symptom. The image must also carry no alpha channel.
+/// The blank-tile regression: `GetBitmapValue`, what LogonUI calls to paint the
+/// tile, fails whenever the embedded BMP is not something `LoadImage` accepts.
+/// A 32-bit `BITMAPV5HEADER`/`BI_BITFIELDS` export fails for every flag
+/// combination and renders blank with no other symptom; the image must carry no
+/// alpha channel either.
 #[test]
 fn tile_image_loads_from_the_embedded_resource() {
     let dll_path = ak_ee_wcp_e2e::dll::build_output_dir().join("ak_cred_provider.dll");
@@ -68,8 +67,8 @@ fn tile_image_loads_from_the_embedded_resource() {
         .expect("a tile-image field") as u32;
 
     unsafe {
-        // `GetCredentialAt` needs an enumerated user but not a usage
-        // scenario, so this stays hermetic.
+        // `GetCredentialAt` needs an enumerated user but not a usage scenario,
+        // so this stays hermetic.
         let set_users: ICredentialProviderSetUserArray =
             loaded.provider().cast().expect("SetUserArray interface");
         set_users

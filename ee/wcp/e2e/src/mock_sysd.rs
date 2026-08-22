@@ -1,9 +1,8 @@
-//! A minimal stand-in for `ak-sysd`'s gRPC endpoints, listening on the same
-//! named pipe the real daemon uses (`ak-platform`'s `Config` falls back to
-//! that fixed path whenever the production config file isn't present, which
-//! is always true on a test machine). Lets `e2e` tests drive the real
-//! `credprovider`/`cef-host` binaries against a fully deterministic backend
-//! with no Docker or real authentik server involved.
+//! A minimal stand-in for `ak-sysd`'s gRPC endpoints, on the same named pipe
+//! the real daemon uses — `ak-platform`'s `Config` falls back to that fixed
+//! path whenever the production config file is absent, always true on a test
+//! machine. Lets the real `credprovider`/`browser-host` binaries run against a
+//! deterministic backend with no Docker or authentik server.
 
 use ak_platform::generated::ping::{
     CapabilitiesResponse, PingResponse,
@@ -20,9 +19,9 @@ use ak_platform::net::server::{SocketPermMode, listen};
 use ak_platform::paths::{SysdSocketID, sysd_socket_path};
 use tonic::{Request, Response, Status};
 
-/// What the mock hands back for a completed sign-in: the URL `cef-host`
-/// opens, and the token embedded in its `goauthentik.io://` redirect that
-/// `token_auth` is expected to validate.
+/// What the mock hands back for a completed sign-in: the URL `browser-host`
+/// opens, and the token in its `goauthentik.io://` redirect that `token_auth`
+/// is expected to validate.
 #[derive(Clone)]
 pub struct MockConfig {
     pub interactive_auth_url: String,
@@ -63,7 +62,9 @@ impl SystemAuthInteractive for MockSystemAuthInteractive {
         &self,
         _request: Request<InteractiveAuthRequest>,
     ) -> Result<Response<InteractiveChallenge>, Status> {
-        Err(Status::unimplemented("not used by credprovider/cef-host"))
+        Err(Status::unimplemented(
+            "not used by credprovider/browser-host",
+        ))
     }
 
     async fn interactive_auth_async(
@@ -102,13 +103,14 @@ impl SystemAuthToken for MockSystemAuthToken {
         &self,
         _request: Request<SshCertAuthRequest>,
     ) -> Result<Response<SshCertAuthResponse>, Status> {
-        Err(Status::unimplemented("not used by credprovider/cef-host"))
+        Err(Status::unimplemented(
+            "not used by credprovider/browser-host",
+        ))
     }
 }
 
-/// Starts the mock server on the real `ak-sysd` named pipe path and returns
-/// a handle whose `Drop` stops it — callers keep it alive for the duration
-/// of a test.
+/// Returns a handle whose `Drop` stops the server; callers keep it alive for
+/// the duration of a test.
 pub struct MockSysd {
     task: tokio::task::JoinHandle<()>,
 }

@@ -1,8 +1,7 @@
-//! Local stand-in for the authentik sign-in page. Serves one HTML document
-//! that navigates to the `goauthentik.io://` redirect `cef-host`'s
-//! resource-request handler watches for, and records the auth header on every
-//! request so tests can assert `cef-host` injects it, not just that the flow
-//! ended well.
+//! Local stand-in for the authentik sign-in page: one HTML document that
+//! navigates to the `goauthentik.io://` redirect `browser-host`'s navigation
+//! handler watches for. Records the auth header on every request, so a test can
+//! assert `browser-host` injects it rather than only that the flow ended well.
 
 use std::io::{BufRead, BufReader, Write};
 
@@ -42,7 +41,7 @@ impl RedirectServer {
         Self::serve(Some(token))
     }
 
-    /// Never redirects — the state a user sits in until they authenticate or
+    /// Never redirects: the state a user sits in until they authenticate or
     /// back out.
     pub fn start_inert() -> std::io::Result<Self> {
         Self::serve(None)
@@ -65,8 +64,8 @@ impl RedirectServer {
                     return;
                 }
                 let Ok(stream) = stream else { continue };
-                // Chromium opens speculative/preconnect sockets that never
-                // send a request, so a failed exchange is not an error.
+                // Chromium opens speculative sockets that never send a
+                // request, so a failed exchange is not an error.
                 let _ = serve_one(stream, &body, &thread_headers);
             }
         });
@@ -79,8 +78,8 @@ impl RedirectServer {
         })
     }
 
-    /// The auth-header value seen on each request served, in order; `None`
-    /// for a request that carried no such header.
+    /// The auth-header value seen on each request served, in order, with
+    /// `None` for a request that carried no such header.
     pub fn observed_auth_headers(&self) -> Vec<Option<String>> {
         self.auth_headers
             .lock()
@@ -104,8 +103,7 @@ fn serve_one(
 ) -> std::io::Result<()> {
     let mut lines = BufReader::new(stream.try_clone()?).lines();
 
-    // Request line. Absent on the speculative sockets Chromium opens and
-    // never writes to.
+    // Absent on the speculative sockets Chromium opens and never writes to.
     if lines.next().transpose()?.is_none() {
         return Ok(());
     }

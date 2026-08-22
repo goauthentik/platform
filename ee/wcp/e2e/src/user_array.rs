@@ -1,6 +1,6 @@
 //! Stand-in for the `ICredentialProviderUserArray` LogonUI passes to
-//! `SetUserArray`, so tests pin the SID, qualified username and provider ID a
-//! `Credential` is built from instead of depending on the machine's accounts.
+//! `SetUserArray`, so a test pins the SID, qualified username and provider ID a
+//! `Credential` is built from rather than depending on the machine's accounts.
 
 use std::cell::RefCell;
 
@@ -23,7 +23,7 @@ use windows::{
 pub const NON_LOCAL_USER_PROVIDER: GUID = GUID::from_u128(0x2a1b3c4d_5e6f_4a8b_9c0d_1e2f3a4b5c6d);
 
 /// `CoTaskMemAlloc` is the allocator every `PWSTR`-returning provider method
-/// must use; the caller (here, the real DLL) frees it.
+/// must use; the caller — here the real DLL — frees it.
 fn cotask_pwstr(value: &str) -> PWSTR {
     let wide: Vec<u16> = value.encode_utf16().chain(std::iter::once(0)).collect();
     let bytes = wide.len() * 2;

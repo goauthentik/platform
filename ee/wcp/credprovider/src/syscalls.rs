@@ -1,14 +1,14 @@
-//! Narrow seams around the handful of Windows calls that have real side
-//! effects, so the logic that decides *when* to call them can be unit
-//! tested against a fake instead of the OS.
+//! Narrow seams around the Windows calls with real side effects, so the logic
+//! deciding *when* to call them can be tested against a fake.
 
 use std::ffi::c_void;
 
 use ak_platform_keyring::{KeyringError, windows::WindowsStore};
 use windows::Win32::Foundation::{CloseHandle, HANDLE, HWND, LPARAM, RECT};
 use windows::Win32::UI::WindowsAndMessaging::{
-    AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetWindowRect,
-    GetWindowThreadProcessId, IsWindowVisible, SetForegroundWindow,
+    AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetSystemMetrics, GetWindowRect,
+    GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible, SM_REMOTESESSION,
+    SetForegroundWindow,
 };
 use windows::{
     Win32::{
@@ -52,20 +52,17 @@ pub trait AuthPackageLookup {
 
 pub trait LocalAccountPassword {
     /// Administrative reset. Orphans the account's DPAPI master key — stored
-    /// passwords, EFS files and personal certificates become unreadable — so
-    /// this is only for first use and for recovering an account whose password
-    /// we no longer know.
+    /// passwords, EFS files and certificates become unreadable — so this is for
+    /// first use and for recovering an account whose password we lost.
     fn reset(&self, username: &str, password: &str) -> windows::core::Result<()>;
 
     /// Self-service change. Supplying the old password lets LSA re-encrypt the
-    /// DPAPI master key instead of orphaning it, which is why rotation goes
-    /// through here and not through `reset`.
+    /// DPAPI master key instead of orphaning it, hence rotating through here.
     fn change(&self, username: &str, old: &str, new: &str) -> windows::core::Result<()>;
 
-    /// Whether `password` is still this account's password. Only codes that
-    /// say something definite about the credential produce an `Ok`; anything
-    /// else is `Err`, because "could not tell" must not be read as "wrong
-    /// password".
+    /// Whether `password` is still this account's password. Only codes saying
+    /// something definite about the credential produce an `Ok`: "could not
+    /// tell" must not be read as "wrong password".
     fn validate(&self, username: &str, password: &str) -> windows::core::Result<PasswordCheck>;
 }
 
@@ -83,9 +80,19 @@ pub trait PasswordStore {
     fn save(&self, sid: &str, password: &str) -> eyre::Result<()>;
 }
 
-/// The window-manager calls behind pushing `ak_cef.exe`'s window to the front.
-/// Windows are a bare `isize` rather than an `HWND` so the policy driving these
-/// can be tested against a fake without a desktop to enumerate.
+/// Whether this provider is running in a remote (RDP) session.
+///
+/// `SM_REMOTESESSION` answers for the asking process's own session, which is
+/// the right test here: the DLL is loaded into whichever LogonUI is showing the
+/// tile. A machine can have someone at the console and someone over RDP at
+/// once, and only one of those is ours.
+pub fn is_remote_session() -> bool {
+    unsafe { GetSystemMetrics(SM_REMOTESESSION) != 0 }
+}
+
+/// The window-manager calls behind pushing `ak_browser.exe`'s window to the
+/// front. Windows are a bare `isize` rather than an `HWND` so the policy driving
+/// them can be tested without a desktop to enumerate.
 pub trait ForegroundControl {
     fn foreground_pid(&self) -> Option<u32>;
     fn visible_top_level_window(&self, pid: u32) -> Option<isize>;
@@ -99,10 +106,9 @@ fn wide(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
-/// `LSA_STRING` is counted, but `MaximumLength` is expected to cover a
-/// trailing NUL — that is what `LsaInitString` produces for a C literal.
-/// Claiming `len + 1` over a buffer that has no terminator overruns it, so
-/// `name` must end in `\0`.
+/// `LSA_STRING` is counted, but `MaximumLength` is expected to cover a trailing
+/// NUL — what `LsaInitString` produces for a C literal — so `name` must end in
+/// `\0` or the claimed `len + 1` overruns the buffer.
 fn lsa_string(name: &'static [u8]) -> LSA_STRING {
     LSA_STRING {
         Length: (name.len() - 1) as u16,
@@ -126,8 +132,8 @@ impl ForegroundControl for RealSyscalls {
         let mut search = WindowSearch { pid, found: 0 };
         // `EnumWindows` walks the *calling thread's* desktop, so this only
         // works from one of LogonUI's own threads. It reports failure when the
-        // callback stops the walk early, which is what finding a match does,
-        // so `found` is the answer rather than the result.
+        // callback stops the walk early — which is what a match does — so
+        // `found` is the answer rather than the result.
         let _ = unsafe {
             EnumWindows(
                 Some(find_window_of_process),
@@ -157,10 +163,10 @@ struct WindowSearch {
     found: isize,
 }
 
-/// Stops at the first window a person could see. Chromium opens several
-/// message-only and zero-size helpers first, and handing one of those to
-/// `SetForegroundWindow` would look like success while leaving the real window
-/// where it was.
+/// Stops at the sign-in window, matched on its title rather than by being the
+/// first visible one: WebView2 puts up a `WS_EX_NOACTIVATE` tool window long
+/// before the sign-in window is revealed, and `SetForegroundWindow` can never
+/// activate that one, so nudging it spends the grant for nothing.
 unsafe extern "system" fn find_window_of_process(hwnd: HWND, lparam: LPARAM) -> BOOL {
     let search = unsafe { &mut *(lparam.0 as *mut WindowSearch) };
 
@@ -174,6 +180,13 @@ unsafe extern "system" fn find_window_of_process(hwnd: HWND, lparam: LPARAM) -> 
     if unsafe { GetWindowRect(hwnd, &mut rect) }.is_err()
         || rect.right <= rect.left
         || rect.bottom <= rect.top
+    {
+        return true.into();
+    }
+
+    let mut title = [0u16; 128];
+    let len = unsafe { GetWindowTextW(hwnd, &mut title) };
+    if len <= 0 || String::from_utf16_lossy(&title[..len as usize]) != ak_ee_wcp_wire::WINDOW_TITLE
     {
         return true.into();
     }
@@ -195,10 +208,9 @@ impl AuthPackageLookup for RealSyscalls {
             let _ = LsaDeregisterLogonProcess(lsa_handle);
         }
 
-        // `NTSTATUS::ok()` is only a sign test, so any informational status
-        // would pass while leaving `auth_package` at the 0 it was initialised
-        // to, and we would hand LogonUI a package id that LSA never wrote.
-        // Only STATUS_SUCCESS means the out-param is meaningful.
+        // `NTSTATUS::ok()` is only a sign test, so an informational status
+        // would pass while leaving `auth_package` at 0 — a package id LSA never
+        // wrote. Only STATUS_SUCCESS means the out-param is meaningful.
         if status.0 != 0 {
             return Err(status.to_hresult().into());
         }
@@ -257,8 +269,8 @@ impl LocalAccountPassword for RealSyscalls {
         let username_wide = wide(username);
         let password_wide = wide(password);
 
-        // A network logon validates the credential without building a session,
-        // and `.` scopes the lookup to this machine's account database.
+        // A network logon validates the credential without building a session;
+        // `.` scopes the lookup to this machine's account database.
         let mut token = HANDLE::default();
         let result = unsafe {
             LogonUserW(
@@ -278,10 +290,9 @@ impl LocalAccountPassword for RealSyscalls {
                 }
                 Ok(PasswordCheck::Valid)
             }
-            // Anything not listed here — a policy denying network logons, a
-            // locked-out or disabled account — means the check was
-            // inconclusive, not that the password is wrong, and the caller
-            // must not reset on the strength of it.
+            // Anything else — a policy denying network logons, a locked-out or
+            // disabled account — is inconclusive rather than wrong, and the
+            // caller must not reset on the strength of it.
             Err(e) if e.code() == ERROR_LOGON_FAILURE.to_hresult() => Ok(PasswordCheck::Rejected),
             Err(e)
                 if e.code() == ERROR_PASSWORD_EXPIRED.to_hresult()
@@ -297,9 +308,9 @@ impl LocalAccountPassword for RealSyscalls {
 /// Keyring-backed [`PasswordStore`], keyed by SID so renaming the account does
 /// not orphan the entry.
 ///
-/// Uses [`WindowsStore`] directly rather than `ak_platform_keyring::store()`,
-/// which resolves to the in-memory store under `debug_assertions` and would
-/// lose the password between LogonUI processes in every development build.
+/// [`WindowsStore`] directly rather than `ak_platform_keyring::store()`, which
+/// resolves to the in-memory store under `debug_assertions` and would lose the
+/// password between LogonUI processes in every development build.
 pub struct KeyringPasswordStore {
     store: WindowsStore,
     service: String,
@@ -336,18 +347,18 @@ impl PasswordStore for KeyringPasswordStore {
     }
 }
 
-/// Name of the dedicated local account `ak_cef.exe` runs as instead of
-/// SYSTEM. Created by the installer (`vpkg/windows/Package.wxs`'s
-/// `util:User`) — keep this in step with that element's `Name` attribute.
+/// The dedicated local account `ak_browser.exe` runs as instead of SYSTEM.
+/// Created by the installer (`vpkg/windows/Package.wxs`'s `util:User`) — keep
+/// this in step with that element's `Name` attribute.
 pub const SERVICE_ACCOUNT_NAME: &str = "ak-wcp-browser";
 
-/// Resolves the service account's name to a SID: both `LsaAddAccountRights`
-/// and the desktop ACL grant below want one, and a name is all the installer
-/// leaves behind.
+/// Resolves the service account's name to a SID: a name is all the installer
+/// leaves behind, and both `LsaAddAccountRights` and the desktop ACL grant
+/// below want one.
 pub fn account_sid(username: &str) -> windows::core::Result<Vec<u8>> {
     let username_wide = wide(username);
-    // Large enough for any SID Windows issues (the practical maximum is well
-    // under 68 bytes) and any domain name `LookupAccountNameW` might report.
+    // Comfortably over the practical maximum for a SID (well under 68 bytes)
+    // and for any domain name `LookupAccountNameW` might report.
     let mut sid = vec![0u8; 256];
     let mut sid_len = sid.len() as u32;
     let mut domain = [0u16; 256];
@@ -377,11 +388,10 @@ fn lsa_unicode_string(wide: &[u16]) -> LSA_UNICODE_STRING {
     }
 }
 
-/// Best-effort "who are we actually running as" for the log line right
-/// before a privilege-enable failure. A privilege can be missing either
-/// because policy genuinely denies it to this account, or because the
-/// token isn't the SYSTEM token this whole design assumes it is — those
-/// need different fixes, and the log line otherwise can't tell them apart.
+/// Best-effort "who are we actually running as", for the log line before a
+/// privilege-enable failure. Policy denying the privilege and the token not
+/// being the SYSTEM token this design assumes need different fixes, and
+/// nothing else in that log line tells them apart.
 fn current_token_identity() -> String {
     unsafe {
         let mut token = HANDLE::default();
@@ -434,11 +444,10 @@ fn current_token_identity() -> String {
     }
 }
 
-/// SYSTEM's token holds every privilege this file needs, but — like any
-/// privilege not `SE_PRIVILEGE_ENABLED_BY_DEFAULT` — disabled until asked
-/// for; the APIs that need one check it as active, not merely present.
-/// `display` is only for the log line on failure — `AdjustTokenPrivileges`
-/// doesn't say which of the (here, always one) privileges it couldn't grant.
+/// SYSTEM's token holds every privilege this file needs, but — like any not
+/// `SE_PRIVILEGE_ENABLED_BY_DEFAULT` — disabled until asked for, and the APIs
+/// needing one check it as active rather than merely present. `display` is for
+/// the failure log line, which `AdjustTokenPrivileges` cannot fill in itself.
 pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()> {
     unsafe {
         let mut token = HANDLE::default();
@@ -456,8 +465,7 @@ pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()
             };
             AdjustTokenPrivileges(token, false, Some(&privileges), 0, None, None)?;
             // The call above reports success even when the privilege was not
-            // actually held to enable — a classic trap, and indistinguishable
-            // from a real success without this check.
+            // held to enable in the first place.
             if GetLastError() == ERROR_NOT_ALL_ASSIGNED {
                 log::error!(
                     "{display} is not held by this token at all (running as {})",
@@ -476,12 +484,11 @@ pub fn enable_privilege(name: PCWSTR, display: &str) -> windows::core::Result<()
 }
 
 /// Mints a primary token for the service account by logging it on with its
-/// stored password, then strips every privilege from the result — the same
-/// pattern GCPW uses for its own LogonUI-hosted sign-in UI (`CreateLogonToken`
-/// in `chrome/credential_provider/gaiacp/gcp_utils.cc`). `LOGON32_LOGON_SERVICE`,
-/// not `_BATCH`: a batch-logon token cannot create named synchronization
-/// objects, fatal to Chromium's own `ProcessSingleton` — see
-/// `BROWSER_PRIVILEGE.md`'s "Roads not taken" for why.
+/// stored password, then strips every privilege from the result — as GCPW does
+/// for its own LogonUI-hosted sign-in UI (`CreateLogonToken` in
+/// `chrome/credential_provider/gaiacp/gcp_utils.cc`). `LOGON32_LOGON_SERVICE`
+/// rather than `_BATCH`, whose token cannot create named synchronization
+/// objects (`BROWSER_PRIVILEGE.md`).
 pub fn service_account_token(username: &str, password: &str) -> windows::core::Result<HANDLE> {
     let username_wide = wide(username);
     let password_wide = wide(password);
@@ -516,10 +523,9 @@ pub fn service_account_token(username: &str, password: &str) -> windows::core::R
     Ok(restricted)
 }
 
-/// String form of a SID, for the keyring's `sid` key. `account_sid` returns
-/// raw bytes for the Win32 calls that want a `PSID`; the keyring store
-/// (like the interactive user's, `credential.rs`) is keyed by the string
-/// form instead.
+/// String form of a SID, for the keyring's `sid` key. `account_sid` returns raw
+/// bytes for the Win32 calls that want a `PSID`, but the keyring store (like the
+/// interactive user's, `credential.rs`) is keyed by the string form.
 pub(crate) fn sid_to_string(sid: &[u8]) -> windows::core::Result<String> {
     unsafe {
         let mut wide_sid = PWSTR(std::ptr::null_mut());
@@ -531,10 +537,9 @@ pub(crate) fn sid_to_string(sid: &[u8]) -> windows::core::Result<String> {
     }
 }
 
-/// Adds `sid` to `handle`'s DACL with `access_mask`, preserving every
-/// existing entry — `SetEntriesInAclW` merges onto `old_dacl` rather than
-/// replacing it, which matters here: replacing outright would drop
-/// SYSTEM/Administrators access to the object this process itself needs.
+/// Adds `sid` to `handle`'s DACL with `access_mask`, preserving every existing
+/// entry: `SetEntriesInAclW` merges onto `old_dacl`, where replacing outright
+/// would drop the SYSTEM/Administrators access this process itself needs.
 unsafe fn grant_access(
     handle: HANDLE,
     object_type: SE_OBJECT_TYPE,
@@ -595,11 +600,11 @@ unsafe fn grant_access(
     }
 }
 
-/// Grants the service account's SID access to the secure desktop — a
-/// non-SYSTEM token has none by default. Deliberate; see `BROWSER_PRIVILEGE.md`
-/// for the tradeoff. Idempotent, and only correct when called from inside
-/// LogonUI's own process: `GetProcessWindowStation`/`OpenDesktopW` resolve
-/// relative to the *caller's* window station, `WinSta0` here.
+/// Grants the service account's SID access to the secure desktop, which a
+/// non-SYSTEM token has none of by default — see `BROWSER_PRIVILEGE.md` for the
+/// tradeoff. Idempotent, and only correct from inside LogonUI's own process:
+/// `GetProcessWindowStation`/`OpenDesktopW` resolve relative to the *caller's*
+/// window station, `WinSta0` here.
 pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
     unsafe {
         let winsta = GetProcessWindowStation()?;
@@ -615,14 +620,14 @@ pub fn ensure_desktop_access(sid: &[u8]) -> windows::core::Result<()> {
     }
 }
 
-/// Grants the service account's SID rights to create objects in this
-/// session's `BaseNamedObjects` — the Object Manager directory Windows
-/// resolves `Local\`-prefixed names into. No Win32 wrapper exists for
-/// opening an arbitrary Object Manager directory the way `OpenDesktopW`
-/// does for desktops, hence the native `NtOpenDirectoryObject` call.
-/// Mirrors GCPW's own `AllowLogonSIDOnLocalBasedNamedObjects`
-/// (`chrome/credential_provider/gaiacp/os_process_manager.cc`), including
-/// its narrower-than-`GENERIC_ALL` mask — see `BROWSER_PRIVILEGE.md`.
+/// Grants the service account's SID rights to create objects in this session's
+/// `BaseNamedObjects`, the Object Manager directory Windows resolves
+/// `Local\`-prefixed names into. The native `NtOpenDirectoryObject` because no
+/// Win32 wrapper opens an arbitrary Object Manager directory the way
+/// `OpenDesktopW` does for desktops. Mirrors GCPW's
+/// `AllowLogonSIDOnLocalBasedNamedObjects`
+/// (`chrome/credential_provider/gaiacp/os_process_manager.cc`), including its
+/// narrower-than-`GENERIC_ALL` mask — see `BROWSER_PRIVILEGE.md`.
 pub fn ensure_base_named_objects_access(sid: &[u8]) -> windows::core::Result<()> {
     use windows::Wdk::Foundation::OBJECT_ATTRIBUTES;
     use windows::Wdk::Storage::FileSystem::NtOpenDirectoryObject;
@@ -677,10 +682,9 @@ pub fn ensure_base_named_objects_access(sid: &[u8]) -> windows::core::Result<()>
 }
 
 /// Denies the service account the logon types that would let it sign someone
-/// in — it must not be usable at the very screen it serves. `Service`, what
-/// `service_account_token` uses (`LOGON32_LOGON_SERVICE`), is deliberately
-/// not among these. `LsaAddAccountRights` is itself idempotent, so this is
-/// safe on every load.
+/// in: it must not be usable at the very screen it serves. `Service`, what
+/// `service_account_token` uses, is deliberately not among them.
+/// `LsaAddAccountRights` is idempotent, so this is safe on every load.
 pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<()> {
     const RIGHTS: [&str; 3] = [
         "SeDenyInteractiveLogonRight",
@@ -708,14 +712,12 @@ pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<(
     }
 }
 
-/// The service account's password: established once and reused after that,
-/// same state machine and same reasoning as the interactive user's own
-/// account (`credential.rs::account_password`, `LOCAL_PASSWORD.md`) — an
-/// administrative reset orphans the DPAPI master key, so once a password is
-/// known, only `change` touches the account again. That reasoning is about
-/// DPAPI survival, which does not apply to an account nothing ever signs
-/// into interactively; kept anyway; there is no reason to churn the account
-/// on every logon when reuse costs nothing.
+/// The service account's password: established once and reused after that, same
+/// state machine as the interactive user's own account
+/// (`credential.rs::account_password`, `LOCAL_PASSWORD.md`), where an
+/// administrative reset orphans the DPAPI master key. That reasoning does not
+/// apply to an account nothing signs into interactively, but reuse costs
+/// nothing and churning the account on every logon buys nothing.
 pub fn service_account_password() -> eyre::Result<String> {
     let sid = account_sid(SERVICE_ACCOUNT_NAME).map_err(|e| eyre::eyre!("{e}"))?;
     let sid = sid_to_string(&sid).map_err(|e| eyre::eyre!("{e}"))?;
@@ -735,7 +737,7 @@ pub fn service_account_password() -> eyre::Result<String> {
                     return Ok(new);
                 }
             }
-            // Changed out of band; fall through to a reset.
+            // Changed out of band.
             Ok(PasswordCheck::Rejected) => {}
             // Inconclusive, not wrong — see credential.rs::stored_password.
             Err(e) => {
@@ -762,9 +764,9 @@ pub fn service_account_password() -> eyre::Result<String> {
 mod byte_layout_tests {
     use super::*;
 
-    /// `MaximumLength` must cover the trailing NUL while `Length` excludes
-    /// it — get this backwards and `LsaLookupAuthenticationPackage` either
-    /// truncates the last real character or reads one byte past the buffer.
+    /// `MaximumLength` must cover the trailing NUL while `Length` excludes it.
+    /// Backwards, and `LsaLookupAuthenticationPackage` either truncates the
+    /// last real character or reads one byte past the buffer.
     #[test]
     fn lsa_string_length_excludes_the_trailing_nul() {
         let s = lsa_string(b"Negotiate\0");
@@ -774,9 +776,8 @@ mod byte_layout_tests {
         assert_eq!(bytes, b"Negotiate");
     }
 
-    /// Unlike `LSA_STRING`, `deny_interactive_and_network_logon`'s rights
-    /// list carries no NUL at all — `Length`/`MaximumLength` are both the
-    /// exact UTF-16 byte count.
+    /// Unlike `LSA_STRING`, `deny_interactive_and_network_logon`'s rights list
+    /// carries no NUL at all.
     #[test]
     fn lsa_unicode_string_round_trips_without_a_nul() {
         let wide: Vec<u16> = "ak-wcp-browser".encode_utf16().collect();

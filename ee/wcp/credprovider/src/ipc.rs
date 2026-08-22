@@ -1,11 +1,10 @@
-//! Spawns `ak_cef.exe` in the interactive session and exchanges
-//! `wire`-framed messages with it over its inherited standard handles: it
-//! writes its result to stdout, and reads a cancel signal from stdin.
-//! Anonymous, inherited pipes rather than named ones with a custom DACL —
-//! matching GCPW's own approach (`CreatePipeForChildProcess`,
-//! `gcp_utils.cc`) — because the child never opens anything by name at all,
-//! so there is no DACL for a hardened box's Object Manager namespace to
-//! disagree with. See `BROWSER_PRIVILEGE.md`'s "Roads not taken".
+//! Spawns `ak_browser.exe` in the interactive session and exchanges
+//! `wire`-framed messages with it over its inherited standard handles.
+//!
+//! Anonymous, inherited pipes rather than named ones with a custom DACL — as
+//! GCPW does too (`CreatePipeForChildProcess`, `gcp_utils.cc`) — because the
+//! child then opens nothing by name, leaving no DACL for a hardened box's
+//! Object Manager namespace to disagree with. See `BROWSER_PRIVILEGE.md`.
 
 use std::ffi::c_void;
 use std::fs::File;
@@ -35,57 +34,266 @@ use windows::{
 
 use crate::syscalls::{self, ForegroundControl};
 use crate::sysd;
-use ak_ee_wcp_wire::{AuthResult, HostReport};
+use ak_ee_wcp_wire::{AuthResult, HostCommand, HostReport};
 
-/// Spawns `ak_cef.exe` and waits for its result. `should_continue` is polled
-/// while waiting, so LogonUI cancelling (the user backing out of the tile)
-/// tears the browser process down instead of orphaning it.
+/// Spawns `ak_browser.exe` and waits for its result. `should_continue` is
+/// polled while waiting, so the user backing out of the tile tears the browser
+/// down instead of orphaning it.
 pub trait AuthFlow {
     fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult;
+
+    /// Start the browser host early, before there is anything for it to load.
+    ///
+    /// Most of the delay between submit and a visible window is WebView2
+    /// building an environment, which needs no URL, so tile selection is enough
+    /// to start it. No sign-in begins here — `ak-sysd` is not called and no
+    /// session exists until [`AuthFlow::run`].
+    fn preload(&self) {}
+
+    /// Tear down anything [`AuthFlow::preload`] started, so backing out of the
+    /// tile does not leave a browser running on the logon screen.
+    fn discard(&self) {}
 }
 
-pub struct CefAuthFlow {
-    pub cef_exe: std::path::PathBuf,
-    pub cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+/// A browser host started ahead of a sign-in and waiting for a `StartSignIn`.
+///
+/// Handles are raw integers so this stays `Send`/`Sync` inside the COM object
+/// that owns it, and are wrapped back up at the point of use — the same trick
+/// `ForegroundControl` plays with `HWND`.
+struct Preloaded {
+    process: usize,
+    thread: usize,
+    pid: u32,
+    result_read: usize,
+    cancel_write: usize,
 }
 
-impl AuthFlow for CefAuthFlow {
-    fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
-        run_cef_host(&self.cef_exe, self.cpus, should_continue)
+impl Preloaded {
+    /// A preloaded process can die while waiting — a missing WebView2 runtime
+    /// is enough — and reusing its pipes hangs the sign-in until the flow times
+    /// out.
+    fn alive(&self) -> bool {
+        unsafe { WaitForSingleObject(HANDLE(self.process as *mut c_void), 0) != WAIT_OBJECT_0 }
+    }
+
+    /// Asks the host to close, then releases everything. Best-effort: every
+    /// caller is on a path with nothing useful to do about a failure.
+    fn shut_down(self) {
+        let cancel_write = HANDLE(self.cancel_write as *mut c_void);
+        send_command(cancel_write, &HostCommand::Cancel);
+        unsafe {
+            let _ = CloseHandle(cancel_write);
+            let process = HANDLE(self.process as *mut c_void);
+            let _ = WaitForSingleObject(process, 5_000);
+            let _ = CloseHandle(process);
+            let _ = CloseHandle(HANDLE(self.thread as *mut c_void));
+            let _ = CloseHandle(HANDLE(self.result_read as *mut c_void));
+        }
     }
 }
 
-/// Only `CPUS_CREDUI` may fall back to launching in the caller's own session.
-/// It is debug-gated and runs on an ordinary desktop; the logon scenarios
-/// must never take this fallback, or Chromium ends up on the secure desktop
-/// with this process's own SYSTEM token instead of the service account's.
+/// Tracks a preload that may still be running when the flow has moved on.
+///
+/// Preloading runs on its own thread, so it can finish after the tile was
+/// deselected or after submit already started a host the normal way. Filing a
+/// result then would leave a browser nobody looks at running on the logon
+/// screen, so every path that stops wanting the current preload bumps
+/// `generation` and the thread hands its result back instead.
+///
+/// Generic only so the state machine can be tested without spawning processes.
+struct PreloadSlot<T> {
+    generation: u64,
+    loading: bool,
+    ready: Option<T>,
+}
+
+impl<T> PreloadSlot<T> {
+    fn new() -> Self {
+        Self {
+            generation: 0,
+            loading: false,
+            ready: None,
+        }
+    }
+
+    /// `None` when a preload is already running or already done.
+    fn begin(&mut self) -> Option<u64> {
+        if self.loading || self.ready.is_some() {
+            return None;
+        }
+        self.loading = true;
+        Some(self.generation)
+    }
+
+    /// Files a finished preload, or hands it back for the caller to shut down
+    /// when it is no longer wanted.
+    fn finish(&mut self, generation: u64, value: T) -> Option<T> {
+        if generation != self.generation {
+            return Some(value);
+        }
+        self.loading = false;
+        self.ready = Some(value);
+        None
+    }
+
+    /// Gives up on a preload that failed, without disturbing a newer one.
+    fn abandon(&mut self, generation: u64) {
+        if generation == self.generation {
+            self.loading = false;
+        }
+    }
+
+    /// Takes whatever is ready, and makes anything still in flight unwanted.
+    fn take(&mut self) -> Option<T> {
+        self.generation += 1;
+        self.loading = false;
+        self.ready.take()
+    }
+}
+
+pub struct BrowserAuthFlow {
+    browser_exe: std::path::PathBuf,
+    cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    slot: std::sync::Arc<std::sync::Mutex<PreloadSlot<Preloaded>>>,
+}
+
+impl BrowserAuthFlow {
+    pub fn new(browser_exe: std::path::PathBuf, cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> Self {
+        Self {
+            browser_exe,
+            cpus,
+            slot: std::sync::Arc::new(std::sync::Mutex::new(PreloadSlot::new())),
+        }
+    }
+
+    fn take_preloaded(&self) -> Option<Preloaded> {
+        self.slot.lock().unwrap_or_else(|e| e.into_inner()).take()
+    }
+}
+
+impl AuthFlow for BrowserAuthFlow {
+    fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
+        run_browser_host(
+            &self.browser_exe,
+            self.cpus,
+            self.take_preloaded(),
+            should_continue,
+        )
+    }
+
+    fn preload(&self) {
+        // The window would open on the remote session's desktop, where the
+        // flow cannot complete: several seconds of a process nobody will see,
+        // on a machine that may have a console session using this properly.
+        if syscalls::is_remote_session() {
+            log::info!("tile selected in a remote session; not preloading the sign-in window");
+            return;
+        }
+
+        let (generation, dead) = {
+            let mut slot = self.slot.lock().unwrap_or_else(|e| e.into_inner());
+            // Worse than none: it reads as ready and its pipes never answer.
+            let dead = match &slot.ready {
+                Some(preloaded) if !preloaded.alive() => slot.ready.take(),
+                _ => None,
+            };
+            (slot.begin(), dead)
+        };
+        if let Some(dead) = dead {
+            dead.shut_down();
+        }
+        let Some(generation) = generation else {
+            return;
+        };
+
+        // On its own thread: `SetSelected` runs on the LogonUI thread that
+        // draws the tile, and a logon, a password rotation, two ACL grants and
+        // a process creation stalled the very click this keeps smooth.
+        let slot = self.slot.clone();
+        let browser_exe = self.browser_exe.clone();
+        let cpus = self.cpus;
+        std::thread::spawn(move || {
+            let started = std::time::Instant::now();
+            let host = preload_browser_host(&browser_exe, cpus);
+            let unwanted = {
+                let mut slot = slot.lock().unwrap_or_else(|e| e.into_inner());
+                match host {
+                    Some(host) => slot.finish(generation, host),
+                    None => {
+                        slot.abandon(generation);
+                        None
+                    }
+                }
+            };
+            match unwanted {
+                Some(host) => {
+                    log::info!(
+                        "the preloaded sign-in window was ready after {}ms but \
+                         no longer wanted; shutting it down",
+                        started.elapsed().as_millis()
+                    );
+                    host.shut_down();
+                }
+                None => log::info!(
+                    "preloaded the sign-in window in {}ms",
+                    started.elapsed().as_millis()
+                ),
+            }
+        });
+    }
+
+    fn discard(&self) {
+        if let Some(preloaded) = self.take_preloaded() {
+            log::info!("tile deselected; shutting the preloaded sign-in window down");
+            preloaded.shut_down();
+        }
+    }
+}
+
+impl Drop for BrowserAuthFlow {
+    fn drop(&mut self) {
+        self.discard();
+    }
+}
+
+/// Writes one command to the host's control pipe, leaving the handle owned by
+/// the caller.
+fn send_command(cancel_write: HANDLE, command: &HostCommand) {
+    let mut pipe = unsafe { File::from_raw_handle(cancel_write.0) };
+    if let Err(e) = ak_ee_wcp_wire::write_host_command(&mut pipe, command) {
+        log::warn!("could not send {command:?} to the sign-in window: {e}");
+    }
+    std::mem::forget(pipe);
+}
+
+/// Only `CPUS_CREDUI` may fall back to the caller's own session: it is
+/// debug-gated and runs on an ordinary desktop. On a logon scenario this
+/// fallback would put the browser on the secure desktop holding this process's
+/// own SYSTEM token.
 fn may_launch_in_current_session(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> bool {
     cpus == CPUS_CREDUI
 }
 
-/// The desktop LogonUI draws on. A window created on any other desktop of the
-/// same window station is fully functional but invisible to the person signing
-/// in, so the logon scenarios have to name it: with `lpDesktop` left NULL,
-/// `CreateProcess*` gives the child whichever desktop the caller happens to be
-/// on, which is only incidentally the right one. `CPUS_CREDUI` keeps it NULL
-/// and inherits the ordinary interactive desktop instead.
+/// The desktop LogonUI draws on. A window on any other desktop of the same
+/// window station works but is invisible, and a NULL `lpDesktop` gives the
+/// child whichever desktop the caller happens to be on — only incidentally the
+/// right one. `CPUS_CREDUI` keeps it NULL and inherits the interactive
+/// desktop.
 const SECURE_DESKTOP: &str = r"WinSta0\Winlogon";
 
 struct StdPipes {
     /// This process's own ends, read/written after the child is spawned.
     result_read: HANDLE,
     cancel_write: HANDLE,
-    /// The child's ends, handed off via `STARTUPINFOW`'s `hStdOutput`/
-    /// `hStdInput` and closed here once the child has its own inherited
-    /// copies.
+    /// The child's ends, handed off via `STARTUPINFOW` and closed here once it
+    /// has its own inherited copies.
     child_stdout: HANDLE,
     child_stdin: HANDLE,
 }
 
-/// One anonymous pipe, both ends inheritable — `CreatePipe` has no way to
-/// mark just one. `keep_private` clears it on whichever end the caller keeps
-/// for itself, or that copy leaks into every future child this process
-/// spawns, not just this one.
+/// One anonymous pipe, both ends inheritable — `CreatePipe` cannot mark just
+/// one. The caller must `keep_private` the end it keeps, or that copy leaks
+/// into every future child this process spawns.
 fn create_inherited_pipe() -> windows::core::Result<(HANDLE, HANDLE)> {
     let sa = SECURITY_ATTRIBUTES {
         nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,
@@ -102,12 +310,11 @@ fn keep_private(handle: HANDLE) -> windows::core::Result<()> {
     unsafe { SetHandleInformation(handle, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }
 }
 
-/// Two anonymous pipes: the child reads the cancel signal from its inherited
-/// stdin and writes its result to its inherited stdout. An *inherited*
-/// handle is a duplicate of one this process (SYSTEM on the real logon
-/// scenarios) already opened and validated — the child's own, low-privilege
-/// token is never consulted at all, unlike a named pipe it has to open by
-/// path itself.
+/// Two anonymous pipes: the child reads a cancel signal from its inherited
+/// stdin and writes its result to its inherited stdout. An inherited handle is
+/// a duplicate of one this process already opened and validated, so the child's
+/// own low-privilege token is never consulted — unlike a named pipe it would
+/// have to open by path.
 fn create_std_pipes() -> windows::core::Result<StdPipes> {
     let (child_stdin, cancel_write) = create_inherited_pipe()?;
     if let Err(e) = keep_private(cancel_write) {
@@ -146,82 +353,183 @@ fn create_std_pipes() -> windows::core::Result<StdPipes> {
     })
 }
 
-fn run_cef_host(
-    cef_exe: &Path,
+/// Spawns a host with no sign-in attached, for [`AuthFlow::preload`].
+///
+/// Quiet on failure: nothing is at stake yet, and a sign-in that finds no
+/// preloaded host just spawns one the slow way.
+fn preload_browser_host(
+    browser_exe: &Path,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+) -> Option<Preloaded> {
+    let pipes = match create_std_pipes() {
+        Ok(p) => p,
+        Err(e) => {
+            log::warn!("could not create IPC pipes to preload the sign-in window: {e}");
+            return None;
+        }
+    };
+
+    let spawn = spawn_browser_host(browser_exe, &pipes, cpus, None);
+    unsafe {
+        let _ = CloseHandle(pipes.child_stdin);
+        let _ = CloseHandle(pipes.child_stdout);
+    }
+    match spawn {
+        Ok(process) => {
+            log::info!(
+                "preloaded the sign-in window as pid {} while the tile is selected",
+                process.dwProcessId
+            );
+            Some(Preloaded {
+                process: process.hProcess.0 as usize,
+                thread: process.hThread.0 as usize,
+                pid: process.dwProcessId,
+                result_read: pipes.result_read.0 as usize,
+                cancel_write: pipes.cancel_write.0 as usize,
+            })
+        }
+        Err(e) => {
+            log::warn!("could not preload the sign-in window: {e}");
+            unsafe {
+                let _ = CloseHandle(pipes.result_read);
+                let _ = CloseHandle(pipes.cancel_write);
+            }
+            None
+        }
+    }
+}
+
+/// The pipes and process a sign-in runs against, however it was started.
+struct RunningHost {
+    process: HANDLE,
+    thread: HANDLE,
+    pid: u32,
+    result_read: HANDLE,
+    cancel_write: HANDLE,
+}
+
+fn run_browser_host(
+    browser_exe: &Path,
+    cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
+    preloaded: Option<Preloaded>,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
-    // Fetched here, not by `ak_cef.exe` itself: the service account it runs
-    // as has no access to `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). Doing
-    // this before the pipes/spawn also means a failure here costs nothing
-    // beyond the round trip itself, rather than a spawned window that can
-    // never load anything.
+    // Worse than none: its pipes would never answer.
+    let preloaded = preloaded.filter(|p| {
+        let alive = p.alive();
+        if !alive {
+            log::warn!("the preloaded sign-in window is gone; starting one now");
+        }
+        alive
+    });
+
+    // Not by `ak_browser.exe` itself: the service account it runs as cannot
+    // reach `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). And now rather than at
+    // preload time: selecting a tile must not start an authentication session.
     let start = match sysd::sys_auth_start_async() {
         Ok(s) => s,
         Err(e) => {
             log::error!("sys_auth_start_async failed: {e}");
+            if let Some(preloaded) = preloaded {
+                preloaded.shut_down();
+            }
             return AuthResult::Failed {
                 reason: e.to_string(),
             };
         }
     };
 
-    let pipes = match create_std_pipes() {
-        Ok(p) => p,
-        Err(e) => {
-            log::error!("failed to create IPC pipes: {e}");
-            return AuthResult::Failed {
-                reason: "failed to create IPC pipes".to_string(),
+    let host = match preloaded {
+        Some(preloaded) => {
+            log::info!(
+                "reusing the preloaded sign-in window (pid {})",
+                preloaded.pid
+            );
+            let host = RunningHost {
+                process: HANDLE(preloaded.process as *mut c_void),
+                thread: HANDLE(preloaded.thread as *mut c_void),
+                pid: preloaded.pid,
+                result_read: HANDLE(preloaded.result_read as *mut c_void),
+                cancel_write: HANDLE(preloaded.cancel_write as *mut c_void),
             };
+            send_command(
+                host.cancel_write,
+                &HostCommand::StartSignIn {
+                    url: start.url.clone(),
+                    header_token: start.header_token.clone(),
+                },
+            );
+            host
         }
-    };
-
-    let spawn = spawn_cef_host(cef_exe, &pipes, cpus, &start.url, &start.header_token);
-    // Our copies of the child's ends are only needed up to the spawn call,
-    // which duplicates them into the child's own handle table (or fails,
-    // in which case there is no child to hold them at all either way).
-    unsafe {
-        let _ = CloseHandle(pipes.child_stdin);
-        let _ = CloseHandle(pipes.child_stdout);
-    }
-    let process = match spawn {
-        Ok(p) => p,
-        Err(e) => {
-            log::error!("failed to launch {}: {e}", cef_exe.display());
-            unsafe {
-                let _ = CloseHandle(pipes.result_read);
-                let _ = CloseHandle(pipes.cancel_write);
-            }
-            return AuthResult::Failed {
-                reason: "failed to launch sign-in window".to_string(),
+        None => {
+            let pipes = match create_std_pipes() {
+                Ok(p) => p,
+                Err(e) => {
+                    log::error!("failed to create IPC pipes: {e}");
+                    return AuthResult::Failed {
+                        reason: "failed to create IPC pipes".to_string(),
+                    };
+                }
             };
+
+            let spawn = spawn_browser_host(
+                browser_exe,
+                &pipes,
+                cpus,
+                Some((&start.url, &start.header_token)),
+            );
+            // The spawn duplicated them into the child's handle table, or
+            // failed, in which case there is no child to hold them.
+            unsafe {
+                let _ = CloseHandle(pipes.child_stdin);
+                let _ = CloseHandle(pipes.child_stdout);
+            }
+            match spawn {
+                Ok(process) => RunningHost {
+                    process: process.hProcess,
+                    thread: process.hThread,
+                    pid: process.dwProcessId,
+                    result_read: pipes.result_read,
+                    cancel_write: pipes.cancel_write,
+                },
+                Err(e) => {
+                    log::error!("failed to launch {}: {e}", browser_exe.display());
+                    unsafe {
+                        let _ = CloseHandle(pipes.result_read);
+                        let _ = CloseHandle(pipes.cancel_write);
+                    }
+                    return AuthResult::Failed {
+                        reason: "failed to launch sign-in window".to_string(),
+                    };
+                }
+            }
         }
     };
 
     let result = wait_for_result(
-        pipes.result_read,
-        pipes.cancel_write,
-        process.hProcess,
-        process.dwProcessId,
+        host.result_read,
+        host.cancel_write,
+        host.process,
+        host.pid,
         should_continue,
     );
 
     unsafe {
-        let _ = CloseHandle(pipes.cancel_write);
-        let _ = WaitForSingleObject(process.hProcess, 5_000);
-        let _ = CloseHandle(process.hProcess);
-        let _ = CloseHandle(process.hThread);
+        let _ = CloseHandle(host.cancel_write);
+        let _ = WaitForSingleObject(host.process, 5_000);
+        let _ = CloseHandle(host.process);
+        let _ = CloseHandle(host.thread);
     }
 
     result
 }
 
-/// `wait_for_result` polls every 200 ms, but the browser takes seconds to open
-/// a window, so nudge on every fifth poll rather than enumerating an empty
-/// desktop five times a second.
+/// `wait_for_result` polls every 200ms, but the browser takes seconds to open a
+/// window; this keeps it from enumerating an empty desktop five times a
+/// second.
 const NUDGE_INTERVAL_TICKS: u32 = 5;
 
-/// Ten seconds of polls. Past that the window has either appeared or is not
+/// Ten seconds of polls: past that the window has either appeared or is not
 /// going to, and the sign-in has no deadline this should compete with.
 const NUDGE_BUDGET_TICKS: u32 = 50;
 
@@ -229,17 +537,17 @@ fn nudge_due(tick: u32, settled: bool) -> bool {
     !settled && tick < NUDGE_BUDGET_TICKS && tick.is_multiple_of(NUDGE_INTERVAL_TICKS)
 }
 
-/// Pushes `ak_cef.exe`'s window to the front from inside LogonUI.
+/// Pushes `ak_browser.exe`'s window to the front from inside LogonUI.
 ///
 /// The child asks for the foreground itself, but a freshly spawned process is
-/// rarely allowed to take it, and the single `AllowSetForegroundWindow` issued
-/// at spawn is spent by the time CEF has a window to apply it to. This process
-/// is the one that can: right desktop, normally the foreground process
-/// already, and exempt from a foreground lock it took itself.
+/// rarely allowed to take it, and the single `AllowSetForegroundWindow` from
+/// the spawn is spent before it has a window to apply it to. This process can:
+/// right desktop, normally the foreground already, and exempt from a foreground
+/// lock it took itself.
 ///
 /// Settles on the child *being* the foreground rather than on a call
-/// succeeding, so a window that takes it and immediately loses it again to a
-/// LogonUI repaint gets pushed back rather than counted as done.
+/// succeeding, so a window that loses it again to a LogonUI repaint gets pushed
+/// back rather than counted as done.
 struct ForegroundNudge {
     child_pid: u32,
     tick: u32,
@@ -277,8 +585,8 @@ impl ForegroundNudge {
         };
         if !self.window_seen {
             self.window_seen = true;
-            // The run that works is the slow one, so how wide this gap is says
-            // whether the grant at spawn had any chance of surviving it.
+            // How wide this gap is says whether the grant at spawn had any
+            // chance of surviving it.
             log::info!(
                 "the sign-in window appeared {}ms after the spawn",
                 self.spawned.elapsed().as_millis()
@@ -291,21 +599,19 @@ impl ForegroundNudge {
     }
 }
 
-/// What the result-pipe reader thread saw. `Eof` and `Error` both end up as a
-/// cancellation for the user, but they mean very different things — the host
-/// died vs. the pipe misbehaved — so they stay separate long enough to be
-/// logged.
+/// What the result-pipe reader thread saw. `Eof` and `Error` both reach the
+/// user as a cancellation, but the host dying and the pipe misbehaving want
+/// different fixes, so they stay separate long enough to be logged.
 enum PipeOutcome {
     Result(AuthResult),
     Eof,
     Error(String),
 }
 
-/// Turns the sign-in redirect's URL into a real outcome by validating its
-/// token against `ak-sysd` — the one step `ak_cef.exe` cannot do itself
-/// (`BROWSER_PRIVILEGE.md`). Runs on the result-pipe reader thread, not the
-/// thread LogonUI called `Connect` on, so this blocking round trip does not
-/// stall `should_continue` polling or the foreground nudge.
+/// Turns the sign-in redirect's URL into a real outcome by validating its token
+/// against `ak-sysd`, the one step `ak_browser.exe` cannot do itself
+/// (`BROWSER_PRIVILEGE.md`). Runs on the result-pipe reader thread so this
+/// blocking round trip does not stall `should_continue` or the nudge.
 fn auth_result_for(url: &str) -> AuthResult {
     match sysd::sys_auth_validate(url) {
         Ok(Some(username)) => AuthResult::Completed { username },
@@ -319,12 +625,11 @@ fn auth_result_for(url: &str) -> AuthResult {
 }
 
 /// Polls in short slices so `should_continue` gets a turn. On cancellation it
-/// asks `ak_cef.exe` to close over the control pipe rather than killing it.
+/// asks `ak_browser.exe` to close over the control pipe rather than killing it.
 ///
-/// Every route out of here other than a real `AuthResult` looks identical to
-/// the user ("Login attempt cancelled"), so each one logs why — including a
-/// crash before the child sends anything, which just surfaces as a plain EOF
-/// once its inherited stdout closes.
+/// Every route out other than a real `AuthResult` reaches the user as the same
+/// "Login attempt cancelled", so each logs why — including a crash before the
+/// child sends anything, which surfaces only as a plain EOF.
 fn wait_for_result(
     result_read: HANDLE,
     cancel_write: HANDLE,
@@ -345,9 +650,9 @@ fn wait_for_result(
     });
 
     let mut cancel_signalled = false;
-    // This loop runs on the thread LogonUI called `Connect` on, so it is on
-    // the desktop the browser's window appears on — which `EnumWindows` and
-    // `SetForegroundWindow` both need, and which no other thread here has.
+    // This loop is on the thread LogonUI called `Connect` on, hence on the
+    // desktop the browser's window appears on — which `EnumWindows` and
+    // `SetForegroundWindow` both need and no other thread here has.
     let mut nudge = ForegroundNudge::new(child_pid);
     loop {
         match rx.recv_timeout(std::time::Duration::from_millis(200)) {
@@ -372,13 +677,8 @@ fn wait_for_result(
                 if !cancel_signalled && !should_continue() {
                     log::info!("LogonUI withdrew the sign-in; asking the window to close");
                     cancel_signalled = true;
-                    // `cancel_write` stays owned by the caller, closed once
-                    // this function returns — wrap it without taking that.
-                    let mut f = unsafe { File::from_raw_handle(cancel_write.0) };
-                    let _ = ak_ee_wcp_wire::write_frame(&mut f, &ak_ee_wcp_wire::CancelSignal {});
-                    std::mem::forget(f);
+                    send_command(cancel_write, &HostCommand::Cancel);
                 }
-                // Host exited without sending a result.
                 if unsafe { WaitForSingleObject(process, 0) } == WAIT_OBJECT_0 {
                     log::warn!(
                         "sign-in window exited without sending a result ({})",
@@ -395,10 +695,10 @@ fn wait_for_result(
     }
 }
 
-/// Exit code of `ak_cef.exe` rendered for a log line. The value is the whole
-/// diagnosis when the host dies before it can say anything: `0xC0000005` is a
-/// crash, `0xC0000142` is a `DLL_INIT_FAILED` from a desktop the process has no
-/// access to, and `0` is a clean exit that simply skipped the result.
+/// Exit code of `ak_browser.exe` rendered for a log line — the whole diagnosis
+/// when the host dies before it can say anything: `0xC0000005` is a crash,
+/// `0xC0000142` a `DLL_INIT_FAILED` from a desktop it cannot reach, `0` a clean
+/// exit that simply skipped the result.
 fn describe_exit(process: HANDLE) -> String {
     let mut code = 0u32;
     if unsafe { GetExitCodeProcess(process, &mut code) }.is_err() {
@@ -411,12 +711,12 @@ fn describe_exit(process: HANDLE) -> String {
     format!("exit code {code:#010x}")
 }
 
-/// Gets `ak_cef.exe` a token for the dedicated service account rather than
-/// SYSTEM (`BROWSER_PRIVILEGE.md`), the same way for both logon and unlock.
-/// Account-hardening is best-effort and only logged on failure — it is
-/// idempotent, so a transient failure just costs a retry next time, and
-/// does not block the token mint that follows. The password is not: a
-/// broken keyring here means no way to log the account on at all.
+/// Gets `ak_browser.exe` a token for the dedicated service account rather than
+/// SYSTEM (`BROWSER_PRIVILEGE.md`), the same way for logon and unlock.
+///
+/// The hardening steps are idempotent, so a transient failure costs one retry
+/// next time and must not block the token mint. The password is not: without it
+/// there is no way to log the account on at all.
 fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
     let password = syscalls::service_account_password().map_err(|e| {
         log::error!("could not establish the service account's password: {e}");
@@ -438,28 +738,31 @@ fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
     syscalls::service_account_token(syscalls::SERVICE_ACCOUNT_NAME, &password)
 }
 
-/// Minimal Windows command-line quoting: wraps `s` in quotes and escapes any
-/// embedded ones, so `CommandLineToArgvW` (what `std::env::args()` on the
-/// far end is built on) sees it as a single argument. Neither a URL nor an
-/// opaque token legitimately contains the backslash-before-quote sequence
-/// the full algorithm exists to handle.
+/// Minimal Windows command-line quoting, enough for `CommandLineToArgvW` (what
+/// `std::env::args()` on the far end is built on) to see one argument. Neither
+/// a URL nor an opaque token legitimately contains the backslash-before-quote
+/// sequence the full algorithm exists to handle.
 fn quote_arg(s: &str) -> String {
     format!("\"{}\"", s.replace('"', "\\\""))
 }
 
-fn spawn_cef_host(
-    cef_exe: &Path,
+/// `sign_in` is `None` when preloading: the host comes up, builds its window
+/// and waits for a `StartSignIn` on the control pipe instead.
+fn spawn_browser_host(
+    browser_exe: &Path,
     pipes: &StdPipes,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
-    sign_in_url: &str,
-    header_token: &str,
+    sign_in: Option<(&str, &str)>,
 ) -> windows::core::Result<PROCESS_INFORMATION> {
-    let cmdline = format!(
-        "\"{}\" --sign-in-url {} --header-token {}",
-        cef_exe.display(),
-        quote_arg(sign_in_url),
-        quote_arg(header_token),
-    );
+    let cmdline = match sign_in {
+        Some((url, header_token)) => format!(
+            "\"{}\" --sign-in-url {} --header-token {}",
+            browser_exe.display(),
+            quote_arg(url),
+            quote_arg(header_token),
+        ),
+        None => format!("\"{}\"", browser_exe.display()),
+    };
 
     let mut si = STARTUPINFOW {
         cb: size_of::<STARTUPINFOW>() as u32,
@@ -468,7 +771,7 @@ fn spawn_cef_host(
         hStdOutput: pipes.child_stdout,
         ..Default::default()
     };
-    // Outlives every `CreateProcess*` call below; `lpDesktop` borrows it.
+    // Must outlive every `CreateProcess*` call below: `lpDesktop` borrows it.
     let mut desktop = (!may_launch_in_current_session(cpus)).then(|| {
         SECURE_DESKTOP
             .encode_utf16()
@@ -493,7 +796,7 @@ fn spawn_cef_host(
     };
     log::info!(
         "launching {} on desktop {} with {} token",
-        cef_exe.display(),
+        browser_exe.display(),
         desktop
             .as_ref()
             .map(|_| SECURE_DESKTOP)
@@ -508,8 +811,7 @@ fn spawn_cef_host(
     let spawned = match token {
         Some(token) => {
             // Confirmed enabled on the test box, but `SE_TCB_NAME` looked
-            // that way too until it turned out not to be held at all —
-            // enable it defensively rather than trust the default.
+            // that way too until it turned out not to be held at all.
             if let Err(e) =
                 syscalls::enable_privilege(SE_IMPERSONATE_NAME, "SeImpersonatePrivilege")
             {
@@ -525,13 +827,11 @@ fn spawn_cef_host(
     };
     spawned?;
 
-    // A freshly spawned process may not bring its own window forward without
-    // this. On its own it is not enough and never was: the grant is
-    // single-shot, and the window it applies to does not exist for several
-    // seconds yet, by which time any foreground change has spent it —
-    // `ForegroundNudge` re-arms it once there is something to push. A failure
-    // is about this process rather than the child, since the call is refused
-    // when the caller is not itself entitled to the foreground.
+    // Necessary but never sufficient: the grant is single-shot and the window
+    // it applies to does not exist for several seconds, by which time any
+    // foreground change has spent it. `ForegroundNudge` re-arms it. A failure
+    // is about this process, which is refused when not itself entitled to the
+    // foreground.
     if let Err(e) = unsafe { AllowSetForegroundWindow(pi.dwProcessId) } {
         log::warn!("AllowSetForegroundWindow({}) failed: {e}", pi.dwProcessId);
     }
@@ -546,11 +846,11 @@ fn spawn_cef_host(
 
 /// Brokered through the Secondary Logon service, needing only
 /// `SE_IMPERSONATE_NAME` where `CreateProcessAsUserW` would need
-/// `SE_ASSIGNPRIMARYTOKEN_NAME`/`SE_INCREASE_QUOTA_NAME` — both absent from
-/// LogonUI's token. Has no `bInheritHandles` parameter, but does honor `si`'s
-/// inheritable `hStdInput`/`hStdOutput` regardless (`BROWSER_PRIVILEGE.md`'s
-/// "Roads not taken"). `LOGON_WITH_PROFILE` loads the account's registry hive
-/// but not its environment block, hence building one explicitly below.
+/// `SE_ASSIGNPRIMARYTOKEN_NAME`/`SE_INCREASE_QUOTA_NAME`, both absent from
+/// LogonUI's token. It has no `bInheritHandles` parameter but honors `si`'s
+/// inheritable handles regardless (`BROWSER_PRIVILEGE.md`), and
+/// `LOGON_WITH_PROFILE` loads the account's hive but not its environment
+/// block — hence building one below.
 fn spawn_with_token(
     token: HANDLE,
     cmdline: &str,
@@ -559,12 +859,9 @@ fn spawn_with_token(
 ) -> windows::core::Result<()> {
     let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
 
-    // Best-effort: on this account's very first ever launch its profile may
-    // not exist on disk yet — only `LOGON_WITH_PROFILE` below creates it —
-    // so `CreateEnvironmentBlock` can fail here. Falling back to this
-    // process's own environment rather than refusing the spawn entirely
-    // matches every other "logged, not fatal" cleanup/setup step in this
-    // file; the spawn is still worth attempting either way.
+    // Best-effort: on the account's first ever launch its profile does not
+    // exist on disk yet — only `LOGON_WITH_PROFILE` below creates it — so this
+    // can fail, and the spawn is still worth attempting.
     let mut env_block: *mut c_void = std::ptr::null_mut();
     let has_env = unsafe { CreateEnvironmentBlock(&mut env_block, Some(token), false) }.is_ok();
     if !has_env {
@@ -644,7 +941,7 @@ mod tests {
 
     #[derive(Default)]
     struct FakeForeground {
-        /// `None` until the browser has opened a window a person could see.
+        /// `None` until the browser has a window a person could see.
         window: Cell<Option<isize>>,
         foreground: Cell<Option<u32>>,
         /// Stands in for the foreground rules refusing the call.
@@ -693,9 +990,76 @@ mod tests {
         }
     }
 
-    /// Nudging on every poll would enumerate the desktop five times a second,
-    /// on the thread LogonUI is waiting on, for the seconds before there is
-    /// anything to find.
+    /// A browser nobody filed is a process left running on the logon screen.
+    #[test]
+    fn a_preload_that_lands_too_late_is_handed_back() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        let generation = slot.begin().expect("nothing in flight yet");
+        // The person clicked submit before it was ready.
+        assert_eq!(slot.take(), None, "nothing was ready to take");
+
+        assert_eq!(
+            slot.finish(generation, 7),
+            Some(7),
+            "the late result should come back for shutting down"
+        );
+        assert_eq!(slot.take(), None, "and must not have been filed");
+    }
+
+    /// Deselecting and reselecting is ordinary at a logon screen.
+    #[test]
+    fn a_preload_does_not_survive_a_deselect() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        let first = slot.begin().expect("first preload starts");
+        slot.take(); // deselect
+        let second = slot.begin().expect("reselect starts another");
+
+        assert_eq!(slot.finish(first, 1), Some(1), "the old one is unwanted");
+        assert_eq!(slot.finish(second, 2), None, "the new one is filed");
+        assert_eq!(slot.take(), Some(2));
+    }
+
+    /// Selecting an already-selected tile must not start a second browser.
+    #[test]
+    fn only_one_preload_runs_at_a_time() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        assert!(slot.begin().is_some());
+        assert!(slot.begin().is_none(), "one is already in flight");
+
+        let generation = 0;
+        assert_eq!(slot.finish(generation, 5), None);
+        assert!(slot.begin().is_none(), "one is already ready");
+    }
+
+    /// A failed preload has to clear the way for the next attempt, without
+    /// disturbing one that started in the meantime.
+    #[test]
+    fn a_failed_preload_frees_the_slot() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        let generation = slot.begin().expect("starts");
+        slot.abandon(generation);
+        assert!(slot.begin().is_some(), "the slot should be free again");
+
+        // Reachable whenever the tile is deselected mid-preload: the late
+        // failure must not clear the flag belonging to its replacement.
+        let superseded = slot.begin();
+        assert!(superseded.is_none(), "still loading from the retry above");
+        slot.take();
+        let current = slot.begin().expect("a fresh preload after the deselect");
+        slot.abandon(generation);
+        assert!(
+            slot.loading,
+            "an older failure must not cancel a newer preload"
+        );
+        assert_eq!(slot.finish(current, 9), None, "the newer one still files");
+    }
+
+    /// Nudging on every poll enumerates the desktop five times a second, on
+    /// the thread LogonUI is waiting on, before there is anything to find.
     #[test]
     fn nudges_on_an_interval_rather_than_every_poll() {
         let due: Vec<u32> = (0..NUDGE_INTERVAL_TICKS * 3)
@@ -730,7 +1094,7 @@ mod tests {
     }
 
     /// The grant issued at spawn is single-shot and spent long before the
-    /// window turns up, so every push re-arms it first.
+    /// window turns up.
     #[test]
     fn re_arms_the_grant_before_every_push() {
         let fake = FakeForeground::with_window_up();
@@ -749,8 +1113,8 @@ mod tests {
         );
     }
 
-    /// Stopping on a successful call rather than on the child holding the
-    /// foreground would miss LogonUI taking it straight back again.
+    /// Stopping on a successful call would miss LogonUI taking the foreground
+    /// straight back.
     #[test]
     fn keeps_pushing_until_the_child_holds_the_foreground() {
         let fake = FakeForeground::with_window_up();
@@ -802,22 +1166,26 @@ mod tests {
         );
     }
 
-    /// Exercises the real inherited-pipe / `CreateProcessW` machinery against
-    /// a throwaway target, without needing an interactive token, elevation,
-    /// or anything listening on the `ak-sysd` pipe. A failure here means
-    /// `Connect` can never launch the sign-in window, which otherwise only
-    /// surfaces as one generic "Sign-in failed" string.
+    /// Exercises the real inherited-pipe/`CreateProcessW` machinery without an
+    /// interactive token, elevation, or anything on the `ak-sysd` pipe. A
+    /// failure here means `Connect` can never launch the sign-in window, which
+    /// otherwise surfaces only as a generic "Sign-in failed".
     #[test]
     fn credui_spawn_succeeds_without_an_interactive_token() {
         let pipes = create_std_pipes().expect("create std pipes");
 
         // Any real executable will do: this asserts the process is created,
-        // not what it does. It exits immediately on the unknown arguments.
+        // not what it does.
         let exe = std::path::PathBuf::from(
             std::env::var("COMSPEC").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".to_string()),
         );
 
-        let spawned = spawn_cef_host(&exe, &pipes, CPUS_CREDUI, "https://example.com", "token");
+        let spawned = spawn_browser_host(
+            &exe,
+            &pipes,
+            CPUS_CREDUI,
+            Some(("https://example.com", "token")),
+        );
 
         unsafe {
             let _ = CloseHandle(pipes.child_stdin);
@@ -832,7 +1200,7 @@ mod tests {
                 let _ = CloseHandle(pi.hProcess);
                 let _ = CloseHandle(pi.hThread);
             },
-            Err(e) => panic!("spawn_cef_host under CPUS_CREDUI failed: {e}"),
+            Err(e) => panic!("spawn_browser_host under CPUS_CREDUI failed: {e}"),
         }
     }
 

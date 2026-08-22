@@ -19,8 +19,8 @@ struct State {
     status: Mutex<Vec<String>>,
 }
 
-/// Reads the state of a live `FakeQueryContinue`; the interface itself hands
-/// out no way back to the implementation.
+/// Reads the state of a live `FakeQueryContinue`, which the interface itself
+/// gives no way back to.
 #[derive(Clone)]
 pub struct QueryContinueProbe(Arc<State>);
 

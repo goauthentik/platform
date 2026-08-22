@@ -1,13 +1,12 @@
 //! IPC protocol and shared appearance constants between `credprovider` and
-//! `cef-host`, kept in one place so the two processes and the `e2e` harness
-//! can't drift out of sync.
+//! `browser-host`, kept in one place so the two processes and the `e2e`
+//! harness cannot drift apart.
 
 use std::io::{self, Read, Write};
 
-/// Outcome `credprovider` hands back from the sign-in flow. Built entirely
-/// on the `credprovider` side of the pipe (from a [`HostReport`] plus, for
-/// `Redirected`, a validation call to `ak-sysd` that only `credprovider` can
-/// reach) — never sent over the wire itself.
+/// Outcome `credprovider` hands back from the sign-in flow. Never sent over
+/// the wire: it is built from a [`HostReport`] plus, for `Redirected`, an
+/// `ak-sysd` validation call only `credprovider` can reach.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AuthResult {
     Completed { username: String },
@@ -15,17 +14,17 @@ pub enum AuthResult {
     Failed { reason: String },
 }
 
-/// Sent from `cef-host` to `credprovider` over the result pipe once the
-/// sign-in flow reaches an end state `cef-host` cannot itself resolve:
-/// validating the redirect's token needs `ak-sysd`, which only
-/// `credprovider` has access to (`BROWSER_PRIVILEGE.md`).
+/// Sent from the browser host to `credprovider` over the result pipe once the
+/// flow reaches an end state the host cannot resolve itself: validating the
+/// redirect's token needs `ak-sysd`, which only `credprovider` can reach
+/// (`BROWSER_PRIVILEGE.md`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HostReport {
-    /// The sign-in redirect fired; here is the full callback URL to extract
+    /// The sign-in redirect fired; `url` is the full callback URL to extract
     /// and validate the token from.
     Redirected { url: String },
-    /// The window closed — or the provider asked it to — without ever
-    /// reaching the redirect.
+    /// The window closed — or the provider asked it to — without reaching the
+    /// redirect.
     Cancelled,
 }
 
@@ -67,10 +66,74 @@ impl TryFrom<HostReportProto> for HostReport {
     }
 }
 
-/// Sent from `credprovider` to `cef-host` over the control pipe to request
-/// that the browser window close without completing the flow.
-#[derive(Clone, Copy, PartialEq, prost::Message)]
-pub struct CancelSignal {}
+/// Sent from `credprovider` to the browser host over the control pipe.
+///
+/// A command channel rather than a bare cancel signal because the host is
+/// spawned at tile selection, to pay WebView2's startup cost early, and only
+/// submitting produces a URL. `StartSignIn` turns a waiting host into a
+/// sign-in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HostCommand {
+    /// Load `url`, injecting `header_token` on every request, and show the
+    /// window once the page is up.
+    StartSignIn { url: String, header_token: String },
+    /// Close without completing the flow.
+    Cancel,
+}
+
+#[derive(Clone, PartialEq, prost::Message)]
+struct HostCommandProto {
+    #[prost(oneof = "CommandKind", tags = "1, 2")]
+    command: Option<CommandKind>,
+}
+
+#[derive(Clone, PartialEq, prost::Oneof)]
+enum CommandKind {
+    #[prost(message, tag = "1")]
+    StartSignIn(StartSignInProto),
+    #[prost(bool, tag = "2")]
+    Cancel(bool),
+}
+
+#[derive(Clone, PartialEq, prost::Message)]
+struct StartSignInProto {
+    #[prost(string, tag = "1")]
+    url: String,
+    #[prost(string, tag = "2")]
+    header_token: String,
+}
+
+impl From<&HostCommand> for HostCommandProto {
+    fn from(c: &HostCommand) -> Self {
+        let command = match c {
+            HostCommand::StartSignIn { url, header_token } => {
+                CommandKind::StartSignIn(StartSignInProto {
+                    url: url.clone(),
+                    header_token: header_token.clone(),
+                })
+            }
+            HostCommand::Cancel => CommandKind::Cancel(true),
+        };
+        HostCommandProto {
+            command: Some(command),
+        }
+    }
+}
+
+impl TryFrom<HostCommandProto> for HostCommand {
+    type Error = WireError;
+
+    fn try_from(p: HostCommandProto) -> Result<Self, WireError> {
+        match p.command {
+            Some(CommandKind::StartSignIn(start)) => Ok(HostCommand::StartSignIn {
+                url: start.url,
+                header_token: start.header_token,
+            }),
+            Some(CommandKind::Cancel(_)) => Ok(HostCommand::Cancel),
+            None => Err(WireError::MissingOutcome),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum WireError {
@@ -105,9 +168,8 @@ impl std::fmt::Display for WireError {
 
 impl std::error::Error for WireError {}
 
-/// Frames larger than this are refused; every real message here is a short
-/// username/reason string, so this only guards against a corrupt length
-/// prefix turning into an unbounded allocation.
+/// Every real message here is a short URL or token, so this only guards
+/// against a corrupt length prefix becoming an unbounded allocation.
 const MAX_FRAME_BYTES: u32 = 64 * 1024;
 
 fn frame(payload: &[u8]) -> Vec<u8> {
@@ -126,10 +188,9 @@ pub fn write_frame<T: prost::Message, W: Write>(w: &mut W, msg: &T) -> Result<()
 
 /// Read exactly one length-prefixed protobuf frame from `r`.
 ///
-/// Returns `Ok(None)` if `r` is at EOF before any bytes of a new frame
-/// arrive (the pipe's write end closed cleanly, e.g. the writer process
-/// exited without sending a result) — callers treat that the same as an
-/// explicit cancellation.
+/// `Ok(None)` means EOF before any bytes of a new frame arrived — the write end
+/// closed cleanly, e.g. the writer exited without sending a result — which
+/// callers treat the same as an explicit cancellation.
 pub fn read_frame<T: prost::Message + Default, R: Read>(r: &mut R) -> Result<Option<T>, WireError> {
     let mut len_buf = [0u8; 4];
     let mut read = 0usize;
@@ -159,6 +220,20 @@ pub fn write_host_report<W: Write>(w: &mut W, report: &HostReport) -> Result<(),
     write_frame(w, &HostReportProto::from(report))
 }
 
+/// Write a `HostCommand` over the control pipe.
+pub fn write_host_command<W: Write>(w: &mut W, command: &HostCommand) -> Result<(), WireError> {
+    write_frame(w, &HostCommandProto::from(command))
+}
+
+/// Read a `HostCommand` from the control pipe. See [`read_frame`] for EOF
+/// handling — the host treats a closed control pipe as a cancellation.
+pub fn read_host_command<R: Read>(r: &mut R) -> Result<Option<HostCommand>, WireError> {
+    match read_frame::<HostCommandProto, R>(r)? {
+        Some(proto) => Ok(Some(HostCommand::try_from(proto)?)),
+        None => Ok(None),
+    }
+}
+
 /// Read a `HostReport` from the result pipe. See [`read_frame`] for EOF
 /// handling.
 pub fn read_host_report<R: Read>(r: &mut R) -> Result<Option<HostReport>, WireError> {
@@ -169,9 +244,8 @@ pub fn read_host_report<R: Read>(r: &mut R) -> Result<Option<HostReport>, WireEr
 }
 
 /// Pulls the interactive-auth token out of the sign-in redirect's query
-/// string. `None` covers both an unparseable URL and a well-formed one
-/// missing the parameter — `credprovider` treats either the same way, as a
-/// failed validation.
+/// string. `None` covers both an unparseable URL and a well-formed one missing
+/// the parameter; `credprovider` fails validation either way.
 pub fn extract_token(url: &str) -> Option<String> {
     let parsed = url::Url::parse(url).ok()?;
     parsed
@@ -215,15 +289,21 @@ pub struct TileField {
     pub text: &'static str,
 }
 
-/// Fixed size of the sign-in window, matching the current CEF window.
+/// Fixed size of the sign-in window.
 pub const WINDOW_WIDTH: i32 = 560;
 pub const WINDOW_HEIGHT: i32 = 670;
+
+/// Undecorated, so nobody reads this — it is how the sign-in window is told
+/// apart from the helper windows WebView2 opens in the same process.
+/// `CreateWindowExW` records it either way, so `GetWindowTextW` can read it
+/// cross-process without the window having a caption.
+pub const WINDOW_TITLE: &str = "Sign in with authentik";
 
 /// `redirect_uri` prefix the sign-in flow completes on.
 pub const REDIRECT_PREFIX: &str = "goauthentik.io://";
 
-/// Query parameter on that redirect carrying the token `cef-host` validates
-/// against `ak-sysd` to turn a finished browser sign-in into a username.
+/// Query parameter on that redirect carrying the token `credprovider`
+/// validates against `ak-sysd` to turn a finished sign-in into a username.
 pub const TOKEN_QUERY_PARAM: &str = "ak-auth-ia-token";
 
 /// Header carrying the interactive-auth session token, injected on every
@@ -296,13 +376,28 @@ mod tests {
         assert_eq!(extract_token("not a url"), None);
     }
 
+    /// The sign-in URL and its header token only exist on the `credprovider`
+    /// side, so this frame is the only way a preloaded host learns them.
     #[test]
-    fn cancel_signal_round_trips() {
-        let mut buf = Vec::new();
-        write_frame(&mut buf, &CancelSignal {}).unwrap();
-        let mut cursor = io::Cursor::new(buf);
-        let decoded: Option<CancelSignal> = read_frame(&mut cursor).unwrap();
-        assert_eq!(decoded, Some(CancelSignal {}));
+    fn host_commands_round_trip() {
+        for command in [
+            HostCommand::StartSignIn {
+                url: "https://authentik.company/if/flow/default/".to_string(),
+                header_token: "header-token".to_string(),
+            },
+            HostCommand::Cancel,
+        ] {
+            let mut buf = Vec::new();
+            write_host_command(&mut buf, &command).unwrap();
+            let mut cursor = io::Cursor::new(buf);
+            assert_eq!(read_host_command(&mut cursor).unwrap(), Some(command));
+        }
+    }
+
+    #[test]
+    fn a_closed_control_pipe_reads_as_no_command() {
+        let mut cursor = io::Cursor::new(Vec::<u8>::new());
+        assert_eq!(read_host_command(&mut cursor).unwrap(), None);
     }
 
     #[test]

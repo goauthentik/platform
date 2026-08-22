@@ -1,6 +1,6 @@
-//! Maps the shared `ak_ee_wcp_wire::TILE_FIELDS` table onto the actual COM field
-//! descriptor/state types LogonUI expects, and loads the tile bitmap
-//! embedded as a Win32 resource.
+//! Maps the shared `ak_ee_wcp_wire::TILE_FIELDS` table onto the COM field
+//! descriptor/state types LogonUI expects, and loads the tile bitmap embedded
+//! as a Win32 resource.
 
 use windows::{
     Win32::{
@@ -63,10 +63,9 @@ pub fn field_descriptor_at(
     })
 }
 
-/// Field visibility/interactive-state pair for `GetFieldState`, matching the
-/// current tile: the image shows on both tiles, the label stays hidden (it
-/// only exists to satisfy `CPFG_CREDENTIAL_PROVIDER_LABEL`), the large text
-/// shows on both, and the submit button only appears once selected.
+/// Field visibility/interactive-state pair for `GetFieldState`. The label stays
+/// hidden — it exists only to satisfy `CPFG_CREDENTIAL_PROVIDER_LABEL` — and the
+/// submit button appears once the tile is selected.
 pub fn field_state_at(
     index: u32,
 ) -> windows::core::Result<(
@@ -87,9 +86,8 @@ pub fn field_state_at(
     })
 }
 
-/// Loads the embedded tile bitmap as a fresh `HBITMAP` — LogonUI takes
-/// ownership and destroys it, so each call returns a new handle rather than
-/// a shared one.
+/// A fresh `HBITMAP` per call rather than a shared one: LogonUI takes ownership
+/// and destroys it.
 pub fn load_tile_bitmap() -> windows::core::Result<HBITMAP> {
     unsafe {
         let hinstance = windows::Win32::Foundation::HINSTANCE(crate::own_module().0);

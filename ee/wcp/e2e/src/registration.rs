@@ -1,10 +1,8 @@
 //! Registers the real `ak_cred_provider.dll` the way the MSI installer does
 //! (`vpkg/windows/Package.wxs`), so a test can activate it through real COM
-//! (`CoCreateInstance`) instead of reaching in with `LoadLibraryW`/
-//! `DllGetClassObject` the way `dll::LoadedProvider` does. That is the path
-//! LogonUI and CredUI actually use to find and load credential providers, and
-//! the only thing in this suite that would catch a wrong or missing registry
-//! value.
+//! rather than reaching in with `LoadLibraryW`/`DllGetClassObject` as
+//! `dll::LoadedProvider` does. That is the path LogonUI and CredUI use, and the
+//! only thing here that would catch a wrong or missing registry value.
 //!
 //! Needs an elevated shell: HKLM is not writable otherwise.
 
@@ -22,10 +20,9 @@ const PROVIDERS_SUBKEY: &str = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Authe
 pub struct RegisteredProvider;
 
 impl RegisteredProvider {
-    /// Fails rather than overwriting if the CLSID is already registered — on
-    /// a machine with a real install, clobbering it would point the real
-    /// credential provider at this dev build, and `Drop` would then delete
-    /// its registration entirely instead of this merely failing a test.
+    /// Fails rather than overwriting an already-registered CLSID: on a machine
+    /// with a real install, clobbering it points the real credential provider
+    /// at this dev build, and `Drop` then deletes its registration outright.
     pub fn register(dll_path: &Path) -> eyre::Result<Self> {
         let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
         if hklm.open_subkey(CLSID_SUBKEY).is_ok() {
@@ -58,8 +55,8 @@ impl Drop for RegisteredProvider {
 }
 
 /// Scopes a classic-COM apartment to the current OS thread. Must be dropped
-/// after every COM interface obtained while it was alive — declare it before
-/// them, since Rust drops locals in reverse declaration order.
+/// after every COM interface obtained while it was alive, so declare it before
+/// them: Rust drops locals in reverse declaration order.
 pub struct ComGuard;
 
 impl ComGuard {

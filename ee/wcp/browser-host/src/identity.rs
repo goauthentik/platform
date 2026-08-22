@@ -1,8 +1,7 @@
-//! One diagnostic: which account and SID this process's own token actually
-//! carries. Logged unconditionally at startup, next to the build hash — this
-//! process only ever runs as SYSTEM or the dedicated service account
-//! (`BROWSER_PRIVILEGE.md`), and confirming which one needs no separate,
-//! correlated capture on the far end.
+//! One diagnostic: which account and SID this process's token carries. This
+//! process runs as either SYSTEM or the dedicated service account
+//! (`BROWSER_PRIVILEGE.md`), and which one is worth having in the log rather
+//! than needing a correlated capture on the far end.
 
 use std::ffi::c_void;
 
@@ -14,9 +13,9 @@ use windows::Win32::Security::{
 use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 use windows::core::{PCWSTR, PWSTR};
 
-/// `"DOMAIN\name (S-1-5-...)"`, or a placeholder describing which step
-/// failed — every step here can fail independently, and which one did says
-/// something different about what is actually running.
+/// `"DOMAIN\name (S-1-5-...)"`, or a placeholder naming the step that failed:
+/// each can fail independently and each says something different about what is
+/// actually running.
 pub fn current_token_identity() -> String {
     unsafe {
         let mut token = HANDLE::default();
