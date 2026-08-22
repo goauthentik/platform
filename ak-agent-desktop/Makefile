@@ -22,7 +22,7 @@ endif
 	mkdir -p "${TOP}/cache/shared"
 	pnpm install
 	pnpm run build
-	$(call cargo_build_local,$(TARGET),--features tauri/custom-protocol --features tauri/devtools -p ak-agent-desktop)
+	$(call cargo_build,$(TARGET),--features tauri/custom-protocol --features tauri/devtools -p ak-agent-desktop)
 	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
 ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}/cache/shared/release")

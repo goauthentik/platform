@@ -14,12 +14,6 @@ endif
 
 .PHONY: test
 test:
-ifeq ($(PLATFORM),gnu/linux)
-ifeq ($(CI),true)
-	sudo apt-get update
-	sudo apt-get install -y libpam0g-dev libudev-dev
-endif
-endif
 	$(call cargo_test,ak-pam)
 
 test-deploy: build

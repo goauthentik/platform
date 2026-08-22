@@ -33,43 +33,9 @@ TOP = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROTO_DIR := "${TOP}/protobuf"
 
 RUST_BUILD_FLAGS ?=
-DOCKER_BUILDER_IMAGE ?= authentik/ak-builder
-CARGO_CRATE_DIR := $(subst $(TOP),,$(CURDIR))
 
-ifneq ($(LOCAL_WORKSPACE),)
-CONTAINER_TOP := ${LOCAL_WORKSPACE}
-else
-CONTAINER_TOP := ${TOP}
-endif
-
-define cargo_build_local
-RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
-		AK_VERSION=${VERSION} \
-		AK_BUILDHASH=${VERSION_HASH} \
-		AK_TAG=${VERSION_TAG} \
-		cargo build \
-		--target-dir $(TOP)cache/shared \
-		--verbose \
-		--release $(2)
-endef
-
-ifeq ($(PLATFORM),gnu/linux)
-define cargo_build
-	docker run --rm \
-		-i \
-		--volume "$(CONTAINER_TOP):/workspace" \
-		--workdir "/workspace/$(CARGO_CRATE_DIR)" \
-		--env RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
-		--env AK_VERSION="${VERSION}" \
-		--env AK_BUILDHASH="${VERSION_HASH}" \
-		--env AK_TAG="${VERSION_TAG}" \
-		$(DOCKER_BUILDER_IMAGE) \
-		cargo build \
-			--target-dir /workspace/cache/shared \
-			--verbose \
-			--release
-endef
-else
+# Linux CI runs inside the builder image (see containers/builder), so builds are
+# always a plain cargo invocation - no docker wrapper, on any platform.
 define cargo_build
 RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 		AK_VERSION=${VERSION} \
@@ -80,7 +46,6 @@ RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 		--verbose \
 		--release $(2)
 endef
-endif
 
 define cargo_test
 	mkdir -p "${TOP}/cache"

@@ -11,6 +11,10 @@ jobs:
     uses: ./.github/workflows/_build-js.yml
     secrets: inherit
   call-build-rs:
+    # packages: write for the builder image it publishes to GHCR.
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/_build-rs.yml
     secrets: inherit
   call-build-ee-psso:
@@ -92,7 +96,7 @@ jobs:
           NETLIFY_SITE_ID: authentik-pkg.netlify.app
 
   build-container:
-    needs: deploy-to-netlify
+    # needs: deploy-to-netlify
     permissions:
       packages: write
     strategy:
@@ -100,6 +104,7 @@ jobs:
       matrix:
         target:
           - containers/selenium
+          - containers/builder
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
@@ -114,7 +119,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
         env:
-          AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
+          # AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
           AK_TAG_SUFFIX: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}
         run: |
           cd ${{ matrix.target }}
