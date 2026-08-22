@@ -97,10 +97,72 @@ impl Preloaded {
     }
 }
 
+/// Tracks a preload that may still be running when the flow has moved on.
+///
+/// Preloading happens on its own thread, so the interesting case is the one
+/// where it finishes late: the tile was deselected, or the person clicked
+/// submit before it was ready and a host was started the normal way. A result
+/// arriving then must not be filed — it would be a browser process nobody ever
+/// looks at, sitting on the logon screen until something reaps it. Every path
+/// that stops wanting the current preload bumps `generation`, and the thread
+/// hands its result back when the generation it started under has passed.
+///
+/// Generic only so the state machine can be tested without spawning processes.
+struct PreloadSlot<T> {
+    generation: u64,
+    loading: bool,
+    ready: Option<T>,
+}
+
+impl<T> PreloadSlot<T> {
+    fn new() -> Self {
+        Self {
+            generation: 0,
+            loading: false,
+            ready: None,
+        }
+    }
+
+    /// Claims the right to start a preload, or `None` when one is already
+    /// running or already done.
+    fn begin(&mut self) -> Option<u64> {
+        if self.loading || self.ready.is_some() {
+            return None;
+        }
+        self.loading = true;
+        Some(self.generation)
+    }
+
+    /// Files a finished preload, or hands it back when it is no longer wanted
+    /// and the caller should shut it down.
+    fn finish(&mut self, generation: u64, value: T) -> Option<T> {
+        if generation != self.generation {
+            return Some(value);
+        }
+        self.loading = false;
+        self.ready = Some(value);
+        None
+    }
+
+    /// Gives up on a preload that failed, without disturbing a newer one.
+    fn abandon(&mut self, generation: u64) {
+        if generation == self.generation {
+            self.loading = false;
+        }
+    }
+
+    /// Takes whatever is ready, and makes anything still in flight unwanted.
+    fn take(&mut self) -> Option<T> {
+        self.generation += 1;
+        self.loading = false;
+        self.ready.take()
+    }
+}
+
 pub struct BrowserAuthFlow {
     browser_exe: std::path::PathBuf,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
-    preloaded: std::sync::Mutex<Option<Preloaded>>,
+    slot: std::sync::Arc<std::sync::Mutex<PreloadSlot<Preloaded>>>,
 }
 
 impl BrowserAuthFlow {
@@ -108,15 +170,12 @@ impl BrowserAuthFlow {
         Self {
             browser_exe,
             cpus,
-            preloaded: std::sync::Mutex::new(None),
+            slot: std::sync::Arc::new(std::sync::Mutex::new(PreloadSlot::new())),
         }
     }
 
     fn take_preloaded(&self) -> Option<Preloaded> {
-        self.preloaded
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .take()
+        self.slot.lock().unwrap_or_else(|e| e.into_inner()).take()
     }
 }
 
@@ -136,23 +195,63 @@ impl AuthFlow for BrowserAuthFlow {
         // there — so selecting the tile in one must not start a browser. It is
         // several seconds of a process nobody will ever see, on a machine that
         // may have a console session using this provider properly at the same
-        // time. `run` still refuses on its own; this is about not paying for a
-        // sign-in that cannot happen.
+        // time.
         if syscalls::is_remote_session() {
             log::info!("tile selected in a remote session; not preloading the sign-in window");
             return;
         }
 
-        let mut slot = self.preloaded.lock().unwrap_or_else(|e| e.into_inner());
-        // Selecting an already-selected tile, or selecting it again after
-        // backing out, must not leave a second browser running.
-        if slot.as_ref().is_some_and(Preloaded::alive) {
-            return;
-        }
-        if let Some(dead) = slot.take() {
+        let (generation, dead) = {
+            let mut slot = self.slot.lock().unwrap_or_else(|e| e.into_inner());
+            // A host that died while it waited is worse than none: it would be
+            // taken as ready and its pipes would never answer.
+            let dead = match &slot.ready {
+                Some(preloaded) if !preloaded.alive() => slot.ready.take(),
+                _ => None,
+            };
+            (slot.begin(), dead)
+        };
+        if let Some(dead) = dead {
             dead.shut_down();
         }
-        *slot = preload_browser_host(&self.browser_exe, self.cpus);
+        let Some(generation) = generation else {
+            return;
+        };
+
+        // On its own thread. This is called from `SetSelected`, on the LogonUI
+        // thread that draws the tile, and the work behind it is a logon, a
+        // password rotation, two ACL grants and a process creation — inline,
+        // that stalled the very click this mechanism exists to keep smooth.
+        let slot = self.slot.clone();
+        let browser_exe = self.browser_exe.clone();
+        let cpus = self.cpus;
+        std::thread::spawn(move || {
+            let started = std::time::Instant::now();
+            let host = preload_browser_host(&browser_exe, cpus);
+            let unwanted = {
+                let mut slot = slot.lock().unwrap_or_else(|e| e.into_inner());
+                match host {
+                    Some(host) => slot.finish(generation, host),
+                    None => {
+                        slot.abandon(generation);
+                        None
+                    }
+                }
+            };
+            match unwanted {
+                Some(host) => {
+                    log::info!(
+                        "the preloaded sign-in window was ready after {}ms but no longer wanted;                          shutting it down",
+                        started.elapsed().as_millis()
+                    );
+                    host.shut_down();
+                }
+                None => log::info!(
+                    "preloaded the sign-in window in {}ms",
+                    started.elapsed().as_millis()
+                ),
+            }
+        });
     }
 
     fn discard(&self) {
@@ -163,8 +262,6 @@ impl AuthFlow for BrowserAuthFlow {
     }
 }
 
-/// A preloaded host outlives the credential only if nobody tidies up, and it
-/// is sitting on the logon screen holding a window station handle.
 impl Drop for BrowserAuthFlow {
     fn drop(&mut self) {
         self.discard();
@@ -923,6 +1020,78 @@ mod tests {
             }
             false
         }
+    }
+
+    /// The preload thread can finish after the flow has moved on. Whatever it
+    /// produced has to come back to be shut down — a browser nobody filed is a
+    /// process left running on the logon screen.
+    #[test]
+    fn a_preload_that_lands_too_late_is_handed_back() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        let generation = slot.begin().expect("nothing in flight yet");
+        // The person clicked submit before it was ready.
+        assert_eq!(slot.take(), None, "nothing was ready to take");
+
+        assert_eq!(
+            slot.finish(generation, 7),
+            Some(7),
+            "the late result should come back for shutting down"
+        );
+        assert_eq!(slot.take(), None, "and must not have been filed");
+    }
+
+    /// Deselecting and reselecting the tile is ordinary at a logon screen, and
+    /// the preload started before the deselect must not be filed afterwards.
+    #[test]
+    fn a_preload_does_not_survive_a_deselect() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        let first = slot.begin().expect("first preload starts");
+        slot.take(); // deselect
+        let second = slot.begin().expect("reselect starts another");
+
+        assert_eq!(slot.finish(first, 1), Some(1), "the old one is unwanted");
+        assert_eq!(slot.finish(second, 2), None, "the new one is filed");
+        assert_eq!(slot.take(), Some(2));
+    }
+
+    /// Selecting an already-selected tile must not start a second browser.
+    #[test]
+    fn only_one_preload_runs_at_a_time() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        assert!(slot.begin().is_some());
+        assert!(slot.begin().is_none(), "one is already in flight");
+
+        let generation = 0;
+        assert_eq!(slot.finish(generation, 5), None);
+        assert!(slot.begin().is_none(), "one is already ready");
+    }
+
+    /// A preload that failed has to clear the way for the next attempt without
+    /// disturbing one that started in the meantime.
+    #[test]
+    fn a_failed_preload_frees_the_slot() {
+        let mut slot: PreloadSlot<u32> = PreloadSlot::new();
+
+        let generation = slot.begin().expect("starts");
+        slot.abandon(generation);
+        assert!(slot.begin().is_some(), "the slot should be free again");
+
+        // A failure from a superseded attempt arriving late must not clear the
+        // flag belonging to the one that replaced it. Reachable whenever the
+        // tile is deselected while a preload is still running.
+        let superseded = slot.begin();
+        assert!(superseded.is_none(), "still loading from the retry above");
+        slot.take();
+        let current = slot.begin().expect("a fresh preload after the deselect");
+        slot.abandon(generation);
+        assert!(
+            slot.loading,
+            "an older failure must not cancel a newer preload"
+        );
+        assert_eq!(slot.finish(current, 9), None, "the newer one still files");
     }
 
     /// Nudging on every poll would enumerate the desktop five times a second,
