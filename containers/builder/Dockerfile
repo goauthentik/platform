@@ -13,7 +13,9 @@ RUN apt-get update && \
         libssl-dev \
         curl git \
         ca-certificates \
-        libpam0g-dev libudev-dev zstd && \
+        libpam0g-dev libudev-dev zstd \
+        # Requirements for github actions
+        sudo && \
     rm -rf /var/lib/apt/lists/*
 
 # dpkg-dev provides dpkg-architecture (common.mk, vpkg/linux/Makefile); nfpm
