@@ -1,9 +1,11 @@
-//! The two places this host touches WebView2 directly: finding out whether the
-//! runtime is installed at all, and injecting the interactive-auth header on
-//! every request the sign-in window makes.
+//! Where this host talks to WebView2 directly: finding out whether the runtime
+//! is installed at all, and then everything that has to be in place before the
+//! sign-in page loads — the interactive-auth header on every request, the page
+//! script, escape-to-cancel, and refusing popups — with the navigation started
+//! last, from inside that setup, so none of it races the first document.
 
 use webview2_com::{
-    AcceleratorKeyPressedEventHandler,
+    AcceleratorKeyPressedEventHandler, AddScriptToExecuteOnDocumentCreatedCompletedHandler,
     Microsoft::Web::WebView2::Win32::{
         COREWEBVIEW2_KEY_EVENT_KIND, COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN,
         COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL, ICoreWebView2WebResourceRequest,
@@ -76,6 +78,8 @@ pub fn navigate_with_header(
     app: tauri::AppHandle,
     header_token: String,
     sign_in_url: String,
+    origin: String,
+    page_script: String,
 ) {
     let on_failure = app.clone();
     if let Err(e) = window.with_webview(move |webview| {
@@ -88,9 +92,16 @@ pub fn navigate_with_header(
             }
         };
 
+        // Scoped to authentik's own origin, not `*`. The header is an
+        // `ak-sysd` interactive-auth token; a filter of `*` put it on every
+        // request the page made, including to third-party origins, which is
+        // how the CEF host behaved too — a flow that hands off to an upstream
+        // IdP, or a page that loads anything from a CDN, handed that token
+        // over with it. Confirmed by watching a second local server receive it.
+        let origin_filter = format!("{origin}/*");
         if let Err(e) = unsafe {
             core.AddWebResourceRequestedFilter(
-                &HSTRING::from("*"),
+                &HSTRING::from(origin_filter.as_str()),
                 COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,
             )
         } {
@@ -181,9 +192,36 @@ pub fn navigate_with_header(
             log::warn!("could not register the new-window handler: {e}");
         }
 
-        log::debug!("header injection registered; starting the sign-in navigation");
-        if let Err(e) = unsafe { core.Navigate(&HSTRING::from(sign_in_url.as_str())) } {
-            log::error!("could not navigate to the sign-in URL: {e}");
+        // Registered before the navigation, and the navigation started from
+        // its completion handler: the script has to be in place before the
+        // first document exists or it misses the page it is for. Same
+        // reasoning as the header filter above, one layer up.
+        let navigate_core = core.clone();
+        let navigate_app = app.clone();
+        let navigate_to = sign_in_url.clone();
+        if let Err(e) = unsafe {
+            core.AddScriptToExecuteOnDocumentCreated(
+                &HSTRING::from(page_script.as_str()),
+                &AddScriptToExecuteOnDocumentCreatedCompletedHandler::create(Box::new(
+                    move |result, _id| {
+                        if let Err(e) = result {
+                            log::error!(
+                                "could not install the page script; the sign-in page will have                                  no cancel link: {e}"
+                            );
+                        }
+                        log::debug!("page script installed; starting the sign-in navigation");
+                        if let Err(e) =
+                            unsafe { navigate_core.Navigate(&HSTRING::from(navigate_to.as_str())) }
+                        {
+                            log::error!("could not navigate to the sign-in URL: {e}");
+                            crate::signin::close(&navigate_app);
+                        }
+                        Ok(())
+                    },
+                )),
+            )
+        } {
+            log::error!("could not register the page script: {e}");
             crate::signin::close(&app);
         }
     }) {

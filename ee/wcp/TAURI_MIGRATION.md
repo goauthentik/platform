@@ -338,6 +338,43 @@ Append as things are learned. Date, what was run, what happened.
   `ui_footer_links` on the sign-in page itself.** That needs a real authentik
   instance. If it does not, this degrades to Esc-only — no worse than before,
   but the visible affordance would be missing.
+- _2026-08-22_ — the injected script now also sets the interactive-auth header
+  on `fetch` calls back to authentik, and installing it moved from the window
+  builder to `AddScriptToExecuteOnDocumentCreated` at navigate time, since it
+  needs the token and origin the preloaded host does not have yet. The
+  navigation starts from that call's completion handler, for the same reason
+  the header filter is registered before navigating: anything set up after the
+  first document exists has already missed it.
+
+  **Two bugs came out of measuring this, both of which looked fine in code.**
+
+  `origin_of` drops the port — it exists to redact log lines. Reusing it as an
+  origin made the script's `location.origin` comparison never match and the
+  WebView2 URI filter match nothing at all, and both failures are silent. There
+  is now a separate `url_origin` that serialises a real origin, and the doc
+  comment on each says which is which.
+
+  The header filter was `*`, so **the token went to every origin the page
+  touched**, not just authentik's — a flow handing off to an upstream IdP, or a
+  page pulling anything from a CDN, handed an `ak-sysd` token over with it. The
+  CEF host did the same (`set_header_by_name` in `on_before_resource_load`, no
+  URL test), so this is not new to the port. Now scoped to the sign-in origin.
+  Watch for the case this could break: an authentik that serves part of a flow
+  from a second host would no longer receive the header there.
+
+  Measured with two local servers, one standing in for authentik and one for a
+  third party. With both layers on: every request to authentik carries the
+  header, the third party gets none. With the native filter disabled, the two
+  `fetch` calls still carry it and the document and favicon do not — which is
+  the script working, and only on `fetch`, as intended.
+
+  The cost of the script layer, stated plainly: the token is now reachable by
+  anything running in that document, where the WebView2 layer kept it in this
+  process. It is passed as a function argument rather than written into the
+  body, so `fetch.toString()` does not hand it over, and it is only ever added
+  to authentik's own origin — but that is mitigation, not equivalence. It
+  buys the requests the native layer never sees, a service worker's being the
+  ones that matter.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service
