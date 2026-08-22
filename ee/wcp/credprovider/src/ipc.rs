@@ -36,11 +36,16 @@ use crate::syscalls::{self, ForegroundControl};
 use crate::sysd;
 use ak_ee_wcp_wire::{AuthResult, HostCommand, HostReport};
 
-/// Spawns `ak_browser.exe` and waits for its result. `should_continue` is
-/// polled while waiting, so the user backing out of the tile tears the browser
-/// down instead of orphaning it.
+/// Spawns `ak_browser.exe` and waits for its result. `login_hint` is the
+/// selected tile's username, prefilled into the sign-in page.
+/// `should_continue` is polled while waiting, so the user backing out of the
+/// tile tears the browser down instead of orphaning it.
 pub trait AuthFlow {
-    fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult;
+    fn run(
+        &self,
+        login_hint: Option<&str>,
+        should_continue: &mut dyn FnMut() -> bool,
+    ) -> AuthResult;
 
     /// Start the browser host early, before there is anything for it to load.
     ///
@@ -172,11 +177,16 @@ impl BrowserAuthFlow {
 }
 
 impl AuthFlow for BrowserAuthFlow {
-    fn run(&self, should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
+    fn run(
+        &self,
+        login_hint: Option<&str>,
+        should_continue: &mut dyn FnMut() -> bool,
+    ) -> AuthResult {
         run_browser_host(
             &self.browser_exe,
             self.cpus,
             self.take_preloaded(),
+            login_hint,
             should_continue,
         )
     }
@@ -412,6 +422,7 @@ fn run_browser_host(
     browser_exe: &Path,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     preloaded: Option<Preloaded>,
+    login_hint: Option<&str>,
     should_continue: &mut dyn FnMut() -> bool,
 ) -> AuthResult {
     // Worse than none: its pipes would never answer.
@@ -426,7 +437,11 @@ fn run_browser_host(
     // Not by `ak_browser.exe` itself: the service account it runs as cannot
     // reach `ak-sysd`'s pipe (`BROWSER_PRIVILEGE.md`). And now rather than at
     // preload time: selecting a tile must not start an authentication session.
-    let start = match sysd::sys_auth_start_async() {
+    log::info!(
+        "starting interactive auth with login hint {}",
+        login_hint.unwrap_or("<none>")
+    );
+    let start = match sysd::sys_auth_start_async(login_hint) {
         Ok(s) => s,
         Err(e) => {
             log::error!("sys_auth_start_async failed: {e}");

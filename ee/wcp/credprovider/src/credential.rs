@@ -445,6 +445,10 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
             self.qualified_username,
             self.is_local_user
         );
+        // Only a hint: `usernames_match` below is what decides whether whoever
+        // authenticated is this tile's user.
+        let login_hint = expected_username(&self.qualified_username, self.is_local_user);
+        let login_hint = (!login_hint.is_empty()).then(|| login_hint.to_string());
         if let Some(q) = pqcws.as_ref() {
             unsafe {
                 let _ = q.SetStatusMessage(w!("Please sign in to your authentik account..."));
@@ -458,7 +462,10 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
             }
         };
 
-        let result = self.deps.auth_flow.run(&mut should_continue);
+        let result = self
+            .deps
+            .auth_flow
+            .run(login_hint.as_deref(), &mut should_continue);
 
         let outcome = match result {
             AuthResult::Completed { username } => {
@@ -496,15 +503,22 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
     }
 }
 
-/// The browser flow authenticates against the qualified username shown on the
-/// tile, which for a local account is `domain\username`.
-fn usernames_match(authenticated: &str, qualified: &str, is_local_user: bool) -> bool {
-    let expected = if is_local_user {
+/// The username the browser flow is expected to authenticate as: a local
+/// account's tile is qualified `domain\username`, and only the username
+/// portion is what authentik knows the person by.
+///
+/// Both the hint sent into the flow and the check on the way back out come
+/// from here, so a tile cannot suggest one username and accept another.
+fn expected_username(qualified: &str, is_local_user: bool) -> &str {
+    if is_local_user {
         qualified.rsplit('\\').next().unwrap_or(qualified)
     } else {
         qualified
-    };
-    expected.eq_ignore_ascii_case(authenticated)
+    }
+}
+
+fn usernames_match(authenticated: &str, qualified: &str, is_local_user: bool) -> bool {
+    expected_username(qualified, is_local_user).eq_ignore_ascii_case(authenticated)
 }
 
 #[cfg(test)]
@@ -525,11 +539,39 @@ mod tests {
     const SID: &str = "S-1-5-21-1-2-3-1001";
     const AUTH_PACKAGE: u32 = 7;
 
-    struct FakeAuthFlow(AuthResult);
+    #[derive(Clone)]
+    struct FakeAuthFlow {
+        result: AuthResult,
+        /// The hint each `run` was handed.
+        hints: Arc<Mutex<Vec<Option<String>>>>,
+    }
+
+    impl FakeAuthFlow {
+        fn completed(username: &str) -> Self {
+            Self {
+                result: AuthResult::Completed {
+                    username: username.to_string(),
+                },
+                hints: Arc::new(Mutex::new(Vec::new())),
+            }
+        }
+
+        fn hints(&self) -> Vec<Option<String>> {
+            self.hints.lock().unwrap_or_else(|e| e.into_inner()).clone()
+        }
+    }
 
     impl AuthFlow for FakeAuthFlow {
-        fn run(&self, _should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
-            self.0.clone()
+        fn run(
+            &self,
+            login_hint: Option<&str>,
+            _should_continue: &mut dyn FnMut() -> bool,
+        ) -> AuthResult {
+            self.hints
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .push(login_hint.map(str::to_string));
+            self.result.clone()
         }
     }
 
@@ -550,7 +592,11 @@ mod tests {
     }
 
     impl AuthFlow for std::sync::Arc<CountingAuthFlow> {
-        fn run(&self, _should_continue: &mut dyn FnMut() -> bool) -> AuthResult {
+        fn run(
+            &self,
+            _login_hint: Option<&str>,
+            _should_continue: &mut dyn FnMut() -> bool,
+        ) -> AuthResult {
             AuthResult::Cancelled
         }
 
@@ -663,31 +709,50 @@ mod tests {
         }
     }
 
-    fn credential(
+    fn credential_for(
+        qualified: &str,
         is_local_user: bool,
+        flow: &FakeAuthFlow,
         password: &FakePassword,
         store: &FakeStore,
     ) -> ICredentialProviderCredential {
-        let qualified = if is_local_user {
-            r"COMPUTER\alice".to_string()
-        } else {
-            "alice".to_string()
-        };
         Credential::new(
             SID.to_string(),
-            qualified,
+            qualified.to_string(),
             is_local_user,
             CPUS_LOGON,
             CredentialDeps {
-                auth_flow: Box::new(FakeAuthFlow(AuthResult::Completed {
-                    username: "alice".to_string(),
-                })),
+                auth_flow: Box::new(flow.clone()),
                 password: Box::new(password.clone()),
                 auth_package: Box::new(FakeAuthPackage),
                 store: Box::new(store.clone()),
             },
         )
         .into()
+    }
+
+    fn credential(
+        is_local_user: bool,
+        password: &FakePassword,
+        store: &FakeStore,
+    ) -> ICredentialProviderCredential {
+        let qualified = if is_local_user {
+            r"COMPUTER\alice"
+        } else {
+            "alice"
+        };
+        credential_for(
+            qualified,
+            is_local_user,
+            &FakeAuthFlow::completed("alice"),
+            password,
+            store,
+        )
+    }
+
+    fn connect(credential: &ICredentialProviderCredential) {
+        let connectable: IConnectableCredentialProviderCredential = credential.cast().unwrap();
+        unsafe { connectable.Connect(None) }.unwrap();
     }
 
     /// A credential whose only interesting dependency is its `AuthFlow`.
@@ -753,12 +818,12 @@ mod tests {
         assert_eq!(flow.counts(), (3, 3));
     }
 
-    /// The returned buffer is the caller's to free.
+    /// Drives `Connect` then `GetSerialization`. The returned buffer is the
+    /// caller's to free.
     fn submit(
         credential: &ICredentialProviderCredential,
     ) -> Option<CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION> {
-        let connectable: IConnectableCredentialProviderCredential = credential.cast().unwrap();
-        unsafe { connectable.Connect(None) }.unwrap();
+        connect(credential);
 
         let mut response = CREDENTIAL_PROVIDER_GET_SERIALIZATION_RESPONSE::default();
         let mut serialization = CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION::default();
@@ -959,6 +1024,57 @@ mod tests {
         report_result(&cred, NTSTATUS(0));
 
         assert!(password.state().changes.is_empty());
+    }
+
+    /// `COMPUTER\alice` is a Windows account name; authentik would not
+    /// recognise the person by it.
+    #[test]
+    fn a_local_tile_hints_the_username_without_the_computer_name() {
+        let flow = FakeAuthFlow::completed("alice");
+        let cred = credential_for(
+            r"COMPUTER\alice",
+            true,
+            &flow,
+            &FakePassword::default(),
+            &FakeStore::default(),
+        );
+
+        connect(&cred);
+
+        assert_eq!(flow.hints(), vec![Some("alice".to_string())]);
+    }
+
+    #[test]
+    fn a_domain_tile_hints_the_qualified_username() {
+        let flow = FakeAuthFlow::completed("alice@example.com");
+        let cred = credential_for(
+            "alice@example.com",
+            false,
+            &flow,
+            &FakePassword::default(),
+            &FakeStore::default(),
+        );
+
+        connect(&cred);
+
+        assert_eq!(flow.hints(), vec![Some("alice@example.com".to_string())]);
+    }
+
+    /// LogonUI can hand over a user with no qualified name at all.
+    #[test]
+    fn a_tile_with_no_username_sends_no_hint() {
+        let flow = FakeAuthFlow::completed("");
+        let cred = credential_for(
+            "",
+            false,
+            &flow,
+            &FakePassword::default(),
+            &FakeStore::default(),
+        );
+
+        connect(&cred);
+
+        assert_eq!(flow.hints(), vec![None]);
     }
 
     #[test]

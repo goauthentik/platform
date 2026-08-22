@@ -10,7 +10,7 @@ use winreg::enums::HKEY_LOCAL_MACHINE;
 
 use ak_platform::generated::ping::capabilities_response::Capability;
 use ak_platform::generated::ping::ping_client::PingClient;
-use ak_platform::generated::sys_auth::TokenAuthRequest;
+use ak_platform::generated::sys_auth::{InteractiveAuthAsyncRequest, TokenAuthRequest};
 use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
 use ak_platform::grpc::grpc_request;
@@ -52,10 +52,16 @@ pub struct AuthStartAsync {
 /// Starts an interactive sign-in: `url` is what `ak_browser.exe` opens, and
 /// `header_token` what it injects on every request that page makes, so the
 /// backend can tie them back to this session.
-pub fn sys_auth_start_async() -> Result<AuthStartAsync> {
+///
+/// `login_hint` is the selected tile's username, prefilled into the sign-in
+/// page. Only a hint: who actually authenticated comes back from
+/// [`sys_auth_validate`].
+pub fn sys_auth_start_async(login_hint: Option<&str>) -> Result<AuthStartAsync> {
     let response = grpc_request(async |ch| {
         Ok(SystemAuthInteractiveClient::new(ch)
-            .interactive_auth_async(())
+            .interactive_auth_async(InteractiveAuthAsyncRequest {
+                username: login_hint.map(str::to_string),
+            })
             .await?)
     })?
     .into_inner();
