@@ -25,6 +25,8 @@ jobs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@v6.0.10
         with:
           run_install: false

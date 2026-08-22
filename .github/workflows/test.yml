@@ -49,6 +49,7 @@ jobs:
           - ak-platform
           - ak-platform-facts
           - ak-sysd
+          - ee/wcp
         platform:
           - macos-26
           - ubuntu-24.04
@@ -63,6 +64,13 @@ jobs:
             target: ak-pam
           - platform: macos-26
             target: ak-nss
+          # wcp is a windows-only credential provider
+          - platform: macos-26
+            target: ee/wcp
+          - platform: ubuntu-24.04
+            target: ee/wcp
+          - platform: ubuntu-24.04-arm
+            target: ee/wcp
     runs-on: ${{ matrix.platform }}
     # Linux tests run inside the builder image, which bakes in the pinned
     # toolchain, cargo-llvm-cov/nextest and the osquery toolchain.
@@ -71,29 +79,22 @@ jobs:
     container: ${{ startsWith(matrix.platform, 'ubuntu') && matrix.target != 'ak-agent-desktop' && needs.builder.outputs.image || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - if: ${{ !startsWith(matrix.platform, 'ubuntu') || matrix.target == 'ak-agent-desktop' }}
-        uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - if: ${{ !startsWith(matrix.platform, 'ubuntu') || matrix.target == 'ak-agent-desktop' }}
-        uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2
+      - uses: taiki-e/install-action@5b4d68e2e660441203ab128a23676f1e4faf1532 # v2
         with:
           tool: cargo-llvm-cov nextest
-      - if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025' }}
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
-      - name: Force real MSVC link.exe
-        # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
-        # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
-        # PATH resolution on this runner image, breaking cargo's link step
-        # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.
-        if: ${{ (matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025' }}
-        shell: pwsh
-        run: |
-          $linkExe = (Get-Command link.exe -All | Where-Object { $_.Source -notlike '*\Git\*' } | Select-Object -First 1).Source
-          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linkExe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          platform: ${{ matrix.platform }}
       - run: |
           make ${{ matrix.target }}/test
         env:
+          # ee/wcp is deliberately absent: it links CEF dynamically and
+          # _build-rs.yml ships it without crt-static, so tests must match.
           RUST_BUILD_FLAGS: ${{ ((matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
@@ -118,6 +119,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: cache/
@@ -145,19 +148,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config
       - run: make ci-install-deps
-      - name: Install osquery-toolchain
-        run: |
-          curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
-            "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-x86_64.tar.xz"
-          sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
-          rm /tmp/osquery-toolchain.tar.xz
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          platform: ubuntu
       - run: make lint-rs
   lint_js:
     name: Lint
@@ -169,6 +168,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@v6.0.10
         with:
           run_install: false
@@ -177,17 +178,6 @@ jobs:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
-      - run: make ${{ matrix.target }}/lint
-  lint_cpp:
-    name: Lint
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - ee/wcp
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: make ${{ matrix.target }}/lint
   build_rs_e2e:
     # packages: write for the builder image it publishes to GHCR.
@@ -208,15 +198,26 @@ jobs:
       platforms: '["ubuntu-24.04"]'
     secrets: inherit
   test_rs_e2e:
-    name: Test (e2e)
+    name: Test (e2e ${{ matrix.ubuntu_version }})
     needs: [package_linux_e2e]
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu_version:
+          - "24.04"
+          - "25.10"
+          - "26.04"
     runs-on: ubuntu-24.04
+    env:
+      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2
+      - uses: taiki-e/install-action@5b4d68e2e660441203ab128a23676f1e4faf1532 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
@@ -256,6 +257,15 @@ jobs:
         run: |
           ./hack/authentik/wait.sh
       - run: make containers/e2e/ci-build
+      # AppArmor policy is host-global: and the container cannot load policy of
+      # its own (no securityfs during docker build)
+      - name: Load authentik AppArmor drop-in
+        run: |
+          sudo install -m 0644 -D \
+            vpkg/linux/nss/_deb/apparmor/abstractions/nameservice.d/authentik \
+            /etc/apparmor.d/abstractions/nameservice.d/authentik
+          sudo systemctl reload apparmor.service
+          sudo aa-status | grep -q unix-chkpwd
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
@@ -269,18 +279,18 @@ jobs:
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e
+          flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov

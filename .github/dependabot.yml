@@ -14,6 +14,10 @@ updates:
         patterns:
           - aws-sdk-*
           - aws-*
+      windows:
+        patterns:
+          - windows
+          - windows-core
   - package-ecosystem: npm
     directories:
       - /
@@ -32,16 +36,20 @@ updates:
       - /
       - .github/actions/apt/
       - .github/actions/macos-signing/
+      - .github/actions/repo/
+      - .github/actions/rpm/
+      - .github/actions/setup-toolchain/
     schedule:
       interval: daily
       time: "04:00"
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+  # /containers/test is deliberately absent: its base image is an ARG, and the
+  # Ubuntu releases under test are enumerated in test.yml's e2e matrix.
   - package-ecosystem: "docker"
     directories:
       - /containers/selenium
-      - /containers/test
     commit-message:
       prefix: "containers:"
     schedule:
