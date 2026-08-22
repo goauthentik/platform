@@ -68,13 +68,13 @@ fn user_agent(runtime_version: &str) -> String {
     )
 }
 
-/// The origin as a browser computes it, port included — JavaScript's
-/// `location.origin`.
+/// The origin as a browser computes it: `scheme://host[:port]`, with a default
+/// port omitted — JavaScript's `location.origin`.
 ///
-/// Deliberately not [`origin_of`], which drops the port to redact log lines.
-/// This value goes into a WebView2 URI filter and is compared against what the
-/// page reports, and a missing port makes both silently wrong: the filter
-/// matches nothing and no error is raised anywhere.
+/// Deliberately not [`origin_of`], which drops the port unconditionally to
+/// redact log lines. This value goes into a WebView2 URI filter and is compared
+/// against what the page reports, so dropping a non-default port makes both
+/// silently wrong: the filter matches nothing and no error is raised anywhere.
 pub(crate) fn url_origin(url: &str) -> Option<String> {
     url.parse::<tauri::Url>()
         .ok()

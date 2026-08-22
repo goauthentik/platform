@@ -352,11 +352,13 @@ impl PasswordStore for KeyringPasswordStore {
 /// this in step with that element's `Name` attribute.
 pub const SERVICE_ACCOUNT_NAME: &str = "ak-wcp-browser";
 
-/// A name is all the installer leaves behind, and both `LsaAddAccountRights`
-/// and the desktop ACL grant below want a SID.
+/// Resolves the service account's name to a SID: a name is all the installer
+/// leaves behind, and both `LsaAddAccountRights` and the desktop ACL grant
+/// below want one.
 pub fn account_sid(username: &str) -> windows::core::Result<Vec<u8>> {
     let username_wide = wide(username);
-    // The practical maximum for a SID is well under 68 bytes.
+    // Comfortably over the practical maximum for a SID (well under 68 bytes)
+    // and for any domain name `LookupAccountNameW` might report.
     let mut sid = vec![0u8; 256];
     let mut sid_len = sid.len() as u32;
     let mut domain = [0u16; 256];
@@ -762,6 +764,7 @@ pub fn service_account_password() -> eyre::Result<String> {
 mod byte_layout_tests {
     use super::*;
 
+    /// `MaximumLength` must cover the trailing NUL while `Length` excludes it.
     /// Backwards, and `LsaLookupAuthenticationPackage` either truncates the
     /// last real character or reads one byte past the buffer.
     #[test]

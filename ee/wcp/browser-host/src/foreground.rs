@@ -20,9 +20,10 @@ use windows::Win32::UI::WindowsAndMessaging::{
     SetForegroundWindow, SetWindowPos, WS_EX_TOPMOST,
 };
 
-/// Front-loaded because what this exists for is losing the foreground to a
-/// LogonUI repaint that settles in a few hundred milliseconds, and finite
-/// because a window nobody is fighting over should stop being fought over.
+/// Milliseconds to wait before each re-activation attempt. Front-loaded
+/// because what this exists for is losing the foreground to a LogonUI repaint
+/// that settles in a few hundred milliseconds, and finite because a window
+/// nobody is fighting over should stop being fought over.
 const RETRY_SCHEDULE_MS: [u64; 5] = [150, 400, 900, 1800, 3000];
 
 /// The delay before retry `attempt`, 0-based, or `None` once spent.

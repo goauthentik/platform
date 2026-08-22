@@ -62,8 +62,8 @@ pub struct Credential {
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     deps: CredentialDeps,
     outcome: Mutex<Option<Outcome>>,
-    /// Kept past `GetSerialization` so `ReportResult` can rotate it once the
-    /// logon has succeeded.
+    /// The credential actually handed to LSA, kept past `GetSerialization` so
+    /// `ReportResult` can rotate it once the logon has succeeded.
     serialized: Mutex<Option<(String, String)>>,
 }
 
@@ -88,8 +88,9 @@ impl Credential {
 }
 
 impl Credential_Impl {
-    /// Established once and reused for a local account, throwaway for a domain
-    /// one. `LOCAL_PASSWORD.md` covers why it is not regenerated every time.
+    /// The password to hand LSA for this account: established once and reused
+    /// for a local account, throwaway for a domain one. `LOCAL_PASSWORD.md`
+    /// covers why it is not regenerated every time.
     fn account_password(&self, username: &str) -> Result<String> {
         if !self.is_local_user {
             return helpers::generate_random_password();
@@ -572,8 +573,8 @@ mod tests {
         }
     }
 
-    /// Records how each call was made, so a test can assert a rotation went
-    /// through `change` rather than `reset`.
+    /// Tracks the account's password and how each call was made, so a test can
+    /// assert a rotation went through `change` rather than `reset`.
     #[derive(Default)]
     struct AccountState {
         password: Option<String>,
@@ -776,7 +777,7 @@ mod tests {
         (response == CPGSR_RETURN_CREDENTIAL_FINISHED).then_some(serialization)
     }
 
-    /// Local accounts only: domain accounts use
+    /// The password packed for LSA. Local accounts only: domain accounts use
     /// `CredPackAuthenticationBufferW`, which is not this layout.
     fn sign_in(credential: &ICredentialProviderCredential) -> Option<String> {
         let buf = submit(credential)?.rgbSerialization;

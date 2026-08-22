@@ -76,8 +76,8 @@ impl LoadedProvider {
         })
     }
 
-    /// Borrowed rather than exposed as a field so it cannot outlive the
-    /// `LoadedProvider` that keeps the DLL mapped.
+    /// The provider instance. Borrowed rather than exposed as a field so it
+    /// cannot outlive the `LoadedProvider` that keeps the DLL mapped.
     pub fn provider(&self) -> &ICredentialProvider {
         #[allow(clippy::expect_used)]
         self.provider

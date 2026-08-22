@@ -78,7 +78,8 @@ impl RedirectServer {
         })
     }
 
-    /// In order, with `None` for a request that carried no such header.
+    /// The auth-header value seen on each request served, in order, with
+    /// `None` for a request that carried no such header.
     pub fn observed_auth_headers(&self) -> Vec<Option<String>> {
         self.auth_headers
             .lock()

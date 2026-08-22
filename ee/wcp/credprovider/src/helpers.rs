@@ -142,8 +142,9 @@ mod tests {
     use super::*;
     use windows::Win32::UI::Shell::CPUS_LOGON;
 
-    /// Whose `Buffer` field is a byte offset into `base` rather than a real
-    /// pointer, matching the packed layout.
+    /// Reads back an `LSA_UNICODE_STRING` whose `Buffer` field is a byte
+    /// offset into `base` rather than a real pointer, matching the packed
+    /// layout.
     unsafe fn read_offset_string(base: *const u8, s: &LSA_UNICODE_STRING) -> String {
         let offset = s.Buffer.0 as usize;
         let len_u16 = s.Length as usize / 2;

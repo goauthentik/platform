@@ -256,7 +256,8 @@ impl Drop for BrowserAuthFlow {
     }
 }
 
-/// Leaves the handle owned by the caller.
+/// Writes one command to the host's control pipe, leaving the handle owned by
+/// the caller.
 fn send_command(cancel_write: HANDLE, command: &HostCommand) {
     let mut pipe = unsafe { File::from_raw_handle(cancel_write.0) };
     if let Err(e) = ak_ee_wcp_wire::write_host_command(&mut pipe, command) {
@@ -902,7 +903,8 @@ fn spawn_with_token(
 }
 
 /// `CreateProcessW` may write into the command-line buffer it is handed, so
-/// each attempt gets a fresh copy.
+/// each attempt gets a fresh copy. `bInheritHandles` is `true` so the child
+/// picks up `si`'s `hStdInput`/`hStdOutput`.
 fn spawn_in_current_session(
     cmdline: &str,
     startup_info: &STARTUPINFOW,
@@ -1032,7 +1034,8 @@ mod tests {
         assert!(slot.begin().is_none(), "one is already ready");
     }
 
-    /// Without disturbing one that started in the meantime.
+    /// A failed preload has to clear the way for the next attempt, without
+    /// disturbing one that started in the meantime.
     #[test]
     fn a_failed_preload_frees_the_slot() {
         let mut slot: PreloadSlot<u32> = PreloadSlot::new();

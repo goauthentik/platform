@@ -56,6 +56,8 @@ struct Search {
     found: isize,
 }
 
+/// The visible sign-in window of an `ak_browser.exe`.
+///
 /// Matched on the title rather than on enumeration order: the window is only
 /// revealed seconds after the spawn, and the WebView2 helper that beats it to
 /// the desktop is neither message-only nor zero-size, so the visibility and
