@@ -20,17 +20,8 @@ on:
         value: ${{ jobs.build.outputs.artifact-id }}
 
 jobs:
-  builder:
-    # Reusable workflows can't request more than their caller was granted, so
-    # packages: write has to be declared at every level of the chain.
-    permissions:
-      contents: read
-      packages: write
-    uses: ./.github/workflows/_builder-image.yml
-
   build:
     name: Build
-    needs: builder
     strategy:
       fail-fast: false
       matrix:
@@ -86,17 +77,6 @@ jobs:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
-      # ubuntu builds run inside the builder container image, which already
-      # bakes in the pinned toolchain - only macos/windows need it installed
-      # (and cached) on the runner itself. ak-agent-desktop is not containerised,
-      # so it needs the toolchain on the ubuntu runner too.
-      - if: ${{ !startsWith(matrix.platform, 'ubuntu') || matrix.target == 'ak-agent-desktop' }}
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
-        with:
-          path: |
-            ~/.rustup/toolchains
-            ~/.rustup/update-hashes
-          key: rustup-toolchain-${{ matrix.platform }}-${{ hashFiles('rust-toolchain.toml') }}
       - if: ${{ !startsWith(matrix.platform, 'ubuntu') || matrix.target == 'ak-agent-desktop' }}
         uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
         with:
@@ -105,13 +85,6 @@ jobs:
       - uses: ./.github/actions/setup-toolchain
         with:
           platform: ${{ matrix.platform }}
-      - if: ${{ !startsWith(matrix.platform, 'ubuntu') }}
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
-        with:
-          path: |
-            ~/.rustup/toolchains
-            ~/.rustup/update-hashes
-          key: rustup-toolchain-${{ matrix.platform }}-${{ hashFiles('rust-toolchain.toml') }}
       # /usr/local/cargo is CARGO_HOME inside the builder image; ~/.cargo is the
       # runner's. Only one of the two exists per job, the other matches nothing.
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
