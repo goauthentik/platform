@@ -93,7 +93,8 @@ public class SysdBridge {
         return try await self.withClient { client in
             let res = SystemAuthInteractive.Client(wrapping: client)
             let url = try await res.interactiveAuthAsync(
-                request: ClientRequest(message: Google_Protobuf_Empty())
+                request: ClientRequest(
+                    message: InteractiveAuthAsyncRequest.init())
             )
             return AKInteractiveAuth(URL: url.url, DTH: url.headerToken)
         }

@@ -493,7 +493,7 @@ pub mod system_auth_interactive_client {
         }
         pub async fn interactive_auth_async(
             &mut self,
-            request: impl tonic::IntoRequest<()>,
+            request: impl tonic::IntoRequest<super::InteractiveAuthAsyncRequest>,
         ) -> std::result::Result<
             tonic::Response<super::InteractiveAuthAsyncResponse>,
             tonic::Status,
@@ -544,7 +544,7 @@ pub mod system_auth_interactive_server {
         >;
         async fn interactive_auth_async(
             &self,
-            request: tonic::Request<()>,
+            request: tonic::Request<super::InteractiveAuthAsyncRequest>,
         ) -> std::result::Result<
             tonic::Response<super::InteractiveAuthAsyncResponse>,
             tonic::Status,
@@ -679,14 +679,19 @@ pub mod system_auth_interactive_server {
                 "/sys_auth.SystemAuthInteractive/InteractiveAuthAsync" => {
                     #[allow(non_camel_case_types)]
                     struct InteractiveAuthAsyncSvc<T: SystemAuthInteractive>(pub Arc<T>);
-                    impl<T: SystemAuthInteractive> tonic::server::UnaryService<()>
+                    impl<
+                        T: SystemAuthInteractive,
+                    > tonic::server::UnaryService<super::InteractiveAuthAsyncRequest>
                     for InteractiveAuthAsyncSvc<T> {
                         type Response = super::InteractiveAuthAsyncResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
-                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::InteractiveAuthAsyncRequest>,
+                        ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
                                 <T as SystemAuthInteractive>::interactive_auth_async(

@@ -27,7 +27,7 @@ const VALID_TOKEN: &str = "valid-token-under-test";
 const USERNAME: &str = "e2e-user";
 
 struct Fixture {
-    _mock: mock_sysd::MockSysd,
+    mock: mock_sysd::MockSysd,
     _caps: harness::DebugCapabilities,
     server: RedirectServer,
     provider: LoadedProvider,
@@ -77,7 +77,7 @@ async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
     }
 
     Fixture {
-        _mock: mock,
+        mock,
         _caps: caps,
         server,
         provider,
@@ -176,6 +176,14 @@ async fn completed_sign_in_serializes_a_credential() {
             serialization.rgbSerialization as *const _,
         ));
     }
+
+    // `credprovider` passes the tile's user into `interactive_auth_async`, so
+    // only a real sign-in shows whether the hint survived the trip.
+    assert_eq!(
+        *fixture.mock.login_hints.lock().unwrap(),
+        vec![Some(USERNAME.to_string())],
+        "interactive_auth_async should have been called once, hinting the tile's user"
+    );
 
     // The header on every request is what let the mock backend hand back a
     // sign-in page at all.
