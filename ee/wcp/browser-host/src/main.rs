@@ -167,11 +167,22 @@ fn js_string(s: &str) -> String {
 /// authentik should not be added to a request the page makes somewhere else,
 /// and the flow can hand off to an upstream IdP mid-sign-in.
 ///
-/// `token` reaching page script at all is a real cost: at the WebView2 layer
-/// it stays in this process, and here it does not. It is passed as an argument
-/// rather than written into the function body so that reading `fetch.toString`
-/// does not hand it over, but anything running in that document is closer to
-/// it than it was. See `TAURI_MIGRATION.md`.
+/// **This hands the token to page script, and that is an accepted cost rather
+/// than a mitigated one.** Passing it as an argument keeps it out of
+/// `fetch.toString()`, but the wrapper has to call `headers.set(HEADER, TOKEN)`
+/// in the page's own context, and `Headers.prototype.set` belongs to the page:
+/// overriding it reads the token. Demonstrated, not theorised — see
+/// `TAURI_MIGRATION.md`.
+///
+/// Tauri's IPC does not solve this. Fetching the token per request would
+/// shorten the window and change nothing about that hook, and exposing the
+/// command bridge to a remote origin — which the flow may hand off to an
+/// upstream IdP — is a larger surface than the token it would protect.
+///
+/// The alternative is to drop this block and leave the header to the WebView2
+/// layer alone, where it stays in this process; the cost there is requests
+/// that layer never sees, a service worker's being the ones that matter. That
+/// trade was weighed and this side of it chosen deliberately.
 fn page_script(origin: &str, token: &str) -> String {
     format!(
         r#"
