@@ -12,6 +12,7 @@ ci-container-tag:
 
 .PHONY: ci-build-args
 ci-build-args:
+	@echo RUST_TOOLCHAIN=$(shell sed -n 's/channel = "\(.*\)"/\1/p' ${TOP}/rust-toolchain.toml)
 
 .PHONY: local-build
 local-build:

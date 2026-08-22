@@ -1,5 +1,7 @@
 FROM docker.io/library/debian:bullseye-slim
 
+ARG RUST_TOOLCHAIN
+
 ENV DEBIAN_FRONTEND=noninteractive \
     RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
@@ -37,7 +39,7 @@ RUN ARCH=$(uname -m) && \
 RUN --mount=type=bind,target=rust-toolchain.toml,src=rust-toolchain.toml \
     curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain none && \
     rustup install && \
-    rustup default "$(sed -n 's/channel = "\(.*\)"/\1/p' rust-toolchain.toml)" && \
+    rustup default "${RUST_TOOLCHAIN}}" && \
     rustc --version && \
     cargo --version
 
