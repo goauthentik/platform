@@ -97,6 +97,68 @@ fn origin_of(url: &str) -> String {
         .unwrap_or_else(|| "<unparseable URL>".to_string())
 }
 
+/// Host-internal URL the injected cancel button navigates to.
+///
+/// Its own scheme rather than a path under `REDIRECT_PREFIX`: WebView2 cannot
+/// navigate either of them, but a separate scheme cannot be confused with a
+/// real `goauthentik.io://` callback no matter what authentik puts in one.
+const CANCEL_URL: &str = "akwcp://cancel";
+
+/// A cancel button, injected into whatever authentik serves.
+///
+/// The window is frameless (see the builder below), so there is no system
+/// close button, and LogonUI's own cancel is behind a topmost window — which
+/// left no way out of a sign-in short of the credential provider giving up.
+///
+/// Runs through WebView2's "execute on document created", so it is not an
+/// inline `<script>` in the page and a strict `script-src` does not stop it.
+/// Styling goes through the CSSOM for the same reason: a `style` attribute
+/// would be subject to `style-src`, but properties set from script are not.
+///
+/// Re-applied on an interval because authentik's flow executor replaces the
+/// document between stages, which takes the button with it.
+const CANCEL_BUTTON_SCRIPT: &str = r#"
+(function () {
+  if (window.__akWcpCancelInstalled) return;
+  window.__akWcpCancelInstalled = true;
+
+  function add() {
+    if (!document.body || document.getElementById('ak-wcp-cancel')) return;
+    var b = document.createElement('button');
+    b.id = 'ak-wcp-cancel';
+    b.type = 'button';
+    b.title = 'Cancel sign-in';
+    b.setAttribute('aria-label', 'Cancel sign-in');
+    b.textContent = '\u00D7';
+    var s = b.style;
+    s.setProperty('position', 'fixed');
+    s.setProperty('top', '10px');
+    s.setProperty('right', '10px');
+    s.setProperty('z-index', '2147483647');
+    s.setProperty('width', '32px');
+    s.setProperty('height', '32px');
+    s.setProperty('padding', '0');
+    s.setProperty('border', 'none');
+    s.setProperty('border-radius', '16px');
+    s.setProperty('background', 'rgba(0,0,0,0.55)');
+    s.setProperty('color', '#fff');
+    s.setProperty('font', '20px/32px system-ui, sans-serif');
+    s.setProperty('cursor', 'pointer');
+    b.addEventListener('click', function () {
+      window.location.href = 'akwcp://cancel';
+    });
+    document.body.appendChild(b);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', add);
+  } else {
+    add();
+  }
+  setInterval(add, 1000);
+})();
+"#;
+
 /// Label the sign-in window is created with and looked up by.
 const SIGN_IN_WINDOW: &str = "sign-in";
 
@@ -293,11 +355,13 @@ fn run(
             // and the window falls back to legacy non-client painting.
             // Unverified on the secure desktop — see TAURI_MIGRATION.md.
             //
-            // Nothing is lost by dropping it: the window is fixed-size
-            // and centered, so there is nothing to drag or resize, and
-            // backing out of the sign-in goes through LogonUI's own
-            // cancel, which reaches this process over the control pipe
-            // rather than through a close button.
+            // The window is fixed-size and centered, so there is nothing
+            // to drag or resize. Cancelling is the one thing the frame
+            // did carry: LogonUI's own cancel is behind a topmost window
+            // and the system close button goes with the caption, which
+            // left a sign-in with no way out short of the credential
+            // provider giving up. `CANCEL_BUTTON_SCRIPT` and the escape
+            // handler in `webview2` replace it.
             .decorations(false)
             // Topmost before the first paint, so the window is never
             // behind LogonUI even for a frame. Asking for focus is a
@@ -310,8 +374,15 @@ fn run(
             .user_agent(&user_agent(&runtime_version))
             .data_directory(data_directory.clone())
             .incognito(true)
+            .initialization_script(CANCEL_BUTTON_SCRIPT)
             .on_navigation(move |url| {
                 let url = url.as_str();
+                if url == CANCEL_URL {
+                    log::info!("cancelled from the sign-in window");
+                    nav_completion.send(HostReport::Cancelled);
+                    signin::close(&nav_handle);
+                    return false;
+                }
                 if !url.starts_with(ak_ee_wcp_wire::REDIRECT_PREFIX) {
                     log::debug!("navigating to {}", origin_of(url));
                     return true;

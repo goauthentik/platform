@@ -3,7 +3,9 @@
 //! every request the sign-in window makes.
 
 use webview2_com::{
+    AcceleratorKeyPressedEventHandler,
     Microsoft::Web::WebView2::Win32::{
+        COREWEBVIEW2_KEY_EVENT_KIND, COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN,
         COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL, ICoreWebView2WebResourceRequest,
     },
     WebResourceRequestedEventHandler,
@@ -116,6 +118,36 @@ pub fn navigate_with_header(
             log::error!("add_WebResourceRequested failed: {e}");
             crate::signin::close(&app);
             return;
+        }
+
+        // Escape is the other way out of a frameless window, and the one
+        // that still works if the injected cancel button never makes it into
+        // the page. Registered on the controller rather than the page, so no
+        // amount of the page's own key handling can swallow it.
+        let escape_app = app.clone();
+        let mut escape_registration = 0i64;
+        if let Err(e) = unsafe {
+            webview.controller().add_AcceleratorKeyPressed(
+                &AcceleratorKeyPressedEventHandler::create(Box::new(move |_sender, args| {
+                    let Some(args) = args else {
+                        return Ok(());
+                    };
+                    const VK_ESCAPE: u32 = 0x1B;
+                    let mut kind = COREWEBVIEW2_KEY_EVENT_KIND::default();
+                    args.KeyEventKind(&mut kind)?;
+                    let mut key = 0u32;
+                    args.VirtualKey(&mut key)?;
+                    if kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN && key == VK_ESCAPE {
+                        log::info!("escape pressed; cancelling the sign-in");
+                        args.SetHandled(true)?;
+                        crate::signin::close(&escape_app);
+                    }
+                    Ok(())
+                })),
+                &mut escape_registration,
+            )
+        } {
+            log::warn!("could not register the escape-to-cancel handler: {e}");
         }
 
         log::debug!("header injection registered; starting the sign-in navigation");

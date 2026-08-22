@@ -283,6 +283,33 @@ Append as things are learned. Date, what was run, what happened.
   cleanly both on an explicit `Cancel` and on the control pipe closing, so
   backing out of the tile — or the provider going away — cannot strand a
   browser on the logon screen.
+- _2026-08-22_ — **the frameless window had no way to cancel**, which the
+  commit that removed the frame got wrong: it claimed backing out went through
+  LogonUI's own cancel. That cancel is behind a topmost window, and the system
+  close button left with the caption, so a started sign-in could only end by
+  completing or by the credential provider giving up. Two ways out now:
+
+  - a cancel button injected into whatever authentik serves, via
+    `initialization_script` (WebView2's execute-on-document-created). It
+    navigates to `akwcp://cancel`, a host-internal scheme the existing
+    navigation handler intercepts — a separate scheme rather than a path under
+    `goauthentik.io://` so it cannot be confused with a real callback.
+  - Escape, handled on the WebView2 controller via `AcceleratorKeyPressed`, so
+    the page's own key handling cannot swallow it and it still works if the
+    button never makes it into the page.
+
+  Both verified against the real binary. The button survives a strict
+  `default-src 'self'`: the script is not an inline `<script>` so `script-src`
+  does not apply, and its styling goes through the CSSOM rather than a `style`
+  attribute, which `style-src` would have blocked. Escape was verified by
+  posting key messages to the webview's child windows rather than by a focused
+  physical keystroke — a background console cannot take the foreground from an
+  always-on-top window — so it exercises the handler, not the focus path.
+
+  The button is re-applied on a one-second interval because authentik's flow
+  executor replaces the document between stages. Worth watching on a real
+  instance: this is UI injected into someone else's page, and it could collide
+  with the flow's own styling.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service
