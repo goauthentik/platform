@@ -38,7 +38,7 @@ RUN ARCH=$(uname -m) && \
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain none && \
     rustup install && \
-    rustup default "${RUST_TOOLCHAIN}}" && \
+    rustup default "${RUST_TOOLCHAIN}" && \
     rustc --version && \
     cargo --version
 
