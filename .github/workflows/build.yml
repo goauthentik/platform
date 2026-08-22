@@ -96,7 +96,7 @@ jobs:
           NETLIFY_SITE_ID: authentik-pkg.netlify.app
 
   build-container:
-    needs: deploy-to-netlify
+    # needs: deploy-to-netlify
     permissions:
       packages: write
     strategy:
@@ -119,7 +119,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
         env:
-          AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
+          # AK_DEPLOY_URL: ${{ needs.deploy-to-netlify.outputs.deploy-url }}
           AK_TAG_SUFFIX: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}
         run: |
           cd ${{ matrix.target }}
