@@ -402,7 +402,7 @@ fn run(
                 SIGN_IN_WINDOW,
                 WebviewUrl::App("index.html".into()),
             )
-            .title("Sign in with authentik")
+            .title(ak_ee_wcp_wire::WINDOW_TITLE)
             .inner_size(
                 f64::from(ak_ee_wcp_wire::WINDOW_WIDTH),
                 f64::from(ak_ee_wcp_wire::WINDOW_HEIGHT),

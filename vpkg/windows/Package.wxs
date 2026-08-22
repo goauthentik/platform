@@ -28,10 +28,58 @@
         <Directory Id="agent" Name="agent" />
       </Directory>
     </StandardDirectory>
+    <!-- Every binary in this package links the MSVC runtime dynamically: the
+         Rust standard library already needs vcruntime140.dll, and aws-lc-sys
+         compiles BoringSSL's C++ with FH4 exception handling, which is what
+         adds vcruntime140_1.dll on top. -->
+    <StandardDirectory Id="TARGETDIR">
+      <Merge Id="VCRedistCRT"
+             SourceFile="$(env.VC_REDIST_MSM)"
+             DiskId="1"
+             Language="0" />
+    </StandardDirectory>
     <StandardDirectory Id="CommonAppDataFolder">
       <Directory Id="ak_ProgramDataRoot" Name="$(var.Manufacturer)">
       </Directory>
     </StandardDirectory>
+    <!-- ak-agent-desktop.exe and ak_browser.exe are both Tauri apps, so they
+         render through the machine's Evergreen WebView2 runtime and there is
+         nothing to fall back to when it is absent. Windows 11 ships it as part
+         of the OS and most Windows 10 devices picked it up through Windows
+         Update, but neither is a guarantee (LTSC, Server and imaged machines
+         turn up without it), so detect it and install it when it is
+         missing. -->
+    <Property Id="WEBVIEW2_VERSION">
+      <RegistrySearch Id="webview2_version"
+                      Root="HKLM"
+                      Key="SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+                      Name="pv"
+                      Type="raw"
+                      Bitness="always32" />
+    </Property>
+
+    <!-- The Evergreen bootstrapper is a ~2MB stub that pulls the runtime
+         matching the machine's architecture from Microsoft; the Makefile
+         fetches it at build time so it rides inside the signed MSI. Deferred
+         and non-impersonated so it runs elevated, which is what makes the
+         install per-machine rather than per-user. Return="check" fails the
+         install if it cannot be installed: an offline machine ends up with no
+         agent rather than an agent whose windows never open, and a
+         credential provider registered on the logon screen that cannot
+         render is the worse of the two outcomes. -->
+    <Binary Id="webview2_bootstrapper" SourceFile="$(env.WEBVIEW2_BOOTSTRAPPER)" />
+    <CustomAction Id="install_webview2"
+                  BinaryRef="webview2_bootstrapper"
+                  ExeCommand="/silent /install"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+    <InstallExecuteSequence>
+      <Custom Action="install_webview2"
+              Before="InstallFinalize"
+              Condition="NOT REMOVE AND (NOT WEBVIEW2_VERSION OR WEBVIEW2_VERSION = &quot;0.0.0.0&quot;)" />
+    </InstallExecuteSequence>
+
     <Icon Id="authentik_icon" SourceFile="$(env.PWD)/resources/icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="authentik_icon" />
     <util:CloseApplication Id="ak_agent_close"
@@ -124,24 +172,7 @@
                           Name="authentik Credential Provider (Browser)"
                           EventMessageFile="[#wcp_ak_browser_exe]"/>
 
-        <!-- ak_browser.exe runs as this account instead of SYSTEM (see
-             ee/wcp/BROWSER_PRIVILEGE.md). credprovider logs it on with
-             LogonUserW and a stored password (syscalls::service_account_password,
-             same pattern as LOCAL_PASSWORD.md) rather than the SE_TCB_NAME-only
-             S4U route: LogonUI's own token does not carry SE_TCB_NAME, the
-             same wall Chromium's own credential provider hits and answers
-             the same way (chrome/credential_provider/gaiacp/gcp_utils.cc,
-             CreateLogonToken). LogonAsService grants the SeServiceLogonRight
-             that LOGON32_LOGON_SERVICE needs — not LogonAsBatchJob/BATCH: a
-             batch-logon token could not create any named synchronization
-             object on a real install (confirmed: CreateMutex denied even
-             for random names), which is fatal to Chromium's own
-             ProcessSingleton; see the comment on
-             credprovider::syscalls::service_account_token. The account is
-             denied all interactive/network/RDP logon regardless, and the
-             token credprovider actually hands ak_browser.exe has every
-             privilege stripped via CreateRestrictedToken on top of that. No
-             dictionary words and no "$" in the initial password below:
+        <!-- ak_browser.exe runs as this account instead of SYSTEM.
              NetUserAdd folds complexity/banned-word LSA filter rejections
              into the same NERR_PasswordTooShort a real length failure
              would give, and "$" is the WiX preprocessor's substitution
@@ -190,6 +221,7 @@
                Description="System and User agents, required.">
         <ComponentRef Id="sysd" />
         <ComponentRef Id="agent" />
+        <MergeRef Id="VCRedistCRT" />
       </Feature>
       <Feature Id="cli"
                Title="authentik CLI"

@@ -226,7 +226,7 @@ async fn the_sign_in_window_opens_topmost() {
     let observed = sighting
         .recv()
         .expect("the window watcher thread should report")
-        .expect("ak_browser.exe never opened a visible window");
+        .expect("ak_browser.exe never revealed its sign-in window");
 
     assert!(
         observed.extended_style & WS_EX_TOPMOST.0 != 0,

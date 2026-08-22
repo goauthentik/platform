@@ -334,7 +334,9 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         };
 
         let packed = if self.is_local_user {
-            let domain = helpers::computer_name();
+            // Win32 reads "." as this machine, so an unset COMPUTERNAME still
+            // scopes the logon to the local account database.
+            let domain = std::env::var("COMPUTERNAME").unwrap_or_else(|_| ".".to_string());
             helpers::pack_kerb_interactive_unlock_logon(&domain, &username, &password, self.cpus)
         } else {
             helpers::pack_authentication_buffer(&username, &password)

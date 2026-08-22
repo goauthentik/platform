@@ -16,8 +16,8 @@ use windows::Win32::{
         QueryFullProcessImageNameW,
     },
     UI::WindowsAndMessaging::{
-        EnumWindows, GWL_EXSTYLE, GetWindowLongPtrW, GetWindowRect, GetWindowThreadProcessId,
-        IsWindowVisible,
+        EnumWindows, GWL_EXSTYLE, GetWindowLongPtrW, GetWindowRect, GetWindowTextW,
+        GetWindowThreadProcessId, IsWindowVisible,
     },
 };
 use windows_core::{BOOL, PWSTR};
@@ -56,10 +56,12 @@ struct Search {
     found: isize,
 }
 
-/// The first visible, non-degenerate top-level window owned by an
-/// `ak_browser.exe`. WebView2 opens several message-only and zero-size helpers
-/// first, and matching one of those would pass while the sign-in window itself
-/// was still misbehaving.
+/// The visible sign-in window of an `ak_browser.exe`.
+///
+/// Matched on the title rather than on enumeration order: the window is only
+/// revealed seconds after the spawn, and the WebView2 helper that beats it to
+/// the desktop is neither message-only nor zero-size, so the visibility and
+/// size filters do not rule that one out.
 fn find() -> Option<HWND> {
     let mut search = Search { found: 0 };
     // Reports failure when the callback stops the walk early, which is what
@@ -83,6 +85,13 @@ unsafe extern "system" fn visit(hwnd: HWND, lparam: LPARAM) -> BOOL {
     if unsafe { GetWindowRect(hwnd, &mut rect) }.is_err()
         || rect.right <= rect.left
         || rect.bottom <= rect.top
+    {
+        return true.into();
+    }
+
+    let mut title = [0u16; 128];
+    let len = unsafe { GetWindowTextW(hwnd, &mut title) };
+    if len <= 0 || String::from_utf16_lossy(&title[..len as usize]) != ak_ee_wcp_wire::WINDOW_TITLE
     {
         return true.into();
     }
