@@ -5,7 +5,7 @@
 //! last, from inside that setup, so none of it races the first document.
 
 use webview2_com::{
-    AcceleratorKeyPressedEventHandler, AddScriptToExecuteOnDocumentCreatedCompletedHandler,
+    AcceleratorKeyPressedEventHandler,
     Microsoft::Web::WebView2::Win32::{
         COREWEBVIEW2_KEY_EVENT_KIND, COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN,
         COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL, ICoreWebView2WebResourceRequest,
@@ -79,7 +79,6 @@ pub fn navigate_with_header(
     header_token: String,
     sign_in_url: String,
     origin: String,
-    page_script: String,
 ) {
     let on_failure = app.clone();
     if let Err(e) = window.with_webview(move |webview| {
@@ -99,19 +98,30 @@ pub fn navigate_with_header(
         // IdP, or a page that loads anything from a CDN, handed that token
         // over with it. Confirmed by watching a second local server receive it.
         let origin_filter = format!("{origin}/*");
+        // Logged because everything about this is invisible when it goes
+        // wrong: a filter that matches nothing registers just as successfully
+        // as one that matches, the handler simply never runs, and the first
+        // sign anyone gets is authentik rejecting the session. The filter is
+        // the value most likely to be wrong, so it goes in the log verbatim.
+        log::info!("injecting {} on requests matching {origin_filter}", ak_ee_wcp_wire::AUTH_HEADER_NAME);
         if let Err(e) = unsafe {
             core.AddWebResourceRequestedFilter(
                 &HSTRING::from(origin_filter.as_str()),
                 COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL,
             )
         } {
-            log::error!("AddWebResourceRequestedFilter failed: {e}");
+            log::error!("AddWebResourceRequestedFilter({origin_filter}) failed: {e}");
             crate::signin::close(&app);
             return;
         }
 
         let header = HSTRING::from(ak_ee_wcp_wire::AUTH_HEADER_NAME);
         let token = HSTRING::from(header_token.as_str());
+        // Counts requests the filter actually matched. Zero is the interesting
+        // number: it means the filter and the requests disagree, which no
+        // error anywhere reports.
+        let injected = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let injected_handler = injected.clone();
         let mut registration = 0i64;
         if let Err(e) = unsafe {
             core.add_WebResourceRequested(
@@ -120,7 +130,32 @@ pub fn navigate_with_header(
                         return Ok(());
                     };
                     let request: ICoreWebView2WebResourceRequest = args.Request()?;
-                    request.Headers()?.SetHeader(&header, &token)?;
+
+                    let uri = {
+                        let mut raw = windows_core::PWSTR::null();
+                        request.Uri(&mut raw)?;
+                        raw.to_string().unwrap_or_default()
+                    };
+
+                    match request.Headers().and_then(|h| h.SetHeader(&header, &token)) {
+                        Ok(()) => {
+                            let n = injected_handler
+                                .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+                                + 1;
+                            // The first one at info, so a working flow says so
+                            // once; the rest at debug, since a sign-in page
+                            // makes a great many requests.
+                            if n == 1 {
+                                log::info!(
+                                    "header injected on the first matching request ({})",
+                                    crate::origin_of(&uri)
+                                );
+                            } else {
+                                log::debug!("header injected on {uri} (request {n})");
+                            }
+                        }
+                        Err(e) => log::error!("could not set the header on {uri}: {e}"),
+                    }
                     Ok(())
                 })),
                 &mut registration,
@@ -130,6 +165,23 @@ pub fn navigate_with_header(
             crate::signin::close(&app);
             return;
         }
+
+        // If nothing ever matched, say so plainly rather than leaving the
+        // reader to infer it from an absence of log lines.
+        let injected_report = injected.clone();
+        let reported_filter = origin_filter.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_secs(15));
+            let n = injected_report.load(std::sync::atomic::Ordering::SeqCst);
+            if n == 0 {
+                log::warn!(
+                    "no request matched {reported_filter} after 15s — the sign-in page is                      loading without {}, so authentik will not associate it with this                      session. The filter and the page's own URLs disagree.",
+                    ak_ee_wcp_wire::AUTH_HEADER_NAME
+                );
+            } else {
+                log::info!("header injected on {n} requests in the first 15s");
+            }
+        });
 
         // Escape is the other way out of a frameless window, and the one
         // that still works if the injected cancel button never makes it into
@@ -161,10 +213,9 @@ pub fn navigate_with_header(
             log::warn!("could not register the escape-to-cancel handler: {e}");
         }
 
-        // A footer link may well be rendered with `target="_blank"`, and a
-        // new-window request is not a navigation — `on_navigation` never sees
-        // it. Without this the cancel link would silently do nothing.
-        let popup_app = app.clone();
+        // Nothing in this window has any business opening another one: it is
+        // a single sign-in page on a logon screen, and a popup there would be
+        // a window nobody can close on a desktop with no taskbar.
         let mut popup_registration = 0i64;
         if let Err(e) = unsafe {
             core.add_NewWindowRequested(
@@ -174,16 +225,9 @@ pub fn navigate_with_header(
                     };
                     let mut uri = windows_core::PWSTR::null();
                     args.Uri(&mut uri)?;
-                    let requested = unsafe { uri.to_string() }.unwrap_or_default();
-                    // Nothing in this window has any business opening another
-                    // one: it is a single sign-in page on a logon screen.
+                    let requested = uri.to_string().unwrap_or_default();
                     args.SetHandled(true)?;
-                    if requested == crate::CANCEL_URL {
-                        log::info!("cancelled from the sign-in page's footer link");
-                        crate::signin::close(&popup_app);
-                    } else {
-                        log::info!("refused a popup to {}", crate::origin_of(&requested));
-                    }
+                    log::info!("refused a popup to {}", crate::origin_of(&requested));
                     Ok(())
                 })),
                 &mut popup_registration,
@@ -192,36 +236,9 @@ pub fn navigate_with_header(
             log::warn!("could not register the new-window handler: {e}");
         }
 
-        // Registered before the navigation, and the navigation started from
-        // its completion handler: the script has to be in place before the
-        // first document exists or it misses the page it is for. Same
-        // reasoning as the header filter above, one layer up.
-        let navigate_core = core.clone();
-        let navigate_app = app.clone();
-        let navigate_to = sign_in_url.clone();
-        if let Err(e) = unsafe {
-            core.AddScriptToExecuteOnDocumentCreated(
-                &HSTRING::from(page_script.as_str()),
-                &AddScriptToExecuteOnDocumentCreatedCompletedHandler::create(Box::new(
-                    move |result, _id| {
-                        if let Err(e) = result {
-                            log::error!(
-                                "could not install the page script; the sign-in page will have                                  no cancel link: {e}"
-                            );
-                        }
-                        log::debug!("page script installed; starting the sign-in navigation");
-                        if let Err(e) =
-                            unsafe { navigate_core.Navigate(&HSTRING::from(navigate_to.as_str())) }
-                        {
-                            log::error!("could not navigate to the sign-in URL: {e}");
-                            crate::signin::close(&navigate_app);
-                        }
-                        Ok(())
-                    },
-                )),
-            )
-        } {
-            log::error!("could not register the page script: {e}");
+        log::debug!("starting the sign-in navigation");
+        if let Err(e) = unsafe { core.Navigate(&HSTRING::from(sign_in_url.as_str())) } {
+            log::error!("could not navigate to the sign-in URL: {e}");
             crate::signin::close(&app);
         }
     }) {

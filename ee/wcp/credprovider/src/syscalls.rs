@@ -7,8 +7,9 @@ use std::ffi::c_void;
 use ak_platform_keyring::{KeyringError, windows::WindowsStore};
 use windows::Win32::Foundation::{CloseHandle, HANDLE, HWND, LPARAM, RECT};
 use windows::Win32::UI::WindowsAndMessaging::{
-    AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW,
-    GetWindowThreadProcessId, IsWindowVisible, SetForegroundWindow,
+    AllowSetForegroundWindow, EnumWindows, GetForegroundWindow, GetSystemMetrics, GetWindowRect,
+    GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible, SM_REMOTESESSION,
+    SetForegroundWindow,
 };
 use windows::{
     Win32::{
@@ -81,6 +82,17 @@ pub enum PasswordCheck {
 pub trait PasswordStore {
     fn load(&self, sid: &str) -> eyre::Result<Option<String>>;
     fn save(&self, sid: &str, password: &str) -> eyre::Result<()>;
+}
+
+/// Whether this provider is running in a remote (RDP) session.
+///
+/// `SM_REMOTESESSION` is per-session and answered by the process asking, which
+/// is what makes it the right test here: the DLL is loaded into whichever
+/// LogonUI is showing the tile, so it reports that session rather than the
+/// console's. A machine can have someone at the console and someone over RDP
+/// at the same time, and only one of those is ours.
+pub fn is_remote_session() -> bool {
+    unsafe { GetSystemMetrics(SM_REMOTESESSION) != 0 }
 }
 
 /// The window-manager calls behind pushing `ak_browser.exe`'s window to the front.

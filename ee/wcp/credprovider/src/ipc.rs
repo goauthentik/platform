@@ -131,6 +131,18 @@ impl AuthFlow for BrowserAuthFlow {
     }
 
     fn preload(&self) {
+        // Nothing here works over RDP — the sign-in window would open on the
+        // remote session's desktop, and the flow it belongs to cannot complete
+        // there — so selecting the tile in one must not start a browser. It is
+        // several seconds of a process nobody will ever see, on a machine that
+        // may have a console session using this provider properly at the same
+        // time. `run` still refuses on its own; this is about not paying for a
+        // sign-in that cannot happen.
+        if syscalls::is_remote_session() {
+            log::info!("tile selected in a remote session; not preloading the sign-in window");
+            return;
+        }
+
         let mut slot = self.preloaded.lock().unwrap_or_else(|e| e.into_inner());
         // Selecting an already-selected tile, or selecting it again after
         // backing out, must not leave a second browser running.

@@ -111,119 +111,6 @@ pub(crate) fn origin_of(url: &str) -> String {
         .unwrap_or_else(|| "<unparseable URL>".to_string())
 }
 
-/// Host-internal URL the injected cancel button navigates to.
-///
-/// Its own scheme rather than a path under `REDIRECT_PREFIX`: WebView2 cannot
-/// navigate either of them, but a separate scheme cannot be confused with a
-/// real `goauthentik.io://` callback no matter what authentik puts in one.
-pub(crate) const CANCEL_URL: &str = "akwcp://cancel";
-
-/// `s` as a JavaScript string literal.
-///
-/// The values this wraps are a URL origin and an opaque token from `ak-sysd`;
-/// neither is ours to assume anything about, and both end up inside a script
-/// that runs on the sign-in page.
-fn js_string(s: &str) -> String {
-    let mut out = String::with_capacity(s.len() + 2);
-    out.push('"');
-    for c in s.chars() {
-        match c {
-            '\"' => out.push_str("\\\""),
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\u{2028}' => out.push_str("\\u2028"),
-            '\u{2029}' => out.push_str("\\u2029"),
-            // `</script>` cannot terminate anything here — this is never
-            // inline in a document — but `<` is cheap to neutralise.
-            '<' => out.push_str("\\u003c"),
-            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
-            c => out.push(c),
-        }
-    }
-    out.push('"');
-    out
-}
-
-/// The script that runs on every document the sign-in window loads.
-///
-/// One job: a cancel link. The window is frameless (see the builder below), so
-/// there is no system close button, and LogonUI's own cancel sits behind a
-/// topmost window. `/api/v3/core/brands/current/` carries `ui_footer_links`,
-/// which the flow executor renders in its footer, so appending one entry there
-/// gets a cancel link that is authentik's own component in authentik's own
-/// styling — nothing here has an opinion about how it looks. Escape does the
-/// same job without any of this and is what GCPW relies on; this is the
-/// visible affordance on top.
-///
-/// **No credential passes through here.** This once also set the
-/// interactive-auth header on `fetch`, which meant handing the token to page
-/// script: the wrapper had to call `headers.set` in the page's own context,
-/// and a page overriding `Headers.prototype.set` read it — demonstrated, not
-/// theorised. The WebView2 layer sets that header on every request to
-/// authentik's origin anyway, `fetch` included, from outside the page's reach,
-/// so the JavaScript bought only the requests that layer cannot see (a service
-/// worker's) and cost the token. See `webview2::navigate_with_header` and
-/// `TAURI_MIGRATION.md`.
-///
-/// Runs through WebView2's execute-on-document-created, so it is not an inline
-/// `<script>` and a strict `script-src` does not stop it. Clicking the link
-/// navigates to [`CANCEL_URL`], which the navigation handler below intercepts.
-fn page_script(origin: &str) -> String {
-    format!(
-        r#"
-(function (ORIGIN, CANCEL) {{
-  if (window.__akWcpInstalled) return;
-  window.__akWcpInstalled = true;
-
-  var BRAND = '/api/v3/core/brands/current/';
-  var inner = window.fetch;
-  if (typeof inner !== 'function') return;
-
-  function toAuthentik(url) {{
-    try {{
-      return new URL(url, document.baseURI).origin === ORIGIN;
-    }} catch (e) {{
-      return false;
-    }}
-  }}
-
-  window.fetch = function (input, init) {{
-    var url = typeof input === 'string' ? input : (input && input.url) || '';
-    var pending = inner.apply(this, arguments);
-    if (url.indexOf(BRAND) === -1 || !toAuthentik(url)) return pending;
-
-    return pending.then(function (response) {{
-      if (!response || !response.ok) return response;
-      return response.clone().json().then(function (body) {{
-        if (!body || !Array.isArray(body.ui_footer_links)) return response;
-        var already = body.ui_footer_links.some(function (l) {{
-          return l && l.href === CANCEL;
-        }});
-        if (already) return response;
-        body.ui_footer_links = body.ui_footer_links.concat([
-          {{ name: 'Cancel sign-in', href: CANCEL }}
-        ]);
-        var headers = new Headers(response.headers);
-        headers.set('content-type', 'application/json');
-        return new Response(JSON.stringify(body), {{
-          status: response.status,
-          statusText: response.statusText,
-          headers: headers
-        }});
-      }}).catch(function () {{
-        // A brand payload we cannot read is not worth failing the page for.
-        return response;
-      }});
-    }});
-  }};
-}})({origin}, {cancel});
-"#,
-        origin = js_string(origin),
-        cancel = js_string(CANCEL_URL),
-    )
-}
-
 /// Label the sign-in window is created with and looked up by.
 const SIGN_IN_WINDOW: &str = "sign-in";
 
@@ -338,8 +225,7 @@ fn start_sign_in(app: &tauri::AppHandle, state: &SignInState, url: String, heade
         return;
     };
     *state.origin.lock().unwrap_or_else(|e| e.into_inner()) = origin.clone();
-    let script = page_script(&origin);
-    webview2::navigate_with_header(&window, app.clone(), header_token, url, origin, script);
+    webview2::navigate_with_header(&window, app.clone(), header_token, url, origin);
     reveal_after_timeout(
         app.clone(),
         state.shown.clone(),
@@ -431,8 +317,9 @@ fn run(
             // did carry: LogonUI's own cancel is behind a topmost window
             // and the system close button goes with the caption, which
             // left a sign-in with no way out short of the credential
-            // provider giving up. `page_script` and the escape
-            // handler in `webview2` replace it.
+            // provider giving up. Escape, handled in `webview2`, is
+            // what replaces it — the same key GCPW uses, and the only
+            // affordance here that does not depend on the page.
             .decorations(false)
             // Topmost before the first paint, so the window is never
             // behind LogonUI even for a frame. Asking for focus is a
@@ -447,12 +334,6 @@ fn run(
             .incognito(true)
             .on_navigation(move |url| {
                 let url = url.as_str();
-                if url == CANCEL_URL {
-                    log::info!("cancelled from the sign-in window");
-                    nav_completion.send(HostReport::Cancelled);
-                    signin::close(&nav_handle);
-                    return false;
-                }
                 if !url.starts_with(ak_ee_wcp_wire::REDIRECT_PREFIX) {
                     log::debug!("navigating to {}", origin_of(url));
                     return true;
@@ -674,47 +555,6 @@ mod tests {
 
         assert_eq!(version, ak_meta::full_version(), "not ak-meta's version");
         assert_eq!(runtime, "120.0.2210.91)");
-    }
-
-    /// The token goes into a script as a literal, so anything that could end
-    /// that literal early would put an `ak-sysd` token where the page can read
-    /// it — or break the script and take the cancel link with it.
-    #[test]
-    fn js_strings_cannot_escape_their_own_quotes() {
-        assert_eq!(js_string("plain"), "\"plain\"");
-        assert_eq!(js_string("a\"b"), "\"a\\\"b\"");
-        assert_eq!(js_string("a\\b"), "\"a\\\\b\"");
-        assert_eq!(js_string("</script>"), "\"\\u003c/script>\"");
-    }
-
-    /// The script is generated, so a hostile origin has to come out as data
-    /// rather than as code.
-    #[test]
-    fn the_page_script_quotes_what_it_is_given() {
-        let origin = "https://a.example\");alert(1);//";
-        let script = page_script(origin);
-        assert!(
-            script.contains(&js_string(origin)),
-            "the origin should appear escaped: {script}"
-        );
-        assert!(
-            !script.contains(origin),
-            "the raw origin would close the literal and run as code"
-        );
-        // The cancel URL comes from the constant rather than being written
-        // out a second time in JavaScript.
-        assert!(script.contains(&js_string(CANCEL_URL)));
-    }
-
-    /// The header is set below the JavaScript layer, where the page cannot
-    /// reach it. A token appearing in this script would be a regression.
-    #[test]
-    fn the_page_script_carries_no_credential() {
-        let script = page_script("https://authentik.company");
-        assert!(
-            !script.contains(ak_ee_wcp_wire::AUTH_HEADER_NAME),
-            "the auth header has no business in page script"
-        );
     }
 
     /// Sign-in URLs carry tokens in the path and query, so only the origin is
