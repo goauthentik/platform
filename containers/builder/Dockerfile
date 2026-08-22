@@ -36,8 +36,7 @@ RUN ARCH=$(uname -m) && \
     tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local && \
     rm /tmp/osquery-toolchain.tar.xz
 
-RUN --mount=type=bind,target=rust-toolchain.toml,src=rust-toolchain.toml \
-    curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain none && \
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain none && \
     rustup install && \
     rustup default "${RUST_TOOLCHAIN}}" && \
     rustc --version && \
