@@ -38,13 +38,13 @@ static DLL_DIR: OnceLock<std::path::PathBuf> = OnceLock::new();
 
 pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E_8E0A_1D0F8E73577A);
 
-/// This DLL's own module handle — resources (the tile bitmap) are embedded
-/// in it, not in the host process's `.exe`.
+/// This DLL's own module handle: the tile bitmap is embedded here, not in the
+/// host process's `.exe`.
 pub(crate) fn own_module() -> HMODULE {
     HMODULE(*DLL_MODULE.get_or_init(|| resolve_own_module().0 as usize) as *mut c_void)
 }
 
-/// Directory this DLL was loaded from — `ak_cef.exe` lives next to it.
+/// Directory this DLL was loaded from — `ak_browser.exe` lives next to it.
 pub(crate) fn dll_dir() -> &'static std::path::Path {
     DLL_DIR.get_or_init(|| {
         module_file_name(own_module())
@@ -103,11 +103,9 @@ extern "system" fn DllGetClassObject(
         ))
         .with_default_filters()
         .allow_platform(true)
-        // A shipped provider is loaded by LogonUI, which has no console, so
-        // release builds log only to the platform log. Debug builds also log
-        // to stdout: that is what `e2e` runs, and it is the only way a
-        // failure inside the DLL (which reports one generic string to the
-        // user) shows up in a test runner's captured output.
+        // LogonUI has no console, so a shipped provider logs only to the
+        // platform log. Debug builds — what `e2e` runs — also log to stdout,
+        // the only way a failure inside the DLL shows up in captured output.
         .allow_stdout(cfg!(debug_assertions))
         .enable();
     });

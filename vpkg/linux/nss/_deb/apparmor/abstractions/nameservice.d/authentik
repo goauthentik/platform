@@ -1,0 +1,13 @@
+# Drop-in for <abstractions/nameservice>, which is included by every profile that
+# performs user/group lookups
+
+# Config file, read to discover the socket path and debug config.
+/etc/authentik/config.json r,
+
+# The ak-sysd control socket.
+@{run}/authentik/sys.sock rw,
+
+# Disconnected-path variants: apparmor >= 4.1 declares unix-chkpwd with
+# flags=(attach_disconnected.path=/att/unix-chkpwd/)
+/att/unix-chkpwd/etc/authentik/config.json r,
+/att/unix-chkpwd/run/authentik/sys.sock rw,

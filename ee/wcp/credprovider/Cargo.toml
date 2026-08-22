@@ -21,6 +21,7 @@ windows-core = { workspace = true }
 eyre = { workspace = true }
 serde = { workspace = true }
 winreg = { workspace = true }
+uuid = { workspace = true }
 
 [build-dependencies]
 embed-resource = "3"

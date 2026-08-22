@@ -19,11 +19,10 @@ members = [
     "ak-platform",
     "ak-sysd",
     # Windows-only. `make lint-rs` excludes these off Windows, since
-    # credprovider is Win32-only and cef-host's build script fetches and
-    # compiles CEF.
+    # credprovider is Win32-only and browser-host is built on WebView2.
     "ee/wcp/wire",
     "ee/wcp/credprovider",
-    "ee/wcp/cef-host",
+    "ee/wcp/browser-host",
     "ee/wcp/e2e",
 ]
 
@@ -45,7 +44,9 @@ strip = "debuginfo"
 [workspace.dependencies]
 ak-api-cli = { path = "ak-api-cli" }
 ak-api-cli-gen = { path = "ak-api-cli-gen" }
-authentik-client = { git = "https://github.com/goauthentik/client-rust", version = "2026.11.0-rc1" , default-features = false, features = ["rustls"], rev = "24c227964b05ff1c3cc9487ccdd40751ac89f6b9" }
+authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "1fd58b9e7ddaafd7d4456f8dc3a799acf95972ea", version = "2026.11.0-rc1", default-features = false, features = [
+    "rustls",
+] }
 chrono = { version = "0.4.45", features = ["serde"] }
 clap = { version = "4.6.1", features = ["derive"] }
 color-eyre = "= 0.6.5"
@@ -84,13 +85,17 @@ windows = { version = "0.62", features = [
     "Win32_System_Com",
     "Win32_System_LibraryLoader",
     "Win32_System_Pipes",
+    "Win32_System_Console",
+    "Win32_System_Environment",
     "Win32_System_IO",
     "Win32_Storage_FileSystem",
     "Win32_Security",
+    "Win32_Security_Authorization",
     "Win32_UI_Shell",
     "Win32_Security_Credentials",
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_RemoteDesktop",
+    "Win32_System_StationsAndDesktops",
     "Win32_System_Threading",
     "Win32_UI_WindowsAndMessaging",
     "Win32_Graphics_Gdi",
@@ -99,6 +104,12 @@ windows = { version = "0.62", features = [
     "Win32_NetworkManagement_NetManagement",
     "Win32_System_SystemInformation",
     "Win32_Storage_EnhancedStorage",
+    # `NtOpenDirectoryObject` — no Win32 wrapper exists for opening an
+    # arbitrary Object Manager directory (`BaseNamedObjects`) the way
+    # `OpenDesktopW` does for desktops.
+    "Wdk_Foundation",
+    "Wdk_Storage_FileSystem",
+    "Wdk_System_SystemServices",
     # `ICredentialProviderUser::GetValue` returns a PROPVARIANT, so the e2e
     # harness needs these to implement that interface for `SetUserArray`.
     "Win32_System_Com_StructuredStorage",

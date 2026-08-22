@@ -1,9 +1,10 @@
-//! Finds the real `ak_cef.exe` window while `Connect` is still blocked on it.
+//! Finds the real `ak_browser.exe` window while `Connect` is still blocked on
+//! it.
 //!
-//! `Connect` does not return until the sign-in is over and the window is gone,
-//! so anything asserted about it has to be seen from another thread. Windows
-//! belong to a desktop rather than a thread, and under `CPUS_CREDUI` the child
-//! is spawned into this same session, so any thread here can see it.
+//! `Connect` does not return until the window is gone, so anything asserted
+//! about it has to be seen from another thread. Windows belong to a desktop
+//! rather than a thread, and under `CPUS_CREDUI` the child is spawned into this
+//! same session, so any thread here can see it.
 
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
@@ -15,8 +16,8 @@ use windows::Win32::{
         QueryFullProcessImageNameW,
     },
     UI::WindowsAndMessaging::{
-        EnumWindows, GWL_EXSTYLE, GetWindowLongPtrW, GetWindowRect, GetWindowThreadProcessId,
-        IsWindowVisible,
+        EnumWindows, GWL_EXSTYLE, GetWindowLongPtrW, GetWindowRect, GetWindowTextW,
+        GetWindowThreadProcessId, IsWindowVisible,
     },
 };
 use windows_core::{BOOL, PWSTR};
@@ -28,8 +29,8 @@ pub struct Observation {
     pub appeared_after: Duration,
 }
 
-/// Watches for `ak_cef.exe`'s window in the background and reports the first
-/// sighting, or `None` after `timeout`.
+/// Reports the first sighting of `ak_browser.exe`'s window, or `None` after
+/// `timeout`.
 pub fn watch(timeout: Duration) -> mpsc::Receiver<Option<Observation>> {
     let (tx, rx) = mpsc::channel();
     std::thread::spawn(move || {
@@ -55,14 +56,16 @@ struct Search {
     found: isize,
 }
 
-/// The first visible, non-degenerate top-level window owned by an
-/// `ak_cef.exe`. Chromium opens several message-only and zero-size helpers
-/// first, and matching one of those would pass while the sign-in window itself
-/// was still misbehaving.
+/// The visible sign-in window of an `ak_browser.exe`.
+///
+/// Matched on the title rather than on enumeration order: the window is only
+/// revealed seconds after the spawn, and the WebView2 helper that beats it to
+/// the desktop is neither message-only nor zero-size, so the visibility and
+/// size filters do not rule that one out.
 fn find() -> Option<HWND> {
     let mut search = Search { found: 0 };
-    // Reports failure when the callback stops the walk early, which is what
-    // finding a match does, so `found` is the answer rather than the result.
+    // Reports failure when the callback stops the walk early — which is what a
+    // match does — so `found` is the answer rather than the result.
     let _ = unsafe {
         EnumWindows(
             Some(visit),
@@ -86,9 +89,16 @@ unsafe extern "system" fn visit(hwnd: HWND, lparam: LPARAM) -> BOOL {
         return true.into();
     }
 
+    let mut title = [0u16; 128];
+    let len = unsafe { GetWindowTextW(hwnd, &mut title) };
+    if len <= 0 || String::from_utf16_lossy(&title[..len as usize]) != ak_ee_wcp_wire::WINDOW_TITLE
+    {
+        return true.into();
+    }
+
     let mut pid = 0u32;
     unsafe { GetWindowThreadProcessId(hwnd, Some(&mut pid)) };
-    if !is_cef_host(pid) {
+    if !is_browser_host(pid) {
         return true.into();
     }
 
@@ -96,7 +106,7 @@ unsafe extern "system" fn visit(hwnd: HWND, lparam: LPARAM) -> BOOL {
     false.into()
 }
 
-fn is_cef_host(pid: u32) -> bool {
+fn is_browser_host(pid: u32) -> bool {
     if pid == 0 {
         return false;
     }
@@ -124,5 +134,5 @@ fn is_cef_host(pid: u32) -> bool {
 
     String::from_utf16_lossy(&buf[..len as usize])
         .to_ascii_lowercase()
-        .ends_with("ak_cef.exe")
+        .ends_with("ak_browser.exe")
 }

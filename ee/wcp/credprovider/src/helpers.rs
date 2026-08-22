@@ -1,13 +1,13 @@
-//! Credential packing: builds the buffer `GetSerialization` hands back to
-//! LogonUI, and the random local-account password used to bridge a
-//! completed browser sign-in into a real Windows logon.
+//! Credential packing: the buffer `GetSerialization` hands back to LogonUI, and
+//! the random local-account password bridging a completed browser sign-in into
+//! a real Windows logon.
 
 use windows::{
     Win32::{
         Foundation::E_OUTOFMEMORY,
         Security::Authentication::Identity::{
-            KERB_INTERACTIVE_UNLOCK_LOGON, KERB_LOGON_SUBMIT_TYPE, KerbInteractiveLogon,
-            KerbWorkstationUnlockLogon, LSA_UNICODE_STRING,
+            KERB_INTERACTIVE_UNLOCK_LOGON, KerbInteractiveLogon, KerbWorkstationUnlockLogon,
+            LSA_UNICODE_STRING,
         },
         Security::Credentials::{
             CRED_PACK_FLAGS, CRED_PACK_ID_PROVIDER_CREDENTIALS, CRED_PACK_PROTECTED_CREDENTIALS,
@@ -26,9 +26,8 @@ const WIN_PASS_LEN: usize = 50;
 /// and never shown to or typed by the user.
 ///
 /// Errors rather than falling back: `buf` starts zeroed, so a discarded RNG
-/// failure would yield the fixed string `"AAAA…"` and `GetSerialization`
-/// would then set *that* as the account's real Windows password. Only
-/// `STATUS_SUCCESS` means the buffer was written.
+/// failure yields the fixed string `"AAAA…"` — which `GetSerialization` would
+/// then set as the account's real Windows password.
 pub fn generate_random_password() -> windows::core::Result<String> {
     const CHARSET: &[u8] =
         b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -43,25 +42,12 @@ pub fn generate_random_password() -> windows::core::Result<String> {
         .collect())
 }
 
-pub fn computer_name() -> String {
-    std::env::var("COMPUTERNAME").unwrap_or_else(|_| ".".to_string())
-}
-
-fn kerb_message_type(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> KERB_LOGON_SUBMIT_TYPE {
-    if cpus == CPUS_UNLOCK_WORKSTATION {
-        KerbWorkstationUnlockLogon
-    } else {
-        KerbInteractiveLogon
-    }
-}
-
 /// Flat `KERB_INTERACTIVE_UNLOCK_LOGON` for a local account, laid out as
 /// `[header][domain][username][password]` in UTF-16.
 ///
 /// Each `LSA_UNICODE_STRING.Buffer` holds a byte offset from the start of the
-/// allocation, not a real pointer; LogonUI patches them before passing the
-/// buffer to LSA. Returns `(ptr, byte_len)`, freed by LogonUI with
-/// `CoTaskMemFree`.
+/// allocation rather than a real pointer; LogonUI patches them before passing
+/// the buffer to LSA, and frees the result with `CoTaskMemFree`.
 pub fn pack_kerb_interactive_unlock_logon(
     domain: &str,
     username: &str,
@@ -94,7 +80,11 @@ pub fn pack_kerb_interactive_unlock_logon(
         });
 
         let kil = &mut (*(buf as *mut KERB_INTERACTIVE_UNLOCK_LOGON)).Logon;
-        kil.MessageType = kerb_message_type(cpus);
+        kil.MessageType = if cpus == CPUS_UNLOCK_WORKSTATION {
+            KerbWorkstationUnlockLogon
+        } else {
+            KerbInteractiveLogon
+        };
         kil.LogonDomainName = domain;
         kil.UserName = username;
         kil.Password = password;
@@ -103,8 +93,8 @@ pub fn pack_kerb_interactive_unlock_logon(
     Ok((buf, total as u32))
 }
 
-/// The buffer shape LogonUI expects for accounts that don't resolve as local
-/// Windows users.
+/// The shape LogonUI expects for accounts that do not resolve as local Windows
+/// users.
 pub fn pack_authentication_buffer(
     username: &str,
     password: &str,
@@ -153,7 +143,8 @@ mod tests {
     use windows::Win32::UI::Shell::CPUS_LOGON;
 
     /// Reads back an `LSA_UNICODE_STRING` whose `Buffer` field is a byte
-    /// offset (not a real pointer) into `base`, matching the packed layout.
+    /// offset into `base` rather than a real pointer, matching the packed
+    /// layout.
     unsafe fn read_offset_string(base: *const u8, s: &LSA_UNICODE_STRING) -> String {
         let offset = s.Buffer.0 as usize;
         let len_u16 = s.Length as usize / 2;
@@ -209,8 +200,8 @@ mod tests {
         let pw = generate_random_password().unwrap();
         assert_eq!(pw.chars().count(), WIN_PASS_LEN);
         assert!(pw.chars().all(|c| c.is_ascii_graphic()));
-        // Would still hold for the all-zero buffer a discarded RNG failure
-        // leaves behind, so pin that it isn't a single repeated character.
+        // Would hold for the all-zero buffer a discarded RNG failure leaves
+        // behind, so pin that it is not one repeated character.
         assert!(
             pw.chars().collect::<std::collections::HashSet<_>>().len() > 1,
             "password should not be a constant run: {pw}"

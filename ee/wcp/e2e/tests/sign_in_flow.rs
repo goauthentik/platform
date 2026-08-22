@@ -1,6 +1,6 @@
 //! The full process-level flow: the real `ak_cred_provider.dll` loaded via
-//! `LoadLibraryW`, handed a user array, driven through `Connect()` — which
-//! spawns the real `ak_cef.exe`, which loads a local page, follows its
+//! `LoadLibraryW`, handed a user array and driven through `Connect()` — which
+//! spawns the real `ak_browser.exe`, which loads a local page, follows its
 //! `goauthentik.io://` redirect and validates the token against a mock
 //! `ak-sysd` — down to the buffer `GetSerialization` hands back.
 //!
@@ -33,8 +33,8 @@ struct Fixture {
     provider: LoadedProvider,
 }
 
-/// Brings up `server` + mock `ak-sysd`, seeds the debug capability, and loads
-/// the real DLL with `user` as the only enumerated account.
+/// Brings up `server` plus a mock `ak-sysd`, seeds the debug capability, and
+/// loads the real DLL with `user` as the only enumerated account.
 async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
     let mock = mock_sysd::start(mock_sysd::MockConfig {
         interactive_auth_url: server.url.clone(),
@@ -53,10 +53,10 @@ async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
         dll_path.exists(),
         "expected {dll_path:?} to exist — build the workspace first"
     );
-    let cef_exe = ak_ee_wcp_e2e::dll::build_output_dir().join("ak_cef.exe");
+    let browser_exe = ak_ee_wcp_e2e::dll::build_output_dir().join("ak_browser.exe");
     assert!(
-        cef_exe.exists(),
-        "expected {cef_exe:?} to exist — build the workspace first"
+        browser_exe.exists(),
+        "expected {browser_exe:?} to exist — build the workspace first"
     );
 
     let provider = LoadedProvider::load(&dll_path).expect("load ak_cred_provider.dll");
@@ -84,13 +84,12 @@ async fn setup(user: TestUser, server: RedirectServer) -> Fixture {
     }
 }
 
-/// Looks up the Negotiate authentication package the same way the DLL does.
+/// Looks up the Negotiate authentication package the same way the DLL does,
+/// which is loaded in-process and so must observe the same answer.
 ///
-/// The DLL is loaded in-process, so this runs under the same token and session
-/// and must observe the same answer. Asserting equality rather than "non-zero"
-/// matters: `LsaLookupAuthenticationPackage` hands back an index into lsass's
-/// authentication package table, assigned at load order, and 0 is a legal id —
-/// nothing about the runner's package table is ours to assume.
+/// Equality rather than "non-zero", because
+/// `LsaLookupAuthenticationPackage` hands back an index into lsass's package
+/// table, assigned at load order, and 0 is a legal id.
 fn negotiate_package() -> u32 {
     use windows::Win32::Foundation::HANDLE;
     use windows::Win32::Security::Authentication::Identity::{
@@ -122,9 +121,9 @@ fn negotiate_package() -> u32 {
     package
 }
 
-/// A completed sign-in for a non-local (domain/UPN) account: no local
-/// password reset, so this needs no account on the machine and serializes
-/// through `CredPackAuthenticationBufferW`.
+/// A non-local (domain/UPN) account skips the local password reset, so this
+/// needs no account on the machine and serializes through
+/// `CredPackAuthenticationBufferW`.
 #[tokio::test(flavor = "multi_thread")]
 async fn completed_sign_in_serializes_a_credential() {
     if !harness::opted_in("completed_sign_in_serializes_a_credential") {
@@ -178,16 +177,16 @@ async fn completed_sign_in_serializes_a_credential() {
         ));
     }
 
-    // The login hint travels over `ak_cef.exe`'s command line, so only the
-    // real spawn shows whether it survived the trip.
+    // `credprovider` passes the tile's user into `interactive_auth_async`, so
+    // only a real sign-in shows whether the hint survived the trip.
     assert_eq!(
         *fixture.mock.login_hints.lock().unwrap(),
         vec![Some(USERNAME.to_string())],
         "interactive_auth_async should have been called once, hinting the tile's user"
     );
 
-    // `cef-host` must put the interactive-auth header on every request it
-    // makes, which is what let the (mock) backend hand back a sign-in page.
+    // The header on every request is what let the mock backend hand back a
+    // sign-in page at all.
     let headers = fixture.server.observed_auth_headers();
     assert!(
         !headers.is_empty(),
@@ -203,17 +202,17 @@ async fn completed_sign_in_serializes_a_credential() {
 /// At a real logon the window opens behind LogonUI unless it is put in the
 /// topmost band explicitly, with no sign it exists short of an alt-tab.
 ///
-/// Only the z-order is asserted. Taking the foreground is a race, and a race
-/// asserted on a CI desktop is a test that gets disabled. `CPUS_CREDUI` is the
-/// only scenario reachable outside a real logon prompt, so the secure desktop
-/// stays on the manual checklist in `e2e/README.md`.
+/// Only the z-order is asserted: taking the foreground is a race, and a race
+/// asserted on a CI desktop is a test that gets disabled. The secure desktop
+/// stays on the manual checklist in `e2e/README.md`, `CPUS_CREDUI` being the
+/// only scenario reachable outside a real logon prompt.
 #[tokio::test(flavor = "multi_thread")]
 async fn the_sign_in_window_opens_topmost() {
     if !harness::opted_in("the_sign_in_window_opens_topmost") {
         return;
     }
 
-    // Never redirects, so the window is still up while it is being looked at.
+    // Never redirects, so the window is still up while it is looked at.
     let server = RedirectServer::start_inert().expect("start local redirect server");
     let fixture = setup(TestUser::non_local(USERNAME), server).await;
 
@@ -225,16 +224,16 @@ async fn the_sign_in_window_opens_topmost() {
 
     let sighting = ak_ee_wcp_e2e::sign_in_window::watch(std::time::Duration::from_secs(30));
 
-    // `Connect` blocks until the flow ends, so the window can only be observed
-    // from the watcher thread. `QueryContinue` is polled every 200ms while it
-    // waits, so this gives the window ~20s to appear before backing out.
+    // `Connect` blocks until the flow ends, so the window can only be seen
+    // from the watcher thread. `QueryContinue` is polled every 200ms, so this
+    // gives the window ~20s to appear before backing out.
     let (qcws, _probe) = query_continue(Some(100));
     unsafe { connectable.Connect(&qcws) }.expect("Connect returns Ok even when cancelled");
 
     let observed = sighting
         .recv()
         .expect("the window watcher thread should report")
-        .expect("ak_cef.exe never opened a visible window");
+        .expect("ak_browser.exe never revealed its sign-in window");
 
     assert!(
         observed.extended_style & WS_EX_TOPMOST.0 != 0,
@@ -245,16 +244,16 @@ async fn the_sign_in_window_opens_topmost() {
 }
 
 /// LogonUI withdrawing consent mid-flow: `QueryContinue` starts failing, the
-/// provider signals `ak_cef.exe` over the control pipe, and the flow reports
-/// a cancellation rather than a credential.
+/// provider signals `ak_browser.exe` over the control pipe, and the flow
+/// reports a cancellation rather than a credential.
 #[tokio::test(flavor = "multi_thread")]
 async fn cancelling_mid_flow_yields_no_credential() {
     if !harness::opted_in("cancelling_mid_flow_yields_no_credential") {
         return;
     }
 
-    // Point the sign-in window at a page that never redirects, so the flow is
-    // still waiting when cancellation arrives.
+    // A page that never redirects, so the flow is still waiting when the
+    // cancellation arrives.
     let server = RedirectServer::start_inert().expect("start local redirect server");
     let fixture = setup(TestUser::non_local(USERNAME), server).await;
 

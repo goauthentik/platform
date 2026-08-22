@@ -27,8 +27,8 @@ pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E
 type DllGetClassObjectFn =
     unsafe extern "system" fn(*const GUID, *const GUID, *mut *mut c_void) -> HRESULT;
 
-/// The build artifacts next to this test binary: cargo puts every workspace
-/// member's output in one profile directory, with test binaries in `deps/`.
+/// Cargo puts every workspace member's output in one profile directory, with
+/// test binaries in `deps/`.
 pub fn build_output_dir() -> PathBuf {
     std::env::current_exe()
         .ok()
@@ -38,10 +38,9 @@ pub fn build_output_dir() -> PathBuf {
 
 pub struct LoadedProvider {
     module: HMODULE,
-    /// `Option` so `Drop` can release it *before* `FreeLibrary`. Every COM
-    /// pointer here is backed by vtable code inside the DLL, so releasing one
-    /// after the module is unmapped jumps into freed pages —
-    /// `STATUS_ACCESS_VIOLATION`.
+    /// `Option` so `Drop` can release it *before* `FreeLibrary`: every COM
+    /// pointer here is backed by vtable code inside the DLL, and releasing one
+    /// after the module is unmapped jumps into freed pages.
     provider: Option<ICredentialProvider>,
 }
 
@@ -89,9 +88,8 @@ impl LoadedProvider {
 
 impl Drop for LoadedProvider {
     fn drop(&mut self) {
-        // Order matters: `Drop::drop` runs before fields are dropped, so
-        // releasing the interface has to happen explicitly here. Leaving it to
-        // the field drop would run it after `FreeLibrary` below.
+        // `Drop::drop` runs before fields are dropped, so leaving this to the
+        // field drop would release the interface after `FreeLibrary` below.
         drop(self.provider.take());
         unsafe {
             let _ = FreeLibrary(self.module);
@@ -99,9 +97,8 @@ impl Drop for LoadedProvider {
     }
 }
 
-/// Calls `GetSerialization` and returns the response code, status icon and
-/// serialization struct, shared by every test that drives a `Connect()`ed
-/// credential to completion regardless of how the provider was activated.
+/// Shared by every test that drives a `Connect()`ed credential to completion,
+/// however the provider was activated.
 ///
 /// # Safety
 /// `credential` must be a live `ICredentialProviderCredential` whose

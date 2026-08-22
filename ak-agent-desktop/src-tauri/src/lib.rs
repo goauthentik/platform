@@ -1,6 +1,7 @@
 use ak_meta::full_version;
 use ak_platform::{log::LogBuilder, string::PlatformString};
 use eyre::Result;
+use sentry::ClientInitGuard;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 
@@ -9,7 +10,9 @@ mod ui;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let _guard = sentry::init(ak_meta::sentry_options("ak-agent-desktop"));
+    let mut opts = ak_meta::sentry_options("ak-agent-desktop");
+    opts.auto_session_tracking = true;
+    let guard = sentry::init(opts);
     LogBuilder::new(
         PlatformString::new()
             .with_windows("authentik User Service")
@@ -19,7 +22,7 @@ pub fn run() {
     .enable();
     tracing::trace!("authentik Agent Desktop v{}", full_version());
 
-    match start_tauri() {
+    match start_tauri(guard) {
         Ok(_) => {}
         Err(e) => {
             tracing::error!("Failed to start tauri: {e:?}");
@@ -27,8 +30,9 @@ pub fn run() {
     }
 }
 
-pub fn start_tauri() -> Result<()> {
+pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_sentry::init(&guard))
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             ui::show_main(app);

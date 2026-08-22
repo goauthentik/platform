@@ -32,17 +32,16 @@ use crate::syscalls::{AuthPackageLookup, LocalAccountPassword, PasswordCheck, Pa
 use crate::tile;
 use ak_ee_wcp_wire::{AuthResult, FieldKind, TILE_FIELDS};
 
-/// Outcome of `Connect`'s browser flow, consumed by `GetSerialization` —
-/// mirrors the original design where `Connect` always succeeds and defers
-/// the cancelled/failed-vs-completed decision to `GetSerialization`.
+/// Outcome of `Connect`'s browser flow, consumed by `GetSerialization`:
+/// `Connect` always succeeds and defers the decision to it.
 enum Outcome {
     Completed { username: String, password: String },
     Cancelled,
     Failed { reason: String },
 }
 
-/// The seams a `Credential` reaches the outside world through, so tests can
-/// drive the sign-in logic without touching LSA or the account database.
+/// The seams a `Credential` reaches the outside world through, so the sign-in
+/// logic can be driven without LSA or the account database.
 pub struct CredentialDeps {
     pub auth_flow: Box<dyn AuthFlow>,
     pub password: Box<dyn LocalAccountPassword>,
@@ -91,14 +90,14 @@ impl Credential {
 impl Credential_Impl {
     /// The password to hand LSA for this account: established once and reused
     /// for a local account, throwaway for a domain one. `LOCAL_PASSWORD.md`
-    /// covers why it is not simply regenerated every time.
+    /// covers why it is not regenerated every time.
     fn account_password(&self, username: &str) -> Result<String> {
         if !self.is_local_user {
             return helpers::generate_random_password();
         }
 
         match self.stored_password(username) {
-            // Correct but no longer accepted for logon. Knowing it means a
+            // Correct but no longer accepted for logon; knowing it means a
             // change still works, so the master key survives.
             Some((stored, PasswordCheck::Expired)) => {
                 log::info!("Connect: stored password has expired; changing it");
@@ -112,15 +111,14 @@ impl Credential_Impl {
 
         let password = helpers::generate_random_password()?;
         self.deps.password.reset(username, &password)?;
-        // Costs another reset next time, but not worth failing a sign-in over.
+        // Costs another reset next time, but not worth failing a sign-in.
         if let Err(e) = self.deps.store.save(&self.sid, &password) {
             log::error!("Connect: could not store the account password: {e}");
         }
         Ok(password)
     }
 
-    /// The stored password and what the account thinks of it, or `None` when
-    /// there is nothing usable to reuse.
+    /// `None` when there is nothing usable to reuse.
     fn stored_password(&self, username: &str) -> Option<(String, PasswordCheck)> {
         let stored = match self.deps.store.load(&self.sid) {
             Ok(Some(stored)) => stored,
@@ -138,9 +136,8 @@ impl Credential_Impl {
                 None
             }
             Ok(check) => Some((stored, check)),
-            // Inconclusive, not wrong. Resetting on a guess destroys the master
-            // key; reusing costs at worst one failed logon, after which
-            // `validate` has a definite answer.
+            // Inconclusive, not wrong: resetting on a guess destroys the master
+            // key, where reusing costs at worst one failed logon.
             Err(e) => {
                 log::warn!("Connect: could not verify the stored password ({e}); using it anyway");
                 Some((stored, PasswordCheck::Valid))
@@ -148,9 +145,9 @@ impl Credential_Impl {
         }
     }
 
-    /// Swap `old` for a freshly generated password, returning the new one.
-    /// Best-effort: a minimum-password-age policy rejects this on every logon,
-    /// and the stored password stays valid either way.
+    /// Swap `old` for a freshly generated password. Best-effort: a
+    /// minimum-password-age policy rejects this on every logon, and the stored
+    /// password stays valid either way.
     fn replace_password(&self, username: &str, old: &str) -> Option<String> {
         let new = match helpers::generate_random_password() {
             Ok(new) => new,
@@ -165,8 +162,8 @@ impl Credential_Impl {
             return None;
         }
 
-        // Leaves the account with a password the vault does not know;
-        // `validate` catches that next sign-in, at the cost of one reset.
+        // Leaves the account with a password the vault does not know, which
+        // `validate` catches next sign-in at the cost of one reset.
         if let Err(e) = self.deps.store.save(&self.sid, &new) {
             log::error!("changed the account password but could not store it: {e}");
         }
@@ -183,11 +180,16 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         Ok(())
     }
 
+    /// Starts the browser host now, so WebView2's several seconds of startup
+    /// happen while the person is still deciding to click. No sign-in begins
+    /// here — see `AuthFlow::preload`.
     fn SetSelected(&self) -> Result<BOOL> {
+        self.deps.auth_flow.preload();
         Ok(FALSE)
     }
 
     fn SetDeselected(&self) -> Result<()> {
+        self.deps.auth_flow.discard();
         *self.outcome.lock().unwrap_or_else(|e| e.into_inner()) = None;
         *self.serialized.lock().unwrap_or_else(|e| e.into_inner()) = None;
         Ok(())
@@ -305,9 +307,8 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
                 }
                 return Ok(());
             }
-            // No outcome at all means `Connect` never ran (or `SetDeselected`
-            // cleared it first), which reaches the user as the same "cancelled"
-            // string but is a different bug entirely.
+            // No outcome means `Connect` never ran, or `SetDeselected` cleared
+            // it first — the same string to the user, a different bug here.
             None => {
                 log::warn!("GetSerialization: no outcome recorded; Connect did not run");
                 unsafe {
@@ -329,7 +330,9 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         };
 
         let packed = if self.is_local_user {
-            let domain = helpers::computer_name();
+            // Win32 reads "." as this machine, so an unset COMPUTERNAME still
+            // scopes the logon to the local account database.
+            let domain = std::env::var("COMPUTERNAME").unwrap_or_else(|_| ".".to_string());
             helpers::pack_kerb_interactive_unlock_logon(&domain, &username, &password, self.cpus)
         } else {
             helpers::pack_authentication_buffer(&username, &password)
@@ -365,8 +368,8 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
             *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
         }
         log::info!("GetSerialization: packed credential for '{username}'");
-        // Only a credential that was actually submitted is eligible for
-        // rotation, so this is recorded here rather than in `Connect`.
+        // Only a submitted credential is eligible for rotation, hence here
+        // rather than in `Connect`.
         *self.serialized.lock().unwrap_or_else(|e| e.into_inner()) = Some((username, password));
         Ok(())
     }
@@ -384,8 +387,8 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
             .unwrap_or_else(|e| e.into_inner())
             .take();
 
-        // STATUS_SUCCESS; the logon session exists, so the password we
-        // submitted is now cached in it and can be changed rather than reset.
+        // STATUS_SUCCESS: the logon session exists, so the submitted password
+        // is cached in it and can be changed rather than reset.
         if ntsstatus.0 == 0
             && self.is_local_user
             && let Some((username, old)) = submitted
@@ -471,9 +474,9 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
                         "Connect: authenticated username '{username}' does not match tile user '{}'",
                         self.qualified_username
                     );
-                    // Matches the original behavior of failing Connect directly
-                    // (rather than deferring to GetSerialization) on a mismatch,
-                    // which also suppresses the tile's Disconnect button.
+                    // Failing `Connect` directly rather than deferring to
+                    // `GetSerialization` also suppresses the tile's Disconnect
+                    // button.
                     return Err(E_FAIL.into());
                 }
 
@@ -572,6 +575,42 @@ mod tests {
         }
     }
 
+    /// Counts the preload/discard calls the tile's selection drives.
+    #[derive(Default)]
+    struct CountingAuthFlow {
+        preloads: std::sync::atomic::AtomicUsize,
+        discards: std::sync::atomic::AtomicUsize,
+    }
+
+    impl CountingAuthFlow {
+        fn counts(&self) -> (usize, usize) {
+            (
+                self.preloads.load(std::sync::atomic::Ordering::SeqCst),
+                self.discards.load(std::sync::atomic::Ordering::SeqCst),
+            )
+        }
+    }
+
+    impl AuthFlow for std::sync::Arc<CountingAuthFlow> {
+        fn run(
+            &self,
+            _login_hint: Option<&str>,
+            _should_continue: &mut dyn FnMut() -> bool,
+        ) -> AuthResult {
+            AuthResult::Cancelled
+        }
+
+        fn preload(&self) {
+            self.preloads
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }
+
+        fn discard(&self) {
+            self.discards
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+
     struct FakeAuthPackage;
 
     impl AuthPackageLookup for FakeAuthPackage {
@@ -580,8 +619,8 @@ mod tests {
         }
     }
 
-    /// Tracks the account's password and how each call was made, so tests can
-    /// assert that a rotation went through `change` rather than `reset`.
+    /// Tracks the account's password and how each call was made, so a test can
+    /// assert a rotation went through `change` rather than `reset`.
     #[derive(Default)]
     struct AccountState {
         password: Option<String>,
@@ -621,7 +660,7 @@ mod tests {
         fn validate(&self, _username: &str, password: &str) -> Result<PasswordCheck> {
             let state = self.state();
             match state.check {
-                // Inconclusive, the case that must not trigger a reset.
+                // Inconclusive: the case that must not trigger a reset.
                 None => Err(E_FAIL.into()),
                 Some(PasswordCheck::Valid) if state.password.as_deref() == Some(password) => {
                     Ok(PasswordCheck::Valid)
@@ -716,6 +755,69 @@ mod tests {
         unsafe { connectable.Connect(None) }.unwrap();
     }
 
+    /// A credential whose only interesting dependency is its `AuthFlow`.
+    fn credential_with_auth_flow(flow: impl AuthFlow + 'static) -> Credential {
+        Credential::new(
+            SID.to_string(),
+            "alice".to_string(),
+            false,
+            CPUS_LOGON,
+            CredentialDeps {
+                auth_flow: Box::new(flow),
+                password: Box::new(FakePassword::default()),
+                auth_package: Box::new(FakeAuthPackage),
+                store: Box::new(FakeStore::default()),
+            },
+        )
+    }
+
+    /// WebView2 takes seconds to build an environment, and doing it on submit
+    /// is the whole delay this exists to remove.
+    #[test]
+    fn selecting_the_tile_preloads_the_browser() {
+        let flow = std::sync::Arc::new(CountingAuthFlow::default());
+        let credential: ICredentialProviderCredential =
+            credential_with_auth_flow(flow.clone()).into();
+
+        let auto_submit = unsafe { credential.SetSelected() }.unwrap();
+
+        assert_eq!(flow.counts(), (1, 0));
+        assert_eq!(
+            auto_submit, FALSE,
+            "preloading must not make the tile submit itself"
+        );
+    }
+
+    /// Otherwise a browser is left on the logon screen waiting for a sign-in
+    /// that is never coming.
+    #[test]
+    fn deselecting_the_tile_discards_the_preloaded_browser() {
+        let flow = std::sync::Arc::new(CountingAuthFlow::default());
+        let credential: ICredentialProviderCredential =
+            credential_with_auth_flow(flow.clone()).into();
+
+        let _ = unsafe { credential.SetSelected() }.unwrap();
+        unsafe { credential.SetDeselected() }.unwrap();
+
+        assert_eq!(flow.counts(), (1, 1));
+    }
+
+    /// Ordinary behaviour at a logon screen, and each round has to leave
+    /// exactly one browser warming.
+    #[test]
+    fn reselecting_the_tile_preloads_again() {
+        let flow = std::sync::Arc::new(CountingAuthFlow::default());
+        let credential: ICredentialProviderCredential =
+            credential_with_auth_flow(flow.clone()).into();
+
+        for _ in 0..3 {
+            let _ = unsafe { credential.SetSelected() }.unwrap();
+            unsafe { credential.SetDeselected() }.unwrap();
+        }
+
+        assert_eq!(flow.counts(), (3, 3));
+    }
+
     /// Drives `Connect` then `GetSerialization`. The returned buffer is the
     /// caller's to free.
     fn submit(
@@ -740,10 +842,8 @@ mod tests {
         (response == CPGSR_RETURN_CREDENTIAL_FINISHED).then_some(serialization)
     }
 
-    /// The password packed for LSA. Local accounts only — domain accounts use
-    /// `CredPackAuthenticationBufferW`, which is not this layout. Reads the
-    /// `LSA_UNICODE_STRING` offsets back out of the flat buffer the same way
-    /// `helpers`' packing tests do.
+    /// The password packed for LSA. Local accounts only: domain accounts use
+    /// `CredPackAuthenticationBufferW`, which is not this layout.
     fn sign_in(credential: &ICredentialProviderCredential) -> Option<String> {
         let buf = submit(credential)?.rgbSerialization;
         let password = unsafe {
@@ -831,8 +931,8 @@ mod tests {
         let store = FakeStore::default();
         store.save(SID, "stored").unwrap();
 
-        // `check` is None, so `validate` errors: we cannot tell, and resetting
-        // would orphan the master key on a guess.
+        // `check` is None, so `validate` errors: resetting on a guess would
+        // orphan the master key.
         let serialized = sign_in(&credential(true, &password, &store)).unwrap();
 
         assert_eq!(serialized, "stored");
