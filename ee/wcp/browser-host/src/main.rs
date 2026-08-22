@@ -86,7 +86,7 @@ fn user_agent(runtime_version: &str) -> String {
 
 /// Scheme and host of `url`, or a placeholder — the rest of a sign-in URL is
 /// not safe to log.
-fn origin_of(url: &str) -> String {
+pub(crate) fn origin_of(url: &str) -> String {
     url.parse::<tauri::Url>()
         .ok()
         .and_then(|parsed| {
@@ -102,60 +102,63 @@ fn origin_of(url: &str) -> String {
 /// Its own scheme rather than a path under `REDIRECT_PREFIX`: WebView2 cannot
 /// navigate either of them, but a separate scheme cannot be confused with a
 /// real `goauthentik.io://` callback no matter what authentik puts in one.
-const CANCEL_URL: &str = "akwcp://cancel";
+pub(crate) const CANCEL_URL: &str = "akwcp://cancel";
 
-/// A cancel button, injected into whatever authentik serves.
+/// Adds a cancel link to the sign-in page, by editing the brand JSON on its
+/// way to authentik's own UI rather than by drawing anything.
 ///
 /// The window is frameless (see the builder below), so there is no system
-/// close button, and LogonUI's own cancel is behind a topmost window — which
-/// left no way out of a sign-in short of the credential provider giving up.
+/// close button, and LogonUI's own cancel sits behind a topmost window — which
+/// left a started sign-in with no way out short of the credential provider
+/// giving up. Escape covers that (see `webview2`, and it is what GCPW relies
+/// on), but a keystroke is not an affordance anyone can see.
 ///
-/// Runs through WebView2's "execute on document created", so it is not an
-/// inline `<script>` in the page and a strict `script-src` does not stop it.
-/// Styling goes through the CSSOM for the same reason: a `style` attribute
-/// would be subject to `style-src`, but properties set from script are not.
+/// `/api/v3/core/brands/current/` carries `ui_footer_links`, which the flow
+/// executor renders in its footer. Appending one entry there means the link is
+/// authentik's own component, in authentik's own styling, positioned wherever
+/// that brand puts its footer — nothing here has an opinion about how it
+/// looks, and there is no injected element to collide with the page.
 ///
-/// Re-applied on an interval because authentik's flow executor replaces the
-/// document between stages, which takes the button with it.
-const CANCEL_BUTTON_SCRIPT: &str = r#"
+/// Runs through WebView2's execute-on-document-created, so it is not an inline
+/// `<script>` and a strict `script-src` does not stop it. Clicking the link
+/// navigates to [`CANCEL_URL`], which the navigation handler below intercepts.
+const CANCEL_LINK_SCRIPT: &str = r#"
 (function () {
   if (window.__akWcpCancelInstalled) return;
   window.__akWcpCancelInstalled = true;
 
-  function add() {
-    if (!document.body || document.getElementById('ak-wcp-cancel')) return;
-    var b = document.createElement('button');
-    b.id = 'ak-wcp-cancel';
-    b.type = 'button';
-    b.title = 'Cancel sign-in';
-    b.setAttribute('aria-label', 'Cancel sign-in');
-    b.textContent = '\u00D7';
-    var s = b.style;
-    s.setProperty('position', 'fixed');
-    s.setProperty('top', '10px');
-    s.setProperty('right', '10px');
-    s.setProperty('z-index', '2147483647');
-    s.setProperty('width', '32px');
-    s.setProperty('height', '32px');
-    s.setProperty('padding', '0');
-    s.setProperty('border', 'none');
-    s.setProperty('border-radius', '16px');
-    s.setProperty('background', 'rgba(0,0,0,0.55)');
-    s.setProperty('color', '#fff');
-    s.setProperty('font', '20px/32px system-ui, sans-serif');
-    s.setProperty('cursor', 'pointer');
-    b.addEventListener('click', function () {
-      window.location.href = 'akwcp://cancel';
-    });
-    document.body.appendChild(b);
-  }
+  var BRAND = '/api/v3/core/brands/current/';
+  var LINK = { name: 'Cancel sign-in', href: 'akwcp://cancel' };
+  var inner = window.fetch;
+  if (typeof inner !== 'function') return;
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', add);
-  } else {
-    add();
-  }
-  setInterval(add, 1000);
+  window.fetch = function (input, init) {
+    var pending = inner.apply(this, arguments);
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (url.indexOf(BRAND) === -1) return pending;
+
+    return pending.then(function (response) {
+      if (!response || !response.ok) return response;
+      return response.clone().json().then(function (body) {
+        if (!body || !Array.isArray(body.ui_footer_links)) return response;
+        var already = body.ui_footer_links.some(function (l) {
+          return l && l.href === LINK.href;
+        });
+        if (already) return response;
+        body.ui_footer_links = body.ui_footer_links.concat([LINK]);
+        var headers = new Headers(response.headers);
+        headers.set('content-type', 'application/json');
+        return new Response(JSON.stringify(body), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: headers
+        });
+      }).catch(function () {
+        // A brand payload we could not read is not worth failing the page for.
+        return response;
+      });
+    });
+  };
 })();
 "#;
 
@@ -360,7 +363,7 @@ fn run(
             // did carry: LogonUI's own cancel is behind a topmost window
             // and the system close button goes with the caption, which
             // left a sign-in with no way out short of the credential
-            // provider giving up. `CANCEL_BUTTON_SCRIPT` and the escape
+            // provider giving up. `CANCEL_LINK_SCRIPT` and the escape
             // handler in `webview2` replace it.
             .decorations(false)
             // Topmost before the first paint, so the window is never
@@ -374,7 +377,7 @@ fn run(
             .user_agent(&user_agent(&runtime_version))
             .data_directory(data_directory.clone())
             .incognito(true)
-            .initialization_script(CANCEL_BUTTON_SCRIPT)
+            .initialization_script(CANCEL_LINK_SCRIPT)
             .on_navigation(move |url| {
                 let url = url.as_str();
                 if url == CANCEL_URL {

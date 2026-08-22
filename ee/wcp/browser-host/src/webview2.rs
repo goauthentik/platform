@@ -8,7 +8,7 @@ use webview2_com::{
         COREWEBVIEW2_KEY_EVENT_KIND, COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN,
         COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL, ICoreWebView2WebResourceRequest,
     },
-    WebResourceRequestedEventHandler,
+    NewWindowRequestedEventHandler, WebResourceRequestedEventHandler,
 };
 use windows_core::HSTRING;
 use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
@@ -148,6 +148,37 @@ pub fn navigate_with_header(
             )
         } {
             log::warn!("could not register the escape-to-cancel handler: {e}");
+        }
+
+        // A footer link may well be rendered with `target="_blank"`, and a
+        // new-window request is not a navigation — `on_navigation` never sees
+        // it. Without this the cancel link would silently do nothing.
+        let popup_app = app.clone();
+        let mut popup_registration = 0i64;
+        if let Err(e) = unsafe {
+            core.add_NewWindowRequested(
+                &NewWindowRequestedEventHandler::create(Box::new(move |_sender, args| {
+                    let Some(args) = args else {
+                        return Ok(());
+                    };
+                    let mut uri = windows_core::PWSTR::null();
+                    args.Uri(&mut uri)?;
+                    let requested = unsafe { uri.to_string() }.unwrap_or_default();
+                    // Nothing in this window has any business opening another
+                    // one: it is a single sign-in page on a logon screen.
+                    args.SetHandled(true)?;
+                    if requested == crate::CANCEL_URL {
+                        log::info!("cancelled from the sign-in page's footer link");
+                        crate::signin::close(&popup_app);
+                    } else {
+                        log::info!("refused a popup to {}", crate::origin_of(&requested));
+                    }
+                    Ok(())
+                })),
+                &mut popup_registration,
+            )
+        } {
+            log::warn!("could not register the new-window handler: {e}");
         }
 
         log::debug!("header injection registered; starting the sign-in navigation");

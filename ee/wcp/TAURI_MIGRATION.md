@@ -310,6 +310,34 @@ Append as things are learned. Date, what was run, what happened.
   executor replaces the document between stages. Worth watching on a real
   instance: this is UI injected into someone else's page, and it could collide
   with the flow's own styling.
+- _2026-08-22_ — **the injected cancel button is gone; the link now comes from
+  authentik's own footer.** The `fetch` hook is the better shape: the injected
+  script no longer draws anything, it patches `window.fetch` and appends
+  `{ name: "Cancel sign-in", href: "akwcp://cancel" }` to `ui_footer_links` in
+  `/api/v3/core/brands/current/` on its way to the flow executor. authentik
+  renders it as its own footer link, in its own styling, wherever that brand
+  puts its footer — so there is no styling here to keep in step with theirs and
+  no injected element to collide with the page. Field shape confirmed against
+  the pinned client (`CurrentBrand.ui_footer_links`, `FooterLink { href, name }`).
+
+  A footer link may be rendered `target="_blank"`, which is a new-window
+  request and not a navigation — `on_navigation` never sees it. A
+  `NewWindowRequested` handler catches that, and refuses every other popup
+  while it is there: nothing in a single sign-in page on a logon screen has any
+  business opening a second window.
+
+  **How GCPW does it: Esc, and only Esc.** Google's own documentation tells the
+  user "if you don't want to continue, press the Esc key". It injects nothing
+  into the sign-in page. Our escape handler already matched that, so the footer
+  link is the extra rather than the mechanism, and Esc remains the path that
+  works when the page is not authentik's at all — an upstream IdP, say.
+
+  Verified against the real binary: the hook adds exactly one link to a brand
+  payload that already had one, and clicking it cancels both as a normal link
+  and as `target="_blank"`. **Not verified: that the flow executor renders
+  `ui_footer_links` on the sign-in page itself.** That needs a real authentik
+  instance. If it does not, this degrades to Esc-only — no worse than before,
+  but the visible affordance would be missing.
 - _Open loose end_: the `logs` folder grant in `Package.wxs` existed for the CEF
   host's file-based Chromium log. `ak_browser.exe` writes no such file. The
   grant is retained pending a VM run that confirms nothing under the service
