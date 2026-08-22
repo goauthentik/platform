@@ -10,6 +10,9 @@ container_ver := $(shell cat "${PWD}/Dockerfile" "${TOP}/rust-toolchain.toml" | 
 ci-container-tag:
 	@echo ghcr.io/goauthentik/platform-builder:${container_ver}
 
+.PHONY: ci-build-args
+ci-build-args:
+
 .PHONY: local-build
 local-build:
 	docker build \
