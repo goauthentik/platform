@@ -41,17 +41,36 @@ ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+		build-essential pkg-config libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 endif
 endif
+
+# credprovider and browser-host are Windows-only workspace members: the first
+# is written against Win32 APIs that don't exist off Windows, the second
+# renders through WebView2. e2e drives both. They stay workspace members so one
+# lockfile and one cargo invocation cover the repo, but clippy can only build
+# them on Windows -- `make ee/wcp/lint` covers them there.
+ifneq ($(OS),Windows_NT)
+RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-browser-host --exclude ak-ee-wcp-e2e
+endif
+
+format:
+	cargo fmt
+	cargo clippy \
+		--fix \
+		--allow-dirty \
+		--workspace \
+		$(RS_LINT_EXCLUDE)
 
 lint-rs:
 	cargo fmt --all
 	cargo clippy --workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 	cargo clippy --fix \
 		--allow-dirty \
 		--workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 
 .PHONY: lint
@@ -86,7 +105,7 @@ test-join:
 		authentik-platform_devcontainer-test-machine-1 \
 		ak-sysd domains join ak -a http://authentik:9000
 
-test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deployak-nss/test-deployak-pam/test-deploy test-ssh
+test-full: clean ak-agent/test-deploy ak-sysd/test-deploy ak-cli/test-deploy ak-nss/test-deploy ak-pam/test-deploy test-ssh
 
 dev--initialize: containers/test/local-build
 
@@ -96,7 +115,6 @@ bump:
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" ee/psso/bump || true
-	"$(MAKE)" ee/wcp/bump || true
 
 ak-pam/%:
 	"$(MAKE)" -C "${TOP}/ak-pam" $*

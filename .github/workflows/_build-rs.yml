@@ -33,6 +33,7 @@ jobs:
           - ak-nss
           - ak-pam
           - ak-sysd
+          - ee/wcp
         platform: ${{ fromJSON(inputs.platforms) }}
         exclude:
           # pam & nss are linux-only targets
@@ -44,6 +45,13 @@ jobs:
             platform: macos-26
           - target: ak-nss
             platform: windows-2025
+          # wcp is a windows-only credential provider
+          - target: ee/wcp
+            platform: macos-26
+          - target: ee/wcp
+            platform: ubuntu-24.04
+          - target: ee/wcp
+            platform: ubuntu-24.04-arm
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -52,7 +60,9 @@ jobs:
     outputs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - if: ${{ matrix.target == 'ak-agent-desktop' }}
         uses: pnpm/action-setup@v6.0.10
         with:
@@ -78,18 +88,9 @@ jobs:
         with:
           rustflags: ""
           cache: false
-      - if: ${{ matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025' }}
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
-      - name: Force real MSVC link.exe
-        # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
-        # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
-        # PATH resolution on this runner image, breaking cargo's link step
-        # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.
-        if: ${{ matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025' }}
-        shell: pwsh
-        run: |
-          $linkExe = (Get-Command link.exe -All | Where-Object { $_.Source -notlike '*\Git\*' } | Select-Object -First 1).Source
-          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linkExe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          platform: ${{ matrix.platform }}
       - if: ${{ !startsWith(matrix.platform, 'ubuntu') }}
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
@@ -115,10 +116,21 @@ jobs:
         env:
           RUST_BUILD_FLAGS: ${{ (matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static ' || '' }}${{ inputs.rust_build_flags }}
           AK_IS_RELEASE: ${{ inputs.is_release }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      # Artifact names cannot contain "/", so nested targets like ee/wcp need
+      # a slug. Doing it here rather than via a matrix `include` is deliberate:
+      # an include that matches no base combination *adds* a job, so pinning a
+      # name for ee/wcp+windows-2025 resurrected it even for ubuntu-only
+      # callers like the e2e build.
+      - id: slug
+        shell: bash
+        run: echo "target=${TARGET//\//-}" >> "$GITHUB_OUTPUT"
+        env:
+          TARGET: ${{ matrix.target }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.target }}${{ inputs.artifact_suffix }}
+          name: authentik_${{ matrix.platform }}_${{ steps.slug.outputs.target }}${{ inputs.artifact_suffix }}
           path: bin/
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         if: always()

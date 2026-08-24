@@ -17,13 +17,17 @@ pub use test_machine::TestMachine;
 pub fn test_init() {
     LogBuilder::new(PlatformString::new())
         .force_stdout(true)
-        .default_level(LevelFilter::Warn)
-        .with_filter("ak_platform_e2e", LevelFilter::Trace)
+        .default_level(LevelFilter::Trace)
+        .with_default_filters()
         .enable();
 }
 
+pub fn is_ci() -> bool {
+    env::var("CI").as_deref() == Ok("true")
+}
+
 pub fn local_authentik_url() -> String {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         env::var("AK_URL").unwrap_or_else(|_| "http://localhost:9000".to_string())
     } else {
         "http://host.docker.internal:9123".to_string()
@@ -31,7 +35,7 @@ pub fn local_authentik_url() -> String {
 }
 
 pub fn container_authentik_url() -> String {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         "http://host.docker.internal:9000".to_string()
     } else {
         "http://host.docker.internal:9123".to_string()
@@ -39,7 +43,7 @@ pub fn container_authentik_url() -> String {
 }
 
 pub fn authentik_creds() -> (String, String) {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         (
             "akadmin".to_string(),
             env::var("AK_PASSWORD").unwrap_or_default(),
@@ -53,7 +57,7 @@ pub fn authentik_creds() -> (String, String) {
 }
 
 pub fn authentik_token() -> String {
-    if env::var("CI").as_deref() == Ok("true") {
+    if is_ci() {
         env::var("AK_TOKEN").unwrap_or_default()
     } else {
         "this-token-is-for-testing-dont-use".to_string()
@@ -260,7 +264,9 @@ pub async fn exec_command(
     cmd: &str,
     env_vars: &[(&str, &str)],
 ) -> Result<(i64, String)> {
-    tracing::info!("[exec] {}", cmd);
+    if !is_ci() {
+        tracing::info!("[exec] {}", cmd);
+    }
     let exec_cmd = ExecCommand::new(["sh", "-c", cmd])
         .with_env_vars(env_vars.iter().map(|(k, v)| (k.to_string(), v.to_string())))
         .with_cmd_ready_condition(CmdWaitFor::Exit { code: None });
@@ -271,7 +277,11 @@ pub async fn exec_command(
         .wrap_err(format!("exec failed: '{}'", cmd))?;
 
     let exit_code = result.exit_code().await.unwrap().unwrap();
-    tracing::info!("[exec] {} exit={}", cmd, exit_code);
+    if is_ci() {
+        eprintln!("::group::{cmd} (Exit code {exit_code})");
+    } else {
+        tracing::info!("[exec] {} exit={}", cmd, exit_code);
+    }
     let stdout_str = String::from_utf8_lossy(&result.stdout_to_vec().await?).into_owned();
     let stderr_str = String::from_utf8_lossy(&result.stderr_to_vec().await?).into_owned();
     stdout_str
@@ -281,6 +291,9 @@ pub async fn exec_command(
         .lines()
         .for_each(|l| tracing::warn!("[stderr] {}", l));
 
+    if is_ci() {
+        eprintln!("::endgroup::");
+    }
     let output = format!("{}{}", stdout_str, stderr_str);
 
     Ok((exit_code, output))
@@ -303,6 +316,22 @@ pub async fn must_exec(
         );
     }
     Ok(output)
+}
+
+/// Fails if the kernel logged an AppArmor denial for an authentik path
+pub async fn assert_no_apparmor_denials(container: &ContainerAsync<GenericImage>) -> Result<()> {
+    // Scoped to authentik paths so unrelated host denials don't fail the test.
+    let (exit_code, output) = exec_command(
+        container,
+        r#"journalctl --no-pager | grep 'apparmor="DENIED"' \
+            | grep -E 'name="(/att/[^"]*)?/(etc|run)/authentik/'"#,
+        &[],
+    )
+    .await?;
+    if exit_code == 0 {
+        bail!("AppArmor denied access to authentik paths:\n{}", output);
+    }
+    Ok(())
 }
 
 /// A single parameterized command test case.

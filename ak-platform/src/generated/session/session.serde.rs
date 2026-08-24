@@ -201,6 +201,279 @@ impl<'de> serde::Deserialize<'de> for CloseSessionResponse {
         deserializer.deserialize_struct("session.CloseSessionResponse", FIELDS, GeneratedVisitor)
     }
 }
+impl serde::Serialize for CreateSessionRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.username.is_empty() {
+            len += 1;
+        }
+        if self.token.is_some() {
+            len += 1;
+        }
+        if self.ssh_auth.is_some() {
+            len += 1;
+        }
+        if self.pid != 0 {
+            len += 1;
+        }
+        if self.ppid != 0 {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("session.CreateSessionRequest", len)?;
+        if !self.username.is_empty() {
+            struct_ser.serialize_field("username", &self.username)?;
+        }
+        if let Some(v) = self.token.as_ref() {
+            struct_ser.serialize_field("token", v)?;
+        }
+        if let Some(v) = self.ssh_auth.as_ref() {
+            struct_ser.serialize_field("sshAuth", v)?;
+        }
+        if self.pid != 0 {
+            struct_ser.serialize_field("pid", &self.pid)?;
+        }
+        if self.ppid != 0 {
+            struct_ser.serialize_field("ppid", &self.ppid)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CreateSessionRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "username",
+            "token",
+            "ssh_auth",
+            "sshAuth",
+            "pid",
+            "ppid",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Username,
+            Token,
+            SshAuth,
+            Pid,
+            Ppid,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "username" => Ok(GeneratedField::Username),
+                            "token" => Ok(GeneratedField::Token),
+                            "sshAuth" | "ssh_auth" => Ok(GeneratedField::SshAuth),
+                            "pid" => Ok(GeneratedField::Pid),
+                            "ppid" => Ok(GeneratedField::Ppid),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CreateSessionRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct session.CreateSessionRequest")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<CreateSessionRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut username__ = None;
+                let mut token__ = None;
+                let mut ssh_auth__ = None;
+                let mut pid__ = None;
+                let mut ppid__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Username => {
+                            if username__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("username"));
+                            }
+                            username__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::Token => {
+                            if token__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("token"));
+                            }
+                            token__ = map_.next_value()?;
+                        }
+                        GeneratedField::SshAuth => {
+                            if ssh_auth__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("sshAuth"));
+                            }
+                            ssh_auth__ = map_.next_value()?;
+                        }
+                        GeneratedField::Pid => {
+                            if pid__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("pid"));
+                            }
+                            pid__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
+                        GeneratedField::Ppid => {
+                            if ppid__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("ppid"));
+                            }
+                            ppid__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
+                    }
+                }
+                Ok(CreateSessionRequest {
+                    username: username__.unwrap_or_default(),
+                    token: token__,
+                    ssh_auth: ssh_auth__,
+                    pid: pid__.unwrap_or_default(),
+                    ppid: ppid__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("session.CreateSessionRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for CreateSessionResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.success {
+            len += 1;
+        }
+        if !self.session_id.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("session.CreateSessionResponse", len)?;
+        if self.success {
+            struct_ser.serialize_field("success", &self.success)?;
+        }
+        if !self.session_id.is_empty() {
+            struct_ser.serialize_field("sessionId", &self.session_id)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for CreateSessionResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "success",
+            "session_id",
+            "sessionId",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Success,
+            SessionId,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "success" => Ok(GeneratedField::Success),
+                            "sessionId" | "session_id" => Ok(GeneratedField::SessionId),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = CreateSessionResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct session.CreateSessionResponse")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<CreateSessionResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut success__ = None;
+                let mut session_id__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Success => {
+                            if success__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("success"));
+                            }
+                            success__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::SessionId => {
+                            if session_id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("sessionId"));
+                            }
+                            session_id__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(CreateSessionResponse {
+                    success: success__.unwrap_or_default(),
+                    session_id: session_id__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("session.CreateSessionResponse", FIELDS, GeneratedVisitor)
+    }
+}
 impl serde::Serialize for OpenSessionRequest {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -347,115 +620,6 @@ impl<'de> serde::Deserialize<'de> for OpenSessionRequest {
             }
         }
         deserializer.deserialize_struct("session.OpenSessionRequest", FIELDS, GeneratedVisitor)
-    }
-}
-impl serde::Serialize for OpenSessionResponse {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if self.success {
-            len += 1;
-        }
-        if !self.session_id.is_empty() {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("session.OpenSessionResponse", len)?;
-        if self.success {
-            struct_ser.serialize_field("success", &self.success)?;
-        }
-        if !self.session_id.is_empty() {
-            struct_ser.serialize_field("sessionId", &self.session_id)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for OpenSessionResponse {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "success",
-            "session_id",
-            "sessionId",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            Success,
-            SessionId,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "success" => Ok(GeneratedField::Success),
-                            "sessionId" | "session_id" => Ok(GeneratedField::SessionId),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = OpenSessionResponse;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct session.OpenSessionResponse")
-            }
-
-            fn visit_map<V>(self, mut map_: V) -> std::result::Result<OpenSessionResponse, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut success__ = None;
-                let mut session_id__ = None;
-                while let Some(k) = map_.next_key()? {
-                    match k {
-                        GeneratedField::Success => {
-                            if success__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("success"));
-                            }
-                            success__ = Some(map_.next_value()?);
-                        }
-                        GeneratedField::SessionId => {
-                            if session_id__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("sessionId"));
-                            }
-                            session_id__ = Some(map_.next_value()?);
-                        }
-                    }
-                }
-                Ok(OpenSessionResponse {
-                    success: success__.unwrap_or_default(),
-                    session_id: session_id__.unwrap_or_default(),
-                })
-            }
-        }
-        deserializer.deserialize_struct("session.OpenSessionResponse", FIELDS, GeneratedVisitor)
     }
 }
 impl serde::Serialize for SessionStatusRequest {

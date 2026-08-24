@@ -24,6 +24,8 @@ windows = { version = "0.61", features = ["Win32_Foundation", "Win32_Security_Cr
 [target.'cfg(target_os = "linux")'.dependencies]
 secret-service = { version = "5.1.0", features = ["rt-tokio-crypto-rust"] }
 tokio = { workspace = true, features = ["sync"] }
+zbus = "5"
+zbus_names = "4.3.4"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "io-util"] }

@@ -44,6 +44,7 @@ pub fn sentry_options<T: ToString>(name: T) -> ClientOptions {
     ClientOptions::new()
         .dsn("https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512")
         .release(release)
+        .attach_stacktrace(true)
         .send_default_pii(false)
         .debug(false)
         .traces_sample_rate(0.3)

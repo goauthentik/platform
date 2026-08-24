@@ -75,7 +75,14 @@ public class SysdBridge {
         return try await withGRPCClient(
             transport: .http2NIOPosix(
                 target: .unixDomainSocket(path: self.getSocketPath(id: id)),
-                transportSecurity: .plaintext
+                transportSecurity: .plaintext,
+                // For a Unix-domain target grpc-swift defaults :authority to the
+                // percent-encoded socket path, which Rust's h2 rejects as an
+                // invalid authority with RST_STREAM(PROTOCOL_ERROR) before tonic
+                // ever sees the request. Pin it to a valid value instead.
+                config: .defaults { config in
+                    config.http2.authority = "localhost"
+                }
             ),
             interceptors: [self.logInterceptor],
             handleClient: handleClient,
@@ -86,7 +93,8 @@ public class SysdBridge {
         return try await self.withClient { client in
             let res = SystemAuthInteractive.Client(wrapping: client)
             let url = try await res.interactiveAuthAsync(
-                request: ClientRequest(message: Google_Protobuf_Empty())
+                request: ClientRequest(
+                    message: InteractiveAuthAsyncRequest.init())
             )
             return AKInteractiveAuth(URL: url.url, DTH: url.headerToken)
         }

@@ -18,7 +18,7 @@ oauth-device-flows = { workspace = true }
 reqwest.workspace = true
 serde_json.workspace = true
 serde.workspace = true
-testcontainers = "0.27"
+testcontainers = "0.28"
 tokio = { workspace = true, features = ["time"] }
 tracing = { workspace = true }
 url.workspace = true

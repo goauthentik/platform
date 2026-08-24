@@ -20,7 +20,7 @@ ak-platform-keyring = { path = "../ak-platform-keyring" }
 authentik-client = { workspace = true }
 base64 = "0.23.0"
 chrono = { workspace = true }
-clap = { version = "4.6.1", features = ["derive"] }
+clap = { workspace = true }
 clap_complete = "4"
 eyre = { workspace = true }
 hex = { workspace = true }
@@ -49,8 +49,29 @@ reqwest-middleware = "0.5.2"
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.4"
 
+# glibc never returns the large transient allocations made by the in-process
+# osquery engine (see `ak-platform-facts`), which strands ~700MB of free heap
+# in its arenas after every device checkin. jemalloc releases dirty pages back
+# to the OS on a decay timer instead.
+#
+# `unprefixed_malloc_on_supported_platforms` is load-bearing, not a nicety:
+# most of that allocation happens in osquery's statically linked C++, which
+# calls plain `malloc`/`free`. Without the unprefixed symbols, jemalloc would
+# only back Rust's `#[global_allocator]` and the C++ side would keep using
+# glibc, leaving the actual problem untouched. On platforms where overriding
+# `malloc` is unsupported (macOS) the feature is inert and jemalloc stays
+# prefixed, which is a graceful downgrade rather than a build failure.
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+tikv-jemallocator = { version = "0.7.0", features = [
+    "unprefixed_malloc_on_supported_platforms",
+] }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2.186"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+core-foundation-sys = "0.8"
 
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.8"

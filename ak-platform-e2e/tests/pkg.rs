@@ -18,6 +18,8 @@ async fn test_packaging_deb() {
 
     for (image, tag) in &[
         ("docker.io/library/ubuntu", "24.04"),
+        ("docker.io/library/ubuntu", "25.10"),
+        ("docker.io/library/ubuntu", "26.04"),
         ("docker.io/library/debian", "13"),
     ] {
         let container = pkg_container(image, tag, &bin_dir).await;
@@ -44,6 +46,7 @@ async fn test_packaging_rpm() {
     for (image, tag) in &[
         ("docker.io/redhat/ubi10", "latest"),
         ("docker.io/library/almalinux", "10"),
+        ("docker.io/library/amazonlinux", "2023"),
     ] {
         let container = pkg_container(image, tag, &bin_dir).await;
 

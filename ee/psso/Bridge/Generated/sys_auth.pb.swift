@@ -132,8 +132,6 @@ nonisolated struct InteractiveAuthInitRequest: Sendable {
 
   var username: String = String()
 
-  var password: String = String()
-
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -183,20 +181,6 @@ nonisolated struct InteractiveAuthRequest: Sendable {
     case `continue`(InteractiveAuthContinueRequest)
 
   }
-
-  init() {}
-}
-
-nonisolated struct InteractiveAuthAsyncResponse: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  var url: String = String()
-
-  var headerToken: String = String()
-
-  var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
@@ -281,6 +265,41 @@ nonisolated struct InteractiveChallenge: Sendable {
     ]
 
   }
+
+  init() {}
+}
+
+nonisolated struct InteractiveAuthAsyncRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var username: String {
+    get {_username ?? String()}
+    set {_username = newValue}
+  }
+  /// Returns true if `username` has been explicitly set.
+  var hasUsername: Bool {self._username != nil}
+  /// Clears the value of `username`. Subsequent reads from it will return its default value.
+  mutating func clearUsername() {self._username = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _username: String? = nil
+}
+
+nonisolated struct InteractiveAuthAsyncResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var url: String = String()
+
+  var headerToken: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
@@ -490,7 +509,7 @@ nonisolated extension SSHCertAuthResponse: SwiftProtobuf.Message, SwiftProtobuf.
 
 nonisolated extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveAuthInitRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}password\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -499,7 +518,6 @@ nonisolated extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftPr
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.username) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.password) }()
       default: break
       }
     }
@@ -509,15 +527,11 @@ nonisolated extension InteractiveAuthInitRequest: SwiftProtobuf.Message, SwiftPr
     if !self.username.isEmpty {
       try visitor.visitSingularStringField(value: self.username, fieldNumber: 1)
     }
-    if !self.password.isEmpty {
-      try visitor.visitSingularStringField(value: self.password, fieldNumber: 2)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: InteractiveAuthInitRequest, rhs: InteractiveAuthInitRequest) -> Bool {
     if lhs.username != rhs.username {return false}
-    if lhs.password != rhs.password {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -625,41 +639,6 @@ nonisolated extension InteractiveAuthRequest: SwiftProtobuf.Message, SwiftProtob
   }
 }
 
-nonisolated extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".InteractiveAuthAsyncResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}url\0\u{3}header_token\0")
-
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularStringField(value: &self.url) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.headerToken) }()
-      default: break
-      }
-    }
-  }
-
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.url.isEmpty {
-      try visitor.visitSingularStringField(value: self.url, fieldNumber: 1)
-    }
-    if !self.headerToken.isEmpty {
-      try visitor.visitSingularStringField(value: self.headerToken, fieldNumber: 2)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  static func ==(lhs: InteractiveAuthAsyncResponse, rhs: InteractiveAuthAsyncResponse) -> Bool {
-    if lhs.url != rhs.url {return false}
-    if lhs.headerToken != rhs.headerToken {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
 nonisolated extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".InteractiveChallenge"
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}txid\0\u{1}finished\0\u{1}result\0\u{1}prompt\0\u{3}prompt_meta\0\u{3}debug_info\0\u{3}session_id\0\u{1}component\0")
@@ -727,6 +706,75 @@ nonisolated extension InteractiveChallenge: SwiftProtobuf.Message, SwiftProtobuf
 
 nonisolated extension InteractiveChallenge.PromptMeta: SwiftProtobuf._ProtoNameProviding {
   static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}PAM_PROMPT_ECHO_OFF\0\u{1}PAM_PROMPT_ECHO_ON\0\u{1}PAM_ERROR_MSG\0\u{1}PAM_TEXT_INFO\0\u{1}PAM_RADIO_TYPE\0\u{2}\u{2}PAM_BINARY_PROMPT\0\u{2}]\u{1}PASSWORD\0")
+}
+
+nonisolated extension InteractiveAuthAsyncRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".InteractiveAuthAsyncRequest"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self._username) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._username {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: InteractiveAuthAsyncRequest, rhs: InteractiveAuthAsyncRequest) -> Bool {
+    if lhs._username != rhs._username {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension InteractiveAuthAsyncResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".InteractiveAuthAsyncResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}url\0\u{3}header_token\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.url) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.headerToken) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.url.isEmpty {
+      try visitor.visitSingularStringField(value: self.url, fieldNumber: 1)
+    }
+    if !self.headerToken.isEmpty {
+      try visitor.visitSingularStringField(value: self.headerToken, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: InteractiveAuthAsyncResponse, rhs: InteractiveAuthAsyncResponse) -> Bool {
+    if lhs.url != rhs.url {return false}
+    if lhs.headerToken != rhs.headerToken {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 nonisolated extension SystemAuthorizeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {

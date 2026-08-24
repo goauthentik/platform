@@ -6,20 +6,8 @@
   "rust-analyzer.testExplorer": true,
   "files.associations": {
     "zshrc": "shellscript",
-    "*.hcl": "terraform",
-    "xstring": "cpp"
+    "*.hcl": "terraform"
   },
-  "gopls": {
-    "build.buildFlags": [
-        "-tags=integration,e2e",
-    ]
-  },
-  "go.testFlags": ["-count=1", "-failfast", "-shuffle=on", "-v", "-covermode=atomic"],
-  "go.testTags": "integration,e2e",
-  "go.testTimeout": "300s",
-  "go.coverOnSingleTest": true,
-  "go.coverOnSingleTestFile": true,
-  "go.coverOnTestPackage": true,
   "gitlens.autolinks": [
       {
           "alphanumeric": true,
@@ -27,8 +15,5 @@
           "url": "https://github.com/goauthentik/platform/issues/<num>",
           "ignoreCase": false
       }
-  ],
-  "cmake.sourceDirectory": "${workspaceFolder}/ee/wcp",
-  "cmake.buildDirectory": "${workspaceFolder}/cache/wcp",
-  "cmake.automaticReconfigure": false
+  ]
 }
