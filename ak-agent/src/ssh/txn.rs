@@ -5,6 +5,7 @@ use ak_platform::{net::server::creds::ProcCredentials, string::PlatformString};
 use ak_platform_authz::AuthorizeAction;
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
 use eyre::{Result, WrapErr, bail};
+use serde::Deserialize;
 use ssh_key::{Certificate, PrivateKey, public::KeyData};
 use uuid::Uuid;
 
@@ -19,6 +20,11 @@ pub struct SSHAgentTransaction {
     pub session_id: Option<Vec<u8>>,
     pub cert: Option<Arc<Certificate>>,
     pub id: Uuid,
+}
+
+#[derive(Deserialize)]
+struct UserInfo {
+    preferred_username: String,
 }
 
 impl SSHAgentTransaction {
@@ -55,11 +61,21 @@ impl SSHAgentTransaction {
             }
         };
 
-        let claims = match root_token.claims() {
-            Ok(c) => c,
+        let username = match root_token.claims() {
+            Ok(c) => c.preferred_username,
             Err(e) => {
-                tracing::warn!("ssh-agent: ensure_cert: failed to parse token claims: {e:?}");
-                return None;
+                tracing::debug!(
+                    "ssh-agent: ensure_cert: access token has no usable profile claims: {e:?}"
+                );
+                match self.get_userinfo_username(&profile).await {
+                    Ok(username) => username,
+                    Err(userinfo_error) => {
+                        tracing::warn!(
+                            "ssh-agent: ensure_cert: failed to get username from userinfo: {userinfo_error:?}"
+                        );
+                        return None;
+                    }
+                }
             }
         };
 
@@ -79,7 +95,7 @@ impl SSHAgentTransaction {
 
         let cert = match generate_cert(
             &self.priv_key,
-            &claims.preferred_username,
+            &username,
             &host_key,
             &host_token_str,
             valid_before,
@@ -94,6 +110,24 @@ impl SSHAgentTransaction {
         let cert = Arc::new(cert);
         self.cert = Some(Arc::clone(&cert));
         Some(cert)
+    }
+
+    async fn get_userinfo_username(&self, profile_name: &str) -> Result<String> {
+        let profile = {
+            let cfg = self.agent.cfg.read().await;
+            cfg.profiles
+                .get(profile_name)
+                .ok_or_else(|| eyre::eyre!("profile {profile_name} not found"))?
+                .clone()
+        };
+        let userinfo_url = format!("{}/application/o/userinfo/", profile.authentik_url);
+        let response = profile
+            .authenticated_http_client()?
+            .get(userinfo_url)
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(response.json::<UserInfo>().await?.preferred_username)
     }
 
     async fn get_host_token(&self, host_key: &KeyData) -> Result<(String, i64)> {
