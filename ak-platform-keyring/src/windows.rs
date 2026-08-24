@@ -116,6 +116,10 @@ fn sanitize_path_component(value: &str) -> String {
     out
 }
 
+fn should_fallback_to_file(error: &keyring_core::Error) -> bool {
+    matches!(error, keyring_core::Error::TooLong(_, _))
+}
+
 fn encrypt_bytes(data: &[u8]) -> Result<Vec<u8>, KeyringError> {
     let mut data_in = CRYPT_INTEGER_BLOB {
         cbData: data.len().try_into().unwrap_or(u32::MAX),
@@ -202,8 +206,7 @@ impl KeyringStore for WindowsStore {
             Ok(()) => Ok(()),
             Err(NoEntry) => Err(KeyringError::NotFound()),
             Err(e) => {
-                let message = e.to_string();
-                if message.contains("longer than the platform limit") {
+                if should_fallback_to_file(&e) {
                     self.write_file(service, user, &data)
                 } else {
                     Err(map_kc(e))
@@ -231,6 +234,18 @@ impl KeyringStore for WindowsStore {
 mod tests {
     use super::*;
     use std::{env, fs};
+
+    #[test]
+    fn detects_windows_utf16_limit_errors() {
+        assert!(should_fallback_to_file(&keyring_core::Error::TooLong(
+            "password encoded as UTF-16".to_string(),
+            2560,
+        )));
+        assert!(!should_fallback_to_file(&keyring_core::Error::NoEntry));
+        assert!(!should_fallback_to_file(&keyring_core::Error::NoStorageAccess(
+            std::io::Error::new(std::io::ErrorKind::Other, "test").into(),
+        )));
+    }
 
     #[tokio::test]
     async fn large_payload_falls_back_to_file() {
