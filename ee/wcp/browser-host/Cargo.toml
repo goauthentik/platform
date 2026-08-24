@@ -23,7 +23,7 @@ sentry = { workspace = true }
 uuid = { workspace = true }
 winreg = { workspace = true }
 tauri = { version = "2" }
-webview2-com = "0.38"
+webview2-com = "0.39"
 
 # Deliberately not `workspace = true`. The workspace pins windows/windows-core
 # at 0.62 for the other ee/wcp crates, but tauri 2.11 and webview2-com 0.38 are
