@@ -32,8 +32,8 @@ webview2-com = "0.38"
 # version here would leave the tauri, webview2-com and raw Win32 call sites in
 # this file disagreeing about the same types. Nothing crosses a crate boundary
 # as a Win32 type, so the two versions coexist as they already do in Cargo.lock.
-windows-core = "0.61"
-windows = { version = "0.61", features = [
+windows-core = "0.62"
+windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_Security",
     "Win32_Security_Authorization",
