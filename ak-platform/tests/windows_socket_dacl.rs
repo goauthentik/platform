@@ -14,15 +14,19 @@ use std::ffi::c_void;
 use ak_platform::net::server::SocketPermMode;
 use ak_platform::net::{client, server};
 use ak_platform::string::PlatformString;
-use windows::Win32::Foundation::{ERROR_SUCCESS, HLOCAL, LocalFree};
+use windows::Win32::Foundation::{CloseHandle, ERROR_SUCCESS, HLOCAL, LocalFree};
 use windows::Win32::Security::Authorization::{
     ConvertSecurityDescriptorToStringSecurityDescriptorW,
-    ConvertStringSecurityDescriptorToSecurityDescriptorW, GetNamedSecurityInfoW, SDDL_REVISION_1,
+    ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo, SDDL_REVISION_1,
     SE_FILE_OBJECT,
 };
 use windows::Win32::Security::{
     CheckTokenMembership, CreateWellKnownSid, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR,
     PSID, SECURITY_MAX_SID_SIZE, WinBuiltinAdministratorsSid,
+};
+use windows::Win32::Storage::FileSystem::{
+    CreateFileW, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
+    READ_CONTROL,
 };
 use windows::core::{BOOL, HSTRING, PWSTR};
 
@@ -37,20 +41,40 @@ struct Dacl(String);
 
 impl Dacl {
     /// Reads back what Windows actually stored on the pipe at `path`.
+    ///
+    /// `GetNamedSecurityInfoW` only documents file-system objects (files,
+    /// directories, shares) for `SE_FILE_OBJECT` — named pipes aren't in that
+    /// list and querying one by path fails with `ERROR_INVALID_PARAMETER`. The
+    /// documented way to read a pipe's DACL is `GetSecurityInfo` against a
+    /// handle opened for `READ_CONTROL`, same as a client would open the pipe.
     fn of_pipe(path: &str) -> Self {
+        let handle = unsafe {
+            CreateFileW(
+                &HSTRING::from(path),
+                READ_CONTROL.0,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                None,
+                OPEN_EXISTING,
+                FILE_FLAGS_AND_ATTRIBUTES(0),
+                None,
+            )
+        }
+        .unwrap_or_else(|e| panic!("could not open {path}: {e}"));
+
         let mut psd = PSECURITY_DESCRIPTOR::default();
         let status = unsafe {
-            GetNamedSecurityInfoW(
-                &HSTRING::from(path),
+            GetSecurityInfo(
+                handle,
                 SE_FILE_OBJECT,
                 DACL_SECURITY_INFORMATION,
                 None,
                 None,
                 None,
                 None,
-                &mut psd,
+                Some(&mut psd),
             )
         };
+        unsafe { CloseHandle(handle) }.unwrap();
         assert_eq!(status, ERROR_SUCCESS, "could not read the DACL of {path}");
 
         let dacl = Self::serialize(psd);
