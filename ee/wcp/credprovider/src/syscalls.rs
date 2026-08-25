@@ -102,7 +102,7 @@ pub trait ForegroundControl {
 
 pub struct RealSyscalls;
 
-fn wide(s: &str) -> Vec<u16> {
+pub(crate) fn wide(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
@@ -718,14 +718,17 @@ pub fn deny_interactive_and_network_logon(sid: &[u8]) -> windows::core::Result<(
 /// administrative reset orphans the DPAPI master key. That reasoning does not
 /// apply to an account nothing signs into interactively, but reuse costs
 /// nothing and churning the account on every logon buys nothing.
-pub fn service_account_password() -> eyre::Result<String> {
+/// Returns the raw SID alongside the password: the caller needs the same SID
+/// right after this for the hardening ACL grants, and resolving it here too
+/// would be a second `LookupAccountNameW` for an answer already in hand.
+pub fn service_account_password() -> eyre::Result<(Vec<u8>, String)> {
     let sid = account_sid(SERVICE_ACCOUNT_NAME).map_err(|e| eyre::eyre!("{e}"))?;
-    let sid = sid_to_string(&sid).map_err(|e| eyre::eyre!("{e}"))?;
+    let sid_str = sid_to_string(&sid).map_err(|e| eyre::eyre!("{e}"))?;
     let store = KeyringPasswordStore::new();
 
-    if let Some(stored) = store.load(&sid)? {
+    if let Some(stored) = store.load(&sid_str)? {
         match RealSyscalls.validate(SERVICE_ACCOUNT_NAME, &stored) {
-            Ok(PasswordCheck::Valid) => return Ok(stored),
+            Ok(PasswordCheck::Valid) => return Ok((sid, stored)),
             Ok(PasswordCheck::Expired) => {
                 let new =
                     crate::helpers::generate_random_password().map_err(|e| eyre::eyre!("{e}"))?;
@@ -733,8 +736,8 @@ pub fn service_account_password() -> eyre::Result<String> {
                     .change(SERVICE_ACCOUNT_NAME, &stored, &new)
                     .is_ok()
                 {
-                    let _ = store.save(&sid, &new);
-                    return Ok(new);
+                    let _ = store.save(&sid_str, &new);
+                    return Ok((sid, new));
                 }
             }
             // Changed out of band.
@@ -744,7 +747,7 @@ pub fn service_account_password() -> eyre::Result<String> {
                 log::warn!(
                     "could not verify the service account's stored password ({e}); using it anyway"
                 );
-                return Ok(stored);
+                return Ok((sid, stored));
             }
         }
     }
@@ -753,10 +756,10 @@ pub fn service_account_password() -> eyre::Result<String> {
     RealSyscalls
         .reset(SERVICE_ACCOUNT_NAME, &password)
         .map_err(|e| eyre::eyre!("{e}"))?;
-    if let Err(e) = store.save(&sid, &password) {
+    if let Err(e) = store.save(&sid_str, &password) {
         log::error!("could not store the service account's password: {e}");
     }
-    Ok(password)
+    Ok((sid, password))
 }
 
 #[cfg(test)]

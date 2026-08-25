@@ -4,7 +4,7 @@ use windows::{Win32::System::Com::CoTaskMemAlloc, core::PWSTR};
 /// handed back to LogonUI through an out-param, which LogonUI then frees with
 /// `CoTaskMemFree`.
 pub fn cotask_pwstr(s: &str) -> PWSTR {
-    let wide: Vec<u16> = s.encode_utf16().chain(std::iter::once(0)).collect();
+    let wide = crate::syscalls::wide(s);
     unsafe {
         let ptr = CoTaskMemAlloc(wide.len() * 2) as *mut u16;
         if ptr.is_null() {

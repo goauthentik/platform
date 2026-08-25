@@ -8,8 +8,8 @@ use windows::{
             STATUS_ACCOUNT_DISABLED, STATUS_ACCOUNT_RESTRICTION, STATUS_LOGON_FAILURE,
         },
         UI::Shell::{
-            CPCFO_ENABLE_TOUCH_KEYBOARD_AUTO_INVOKE, CPCFO_NONE, CPGSR_NO_CREDENTIAL_FINISHED,
-            CPGSR_NO_CREDENTIAL_NOT_FINISHED, CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_ERROR,
+            CPGSR_NO_CREDENTIAL_FINISHED, CPGSR_NO_CREDENTIAL_NOT_FINISHED,
+            CPGSR_RETURN_CREDENTIAL_FINISHED, CPSI_ERROR,
             CPSI_NONE, CPSI_SUCCESS, CPSI_WARNING, CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS,
             CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION,
             CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE, CREDENTIAL_PROVIDER_FIELD_STATE,
@@ -26,11 +26,11 @@ use windows::{
 };
 
 use crate::helpers;
-use crate::ipc::AuthFlow;
+use crate::ipc::{AuthFlow, AuthResult};
 use crate::strings::cotask_pwstr;
 use crate::syscalls::{AuthPackageLookup, LocalAccountPassword, PasswordCheck, PasswordStore};
 use crate::tile;
-use ak_ee_wcp_wire::{AuthResult, FieldKind, TILE_FIELDS};
+use ak_ee_wcp_wire::{FieldKind, TILE_FIELDS};
 
 /// Outcome of `Connect`'s browser flow, consumed by `GetSerialization`:
 /// `Connect` always succeeds and defers the decision to it.
@@ -298,19 +298,15 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
         let (username, password) = match outcome {
             Some(Outcome::Completed { username, password }) => (username, password),
-            Some(Outcome::Cancelled) => {
-                log::info!("GetSerialization: sign-in was cancelled");
-                unsafe {
-                    *pcpgsr = CPGSR_NO_CREDENTIAL_FINISHED;
-                    *ppszoptionalstatustext = cotask_pwstr("Login attempt cancelled");
-                    *pcpsioptionalstatusicon = CPSI_WARNING;
+            // `Some(Cancelled)` and `None` (the latter meaning `Connect` never
+            // ran, or `SetDeselected` cleared it first) reach the user as the
+            // same string; only the log line tells them apart.
+            cancelled_or_missing @ (Some(Outcome::Cancelled) | None) => {
+                if cancelled_or_missing.is_some() {
+                    log::info!("GetSerialization: sign-in was cancelled");
+                } else {
+                    log::warn!("GetSerialization: no outcome recorded; Connect did not run");
                 }
-                return Ok(());
-            }
-            // No outcome means `Connect` never ran, or `SetDeselected` cleared
-            // it first — the same string to the user, a different bug here.
-            None => {
-                log::warn!("GetSerialization: no outcome recorded; Connect did not run");
                 unsafe {
                     *pcpgsr = CPGSR_NO_CREDENTIAL_FINISHED;
                     *ppszoptionalstatustext = cotask_pwstr("Login attempt cancelled");
@@ -427,14 +423,7 @@ impl ICredentialProviderCredentialWithFieldOptions_Impl for Credential_Impl {
         &self,
         fieldid: u32,
     ) -> Result<CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS> {
-        let field = TILE_FIELDS
-            .get(fieldid as usize)
-            .ok_or(windows::core::Error::from(E_INVALIDARG))?;
-        Ok(if field.kind == FieldKind::TileImage {
-            CPCFO_ENABLE_TOUCH_KEYBOARD_AUTO_INVOKE
-        } else {
-            CPCFO_NONE
-        })
+        tile::field_options_at(fieldid)
     }
 }
 

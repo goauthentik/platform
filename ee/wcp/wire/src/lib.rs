@@ -4,15 +4,14 @@
 
 use std::io::{self, Read, Write};
 
-/// Outcome `credprovider` hands back from the sign-in flow. Never sent over
-/// the wire: it is built from a [`HostReport`] plus, for `Redirected`, an
-/// `ak-sysd` validation call only `credprovider` can reach.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AuthResult {
-    Completed { username: String },
-    Cancelled,
-    Failed { reason: String },
-}
+use windows_core::GUID;
+
+/// The credential provider's COM class ID, registered by the MSI installer
+/// (`vpkg/windows/Package.wxs`) and looked up by `credprovider` (activation)
+/// and `e2e::dll` (direct `DllGetClassObject` calls) — kept in one place so
+/// the two cannot drift apart. `e2e::registration` additionally hardcodes its
+/// string form for the registry paths it writes.
+pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E_8E0A_1D0F8E73577A);
 
 /// Sent from the browser host to `credprovider` over the result pipe once the
 /// flow reaches an end state the host cannot resolve itself: validating the
