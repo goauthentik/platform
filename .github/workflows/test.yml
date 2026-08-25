@@ -215,7 +215,7 @@ jobs:
           name: authentik_ubuntu-24.04_ak-pam-e2e
           path: bin/
       - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd
-      - uses: goauthentik/action-setup-authentik@3a1d4f81e5a29709c173f8b74250b1781e298bf9 # v3.1
+      - uses: goauthentik/action-setup-authentik@7b133e4e068c38a0874f7c5fa3e3ec43ff924d4d # v3.1
         id: setup
         with:
           version: beta
