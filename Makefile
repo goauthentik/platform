@@ -146,6 +146,24 @@ ak-api-cli-gen/%:
 ak-platform-facts/%:
 	"$(MAKE)" -C "${TOP}/ak-platform-facts" $*
 
+ak-platform-keyring/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-keyring" $*
+
+ak-platform-authz/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-authz" $*
+
+ak-api-cli/%:
+	"$(MAKE)" -C "${TOP}/ak-api-cli" $*
+
+ak-flow-executor/%:
+	"$(MAKE)" -C "${TOP}/ak-flow-executor" $*
+
+ak-meta/%:
+	"$(MAKE)" -C "${TOP}/ak-meta" $*
+
+ak-meta-macros/%:
+	"$(MAKE)" -C "${TOP}/ak-meta-macros" $*
+
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*
 

@@ -22,10 +22,15 @@ jobs:
         target:
           - ak-agent
           - ak-agent-desktop
+          - ak-api-cli
           - ak-api-cli-gen
           - ak-browser-support
           - ak-cli
+          - ak-flow-executor
+          - ak-meta
+          - ak-meta-macros
           - ak-platform
+          - ak-platform-authz
           - ak-platform-facts
           - ak-platform-keyring
           - ak-sysd
