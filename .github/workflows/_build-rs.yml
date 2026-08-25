@@ -33,6 +33,7 @@ jobs:
           - ak-nss
           - ak-pam
           - ak-sysd
+          - ak-sysd-ctrl-relay
           - ee/wcp
         platform: ${{ fromJSON(inputs.platforms) }}
         exclude:

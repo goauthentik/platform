@@ -15,7 +15,6 @@
 //! `Listener::accept`) — both need to be checked on real hardware before
 //! this is trusted to gate access to a root daemon.
 
-use std::collections::VecDeque;
 use std::ffi::{CString, c_void};
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -64,6 +63,28 @@ unsafe extern "C" {
 
 const KEY_DATA: &[u8] = b"data\0";
 
+/// Event handler shared by both connection roles: unpacks the `data` payload
+/// out of each inbound dictionary message and queues it for `poll_read`.
+fn data_handler(tx: mpsc::UnboundedSender<Vec<u8>>) -> block2::RcBlock<dyn Fn(xpc_object_t)> {
+    block2::RcBlock::new(move |object: xpc_object_t| {
+        if object.is_null() {
+            return;
+        }
+        unsafe {
+            if xpc_get_type(object) != xpc_dictionary_type() {
+                return;
+            }
+            let key = KEY_DATA.as_ptr() as *const std::os::raw::c_char;
+            let mut len: usize = 0;
+            let ptr = xpc_dictionary_get_data(object, key, &mut len);
+            if !ptr.is_null() && len > 0 {
+                let bytes = std::slice::from_raw_parts(ptr as *const u8, len).to_vec();
+                let _ = tx.send(bytes);
+            }
+        }
+    })
+}
+
 /// One XPC connection (either end), presented as a duplex byte stream.
 ///
 /// XPC itself is message-oriented: every `AsyncWrite::poll_write` call is
@@ -74,7 +95,37 @@ const KEY_DATA: &[u8] = b"data\0";
 pub struct XpcDuplex {
     conn: xpc_connection_t,
     inbound: mpsc::UnboundedReceiver<Vec<u8>>,
-    pending: VecDeque<u8>,
+    /// Bytes of the one message currently being drained, and how far into it
+    /// `poll_read` has got. Refilled from `inbound` only once exhausted.
+    pending: Vec<u8>,
+    offset: usize,
+}
+
+/// Creates a Mach-service connection in either role, installs `handler` and
+/// resumes it. The client (`XpcDuplex::connect_mach_service`) and the
+/// listener (`MachServiceListener::bind`) differ only in `flags` and in what
+/// the handler does with each event.
+///
+/// # Safety
+/// `handler` must remain valid for the lifetime of the returned connection.
+unsafe fn create_mach_service(
+    service_name: &str,
+    flags: u64,
+    handler: &block2::DynBlock<dyn Fn(xpc_object_t)>,
+) -> std::io::Result<xpc_connection_t> {
+    let name = CString::new(service_name)
+        .map_err(|e| std::io::Error::other(format!("invalid service name: {e}")))?;
+    unsafe {
+        let conn = xpc_connection_create_mach_service(name.as_ptr(), std::ptr::null_mut(), flags);
+        if conn.is_null() {
+            return Err(std::io::Error::other(
+                "xpc_connection_create_mach_service returned NULL",
+            ));
+        }
+        xpc_connection_set_event_handler(conn, handler);
+        xpc_connection_resume(conn);
+        Ok(conn)
+    }
 }
 
 // SAFETY: the underlying `xpc_connection_t` is only ever touched from the
@@ -87,21 +138,16 @@ impl XpcDuplex {
     /// Connects to a named Mach service (client role — e.g. the desktop app
     /// reaching the privileged daemon).
     pub async fn connect_mach_service(service_name: &str) -> std::io::Result<Self> {
-        let name = CString::new(service_name)
-            .map_err(|e| std::io::Error::other(format!("invalid service name: {e}")))?;
-        unsafe {
-            let conn = xpc_connection_create_mach_service(
-                name.as_ptr(),
-                std::ptr::null_mut(),
+        let (tx, rx) = mpsc::unbounded_channel();
+        let handler = data_handler(tx);
+        let conn = unsafe {
+            create_mach_service(
+                service_name,
                 XPC_CONNECTION_MACH_SERVICE_PRIVILEGED,
-            );
-            if conn.is_null() {
-                return Err(std::io::Error::other(
-                    "xpc_connection_create_mach_service returned NULL",
-                ));
-            }
-            Ok(Self::from_raw_connection(conn))
-        }
+                &handler,
+            )?
+        };
+        Ok(Self::new(conn, rx))
     }
 
     /// Wraps an already-created/accepted `xpc_connection_t` (server role —
@@ -113,28 +159,19 @@ impl XpcDuplex {
     unsafe fn from_raw_connection(conn: xpc_connection_t) -> Self {
         let (tx, rx) = mpsc::unbounded_channel();
         unsafe {
-            let handler = block2::RcBlock::new(move |object: xpc_object_t| {
-                if object.is_null() {
-                    return;
-                }
-                if xpc_get_type(object) != xpc_dictionary_type() {
-                    return;
-                }
-                let key = KEY_DATA.as_ptr() as *const std::os::raw::c_char;
-                let mut len: usize = 0;
-                let ptr = xpc_dictionary_get_data(object, key, &mut len);
-                if !ptr.is_null() && len > 0 {
-                    let bytes = std::slice::from_raw_parts(ptr as *const u8, len).to_vec();
-                    let _ = tx.send(bytes);
-                }
-            });
+            let handler = data_handler(tx);
             xpc_connection_set_event_handler(conn, &handler);
             xpc_connection_resume(conn);
         }
+        Self::new(conn, rx)
+    }
+
+    fn new(conn: xpc_connection_t, inbound: mpsc::UnboundedReceiver<Vec<u8>>) -> Self {
         XpcDuplex {
             conn,
-            inbound: rx,
-            pending: VecDeque::new(),
+            inbound,
+            pending: Vec::new(),
+            offset: 0,
         }
     }
 
@@ -171,16 +208,19 @@ impl AsyncRead for XpcDuplex {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<std::io::Result<()>> {
-        if self.pending.is_empty() {
+        if self.offset >= self.pending.len() {
             match self.inbound.poll_recv(cx) {
-                Poll::Ready(Some(bytes)) => self.pending.extend(bytes),
+                Poll::Ready(Some(bytes)) => {
+                    self.pending = bytes;
+                    self.offset = 0;
+                }
                 Poll::Ready(None) => return Poll::Ready(Ok(())),
                 Poll::Pending => return Poll::Pending,
             }
         }
-        let n = buf.remaining().min(self.pending.len());
-        let chunk: Vec<u8> = self.pending.drain(..n).collect();
-        buf.put_slice(&chunk);
+        let n = buf.remaining().min(self.pending.len() - self.offset);
+        buf.put_slice(&self.pending[self.offset..self.offset + n]);
+        self.offset += n;
         Poll::Ready(Ok(()))
     }
 }
@@ -212,20 +252,8 @@ unsafe impl Send for MachServiceListener {}
 
 impl MachServiceListener {
     pub fn bind(service_name: &str) -> std::io::Result<Self> {
-        let name = CString::new(service_name)
-            .map_err(|e| std::io::Error::other(format!("invalid service name: {e}")))?;
         let (tx, rx) = mpsc::unbounded_channel();
         unsafe {
-            let conn = xpc_connection_create_mach_service(
-                name.as_ptr(),
-                std::ptr::null_mut(),
-                XPC_CONNECTION_MACH_SERVICE_LISTENER,
-            );
-            if conn.is_null() {
-                return Err(std::io::Error::other(
-                    "xpc_connection_create_mach_service (listener) returned NULL",
-                ));
-            }
             let handler = block2::RcBlock::new(move |object: xpc_object_t| {
                 if object.is_null() || xpc_get_type(object) != xpc_connection_type() {
                     return;
@@ -242,8 +270,8 @@ impl MachServiceListener {
                 let peer = XpcDuplex::from_raw_connection(object);
                 let _ = tx.send(peer);
             });
-            xpc_connection_set_event_handler(conn, &handler);
-            xpc_connection_resume(conn);
+            let conn =
+                create_mach_service(service_name, XPC_CONNECTION_MACH_SERVICE_LISTENER, &handler)?;
             Ok(MachServiceListener {
                 _conn: conn,
                 peers: rx,

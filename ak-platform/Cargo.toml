@@ -12,7 +12,6 @@ name = "grpc_client"
 
 [dependencies]
 base64 = "0.23.0"
-hyper = "1"
 hyper-util = { workspace = true }
 log = { workspace = true }
 pbjson = { workspace = true }
@@ -49,6 +48,7 @@ oslog = "0.2.0"
 # talk raw XPC — no maintained high-level binding exists for either, so both
 # go through objc2's `msg_send!`/blocks directly.
 objc2 = "0.6"
+objc2-foundation = "0.3"
 block2 = "0.6"
 
 [target.'cfg(unix)'.dependencies]
@@ -59,10 +59,13 @@ tokio = { workspace = true, features = ["process"] }
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.4.0"
+# SDDL literals for the named-pipe DACLs in `net::server`; must stay on the
+# same major as the `widestring` re-exported through `interprocess`.
+widestring = "1"
 # `net::elevate::windows` builds a locked-down rendezvous pipe and launches
 # the CTRL relay helper elevated.
 tokio = { workspace = true, features = ["net"] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { workspace = true }
 windows = { version = "0.62.2", features = [
     "Win32_Foundation",
     "Win32_Security",

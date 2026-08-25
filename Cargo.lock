@@ -322,13 +322,13 @@ dependencies = [
  "http 1.5.0",
  "http-body 1.1.0",
  "http-body-util",
- "hyper 1.11.0",
  "hyper-util",
  "interprocess",
  "libc",
  "log",
  "notify",
  "objc2",
+ "objc2-foundation",
  "oslog",
  "pbjson",
  "pbjson-types",
@@ -350,6 +350,7 @@ dependencies = [
  "tower-http 0.7.0",
  "tracing",
  "uuid",
+ "widestring",
  "windows 0.62.2",
 ]
 
@@ -475,10 +476,12 @@ dependencies = [
 
 [[package]]
 name = "ak-sysd-ctrl-relay"
-version = "0.60.1"
+version = "0.61.0"
 dependencies = [
+ "ak-meta",
  "ak-platform",
  "eyre",
+ "sentry",
  "tokio",
  "tracing",
 ]

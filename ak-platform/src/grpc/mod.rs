@@ -85,16 +85,21 @@ impl GrpcError {
     }
 }
 
-pub async fn grpc_endpoint(path: String) -> GrpcResult<Channel> {
-    // Dummy URI to satisfy Endpoint::from() type requirements
-    // The connector ignores this and uses the socket_path parameter directly
+/// Dummy endpoint to satisfy `Endpoint::from()`'s type requirements — every
+/// connector in this crate ignores the URI tonic hands it and dials its own
+/// transport instead (a unix socket, a named pipe, or an elevated relay; see
+/// [`crate::net::elevate`]).
+pub(crate) fn dummy_endpoint() -> Result<Endpoint> {
     let u = Uri::builder()
         .scheme("http")
         .authority(":123")
         .path_and_query("/")
-        .build()
-        .map_err(|e| GrpcError::Other(e.into()))?;
-    let endpoint = Endpoint::from(u);
+        .build()?;
+    Ok(Endpoint::from(u))
+}
+
+pub async fn grpc_endpoint(path: String) -> GrpcResult<Channel> {
+    let endpoint = dummy_endpoint().map_err(GrpcError::Other)?;
     let channel = grpc_dial(endpoint, path.clone())
         .await
         .map_err(|e| GrpcError::from_dial(e, path))?;

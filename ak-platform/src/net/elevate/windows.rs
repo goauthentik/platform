@@ -18,37 +18,23 @@
 //! real `windows-msvc` toolchain before relying on it.
 
 use eyre::{Result, WrapErr, bail};
-use hyper_util::rt::TokioIo;
 use std::ffi::c_void;
-use std::os::windows::ffi::OsStrExt;
 use tonic::transport::Channel;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::Security::Authorization::ConvertStringSecurityDescriptorToSecurityDescriptorW;
 use windows::Win32::Security::{PSECURITY_DESCRIPTOR, SDDL_REVISION_1, SECURITY_ATTRIBUTES};
-use windows::Win32::UI::Shell::{
-    SEE_MASK_NOASYNC, SHELLEXECUTEINFOW, ShellExecuteExW,
-};
+use windows::Win32::UI::Shell::{SEE_MASK_NOASYNC, SHELLEXECUTEINFOW, ShellExecuteExW};
 use windows::Win32::UI::WindowsAndMessaging::SW_HIDE;
-use windows::core::PCWSTR;
+use windows::core::{HSTRING, PCWSTR, w};
 
 use super::channel_from_connector;
-
-/// Absolute path, matching where packaging installs binaries alongside
-/// `ak-sysd` — see `sysd_config_file()` in `ak-platform::paths`.
-const RELAY_HELPER: &str = r"C:\Program Files\Authentik Security Inc\sysd\ak-sysd-ctrl-relay.exe";
+use crate::paths::sysd_ctrl_relay_path;
 
 /// Owner (`OW`) and built-in Administrators (`BA`) get full access; the
 /// mandatory label denies write-up *and* read-up below High integrity, so a
 /// same-user process running at Medium integrity (i.e. not elevated) can't
 /// open the pipe even with the right name.
-const PIPE_SDDL: &str = "D:(A;;GA;;;OW)(A;;GA;;;BA)S:(ML;;NWNRNX;;;HI)";
-
-fn wide_null(s: &str) -> Vec<u16> {
-    std::ffi::OsStr::new(s)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
+const PIPE_SDDL: PCWSTR = w!("D:(A;;GA;;;OW)(A;;GA;;;BA)S:(ML;;NWNRNX;;;HI)");
 
 pub async fn connect() -> Result<Channel> {
     let pipe_name = format!(r"\\.\pipe\ak-sysd-ctrl-relay-{}", uuid::Uuid::new_v4());
@@ -69,30 +55,35 @@ pub async fn connect() -> Result<Channel> {
         )
         .wrap_err("failed to create rendezvous pipe")?;
 
-    launch_relay_elevated(&pipe_name)?;
+    // `SEE_MASK_NOASYNC` blocks until the UAC broker finishes — which includes
+    // however long the consent dialog sits on screen. Off the async worker.
+    let launch_name = pipe_name.clone();
+    tokio::task::spawn_blocking(move || launch_relay_elevated(&launch_name))
+        .await
+        .wrap_err("elevated relay launch task panicked")??;
 
     server
         .connect()
         .await
         .wrap_err("relay helper never connected to the rendezvous pipe")?;
 
-    channel_from_connector(move |_uri| {
-        // `server` is moved in on the first (and only expected) connection
-        // attempt; tonic only calls the connector once for a channel backed
-        // by a single already-accepted stream.
-        let server = server;
-        async move { Ok(TokioIo::new(server)) }
+    // The stream is already accepted, so hand it over on the first (and only
+    // expected) connection attempt and fail any retry rather than silently
+    // reconnecting to a pipe nothing is listening on.
+    let mut server = Some(server);
+    channel_from_connector(move || {
+        let taken = server.take();
+        async move { taken.ok_or_else(|| std::io::Error::other("relay stream already consumed")) }
     })
     .await
     .wrap_err("failed to build channel over elevated CTRL relay")
 }
 
 fn build_security_attributes() -> Result<SECURITY_ATTRIBUTES> {
-    let sddl = wide_null(PIPE_SDDL);
     let mut psd = PSECURITY_DESCRIPTOR::default();
     unsafe {
         ConvertStringSecurityDescriptorToSecurityDescriptorW(
-            PCWSTR(sddl.as_ptr()),
+            PIPE_SDDL,
             SDDL_REVISION_1,
             &mut psd,
             None,
@@ -108,23 +99,21 @@ fn build_security_attributes() -> Result<SECURITY_ATTRIBUTES> {
 }
 
 fn launch_relay_elevated(pipe_name: &str) -> Result<()> {
-    let verb = wide_null("runas");
-    let file = wide_null(RELAY_HELPER);
-    let params = wide_null(pipe_name);
+    let file = HSTRING::from(sysd_ctrl_relay_path().for_current());
+    let params = HSTRING::from(pipe_name);
 
     let mut info = SHELLEXECUTEINFOW {
         cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
         fMask: SEE_MASK_NOASYNC,
         hwnd: HWND::default(),
-        lpVerb: PCWSTR(verb.as_ptr()),
+        lpVerb: w!("runas"),
         lpFile: PCWSTR(file.as_ptr()),
         lpParameters: PCWSTR(params.as_ptr()),
         nShow: SW_HIDE.0,
         ..Default::default()
     };
 
-    let ok = unsafe { ShellExecuteExW(&mut info) };
-    if let Err(e) = ok {
+    if let Err(e) = unsafe { ShellExecuteExW(&mut info) } {
         bail!("ShellExecuteExW(runas) failed: {e}");
     }
     Ok(())

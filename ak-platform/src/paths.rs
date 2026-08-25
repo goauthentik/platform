@@ -37,6 +37,26 @@ pub fn sysd_socket_path(id: SysdSocketID) -> PlatformString {
     }
 }
 
+/// Mach service name the macOS CTRL relay daemon advertises, and the label of
+/// the `SMAppService` LaunchDaemon plist that declares it. Shared by the
+/// client (`net::elevate::macos`) and the daemon (`ak-sysd-ctrl-relay`); the
+/// plist in `vpkg/macos/scripts/sysd-ctrl-relay-daemon.plist` is the one
+/// remaining copy and must match.
+pub const SYSD_CTRL_RELAY_MACH_SERVICE: &str = "io.goauthentik.platform.sysd-ctrl-relay";
+
+/// Where packaging installs the elevated CTRL relay helper. Kept here rather
+/// than in `net::elevate` so the three install locations stay next to the
+/// other packaged paths — `vpkg/linux/agent-desktop/nfpm.yaml`,
+/// `vpkg/windows/Package.wxs` and `vpkg/macos/Makefile` must agree with this.
+/// On Linux the value is also the `org.freedesktop.policykit.exec.path` in
+/// `io.goauthentik.platform.policy`, which pkexec matches on exactly.
+pub fn sysd_ctrl_relay_path() -> PlatformString {
+    PlatformString::new()
+        .with_darwin("/Applications/authentik Agent.app/Contents/MacOS/ak-sysd-ctrl-relay")
+        .with_linux("/usr/bin/ak-sysd-ctrl-relay")
+        .with_windows(r"C:\Program Files\Authentik Security Inc\sysd\ak-sysd-ctrl-relay.exe")
+}
+
 pub enum AgentSocketID {
     Default,
     SSH,

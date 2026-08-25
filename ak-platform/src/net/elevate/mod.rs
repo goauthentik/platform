@@ -40,32 +40,33 @@ mod windows;
 pub use macos::ensure_registered;
 
 use eyre::Result;
-use hyper::rt::{Read as HyperRead, Write as HyperWrite};
+use hyper_util::rt::TokioIo;
 use std::future::Future;
-use tonic::transport::{Channel, Endpoint, Uri};
+use tokio::io::{AsyncRead, AsyncWrite};
+use tonic::transport::{Channel, Uri};
 use tower::service_fn;
 
-/// Builds a `Channel` from a per-connection-attempt async factory, matching
-/// the dummy-`Uri` dance in [`crate::grpc::grpc_endpoint`] — the connector
-/// ignores the URI tonic hands it and does its own thing instead.
+use crate::grpc::dummy_endpoint;
+
+/// Builds a `Channel` from a per-connection-attempt async factory, reusing the
+/// dummy-`Uri` endpoint from [`crate::grpc::dummy_endpoint`] — the connector
+/// ignores the URI tonic hands it and dials its own transport instead.
 ///
-/// `T` needs to satisfy hyper's `Read`/`Write` (not tokio's `AsyncRead`/
-/// `AsyncWrite`) since that's what `connect_with_connector` requires
-/// directly — wrap tokio-native streams in `hyper_util::rt::TokioIo` before
-/// returning them from `connect`.
-pub(crate) async fn channel_from_connector<F, Fut, T>(connect: F) -> Result<Channel>
+/// `connect` yields a tokio-native stream; the `hyper_util::rt::TokioIo` wrap
+/// that `connect_with_connector` needs happens here rather than at each call
+/// site. `FnMut` (not `Fn`) so a caller holding an already-accepted stream can
+/// hand it over once via `Option::take`.
+pub(crate) async fn channel_from_connector<F, Fut, T>(mut connect: F) -> Result<Channel>
 where
-    F: Fn(Uri) -> Fut + Send + Sync + 'static,
+    F: FnMut() -> Fut + Send + Sync + 'static,
     Fut: Future<Output = std::io::Result<T>> + Send + 'static,
-    T: HyperRead + HyperWrite + Send + Unpin + 'static,
+    T: AsyncRead + AsyncWrite + Send + Unpin + 'static,
 {
-    let u = Uri::builder()
-        .scheme("http")
-        .authority(":123")
-        .path_and_query("/")
-        .build()?;
-    let channel = Endpoint::from(u)
-        .connect_with_connector(service_fn(connect))
+    let channel = dummy_endpoint()?
+        .connect_with_connector(service_fn(move |_: Uri| {
+            let fut = connect();
+            async move { fut.await.map(TokioIo::new) }
+        }))
         .await?;
     Ok(channel)
 }

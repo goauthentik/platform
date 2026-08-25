@@ -75,10 +75,15 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             // relay daemon. Best-effort: a failure here (e.g. not yet
             // approved in System Settings) shouldn't block the rest of the
             // app — it just means elevated CTRL actions aren't available yet.
+            // Off-thread because it's a synchronous XPC round-trip into
+            // `smd`, and this hook runs on the main thread before the event
+            // loop starts — nothing below depends on the result.
             #[cfg(target_os = "macos")]
-            if let Err(e) = ak_platform::net::elevate::ensure_registered() {
-                tracing::warn!("failed to register sysd CTRL relay daemon: {e:?}");
-            }
+            std::thread::spawn(|| {
+                if let Err(e) = ak_platform::net::elevate::ensure_registered() {
+                    tracing::warn!("failed to register sysd CTRL relay daemon: {e:?}");
+                }
+            });
 
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
