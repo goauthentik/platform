@@ -25,34 +25,30 @@ jobs:
           - ak-api-cli-gen
           - ak-browser-support
           - ak-cli
-          - ak-nss
-          - ak-pam
           - ak-platform
           - ak-platform-facts
           - ak-platform-keyring
           - ak-sysd
-          - ee/wcp
+          # platform specific crates, included below
+          # - ak-nss
+          # - ak-pam
+          # - ee/wcp
         platform:
           - macos-26
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - windows-2025
-        exclude:
+        include:
           - platform: windows-2025
-            target: ak-pam
-          - platform: windows-2025
-            target: ak-nss
-          - platform: macos-26
-            target: ak-pam
-          - platform: macos-26
-            target: ak-nss
-          # wcp is a windows-only credential provider
-          - platform: macos-26
             target: ee/wcp
           - platform: ubuntu-24.04
-            target: ee/wcp
+            target: ak-nss
           - platform: ubuntu-24.04-arm
-            target: ee/wcp
+            target: ak-nss
+          - platform: ubuntu-24.04
+            target: ak-pam
+          - platform: ubuntu-24.04-arm
+            target: ak-pam
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
