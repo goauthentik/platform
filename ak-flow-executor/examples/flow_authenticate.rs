@@ -1,8 +1,8 @@
 use ak_flow_executor::executor::FlowExecutor;
 use ak_platform::{log::LogBuilder, string::PlatformString};
 
-#[tokio::test]
-async fn login() {
+#[tokio::main]
+async fn main() {
     LogBuilder::new(PlatformString::new())
         .force_stdout(true)
         .enable();
