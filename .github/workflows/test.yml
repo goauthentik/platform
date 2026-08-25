@@ -29,6 +29,7 @@ jobs:
           - ak-pam
           - ak-platform
           - ak-platform-facts
+          - ak-platform-keyring
           - ak-sysd
           - ee/wcp
         platform:
