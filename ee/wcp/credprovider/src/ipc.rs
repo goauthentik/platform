@@ -34,7 +34,18 @@ use windows::{
 
 use crate::syscalls::{self, ForegroundControl};
 use crate::sysd;
-use ak_ee_wcp_wire::{AuthResult, HostCommand, HostReport};
+use ak_ee_wcp_wire::{HostCommand, HostReport};
+
+/// Outcome `credprovider` hands back from the sign-in flow. Never sent over
+/// the wire: it is built from a [`HostReport`] plus, for `Redirected`, an
+/// `ak-sysd` validation call only `credprovider` can reach — so, unlike
+/// `HostCommand`/`HostReport`, this stays local rather than living in `wire`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AuthResult {
+    Completed { username: String },
+    Cancelled,
+    Failed { reason: String },
+}
 
 /// Spawns `ak_browser.exe` and waits for its result. `login_hint` is the
 /// selected tile's username, prefilled into the sign-in page.
@@ -320,6 +331,14 @@ fn keep_private(handle: HANDLE) -> windows::core::Result<()> {
     unsafe { SetHandleInformation(handle, HANDLE_FLAG_INHERIT.0, HANDLE_FLAGS(0)) }
 }
 
+fn close_all(handles: &[HANDLE]) {
+    for &h in handles {
+        unsafe {
+            let _ = CloseHandle(h);
+        }
+    }
+}
+
 /// Two anonymous pipes: the child reads a cancel signal from its inherited
 /// stdin and writes its result to its inherited stdout. An inherited handle is
 /// a duplicate of one this process already opened and validated, so the child's
@@ -328,30 +347,19 @@ fn keep_private(handle: HANDLE) -> windows::core::Result<()> {
 fn create_std_pipes() -> windows::core::Result<StdPipes> {
     let (child_stdin, cancel_write) = create_inherited_pipe()?;
     if let Err(e) = keep_private(cancel_write) {
-        unsafe {
-            let _ = CloseHandle(child_stdin);
-            let _ = CloseHandle(cancel_write);
-        }
+        close_all(&[child_stdin, cancel_write]);
         return Err(e);
     }
 
     let (result_read, child_stdout) = match create_inherited_pipe() {
         Ok(p) => p,
         Err(e) => {
-            unsafe {
-                let _ = CloseHandle(child_stdin);
-                let _ = CloseHandle(cancel_write);
-            }
+            close_all(&[child_stdin, cancel_write]);
             return Err(e);
         }
     };
     if let Err(e) = keep_private(result_read) {
-        unsafe {
-            let _ = CloseHandle(child_stdin);
-            let _ = CloseHandle(cancel_write);
-            let _ = CloseHandle(result_read);
-            let _ = CloseHandle(child_stdout);
-        }
+        close_all(&[child_stdin, cancel_write, result_read, child_stdout]);
         return Err(e);
     }
 
@@ -733,12 +741,10 @@ fn describe_exit(process: HANDLE) -> String {
 /// next time and must not block the token mint. The password is not: without it
 /// there is no way to log the account on at all.
 fn acquire_service_account_token() -> windows::core::Result<HANDLE> {
-    let password = syscalls::service_account_password().map_err(|e| {
+    let (sid, password) = syscalls::service_account_password().map_err(|e| {
         log::error!("could not establish the service account's password: {e}");
         windows::core::Error::from(E_FAIL)
     })?;
-
-    let sid = syscalls::account_sid(syscalls::SERVICE_ACCOUNT_NAME)?;
 
     if let Err(e) = syscalls::deny_interactive_and_network_logon(&sid) {
         log::warn!("could not deny the service account interactive/network logon: {e}");
@@ -872,7 +878,7 @@ fn spawn_with_token(
     si: &STARTUPINFOW,
     pi: &mut PROCESS_INFORMATION,
 ) -> windows::core::Result<()> {
-    let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
+    let mut cmdline_wide = syscalls::wide(cmdline);
 
     // Best-effort: on the account's first ever launch its profile does not
     // exist on disk yet — only `LOGON_WITH_PROFILE` below creates it — so this
@@ -925,7 +931,7 @@ fn spawn_in_current_session(
     startup_info: &STARTUPINFOW,
     pi: &mut PROCESS_INFORMATION,
 ) -> windows::core::Result<()> {
-    let mut cmdline_wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
+    let mut cmdline_wide = syscalls::wide(cmdline);
     unsafe {
         CreateProcessW(
             PCWSTR::null(),

@@ -6,10 +6,11 @@ use windows::{
     Win32::{
         Graphics::Gdi::HBITMAP,
         UI::Shell::{
-            CPFG_CREDENTIAL_PROVIDER_LABEL, CPFG_CREDENTIAL_PROVIDER_LOGO,
-            CPFG_STANDALONE_SUBMIT_BUTTON, CPFIS_FOCUSED, CPFIS_NONE, CPFS_DISPLAY_IN_BOTH,
-            CPFS_DISPLAY_IN_SELECTED_TILE, CPFS_HIDDEN, CPFT_LARGE_TEXT, CPFT_SMALL_TEXT,
-            CPFT_SUBMIT_BUTTON, CPFT_TILE_IMAGE, CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR,
+            CPCFO_ENABLE_TOUCH_KEYBOARD_AUTO_INVOKE, CPCFO_NONE, CPFG_CREDENTIAL_PROVIDER_LABEL,
+            CPFG_CREDENTIAL_PROVIDER_LOGO, CPFG_STANDALONE_SUBMIT_BUTTON, CPFIS_FOCUSED,
+            CPFIS_NONE, CPFS_DISPLAY_IN_BOTH, CPFS_DISPLAY_IN_SELECTED_TILE, CPFS_HIDDEN,
+            CPFT_LARGE_TEXT, CPFT_SMALL_TEXT, CPFT_SUBMIT_BUTTON, CPFT_TILE_IMAGE,
+            CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS, CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR,
             CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE, CREDENTIAL_PROVIDER_FIELD_STATE,
             CREDENTIAL_PROVIDER_FIELD_TYPE,
         },
@@ -83,6 +84,24 @@ pub fn field_state_at(
         FieldKind::HiddenLabel => (CPFS_HIDDEN, CPFIS_NONE),
         FieldKind::LargeText => (CPFS_DISPLAY_IN_BOTH, CPFIS_NONE),
         FieldKind::SubmitButton => (CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE),
+    })
+}
+
+/// Field options for `GetFieldOptions`: the tile image gets the touch keyboard
+/// auto-invoked on it, so tapping it on a touch device opens the sign-in flow
+/// without an extra tap to raise the keyboard first.
+pub fn field_options_at(
+    index: u32,
+) -> windows::core::Result<CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS> {
+    let field = TILE_FIELDS
+        .get(index as usize)
+        .ok_or(windows::core::Error::from(
+            windows::Win32::Foundation::E_INVALIDARG,
+        ))?;
+    Ok(if field.kind == FieldKind::TileImage {
+        CPCFO_ENABLE_TOUCH_KEYBOARD_AUTO_INVOKE
+    } else {
+        CPCFO_NONE
     })
 }
 
