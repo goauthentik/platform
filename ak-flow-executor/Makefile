@@ -2,4 +2,4 @@ include ../common.mk
 
 .PHONY: test
 test:
-	$(call cargo_test,ak-platform)
+	$(call cargo_test,ak-flow-executor)

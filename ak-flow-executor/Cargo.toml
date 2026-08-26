@@ -4,6 +4,9 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[[example]]
+name = "flow_authenticate"
+
 [dependencies]
 authentik-client = { workspace = true }
 eyre = { workspace = true }
