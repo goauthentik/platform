@@ -1,12 +1,5 @@
 //! Integration coverage for the DACLs `net::server::listen` attaches to Windows
 //! named pipes.
-//!
-//! These were dropped in the Go -> Rust port, so the failure mode worth guarding
-//! against is "no descriptor applied at all" — a pipe created with the default
-//! descriptor still works locally, it just silently grants the wrong set of
-//! callers. Each test therefore reads the DACL back off the live pipe and
-//! compares it to the one its `SocketPermMode` is supposed to produce.
-
 #![cfg(windows)]
 
 use std::ffi::c_void;
@@ -14,48 +7,64 @@ use std::ffi::c_void;
 use ak_platform::net::server::SocketPermMode;
 use ak_platform::net::{client, server};
 use ak_platform::string::PlatformString;
-use windows::Win32::Foundation::{ERROR_SUCCESS, HLOCAL, LocalFree};
+use windows::Win32::Foundation::{CloseHandle, HLOCAL, LocalFree};
 use windows::Win32::Security::Authorization::{
     ConvertSecurityDescriptorToStringSecurityDescriptorW,
-    ConvertStringSecurityDescriptorToSecurityDescriptorW, GetNamedSecurityInfoW, SDDL_REVISION_1,
-    SE_FILE_OBJECT,
+    ConvertStringSecurityDescriptorToSecurityDescriptorW, SDDL_REVISION_1,
 };
 use windows::Win32::Security::{
-    CheckTokenMembership, CreateWellKnownSid, DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR,
-    PSID, SECURITY_MAX_SID_SIZE, WinBuiltinAdministratorsSid,
+    CheckTokenMembership, CreateWellKnownSid, DACL_SECURITY_INFORMATION, GetKernelObjectSecurity,
+    PSECURITY_DESCRIPTOR, PSID, SECURITY_MAX_SID_SIZE, WinBuiltinAdministratorsSid,
+};
+use windows::Win32::Storage::FileSystem::{
+    CreateFileW, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
+    READ_CONTROL,
 };
 use windows::core::{BOOL, HSTRING, PWSTR};
 
 /// A DACL, always held in the spelling Windows itself produces.
 ///
-/// The same access mask has several valid SDDL spellings (`FA` vs `0x1f01ff`,
-/// differing ACE order), so both the expected and the observed descriptor are
-/// run through `ConvertSecurityDescriptorToStringSecurityDescriptorW` before
-/// being compared — otherwise a passing test could fail on formatting alone.
 #[derive(Debug, PartialEq, Eq)]
 struct Dacl(String);
 
 impl Dacl {
     /// Reads back what Windows actually stored on the pipe at `path`.
     fn of_pipe(path: &str) -> Self {
-        let mut psd = PSECURITY_DESCRIPTOR::default();
-        let status = unsafe {
-            GetNamedSecurityInfoW(
+        let handle = unsafe {
+            CreateFileW(
                 &HSTRING::from(path),
-                SE_FILE_OBJECT,
-                DACL_SECURITY_INFORMATION,
+                READ_CONTROL.0,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
                 None,
+                OPEN_EXISTING,
+                FILE_FLAGS_AND_ATTRIBUTES(0),
                 None,
-                None,
-                None,
-                &mut psd,
             )
-        };
-        assert_eq!(status, ERROR_SUCCESS, "could not read the DACL of {path}");
+        }
+        .unwrap_or_else(|e| panic!("could not open {path}: {e}"));
 
-        let dacl = Self::serialize(psd);
-        unsafe { LocalFree(Some(HLOCAL(psd.0))) };
-        dacl
+        // First call learns the buffer size; it's expected to fail with
+        // ERROR_INSUFFICIENT_BUFFER since none was provided yet.
+        let mut needed = 0u32;
+        unsafe {
+            GetKernelObjectSecurity(handle, DACL_SECURITY_INFORMATION.0, None, 0, &mut needed)
+        }
+        .ok();
+
+        let mut buf = vec![0u8; needed as usize];
+        unsafe {
+            GetKernelObjectSecurity(
+                handle,
+                DACL_SECURITY_INFORMATION.0,
+                Some(PSECURITY_DESCRIPTOR(buf.as_mut_ptr() as *mut c_void)),
+                needed,
+                &mut needed,
+            )
+        }
+        .unwrap_or_else(|e| panic!("could not read the DACL of {path}: {e}"));
+        unsafe { CloseHandle(handle) }.unwrap();
+
+        Self::serialize(PSECURITY_DESCRIPTOR(buf.as_mut_ptr() as *mut c_void))
     }
 
     /// The DACL described by an SDDL literal.
