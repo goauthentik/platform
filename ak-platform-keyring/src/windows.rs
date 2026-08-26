@@ -287,9 +287,10 @@ impl KeyringStore for WindowsStore {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "windows"))]
 mod tests {
     use super::*;
+    use crate::service;
     use std::{env, fs};
 
     #[test]
@@ -361,14 +362,8 @@ mod tests {
                 None => env::remove_var("APPDATA"),
             }
         }
-        self.delete_blocking(service, user)
+        store.delete_blocking(service, user).unwrap();
     }
-}
-
-#[cfg(all(test, target_os = "windows"))]
-mod tests {
-    use super::*;
-    use crate::service;
 
     // These hit the real Credential Manager, like the macOS tests hit the real
     // keychain. Unique service names keep concurrent runs from colliding.
