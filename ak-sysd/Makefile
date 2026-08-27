@@ -20,11 +20,10 @@ ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}/cache/shared/release")
 endif
 
-build-local:
-	mkdir -p "${TOP}/bin/${TARGET}"
-	mkdir -p "${TOP}/cache/shared"
-	$(call cargo_build_local,$(TARGET))
-	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+# Kept as an alias: this used to be the escape hatch from the docker-wrapped
+# build, which no longer exists.
+.PHONY: build-local
+build-local: build
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb

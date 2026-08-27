@@ -144,6 +144,14 @@ Builder Docker image with the pinned Rust toolchain, used for the Linux builds i
 
 Requirements: Docker.
 
+#### `containers/builder/%`
+
+Linux build environment, published to `ghcr.io/goauthentik/platform-builder`. CI uses it as the runtime for the Linux build, package and test jobs; it pins the Rust toolchain, the osquery toolchain, `nfpm` and the coverage tooling, and its Debian bullseye base is what keeps the shipped binaries' glibc requirement at 2.31.
+
+The tag is a hash of `Dockerfile` + `rust-toolchain.toml` (`make containers/builder/ci-container-tag`), so CI only rebuilds and pushes when one of those changes.
+
+Requirements: Docker.
+
 #### `containers/selenium/%`
 
 Selenium test Docker container.
