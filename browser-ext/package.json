@@ -28,7 +28,7 @@
         "lit": "^3.3.3",
         "prettier": "^3.9.6",
         "prettier-plugin-packagejson": "^3.0.2",
-        "rollup": "^4.62.5",
+        "rollup": "^4.63.0",
         "tslib": "^2.8.1",
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.67.0"
