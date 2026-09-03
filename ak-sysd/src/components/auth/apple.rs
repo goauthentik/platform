@@ -1,5 +1,6 @@
 use crate::components::SysdContext;
 use crate::util::to_status;
+use ak_platform::generated::sys_auth_apple::register_device_response::BiometricPolicy;
 use ak_platform::generated::sys_auth_apple::{
     RegisterDeviceRequest, RegisterDeviceResponse, RegisterUserRequest, RegisterUserResponse,
 };
@@ -43,6 +44,37 @@ pub async fn register_device(
     let res = endpoints_agents_psso_register_device_create(&active.api, body)
         .await
         .map_err(|e| Status::internal(format!("psso register_device failed: {e}")))?;
+    // TEMPORARY: authentik returns `biometric_policies` on this endpoint, but the
+    // generated authentik-client has no field for it, so `res.biometric_policies`
+    // does not compile against the pinned client. Hardcode the set the connector
+    // is expected to send until the client is regenerated, then replace this with
+    // the response value and delete the constant.
+    //
+    // Every member of Apple's OptionSet is listed so a test run is a matter of
+    // commenting lines in and out rather than looking the variants up again. Keep at
+    // most one requirement live: TouchIdOrWatchCurrentSet invalidates the key when the
+    // enrolled biometrics change, TouchIdOrWatchAny does not, and the two together are
+    // contradictory. The rest are independent modifiers.
+    //
+    // Live set below is the Secure Enclave configuration. It is inert while the
+    // profile asks for the password method -- macOS only reads this policy when there
+    // is a user Secure Enclave key to guard -- so it can stay put across both tests.
+    let biometric_policies = vec![
+        // Requirement -- pick one.
+        BiometricPolicy::TouchIdOrWatchCurrentSet as i32,
+        // BiometricPolicy::TouchIdOrWatchAny as i32,
+        //
+        // Modifiers. PasswordFallback is live deliberately: without it a user whose
+        // Touch ID is cancelled, failing, or never enrolled cannot use the key at all.
+        BiometricPolicy::PasswordFallback as i32,
+        // BiometricPolicy::ReuseDuringUnlock as i32,
+    ];
+    tracing::info!(
+        domain = %active.cfg.domain,
+        biometric_policies = ?biometric_policies,
+        client_id = %res.client_id,
+        "psso register_device response"
+    );
     Ok(RegisterDeviceResponse {
         client_id: res.client_id,
         issuer: res.issuer,
@@ -50,6 +82,7 @@ pub async fn register_device(
         jwks_endpoint: res.jwks_endpoint,
         audience: res.audience,
         nonce_endpoint: res.nonce_endpoint,
+        biometric_policies,
         // Not part of the API response — the domain's own stored token,
         // mirroring Go's `device_token: dc.Token`.
         device_token: active.cfg.token.clone(),
