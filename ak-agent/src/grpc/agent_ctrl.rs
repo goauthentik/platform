@@ -190,6 +190,7 @@ mod tests {
                 "client".to_string(),
                 fake_access_token("alice"),
                 "refresh".to_string(),
+                "".to_string(),
             ),
         );
 
@@ -207,6 +208,7 @@ mod tests {
                 "client".to_string(),
                 "access".to_string(),
                 "refresh".to_string(),
+                "".to_string(),
             ),
         );
 
