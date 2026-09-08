@@ -1,12 +1,12 @@
-FROM docker.io/library/almalinux:8
+FROM docker.io/library/almalinux:9
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
     CARGO_TERM_COLOR=always
 
-RUN dnf install -y \
-        gcc gcc-c++ make \
+RUN dnf install -y --allowerasing \
+        gcc gcc-c++ make cmake \
         pkgconf-pkg-config \
         openssl-devel \
         curl git \
