@@ -28,6 +28,10 @@ pub enum ConfigCommands {
         client_id: String,
         #[arg(short = 'd', long, default_value = DEFAULT_APP_SLUG)]
         app_slug: String,
+        /// Bind the resulting profile to a locally-generated key (RFC 9449 DPoP).
+        /// Requires an authentik server that supports OpenID Key Binding.
+        #[arg(long, default_value_t = false)]
+        dpop: bool,
     },
 }
 
@@ -51,6 +55,7 @@ pub async fn list_profiles(app: App) -> Result<()> {
         println!("\tLast Renewal: {}", render_timestamp(profile.last_renewed));
         println!("\tNext Renewal: {}", render_timestamp(profile.next_renew));
         println!("\tauthentik URL: {}", profile.authentik_url);
+        println!("\tDPoP bound: {}", profile.dpop_bound);
     }
     Ok(())
 }
@@ -60,9 +65,11 @@ pub async fn setup(
     authentik_url: &str,
     client_id: &str,
     app_slug: &str,
+    dpop: bool,
 ) -> Result<()> {
     let access_token: String;
     let refresh_token: String;
+    let mut dpop_private_key = String::new();
     if let Ok(at) = env::var("AK_CLI_ACCESS_TOKEN")
         && let Ok(rt) = env::var("AK_CLI_REFRESH_TOKEN")
     {
@@ -74,6 +81,7 @@ pub async fn setup(
             authentik_url: Url::parse(authentik_url).wrap_err("invalid authentik URL")?,
             app_slug: app_slug.to_owned(),
             client_id: client_id.to_owned(),
+            dpop_enabled: dpop,
             url_callback: None,
         })
         .await
@@ -85,6 +93,9 @@ pub async fn setup(
             refresh_token = rt;
         } else {
             bail!("Device-flow setup did not return access/refresh token");
+        }
+        if let Some(key) = prof.dpop_private_key_pem {
+            dpop_private_key = key;
         }
     }
 
@@ -102,6 +113,7 @@ pub async fn setup(
             client_id: client_id.to_owned(),
             access_token: access_token.clone(),
             refresh_token: refresh_token.clone(),
+            dpop_private_key,
         })
         .await
         .wrap_err("failed to register profile with agent")?
@@ -111,34 +123,30 @@ pub async fn setup(
     Ok(())
 }
 
-pub async fn current_profile(app: App) -> Result<()> {
-    let res = app
-        .user()
-        .await?
-        .clone()
-        .ctrl()
-        .current_profile(())
-        .await
-        .wrap_err("failed to get current profile")?
-        .into_inner();
-    assert_response_valid(res.header)?;
-    println!("{}", res.profile);
-    Ok(())
-}
-
-pub async fn switch_profile(app: App, profile: &str) -> Result<()> {
-    let res = app
-        .user()
-        .await?
-        .clone()
-        .ctrl()
-        .switch_profile(RequestHeader {
-            profile: profile.to_string(),
-        })
-        .await
-        .wrap_err("failed to switch profile")?
-        .into_inner();
-    assert_response_valid(Some(res))?;
-    println!("Successfully switched to profile '{profile}'!");
-    Ok(())
+pub async fn switch_profile(app: App, profile: &Option<String>) -> Result<()> {
+    let mut ctrl = app.user().await?.clone().ctrl();
+    match profile {
+        Some(p) => {
+            let res = ctrl
+                .switch_profile(RequestHeader {
+                    profile: p.to_string(),
+                })
+                .await
+                .wrap_err("failed to switch profile")?
+                .into_inner();
+            assert_response_valid(Some(res))?;
+            println!("Successfully switched to profile '{p}'!");
+            Ok(())
+        }
+        None => {
+            let res = ctrl
+                .current_profile(())
+                .await
+                .wrap_err("failed to get current profile")?
+                .into_inner();
+            assert_response_valid(res.header)?;
+            println!("{}", res.profile);
+            Ok(())
+        }
+    }
 }

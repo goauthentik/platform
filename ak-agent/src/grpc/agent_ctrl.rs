@@ -24,6 +24,7 @@ impl AgentCtrl for AgentGRPCServer {
                 authentik_url: c_prof.authentik_url.clone(),
                 last_renewed: None,
                 next_renew: None,
+                dpop_bound: c_prof.dpop_enabled(),
                 status: ProfileStatus::Failed as i32,
             };
 
@@ -65,6 +66,7 @@ impl AgentCtrl for AgentGRPCServer {
                 authentik_url: c_prof.authentik_url.clone(),
                 last_renewed: Some(claims.iat.into()),
                 next_renew: Some(claims.exp.into()),
+                dpop_bound: c_prof.dpop_enabled(),
                 status: status as i32,
             });
         }
@@ -93,6 +95,7 @@ impl AgentCtrl for AgentGRPCServer {
                     req.client_id,
                     req.access_token,
                     req.refresh_token,
+                    req.dpop_private_key,
                 ),
             );
             if cfg.active_profile.is_empty() {
@@ -187,6 +190,7 @@ mod tests {
                 "client".to_string(),
                 fake_access_token("alice"),
                 "refresh".to_string(),
+                "".to_string(),
             ),
         );
 
@@ -204,6 +208,7 @@ mod tests {
                 "client".to_string(),
                 "access".to_string(),
                 "refresh".to_string(),
+                "".to_string(),
             ),
         );
 
