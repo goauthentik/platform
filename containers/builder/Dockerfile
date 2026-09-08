@@ -1,20 +1,18 @@
-FROM docker.io/library/debian:bullseye-slim
+FROM docker.io/library/almalinux:8
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    RUSTUP_HOME=/usr/local/rustup \
+ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
     CARGO_TERM_COLOR=always
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        pkg-config \
-        libssl-dev \
+RUN dnf install -y \
+        gcc gcc-c++ make \
+        pkgconf-pkg-config \
+        openssl-devel \
         curl git \
         ca-certificates \
-        libpam0g-dev libudev-dev zstd && \
-    rm -rf /var/lib/apt/lists/*
+        pam-devel systemd-devel zstd xz && \
+    dnf clean all
 
 RUN ARCH=$(uname -m) && \
     curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
