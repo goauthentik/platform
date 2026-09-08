@@ -34,8 +34,6 @@ pub struct SshCertAuthResponse {
 pub struct InteractiveAuthInitRequest {
     #[prost(string, tag="1")]
     pub username: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
-    pub password: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct InteractiveAuthContinueRequest {
@@ -58,13 +56,6 @@ pub mod interactive_auth_request {
         #[prost(message, tag="2")]
         Continue(super::InteractiveAuthContinueRequest),
     }
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct InteractiveAuthAsyncResponse {
-    #[prost(string, tag="1")]
-    pub url: ::prost::alloc::string::String,
-    #[prost(string, tag="2")]
-    pub header_token: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct InteractiveChallenge {
@@ -131,6 +122,18 @@ pub mod interactive_challenge {
             }
         }
     }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct InteractiveAuthAsyncRequest {
+    #[prost(string, optional, tag="1")]
+    pub username: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct InteractiveAuthAsyncResponse {
+    #[prost(string, tag="1")]
+    pub url: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub header_token: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SystemAuthorizeRequest {

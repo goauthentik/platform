@@ -541,115 +541,6 @@ impl<'de> serde::Deserialize<'de> for CurrentTokenResponse {
         deserializer.deserialize_struct("agent_auth.CurrentTokenResponse", FIELDS, GeneratedVisitor)
     }
 }
-impl serde::Serialize for DeviceTokenExchangeRequest {
-    #[allow(deprecated)]
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-        let mut len = 0;
-        if self.header.is_some() {
-            len += 1;
-        }
-        if !self.device_name.is_empty() {
-            len += 1;
-        }
-        let mut struct_ser = serializer.serialize_struct("agent_auth.DeviceTokenExchangeRequest", len)?;
-        if let Some(v) = self.header.as_ref() {
-            struct_ser.serialize_field("header", v)?;
-        }
-        if !self.device_name.is_empty() {
-            struct_ser.serialize_field("deviceName", &self.device_name)?;
-        }
-        struct_ser.end()
-    }
-}
-impl<'de> serde::Deserialize<'de> for DeviceTokenExchangeRequest {
-    #[allow(deprecated)]
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        const FIELDS: &[&str] = &[
-            "header",
-            "device_name",
-            "deviceName",
-        ];
-
-        #[allow(clippy::enum_variant_names)]
-        enum GeneratedField {
-            Header,
-            DeviceName,
-        }
-        impl<'de> serde::Deserialize<'de> for GeneratedField {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                struct GeneratedVisitor;
-
-                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-                    type Value = GeneratedField;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", FIELDS)
-                    }
-
-                    #[allow(unused_variables)]
-                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
-                    where
-                        E: serde::de::Error,
-                    {
-                        match value {
-                            "header" => Ok(GeneratedField::Header),
-                            "deviceName" | "device_name" => Ok(GeneratedField::DeviceName),
-                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
-                        }
-                    }
-                }
-                deserializer.deserialize_identifier(GeneratedVisitor)
-            }
-        }
-        struct GeneratedVisitor;
-        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
-            type Value = DeviceTokenExchangeRequest;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("struct agent_auth.DeviceTokenExchangeRequest")
-            }
-
-            fn visit_map<V>(self, mut map_: V) -> std::result::Result<DeviceTokenExchangeRequest, V::Error>
-                where
-                    V: serde::de::MapAccess<'de>,
-            {
-                let mut header__ = None;
-                let mut device_name__ = None;
-                while let Some(k) = map_.next_key()? {
-                    match k {
-                        GeneratedField::Header => {
-                            if header__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("header"));
-                            }
-                            header__ = map_.next_value()?;
-                        }
-                        GeneratedField::DeviceName => {
-                            if device_name__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("deviceName"));
-                            }
-                            device_name__ = Some(map_.next_value()?);
-                        }
-                    }
-                }
-                Ok(DeviceTokenExchangeRequest {
-                    header: header__,
-                    device_name: device_name__.unwrap_or_default(),
-                })
-            }
-        }
-        deserializer.deserialize_struct("agent_auth.DeviceTokenExchangeRequest", FIELDS, GeneratedVisitor)
-    }
-}
 impl serde::Serialize for TokenExchangeRequest {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -661,15 +552,33 @@ impl serde::Serialize for TokenExchangeRequest {
         if self.header.is_some() {
             len += 1;
         }
-        if !self.client_id.is_empty() {
+        if !self.audience.is_empty() {
+            len += 1;
+        }
+        if !self.scopes.is_empty() {
+            len += 1;
+        }
+        if self.actor_token.is_some() {
+            len += 1;
+        }
+        if self.actor_token_type.is_some() {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("agent_auth.TokenExchangeRequest", len)?;
         if let Some(v) = self.header.as_ref() {
             struct_ser.serialize_field("header", v)?;
         }
-        if !self.client_id.is_empty() {
-            struct_ser.serialize_field("clientId", &self.client_id)?;
+        if !self.audience.is_empty() {
+            struct_ser.serialize_field("audience", &self.audience)?;
+        }
+        if !self.scopes.is_empty() {
+            struct_ser.serialize_field("scopes", &self.scopes)?;
+        }
+        if let Some(v) = self.actor_token.as_ref() {
+            struct_ser.serialize_field("actorToken", v)?;
+        }
+        if let Some(v) = self.actor_token_type.as_ref() {
+            struct_ser.serialize_field("actorTokenType", v)?;
         }
         struct_ser.end()
     }
@@ -682,14 +591,21 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
     {
         const FIELDS: &[&str] = &[
             "header",
-            "client_id",
-            "clientId",
+            "audience",
+            "scopes",
+            "actor_token",
+            "actorToken",
+            "actor_token_type",
+            "actorTokenType",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Header,
-            ClientId,
+            Audience,
+            Scopes,
+            ActorToken,
+            ActorTokenType,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -712,7 +628,10 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
                     {
                         match value {
                             "header" => Ok(GeneratedField::Header),
-                            "clientId" | "client_id" => Ok(GeneratedField::ClientId),
+                            "audience" => Ok(GeneratedField::Audience),
+                            "scopes" => Ok(GeneratedField::Scopes),
+                            "actorToken" | "actor_token" => Ok(GeneratedField::ActorToken),
+                            "actorTokenType" | "actor_token_type" => Ok(GeneratedField::ActorTokenType),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -733,7 +652,10 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut header__ = None;
-                let mut client_id__ = None;
+                let mut audience__ = None;
+                let mut scopes__ = None;
+                let mut actor_token__ = None;
+                let mut actor_token_type__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Header => {
@@ -742,17 +664,38 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
                             }
                             header__ = map_.next_value()?;
                         }
-                        GeneratedField::ClientId => {
-                            if client_id__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("clientId"));
+                        GeneratedField::Audience => {
+                            if audience__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("audience"));
                             }
-                            client_id__ = Some(map_.next_value()?);
+                            audience__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::Scopes => {
+                            if scopes__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("scopes"));
+                            }
+                            scopes__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::ActorToken => {
+                            if actor_token__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("actorToken"));
+                            }
+                            actor_token__ = map_.next_value()?;
+                        }
+                        GeneratedField::ActorTokenType => {
+                            if actor_token_type__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("actorTokenType"));
+                            }
+                            actor_token_type__ = map_.next_value()?;
                         }
                     }
                 }
                 Ok(TokenExchangeRequest {
                     header: header__,
-                    client_id: client_id__.unwrap_or_default(),
+                    audience: audience__.unwrap_or_default(),
+                    scopes: scopes__.unwrap_or_default(),
+                    actor_token: actor_token__,
+                    actor_token_type: actor_token_type__,
                 })
             }
         }

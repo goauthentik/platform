@@ -3,6 +3,7 @@ use libnss::interop::Response;
 use libnss::shadow::{Shadow, ShadowHooks};
 
 use crate::AuthentikNSS;
+use crate::backend::ErrMap;
 use crate::backend::{DirectoryBridge, GrpcDirectoryBridge};
 use crate::mapping::shadow_entry;
 
@@ -19,73 +20,81 @@ impl ShadowHooks for AuthentikNSS {
 }
 
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Shadow>> {
-    match bridge.list_users() {
-        Ok(users) => {
-            let entries = users.into_iter().map(|u| shadow_entry(u.name)).collect();
-            Response::Success(entries)
-        }
-        Err(e) => {
-            tracing::warn!("Failed to get users: {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .list_users()
+        .map(|users| users.into_iter().map(|u| shadow_entry(u.name)).collect())
+        .to_response("failed to list users")
 }
 
 fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Response<Shadow> {
-    match bridge.get_user(GetRequest {
-        name: Some(name.clone()),
-        id: None,
-    }) {
-        Ok(user) => Response::Success(shadow_entry(user.name)),
-        Err(e) => {
-            tracing::warn!("Failed to get user by name '{name}': {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .get_user(GetRequest {
+            name: Some(name.clone()),
+            id: None,
+        })
+        .map(|user| shadow_entry(user.name))
+        .to_response(format!("failed to get shadow entry for '{name}'"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use ak_platform::generated::sys_directory::{Group as AKGroup, User};
-    use eyre::Result;
+    use ak_platform::grpc::{GrpcResult, Status};
 
     struct MockBridge {
         users: Vec<User>,
     }
 
     impl DirectoryBridge for MockBridge {
-        fn list_users(&self) -> Result<Vec<User>> {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
             Ok(self.users.clone())
         }
-        fn get_user(&self, req: GetRequest) -> Result<User> {
+        fn get_user(&self, req: GetRequest) -> GrpcResult<User> {
             self.users
                 .iter()
                 .find(|u| req.name.as_deref().map_or(false, |n| n == u.name))
                 .cloned()
-                .ok_or_else(|| eyre::eyre!("not found"))
+                .ok_or_else(|| Status::not_found("no such entry").into())
         }
-        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
             unreachable!()
         }
-        fn get_group(&self, _req: GetRequest) -> Result<AKGroup> {
+        fn get_group(&self, _req: GetRequest) -> GrpcResult<AKGroup> {
             unreachable!()
         }
     }
 
-    struct ErrorBridge;
-    impl DirectoryBridge for ErrorBridge {
-        fn list_users(&self) -> Result<Vec<User>> {
-            Err(eyre::eyre!("unavailable"))
+    struct UnavailBridge;
+    impl DirectoryBridge for UnavailBridge {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
+            Err(Status::unavailable("connect failed").into())
         }
-        fn get_user(&self, _: GetRequest) -> Result<User> {
-            Err(eyre::eyre!("unavailable"))
+        fn get_user(&self, _: GetRequest) -> GrpcResult<User> {
+            Err(Status::unavailable("connect failed").into())
         }
-        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
             unreachable!()
         }
-        fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
+        fn get_group(&self, _: GetRequest) -> GrpcResult<AKGroup> {
             unreachable!()
+        }
+    }
+
+    /// sysd answered, and there is no such entry.
+    struct NotFoundBridge;
+    impl DirectoryBridge for NotFoundBridge {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn get_user(&self, _: GetRequest) -> GrpcResult<User> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn get_group(&self, _: GetRequest) -> GrpcResult<AKGroup> {
+            Err(Status::not_found("no such entry").into())
         }
     }
 
@@ -119,7 +128,7 @@ mod tests {
     #[test]
     fn get_all_entries_unavail_on_error() {
         assert!(matches!(
-            get_all_entries_with(&ErrorBridge),
+            get_all_entries_with(&UnavailBridge),
             Response::Unavail
         ));
     }
@@ -141,8 +150,24 @@ mod tests {
     #[test]
     fn get_entry_by_name_unavail_on_error() {
         assert!(matches!(
-            get_entry_by_name_with(&ErrorBridge, "alice".to_owned()),
+            get_entry_by_name_with(&UnavailBridge, "alice".to_owned()),
             Response::Unavail
+        ));
+    }
+
+    /// A name that simply isn't in the directory is NOTFOUND, not UNAVAIL.
+    #[test]
+    fn get_entry_by_name_notfound_when_missing() {
+        let bridge = MockBridge {
+            users: vec![alice()],
+        };
+        assert!(matches!(
+            get_entry_by_name_with(&bridge, "bob".to_owned()),
+            Response::NotFound
+        ));
+        assert!(matches!(
+            get_entry_by_name_with(&NotFoundBridge, "bob".to_owned()),
+            Response::NotFound
         ));
     }
 }

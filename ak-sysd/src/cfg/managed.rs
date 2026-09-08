@@ -9,29 +9,64 @@ pub struct SysdManagedConfig {
 /// package. Returns `Ok(None)` if there is no managed config source on this
 /// platform or no value is currently set (both are normal, not errors).
 #[cfg(target_os = "macos")]
-pub fn load_managed_config() -> Result<Option<SysdManagedConfig>> {
-    // `defaults read` resolves the same preferences domain
-    // (`io.goauthentik.platform`) that Go's CFPreferencesCopyAppValue call
-    // reads from. Shelling out avoids a raw Core Foundation FFI dependency;
-    // if strict merging of the MDM-managed preferences layer (as opposed to
-    // this host's local preferences) turns out to matter, replace this with
-    // a direct CFPreferencesCopyAppValue call instead.
-    let read = |key: &str| -> Option<String> {
-        let out = std::process::Command::new("defaults")
-            .args(["read", "io.goauthentik.platform", key])
-            .output()
-            .ok()?;
-        if !out.status.success() {
+const MANAGED_APP_ID: &str = "io.goauthentik.platform";
+
+/// Reads a single MDM-forced string preference.
+///
+/// `CFPreferencesCopyAppValue` is the API Go used, and it is the only way to
+/// see the managed layer: profile-delivered values live in
+/// `/Library/Managed Preferences/<app-id>.plist`, and `defaults read <app-id>`
+/// does **not** resolve them — it reports "domain does not exist" on a machine
+/// that plainly has the plist. Shelling out therefore made managed enrollment a
+/// silent no-op on every managed Mac.
+///
+/// `CFPreferencesAppValueIsForced` gates on the value actually being managed.
+/// `CopyAppValue` alone returns the *effective* value, which may come from
+/// ordinary user defaults — and this value decides which authentik a root
+/// daemon enrolls against, so anything not delivered by MDM is ignored.
+#[cfg(target_os = "macos")]
+fn managed_string(key: &str) -> Option<String> {
+    use core_foundation::base::TCFType;
+    use core_foundation::string::CFString;
+    use core_foundation_sys::base::{CFGetTypeID, CFRelease};
+    use core_foundation_sys::preferences::{
+        CFPreferencesAppValueIsForced, CFPreferencesCopyAppValue,
+    };
+    use core_foundation_sys::string::CFStringRef;
+
+    let cf_key = CFString::new(key);
+    let cf_app = CFString::new(MANAGED_APP_ID);
+
+    unsafe {
+        if CFPreferencesAppValueIsForced(cf_key.as_concrete_TypeRef(), cf_app.as_concrete_TypeRef())
+            == 0
+        {
             return None;
         }
-        let val = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if val.is_empty() { None } else { Some(val) }
-    };
 
-    let Some(url) = read("URL") else {
+        let value =
+            CFPreferencesCopyAppValue(cf_key.as_concrete_TypeRef(), cf_app.as_concrete_TypeRef());
+        if value.is_null() {
+            return None;
+        }
+
+        // Copy* returns +1; we own it from here.
+        if CFGetTypeID(value) != CFString::type_id() {
+            CFRelease(value);
+            tracing::warn!(key, "managed preference is not a string, ignoring");
+            return None;
+        }
+        let s = CFString::wrap_under_create_rule(value as CFStringRef).to_string();
+        if s.is_empty() { None } else { Some(s) }
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub fn load_managed_config() -> Result<Option<SysdManagedConfig>> {
+    let Some(url) = managed_string("URL") else {
         return Ok(None);
     };
-    let Some(registration_token) = read("RegistrationToken") else {
+    let Some(registration_token) = managed_string("RegistrationToken") else {
         return Ok(None);
     };
     Ok(Some(SysdManagedConfig {

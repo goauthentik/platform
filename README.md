@@ -29,8 +29,11 @@ brew install gmake rustup swift
 ### Linux Dependencies
 
 ```shell
-sudo apt-get install libpam0g-dev libudev-dev
+sudo apt-get install build-essential pkg-config libpam0g-dev libudev-dev \
+    libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 ```
+
+(`make ci-install-deps` installs the same set.)
 
 ### Windows Dependencies
 
@@ -41,6 +44,8 @@ winget install -e --id Rustlang.Rustup
 . 'C:\Program Files\Git\bin\bash.exe'
 source "hack/windows/setup.sh"
 ```
+
+CMake is required by the `cef-dll-sys` and `aws-lc-sys` build scripts, not by any C++ project in this repo.
 
 ### Targets
 
@@ -68,17 +73,23 @@ CLI tool (`ak`), built in Rust. Used to interact with the agent. Runs on macOS, 
 
 Requirements: Rust toolchain.
 
-#### `sysd/%`
+#### `ak-sysd/%`
 
-System agent daemon (`ak-sysd`), built in Go. Runs on macOS, Linux, and Windows.
+System agent daemon (`ak-sysd`), built in Rust. Runs on macOS, Linux, and Windows.
 
-Requirements: Go (version from `go.mod`). On Windows, `goversioninfo` is invoked automatically as a Go tool to embed version resources.
+Requirements: Rust toolchain.
 
-#### `agent/%`
+#### `ak-agent/%`
 
-Local agent / systray app (`ak-agent`), built in Go. Runs on macOS, Linux, and Windows. On Windows, built with `-H=windowsgui` so it runs as a true background systray process.
+Per-user local agent (`ak-agent`), built in Rust. Runs on macOS, Linux, and Windows.
 
-Requirements: Go (version from `go.mod`). On Windows, also uses `goversioninfo` (Go tool) to embed version resources.
+Requirements: Rust toolchain.
+
+#### `ak-agent-desktop/%`
+
+Desktop/systray app (`ak-agent-desktop`), built with Tauri (Rust + TypeScript). Runs on macOS, Linux, and Windows.
+
+Requirements: Rust toolchain, Node.js ≥ 24 and pnpm. On Linux, `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`, and `patchelf`.
 
 #### `browser-ext/%`
 
@@ -90,31 +101,48 @@ Requirements: Node.js ≥ 24 (version from `browser-ext/package.json`).
 
 macOS Platform SSO extension (`PSSO.appex`), built with Xcode and Swift. **macOS only** (macos-26).
 
-Requirements: Xcode, `swift-format`, `protoc` with the `grpc-swift-2` plugin (for protobuf generation), and `gomobile` (to bind the Go system agent as an `.xcframework`). Code signing is required for distribution; local builds can skip it by passing `XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'`.
+Requirements: Xcode, `swift-format`, and `protoc` with the `grpc-swift-2` plugin (for protobuf generation). Code signing is required for distribution; local builds can skip it by passing `XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'`.
 
 #### `ee/wcp/%`
 
-Windows Credential Provider (Enterprise Edition), built with CMake and MSVC. **Windows only** (windows-2025, x86\_64).
+Windows Credential Provider (Enterprise Edition), built in Rust. **Windows only** (windows-2025, x86\_64). Produces `ak_cred_provider.dll` (the credential provider itself) and `ak_cef.exe` (the CEF host that renders the sign-in flow), plus the CEF runtime files alongside them in `bin/wcp/`.
 
-Requirements: Visual Studio 18 (MSVC, amd64), CMake, GnuWin32, LLVM (`clang-format` for linting). Run `hack/windows/setup.sh` first to configure the required paths.
+Four workspace crates live under `ee/wcp/`, all Windows-only except `wire`:
+
+| Directory | Crate | Artifact |
+| --- | --- | --- |
+| `wire/` | `ak-ee-wcp-wire` | shared DLL↔host wire types |
+| `credprovider/` | `ak-ee-wcp` | `ak_cred_provider.dll` |
+| `cef-host/` | `ak-ee-wcp-cef-host` | `ak_cef.exe` |
+| `e2e/` | `ak-ee-wcp-e2e` | tests only (see `ee/wcp/e2e/README.md`) |
+
+Because they are Windows-only, `make lint-rs` excludes all but `wire` off Windows; `make ee/wcp/lint` covers them on Windows.
+
+Requirements: Rust toolchain (`x86_64-pc-windows-msvc`), MSVC build tools, CMake and GnuWin32 Make. The CEF runtime is fetched automatically by the `cef-runtime` target via `export-cef-dir`, pinned to the `cef-dll-sys` version in `Cargo.lock` and cached in `cache/cef`. Run `hack/windows/setup.sh` first to configure the required paths.
 
 #### `vpkg/macos/%`
 
-macOS installer package (`authentik Agent Installer.pkg`). Assembles pre-built binaries (agent, sysd, ak-cli, ak-browser-support, PSSO.appex) into an app bundle, signs it, and produces a distributable `.pkg`. **macOS only**.
+macOS installer package (`authentik Agent Installer.pkg`). Assembles pre-built binaries (ak-agent-desktop, ak-sysd, ak-cli, ak-browser-support, PSSO.appex) into an app bundle, signs it, and produces a distributable `.pkg`. **macOS only**.
 
-Requirements: Pre-built outputs from `ak-agent/build`, `sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build`. Apple code-signing certificate and provisioning profile in `~/Library/MobileDevice/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
+Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build` (`make vpkg/macos/local` builds them all). Apple code-signing certificate and provisioning profile in `~/Library/MobileDevice/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
 
 #### `vpkg/windows/%`
 
 Windows installer package (`authentik Agent Installer.msi`), built with `dotnet`. **Windows only**.
 
-Requirements: Pre-built outputs from `ak-agent/build`, `sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/wcp/build`. `dotnet` SDK.
+Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/wcp/build` (`make vpkg/windows/local` builds them all). `dotnet` SDK.
 
 #### `vpkg/linux/%`
 
-Linux DEB and RPM packages, produced via `nfpm` (invoked as a Go tool). **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
+Linux DEB and RPM packages, produced via `nfpm`. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
 
-Requirements: Pre-built outputs from `ak-cli/build`, `sysd/build`, `ak-agent/build`, `ak-browser-support/build`, `nss/build`, and `pam/build`. Go (used to run `nfpm`). Packages produced: `authentik-cli`, `authentik-sysd`, `authentik-agent`, `libnss-authentik`, `libpam-authentik`.
+Requirements: Pre-built outputs from `ak-cli/build`, `ak-sysd/build`, `ak-agent/build`, `ak-agent-desktop/build`, `ak-browser-support/build`, `ak-nss/build`, and `ak-pam/build`. `nfpm` on `PATH`. Packages produced: `authentik-cli`, `authentik-sysd`, `authentik-agent`, `authentik-agent-desktop`, `libnss-authentik`, `libpam-authentik`.
+
+#### `containers/builder/%`
+
+Builder Docker image with the pinned Rust toolchain, used for the Linux builds in CI.
+
+Requirements: Docker.
 
 #### `containers/selenium/%`
 

@@ -36,12 +36,12 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse> {
                 Some(c) => match c.as_str() {
                     Ok(d) => Some(d.to_string()),
                     Err(e) => {
-                        log::warn!("failed to convert pin to string: {e:?}");
+                        tracing::warn!("failed to convert pin to string: {e:?}");
                         return Err(e.into());
                     }
                 },
                 None => {
-                    log::warn!("Failed to get PIN");
+                    tracing::warn!("Failed to get PIN");
                     bail!("failed to get pin");
                 }
             },
@@ -62,7 +62,7 @@ pub fn fido2(raw: String, conv: &Conv<'_>) -> Result<FidoResponse> {
     let assertions = device
         .get_assertion_with_args(&assertion_args)
         .map_err(|e| eyre::eyre!("{e:#}"))?;
-    log::debug!("FIDO2: Authenticate Success");
+    tracing::debug!("FIDO2: Authenticate Success");
 
     pam_print_user(conv, "Validating...");
 

@@ -8,6 +8,13 @@ use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 use eyre::Result;
 
+/// See the `tikv-jemallocator` dependency comment in `Cargo.toml`: glibc
+/// strands the in-process osquery engine's large transient allocations in its
+/// arenas forever, where jemalloc decays them back to the OS.
+#[cfg(not(target_os = "windows"))]
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
 pub mod agent;
 pub mod cfg;
 pub mod check;

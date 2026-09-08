@@ -3,11 +3,11 @@ use tonic::transport::Channel;
 
 use crate::{
     generated::{
-        agent_platform::agent_platform_client::AgentPlatformClient, ping::ping_client::PingClient,
-        session::session_manager_client::SessionManagerClient,
+        ping::ping_client::PingClient, session::session_manager_client::SessionManagerClient,
         sys_auth::system_auth_token_client::SystemAuthTokenClient,
         sys_ctrl::system_ctrl_client::SystemCtrlClient,
         sys_directory::system_directory_client::SystemDirectoryClient,
+        sys_platform::system_platform_client::SystemPlatformClient,
     },
     grpc::grpc_endpoint,
     paths::{SysdSocketID, sysd_socket_path},
@@ -36,8 +36,8 @@ impl Client {
         SessionManagerClient::new(self.c)
     }
 
-    pub fn platform(self) -> AgentPlatformClient<Channel> {
-        AgentPlatformClient::new(self.c)
+    pub fn platform(self) -> SystemPlatformClient<Channel> {
+        SystemPlatformClient::new(self.c)
     }
 
     pub fn ping(self) -> PingClient<Channel> {

@@ -84,7 +84,6 @@ async fn interactive_auth_init(
         Arc::clone(&active),
         flow_slug,
         init.username,
-        init.password,
     )
     .await?;
 
@@ -124,6 +123,7 @@ async fn interactive_auth_continue(
 
 pub async fn interactive_auth_async(
     ctx: &SysdContext,
+    username: Option<String>,
 ) -> Result<InteractiveAuthAsyncResponse, Status> {
     if !interactive_supported(ctx).await {
         return Err(Status::unavailable(
@@ -131,7 +131,7 @@ pub async fn interactive_auth_async(
         ));
     }
     let active = ctx.domains.active().await.map_err(to_status)?;
-    let ia = endpoints_agents_connectors_auth_ia_create(&active.api)
+    let ia = endpoints_agents_connectors_auth_ia_create(&active.api, username.as_deref())
         .await
         .map_err(|e| Status::internal(format!("failed to start interactive auth: {e}")))?;
     Ok(InteractiveAuthAsyncResponse {

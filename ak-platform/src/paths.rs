@@ -42,7 +42,7 @@ pub enum AgentSocketID {
     SSH,
 }
 
-fn xdg_data_path(last_seg: &str) -> Result<String> {
+pub fn xdg_data_path(last_seg: &str) -> Result<String> {
     let mut data = match data_dir() {
         Some(d) => d,
         None => bail!("Failed to get XDG data path"),

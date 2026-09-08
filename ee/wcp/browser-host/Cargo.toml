@@ -1,0 +1,43 @@
+[package]
+name = "ak-ee-wcp-browser-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "ak_browser"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+ak-ee-wcp-wire = { path = "../wire" }
+ak-meta = { path = "../../../ak-meta" }
+ak-platform = { path = "../../../ak-platform" }
+log = { workspace = true }
+sentry = { workspace = true }
+uuid = { workspace = true }
+winreg = { workspace = true }
+tauri = { version = "2" }
+webview2-com = "0.38"
+
+# Deliberately not `workspace = true`. The workspace pins windows/windows-core
+# at 0.62 for the other ee/wcp crates, but tauri 2.11 and webview2-com 0.38 are
+# both built on 0.61 — `Window::hwnd()` hands back a 0.61 `HWND`, and the
+# WebResourceRequested handler wants a 0.61 `HSTRING`. Taking the workspace
+# version here would leave the tauri, webview2-com and raw Win32 call sites in
+# this file disagreeing about the same types. Nothing crosses a crate boundary
+# as a Win32 type, so the two versions coexist as they already do in Cargo.lock.
+windows-core = "0.61"
+windows = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Security_Authorization",
+    "Win32_System_Console",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+] }

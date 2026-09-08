@@ -29,6 +29,12 @@ message SetupResponse {
   agent.ResponseHeader header = 1;
 }
 
+enum ProfileStatus {
+  UNSPECIFIED = 0;
+  ACTIVE = 1;
+  FAILED = 2;
+}
+
 message Profile {
   string name = 1;
   string username = 2;
@@ -36,6 +42,7 @@ message Profile {
   google.protobuf.Timestamp last_renewed = 4;
   google.protobuf.Timestamp next_renew = 5;
   bool dpop_bound = 6;
+  ProfileStatus status = 7;
 }
 
 message ListProfilesResponse {

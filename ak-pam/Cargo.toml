@@ -13,14 +13,14 @@ workspace = true
 
 [dependencies]
 ak-platform = { path = "../ak-platform" }
-eyre = { workspace = true }
 ctap-hid-fido2 = "3.5.11"
 ctor = "1.0.7"
 dtor = "1.0.5"
+eyre.workspace = true
 gethostname = "1.1.0"
 libc = "0.2.186"
-log = { workspace = true }
 pam-bindings = "0.3.0"
-serde = { workspace = true }
-serde_json = { workspace = true }
-whoami = { workspace = true }
+serde_json.workspace = true
+serde.workspace = true
+tracing.workspace = true
+whoami.workspace = true

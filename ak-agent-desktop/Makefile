@@ -24,6 +24,9 @@ endif
 	pnpm run build
 	$(call cargo_build_local,$(TARGET),--features tauri/custom-protocol --features tauri/devtools -p ak-agent-desktop)
 	cp "${TOP}/cache/shared/release/${BIN}" "${TOP}/bin/${TARGET}/${BIND}"
+ifdef SENTRY_AUTH_TOKEN
+	@$(call sentry_upload_symbols,"${TOP}/cache/shared/release")
+endif
 
 test-deploy: build
 	$(TME) dpkg -i /workspaces/bin/${TARGET}/authentik-${TARGET}_${VERSION}+_${ARCH}.deb

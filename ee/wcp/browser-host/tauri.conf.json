@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "authentik Sign-in",
+    "version": "0.1.0",
+    "identifier": "io.goauthentik.platform.wcp.browser",
+    "build": {
+        "frontendDist": "./dist"
+    },
+    "app": {
+        "windows": [],
+        "security": {
+            "csp": null
+        }
+    },
+    "bundle": {
+        "active": false,
+        "icon": ["icons/icon.png", "icons/icon.ico"]
+    }
+}

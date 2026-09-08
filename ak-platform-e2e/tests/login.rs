@@ -1,5 +1,6 @@
 use ak_platform_e2e::{
-    TestMachine, authentik_creds, cleanup_hosts, exec_command, join_domain, must_exec, test_init,
+    TestMachine, assert_no_apparmor_denials, authentik_creds, cleanup_hosts, exec_command,
+    join_domain, must_exec, test_init,
 };
 
 /// Verifies that a real local (non-SSH) login via the `login` PAM service is
@@ -24,6 +25,10 @@ async fn test_local_login_success() {
         output.contains("successfully authenticated"),
         "expected successful local login, got: {output}"
     );
+
+    assert_no_apparmor_denials(&tm.container)
+        .await
+        .expect("no apparmor denials");
 
     cleanup_hosts().await.expect("cleanup");
 }

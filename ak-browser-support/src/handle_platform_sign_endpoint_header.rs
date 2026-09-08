@@ -1,6 +1,6 @@
 use eyre::{Result, WrapErr};
 
-use ak_platform::generated::{agent::RequestHeader, agent_platform::PlatformEndpointRequest};
+use ak_platform::generated::sys_platform::PlatformEndpointRequest;
 use serde_json::Value;
 
 use crate::{
@@ -20,9 +20,6 @@ impl PathHandler {
             .clone()
             .platform()
             .signed_endpoint_header(PlatformEndpointRequest {
-                header: Some(RequestHeader {
-                    profile: msg.profile.clone(),
-                }),
                 challenge: challenge.to_string(),
             })
             .await

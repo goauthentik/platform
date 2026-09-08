@@ -20,6 +20,44 @@ fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobu
   typealias Version = _2
 }
 
+nonisolated enum ProfileStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+  typealias RawValue = Int
+  case unspecified // = 0
+  case active // = 1
+  case failed // = 2
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .unspecified
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .unspecified
+    case 1: self = .active
+    case 2: self = .failed
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .unspecified: return 0
+    case .active: return 1
+    case .failed: return 2
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static let allCases: [ProfileStatus] = [
+    .unspecified,
+    .active,
+    .failed,
+  ]
+
+}
+
 nonisolated struct SetupRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -43,6 +81,9 @@ nonisolated struct SetupRequest: Sendable {
   var accessToken: String = String()
 
   var refreshToken: String = String()
+
+  /// PKCS#8 PEM DPoP private key; empty if this profile is not key-bound.
+  var dpopPrivateKey: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -100,6 +141,10 @@ nonisolated struct Profile: Sendable {
   var hasNextRenew: Bool {self._nextRenew != nil}
   /// Clears the value of `nextRenew`. Subsequent reads from it will return its default value.
   mutating func clearNextRenew() {self._nextRenew = nil}
+
+  var dpopBound: Bool = false
+
+  var status: ProfileStatus = .unspecified
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -159,9 +204,13 @@ nonisolated struct CurrentProfileResponse: Sendable {
 
 fileprivate nonisolated let _protobuf_package = "agent_ctrl"
 
+nonisolated extension ProfileStatus: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}ACTIVE\0\u{1}FAILED\0")
+}
+
 nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SetupRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}authentik_url\0\u{3}app_slug\0\u{3}client_id\0\u{3}access_token\0\u{3}refresh_token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{3}authentik_url\0\u{3}app_slug\0\u{3}client_id\0\u{3}access_token\0\u{3}refresh_token\0\u{3}dpop_private_key\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -175,6 +224,7 @@ nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
       case 4: try { try decoder.decodeSingularStringField(value: &self.clientID) }()
       case 5: try { try decoder.decodeSingularStringField(value: &self.accessToken) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.refreshToken) }()
+      case 7: try { try decoder.decodeSingularStringField(value: &self.dpopPrivateKey) }()
       default: break
       }
     }
@@ -203,6 +253,9 @@ nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if !self.refreshToken.isEmpty {
       try visitor.visitSingularStringField(value: self.refreshToken, fieldNumber: 6)
     }
+    if !self.dpopPrivateKey.isEmpty {
+      try visitor.visitSingularStringField(value: self.dpopPrivateKey, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -213,6 +266,7 @@ nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
     if lhs.clientID != rhs.clientID {return false}
     if lhs.accessToken != rhs.accessToken {return false}
     if lhs.refreshToken != rhs.refreshToken {return false}
+    if lhs.dpopPrivateKey != rhs.dpopPrivateKey {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -254,7 +308,7 @@ nonisolated extension SetupResponse: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Profile"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}username\0\u{3}authentik_url\0\u{3}last_renewed\0\u{3}next_renew\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}username\0\u{3}authentik_url\0\u{3}last_renewed\0\u{3}next_renew\0\u{3}dpop_bound\0\u{1}status\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -267,6 +321,8 @@ nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       case 3: try { try decoder.decodeSingularStringField(value: &self.authentikURL) }()
       case 4: try { try decoder.decodeSingularMessageField(value: &self._lastRenewed) }()
       case 5: try { try decoder.decodeSingularMessageField(value: &self._nextRenew) }()
+      case 6: try { try decoder.decodeSingularBoolField(value: &self.dpopBound) }()
+      case 7: try { try decoder.decodeSingularEnumField(value: &self.status) }()
       default: break
       }
     }
@@ -292,6 +348,12 @@ nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     try { if let v = self._nextRenew {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     } }()
+    if self.dpopBound != false {
+      try visitor.visitSingularBoolField(value: self.dpopBound, fieldNumber: 6)
+    }
+    if self.status != .unspecified {
+      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 7)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -301,6 +363,8 @@ nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if lhs.authentikURL != rhs.authentikURL {return false}
     if lhs._lastRenewed != rhs._lastRenewed {return false}
     if lhs._nextRenew != rhs._nextRenew {return false}
+    if lhs.dpopBound != rhs.dpopBound {return false}
+    if lhs.status != rhs.status {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

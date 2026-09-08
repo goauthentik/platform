@@ -1,4 +1,3 @@
-use env_filter::{Filter, FilteredLog};
 use eventlog::EventLog;
 use eyre::Result;
 use log::Log;

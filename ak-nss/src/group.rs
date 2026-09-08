@@ -4,6 +4,7 @@ use libnss::group::{Group, GroupHooks};
 use libnss::interop::Response;
 
 use crate::AuthentikNSS;
+use crate::backend::ErrMap;
 use crate::backend::{DirectoryBridge, GrpcDirectoryBridge};
 use crate::mapping::ak_group_to_group_entry;
 
@@ -25,62 +26,53 @@ impl GroupHooks for AuthentikNSS {
 }
 
 fn get_all_entries_with(bridge: &impl DirectoryBridge) -> Response<Vec<Group>> {
-    match bridge.list_groups() {
-        Ok(groups) => Response::Success(groups.into_iter().map(ak_group_to_group_entry).collect()),
-        Err(e) => {
-            tracing::warn!("Failed to get groups: {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .list_groups()
+        .map(|groups| groups.into_iter().map(ak_group_to_group_entry).collect())
+        .to_response("failed to list groups")
 }
 
 fn get_entry_by_gid_with(bridge: &impl DirectoryBridge, gid: gid_t) -> Response<Group> {
-    match bridge.get_group(GetRequest {
-        name: None,
-        id: Some(gid),
-    }) {
-        Ok(group) => Response::Success(ak_group_to_group_entry(group)),
-        Err(e) => {
-            tracing::warn!("error when getting group by ID '{gid}': {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .get_group(GetRequest {
+            name: None,
+            id: Some(gid),
+        })
+        .map(ak_group_to_group_entry)
+        .to_response(format!("failed to get group by ID '{gid}'"))
 }
 
 fn get_entry_by_name_with(bridge: &impl DirectoryBridge, name: String) -> Response<Group> {
-    match bridge.get_group(GetRequest {
-        name: Some(name.clone()),
-        id: None,
-    }) {
-        Ok(group) => Response::Success(ak_group_to_group_entry(group)),
-        Err(e) => {
-            tracing::warn!("error when getting group by name '{name}': {e:?}");
-            Response::Unavail
-        }
-    }
+    bridge
+        .get_group(GetRequest {
+            name: Some(name.clone()),
+            id: None,
+        })
+        .map(ak_group_to_group_entry)
+        .to_response(format!("failed to get group by name '{name}'"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use ak_platform::generated::sys_directory::{Group as AKGroup, User};
-    use eyre::Result;
+    use ak_platform::grpc::{GrpcResult, Status};
 
     struct MockBridge {
         groups: Vec<AKGroup>,
     }
 
     impl DirectoryBridge for MockBridge {
-        fn list_users(&self) -> Result<Vec<User>> {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
             unreachable!()
         }
-        fn get_user(&self, _req: GetRequest) -> Result<User> {
+        fn get_user(&self, _req: GetRequest) -> GrpcResult<User> {
             unreachable!()
         }
-        fn list_groups(&self) -> Result<Vec<AKGroup>> {
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
             Ok(self.groups.clone())
         }
-        fn get_group(&self, req: GetRequest) -> Result<AKGroup> {
+        fn get_group(&self, req: GetRequest) -> GrpcResult<AKGroup> {
             self.groups
                 .iter()
                 .find(|g| {
@@ -88,23 +80,40 @@ mod tests {
                         || req.name.as_deref().map_or(false, |n| n == g.name)
                 })
                 .cloned()
-                .ok_or_else(|| eyre::eyre!("not found"))
+                .ok_or_else(|| Status::not_found("no such entry").into())
         }
     }
 
-    struct ErrorBridge;
-    impl DirectoryBridge for ErrorBridge {
-        fn list_users(&self) -> Result<Vec<User>> {
+    struct UnavailBridge;
+    impl DirectoryBridge for UnavailBridge {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
             unreachable!()
         }
-        fn get_user(&self, _: GetRequest) -> Result<User> {
+        fn get_user(&self, _: GetRequest) -> GrpcResult<User> {
             unreachable!()
         }
-        fn list_groups(&self) -> Result<Vec<AKGroup>> {
-            Err(eyre::eyre!("unavailable"))
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
+            Err(Status::unavailable("connect failed").into())
         }
-        fn get_group(&self, _: GetRequest) -> Result<AKGroup> {
-            Err(eyre::eyre!("unavailable"))
+        fn get_group(&self, _: GetRequest) -> GrpcResult<AKGroup> {
+            Err(Status::unavailable("connect failed").into())
+        }
+    }
+
+    /// sysd answered, and there is no such entry.
+    struct NotFoundBridge;
+    impl DirectoryBridge for NotFoundBridge {
+        fn list_users(&self) -> GrpcResult<Vec<User>> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn get_user(&self, _: GetRequest) -> GrpcResult<User> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
+            Err(Status::not_found("no such entry").into())
+        }
+        fn get_group(&self, _: GetRequest) -> GrpcResult<AKGroup> {
+            Err(Status::not_found("no such entry").into())
         }
     }
 
@@ -136,7 +145,7 @@ mod tests {
     #[test]
     fn get_all_entries_unavail_on_error() {
         assert!(matches!(
-            get_all_entries_with(&ErrorBridge),
+            get_all_entries_with(&UnavailBridge),
             Response::Unavail
         ));
     }
@@ -155,7 +164,7 @@ mod tests {
     #[test]
     fn get_entry_by_gid_unavail_on_error() {
         assert!(matches!(
-            get_entry_by_gid_with(&ErrorBridge, 200),
+            get_entry_by_gid_with(&UnavailBridge, 200),
             Response::Unavail
         ));
     }
@@ -174,8 +183,40 @@ mod tests {
     #[test]
     fn get_entry_by_name_unavail_on_error() {
         assert!(matches!(
-            get_entry_by_name_with(&ErrorBridge, "admins".to_owned()),
+            get_entry_by_name_with(&UnavailBridge, "admins".to_owned()),
             Response::Unavail
+        ));
+    }
+
+    /// A gid that simply isn't in the directory is NOTFOUND, not UNAVAIL.
+    #[test]
+    fn get_entry_by_gid_notfound_when_missing() {
+        let bridge = MockBridge {
+            groups: vec![admins()],
+        };
+        assert!(matches!(
+            get_entry_by_gid_with(&bridge, 4242),
+            Response::NotFound
+        ));
+        assert!(matches!(
+            get_entry_by_gid_with(&NotFoundBridge, 4242),
+            Response::NotFound
+        ));
+    }
+
+    /// A group name that simply isn't in the directory is NOTFOUND, not UNAVAIL.
+    #[test]
+    fn get_entry_by_name_notfound_when_missing() {
+        let bridge = MockBridge {
+            groups: vec![admins()],
+        };
+        assert!(matches!(
+            get_entry_by_name_with(&bridge, "nosuchgroup".to_owned()),
+            Response::NotFound
+        ));
+        assert!(matches!(
+            get_entry_by_name_with(&NotFoundBridge, "nosuchgroup".to_owned()),
+            Response::NotFound
         ));
     }
 }
