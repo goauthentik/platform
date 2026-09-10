@@ -88,6 +88,7 @@ jobs:
         with:
           rustflags: ""
           cache: false
+          build-warnings: warn
       - uses: ./.github/actions/setup-toolchain
         with:
           platform: ${{ matrix.platform }}
