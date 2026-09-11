@@ -14,6 +14,10 @@ const PERMITTED_TAGS: &[&str] = &["!Find", "!KeyOf"];
 #[derive(Debug, Clone, PartialEq)]
 pub struct TaggedRef {
     pub tag: RefTag,
+    /// `!Find` lookup model; absent for `!KeyOf`.
+    pub lookup_model: Option<String>,
+    /// `!Find` lookup field; absent for `!KeyOf`.
+    pub lookup_field: Option<String>,
     /// The resolved target string (scope slug, flow slug, key name, or KeyOf id).
     pub target: String,
 }
@@ -58,6 +62,8 @@ fn walk(n: &Node, out: &mut WalkResult) {
             match n {
                 Node::Scalar { value, .. } => out.refs.push(TaggedRef {
                     tag: RefTag::KeyOf,
+                    lookup_model: None,
+                    lookup_field: None,
                     target: value.clone(),
                 }),
                 _ => out.violations.push(
@@ -117,11 +123,14 @@ fn extract_find(n: &Node, out: &mut WalkResult) {
         ));
         return;
     }
-    if !matches!(model_node, Node::Scalar { .. }) {
+    if !is_string_scalar(model_node) {
         out.violations
             .push("!Find model name must be a scalar string".into());
         return;
     }
+    let Node::Scalar { value: model, .. } = model_node else {
+        unreachable!("is_string_scalar only accepts scalar nodes");
+    };
 
     for cond in &items[1..] {
         let cond_items = match cond {
@@ -162,9 +171,13 @@ fn extract_find(n: &Node, out: &mut WalkResult) {
                 .push("!Find condition value must be a scalar string".into());
             return;
         }
-        if let Node::Scalar { value, .. } = val_node {
+        if let (Node::Scalar { value: field, .. }, Node::Scalar { value, .. }) =
+            (field_node, val_node)
+        {
             out.refs.push(TaggedRef {
                 tag: RefTag::Find,
+                lookup_model: Some(model.clone()),
+                lookup_field: Some(field.clone()),
                 target: value.clone(),
             });
         }
@@ -207,6 +220,8 @@ mod tests {
             r.refs,
             vec![TaggedRef {
                 tag: RefTag::KeyOf,
+                lookup_model: None,
+                lookup_field: None,
                 target: "my-provider".into()
             }]
         );

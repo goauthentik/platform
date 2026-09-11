@@ -1,16 +1,12 @@
-//! Validate a proposed authentik Blueprint without applying it — the control-
-//! plane policy-enforcement point.
+//! Validate a proposed Blueprint without applying it.
 //!
-//! The orchestrator owns the top-level flow (raw scans → parse → per-entry
-//! attribute binning → whole-document tag walk) and delegates the hard parts to
-//! [`crate::mcp::blueprint::policy`], [`crate::mcp::blueprint::tags`], [`crate::mcp::blueprint::refs`], and [`crate::mcp::blueprint::duration`].
-//! It never panics on hostile or malformed input: a parse or walk error becomes
-//! a violation, not a panic.
+//! Malformed or unsafe input is returned as a violation rather than causing a
+//! panic.
 
 use std::collections::HashSet;
 
 use crate::mcp::blueprint::duration::parse_token_duration;
-use crate::mcp::blueprint::policy::{Bin, allowed_models, models};
+use crate::mcp::blueprint::policy::{Bin, allowed_models, is_destructive_entry, models};
 use crate::mcp::blueprint::refs::{check_ref, check_ref_attr};
 use crate::mcp::blueprint::tags::collect_tagged_refs;
 use crate::mcp::blueprint::yaml::{Node, Plain, parse_document};
@@ -151,6 +147,25 @@ pub fn validate_blueprint(content: &str) -> BlueprintValidation {
         if !allowed.iter().any(|m| m == &model) {
             violations.push(format!(
                 "entry {i}: model \"{model}\" is not in the allow-list (only curated models are permitted)"
+            ));
+            continue;
+        }
+
+        let state = match entry.get("state") {
+            None => None,
+            Some(Node::Scalar {
+                value, tag: None, ..
+            }) => Some(value.as_str()),
+            Some(_) => {
+                violations.push(format!(
+                    "entry {i}: state must be a plain untagged scalar when supplied"
+                ));
+                continue;
+            }
+        };
+        if is_destructive_entry(&model, state) {
+            violations.push(format!(
+                "entry {i}: destructive state/model is not permitted"
             ));
             continue;
         }
@@ -421,6 +436,40 @@ mod tests {
             )
             .ok
         );
+    }
+
+    #[test]
+    fn rejects_destructive_or_tagged_state() {
+        let absent = validate_blueprint(
+            "version: 1\nentries:\n  - model: authentik_core.application\n    state: absent\n    attrs: {name: x}",
+        );
+        assert!(!absent.ok, "{}", joined(&absent));
+        let tagged = validate_blueprint(
+            "version: 1\nentries:\n  - id: present\n    model: authentik_core.application\n    attrs: {name: x}\n  - model: authentik_core.application\n    state: !KeyOf present\n    attrs: {name: y}",
+        );
+        assert!(!tagged.ok, "{}", joined(&tagged));
+    }
+
+    #[test]
+    fn rejects_find_with_unapproved_model_or_field() {
+        for find in [
+            "!Find [authentik_core.user, [managed, goauthentik.io/providers/oauth2/scope-openid]]",
+            "!Find [authentik_providers_oauth2.scopemapping, [name, goauthentik.io/providers/oauth2/scope-openid]]",
+        ] {
+            let r = validate_blueprint(&format!(
+                "version: 1\nentries:\n  - model: authentik_providers_oauth2.oauth2provider\n    attrs:\n      name: x\n      property_mappings: [{find}]"
+            ));
+            assert!(!r.ok, "{find}: {}", joined(&r));
+        }
+    }
+
+    #[test]
+    fn rejects_duplicate_yaml_mapping_keys() {
+        let r = validate_blueprint(
+            "version: 1\nentries:\n  - model: authentik_core.application\n    model: authentik_core.group\n    attrs: {name: x}",
+        );
+        assert!(!r.ok);
+        assert!(joined(&r).contains("duplicate"));
     }
 
     #[test]

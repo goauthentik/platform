@@ -1,7 +1,7 @@
-//! Curate-check references. A `ref`-binned attribute must carry a permitted
-//! reference (a curated `!Find` or an in-blueprint `!KeyOf`); these helpers
-//! decide whether a reference target is curated and whether an attribute value
-//! node is a permitted reference at all.
+//! Validate references used by `ref`-binned attributes.
+//!
+//! `!Find` must match an approved model, field, and value; `!KeyOf` must point
+//! to an entry in the same Blueprint.
 
 use std::collections::HashSet;
 
@@ -30,19 +30,41 @@ pub fn check_ref(reference: &TaggedRef, defined_ids: &HashSet<String>) -> Option
             }
         }
         RefTag::Find => {
-            if EXCLUDED_SCOPES.contains(&target.as_str()) {
-                return Some(format!(
-                    "external reference \"{target}\" is not permitted (excluded scope)"
-                ));
+            let lookup = (
+                reference.lookup_model.as_deref(),
+                reference.lookup_field.as_deref(),
+                target.as_str(),
+            );
+            if lookup.0 == Some("authentik_providers_oauth2.scopemapping")
+                && lookup.1 == Some("managed")
+            {
+                if EXCLUDED_SCOPES.contains(&target.as_str()) {
+                    return Some(format!(
+                        "external reference \"{target}\" is not permitted (excluded scope)"
+                    ));
+                }
+                if CURATED_SCOPE_MAPPINGS.contains(&target.as_str()) {
+                    return None;
+                }
             }
-            if CURATED_SCOPE_MAPPINGS.contains(&target.as_str())
-                || CURATED_FLOWS.contains(&target.as_str())
-                || target == DEFAULT_SIGNING_KEY_NAME
+            if lookup.0 == Some("authentik_flows.flow")
+                && lookup.1 == Some("slug")
+                && CURATED_FLOWS.contains(&target.as_str())
+            {
+                return None;
+            }
+            if lookup
+                == (
+                    Some("authentik_crypto.certificatekeypair"),
+                    Some("name"),
+                    DEFAULT_SIGNING_KEY_NAME,
+                )
             {
                 return None;
             }
             Some(format!(
-                "external reference \"{target}\" is not permitted (only curated built-ins may be referenced)"
+                "external reference ({:?}, {:?}, \"{target}\") is not permitted (only curated built-ins may be referenced)",
+                lookup.0, lookup.1
             ))
         }
     }
@@ -117,6 +139,8 @@ mod tests {
             check_ref(
                 &TaggedRef {
                     tag: RefTag::KeyOf,
+                    lookup_model: None,
+                    lookup_field: None,
                     target: "p".into()
                 },
                 &ids(&["p"])
@@ -127,6 +151,8 @@ mod tests {
             check_ref(
                 &TaggedRef {
                     tag: RefTag::KeyOf,
+                    lookup_model: None,
+                    lookup_field: None,
                     target: "p".into()
                 },
                 &ids(&[])
@@ -148,6 +174,23 @@ mod tests {
                 check_ref(
                     &TaggedRef {
                         tag: RefTag::Find,
+                        lookup_model: Some(
+                            match t {
+                                "authentik Self-signed Certificate" =>
+                                    "authentik_crypto.certificatekeypair",
+                                "default-provider-invalidation-flow" => "authentik_flows.flow",
+                                _ => "authentik_providers_oauth2.scopemapping",
+                            }
+                            .into()
+                        ),
+                        lookup_field: Some(
+                            match t {
+                                "authentik Self-signed Certificate" => "name",
+                                "default-provider-invalidation-flow" => "slug",
+                                _ => "managed",
+                            }
+                            .into()
+                        ),
                         target: t.into()
                     },
                     &none
@@ -164,6 +207,8 @@ mod tests {
             check_ref(
                 &TaggedRef {
                     tag: RefTag::Find,
+                    lookup_model: Some("authentik_providers_oauth2.scopemapping".into()),
+                    lookup_field: Some("managed".into()),
                     target: "goauthentik.io/providers/oauth2/scope-authentik_api".into()
                 },
                 &none
@@ -175,6 +220,8 @@ mod tests {
             check_ref(
                 &TaggedRef {
                     tag: RefTag::Find,
+                    lookup_model: Some("authentik_flows.flow".into()),
+                    lookup_field: Some("slug".into()),
                     target: "some-other-flow".into()
                 },
                 &none
