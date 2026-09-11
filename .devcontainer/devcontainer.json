@@ -11,13 +11,15 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "golang.go",
         "ms-azuretools.vscode-docker",
         "redhat.vscode-yaml",
         "rust-lang.rust-analyzer",
-        "DrBlury.protobuf-vsc"
+        "DrBlury.protobuf-vsc",
+        "tauri-apps.tauri-vscode"
       ],
       "settings": {
+        "rust-analyzer.cargo.targetDir": "cache/_devcontainer/",
+        "rust-analyzer.testExplorer": true,
         "protoc": {
           "options": [
             "-I=protos/"
@@ -27,10 +29,10 @@
     }
   },
   "features": {
-    "ghcr.io/devcontainers/features/go:1": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/devcontainers/features/rust:1": {},
-    "ghcr.io/guiyomh/features/golangci-lint:0": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.0": {},
+    "ghcr.io/devcontainers/features/rust:1.5.1": {
+      "components": "rust-analyzer,rust-src,rustfmt,clippy,llvm-tools-preview"
+    },
     "ghcr.io/devcontainers-extra/features/protoc:1": {},
     "ghcr.io/devcontainers/features/node:2": {}
   }

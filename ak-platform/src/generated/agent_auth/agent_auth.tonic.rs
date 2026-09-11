@@ -159,30 +159,6 @@ pub mod agent_auth_client {
                 .insert(GrpcMethod::new("agent_auth.AgentAuth", "CachedTokenExchange"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn device_token_exchange(
-            &mut self,
-            request: impl tonic::IntoRequest<super::DeviceTokenExchangeRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::TokenExchangeResponse>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic_prost::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/agent_auth.AgentAuth/DeviceTokenExchange",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("agent_auth.AgentAuth", "DeviceTokenExchange"));
-            self.inner.unary(req, path, codec).await
-        }
         pub async fn authorize(
             &mut self,
             request: impl tonic::IntoRequest<super::AuthorizeRequest>,
@@ -236,13 +212,6 @@ pub mod agent_auth_server {
         async fn cached_token_exchange(
             &self,
             request: tonic::Request<super::TokenExchangeRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::TokenExchangeResponse>,
-            tonic::Status,
-        >;
-        async fn device_token_exchange(
-            &self,
-            request: tonic::Request<super::DeviceTokenExchangeRequest>,
         ) -> std::result::Result<
             tonic::Response<super::TokenExchangeResponse>,
             tonic::Status,
@@ -450,52 +419,6 @@ pub mod agent_auth_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = CachedTokenExchangeSvc(inner);
-                        let codec = tonic_prost::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                "/agent_auth.AgentAuth/DeviceTokenExchange" => {
-                    #[allow(non_camel_case_types)]
-                    struct DeviceTokenExchangeSvc<T: AgentAuth>(pub Arc<T>);
-                    impl<
-                        T: AgentAuth,
-                    > tonic::server::UnaryService<super::DeviceTokenExchangeRequest>
-                    for DeviceTokenExchangeSvc<T> {
-                        type Response = super::TokenExchangeResponse;
-                        type Future = BoxFuture<
-                            tonic::Response<Self::Response>,
-                            tonic::Status,
-                        >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::DeviceTokenExchangeRequest>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as AgentAuth>::device_token_exchange(&inner, request)
-                                    .await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = DeviceTokenExchangeSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

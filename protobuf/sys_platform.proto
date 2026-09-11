@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package sys_platform;
+option swift_prefix = "";
+
+import "agent.proto";
+
+service SystemPlatform {
+  rpc SignedEndpointHeader(PlatformEndpointRequest) returns (PlatformEndpointResponse);
+}
+
+message PlatformEndpointRequest {
+  string challenge = 1;
+}
+
+message PlatformEndpointResponse {
+  agent.ResponseHeader header = 1;
+  string message = 2;
+}

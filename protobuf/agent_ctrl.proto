@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package agent_ctrl;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "agent.proto";
@@ -11,6 +10,8 @@ import "google/protobuf/timestamp.proto";
 service AgentCtrl {
   rpc ListProfiles(google.protobuf.Empty) returns (ListProfilesResponse);
   rpc Setup(SetupRequest) returns (SetupResponse);
+  rpc SwitchProfile(agent.RequestHeader) returns (agent.ResponseHeader);
+  rpc CurrentProfile(google.protobuf.Empty) returns (CurrentProfileResponse);
 }
 
 message SetupRequest {
@@ -26,15 +27,27 @@ message SetupResponse {
   agent.ResponseHeader header = 1;
 }
 
+enum ProfileStatus {
+  UNSPECIFIED = 0;
+  ACTIVE = 1;
+  FAILED = 2;
+}
+
 message Profile {
   string name = 1;
   string username = 2;
   string authentik_url = 3;
   google.protobuf.Timestamp last_renewed = 4;
   google.protobuf.Timestamp next_renew = 5;
+  ProfileStatus status = 6;
 }
 
 message ListProfilesResponse {
   agent.ResponseHeader header = 1;
   repeated Profile profiles = 2;
+}
+
+message CurrentProfileResponse {
+  agent.ResponseHeader header = 1;
+  string profile = 2;
 }

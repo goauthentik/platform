@@ -1,5 +1,5 @@
-use ak_platform::prelude::*;
 use ak_platform::string::PlatformString;
+use eyre::{Result, WrapErr};
 use std::collections::HashMap;
 use zbus::zvariant::OwnedValue;
 
@@ -67,7 +67,7 @@ pub async fn prompt(_msg: PlatformString) -> Result<bool> {
             "",
         )
         .await
-        .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+        .wrap_err("polkit: check_authorization RPC failed")?;
 
     Ok(is_authorized)
 }

@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop cmd/agent_system ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
 
 .PHONY: all
 all: clean gen
@@ -15,17 +15,7 @@ clean:
 	rm -rf ${PWD}/bin/*
 
 .PHONY: gen
-gen: go-gen-proto rs-gen-proto ee/psso/gen
-	go generate ./...
-
-go-gen-proto:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-	protoc \
-		--go_out ${PWD} \
-		--go-grpc_out=${PWD} \
-		-I $(PROTO_DIR) \
-		$(PROTO_DIR)/**
+gen: rs-gen-proto ee/psso/gen
 
 rs-gen-proto:
 	cargo install protoc-gen-prost
@@ -44,72 +34,66 @@ rs-gen-proto:
 		-I $(PROTO_DIR) \
 		${PROTO_DIR}/*
 	cargo fmt --all
+	cargo clippy --fix --allow-dirty -p ak-platform
 
 ci-install-deps:
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+		build-essential pkg-config libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 endif
 endif
+
+# credprovider and browser-host are Windows-only workspace members: the first
+# is written against Win32 APIs that don't exist off Windows, the second
+# renders through WebView2. e2e drives both. They stay workspace members so one
+# lockfile and one cargo invocation cover the repo, but clippy can only build
+# them on Windows -- `make ee/wcp/lint` covers them there.
+ifneq ($(OS),Windows_NT)
+RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-browser-host --exclude ak-ee-wcp-e2e
+endif
+
+format:
+	cargo fmt
+	cargo clippy \
+		--fix \
+		--allow-dirty \
+		--workspace \
+		$(RS_LINT_EXCLUDE)
 
 lint-rs:
 	cargo fmt --all
 	cargo clippy --workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 	cargo clippy --fix \
 		--allow-dirty \
 		--workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
-
-lint-go:
-	golangci-lint run
 
 .PHONY: lint
 lint: $(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-rs
-	"$(MAKE)" lint-go
-
-test:
-	go tool gotest.tools/gotestsum \
-		--junitfile ${PWD}/junit.xml \
-		--jsonfile ${TEST_OUTPUT} \
-		-- \
-		-p 1 \
-		-v \
-		-coverprofile=${PWD}/coverage.txt \
-		-covermode=atomic \
-		-count=${TEST_COUNT} \
-		${GO_TEST_FLAGS} \
-		$(shell go list ${GO_TEST_FLAGS} ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb)
-	go tool cover \
-		-html ${PWD}/coverage.txt \
-		-o ${PWD}/coverage.html
 
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
 
 test-e2e: containers/e2e/local-build
-	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+	$(call cargo_test,ak-platform-e2e)
 
 test-e2e-ci:
-	"$(MAKE)" test GO_TEST_FLAGS=-tags=e2e
+	$(call cargo_test,ak-platform-e2e)
 
 test-e2e-convert:
-	go tool covdata textfmt \
-		-i $(shell find ${PWD}/e2e/coverage/ -mindepth 1 -maxdepth 1 -type d ! -name rs | xargs | sed 's/ /,/g') \
-		--pkg $(shell go list ./... | grep -v goauthentik.io/platform/vnd | grep -v goauthentik.io/platform/pkg/pb | xargs | sed 's/ /,/g') \
-		-o ${PWD}/coverage_in_container.txt
-	go tool cover \
-		-html ${PWD}/coverage_in_container.txt \
-		-o ${PWD}/coverage_in_container.html
+	$(call rs_e2e_coverage_convert)
 
 test-setup:
 	go run -v ./cmd/cli setup -v http://authentik:9000
 
 test-ssh:
-	go run -v ./cmd/cli ssh -i akadmin@ak-platform-test-machine
+	ssh -i akadmin@ak-platform-test-machine
 
 test-shell:
 	docker exec -it authentik-platform_devcontainer-test-machine-1 bash
@@ -121,7 +105,7 @@ test-join:
 		authentik-platform_devcontainer-test-machine-1 \
 		ak-sysd domains join ak -a http://authentik:9000
 
-test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deployak-nss/test-deployak-pam/test-deploy test-ssh
+test-full: clean ak-agent/test-deploy ak-sysd/test-deploy ak-cli/test-deploy ak-nss/test-deploy ak-pam/test-deploy test-ssh
 
 dev--initialize: containers/test/local-build
 
@@ -131,7 +115,6 @@ bump:
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" ee/psso/bump || true
-	"$(MAKE)" ee/wcp/bump || true
 
 ak-pam/%:
 	"$(MAKE)" -C "${TOP}/ak-pam" $*
@@ -148,14 +131,38 @@ ak-cli/%:
 ak-platform/%:
 	"$(MAKE)" -C "${TOP}/ak-platform" $*
 
-sysd/%:
-	"$(MAKE)" -C "${TOP}/cmd/agent_system" $*
+ak-sysd/%:
+	"$(MAKE)" -C "${TOP}/ak-sysd" $*
 
 ak-agent/%:
 	"$(MAKE)" -C "${TOP}/ak-agent" $*
 
 ak-agent-desktop/%:
 	"$(MAKE)" -C "${TOP}/ak-agent-desktop" $*
+
+ak-api-cli-gen/%:
+	"$(MAKE)" -C "${TOP}/ak-api-cli-gen" $*
+
+ak-platform-facts/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-facts" $*
+
+ak-platform-keyring/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-keyring" $*
+
+ak-platform-authz/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-authz" $*
+
+ak-api-cli/%:
+	"$(MAKE)" -C "${TOP}/ak-api-cli" $*
+
+ak-flow-executor/%:
+	"$(MAKE)" -C "${TOP}/ak-flow-executor" $*
+
+ak-meta/%:
+	"$(MAKE)" -C "${TOP}/ak-meta" $*
+
+ak-meta-macros/%:
+	"$(MAKE)" -C "${TOP}/ak-meta-macros" $*
 
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*

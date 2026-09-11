@@ -28,10 +28,12 @@ jobs:
         target:
           - ak-agent
           - ak-agent-desktop
-          - ak-pam
-          - ak-nss
           - ak-browser-support
           - ak-cli
+          - ak-nss
+          - ak-pam
+          - ak-sysd
+          - ee/wcp
         platform: ${{ fromJSON(inputs.platforms) }}
         exclude:
           # pam & nss are linux-only targets
@@ -43,6 +45,13 @@ jobs:
             platform: macos-26
           - target: ak-nss
             platform: windows-2025
+          # wcp is a windows-only credential provider
+          - target: ee/wcp
+            platform: macos-26
+          - target: ee/wcp
+            platform: ubuntu-24.04
+          - target: ee/wcp
+            platform: ubuntu-24.04-arm
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always
@@ -51,34 +60,84 @@ jobs:
     outputs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - if: ${{ matrix.target == 'ak-agent-desktop' }}
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
       - if: ${{ matrix.target == 'ak-agent-desktop' }}
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
+      # ubuntu builds run inside the builder container image, which already
+      # bakes in the pinned toolchain - only macos/windows need it installed
+      # (and cached) on the runner itself.
+      - if: ${{ !startsWith(matrix.platform, 'ubuntu') }}
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+          key: rustup-toolchain-${{ matrix.platform }}-${{ hashFiles('rust-toolchain.toml') }}
+      - if: ${{ !startsWith(matrix.platform, 'ubuntu') }}
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
+        with:
+          rustflags: ""
+          cache: false
+          build-warnings: warn
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          platform: ${{ matrix.platform }}
+      - if: ${{ !startsWith(matrix.platform, 'ubuntu') }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+          key: rustup-toolchain-${{ matrix.platform }}-${{ hashFiles('rust-toolchain.toml') }}
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             cache/
-          key: target-cache-${{ matrix.target }}-${{ matrix.platform }}
+          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}
+          restore-keys: |
+            target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-
+            target-cache-${{ matrix.platform }}-
       - name: Build builder image
         if: startsWith(matrix.platform, 'ubuntu')
         run: make containers/builder/build
       - run: |
           make ${{ matrix.target }}/build
         env:
-          RUST_BUILD_FLAGS: ${{ inputs.rust_build_flags }}
+          RUST_BUILD_FLAGS: ${{ (matrix.target == 'ak-sysd' && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static ' || '' }}${{ inputs.rust_build_flags }}
           AK_IS_RELEASE: ${{ inputs.is_release }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      # Artifact names cannot contain "/", so nested targets like ee/wcp need
+      # a slug. Doing it here rather than via a matrix `include` is deliberate:
+      # an include that matches no base combination *adds* a job, so pinning a
+      # name for ee/wcp+windows-2025 resurrected it even for ubuntu-only
+      # callers like the e2e build.
+      - id: slug
+        shell: bash
+        run: echo "target=${TARGET//\//-}" >> "$GITHUB_OUTPUT"
+        env:
+          TARGET: ${{ matrix.target }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         id: artifact
         with:
-          name: authentik_${{ matrix.platform }}_${{ matrix.target }}${{ inputs.artifact_suffix }}
+          name: authentik_${{ matrix.platform }}_${{ steps.slug.outputs.target }}${{ inputs.artifact_suffix }}
           path: bin/
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
+        if: always()
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cache/
+          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}

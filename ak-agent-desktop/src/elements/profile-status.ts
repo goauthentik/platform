@@ -2,12 +2,12 @@ import type { profile } from "../bridge.js";
 
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-import { css, html, LitElement } from "lit";
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 type RenewalStatus = "active" | "expiring" | "expired" | "disconnected";
 
-function renewalStatus(nextRenew: Date | string | null): RenewalStatus {
+function renewalStatus(nextRenew: Date | string | null | undefined): RenewalStatus {
     if (!nextRenew) return "disconnected";
     const next = new Date(nextRenew);
     const now = Date.now();
@@ -18,13 +18,13 @@ function renewalStatus(nextRenew: Date | string | null): RenewalStatus {
 }
 
 const STATUS_LABELS: Record<RenewalStatus, string> = {
-    active: "Active",
+    active: "Valid",
     expiring: "Expiring soon",
     expired: "Needs renewal",
     disconnected: "Not connected",
 };
 
-function formatDate(d: Date | string | null): string {
+function formatDate(d: Date | string | null | undefined): string {
     if (!d) return "—";
     return new Date(d).toLocaleTimeString(undefined, {
         year: "numeric",
@@ -107,6 +107,10 @@ export class ProfileStatus extends LitElement {
             background: #f0f0f0;
             color: #5a5a5a;
         }
+        .status-badge.failed {
+            background: var(--ak-color-badge, #ffebee);
+            color: var(--ak-color-badge-text, #c62828);
+        }
         .renewal-dates {
             display: flex;
             gap: 16px;
@@ -127,6 +131,7 @@ export class ProfileStatus extends LitElement {
     `;
 
     @property({ type: Array }) profiles: profile[] = [];
+    @property() activeProfile?: string;
 
     render() {
         return html`
@@ -140,9 +145,22 @@ export class ProfileStatus extends LitElement {
                               <div class="profile-row">
                                   <div class="profile-header">
                                       <span class="profile-name">${p.name}</span>
-                                      <span class="status-badge ${status}"
-                                          >${STATUS_LABELS[status]}</span
-                                      >
+                                      <div class="status-container">
+                                          ${p.name === this.activeProfile
+                                              ? html`
+                                                    <span class="status-badge active"
+                                                        >Active Profile</span
+                                                    >
+                                                `
+                                              : nothing}
+                                          ${p.status === "FAILED"
+                                              ? html`<span class="status-badge failed"
+                                                    >Renewal Failed</span
+                                                >`
+                                              : html`<span class="status-badge ${status}"
+                                                    >${STATUS_LABELS[status]}</span
+                                                >`}
+                                      </div>
                                   </div>
                                   <div class="profile-username">Username: ${p.username}</div>
                                   <div class="profile-url">

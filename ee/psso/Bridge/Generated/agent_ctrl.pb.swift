@@ -20,6 +20,44 @@ fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobu
   typealias Version = _2
 }
 
+nonisolated enum ProfileStatus: SwiftProtobuf.Enum, Swift.CaseIterable {
+  typealias RawValue = Int
+  case unspecified // = 0
+  case active // = 1
+  case failed // = 2
+  case UNRECOGNIZED(Int)
+
+  init() {
+    self = .unspecified
+  }
+
+  init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .unspecified
+    case 1: self = .active
+    case 2: self = .failed
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  var rawValue: Int {
+    switch self {
+    case .unspecified: return 0
+    case .active: return 1
+    case .failed: return 2
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  static let allCases: [ProfileStatus] = [
+    .unspecified,
+    .active,
+    .failed,
+  ]
+
+}
+
 nonisolated struct SetupRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -79,9 +117,36 @@ nonisolated struct Profile: Sendable {
 
   var name: String = String()
 
+  var username: String = String()
+
+  var authentikURL: String = String()
+
+  var lastRenewed: SwiftProtobuf.Google_Protobuf_Timestamp {
+    get {_lastRenewed ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    set {_lastRenewed = newValue}
+  }
+  /// Returns true if `lastRenewed` has been explicitly set.
+  var hasLastRenewed: Bool {self._lastRenewed != nil}
+  /// Clears the value of `lastRenewed`. Subsequent reads from it will return its default value.
+  mutating func clearLastRenewed() {self._lastRenewed = nil}
+
+  var nextRenew: SwiftProtobuf.Google_Protobuf_Timestamp {
+    get {_nextRenew ?? SwiftProtobuf.Google_Protobuf_Timestamp()}
+    set {_nextRenew = newValue}
+  }
+  /// Returns true if `nextRenew` has been explicitly set.
+  var hasNextRenew: Bool {self._nextRenew != nil}
+  /// Clears the value of `nextRenew`. Subsequent reads from it will return its default value.
+  mutating func clearNextRenew() {self._nextRenew = nil}
+
+  var status: ProfileStatus = .unspecified
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
+
+  fileprivate var _lastRenewed: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
+  fileprivate var _nextRenew: SwiftProtobuf.Google_Protobuf_Timestamp? = nil
 }
 
 nonisolated struct ListProfilesResponse: Sendable {
@@ -107,9 +172,36 @@ nonisolated struct ListProfilesResponse: Sendable {
   fileprivate var _header: ResponseHeader? = nil
 }
 
+nonisolated struct CurrentProfileResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var header: ResponseHeader {
+    get {_header ?? ResponseHeader()}
+    set {_header = newValue}
+  }
+  /// Returns true if `header` has been explicitly set.
+  var hasHeader: Bool {self._header != nil}
+  /// Clears the value of `header`. Subsequent reads from it will return its default value.
+  mutating func clearHeader() {self._header = nil}
+
+  var profile: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _header: ResponseHeader? = nil
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate nonisolated let _protobuf_package = "agent_ctrl"
+
+nonisolated extension ProfileStatus: SwiftProtobuf._ProtoNameProviding {
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}ACTIVE\0\u{1}FAILED\0")
+}
 
 nonisolated extension SetupRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".SetupRequest"
@@ -206,7 +298,7 @@ nonisolated extension SetupResponse: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Profile"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}username\0\u{3}authentik_url\0\u{3}last_renewed\0\u{3}next_renew\0\u{1}status\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -215,20 +307,49 @@ nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.username) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.authentikURL) }()
+      case 4: try { try decoder.decodeSingularMessageField(value: &self._lastRenewed) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._nextRenew) }()
+      case 6: try { try decoder.decodeSingularEnumField(value: &self.status) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
+    }
+    if !self.username.isEmpty {
+      try visitor.visitSingularStringField(value: self.username, fieldNumber: 2)
+    }
+    if !self.authentikURL.isEmpty {
+      try visitor.visitSingularStringField(value: self.authentikURL, fieldNumber: 3)
+    }
+    try { if let v = self._lastRenewed {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+    } }()
+    try { if let v = self._nextRenew {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
+    if self.status != .unspecified {
+      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 6)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Profile, rhs: Profile) -> Bool {
     if lhs.name != rhs.name {return false}
+    if lhs.username != rhs.username {return false}
+    if lhs.authentikURL != rhs.authentikURL {return false}
+    if lhs._lastRenewed != rhs._lastRenewed {return false}
+    if lhs._nextRenew != rhs._nextRenew {return false}
+    if lhs.status != rhs.status {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -268,6 +389,45 @@ nonisolated extension ListProfilesResponse: SwiftProtobuf.Message, SwiftProtobuf
   static func ==(lhs: ListProfilesResponse, rhs: ListProfilesResponse) -> Bool {
     if lhs._header != rhs._header {return false}
     if lhs.profiles != rhs.profiles {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension CurrentProfileResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".CurrentProfileResponse"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}profile\0")
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.profile) }()
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._header {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.profile.isEmpty {
+      try visitor.visitSingularStringField(value: self.profile, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CurrentProfileResponse, rhs: CurrentProfileResponse) -> Bool {
+    if lhs._header != rhs._header {return false}
+    if lhs.profile != rhs.profile {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

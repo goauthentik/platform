@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use ak_platform::paths::xdg_config_path;
-use ak_platform::prelude::*;
 use ak_platform::storage::cfgmgr::ConfigManager;
+use eyre::Result;
 use waitgroup::WaitGroup;
 
 use crate::config::ConfigV1;

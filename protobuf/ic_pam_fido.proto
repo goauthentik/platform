@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package ic_pam_fido;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 message FIDORequest {

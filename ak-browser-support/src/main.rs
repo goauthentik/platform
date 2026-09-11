@@ -1,4 +1,4 @@
-use ak_platform::log::init_log;
+use ak_platform::log::LogBuilder;
 use ak_platform::string::PlatformString;
 
 use crate::path_handler::PathHandler;
@@ -10,14 +10,17 @@ mod handle_platform_sign_endpoint_header;
 mod models;
 mod path_handler;
 
-#[tokio::main]
+#[ak_meta::main("ak-browser-support")]
 async fn main() {
-    init_log(
+    LogBuilder::new(
         PlatformString::new()
             .with_windows("authentik Browser Support")
             .with_linux("ak-browser-support")
             .with_darwin("io.goauthentik.platform.browser-support"),
-    );
+    )
+    .with_default_filters()
+    .allow_stdout(false)
+    .enable();
     let path_handler = match PathHandler::new().await {
         Ok(ph) => ph,
         Err(e) => {

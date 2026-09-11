@@ -1,21 +1,24 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use ak_meta::user_agent;
+use ak_platform::shared::AuthentikClaims;
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use tokio::sync::{Notify, RwLock};
 
-use ak_platform::prelude::*;
 use ak_platform::storage::cfgmgr::ConfigManager;
+use eyre::{Result, bail};
 
 use crate::config::ConfigV1;
-use crate::token::{AuthentikClaims, Token};
+use crate::token::Token;
 
 pub struct ProfileTokenManager {
     profile_name: String,
     cfg: Arc<ConfigManager<ConfigV1>>,
     jwks: Option<Arc<RwLock<JwkSet>>>,
     cancel: Arc<Notify>,
+    failed: Arc<RwLock<Option<String>>>,
 }
 
 impl ProfileTokenManager {
@@ -29,7 +32,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             format!(
                 "{}/application/o/{}/jwks/",
                 profile.authentik_url, profile.app_slug
@@ -39,13 +42,15 @@ impl ProfileTokenManager {
         let jwks = Self::fetch_jwks(&jwks_url).await?;
         let jwks = Arc::new(RwLock::new(jwks));
         let cancel = Arc::new(Notify::new());
+        let failed = Arc::new(RwLock::new(None));
 
         // start_renewing needs owned data since the task must be 'static
         let cancel_bg = Arc::clone(&cancel);
         let cfg_bg = Arc::clone(&cfg);
         let name_bg = profile_name.clone();
+        let failed_bg = Arc::clone(&failed);
         tokio::spawn(async move {
-            Self::start_renewing(name_bg, cfg_bg, cancel_bg).await;
+            Self::start_renewing(name_bg, cfg_bg, cancel_bg, failed_bg).await;
         });
 
         Ok(ProfileTokenManager {
@@ -53,6 +58,7 @@ impl ProfileTokenManager {
             cfg,
             jwks: Some(jwks),
             cancel,
+            failed,
         })
     }
 
@@ -62,7 +68,13 @@ impl ProfileTokenManager {
             cfg,
             jwks: None,
             cancel: Arc::new(Notify::new()),
+            failed: Arc::new(RwLock::new(None)),
         }
+    }
+
+    /// Returns the error from the most recent failed renewal attempt, if any.
+    pub async fn is_failed(&self) -> Option<String> {
+        self.failed.read().await.clone()
     }
 
     pub async fn unverified(&self) -> Result<Token> {
@@ -71,7 +83,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             profile.access_token().clone()
         };
         Ok(Token {
@@ -88,7 +100,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             (
                 profile.access_token().clone(),
                 profile.refresh_token().clone(),
@@ -106,7 +118,7 @@ impl ProfileTokenManager {
                     let profile = config
                         .profiles
                         .get(&self.profile_name)
-                        .ok_or("profile not found")?;
+                        .ok_or_else(|| eyre::eyre!("profile not found"))?;
                     return Ok(Token {
                         access_token: profile.access_token().clone(),
                         token_type: None,
@@ -138,6 +150,7 @@ impl ProfileTokenManager {
         profile_name: String,
         cfg: Arc<ConfigManager<ConfigV1>>,
         cancel: Arc<Notify>,
+        failed: Arc<RwLock<Option<String>>>,
     ) {
         loop {
             let sleep_dur = {
@@ -151,11 +164,14 @@ impl ProfileTokenManager {
                         return;
                     }
                     Some(profile) => {
-                        match Self::time_until_expiry(&profile.access_token()).to_std() {
+                        let dur = Self::time_until_expiry(&profile.access_token());
+                        match dur.to_std() {
                             Ok(d) => d,
                             Err(e) => {
-                                tracing::warn!("couldn't convert duration to std: {e:?}");
-                                return;
+                                tracing::warn!(
+                                    "couldn't convert duration {dur:?} to std, defaulting to 30s: {e:?}"
+                                );
+                                Duration::from_secs(30)
                             }
                         }
                     }
@@ -176,6 +192,7 @@ impl ProfileTokenManager {
                         cfg: Arc::clone(&cfg),
                         jwks: None,
                         cancel: Arc::clone(&cancel),
+                        failed: Arc::clone(&failed),
                     };
                     if let Err(e) = ptm.renew().await {
                         tracing::warn!(profile = profile_name, "failed to renew token: {e:?}");
@@ -186,13 +203,25 @@ impl ProfileTokenManager {
         }
     }
 
+    /// Attempts a renewal and records the outcome so it can be queried via
+    /// `is_failed()`, without requiring callers to drive the background
+    /// renewal loop.
     async fn renew(&self) -> Result<()> {
+        let result = self.try_renew().await;
+        match &result {
+            Ok(()) => *self.failed.write().await = None,
+            Err(e) => *self.failed.write().await = Some(e.to_string()),
+        }
+        result
+    }
+
+    async fn try_renew(&self) -> Result<()> {
         let (token_url, refresh_token, client_id) = {
             let config = self.cfg.read().await;
             let profile = config
                 .profiles
                 .get(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             (
                 format!("{}/application/o/token/", profile.authentik_url),
                 profile.refresh_token().clone(),
@@ -219,7 +248,7 @@ impl ProfileTokenManager {
 
         if !res.status().is_success() {
             let body = res.text().await?;
-            return Err(Box::from(format!("token renewal failed: {body}")));
+            bail!("token renewal failed: {body}");
         }
 
         let new_token: Token = res.json().await?;
@@ -229,7 +258,7 @@ impl ProfileTokenManager {
             let profile = config
                 .profiles
                 .get_mut(&self.profile_name)
-                .ok_or("profile not found")?;
+                .ok_or_else(|| eyre::eyre!("profile not found"))?;
             profile.set_access_token(new_token.access_token.clone());
             if let Some(rt) = &new_token.refresh_token
                 && !rt.is_empty()
@@ -279,5 +308,36 @@ impl ProfileTokenManager {
 
     fn is_expired(e: &jsonwebtoken::errors::Error) -> bool {
         matches!(e.kind(), jsonwebtoken::errors::ErrorKind::ExpiredSignature)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ak_platform::storage::cfgmgr::testutils::test_config_manager;
+
+    use super::*;
+    use crate::config::ConfigV1Profile;
+
+    #[tokio::test]
+    async fn renew_failure_is_recorded() {
+        let cfg = test_config_manager::<ConfigV1>();
+        cfg.write().await.profiles.insert(
+            "p1".to_string(),
+            ConfigV1Profile::from_tokens(
+                // Nothing listens on port 1 on loopback, so this fails
+                // immediately with ConnectionRefused rather than timing out.
+                "http://127.0.0.1:1".to_string(),
+                "app".to_string(),
+                "client".to_string(),
+                "access".to_string(),
+                "refresh".to_string(),
+            ),
+        );
+
+        let ptm = ProfileTokenManager::new("p1", cfg);
+
+        assert!(ptm.is_failed().await.is_none());
+        assert!(ptm.renew().await.is_err());
+        assert!(ptm.is_failed().await.is_some());
     }
 }

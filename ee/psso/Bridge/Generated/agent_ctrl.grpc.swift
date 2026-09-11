@@ -47,10 +47,38 @@ internal enum AgentCtrl: Sendable {
                 type: .unary
             )
         }
+        /// Namespace for "SwitchProfile" metadata.
+        internal enum SwitchProfile: Sendable {
+            /// Request type for "SwitchProfile".
+            internal typealias Input = RequestHeader
+            /// Response type for "SwitchProfile".
+            internal typealias Output = ResponseHeader
+            /// Descriptor for "SwitchProfile".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_ctrl.AgentCtrl"),
+                method: "SwitchProfile",
+                type: .unary
+            )
+        }
+        /// Namespace for "CurrentProfile" metadata.
+        internal enum CurrentProfile: Sendable {
+            /// Request type for "CurrentProfile".
+            internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
+            /// Response type for "CurrentProfile".
+            internal typealias Output = CurrentProfileResponse
+            /// Descriptor for "CurrentProfile".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_ctrl.AgentCtrl"),
+                method: "CurrentProfile",
+                type: .unary
+            )
+        }
         /// Descriptors for all methods in the "agent_ctrl.AgentCtrl" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             ListProfiles.descriptor,
-            Setup.descriptor
+            Setup.descriptor,
+            SwitchProfile.descriptor,
+            CurrentProfile.descriptor
         ]
     }
 }
@@ -106,6 +134,44 @@ extension AgentCtrl {
             deserializer: some GRPCCore.MessageDeserializer<SetupResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<SetupResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "SwitchProfile" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `RequestHeader` message.
+        ///   - serializer: A serializer for `RequestHeader` messages.
+        ///   - deserializer: A deserializer for `ResponseHeader` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func switchProfile<Result>(
+            request: GRPCCore.ClientRequest<RequestHeader>,
+            serializer: some GRPCCore.MessageSerializer<RequestHeader>,
+            deserializer: some GRPCCore.MessageDeserializer<ResponseHeader>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "CurrentProfile" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `CurrentProfileResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func currentProfile<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<CurrentProfileResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CurrentProfileResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -184,6 +250,66 @@ extension AgentCtrl {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "SwitchProfile" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `RequestHeader` message.
+        ///   - serializer: A serializer for `RequestHeader` messages.
+        ///   - deserializer: A deserializer for `ResponseHeader` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func switchProfile<Result>(
+            request: GRPCCore.ClientRequest<RequestHeader>,
+            serializer: some GRPCCore.MessageSerializer<RequestHeader>,
+            deserializer: some GRPCCore.MessageDeserializer<ResponseHeader>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: AgentCtrl.Method.SwitchProfile.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
+        /// Call the "CurrentProfile" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - deserializer: A deserializer for `CurrentProfileResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func currentProfile<Result>(
+            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            deserializer: some GRPCCore.MessageDeserializer<CurrentProfileResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CurrentProfileResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: AgentCtrl.Method.CurrentProfile.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -235,6 +361,56 @@ extension AgentCtrl.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<SetupRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<SetupResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "SwitchProfile" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `RequestHeader` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func switchProfile<Result>(
+        request: GRPCCore.ClientRequest<RequestHeader>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.switchProfile(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<RequestHeader>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<ResponseHeader>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "CurrentProfile" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func currentProfile<Result>(
+        request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CurrentProfileResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.currentProfile(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<CurrentProfileResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -296,6 +472,64 @@ extension AgentCtrl.ClientProtocol {
             metadata: metadata
         )
         return try await self.setup(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "SwitchProfile" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func switchProfile<Result>(
+        _ message: RequestHeader,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<RequestHeader>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.switchProfile(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "CurrentProfile" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func currentProfile<Result>(
+        _ message: SwiftProtobuf.Google_Protobuf_Empty,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CurrentProfileResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.currentProfile(
             request: request,
             options: options,
             onResponse: handleResponse

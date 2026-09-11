@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package agent_auth;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "agent.proto";
@@ -10,7 +9,6 @@ service AgentAuth {
   rpc WhoAmI(WhoAmIRequest) returns (WhoAmIResponse);
   rpc GetCurrentToken(CurrentTokenRequest) returns (CurrentTokenResponse);
   rpc CachedTokenExchange(TokenExchangeRequest) returns (TokenExchangeResponse);
-  rpc DeviceTokenExchange(DeviceTokenExchangeRequest) returns (TokenExchangeResponse);
   rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
 }
 
@@ -42,18 +40,16 @@ message CurrentTokenResponse {
 
 message TokenExchangeRequest {
   agent.RequestHeader header = 1;
-  string client_id = 2;
+  string audience = 2;
+  repeated string scopes = 3;
+  optional string actor_token = 4;
+  optional string actor_token_type = 5;
 }
 
 message TokenExchangeResponse {
   agent.ResponseHeader header = 1;
   string access_token = 2;
   int64 expires_in = 3;
-}
-
-message DeviceTokenExchangeRequest {
-  agent.RequestHeader header = 1;
-  string device_name = 2;
 }
 
 message AuthorizeRequest {

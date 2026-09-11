@@ -22,6 +22,15 @@ contents:
     file_info:
       mode: 0644
     packager: rpm
+  # AppArmor. Every confined profile that does user/group lookups includes
+  # <abstractions/nameservice>, and glibc loads our NSS module into it, so this
+  # single drop-in covers all of them (unix-chkpwd, sshd, cron, ...).
+  - src: ./nss/_deb/apparmor/abstractions/nameservice.d/authentik
+    dst: /etc/apparmor.d/abstractions/nameservice.d/authentik
+    file_info:
+      mode: 0644
+    packager: deb
+    type: config
 overrides:
   deb:
     depends:

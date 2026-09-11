@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package state_sysd_session;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "google/protobuf/timestamp.proto";

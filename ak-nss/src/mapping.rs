@@ -3,30 +3,44 @@ use libnss::group::Group;
 use libnss::passwd::Passwd;
 use libnss::shadow::Shadow;
 
+/// libnss marshals these strings with `CString::new(..).expect(..)`
+/// (libnss 0.9.0 `interop.rs`), which panics inside an `extern "C"` NSS entry
+/// point — aborting whatever called us, i.e. sshd or login — if a field contains
+/// an interior NUL. Directory data is remote-controlled, so strip NULs before
+/// they get that far.
+fn nss_safe(s: String) -> String {
+    if s.contains('\0') {
+        tracing::warn!("stripping NUL byte(s) from directory field");
+        s.replace('\0', "")
+    } else {
+        s
+    }
+}
+
 pub fn user_to_passwd_entry(entry: User) -> Passwd {
     Passwd {
-        name: entry.name,
+        name: nss_safe(entry.name),
         passwd: "x".to_owned(),
         uid: entry.uid,
         gid: entry.gid,
-        gecos: entry.gecos,
-        dir: entry.homedir,
-        shell: entry.shell,
+        gecos: nss_safe(entry.gecos),
+        dir: nss_safe(entry.homedir),
+        shell: nss_safe(entry.shell),
     }
 }
 
 pub fn ak_group_to_group_entry(group: AKGroup) -> Group {
     Group {
-        name: group.name,
-        passwd: group.passwd,
+        name: nss_safe(group.name),
+        passwd: nss_safe(group.passwd),
         gid: group.gid,
-        members: group.members,
+        members: group.members.into_iter().map(nss_safe).collect(),
     }
 }
 
 pub fn shadow_entry(name: String) -> Shadow {
     Shadow {
-        name,
+        name: nss_safe(name),
         passwd: "x".to_owned(),
         last_change: -1,
         change_min_days: -1,
@@ -95,6 +109,43 @@ mod tests {
         let s = shadow_entry("alice".to_owned());
         assert_eq!(s.name, "alice");
         assert_eq!(s.passwd, "x");
+    }
+
+    /// An interior NUL would make libnss's `CString::new(..).expect(..)` panic
+    /// inside an `extern "C"` hook, aborting sshd or login.
+    #[test]
+    fn passwd_entry_strips_nul_bytes() {
+        let p = user_to_passwd_entry(User {
+            name: "ali\0ce".to_owned(),
+            uid: 1000,
+            gid: 100,
+            gecos: "Alice\0 Smith".to_owned(),
+            homedir: "/home/ali\0ce".to_owned(),
+            shell: "/bin/ba\0sh".to_owned(),
+        });
+        for field in [&p.name, &p.passwd, &p.gecos, &p.dir, &p.shell] {
+            assert!(!field.contains('\0'), "{field:?} still contains a NUL");
+        }
+        assert_eq!(p.name, "alice");
+        assert_eq!(p.shell, "/bin/bash");
+    }
+
+    #[test]
+    fn group_entry_strips_nul_bytes_including_members() {
+        let g = ak_group_to_group_entry(AKGroup {
+            name: "admi\0ns".to_owned(),
+            gid: 200,
+            passwd: "x\0".to_owned(),
+            members: vec!["ali\0ce".to_owned(), "bob".to_owned()],
+        });
+        assert_eq!(g.name, "admins");
+        assert_eq!(g.passwd, "x");
+        assert_eq!(g.members, vec!["alice".to_owned(), "bob".to_owned()]);
+    }
+
+    #[test]
+    fn shadow_entry_strips_nul_bytes() {
+        assert_eq!(shadow_entry("ali\0ce".to_owned()).name, "alice");
     }
 
     #[test]

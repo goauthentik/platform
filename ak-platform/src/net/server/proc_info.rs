@@ -1,8 +1,7 @@
 use std::{fmt, path::PathBuf};
 
+use eyre::{Result, bail};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
-
-use crate::prelude::BoxError;
 
 #[derive(Debug, Clone)]
 pub struct ProcInfo {
@@ -32,7 +31,7 @@ impl fmt::Display for ProcInfoError {
 impl std::error::Error for ProcInfoError {}
 
 impl ProcInfo {
-    pub fn from_pid(pid: u32) -> Result<Self, ProcInfoError> {
+    pub fn from_pid(pid: u32) -> Result<Self> {
         let sysinfo_pid = Pid::from_u32(pid);
         let parent_pid_opt = {
             // First pass: fetch the target process and record its parent PID.
@@ -99,21 +98,24 @@ impl ProcInfo {
         })
     }
 
-    pub fn parent_cmdline(&self) -> Result<String, BoxError> {
+    pub fn parent_cmdline(&self) -> Result<String> {
         let p = match &self.parent {
             Some(p) => p,
-            None => return Err("Process has no parent process".into()),
+            None => bail!("Process has no parent process"),
         };
         Ok(p.cmdline.clone())
     }
 
-    pub fn unique_process_id(&self) -> Result<String, BoxError> {
-        let p = self.parent.clone().ok_or("failed to get parent process")?;
+    pub fn unique_process_id(&self) -> Result<String> {
+        let p = self
+            .parent
+            .clone()
+            .ok_or_else(|| eyre::eyre!("failed to get parent process"))?;
         let first_exe = p
             .cmdline
             .split(" ")
             .next()
-            .ok_or("failed to get first exe")?;
+            .ok_or_else(|| eyre::eyre!("failed to get first exe"))?;
         Ok(format!("{}:{}", p.exe.to_string_lossy(), first_exe))
     }
 }
@@ -151,7 +153,10 @@ mod tests {
         // PID 0 is the System Idle Process on Windows, so use u32::MAX which is
         // never a valid PID on any OS.
         let err = ProcInfo::from_pid(u32::MAX).unwrap_err();
-        assert!(matches!(err, ProcInfoError::ProcessNotFound(u32::MAX)));
+        let pie = err
+            .downcast_ref::<ProcInfoError>()
+            .expect("expected ProcInfoError");
+        assert!(matches!(pie, ProcInfoError::ProcessNotFound(u32::MAX)));
     }
 
     #[test]

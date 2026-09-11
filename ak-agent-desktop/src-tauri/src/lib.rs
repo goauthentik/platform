@@ -1,6 +1,7 @@
 use ak_meta::full_version;
-use ak_platform::prelude::*;
-use ak_platform::{log::init_log, string::PlatformString};
+use ak_platform::{log::LogBuilder, string::PlatformString};
+use eyre::Result;
+use sentry::ClientInitGuard;
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 
@@ -9,20 +10,19 @@ mod ui;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    init_log(
+    let mut opts = ak_meta::sentry_options("ak-agent-desktop");
+    opts.auto_session_tracking = true;
+    let guard = sentry::init(opts);
+    LogBuilder::new(
         PlatformString::new()
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
-    );
+    )
+    .with_default_filters()
+    .enable();
     tracing::trace!("authentik Agent Desktop v{}", full_version());
-    match ak_platform_keyring::init() {
-        Ok(_) => {}
-        Err(e) => {
-            eprintln!("Failed to setup keyring: {e:?}");
-        }
-    };
 
-    match start_tauri() {
+    match start_tauri(guard) {
         Ok(_) => {}
         Err(e) => {
             tracing::error!("Failed to start tauri: {e:?}");
@@ -30,8 +30,10 @@ pub fn run() {
     }
 }
 
-pub fn start_tauri() -> Result<()> {
+pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_sentry::init(&guard))
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             ui::show_main(app);
         }))
@@ -67,7 +69,7 @@ pub fn start_tauri() -> Result<()> {
             });
 
             #[cfg(target_os = "macos")]
-            ui::macos::setup_menu(app)?;
+            ui::macos::setup_app(app)?;
 
             TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -86,7 +88,9 @@ pub fn start_tauri() -> Result<()> {
         })
         .invoke_handler(tauri::generate_handler![
             cmd::get_user_info,
-            cmd::list_profiles
+            cmd::list_profiles,
+            cmd::active_profile,
+            cmd::get_versions,
         ])
         .build(tauri::generate_context!())?
         .run(|app, event| {

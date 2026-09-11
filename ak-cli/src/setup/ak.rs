@@ -1,5 +1,5 @@
 use crate::setup::Profile;
-use ak_platform::prelude::*;
+use eyre::Result;
 use url::Url;
 pub const DEFAULT_APP_SLUG: &str = "authentik-cli";
 pub const DEFAULT_CLIENT_ID: &str = "authentik-cli";

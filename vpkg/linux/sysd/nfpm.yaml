@@ -10,7 +10,7 @@ homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
 contents:
-  - src: ../../bin/agent_system/ak-sysd
+  - src: ../../bin/sysd/ak-sysd
     dst: /usr/bin/ak-sysd
   - src: ./sysd/usr/lib/systemd/system/ak-sysd.service
     dst: /usr/lib/systemd/system/ak-sysd.service
@@ -19,11 +19,13 @@ contents:
   - src: ./sysd/config.json
     dst: /etc/authentik/config.json
     type: config
-  - src: ../../bin/agent_system/completions/agent_system.bash
+  - src: ../../bin/sysd/completions/sysd.bash
     dst: /etc/bash_completion.d/ak-sysd
   - dst: /etc/authentik/domains
     type: dir
   - dst: /var/lib/authentik
+    type: dir
+  - dst: /var/log/authentik
     type: dir
   - src: ../../bin/browser_support/ak-browser-support
     dst: /usr/bin/ak-browser-support

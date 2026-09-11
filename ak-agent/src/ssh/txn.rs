@@ -1,9 +1,11 @@
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use ak_platform::{net::server::creds::ProcCredentials, prelude::*, string::PlatformString};
+use ak_platform::{net::server::creds::ProcCredentials, string::PlatformString};
 use ak_platform_authz::AuthorizeAction;
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
+use eyre::{Result, WrapErr, bail};
+use serde::Deserialize;
 use ssh_key::{Certificate, PrivateKey, public::KeyData};
 use uuid::Uuid;
 
@@ -13,12 +15,16 @@ use crate::ssh::txn_keys::generate_cert;
 pub struct SSHAgentTransaction {
     pub agent: Arc<Agent>,
     pub priv_key: Arc<PrivateKey>,
-    pub profile: String,
     pub creds: ProcCredentials,
     pub host_key: Option<KeyData>,
     pub session_id: Option<Vec<u8>>,
     pub cert: Option<Arc<Certificate>>,
     pub id: Uuid,
+}
+
+#[derive(Deserialize)]
+struct UserInfo {
+    preferred_username: String,
 }
 
 impl SSHAgentTransaction {
@@ -35,11 +41,12 @@ impl SSHAgentTransaction {
             }
         };
 
-        let token_mgr = match self.agent.gtm.for_profile(&self.profile).await {
+        let profile = self.agent.cfg.read().await.active_profile.clone();
+        let token_mgr = match self.agent.gtm.for_profile(profile.clone()).await {
             Some(m) => m,
             None => {
                 tracing::warn!(
-                    profile = self.profile,
+                    profile = profile,
                     "ssh-agent: ensure_cert: profile not found"
                 );
                 return None;
@@ -54,11 +61,21 @@ impl SSHAgentTransaction {
             }
         };
 
-        let claims = match root_token.claims() {
-            Ok(c) => c,
+        let username = match root_token.claims() {
+            Ok(c) => c.preferred_username,
             Err(e) => {
-                tracing::warn!("ssh-agent: ensure_cert: failed to parse token claims: {e:?}");
-                return None;
+                tracing::debug!(
+                    "ssh-agent: ensure_cert: access token has no usable profile claims: {e:?}"
+                );
+                match self.get_userinfo_username(&profile).await {
+                    Ok(username) => username,
+                    Err(userinfo_error) => {
+                        tracing::warn!(
+                            "ssh-agent: ensure_cert: failed to get username from userinfo: {userinfo_error:?}"
+                        );
+                        return None;
+                    }
+                }
             }
         };
 
@@ -78,7 +95,7 @@ impl SSHAgentTransaction {
 
         let cert = match generate_cert(
             &self.priv_key,
-            &claims.preferred_username,
+            &username,
             &host_key,
             &host_token_str,
             valid_before,
@@ -95,19 +112,38 @@ impl SSHAgentTransaction {
         Some(cert)
     }
 
-    async fn get_host_token(&self, host_key: &KeyData) -> Result<(String, i64)> {
+    async fn get_userinfo_username(&self, profile_name: &str) -> Result<String> {
         let profile = {
             let cfg = self.agent.cfg.read().await;
             cfg.profiles
-                .get(&self.profile)
-                .ok_or("profile not found")?
+                .get(profile_name)
+                .ok_or_else(|| eyre::eyre!("profile {profile_name} not found"))?
+                .clone()
+        };
+        let userinfo_url = format!("{}/application/o/userinfo/", profile.authentik_url);
+        let response = profile
+            .authenticated_http_client()?
+            .get(userinfo_url)
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(response.json::<UserInfo>().await?.preferred_username)
+    }
+
+    async fn get_host_token(&self, host_key: &KeyData) -> Result<(String, i64)> {
+        let profile = {
+            let profile = self.agent.cfg.read().await.active_profile.clone();
+            let cfg = self.agent.cfg.read().await;
+            cfg.profiles
+                .get(&profile)
+                .ok_or_else(|| eyre::eyre!("profile {} not found", profile))?
                 .clone()
         };
 
         let pk = ssh_key::PublicKey::from(host_key.clone());
         let host_key_str = pk
             .to_openssh()
-            .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+            .wrap_err("failed to serialize host public key")?;
         let host_key_trimmed = host_key_str.trim().to_string();
 
         self.authorize(&host_key_trimmed).await?;
@@ -117,7 +153,7 @@ impl SSHAgentTransaction {
 
         let dt = endpoints_agents_connectors_auth_fed_create(&api_config, &device_name)
             .await
-            .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+            .map_err(|e| eyre::eyre!("{e}"))?;
 
         Ok((dt.token, dt.expires_in.unwrap_or(0) as i64))
     }
@@ -126,26 +162,25 @@ impl SSHAgentTransaction {
         let hk1 = host_key_str.to_string();
         let hk2 = host_key_str.to_string();
 
-        let result = AuthorizeAction {
-            message: Box::new(move |c| {
+        let result = AuthorizeAction::build()
+            .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!("authorize access device '{hk1}' in '{cmd}'"))
                     .with_windows(format!("'{hk1}' is attempting to access '{cmd}'"))
                     .with_linux(format!("'{hk1}' is attempting to access '{cmd}'")))
-            }),
-            uid: Box::new(move |c| {
+            })
+            .with_uid(move |c| {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{hk2}:{pid}"))
-            }),
-            timeout_success: Duration::from_secs(30 * 60),
-            timeout_denied: Duration::from_secs(5 * 60),
-        }
-        .prompt(self.creds.clone())
-        .await?;
+            })
+            .with_success_timeout(Duration::from_secs(30 * 60))
+            .with_denied_timeout(Duration::from_secs(5 * 60))
+            .prompt(self.creds.clone())
+            .await?;
 
         if !result {
-            return Err(Box::from("authorization denied by user"));
+            bail!("authorization denied by user");
         }
         Ok(())
     }

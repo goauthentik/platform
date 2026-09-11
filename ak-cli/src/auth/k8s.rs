@@ -1,10 +1,10 @@
-use ak_platform::prelude::*;
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
     grpc::assert_response_valid,
 };
 use chrono::{DateTime, TimeDelta, Utc};
+use eyre::{Result, WrapErr};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
@@ -49,9 +49,13 @@ pub async fn get_credentials(
             header: Some(RequestHeader {
                 profile: opts.profile,
             }),
-            client_id: opts.client_id,
+            audience: opts.client_id,
+            scopes: vec![],
+            actor_token: None,
+            actor_token_type: None,
         })
-        .await?
+        .await
+        .wrap_err("failed to exchange token")?
         .into_inner();
     assert_response_valid(res.header)?;
 

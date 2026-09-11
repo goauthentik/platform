@@ -89,3 +89,4 @@ iOSInjectionProject/
 dist/
 sysd.xcframework/**
 .derived-data-log*
+coverage.xml
