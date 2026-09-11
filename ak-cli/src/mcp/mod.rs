@@ -8,7 +8,10 @@ use crate::{
     mcp::{
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
-        tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
+        tools::{
+            BlueprintValidateArgs, CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs,
+            TokenExchangeArgs,
+        },
     },
 };
 use ak_meta::user_agent;
@@ -140,6 +143,17 @@ impl AuthentikMcp {
     }
 
     #[tool(
+        description = "Validate proposed authentik Blueprint YAML before applying it. Rejects destructive entries, secret fields, non-curated references, unsafe tags, and malformed YAML. Does not make changes.",
+        annotations(title = "Validate Blueprint", read_only_hint = true)
+    )]
+    async fn blueprint_validate(
+        &self,
+        Parameters(args): Parameters<BlueprintValidateArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._validate_blueprint(args).await
+    }
+
+    #[tool(
         description = "Send a read-only HTTP request (GET/HEAD) as an agent identity. Only hosts \
                        sharing a registrable domain with an application the agent exchanged a token \
                        for can be reached; that token is attached automatically. Redirects are not \
@@ -192,7 +206,8 @@ impl ServerHandler for AuthentikMcp {
                  an agent identity), token_exchange (exchange an agent identity for an \
                  on-behalf-of token for one application), http_fetch and http_send (call an \
                  application as the agent identity). The usual order is create_agent, \
-                 request_access, token_exchange, then http_fetch/http_send; the latter two can \
+                 request_access, token_exchange, then http_fetch/http_send; use blueprint_validate \
+                 before applying Blueprint content. The latter two can \
                  only reach hosts adjacent to an application the agent exchanged a token for."
                     .to_string(),
             )
