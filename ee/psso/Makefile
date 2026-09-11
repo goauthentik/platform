@@ -8,6 +8,13 @@ XCB_EXTRA_ARGS =
 SOURCES := "${PWD}/Bridge" \
 		"${PWD}/PSSO"
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	SED_INPLACE = /usr/bin/sed -i ''
+else
+	SED_INPLACE = sed -i
+endif
+
 .PHONY: clean
 clean:
 	xcodebuild ${XCB_DEF_ARGS} clean
@@ -82,4 +89,4 @@ gen:
 		--swift_opt=ImplementationOnlyImports=true \
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
-	sed -i 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*
+	$(SED_INPLACE) 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*
