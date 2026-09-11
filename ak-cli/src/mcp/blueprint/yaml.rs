@@ -1,9 +1,4 @@
-//! A minimal tag-preserving YAML AST built over `saphyr-parser`'s event stream.
-//!
-//! The validator's whole boundary depends on *seeing* YAML tags (`!Find`,
-//! `!Env`, …), which a serde-style loader discards. We therefore walk the raw
-//! event stream and keep the tag on every node, plus a plain-value projection
-//! (the equivalent of the TS `yaml` lib's `.toJSON()`) for value checks.
+//! Minimal YAML AST that preserves explicit tags for validation.
 
 use saphyr_parser::{Event, Parser, ScalarStyle, Tag};
 
@@ -326,13 +321,49 @@ pub fn parse_document(content: &str) -> Result<Option<Node>, String> {
         match ev {
             Ev::DocStart => {
                 b.pos += 1;
-                return Ok(b.build());
+                let document = b.build();
+                if let Some(node) = document.as_ref() {
+                    validate_mapping_keys(node)?;
+                }
+                return Ok(document);
             }
             Ev::DocEnd => break,
             _ => b.pos += 1,
         }
     }
     Ok(None)
+}
+
+/// Blueprint mappings must have plain, unique string keys. Besides matching
+/// the blueprint schema, this prevents the validator and the YAML loader from
+/// choosing different values for duplicate keys.
+fn validate_mapping_keys(node: &Node) -> Result<(), String> {
+    match node {
+        Node::Map { pairs, .. } => {
+            let mut keys = std::collections::HashSet::new();
+            for (key, node_value) in pairs {
+                let Node::Scalar {
+                    value: key_value,
+                    tag: None,
+                    ..
+                } = key
+                else {
+                    return Err("YAML mapping keys must be plain, untagged scalars".into());
+                };
+                if !keys.insert(key_value) {
+                    return Err(format!("duplicate YAML mapping key {key_value:?}"));
+                }
+                validate_mapping_keys(node_value)?;
+            }
+        }
+        Node::Seq { items, .. } => {
+            for item in items {
+                validate_mapping_keys(item)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -373,5 +404,15 @@ mod tests {
     fn empty_input_is_none_not_panic() {
         assert_eq!(parse_document("").unwrap(), None);
         assert_eq!(parse_document("   \n# just a comment").unwrap(), None);
+    }
+
+    #[test]
+    fn rejects_duplicate_or_tagged_mapping_keys() {
+        assert!(
+            parse_document("a: 1\na: 2")
+                .unwrap_err()
+                .contains("duplicate")
+        );
+        assert!(parse_document("!Context a: 1").is_err());
     }
 }
