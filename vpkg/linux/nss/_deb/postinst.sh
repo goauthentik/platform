@@ -2,6 +2,12 @@
 #DEBHELPER#
 set -euo pipefail
 
+if [ "$(uname -s)" = "Darwin" ]; then
+	SED_INPLACE="/usr/bin/sed -i ''"
+else
+	SED_INPLACE="sed -i"
+fi
+
 # This code was taken from authd, which got it from libnss-sss, which got it from libnss-myhostname, which got it from nss-mdns:
 
 log() {
@@ -20,7 +26,7 @@ insert_nss_entry() {
         return
     fi
     # append 'authentik' to the end of the line if it's not found already
-    sed -i --regexp-extended '
+    $SED_INPLACE --regexp-extended '
       /^(passwd|group|shadow):/ {
         /\bauthentik\b/! s/$/ authentik/
       }

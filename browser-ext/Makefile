@@ -5,13 +5,21 @@ FILE_NAME_CHROME := authentik_chrome.zip
 FILE_NAME_EDGE := authentik_edge.zip
 FILE_NAME_FIREFOX := authentik_firefox.zip
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	SED_INPLACE = /usr/bin/sed -i ''
+else
+	SED_INPLACE = sed -i
+endif
+
+
 .PHONY: bump
 bump:
 	pnpm version ${VERSION} || true
-	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-chrome.json"
-	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-edge.json"
-	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-firefox.json"
-	sed -i 's/VERSION = ".*"/VERSION = "${VERSION}"/g' ${PWD}/src/version.ts
+	$(SED_INPLACE) 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-chrome.json"
+	$(SED_INPLACE) 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-edge.json"
+	$(SED_INPLACE) 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-firefox.json"
+	$(SED_INPLACE) 's/VERSION = ".*"/VERSION = "${VERSION}"/g' ${PWD}/src/version.ts
 
 .PHONY: build
 build:
