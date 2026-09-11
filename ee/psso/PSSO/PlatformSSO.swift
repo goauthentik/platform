@@ -58,7 +58,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             self.logger.error("Failed to check if interactive auth is available: \(error)")
             return .failed
         }
-        let interactive = InteractiveAuth(loginManager: loginManager)
+        let interactive = InteractiveAuth(loginManager: loginManager, method: method)
         self.interactive = interactive
         do {
             return try await interactive.startAuth(viewController: self) ?? .failed
@@ -83,7 +83,12 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
 
     func supportedGrantTypes() -> ASAuthorizationProviderExtensionSupportedGrantTypes {
         self.logger.debug("supportedGrantTypes")
-        return [.jwtBearer]
+        // Both methods the profile can ask for. macOS picks one according to the
+        // payload's AuthenticationMethod: jwt-bearer carries an assertion signed by the
+        // user's Secure Enclave key, password carries the login-window credential as
+        // claims of the login request. Advertising only jwt-bearer leaves a Password
+        // profile with no grant it can use, and macOS never attempts a login at all.
+        return [.jwtBearer, .password]
     }
 
     func keyWillRotate(

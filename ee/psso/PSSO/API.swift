@@ -38,11 +38,30 @@ class API {
     func RegisterUser(
         loginManger: ASAuthorizationProviderExtensionLoginManager,
         userToken: String,
+        method: ASAuthorizationProviderExtensionAuthenticationMethod,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
-                from: loginManger.key(for: .userSecureEnclaveKey)!)!
-            self.logger.debug("registering user with sysd...")
+            // Only the userSecureEnclaveKey method has a user Secure Enclave key to
+            // register: in password mode macOS never generates one, so asking for it
+            // returns nil. Registering is still required in both modes -- it is what
+            // binds this local account to an authentik user -- so the key is optional
+            // here rather than a precondition.
+            var EnclaveKeyID = ""
+            var UserSecureEnclaveKey = ""
+            if method == .userSecureEnclaveKey {
+                guard let key = loginManger.key(for: .userSecureEnclaveKey) else {
+                    self.logger.error("no user Secure Enclave key to register")
+                    return .failed
+                }
+                guard let (keyID, publicKey, _) = try getPublicKeyString(from: key) else {
+                    self.logger.error("could not read the user Secure Enclave public key")
+                    return .failed
+                }
+                EnclaveKeyID = keyID
+                UserSecureEnclaveKey = publicKey
+            }
+            self.logger.debug(
+                "registering user with sysd, method \(String(describing: method))...")
             let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
                     enclaveKeyID: EnclaveKeyID,
