@@ -52,17 +52,20 @@ impl WindowsStore {
     }
 
     fn storage_dir(&self) -> Result<PathBuf, KeyringError> {
-        let path = xdg_data_path("tokens")
-            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
+        let path =
+            xdg_data_path("tokens").map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
         let dir = PathBuf::from(path);
-        fs::create_dir_all(&dir)
-            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
+        fs::create_dir_all(&dir).map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
         Ok(dir)
     }
 
     fn file_path(&self, service: &str, user: &str) -> Result<PathBuf, KeyringError> {
         let dir = self.storage_dir()?;
-        let filename = format!("{}-{}.bin", sanitize_path_component(service), sanitize_path_component(user));
+        let filename = format!(
+            "{}-{}.bin",
+            sanitize_path_component(service),
+            sanitize_path_component(user)
+        );
         Ok(dir.join(filename))
     }
 
@@ -84,8 +87,7 @@ impl WindowsStore {
     fn write_file(&self, service: &str, user: &str, data: &str) -> Result<(), KeyringError> {
         let path = self.file_path(service, user)?;
         let encrypted = encrypt_bytes(data.as_bytes())?;
-        fs::write(&path, encrypted)
-            .map_err(|e| KeyringError::Other(eyre::Report::from(e)))
+        fs::write(&path, encrypted).map_err(|e| KeyringError::Other(eyre::Report::from(e)))
     }
 
     fn delete_file(&self, service: &str, user: &str) -> Result<(), KeyringError> {
@@ -197,9 +199,8 @@ fn encrypt_bytes(data: &[u8]) -> Result<Vec<u8>, KeyringError> {
     if let Err(e) = result {
         return Err(KeyringError::Other(eyre::Report::from(e)));
     }
-    let bytes = unsafe {
-        std::slice::from_raw_parts(data_out.pbData, data_out.cbData as usize).to_vec()
-    };
+    let bytes =
+        unsafe { std::slice::from_raw_parts(data_out.pbData, data_out.cbData as usize).to_vec() };
     unsafe {
         let _ = LocalFree(Some(HLOCAL(data_out.pbData as *mut c_void)));
     }
@@ -226,9 +227,8 @@ fn decrypt_bytes(data: &[u8]) -> Result<Vec<u8>, KeyringError> {
     if let Err(e) = result {
         return Err(KeyringError::Other(eyre::Report::from(e)));
     }
-    let bytes = unsafe {
-        std::slice::from_raw_parts(data_out.pbData, data_out.cbData as usize).to_vec()
-    };
+    let bytes =
+        unsafe { std::slice::from_raw_parts(data_out.pbData, data_out.cbData as usize).to_vec() };
     unsafe {
         let _ = LocalFree(Some(HLOCAL(data_out.pbData as *mut c_void)));
     }
@@ -300,9 +300,11 @@ mod tests {
             2560,
         )));
         assert!(!should_fallback_to_file(&keyring_core::Error::NoEntry));
-        assert!(!should_fallback_to_file(&keyring_core::Error::NoStorageAccess(
-            std::io::Error::new(std::io::ErrorKind::Other, "test").into(),
-        )));
+        assert!(!should_fallback_to_file(
+            &keyring_core::Error::NoStorageAccess(
+                std::io::Error::new(std::io::ErrorKind::Other, "test").into(),
+            )
+        ));
     }
 
     #[tokio::test]
@@ -318,7 +320,10 @@ mod tests {
             .unwrap();
         let loaded = store.get(service, user, Accessibility::User).await.unwrap();
         assert_eq!(loaded, payload);
-        store.delete(service, user, Accessibility::User).await.unwrap();
+        store
+            .delete(service, user, Accessibility::User)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
@@ -342,13 +347,23 @@ mod tests {
             .await
             .unwrap();
 
-        let file_path = temp_dir.join(format!("{}-{}.bin", sanitize_path_component(service), sanitize_path_component(user)));
-        assert!(!file_path.exists(), "payload should not fall back to file storage below the platform limit");
+        let file_path = temp_dir.join(format!(
+            "{}-{}.bin",
+            sanitize_path_component(service),
+            sanitize_path_component(user)
+        ));
+        assert!(
+            !file_path.exists(),
+            "payload should not fall back to file storage below the platform limit"
+        );
 
         let loaded = store.get(service, user, Accessibility::User).await.unwrap();
         assert_eq!(loaded, payload);
 
-        store.delete(service, user, Accessibility::User).await.unwrap();
+        store
+            .delete(service, user, Accessibility::User)
+            .await
+            .unwrap();
         let _ = fs::remove_file(file_path);
         let _ = fs::remove_dir_all(&temp_dir);
 
