@@ -174,6 +174,9 @@ impl serde::Serialize for RegisterDeviceResponse {
         if !self.device_token.is_empty() {
             len += 1;
         }
+        if !self.authorization_endpoint.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("sys_auth_apple.RegisterDeviceResponse", len)?;
         if !self.client_id.is_empty() {
             struct_ser.serialize_field("clientId", &self.client_id)?;
@@ -195,6 +198,9 @@ impl serde::Serialize for RegisterDeviceResponse {
         }
         if !self.device_token.is_empty() {
             struct_ser.serialize_field("deviceToken", &self.device_token)?;
+        }
+        if !self.authorization_endpoint.is_empty() {
+            struct_ser.serialize_field("authorizationEndpoint", &self.authorization_endpoint)?;
         }
         struct_ser.end()
     }
@@ -218,6 +224,8 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             "nonceEndpoint",
             "device_token",
             "deviceToken",
+            "authorization_endpoint",
+            "authorizationEndpoint",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -229,6 +237,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             Audience,
             NonceEndpoint,
             DeviceToken,
+            AuthorizationEndpoint,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -257,6 +266,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             "audience" => Ok(GeneratedField::Audience),
                             "nonceEndpoint" | "nonce_endpoint" => Ok(GeneratedField::NonceEndpoint),
                             "deviceToken" | "device_token" => Ok(GeneratedField::DeviceToken),
+                            "authorizationEndpoint" | "authorization_endpoint" => Ok(GeneratedField::AuthorizationEndpoint),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -283,6 +293,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                 let mut audience__ = None;
                 let mut nonce_endpoint__ = None;
                 let mut device_token__ = None;
+                let mut authorization_endpoint__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::ClientId => {
@@ -327,6 +338,12 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             }
                             device_token__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::AuthorizationEndpoint => {
+                            if authorization_endpoint__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("authorizationEndpoint"));
+                            }
+                            authorization_endpoint__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(RegisterDeviceResponse {
@@ -337,6 +354,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                     audience: audience__.unwrap_or_default(),
                     nonce_endpoint: nonce_endpoint__.unwrap_or_default(),
                     device_token: device_token__.unwrap_or_default(),
+                    authorization_endpoint: authorization_endpoint__.unwrap_or_default(),
                 })
             }
         }
