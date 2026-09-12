@@ -95,7 +95,7 @@ jobs:
       matrix:
         target:
           - ee/psso
-    runs-on: macos-15
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
@@ -103,9 +103,9 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: cache/
-          key: target-cache-psso-macos-15-${{ hashFiles('ee/psso/**') }}
+          key: target-cache-psso-xcode-27-${{ hashFiles('ee/psso/**') }}
           restore-keys: |
-            target-cache-psso-macos-15-
+            target-cache-psso-xcode-27-
       - run: |
           brew install xcresultparser
           make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
