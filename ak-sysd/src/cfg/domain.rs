@@ -212,17 +212,41 @@ impl DomainManager {
         refresh_interval
     }
 
-    /// First enabled domain — mirrors Go's `dom[0]` shortcut for
-    /// single-tenant components (ping, auth, directory, device). Do not
+    /// First enabled domain that has a token — mirrors Go's `dom[0]` shortcut
+    /// for single-tenant components (ping, auth, directory, device). Do not
     /// invent smarter "current domain" selection here.
+    ///
+    /// An MDM-managed domain wins when there is one: it carries the connector
+    /// and device group the organisation assigned, whereas a hand-run
+    /// `domains join` may point somewhere else entirely. Policy beats ad hoc.
+    ///
+    /// The token check matters because `load_managed` adds an MDM-managed
+    /// domain alongside any user-enrolled ones. If its enrollment produced no
+    /// token, it is still `enabled`, and returning it means every request goes
+    /// out as `Bearer+agent ` and comes back 403 "Authentication credentials
+    /// were not provided" — while a perfectly good domain sits further down the
+    /// list.
+    ///
+    /// Note this still only ever returns one domain, while the storage layer
+    /// happily holds several. Every auth path (`ping`, `auth/*`, `session`,
+    /// `directory`) calls this and silently ignores the rest; only `device`
+    /// check-in and `healthcheck_all` fan out. Making multi-domain genuinely
+    /// work means binding a domain to each of those call sites.
     pub async fn active(&self) -> Result<Arc<LoadedDomain>> {
-        self.domains
-            .read()
-            .await
+        let domains = self.domains.read().await;
+        let usable = |d: &&Arc<LoadedDomain>| d.cfg.enabled && !d.cfg.token.is_empty();
+        let selected = domains
             .iter()
-            .find(|d| d.cfg.enabled)
+            .find(|d| usable(d) && d.cfg.managed)
+            .or_else(|| domains.iter().find(usable))
             .cloned()
-            .ok_or_else(|| eyre!("no enabled domain configured"))
+            .ok_or_else(|| eyre!("no enabled domain with a token configured"))?;
+        tracing::debug!(
+            domain = %selected.cfg.domain,
+            managed = selected.cfg.managed,
+            "selected active domain"
+        );
+        Ok(selected)
     }
 
     pub async fn save_domain(&self, cfg: DomainConfig) -> Result<()> {
@@ -238,7 +262,36 @@ impl DomainManager {
             )
             .await
         {
-            Ok(_) => on_disk.fallback_token = String::new(),
+            // A write that cannot be read back is no use to us, so confirm the
+            // value is retrievable before dropping the on-disk copy. On macOS
+            // the write succeeds from a launchd daemon but the read fails with
+            // errSecInteractionNotAllowed, because retrieving the item wants an
+            // ACL prompt and there is no UI session to show one. Clearing the
+            // fallback on the strength of the write alone leaves the token
+            // somewhere sysd can never reach, and every subsequent request goes
+            // out as `Bearer+agent ` and comes back 403.
+            Ok(_) => match ak_platform_keyring::store()
+                .get(
+                    &keyring_service(),
+                    &cfg.domain,
+                    ak_platform_keyring::Accessibility::Always,
+                )
+                .await
+            {
+                Ok(stored) if stored == cfg.token => on_disk.fallback_token = String::new(),
+                Ok(_) => {
+                    on_disk.fallback_token = cfg.token.clone();
+                    tracing::warn!(
+                        "keyring returned a different token than was written, keeping file fallback"
+                    );
+                }
+                Err(e) => {
+                    on_disk.fallback_token = cfg.token.clone();
+                    tracing::warn!(
+                        "saved domain token to keyring but could not read it back ({e:?}), keeping file fallback"
+                    );
+                }
+            },
             Err(e) => {
                 on_disk.fallback_token = cfg.token.clone();
                 tracing::warn!(
@@ -370,11 +423,25 @@ impl DomainManager {
     /// Loads (or re-enrolls, or removes) the MDM-managed domain. See
     /// `cfg::managed` for the platform-specific config source.
     pub async fn load_managed(&self) -> Result<()> {
+        const MANAGED_DOMAIN_NAME: &str = "ak-mdm-managed";
+
         let Some(managed) = crate::cfg::managed::load_managed_config()? else {
+            // No managed config means the profile is gone, so a managed domain
+            // left behind is stale policy. `load_all` reloads every `*.json`
+            // regardless of whether the config that created it still exists, so
+            // without this the domain lingers forever — never refreshed, never
+            // revoked, and still competing to be the active one.
+            if self
+                .domains()
+                .await
+                .iter()
+                .any(|d| d.cfg.domain == MANAGED_DOMAIN_NAME)
+            {
+                tracing::info!("managed config absent, removing managed domain");
+                self.delete_domain(MANAGED_DOMAIN_NAME).await?;
+            }
             return Ok(());
         };
-
-        const MANAGED_DOMAIN_NAME: &str = "ak-mdm-managed";
         let existing = self
             .domains()
             .await
