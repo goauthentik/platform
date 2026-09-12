@@ -86,6 +86,11 @@ pub struct BlueprintApplyArgs {
     pub profile: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct BlueprintApplyResult {
+    success: bool,
+}
+
 /// Resolve an Agent connector's UUID by name, or the sole connector when no name
 /// is given. Uses the operator's token (the endpoints API is not in the typed
 /// client, so this is a raw request).
@@ -208,6 +213,9 @@ impl AuthentikMcp {
         let base = token.url.trim_end_matches('/').to_string();
         let bearer = token.raw;
         let client = reqwest::Client::builder()
+            // Do not let a configured instance redirect this bearer token to a
+            // different origin.
+            .redirect(reqwest::redirect::Policy::none())
             .user_agent(user_agent())
             .timeout(Duration::from_secs(60))
             .build()
@@ -227,14 +235,22 @@ impl AuthentikMcp {
             .await
             .map_err(|e| McpError::internal_error(format!("apply request failed: {e}"), None))?;
         let status = resp.status();
-        let body = resp.text().await.unwrap_or_default();
         if !status.is_success() {
             return Ok(CallToolResult::success(vec![ContentBlock::text(format!(
-                "The server rejected the apply (HTTP {}):\n{body}",
+                "The server rejected the apply (HTTP {}).",
                 status.as_u16()
             ))]));
         }
-        Ok(CallToolResult::success(vec![ContentBlock::text(body)]))
+        let result: BlueprintApplyResult = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(format!("invalid apply response: {e}"), None))?;
+        let message = if result.success {
+            "Blueprint applied successfully."
+        } else {
+            "Blueprint did not pass server validation and was not applied."
+        };
+        Ok(CallToolResult::success(vec![ContentBlock::text(message)]))
     }
 
     pub async fn _list_applications(
