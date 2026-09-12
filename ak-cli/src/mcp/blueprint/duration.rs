@@ -8,7 +8,6 @@ use crate::mcp::blueprint::yaml::Plain;
 pub fn parse_token_duration(val: &Plain) -> Option<i64> {
     match val {
         Plain::Int(n) => Some(*n),
-        Plain::Float(f) => Some(*f as i64),
         Plain::Str(s) => parse_str(s),
         _ => None,
     }
@@ -114,6 +113,7 @@ mod tests {
         assert_eq!(s("hours="), None);
         assert_eq!(parse_token_duration(&Plain::Null), None);
         assert_eq!(parse_token_duration(&Plain::Bool(true)), None);
+        assert_eq!(parse_token_duration(&Plain::Float(1.5)), None);
         assert_eq!(parse_token_duration(&Plain::Map(vec![])), None);
     }
 }
