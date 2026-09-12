@@ -55,14 +55,6 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             self.logger.info("User is already registered and repair is not required")
             return .success
         }
-        if #available(macOS 27.0, *) {
-            if method == .openID {
-                loginManager.saveUserLoginConfiguration(ASAuthorizationProviderExtensionUserLoginConfiguration(
-                    loginUserName: userName ??,
-                ))
-                return .success
-            }
-        }
         if !options.contains(.userInteractionEnabled) {
             self.logger.error("User interaction is required")
             return .userInterfaceRequired
