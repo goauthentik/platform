@@ -107,7 +107,7 @@ jobs:
           restore-keys: |
             target-cache-psso-xcode-27-
       - run: |
-          brew install xcresultparser
+          brew install xcresultparser xcbeautify
           make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
         if: ${{ always() }}

@@ -42,6 +42,7 @@ jobs:
       - if: steps.check.outputs.has-signing-cert == 'false'
         run: echo 'XCB_EXTRA_ARGS=CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO' >> $GITHUB_ENV
       - run: |
+          brew install xcbeautify
           make ee/psso/build XCB_EXTRA_ARGS=${XCB_EXTRA_ARGS}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
