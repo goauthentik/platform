@@ -48,10 +48,7 @@ enum Commands {
     Version,
     /// Switch to a different active profile
     #[command(alias = "s")]
-    SwitchProfile {
-        #[arg(required = true)]
-        profile: String,
-    },
+    SwitchProfile { profile: Option<String> },
 
     /// Configure authentik CLI
     Config {
@@ -172,7 +169,8 @@ async fn main() -> std::result::Result<(), Error> {
                 authentik_url,
                 client_id,
                 app_slug,
-            } => commands::config::setup(app, authentik_url, client_id, app_slug).await,
+                dpop,
+            } => commands::config::setup(app, authentik_url, client_id, app_slug, *dpop).await,
         },
         Commands::Auth { command } => {
             // If not in verbose, set a higher default log level as the output matters

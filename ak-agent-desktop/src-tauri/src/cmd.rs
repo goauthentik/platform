@@ -29,6 +29,7 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: None,
             next_renew: None,
+            dpop_bound: c_prof.dpop_enabled(),
             status: ProfileStatus::Failed as i32,
         };
 
@@ -61,6 +62,7 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: Some(claims.iat.into()),
             next_renew: Some(claims.exp.into()),
+            dpop_bound: c_prof.dpop_enabled(),
             status: ProfileStatus::Active as i32,
         });
     }

@@ -216,7 +216,7 @@ impl ProfileTokenManager {
     }
 
     async fn try_renew(&self) -> Result<()> {
-        let (token_url, refresh_token, client_id) = {
+        let (token_url, refresh_token, client_id, dpop_keypair) = {
             let config = self.cfg.read().await;
             let profile = config
                 .profiles
@@ -226,6 +226,7 @@ impl ProfileTokenManager {
                 format!("{}/application/o/token/", profile.authentik_url),
                 profile.refresh_token().clone(),
                 profile.client_id.clone(),
+                profile.dpop_keypair()?,
             )
         };
 
@@ -234,17 +235,21 @@ impl ProfileTokenManager {
             .append_pair("refresh_token", &refresh_token)
             .finish();
         let client = reqwest::Client::new();
-        let res = client
+        let mut req = client
             .post(&token_url)
             .basic_auth(&client_id, None::<&str>)
             .header(
                 reqwest::header::CONTENT_TYPE,
                 "application/x-www-form-urlencoded",
             )
-            .header(reqwest::header::USER_AGENT, user_agent())
-            .body(body)
-            .send()
-            .await?;
+            .header(reqwest::header::USER_AGENT, user_agent());
+
+        if let Some(kp) = &dpop_keypair {
+            let proof = ak_platform::dpop::build_proof(kp, "POST", &token_url, None)?;
+            req = req.header("DPoP", proof);
+        }
+
+        let res = req.body(body).send().await?;
 
         if !res.status().is_success() {
             let body = res.text().await?;
@@ -331,6 +336,7 @@ mod tests {
                 "client".to_string(),
                 "access".to_string(),
                 "refresh".to_string(),
+                "".to_string(),
             ),
         );
 

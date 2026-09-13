@@ -21,7 +21,6 @@ chrono = { workspace = true }
 clap = { workspace = true }
 clap_complete = "4"
 tracing = { workspace = true }
-oauth-device-flows = { workspace = true }
 open = "5.3.5"
 pbjson-types = { workspace = true }
 psl = { workspace = true }
