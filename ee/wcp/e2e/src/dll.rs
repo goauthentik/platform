@@ -22,7 +22,7 @@ use windows::{
     core::{GUID, HRESULT, Interface, PCWSTR, PWSTR, s},
 };
 
-pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E_8E0A_1D0F8E73577A);
+pub use ak_ee_wcp_wire::CLSID_CREDENTIAL_PROVIDER;
 
 type DllGetClassObjectFn =
     unsafe extern "system" fn(*const GUID, *const GUID, *mut *mut c_void) -> HRESULT;

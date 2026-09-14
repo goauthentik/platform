@@ -36,7 +36,7 @@ static FACTORY_LOCK_COUNT: AtomicUsize = AtomicUsize::new(0);
 static DLL_MODULE: OnceLock<usize> = OnceLock::new();
 static DLL_DIR: OnceLock<std::path::PathBuf> = OnceLock::new();
 
-pub const CLSID_CREDENTIAL_PROVIDER: GUID = GUID::from_u128(0x7BCC7941_18BA_4A8E_8E0A_1D0F8E73577A);
+pub use ak_ee_wcp_wire::CLSID_CREDENTIAL_PROVIDER;
 
 /// This DLL's own module handle: the tile bitmap is embedded here, not in the
 /// host process's `.exe`.

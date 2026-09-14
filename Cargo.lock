@@ -226,6 +226,7 @@ version = "0.61.0"
 dependencies = [
  "prost",
  "url",
+ "windows-core 0.62.2",
 ]
 
 [[package]]
