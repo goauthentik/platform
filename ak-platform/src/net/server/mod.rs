@@ -7,10 +7,16 @@ use std::{
 };
 
 use interprocess::local_socket::{GenericFilePath, ListenerOptions, tokio::prelude::*};
+#[cfg(windows)]
+use interprocess::os::windows::{
+    local_socket::ListenerOptionsExt, security_descriptor::SecurityDescriptor,
+};
 use ssh_agent_lib::agent::ListeningSocket;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::sync::mpsc;
 use tokio_stream::Stream as AsyncStream;
+#[cfg(windows)]
+use widestring::{U16CStr, u16cstr};
 
 use crate::string::PlatformString;
 
@@ -21,6 +27,24 @@ pub enum SocketPermMode {
     Owner,
     Everyone,
     Admin,
+}
+
+impl SocketPermMode {
+    /// Named pipes carry no file mode, so the Unix permission bits are expressed
+    /// as a DACL instead. `FA` is full access, granted to the pipe's owner (`OW`),
+    /// to Everyone (`WD`), or to built-in Administrators (`BA`) plus SYSTEM (`SY`)
+    /// — the admin case deliberately omits the owner so an unprivileged creator
+    /// cannot reconnect to its own socket.
+    #[cfg(windows)]
+    fn security_descriptor(&self) -> Result<SecurityDescriptor> {
+        let sddl: &U16CStr = match self {
+            Self::Owner => u16cstr!("D:(A;;FA;;;OW)"),
+            Self::Everyone => u16cstr!("D:(A;;FA;;;WD)"),
+            Self::Admin => u16cstr!("D:(A;;FA;;;BA)(A;;FA;;;SY)"),
+        };
+        SecurityDescriptor::deserialize(sddl)
+            .map_err(|e| eyre::eyre!("failed to build socket security descriptor: {e}"))
+    }
 }
 
 pub struct ConnectedLocalStream(LocalSocketStream);
@@ -108,18 +132,21 @@ pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<Listen
         SocketPermMode::Everyone => 0o666,
         SocketPermMode::Admin => 0o660,
     };
-    #[cfg(not(unix))]
+    #[cfg(not(any(unix, windows)))]
     let _ = perm;
+
+    let options = ListenerOptions::new().name(name).try_overwrite(true);
+    // Built before the umask swap below so a failure here can't return early
+    // with the process umask still restricted.
+    #[cfg(windows)]
+    let options = options.security_descriptor(perm.security_descriptor()?);
 
     // Restrict umask to close the TOCTOU window where the socket file briefly
     // exists with permissive default permissions before the final chmod runs.
     #[cfg(unix)]
     let old_umask = unsafe { libc::umask(0o777 & !mode) };
 
-    let create_result = ListenerOptions::new()
-        .name(name)
-        .try_overwrite(true)
-        .create_tokio();
+    let create_result = options.create_tokio();
 
     #[cfg(unix)]
     unsafe {
@@ -202,6 +229,18 @@ mod tests {
         let _listener = listen(ps(path), SocketPermMode::Everyone).await.unwrap();
         let mode = std::fs::metadata(path).unwrap().mode() & 0o777;
         assert_eq!(mode, 0o666);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn perm_modes_have_valid_sddl() {
+        for perm in [
+            SocketPermMode::Owner,
+            SocketPermMode::Everyone,
+            SocketPermMode::Admin,
+        ] {
+            perm.security_descriptor().unwrap();
+        }
     }
 
     #[cfg(windows)]

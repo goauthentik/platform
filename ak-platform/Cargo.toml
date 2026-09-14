@@ -51,7 +51,14 @@ libc = "0.2.186"
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.4.0"
+# SDDL literals for the named-pipe DACLs in `net::server`; must stay on the same
+# major as the `widestring` re-exported through `interprocess`.
+widestring = "1"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "io-util"] }
 tempfile = { workspace = true }
+
+# `tests/windows_socket_dacl.rs` reads the DACL back off a live named pipe.
+[target.'cfg(windows)'.dev-dependencies]
+windows = { workspace = true }
