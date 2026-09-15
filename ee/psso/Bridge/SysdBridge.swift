@@ -225,6 +225,32 @@ public class SysdBridge {
                                 withAllowedCharacters: .alphanumerics)
                         )
                     )
+                // Biometric policy for the user Secure Enclave key.
+                // userSecureEnclaveKeyBiometricPolicy is an OptionSet
+                // (AuthenticationServices, macOS 14.4+): one requirement
+                // (.touchIDOrWatchCurrentSet invalidates the key when the enrolled
+                // biometrics change, .touchIDOrWatchAny does not) plus two independent
+                // modifiers — .passwordFallback prompts for the IdP password when Touch
+                // ID is cancelled, fails or was never enrolled, and .reuseDuringUnlock
+                // reuses the Touch ID presented at unlock.
+                //
+                // The set is sent by authentik so the whole OptionSet is configurable;
+                // an empty list leaves the property untouched.
+                var policy:
+                    ASAuthorizationProviderExtensionLoginConfiguration
+                    .UserSecureEnclaveKeyBiometricPolicy = []
+                for entry in res.biometricPolicies {
+                    switch entry {
+                    case .touchIDOrWatchCurrentSet: policy.insert(.touchIDOrWatchCurrentSet)
+                    case .touchIDOrWatchAny: policy.insert(.touchIDOrWatchAny)
+                    case .reuseDuringUnlock: policy.insert(.reuseDuringUnlock)
+                    case .passwordFallback: policy.insert(.passwordFallback)
+                    case .unspecified, .UNRECOGNIZED: continue
+                    }
+                }
+                if !policy.isEmpty {
+                    cfg.userSecureEnclaveKeyBiometricPolicy = policy
+                }
                 return cfg
             }
         }

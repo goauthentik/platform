@@ -41,6 +41,50 @@ pub struct RegisterDeviceResponse {
     pub nonce_endpoint: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub device_token: ::prost::alloc::string::String,
+    #[prost(enumeration="register_device_response::BiometricPolicy", repeated, tag="8")]
+    pub biometric_policies: ::prost::alloc::vec::Vec<i32>,
+}
+/// Nested message and enum types in `RegisterDeviceResponse`.
+pub mod register_device_response {
+    /// Biometric requirements for the user Secure Enclave key. Mirrors the members
+    /// of Apple's userSecureEnclaveKeyBiometricPolicy OptionSet: one requirement
+    /// (CURRENT_SET or ANY) plus any number of modifiers. Empty means no biometric
+    /// policy is applied.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[repr(i32)]
+    pub enum BiometricPolicy {
+        Unspecified = 0,
+        TouchIdOrWatchCurrentSet = 1,
+        TouchIdOrWatchAny = 2,
+        ReuseDuringUnlock = 3,
+        PasswordFallback = 4,
+    }
+    impl BiometricPolicy {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Unspecified => "UNSPECIFIED",
+                Self::TouchIdOrWatchCurrentSet => "TOUCH_ID_OR_WATCH_CURRENT_SET",
+                Self::TouchIdOrWatchAny => "TOUCH_ID_OR_WATCH_ANY",
+                Self::ReuseDuringUnlock => "REUSE_DURING_UNLOCK",
+                Self::PasswordFallback => "PASSWORD_FALLBACK",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "UNSPECIFIED" => Some(Self::Unspecified),
+                "TOUCH_ID_OR_WATCH_CURRENT_SET" => Some(Self::TouchIdOrWatchCurrentSet),
+                "TOUCH_ID_OR_WATCH_ANY" => Some(Self::TouchIdOrWatchAny),
+                "REUSE_DURING_UNLOCK" => Some(Self::ReuseDuringUnlock),
+                "PASSWORD_FALLBACK" => Some(Self::PasswordFallback),
+                _ => None,
+            }
+        }
+    }
 }
 include!("sys_auth_apple.tonic.rs");
 include!("sys_auth_apple.serde.rs");
