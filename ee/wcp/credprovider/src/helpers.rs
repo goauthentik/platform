@@ -99,8 +99,8 @@ pub fn pack_authentication_buffer(
     username: &str,
     password: &str,
 ) -> windows::core::Result<(*mut u8, u32)> {
-    let username_wide: Vec<u16> = username.encode_utf16().chain(std::iter::once(0)).collect();
-    let password_wide: Vec<u16> = password.encode_utf16().chain(std::iter::once(0)).collect();
+    let username_wide = crate::syscalls::wide(username);
+    let password_wide = crate::syscalls::wide(password);
     let flags =
         CRED_PACK_FLAGS(CRED_PACK_PROTECTED_CREDENTIALS.0 | CRED_PACK_ID_PROVIDER_CREDENTIALS.0);
 
