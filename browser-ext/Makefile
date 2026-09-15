@@ -5,14 +5,6 @@ FILE_NAME_CHROME := authentik_chrome.zip
 FILE_NAME_EDGE := authentik_edge.zip
 FILE_NAME_FIREFOX := authentik_firefox.zip
 
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-	SED_INPLACE = /usr/bin/sed -i ''
-else
-	SED_INPLACE = sed -i
-endif
-
-
 .PHONY: bump
 bump:
 	pnpm version ${VERSION} || true

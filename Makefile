@@ -7,13 +7,6 @@ PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
 TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
 
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-	SED_INPLACE = /usr/bin/sed -i ''
-else
-	SED_INPLACE = sed -i
-endif
-
 .PHONY: all
 all: clean gen
 
