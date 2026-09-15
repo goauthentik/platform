@@ -3,6 +3,12 @@ import Bridge
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistrationHandler {
 
+    /// Whether to embed the previous refresh token in the login request. Disabled by default for
+    /// the `UserSecureEnclaveKey` method: after a password reset or session revocation a stale
+    /// refresh token can cause the login request to be rejected. Flip to `true` to test against a
+    /// server that expects it.
+    static let includePreviousRefreshTokenInLoginRequest = false
+
     var supportedDeviceEncryptionAlgorithms: [ASAuthorizationProviderExtensionEncryptionAlgorithm] {
         return [.ecdhe_A256GCM]
     }
@@ -27,7 +33,8 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         )
         if let registration = registration {
             registration.accountDisplayName = "authentik"
-            registration.includePreviousRefreshTokenInLoginRequest = true
+            registration.includePreviousRefreshTokenInLoginRequest =
+                AuthenticationViewController.includePreviousRefreshTokenInLoginRequest
             do {
                 try loginManager.saveLoginConfiguration(registration)
                 return .success
@@ -88,10 +95,33 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
 
     func keyWillRotate(
         for keyType: ASAuthorizationProviderExtensionKeyType,
-        newKey _: SecKey,
-        loginManager _: ASAuthorizationProviderExtensionLoginManager,
+        newKey: SecKey,
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
     ) async -> Bool {
         self.logger.debug("keyWillRotate \(String(describing: keyType))")
-        return false
+        switch keyType {
+        case .currentDeviceSigning, .currentDeviceEncryption:
+            // Re-register the rotated device key so the IdP keeps a matching public key.
+            // Rejecting the rotation here would leave the server with the old key and break
+            // subsequent login assertions.
+            let ok = await API.shared.RotateDeviceKey(
+                loginManager: loginManager, keyType: keyType, newKey: newKey)
+            if !ok {
+                self.logger.warning(
+                    "failed to re-register rotated device key; rejecting rotation")
+            }
+            return ok
+        case .userSecureEnclaveKey:
+            // Re-registering the user SE key requires fresh user auth, which isn't available in
+            // this callback. Reject so the OS falls back to interactive user re-registration via
+            // beginUserRegistration. See plan: user-key rotation needs a server-coordinated change.
+            self.logger.warning(
+                "user SE key rotation requested; rejecting to force interactive re-registration")
+            return false
+        default:
+            self.logger.warning(
+                "unhandled key rotation for \(String(describing: keyType)); rejecting")
+            return false
+        }
     }
 }
