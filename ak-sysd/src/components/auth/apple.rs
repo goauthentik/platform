@@ -53,7 +53,6 @@ pub async fn register_device(
         // Not part of the API response — the domain's own stored token,
         // mirroring Go's `device_token: dc.Token`.
         device_token: active.cfg.token.clone(),
-        // authorization_endpoint: format!("{}/application/o/authorize/", active.cfg.authentik_url).to_string(),
-        authorization_endpoint: "https://ak.beryju.dev/endpoints/agent/psso/authorize/?state=foo".to_string(),
+        authorization_endpoint: format!("{}/endpoints/agent/psso/authorize/", active.cfg.authentik_url).to_string(),
     })
 }
