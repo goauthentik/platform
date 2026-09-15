@@ -54,7 +54,7 @@ pub async fn register_device(
         // mirroring Go's `device_token: dc.Token`.
         device_token: active.cfg.token.clone(),
         authorization_endpoint: format!(
-            "{}/endpoints/agent/psso/authorize/",
+            "{}/endpoints/agent/psso/preauthenticate/",
             active
                 .cfg
                 .authentik_url

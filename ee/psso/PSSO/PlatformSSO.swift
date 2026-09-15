@@ -29,9 +29,6 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             registration.accountDisplayName = "authentik"
             registration.includePreviousRefreshTokenInLoginRequest = true
             do {
-                if #available(macOS 27.0, *) {
-                    registration.federationType = .openID
-                }
                 try loginManager.saveLoginConfiguration(registration)
                 return .success
             } catch {

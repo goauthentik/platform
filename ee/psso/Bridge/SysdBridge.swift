@@ -217,7 +217,9 @@ public class SysdBridge {
                     audience: res.audience
                 )
                 if #available(macOS 27.0, *) {
-                    cfg.authorizationURL = URL(string: res.authorizationEndpoint)!
+                    cfg.federationType = .dynamicOpenID
+                    cfg.federationUserPreauthenticationURL = URL(string: res.authorizationEndpoint)!
+                    cfg.authorizationURLKeypath = "authorization_url"
                 }
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
                 cfg.customNonceRequestValues
