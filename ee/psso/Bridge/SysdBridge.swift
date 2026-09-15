@@ -221,6 +221,7 @@ public class SysdBridge {
                     cfg.federationUserPreauthenticationURL = URL(string: res.authorizationEndpoint)!
                     cfg.authorizationURLKeypath = "authorization_url"
                 }
+                cfg.keyEndpointURL = URL(string: res.tokenEndpoint)!
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
                 cfg.customNonceRequestValues
                     .append(
