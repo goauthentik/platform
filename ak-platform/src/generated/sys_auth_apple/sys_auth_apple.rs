@@ -41,6 +41,8 @@ pub struct RegisterDeviceResponse {
     pub nonce_endpoint: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub device_token: ::prost::alloc::string::String,
+    #[prost(string, tag="8")]
+    pub authorization_endpoint: ::prost::alloc::string::String,
 }
 include!("sys_auth_apple.tonic.rs");
 include!("sys_auth_apple.serde.rs");

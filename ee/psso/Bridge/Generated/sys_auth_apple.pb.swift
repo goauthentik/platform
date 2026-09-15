@@ -85,6 +85,8 @@ nonisolated struct RegisterDeviceResponse: Sendable {
 
   var deviceToken: String = String()
 
+  var authorizationEndpoint: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -211,7 +213,7 @@ nonisolated extension RegisterDeviceRequest: SwiftProtobuf.Message, SwiftProtobu
 
 nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".RegisterDeviceResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0\u{3}device_token\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}client_id\0\u{1}issuer\0\u{3}token_endpoint\0\u{3}jwks_endpoint\0\u{1}audience\0\u{3}nonce_endpoint\0\u{3}device_token\0\u{3}authorization_endpoint\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -226,6 +228,7 @@ nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtob
       case 5: try { try decoder.decodeSingularStringField(value: &self.audience) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.nonceEndpoint) }()
       case 7: try { try decoder.decodeSingularStringField(value: &self.deviceToken) }()
+      case 8: try { try decoder.decodeSingularStringField(value: &self.authorizationEndpoint) }()
       default: break
       }
     }
@@ -253,6 +256,9 @@ nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtob
     if !self.deviceToken.isEmpty {
       try visitor.visitSingularStringField(value: self.deviceToken, fieldNumber: 7)
     }
+    if !self.authorizationEndpoint.isEmpty {
+      try visitor.visitSingularStringField(value: self.authorizationEndpoint, fieldNumber: 8)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -264,6 +270,7 @@ nonisolated extension RegisterDeviceResponse: SwiftProtobuf.Message, SwiftProtob
     if lhs.audience != rhs.audience {return false}
     if lhs.nonceEndpoint != rhs.nonceEndpoint {return false}
     if lhs.deviceToken != rhs.deviceToken {return false}
+    if lhs.authorizationEndpoint != rhs.authorizationEndpoint {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

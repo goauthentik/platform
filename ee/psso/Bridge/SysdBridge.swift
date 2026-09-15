@@ -187,7 +187,7 @@ public class SysdBridge {
                         }
                     ))
                 return ASAuthorizationProviderExtensionUserLoginConfiguration(
-                    loginUserName: reply.username
+                    loginUserName: reply.username,
                 )
             }
         }
@@ -216,6 +216,12 @@ public class SysdBridge {
                     jwksEndpointURL: URL(string: res.jwksEndpoint)!,
                     audience: res.audience
                 )
+                if #available(macOS 27.0, *) {
+                    cfg.federationType = .dynamicOpenID
+                    cfg.federationUserPreauthenticationURL = URL(string: res.authorizationEndpoint)!
+                    cfg.authorizationURLKeypath = "authorization_url"
+                }
+                cfg.keyEndpointURL = URL(string: res.tokenEndpoint)!
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
                 cfg.customNonceRequestValues
                     .append(
