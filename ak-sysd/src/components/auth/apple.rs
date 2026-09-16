@@ -66,13 +66,34 @@ pub async fn register_device(
     })
 }
 
-/// A status that means authentik no longer knows this device, as opposed to a
-/// transport failure: the caller needs to hear about the former.
-fn is_device_unknown(status: StatusCode) -> bool {
-    matches!(
+/// What a response status from the registration endpoints means for us.
+#[derive(Debug, PartialEq, Eq)]
+enum Outcome {
+    Ok,
+    /// authentik rejected our device token, so the registration really is gone.
+    DeviceUnknown,
+    /// This authentik does not have the endpoint. Note that 404 lands here and
+    /// never in `DeviceUnknown`: an older server answers 404/405 for routes it
+    /// does not serve, and reading that as "this device was deleted" would have
+    /// every Mac ask for a repair registration it does not need.
+    Unsupported,
+    /// Anything else, worth trying again later.
+    Retry,
+}
+
+fn classify(status: StatusCode) -> Outcome {
+    if status.is_success() {
+        Outcome::Ok
+    } else if matches!(status, StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN) {
+        Outcome::DeviceUnknown
+    } else if matches!(
         status,
-        StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN | StatusCode::NOT_FOUND
-    )
+        StatusCode::NOT_FOUND | StatusCode::METHOD_NOT_ALLOWED
+    ) {
+        Outcome::Unsupported
+    } else {
+        Outcome::Retry
+    }
 }
 
 pub async fn registration_state(
@@ -94,10 +115,20 @@ pub async fn registration_state(
                 })
                 .collect(),
         }),
-        Err(Error::ResponseError(content)) if is_device_unknown(content.status) => {
-            tracing::info!(status = %content.status, "device unknown to authentik");
-            Ok(RegistrationStateResponse::default())
-        }
+        Err(Error::ResponseError(content)) => match classify(content.status) {
+            Outcome::DeviceUnknown => {
+                tracing::info!(status = %content.status, "device unknown to authentik");
+                Ok(RegistrationStateResponse::default())
+            }
+            Outcome::Unsupported => Err(Status::failed_precondition(format!(
+                "authentik does not support psso registration state: {}",
+                content.status
+            ))),
+            _ => Err(Status::unavailable(format!(
+                "psso registration_state failed: {}",
+                content.status
+            ))),
+        },
         Err(e) => Err(Status::unavailable(format!(
             "psso registration_state failed: {e}"
         ))),
@@ -109,7 +140,7 @@ pub async fn unregister_device(
     _req: UnregisterDeviceRequest,
 ) -> Result<UnregisterDeviceResponse, Status> {
     match try_unregister(ctx).await {
-        Ok(()) => Ok(UnregisterDeviceResponse { completed: true }),
+        Ok(completed) => Ok(UnregisterDeviceResponse { completed }),
         Err(e) => {
             // The configuration profile is already gone, so the extension will not
             // be invoked again: queue the call for the next checkin instead of
@@ -125,13 +156,28 @@ pub async fn unregister_device(
     }
 }
 
-async fn try_unregister(ctx: &SysdContext) -> Result<()> {
+/// `Ok(false)` means there is nothing more to try, as opposed to `Err`, which
+/// asks the caller to queue the unregister for a later attempt.
+async fn try_unregister(ctx: &SysdContext) -> Result<bool> {
     let active = ctx.domains.active().await?;
-    match endpoints_agents_psso_register_device_destroy(&active.api).await {
-        Ok(()) => Ok(()),
-        // A device authentik has already forgotten needs no unregistering.
-        Err(Error::ResponseError(content)) if content.status == StatusCode::NOT_FOUND => Ok(()),
+    let status = match endpoints_agents_psso_register_device_destroy(&active.api).await {
+        Ok(()) => return Ok(true),
+        Err(Error::ResponseError(content)) => content.status,
         Err(e) => bail!("psso unregister failed: {e}"),
+    };
+    match classify(status) {
+        Outcome::Ok => Ok(true),
+        // Retrying against an authentik without the endpoint, or with a token it
+        // no longer accepts, only produces the same answer every checkin.
+        Outcome::Unsupported => {
+            tracing::warn!(%status, "authentik does not support psso unregister");
+            Ok(false)
+        }
+        Outcome::DeviceUnknown => {
+            tracing::info!(%status, "authentik already forgot this device");
+            Ok(true)
+        }
+        Outcome::Retry => bail!("psso unregister failed: {status}"),
     }
 }
 
@@ -150,8 +196,10 @@ pub async fn drain_pending_unregister(ctx: &SysdContext) {
         }
     }
     match try_unregister(ctx).await {
-        Ok(()) => {
-            tracing::info!("drained pending psso unregister");
+        // Either it went through or nothing more can be tried, both of which end
+        // the retries rather than leaving the entry to fire on every checkin.
+        Ok(completed) => {
+            tracing::info!(completed, "drained pending psso unregister");
             if let Err(e) = kv.set(KEY_PENDING_UNREGISTER, "").await {
                 tracing::warn!("failed to clear pending psso unregister: {e:?}");
             }
@@ -164,6 +212,24 @@ pub async fn drain_pending_unregister(ctx: &SysdContext) {
 mod test {
     use super::*;
     use crate::context::testutils::test_context;
+
+    /// An authentik without these endpoints answers 404 or 405, which must never
+    /// read as "this device was deleted" -- that would have every Mac talking to
+    /// an older server ask for a repair registration it does not need.
+    #[test]
+    fn test_missing_endpoint_is_not_a_missing_device() {
+        assert_eq!(classify(StatusCode::NOT_FOUND), Outcome::Unsupported);
+        assert_eq!(
+            classify(StatusCode::METHOD_NOT_ALLOWED),
+            Outcome::Unsupported
+        );
+        assert_eq!(classify(StatusCode::UNAUTHORIZED), Outcome::DeviceUnknown);
+        assert_eq!(classify(StatusCode::FORBIDDEN), Outcome::DeviceUnknown);
+        assert_eq!(classify(StatusCode::INTERNAL_SERVER_ERROR), Outcome::Retry);
+        assert_eq!(classify(StatusCode::BAD_GATEWAY), Outcome::Retry);
+        assert_eq!(classify(StatusCode::OK), Outcome::Ok);
+        assert_eq!(classify(StatusCode::NO_CONTENT), Outcome::Ok);
+    }
 
     /// With no reachable domain the unregister must be queued rather than dropped:
     /// once the configuration profile is gone the extension never runs again, so
