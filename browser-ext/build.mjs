@@ -9,6 +9,7 @@ const options = {
     bundle: true,
     outdir: "dist",
     format: "esm",
+    splitting: true,
     sourcemap: true,
     logLevel: "info",
 };
