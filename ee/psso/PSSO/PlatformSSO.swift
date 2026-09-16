@@ -1,5 +1,7 @@
+import AppKit
 import AuthenticationServices
 import Bridge
+import Foundation
 
 extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistrationHandler {
 
@@ -104,5 +106,56 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
     ) async -> Bool {
         self.logger.debug("keyWillRotate \(String(describing: keyType))")
         return false
+    }
+
+    @available(macOS 26.0, *)
+    func profilePictureForUser(using loginManager: ASAuthorizationProviderExtensionLoginManager)
+        async -> Data
+    {
+        self.logger.debug("profilePictureForUser")
+        guard let idToken = loginManager.ssoTokens?["id_token"] as? String,
+            let claims = jwtClaims(idToken),
+            let urlString = claims["picture"] as? String,
+            let url = URL(string: urlString),
+            url.scheme == "https" || url.scheme == "http"
+        else {
+            self.logger.debug("No picture claim in id_token")
+            return Data()
+        }
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let http = response as? HTTPURLResponse,
+                (200..<300).contains(http.statusCode)
+            else {
+                self.logger.warning("failed to download profile picture: \(response)")
+                return Data()
+            }
+            // The system only accepts JPEG, convert anything else
+            if data.starts(with: [0xFF, 0xD8, 0xFF]) {
+                return data
+            }
+            guard let tiff = NSImage(data: data)?.tiffRepresentation,
+                let jpeg = NSBitmapImageRep(data: tiff)?
+                    .representation(using: .jpeg, properties: [:])
+            else {
+                self.logger.warning("failed to convert profile picture to JPEG")
+                return Data()
+            }
+            return jpeg
+        } catch {
+            self.logger.warning("failed to download profile picture: \(error)")
+            return Data()
+        }
+    }
+
+    private func jwtClaims(_ token: String) -> [String: Any]? {
+        let parts = token.split(separator: ".")
+        guard parts.count == 3 else { return nil }
+        var payload = String(parts[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        payload += String(repeating: "=", count: (4 - payload.count % 4) % 4)
+        guard let data = Data(base64Encoded: payload) else { return nil }
+        return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
     }
 }
