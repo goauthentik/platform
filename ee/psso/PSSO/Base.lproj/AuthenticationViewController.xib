@@ -50,11 +50,10 @@ Gw
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="g0D-ah-5cf" secondAttribute="bottom" constant="70" id="TG4-xb-neE"/>
                 <constraint firstItem="g0D-ah-5cf" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" constant="20" id="VRh-Mp-tdt"/>
-                <constraint firstItem="g0D-ah-5cf" firstAttribute="top" secondItem="Sfe-Ar-eaG" secondAttribute="top" constant="20" id="YKK-at-gek"/>
+                <constraint firstItem="g0D-ah-5cf" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" constant="20" id="YKK-at-gek"/>
                 <constraint firstAttribute="trailing" secondItem="g0D-ah-5cf" secondAttribute="trailing" constant="20" id="aiJ-0d-7TV"/>
                 <constraint firstItem="VNj-fQ-z4L" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" constant="20" id="kAr-eU-gqk"/>
             </constraints>
-            <viewLayoutGuide key="safeAreaLayoutGuide" id="Sfe-Ar-eaG"/>
             <point key="canvasLocation" x="101.5" y="283"/>
         </customView>
     </objects>
