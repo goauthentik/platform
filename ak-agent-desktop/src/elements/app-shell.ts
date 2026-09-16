@@ -1,7 +1,6 @@
 import "./header.js";
 import "./profile-status.js";
 import "./status-bar.js";
-
 import { activeProfile, getVersions, listProfiles, profile, userInfo, Versions } from "../bridge";
 
 import { SessionUser } from "@goauthentik/api";
@@ -56,11 +55,13 @@ export class AppShell extends LitElement {
     private async _refresh(): Promise<void> {
         this.profiles = await listProfiles();
         this.activeProfile = await activeProfile();
+
         try {
             this.user = await userInfo("default");
         } catch (exc) {
             console.warn("Failed to fetch user info", exc);
         }
+
         try {
             this.versions = await getVersions();
         } catch (exc) {
@@ -74,11 +75,14 @@ export class AppShell extends LitElement {
                 .user=${this.user}
                 @mousedown=${(ev: MouseEvent) => {
                     const appWindow = getCurrentWindow();
+
                     if (ev.buttons === 1) {
                         // Primary (left) button
-                        ev.detail === 2
-                            ? appWindow.toggleMaximize() // Maximize on double click
-                            : appWindow.startDragging(); // Else start dragging
+                        if (ev.detail === 2) {
+                            appWindow.toggleMaximize(); // Maximize on double click
+                        } else {
+                            appWindow.startDragging(); // Else start dragging
+                        }
                     }
                 }}
             ></ak-platform-header>

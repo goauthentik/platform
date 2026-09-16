@@ -18,9 +18,11 @@ function createRandomString(length: number = 16) {
     let result = "";
     const randomArray = new Uint8Array(length);
     crypto.getRandomValues(randomArray);
+
     randomArray.forEach((number) => {
         result += chars[number % chars.length];
     });
+
     return result;
 }
 
@@ -39,43 +41,55 @@ export class Native {
     #connect() {
         this.#port = chrome.runtime.connectNative("io.goauthentik.platform");
         this.#port.onMessage.addListener(this.#listener.bind(this));
+
         this.#port.onDisconnect.addListener(() => {
             this.#reconnectDelay *= 1.35;
             this.#reconnectDelay = Math.min(this.#reconnectDelay, 3600);
-            // @ts-ignore
+            // @ts-ignore: chrome.runtime.lastError is not typed as an Error property but is checked here as a fallback
             const err = chrome.runtime.lastError || this.#port?.error;
+
             console.debug(
                 `authentik/bext/native: Disconnected, reconnecting in ${this.#reconnectDelay}`,
                 err,
             );
+
             clearTimeout(this.#reconnectTimeout);
+
             this.#reconnectTimeout = setTimeout(() => {
                 this.#connect();
             }, this.#reconnectDelay * 1000);
         });
+
         console.debug("authentik/bext/native: Connected to native");
     }
 
     #listener(msg: Response) {
         const prom = this.#promises.get(msg.response_to);
+
         console.debug(`authentik/bext/native[${msg.response_to}]: Got response`);
+
         if (!prom) {
             console.debug(`authentik/bext/native[${msg.response_to}]: No promise to resolve`);
+
             return;
         }
+
         prom.resolve(msg);
     }
 
     postMessage(msg: Partial<Message>): Promise<Response> {
         msg.id = createRandomString();
         const promise = Promise.withResolvers<Response>();
+
         try {
             this.#promises.set(msg.id, promise);
             this.#port?.postMessage(msg);
+
             console.debug(`authentik/bext/native[${msg.id}]: Sending message ${msg.path}`);
         } catch (exc) {
             this.#promises.get(msg.id)?.reject(exc);
         }
+
         return promise.promise;
     }
 
@@ -90,8 +104,9 @@ export class Native {
         const token = await this.postMessage({
             version: "1",
             path: "get_token",
-            profile: profile,
+            profile,
         });
+
         return {
             token: token.data.token as string,
             url: token.data.url as string,
@@ -103,6 +118,7 @@ export class Native {
             version: "1",
             path: "list_profiles",
         });
+
         return {
             profiles: profiles.data.profiles as unknown as { name: string }[],
         };
@@ -112,11 +128,12 @@ export class Native {
         const response = await this.postMessage({
             version: "1",
             path: "platform_sign_endpoint_header",
-            profile: profile,
+            profile,
             data: {
-                challenge: challenge,
+                challenge,
             },
         });
+
         return response.data.response as string;
     }
 
@@ -130,15 +147,19 @@ export class Native {
                     accessToken: token.token,
                 }),
             ).coreApplicationsList({});
+
             const apps = response.results.map((app) => {
                 if (app.launchUrl && app.launchUrl.startsWith("/")) {
                     return { ...app, launchUrl: `${token.url}${app.launchUrl}` };
                 }
+
                 return app;
             });
+
             return apps;
         } catch (exc) {
             console.warn(`authentik/bext: failed to get applications: ${exc}`);
+
             return [];
         }
     }

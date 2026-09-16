@@ -11,6 +11,7 @@ window.addEventListener(
                 if (event.source !== window) {
                     return;
                 }
+
                 chrome.runtime
                     .sendMessage({
                         action: "platform_sign_endpoint_header",
