@@ -44,6 +44,39 @@ pub struct RegisterDeviceResponse {
     #[prost(string, tag="8")]
     pub authorization_endpoint: ::prost::alloc::string::String,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RegistrationStateRequest {
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RegistrationStateUser {
+    #[prost(string, tag="1")]
+    pub username: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub enclave_key_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RegistrationStateResponse {
+    /// False when authentik no longer knows this device at all (connection gone
+    /// or device token revoked), in which case the key IDs are empty.
+    #[prost(bool, tag="1")]
+    pub device_registered: bool,
+    #[prost(string, tag="2")]
+    pub sign_key_id: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub enc_key_id: ::prost::alloc::string::String,
+    #[prost(message, repeated, tag="4")]
+    pub users: ::prost::alloc::vec::Vec<RegistrationStateUser>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UnregisterDeviceRequest {
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UnregisterDeviceResponse {
+    /// False when the call could not reach authentik and was queued for a
+    /// later checkin instead.
+    #[prost(bool, tag="1")]
+    pub completed: bool,
+}
 include!("sys_auth_apple.tonic.rs");
 include!("sys_auth_apple.serde.rs");
 // @@protoc_insertion_point(module)

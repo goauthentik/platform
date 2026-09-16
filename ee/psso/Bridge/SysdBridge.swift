@@ -38,6 +38,15 @@ public struct AKInteractiveAuth {
     public var DTH: String
 }
 
+/// Platform SSO registration as authentik currently has it. Mirrors the proto
+/// message, which stays internal to this module.
+public struct PSSORegistrationState: Sendable {
+    public let deviceRegistered: Bool
+    public let signKeyID: String
+    public let encKeyID: String
+    public let userEnclaveKeyIDs: [String]
+}
+
 public enum SocketID: String {
     case defaultSocket
     case ctrlSocket = "ctrl"
@@ -232,6 +241,36 @@ public class SysdBridge {
                         )
                     )
                 return cfg
+            }
+        }
+
+        /// What authentik currently has stored for this device, used to detect a
+        /// registration that has drifted or been removed server-side.
+        public func pssoRegistrationState() async throws -> PSSORegistrationState {
+            return try await self.withClient { client in
+                let c = SystemAuthApple.Client(wrapping: client)
+                let reply = try await c.registrationState(
+                    request: ClientRequest(message: RegistrationStateRequest())
+                )
+                return PSSORegistrationState(
+                    deviceRegistered: reply.deviceRegistered,
+                    signKeyID: reply.signKeyID,
+                    encKeyID: reply.encKeyID,
+                    userEnclaveKeyIDs: reply.users.map { $0.enclaveKeyID },
+                )
+            }
+        }
+
+        /// Clears this device's Platform SSO registration in authentik. Returns false
+        /// when sysd could not reach the server and queued the call instead.
+        @discardableResult
+        public func pssoUnregisterDevice() async throws -> Bool {
+            return try await self.withClient { client in
+                let c = SystemAuthApple.Client(wrapping: client)
+                let reply = try await c.unregisterDevice(
+                    request: ClientRequest(message: UnregisterDeviceRequest())
+                )
+                return reply.completed
             }
         }
     #endif

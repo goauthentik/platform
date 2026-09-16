@@ -142,6 +142,61 @@ pub mod system_auth_apple_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+        pub async fn registration_state(
+            &mut self,
+            request: impl tonic::IntoRequest<super::RegistrationStateRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::RegistrationStateResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_auth_apple.SystemAuthApple/RegistrationState",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "sys_auth_apple.SystemAuthApple",
+                        "RegistrationState",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn unregister_device(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UnregisterDeviceRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UnregisterDeviceResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/sys_auth_apple.SystemAuthApple/UnregisterDevice",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("sys_auth_apple.SystemAuthApple", "UnregisterDevice"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -169,6 +224,20 @@ pub mod system_auth_apple_server {
             request: tonic::Request<super::RegisterDeviceRequest>,
         ) -> std::result::Result<
             tonic::Response<super::RegisterDeviceResponse>,
+            tonic::Status,
+        >;
+        async fn registration_state(
+            &self,
+            request: tonic::Request<super::RegistrationStateRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::RegistrationStateResponse>,
+            tonic::Status,
+        >;
+        async fn unregister_device(
+            &self,
+            request: tonic::Request<super::UnregisterDeviceRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UnregisterDeviceResponse>,
             tonic::Status,
         >;
     }
@@ -324,6 +393,98 @@ pub mod system_auth_apple_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = RegisterDeviceSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/sys_auth_apple.SystemAuthApple/RegistrationState" => {
+                    #[allow(non_camel_case_types)]
+                    struct RegistrationStateSvc<T: SystemAuthApple>(pub Arc<T>);
+                    impl<
+                        T: SystemAuthApple,
+                    > tonic::server::UnaryService<super::RegistrationStateRequest>
+                    for RegistrationStateSvc<T> {
+                        type Response = super::RegistrationStateResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::RegistrationStateRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SystemAuthApple>::registration_state(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = RegistrationStateSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/sys_auth_apple.SystemAuthApple/UnregisterDevice" => {
+                    #[allow(non_camel_case_types)]
+                    struct UnregisterDeviceSvc<T: SystemAuthApple>(pub Arc<T>);
+                    impl<
+                        T: SystemAuthApple,
+                    > tonic::server::UnaryService<super::UnregisterDeviceRequest>
+                    for UnregisterDeviceSvc<T> {
+                        type Response = super::UnregisterDeviceResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::UnregisterDeviceRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SystemAuthApple>::unregister_device(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UnregisterDeviceSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
