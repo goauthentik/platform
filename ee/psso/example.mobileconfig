@@ -5,10 +5,51 @@
 	<key>PayloadContent</key>
 	<array>
 		<dict>
+			<key>PayloadDisplayName</key>
+			<string>authentik Platform</string>
+			<key>PayloadIdentifier</key>
+			<string>io.goauthentik.platform.9678341E-B3DA-4832-BC81-ABFDF795F105</string>
+			<key>PayloadType</key>
+			<string>io.goauthentik.platform</string>
+			<key>PayloadUUID</key>
+			<string>e23c930f-517b-4d8f-9074-514b786e852e</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+			<key>RegistrationToken</key>
+			<string>foo</string>
+			<key>URL</key>
+			<string>https://ak.beryju.dev</string>
+		</dict>
+		<dict>
+			<key>Configuration</key>
+			<array>
+				<dict>
+					<key>ApplicationIdentifier</key>
+					<string>232G855Y8N.io.goauthentik.platform.agent</string>
+					<key>AssociatedDomains</key>
+					<array>
+						<string>authsrv:ak.beryju.dev?mode=developer</string>
+					</array>
+					<key>EnableDirectDownloads</key>
+					<false/>
+				</dict>
+			</array>
+			<key>PayloadDisplayName</key>
+			<string>Associated Domains</string>
+			<key>PayloadIdentifier</key>
+			<string>com.apple.associated-domains.9678341E-B3DA-4832-BC81-ABFDF795F105</string>
+			<key>PayloadType</key>
+			<string>com.apple.associated-domains</string>
+			<key>PayloadUUID</key>
+			<string>61857935-66d3-4a55-9f7a-d1e66e8c9d76</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
 			<key>ExtensionIdentifier</key>
 			<string>io.goauthentik.platform.psso</string>
 			<key>PayloadDisplayName</key>
-			<string>Extensible Single Sign-On</string>
+			<string>Platform Single Sign-On</string>
 			<key>PayloadIdentifier</key>
 			<string>com.apple.extensiblesso.F903C84F-BAF9-485C-9DCE-9DFC5AD07DF2</string>
 			<key>PayloadType</key>
@@ -48,8 +89,6 @@
 				<key>UserAuthorizationMode</key>
 				<string>Standard</string>
 			</dict>
-			<key>RegistrationToken</key>
-			<string>foo</string>
 			<key>TeamIdentifier</key>
 			<string>232G855Y8N</string>
 			<key>Type</key>
@@ -58,40 +97,10 @@
 			<array>
 				<string>https://ak.beryju.dev</string>
 			</array>
-			<key>ExtensionData</key>
-			<dict>
-				<key>authentik.base</key>
-				<string>https://ak.beryju.dev</string>
-			</dict>
-		</dict>
-		<dict>
-			<key>Configuration</key>
-			<array>
-				<dict>
-					<key>ApplicationIdentifier</key>
-					<string>232G855Y8N.io.goauthentik.platform.agent</string>
-					<key>AssociatedDomains</key>
-					<array>
-						<string>authsrv:ak.beryju.dev</string>
-					</array>
-					<key>EnableDirectDownloads</key>
-					<false/>
-				</dict>
-			</array>
-			<key>PayloadDisplayName</key>
-			<string>Associated Domains</string>
-			<key>PayloadIdentifier</key>
-			<string>com.apple.associated-domains.A08365B8-A206-41D7-9FF5-4E69D0AA4687</string>
-			<key>PayloadType</key>
-			<string>com.apple.associated-domains</string>
-			<key>PayloadUUID</key>
-			<string>A08365B8-A206-41D7-9FF5-4E69D0AA4687</string>
-			<key>PayloadVersion</key>
-			<integer>1</integer>
 		</dict>
 	</array>
 	<key>PayloadDisplayName</key>
-	<string>platform SSO</string>
+	<string>authentik Platform</string>
 	<key>PayloadIdentifier</key>
 	<string>BD6AE281-E695-41C3-ACCD-E43D28DCB2E7</string>
 	<key>PayloadScope</key>
