@@ -1,5 +1,5 @@
+use crate::components::session::SessionOpened;
 use crate::components::{Component, SysdContext};
-use crate::events::SysdEvent;
 use ak_platform::paths::SysdSocketID;
 use eyre::Result;
 use std::sync::Arc;
@@ -13,6 +13,15 @@ pub struct AgentStarterComponent {
 
 impl AgentStarterComponent {
     pub fn new(ctx: SysdContext) -> AgentStarterComponent {
+        let hctx = ctx.clone();
+        ctx.events.on(move |_: SessionOpened| {
+            let ctx = hctx.clone();
+            async move {
+                if let Err(e) = try_start(&ctx).await {
+                    tracing::warn!("failed to start desktop agent: {e:?}");
+                }
+            }
+        });
         AgentStarterComponent { ctx }
     }
 }
@@ -28,19 +37,6 @@ impl Component for AgentStarterComponent {
         tokio::spawn(async move {
             if let Err(e) = try_start(&ctx).await {
                 tracing::debug!("agent_starter initial start attempt: {e:?}");
-            }
-
-            let mut rx = ctx.events.subscribe();
-            loop {
-                tokio::select! {
-                    ev = rx.recv() => {
-                        if let Ok(SysdEvent::SessionOpened { .. }) = ev
-                            && let Err(e) = try_start(&ctx).await {
-                                tracing::warn!("failed to start desktop agent: {e:?}");
-                        }
-                    }
-                    _ = ctx.cancel.cancelled() => return,
-                }
             }
         });
         Ok(())

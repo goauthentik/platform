@@ -1,5 +1,4 @@
 use crate::components::{Component, SysdContext};
-use crate::events::SysdEvent;
 use ak_platform::generated::sys_directory::{
     GetRequest, Group, Groups, User, Users,
     system_directory_server::{SystemDirectory, SystemDirectoryServer},
@@ -16,6 +15,12 @@ pub mod users;
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
 pub const PAGE_SIZE: i32 = 100;
+
+/// Users and groups for `domain` were refreshed from the API.
+#[derive(Clone, Debug)]
+pub struct DirectoryFetched {
+    pub domain: String,
+}
 
 pub struct DirectoryComponent {
     ctx: SysdContext,
@@ -80,7 +85,7 @@ impl DirectoryComponent {
         *self.users.write().await = users;
         *self.groups.write().await = groups;
 
-        self.ctx.events.dispatch(SysdEvent::DirectoryFetched {
+        self.ctx.events.dispatch(DirectoryFetched {
             domain: domain.cfg.domain.clone(),
         });
         Ok(())
