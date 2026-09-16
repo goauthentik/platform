@@ -82,4 +82,4 @@ gen:
 		--swift_opt=ImplementationOnlyImports=true \
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
-	sed -i 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*
+	$(SED_INPLACE) 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*

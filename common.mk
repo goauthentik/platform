@@ -42,6 +42,13 @@ else
 CONTAINER_TOP := ${TOP}
 endif
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	SED_INPLACE = /usr/bin/sed -i ''
+else
+	SED_INPLACE = sed -i
+endif
+
 define cargo_build_local
 RUSTFLAGS="$(RUST_BUILD_FLAGS)" \
 		AK_VERSION=${VERSION} \
