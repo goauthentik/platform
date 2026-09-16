@@ -50,17 +50,7 @@ pub async fn register_device(
         jwks_endpoint: res.jwks_endpoint,
         audience: res.audience,
         nonce_endpoint: res.nonce_endpoint,
-        // Not part of the API response — the domain's own stored token,
-        // mirroring Go's `device_token: dc.Token`.
         device_token: active.cfg.token.clone(),
-        authorization_endpoint: format!(
-            "{}/endpoints/agent/psso/preauthenticate/",
-            active
-                .cfg
-                .authentik_url
-                .strip_suffix("/")
-                .unwrap_or(&active.cfg.authentik_url)
-        )
-        .to_string(),
+        authorization_endpoint: res.authorization_endpoint,
     })
 }

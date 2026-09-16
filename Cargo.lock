@@ -824,7 +824,7 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 [[package]]
 name = "authentik-client"
 version = "2026.11.0-rc1"
-source = "git+https://github.com/goauthentik/client-rust?rev=1fd58b9e7ddaafd7d4456f8dc3a799acf95972ea#1fd58b9e7ddaafd7d4456f8dc3a799acf95972ea"
+source = "git+https://github.com/goauthentik/client-rust?rev=f4be5ff7cd169ef6b68bd13a8e97b7ce6d17410b#f4be5ff7cd169ef6b68bd13a8e97b7ce6d17410b"
 dependencies = [
  "chrono",
  "reqwest 0.13.5",
