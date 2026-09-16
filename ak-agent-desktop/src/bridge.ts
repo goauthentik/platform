@@ -13,8 +13,9 @@ export interface profile {
     status?: ProfileStatus;
 }
 
-export async function userInfo(profile: String): Promise<SessionUser> {
-    const rawUser = await invoke<unknown>("get_user_info", { profile: profile });
+export async function userInfo(profile: string): Promise<SessionUser> {
+    const rawUser = await invoke<unknown>("get_user_info", { profile });
+
     return SessionUserFromJSON(rawUser);
 }
 
@@ -31,6 +32,7 @@ export async function listProfiles(): Promise<profile[]> {
         nextRenew?: string;
         status?: ProfileStatus;
     }
+
     return await invoke<r_profile[]>("list_profiles").then((p) => {
         return p.map((prof) => {
             return {

@@ -53,5 +53,5 @@ package-firefox: build
 .PHONY: lint
 lint:
 	pnpm install
-	pnpm run lint-check
-	pnpm run prettier-check
+	pnpm run lint:check
+	pnpm run format:check
