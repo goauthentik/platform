@@ -160,16 +160,6 @@ public class SysdBridge {
         }
     }
 
-    public func domainsList(name: String, authentikURL: String, token: String) async throws {
-        return try await self.withClient(id: .ctrlSocket) { client in
-            let c = SystemCtrl.Client(wrapping: client)
-            let reply = try await c.domainList(
-                request: ClientRequest(message: Google_Protobuf_Empty())
-            )
-            //            return reply.domains[0].
-        }
-    }
-
     #if os(macOS)
         public func pssoRegisterUser(
             enclaveKeyID: String,

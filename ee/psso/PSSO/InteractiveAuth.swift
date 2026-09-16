@@ -81,7 +81,7 @@ final class InteractiveAuth {
     func injectDTH(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async
         -> WKNavigationActionPolicy
     {
-        var request = await navigationAction.request
+        var request = navigationAction.request
         if request
             .value(forHTTPHeaderField: InteractiveAuth.dthHeader) != nil
         {
@@ -92,7 +92,7 @@ final class InteractiveAuth {
                 authState?.DTH,
                 forHTTPHeaderField: InteractiveAuth.dthHeader
             )
-        await webView.load(request)
+        webView.load(request)
         return .cancel
     }
 
