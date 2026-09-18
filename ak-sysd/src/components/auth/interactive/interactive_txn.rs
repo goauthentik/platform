@@ -258,9 +258,9 @@ mod tests {
                 enabled: true,
                 authentik_url: server.url_str("/").trim_end_matches('/').to_string(),
                 domain: "test-domain".to_string(),
-                managed: false,
                 fallback_token: String::new(),
                 token: "test-token".to_string(),
+                ..Default::default()
             },
             api,
             remote: Arc::new(RwLock::new(None)),
