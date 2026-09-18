@@ -1,3 +1,5 @@
+#[cfg(target_os = "macos")]
+use crate::components::device::CheckinCompleted;
 use crate::components::{Component, SysdContext};
 use ak_platform::generated::sys_auth::{
     InteractiveAuthAsyncRequest, InteractiveAuthAsyncResponse, InteractiveAuthRequest,
@@ -8,6 +10,8 @@ use ak_platform::generated::sys_auth::{
 };
 use ak_platform::generated::sys_auth_apple::{
     RegisterDeviceRequest, RegisterDeviceResponse, RegisterUserRequest, RegisterUserResponse,
+    RegistrationStateRequest, RegistrationStateResponse, UnregisterDeviceRequest,
+    UnregisterDeviceResponse,
     system_auth_apple_server::{SystemAuthApple, SystemAuthAppleServer},
 };
 use ak_platform::paths::SysdSocketID;
@@ -27,6 +31,19 @@ pub struct AuthComponent {
 
 impl AuthComponent {
     pub fn new(ctx: SysdContext) -> AuthComponent {
+        // Once the Platform SSO configuration profile is removed the extension is
+        // never invoked again, so a queued unregister can only be finished here,
+        // when a checkin proves authentik is reachable.
+        #[cfg(target_os = "macos")]
+        {
+            let hctx = ctx.clone();
+            ctx.events.on(move |_: CheckinCompleted| {
+                let ctx = hctx.clone();
+                async move {
+                    apple::drain_pending_unregister(&ctx).await;
+                }
+            });
+        }
         AuthComponent {
             ctx,
             txns: interactive::new_txns(),
@@ -143,6 +160,24 @@ impl SystemAuthApple for AuthComponent {
         request: Request<RegisterDeviceRequest>,
     ) -> Result<Response<RegisterDeviceResponse>, Status> {
         apple::register_device(&self.ctx, request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    async fn registration_state(
+        &self,
+        request: Request<RegistrationStateRequest>,
+    ) -> Result<Response<RegistrationStateResponse>, Status> {
+        apple::registration_state(&self.ctx, request.into_inner())
+            .await
+            .map(Response::new)
+    }
+
+    async fn unregister_device(
+        &self,
+        request: Request<UnregisterDeviceRequest>,
+    ) -> Result<Response<UnregisterDeviceResponse>, Status> {
+        apple::unregister_device(&self.ctx, request.into_inner())
             .await
             .map(Response::new)
     }
