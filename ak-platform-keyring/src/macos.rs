@@ -69,6 +69,8 @@ impl KeyringStore for MacosStore {
             }
             Err(e) if e.code() == -25300 => Err(KeyringError::NotFound()),
             Err(e) if e.code() == -25291 => Err(KeyringError::NotAvailable()),
+            // errSecInteractionNotAllowed: the item exists but is unreadable in this session
+            Err(e) if e.code() == -25308 => Err(KeyringError::NotAccessible()),
             Err(e) => Err(KeyringError::Other(eyre::Report::from(e))),
         }
     }

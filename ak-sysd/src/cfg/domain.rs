@@ -27,6 +27,10 @@ pub struct DomainConfig {
     pub fallback_token: String,
     #[serde(skip)]
     pub token: String,
+    /// Set when the keyring entry was found but is permanently unreadable and
+    /// has been discarded — the domain needs a fresh enrollment, not a retry.
+    #[serde(skip)]
+    pub needs_reenroll: bool,
 }
 
 impl DomainConfig {
@@ -131,7 +135,7 @@ impl DomainManager {
                 }
                 let raw = std::fs::read_to_string(&path)?;
                 let mut cfg: DomainConfig = serde_json::from_str(&raw)?;
-                cfg.token = self.resolve_token(&cfg).await;
+                self.resolve_token(&mut cfg).await;
 
                 // Pre-seed from the on-disk cache so components have a
                 // last-known-good AgentConfig/brand before healthcheck_all's
@@ -174,8 +178,14 @@ impl DomainManager {
         Ok(())
     }
 
-    async fn resolve_token(&self, cfg: &DomainConfig) -> String {
-        match ak_platform_keyring::store()
+    /// Fills in `cfg.token` from the keyring, falling back to the on-disk copy.
+    ///
+    /// `NotAccessible` (macOS errSecInteractionNotAllowed) is the one failure
+    /// that never resolves by retrying: the item exists but this process can
+    /// never read it. Delete it and flag the domain for re-enrollment so the
+    /// next load replaces it, instead of retrying forever on every access.
+    async fn resolve_token(&self, cfg: &mut DomainConfig) {
+        cfg.token = match ak_platform_keyring::store()
             .get(
                 &keyring_service(),
                 &cfg.domain,
@@ -191,6 +201,27 @@ impl DomainManager {
                 );
                 cfg.fallback_token.clone()
             }
+            Err(ak_platform_keyring::KeyringError::NotAccessible()) => {
+                tracing::warn!(
+                    domain = cfg.domain,
+                    "domain token is not readable by this process, discarding it"
+                );
+                if let Err(e) = ak_platform_keyring::store()
+                    .delete(
+                        &keyring_service(),
+                        &cfg.domain,
+                        ak_platform_keyring::Accessibility::Always,
+                    )
+                    .await
+                {
+                    tracing::warn!(
+                        domain = cfg.domain,
+                        "failed to delete unreadable domain token: {e:?}"
+                    );
+                }
+                cfg.needs_reenroll = cfg.fallback_token.is_empty();
+                cfg.fallback_token.clone()
+            }
             Err(e) => {
                 tracing::warn!(
                     domain = cfg.domain,
@@ -198,7 +229,7 @@ impl DomainManager {
                 );
                 cfg.fallback_token.clone()
             }
-        }
+        };
     }
 
     /// Re-reads the keyring for any domain that came up token-less.
@@ -219,7 +250,7 @@ impl DomainManager {
                 continue;
             }
             let mut cfg = d.cfg.clone();
-            cfg.token = self.resolve_token(&cfg).await;
+            self.resolve_token(&mut cfg).await;
             if cfg.token.is_empty() {
                 tracing::warn!(domain = cfg.domain, "domain has no usable token");
                 continue;
@@ -372,6 +403,7 @@ impl DomainManager {
             managed: false,
             fallback_token: String::new(),
             token: res.token,
+            needs_reenroll: false,
         })
     }
 
@@ -446,10 +478,13 @@ impl DomainManager {
                 .cfg
                 .authentik_url
                 .eq_ignore_ascii_case(&managed.url)
+                && !existing.cfg.needs_reenroll
             {
                 tracing::debug!("resumed existing managed domain");
                 return Ok(());
             }
+            // Either the MDM config points somewhere else now, or the token was
+            // discarded as unreadable — both need the domain enrolled again.
             if let Err(e) = self.delete_domain(MANAGED_DOMAIN_NAME).await {
                 tracing::warn!("failed to delete old managed domain: {e:?}");
             }
@@ -512,6 +547,7 @@ mod tests {
             managed: false,
             fallback_token: "atoken".to_string(),
             token: String::new(),
+            needs_reenroll: false,
         };
         std::fs::write(
             dir.path().join(cfg.file_name()),
@@ -584,6 +620,7 @@ mod tests {
             managed: false,
             fallback_token: String::new(),
             token: String::new(),
+            needs_reenroll: false,
         };
         std::fs::write(
             dir.path().join(cfg.file_name()),
