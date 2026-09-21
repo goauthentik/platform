@@ -50,6 +50,7 @@ dependencies = [
  "eyre",
  "hex",
  "jsonwebtoken",
+ "oauth2",
  "pbjson-types",
  "reqwest",
  "reqwest-middleware",

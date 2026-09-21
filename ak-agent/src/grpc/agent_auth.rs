@@ -8,6 +8,7 @@ use ak_platform::{
             agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
+    oauth2_http,
     string::PlatformString,
 };
 use ak_platform_authz::grpc::AuthPeer;
@@ -15,6 +16,7 @@ use ak_platform_keyring::cache::Cache;
 use ak_platform_keyring::cache::CacheData;
 use chrono::{DateTime, Utc};
 use hex::encode as hex_encode;
+use oauth2::{ClientId, Scope, TokenResponse, TokenUrl, basic::BasicClient};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -231,32 +233,18 @@ impl AgentAuth for AgentGRPCServer {
             }));
         }
 
-        let token_url = format!("{}/application/o/token/", profile.authentik_url);
-        let body = self._token_exchange_request(inner.clone(), &profile)?;
-
-        let res = reqwest::Client::new()
-            .post(&token_url)
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/x-www-form-urlencoded",
-            )
-            .header(reqwest::header::USER_AGENT, user_agent())
-            .body(body)
-            .send()
-            .await
-            .map_err(|e| Status::from_error(e.into()))?;
-
-        if !res.status().is_success() {
-            let body = res.text().await.unwrap_or_default();
-            return Err(Status::internal(format!("token exchange failed: {body}")));
-        }
-
-        let new_token: OAuthTokenResponse =
-            res.json().await.map_err(|e| Status::from_error(e.into()))?;
-        let expires_in = new_token.expires_in.unwrap_or(0);
+        let (access_token, expires_in) = if let Some(at) = inner.actor_token.clone() {
+            let Some(actor_token_type) = inner.actor_token_type.clone() else {
+                return Err(Status::invalid_argument("Missing actor_token_type"));
+            };
+            self._token_exchange_grant(inner, &profile, &at, &actor_token_type)
+                .await?
+        } else {
+            self._exchange_client_credentials(inner, &profile).await?
+        };
 
         let cached = CachedExchangeToken {
-            access_token: new_token.access_token.clone(),
+            access_token: access_token.clone(),
             expires_in,
             created: Utc::now(),
         };
@@ -271,7 +259,7 @@ impl AgentAuth for AgentGRPCServer {
         tracing::debug!(audience, "cached_token_exchange: exchanged new token");
         Ok(Response::new(TokenExchangeResponse {
             header: Some(ResponseHeader { successful: true }),
-            access_token: new_token.access_token,
+            access_token,
             expires_in,
         }))
     }
@@ -302,23 +290,25 @@ impl AgentAuth for AgentGRPCServer {
 }
 
 impl AgentGRPCServer {
-    pub fn _token_exchange_request(
+    /// RFC 8693 token-exchange grant, used when targeting a specific actor. The
+    /// `oauth2` crate has no support for this grant type (only the standard
+    /// authorization_code/client_credentials/device_code/password/refresh_token
+    /// grants), so it's built and sent by hand.
+    async fn _token_exchange_grant(
         &self,
-        request: TokenExchangeRequest,
+        request: &TokenExchangeRequest,
         profile: &ConfigV1Profile,
-    ) -> Result<String, Status> {
+        actor_token: &str,
+        actor_token_type: &str,
+    ) -> Result<(String, i64), Status> {
         let scope_string = if request.scopes.is_empty() {
             "openid email profile".to_string()
         } else {
             request.scopes.join(" ")
         };
-        let mut body = form_urlencoded::Serializer::new(String::new());
-        body.append_pair("scope", &scope_string);
-
-        // Since token-exchange (especially with actor & targeting) was only added in 2026.8
-        // fallback to client_credentials if we don't need targeting
-        if let Some(at) = request.actor_token {
-            body.append_pair(
+        let body = form_urlencoded::Serializer::new(String::new())
+            .append_pair("scope", &scope_string)
+            .append_pair(
                 "grant_type",
                 "urn:ietf:params:oauth:grant-type:token-exchange",
             )
@@ -329,20 +319,78 @@ impl AgentGRPCServer {
                 "urn:ietf:params:oauth:token-type:access_token",
             )
             .append_pair("audience", &request.audience)
-            .append_pair("actor_token", &at);
-            let Some(at_type) = request.actor_token_type else {
-                return Err(Status::invalid_argument("Missing actor_token_type"));
-            };
-            body.append_pair("actor_token_type", &at_type);
-        } else {
-            body.append_pair("grant_type", "client_credentials")
-                .append_pair("client_id", &request.audience)
-                .append_pair(
-                    "client_assertion_type",
-                    "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                )
-                .append_pair("client_assertion", &profile.access_token());
+            .append_pair("actor_token", actor_token)
+            .append_pair("actor_token_type", actor_token_type)
+            .finish();
+
+        let token_url = format!("{}/application/o/token/", profile.authentik_url);
+        let res = reqwest::Client::new()
+            .post(&token_url)
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .header(reqwest::header::USER_AGENT, user_agent())
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| Status::from_error(e.into()))?;
+
+        if !res.status().is_success() {
+            let body = res.text().await.unwrap_or_default();
+            return Err(Status::internal(format!("token exchange failed: {body}")));
         }
-        Ok(body.finish())
+
+        let new_token: OAuthTokenResponse =
+            res.json().await.map_err(|e| Status::from_error(e.into()))?;
+        Ok((new_token.access_token, new_token.expires_in.unwrap_or(0)))
+    }
+
+    /// Plain client_credentials grant, authenticating with a JWT-bearer client
+    /// assertion instead of a client secret.
+    async fn _exchange_client_credentials(
+        &self,
+        request: &TokenExchangeRequest,
+        profile: &ConfigV1Profile,
+    ) -> Result<(String, i64), Status> {
+        let scopes: Vec<Scope> = if request.scopes.is_empty() {
+            ["openid", "email", "profile"]
+                .into_iter()
+                .map(|s| Scope::new(s.to_string()))
+                .collect()
+        } else {
+            request.scopes.iter().cloned().map(Scope::new).collect()
+        };
+
+        let token_url = TokenUrl::new(format!("{}/application/o/token/", profile.authentik_url))
+            .map_err(|e| Status::internal(format!("invalid token URL: {e}")))?;
+        let reqwest_client = reqwest::ClientBuilder::new()
+            .user_agent(user_agent())
+            .build()
+            .map_err(|e| Status::from_error(e.into()))?;
+        let http_client = oauth2_http::adapter(reqwest_client);
+
+        let client =
+            BasicClient::new(ClientId::new(request.audience.clone())).set_token_uri(token_url);
+
+        let token_response = client
+            .exchange_client_credentials()
+            .add_scopes(scopes)
+            .add_extra_param(
+                "client_assertion_type",
+                "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+            )
+            .add_extra_param("client_assertion", profile.access_token())
+            .request_async(&http_client)
+            .await
+            .map_err(|e| Status::internal(format!("token exchange failed: {e}")))?;
+
+        Ok((
+            token_response.access_token().secret().clone(),
+            token_response
+                .expires_in()
+                .map(|d| d.as_secs() as i64)
+                .unwrap_or(0),
+        ))
     }
 }
