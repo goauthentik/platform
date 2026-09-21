@@ -51,7 +51,7 @@ dependencies = [
  "hex",
  "jsonwebtoken",
  "pbjson-types",
- "reqwest 0.13.5",
+ "reqwest",
  "reqwest-middleware",
  "sentry",
  "sentry-tower",
@@ -153,12 +153,12 @@ dependencies = [
  "clap_complete",
  "color-eyre",
  "eyre",
- "oauth-device-flows",
+ "oauth2",
  "open",
  "pbjson-types",
  "psl",
  "ratatui",
- "reqwest 0.13.5",
+ "reqwest",
  "rmcp",
  "sentry",
  "serde",
@@ -240,7 +240,7 @@ dependencies = [
  "eyre",
  "httptest",
  "regex",
- "reqwest 0.13.5",
+ "reqwest",
  "reqwest-middleware",
  "reqwest_cookie_store",
  "tokio",
@@ -316,10 +316,12 @@ dependencies = [
  "libc",
  "log",
  "notify",
+ "oauth2",
  "oslog",
  "pbjson",
  "pbjson-types",
  "prost",
+ "reqwest",
  "serde",
  "serde_json",
  "serde_with",
@@ -362,8 +364,8 @@ dependencies = [
  "ak-platform",
  "authentik-client",
  "eyre",
- "oauth-device-flows",
- "reqwest 0.13.5",
+ "oauth2",
+ "reqwest",
  "serde",
  "serde_json",
  "testcontainers",
@@ -435,7 +437,7 @@ dependencies = [
  "libc",
  "pbjson-types",
  "rand 0.10.2",
- "reqwest 0.13.5",
+ "reqwest",
  "reqwest-middleware",
  "rpassword",
  "rusqlite",
@@ -827,7 +829,7 @@ version = "2026.11.0-rc1"
 source = "git+https://github.com/goauthentik/client-rust?rev=f4be5ff7cd169ef6b68bd13a8e97b7ce6d17410b#f4be5ff7cd169ef6b68bd13a8e97b7ce6d17410b"
 dependencies = [
  "chrono",
- "reqwest 0.13.5",
+ "reqwest",
  "reqwest-middleware",
  "serde",
  "serde_json",
@@ -1502,12 +1504,6 @@ name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
-
-[[package]]
-name = "byteorder-lite"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
 name = "bytes"
@@ -3953,7 +3949,6 @@ dependencies = [
  "tokio",
  "tokio-rustls 0.26.4",
  "tower-service",
- "webpki-roots",
 ]
 
 [[package]]
@@ -4148,18 +4143,6 @@ checksum = "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
-]
-
-[[package]]
-name = "image"
-version = "0.25.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
-dependencies = [
- "bytemuck",
- "byteorder-lite",
- "moxcms",
- "num-traits",
 ]
 
 [[package]]
@@ -4954,16 +4937,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "moxcms"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb85c154ba489f01b25c0d36ae69a87e4a1c73a72631fc6c0eb6dde34a73e44b"
-dependencies = [
- "num-traits",
- "pxfm",
-]
-
-[[package]]
 name = "muda"
 version = "0.19.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5264,22 +5237,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "oauth-device-flows"
-version = "0.1.0"
+name = "oauth2"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a20dd669fa331a18d6d83a31bbea02ec9d0ab494cfee6a474935106997986964"
+checksum = "51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d"
 dependencies = [
  "base64 0.22.1",
- "qrcode",
- "reqwest 0.12.28",
- "secrecy 0.8.0",
+ "chrono",
+ "getrandom 0.2.17",
+ "http 1.5.0",
+ "rand 0.8.7",
  "serde",
  "serde_json",
+ "serde_path_to_error",
+ "sha2 0.10.9",
  "thiserror 1.0.69",
- "time",
- "tokio",
  "url",
- "uuid",
 ]
 
 [[package]]
@@ -6376,21 +6349,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pxfm"
-version = "0.1.30"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d55d956fa96f5ec02be2e13af0e20391a5aa83d6a074e3ad368959d0fab299ea"
-
-[[package]]
-name = "qrcode"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d68782463e408eb1e668cf6152704bd856c78c5b6417adaee3203d8f4c1fc9ec"
-dependencies = [
- "image",
-]
-
-[[package]]
 name = "quick-xml"
 version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6781,44 +6739,6 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "reqwest"
-version = "0.12.28"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
-dependencies = [
- "base64 0.22.1",
- "bytes",
- "futures-core",
- "http 1.5.0",
- "http-body 1.1.0",
- "http-body-util",
- "hyper 1.11.0",
- "hyper-rustls 0.27.9",
- "hyper-util",
- "js-sys",
- "log",
- "percent-encoding",
- "pin-project-lite",
- "quinn",
- "rustls 0.23.42",
- "rustls-pki-types",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "sync_wrapper",
- "tokio",
- "tokio-rustls 0.26.4",
- "tower",
- "tower-http 0.6.11",
- "tower-service",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "webpki-roots",
-]
-
-[[package]]
-name = "reqwest"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
@@ -6871,7 +6791,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "http 1.5.0",
- "reqwest 0.13.5",
+ "reqwest",
  "serde",
  "thiserror 2.0.19",
  "tower-service",
@@ -6885,7 +6805,7 @@ checksum = "beb98c4d52ae6ceed18a0dff0564717623dd75fae08619ae0927332f0a81abbc"
 dependencies = [
  "bytes",
  "cookie_store",
- "reqwest 0.13.5",
+ "reqwest",
  "url",
 ]
 
@@ -7305,16 +7225,6 @@ dependencies = [
 
 [[package]]
 name = "secrecy"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bd1c54ea06cfd2f6b63219704de0b9b4f72dcc2b8fdef820be6cd799780e91e"
-dependencies = [
- "serde",
- "zeroize",
-]
-
-[[package]]
-name = "secrecy"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e891af845473308773346dc847b2c23ee78fe442e0472ac50e22a18a93d3ae5a"
@@ -7401,7 +7311,7 @@ checksum = "76a88b65feb368d9dde5d531a2b59b25016e36fd6e4978432371a3ee77746ca2"
 dependencies = [
  "cfg_aliases",
  "httpdate",
- "reqwest 0.13.5",
+ "reqwest",
  "rustls 0.23.42",
  "sentry-backtrace",
  "sentry-contexts",
@@ -7591,6 +7501,17 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
+]
+
+[[package]]
+name = "serde_path_to_error"
+version = "0.1.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10a9ff822e371bb5403e391ecd83e182e0e77ba7f6fe0160b795797109d1b457"
+dependencies = [
+ "itoa",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -7981,7 +7902,7 @@ dependencies = [
  "byteorder",
  "futures",
  "log",
- "secrecy 0.10.3",
+ "secrecy",
  "service-binding",
  "signature",
  "ssh-encoding 0.2.0",
@@ -8332,7 +8253,7 @@ dependencies = [
  "percent-encoding",
  "plist",
  "raw-window-handle",
- "reqwest 0.13.5",
+ "reqwest",
  "serde",
  "serde_json",
  "serde_repr",
@@ -8876,7 +8797,6 @@ dependencies = [
  "bytes",
  "libc",
  "mio",
- "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.6.5",

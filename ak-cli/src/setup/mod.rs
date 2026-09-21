@@ -1,12 +1,16 @@
 use crate::format;
 use crate::setup::ak::urls_for_profile;
 use eyre::Result;
-use oauth_device_flows::provider::GenericProviderConfig;
-use oauth_device_flows::{DeviceFlow, DeviceFlowConfig, Provider};
+use oauth2::basic::BasicClient;
+use oauth2::{
+    ClientId, DeviceAuthorizationUrl, Scope,
+    StandardDeviceAuthorizationResponse, TokenResponse, TokenUrl,
+};
+use url::Url;
+
 use open::that;
 use ratatui::text::Line;
 use std::time::Duration;
-use url::Url;
 
 pub mod ak;
 
@@ -66,45 +70,53 @@ pub async fn setup(opts: Options) -> Result<Profile> {
         },
     };
 
-    let config = DeviceFlowConfig::new()
-        .client_id(opts.client_id.clone())
-        .scopes(vec![
-            "openid",
-            "profile",
-            "email",
-            "offline_access",
-            "goauthentik.io/api",
+    let client = BasicClient::new(ClientId::new(opts.client_id.clone()))
+        .set_token_uri(TokenUrl::from_url(urls.token_url))
+        .set_device_authorization_url(DeviceAuthorizationUrl::from_url(urls.device_code_url));
+
+    let reqwest_client = reqwest::ClientBuilder::new()
+        // Following redirects opens the client up to SSRF vulnerabilities.
+        .redirect(reqwest::redirect::Policy::none())
+        .build()?;
+    let http_client = ak_platform::oauth2_http::adapter(reqwest_client);
+
+    let details: StandardDeviceAuthorizationResponse = client
+        .exchange_device_code()
+        .add_scopes(vec![
+            Scope::new("openid".to_string()),
+            Scope::new("profile".to_string()),
+            Scope::new("email".to_string()),
+            Scope::new("offline_access".to_string()),
+            Scope::new("goauthentik.io/api".to_string()),
         ])
-        .poll_interval(Duration::from_secs(5))
-        .generic_provider(GenericProviderConfig::new(
-            urls.device_code_url,
-            urls.token_url,
-            "authentik".to_owned(),
-        ))
-        .max_attempts(12);
+        .add_scope(Scope::new("read".to_string()))
+        .request_async(&http_client)
+        .await?;
 
-    let mut device_flow = DeviceFlow::new(Provider::Generic, config)?;
-
-    let auth_response = device_flow.initialize().await?;
-
-    let verification_uri = match auth_response.verification_uri_complete() {
-        Some(vu) => vu,
-        None => auth_response.verification_uri(),
-    };
-    callback(verification_uri.clone())?;
+    callback(details.verification_uri().url().clone())?;
 
     eprintln!("Waiting for authentication...");
-    let token_response = device_flow.poll_for_token().await?;
+
+    let token_response = client
+        .exchange_device_access_token(&details)
+        .request_async(
+            &http_client,
+            tokio::time::sleep,
+            Some(Duration::from_secs(15)),
+        )
+        .await?;
+
+    eprintln!("Successfully authenticated!");
 
     let mut profile = Profile {
         authentik_url: opts.authentik_url.clone(),
         app_slug: opts.app_slug.clone(),
         client_id: opts.client_id.clone(),
-        access_token: Some(token_response.access_token().to_owned()),
+        access_token: Some(token_response.access_token().secret().clone()),
         refresh_token: None,
     };
     if let Some(token) = token_response.refresh_token() {
-        profile.refresh_token = Some(token.to_owned())
+        profile.refresh_token = Some(token.secret().clone())
     }
     Ok(profile)
 }

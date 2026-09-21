@@ -178,8 +178,8 @@ impl AuthentikMcp {
 
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for AuthentikMcp {
-    fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+    fn get_info(&self) -> ServerConfig {
+        ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(
                 Implementation::new("authentik Agent", ak_meta::full_version())
                     .with_website_url("https://goauthentik.io"),
