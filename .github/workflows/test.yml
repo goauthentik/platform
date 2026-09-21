@@ -75,13 +75,13 @@ jobs:
           # ee/wcp is deliberately absent: _build-rs.yml ships it without
           # crt-static, so its tests have to be built the same way.
           RUST_BUILD_FLAGS: ${{ ((matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
-      - uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-${{ matrix.platform }}-${{ matrix.target }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
-      - uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -109,13 +109,13 @@ jobs:
       - run: |
           brew install xcresultparser xcbeautify
           make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
-      - uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: swift
           files: ${{ github.workspace }}/cache/psso/coverage.xml
-      - uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -252,20 +252,20 @@ jobs:
       - run: |
           sudo chmod -R 777 ./ak-platform-e2e/coverage
           make test-e2e-convert
-      - uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
-      - uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
-      - uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
