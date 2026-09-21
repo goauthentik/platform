@@ -11,8 +11,8 @@ importers:
   ak-agent-desktop:
     dependencies:
       '@goauthentik/api':
-        specifier: ^2026.8.2
-        version: 2026.8.2
+        specifier: ^2026.8.3
+        version: 2026.8.3
       '@goauthentik/brand-assets':
         specifier: ^2.0.0
         version: 2.0.0
@@ -59,8 +59,8 @@ importers:
   browser-ext:
     devDependencies:
       '@goauthentik/api':
-        specifier: ^2026.8.2
-        version: 2026.8.2
+        specifier: ^2026.8.3
+        version: 2026.8.3
       '@goauthentik/oxfmt-config':
         specifier: ^9.1.0
         version: 9.1.0(oxfmt@0.68.0)(typescript@7.0.2)
@@ -294,8 +294,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@goauthentik/api@2026.8.2':
-    resolution: {integrity: sha512-/YHts217H/seuDxFY8GW3+MJqzbnA5B5moelHLWp0aIhM7zGD6/EA35tM4OYIBHVYdj4Qb9C6ie6Desw2KjQHA==}
+  '@goauthentik/api@2026.8.3':
+    resolution: {integrity: sha512-wDJeHC9h6c0RQTBnDdWac6GmCX6nMg3vHNEwToRgBU1GH7Nduzp4gJIG9r2g6MXLV3oVNjbMEQmkwdFfYnFMmg==}
 
   '@goauthentik/brand-assets@2.0.0':
     resolution: {integrity: sha512-yRJrV+KuGrz7MNcRzAkZa4e7LuciuFZBVSyPFRd/EndxgiqcFuFHyn+6tEurKNmianBNURhe2qm5ytoLFgEWFQ==}
@@ -970,8 +970,8 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
-  brace-expansion@1.1.18:
-    resolution: {integrity: sha512-Edep/X9fGqVNmzKBVsDYIOtD+z1tuezV70LBjdCst9Tqu76lsnvRiZ6oTic1n+/BIwX6QDGAO94PN4N2SADvtw==}
+  brace-expansion@1.1.21:
+    resolution: {integrity: sha512-9zeA+KLZNNzglF2TPKRQEDyx6Yby7daAkuy8MiPzpXPsYDWi/DRM8jmwUDxokQjYqBpv5DgPiwD4h4ZZSy1Ujw==}
 
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
@@ -1608,7 +1608,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@goauthentik/api@2026.8.2': {}
+  '@goauthentik/api@2026.8.3': {}
 
   '@goauthentik/brand-assets@2.0.0': {}
 
@@ -2005,7 +2005,7 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
-  brace-expansion@1.1.18:
+  brace-expansion@1.1.21:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
@@ -2312,7 +2312,7 @@ snapshots:
 
   minimatch@3.1.5:
     dependencies:
-      brace-expansion: 1.1.18
+      brace-expansion: 1.1.21
 
   ms@2.1.3: {}
 

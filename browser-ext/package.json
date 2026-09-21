@@ -13,7 +13,7 @@
         "watch": "node build.mjs --watch"
     },
     "devDependencies": {
-        "@goauthentik/api": "^2026.8.2",
+        "@goauthentik/api": "^2026.8.3",
         "@goauthentik/oxfmt-config": "^9.1.0",
         "@goauthentik/oxlint-config": "^1.0.0",
         "@goauthentik/tsconfig": "^2.0.0",
