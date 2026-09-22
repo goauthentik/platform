@@ -1,0 +1,21 @@
+include ../../common.mk
+
+base_ver := $(shell cat Dockerfile | grep FROM | awk '{print $$2}' | awk -F: '{print $$2}')
+container_ver := ${base_ver}-ak-${VERSION}
+
+.PHONY: ci-container-tag
+ci-container-tag:
+	$(eval suffix := $(if $(strip $(AK_TAG_SUFFIX)),-${AK_TAG_SUFFIX},))
+	@echo ghcr.io/goauthentik/platform-ssh:${container_ver}${suffix}
+
+.PHONY: ci-build-args
+ci-build-args:
+	@echo AK_PLATFORM_VER=${VERSION_PKG}
+	@echo AK_DEPLOY_URL=${AK_DEPLOY_URL}
+
+.PHONY: local-build
+local-build:
+	docker build \
+		-t ghcr.io/goauthentik/platform-ssh:${container_ver} \
+		--no-cache \
+		.
