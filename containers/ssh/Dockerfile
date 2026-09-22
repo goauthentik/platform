@@ -6,7 +6,7 @@ ARG AK_DEPLOY_URL=https://pkg.goauthentik.io
 USER root
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends openssh-server supervisor && \
+    apt-get install -y --no-install-recommends openssh-server supervisor curl gpg ca-certificates && \
     ssh-keygen -A && \
     mkdir -p /run/sshd && \
     curl -fsSL "${AK_DEPLOY_URL}/keys/gpg-key.asc" | gpg --dearmor -o /usr/share/keyrings/authentik-keyring.gpg && \
