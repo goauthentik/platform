@@ -64,7 +64,23 @@ pub struct TokenExchangeArgs {
     pub scopes: Option<Vec<String>>,
 }
 
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BlueprintValidateArgs {
+    /// Complete proposed Blueprint YAML. This tool performs no changes.
+    pub content: String,
+}
+
 impl AuthentikMcp {
+    pub async fn _validate_blueprint(
+        &self,
+        args: BlueprintValidateArgs,
+    ) -> Result<CallToolResult, McpError> {
+        let result = crate::mcp::blueprint::validate_blueprint(&args.content);
+        let json = serde_json::to_string_pretty(&result)
+            .map_err(|e| McpError::internal_error(format!("serialize failed: {e}"), None))?;
+        Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
+    }
+
     pub async fn _list_applications(
         &self,
         args: ListApplicationsArgs,
