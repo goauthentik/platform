@@ -3,6 +3,7 @@ include ../../common.mk
 TARGET := vpkg/macos
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
+PROVISION_PROFILE_PATH := $(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)
 
 .PHONY: lint
 lint:
@@ -42,7 +43,9 @@ build-app:
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
 		"ak"
 	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
-	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
+ifneq $(PROVISION_PROFILE_PATH,)
+	cp "${PROVISION_PROFILE_PATH}" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
+endif
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/sysd/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
@@ -50,6 +53,7 @@ build-app:
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*
 	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
+ifneq $(PROVISION_PROFILE_PATH,)
 	codesign \
 		--force \
 		--verify \
@@ -57,6 +61,7 @@ build-app:
 		--entitlements "${PWD}/authentikEndpoint.entitlements" \
 		--sign ${MACOS_SIGN_CERT} \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
+endif
 
 .PHONY: package
 package: build-app
