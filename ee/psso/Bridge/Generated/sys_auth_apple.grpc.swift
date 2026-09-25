@@ -46,10 +46,38 @@ internal enum SystemAuthApple: Sendable {
                 type: .unary
             )
         }
+        /// Namespace for "RegistrationState" metadata.
+        internal enum RegistrationState: Sendable {
+            /// Request type for "RegistrationState".
+            internal typealias Input = RegistrationStateRequest
+            /// Response type for "RegistrationState".
+            internal typealias Output = RegistrationStateResponse
+            /// Descriptor for "RegistrationState".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth_apple.SystemAuthApple"),
+                method: "RegistrationState",
+                type: .unary
+            )
+        }
+        /// Namespace for "UnregisterDevice" metadata.
+        internal enum UnregisterDevice: Sendable {
+            /// Request type for "UnregisterDevice".
+            internal typealias Input = UnregisterDeviceRequest
+            /// Response type for "UnregisterDevice".
+            internal typealias Output = UnregisterDeviceResponse
+            /// Descriptor for "UnregisterDevice".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "sys_auth_apple.SystemAuthApple"),
+                method: "UnregisterDevice",
+                type: .unary
+            )
+        }
         /// Descriptors for all methods in the "sys_auth_apple.SystemAuthApple" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             RegisterUser.descriptor,
-            RegisterDevice.descriptor
+            RegisterDevice.descriptor,
+            RegistrationState.descriptor,
+            UnregisterDevice.descriptor
         ]
     }
 }
@@ -105,6 +133,54 @@ extension SystemAuthApple {
             deserializer: some GRPCCore.MessageDeserializer<RegisterDeviceResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegisterDeviceResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "RegistrationState" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Reports what authentik currently has stored for this device, so the
+        /// > extension can detect drift and ask the system for a repair registration.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `RegistrationStateRequest` message.
+        ///   - serializer: A serializer for `RegistrationStateRequest` messages.
+        ///   - deserializer: A deserializer for `RegistrationStateResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func registrationState<Result>(
+            request: GRPCCore.ClientRequest<RegistrationStateRequest>,
+            serializer: some GRPCCore.MessageSerializer<RegistrationStateRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<RegistrationStateResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegistrationStateResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "UnregisterDevice" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Clears this device's Platform SSO registration, used when the
+        /// > configuration profile is removed.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `UnregisterDeviceRequest` message.
+        ///   - serializer: A serializer for `UnregisterDeviceRequest` messages.
+        ///   - deserializer: A deserializer for `UnregisterDeviceResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func unregisterDevice<Result>(
+            request: GRPCCore.ClientRequest<UnregisterDeviceRequest>,
+            serializer: some GRPCCore.MessageSerializer<UnregisterDeviceRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<UnregisterDeviceResponse>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<UnregisterDeviceResponse>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -183,6 +259,76 @@ extension SystemAuthApple {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "RegistrationState" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Reports what authentik currently has stored for this device, so the
+        /// > extension can detect drift and ask the system for a repair registration.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `RegistrationStateRequest` message.
+        ///   - serializer: A serializer for `RegistrationStateRequest` messages.
+        ///   - deserializer: A deserializer for `RegistrationStateResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func registrationState<Result>(
+            request: GRPCCore.ClientRequest<RegistrationStateRequest>,
+            serializer: some GRPCCore.MessageSerializer<RegistrationStateRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<RegistrationStateResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegistrationStateResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SystemAuthApple.Method.RegistrationState.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
+
+        /// Call the "UnregisterDevice" method.
+        ///
+        /// > Source IDL Documentation:
+        /// >
+        /// > Clears this device's Platform SSO registration, used when the
+        /// > configuration profile is removed.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `UnregisterDeviceRequest` message.
+        ///   - serializer: A serializer for `UnregisterDeviceRequest` messages.
+        ///   - deserializer: A deserializer for `UnregisterDeviceResponse` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func unregisterDevice<Result>(
+            request: GRPCCore.ClientRequest<UnregisterDeviceRequest>,
+            serializer: some GRPCCore.MessageSerializer<UnregisterDeviceRequest>,
+            deserializer: some GRPCCore.MessageDeserializer<UnregisterDeviceResponse>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<UnregisterDeviceResponse>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: SystemAuthApple.Method.UnregisterDevice.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -234,6 +380,66 @@ extension SystemAuthApple.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<RegisterDeviceRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<RegisterDeviceResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "RegistrationState" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Reports what authentik currently has stored for this device, so the
+    /// > extension can detect drift and ask the system for a repair registration.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `RegistrationStateRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func registrationState<Result>(
+        request: GRPCCore.ClientRequest<RegistrationStateRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegistrationStateResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.registrationState(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<RegistrationStateRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<RegistrationStateResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "UnregisterDevice" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Clears this device's Platform SSO registration, used when the
+    /// > configuration profile is removed.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `UnregisterDeviceRequest` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func unregisterDevice<Result>(
+        request: GRPCCore.ClientRequest<UnregisterDeviceRequest>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<UnregisterDeviceResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.unregisterDevice(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<UnregisterDeviceRequest>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<UnregisterDeviceResponse>(),
             options: options,
             onResponse: handleResponse
         )
@@ -295,6 +501,74 @@ extension SystemAuthApple.ClientProtocol {
             metadata: metadata
         )
         return try await self.registerDevice(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "RegistrationState" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Reports what authentik currently has stored for this device, so the
+    /// > extension can detect drift and ask the system for a repair registration.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func registrationState<Result>(
+        _ message: RegistrationStateRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<RegistrationStateResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<RegistrationStateRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.registrationState(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "UnregisterDevice" method.
+    ///
+    /// > Source IDL Documentation:
+    /// >
+    /// > Clears this device's Platform SSO registration, used when the
+    /// > configuration profile is removed.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func unregisterDevice<Result>(
+        _ message: UnregisterDeviceRequest,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<UnregisterDeviceResponse>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<UnregisterDeviceRequest>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.unregisterDevice(
             request: request,
             options: options,
             onResponse: handleResponse

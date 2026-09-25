@@ -6,6 +6,12 @@ option swift_prefix = "";
 service SystemAuthApple {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
   rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
+  // Reports what authentik currently has stored for this device, so the
+  // extension can detect drift and ask the system for a repair registration.
+  rpc RegistrationState(RegistrationStateRequest) returns (RegistrationStateResponse);
+  // Clears this device's Platform SSO registration, used when the
+  // configuration profile is removed.
+  rpc UnregisterDevice(UnregisterDeviceRequest) returns (UnregisterDeviceResponse);
 }
 
 message RegisterUserRequest {
@@ -34,4 +40,28 @@ message RegisterDeviceResponse {
   string nonce_endpoint = 6;
   string device_token = 7;
   string authorization_endpoint = 8;
+}
+
+message RegistrationStateRequest {}
+
+message RegistrationStateUser {
+  string username = 1;
+  string enclave_key_id = 2;
+}
+
+message RegistrationStateResponse {
+  // False when authentik no longer knows this device at all (connection gone
+  // or device token revoked), in which case the key IDs are empty.
+  bool device_registered = 1;
+  string sign_key_id = 2;
+  string enc_key_id = 3;
+  repeated RegistrationStateUser users = 4;
+}
+
+message UnregisterDeviceRequest {}
+
+message UnregisterDeviceResponse {
+  // False when the call could not reach authentik and was queued for a
+  // later checkin instead.
+  bool completed = 1;
 }

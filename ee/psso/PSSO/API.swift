@@ -45,8 +45,7 @@ class API {
         userToken: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            guard let key = loginManger.key(for: .userSecureEnclaveKey)
-                    ?? loginManger.key(for: .userDeviceSigning),
+            guard let key = userKey(loginManger),
                 let (enclaveKeyID, userSecureEnclaveKey, _) = try getPublicKeyString(from: key)
             else {
                 self.logger.error("no user secure enclave key available, cannot register user")
@@ -67,6 +66,86 @@ class API {
             self.logger.error("failed to register: \(error)")
             return .failed
         }
+    }
+
+    /// Compares the keys authentik has stored for this device against the ones the
+    /// system holds locally, and asks for a repair registration for whatever has
+    /// drifted. Without this a device whose server-side record was lost or replaced
+    /// keeps failing every login with nothing able to notice.
+    ///
+    /// ponytail: no cooldown between repair requests -- the system schedules the
+    /// repair registrations and drift only appears at login time, so this cannot spin.
+    /// Add one if repair storms ever show up in the logs.
+    func CheckRegistration(loginManager: ASAuthorizationProviderExtensionLoginManager) async {
+        guard loginManager.isDeviceRegistered else { return }
+        let state: PSSORegistrationState
+        do {
+            state = try await SysdBridge.shared.pssoRegistrationState()
+        } catch {
+            self.logger.warning("failed to fetch registration state: \(error)")
+            return
+        }
+        if !state.deviceRegistered {
+            self.logger.warning("authentik no longer knows this device, requesting repair")
+            loginManager.deviceRegistrationsNeedsRepair()
+            return
+        }
+        guard let signKeyID = keyID(loginManager, for: .currentDeviceSigning) else {
+            // Registered but the key is unreadable: only a fresh keypair recovers this.
+            self.logger.warning("device signing key unreadable, resetting device keys")
+            loginManager.resetDeviceKeys()
+            loginManager.deviceRegistrationsNeedsRepair()
+            return
+        }
+        if signKeyID != state.signKeyID {
+            self.logger.warning("device signing key drifted from authentik, requesting repair")
+            loginManager.deviceRegistrationsNeedsRepair()
+        }
+        if keyID(loginManager, for: .currentDeviceEncryption) != state.encKeyID {
+            self.logger.warning("device encryption key drifted from authentik, requesting repair")
+            loginManager.decryptionKeysNeedRepair()
+        }
+        guard loginManager.isUserRegistered else { return }
+        guard let enclaveKeyID = userKeyID(loginManager) else {
+            self.logger.warning("user enclave key unreadable, resetting it")
+            loginManager.resetUserSecureEnclaveKey()
+            loginManager.userRegistrationsNeedsRepair()
+            return
+        }
+        if !state.userEnclaveKeyIDs.contains(enclaveKeyID) {
+            self.logger.warning("user binding missing from authentik, requesting repair")
+            loginManager.userRegistrationsNeedsRepair()
+        }
+    }
+
+    /// The key ID authentik would have stored for one of this device's keys, or nil
+    /// when the key is missing or unreadable.
+    func keyID(
+        _ loginManager: ASAuthorizationProviderExtensionLoginManager,
+        for keyType: ASAuthorizationProviderExtensionKeyType,
+    ) -> String? {
+        guard let key = loginManager.key(for: keyType),
+            let (keyID, _, _) = try? getPublicKeyString(from: key)
+        else {
+            return nil
+        }
+        return keyID
+    }
+
+    /// The key that signs this user's login assertions, which is what authentik
+    /// stores as the binding's enclave key.
+    func userKey(_ loginManager: ASAuthorizationProviderExtensionLoginManager) -> SecKey? {
+        return loginManager.key(for: .userSecureEnclaveKey)
+            ?? loginManager.key(for: .userDeviceSigning)
+    }
+
+    func userKeyID(_ loginManager: ASAuthorizationProviderExtensionLoginManager) -> String? {
+        guard let key = userKey(loginManager),
+            let (keyID, _, _) = try? getPublicKeyString(from: key)
+        else {
+            return nil
+        }
+        return keyID
     }
 
     func getPublicKey(from privateKey: SecKey) -> SecKey? {

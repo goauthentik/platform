@@ -17,6 +17,13 @@ use tonic::{Request, Response, Status};
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
 
+/// A checkin for `domain` reached the API. Components waiting to retry work
+/// that needs the server hang off this.
+#[derive(Clone, Debug)]
+pub struct CheckinCompleted {
+    pub domain: String,
+}
+
 #[derive(Debug)]
 pub struct DeviceComponent {
     ctx: SysdContext,
@@ -79,8 +86,11 @@ impl Component for DeviceComponent {
                             continue;
                         }
                     };
-                    if let Err(e) = authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(&d.api, Some(facts)).await {
-                        tracing::warn!(domain = d.cfg.domain, "checkin failed: {e:?}");
+                    match authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(&d.api, Some(facts)).await {
+                        Ok(_) => ctx.events.dispatch(CheckinCompleted {
+                            domain: d.cfg.domain.clone(),
+                        }),
+                        Err(e) => tracing::warn!(domain = d.cfg.domain, "checkin failed: {e:?}"),
                     }
                 }
                 let jitter = rand::random::<u64>() % 30;
