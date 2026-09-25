@@ -21,6 +21,7 @@ chrono = { workspace = true }
 eyre = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { version = "11", features = ["rust_crypto"] }
+oauth2 = { workspace = true }
 pbjson-types = { workspace = true }
 reqwest = { workspace = true }
 reqwest-middleware = "0.5.2"

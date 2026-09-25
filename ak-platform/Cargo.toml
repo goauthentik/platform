@@ -25,6 +25,8 @@ tonic-prost = { workspace = true }
 tower = { workspace = true }
 dirs-next = "2.0.0"
 eyre = { workspace = true }
+oauth2 = { workspace = true }
+reqwest = { workspace = true }
 ssh-agent-lib = { workspace = true }
 http = "1.4.2"
 bytes = "1.11.1"

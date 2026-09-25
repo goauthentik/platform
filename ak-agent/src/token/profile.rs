@@ -2,13 +2,15 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use ak_meta::user_agent;
+use ak_platform::oauth2_http;
 use ak_platform::shared::AuthentikClaims;
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
+use oauth2::{ClientId, RefreshToken, TokenResponse, TokenUrl, basic::BasicClient};
 use tokio::sync::{Notify, RwLock};
 
 use ak_platform::storage::cfgmgr::ConfigManager;
-use eyre::{Result, bail};
+use eyre::Result;
 
 use crate::config::ConfigV1;
 use crate::token::Token;
@@ -229,29 +231,18 @@ impl ProfileTokenManager {
             )
         };
 
-        let body = url::form_urlencoded::Serializer::new(String::new())
-            .append_pair("grant_type", "refresh_token")
-            .append_pair("refresh_token", &refresh_token)
-            .finish();
-        let client = reqwest::Client::new();
-        let res = client
-            .post(&token_url)
-            .basic_auth(&client_id, None::<&str>)
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/x-www-form-urlencoded",
-            )
-            .header(reqwest::header::USER_AGENT, user_agent())
-            .body(body)
-            .send()
-            .await?;
+        let reqwest_client = reqwest::ClientBuilder::new()
+            .user_agent(user_agent())
+            .build()?;
+        let http_client = oauth2_http::adapter(reqwest_client);
+        let client =
+            BasicClient::new(ClientId::new(client_id)).set_token_uri(TokenUrl::new(token_url)?);
 
-        if !res.status().is_success() {
-            let body = res.text().await?;
-            bail!("token renewal failed: {body}");
-        }
-
-        let new_token: Token = res.json().await?;
+        let token_response = client
+            .exchange_refresh_token(&RefreshToken::new(refresh_token))
+            .request_async(&http_client)
+            .await
+            .map_err(|e| eyre::eyre!("token renewal failed: {e}"))?;
 
         {
             let mut config = self.cfg.write().await;
@@ -259,11 +250,11 @@ impl ProfileTokenManager {
                 .profiles
                 .get_mut(&self.profile_name)
                 .ok_or_else(|| eyre::eyre!("profile not found"))?;
-            profile.set_access_token(new_token.access_token.clone());
-            if let Some(rt) = &new_token.refresh_token
-                && !rt.is_empty()
+            profile.set_access_token(token_response.access_token().secret());
+            if let Some(rt) = token_response.refresh_token()
+                && !rt.secret().is_empty()
             {
-                profile.set_refresh_token(rt.clone())
+                profile.set_refresh_token(rt.secret())
             }
         }
 
