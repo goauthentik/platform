@@ -1,6 +1,6 @@
 use crate::format;
 use crate::setup::ak::urls_for_profile;
-use eyre::Result;
+use eyre::{Result, WrapErr};
 use oauth2::basic::BasicClient;
 use oauth2::{
     ClientId, DeviceAuthorizationUrl, Scope, StandardDeviceAuthorizationResponse, TokenResponse,
@@ -92,7 +92,11 @@ pub async fn setup(opts: Options) -> Result<Profile> {
         .request_async(&http_client)
         .await?;
 
-    callback(details.verification_uri().url().clone())?;
+    let verification_url = match details.verification_uri_complete() {
+        Some(vu) => Url::parse(vu.secret()).wrap_err("invalid verification URI")?,
+        None => details.verification_uri().url().clone(),
+    };
+    callback(verification_url)?;
 
     eprintln!("Waiting for authentication...");
 

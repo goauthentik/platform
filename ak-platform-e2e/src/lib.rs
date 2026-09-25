@@ -140,11 +140,16 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
         .request_async(&http_client)
         .await?;
 
-    // Auto-approve: visit the verification URI with an authenticated session,
-    // then submit the implicit consent form.
+    // Auto-approve: visit the verification URI (pre-filled with the user code
+    // when the server provides one) with an authenticated session, then submit
+    // the implicit consent form.
     let auth_client = authenticated_session().await?;
+    let verification_url = details
+        .verification_uri_complete()
+        .map(|vu| vu.secret().clone())
+        .unwrap_or_else(|| details.verification_uri().url().to_string());
     auth_client
-        .get(details.verification_uri().url().clone().as_str())
+        .get(&verification_url)
         .send()
         .await
         .wrap_err("failed to visit verification URI")?;
