@@ -63,7 +63,7 @@ jobs:
         with:
           rustflags: ""
           build-warnings: warn
-      - uses: taiki-e/install-action@4076c08d76dba979c11a7285295b0716c1d67908 # v2
+      - uses: taiki-e/install-action@dfae9bf3d6f6c6f20ef4ebb3486c01a51341ff12 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: ./.github/actions/setup-toolchain
@@ -194,7 +194,7 @@ jobs:
         with:
           rustflags: ""
           build-warnings: warn
-      - uses: taiki-e/install-action@4076c08d76dba979c11a7285295b0716c1d67908 # v2
+      - uses: taiki-e/install-action@dfae9bf3d6f6c6f20ef4ebb3486c01a51341ff12 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6

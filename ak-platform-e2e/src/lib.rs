@@ -7,12 +7,12 @@ use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints
 use eyre::{Context, ContextCompat, Result, bail};
 use oauth2::basic::BasicClient;
 use oauth2::{
-    ClientId, DeviceAuthorizationUrl, Scope,
-    StandardDeviceAuthorizationResponse, TokenResponse, TokenUrl,
+    ClientId, DeviceAuthorizationUrl, Scope, StandardDeviceAuthorizationResponse, TokenResponse,
+    TokenUrl,
 };
-use url::Url;
 use testcontainers::core::CmdWaitFor;
 use testcontainers::{ContainerAsync, GenericImage, core::ExecCommand};
+use url::Url;
 
 pub mod test_machine;
 pub use test_machine::TestMachine;
@@ -112,10 +112,14 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
     }
 
     let client = BasicClient::new(ClientId::new("authentik-cli".to_string()))
-        .set_token_uri(TokenUrl::from_url(base.join("application/o/token/")
-                .wrap_err("invalid token URL")?))
-        .set_device_authorization_url(DeviceAuthorizationUrl::from_url(base.join("application/o/device/")
-                .wrap_err("invalid device URL")?));
+        .set_token_uri(TokenUrl::from_url(
+            base.join("application/o/token/")
+                .wrap_err("invalid token URL")?,
+        ))
+        .set_device_authorization_url(DeviceAuthorizationUrl::from_url(
+            base.join("application/o/device/")
+                .wrap_err("invalid device URL")?,
+        ));
 
     let reqwest_client = reqwest::ClientBuilder::new()
         // Following redirects opens the client up to SSRF vulnerabilities.
@@ -160,14 +164,11 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
             .await;
     }
 
-        let token_response = client
+    let token_response = client
         .exchange_device_access_token(&details)
-        .request_async(
-            &http_client,
-            tokio::time::sleep,
-            Some(Duration::from_secs(15)),
-        )
-        .await.wrap_err("device flow polling failed")?;
+        .request_async(&http_client, tokio::time::sleep, None)
+        .await
+        .wrap_err("device flow polling failed")?;
 
     let ak_url = container_authentik_url();
     let access_token = token_response.access_token().secret().to_owned();

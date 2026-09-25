@@ -3,8 +3,8 @@ use crate::setup::ak::urls_for_profile;
 use eyre::Result;
 use oauth2::basic::BasicClient;
 use oauth2::{
-    ClientId, DeviceAuthorizationUrl, Scope,
-    StandardDeviceAuthorizationResponse, TokenResponse, TokenUrl,
+    ClientId, DeviceAuthorizationUrl, Scope, StandardDeviceAuthorizationResponse, TokenResponse,
+    TokenUrl,
 };
 use url::Url;
 

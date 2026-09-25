@@ -9,8 +9,12 @@
 use std::future::Future;
 use std::pin::Pin;
 
-type HttpFuture =
-    Pin<Box<dyn Future<Output = Result<oauth2::HttpResponse, oauth2::HttpClientError<reqwest::Error>>> + Send>>;
+type HttpFuture = Pin<
+    Box<
+        dyn Future<Output = Result<oauth2::HttpResponse, oauth2::HttpClientError<reqwest::Error>>>
+            + Send,
+    >,
+>;
 
 /// Builds an `AsyncHttpClient` for oauth2 backed by the given `reqwest::Client`.
 pub fn adapter(client: reqwest::Client) -> impl Fn(oauth2::HttpRequest) -> HttpFuture {
@@ -36,7 +40,9 @@ pub fn adapter(client: reqwest::Client) -> impl Fn(oauth2::HttpRequest) -> HttpF
                 .await
                 .map_err(|e| oauth2::HttpClientError::Reqwest(Box::new(e)))?
                 .to_vec();
-            resp_builder.body(body).map_err(oauth2::HttpClientError::Http)
+            resp_builder
+                .body(body)
+                .map_err(oauth2::HttpClientError::Http)
         })
     }
 }

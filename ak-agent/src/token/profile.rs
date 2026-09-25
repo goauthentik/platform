@@ -231,10 +231,12 @@ impl ProfileTokenManager {
             )
         };
 
-        let reqwest_client = reqwest::ClientBuilder::new().user_agent(user_agent()).build()?;
+        let reqwest_client = reqwest::ClientBuilder::new()
+            .user_agent(user_agent())
+            .build()?;
         let http_client = oauth2_http::adapter(reqwest_client);
-        let client = BasicClient::new(ClientId::new(client_id))
-            .set_token_uri(TokenUrl::new(token_url)?);
+        let client =
+            BasicClient::new(ClientId::new(client_id)).set_token_uri(TokenUrl::new(token_url)?);
 
         let token_response = client
             .exchange_refresh_token(&RefreshToken::new(refresh_token))
