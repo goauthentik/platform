@@ -10,7 +10,6 @@ use url::Url;
 
 use open::that;
 use ratatui::text::Line;
-use std::time::Duration;
 
 pub mod ak;
 
@@ -99,11 +98,7 @@ pub async fn setup(opts: Options) -> Result<Profile> {
 
     let token_response = client
         .exchange_device_access_token(&details)
-        .request_async(
-            &http_client,
-            tokio::time::sleep,
-            Some(Duration::from_secs(15)),
-        )
+        .request_async(&http_client, tokio::time::sleep, None)
         .await?;
 
     eprintln!("Successfully authenticated!");
