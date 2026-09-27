@@ -32,13 +32,13 @@ sudo launchctl load -w $DAEMON_PLIST_PATH
 echo "Finished loading authentik sysd daemon."
 
 set +e
-old_pid=$(pgrep "ak-agent")
+old_pid=$(pgrep "ak-agent-desktop")
 
 if [ $? -eq 0 ] && [ $old_pid -gt 0 ]; then
-    echo "'ak-agent' app running with pid: ${old_pid}.";
-    sudo pkill "ak-agent" && echo "Killed existing 'ak-agent' app." || echo "Unable to kill 'ak-agent' app."
+    echo "'ak-agent-desktop' app running with pid: ${old_pid}.";
+    sudo pkill "ak-agent-desktop" && echo "Killed existing 'ak-agent-desktop' app." || echo "Unable to kill 'ak-agent-desktop' app."
 else
-    echo "'ak-agent' app not running."
+    echo "'ak-agent-desktop' app not running."
 fi
 
 sleep 1
@@ -50,7 +50,7 @@ for i in {1..5}; do
     open "${INSTALL_DIR}/authentik Agent.app"
     sleep 1
 
-    new_pid=$(pgrep "ak-agent")
+    new_pid=$(pgrep "ak-agent-desktop")
     if [ $? -eq 0 ] && [ $new_pid -gt 0 ]; then
         echo "'authentik Agent' app running with new pid: ${new_pid}."
         LAUNCH_FAILED=false
