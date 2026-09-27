@@ -6,10 +6,12 @@ use ak_platform_authz::AuthorizeAction;
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
 use eyre::{Result, WrapErr, bail};
 use serde::Deserialize;
+use ssh_agent_lib::agent::Session;
 use ssh_key::{Certificate, PrivateKey, public::KeyData};
 use uuid::Uuid;
 
 use crate::Agent;
+use crate::ssh::passthrough::is_passthrough_host;
 use crate::ssh::txn_keys::generate_cert;
 
 pub struct SSHAgentTransaction {
@@ -110,6 +112,39 @@ impl SSHAgentTransaction {
         let cert = Arc::new(cert);
         self.cert = Some(Arc::clone(&cert));
         Some(cert)
+    }
+
+    /// Returns a client connected to the configured fallback/passthrough SSH
+    /// agent, if this session's host should be routed there instead of
+    /// authentik: either because it's a well-known non-authentik host (skips
+    /// straight there, no prompt) or because authentik doesn't recognize the
+    /// host (`ensure_cert` came back empty).
+    pub(crate) async fn fallback_agent(&mut self) -> Option<Box<dyn Session>> {
+        let fallback_cfg = self.agent.cfg.read().await.ssh_fallback_agent.clone()?;
+
+        let use_fallback = match &self.host_key {
+            Some(host_key)
+                if is_passthrough_host(host_key, &fallback_cfg.extra_passthrough_hosts) =>
+            {
+                true
+            }
+            _ => self.ensure_cert().await.is_none(),
+        };
+        if !use_fallback {
+            return None;
+        }
+
+        match ak_platform::net::client::connect_stream(PlatformString::new_with_default(
+            &fallback_cfg.socket_path,
+        ))
+        .await
+        {
+            Ok(stream) => Some(Box::new(ssh_agent_lib::client::Client::new(stream))),
+            Err(e) => {
+                tracing::warn!("ssh-agent: failed to connect to fallback agent: {e:?}");
+                None
+            }
+        }
     }
 
     async fn get_userinfo_username(&self, profile_name: &str) -> Result<String> {
