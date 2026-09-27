@@ -36,12 +36,14 @@ export class StatusBar extends LitElement {
         if (!v) {
             return html`<span class="entry"><span class="label">${label}:</span> —</span>`;
         }
+
         if (v.error) {
             return html`<span class="entry"
                 ><span class="label">${label}:</span>
                 <span class="error" title=${v.error}>disconnected</span></span
             >`;
         }
+
         return html`<span class="entry"><span class="label">${label}:</span> v${v.version}</span>`;
     }
 

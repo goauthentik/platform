@@ -63,7 +63,9 @@ export class Header extends LitElement {
     private _startDrag(e: MouseEvent) {
         if (e.button !== 0) return;
         const target = e.composedPath()[0] as HTMLElement;
+
         if (target.closest?.("button, a, .avatar")) return;
+
         void import("@tauri-apps/api/window")
             .then(({ getCurrentWindow }) => void getCurrentWindow().startDragging())
             .catch(() => {

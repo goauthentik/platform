@@ -12,8 +12,11 @@ function renewalStatus(nextRenew: Date | string | null | undefined): RenewalStat
     const next = new Date(nextRenew);
     const now = Date.now();
     const diff = next.getTime() - now;
+
     if (diff < 0) return "expired";
+
     if (diff < 30 * 60 * 1000) return "expiring";
+
     return "active";
 }
 
@@ -26,6 +29,7 @@ const STATUS_LABELS: Record<RenewalStatus, string> = {
 
 function formatDate(d: Date | string | null | undefined): string {
     if (!d) return "—";
+
     return new Date(d).toLocaleTimeString(undefined, {
         year: "numeric",
         month: "short",
@@ -137,56 +141,61 @@ export class ProfileStatus extends LitElement {
         return html`
             <div class="section">
                 <div class="section-title">Profiles</div>
-                ${this.profiles.length === 0
-                    ? html`<div class="empty">No profiles configured.</div>`
-                    : this.profiles.map((p) => {
-                          const status = renewalStatus(p.nextRenew);
-                          return html`
-                              <div class="profile-row">
-                                  <div class="profile-header">
-                                      <span class="profile-name">${p.name}</span>
-                                      <div class="status-container">
-                                          ${p.name === this.activeProfile
-                                              ? html`
-                                                    <span class="status-badge active"
-                                                        >Active Profile</span
-                                                    >
-                                                `
-                                              : nothing}
-                                          ${p.status === "FAILED"
-                                              ? html`<span class="status-badge failed"
-                                                    >Renewal Failed</span
-                                                >`
-                                              : html`<span class="status-badge ${status}"
-                                                    >${STATUS_LABELS[status]}</span
-                                                >`}
+                ${
+                    this.profiles.length === 0
+                        ? html`<div class="empty">No profiles configured.</div>`
+                        : this.profiles.map((p) => {
+                              const status = renewalStatus(p.nextRenew);
+
+                              return html`
+                                  <div class="profile-row">
+                                      <div class="profile-header">
+                                          <span class="profile-name">${p.name}</span>
+                                          <div class="status-container">
+                                              ${
+                                                  p.name === this.activeProfile
+                                                      ? html`
+                                                            <span class="status-badge active"
+                                                                >Active Profile</span
+                                                            >
+                                                        `
+                                                      : nothing
+                                              }
+                                              ${
+                                                  p.status === "FAILED"
+                                                      ? html`<span class="status-badge failed"
+                                                            >Renewal Failed</span
+                                                        >`
+                                                      : html`<span class="status-badge ${status}"
+                                                            >${STATUS_LABELS[status]}</span
+                                                        >`
+                                              }
+                                          </div>
+                                      </div>
+                                      <div class="profile-username">Username: ${p.username}</div>
+                                      <div class="profile-url">
+                                          <button
+                                              @click=${() => {
+                                                  openUrl(p.authentikUrl);
+                                              }}
+                                          >
+                                              Open authentik
+                                          </button>
+                                      </div>
+                                      <div class="renewal-dates">
+                                          <div class="date-field">
+                                              <span class="date-label">Last renewed:</span
+                                              >${formatDate(p.lastRenewed)}
+                                          </div>
+                                          <div class="date-field">
+                                              <span class="date-label">Next renewal:</span
+                                              >${formatDate(p.nextRenew)}
+                                          </div>
                                       </div>
                                   </div>
-                                  <div class="profile-username">Username: ${p.username}</div>
-                                  <div class="profile-url">
-                                      <button
-                                          @click=${() => {
-                                              openUrl(p.authentikUrl);
-                                          }}
-                                      >
-                                          Open authentik
-                                      </button>
-                                  </div>
-                                  <div class="renewal-dates">
-                                      <div class="date-field">
-                                          <span class="date-label">Last renewed:</span>${formatDate(
-                                              p.lastRenewed,
-                                          )}
-                                      </div>
-                                      <div class="date-field">
-                                          <span class="date-label">Next renewal:</span>${formatDate(
-                                              p.nextRenew,
-                                          )}
-                                      </div>
-                                  </div>
-                              </div>
-                          `;
-                      })}
+                              `;
+                          })
+                }
             </div>
         `;
     }

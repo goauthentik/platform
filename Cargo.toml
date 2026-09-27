@@ -28,7 +28,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.61.0"
+version = "0.63.0"
 edition = "2024"
 license = "MIT"
 
@@ -45,7 +45,7 @@ strip = "debuginfo"
 [workspace.dependencies]
 ak-api-cli = { path = "ak-api-cli" }
 ak-api-cli-gen = { path = "ak-api-cli-gen" }
-authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "1fd58b9e7ddaafd7d4456f8dc3a799acf95972ea", version = "2026.11.0-rc1", default-features = false, features = [
+authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "f4be5ff7cd169ef6b68bd13a8e97b7ce6d17410b", version = "2026.11.0-rc1", default-features = false, features = [
     "rustls",
 ] }
 chrono = { version = "0.4.45", features = ["serde"] }
@@ -70,7 +70,7 @@ tracing = { version = "0.1.44", features = ["log-always"] }
 url = "2.5.8"
 uuid = { version = "1.23.3", features = ["v4"] }
 whoami = "2.1.0"
-oauth-device-flows = "0.1.0"
+oauth2 = { version = "5.0.0", default-features = false }
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls", "cookies"] }
 tracing-subscriber = "0.3"
 tempfile = "3"

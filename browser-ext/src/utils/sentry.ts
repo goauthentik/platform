@@ -8,5 +8,6 @@ export function sentry(component: string) {
         sendDefaultPii: false,
         release: `ak-platform-browser-ext@${VERSION}`,
     });
+
     setTag("authentik.component", component);
 }

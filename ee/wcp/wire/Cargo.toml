@@ -10,3 +10,4 @@ workspace = true
 [dependencies]
 prost = "0.14"
 url = { workspace = true }
+windows-core = { workspace = true }

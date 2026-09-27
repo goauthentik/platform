@@ -22,45 +22,48 @@ jobs:
         target:
           - ak-agent
           - ak-agent-desktop
+          - ak-api-cli
           - ak-api-cli-gen
           - ak-browser-support
           - ak-cli
-          - ak-nss
-          - ak-pam
+          - ak-flow-executor
+          - ak-meta
+          - ak-meta-macros
           - ak-platform
+          - ak-platform-authz
           - ak-platform-facts
+          - ak-platform-keyring
           - ak-sysd
-          - ee/wcp
+          # platform specific crates, included below
+          # - ak-nss
+          # - ak-pam
+          # - ee/wcp
         platform:
           - macos-26
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - windows-2025
-        exclude:
+        include:
           - platform: windows-2025
-            target: ak-pam
-          - platform: windows-2025
-            target: ak-nss
-          - platform: macos-26
-            target: ak-pam
-          - platform: macos-26
-            target: ak-nss
-          # wcp is a windows-only credential provider
-          - platform: macos-26
             target: ee/wcp
           - platform: ubuntu-24.04
-            target: ee/wcp
+            target: ak-nss
           - platform: ubuntu-24.04-arm
-            target: ee/wcp
+            target: ak-nss
+          - platform: ubuntu-24.04
+            target: ak-pam
+          - platform: ubuntu-24.04-arm
+            target: ak-pam
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@ba47c86ac325773530516bb756137ac718732518 # v2
+          build-warnings: warn
+      - uses: taiki-e/install-action@dfae9bf3d6f6c6f20ef4ebb3486c01a51341ff12 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: ./.github/actions/setup-toolchain
@@ -72,13 +75,13 @@ jobs:
           # ee/wcp is deliberately absent: _build-rs.yml ships it without
           # crt-static, so its tests have to be built the same way.
           RUST_BUILD_FLAGS: ${{ ((matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-${{ matrix.platform }}-${{ matrix.target }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -92,7 +95,7 @@ jobs:
       matrix:
         target:
           - ee/psso
-    runs-on: macos-15
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
@@ -100,19 +103,19 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: cache/
-          key: target-cache-psso-macos-15-${{ hashFiles('ee/psso/**') }}
+          key: target-cache-psso-xcode-27-${{ hashFiles('ee/psso/**') }}
           restore-keys: |
-            target-cache-psso-macos-15-
+            target-cache-psso-xcode-27-
       - run: |
-          brew install xcresultparser
+          brew install xcresultparser xcbeautify
           make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: swift
           files: ${{ github.workspace }}/cache/psso/coverage.xml
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -126,9 +129,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
         with:
           rustflags: ""
+          build-warnings: warn
       - run: make ci-install-deps
       - uses: ./.github/actions/setup-toolchain
         with:
@@ -146,7 +150,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: pnpm/action-setup@v6.0.10
+      - uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
@@ -186,10 +190,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659 # v1
+      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
         with:
           rustflags: ""
-      - uses: taiki-e/install-action@ba47c86ac325773530516bb756137ac718732518 # v2
+          build-warnings: warn
+      - uses: taiki-e/install-action@dfae9bf3d6f6c6f20ef4ebb3486c01a51341ff12 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
@@ -247,20 +252,20 @@ jobs:
       - run: |
           sudo chmod -R 777 ./ak-platform-e2e/coverage
           make test-e2e-convert
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true

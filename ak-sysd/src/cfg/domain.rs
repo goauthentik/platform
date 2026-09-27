@@ -27,6 +27,10 @@ pub struct DomainConfig {
     pub fallback_token: String,
     #[serde(skip)]
     pub token: String,
+    /// Set when the keyring entry was found but is permanently unreadable and
+    /// has been discarded — the domain needs a fresh enrollment, not a retry.
+    #[serde(skip)]
+    pub needs_reenroll: bool,
 }
 
 impl DomainConfig {
@@ -131,7 +135,7 @@ impl DomainManager {
                 }
                 let raw = std::fs::read_to_string(&path)?;
                 let mut cfg: DomainConfig = serde_json::from_str(&raw)?;
-                cfg.token = self.resolve_token(&cfg).await;
+                self.resolve_token(&mut cfg).await;
 
                 // Pre-seed from the on-disk cache so components have a
                 // last-known-good AgentConfig/brand before healthcheck_all's
@@ -174,8 +178,14 @@ impl DomainManager {
         Ok(())
     }
 
-    async fn resolve_token(&self, cfg: &DomainConfig) -> String {
-        match ak_platform_keyring::store()
+    /// Fills in `cfg.token` from the keyring, falling back to the on-disk copy.
+    ///
+    /// `NotAccessible` (macOS errSecInteractionNotAllowed) is the one failure
+    /// that never resolves by retrying: the item exists but this process can
+    /// never read it. Delete it and flag the domain for re-enrollment so the
+    /// next load replaces it, instead of retrying forever on every access.
+    async fn resolve_token(&self, cfg: &mut DomainConfig) {
+        cfg.token = match ak_platform_keyring::store()
             .get(
                 &keyring_service(),
                 &cfg.domain,
@@ -183,17 +193,96 @@ impl DomainManager {
             )
             .await
         {
-            Ok(token) => token,
+            Ok(token) if !token.is_empty() => token,
+            Ok(_) => {
+                tracing::warn!(
+                    domain = cfg.domain,
+                    "keyring returned an empty domain token, falling back to file"
+                );
+                cfg.fallback_token.clone()
+            }
+            Err(ak_platform_keyring::KeyringError::NotAccessible()) => {
+                tracing::warn!(
+                    domain = cfg.domain,
+                    "domain token is not readable by this process, discarding it"
+                );
+                if let Err(e) = ak_platform_keyring::store()
+                    .delete(
+                        &keyring_service(),
+                        &cfg.domain,
+                        ak_platform_keyring::Accessibility::Always,
+                    )
+                    .await
+                {
+                    tracing::warn!(
+                        domain = cfg.domain,
+                        "failed to delete unreadable domain token: {e:?}"
+                    );
+                }
+                cfg.needs_reenroll = cfg.fallback_token.is_empty();
+                cfg.fallback_token.clone()
+            }
             Err(e) => {
                 tracing::warn!(
+                    domain = cfg.domain,
                     "failed load domain token from keyring, falling back to file: {e:?}"
                 );
                 cfg.fallback_token.clone()
+            }
+        };
+    }
+
+    /// Re-reads the keyring for any domain that came up token-less.
+    ///
+    /// `save_domain` blanks the on-disk `fallback_token` once the keyring
+    /// write succeeds, so a keyring *read* failure at load time leaves an
+    /// empty token behind — and `load_all` only re-runs when a domain is
+    /// added or removed. ak-sysd starting before the keychain/secret service
+    /// is readable is normal boot ordering, not an edge case, and the result
+    /// was every request for that domain going out with a bare
+    /// `Authorization: Bearer+agent ` (and JWTs signed with an empty secret)
+    /// for the rest of the process lifetime. Retrying on access repairs the
+    /// domain on first use after unlock.
+    async fn repair_tokens(&self) {
+        let mut domains = self.domains.write().await;
+        for d in domains.iter_mut() {
+            if !d.cfg.token.is_empty() {
+                continue;
+            }
+            let mut cfg = d.cfg.clone();
+            self.resolve_token(&mut cfg).await;
+            if cfg.token.is_empty() {
+                tracing::warn!(domain = cfg.domain, "domain has no usable token");
+                continue;
+            }
+            match build_api_client(&cfg.authentik_url, &cfg.token, TokenFormat::BearerAgent) {
+                Ok(api) => {
+                    tracing::info!(domain = cfg.domain, "recovered domain token from keyring");
+                    let repaired = Arc::new(LoadedDomain {
+                        api,
+                        remote: Arc::clone(&d.remote),
+                        brand: Arc::clone(&d.brand),
+                        cfg,
+                    });
+                    *d = repaired;
+                }
+                Err(e) => {
+                    tracing::warn!(domain = cfg.domain, "failed to rebuild API client: {e:?}");
+                }
             }
         }
     }
 
     pub async fn domains(&self) -> Vec<Arc<LoadedDomain>> {
+        let needs_repair = self
+            .domains
+            .read()
+            .await
+            .iter()
+            .any(|d| d.cfg.token.is_empty());
+        if needs_repair {
+            self.repair_tokens().await;
+        }
         self.domains.read().await.clone()
     }
 
@@ -215,13 +304,15 @@ impl DomainManager {
     /// First enabled domain — mirrors Go's `dom[0]` shortcut for
     /// single-tenant components (ping, auth, directory, device). Do not
     /// invent smarter "current domain" selection here.
+    ///
+    /// Token-less domains are skipped rather than handed out: every caller
+    /// either signs with the token or sends it as the bearer credential, so
+    /// returning one produces unauthenticated requests instead of an error.
     pub async fn active(&self) -> Result<Arc<LoadedDomain>> {
-        self.domains
-            .read()
+        self.domains()
             .await
-            .iter()
-            .find(|d| d.cfg.enabled)
-            .cloned()
+            .into_iter()
+            .find(|d| d.cfg.enabled && !d.cfg.token.is_empty())
             .ok_or_else(|| eyre!("no enabled domain configured"))
     }
 
@@ -312,6 +403,7 @@ impl DomainManager {
             managed: false,
             fallback_token: String::new(),
             token: res.token,
+            needs_reenroll: false,
         })
     }
 
@@ -386,10 +478,13 @@ impl DomainManager {
                 .cfg
                 .authentik_url
                 .eq_ignore_ascii_case(&managed.url)
+                && !existing.cfg.needs_reenroll
             {
                 tracing::debug!("resumed existing managed domain");
                 return Ok(());
             }
+            // Either the MDM config points somewhere else now, or the token was
+            // discarded as unreadable — both need the domain enrolled again.
             if let Err(e) = self.delete_domain(MANAGED_DOMAIN_NAME).await {
                 tracing::warn!("failed to delete old managed domain: {e:?}");
             }
@@ -452,6 +547,7 @@ mod tests {
             managed: false,
             fallback_token: "atoken".to_string(),
             token: String::new(),
+            needs_reenroll: false,
         };
         std::fs::write(
             dir.path().join(cfg.file_name()),
@@ -506,5 +602,55 @@ mod tests {
             loaded_brand.flow_authentication,
             Some("default-authentication-flow".to_string())
         );
+    }
+
+    /// A domain whose token was unreadable at load time (keyring down, and
+    /// `save_domain` already blanked the on-disk fallback) must never be
+    /// handed to a caller that would then send requests with no credential —
+    /// and must recover once the keyring answers again.
+    #[tokio::test]
+    async fn token_less_domain_is_withheld_then_repaired() {
+        let state = Arc::new(test_store());
+        let dir = TempDir::new().unwrap();
+
+        let cfg = DomainConfig {
+            enabled: true,
+            authentik_url: "https://authentik.example".to_string(),
+            domain: "tokenless".to_string(),
+            managed: false,
+            fallback_token: String::new(),
+            token: String::new(),
+            needs_reenroll: false,
+        };
+        std::fs::write(
+            dir.path().join(cfg.file_name()),
+            serde_json::to_string(&cfg).unwrap(),
+        )
+        .unwrap();
+
+        let manager = DomainManager::new(dir.path().to_str().unwrap().to_string(), state)
+            .await
+            .unwrap();
+
+        assert!(
+            manager.active().await.is_err(),
+            "a token-less domain must not be served as active"
+        );
+
+        ak_platform_keyring::store()
+            .set(
+                &keyring_service(),
+                &cfg.domain,
+                ak_platform_keyring::Accessibility::Always,
+                "recovered-token".to_string(),
+            )
+            .await
+            .unwrap();
+
+        let active = manager
+            .active()
+            .await
+            .expect("domain should recover once the keyring answers");
+        assert_eq!(active.cfg.token, "recovered-token");
     }
 }

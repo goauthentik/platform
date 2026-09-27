@@ -3,3 +3,6 @@ packages:
   - ak-agent-desktop
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@goauthentik/oxfmt-config@9.1.0'
+  - '@goauthentik/oxlint-config@1.0.0'

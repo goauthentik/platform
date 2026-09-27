@@ -3,7 +3,7 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = 0.61.0
+VERSION = 0.63.0
 VERSION_HASH = $(shell git rev-parse HEAD)
 VERSION_TAG = $(shell git tag --points-at HEAD)
 ifeq ($(CI),true)
@@ -40,6 +40,13 @@ ifneq ($(LOCAL_WORKSPACE),)
 CONTAINER_TOP := ${LOCAL_WORKSPACE}
 else
 CONTAINER_TOP := ${TOP}
+endif
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	SED_INPLACE = /usr/bin/sed -i ''
+else
+	SED_INPLACE = sed -i
 endif
 
 define cargo_build_local

@@ -50,8 +50,7 @@ pub async fn register_device(
         jwks_endpoint: res.jwks_endpoint,
         audience: res.audience,
         nonce_endpoint: res.nonce_endpoint,
-        // Not part of the API response — the domain's own stored token,
-        // mirroring Go's `device_token: dc.Token`.
         device_token: active.cfg.token.clone(),
+        authorization_endpoint: res.authorization_endpoint,
     })
 }

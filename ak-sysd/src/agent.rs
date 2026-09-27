@@ -2,11 +2,11 @@ use crate::cfg::domain::DomainManager;
 use crate::components::Component;
 use crate::components::agent_starter::AgentStarterComponent;
 use crate::components::auth::AuthComponent;
+use crate::components::ctrl::ConfigChanged;
 use crate::components::ctrl::CtrlComponent;
 use crate::components::device::DeviceComponent;
 use crate::components::ping::PingComponent;
 use crate::context::SysdContext;
-use crate::events::{ConfigChangeKind, SysdEvent};
 use crate::state::StateStore;
 use ak_platform::grpc::log::TraceLayer;
 use ak_platform::net::server::{SocketPermMode, listen};
@@ -100,52 +100,36 @@ impl Agent {
     }
 
     fn watch_config_changes(&self) {
-        let ctx = self.ctx.clone();
+        let bus_ctx = self.ctx.clone();
         let components = self.components.clone();
-        let mut rx = ctx.events.subscribe();
-        let handle = tokio::spawn(async move {
-            loop {
-                tokio::select! {
-                    ev = rx.recv() => {
-                        match ev {
-                            Ok(SysdEvent::ConfigChanged {
-                                kind: ConfigChangeKind::Added | ConfigChangeKind::Removed,
-                            }) => {
-                                tracing::info!("domain config changed, restarting components");
-                                for (id, c) in &components {
-                                    tracing::info!(component = id, "stopping component");
-                                    if let Err(e) = c.stop().await {
-                                        tracing::warn!("component failed to stop: {e:?}");
-                                    }
-                                }
-                                if let Err(e) = ctx.domains.load_all().await {
-                                    tracing::warn!("failed to reload domains: {e:?}");
-                                }
-                                for (id, c) in &components {
-                                    tracing::info!(component = id, "starting component");
-                                    if let Err(e) = c.start().await {
-                                        tracing::warn!("component failed to start: {e:?}");
-                                    }
-                                }
-                                // Mirror Agent::start()'s post-startup healthcheck: load_all()
-                                // only pre-seeds `remote` from the on-disk cache, which is empty
-                                // for a newly-joined domain, so interactive-auth/ssh-cert checks
-                                // that depend on `remote` would otherwise stay broken until the
-                                // next full daemon restart.
-                                ctx.domains.healthcheck_all().await;
-                            }
-                            Ok(_) => {}
-                            Err(_) => return,
-                        }
+        self.ctx.events.on(move |_: ConfigChanged| {
+            let ctx = bus_ctx.clone();
+            let components = components.clone();
+            async move {
+                tracing::info!("domain config changed, restarting components");
+                for (id, c) in &components {
+                    tracing::info!(component = id, "stopping component");
+                    if let Err(e) = c.stop().await {
+                        tracing::warn!("component failed to stop: {e:?}");
                     }
-                    () = ctx.cancel.cancelled() => return,
                 }
+                if let Err(e) = ctx.domains.load_all().await {
+                    tracing::warn!("failed to reload domains: {e:?}");
+                }
+                for (id, c) in &components {
+                    tracing::info!(component = id, "starting component");
+                    if let Err(e) = c.start().await {
+                        tracing::warn!("component failed to start: {e:?}");
+                    }
+                }
+                // Mirror Agent::start()'s post-startup healthcheck: load_all()
+                // only pre-seeds `remote` from the on-disk cache, which is empty
+                // for a newly-joined domain, so interactive-auth/ssh-cert checks
+                // that depend on `remote` would otherwise stay broken until the
+                // next full daemon restart.
+                ctx.domains.healthcheck_all().await;
             }
         });
-        self.background
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .push(handle);
     }
 
     fn serve(&self, socket: SysdSocketID, perm: SocketPermMode, routes: RoutesBuilder) {
@@ -183,7 +167,6 @@ impl Agent {
             }
         }
         self.ctx.domains.healthcheck_all().await;
-        self.ctx.events.dispatch(SysdEvent::LifecycleStarted);
 
         self.serve(
             SysdSocketID::Default,

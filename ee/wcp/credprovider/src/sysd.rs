@@ -10,9 +10,9 @@ use winreg::enums::HKEY_LOCAL_MACHINE;
 
 use ak_platform::generated::ping::capabilities_response::Capability;
 use ak_platform::generated::ping::ping_client::PingClient;
-use ak_platform::generated::sys_auth::{InteractiveAuthAsyncRequest, TokenAuthRequest};
 use ak_platform::generated::sys_auth::system_auth_interactive_client::SystemAuthInteractiveClient;
 use ak_platform::generated::sys_auth::system_auth_token_client::SystemAuthTokenClient;
+use ak_platform::generated::sys_auth::{InteractiveAuthAsyncRequest, TokenAuthRequest};
 use ak_platform::grpc::grpc_request;
 
 /// `ak_ee_wcp_e2e::harness` seeds this same key to turn on `debug`; keep the

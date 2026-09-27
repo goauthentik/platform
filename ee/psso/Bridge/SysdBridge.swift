@@ -160,16 +160,6 @@ public class SysdBridge {
         }
     }
 
-    public func domainsList(name: String, authentikURL: String, token: String) async throws {
-        return try await self.withClient(id: .ctrlSocket) { client in
-            let c = SystemCtrl.Client(wrapping: client)
-            let reply = try await c.domainList(
-                request: ClientRequest(message: Google_Protobuf_Empty())
-            )
-            //            return reply.domains[0].
-        }
-    }
-
     #if os(macOS)
         public func pssoRegisterUser(
             enclaveKeyID: String,
@@ -187,7 +177,7 @@ public class SysdBridge {
                         }
                     ))
                 return ASAuthorizationProviderExtensionUserLoginConfiguration(
-                    loginUserName: reply.username
+                    loginUserName: reply.username,
                 )
             }
         }
@@ -216,6 +206,12 @@ public class SysdBridge {
                     jwksEndpointURL: URL(string: res.jwksEndpoint)!,
                     audience: res.audience
                 )
+                if #available(macOS 27.0, *) {
+                    cfg.federationType = .dynamicOpenID
+                    cfg.federationUserPreauthenticationURL = URL(string: res.authorizationEndpoint)!
+                    cfg.authorizationURLKeypath = "authorization_url"
+                }
+                cfg.keyEndpointURL = URL(string: res.tokenEndpoint)!
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
                 cfg.customNonceRequestValues
                     .append(

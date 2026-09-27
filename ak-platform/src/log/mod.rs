@@ -57,6 +57,7 @@ impl LogBuilder {
     }
 
     pub fn with_default_filters(mut self) -> Self {
+        self.filter.push(("bollard".to_owned(), LevelFilter::Warn));
         self.filter.push(("h2".to_owned(), LevelFilter::Warn));
         self.filter
             .push(("hyper_util".to_owned(), LevelFilter::Warn));

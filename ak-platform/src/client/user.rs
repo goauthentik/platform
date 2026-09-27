@@ -163,7 +163,13 @@ where
 mod tests {
     use super::*;
 
+    // `GenericFilePath` only accepts Windows paths shaped like a named pipe, so
+    // a Unix-style path fails there with "not a named pipe path" before a dial
+    // is even attempted, never reaching the ENOENT this test is guarding.
+    #[cfg(unix)]
     const MISSING: &str = "/nonexistent/ak-platform-test/agent.sock";
+    #[cfg(windows)]
+    const MISSING: &str = r"\\.\pipe\ak-platform-test-nonexistent";
 
     /// Guards the classification the SSH fallback depends on: dialing a path with
     /// no socket must come back as `SocketNotFound`, which means the connector's

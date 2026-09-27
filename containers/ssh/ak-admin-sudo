@@ -1,0 +1,1 @@
+%authentik\ admins         ALL = (ALL) NOPASSWD: ALL
