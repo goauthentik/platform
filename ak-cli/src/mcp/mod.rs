@@ -24,6 +24,7 @@ use rmcp::{
     tool, tool_handler, tool_router,
 };
 
+pub mod blueprint;
 pub mod http;
 pub mod origin;
 pub mod tools;

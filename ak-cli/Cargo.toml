@@ -37,3 +37,4 @@ uuid.workspace = true
 reqwest.workspace = true
 sentry.workspace = true
 rmcp = { version = "3.0.1", features = ["transport-io"] }
+saphyr-parser = "0.0.12"
