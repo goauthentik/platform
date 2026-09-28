@@ -9,8 +9,8 @@ use crate::{
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
         tools::{
-            BlueprintValidateArgs, CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs,
-            TokenExchangeArgs,
+            BlueprintApplyArgs, BlueprintValidateArgs, CreateAgentArgs, ListApplicationsArgs,
+            RequestAccessArgs, TokenExchangeArgs,
         },
     },
 };
@@ -154,6 +154,25 @@ impl AuthentikMcp {
     }
 
     #[tool(
+        description = "Validate and apply a proposed authentik Blueprint. The content is checked \
+                       against the local policy, then applied on the server as a bounded, \
+                       least-privilege identity (never as you), so it can only add or change \
+                       Applications and OAuth2/SAML providers. If this device is not set up yet, \
+                       the tool explains how to connect it with `ak config setup`.",
+        annotations(
+            title = "Apply Blueprint",
+            read_only_hint = false,
+            destructive_hint = true
+        )
+    )]
+    async fn blueprint_apply(
+        &self,
+        Parameters(args): Parameters<BlueprintApplyArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._blueprint_apply(args).await
+    }
+
+    #[tool(
         description = "Send a read-only HTTP request (GET/HEAD) as an agent identity. Only hosts \
                        sharing a registrable domain with an application the agent exchanged a token \
                        for can be reached; that token is attached automatically. Redirects are not \
@@ -205,10 +224,12 @@ impl ServerHandler for AuthentikMcp {
                  authenticated user), request_access (ask for access to applications on behalf of \
                  an agent identity), token_exchange (exchange an agent identity for an \
                  on-behalf-of token for one application), http_fetch and http_send (call an \
-                 application as the agent identity). The usual order is create_agent, \
-                 request_access, token_exchange, then http_fetch/http_send; use blueprint_validate \
-                 before applying Blueprint content. The latter two can \
-                 only reach hosts adjacent to an application the agent exchanged a token for."
+                 application as the agent identity), and blueprint_validate / blueprint_apply \
+                 (check, then apply, proposed Blueprint content — blueprint_apply validates first \
+                 and applies as a bounded server identity, so prefer it over crafting raw writes). \
+                 The usual order for application access is create_agent, request_access, \
+                 token_exchange, then http_fetch/http_send; those last two can only reach hosts \
+                 adjacent to an application the agent exchanged a token for."
                     .to_string(),
             )
     }

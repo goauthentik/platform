@@ -183,6 +183,17 @@ pub fn validate_blueprint(content: &str) -> BlueprintValidation {
             }
         };
 
+        if matches!(attrs, Node::Map { pairs, .. } if pairs.is_empty()) {
+            violations.push(format!("entry {i}: attrs must be a non-empty object"));
+            continue;
+        }
+
+        for forbidden in ["permissions", "conditions"] {
+            if entry.get(forbidden).is_some() {
+                violations.push(format!("entry {i}: {forbidden} are not permitted"));
+            }
+        }
+
         let rules = all_models.get(model.as_str());
 
         if let Node::Map { pairs, .. } = attrs {
@@ -436,6 +447,22 @@ mod tests {
             )
             .ok
         );
+    }
+
+    #[test]
+    fn rejects_empty_attrs_and_entry_permissions_or_conditions() {
+        let empty = validate_blueprint(
+            "version: 1\nentries:\n  - model: authentik_core.application\n    attrs: {}",
+        );
+        assert!(!empty.ok, "{}", joined(&empty));
+
+        for extra in ["permissions: []", "conditions: []"] {
+            let r = validate_blueprint(&format!(
+                "version: 1\nentries:\n  - model: authentik_core.application\n    {extra}\n    attrs: {{name: x}}"
+            ));
+            assert!(!r.ok, "{extra}: {}", joined(&r));
+            assert!(joined(&r).contains(extra.split(':').next().unwrap_or_default()));
+        }
     }
 
     #[test]

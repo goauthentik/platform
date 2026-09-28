@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use crate::mcp::{AuthentikMcp, Grant, origin::AllowedOrigin};
+use ak_meta::user_agent;
 use ak_platform::generated::agent::RequestHeader;
 use ak_platform::generated::agent_auth::TokenExchangeRequest;
 use ak_platform::grpc::assert_response_valid;
@@ -70,6 +73,101 @@ pub struct BlueprintValidateArgs {
     pub content: String,
 }
 
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct BlueprintApplyArgs {
+    /// Complete proposed Blueprint YAML to validate and apply.
+    pub content: String,
+    /// Name of the Agent connector to apply through. Optional when the instance
+    /// has exactly one Agent connector.
+    #[serde(default)]
+    pub connector: Option<String>,
+    /// Profile to use (defaults to currently active profile)
+    #[serde(default)]
+    pub profile: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct BlueprintApplyResult {
+    success: bool,
+}
+
+/// Resolve an Agent connector's UUID by name, or the sole connector when no name
+/// is given. Uses the operator's token (the endpoints API is not in the typed
+/// client, so this is a raw request).
+async fn resolve_connector(
+    client: &reqwest::Client,
+    base: &str,
+    bearer: &str,
+    name: Option<&str>,
+) -> Result<String, McpError> {
+    let resp = client
+        .get(format!("{base}/api/v3/endpoints/agents/connectors/"))
+        .bearer_auth(bearer)
+        .send()
+        .await
+        .map_err(|e| {
+            McpError::internal_error(format!("listing agent connectors failed: {e}"), None)
+        })?;
+    if !resp.status().is_success() {
+        return Err(McpError::internal_error(
+            format!(
+                "listing agent connectors failed: HTTP {}",
+                resp.status().as_u16()
+            ),
+            None,
+        ));
+    }
+    let body: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| McpError::internal_error(format!("invalid connector list: {e}"), None))?;
+    let mut connectors: Vec<(String, String)> = body
+        .get("results")
+        .and_then(|v| v.as_array())
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|c| {
+                    let uuid = c.get("connector_uuid")?.as_str()?.to_string();
+                    let cname = c.get("name")?.as_str()?.to_string();
+                    Some((uuid, cname))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if let Some(name) = name {
+        connectors.retain(|(_, n)| n == name);
+        match connectors.as_slice() {
+            [(uuid, _)] => Ok(uuid.clone()),
+            [] => Err(McpError::invalid_params(
+                format!("no Agent connector named {name:?}"),
+                None,
+            )),
+            _ => Err(McpError::invalid_params(
+                format!("more than one Agent connector named {name:?}"),
+                None,
+            )),
+        }
+    } else {
+        match connectors.as_slice() {
+            [(uuid, _)] => Ok(uuid.clone()),
+            [] => Err(McpError::invalid_params(
+                "no Agent connector is configured on this instance".to_string(),
+                None,
+            )),
+            _ => {
+                let names: Vec<&str> = connectors.iter().map(|(_, n)| n.as_str()).collect();
+                Err(McpError::invalid_params(
+                    format!(
+                        "several Agent connectors exist ({}); pass `connector`",
+                        names.join(", ")
+                    ),
+                    None,
+                ))
+            }
+        }
+    }
+}
+
 impl AuthentikMcp {
     pub async fn _validate_blueprint(
         &self,
@@ -79,6 +177,80 @@ impl AuthentikMcp {
         let json = serde_json::to_string_pretty(&result)
             .map_err(|e| McpError::internal_error(format!("serialize failed: {e}"), None))?;
         Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
+    }
+
+    /// Validate a proposed Blueprint locally, then apply it on the server as the
+    /// bounded, least-privilege Agent identity — never as the operator. The local
+    /// validation is fast feedback and a courtesy; the server enforces the same
+    /// policy plus per-model RBAC independently.
+    pub async fn _blueprint_apply(
+        &self,
+        args: BlueprintApplyArgs,
+    ) -> Result<CallToolResult, McpError> {
+        // 1. Validate locally — never send known-bad content to the server.
+        let validation = crate::mcp::blueprint::validate_blueprint(&args.content);
+        if !validation.ok {
+            let json = serde_json::to_string_pretty(&validation)
+                .map_err(|e| McpError::internal_error(format!("serialize failed: {e}"), None))?;
+            return Ok(CallToolResult::success(vec![ContentBlock::text(format!(
+                "Blueprint failed local validation and was not applied:\n{json}"
+            ))]));
+        }
+
+        // 2. Authenticate through the local agent (this triggers the consent
+        //    gate). A missing profile means the device isn't set up yet.
+        let token = match self.get_user_token(args.profile).await {
+            Ok(token) => token,
+            Err(_) => {
+                return Ok(CallToolResult::success(vec![ContentBlock::text(
+                    "This device is not set up to talk to authentik yet. Run \
+                     `ak config setup --authentik-url <your-authentik-url>` to connect it, then \
+                     try applying again."
+                        .to_string(),
+                )]));
+            }
+        };
+        let base = token.url.trim_end_matches('/').to_string();
+        let bearer = token.raw;
+        let client = reqwest::Client::builder()
+            // Do not let a configured instance redirect this bearer token to a
+            // different origin.
+            .redirect(reqwest::redirect::Policy::none())
+            .user_agent(user_agent())
+            .timeout(Duration::from_secs(60))
+            .build()
+            .map_err(|e| {
+                McpError::internal_error(format!("failed to build HTTP client: {e}"), None)
+            })?;
+
+        // 3. Resolve the connector, then apply as the bounded server identity.
+        let pk = resolve_connector(&client, &base, &bearer, args.connector.as_deref()).await?;
+        let resp = client
+            .post(format!(
+                "{base}/api/v3/endpoints/agents/connectors/{pk}/apply_blueprint/"
+            ))
+            .bearer_auth(&bearer)
+            .json(&serde_json::json!({ "content": args.content }))
+            .send()
+            .await
+            .map_err(|e| McpError::internal_error(format!("apply request failed: {e}"), None))?;
+        let status = resp.status();
+        if !status.is_success() {
+            return Ok(CallToolResult::success(vec![ContentBlock::text(format!(
+                "The server rejected the apply (HTTP {}).",
+                status.as_u16()
+            ))]));
+        }
+        let result: BlueprintApplyResult = resp
+            .json()
+            .await
+            .map_err(|e| McpError::internal_error(format!("invalid apply response: {e}"), None))?;
+        let message = if result.success {
+            "Blueprint applied successfully."
+        } else {
+            "Blueprint did not pass server validation and was not applied."
+        };
+        Ok(CallToolResult::success(vec![ContentBlock::text(message)]))
     }
 
     pub async fn _list_applications(
