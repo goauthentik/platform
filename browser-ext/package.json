@@ -15,7 +15,7 @@
     "devDependencies": {
         "@goauthentik/api": "^2026.8.3",
         "@goauthentik/oxfmt-config": "^9.1.0",
-        "@goauthentik/oxlint-config": "^1.0.0",
+        "@goauthentik/oxlint-config": "^1.0.1",
         "@goauthentik/tsconfig": "^2.0.0",
         "@sentry/browser": "^10.75.3",
         "@types/chrome": "^0.3.0",
