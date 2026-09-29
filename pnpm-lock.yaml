@@ -20,8 +20,8 @@ importers:
         specifier: ^9.1.0
         version: 9.1.0(oxfmt@0.70.0)(typescript@7.0.2)
       '@goauthentik/oxlint-config':
-        specifier: ^1.0.0
-        version: 1.0.0(eslint@9.39.5)(oxlint@1.83.0)
+        specifier: ^1.0.1
+        version: 1.0.1(eslint@9.39.5)(oxlint@1.83.0)
       '@goauthentik/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0
@@ -65,8 +65,8 @@ importers:
         specifier: ^9.1.0
         version: 9.1.0(oxfmt@0.70.0)(typescript@7.0.2)
       '@goauthentik/oxlint-config':
-        specifier: ^1.0.0
-        version: 1.0.0(eslint@9.39.5)(oxlint@1.83.0)
+        specifier: ^1.0.1
+        version: 1.0.1(eslint@9.39.5)(oxlint@1.83.0)
       '@goauthentik/tsconfig':
         specifier: ^2.0.0
         version: 2.0.0
@@ -307,8 +307,8 @@ packages:
       oxfmt: '>=0.67.0 <1'
       typescript: ^6.0.3 || ^7.0.0
 
-  '@goauthentik/oxlint-config@1.0.0':
-    resolution: {integrity: sha512-aCpHNihFHTK+2bKyRG8skhVIXVwCwJb0F8qqI89Mg3RWiZZalDJJkk8ZyQaTudTd9zh2EcUrioURyZJ6hDg2wg==}
+  '@goauthentik/oxlint-config@1.0.1':
+    resolution: {integrity: sha512-Kf1Dsw1vXBNLtFKJGF+Og5nDYvFB5/hREbmBviDgxw3rw0xnaJNp7SRfA7O9GcASgT3x+Yl13hTasWLPdGMzTg==}
     engines: {node: '>=24.0'}
     peerDependencies:
       oxlint: '>=1.75.0 <2'
@@ -1019,8 +1019,8 @@ packages:
     resolution: {integrity: sha512-gYzvtM72ZtxQO0T048kd6HWSbbGCNOUwcnfQ01cqIJ4X2IYKFFHZ5mKvrQETcFXxsRObZulDaKmy//R7TPtsBg==}
     engines: {node: '>=20.19.0'}
 
-  entities@8.0.0:
-    resolution: {integrity: sha512-zwfzJecQ/Uej6tusMqwAqU/6KL2XaB2VZ2Jg54Je6ahNBGNH6Ek6g3jjNCF0fG9EWQKGZNddNjU5F1ZQn/sBnA==}
+  entities@8.1.0:
+    resolution: {integrity: sha512-kxL7msIffSuh9aaFAMD7rxAIuTRMAHMeBtgHW2yUdWw732ZNh4MehkF2gdjvtdmikkaIP9bFDDJOPlsvm7avrA==}
     engines: {node: '>=20.19.0'}
 
   esbuild@0.28.2:
@@ -1617,7 +1617,7 @@ snapshots:
       oxfmt: 0.70.0
       typescript: 7.0.2
 
-  '@goauthentik/oxlint-config@1.0.0(eslint@9.39.5)(oxlint@1.83.0)':
+  '@goauthentik/oxlint-config@1.0.1(eslint@9.39.5)(oxlint@1.83.0)':
     dependencies:
       eslint-plugin-lit: 2.3.1(eslint@9.39.5)
       eslint-plugin-wc: 3.1.0(eslint@9.39.5)
@@ -2045,7 +2045,7 @@ snapshots:
     dependencies:
       domelementtype: 3.0.0
 
-  entities@8.0.0: {}
+  entities@8.1.0: {}
 
   esbuild@0.28.2:
     optionalDependencies:
@@ -2394,7 +2394,7 @@ snapshots:
 
   parse5@8.0.1:
     dependencies:
-      entities: 8.0.0
+      entities: 8.1.0
 
   path-exists@4.0.0: {}
 
