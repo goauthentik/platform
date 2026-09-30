@@ -73,12 +73,11 @@ impl InteractiveAuthTransaction {
 
     /// Advances the flow, auto-solving identification/password where possible,
     /// until it produces a challenge for the client (or finishes).
-    #[tracing::instrument(fields(self.id), skip_all)]
     pub async fn get_next_challenge(&mut self) -> Result<InteractiveChallenge, Status> {
         let Some(ch) = self.fex.challenge() else {
             return Err(Status::internal("no current flow challenge"));
         };
-        tracing::trace!(challenge = ?ch, "challenge");
+        tracing::debug!(challenge = ?ch, "get_next_challenge");
         match ch {
             ChallengeTypes::XakFlowRedirect(_) => self.finish_success().await,
             ChallengeTypes::AkStageAccessDenied(c) => {
@@ -134,7 +133,6 @@ impl InteractiveAuthTransaction {
 
     /// Submits `value` for the current stage. `Ok(None)` on success;
     /// `Ok(Some(challenge))` carries a flow error back as an error prompt.
-    #[tracing::instrument(fields(self.id), skip_all)]
     pub(super) async fn solve_challenge(
         &mut self,
         value: String,
@@ -142,7 +140,7 @@ impl InteractiveAuthTransaction {
         let Some(ch) = self.fex.challenge() else {
             return Err(Status::internal("no current flow challenge"));
         };
-        tracing::trace!(challenge = ?ch, "challenge");
+        tracing::debug!(challenge = ?ch, "solve_challenge");
         let req = match &ch {
             ChallengeTypes::AkStageIdentification(_) => {
                 FlowChallengeResponseRequest::AkStageIdentification(
