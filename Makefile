@@ -116,6 +116,9 @@ bump:
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" ee/psso/bump || true
 
+print-version:
+	@echo ${VERSION}
+
 ak-pam/%:
 	"$(MAKE)" -C "${TOP}/ak-pam" $*
 

@@ -156,3 +156,15 @@ jobs:
             ./packages/authentik_browser-ext/browser-ext/authentik_firefox.zip
             ./packages/authentik_package-macos/authentik Agent Installer.pkg
             ./packages/authentik_package-windows/authentik Agent Installer.msi
+      - id: get-version
+        run: |
+          VERSION=$(make print-version 2> /dev/null)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Bump version
+        uses: goauthentik/version@main
+        with:
+          product: platform
+          new-version: ${{ steps.get-version.outputs.version }}
+          reason: bugfix
+          token: ${{ steps.app-token.outputs.token }}
+          github-app-slug: ${{ steps.app-token.outputs.app-slug }}
