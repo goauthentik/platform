@@ -1,8 +1,9 @@
 use std::{collections::HashMap, num::ParseIntError};
 
 use authentik_client::models::{
-    AuthenticatorValidationChallengeResponseRequest, ChallengeTypes, DeviceChallengeRequest,
-    DeviceClassesEnum, FlowChallengeResponseRequest, IdentificationChallengeResponseRequest,
+    AuthenticatorValidationChallengeResponseRequest, ChallengeTypes,
+    ConsentChallengeResponseRequest, DeviceChallengeRequest, DeviceClassesEnum,
+    FlowChallengeResponseRequest, IdentificationChallengeResponseRequest,
     PasswordChallengeResponseRequest, UserLoginChallengeResponseRequest,
 };
 
@@ -130,6 +131,40 @@ impl Solver for AuthenticatorValidateSolver {
         }
         Ok(FlowChallengeResponseRequest::AkStageAuthenticatorValidate(
             res,
+        ))
+    }
+}
+
+#[derive(Default)]
+pub struct ConsentSolver;
+impl Solver for ConsentSolver {
+    fn component(&self) -> String {
+        "ak-stage-consent".into()
+    }
+
+    fn solve(
+        &self,
+        ct: ChallengeTypes,
+        answers: HashMap<String, String>,
+    ) -> Result<FlowChallengeResponseRequest, FlowError> {
+        let ct = match ct {
+            ChallengeTypes::AkStageConsent(e) => e,
+            _ => return Err(FlowError::Other(eyre::eyre!("Invalid challenge"))),
+        };
+        // By default if no answer is given, the consent stage is consented to
+        if let Some(a) = answers.get(&self.component())
+            && let Ok(approved) = a.trim().parse::<bool>()
+            && !approved
+        {
+            return Err(FlowError::Other(eyre::eyre!(
+                "Consent stage did not have consent"
+            )));
+        }
+        Ok(FlowChallengeResponseRequest::AkStageConsent(
+            ConsentChallengeResponseRequest {
+                component: Some(self.component()),
+                token: ct.token,
+            },
         ))
     }
 }
