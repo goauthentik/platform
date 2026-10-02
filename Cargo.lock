@@ -303,6 +303,7 @@ name = "ak-platform"
 version = "0.63.3"
 dependencies = [
  "base64 0.23.1",
+ "block2",
  "bytes",
  "chrono",
  "dirs-next",
@@ -318,6 +319,8 @@ dependencies = [
  "log",
  "notify",
  "oauth2",
+ "objc2",
+ "objc2-foundation",
  "oslog",
  "pbjson",
  "pbjson-types",
@@ -339,6 +342,7 @@ dependencies = [
  "tower",
  "tower-http 0.7.1",
  "tracing",
+ "uuid",
  "widestring",
  "windows 0.62.2",
 ]
@@ -462,6 +466,18 @@ dependencies = [
  "windows-service",
  "windows_exe_info",
  "winreg 0.56.0",
+]
+
+[[package]]
+name = "ak-sysd-ctrl-relay"
+version = "0.63.0"
+dependencies = [
+ "ak-meta",
+ "ak-platform",
+ "eyre",
+ "sentry",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

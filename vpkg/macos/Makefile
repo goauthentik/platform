@@ -18,6 +18,7 @@ local:
 	$(MAKE) -C "${TOP}" -j \
 		ak-agent-desktop/build \
 		ak-sysd/build \
+		ak-sysd-ctrl-relay/build \
 		ee/psso/build \
 		ak-browser-support/build \
 		ak-cli/build
@@ -29,8 +30,10 @@ build-app:
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources"
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Library/LaunchDaemons"
 	chmod +x "${TOP}/bin/cli/ak"
 	chmod +x "${TOP}/bin/sysd/ak-sysd"
+	chmod +x "${TOP}/bin/sysd-ctrl-relay/ak-sysd-ctrl-relay"
 	chmod +x "${TOP}/bin/agent-desktop/ak-agent-desktop"
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
 	"${TOP}/hack/completions.sh" \
@@ -46,6 +49,8 @@ build-app:
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/sysd/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${TOP}/bin/sysd-ctrl-relay/ak-sysd-ctrl-relay" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${PWD}/scripts/sysd-ctrl-relay-daemon.plist" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Library/LaunchDaemons/io.goauthentik.platform.sysd-ctrl-relay.plist"
 	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*

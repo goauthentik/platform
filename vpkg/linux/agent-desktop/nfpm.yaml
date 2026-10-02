@@ -14,6 +14,13 @@ conflicts:
 contents:
   - src: ../../bin/agent-desktop/ak-agent-desktop
     dst: /usr/bin/ak-agent-desktop
+  - src: ../../bin/sysd-ctrl-relay/ak-sysd-ctrl-relay
+    dst: /usr/bin/ak-sysd-ctrl-relay
+    # pkexec only trusts targets that are root-owned and not group/other
+    # writable; nfpm installs as root by default, so this just pins the mode
+    # explicitly rather than relying on that default silently.
+    file_info:
+      mode: 0755
   - src: ./agent/usr/share/polkit-1/actions/io.goauthentik.platform.policy
     dst: /usr/share/polkit-1/actions/io.goauthentik.platform.policy
   - src: ./agent-desktop/usr/share/applications/authentik-agent-desktop.desktop

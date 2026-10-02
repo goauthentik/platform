@@ -96,6 +96,14 @@
               KeyPath="true" />
         <File Id="ak_sysd_config"
               Source="$(env.PWD)/config.json" />
+        <!-- Elevated relay used by ak-agent-desktop to reach this service's
+             admin-only CTRL pipe without running the whole app elevated —
+             see ak_platform::net::elevate::windows. Must stay alongside
+             ak-sysd: ak_platform::paths::sysd_ctrl_relay_path() hardcodes the
+             default INSTALLFOLDER location, so a custom install directory
+             will not be found. -->
+        <File Id="ak_sysd_ctrl_relay"
+              Source="$(env.ROOT)/bin/sysd-ctrl-relay/ak-sysd-ctrl-relay.exe" />
 
         <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\authentik" />
         <util:EventSource Log="authentik"

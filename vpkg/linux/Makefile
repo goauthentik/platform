@@ -14,6 +14,7 @@ package:
 	chmod +x "${TOP}/bin/agent/ak-agent"
 	chmod +x "${TOP}/bin/agent-desktop/ak-agent-desktop"
 	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
+	chmod +x "${TOP}/bin/sysd-ctrl-relay/ak-sysd-ctrl-relay"
 	"${TOP}/hack/completions.sh" \
 		"${TOP}/bin/sysd/ak-sysd" \
 		"${TOP}/bin/sysd/completions" \

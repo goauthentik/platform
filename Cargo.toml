@@ -18,6 +18,7 @@ members = [
     "ak-platform-keyring",
     "ak-platform",
     "ak-sysd",
+    "ak-sysd-ctrl-relay",
     # Windows-only. `make lint-rs` excludes these off Windows, since
     # credprovider is Win32-only and browser-host is built on WebView2.
     "ee/wcp/wire",

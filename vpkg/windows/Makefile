@@ -23,6 +23,7 @@ WEBVIEW2_BOOTSTRAPPER := ${TOP}/cache/${TARGET}/MicrosoftEdgeWebview2Setup.exe
 local:
 	$(MAKE) -C "${TOP}" -j \
 		ak-sysd/build \
+		ak-sysd-ctrl-relay/build \
 		ak-agent-desktop/build \
 		ak-cli/build \
 		ak-browser-support/build \
@@ -33,6 +34,7 @@ local:
 package:
 ifeq ($(AK_IS_RELEASE),true)
 	$(call sign_binary,"${TOP}/bin/sysd/ak-sysd.exe")
+	$(call sign_binary,"${TOP}/bin/sysd-ctrl-relay/ak-sysd-ctrl-relay.exe")
 	$(call sign_binary,"${TOP}/bin/agent-desktop/ak-agent-desktop.exe")
 	$(call sign_binary,"${TOP}/bin/cli/ak.exe")
 	$(call sign_binary,"${TOP}/bin/browser_support/ak-browser-support.exe")

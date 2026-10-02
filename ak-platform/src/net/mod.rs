@@ -1,5 +1,8 @@
 pub mod client;
+pub mod elevate;
 pub mod server;
+#[cfg(target_os = "macos")]
+pub mod xpc;
 
 #[cfg(test)]
 mod tests {
