@@ -14,7 +14,7 @@ on:
         default: ""
       platforms:
         type: string
-        default: '["macos-26","ubuntu-24.04","ubuntu-24.04-arm","windows-2025"]'
+        default: '["macos-26","ubuntu-26.04","ubuntu-26.04-arm","windows-2025"]'
     outputs:
       artifact:
         value: ${{ jobs.build.outputs.artifact-id }}
@@ -49,9 +49,9 @@ jobs:
           - target: ee/wcp
             platform: macos-26
           - target: ee/wcp
-            platform: ubuntu-24.04
+            platform: ubuntu-26.04
           - target: ee/wcp
-            platform: ubuntu-24.04-arm
+            platform: ubuntu-26.04-arm
     runs-on: ${{ matrix.platform }}
     env:
       CARGO_TERM_COLOR: always

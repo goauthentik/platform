@@ -40,19 +40,19 @@ jobs:
           # - ee/wcp
         platform:
           - macos-26
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
+          - ubuntu-26.04
+          - ubuntu-26.04-arm
           - windows-2025
         include:
           - platform: windows-2025
             target: ee/wcp
-          - platform: ubuntu-24.04
+          - platform: ubuntu-26.04
             target: ak-nss
-          - platform: ubuntu-24.04-arm
+          - platform: ubuntu-26.04-arm
             target: ak-nss
-          - platform: ubuntu-24.04
+          - platform: ubuntu-26.04
             target: ak-pam
-          - platform: ubuntu-24.04-arm
+          - platform: ubuntu-26.04-arm
             target: ak-pam
     runs-on: ${{ matrix.platform }}
     steps:
@@ -124,7 +124,7 @@ jobs:
           report_type: test_results
   lint_rs:
     name: Lint (rust)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
@@ -145,7 +145,7 @@ jobs:
       matrix:
         target:
           - browser-ext
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
@@ -164,14 +164,14 @@ jobs:
     with:
       rust_build_flags: "-C instrument-coverage -C codegen-units=1"
       artifact_suffix: "-e2e"
-      platforms: '["ubuntu-24.04"]'
+      platforms: '["ubuntu-26.04"]'
     secrets: inherit
   package_linux_e2e:
     needs: build_rs_e2e
     uses: ./.github/workflows/_package-linux.yml
     with:
       artifact_suffix: "-e2e"
-      platforms: '["ubuntu-24.04"]'
+      platforms: '["ubuntu-26.04"]'
     secrets: inherit
   test_rs_e2e:
     name: Test (e2e ${{ matrix.ubuntu_version }})
@@ -183,7 +183,7 @@ jobs:
           - "24.04"
           - "25.10"
           - "26.04"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
     steps:
@@ -199,23 +199,23 @@ jobs:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_package-linux-ubuntu-24.04-e2e
+          name: authentik_package-linux-ubuntu-26.04-e2e
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_ubuntu-24.04_ak-agent-e2e
+          name: authentik_ubuntu-26.04_ak-agent-e2e
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_ubuntu-24.04_ak-cli-e2e
+          name: authentik_ubuntu-26.04_ak-cli-e2e
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_ubuntu-24.04_ak-nss-e2e
+          name: authentik_ubuntu-26.04_ak-nss-e2e
           path: bin/
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
-          name: authentik_ubuntu-24.04_ak-pam-e2e
+          name: authentik_ubuntu-26.04_ak-pam-e2e
           path: bin/
       - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd
       - uses: goauthentik/action-setup-authentik@e9b3782a8da81f3a33bbe21de97c7d3cf6c8820f # v3.2

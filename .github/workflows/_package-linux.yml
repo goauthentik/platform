@@ -11,7 +11,7 @@ on:
         default: ""
       platforms:
         type: string
-        default: '["ubuntu-24.04","ubuntu-24.04-arm"]'
+        default: '["ubuntu-26.04","ubuntu-26.04-arm"]'
 
 jobs:
   package:
