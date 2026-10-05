@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use windows::{
     Win32::{
-        Foundation::{E_FAIL, E_INVALIDARG, E_NOTIMPL, FALSE, NTSTATUS},
+        Foundation::{E_FAIL, E_INVALIDARG, E_NOTIMPL, FALSE, NTSTATUS, S_FALSE},
         Graphics::Gdi::HBITMAP,
         Security::Credentials::{
             STATUS_ACCOUNT_DISABLED, STATUS_ACCOUNT_RESTRICTION, STATUS_LOGON_FAILURE,
@@ -66,6 +66,9 @@ pub struct Credential {
     sid: String,
     qualified_username: String,
     is_local_user: bool,
+    /// The "Other user" tile: no account until someone signs in, and then
+    /// whichever account authentik says they are.
+    other_user: bool,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     deps: CredentialDeps,
     outcome: Mutex<Option<Outcome>>,
@@ -86,10 +89,21 @@ impl Credential {
             sid,
             qualified_username,
             is_local_user,
+            other_user: false,
             cpus,
             deps,
             outcome: Mutex::new(None),
             serialized: Mutex::new(None),
+        }
+    }
+
+    /// Signs in whoever authenticates, as the local account of the same name.
+    /// Only possible through the KDC: without a known account there is no
+    /// password of its own to manage.
+    pub fn other_user(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO, deps: CredentialDeps) -> Self {
+        Self {
+            other_user: true,
+            ..Self::new(String::new(), String::new(), true, cpus, deps)
         }
     }
 }
@@ -426,6 +440,12 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
 impl ICredentialProviderCredential2_Impl for Credential_Impl {
     fn GetUserSid(&self) -> Result<PWSTR> {
+        // `S_FALSE` with no SID is what files a credential under "Other user".
+        // ponytail: the windows-rs shim leaves the out-param unwritten on any
+        // non-`Ok`, so this relies on LogonUI initializing it as COM callers do.
+        if self.other_user {
+            return Err(windows::core::Error::from_hresult(S_FALSE));
+        }
         if self.sid.is_empty() {
             Ok(PWSTR::null())
         } else {
@@ -474,7 +494,9 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
 
         let outcome = match result {
             AuthResult::Completed { username, kerberos } => {
-                if !usernames_match(&username, &self.qualified_username, self.is_local_user) {
+                if !self.other_user
+                    && !usernames_match(&username, &self.qualified_username, self.is_local_user)
+                {
                     log::warn!(
                         "Connect: authenticated username '{username}' does not match tile user '{}'",
                         self.qualified_username
@@ -494,6 +516,12 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
                         username,
                         password: kerberos.password,
                         realm: Some(kerberos.realm),
+                    }
+                } else if self.other_user {
+                    // Managing a password would mean resetting the account of
+                    // whatever name came back, which only the KDC makes safe.
+                    Outcome::Failed {
+                        reason: "the Other user tile needs ak-sysd's KDC".to_string(),
                     }
                 } else {
                     let password = match self.account_password(&username) {
@@ -1019,6 +1047,68 @@ mod tests {
         let state = password.state();
         assert!(state.resets.is_empty() && state.changes.is_empty());
         assert_eq!(store.get(SID), None);
+    }
+
+    fn other_user(
+        kerberos: Option<crate::ipc::KerberosLogon>,
+        password: &FakePassword,
+        store: &FakeStore,
+    ) -> (ICredentialProviderCredential, FakeAuthFlow) {
+        let mut flow = FakeAuthFlow::completed("bob");
+        flow.result = AuthResult::Completed {
+            username: "bob".to_string(),
+            kerberos,
+        };
+        let deps = CredentialDeps {
+            auth_flow: Box::new(flow.clone()),
+            password: Box::new(password.clone()),
+            auth_package: Box::new(FakeAuthPackage),
+            store: Box::new(store.clone()),
+        };
+        (Credential::other_user(CPUS_LOGON, deps).into(), flow)
+    }
+
+    /// The tile has no user of its own, so whoever authentik says signed in is
+    /// who gets logged on.
+    #[test]
+    fn other_user_logs_on_whoever_signed_in() {
+        let kerberos = crate::ipc::KerberosLogon {
+            realm: "AUTHENTIK.LOCAL".to_string(),
+            password: "krb-password".to_string(),
+        };
+        let (cred, flow) = other_user(
+            Some(kerberos),
+            &FakePassword::default(),
+            &FakeStore::default(),
+        );
+
+        let serialization = submit(&cred).unwrap();
+        unsafe { CoTaskMemFree(Some(serialization.rgbSerialization as *const _)) };
+
+        assert_eq!(flow.hints(), vec![None]);
+        let sid = unsafe {
+            cred.cast::<ICredentialProviderCredential2>()
+                .unwrap()
+                .GetUserSid()
+        };
+        assert_eq!(
+            sid.unwrap_err().code(),
+            S_FALSE,
+            "must land on the Other user tile"
+        );
+    }
+
+    /// Without the KDC the only way in would be resetting the password of
+    /// whichever account name came back.
+    #[test]
+    fn other_user_without_the_kdc_touches_no_account() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        let (cred, _) = other_user(None, &password, &store);
+
+        assert!(submit(&cred).is_none());
+        assert!(password.state().resets.is_empty());
+        assert_eq!(store.get(""), None);
     }
 
     #[test]

@@ -58,6 +58,9 @@ impl CredentialProvider {
                 built.push(credential_from_user(&user, cpus).into());
             }
         }
+        if cpus == CPUS_LOGON && kdc_realm_configured() {
+            built.push(Credential::other_user(cpus, credential_deps(cpus)).into());
+        }
 
         *credentials = Some(built);
     }
@@ -74,20 +77,35 @@ fn credential_from_user(
         .map(take_pwstr)
         .unwrap_or_default();
     let sid = unsafe { user.GetSid() }.map(take_pwstr).unwrap_or_default();
-
-    let browser_exe = crate::dll_dir().join("ak_browser.exe");
     Credential::new(
         sid,
         qualified_username,
         is_local_user,
         cpus,
-        CredentialDeps {
-            auth_flow: Box::new(BrowserAuthFlow::new(browser_exe, cpus)),
-            password: Box::new(RealSyscalls),
-            auth_package: Box::new(RealSyscalls),
-            store: Box::new(KeyringPasswordStore::new()),
-        },
+        credential_deps(cpus),
     )
+}
+
+fn credential_deps(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO) -> CredentialDeps {
+    let browser_exe = crate::dll_dir().join("ak_browser.exe");
+    CredentialDeps {
+        auth_flow: Box::new(BrowserAuthFlow::new(browser_exe, cpus)),
+        password: Box::new(RealSyscalls),
+        auth_package: Box::new(RealSyscalls),
+        store: Box::new(KeyringPasswordStore::new()),
+    }
+}
+
+/// Where `ksetup /addkdc` records `ak-sysd`'s realm (`REALM` in
+/// `ak-sysd/src/components/kdc`). Absent on a domain-joined machine, where
+/// `ksetup` refuses, and an "Other user" tile could never sign anyone in.
+const KDC_REALM_KEY: &str =
+    r"SYSTEM\CurrentControlSet\Control\Lsa\Kerberos\Domains\AUTHENTIK.LOCAL";
+
+fn kdc_realm_configured() -> bool {
+    winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE)
+        .open_subkey(KDC_REALM_KEY)
+        .is_ok()
 }
 
 impl ICredentialProvider_Impl for CredentialProvider_Impl {
