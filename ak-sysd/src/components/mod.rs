@@ -9,6 +9,9 @@ pub mod auth;
 pub mod ctrl;
 pub mod device;
 pub mod directory;
+#[cfg(any(windows, test))]
+#[cfg_attr(not(windows), allow(dead_code))]
+pub mod kdc;
 pub mod ping;
 pub mod session;
 

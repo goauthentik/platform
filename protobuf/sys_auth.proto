@@ -34,6 +34,10 @@ message TokenAuthResponse {
   bool successful = 1;
   agent.Token token = 2;
   string session_id = 3;
+  // Set on Windows when the local KDC is running: log the user on as
+  // `kerberos_realm`\username with `kerberos_password` (ee/wcp).
+  string kerberos_realm = 4;
+  string kerberos_password = 5;
 }
 
 message SSHCertAuthRequest {

@@ -42,9 +42,32 @@ use ak_ee_wcp_wire::{HostCommand, HostReport};
 /// `HostCommand`/`HostReport`, this stays local rather than living in `wire`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AuthResult {
-    Completed { username: String },
+    Completed {
+        username: String,
+        kerberos: Option<KerberosLogon>,
+    },
     Cancelled,
-    Failed { reason: String },
+    Failed {
+        reason: String,
+    },
+}
+
+/// A logon as `realm\username` against `ak-sysd`'s KDC, which Windows maps
+/// onto the local account of the same name (`ksetup /mapuser`), so the
+/// account's own password is never needed.
+#[derive(Clone, PartialEq, Eq)]
+pub struct KerberosLogon {
+    pub realm: String,
+    pub password: String,
+}
+
+/// `AuthResult` is logged whole.
+impl std::fmt::Debug for KerberosLogon {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("KerberosLogon")
+            .field("realm", &self.realm)
+            .finish_non_exhaustive()
+    }
 }
 
 /// Spawns `ak_browser.exe` and waits for its result. `login_hint` is the
@@ -637,7 +660,9 @@ enum PipeOutcome {
 /// blocking round trip does not stall `should_continue` or the nudge.
 fn auth_result_for(url: &str) -> AuthResult {
     match sysd::sys_auth_validate(url) {
-        Ok(Some(username)) => AuthResult::Completed { username },
+        Ok(Some(sysd::Validated { username, kerberos })) => {
+            AuthResult::Completed { username, kerberos }
+        }
         Ok(None) => AuthResult::Failed {
             reason: "token validation failed".to_string(),
         },

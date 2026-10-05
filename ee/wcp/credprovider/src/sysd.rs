@@ -71,9 +71,16 @@ pub fn sys_auth_start_async(login_hint: Option<&str>) -> Result<AuthStartAsync> 
     })
 }
 
+/// Who a validated sign-in authenticated as, and, when `ak-sysd`'s KDC is up,
+/// the realm credential to log them on with instead of the local password.
+pub struct Validated {
+    pub username: String,
+    pub kerberos: Option<crate::ipc::KerberosLogon>,
+}
+
 /// Validates the token embedded in the sign-in redirect's URL. `None` covers
 /// both an unextractable token and one `ak-sysd` rejects.
-pub fn sys_auth_validate(url: &str) -> Result<Option<String>> {
+pub fn sys_auth_validate(url: &str) -> Result<Option<Validated>> {
     let Some(raw_token) = ak_ee_wcp_wire::extract_token(url) else {
         return Ok(None);
     };
@@ -91,10 +98,15 @@ pub fn sys_auth_validate(url: &str) -> Result<Option<String>> {
     if !response.successful {
         return Ok(None);
     }
-    Ok(Some(
-        response
+    let kerberos = (!response.kerberos_realm.is_empty()).then(|| crate::ipc::KerberosLogon {
+        realm: response.kerberos_realm,
+        password: response.kerberos_password,
+    });
+    Ok(Some(Validated {
+        username: response
             .token
             .map(|t| t.preferred_username)
             .unwrap_or_default(),
-    ))
+        kerberos,
+    }))
 }

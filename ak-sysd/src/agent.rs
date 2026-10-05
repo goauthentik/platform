@@ -23,6 +23,8 @@ use tonic::transport::Server;
 
 #[cfg(target_os = "linux")]
 use crate::components::directory::DirectoryComponent;
+#[cfg(windows)]
+use crate::components::kdc::KdcComponent;
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 use crate::components::session::SessionComponent;
 
@@ -94,6 +96,8 @@ impl Agent {
         register!(DirectoryComponent);
         #[cfg(any(target_os = "linux", target_os = "windows"))]
         register!(SessionComponent);
+        #[cfg(windows)]
+        register!(KdcComponent);
         register!(CtrlComponent);
 
         components

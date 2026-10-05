@@ -1447,6 +1447,12 @@ impl serde::Serialize for TokenAuthResponse {
         if !self.session_id.is_empty() {
             len += 1;
         }
+        if !self.kerberos_realm.is_empty() {
+            len += 1;
+        }
+        if !self.kerberos_password.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("sys_auth.TokenAuthResponse", len)?;
         if self.successful {
             struct_ser.serialize_field("successful", &self.successful)?;
@@ -1456,6 +1462,12 @@ impl serde::Serialize for TokenAuthResponse {
         }
         if !self.session_id.is_empty() {
             struct_ser.serialize_field("sessionId", &self.session_id)?;
+        }
+        if !self.kerberos_realm.is_empty() {
+            struct_ser.serialize_field("kerberosRealm", &self.kerberos_realm)?;
+        }
+        if !self.kerberos_password.is_empty() {
+            struct_ser.serialize_field("kerberosPassword", &self.kerberos_password)?;
         }
         struct_ser.end()
     }
@@ -1471,6 +1483,10 @@ impl<'de> serde::Deserialize<'de> for TokenAuthResponse {
             "token",
             "session_id",
             "sessionId",
+            "kerberos_realm",
+            "kerberosRealm",
+            "kerberos_password",
+            "kerberosPassword",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -1478,6 +1494,8 @@ impl<'de> serde::Deserialize<'de> for TokenAuthResponse {
             Successful,
             Token,
             SessionId,
+            KerberosRealm,
+            KerberosPassword,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -1502,6 +1520,8 @@ impl<'de> serde::Deserialize<'de> for TokenAuthResponse {
                             "successful" => Ok(GeneratedField::Successful),
                             "token" => Ok(GeneratedField::Token),
                             "sessionId" | "session_id" => Ok(GeneratedField::SessionId),
+                            "kerberosRealm" | "kerberos_realm" => Ok(GeneratedField::KerberosRealm),
+                            "kerberosPassword" | "kerberos_password" => Ok(GeneratedField::KerberosPassword),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -1524,6 +1544,8 @@ impl<'de> serde::Deserialize<'de> for TokenAuthResponse {
                 let mut successful__ = None;
                 let mut token__ = None;
                 let mut session_id__ = None;
+                let mut kerberos_realm__ = None;
+                let mut kerberos_password__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Successful => {
@@ -1544,12 +1566,26 @@ impl<'de> serde::Deserialize<'de> for TokenAuthResponse {
                             }
                             session_id__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::KerberosRealm => {
+                            if kerberos_realm__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("kerberosRealm"));
+                            }
+                            kerberos_realm__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::KerberosPassword => {
+                            if kerberos_password__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("kerberosPassword"));
+                            }
+                            kerberos_password__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(TokenAuthResponse {
                     successful: successful__.unwrap_or_default(),
                     token: token__,
                     session_id: session_id__.unwrap_or_default(),
+                    kerberos_realm: kerberos_realm__.unwrap_or_default(),
+                    kerberos_password: kerberos_password__.unwrap_or_default(),
                 })
             }
         }
