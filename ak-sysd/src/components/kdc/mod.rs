@@ -22,9 +22,9 @@ use ak_platform::paths::SysdSocketID;
 
 mod proto;
 
-/// Never resolves in DNS (RFC 2606), so Windows only finds the KDC through
-/// the `ksetup /addkdc` mapping.
-pub const REALM: &str = "AUTHENTIK.INVALID";
+/// Not a real DNS domain (`.local` is mDNS-only), so Windows finds the KDC
+/// through the `ksetup /addkdc` mapping rather than SRV lookups.
+pub const REALM: &str = "AUTHENTIK.LOCAL";
 const LISTEN: &str = "127.0.0.1:88";
 /// Requests and replies here are a few hundred bytes; anything near this is
 /// not Kerberos.

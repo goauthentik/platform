@@ -998,7 +998,7 @@ mod tests {
         flow.result = AuthResult::Completed {
             username: "alice".to_string(),
             kerberos: Some(crate::ipc::KerberosLogon {
-                realm: "AUTHENTIK.INVALID".to_string(),
+                realm: "AUTHENTIK.LOCAL".to_string(),
                 password: "krb-password".to_string(),
             }),
         };
@@ -1010,7 +1010,7 @@ mod tests {
             String::from_utf16_lossy(std::slice::from_raw_parts(ptr, s.Length as usize / 2))
         };
         let logon = unsafe { &(*(buf as *const KERB_INTERACTIVE_UNLOCK_LOGON)).Logon };
-        assert_eq!(read(&logon.LogonDomainName), "AUTHENTIK.INVALID");
+        assert_eq!(read(&logon.LogonDomainName), "AUTHENTIK.LOCAL");
         assert_eq!(read(&logon.UserName), "alice");
         assert_eq!(read(&logon.Password), "krb-password");
         unsafe { CoTaskMemFree(Some(buf as *const _)) };

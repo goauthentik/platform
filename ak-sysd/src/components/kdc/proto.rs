@@ -535,7 +535,7 @@ mod tests {
     use picky_krb::data_types::{ApOptions, AuthenticatorInner};
     use picky_krb::messages::{ApReqInner, KdcReq, KdcReqBody};
 
-    const REALM: &str = "AUTHENTIK.INVALID";
+    const REALM: &str = "AUTHENTIK.LOCAL";
     const MACHINE_PASSWORD: &str = "machine-password";
 
     fn now() -> DateTime<Utc> {
