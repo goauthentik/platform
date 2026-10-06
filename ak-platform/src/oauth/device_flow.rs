@@ -75,6 +75,9 @@ pub async fn request_device_authorization(
 
     if !res.status().is_success() {
         let body = res.text().await.unwrap_or_default();
+        if let Ok(err) = serde_json::from_str::<TokenErrorResponse>(&body) {
+            return Err(OAuthError(err.error).into());
+        }
         bail!("device authorization request failed: {body}");
     }
 
@@ -95,11 +98,26 @@ pub async fn request_device_authorization(
     })
 }
 
+/// An OAuth error code (RFC 6749 section 5.2) returned by the server, so
+/// callers can react to specific codes via `Report::downcast_ref`.
+#[derive(Debug)]
+pub struct OAuthError(pub String);
+
+impl std::fmt::Display for OAuthError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "device authorization request failed: {}", self.0)
+    }
+}
+
+impl std::error::Error for OAuthError {}
+
 /// The token response of a completed device authorization grant.
 pub struct DeviceTokenResult {
     pub access_token: String,
     pub refresh_token: Option<String>,
     pub expires_in: Option<i64>,
+    /// Space-separated scopes actually granted, if the server reported them.
+    pub scope: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -107,6 +125,7 @@ struct TokenSuccessResponse {
     access_token: String,
     refresh_token: Option<String>,
     expires_in: Option<i64>,
+    scope: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -165,6 +184,7 @@ pub async fn poll_for_device_token(
                 access_token: parsed.access_token,
                 refresh_token: parsed.refresh_token,
                 expires_in: parsed.expires_in,
+                scope: parsed.scope,
             });
         }
 
@@ -232,6 +252,30 @@ mod tests {
         assert_eq!(auth.user_code, "WXYZ-1234");
         assert_eq!(auth.interval, Duration::from_secs(5));
         assert!(auth.verification_uri_complete.is_some());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn request_device_authorization_surfaces_oauth_error_code() -> Result<()> {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/device/"))
+            .respond_with(ResponseTemplate::new(400).set_body_json(json!({
+                "error": "dpop_jkt_not_allowed",
+                "error_description": "..."
+            })))
+            .mount(&server)
+            .await;
+
+        let url = Url::parse(&format!("{}/device/", server.uri()))?;
+        let err = request_device_authorization(&url, "c", &["openid"], Some("t"), "ua")
+            .await
+            .err()
+            .ok_or_else(|| eyre!("expected error"))?;
+        assert_eq!(
+            err.downcast_ref::<OAuthError>().map(|e| e.0.as_str()),
+            Some("dpop_jkt_not_allowed")
+        );
         Ok(())
     }
 

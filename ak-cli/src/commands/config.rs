@@ -33,10 +33,6 @@ pub enum ConfigCommands {
         client_id: String,
         #[arg(short = 'd', long, default_value = DEFAULT_APP_SLUG)]
         app_slug: String,
-        /// Bind the resulting profile to a locally-generated key (RFC 9449 DPoP).
-        /// Requires an authentik server that supports OpenID Key Binding.
-        #[arg(long, default_value_t = false)]
-        dpop: bool,
     },
 }
 
@@ -70,7 +66,6 @@ pub async fn setup(
     authentik_url: &str,
     client_id: &str,
     app_slug: &str,
-    dpop: bool,
 ) -> Result<()> {
     let access_token: String;
     let refresh_token: String;
@@ -86,7 +81,6 @@ pub async fn setup(
                 authentik_url: Url::parse(authentik_url).wrap_err("invalid authentik URL")?,
                 app_slug: app_slug.to_owned(),
                 client_id: client_id.to_owned(),
-                dpop_enabled: dpop,
                 user_agent: ak_meta::user_agent(),
             },
             |url| {

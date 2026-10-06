@@ -102,7 +102,6 @@ pub async fn setup_profile(
                 .map_err(|e| format!("invalid authentik URL: {e}"))?,
             app_slug: app_slug.clone(),
             client_id: client_id.clone(),
-            dpop_enabled: false,
             user_agent: ak_meta::user_agent(),
         },
         // Frontend opens the URL and shows it as a fallback link.
