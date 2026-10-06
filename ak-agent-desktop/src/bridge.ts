@@ -51,8 +51,7 @@ export interface ComponentVersion {
 }
 
 export interface Versions {
-    desktop: string;
-    agent: ComponentVersion;
+    agent: string;
     sysd: ComponentVersion;
 }
 
