@@ -41,7 +41,8 @@ ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		build-essential pkg-config libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+		build-essential pkg-config libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf \
+		libdbus-1-dev libtss2-dev
 endif
 endif
 
@@ -90,7 +91,7 @@ test-e2e-convert:
 	$(call rs_e2e_coverage_convert)
 
 test-setup:
-	go run -v ./cmd/cli setup -v http://authentik:9000
+	cargo run -p ak-cli -v config setup --authentik-url http://authentik:9000
 
 test-ssh:
 	ssh -i akadmin@ak-platform-test-machine
