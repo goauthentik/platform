@@ -50,7 +50,7 @@ export class AppShell extends LitElement {
             min-height: 0;
         }
         nav {
-            width: 180px;
+            width: 190px;
             flex-shrink: 0;
             padding: 12px 8px;
             display: flex;
