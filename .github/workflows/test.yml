@@ -124,7 +124,14 @@ jobs:
           report_type: test_results
   lint_rs:
     name: Lint (rust)
-    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - macos-26
+          - ubuntu-26.04
+          - windows-2025
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
@@ -136,8 +143,8 @@ jobs:
       - run: make ci-install-deps
       - uses: ./.github/actions/setup-toolchain
         with:
-          platform: ubuntu
-      - run: make lint-rs
+          platform: ${{ matrix.platform }}
+      - run: make lint-rs-ci
   lint_js:
     name: Lint
     strategy:

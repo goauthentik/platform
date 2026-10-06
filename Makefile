@@ -73,8 +73,15 @@ lint-rs:
 		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 
+lint-rs-ci:
+	cargo fmt --all --check
+	cargo clippy --workspace \
+		${RS_LINT_EXCLUDE} \
+		${RS_TEST_FLAGS} \
+		-- -D warnings
+
 .PHONY: lint
-lint: $(foreach target,$(TARGETS),${target}/lint)
+lint:$(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-rs
 
 test-integration:
