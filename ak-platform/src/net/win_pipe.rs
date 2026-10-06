@@ -27,32 +27,36 @@ use windows::core::HSTRING;
 pub async fn connect(path: &str) -> io::Result<Stream> {
     let path = HSTRING::from(path);
     loop {
-        let handle = unsafe {
-            CreateFileW(
-                &path,
-                (GENERIC_READ | GENERIC_WRITE).0,
-                FILE_SHARE_READ | FILE_SHARE_WRITE,
-                None,
-                OPEN_EXISTING,
-                FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION,
-                None,
-            )
-        };
-        match handle {
-            Ok(h) => {
-                // SAFETY: we just opened this handle and nothing else owns it.
-                let h = unsafe { OwnedHandle::from_raw_handle(h.0) };
-                return PipeStream::try_from(h)
-                    .map(Stream::from)
-                    .map_err(|e| io::Error::other(e.to_string()));
-            }
-            // All server instances are taken; one frees up once a connection is accepted.
-            Err(e) if e.code() == ERROR_PIPE_BUSY.to_hresult() => {
-                tokio::time::sleep(Duration::from_millis(10)).await
-            }
-            // CreateFileW fails with Win32 errors, which live in the HRESULT's low bits.
-            Err(e) => return Err(io::Error::from_raw_os_error(e.code().0 & 0xFFFF)),
+        if let Some(h) = open(&path)? {
+            return PipeStream::try_from(h)
+                .map(Stream::from)
+                .map_err(|e| io::Error::other(e.to_string()));
         }
+        // All server instances are taken; one frees up once a connection is accepted.
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+}
+
+/// `None` while the pipe is busy. Kept out of [`connect`] so the raw, non-`Send`
+/// `HANDLE` never lives across an await.
+fn open(path: &HSTRING) -> io::Result<Option<OwnedHandle>> {
+    let handle = unsafe {
+        CreateFileW(
+            path,
+            (GENERIC_READ | GENERIC_WRITE).0,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            None,
+            OPEN_EXISTING,
+            FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION,
+            None,
+        )
+    };
+    match handle {
+        // SAFETY: we just opened this handle and nothing else owns it.
+        Ok(h) => Ok(Some(unsafe { OwnedHandle::from_raw_handle(h.0) })),
+        Err(e) if e.code() == ERROR_PIPE_BUSY.to_hresult() => Ok(None),
+        // CreateFileW fails with Win32 errors, which live in the HRESULT's low bits.
+        Err(e) => Err(io::Error::from_raw_os_error(e.code().0 & 0xFFFF)),
     }
 }
 
