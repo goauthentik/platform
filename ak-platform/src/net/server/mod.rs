@@ -34,11 +34,12 @@ impl SocketPermMode {
     /// as a DACL instead. `FA` is full access, granted to the pipe's owner (`OW`),
     /// to Everyone (`WD`), or to built-in Administrators (`BA`) plus SYSTEM (`SY`)
     /// — the admin case deliberately omits the owner so an unprivileged creator
-    /// cannot reconnect to its own socket.
+    /// cannot reconnect to its own socket. SYSTEM can reach owner pipes, like root
+    /// can reach `0600` sockets, which sysd needs to call the user's agent.
     #[cfg(windows)]
     fn security_descriptor(&self) -> Result<SecurityDescriptor> {
         let sddl: &U16CStr = match self {
-            Self::Owner => u16cstr!("D:(A;;FA;;;OW)"),
+            Self::Owner => u16cstr!("D:(A;;FA;;;OW)(A;;FA;;;SY)"),
             Self::Everyone => u16cstr!("D:(A;;FA;;;WD)"),
             Self::Admin => u16cstr!("D:(A;;FA;;;BA)(A;;FA;;;SY)"),
         };
@@ -47,7 +48,13 @@ impl SocketPermMode {
     }
 }
 
-pub struct ConnectedLocalStream(LocalSocketStream);
+pub struct ConnectedLocalStream {
+    stream: LocalSocketStream,
+    /// Whether the peer runs as SYSTEM. Windows only lets a pipe server look at its
+    /// client after reading from it, so it's set on the first read.
+    #[cfg(windows)]
+    system: std::sync::Arc<std::sync::OnceLock<bool>>,
+}
 
 impl fmt::Debug for ConnectedLocalStream {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -61,7 +68,16 @@ impl AsyncRead for ConnectedLocalStream {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_read(cx, buf)
+        let res = Pin::new(&mut self.stream).poll_read(cx, buf);
+        #[cfg(windows)]
+        if matches!(res, Poll::Ready(Ok(()))) && self.system.get().is_none() {
+            use std::os::windows::io::AsHandle;
+            let LocalSocketStream::NamedPipe(pipe) = &self.stream;
+            let _ = self
+                .system
+                .set(crate::net::win_pipe::peer_is_system(pipe.as_handle()));
+        }
+        res
     }
 }
 
@@ -71,15 +87,15 @@ impl AsyncWrite for ConnectedLocalStream {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.0).poll_write(cx, buf)
+        Pin::new(&mut self.stream).poll_write(cx, buf)
     }
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_flush(cx)
+        Pin::new(&mut self.stream).poll_flush(cx)
     }
 
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_shutdown(cx)
+        Pin::new(&mut self.stream).poll_shutdown(cx)
     }
 }
 
@@ -170,7 +186,12 @@ pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<Listen
         loop {
             match listener.accept().await {
                 Ok(stream) => {
-                    if tx.send(Ok(ConnectedLocalStream(stream))).await.is_err() {
+                    let stream = ConnectedLocalStream {
+                        stream,
+                        #[cfg(windows)]
+                        system: Default::default(),
+                    };
+                    if tx.send(Ok(stream)).await.is_err() {
                         break;
                     }
                 }
