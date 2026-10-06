@@ -45,40 +45,35 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
         .build()?;
     tauri::async_runtime::set(rt.handle().clone());
 
+    // Created before tauri so commands never see unmanaged state.
+    let agent = rt.block_on(ak_agent::agent::Agent::new())?;
+
     tauri::Builder::default()
+        .manage(agent.clone())
         .plugin(tauri_plugin_sentry::init(&guard))
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             ui::show_main(app);
         }))
         .plugin(tauri_plugin_opener::init())
-        .setup(|app| {
-            let handle = app.handle().clone();
+        .setup(move |app| {
+            let watcher_handle = app.handle().clone();
+            let reload_notify = agent.cfg.on_reload();
             tauri::async_runtime::spawn(async move {
-                match ak_agent::agent::Agent::new().await {
-                    Ok(agent) => {
-                        handle.manage(agent.clone());
-                        let watcher_handle = handle.clone();
-                        let reload_notify = agent.cfg.on_reload();
-                        tauri::async_runtime::spawn(async move {
-                            loop {
-                                reload_notify.notified().await;
-                                let visible = watcher_handle
-                                    .get_webview_window(ui::WINDOW_LABEL)
-                                    .and_then(|w| w.is_visible().ok())
-                                    .unwrap_or(false);
-                                if visible
-                                    && let Err(e) = watcher_handle.emit("ak-config-reloaded", ())
-                                {
-                                    tracing::warn!("failed to emit config reload event: {e}");
-                                }
-                            }
-                        });
-                        if let Err(e) = agent.start().await {
-                            tracing::error!("agent exited with error: {e}");
-                        }
+                loop {
+                    reload_notify.notified().await;
+                    let visible = watcher_handle
+                        .get_webview_window(ui::WINDOW_LABEL)
+                        .and_then(|w| w.is_visible().ok())
+                        .unwrap_or(false);
+                    if visible && let Err(e) = watcher_handle.emit("ak-config-reloaded", ()) {
+                        tracing::warn!("failed to emit config reload event: {e}");
                     }
-                    Err(e) => tracing::error!("failed to start agent: {e}"),
+                }
+            });
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = agent.start().await {
+                    tracing::error!("agent exited with error: {e}");
                 }
             });
 
