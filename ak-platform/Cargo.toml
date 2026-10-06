@@ -53,6 +53,7 @@ libc = "0.2.186"
 
 [target.'cfg(windows)'.dependencies]
 eventlog = "0.4.0"
+windows = { workspace = true }
 # SDDL literals for the named-pipe DACLs in `net::server`; must stay on the same
 # major as the `widestring` re-exported through `interprocess`.
 widestring = "1"
