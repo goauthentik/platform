@@ -91,11 +91,6 @@ runs:
         cat > ~/.rpmmacros << EOF
         %_gpg_name ${GPG_KEY_ID}
         %_signature gpg
-        %__gpg_sign_cmd %{__gpg} \\
-            gpg --force-v3-sigs --batch --verbose --no-armor \\
-            --no-secmem-warning --pinentry-mode loopback \\
-            -u "%{_gpg_name}" -sbo %{__signature_filename} \\
-            --digest-algo sha256 %{__plaintext_filename}
         EOF
 
         echo "GPG setup completed with key: ${GPG_KEY_ID}"
