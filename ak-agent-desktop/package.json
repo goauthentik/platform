@@ -25,7 +25,7 @@
         "@tauri-apps/plugin-os": "~2.4.0",
         "lit": "^3.3.3",
         "oxfmt": "^0.71.0",
-        "oxlint": "^1.85.0",
+        "oxlint": "^1.86.0",
         "tauri-plugin-sentry-api": "^0.5.0",
         "typescript": "^7.0.2",
         "vite": "^8.3.2"
