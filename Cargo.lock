@@ -62,6 +62,7 @@ dependencies = [
  "ssh-agent-lib",
  "ssh-encoding 0.3.0",
  "ssh-key",
+ "tempfile",
  "tokio",
  "tonic",
  "tonic-prost",

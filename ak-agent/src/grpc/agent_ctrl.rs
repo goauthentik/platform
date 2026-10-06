@@ -135,6 +135,18 @@ impl AgentCtrl for AgentGRPCServer {
             profile: cfg.active_profile.clone(),
         }))
     }
+
+    async fn delete_profile(
+        &self,
+        request: Request<RequestHeader>,
+    ) -> Result<Response<ResponseHeader>, Status> {
+        let profile = request.into_inner().profile;
+        if let Err(e) = self.agent.delete_profile(&profile).await {
+            tracing::warn!("failed to delete profile: {e:?}");
+            return Err(Status::from_error(e.into()));
+        }
+        Ok(Response::new(ResponseHeader { successful: true }))
+    }
 }
 
 #[cfg(test)]
@@ -142,6 +154,7 @@ mod tests {
     use std::sync::Arc;
 
     use ak_platform::shared::AuthentikClaims;
+    use ak_platform::storage::cfgmgr::ConfigManager;
     use ak_platform::storage::cfgmgr::testutils::test_config_manager;
     use chrono::{TimeDelta, Utc};
     use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
@@ -227,5 +240,52 @@ mod tests {
 
         let bad = resp.profiles.iter().find(|p| p.name == "bad").unwrap();
         assert_eq!(bad.status, ProfileStatus::Failed as i32);
+    }
+
+    #[tokio::test]
+    async fn delete_active_profile_switches_to_remaining() {
+        let _guard = gtm_test_lock().lock().unwrap_or_else(|e| e.into_inner());
+
+        let dir = tempfile::tempdir().unwrap();
+        let cfg = ConfigManager::<ConfigV1>::new(
+            dir.path().join("config.json").to_string_lossy().to_string(),
+        )
+        .await
+        .unwrap();
+        let gtm = GlobalTokenManager::new(Arc::clone(&cfg)).await.unwrap();
+        {
+            let mut c = cfg.write().await;
+            for name in ["a", "b"] {
+                c.profiles.insert(
+                    name.to_string(),
+                    ConfigV1Profile::from_tokens(
+                        "http://127.0.0.1:1".to_string(),
+                        "app".to_string(),
+                        "client".to_string(),
+                        "access".to_string(),
+                        "refresh".to_string(),
+                    ),
+                );
+            }
+            c.active_profile = "a".to_string();
+        }
+        let server = AgentGRPCServer::new(Arc::new(Agent {
+            cfg: Arc::clone(&cfg),
+            gtm: Arc::new(gtm),
+        }))
+        .await
+        .unwrap();
+
+        let header = |p: &str| {
+            Request::new(RequestHeader {
+                profile: p.to_string(),
+            })
+        };
+        server.delete_profile(header("a")).await.unwrap();
+        assert!(server.delete_profile(header("missing")).await.is_err());
+
+        let c = cfg.read().await;
+        assert!(!c.profiles.contains_key("a"));
+        assert_eq!(c.active_profile, "b");
     }
 }

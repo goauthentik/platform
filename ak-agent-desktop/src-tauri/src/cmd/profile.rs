@@ -128,3 +128,11 @@ pub async fn setup_profile(
         .await
         .map_err(|e| format!("failed to save profile: {e:#}"))
 }
+
+#[tauri::command]
+pub async fn delete_profile(state: tauri::State<'_, Agent>, name: String) -> Result<()> {
+    state
+        .delete_profile(&name)
+        .await
+        .map_err(|e| format!("failed to delete profile: {e:#}"))
+}

@@ -20,6 +20,11 @@ use url::Url;
 pub enum ConfigCommands {
     /// List profiles
     ListProfiles,
+    /// Delete a profile
+    DeleteProfile {
+        #[arg(required = true)]
+        profile: String,
+    },
     /// Configure authentik CLI
     Setup {
         #[arg(short, long, required = true)]
@@ -165,4 +170,21 @@ pub async fn switch_profile(app: App, profile: &Option<String>) -> Result<()> {
             Ok(())
         }
     }
+}
+
+pub async fn delete_profile(app: App, profile: &str) -> Result<()> {
+    let res = app
+        .user()
+        .await?
+        .clone()
+        .ctrl()
+        .delete_profile(RequestHeader {
+            profile: profile.to_string(),
+        })
+        .await
+        .wrap_err("failed to delete profile")?
+        .into_inner();
+    assert_response_valid(Some(res))?;
+    println!("Successfully deleted profile '{profile}'!");
+    Ok(())
 }

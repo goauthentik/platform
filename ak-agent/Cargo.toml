@@ -45,3 +45,6 @@ waitgroup = "0.1.2"
 
 [build-dependencies]
 windows_exe_info = "0.5.2"
+
+[dev-dependencies]
+tempfile = { workspace = true }

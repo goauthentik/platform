@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use ak_platform::paths::xdg_config_path;
 use ak_platform::storage::cfgmgr::ConfigManager;
-use eyre::Result;
+use eyre::{Result, bail};
 use waitgroup::WaitGroup;
 
 use crate::config::{ConfigV1, ConfigV1Profile};
@@ -38,6 +38,22 @@ impl Agent {
         self.cfg.save().await?;
         self.gtm.wait_for_profile(name).await;
         tracing::info!(profile = name, "setup new profile");
+        Ok(())
+    }
+
+    /// Remove a profile. If it was active, another remaining profile (if any) becomes active.
+    pub async fn delete_profile(&self, name: &str) -> Result<()> {
+        {
+            let mut cfg = self.cfg.write().await;
+            if cfg.profiles.remove(name).is_none() {
+                bail!("profile '{name}' not found");
+            }
+            if cfg.active_profile == name {
+                cfg.active_profile = cfg.profiles.keys().next().cloned().unwrap_or_default();
+            }
+        }
+        self.cfg.save().await?;
+        tracing::info!(profile = name, "deleted profile");
         Ok(())
     }
 
