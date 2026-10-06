@@ -108,8 +108,6 @@ pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
 
 #[cfg(test)]
 mod tests {
-    use std::str::pattern::Pattern;
-
     use super::*;
 
     #[cfg(target_os = "macos")]
