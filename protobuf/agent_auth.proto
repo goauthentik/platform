@@ -29,6 +29,8 @@ message CurrentTokenRequest {
     UNVERIFIED = 2;
   }
   Type type = 2;
+  // Set by sysd when asking on behalf of another process of this user.
+  uint32 caller_pid = 3;
 }
 
 message CurrentTokenResponse {
