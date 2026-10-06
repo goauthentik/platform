@@ -63,7 +63,6 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
             Scope::new("offline_access".to_string()),
             Scope::new("goauthentik.io/api".to_string()),
         ])
-        .add_scope(Scope::new("read".to_string()))
         .request_async(&http_client)
         .await?;
 
