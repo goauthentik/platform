@@ -1,11 +1,13 @@
 use ak_meta::user_agent;
 use ak_platform::{
+    dpop::build_proof,
     generated::{
         agent::{ResponseHeader, Token},
         agent_auth::{
             AuthorizeRequest, AuthorizeResponse, CurrentTokenRequest, CurrentTokenResponse,
-            TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest, WhoAmIResponse,
-            agent_auth_server::AgentAuth, current_token_request::Type,
+            SignDpopProofRequest, SignDpopProofResponse, TokenExchangeRequest,
+            TokenExchangeResponse, WhoAmIRequest, WhoAmIResponse, agent_auth_server::AgentAuth,
+            current_token_request::Type,
         },
     },
     net::server::{creds::ProcCredentials, proc_info::process_user},
@@ -286,6 +288,62 @@ impl AgentAuth for AgentGRPCServer {
             header: Some(ResponseHeader { successful: true }),
             access_token,
             expires_in,
+        }))
+    }
+
+    async fn sign_dpop_proof(
+        &self,
+        request: Request<SignDpopProofRequest>,
+    ) -> Result<Response<SignDpopProofResponse>, Status> {
+        let inner = request.get_ref();
+        let profile_name = inner
+            .header
+            .as_ref()
+            .ok_or(Status::invalid_argument("missing header"))?
+            .profile
+            .clone();
+        let profile = self.profile_for_request(inner.header.clone()).await?;
+
+        let pn1 = profile_name.clone();
+        let pn2 = profile_name.clone();
+        request
+            .auth_peer()
+            .with_message(move |c| {
+                let cmd = c.clone().proc_info()?.parent_cmdline()?;
+                Ok(PlatformString::new()
+                    .with_darwin(format!("authorize DPoP signing for '{pn1}' in '{cmd}'"))
+                    .with_windows(format!(
+                        "'{cmd}' is attempting to sign a DPoP proof for '{pn1}'"
+                    ))
+                    .with_linux(format!(
+                        "'{cmd}' is attempting to sign a DPoP proof for '{pn1}'"
+                    )))
+            })
+            .with_uid(move |c| {
+                let pid = c.clone().proc_info()?.unique_process_id()?;
+                Ok(format!("{pn2}:{pid}"))
+            })
+            .with_success_timeout(Duration::from_secs(30 * 60))
+            .with_denied_timeout(Duration::from_secs(1))
+            .finish()
+            .await?;
+
+        let signer = profile
+            .dpop_signer(&profile_name)
+            .map_err(|e| Status::from_error(e.into()))?
+            .ok_or_else(|| Status::failed_precondition("profile has no DPoP key"))?;
+
+        let proof = build_proof(
+            &signer,
+            &inner.htm,
+            &inner.htu,
+            inner.code_for_c_s256.as_deref(),
+        )
+        .map_err(|e| Status::from_error(e.into()))?;
+
+        Ok(Response::new(SignDpopProofResponse {
+            header: Some(ResponseHeader { successful: true }),
+            proof,
         }))
     }
 

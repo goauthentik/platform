@@ -216,7 +216,7 @@ impl ProfileTokenManager {
     }
 
     async fn try_renew(&self) -> Result<()> {
-        let (token_url, refresh_token, client_id, dpop_keypair) = {
+        let (token_url, refresh_token, client_id, dpop_signer) = {
             let config = self.cfg.read().await;
             let profile = config
                 .profiles
@@ -226,7 +226,7 @@ impl ProfileTokenManager {
                 format!("{}/application/o/token/", profile.authentik_url),
                 profile.refresh_token().clone(),
                 profile.client_id.clone(),
-                profile.dpop_keypair()?,
+                profile.dpop_signer(&self.profile_name)?,
             )
         };
 
@@ -244,8 +244,8 @@ impl ProfileTokenManager {
             )
             .header(reqwest::header::USER_AGENT, user_agent());
 
-        if let Some(kp) = &dpop_keypair {
-            let proof = ak_platform::dpop::build_proof(kp, "POST", &token_url, None)?;
+        if let Some(signer) = &dpop_signer {
+            let proof = ak_platform::dpop::build_proof(signer, "POST", &token_url, None)?;
             req = req.header("DPoP", proof);
         }
 
@@ -336,7 +336,6 @@ mod tests {
                 "client".to_string(),
                 "access".to_string(),
                 "refresh".to_string(),
-                "".to_string(),
             ),
         );
 

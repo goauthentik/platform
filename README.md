@@ -29,7 +29,7 @@ brew install gmake rustup swift
 ### Linux Dependencies
 
 ```shell
-sudo apt-get install build-essential pkg-config libpam0g-dev libudev-dev \
+sudo apt-get install build-essential pkg-config libpam0g-dev libudev-dev libdbus-1-dev libtss2-dev \
     libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 ```
 

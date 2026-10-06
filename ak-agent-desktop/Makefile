@@ -11,11 +11,15 @@ endif
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
+.PHONY: dev
+dev:
+	pnpm run tauri dev
+
 build:
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
-	sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+	sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libtss2-dev
 endif
 endif
 	mkdir -p "${TOP}/bin/${TARGET}"

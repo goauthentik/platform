@@ -10,6 +10,7 @@ import "google/protobuf/timestamp.proto";
 service AgentCtrl {
   rpc ListProfiles(google.protobuf.Empty) returns (ListProfilesResponse);
   rpc Setup(SetupRequest) returns (SetupResponse);
+  rpc PrepareDpopKey(PrepareDpopKeyRequest) returns (PrepareDpopKeyResponse);
   rpc SwitchProfile(agent.RequestHeader) returns (agent.ResponseHeader);
   rpc CurrentProfile(google.protobuf.Empty) returns (CurrentProfileResponse);
   rpc DeleteProfile(agent.RequestHeader) returns (agent.ResponseHeader);
@@ -22,8 +23,11 @@ message SetupRequest {
   string client_id = 4;
   string access_token = 5;
   string refresh_token = 6;
-  // PKCS#8 PEM DPoP private key; empty if this profile is not key-bound.
-  string dpop_private_key = 7;
+  // Was dpop_private_key; the key now never leaves ak-agent (see PrepareDpopKey).
+  reserved 7;
+  // Whether the server bound the tokens to the key from PrepareDpopKey. When
+  // false, the prepared key is discarded and the profile is not key-bound.
+  bool dpop_bound = 8;
 }
 
 message SetupResponse {
@@ -34,6 +38,25 @@ enum ProfileStatus {
   UNSPECIFIED = 0;
   ACTIVE = 1;
   FAILED = 2;
+}
+
+// Establishes (generating if needed) the DPoP key for a profile before the
+// device flow starts, since the resulting thumbprint must ride the initial
+// device-authorization request. header.profile names the profile being
+// enrolled; it need not exist yet — this call creates it.
+message PrepareDpopKeyRequest {
+  agent.RequestHeader header = 1;
+  string authentik_url = 2;
+  string app_slug = 3;
+  string client_id = 4;
+}
+
+message PrepareDpopKeyResponse {
+  agent.ResponseHeader header = 1;
+  string dpop_jkt = 2;
+  // True if backed by the platform Secure Enclave/TPM; false if this device
+  // had no usable hardware backend and a software key was used instead.
+  bool hardware_backed = 3;
 }
 
 message Profile {

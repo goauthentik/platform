@@ -5,13 +5,14 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     PATH=/usr/local/cargo/bin:$PATH \
     CARGO_TERM_COLOR=always
 
-RUN dnf install -y --allowerasing \
+RUN dnf install -y --allowerasing --enablerepo=crb \
         gcc gcc-c++ make cmake \
         pkgconf-pkg-config \
         openssl-devel \
         curl git \
         ca-certificates \
-        pam-devel systemd-devel zstd xz && \
+        pam-devel systemd-devel zstd xz \
+        dbus-devel tpm2-tss-devel && \
     dnf clean all
 
 RUN ARCH=$(uname -m) && \
