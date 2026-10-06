@@ -19,6 +19,7 @@
         "@goauthentik/fonts": "^2.0.0",
         "@goauthentik/oxfmt-config": "^9.1.0",
         "@goauthentik/oxlint-config": "^1.0.1",
+        "@goauthentik/theme": "^2.0.1",
         "@goauthentik/tsconfig": "^2.0.0",
         "@tauri-apps/api": "^2",
         "@tauri-apps/cli": "^2",

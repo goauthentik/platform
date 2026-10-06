@@ -12,9 +12,9 @@ export class StatusBar extends LitElement {
             gap: 2px;
             margin-top: auto;
             padding: 8px 12px 0;
-            border-top: 1px solid var(--ak-color-divider, #e0e0e0);
-            font-size: 11px;
-            color: var(--ak-color-text-secondary, #5a5a5a);
+            border-top: 1px solid var(--ak-global--color--border);
+            font-size: var(--ak-global--font-size--xs);
+            color: var(--ak-global--color--ink--muted);
             user-select: none;
         }
         .entry {
@@ -26,7 +26,7 @@ export class StatusBar extends LitElement {
             font-weight: 600;
         }
         .error {
-            color: #c62828;
+            color: var(--ak-global--color--danger);
         }
     `;
 

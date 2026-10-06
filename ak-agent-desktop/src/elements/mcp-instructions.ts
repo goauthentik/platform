@@ -105,14 +105,15 @@ export class McpInstructions extends LitElement {
             display: block;
         }
         .section {
-            background: var(--ak-color-surface-raised, #fff);
+            background: var(--ak-global--color--surface);
             padding: 20px 24px 24px;
-            border-bottom: 1px solid var(--ak-color-divider, #e0e0e0);
-            font-size: 13px;
-            color: var(--ak-color-text-primary, #0f0f0f);
+            border-bottom: 1px solid var(--ak-global--color--border);
+            font-size: var(--ak-global--font-size--sm);
+            color: var(--ak-global--color--ink);
         }
         .section-title {
-            font-size: 13px;
+            font-family: var(--ak-global--font-family--heading);
+            font-size: var(--ak-global--font-size--sm);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -120,8 +121,8 @@ export class McpInstructions extends LitElement {
         }
         .intro,
         .docs {
-            font-size: 12px;
-            color: var(--ak-color-text-secondary, #5a5a5a);
+            font-size: var(--ak-global--font-size--xs);
+            color: var(--ak-global--color--ink--muted);
             margin: 0 0 12px;
         }
         .tabs {
@@ -131,17 +132,18 @@ export class McpInstructions extends LitElement {
             margin-bottom: 12px;
         }
         .tabs button {
+            font: inherit;
             border: none;
-            border-radius: 999px;
+            border-radius: var(--ak-global--radius--pill);
             padding: 4px 12px;
-            font-size: 12px;
+            font-size: var(--ak-global--font-size--xs);
             cursor: pointer;
             background: transparent;
-            color: var(--ak-color-tab-inactive-text, #1565c0);
+            color: var(--ak-global--color--link);
         }
         .tabs button[aria-selected="true"] {
-            background: var(--ak-color-tab-pill-bg, #1565c0);
-            color: var(--ak-color-tab-pill-text, #fff);
+            background: var(--ak-global--color--primary);
+            color: var(--ak-global--color--surface);
         }
         ol {
             margin: 0 0 12px;
@@ -155,30 +157,53 @@ export class McpInstructions extends LitElement {
             margin-top: 6px;
         }
         .snippet button {
+            font: inherit;
             position: absolute;
             top: 6px;
             right: 6px;
-            font-size: 11px;
+            font-size: var(--ak-global--font-size--xs);
+            padding: 2px 8px;
+            border: 1px solid var(--ak-global--color--border);
+            border-radius: var(--ak-global--radius--sm);
+            background: var(--ak-global--color--surface);
+            color: var(--ak-global--color--ink);
+            cursor: pointer;
         }
         pre {
             margin: 0;
             padding: 8px 12px;
             padding-right: 64px;
-            background: var(--ak-color-surface, #f6f6f6);
-            border-radius: 4px;
-            font-size: 12px;
+            background: var(--ak-global--color--surface--muted);
+            border-radius: var(--ak-global--radius--sm);
+            font-size: var(--ak-global--font-size--xs);
             overflow-x: auto;
             user-select: text;
         }
         code {
-            font-family: "RedHatMono", ui-monospace, Menlo, monospace;
+            font-family: var(--ak-global--font-family--code);
         }
         .install {
             margin-bottom: 12px;
         }
-        a {
-            color: var(--ak-color-tab-inactive-text, #1565c0);
+        .install button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: var(--ak-global--radius--sm);
+            background: var(--ak-global--color--primary);
+            color: var(--ak-global--color--surface);
+            font: inherit;
             cursor: pointer;
+        }
+        .install button:hover {
+            background: var(--ak-global--color--primary--active);
+        }
+        a {
+            color: var(--ak-global--color--link);
+            cursor: pointer;
+            text-decoration: var(--ak-global--link--text-decoration);
+        }
+        a:hover {
+            text-decoration: var(--ak-global--link--text-decoration--hover);
         }
     `;
 
