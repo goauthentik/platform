@@ -462,8 +462,10 @@ impl DomainManager {
     /// Loads (or re-enrolls, or removes) the MDM-managed domain. See
     /// `cfg::managed` for the platform-specific config source.
     pub async fn load_managed(&self) -> Result<()> {
-        let Some(managed) = crate::cfg::managed::load_managed_config()? else {
-            return Ok(());
+        let managed = match  crate::cfg::managed::load_managed_config() {
+            Ok(Some(a)) => a,
+            Ok(None) => return Ok(()),
+            Err(e) => return Err(e),
         };
 
         const MANAGED_DOMAIN_NAME: &str = "ak-mdm-managed";

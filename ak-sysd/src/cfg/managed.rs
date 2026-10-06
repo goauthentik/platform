@@ -1,5 +1,7 @@
 use eyre::Result;
+use serde::Deserialize;
 
+#[derive(Deserialize)]
 pub struct SysdManagedConfig {
     pub registration_token: String,
     pub url: String,
@@ -100,7 +102,21 @@ pub fn load_managed_config() -> Result<Option<SysdManagedConfig>> {
 }
 
 #[cfg(target_os = "linux")]
+pub const LINUX_MANAGED_CONFIG_PATH: &str = "/etc/authentik/managed.json";
+
+#[cfg(target_os = "linux")]
 pub fn load_managed_config() -> Result<Option<SysdManagedConfig>> {
-    // Go has no managed-config source on Linux either.
-    Ok(None)
+    use std::{fs::File, io::ErrorKind};
+
+    let f = match File::open(LINUX_MANAGED_CONFIG_PATH) {
+        Ok(f) => f,
+        Err(e) => match e.kind() {
+            ErrorKind::NotFound => return Ok(None),
+            _ => return Err(e.into()),
+        },
+    };
+    let Ok(managed_config) = serde_json::from_reader::<File, SysdManagedConfig>(f) else {
+        return Ok(None);
+    };
+    Ok(Some(managed_config))
 }
