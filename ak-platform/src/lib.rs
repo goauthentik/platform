@@ -6,6 +6,7 @@ pub mod log;
 pub mod net;
 pub mod oauth2_http;
 pub mod paths;
+pub mod setup;
 pub mod shared;
 pub mod storage;
 pub mod string;
