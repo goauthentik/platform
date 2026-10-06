@@ -48,6 +48,8 @@ pub fn xdg_data_path(last_seg: &str) -> Result<String> {
         None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
+    #[cfg(debug_assertions)]
+    data.push("dev");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
@@ -61,6 +63,8 @@ pub fn xdg_config_path(last_seg: &str) -> Result<String> {
         None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
+    #[cfg(debug_assertions)]
+    data.push("dev");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),

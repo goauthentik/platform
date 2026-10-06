@@ -24,7 +24,12 @@ pub fn show_main(app: &tauri::AppHandle) {
         Some(w) => w,
         None => {
             let mut b = WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default())
-                .title("authentik Agent")
+                .title(
+                    #[cfg(debug_assertions)]
+                    "authentik Agent (Dev)",
+                    #[cfg(not(debug_assertions))]
+                    "authentik Agent",
+                )
                 .inner_size(590.0, 423.0);
             #[cfg(target_os = "macos")]
             {
