@@ -137,10 +137,14 @@ export class AppShell extends LitElement {
         this.profiles = await listProfiles();
         this.activeProfile = await activeProfile();
 
-        try {
-            this.user = await userInfo("default");
-        } catch (exc) {
-            console.warn("Failed to fetch user info", exc);
+        this.user = undefined;
+
+        if (this.profiles.some((p) => p.name === this.activeProfile)) {
+            try {
+                this.user = await userInfo(this.activeProfile);
+            } catch (exc) {
+                console.warn("Failed to fetch user info", exc);
+            }
         }
 
         await this._refreshSshStatus();
