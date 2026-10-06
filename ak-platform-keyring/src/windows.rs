@@ -52,8 +52,7 @@ impl WindowsStore {
     }
 
     fn storage_dir(&self) -> Result<PathBuf, KeyringError> {
-        let path =
-            xdg_data_path("tokens").map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
+        let path = xdg_data_path("tokens").map_err(KeyringError::Other)?;
         let dir = PathBuf::from(path);
         fs::create_dir_all(&dir).map_err(|e| KeyringError::Other(eyre::Report::from(e)))?;
         Ok(dir)
@@ -180,14 +179,14 @@ fn should_fallback_to_file(error: &keyring_core::Error) -> bool {
 }
 
 fn encrypt_bytes(data: &[u8]) -> Result<Vec<u8>, KeyringError> {
-    let mut data_in = CRYPT_INTEGER_BLOB {
+    let data_in = CRYPT_INTEGER_BLOB {
         cbData: data.len().try_into().unwrap_or(u32::MAX),
         pbData: data.as_ptr() as *mut u8,
     };
     let mut data_out = CRYPT_INTEGER_BLOB::default();
     let result = unsafe {
         CryptProtectData(
-            &mut data_in,
+            &data_in,
             None,
             None,
             None,
@@ -208,14 +207,14 @@ fn encrypt_bytes(data: &[u8]) -> Result<Vec<u8>, KeyringError> {
 }
 
 fn decrypt_bytes(data: &[u8]) -> Result<Vec<u8>, KeyringError> {
-    let mut data_in = CRYPT_INTEGER_BLOB {
+    let data_in = CRYPT_INTEGER_BLOB {
         cbData: data.len().try_into().unwrap_or(u32::MAX),
         pbData: data.as_ptr() as *mut u8,
     };
     let mut data_out = CRYPT_INTEGER_BLOB::default();
     let result = unsafe {
         CryptUnprotectData(
-            &mut data_in,
+            &data_in,
             None,
             None,
             None,

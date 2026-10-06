@@ -12,13 +12,13 @@ pub fn init_log(name: &str) -> Result<Box<dyn Log>> {
         process: name.into(),
         ..Default::default()
     };
-    return match syslog::unix(formatter) {
+    match syslog::unix(formatter) {
         Ok(logger) => Ok(Box::new(BasicLogger::new(logger))),
         Err(e) => {
             log::warn!("unable to connect to syslog: {e:?}");
-            return build_file_log(format!("/var/log/authentik/{}.log", name));
+            build_file_log(format!("/var/log/authentik/{}.log", name))
         }
-    };
+    }
 }
 
 fn build_file_log(path: String) -> Result<Box<dyn Log>> {
