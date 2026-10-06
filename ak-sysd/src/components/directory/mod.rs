@@ -159,10 +159,6 @@ impl Component for DirectoryComponent {
         Ok(())
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(SystemDirectoryServer::from_arc(self));

@@ -80,10 +80,6 @@ impl Component for AuthComponent {
         Ok(())
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(SystemAuthTokenServer::from_arc(Arc::clone(&self)));
