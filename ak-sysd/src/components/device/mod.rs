@@ -80,16 +80,12 @@ impl DeviceComponent {
         if cfg!(windows) {
             bail!("not supported on windows");
         }
-        let caller_pid = u32::try_from(caller.ok_or_eyre("no peer credentials")?.pid())?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::MetadataExt;
-            let user = ak_platform::net::server::proc_info::process_user(caller_pid)
-                .ok_or_eyre("unknown caller user")?;
-            if std::fs::metadata(&req.agent_socket)?.uid() != *user {
-                bail!("agent socket is not owned by the caller");
-            }
-        }
+        let caller = caller.ok_or_eyre("no peer credentials")?;
+        let caller_pid = u32::try_from(caller.pid())?;
+        ensure_socket_owner(
+            &req.agent_socket,
+            caller.uid().ok_or_eyre("unknown caller uid")?,
+        )?;
         let channel = ak_platform::grpc::grpc_endpoint(req.agent_socket.clone()).await?;
         let token = AgentAuthClient::new(channel)
             .get_current_token(CurrentTokenRequest {
@@ -158,6 +154,23 @@ impl Component for DeviceComponent {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(SystemPlatformServer::from_arc(self));
         }
+    }
+}
+
+/// The agent socket path comes from the caller, so only use it when the caller owns it.
+fn ensure_socket_owner(path: &str, uid: u32) -> Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        if std::fs::metadata(path)?.uid() != uid {
+            bail!("agent socket is not owned by the caller");
+        }
+        Ok(())
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = (path, uid);
+        bail!("not supported on windows")
     }
 }
 
@@ -249,5 +262,21 @@ impl SystemPlatform for DeviceComponent {
         Err(Status::permission_denied(
             "challenge did not validate against any loaded domain",
         ))
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::ensure_socket_owner;
+    use std::os::unix::fs::MetadataExt;
+
+    #[test]
+    fn socket_owner() {
+        let file = tempfile::NamedTempFile::new().unwrap();
+        let path = file.path().to_str().unwrap();
+        let uid = std::fs::metadata(path).unwrap().uid();
+        assert!(ensure_socket_owner(path, uid).is_ok());
+        assert!(ensure_socket_owner(path, uid + 1).is_err());
+        assert!(ensure_socket_owner("/nonexistent/agent.sock", uid).is_err());
     }
 }

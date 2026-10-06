@@ -102,7 +102,10 @@ mod tests {
             agent_socket_path(AgentSocketID::Default)
                 .unwrap()
                 .for_platform("macos"),
-            format!("{}/Library/Application Support/authentik/dev/agent.sock", home)
+            format!(
+                "{}/Library/Application Support/authentik/dev/agent.sock",
+                home
+            )
         )
     }
 

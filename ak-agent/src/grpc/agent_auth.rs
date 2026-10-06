@@ -70,17 +70,9 @@ fn on_behalf_of<T>(
     if caller_pid == 0 {
         return Ok(peer);
     }
-    let peer = peer
-        .and_then(|p| u32::try_from(p.pid()).ok())
-        .and_then(process_user);
-    #[cfg(unix)]
-    let peer_is_root = peer.is_some_and(|u| *u == 0);
-    // sysd doesn't call agents on Windows yet.
-    #[cfg(not(unix))]
-    let peer_is_root = {
-        let _ = peer;
-        false
-    };
+    // The kernel-reported uid, as a root process's user isn't readable by us on macOS.
+    // Always `None` on Windows, where sysd doesn't call agents yet.
+    let peer_is_root = peer.as_ref().and_then(ProcCredentials::uid) == Some(0);
     let own = process_user(std::process::id());
     if !peer_is_root || own.is_none() || process_user(caller_pid) != own {
         return Err(Status::permission_denied(
@@ -426,5 +418,73 @@ impl AgentGRPCServer {
                 .map(|d| d.as_secs() as i64)
                 .unwrap_or(0),
         ))
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+
+    fn request(peer: Option<ProcCredentials>) -> Request<()> {
+        let mut req = Request::new(());
+        if let Some(p) = peer {
+            req.extensions_mut().insert(p);
+        }
+        req
+    }
+
+    fn root_peer() -> Option<ProcCredentials> {
+        Some(ProcCredentials::new(Some(1)).with_uid(Some(0)))
+    }
+
+    fn own_pid() -> u32 {
+        std::process::id()
+    }
+
+    fn running_as_root() -> bool {
+        process_user(own_pid()).is_some_and(|u| *u == 0)
+    }
+
+    #[test]
+    fn without_caller_pid_peer_is_used() {
+        let peer = Some(ProcCredentials::new(Some(42)));
+        let creds = on_behalf_of(&request(peer), 0).unwrap().unwrap();
+        assert_eq!(creds.pid(), 42);
+    }
+
+    #[test]
+    fn root_peer_acts_for_own_user() {
+        let creds = on_behalf_of(&request(root_peer()), own_pid())
+            .unwrap()
+            .unwrap();
+        assert_eq!(creds.pid(), i64::from(own_pid()));
+    }
+
+    #[test]
+    fn non_root_peer_is_rejected() {
+        let peer = Some(ProcCredentials::new(Some(own_pid().into())).with_uid(Some(1000)));
+        let err = on_behalf_of(&request(peer), own_pid()).unwrap_err();
+        assert_eq!(err.code(), tonic::Code::PermissionDenied);
+    }
+
+    #[test]
+    fn peer_without_uid_is_rejected() {
+        let peer = Some(ProcCredentials::new(Some(1)));
+        assert!(on_behalf_of(&request(peer), own_pid()).is_err());
+        assert!(on_behalf_of(&request(None), own_pid()).is_err());
+    }
+
+    #[test]
+    fn caller_of_other_user_is_rejected() {
+        // pid 1 runs as root, which is only "another user" when we aren't root.
+        if running_as_root() {
+            return;
+        }
+        assert!(on_behalf_of(&request(root_peer()), 1).is_err());
+    }
+
+    #[test]
+    fn unknown_caller_is_rejected() {
+        assert!(on_behalf_of(&request(root_peer()), u32::MAX).is_err());
     }
 }
