@@ -93,6 +93,7 @@ dependencies = [
  "tauri-plugin-os",
  "tauri-plugin-sentry",
  "tauri-plugin-single-instance",
+ "tokio",
  "tracing",
 ]
 

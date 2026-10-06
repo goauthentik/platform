@@ -29,6 +29,7 @@ tauri-plugin-opener = "2"
 tauri-plugin-os = "2"
 tauri-plugin-sentry = "0.7"
 sentry = { workspace = true }
+tokio = { workspace = true }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"

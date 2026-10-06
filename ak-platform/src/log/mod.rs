@@ -65,6 +65,8 @@ impl LogBuilder {
         self.filter.push(("reqwest".to_owned(), LevelFilter::Warn));
         self.filter.push(("tonic".to_owned(), LevelFilter::Warn));
         self.filter.push(("tower".to_owned(), LevelFilter::Warn));
+        self.filter.push(("tao".to_owned(), LevelFilter::Warn));
+        self.filter.push(("os_info".to_owned(), LevelFilter::Warn));
         self.filter
             .push(("tracing::span".to_owned(), LevelFilter::Warn));
         self

@@ -33,6 +33,7 @@ pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
         #vis #sig {
             let _guard = ::sentry::init(::ak_meta::sentry_options(#name));
             ::tokio::runtime::Builder::new_multi_thread()
+                .thread_name(#name)
                 .enable_all()
                 .build()
                 .unwrap()
