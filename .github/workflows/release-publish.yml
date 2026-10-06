@@ -58,7 +58,7 @@ jobs:
 
   deploy-to-netlify:
     needs: call-deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       deploy-url: ${{ steps.netlify.outputs.deploy-url }}
     steps:
@@ -99,7 +99,7 @@ jobs:
         target:
           - containers/selenium
           - containers/ssh
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
@@ -134,7 +134,7 @@ jobs:
   attach-and-publish:
     name: Attach artifacts and publish
     needs: [call-deploy, call-package-darwin, call-package-windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:

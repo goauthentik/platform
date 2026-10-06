@@ -48,7 +48,7 @@ jobs:
 
   deploy-to-netlify:
     needs: call-deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     permissions:
       pull-requests: write
@@ -101,7 +101,7 @@ jobs:
         target:
           - containers/selenium
           - containers/ssh
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:

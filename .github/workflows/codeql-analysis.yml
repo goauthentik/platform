@@ -23,9 +23,9 @@ jobs:
       matrix:
         language-platform:
           - language: "rust"
-            platform: ubuntu-24.04
+            platform: ubuntu-26.04
           - language: "javascript"
-            platform: ubuntu-24.04
+            platform: ubuntu-26.04
           # - language: "swift"
           #   platform: macos-26
           # - language: "cpp"
@@ -38,7 +38,7 @@ jobs:
         with:
           languages: ${{ matrix.language-platform.language }}
       - name: Install libraries
-        if: ${{ matrix.language-platform.platform == 'ubuntu-24.04' }}
+        if: ${{ matrix.language-platform.platform == 'ubuntu-26.04' }}
         run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4.38.2
