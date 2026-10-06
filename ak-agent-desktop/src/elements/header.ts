@@ -15,7 +15,7 @@ export class Header extends LitElement {
     static styles = css`
         :host {
             display: block;
-            background: var(--ak-color-brand);
+            background: var(--ak-global--color--accent);
         }
         .header {
             display: flex;
@@ -48,11 +48,11 @@ export class Header extends LitElement {
             height: 32px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.2);
-            color: #fff;
+            color: var(--ak-global--color--ink--pin-dark);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: var(--ak-global--font-size--sm);
             font-weight: 600;
             letter-spacing: 0.02em;
             cursor: pointer;

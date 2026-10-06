@@ -20,7 +20,7 @@ export class AppShell extends LitElement {
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            background: var(--ak-color-surface, #f6f6f6);
+            background: var(--ak-global--color--surface--muted);
         }
         .body {
             flex: 1;
@@ -34,24 +34,27 @@ export class AppShell extends LitElement {
             display: flex;
             flex-direction: column;
             gap: 2px;
-            background: var(--ak-color-surface-raised, #fff);
-            border-right: 1px solid var(--ak-color-divider, #e0e0e0);
+            background: var(--ak-global--color--surface);
+            border-right: 1px solid var(--ak-global--color--border);
         }
         nav button {
+            font: inherit;
             border: none;
-            border-radius: 6px;
+            border-radius: var(--ak-global--radius--sm);
             padding: 6px 12px;
             text-align: left;
-            font-size: 13px;
+            font-size: var(--ak-global--font-size--sm);
             cursor: pointer;
             background: transparent;
-            color: var(--ak-color-text-primary, #0f0f0f);
+            color: var(--ak-global--color--ink);
         }
         nav button:hover {
-            background: var(--ak-color-surface, #f6f6f6);
+            background: var(--ak-global--color--surface--muted);
         }
         nav button[aria-current="page"] {
-            background: var(--ak-color-surface-selected, #e8e8e8);
+            background: var(--ak-global--color--surface--muted);
+            color: var(--ak-global--color--active);
+            box-shadow: inset 3px 0 0 var(--ak-global--color--active);
             font-weight: 600;
         }
         .content {
