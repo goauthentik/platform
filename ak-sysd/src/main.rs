@@ -91,6 +91,9 @@ enum TroubleshootCommands {
 #[ak_meta::main("ak-sysd")]
 pub async fn main() -> Result<()> {
     let cli = SysdArgs::parse();
+    if !matches!(cli.command, Commands::Agent) {
+        ak_platform::restore_sigpipe();
+    }
     LogBuilder::new(
         PlatformString::new()
             .with_linux("ak-sysd")
