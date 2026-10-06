@@ -26,6 +26,7 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: None,
             next_renew: None,
+            dpop_bound: c_prof.dpop_enabled(),
             status: ProfileStatus::Failed as i32,
         };
 
@@ -58,6 +59,7 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: Some(claims.iat.into()),
             next_renew: Some(claims.exp.into()),
+            dpop_bound: c_prof.dpop_enabled(),
             status: ProfileStatus::Active as i32,
         });
     }
@@ -100,6 +102,7 @@ pub async fn setup_profile(
                 .map_err(|e| format!("invalid authentik URL: {e}"))?,
             app_slug: app_slug.clone(),
             client_id: client_id.clone(),
+            user_agent: ak_meta::user_agent(),
         },
         // Frontend opens the URL and shows it as a fallback link.
         |url| Ok(app.emit("ak-setup-url", url.to_string())?),
@@ -112,7 +115,14 @@ pub async fn setup_profile(
     state
         .setup_profile(
             &name,
-            ConfigV1Profile::from_tokens(authentik_url, app_slug, client_id, at, rt),
+            ConfigV1Profile::from_tokens(
+                authentik_url,
+                app_slug,
+                client_id,
+                at,
+                rt,
+                prof.dpop_private_key_pem.unwrap_or_default(),
+            ),
         )
         .await
         .map_err(|e| format!("failed to save profile: {e:#}"))

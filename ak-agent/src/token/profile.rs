@@ -2,15 +2,13 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use ak_meta::user_agent;
-use ak_platform::oauth2_http;
 use ak_platform::shared::AuthentikClaims;
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
-use oauth2::{ClientId, RefreshToken, TokenResponse, TokenUrl, basic::BasicClient};
 use tokio::sync::{Notify, RwLock};
 
 use ak_platform::storage::cfgmgr::ConfigManager;
-use eyre::Result;
+use eyre::{Result, bail};
 
 use crate::config::ConfigV1;
 use crate::token::Token;
@@ -218,7 +216,7 @@ impl ProfileTokenManager {
     }
 
     async fn try_renew(&self) -> Result<()> {
-        let (token_url, refresh_token, client_id) = {
+        let (token_url, refresh_token, client_id, dpop_keypair) = {
             let config = self.cfg.read().await;
             let profile = config
                 .profiles
@@ -228,21 +226,37 @@ impl ProfileTokenManager {
                 format!("{}/application/o/token/", profile.authentik_url),
                 profile.refresh_token().clone(),
                 profile.client_id.clone(),
+                profile.dpop_keypair()?,
             )
         };
 
-        let reqwest_client = reqwest::ClientBuilder::new()
-            .user_agent(user_agent())
-            .build()?;
-        let http_client = oauth2_http::adapter(reqwest_client);
-        let client =
-            BasicClient::new(ClientId::new(client_id)).set_token_uri(TokenUrl::new(token_url)?);
+        let body = url::form_urlencoded::Serializer::new(String::new())
+            .append_pair("grant_type", "refresh_token")
+            .append_pair("refresh_token", &refresh_token)
+            .finish();
+        let client = reqwest::Client::new();
+        let mut req = client
+            .post(&token_url)
+            .basic_auth(&client_id, None::<&str>)
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                "application/x-www-form-urlencoded",
+            )
+            .header(reqwest::header::USER_AGENT, user_agent());
 
-        let token_response = client
-            .exchange_refresh_token(&RefreshToken::new(refresh_token))
-            .request_async(&http_client)
-            .await
-            .map_err(|e| eyre::eyre!("token renewal failed: {e}"))?;
+        if let Some(kp) = &dpop_keypair {
+            let proof = ak_platform::dpop::build_proof(kp, "POST", &token_url, None)?;
+            req = req.header("DPoP", proof);
+        }
+
+        let res = req.body(body).send().await?;
+
+        if !res.status().is_success() {
+            let body = res.text().await?;
+            bail!("token renewal failed: {body}");
+        }
+
+        let new_token: Token = res.json().await?;
 
         {
             let mut config = self.cfg.write().await;
@@ -250,11 +264,11 @@ impl ProfileTokenManager {
                 .profiles
                 .get_mut(&self.profile_name)
                 .ok_or_else(|| eyre::eyre!("profile not found"))?;
-            profile.set_access_token(token_response.access_token().secret());
-            if let Some(rt) = token_response.refresh_token()
-                && !rt.secret().is_empty()
+            profile.set_access_token(&new_token.access_token);
+            if let Some(rt) = &new_token.refresh_token
+                && !rt.is_empty()
             {
-                profile.set_refresh_token(rt.secret())
+                profile.set_refresh_token(rt)
             }
         }
 
@@ -322,6 +336,7 @@ mod tests {
                 "client".to_string(),
                 "access".to_string(),
                 "refresh".to_string(),
+                "".to_string(),
             ),
         );
 

@@ -2,14 +2,10 @@ use std::{env, path::PathBuf, time::Duration};
 
 use ak_flow_executor::executor::FlowExecutor;
 use ak_platform::log::{LevelFilter, LogBuilder};
+use ak_platform::oauth::device_flow::{poll_for_device_token, request_device_authorization};
 use ak_platform::string::PlatformString;
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
 use eyre::{Context, ContextCompat, Result, bail};
-use oauth2::basic::BasicClient;
-use oauth2::{
-    ClientId, DeviceAuthorizationUrl, Scope, StandardDeviceAuthorizationResponse, TokenResponse,
-    TokenUrl,
-};
 use testcontainers::core::CmdWaitFor;
 use testcontainers::{ContainerAsync, GenericImage, core::ExecCommand};
 use url::Url;
@@ -111,44 +107,40 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
         base.set_path(&format!("{}/", base.path()));
     }
 
-    let client = BasicClient::new(ClientId::new("authentik-cli".to_string()))
-        .set_token_uri(TokenUrl::from_url(
-            base.join("application/o/token/")
-                .wrap_err("invalid token URL")?,
-        ))
-        .set_device_authorization_url(DeviceAuthorizationUrl::from_url(
-            base.join("application/o/device/")
-                .wrap_err("invalid device URL")?,
-        ));
+    let device_code_url = base
+        .join("application/o/device/")
+        .wrap_err("invalid device URL")?;
+    let token_url = base
+        .join("application/o/token/")
+        .wrap_err("invalid token URL")?;
+    let scopes = [
+        "openid",
+        "profile",
+        "email",
+        "offline_access",
+        "goauthentik.io/api",
+    ];
 
-    let reqwest_client = reqwest::ClientBuilder::new()
-        // Following redirects opens the client up to SSRF vulnerabilities.
-        .redirect(reqwest::redirect::Policy::none())
-        .build()?;
-    let http_client = ak_platform::oauth2_http::adapter(reqwest_client);
-
-    let details: StandardDeviceAuthorizationResponse = client
-        .exchange_device_code()
-        .add_scopes(vec![
-            Scope::new("openid".to_string()),
-            Scope::new("profile".to_string()),
-            Scope::new("email".to_string()),
-            Scope::new("offline_access".to_string()),
-            Scope::new("goauthentik.io/api".to_string()),
-        ])
-        .request_async(&http_client)
-        .await?;
+    let auth = request_device_authorization(
+        &device_code_url,
+        "authentik-cli",
+        &scopes,
+        None,
+        "ak-platform-e2e",
+    )
+    .await
+    .wrap_err("device flow initialization failed")?;
+    let verification_uri = auth
+        .verification_uri_complete
+        .clone()
+        .unwrap_or_else(|| auth.verification_uri.clone());
 
     // Auto-approve: visit the verification URI (pre-filled with the user code
     // when the server provides one) with an authenticated session, then submit
     // the implicit consent form.
     let auth_client = authenticated_session().await?;
-    let verification_url = details
-        .verification_uri_complete()
-        .map(|vu| vu.secret().clone())
-        .unwrap_or_else(|| details.verification_uri().url().to_string());
     auth_client
-        .get(&verification_url)
+        .get(verification_uri.as_str())
         .send()
         .await
         .wrap_err("failed to visit verification URI")?;
@@ -168,18 +160,14 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
             .await;
     }
 
-    let token_response = client
-        .exchange_device_access_token(&details)
-        .request_async(&http_client, tokio::time::sleep, None)
-        .await
-        .wrap_err("device flow polling failed")?;
+    let token_response =
+        poll_for_device_token(&token_url, "authentik-cli", &auth, None, "ak-platform-e2e")
+            .await
+            .wrap_err("device flow polling failed")?;
 
     let ak_url = container_authentik_url();
-    let access_token = token_response.access_token().secret().to_owned();
-    let refresh_token = token_response
-        .refresh_token()
-        .map(|t| t.secret().to_owned())
-        .unwrap_or_default();
+    let access_token = token_response.access_token;
+    let refresh_token = token_response.refresh_token.unwrap_or_default();
     must_exec(
         &tm.container,
         &format!("ak config setup -a {}", ak_url),

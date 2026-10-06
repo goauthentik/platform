@@ -1,18 +1,18 @@
+use crate::dpop::DpopKeyPair;
+use crate::oauth::device_flow::{OAuthError, poll_for_device_token, request_device_authorization};
 use crate::setup::ak::urls_for_profile;
-use eyre::{Result, WrapErr};
-use oauth2::basic::BasicClient;
-use oauth2::{
-    ClientId, DeviceAuthorizationUrl, Scope, StandardDeviceAuthorizationResponse, TokenResponse,
-    TokenUrl,
-};
+use eyre::Result;
 use url::Url;
 
 pub mod ak;
+
+const SCOPE_BOUND_KEY: &str = "bound_key";
 
 pub struct Options {
     pub authentik_url: Url,
     pub app_slug: String,
     pub client_id: String,
+    pub user_agent: String,
 }
 
 pub struct Profile {
@@ -21,6 +21,8 @@ pub struct Profile {
     pub client_id: String,
     pub access_token: Option<String>,
     pub refresh_token: Option<String>,
+    /// PKCS#8 PEM DPoP private key, when the server bound the tokens to it.
+    pub dpop_private_key_pem: Option<String>,
 }
 
 impl Profile {
@@ -31,6 +33,7 @@ impl Profile {
             client_id,
             access_token: None,
             refresh_token: None,
+            dpop_private_key_pem: None,
         }
     }
 }
@@ -44,48 +47,81 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
         opts.client_id.clone(),
     ))?;
 
-    let client = BasicClient::new(ClientId::new(opts.client_id.clone()))
-        .set_token_uri(TokenUrl::from_url(urls.token_url))
-        .set_device_authorization_url(DeviceAuthorizationUrl::from_url(urls.device_code_url));
+    // Always attempt key binding and let the server decide: authentik
+    // >= 2026.8 rejects `dpop_jkt` when the provider has no `bound_key` scope
+    // mapping, and older versions silently drop the scope. Either way the
+    // granted scopes in the token response tell us whether binding happened.
+    let dpop_keypair = DpopKeyPair::generate();
+    let dpop_jkt = dpop_keypair.thumbprint()?;
+    let mut scopes = vec![
+        "openid",
+        "profile",
+        "email",
+        "offline_access",
+        "goauthentik.io/api",
+        SCOPE_BOUND_KEY,
+    ];
 
-    let reqwest_client = reqwest::ClientBuilder::new()
-        // Following redirects opens the client up to SSRF vulnerabilities.
-        .redirect(reqwest::redirect::Policy::none())
-        .build()?;
-    let http_client = crate::oauth2_http::adapter(reqwest_client);
-
-    let details: StandardDeviceAuthorizationResponse = client
-        .exchange_device_code()
-        .add_scopes(vec![
-            Scope::new("openid".to_string()),
-            Scope::new("profile".to_string()),
-            Scope::new("email".to_string()),
-            Scope::new("offline_access".to_string()),
-            Scope::new("goauthentik.io/api".to_string()),
-        ])
-        .request_async(&http_client)
-        .await?;
-
-    let verification_url = match details.verification_uri_complete() {
-        Some(vu) => Url::parse(vu.secret()).wrap_err("invalid verification URI")?,
-        None => details.verification_uri().url().clone(),
+    let mut dpop_requested = true;
+    let auth = match request_device_authorization(
+        &urls.device_code_url,
+        &opts.client_id,
+        &scopes,
+        Some(&dpop_jkt),
+        &opts.user_agent,
+    )
+    .await
+    {
+        Err(e)
+            if e.downcast_ref::<OAuthError>()
+                .is_some_and(|e| e.0 == "dpop_jkt_not_allowed") =>
+        {
+            tracing::debug!("provider does not support key binding, continuing without DPoP");
+            dpop_requested = false;
+            scopes.retain(|s| *s != SCOPE_BOUND_KEY);
+            request_device_authorization(
+                &urls.device_code_url,
+                &opts.client_id,
+                &scopes,
+                None,
+                &opts.user_agent,
+            )
+            .await?
+        }
+        res => res?,
     };
-    url_callback(verification_url)?;
 
-    let token_response = client
-        .exchange_device_access_token(&details)
-        .request_async(&http_client, tokio::time::sleep, None)
-        .await?;
+    url_callback(
+        auth.verification_uri_complete
+            .clone()
+            .unwrap_or_else(|| auth.verification_uri.clone()),
+    )?;
 
-    let mut profile = Profile {
+    let token_response = poll_for_device_token(
+        &urls.token_url,
+        &opts.client_id,
+        &auth,
+        dpop_requested.then_some(&dpop_keypair),
+        &opts.user_agent,
+    )
+    .await?;
+
+    let dpop_bound = token_response
+        .scope
+        .as_deref()
+        .is_some_and(|s| s.split_whitespace().any(|s| s == SCOPE_BOUND_KEY));
+    let dpop_private_key_pem = if dpop_bound {
+        Some(dpop_keypair.to_pkcs8_pem()?)
+    } else {
+        None
+    };
+
+    Ok(Profile {
         authentik_url: opts.authentik_url.clone(),
         app_slug: opts.app_slug.clone(),
         client_id: opts.client_id.clone(),
-        access_token: Some(token_response.access_token().secret().clone()),
-        refresh_token: None,
-    };
-    if let Some(token) = token_response.refresh_token() {
-        profile.refresh_token = Some(token.secret().clone())
-    }
-    Ok(profile)
+        access_token: Some(token_response.access_token),
+        refresh_token: token_response.refresh_token,
+        dpop_private_key_pem,
+    })
 }
