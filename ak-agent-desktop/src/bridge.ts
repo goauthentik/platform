@@ -101,3 +101,7 @@ export interface SetupProfileOptions {
 export async function setupProfile(opts: SetupProfileOptions): Promise<void> {
     return await invoke("setup_profile", { ...opts });
 }
+
+export async function deleteProfile(name: string): Promise<void> {
+    return await invoke("delete_profile", { name });
+}

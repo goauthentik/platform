@@ -12,6 +12,7 @@ service AgentCtrl {
   rpc Setup(SetupRequest) returns (SetupResponse);
   rpc SwitchProfile(agent.RequestHeader) returns (agent.ResponseHeader);
   rpc CurrentProfile(google.protobuf.Empty) returns (CurrentProfileResponse);
+  rpc DeleteProfile(agent.RequestHeader) returns (agent.ResponseHeader);
 }
 
 message SetupRequest {

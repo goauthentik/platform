@@ -1,10 +1,10 @@
 import "../elements/profile-setup.js";
-import type { profile } from "../bridge.js";
+import { deleteProfile, type profile } from "../bridge.js";
 
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 import { css, html, LitElement, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 
 type RenewalStatus = "active" | "expiring" | "expired" | "disconnected";
 
@@ -100,6 +100,10 @@ export class ProfileStatus extends LitElement {
             color: var(--ak-global--color--link);
             cursor: pointer;
         }
+        .profile-url button.danger {
+            margin-left: 12px;
+            color: var(--ak-global--color--danger);
+        }
         .profile-url button:hover {
             text-decoration: var(--ak-global--link--text-decoration--hover);
         }
@@ -150,6 +154,23 @@ export class ProfileStatus extends LitElement {
     @property({ type: Array }) profiles: profile[] = [];
     @property() activeProfile?: string;
 
+    /** Name of the profile whose delete button was clicked once and awaits confirmation. */
+    @state() private confirmDelete?: string;
+
+    private async _delete(name: string): Promise<void> {
+        if (this.confirmDelete !== name) {
+            this.confirmDelete = name;
+            return;
+        }
+        this.confirmDelete = undefined;
+        try {
+            await deleteProfile(name);
+        } catch (exc) {
+            console.warn("Failed to delete profile", exc);
+        }
+        this.dispatchEvent(new CustomEvent("ak-profile-deleted", { bubbles: true, composed: true }));
+    }
+
     render() {
         return html`
             <div class="section">
@@ -193,6 +214,17 @@ export class ProfileStatus extends LitElement {
                                               }}
                                           >
                                               Open authentik
+                                          </button>
+                                          <button
+                                              class="danger"
+                                              @click=${() => this._delete(p.name)}
+                                              @blur=${() => (this.confirmDelete = undefined)}
+                                          >
+                                              ${
+                                                  this.confirmDelete === p.name
+                                                      ? "Click again to delete"
+                                                      : "Delete"
+                                              }
                                           </button>
                                       </div>
                                       <div class="renewal-dates">

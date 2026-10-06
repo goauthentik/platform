@@ -73,12 +73,26 @@ internal enum AgentCtrl: Sendable {
                 type: .unary
             )
         }
+        /// Namespace for "DeleteProfile" metadata.
+        internal enum DeleteProfile: Sendable {
+            /// Request type for "DeleteProfile".
+            internal typealias Input = RequestHeader
+            /// Response type for "DeleteProfile".
+            internal typealias Output = ResponseHeader
+            /// Descriptor for "DeleteProfile".
+            internal static let descriptor = GRPCCore.MethodDescriptor(
+                service: GRPCCore.ServiceDescriptor(fullyQualifiedService: "agent_ctrl.AgentCtrl"),
+                method: "DeleteProfile",
+                type: .unary
+            )
+        }
         /// Descriptors for all methods in the "agent_ctrl.AgentCtrl" service.
         internal static let descriptors: [GRPCCore.MethodDescriptor] = [
             ListProfiles.descriptor,
             Setup.descriptor,
             SwitchProfile.descriptor,
-            CurrentProfile.descriptor
+            CurrentProfile.descriptor,
+            DeleteProfile.descriptor
         ]
     }
 }
@@ -172,6 +186,25 @@ extension AgentCtrl {
             deserializer: some GRPCCore.MessageDeserializer<CurrentProfileResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<CurrentProfileResponse>) async throws -> Result
+        ) async throws -> Result where Result: Sendable
+
+        /// Call the "DeleteProfile" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `RequestHeader` message.
+        ///   - serializer: A serializer for `RequestHeader` messages.
+        ///   - deserializer: A deserializer for `ResponseHeader` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        func deleteProfile<Result>(
+            request: GRPCCore.ClientRequest<RequestHeader>,
+            serializer: some GRPCCore.MessageSerializer<RequestHeader>,
+            deserializer: some GRPCCore.MessageDeserializer<ResponseHeader>,
+            options: GRPCCore.CallOptions,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result
         ) async throws -> Result where Result: Sendable
     }
 
@@ -310,6 +343,36 @@ extension AgentCtrl {
                 onResponse: handleResponse
             )
         }
+
+        /// Call the "DeleteProfile" method.
+        ///
+        /// - Parameters:
+        ///   - request: A request containing a single `RequestHeader` message.
+        ///   - serializer: A serializer for `RequestHeader` messages.
+        ///   - deserializer: A deserializer for `ResponseHeader` messages.
+        ///   - options: Options to apply to this RPC.
+        ///   - handleResponse: A closure which handles the response, the result of which is
+        ///       returned to the caller. Returning from the closure will cancel the RPC if it
+        ///       hasn't already finished.
+        /// - Returns: The result of `handleResponse`.
+        internal func deleteProfile<Result>(
+            request: GRPCCore.ClientRequest<RequestHeader>,
+            serializer: some GRPCCore.MessageSerializer<RequestHeader>,
+            deserializer: some GRPCCore.MessageDeserializer<ResponseHeader>,
+            options: GRPCCore.CallOptions = .defaults,
+            onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result = { response in
+                try response.message
+            }
+        ) async throws -> Result where Result: Sendable {
+            try await self.client.unary(
+                request: request,
+                descriptor: AgentCtrl.Method.DeleteProfile.descriptor,
+                serializer: serializer,
+                deserializer: deserializer,
+                options: options,
+                onResponse: handleResponse
+            )
+        }
     }
 }
 
@@ -411,6 +474,31 @@ extension AgentCtrl.ClientProtocol {
             request: request,
             serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<CurrentProfileResponse>(),
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "DeleteProfile" method.
+    ///
+    /// - Parameters:
+    ///   - request: A request containing a single `RequestHeader` message.
+    ///   - options: Options to apply to this RPC.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func deleteProfile<Result>(
+        request: GRPCCore.ClientRequest<RequestHeader>,
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        try await self.deleteProfile(
+            request: request,
+            serializer: GRPCProtobuf.ProtobufSerializer<RequestHeader>(),
+            deserializer: GRPCProtobuf.ProtobufDeserializer<ResponseHeader>(),
             options: options,
             onResponse: handleResponse
         )
@@ -530,6 +618,35 @@ extension AgentCtrl.ClientProtocol {
             metadata: metadata
         )
         return try await self.currentProfile(
+            request: request,
+            options: options,
+            onResponse: handleResponse
+        )
+    }
+
+    /// Call the "DeleteProfile" method.
+    ///
+    /// - Parameters:
+    ///   - message: request message to send.
+    ///   - metadata: Additional metadata to send, defaults to empty.
+    ///   - options: Options to apply to this RPC, defaults to `.defaults`.
+    ///   - handleResponse: A closure which handles the response, the result of which is
+    ///       returned to the caller. Returning from the closure will cancel the RPC if it
+    ///       hasn't already finished.
+    /// - Returns: The result of `handleResponse`.
+    internal func deleteProfile<Result>(
+        _ message: RequestHeader,
+        metadata: GRPCCore.Metadata = [:],
+        options: GRPCCore.CallOptions = .defaults,
+        onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<ResponseHeader>) async throws -> Result = { response in
+            try response.message
+        }
+    ) async throws -> Result where Result: Sendable {
+        let request = GRPCCore.ClientRequest<RequestHeader>(
+            message: message,
+            metadata: metadata
+        )
+        return try await self.deleteProfile(
             request: request,
             options: options,
             onResponse: handleResponse
