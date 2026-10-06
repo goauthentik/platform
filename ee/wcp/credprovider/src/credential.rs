@@ -2,7 +2,7 @@ use std::sync::Mutex;
 
 use windows::{
     Win32::{
-        Foundation::{E_FAIL, E_INVALIDARG, E_NOTIMPL, FALSE, NTSTATUS},
+        Foundation::{E_FAIL, E_INVALIDARG, E_NOTIMPL, FALSE, NTSTATUS, S_FALSE},
         Graphics::Gdi::HBITMAP,
         Security::Credentials::{
             STATUS_ACCOUNT_DISABLED, STATUS_ACCOUNT_RESTRICTION, STATUS_LOGON_FAILURE,
@@ -35,9 +35,16 @@ use ak_ee_wcp_wire::{FieldKind, TILE_FIELDS};
 /// Outcome of `Connect`'s browser flow, consumed by `GetSerialization`:
 /// `Connect` always succeeds and defers the decision to it.
 enum Outcome {
-    Completed { username: String, password: String },
+    Completed {
+        username: String,
+        password: String,
+        /// Set for a Kerberos logon, whose password is not the account's.
+        realm: Option<String>,
+    },
     Cancelled,
-    Failed { reason: String },
+    Failed {
+        reason: String,
+    },
 }
 
 /// The seams a `Credential` reaches the outside world through, so the sign-in
@@ -59,6 +66,9 @@ pub struct Credential {
     sid: String,
     qualified_username: String,
     is_local_user: bool,
+    /// The "Other user" tile: no account until someone signs in, and then
+    /// whichever account authentik says they are.
+    other_user: bool,
     cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO,
     deps: CredentialDeps,
     outcome: Mutex<Option<Outcome>>,
@@ -79,10 +89,21 @@ impl Credential {
             sid,
             qualified_username,
             is_local_user,
+            other_user: false,
             cpus,
             deps,
             outcome: Mutex::new(None),
             serialized: Mutex::new(None),
+        }
+    }
+
+    /// Signs in whoever authenticates, as the local account of the same name.
+    /// Only possible through the KDC: without a known account there is no
+    /// password of its own to manage.
+    pub fn other_user(cpus: CREDENTIAL_PROVIDER_USAGE_SCENARIO, deps: CredentialDeps) -> Self {
+        Self {
+            other_user: true,
+            ..Self::new(String::new(), String::new(), true, cpus, deps)
         }
     }
 }
@@ -296,8 +317,12 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
             *pcpsioptionalstatusicon = CPSI_NONE;
         }
 
-        let (username, password) = match outcome {
-            Some(Outcome::Completed { username, password }) => (username, password),
+        let (username, password, realm) = match outcome {
+            Some(Outcome::Completed {
+                username,
+                password,
+                realm,
+            }) => (username, password, realm),
             // `Some(Cancelled)` and `None` (the latter meaning `Connect` never
             // ran, or `SetDeselected` cleared it first) reach the user as the
             // same string; only the log line tells them apart.
@@ -328,7 +353,9 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         let packed = if self.is_local_user {
             // Win32 reads "." as this machine, so an unset COMPUTERNAME still
             // scopes the logon to the local account database.
-            let domain = std::env::var("COMPUTERNAME").unwrap_or_else(|_| ".".to_string());
+            let domain = realm.clone().unwrap_or_else(|| {
+                std::env::var("COMPUTERNAME").unwrap_or_else(|_| ".".to_string())
+            });
             helpers::pack_kerb_interactive_unlock_logon(&domain, &username, &password, self.cpus)
         } else {
             helpers::pack_authentication_buffer(&username, &password)
@@ -365,8 +392,11 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
         }
         log::info!("GetSerialization: packed credential for '{username}'");
         // Only a submitted credential is eligible for rotation, hence here
-        // rather than in `Connect`.
-        *self.serialized.lock().unwrap_or_else(|e| e.into_inner()) = Some((username, password));
+        // rather than in `Connect`. A Kerberos one is not the account's to
+        // rotate.
+        if realm.is_none() {
+            *self.serialized.lock().unwrap_or_else(|e| e.into_inner()) = Some((username, password));
+        }
         Ok(())
     }
 
@@ -410,6 +440,12 @@ impl ICredentialProviderCredential_Impl for Credential_Impl {
 
 impl ICredentialProviderCredential2_Impl for Credential_Impl {
     fn GetUserSid(&self) -> Result<PWSTR> {
+        // `S_FALSE` with no SID is what files a credential under "Other user".
+        // ponytail: the windows-rs shim leaves the out-param unwritten on any
+        // non-`Ok`, so this relies on LogonUI initializing it as COM callers do.
+        if self.other_user {
+            return Err(windows::core::Error::from_hresult(S_FALSE));
+        }
         if self.sid.is_empty() {
             Ok(PWSTR::null())
         } else {
@@ -457,8 +493,10 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
             .run(login_hint.as_deref(), &mut should_continue);
 
         let outcome = match result {
-            AuthResult::Completed { username } => {
-                if !usernames_match(&username, &self.qualified_username, self.is_local_user) {
+            AuthResult::Completed { username, kerberos } => {
+                if !self.other_user
+                    && !usernames_match(&username, &self.qualified_username, self.is_local_user)
+                {
                     log::warn!(
                         "Connect: authenticated username '{username}' does not match tile user '{}'",
                         self.qualified_username
@@ -469,15 +507,36 @@ impl IConnectableCredentialProviderCredential_Impl for Credential_Impl {
                     return Err(E_FAIL.into());
                 }
 
-                let password = match self.account_password(&username) {
-                    Ok(password) => password,
-                    Err(e) => {
-                        log::error!("Connect: could not establish a password: {e}");
-                        return Err(E_FAIL.into());
+                // `ak-sysd`'s KDC vouches for the sign-in, so the account's own
+                // password stays untouched; without it, fall back to managing
+                // that password.
+                if let Some(kerberos) = kerberos.filter(|_| self.is_local_user) {
+                    log::info!("Connect: logging on through realm {}", kerberos.realm);
+                    Outcome::Completed {
+                        username,
+                        password: kerberos.password,
+                        realm: Some(kerberos.realm),
                     }
-                };
-
-                Outcome::Completed { username, password }
+                } else if self.other_user {
+                    // Managing a password would mean resetting the account of
+                    // whatever name came back, which only the KDC makes safe.
+                    Outcome::Failed {
+                        reason: "the Other user tile needs ak-sysd's KDC".to_string(),
+                    }
+                } else {
+                    let password = match self.account_password(&username) {
+                        Ok(password) => password,
+                        Err(e) => {
+                            log::error!("Connect: could not establish a password: {e}");
+                            return Err(E_FAIL.into());
+                        }
+                    };
+                    Outcome::Completed {
+                        username,
+                        password,
+                        realm: None,
+                    }
+                }
             }
             AuthResult::Cancelled => Outcome::Cancelled,
             AuthResult::Failed { reason } => Outcome::Failed { reason },
@@ -540,6 +599,7 @@ mod tests {
             Self {
                 result: AuthResult::Completed {
                     username: username.to_string(),
+                    kerberos: None,
                 },
                 hints: Arc::new(Mutex::new(Vec::new())),
             }
@@ -954,6 +1014,101 @@ mod tests {
         assert!(password.state().resets.is_empty());
         assert!(password.state().changes.is_empty());
         assert_eq!(store.get(SID), None);
+    }
+
+    /// The whole point of the KDC: the account's own password is never read,
+    /// reset or rotated.
+    #[test]
+    fn a_kerberos_logon_leaves_the_account_password_alone() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        let mut flow = FakeAuthFlow::completed("alice");
+        flow.result = AuthResult::Completed {
+            username: "alice".to_string(),
+            kerberos: Some(crate::ipc::KerberosLogon {
+                realm: "AUTHENTIK.LOCAL".to_string(),
+                password: "krb-password".to_string(),
+            }),
+        };
+        let cred = credential_for(r"COMPUTER\alice", true, &flow, &password, &store);
+
+        let buf = submit(&cred).unwrap().rgbSerialization;
+        let read = |s: &windows::Win32::Security::Authentication::Identity::LSA_UNICODE_STRING| unsafe {
+            let ptr = buf.add(s.Buffer.0 as usize) as *const u16;
+            String::from_utf16_lossy(std::slice::from_raw_parts(ptr, s.Length as usize / 2))
+        };
+        let logon = unsafe { &(*(buf as *const KERB_INTERACTIVE_UNLOCK_LOGON)).Logon };
+        assert_eq!(read(&logon.LogonDomainName), "AUTHENTIK.LOCAL");
+        assert_eq!(read(&logon.UserName), "alice");
+        assert_eq!(read(&logon.Password), "krb-password");
+        unsafe { CoTaskMemFree(Some(buf as *const _)) };
+        report_result(&cred, NTSTATUS(0));
+
+        let state = password.state();
+        assert!(state.resets.is_empty() && state.changes.is_empty());
+        assert_eq!(store.get(SID), None);
+    }
+
+    fn other_user(
+        kerberos: Option<crate::ipc::KerberosLogon>,
+        password: &FakePassword,
+        store: &FakeStore,
+    ) -> (ICredentialProviderCredential, FakeAuthFlow) {
+        let mut flow = FakeAuthFlow::completed("bob");
+        flow.result = AuthResult::Completed {
+            username: "bob".to_string(),
+            kerberos,
+        };
+        let deps = CredentialDeps {
+            auth_flow: Box::new(flow.clone()),
+            password: Box::new(password.clone()),
+            auth_package: Box::new(FakeAuthPackage),
+            store: Box::new(store.clone()),
+        };
+        (Credential::other_user(CPUS_LOGON, deps).into(), flow)
+    }
+
+    /// The tile has no user of its own, so whoever authentik says signed in is
+    /// who gets logged on.
+    #[test]
+    fn other_user_logs_on_whoever_signed_in() {
+        let kerberos = crate::ipc::KerberosLogon {
+            realm: "AUTHENTIK.LOCAL".to_string(),
+            password: "krb-password".to_string(),
+        };
+        let (cred, flow) = other_user(
+            Some(kerberos),
+            &FakePassword::default(),
+            &FakeStore::default(),
+        );
+
+        let serialization = submit(&cred).unwrap();
+        unsafe { CoTaskMemFree(Some(serialization.rgbSerialization as *const _)) };
+
+        assert_eq!(flow.hints(), vec![None]);
+        let sid = unsafe {
+            cred.cast::<ICredentialProviderCredential2>()
+                .unwrap()
+                .GetUserSid()
+        };
+        assert_eq!(
+            sid.unwrap_err().code(),
+            S_FALSE,
+            "must land on the Other user tile"
+        );
+    }
+
+    /// Without the KDC the only way in would be resetting the password of
+    /// whichever account name came back.
+    #[test]
+    fn other_user_without_the_kdc_touches_no_account() {
+        let password = FakePassword::default();
+        let store = FakeStore::default();
+        let (cred, _) = other_user(None, &password, &store);
+
+        assert!(submit(&cred).is_none());
+        assert!(password.state().resets.is_empty());
+        assert_eq!(store.get(""), None);
     }
 
     #[test]

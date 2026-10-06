@@ -15,6 +15,12 @@ pub struct TokenAuthResponse {
     pub token: ::core::option::Option<super::agent::Token>,
     #[prost(string, tag="3")]
     pub session_id: ::prost::alloc::string::String,
+    /// Set on Windows when the local KDC is running: log the user on as
+    /// `kerberos_realm`\username with `kerberos_password` (ee/wcp).
+    #[prost(string, tag="4")]
+    pub kerberos_realm: ::prost::alloc::string::String,
+    #[prost(string, tag="5")]
+    pub kerberos_password: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SshCertAuthRequest {

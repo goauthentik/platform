@@ -108,6 +108,7 @@ impl SystemAuthToken for MockSystemAuthToken {
                 ..Default::default()
             }),
             session_id: "mock-session".to_string(),
+            ..Default::default()
         }))
     }
 

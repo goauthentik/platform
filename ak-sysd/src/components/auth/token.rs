@@ -203,7 +203,26 @@ impl SystemAuthToken for AuthComponent {
             }
         }
 
+        #[cfg_attr(not(windows), allow(unused_mut))]
+        let mut kerberos = None;
+        #[cfg(windows)]
+        if let Some(kdc) = self
+            .ctx
+            .registry
+            .get::<crate::components::kdc::KdcComponent>("kdc")
+        {
+            // Without it the credential provider falls back to the account's
+            // own password, so this is not worth failing the sign-in over.
+            match kdc.issue(&token.claims.preferred_username).await {
+                Ok(issued) => kerberos = issued,
+                Err(e) => tracing::warn!("failed to issue Kerberos credentials: {e:?}"),
+            }
+        }
+        let (kerberos_realm, kerberos_password) = kerberos.unwrap_or_default();
+
         Ok(Response::new(TokenAuthResponse {
+            kerberos_realm,
+            kerberos_password,
             successful: true,
             token: Some(Token {
                 preferred_username: token.claims.preferred_username,

@@ -26,6 +26,9 @@ eyre = { workspace = true }
 hex = { workspace = true }
 jsonwebtoken = { version = "11", features = ["rust_crypto"] }
 pbjson-types = { workspace = true }
+picky-asn1 = { version = "0.10", features = ["chrono_conversion"] }
+picky-asn1-der = "0.5"
+picky-krb = "0.12"
 rand = "0.10"
 reqwest = { workspace = true }
 rpassword = "7"
@@ -38,7 +41,7 @@ sha2 = { workspace = true }
 ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
 subtle = "2"
 tempfile = { workspace = true }
-tokio = { workspace = true, features = ["time", "signal"] }
+tokio = { workspace = true, features = ["time", "signal", "net", "io-util", "process"] }
 tokio-util = "0.7"
 tonic = { workspace = true }
 tonic-prost = { workspace = true }
@@ -82,6 +85,7 @@ windows = { version = "0.62.2", features = [
     "Win32_System_Threading",
     "Win32_System_Environment",
     "Win32_Foundation",
+    "Win32_System_SystemInformation",
 ] }
 
 [build-dependencies]
