@@ -125,7 +125,7 @@ export class AppShell extends LitElement {
                     }
                 }}
             ></ak-platform-header>
-            <div class="body">
+            <div class="body" @ak-profile-added=${() => this._refresh()}>
                 <nav>
                     ${(
                         [
