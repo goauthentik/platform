@@ -34,7 +34,7 @@ pub trait Component: Send + Sync {
     /// per-socket route builder.
     fn register(self: Arc<Self>, _socket: SysdSocketID, _routes: &mut tonic::service::RoutesBuilder)
     where
-        Self: Sized {
-        ()
+        Self: Sized,
+    {
     }
 }

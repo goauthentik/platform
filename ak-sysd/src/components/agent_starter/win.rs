@@ -1,5 +1,4 @@
 //! Win32 GUI-session helpers, ported from Fleet's `execuser_windows.go`.
-//! Compile-checked for windows-msvc but not runtime-tested.
 
 use std::ffi::c_void;
 use std::ptr::null_mut;
@@ -12,7 +11,7 @@ use windows::Win32::Security::{
 use windows::Win32::System::Environment::{CreateEnvironmentBlock, DestroyEnvironmentBlock};
 use windows::Win32::System::RemoteDesktop::{
     WTS_SESSION_INFOW, WTSActive, WTSEnumerateSessionsW, WTSFreeMemory,
-    WTSGetActiveConsoleSessionId, WTSQuerySessionInformationW, WTSQueryUserToken, WTSUserName,
+    WTSGetActiveConsoleSessionId, WTSQueryUserToken,
 };
 use windows::Win32::System::Threading::{
     CREATE_NEW_CONSOLE, CREATE_UNICODE_ENVIRONMENT, CreateProcessAsUserW, PROCESS_CREATION_FLAGS,
@@ -23,8 +22,18 @@ use windows::core::{PCWSTR, PWSTR};
 const DESKTOP: &str = "winsta0\\default";
 const SW_SHOW: u16 = 5;
 
+/// The launcher always targets the active session's token, so no username
+/// is needed.
+pub fn logged_in_via_gui() -> Result<Option<String>> {
+    Ok(Some(String::new()))
+}
+
+pub fn run(path: &str, _user: &str, env: &[(&str, &str)]) -> Result<()> {
+    spawn_as_session(path, active_session_id()?, env)
+}
+
 /// Active GUI session, falling back to the physical console.
-pub fn active_session_id() -> Result<u32> {
+fn active_session_id() -> Result<u32> {
     let mut info: *mut WTS_SESSION_INFOW = null_mut();
     let mut count: u32 = 0;
     unsafe {
@@ -36,27 +45,15 @@ pub fn active_session_id() -> Result<u32> {
             .find(|s| s.State == WTSActive)
             .map(|s| s.SessionId);
         WTSFreeMemory(info as *mut c_void);
-        Ok(found.unwrap_or_else(|| WTSGetActiveConsoleSessionId()))
-    }
-}
-
-pub fn session_username(session_id: u32) -> Result<String> {
-    let mut buf = PWSTR::null();
-    let mut len: u32 = 0;
-    unsafe {
-        WTSQuerySessionInformationW(None, session_id, WTSUserName, &mut buf, &mut len)
-            .map_err(|e| eyre::eyre!("WTSQuerySessionInformation failed: {e}"))?;
-        let name = buf.to_string().unwrap_or_default();
-        WTSFreeMemory(buf.as_ptr() as *mut c_void);
-        if name.is_empty() {
-            bail!("no GUI-logged-in user found");
+        match found.unwrap_or_else(|| WTSGetActiveConsoleSessionId()) {
+            u32::MAX => bail!("no active console session"),
+            id => Ok(id),
         }
-        Ok(name)
     }
 }
 
 /// Spawns `path` as the user of `session_id`, in their environment and desktop.
-pub fn spawn_as_session(path: &str, session_id: u32, debug: bool) -> Result<()> {
+fn spawn_as_session(path: &str, session_id: u32, env: &[(&str, &str)]) -> Result<()> {
     // WTSQueryUserToken -> DuplicateTokenEx -> CreateProcessAsUserW.
     unsafe {
         let mut user_token = HANDLE::default();
@@ -75,17 +72,18 @@ pub fn spawn_as_session(path: &str, session_id: u32, debug: bool) -> Result<()> 
         let _ = CloseHandle(user_token);
         dup.map_err(|e| eyre::eyre!("DuplicateTokenEx failed: {e}"))?;
 
-        let result = spawn_with_token(token, path, debug);
+        let result = spawn_with_token(token, path, env);
         let _ = CloseHandle(token);
         result
     }
 }
 
-unsafe fn spawn_with_token(token: HANDLE, path: &str, debug: bool) -> Result<()> {
+unsafe fn spawn_with_token(token: HANDLE, path: &str, env: &[(&str, &str)]) -> Result<()> {
     let mut env_ptr: *mut c_void = null_mut();
-    unsafe { CreateEnvironmentBlock(&mut env_ptr, Some(token), false) }
+    // Inherit sysd's own environment too, like Go's execuser did.
+    unsafe { CreateEnvironmentBlock(&mut env_ptr, Some(token), true) }
         .map_err(|e| eyre::eyre!("CreateEnvironmentBlock failed: {e}"))?;
-    let env = unsafe { build_environment(env_ptr as *const u16, debug) };
+    let env = unsafe { build_environment(env_ptr as *const u16, env) };
     let _ = unsafe { DestroyEnvironmentBlock(env_ptr) };
 
     let app: Vec<u16> = path.encode_utf16().chain(std::iter::once(0)).collect();
@@ -126,7 +124,7 @@ unsafe fn spawn_with_token(token: HANDLE, path: &str, debug: bool) -> Result<()>
 
 /// Copies the user's env block (`KEY=VALUE\0`-joined, double-null terminated)
 /// and appends the agent's own variables.
-unsafe fn build_environment(ptr: *const u16, debug: bool) -> Vec<u16> {
+unsafe fn build_environment(ptr: *const u16, vars: &[(&str, &str)]) -> Vec<u16> {
     let mut block = Vec::new();
     let mut i = 0isize;
     unsafe {
@@ -140,13 +138,9 @@ unsafe fn build_environment(ptr: *const u16, debug: bool) -> Vec<u16> {
             i += 1;
         }
     }
-    let mut push_var = |kv: &str| {
-        block.extend(kv.encode_utf16());
+    for (k, v) in vars {
+        block.extend(format!("{k}={v}").encode_utf16());
         block.push(0);
-    };
-    push_var("AK_AGENT_SUPERVISED=true");
-    if debug {
-        push_var("AK_AGENT_DEBUG=true");
     }
     block.push(0);
     block
