@@ -38,6 +38,13 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
         context.config_mut().identifier = "io.goauthentik.platform.dev.agent.desktop".to_string();
     }
 
+    // Own runtime instead of tauri's default so its threads get a recognisable name.
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .thread_name("ak-agent-desktop")
+        .enable_all()
+        .build()?;
+    tauri::async_runtime::set(rt.handle().clone());
+
     tauri::Builder::default()
         .plugin(tauri_plugin_sentry::init(&guard))
         .plugin(tauri_plugin_os::init())

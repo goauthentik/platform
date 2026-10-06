@@ -129,6 +129,7 @@ pub fn grpc_request_path<T, F: Future<Output = GrpcResult<T>>>(
     future: impl Fn(Channel) -> F,
 ) -> GrpcResult<T> {
     let rt = Builder::new_current_thread()
+        .thread_name("ak-grpc")
         .enable_all()
         .build()
         .map_err(|e| GrpcError::Other(e.into()))?;
@@ -144,6 +145,7 @@ pub fn grpc_request_tunnel<T, F: Future<Output = GrpcResult<T>>>(
     future: impl Fn(SSHService) -> F,
 ) -> GrpcResult<T> {
     let rt = Builder::new_current_thread()
+        .thread_name("ak-grpc-tunnel")
         .enable_all()
         .build()
         .map_err(|e| GrpcError::Other(e.into()))?;
@@ -174,7 +176,10 @@ pub struct Bridge {
 
 impl Bridge {
     pub fn new() -> Result<Self> {
-        let rt = Builder::new_current_thread().enable_all().build()?;
+        let rt = Builder::new_current_thread()
+            .thread_name("ak-grpc")
+            .enable_all()
+            .build()?;
         Ok(Self { rt })
     }
 }
