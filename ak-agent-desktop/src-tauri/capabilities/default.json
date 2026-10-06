@@ -8,6 +8,10 @@
         "opener:default",
         "core:window:allow-start-dragging",
         "opener:allow-default-urls",
+        {
+            "identifier": "opener:allow-open-url",
+            "allow": [{ "url": "cursor://*" }, { "url": "vscode:*" }]
+        },
         "os:default",
         "sentry:default"
     ]

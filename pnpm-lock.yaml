@@ -16,6 +16,9 @@ importers:
       '@goauthentik/brand-assets':
         specifier: ^2.0.0
         version: 2.0.0
+      '@goauthentik/fonts':
+        specifier: ^2.0.0
+        version: 2.0.0
       '@goauthentik/oxfmt-config':
         specifier: ^9.1.0
         version: 9.1.0(oxfmt@0.71.0)(typescript@7.0.2)
@@ -299,6 +302,10 @@ packages:
 
   '@goauthentik/brand-assets@2.0.0':
     resolution: {integrity: sha512-yRJrV+KuGrz7MNcRzAkZa4e7LuciuFZBVSyPFRd/EndxgiqcFuFHyn+6tEurKNmianBNURhe2qm5ytoLFgEWFQ==}
+
+  '@goauthentik/fonts@2.0.0':
+    resolution: {integrity: sha512-EpZBCnsLOvOEAVR5MjFbMMLLRj5oTYGUBcJXBMvfiwsBw4xgPxA4nOLrKLmhtm+d88lxkNhMfefqcp8UP8/PWQ==}
+    engines: {node: '>=24', pnpm: '>=12.4.0'}
 
   '@goauthentik/oxfmt-config@9.1.0':
     resolution: {integrity: sha512-WaJkiD8jmTJlxbLm6nccPZ0KC4x89iOlg8IoDnYxMdWkWMF+BK72SIwGPUP/Vyyazfpydw0klixsRZlfObCMYA==}
@@ -1611,6 +1618,8 @@ snapshots:
   '@goauthentik/api@2026.8.3': {}
 
   '@goauthentik/brand-assets@2.0.0': {}
+
+  '@goauthentik/fonts@2.0.0': {}
 
   '@goauthentik/oxfmt-config@9.1.0(oxfmt@0.71.0)(typescript@7.0.2)':
     dependencies:
