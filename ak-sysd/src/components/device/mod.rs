@@ -23,6 +23,11 @@ use tonic::{Request, Response, Status};
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
 
+// disabled until sysd can verify the agent's token. It's signed by the
+// agent's OAuth provider, whose key isn't in the domain's `jwks_auth`; exchanging it
+// via `auth_fed` first (like the SSH path) would give one that is.
+const ADD_CALLER_USER: bool = false;
+
 #[derive(Debug)]
 pub struct DeviceComponent {
     ctx: SysdContext,
@@ -221,12 +226,16 @@ impl SystemPlatform for DeviceComponent {
                 continue;
             }
 
-            let user = match self.caller_claims(caller.clone(), &req, remote).await {
-                Ok(c) => Some(c),
-                Err(e) => {
-                    tracing::debug!("not adding user to endpoint header: {e:?}");
-                    None
+            let user = if ADD_CALLER_USER {
+                match self.caller_claims(caller.clone(), &req, remote).await {
+                    Ok(c) => Some(c),
+                    Err(e) => {
+                        tracing::debug!("not adding user to endpoint header: {e:?}");
+                        None
+                    }
                 }
+            } else {
+                None
             };
             let now = chrono::Utc::now().timestamp();
             let claims = EndpointClaims {
