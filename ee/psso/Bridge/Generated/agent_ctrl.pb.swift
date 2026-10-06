@@ -142,9 +142,9 @@ nonisolated struct Profile: Sendable {
   /// Clears the value of `nextRenew`. Subsequent reads from it will return its default value.
   mutating func clearNextRenew() {self._nextRenew = nil}
 
-  var dpopBound: Bool = false
-
   var status: ProfileStatus = .unspecified
+
+  var dpopBound: Bool = false
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -308,7 +308,7 @@ nonisolated extension SetupResponse: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Profile"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}username\0\u{3}authentik_url\0\u{3}last_renewed\0\u{3}next_renew\0\u{3}dpop_bound\0\u{1}status\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}username\0\u{3}authentik_url\0\u{3}last_renewed\0\u{3}next_renew\0\u{1}status\0\u{3}dpop_bound\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -321,8 +321,8 @@ nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       case 3: try { try decoder.decodeSingularStringField(value: &self.authentikURL) }()
       case 4: try { try decoder.decodeSingularMessageField(value: &self._lastRenewed) }()
       case 5: try { try decoder.decodeSingularMessageField(value: &self._nextRenew) }()
-      case 6: try { try decoder.decodeSingularBoolField(value: &self.dpopBound) }()
-      case 7: try { try decoder.decodeSingularEnumField(value: &self.status) }()
+      case 6: try { try decoder.decodeSingularEnumField(value: &self.status) }()
+      case 7: try { try decoder.decodeSingularBoolField(value: &self.dpopBound) }()
       default: break
       }
     }
@@ -348,11 +348,11 @@ nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     try { if let v = self._nextRenew {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     } }()
-    if self.dpopBound != false {
-      try visitor.visitSingularBoolField(value: self.dpopBound, fieldNumber: 6)
-    }
     if self.status != .unspecified {
-      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 7)
+      try visitor.visitSingularEnumField(value: self.status, fieldNumber: 6)
+    }
+    if self.dpopBound != false {
+      try visitor.visitSingularBoolField(value: self.dpopBound, fieldNumber: 7)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -363,8 +363,8 @@ nonisolated extension Profile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     if lhs.authentikURL != rhs.authentikURL {return false}
     if lhs._lastRenewed != rhs._lastRenewed {return false}
     if lhs._nextRenew != rhs._nextRenew {return false}
-    if lhs.dpopBound != rhs.dpopBound {return false}
     if lhs.status != rhs.status {return false}
+    if lhs.dpopBound != rhs.dpopBound {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

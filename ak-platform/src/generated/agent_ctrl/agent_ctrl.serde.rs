@@ -238,10 +238,10 @@ impl serde::Serialize for Profile {
         if self.next_renew.is_some() {
             len += 1;
         }
-        if self.dpop_bound {
+        if self.status != 0 {
             len += 1;
         }
-        if self.status != 0 {
+        if self.dpop_bound {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("agent_ctrl.Profile", len)?;
@@ -260,13 +260,13 @@ impl serde::Serialize for Profile {
         if let Some(v) = self.next_renew.as_ref() {
             struct_ser.serialize_field("nextRenew", v)?;
         }
-        if self.dpop_bound {
-            struct_ser.serialize_field("dpopBound", &self.dpop_bound)?;
-        }
         if self.status != 0 {
             let v = ProfileStatus::try_from(self.status)
                 .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", self.status)))?;
             struct_ser.serialize_field("status", &v)?;
+        }
+        if self.dpop_bound {
+            struct_ser.serialize_field("dpopBound", &self.dpop_bound)?;
         }
         struct_ser.end()
     }
@@ -286,9 +286,9 @@ impl<'de> serde::Deserialize<'de> for Profile {
             "lastRenewed",
             "next_renew",
             "nextRenew",
+            "status",
             "dpop_bound",
             "dpopBound",
-            "status",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -298,8 +298,8 @@ impl<'de> serde::Deserialize<'de> for Profile {
             AuthentikUrl,
             LastRenewed,
             NextRenew,
-            DpopBound,
             Status,
+            DpopBound,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -326,8 +326,8 @@ impl<'de> serde::Deserialize<'de> for Profile {
                             "authentikUrl" | "authentik_url" => Ok(GeneratedField::AuthentikUrl),
                             "lastRenewed" | "last_renewed" => Ok(GeneratedField::LastRenewed),
                             "nextRenew" | "next_renew" => Ok(GeneratedField::NextRenew),
-                            "dpopBound" | "dpop_bound" => Ok(GeneratedField::DpopBound),
                             "status" => Ok(GeneratedField::Status),
+                            "dpopBound" | "dpop_bound" => Ok(GeneratedField::DpopBound),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -352,8 +352,8 @@ impl<'de> serde::Deserialize<'de> for Profile {
                 let mut authentik_url__ = None;
                 let mut last_renewed__ = None;
                 let mut next_renew__ = None;
-                let mut dpop_bound__ = None;
                 let mut status__ = None;
+                let mut dpop_bound__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -386,17 +386,17 @@ impl<'de> serde::Deserialize<'de> for Profile {
                             }
                             next_renew__ = map_.next_value()?;
                         }
-                        GeneratedField::DpopBound => {
-                            if dpop_bound__.is_some() {
-                                return Err(serde::de::Error::duplicate_field("dpopBound"));
-                            }
-                            dpop_bound__ = Some(map_.next_value()?);
-                        }
                         GeneratedField::Status => {
                             if status__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("status"));
                             }
                             status__ = Some(map_.next_value::<ProfileStatus>()? as i32);
+                        }
+                        GeneratedField::DpopBound => {
+                            if dpop_bound__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("dpopBound"));
+                            }
+                            dpop_bound__ = Some(map_.next_value()?);
                         }
                     }
                 }
@@ -406,8 +406,8 @@ impl<'de> serde::Deserialize<'de> for Profile {
                     authentik_url: authentik_url__.unwrap_or_default(),
                     last_renewed: last_renewed__,
                     next_renew: next_renew__,
-                    dpop_bound: dpop_bound__.unwrap_or_default(),
                     status: status__.unwrap_or_default(),
+                    dpop_bound: dpop_bound__.unwrap_or_default(),
                 })
             }
         }
