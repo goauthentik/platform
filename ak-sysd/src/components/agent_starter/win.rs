@@ -91,7 +91,7 @@ unsafe fn spawn_with_token(token: HANDLE, path: &str, debug: bool) -> Result<()>
     let app: Vec<u16> = path.encode_utf16().chain(std::iter::once(0)).collect();
     let mut desktop: Vec<u16> = DESKTOP.encode_utf16().chain(std::iter::once(0)).collect();
 
-    let mut si = STARTUPINFOW {
+    let si = STARTUPINFOW {
         cb: size_of::<STARTUPINFOW>() as u32,
         lpDesktop: PWSTR(desktop.as_mut_ptr()),
         dwFlags: STARTF_USESHOWWINDOW,
@@ -111,7 +111,7 @@ unsafe fn spawn_with_token(token: HANDLE, path: &str, debug: bool) -> Result<()>
             PROCESS_CREATION_FLAGS(CREATE_UNICODE_ENVIRONMENT.0 | CREATE_NEW_CONSOLE.0),
             Some(env.as_ptr() as *const c_void),
             PCWSTR::null(),
-            &mut si,
+            &si,
             &mut pi,
         )
     }

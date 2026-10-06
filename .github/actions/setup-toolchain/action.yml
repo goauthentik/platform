@@ -20,9 +20,9 @@ runs:
         sudo tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local
         rm /tmp/osquery-toolchain.tar.xz
     - if: startsWith(inputs.platform, 'windows')
-      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
+      uses: Eden-CI/msvc-dev-cmd@1bd71f95d6f3d1b2b3395b335cc63bcdc90cf223
     - name: Force real MSVC link.exe
-      # ilammy/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
+      # Eden-CI/msvc-dev-cmd puts MSVC's tools on PATH, but Git for Windows'
       # own usr/bin/link.exe (a hardlink utility, not a linker) still wins
       # PATH resolution on this runner image, breaking cargo's link step
       # ("/usr/bin/link: extra operand ..."). Pin the real one explicitly.

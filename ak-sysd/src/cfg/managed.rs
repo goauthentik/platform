@@ -126,5 +126,5 @@ pub fn load_managed_config() -> Result<Option<SysdManagedConfig>> {
             metadata.uid(),
         ));
     };
-    return Ok(Some(serde_json::from_reader::<File, SysdManagedConfig>(f)?));
+    Ok(Some(serde_json::from_reader::<File, SysdManagedConfig>(f)?))
 }

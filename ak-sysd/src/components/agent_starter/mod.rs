@@ -104,10 +104,11 @@ mod gui_user {
         let out = std::process::Command::new("who").output()?;
         let text = String::from_utf8_lossy(&out.stdout);
         for line in text.lines() {
-            if line.contains('(') && line.contains(':') {
-                if let Some(user) = line.split_whitespace().next() {
-                    return Ok(user.to_string());
-                }
+            if line.contains('(')
+                && line.contains(':')
+                && let Some(user) = line.split_whitespace().next()
+            {
+                return Ok(user.to_string());
             }
         }
         bail!("no GUI-logged-in user found")
