@@ -132,6 +132,9 @@ export class ProfileStatus extends LitElement {
         .status-badge.failed {
             --badge: var(--ak-global--color--danger);
         }
+        .status-badge.bound {
+            --badge: var(--ak-global--color--primary);
+        }
         .renewal-dates {
             display: flex;
             gap: 16px;
@@ -168,7 +171,9 @@ export class ProfileStatus extends LitElement {
         } catch (exc) {
             console.warn("Failed to delete profile", exc);
         }
-        this.dispatchEvent(new CustomEvent("ak-profile-deleted", { bubbles: true, composed: true }));
+        this.dispatchEvent(
+            new CustomEvent("ak-profile-deleted", { bubbles: true, composed: true }),
+        );
     }
 
     render() {
@@ -203,6 +208,15 @@ export class ProfileStatus extends LitElement {
                                                       : html`<span class="status-badge ${status}"
                                                             >${STATUS_LABELS[status]}</span
                                                         >`
+                                              }
+                                              ${
+                                                  p.dpopBound
+                                                      ? html`<span
+                                                            class="status-badge bound"
+                                                            title="Tokens are bound to a key on this device (DPoP)"
+                                                            >Key-bound</span
+                                                        >`
+                                                      : nothing
                                               }
                                           </div>
                                       </div>

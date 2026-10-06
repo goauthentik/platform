@@ -11,6 +11,7 @@ export interface profile {
     lastRenewed?: Date;
     nextRenew?: Date;
     status?: ProfileStatus;
+    dpopBound?: boolean;
 }
 
 export async function userInfo(profile: string): Promise<SessionUser> {
@@ -31,6 +32,7 @@ export async function listProfiles(): Promise<profile[]> {
         lastRenewed?: string;
         nextRenew?: string;
         status?: ProfileStatus;
+        dpopBound?: boolean;
     }
 
     return await invoke<r_profile[]>("list_profiles").then((p) => {
