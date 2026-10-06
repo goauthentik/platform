@@ -101,4 +101,8 @@ cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host-chrome.
 cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host-chrome.json" "$edgeSystemWidePath/io.goauthentik.platform.json"
 cp -v "/Applications/authentik Agent.app/Contents/Resources/browser-host-firefox.json" "$firefoxSystemWidePath/io.goauthentik.platform.json"
 
+# Browsers keep their native messaging host running, so they'd keep using the old
+# binary until restarted. The extension reconnects by itself and starts the new one.
+pkill -x "ak-browser-support" && echo "Stopped running browser support hosts." || echo "No browser support hosts running."
+
 echo "Finished running postinstall script."
