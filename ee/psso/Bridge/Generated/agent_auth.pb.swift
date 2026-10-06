@@ -80,6 +80,9 @@ nonisolated struct CurrentTokenRequest: Sendable {
 
   var type: CurrentTokenRequest.TypeEnum = .unspecified
 
+  /// Set by sysd when asking on behalf of another process of this user.
+  var callerPid: UInt32 = 0
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   nonisolated enum TypeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
@@ -355,7 +358,7 @@ nonisolated extension WhoAmIResponse: SwiftProtobuf.Message, SwiftProtobuf._Mess
 
 nonisolated extension CurrentTokenRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".CurrentTokenRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}type\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}type\0\u{3}caller_pid\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -365,6 +368,7 @@ nonisolated extension CurrentTokenRequest: SwiftProtobuf.Message, SwiftProtobuf.
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularMessageField(value: &self._header) }()
       case 2: try { try decoder.decodeSingularEnumField(value: &self.type) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.callerPid) }()
       default: break
       }
     }
@@ -381,12 +385,16 @@ nonisolated extension CurrentTokenRequest: SwiftProtobuf.Message, SwiftProtobuf.
     if self.type != .unspecified {
       try visitor.visitSingularEnumField(value: self.type, fieldNumber: 2)
     }
+    if self.callerPid != 0 {
+      try visitor.visitSingularUInt32Field(value: self.callerPid, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: CurrentTokenRequest, rhs: CurrentTokenRequest) -> Bool {
     if lhs._header != rhs._header {return false}
     if lhs.type != rhs.type {return false}
+    if lhs.callerPid != rhs.callerPid {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -11,6 +11,9 @@ service SystemPlatform {
 
 message PlatformEndpointRequest {
   string challenge = 1;
+  string profile = 2;
+  // Socket of the caller's agent, used to add the caller's user to the signed header.
+  string agent_socket = 3;
 }
 
 message PlatformEndpointResponse {

@@ -1,6 +1,7 @@
 use eyre::{Result, WrapErr};
 
 use ak_platform::generated::sys_platform::PlatformEndpointRequest;
+use ak_platform::paths::{AgentSocketID, agent_socket_path};
 use serde_json::Value;
 
 use crate::{
@@ -21,6 +22,8 @@ impl PathHandler {
             .platform()
             .signed_endpoint_header(PlatformEndpointRequest {
                 challenge: challenge.to_string(),
+                profile: msg.profile.clone(),
+                agent_socket: agent_socket_path(AgentSocketID::Default)?.for_current(),
             })
             .await
             .wrap_err("failed to sign endpoint header")?

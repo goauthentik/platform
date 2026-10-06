@@ -18,6 +18,9 @@ pub struct CurrentTokenRequest {
     pub header: ::core::option::Option<super::agent::RequestHeader>,
     #[prost(enumeration="current_token_request::Type", tag="2")]
     pub r#type: i32,
+    /// Set by sysd when asking on behalf of another process of this user.
+    #[prost(uint32, tag="3")]
+    pub caller_pid: u32,
 }
 /// Nested message and enum types in `CurrentTokenRequest`.
 pub mod current_token_request {
