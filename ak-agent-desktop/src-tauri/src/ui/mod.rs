@@ -1,6 +1,10 @@
 use tauri::{LogicalPosition, Manager, WebviewUrl, WebviewWindowBuilder};
 
 pub const WINDOW_LABEL: &str = "main";
+#[cfg(debug_assertions)]
+pub const WINDOW_TITLE: &str = "authentik Agent (Dev)";
+#[cfg(not(debug_assertions))]
+pub const WINDOW_TITLE: &str = "authentik Agent";
 
 #[cfg(target_os = "macos")]
 pub mod macos;
@@ -19,18 +23,12 @@ pub fn show_main(app: &tauri::AppHandle) {
         let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
         let _ = app.show();
     }
-
     let win = match app.get_webview_window(WINDOW_LABEL) {
         Some(w) => w,
         None => {
             let mut b = WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default())
-                .title(
-                    #[cfg(debug_assertions)]
-                    "authentik Agent (Dev)",
-                    #[cfg(not(debug_assertions))]
-                    "authentik Agent",
-                )
-                .inner_size(590.0, 423.0);
+                .title(WINDOW_TITLE)
+                .inner_size(870.0, 640.0);
             #[cfg(target_os = "macos")]
             {
                 b = b

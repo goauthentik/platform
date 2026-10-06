@@ -35,7 +35,7 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
     let mut context = tauri::generate_context!();
     #[cfg(debug_assertions)]
     {
-        context.config_mut().identifier = "io.goauthentik.platform.debug.agent.desktop".to_string();
+        context.config_mut().identifier = "io.goauthentik.platform.dev.agent.desktop".to_string();
     }
 
     tauri::Builder::default()
