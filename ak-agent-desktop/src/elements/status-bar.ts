@@ -50,9 +50,8 @@ export class StatusBar extends LitElement {
     render() {
         return html`
             <span class="entry"
-                ><span class="label">Desktop:</span> v${this.versions?.desktop ?? "—"}</span
+                ><span class="label">Desktop:</span> v${this.versions?.agent ?? "—"}</span
             >
-            ${this._renderEntry("Agent", this.versions?.agent)}
             ${this._renderEntry("System", this.versions?.sysd)}
         `;
     }

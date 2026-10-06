@@ -1,7 +1,7 @@
 use ak_platform::{
     generated::ping::ping_client::PingClient,
     grpc::grpc_endpoint,
-    paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
+    paths::{SysdSocketID, sysd_socket_path},
     string::PlatformString,
 };
 
@@ -18,25 +18,15 @@ pub struct ComponentVersion {
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Versions {
-    pub desktop: String,
-    pub agent: ComponentVersion,
+    pub agent: String,
     pub sysd: ComponentVersion,
 }
 
 #[tauri::command]
 pub async fn get_versions() -> Result<Versions> {
-    let agent = match agent_socket_path(AgentSocketID::Default) {
-        Ok(p) => ping_component(p).await,
-        Err(e) => ComponentVersion {
-            version: None,
-            server_version: None,
-            error: Some(e.to_string()),
-        },
-    };
     let sysd = ping_component(sysd_socket_path(SysdSocketID::Default)).await;
     Ok(Versions {
-        desktop: ak_meta::full_version(),
-        agent,
+        agent: ak_meta::full_version(),
         sysd,
     })
 }

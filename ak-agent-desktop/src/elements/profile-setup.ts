@@ -163,6 +163,7 @@ export class ProfileSetup extends LitElement {
                             type="url"
                             required
                             placeholder="https://authentik.company"
+                            value=${import.meta.env.DEV ? "http://localhost:9000" : ""}
                             ?disabled=${this.busy}
                         />
                     </label>

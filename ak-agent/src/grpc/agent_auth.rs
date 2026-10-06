@@ -60,8 +60,8 @@ use crate::{config::ConfigV1Profile, grpc::AgentGRPCServer};
 
 /// Credentials to authorize a request as. sysd asks on behalf of `caller_pid` (the
 /// browser support host), so that process is authorized instead of sysd. Only root
-/// peers may do so, and only for callers running as our user, so sysd can't be used
-/// to reach another user's agent.
+/// or SYSTEM peers may do so, and only for callers running as our user, so sysd can't
+/// be used to reach another user's agent.
 fn on_behalf_of<T>(
     request: &Request<T>,
     caller_pid: u32,
@@ -70,11 +70,10 @@ fn on_behalf_of<T>(
     if caller_pid == 0 {
         return Ok(peer);
     }
-    // The kernel-reported uid, as a root process's user isn't readable by us on macOS.
-    // Always `None` on Windows, where sysd doesn't call agents yet.
-    let peer_is_root = peer.as_ref().and_then(ProcCredentials::uid) == Some(0);
+    // From the kernel, as a root process's user isn't readable by us on macOS.
+    let peer_privileged = peer.as_ref().is_some_and(ProcCredentials::is_privileged);
     let own = process_user(std::process::id());
-    if !peer_is_root || own.is_none() || process_user(caller_pid) != own {
+    if !peer_privileged || own.is_none() || process_user(caller_pid) != own {
         return Err(Status::permission_denied(
             "not allowed to act on behalf of caller",
         ));
