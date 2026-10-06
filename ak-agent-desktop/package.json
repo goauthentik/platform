@@ -1,8 +1,8 @@
 {
     "name": "ak-agent-desktop",
     "version": "0.1.0",
-    "private": true,
     "type": "module",
+    "private": true,
     "scripts": {
         "build": "tsc && vite build",
         "dev": "vite",
@@ -36,5 +36,8 @@
         "onlyBuiltDependencies": [
             "esbuild"
         ]
+    },
+    "engines": {
+        "node": ">=24"
     }
 }

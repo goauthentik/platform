@@ -1,7 +1,7 @@
 {
     "name": "authentik-browser-ext",
     "version": "0.44.3",
-    "description": "Authentik Application Launcher Chrome Extension",
+    "private": true,
     "type": "module",
     "scripts": {
         "build": "node build.mjs",
