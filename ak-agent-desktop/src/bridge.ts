@@ -90,3 +90,14 @@ export interface SshStatusResponse {
 export async function getSshStatus(): Promise<SshStatusResponse> {
     return await invoke<SshStatusResponse>("get_ssh_status");
 }
+
+export interface SetupProfileOptions {
+    name: string;
+    authentikUrl: string;
+    clientId: string;
+    appSlug: string;
+}
+
+export async function setupProfile(opts: SetupProfileOptions): Promise<void> {
+    return await invoke("setup_profile", { ...opts });
+}

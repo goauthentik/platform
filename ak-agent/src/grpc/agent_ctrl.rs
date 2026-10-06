@@ -83,10 +83,10 @@ impl AgentCtrl for AgentGRPCServer {
             .header
             .ok_or(Status::invalid_argument("missing header"))?
             .profile;
-        {
-            let mut cfg = self.agent.cfg.write().await;
-            cfg.profiles.insert(
-                profile_name.clone(),
+        if let Err(e) = self
+            .agent
+            .setup_profile(
+                &profile_name,
                 ConfigV1Profile::from_tokens(
                     req.authentik_url,
                     req.app_slug,
@@ -94,17 +94,12 @@ impl AgentCtrl for AgentGRPCServer {
                     req.access_token,
                     req.refresh_token,
                 ),
-            );
-            if cfg.active_profile.is_empty() {
-                cfg.active_profile = profile_name.clone();
-            }
-        }
-        if let Err(e) = self.agent.cfg.save().await {
+            )
+            .await
+        {
             tracing::warn!("failed to save config: {e:?}");
             return Err(Status::from_error(e.into()));
         }
-        self.agent.gtm.wait_for_profile(&profile_name).await;
-        tracing::info!(profile = profile_name, "setup new profile");
         Ok(Response::new(SetupResponse {
             header: Some(ResponseHeader { successful: true }),
         }))

@@ -101,13 +101,14 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            cmd::get_user_info,
-            cmd::list_profiles,
-            cmd::active_profile,
-            cmd::get_versions,
-            cmd::get_ssh_config,
-            cmd::set_ssh_fallback_agent,
-            cmd::get_ssh_status,
+            cmd::profile::get_user_info,
+            cmd::profile::list_profiles,
+            cmd::profile::active_profile,
+            cmd::profile::setup_profile,
+            cmd::ssh::get_ssh_config,
+            cmd::ssh::set_ssh_fallback_agent,
+            cmd::ssh::get_ssh_status,
+            cmd::version::get_versions,
         ])
         .build(context)?
         .run(|app, event| {

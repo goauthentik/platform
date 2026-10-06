@@ -95,6 +95,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tokio",
  "tracing",
+ "url",
 ]
 
 [[package]]
@@ -340,6 +341,7 @@ dependencies = [
  "tower",
  "tower-http 0.7.1",
  "tracing",
+ "url",
  "widestring",
  "windows 0.62.2",
 ]
