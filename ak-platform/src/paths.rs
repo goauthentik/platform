@@ -72,22 +72,20 @@ pub fn xdg_config_path(last_seg: &str) -> Result<String> {
     }
 }
 
-/// Pipe names are global on Windows, so per-user pipes get the current session's ID
-/// to keep agents of concurrent sessions apart.
+/// Agent pipe of the session `pid` runs in. Pipe names are global on Windows, so they
+/// get the session ID to keep agents of concurrent sessions apart.
 #[cfg(windows)]
-fn windows_session_pipe(base: &str) -> Result<String> {
-    use windows::Win32::System::{
-        RemoteDesktop::ProcessIdToSessionId, Threading::GetCurrentProcessId,
-    };
+pub fn windows_agent_pipe(pid: u32) -> Result<String> {
+    use windows::Win32::System::RemoteDesktop::ProcessIdToSessionId;
     let mut session = 0;
-    unsafe { ProcessIdToSessionId(GetCurrentProcessId(), &mut session) }
+    unsafe { ProcessIdToSessionId(pid, &mut session) }
         .map_err(|e| eyre::eyre!("failed to get session ID: {e}"))?;
-    Ok(format!("{base}-{session}"))
+    Ok(format!(r"\\.\pipe\authentik\socket-{session}"))
 }
 
 #[cfg(not(windows))]
-fn windows_session_pipe(base: &str) -> Result<String> {
-    Ok(base.to_string())
+pub fn windows_agent_pipe(_pid: u32) -> Result<String> {
+    Ok(r"\\.\pipe\authentik\socket".to_string())
 }
 
 pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
@@ -97,7 +95,7 @@ pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
                 return Ok(PlatformString::new_with_default(&x));
             }
             Ok(PlatformString::new()
-                .with_windows(windows_session_pipe(r"\\.\pipe\authentik\socket")?)
+                .with_windows(windows_agent_pipe(std::process::id())?)
                 .with_linux(&xdg_data_path("agent.sock")?))
         }
         AgentSocketID::SSH => Ok(PlatformString::new()
@@ -146,5 +144,16 @@ mod tests {
             .unwrap()
             .for_current();
         assert!(path.starts_with(r"\\.\pipe\authentik\socket-"));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_agent_pipe_for_own_pid_windows() {
+        assert_eq!(
+            windows_agent_pipe(std::process::id()).unwrap(),
+            agent_socket_path(AgentSocketID::Default)
+                .unwrap()
+                .for_current()
+        );
     }
 }

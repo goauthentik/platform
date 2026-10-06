@@ -74,18 +74,9 @@ impl DeviceComponent {
         req: &PlatformEndpointRequest,
         remote: AgentConfig,
     ) -> Result<AuthentikClaims> {
-        // ponytail: no Windows support. sysd connecting to a pipe as SYSTEM lets the
-        // pipe's server impersonate it; add once the client connects with
-        // SecurityIdentification.
-        if cfg!(windows) {
-            bail!("not supported on windows");
-        }
         let caller = caller.ok_or_eyre("no peer credentials")?;
         let caller_pid = u32::try_from(caller.pid())?;
-        ensure_socket_owner(
-            &req.agent_socket,
-            caller.uid().ok_or_eyre("unknown caller uid")?,
-        )?;
+        ensure_callers_socket(&req.agent_socket, &caller)?;
         let channel = ak_platform::grpc::grpc_endpoint(req.agent_socket.clone()).await?;
         let token = AgentAuthClient::new(channel)
             .get_current_token(CurrentTokenRequest {
@@ -157,21 +148,22 @@ impl Component for DeviceComponent {
     }
 }
 
-/// The agent socket path comes from the caller, so only use it when the caller owns it.
-fn ensure_socket_owner(path: &str, uid: u32) -> Result<()> {
+/// The agent socket path comes from the caller, so only use the caller's own: on unix
+/// one owned by the caller's user, on Windows the agent pipe of the caller's session.
+fn ensure_callers_socket(path: &str, caller: &ProcCredentials) -> Result<()> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
+        let uid = caller.uid().ok_or_eyre("unknown caller uid")?;
         if std::fs::metadata(path)?.uid() != uid {
             bail!("agent socket is not owned by the caller");
         }
-        Ok(())
     }
-    #[cfg(not(unix))]
-    {
-        let _ = (path, uid);
-        bail!("not supported on windows")
+    #[cfg(windows)]
+    if path != ak_platform::paths::windows_agent_pipe(u32::try_from(caller.pid())?)? {
+        bail!("agent pipe is not the one of the caller's session");
     }
+    Ok(())
 }
 
 #[derive(Serialize, Deserialize)]
@@ -267,16 +259,19 @@ impl SystemPlatform for DeviceComponent {
 
 #[cfg(all(test, unix))]
 mod tests {
-    use super::ensure_socket_owner;
+    use super::ensure_callers_socket;
+    use ak_platform::net::server::creds::ProcCredentials;
     use std::os::unix::fs::MetadataExt;
 
     #[test]
-    fn socket_owner() {
+    fn callers_socket() {
         let file = tempfile::NamedTempFile::new().unwrap();
         let path = file.path().to_str().unwrap();
         let uid = std::fs::metadata(path).unwrap().uid();
-        assert!(ensure_socket_owner(path, uid).is_ok());
-        assert!(ensure_socket_owner(path, uid + 1).is_err());
-        assert!(ensure_socket_owner("/nonexistent/agent.sock", uid).is_err());
+        let caller = |uid| ProcCredentials::new(None).with_uid(uid);
+        assert!(ensure_callers_socket(path, &caller(Some(uid))).is_ok());
+        assert!(ensure_callers_socket(path, &caller(Some(uid + 1))).is_err());
+        assert!(ensure_callers_socket(path, &caller(None)).is_err());
+        assert!(ensure_callers_socket("/nonexistent/agent.sock", &caller(Some(uid))).is_err());
     }
 }

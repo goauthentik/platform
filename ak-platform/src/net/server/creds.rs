@@ -30,7 +30,7 @@ impl Connected for ConnectedLocalStream {
 
     fn connect_info(&self) -> Self::ConnectInfo {
         let pc = self
-            .0
+            .stream
             .peer_creds()
             .inspect_err(|e| tracing::warn!("Failed to get peer credentials: {e:?}"))
             .ok();
@@ -38,7 +38,7 @@ impl Connected for ConnectedLocalStream {
         // LOCAL_PEERCRED carries no pid on macOS, so it's queried separately.
         #[cfg(target_os = "macos")]
         let pid = {
-            let pid = peer_pid_via_getsockopt(&self.0);
+            let pid = peer_pid_via_getsockopt(&self.stream);
             if pid < 0 {
                 tracing::warn!("LOCAL_PEERPID getsockopt failed");
             }
@@ -50,7 +50,12 @@ impl Connected for ConnectedLocalStream {
         let uid = pc.and_then(|pc| pc.euid());
         #[cfg(not(unix))]
         let uid = None;
-        ProcCredentials { pid, uid }
+        ProcCredentials {
+            pid,
+            uid,
+            #[cfg(windows)]
+            system: self.system.clone(),
+        }
     }
 }
 
@@ -59,11 +64,20 @@ pub struct ProcCredentials {
     pid: Option<i64>,
     /// Effective uid of the peer, from the kernel. Always `None` on Windows.
     uid: Option<u32>,
+    /// Whether the peer runs as SYSTEM, from the kernel. Only known once the
+    /// connection was read from, see `ConnectedLocalStream`.
+    #[cfg(windows)]
+    system: std::sync::Arc<std::sync::OnceLock<bool>>,
 }
 
 impl ProcCredentials {
     pub fn new(pid: Option<i64>) -> ProcCredentials {
-        ProcCredentials { pid, uid: None }
+        ProcCredentials {
+            pid,
+            uid: None,
+            #[cfg(windows)]
+            system: Default::default(),
+        }
     }
 
     pub fn with_uid(mut self, uid: Option<u32>) -> ProcCredentials {
@@ -72,14 +86,19 @@ impl ProcCredentials {
     }
 
     pub fn current() -> ProcCredentials {
-        ProcCredentials {
-            pid: None,
-            uid: None,
-        }
+        Self::new(None)
     }
 
     pub fn uid(&self) -> Option<u32> {
         self.uid
+    }
+
+    /// Whether the peer runs as root or SYSTEM.
+    pub fn is_privileged(&self) -> bool {
+        #[cfg(windows)]
+        return self.system.get() == Some(&true);
+        #[cfg(not(windows))]
+        return self.uid == Some(0);
     }
 
     pub fn pid(&self) -> i64 {
