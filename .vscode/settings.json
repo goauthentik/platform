@@ -8,6 +8,9 @@
     "zshrc": "shellscript",
     "*.hcl": "terraform"
   },
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
   "gitlens.autolinks": [
       {
           "alphanumeric": true,

@@ -1,4 +1,3 @@
-use crate::format;
 use crate::setup::ak::urls_for_profile;
 use eyre::{Result, WrapErr};
 use oauth2::basic::BasicClient;
@@ -8,19 +7,12 @@ use oauth2::{
 };
 use url::Url;
 
-use open::that;
-use ratatui::text::Line;
-
 pub mod ak;
 
-type URLCallback = fn(url: Url) -> Result<()>;
-
 pub struct Options {
-    pub profile_name: String,
     pub authentik_url: Url,
     pub app_slug: String,
     pub client_id: String,
-    pub url_callback: Option<URLCallback>,
 }
 
 pub struct Profile {
@@ -43,31 +35,14 @@ impl Profile {
     }
 }
 
-pub async fn setup(opts: Options) -> Result<Profile> {
+/// Run the OAuth device flow. `url_callback` receives the verification URL
+/// the user must open to authorize the device.
+pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) -> Result<Profile> {
     let urls = urls_for_profile(Profile::new(
         opts.authentik_url.clone(),
         opts.app_slug.clone(),
         opts.client_id.clone(),
     ))?;
-    let callback: URLCallback = match opts.url_callback {
-        Some(c) => c,
-        None => |url: Url| -> Result<()> {
-            match that(url.to_string()) {
-                Ok(_) => Ok(()),
-                Err(e) => {
-                    tracing::debug!("failed to open URL in browser: {e:?}");
-                    println!(
-                        "{}",
-                        Line::styled(
-                            format!("Open this URL in your browser: {}", url),
-                            format::box_style()
-                        )
-                    );
-                    Ok(())
-                }
-            }
-        },
-    };
 
     let client = BasicClient::new(ClientId::new(opts.client_id.clone()))
         .set_token_uri(TokenUrl::from_url(urls.token_url))
@@ -77,7 +52,7 @@ pub async fn setup(opts: Options) -> Result<Profile> {
         // Following redirects opens the client up to SSRF vulnerabilities.
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
-    let http_client = ak_platform::oauth2_http::adapter(reqwest_client);
+    let http_client = crate::oauth2_http::adapter(reqwest_client);
 
     let details: StandardDeviceAuthorizationResponse = client
         .exchange_device_code()
@@ -96,16 +71,12 @@ pub async fn setup(opts: Options) -> Result<Profile> {
         Some(vu) => Url::parse(vu.secret()).wrap_err("invalid verification URI")?,
         None => details.verification_uri().url().clone(),
     };
-    callback(verification_url)?;
-
-    eprintln!("Waiting for authentication...");
+    url_callback(verification_url)?;
 
     let token_response = client
         .exchange_device_access_token(&details)
         .request_async(&http_client, tokio::time::sleep, None)
         .await?;
-
-    eprintln!("Successfully authenticated!");
 
     let mut profile = Profile {
         authentik_url: opts.authentik_url.clone(),

@@ -1,3 +1,4 @@
+import "../elements/profile-setup.js";
 import type { profile } from "../bridge.js";
 
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -49,6 +50,9 @@ export class ProfileStatus extends LitElement {
             border-bottom: 1px solid var(--ak-global--color--border);
         }
         .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             font-family: var(--ak-global--font-family--heading);
             font-size: var(--ak-global--font-size--sm);
             font-weight: 600;
@@ -149,7 +153,7 @@ export class ProfileStatus extends LitElement {
     render() {
         return html`
             <div class="section">
-                <div class="section-title">Profiles</div>
+                <div class="section-title">Profiles <ak-profile-setup></ak-profile-setup></div>
                 ${
                     this.profiles.length === 0
                         ? html`<div class="empty">No profiles configured.</div>`
