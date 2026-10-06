@@ -59,7 +59,6 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
         "email",
         "offline_access",
         "goauthentik.io/api",
-        "read",
         SCOPE_BOUND_KEY,
     ];
 
