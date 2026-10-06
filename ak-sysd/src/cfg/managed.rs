@@ -1,4 +1,4 @@
-use eyre::Result;
+use eyre::{Result, eyre};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -106,6 +106,7 @@ pub const LINUX_MANAGED_CONFIG_PATH: &str = "/etc/authentik/managed.json";
 
 #[cfg(target_os = "linux")]
 pub fn load_managed_config() -> Result<Option<SysdManagedConfig>> {
+    use std::os::unix::fs::PermissionsExt as _;
     use std::{fs::File, io::ErrorKind};
 
     let f = match File::open(LINUX_MANAGED_CONFIG_PATH) {
@@ -114,6 +115,13 @@ pub fn load_managed_config() -> Result<Option<SysdManagedConfig>> {
             ErrorKind::NotFound => return Ok(None),
             _ => return Err(e.into()),
         },
+    };
+    let metadata = f.metadata()?;
+    if metadata.permissions().mode() != 0o600 {
+        return Err(eyre!(
+            "Managed config has incorrect permissions: {:o}, should be 0600",
+            metadata.permissions().mode()
+        ));
     };
     let Ok(managed_config) = serde_json::from_reader::<File, SysdManagedConfig>(f) else {
         return Ok(None);
