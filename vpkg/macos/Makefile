@@ -15,13 +15,13 @@ bump:
 
 .PHONY: local
 local:
-	$(MAKE) -C "${TOP}" -j \
+	$(MAKE) -C "${TOP}" RUST_BUILD_FLAGS="-C debug-assertions" -j \
 		ak-agent-desktop/build \
 		ak-sysd/build \
 		ee/psso/build \
 		ak-browser-support/build \
 		ak-cli/build
-	$(MAKE) -C "${TOP}" vpkg/macos/build-app
+	$(MAKE) -C "${TOP}" DEV_BUILD=1 vpkg/macos/build-app
 
 .PHONY: build-app
 build-app:
@@ -42,6 +42,9 @@ build-app:
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
 		"ak"
 	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
+ifeq (${DEV_BUILD}, 1)
+	"${TOP}/hack/plist.py" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleIdentifier" "io.goauthentik.platform.dev.agent"
+endif
 	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"

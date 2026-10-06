@@ -31,6 +31,13 @@ pub fn run() {
 }
 
 pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
+    #[allow(unused_mut)]
+    let mut context = tauri::generate_context!();
+    #[cfg(debug_assertions)]
+    {
+        context.config_mut().identifier = "io.goauthentik.platform.dev.agent.desktop".to_string();
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_sentry::init(&guard))
         .plugin(tauri_plugin_os::init())
@@ -92,7 +99,7 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             cmd::active_profile,
             cmd::get_versions,
         ])
-        .build(tauri::generate_context!())?
+        .build(context)?
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = event
                 && code.is_none()
