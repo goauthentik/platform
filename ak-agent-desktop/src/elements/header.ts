@@ -3,7 +3,7 @@ import logoSvg from "@goauthentik/brand-assets/icon_left_brand_white.svg?raw";
 
 import { platform } from "@tauri-apps/plugin-os";
 
-import { css, html, LitElement } from "lit";
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
@@ -15,7 +15,7 @@ export class Header extends LitElement {
     static styles = css`
         :host {
             display: block;
-            background: var(--ak-color-brand);
+            background: var(--ak-global--color--accent);
         }
         .header {
             display: flex;
@@ -48,11 +48,11 @@ export class Header extends LitElement {
             height: 32px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.2);
-            color: #fff;
+            color: var(--ak-global--color--ink--pin-dark);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+            font-size: var(--ak-global--font-size--sm);
             font-weight: 600;
             letter-spacing: 0.02em;
             cursor: pointer;
@@ -63,7 +63,9 @@ export class Header extends LitElement {
     private _startDrag(e: MouseEvent) {
         if (e.button !== 0) return;
         const target = e.composedPath()[0] as HTMLElement;
+
         if (target.closest?.("button, a, .avatar")) return;
+
         void import("@tauri-apps/api/window")
             .then(({ getCurrentWindow }) => void getCurrentWindow().startDragging())
             .catch(() => {
@@ -75,9 +77,13 @@ export class Header extends LitElement {
         return html`
             <div class="header" @mousedown=${this._startDrag}>
                 <div class="logo" data-platform="${platform()}">${unsafeHTML(logoSvg)}</div>
-                <div class="actions">
-                    <img class="avatar" src="${this.user?.user.avatar || ""}" />
-                </div>
+                ${
+                    this.user
+                        ? html`<div class="actions">
+                              <img class="avatar" src="${this.user?.user.avatar || ""}" />
+                          </div>`
+                        : nothing
+                }
             </div>
         `;
     }

@@ -82,6 +82,7 @@ pub async fn get_credentials(
                 profile: opts.profile.clone(),
             }),
             r#type: current_token_request::Type::Verified as i32,
+            caller_pid: 0,
         })
         .await
         .wrap_err("failed to get current token")?

@@ -8,13 +8,13 @@ export class StatusBar extends LitElement {
     static styles = css`
         :host {
             display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 6px 24px;
-            background: var(--ak-color-surface-raised, #fff);
-            border-top: 1px solid var(--ak-color-divider, #e0e0e0);
-            font-size: 11px;
-            color: var(--ak-color-text-secondary, #5a5a5a);
+            flex-direction: column;
+            gap: 2px;
+            margin-top: auto;
+            padding: 8px 12px 0;
+            border-top: 1px solid var(--ak-global--color--border);
+            font-size: var(--ak-global--font-size--xs);
+            color: var(--ak-global--color--ink--muted);
             user-select: none;
         }
         .entry {
@@ -26,7 +26,7 @@ export class StatusBar extends LitElement {
             font-weight: 600;
         }
         .error {
-            color: #c62828;
+            color: var(--ak-global--color--danger);
         }
     `;
 
@@ -36,12 +36,14 @@ export class StatusBar extends LitElement {
         if (!v) {
             return html`<span class="entry"><span class="label">${label}:</span> —</span>`;
         }
+
         if (v.error) {
             return html`<span class="entry"
                 ><span class="label">${label}:</span>
                 <span class="error" title=${v.error}>disconnected</span></span
             >`;
         }
+
         return html`<span class="entry"><span class="label">${label}:</span> v${v.version}</span>`;
     }
 

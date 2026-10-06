@@ -19,6 +19,11 @@ pub struct ConfigV1 {
     #[serde(default)]
     pub active_profile: String,
     pub profiles: HashMap<String, ConfigV1Profile>,
+    /// Optional fallback/passthrough SSH agent used for hosts not managed by
+    /// authentik (e.g. github.com, gitlab.com). When unset, the ssh-agent
+    /// behaves as before and does not proxy to another agent.
+    #[serde(default)]
+    pub ssh_fallback_agent: Option<SshFallbackAgentConfig>,
 }
 
 impl Default for ConfigV1 {
@@ -27,8 +32,23 @@ impl Default for ConfigV1 {
             debug: false,
             active_profile: DEFAULT_PROFILE.to_string(),
             profiles: Default::default(),
+            ssh_fallback_agent: None,
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SshFallbackAgentConfig {
+    /// Path to the fallback SSH agent socket (e.g. the system's original
+    /// `SSH_AUTH_SOCK`, or a hardware-key agent) used for hosts not managed
+    /// by authentik.
+    pub socket_path: String,
+    /// Extra hosts that should always be routed to the fallback agent,
+    /// bypassing authentik entirely, given as `known_hosts`-format lines
+    /// (e.g. the output of `ssh-keyscan your-host.example.com`). Merged with
+    /// a built-in list of well-known git hosts (github.com, gitlab.com).
+    #[serde(default)]
+    pub extra_passthrough_hosts: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

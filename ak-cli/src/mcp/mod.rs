@@ -74,6 +74,7 @@ impl AuthentikMcp {
             .get_current_token(CurrentTokenRequest {
                 header: Some(RequestHeader { profile: _profile }),
                 r#type: Type::Verified as i32,
+                caller_pid: 0,
             })
             .await
             .map_err(|e| McpError::internal_error(format!("failed to get API token: {e}"), None))?
@@ -178,8 +179,8 @@ impl AuthentikMcp {
 
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for AuthentikMcp {
-    fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+    fn get_info(&self) -> ServerConfig {
+        ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(
                 Implementation::new("authentik Agent", ak_meta::full_version())
                     .with_website_url("https://goauthentik.io"),

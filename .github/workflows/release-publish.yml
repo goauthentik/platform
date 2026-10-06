@@ -98,11 +98,12 @@ jobs:
       matrix:
         target:
           - containers/selenium
+          - containers/ssh
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
-      - uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
-      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@594f3bf4285d9ea8dc53c9a0c9c4092420091003 # v4.4.0
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
@@ -121,7 +122,7 @@ jobs:
           echo "build-args<<EOF" >> $GITHUB_OUTPUT
           make ci-build-args >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ${{ matrix.target }}
           file: ${{ matrix.target }}/Dockerfile
@@ -137,11 +138,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v2
         with:
           client-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIV_KEY }}
+          repositories: |
+            platform
+            version
       - name: Download packages
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
         with:
@@ -155,3 +160,15 @@ jobs:
             ./packages/authentik_browser-ext/browser-ext/authentik_firefox.zip
             ./packages/authentik_package-macos/authentik Agent Installer.pkg
             ./packages/authentik_package-windows/authentik Agent Installer.msi
+      - id: get-version
+        run: |
+          VERSION=$(make print-version 2> /dev/null)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Bump version
+        uses: goauthentik/version@main
+        with:
+          product: platform
+          new-version: ${{ steps.get-version.outputs.version }}
+          reason: bugfix
+          token: ${{ steps.app-token.outputs.token }}
+          github-app-slug: ${{ steps.app-token.outputs.app-slug }}

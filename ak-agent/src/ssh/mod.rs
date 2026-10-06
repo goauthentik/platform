@@ -13,6 +13,7 @@ use tonic::transport::server::Connected as _;
 pub mod agent;
 pub mod ext_ak;
 pub mod ext_session_bind;
+pub mod passthrough;
 pub mod txn;
 pub mod txn_keys;
 

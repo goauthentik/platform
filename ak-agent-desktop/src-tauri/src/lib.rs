@@ -31,6 +31,20 @@ pub fn run() {
 }
 
 pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
+    #[allow(unused_mut)]
+    let mut context = tauri::generate_context!();
+    #[cfg(debug_assertions)]
+    {
+        context.config_mut().identifier = "io.goauthentik.platform.dev.agent.desktop".to_string();
+    }
+
+    // Own runtime instead of tauri's default so its threads get a recognisable name.
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .thread_name("ak-agent-desktop")
+        .enable_all()
+        .build()?;
+    tauri::async_runtime::set(rt.handle().clone());
+
     tauri::Builder::default()
         .plugin(tauri_plugin_sentry::init(&guard))
         .plugin(tauri_plugin_os::init())
@@ -87,12 +101,16 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            cmd::get_user_info,
-            cmd::list_profiles,
-            cmd::active_profile,
-            cmd::get_versions,
+            cmd::profile::get_user_info,
+            cmd::profile::list_profiles,
+            cmd::profile::active_profile,
+            cmd::profile::setup_profile,
+            cmd::ssh::get_ssh_config,
+            cmd::ssh::set_ssh_fallback_agent,
+            cmd::ssh::get_ssh_status,
+            cmd::version::get_versions,
         ])
-        .build(tauri::generate_context!())?
+        .build(context)?
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = event
                 && code.is_none()

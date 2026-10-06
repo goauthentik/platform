@@ -27,10 +27,10 @@ build:
 		-configuration Release \
 		-showBuildSettings \
 		${XCB_EXTRA_ARGS}
-	xcodebuild \
+	set -o pipefail && xcodebuild \
 		${XCB_DEF_ARGS} \
 		-configuration Release \
-		${XCB_EXTRA_ARGS}
+		${XCB_EXTRA_ARGS} | xcbeautify
 	cp -R "${TOP}/cache/${TARGET}/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}/bin/${TARGET}")
@@ -82,4 +82,4 @@ gen:
 		--swift_opt=ImplementationOnlyImports=true \
 		-I $(PROTO_DIR) \
 		$(PROTO_DIR)/**
-	sed -i 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*
+	$(SED_INPLACE) 's/@_implementationOnly import/internal import/g' ${PWD}/Bridge/Generated/*

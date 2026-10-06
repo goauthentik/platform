@@ -35,10 +35,10 @@ pub struct Profile {
     pub last_renewed: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(message, optional, tag="5")]
     pub next_renew: ::core::option::Option<::pbjson_types::Timestamp>,
-    #[prost(bool, tag="6")]
-    pub dpop_bound: bool,
-    #[prost(enumeration="ProfileStatus", tag="7")]
+    #[prost(enumeration="ProfileStatus", tag="6")]
     pub status: i32,
+    #[prost(bool, tag="7")]
+    pub dpop_bound: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListProfilesResponse {

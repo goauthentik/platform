@@ -64,6 +64,7 @@ where
             Ok(c) => c.clone(),
             Err(KeyringError::NotFound()) => return Err(CacheError::NotFound()),
             Err(KeyringError::NotAvailable()) => return Err(CacheError::NotFound()),
+            Err(KeyringError::NotAccessible()) => return Err(CacheError::NotFound()),
             Err(KeyringError::Other(e)) => return Err(CacheError::Other(e)),
         };
         let v: T =

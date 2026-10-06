@@ -1,5 +1,4 @@
 use crate::components::{Component, SysdContext};
-use crate::events::{ConfigChangeKind, SysdEvent};
 use crate::state::TroubleshootNode;
 use crate::util::to_status;
 use ak_platform::generated::sys_ctrl::{
@@ -11,6 +10,10 @@ use ak_platform::paths::SysdSocketID;
 use eyre::Result;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
+
+/// A domain was added or removed; the agent restarts every component.
+#[derive(Clone, Debug)]
+pub struct ConfigChanged;
 
 pub struct CtrlComponent {
     ctx: SysdContext,
@@ -118,9 +121,7 @@ impl SystemCtrl for CtrlComponent {
             tracing::warn!(domain = cfg.domain, "post-enroll healthcheck failed: {e:?}");
         }
 
-        self.ctx.events.dispatch(SysdEvent::ConfigChanged {
-            kind: ConfigChangeKind::Added,
-        });
+        self.ctx.events.dispatch(ConfigChanged);
 
         if let Some(device) = self
             .ctx

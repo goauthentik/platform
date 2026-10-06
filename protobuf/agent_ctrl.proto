@@ -41,8 +41,8 @@ message Profile {
   string authentik_url = 3;
   google.protobuf.Timestamp last_renewed = 4;
   google.protobuf.Timestamp next_renew = 5;
-  bool dpop_bound = 6;
-  ProfileStatus status = 7;
+  ProfileStatus status = 6;
+  bool dpop_bound = 7;
 }
 
 message ListProfilesResponse {

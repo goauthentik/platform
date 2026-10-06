@@ -135,8 +135,9 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
         .clone()
         .unwrap_or_else(|| auth.verification_uri.clone());
 
-    // Auto-approve: visit the verification URI with an authenticated session,
-    // then submit the implicit consent form.
+    // Auto-approve: visit the verification URI (pre-filled with the user code
+    // when the server provides one) with an authenticated session, then submit
+    // the implicit consent form.
     let auth_client = authenticated_session().await?;
     auth_client
         .get(verification_uri.as_str())

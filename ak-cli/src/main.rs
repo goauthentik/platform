@@ -17,7 +17,6 @@ pub mod cache;
 pub mod commands;
 pub mod format;
 pub mod mcp;
-pub mod setup;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik CLI")]

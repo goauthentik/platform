@@ -51,13 +51,16 @@ pub async fn request_device_authorization(
     dpop_jkt: Option<&str>,
     user_agent: &str,
 ) -> Result<DeviceAuthorization> {
-    let mut form = url::form_urlencoded::Serializer::new(String::new());
-    form.append_pair("client_id", client_id);
-    form.append_pair("scope", &scopes.join(" "));
-    if let Some(jkt) = dpop_jkt {
-        form.append_pair("dpop_jkt", jkt);
-    }
-    let body = form.finish();
+    // Scoped so the non-`Send` serializer isn't held across the await below.
+    let body = {
+        let mut form = url::form_urlencoded::Serializer::new(String::new());
+        form.append_pair("client_id", client_id);
+        form.append_pair("scope", &scopes.join(" "));
+        if let Some(jkt) = dpop_jkt {
+            form.append_pair("dpop_jkt", jkt);
+        }
+        form.finish()
+    };
 
     let res = reqwest::Client::new()
         .post(device_code_url.clone())

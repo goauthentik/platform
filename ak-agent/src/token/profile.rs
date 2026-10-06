@@ -264,11 +264,11 @@ impl ProfileTokenManager {
                 .profiles
                 .get_mut(&self.profile_name)
                 .ok_or_else(|| eyre::eyre!("profile not found"))?;
-            profile.set_access_token(new_token.access_token.clone());
+            profile.set_access_token(&new_token.access_token);
             if let Some(rt) = &new_token.refresh_token
                 && !rt.is_empty()
             {
-                profile.set_refresh_token(rt.clone())
+                profile.set_refresh_token(rt)
             }
         }
 

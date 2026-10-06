@@ -15,6 +15,13 @@ use tonic::{Request, Response, Status};
 
 mod terminate;
 
+/// A user session was opened (a login or an SSH session).
+#[derive(Clone, Debug)]
+pub struct SessionOpened {
+    pub session_id: String,
+    pub pid: u32,
+}
+
 pub struct SessionComponent {
     ctx: SysdContext,
 }
@@ -191,12 +198,10 @@ impl SessionManager for SessionComponent {
             .await
             .map_err(crate::util::to_status)?;
 
-        self.ctx
-            .events
-            .dispatch(crate::events::SysdEvent::SessionOpened {
-                session_id: session.id.clone(),
-                pid: req.pid,
-            });
+        self.ctx.events.dispatch(SessionOpened {
+            session_id: session.id.clone(),
+            pid: req.pid,
+        });
 
         Ok(Response::new(CreateSessionResponse {
             success: true,
@@ -256,12 +261,10 @@ impl SessionManager for SessionComponent {
             .await
             .map_err(crate::util::to_status)?;
 
-        self.ctx
-            .events
-            .dispatch(crate::events::SysdEvent::SessionOpened {
-                session_id: session.id.clone(),
-                pid: req.pid,
-            });
+        self.ctx.events.dispatch(SessionOpened {
+            session_id: session.id.clone(),
+            pid: req.pid,
+        });
 
         Ok(Response::new(CreateSessionResponse {
             success: true,

@@ -1,7 +1,7 @@
 use std::{fmt, path::PathBuf};
 
 use eyre::{Result, bail};
-use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System, UpdateKind};
+use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System, Uid, UpdateKind};
 
 #[derive(Debug, Clone)]
 pub struct ProcInfo {
@@ -29,6 +29,16 @@ impl fmt::Display for ProcInfoError {
 }
 
 impl std::error::Error for ProcInfoError {}
+
+/// User a process runs as. Unlike [`ProcInfo::from_pid`] this works for processes of
+/// other users, whose exe path is not always readable.
+pub fn process_user(pid: u32) -> Option<Uid> {
+    let pid = Pid::from_u32(pid);
+    let mut sys = System::new();
+    let kind = ProcessRefreshKind::nothing().with_user(UpdateKind::OnlyIfNotSet);
+    sys.refresh_processes_specifics(ProcessesToUpdate::Some(&[pid]), false, kind);
+    sys.process(pid)?.user_id().cloned()
+}
 
 impl ProcInfo {
     pub fn from_pid(pid: u32) -> Result<Self> {
@@ -146,6 +156,12 @@ mod tests {
         let parent = info.parent.expect("current process should have a parent");
         assert!(parent.pid > 0, "parent pid should be non-zero");
         assert!(parent.parent.is_none(), "parent should not recurse further");
+    }
+
+    #[test]
+    fn process_user_current_and_missing() {
+        assert!(process_user(std::process::id()).is_some());
+        assert!(process_user(u32::MAX).is_none());
     }
 
     #[test]

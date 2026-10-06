@@ -48,6 +48,8 @@ pub fn xdg_data_path(last_seg: &str) -> Result<String> {
         None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
+    #[cfg(debug_assertions)]
+    data.push("dev");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
@@ -61,11 +63,31 @@ pub fn xdg_config_path(last_seg: &str) -> Result<String> {
         None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
+    #[cfg(debug_assertions)]
+    data.push("dev");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
         None => bail!("Failed to convert path to string"),
     }
+}
+
+/// Pipe names are global on Windows, so per-user pipes get the current session's ID
+/// to keep agents of concurrent sessions apart.
+#[cfg(windows)]
+fn windows_session_pipe(base: &str) -> Result<String> {
+    use windows::Win32::System::{
+        RemoteDesktop::ProcessIdToSessionId, Threading::GetCurrentProcessId,
+    };
+    let mut session = 0;
+    unsafe { ProcessIdToSessionId(GetCurrentProcessId(), &mut session) }
+        .map_err(|e| eyre::eyre!("failed to get session ID: {e}"))?;
+    Ok(format!("{base}-{session}"))
+}
+
+#[cfg(not(windows))]
+fn windows_session_pipe(base: &str) -> Result<String> {
+    Ok(base.to_string())
 }
 
 pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
@@ -75,7 +97,7 @@ pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
                 return Ok(PlatformString::new_with_default(&x));
             }
             Ok(PlatformString::new()
-                .with_windows(r"\\.\pipe\authentik\socket")
+                .with_windows(windows_session_pipe(r"\\.\pipe\authentik\socket")?)
                 .with_linux(&xdg_data_path("agent.sock")?))
         }
         AgentSocketID::SSH => Ok(PlatformString::new()
@@ -86,7 +108,6 @@ pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
 
     #[cfg(target_os = "macos")]
@@ -98,7 +119,10 @@ mod tests {
             agent_socket_path(AgentSocketID::Default)
                 .unwrap()
                 .for_platform("macos"),
-            format!("{}/Library/Application Support/authentik/agent.sock", home)
+            format!(
+                "{}/Library/Application Support/authentik/dev/agent.sock",
+                home
+            )
         )
     }
 
@@ -111,7 +135,16 @@ mod tests {
             agent_socket_path(AgentSocketID::Default)
                 .unwrap()
                 .for_platform("linux"),
-            format!("{}/.local/share/authentik/agent.sock", home)
+            format!("{}/.local/share/authentik/dev/agent.sock", home)
         )
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_agent_default_windows() {
+        let path = agent_socket_path(AgentSocketID::Default)
+            .unwrap()
+            .for_current();
+        assert!(path.starts_with(r"\\.\pipe\authentik\socket-"));
     }
 }

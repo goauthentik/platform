@@ -1,24 +1,17 @@
-use crate::format;
+use crate::dpop::DpopKeyPair;
+use crate::oauth::device_flow::{poll_for_device_token, request_device_authorization};
 use crate::setup::ak::urls_for_profile;
-use ak_meta::user_agent;
-use ak_platform::dpop::DpopKeyPair;
-use ak_platform::oauth::device_flow::{poll_for_device_token, request_device_authorization};
 use eyre::Result;
-use open::that;
-use ratatui::text::Line;
 use url::Url;
 
 pub mod ak;
 
-type URLCallback = fn(url: Url) -> Result<()>;
-
 pub struct Options {
-    pub profile_name: String,
     pub authentik_url: Url,
     pub app_slug: String,
     pub client_id: String,
     pub dpop_enabled: bool,
-    pub url_callback: Option<URLCallback>,
+    pub user_agent: String,
 }
 
 pub struct Profile {
@@ -44,31 +37,14 @@ impl Profile {
     }
 }
 
-pub async fn setup(opts: Options) -> Result<Profile> {
+/// Run the OAuth device flow. `url_callback` receives the verification URL
+/// the user must open to authorize the device.
+pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) -> Result<Profile> {
     let urls = urls_for_profile(Profile::new(
         opts.authentik_url.clone(),
         opts.app_slug.clone(),
         opts.client_id.clone(),
     ))?;
-    let callback: URLCallback = match opts.url_callback {
-        Some(c) => c,
-        None => |url: Url| -> Result<()> {
-            match that(url.to_string()) {
-                Ok(_) => Ok(()),
-                Err(e) => {
-                    tracing::debug!("failed to open URL in browser: {e:?}");
-                    println!(
-                        "{}",
-                        Line::styled(
-                            format!("Open this URL in your browser: {}", url),
-                            format::box_style()
-                        )
-                    );
-                    Ok(())
-                }
-            }
-        },
-    };
 
     let dpop_keypair = opts.dpop_enabled.then(DpopKeyPair::generate);
     let dpop_jkt = dpop_keypair
@@ -82,6 +58,7 @@ pub async fn setup(opts: Options) -> Result<Profile> {
         "email",
         "offline_access",
         "goauthentik.io/api",
+        "read",
     ];
     if opts.dpop_enabled {
         scopes.push("bound_key");
@@ -92,23 +69,22 @@ pub async fn setup(opts: Options) -> Result<Profile> {
         &opts.client_id,
         &scopes,
         dpop_jkt.as_deref(),
-        &user_agent(),
+        &opts.user_agent,
     )
     .await?;
 
-    let verification_uri = auth
-        .verification_uri_complete
-        .clone()
-        .unwrap_or_else(|| auth.verification_uri.clone());
-    callback(verification_uri)?;
+    url_callback(
+        auth.verification_uri_complete
+            .clone()
+            .unwrap_or_else(|| auth.verification_uri.clone()),
+    )?;
 
-    eprintln!("Waiting for authentication...");
     let token_response = poll_for_device_token(
         &urls.token_url,
         &opts.client_id,
         &auth,
         dpop_keypair.as_ref(),
-        &user_agent(),
+        &opts.user_agent,
     )
     .await?;
 

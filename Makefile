@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e containers/ssh ak-platform ak-sysd
 
 .PHONY: all
 all: clean gen
@@ -110,11 +110,14 @@ test-full: clean ak-agent/test-deploy ak-sysd/test-deploy ak-cli/test-deploy ak-
 dev--initialize: containers/test/local-build
 
 bump:
-	sed -i 's/VERSION = .*/VERSION = ${version}/g' common.mk
-	sed -i 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
+	$(SED_INPLACE) 's/VERSION = .*/VERSION = ${version}/g' common.mk
+	$(SED_INPLACE) 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" ee/psso/bump || true
+
+print-version:
+	@echo ${VERSION}
 
 ak-pam/%:
 	"$(MAKE)" -C "${TOP}/ak-pam" $*
@@ -193,3 +196,6 @@ containers/test/%:
 
 containers/e2e/%:
 	"$(MAKE)" -C "${TOP}/containers/e2e" $*
+
+containers/ssh/%:
+	"$(MAKE)" -C "${TOP}/containers/ssh" $*

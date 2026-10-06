@@ -1,14 +1,14 @@
 use crate::{
     App,
     format::{self, render_timestamp},
-    setup::{
-        self,
-        ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
-    },
 };
 use ak_platform::{
     generated::{agent::RequestHeader, agent_ctrl::SetupRequest},
     grpc::assert_response_valid,
+    setup::{
+        self,
+        ak::{DEFAULT_APP_SLUG, DEFAULT_CLIENT_ID},
+    },
 };
 use clap::Subcommand;
 use eyre::{Result, WrapErr, bail};
@@ -76,16 +76,32 @@ pub async fn setup(
         access_token = at;
         refresh_token = rt;
     } else {
-        let prof = setup::setup(setup::Options {
-            profile_name: app.args.profile.clone().unwrap_or(app.profile().await),
-            authentik_url: Url::parse(authentik_url).wrap_err("invalid authentik URL")?,
-            app_slug: app_slug.to_owned(),
-            client_id: client_id.to_owned(),
-            dpop_enabled: dpop,
-            url_callback: None,
-        })
+        let prof = setup::setup(
+            setup::Options {
+                authentik_url: Url::parse(authentik_url).wrap_err("invalid authentik URL")?,
+                app_slug: app_slug.to_owned(),
+                client_id: client_id.to_owned(),
+                dpop_enabled: dpop,
+                user_agent: ak_meta::user_agent(),
+            },
+            |url| {
+                if let Err(e) = open::that(url.to_string()) {
+                    tracing::debug!("failed to open URL in browser: {e:?}");
+                    println!(
+                        "{}",
+                        Line::styled(
+                            format!("Open this URL in your browser: {}", url),
+                            format::box_style()
+                        )
+                    );
+                }
+                eprintln!("Waiting for authentication...");
+                Ok(())
+            },
+        )
         .await
         .wrap_err("device flow setup failed")?;
+        eprintln!("Successfully authenticated!");
         if let Some(at) = prof.access_token
             && let Some(rt) = prof.refresh_token
         {
