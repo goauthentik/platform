@@ -59,3 +59,14 @@ export interface Versions {
 export async function getVersions(): Promise<Versions> {
     return await invoke<Versions>("get_versions");
 }
+
+export interface SetupProfileOptions {
+    name: string;
+    authentikUrl: string;
+    clientId: string;
+    appSlug: string;
+}
+
+export async function setupProfile(opts: SetupProfileOptions): Promise<void> {
+    return await invoke("setup_profile", { ...opts });
+}

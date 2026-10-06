@@ -9,7 +9,7 @@ import { SessionUser } from "@goauthentik/api";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import { css, html, LitElement } from "lit";
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 
 @customElement("ak-app-shell")
@@ -21,6 +21,17 @@ export class AppShell extends LitElement {
             height: 100vh;
             overflow: hidden;
             background: var(--ak-global--color--surface--muted);
+        }
+        .dev-banner {
+            padding: var(--ak-global--spacer--xs) var(--ak-global--spacer--md);
+            background: color-mix(
+                in oklch,
+                var(--ak-global--color--warning--deep) 15%,
+                transparent
+            );
+            color: var(--ak-global--color--warning--deep);
+            font-size: var(--ak-global--font-size--xs);
+            border-bottom: var(--ak-global--border-width--sm) solid var(--ak-global--color--border);
         }
         .body {
             flex: 1;
@@ -125,7 +136,14 @@ export class AppShell extends LitElement {
                     }
                 }}
             ></ak-platform-header>
-            <div class="body">
+            ${
+                import.meta.env.DEV
+                    ? html`<div class="dev-banner" role="status">
+                          Development build: some features might not work.
+                      </div>`
+                    : nothing
+            }
+            <div class="body" @ak-profile-added=${() => this._refresh()}>
                 <nav>
                     ${(
                         [
