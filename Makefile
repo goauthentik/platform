@@ -52,6 +52,9 @@ endif
 # them on Windows -- `make ee/wcp/lint` covers them there.
 ifneq ($(OS),Windows_NT)
 RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-browser-host --exclude ak-ee-wcp-e2e
+else
+# nss and pam are unix-only.
+RS_LINT_EXCLUDE := --exclude ak-nss --exclude ak-pam
 endif
 
 format:

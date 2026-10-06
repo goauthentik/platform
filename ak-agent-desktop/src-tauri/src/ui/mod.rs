@@ -1,4 +1,4 @@
-use tauri::{LogicalPosition, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 pub const WINDOW_LABEL: &str = "main";
 #[cfg(debug_assertions)]
@@ -26,16 +26,14 @@ pub fn show_main(app: &tauri::AppHandle) {
     let win = match app.get_webview_window(WINDOW_LABEL) {
         Some(w) => w,
         None => {
-            let mut b = WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default())
+            let b = WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default())
                 .title(WINDOW_TITLE)
                 .inner_size(870.0, 640.0);
             #[cfg(target_os = "macos")]
-            {
-                b = b
-                    .hidden_title(true)
-                    .title_bar_style(tauri::TitleBarStyle::Overlay)
-                    .traffic_light_position(LogicalPosition::new(16, 28))
-            }
+            let b = b
+                .hidden_title(true)
+                .title_bar_style(tauri::TitleBarStyle::Overlay)
+                .traffic_light_position(tauri::LogicalPosition::new(16, 28));
             b.build().unwrap()
         }
     };
