@@ -90,7 +90,7 @@ test-e2e-convert:
 	$(call rs_e2e_coverage_convert)
 
 test-setup:
-	go run -v ./cmd/cli setup -v http://authentik:9000
+	cargo run -p ak-cli -- -v config setup --authentik-url http://authentik:9000
 
 test-ssh:
 	ssh -i akadmin@ak-platform-test-machine
