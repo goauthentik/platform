@@ -1,4 +1,4 @@
-import "./profile-setup.js";
+import "../elements/profile-setup.js";
 import type { profile } from "../bridge.js";
 
 import { openUrl } from "@tauri-apps/plugin-opener";

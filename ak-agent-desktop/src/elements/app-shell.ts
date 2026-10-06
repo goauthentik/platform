@@ -1,7 +1,7 @@
 import "./header.js";
-import "./mcp-instructions.js";
-import "./profile-status.js";
-import "./ssh-agent.js";
+import "../pages/mcp-instructions.js";
+import "../pages/profile-status.js";
+import "../pages/ssh-agent.js";
 import "./ssh-status-badge.js";
 import "./status-bar.js";
 import {

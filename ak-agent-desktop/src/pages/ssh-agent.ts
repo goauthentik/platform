@@ -1,4 +1,4 @@
-import "./ssh-status-badge.js";
+import "../elements/ssh-status-badge.js";
 import {
     getSshConfig,
     setSshFallbackAgent,
