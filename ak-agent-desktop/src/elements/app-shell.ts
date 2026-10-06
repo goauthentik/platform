@@ -190,7 +190,11 @@ export class AppShell extends LitElement {
                       </div>`
                     : nothing
             }
-            <div class="body" @ak-profile-added=${() => this._refresh()}>
+            <div
+                class="body"
+                @ak-profile-added=${() => this._refresh()}
+                @ak-profile-deleted=${() => this._refresh()}
+            >
                 <nav>
                     ${(
                         [

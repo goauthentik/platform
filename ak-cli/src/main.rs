@@ -167,6 +167,9 @@ async fn main() -> std::result::Result<(), Error> {
         Commands::SwitchProfile { profile } => commands::config::switch_profile(app, profile).await,
         Commands::Config { command } => match command {
             ConfigCommands::ListProfiles => commands::config::list_profiles(app).await,
+            ConfigCommands::DeleteProfile { profile } => {
+                commands::config::delete_profile(app, profile).await
+            }
             ConfigCommands::Setup {
                 authentik_url,
                 client_id,
