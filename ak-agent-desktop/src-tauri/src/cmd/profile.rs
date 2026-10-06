@@ -1,16 +1,13 @@
-use ak_agent::Agent;
+use ak_agent::{Agent, config::ConfigV1Profile};
 use ak_platform::{
-    generated::{
-        agent_ctrl::{Profile, ProfileStatus},
-        ping::ping_client::PingClient,
-    },
-    grpc::grpc_endpoint,
-    paths::{AgentSocketID, SysdSocketID, agent_socket_path, sysd_socket_path},
-    string::PlatformString,
+    generated::agent_ctrl::{Profile, ProfileStatus},
+    setup,
 };
 use authentik_client::{apis::core_api::core_users_me_retrieve, models::SessionUser};
+use tauri::Emitter;
+use url::Url;
 
-pub type Result<T> = std::result::Result<T, String>;
+use super::Result;
 
 #[tauri::command]
 pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile>> {
@@ -29,6 +26,7 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: None,
             next_renew: None,
+            dpop_bound: c_prof.dpop_enabled(),
             status: ProfileStatus::Failed as i32,
         };
 
@@ -61,6 +59,7 @@ pub async fn list_profiles(state: tauri::State<'_, Agent>) -> Result<Vec<Profile
             authentik_url: c_prof.authentik_url.clone(),
             last_renewed: Some(claims.iat.into()),
             next_renew: Some(claims.exp.into()),
+            dpop_bound: c_prof.dpop_enabled(),
             status: ProfileStatus::Active as i32,
         });
     }
@@ -88,64 +87,51 @@ pub async fn active_profile(state: tauri::State<'_, Agent>) -> Result<String> {
     Ok(state.cfg.read().await.active_profile.clone())
 }
 
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ComponentVersion {
-    pub version: Option<String>,
-    pub server_version: Option<String>,
-    pub error: Option<String>,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Versions {
-    pub desktop: String,
-    pub agent: ComponentVersion,
-    pub sysd: ComponentVersion,
+#[tauri::command]
+pub async fn setup_profile(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, Agent>,
+    name: String,
+    authentik_url: String,
+    client_id: String,
+    app_slug: String,
+) -> Result<()> {
+    let prof = setup::setup(
+        setup::Options {
+            authentik_url: Url::parse(&authentik_url)
+                .map_err(|e| format!("invalid authentik URL: {e}"))?,
+            app_slug: app_slug.clone(),
+            client_id: client_id.clone(),
+            user_agent: ak_meta::user_agent(),
+        },
+        // Frontend opens the URL and shows it as a fallback link.
+        |url| Ok(app.emit("ak-setup-url", url.to_string())?),
+    )
+    .await
+    .map_err(|e| format!("device flow setup failed: {e:#}"))?;
+    let (Some(at), Some(rt)) = (prof.access_token, prof.refresh_token) else {
+        return Err("device flow setup did not return access/refresh token".to_string());
+    };
+    state
+        .setup_profile(
+            &name,
+            ConfigV1Profile::from_tokens(
+                authentik_url,
+                app_slug,
+                client_id,
+                at,
+                rt,
+                prof.dpop_private_key_pem.unwrap_or_default(),
+            ),
+        )
+        .await
+        .map_err(|e| format!("failed to save profile: {e:#}"))
 }
 
 #[tauri::command]
-pub async fn get_versions() -> Result<Versions> {
-    let agent = match agent_socket_path(AgentSocketID::Default) {
-        Ok(p) => ping_component(p).await,
-        Err(e) => ComponentVersion {
-            version: None,
-            server_version: None,
-            error: Some(e.to_string()),
-        },
-    };
-    let sysd = ping_component(sysd_socket_path(SysdSocketID::Default)).await;
-    Ok(Versions {
-        desktop: ak_meta::full_version(),
-        agent,
-        sysd,
-    })
-}
-
-async fn ping_component(p: PlatformString) -> ComponentVersion {
-    let channel = match grpc_endpoint(p.for_current()).await {
-        Ok(c) => c,
-        Err(e) => {
-            return ComponentVersion {
-                version: None,
-                server_version: None,
-                error: Some(format!("{e:?}")),
-            };
-        }
-    };
-    match PingClient::new(channel).ping(()).await {
-        Ok(res) => {
-            let res = res.into_inner();
-            ComponentVersion {
-                version: Some(res.version),
-                server_version: Some(res.server_version),
-                error: None,
-            }
-        }
-        Err(e) => ComponentVersion {
-            version: None,
-            server_version: None,
-            error: Some(format!("{e:?}")),
-        },
-    }
+pub async fn delete_profile(state: tauri::State<'_, Agent>, name: String) -> Result<()> {
+    state
+        .delete_profile(&name)
+        .await
+        .map_err(|e| format!("failed to delete profile: {e:#}"))
 }

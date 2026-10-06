@@ -229,6 +229,9 @@ impl serde::Serialize for CurrentTokenRequest {
         if self.r#type != 0 {
             len += 1;
         }
+        if self.caller_pid != 0 {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("agent_auth.CurrentTokenRequest", len)?;
         if let Some(v) = self.header.as_ref() {
             struct_ser.serialize_field("header", v)?;
@@ -237,6 +240,9 @@ impl serde::Serialize for CurrentTokenRequest {
             let v = current_token_request::Type::try_from(self.r#type)
                 .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", self.r#type)))?;
             struct_ser.serialize_field("type", &v)?;
+        }
+        if self.caller_pid != 0 {
+            struct_ser.serialize_field("callerPid", &self.caller_pid)?;
         }
         struct_ser.end()
     }
@@ -250,12 +256,15 @@ impl<'de> serde::Deserialize<'de> for CurrentTokenRequest {
         const FIELDS: &[&str] = &[
             "header",
             "type",
+            "caller_pid",
+            "callerPid",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Header,
             Type,
+            CallerPid,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -279,6 +288,7 @@ impl<'de> serde::Deserialize<'de> for CurrentTokenRequest {
                         match value {
                             "header" => Ok(GeneratedField::Header),
                             "type" => Ok(GeneratedField::Type),
+                            "callerPid" | "caller_pid" => Ok(GeneratedField::CallerPid),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -300,6 +310,7 @@ impl<'de> serde::Deserialize<'de> for CurrentTokenRequest {
             {
                 let mut header__ = None;
                 let mut r#type__ = None;
+                let mut caller_pid__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Header => {
@@ -314,11 +325,20 @@ impl<'de> serde::Deserialize<'de> for CurrentTokenRequest {
                             }
                             r#type__ = Some(map_.next_value::<current_token_request::Type>()? as i32);
                         }
+                        GeneratedField::CallerPid => {
+                            if caller_pid__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("callerPid"));
+                            }
+                            caller_pid__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(CurrentTokenRequest {
                     header: header__,
                     r#type: r#type__.unwrap_or_default(),
+                    caller_pid: caller_pid__.unwrap_or_default(),
                 })
             }
         }

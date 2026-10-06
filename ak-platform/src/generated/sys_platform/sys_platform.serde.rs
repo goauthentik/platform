@@ -10,9 +10,21 @@ impl serde::Serialize for PlatformEndpointRequest {
         if !self.challenge.is_empty() {
             len += 1;
         }
+        if !self.profile.is_empty() {
+            len += 1;
+        }
+        if !self.agent_socket.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("sys_platform.PlatformEndpointRequest", len)?;
         if !self.challenge.is_empty() {
             struct_ser.serialize_field("challenge", &self.challenge)?;
+        }
+        if !self.profile.is_empty() {
+            struct_ser.serialize_field("profile", &self.profile)?;
+        }
+        if !self.agent_socket.is_empty() {
+            struct_ser.serialize_field("agentSocket", &self.agent_socket)?;
         }
         struct_ser.end()
     }
@@ -25,11 +37,16 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointRequest {
     {
         const FIELDS: &[&str] = &[
             "challenge",
+            "profile",
+            "agent_socket",
+            "agentSocket",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Challenge,
+            Profile,
+            AgentSocket,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -52,6 +69,8 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointRequest {
                     {
                         match value {
                             "challenge" => Ok(GeneratedField::Challenge),
+                            "profile" => Ok(GeneratedField::Profile),
+                            "agentSocket" | "agent_socket" => Ok(GeneratedField::AgentSocket),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -72,6 +91,8 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointRequest {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut challenge__ = None;
+                let mut profile__ = None;
+                let mut agent_socket__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Challenge => {
@@ -80,10 +101,24 @@ impl<'de> serde::Deserialize<'de> for PlatformEndpointRequest {
                             }
                             challenge__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::Profile => {
+                            if profile__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("profile"));
+                            }
+                            profile__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::AgentSocket => {
+                            if agent_socket__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("agentSocket"));
+                            }
+                            agent_socket__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(PlatformEndpointRequest {
                     challenge: challenge__.unwrap_or_default(),
+                    profile: profile__.unwrap_or_default(),
+                    agent_socket: agent_socket__.unwrap_or_default(),
                 })
             }
         }

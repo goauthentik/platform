@@ -1,11 +1,14 @@
 pub mod client;
 pub mod config;
+pub mod dpop;
 pub mod generated;
 pub mod grpc;
 pub mod log;
 pub mod net;
+pub mod oauth;
 pub mod oauth2_http;
 pub mod paths;
+pub mod setup;
 pub mod shared;
 pub mod storage;
 pub mod string;

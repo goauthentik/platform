@@ -38,7 +38,7 @@ jobs:
         with:
           languages: ${{ matrix.language-platform.language }}
       - name: Install libraries
-        if: ${{ matrix.language-platform.language == 'ubuntu-26.04' }}
+        if: ${{ matrix.language-platform.platform == 'ubuntu-26.04' }}
         run: sudo apt-get update && sudo apt-get install -y libpam0g-dev libudev-dev
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4.38.2

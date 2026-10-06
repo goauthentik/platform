@@ -6,7 +6,11 @@ use std::{borrow::Cow, env};
 pub use ak_meta_macros::main;
 
 pub fn version() -> String {
-    env!("AK_VERSION").to_string()
+    let v = env!("AK_VERSION").to_string();
+    if v.is_empty() {
+        return "Next".to_string();
+    }
+    v
 }
 
 pub fn build_hash() -> String {

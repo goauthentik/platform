@@ -74,6 +74,7 @@ impl AuthentikMcp {
             .get_current_token(CurrentTokenRequest {
                 header: Some(RequestHeader { profile: _profile }),
                 r#type: Type::Verified as i32,
+                caller_pid: 0,
             })
             .await
             .map_err(|e| McpError::internal_error(format!("failed to get API token: {e}"), None))?

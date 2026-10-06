@@ -18,6 +18,7 @@ pub async fn exec_api_command(mut app: super::App, cmd: &ApiCommand) -> Result<(
         .get_current_token(CurrentTokenRequest {
             header: Some(RequestHeader { profile }),
             r#type: Type::Verified as i32,
+            caller_pid: 0,
         })
         .await
         .wrap_err("failed to get API access token")?

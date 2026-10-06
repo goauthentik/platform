@@ -1,9 +1,10 @@
-import type { profile } from "../bridge.js";
+import "../elements/profile-setup.js";
+import { deleteProfile, type profile } from "../bridge.js";
 
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 import { css, html, LitElement, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 
 type RenewalStatus = "active" | "expiring" | "expired" | "disconnected";
 
@@ -44,21 +45,25 @@ export class ProfileStatus extends LitElement {
             display: block;
         }
         .section {
-            background: var(--ak-color-surface-raised, #fff);
+            background: var(--ak-global--color--surface);
             padding: 20px 24px 24px;
-            border-bottom: 1px solid var(--ak-color-divider, #e0e0e0);
+            border-bottom: 1px solid var(--ak-global--color--border);
         }
         .section-title {
-            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: var(--ak-global--font-family--heading);
+            font-size: var(--ak-global--font-size--sm);
             font-weight: 600;
-            color: var(--ak-color-text-primary, #0f0f0f);
+            color: var(--ak-global--color--ink);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin: 0 0 14px;
         }
         .profile-row {
             padding: 12px 0;
-            border-bottom: 1px solid var(--ak-color-divider, #e0e0e0);
+            border-bottom: 1px solid var(--ak-global--color--border);
         }
         .profile-row:last-child {
             border-bottom: none;
@@ -72,64 +77,79 @@ export class ProfileStatus extends LitElement {
             margin-bottom: 6px;
         }
         .profile-name {
-            font-size: 14px;
+            font-size: var(--ak-global--font-size--sm);
             font-weight: 600;
-            color: var(--ak-color-text-primary, #0f0f0f);
+            color: var(--ak-global--color--ink);
         }
         .profile-username {
-            font-size: 12px;
-            color: var(--ak-color-text-secondary, #5a5a5a);
+            font-size: var(--ak-global--font-size--xs);
+            color: var(--ak-global--color--ink--muted);
             margin-bottom: 4px;
         }
         .profile-url {
-            font-size: 12px;
-            color: var(--ak-color-text-secondary, #5a5a5a);
+            font-size: var(--ak-global--font-size--xs);
+            color: var(--ak-global--color--ink--muted);
             margin-bottom: 6px;
             word-break: break-all;
         }
+        .profile-url button {
+            padding: 0;
+            border: none;
+            background: none;
+            font: inherit;
+            color: var(--ak-global--color--link);
+            cursor: pointer;
+        }
+        .profile-url button.danger {
+            margin-left: 12px;
+            color: var(--ak-global--color--danger);
+        }
+        .profile-url button:hover {
+            text-decoration: var(--ak-global--link--text-decoration--hover);
+        }
         .status-badge {
-            font-size: 12px;
+            background: color-mix(in oklch, var(--badge) 15%, transparent);
+            color: var(--badge);
+            font-size: var(--ak-global--font-size--xs);
             font-weight: 500;
             padding: 2px 8px;
-            border-radius: 999px;
+            border-radius: var(--ak-global--radius--pill);
             white-space: nowrap;
             flex-shrink: 0;
         }
         .status-badge.active {
-            background: #e8f5e9;
-            color: #2e7d32;
+            --badge: var(--ak-global--color--success);
         }
         .status-badge.expiring {
-            background: #fff3e0;
-            color: #e65100;
+            --badge: var(--ak-global--color--warning--deep);
         }
         .status-badge.expired {
-            background: #ffebee;
-            color: #c62828;
+            --badge: var(--ak-global--color--danger);
         }
         .status-badge.disconnected {
-            background: #f0f0f0;
-            color: #5a5a5a;
+            --badge: var(--ak-global--color--ink--muted);
         }
         .status-badge.failed {
-            background: var(--ak-color-badge, #ffebee);
-            color: var(--ak-color-badge-text, #c62828);
+            --badge: var(--ak-global--color--danger);
+        }
+        .status-badge.bound {
+            --badge: var(--ak-global--color--primary);
         }
         .renewal-dates {
             display: flex;
             gap: 16px;
         }
         .date-field {
-            font-size: 12px;
-            color: var(--ak-color-text-secondary, #5a5a5a);
+            font-size: var(--ak-global--font-size--xs);
+            color: var(--ak-global--color--ink--muted);
         }
         .date-label {
             font-weight: 600;
             margin-right: 4px;
         }
         .empty {
-            font-size: 14px;
-            color: var(--ak-color-text-secondary, #5a5a5a);
+            font-size: var(--ak-global--font-size--sm);
+            color: var(--ak-global--color--ink--muted);
             padding: 8px 0;
         }
     `;
@@ -137,10 +157,29 @@ export class ProfileStatus extends LitElement {
     @property({ type: Array }) profiles: profile[] = [];
     @property() activeProfile?: string;
 
+    /** Name of the profile whose delete button was clicked once and awaits confirmation. */
+    @state() private confirmDelete?: string;
+
+    private async _delete(name: string): Promise<void> {
+        if (this.confirmDelete !== name) {
+            this.confirmDelete = name;
+            return;
+        }
+        this.confirmDelete = undefined;
+        try {
+            await deleteProfile(name);
+        } catch (exc) {
+            console.warn("Failed to delete profile", exc);
+        }
+        this.dispatchEvent(
+            new CustomEvent("ak-profile-deleted", { bubbles: true, composed: true }),
+        );
+    }
+
     render() {
         return html`
             <div class="section">
-                <div class="section-title">Profiles</div>
+                <div class="section-title">Profiles <ak-profile-setup></ak-profile-setup></div>
                 ${
                     this.profiles.length === 0
                         ? html`<div class="empty">No profiles configured.</div>`
@@ -170,6 +209,15 @@ export class ProfileStatus extends LitElement {
                                                             >${STATUS_LABELS[status]}</span
                                                         >`
                                               }
+                                              ${
+                                                  p.dpopBound
+                                                      ? html`<span
+                                                            class="status-badge bound"
+                                                            title="Tokens are bound to a key on this device (DPoP)"
+                                                            >Key-bound</span
+                                                        >`
+                                                      : nothing
+                                              }
                                           </div>
                                       </div>
                                       <div class="profile-username">Username: ${p.username}</div>
@@ -180,6 +228,17 @@ export class ProfileStatus extends LitElement {
                                               }}
                                           >
                                               Open authentik
+                                          </button>
+                                          <button
+                                              class="danger"
+                                              @click=${() => this._delete(p.name)}
+                                              @blur=${() => (this.confirmDelete = undefined)}
+                                          >
+                                              ${
+                                                  this.confirmDelete === p.name
+                                                      ? "Click again to delete"
+                                                      : "Delete"
+                                              }
                                           </button>
                                       </div>
                                       <div class="renewal-dates">

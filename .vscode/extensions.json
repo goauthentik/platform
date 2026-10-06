@@ -4,6 +4,7 @@
         "redhat.vscode-yaml",
         "rust-lang.rust-analyzer",
         "DrBlury.protobuf-vsc",
-        "tauri-apps.tauri-vscode"
+        "tauri-apps.tauri-vscode",
+        "oxc.oxc-vscode"
     ]
 }

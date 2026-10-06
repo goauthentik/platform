@@ -63,7 +63,7 @@ jobs:
         with:
           rustflags: ""
           build-warnings: warn
-      - uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2
+      - uses: taiki-e/install-action@861a07ce7084f55488e375df125cdc99bba60eb7 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: ./.github/actions/setup-toolchain
@@ -194,7 +194,7 @@ jobs:
         with:
           rustflags: ""
           build-warnings: warn
-      - uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2
+      - uses: taiki-e/install-action@861a07ce7084f55488e375df125cdc99bba60eb7 # v2
         with:
           tool: cargo-llvm-cov nextest
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
@@ -218,7 +218,7 @@ jobs:
           name: authentik_ubuntu-26.04_ak-pam-e2e
           path: bin/
       - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd
-      - uses: goauthentik/action-setup-authentik@e9b3782a8da81f3a33bbe21de97c7d3cf6c8820f # v3.2
+      - uses: goauthentik/action-setup-authentik@5b35e5951a1ec761847711a5d8170dbd67675526 # v3.3
         id: setup
         with:
           version: beta

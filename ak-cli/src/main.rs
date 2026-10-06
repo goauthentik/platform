@@ -17,7 +17,6 @@ pub mod cache;
 pub mod commands;
 pub mod format;
 pub mod mcp;
-pub mod setup;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik CLI")]
@@ -48,10 +47,7 @@ enum Commands {
     Version,
     /// Switch to a different active profile
     #[command(alias = "s")]
-    SwitchProfile {
-        #[arg(required = true)]
-        profile: String,
-    },
+    SwitchProfile { profile: Option<String> },
 
     /// Configure authentik CLI
     Config {
@@ -168,6 +164,9 @@ async fn main() -> std::result::Result<(), Error> {
         Commands::SwitchProfile { profile } => commands::config::switch_profile(app, profile).await,
         Commands::Config { command } => match command {
             ConfigCommands::ListProfiles => commands::config::list_profiles(app).await,
+            ConfigCommands::DeleteProfile { profile } => {
+                commands::config::delete_profile(app, profile).await
+            }
             ConfigCommands::Setup {
                 authentik_url,
                 client_id,

@@ -119,7 +119,7 @@ fn is_administrator() -> bool {
 }
 
 #[tokio::test]
-async fn owner_mode_grants_the_owner_only() {
+async fn owner_mode_grants_the_owner_and_system() {
     let path = r"\\.\pipe\ak-test-dacl-owner";
     let _listener = server::listen(
         PlatformString::new_with_default(path),
@@ -128,7 +128,10 @@ async fn owner_mode_grants_the_owner_only() {
     .await
     .unwrap();
 
-    assert_eq!(Dacl::of_pipe(path), Dacl::of_sddl("D:(A;;FA;;;OW)"));
+    assert_eq!(
+        Dacl::of_pipe(path),
+        Dacl::of_sddl("D:(A;;FA;;;OW)(A;;FA;;;SY)")
+    );
 }
 
 #[tokio::test]

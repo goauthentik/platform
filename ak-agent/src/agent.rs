@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use ak_platform::paths::xdg_config_path;
 use ak_platform::storage::cfgmgr::ConfigManager;
-use eyre::Result;
+use eyre::{Result, bail};
 use waitgroup::WaitGroup;
 
-use crate::config::ConfigV1;
+use crate::config::{ConfigV1, ConfigV1Profile};
 use crate::grpc::AgentGRPCServer;
 use crate::ssh::AgentSSHServer;
 use crate::token::global::GlobalTokenManager;
@@ -24,6 +24,37 @@ impl Agent {
             cfg: cc,
             gtm: Arc::new(GlobalTokenManager::new(Arc::clone(&cfg)).await?),
         })
+    }
+
+    /// Store a new profile, activate it if no profile is active yet and wait for its token manager.
+    pub async fn setup_profile(&self, name: &str, profile: ConfigV1Profile) -> Result<()> {
+        {
+            let mut cfg = self.cfg.write().await;
+            cfg.profiles.insert(name.to_owned(), profile);
+            if cfg.active_profile.is_empty() {
+                cfg.active_profile = name.to_owned();
+            }
+        }
+        self.cfg.save().await?;
+        self.gtm.wait_for_profile(name).await;
+        tracing::info!(profile = name, "setup new profile");
+        Ok(())
+    }
+
+    /// Remove a profile. If it was active, another remaining profile (if any) becomes active.
+    pub async fn delete_profile(&self, name: &str) -> Result<()> {
+        {
+            let mut cfg = self.cfg.write().await;
+            if cfg.profiles.remove(name).is_none() {
+                bail!("profile '{name}' not found");
+            }
+            if cfg.active_profile == name {
+                cfg.active_profile = cfg.profiles.keys().next().cloned().unwrap_or_default();
+            }
+        }
+        self.cfg.save().await?;
+        tracing::info!(profile = name, "deleted profile");
+        Ok(())
     }
 
     pub async fn start(self) -> Result<()> {

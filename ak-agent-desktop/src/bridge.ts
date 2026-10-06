@@ -11,6 +11,7 @@ export interface profile {
     lastRenewed?: Date;
     nextRenew?: Date;
     status?: ProfileStatus;
+    dpopBound?: boolean;
 }
 
 export async function userInfo(profile: string): Promise<SessionUser> {
@@ -31,6 +32,7 @@ export async function listProfiles(): Promise<profile[]> {
         lastRenewed?: string;
         nextRenew?: string;
         status?: ProfileStatus;
+        dpopBound?: boolean;
     }
 
     return await invoke<r_profile[]>("list_profiles").then((p) => {
@@ -51,11 +53,56 @@ export interface ComponentVersion {
 }
 
 export interface Versions {
-    desktop: string;
-    agent: ComponentVersion;
+    agent: string;
     sysd: ComponentVersion;
 }
 
 export async function getVersions(): Promise<Versions> {
     return await invoke<Versions>("get_versions");
+}
+
+export interface SshConfig {
+    socketPath: string;
+    systemSocketPath?: string;
+    fallbackSocketPath: string;
+    extraPassthroughHosts: string[];
+}
+
+export async function getSshConfig(): Promise<SshConfig> {
+    return await invoke<SshConfig>("get_ssh_config");
+}
+
+/** An empty `socketPath` disables the fallback agent. */
+export async function setSshFallbackAgent(
+    socketPath: string,
+    extraPassthroughHosts: string[],
+): Promise<void> {
+    return await invoke("set_ssh_fallback_agent", { socketPath, extraPassthroughHosts });
+}
+
+export type SshStatus = "active" | "partial" | "unconfigured" | "notRunning";
+
+export interface SshStatusResponse {
+    status: SshStatus;
+    /** Agent `ssh` uses for hosts without a specific config. */
+    identityAgent?: string;
+}
+
+export async function getSshStatus(): Promise<SshStatusResponse> {
+    return await invoke<SshStatusResponse>("get_ssh_status");
+}
+
+export interface SetupProfileOptions {
+    name: string;
+    authentikUrl: string;
+    clientId: string;
+    appSlug: string;
+}
+
+export async function setupProfile(opts: SetupProfileOptions): Promise<void> {
+    return await invoke("setup_profile", { ...opts });
+}
+
+export async function deleteProfile(name: string): Promise<void> {
+    return await invoke("delete_profile", { name });
 }
