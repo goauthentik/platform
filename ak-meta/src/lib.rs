@@ -8,9 +8,9 @@ pub use ak_meta_macros::main;
 pub fn version() -> String {
     let v = env!("AK_VERSION").to_string();
     if v.is_empty() {
-        return "Next".to_string()
+        return "Next".to_string();
     }
-    return v
+    v
 }
 
 pub fn build_hash() -> String {
