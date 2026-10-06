@@ -152,6 +152,20 @@ export class AppShell extends LitElement {
         }
     }
 
+    renderPage() {
+        switch (this.page) {
+            case "profiles":
+                return html`<ak-profile-status
+                    .profiles=${this.profiles ?? []}
+                    .activeProfile=${this.activeProfile}
+                ></ak-profile-status>`;
+            case "ssh":
+                return html`<ak-ssh-agent .sshStatus=${this.sshStatus}></ak-ssh-agent>`;
+            case "mcp":
+                return html`<ak-mcp-instructions></ak-mcp-instructions>`;
+        }
+    }
+
     render() {
         return html`
             <ak-platform-header
@@ -203,18 +217,7 @@ export class AppShell extends LitElement {
                     )}
                     <ak-status-bar .versions=${this.versions}></ak-status-bar>
                 </nav>
-                <div class="content">
-                    ${
-                        this.page === "profiles"
-                            ? html`<ak-profile-status
-                                  .profiles=${this.profiles ?? []}
-                                  .activeProfile=${this.activeProfile}
-                              ></ak-profile-status>`
-                            : this.page === "ssh"
-                              ? html`<ak-ssh-agent .sshStatus=${this.sshStatus}></ak-ssh-agent>`
-                              : html`<ak-mcp-instructions></ak-mcp-instructions>`
-                    }
-                </div>
+                <div class="content">${this.renderPage()}</div>
             </div>
         `;
     }
