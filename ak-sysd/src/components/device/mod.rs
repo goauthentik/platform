@@ -1,13 +1,19 @@
+use crate::components::auth::AuthComponent;
 use crate::components::{Component, SysdContext};
 use crate::util::to_status;
-use ak_platform::generated::agent::ResponseHeader;
+use ak_platform::generated::agent::{RequestHeader, ResponseHeader};
+use ak_platform::generated::agent_auth::{
+    CurrentTokenRequest, agent_auth_client::AgentAuthClient, current_token_request,
+};
 use ak_platform::generated::sys_platform::{
     PlatformEndpointRequest, PlatformEndpointResponse,
     system_platform_server::{SystemPlatform, SystemPlatformServer},
 };
+use ak_platform::net::server::creds::ProcCredentials;
 use ak_platform::paths::SysdSocketID;
-use authentik_client::models::DeviceFactsRequest;
-use eyre::{Result, bail};
+use ak_platform::shared::AuthentikClaims;
+use authentik_client::models::{AgentConfig, DeviceFactsRequest};
+use eyre::{OptionExt, Result, bail};
 use jsonwebtoken::{
     Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, decode_header,
 };
@@ -57,6 +63,50 @@ impl DeviceComponent {
         .await
         .map_err(|e| eyre::eyre!("checkin failed: {e}"))?;
         Ok(())
+    }
+
+    /// Asks the caller's agent for its token and returns its verified claims. The agent
+    /// only answers for callers running as its own user, so a caller can't get another
+    /// user's identity by pointing sysd at their agent.
+    async fn caller_claims(
+        &self,
+        caller: Option<ProcCredentials>,
+        req: &PlatformEndpointRequest,
+        remote: AgentConfig,
+    ) -> Result<AuthentikClaims> {
+        // ponytail: no Windows support. sysd connecting to a pipe as SYSTEM lets the
+        // pipe's server impersonate it; add once the client connects with
+        // SecurityIdentification.
+        if cfg!(windows) {
+            bail!("not supported on windows");
+        }
+        let caller_pid = u32::try_from(caller.ok_or_eyre("no peer credentials")?.pid())?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            let user = ak_platform::net::server::proc_info::process_user(caller_pid)
+                .ok_or_eyre("unknown caller user")?;
+            if std::fs::metadata(&req.agent_socket)?.uid() != *user {
+                bail!("agent socket is not owned by the caller");
+            }
+        }
+        let channel = ak_platform::grpc::grpc_endpoint(req.agent_socket.clone()).await?;
+        let token = AgentAuthClient::new(channel)
+            .get_current_token(CurrentTokenRequest {
+                header: Some(RequestHeader {
+                    profile: req.profile.clone(),
+                }),
+                r#type: current_token_request::Type::Verified as i32,
+                caller_pid,
+            })
+            .await?
+            .into_inner();
+        let auth = self
+            .ctx
+            .registry
+            .get::<AuthComponent>("auth")
+            .ok_or_eyre("no auth component")?;
+        Ok(auth.validate_token(token.raw, Some(remote)).await?.claims)
     }
 }
 
@@ -118,6 +168,10 @@ struct EndpointClaims {
     atc: String,
     iat: i64,
     exp: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    sub: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    jti: Option<String>,
 }
 
 #[tonic::async_trait]
@@ -126,6 +180,7 @@ impl SystemPlatform for DeviceComponent {
         &self,
         request: Request<PlatformEndpointRequest>,
     ) -> Result<Response<PlatformEndpointResponse>, Status> {
+        let caller = request.extensions().get::<ProcCredentials>().cloned();
         let req = request.into_inner();
         let domains = self.ctx.domains.domains().await;
 
@@ -161,6 +216,13 @@ impl SystemPlatform for DeviceComponent {
                 continue;
             }
 
+            let user = match self.caller_claims(caller.clone(), &req, remote).await {
+                Ok(c) => Some(c),
+                Err(e) => {
+                    tracing::debug!("not adding user to endpoint header: {e:?}");
+                    None
+                }
+            };
             let now = chrono::Utc::now().timestamp();
             let claims = EndpointClaims {
                 iss: ak_platform_facts::serial().unwrap_or_default(),
@@ -168,6 +230,8 @@ impl SystemPlatform for DeviceComponent {
                 atc: req.challenge.clone(),
                 iat: now,
                 exp: now + 5 * 60,
+                sub: user.as_ref().and_then(|c| c.sub.clone()),
+                jti: user.and_then(|c| c.jti),
             };
             let signed = jsonwebtoken::encode(
                 &Header::new(Algorithm::HS512),

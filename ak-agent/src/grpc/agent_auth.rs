@@ -8,6 +8,7 @@ use ak_platform::{
             agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
+    net::server::{creds::ProcCredentials, proc_info::process_user},
     oauth2_http,
     string::PlatformString,
 };
@@ -56,6 +57,38 @@ struct OAuthTokenResponse {
 }
 
 use crate::{config::ConfigV1Profile, grpc::AgentGRPCServer};
+
+/// Credentials to authorize a request as. sysd asks on behalf of `caller_pid` (the
+/// browser support host), so that process is authorized instead of sysd. Only root
+/// peers may do so, and only for callers running as our user, so sysd can't be used
+/// to reach another user's agent.
+fn on_behalf_of<T>(
+    request: &Request<T>,
+    caller_pid: u32,
+) -> Result<Option<ProcCredentials>, Status> {
+    let peer = request.extensions().get::<ProcCredentials>().cloned();
+    if caller_pid == 0 {
+        return Ok(peer);
+    }
+    let peer = peer
+        .and_then(|p| u32::try_from(p.pid()).ok())
+        .and_then(process_user);
+    #[cfg(unix)]
+    let peer_is_root = peer.is_some_and(|u| *u == 0);
+    // sysd doesn't call agents on Windows yet.
+    #[cfg(not(unix))]
+    let peer_is_root = {
+        let _ = peer;
+        false
+    };
+    let own = process_user(std::process::id());
+    if !peer_is_root || own.is_none() || process_user(caller_pid) != own {
+        return Err(Status::permission_denied(
+            "not allowed to act on behalf of caller",
+        ));
+    }
+    Ok(Some(ProcCredentials::new(Some(caller_pid.into()))))
+}
 
 #[tonic::async_trait]
 impl AgentAuth for AgentGRPCServer {
@@ -130,6 +163,7 @@ impl AgentAuth for AgentGRPCServer {
 
         request
             .auth_peer()
+            .with_creds(on_behalf_of(&request, inner_req.caller_pid)?)
             .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
