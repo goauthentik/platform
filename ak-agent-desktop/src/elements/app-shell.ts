@@ -1,4 +1,5 @@
 import "./header.js";
+import "./mcp-instructions.js";
 import "./profile-status.js";
 import "./status-bar.js";
 import { activeProfile, getVersions, listProfiles, profile, userInfo, Versions } from "../bridge";
@@ -21,11 +22,46 @@ export class AppShell extends LitElement {
             overflow: hidden;
             background: var(--ak-color-surface, #f6f6f6);
         }
+        .body {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+        nav {
+            width: 180px;
+            flex-shrink: 0;
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: var(--ak-color-surface-raised, #fff);
+            border-right: 1px solid var(--ak-color-divider, #e0e0e0);
+        }
+        nav button {
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            text-align: left;
+            font-size: 13px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--ak-color-text-primary, #0f0f0f);
+        }
+        nav button:hover {
+            background: var(--ak-color-surface, #f6f6f6);
+        }
+        nav button[aria-current="page"] {
+            background: var(--ak-color-surface-selected, #e8e8e8);
+            font-weight: 600;
+        }
         .content {
             flex: 1;
             overflow-y: auto;
         }
     `;
+
+    @state()
+    private page: "profiles" | "mcp" = "profiles";
 
     @state()
     private user?: SessionUser;
@@ -86,13 +122,36 @@ export class AppShell extends LitElement {
                     }
                 }}
             ></ak-platform-header>
-            <div class="content">
-                <ak-profile-status
-                    .profiles=${this.profiles ?? []}
-                    .activeProfile=${this.activeProfile}
-                ></ak-profile-status>
+            <div class="body">
+                <nav>
+                    ${(
+                        [
+                            ["profiles", "Profiles"],
+                            ["mcp", "MCP Server"],
+                        ] as const
+                    ).map(
+                        ([page, label]) => html`
+                            <button
+                                aria-current=${this.page === page ? "page" : "false"}
+                                @click=${() => (this.page = page)}
+                            >
+                                ${label}
+                            </button>
+                        `,
+                    )}
+                    <ak-status-bar .versions=${this.versions}></ak-status-bar>
+                </nav>
+                <div class="content">
+                    ${
+                        this.page === "profiles"
+                            ? html`<ak-profile-status
+                                  .profiles=${this.profiles ?? []}
+                                  .activeProfile=${this.activeProfile}
+                              ></ak-profile-status>`
+                            : html`<ak-mcp-instructions></ak-mcp-instructions>`
+                    }
+                </div>
             </div>
-            <ak-status-bar .versions=${this.versions}></ak-status-bar>
         `;
     }
 }

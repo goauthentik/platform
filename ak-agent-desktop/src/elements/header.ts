@@ -3,7 +3,7 @@ import logoSvg from "@goauthentik/brand-assets/icon_left_brand_white.svg?raw";
 
 import { platform } from "@tauri-apps/plugin-os";
 
-import { css, html, LitElement } from "lit";
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
@@ -77,9 +77,13 @@ export class Header extends LitElement {
         return html`
             <div class="header" @mousedown=${this._startDrag}>
                 <div class="logo" data-platform="${platform()}">${unsafeHTML(logoSvg)}</div>
-                <div class="actions">
-                    <img class="avatar" src="${this.user?.user.avatar || ""}" />
-                </div>
+                ${
+                    this.user
+                        ? html`<div class="actions">
+                              <img class="avatar" src="${this.user?.user.avatar || ""}" />
+                          </div>`
+                        : nothing
+                }
             </div>
         `;
     }
