@@ -1,8 +1,19 @@
 import "./header.js";
-import "./mcp-instructions.js";
-import "./profile-status.js";
+import "../pages/mcp-instructions.js";
+import "../pages/profile-status.js";
+import "../pages/ssh-agent.js";
+import "./ssh-status-badge.js";
 import "./status-bar.js";
-import { activeProfile, getVersions, listProfiles, profile, userInfo, Versions } from "../bridge";
+import {
+    activeProfile,
+    getSshStatus,
+    getVersions,
+    listProfiles,
+    profile,
+    SshStatusResponse,
+    userInfo,
+    Versions,
+} from "../bridge";
 
 import { SessionUser } from "@goauthentik/api";
 
@@ -59,6 +70,12 @@ export class AppShell extends LitElement {
             background: transparent;
             color: var(--ak-global--color--ink);
         }
+        nav button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--ak-global--spacer--xs);
+        }
         nav button:hover {
             background: var(--ak-global--color--surface--muted);
         }
@@ -75,7 +92,7 @@ export class AppShell extends LitElement {
     `;
 
     @state()
-    private page: "profiles" | "mcp" = "profiles";
+    private page: "profiles" | "ssh" | "mcp" = "profiles";
 
     @state()
     private user?: SessionUser;
@@ -89,16 +106,30 @@ export class AppShell extends LitElement {
     @state()
     private versions?: Versions;
 
+    @state()
+    private sshStatus?: SshStatusResponse;
+
     private _unlisten?: () => void;
+
+    // ~/.ssh/config is usually edited elsewhere, so re-check when the window regains focus.
+    private _refreshSshStatus = async () => {
+        try {
+            this.sshStatus = await getSshStatus();
+        } catch (exc) {
+            console.warn("Failed to fetch SSH status", exc);
+        }
+    };
 
     async connectedCallback(): Promise<void> {
         super.connectedCallback();
+        window.addEventListener("focus", this._refreshSshStatus);
         this._unlisten = await listen("ak-config-reloaded", () => this._refresh());
         await this._refresh();
     }
 
     disconnectedCallback(): void {
         super.disconnectedCallback();
+        window.removeEventListener("focus", this._refreshSshStatus);
         this._unlisten?.();
     }
 
@@ -112,10 +143,26 @@ export class AppShell extends LitElement {
             console.warn("Failed to fetch user info", exc);
         }
 
+        await this._refreshSshStatus();
+
         try {
             this.versions = await getVersions();
         } catch (exc) {
             console.warn("Failed to fetch versions", exc);
+        }
+    }
+
+    renderPage() {
+        switch (this.page) {
+            case "profiles":
+                return html`<ak-profile-status
+                    .profiles=${this.profiles ?? []}
+                    .activeProfile=${this.activeProfile}
+                ></ak-profile-status>`;
+            case "ssh":
+                return html`<ak-ssh-agent .sshStatus=${this.sshStatus}></ak-ssh-agent>`;
+            case "mcp":
+                return html`<ak-mcp-instructions></ak-mcp-instructions>`;
         }
     }
 
@@ -148,6 +195,7 @@ export class AppShell extends LitElement {
                     ${(
                         [
                             ["profiles", "Profiles"],
+                            ["ssh", "SSH Agent"],
                             ["mcp", "MCP Server"],
                         ] as const
                     ).map(
@@ -157,21 +205,19 @@ export class AppShell extends LitElement {
                                 @click=${() => (this.page = page)}
                             >
                                 ${label}
+                                ${
+                                    page === "ssh"
+                                        ? html`<ak-ssh-status-badge
+                                              .status=${this.sshStatus?.status}
+                                          ></ak-ssh-status-badge>`
+                                        : nothing
+                                }
                             </button>
                         `,
                     )}
                     <ak-status-bar .versions=${this.versions}></ak-status-bar>
                 </nav>
-                <div class="content">
-                    ${
-                        this.page === "profiles"
-                            ? html`<ak-profile-status
-                                  .profiles=${this.profiles ?? []}
-                                  .activeProfile=${this.activeProfile}
-                              ></ak-profile-status>`
-                            : html`<ak-mcp-instructions></ak-mcp-instructions>`
-                    }
-                </div>
+                <div class="content">${this.renderPage()}</div>
             </div>
         `;
     }

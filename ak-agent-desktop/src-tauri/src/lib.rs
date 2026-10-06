@@ -105,6 +105,9 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             cmd::profile::list_profiles,
             cmd::profile::active_profile,
             cmd::profile::setup_profile,
+            cmd::ssh::get_ssh_config,
+            cmd::ssh::set_ssh_fallback_agent,
+            cmd::ssh::get_ssh_status,
             cmd::version::get_versions,
         ])
         .build(context)?

@@ -60,6 +60,37 @@ export async function getVersions(): Promise<Versions> {
     return await invoke<Versions>("get_versions");
 }
 
+export interface SshConfig {
+    socketPath: string;
+    systemSocketPath?: string;
+    fallbackSocketPath: string;
+    extraPassthroughHosts: string[];
+}
+
+export async function getSshConfig(): Promise<SshConfig> {
+    return await invoke<SshConfig>("get_ssh_config");
+}
+
+/** An empty `socketPath` disables the fallback agent. */
+export async function setSshFallbackAgent(
+    socketPath: string,
+    extraPassthroughHosts: string[],
+): Promise<void> {
+    return await invoke("set_ssh_fallback_agent", { socketPath, extraPassthroughHosts });
+}
+
+export type SshStatus = "active" | "partial" | "unconfigured" | "notRunning";
+
+export interface SshStatusResponse {
+    status: SshStatus;
+    /** Agent `ssh` uses for hosts without a specific config. */
+    identityAgent?: string;
+}
+
+export async function getSshStatus(): Promise<SshStatusResponse> {
+    return await invoke<SshStatusResponse>("get_ssh_status");
+}
+
 export interface SetupProfileOptions {
     name: string;
     authentikUrl: string;
