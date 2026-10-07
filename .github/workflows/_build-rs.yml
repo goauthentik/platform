@@ -63,6 +63,25 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+      # Both are I/O bound and independent of the toolchain setup below, so
+      # overlap them with it; `wait-all` joins them before the build.
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
+        background: true
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cache/
+          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}
+          restore-keys: |
+            target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-
+            target-cache-${{ matrix.platform }}-
+      # Only rust-toolchain.toml is read from the build context, so the cache
+      # restore writing into cache/ concurrently is harmless.
+      - name: Build builder image
+        if: startsWith(matrix.platform, 'ubuntu')
+        background: true
+        run: make containers/builder/build
       - if: ${{ matrix.target == 'ak-agent-desktop' }}
         uses: pnpm/action-setup@v6.1.0
         with:
@@ -99,19 +118,7 @@ jobs:
             ~/.rustup/toolchains
             ~/.rustup/update-hashes
           key: rustup-toolchain-${{ matrix.platform }}-${{ hashFiles('rust-toolchain.toml') }}
-      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            cache/
-          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}
-          restore-keys: |
-            target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-
-            target-cache-${{ matrix.platform }}-
-      - name: Build builder image
-        if: startsWith(matrix.platform, 'ubuntu')
-        run: make containers/builder/build
+      - wait-all:
       - run: |
           make ${{ matrix.target }}/build
         env:

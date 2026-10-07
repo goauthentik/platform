@@ -26,38 +26,39 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_${{ matrix.platform }}_ak-cli${{ inputs.artifact_suffix }}
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_${{ matrix.platform }}_ak-agent${{ inputs.artifact_suffix }}
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_${{ matrix.platform }}_ak-agent-desktop${{ inputs.artifact_suffix }}
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_${{ matrix.platform }}_ak-sysd${{ inputs.artifact_suffix }}
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_${{ matrix.platform }}_ak-browser-support${{ inputs.artifact_suffix }}
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_${{ matrix.platform }}_ak-nss${{ inputs.artifact_suffix }}
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_${{ matrix.platform }}_ak-pam${{ inputs.artifact_suffix }}
-          path: bin/
-      - run: |
-          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
-          sudo apt update
-          sudo apt install nfpm -y
+      - parallel:
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_${{ matrix.platform }}_ak-cli${{ inputs.artifact_suffix }}
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_${{ matrix.platform }}_ak-agent${{ inputs.artifact_suffix }}
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_${{ matrix.platform }}_ak-agent-desktop${{ inputs.artifact_suffix }}
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_${{ matrix.platform }}_ak-sysd${{ inputs.artifact_suffix }}
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_${{ matrix.platform }}_ak-browser-support${{ inputs.artifact_suffix }}
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_${{ matrix.platform }}_ak-nss${{ inputs.artifact_suffix }}
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_${{ matrix.platform }}_ak-pam${{ inputs.artifact_suffix }}
+              path: bin/
+          - run: |
+              echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+              sudo apt update
+              sudo apt install nfpm -y
       - shell: bash
         run: make vpkg/linux/package
         env:
