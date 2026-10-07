@@ -129,6 +129,16 @@ bump:
 print-version:
 	@echo ${VERSION}
 
+# Must match the release the apps report (`ak_meta::sentry_options`, browser-ext `sentry.ts`).
+SENTRY_RELEASE := ak-platform@${VERSION}
+SENTRY_RELEASES_CLI := npx @sentry/cli releases --org authentik-security-inc --project platform
+
+# Associates commits with the release so `Fixes PLATFORM-123` resolves issues on release.
+sentry-release:
+	${SENTRY_RELEASES_CLI} new ${SENTRY_RELEASE}
+	${SENTRY_RELEASES_CLI} set-commits --auto --ignore-missing ${SENTRY_RELEASE}
+	${SENTRY_RELEASES_CLI} finalize ${SENTRY_RELEASE}
+
 ak-pam/%:
 	"$(MAKE)" -C "${TOP}/ak-pam" $*
 

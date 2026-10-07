@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemFn, LitStr, parse_macro_input};
 
-/// Like `#[tokio::main]`, but also initializes Sentry (via `ak_meta::sentry_options`)
+/// Like `#[tokio::main]`, but also initializes Sentry (via `ak_meta::sentry_init`)
 /// before the multi-threaded tokio runtime is built, so the runtime setup and the
 /// annotated function body both run under Sentry's error/panic capture.
 ///
@@ -31,7 +31,7 @@ pub fn main(attr: TokenStream, item: TokenStream) -> TokenStream {
     quote! {
         #(#attrs)*
         #vis #sig {
-            let _guard = ::sentry::init(::ak_meta::sentry_options(#name));
+            let _guard = ::ak_meta::sentry_init(#name, ::ak_meta::sentry_options());
             ::tokio::runtime::Builder::new_multi_thread()
                 .thread_name(#name)
                 .enable_all()

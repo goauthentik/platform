@@ -131,6 +131,17 @@ jobs:
           tags: ${{ steps.meta.outputs.tag }}
           platforms: linux/amd64,linux/arm64
 
+  sentry-release:
+    needs: call-deploy
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          fetch-depth: 0
+      - run: make sentry-release
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
   attach-and-publish:
     name: Attach artifacts and publish
     needs: [call-deploy, call-package-darwin, call-package-windows]
