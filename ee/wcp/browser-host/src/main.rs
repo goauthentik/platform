@@ -381,7 +381,7 @@ fn run(
 
 fn main() {
     // Held for all of `main` so the client can still flush at exit.
-    let _sentry = sentry::init(ak_meta::sentry_options("ak-browser"));
+    let _sentry = ak_meta::sentry_init("ak-browser", ak_meta::sentry_options());
 
     ak_platform::log::LogBuilder::new(ak_platform::string::PlatformString::new_with_default(
         "authentik Credential Provider (Browser)",
