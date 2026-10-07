@@ -142,6 +142,7 @@ impl App {
 
 #[ak_meta::main("ak-cli")]
 async fn main() -> std::result::Result<(), Error> {
+    ak_platform::restore_sigpipe();
     let cli = CliArgs::parse();
 
     let default_level = if cli.verbose {
