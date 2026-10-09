@@ -1,3 +1,4 @@
+pub mod page;
 pub mod profile;
 pub mod ssh;
 pub mod version;

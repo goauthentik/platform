@@ -106,3 +106,8 @@ export async function setupProfile(opts: SetupProfileOptions): Promise<void> {
 export async function deleteProfile(name: string): Promise<void> {
     return await invoke("delete_profile", { name });
 }
+
+/** Page requested by a deep link, if any. Cleared once taken. */
+export async function takePendingPage(): Promise<string | null> {
+    return await invoke<string | null>("take_pending_page");
+}
