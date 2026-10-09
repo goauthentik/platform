@@ -64,6 +64,7 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
         .setup(move |app| {
             setup::setup_deeplink(app)?;
             setup::setup_agent(app, agent);
+            tauri::async_runtime::spawn(cmd::version::send_startup_analytics());
 
             #[cfg(target_os = "macos")]
             ui::macos::setup_app(app)?;

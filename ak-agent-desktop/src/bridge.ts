@@ -52,9 +52,16 @@ export interface ComponentVersion {
     error?: string;
 }
 
+export interface StableVersion {
+    version: string;
+    changelogUrl: string;
+}
+
 export interface Versions {
     agent: string;
     sysd: ComponentVersion;
+    /** Set only when a newer release is available. */
+    update?: StableVersion;
 }
 
 export async function getVersions(): Promise<Versions> {
