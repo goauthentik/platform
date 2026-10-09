@@ -16,28 +16,28 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_windows-2025_ak-agent-desktop
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_windows-2025_ak-cli
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_windows-2025_ak-sysd
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_windows-2025_ak-browser-support
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_windows-2025_ee-wcp
-          path: bin/
-
-      - uses: digicert/code-signing-software-trust-action@v1
+      - parallel:
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_windows-2025_ak-agent-desktop
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_windows-2025_ak-cli
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_windows-2025_ak-sysd
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_windows-2025_ak-browser-support
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_windows-2025_ee-wcp
+              path: bin/
+          - uses: digicert/code-signing-software-trust-action@v1
       - shell: bash
         run: |
           echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12

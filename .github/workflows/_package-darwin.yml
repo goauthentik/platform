@@ -16,26 +16,27 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_macos-26_ak-agent-desktop
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_macos-26_ak-cli
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_macos-26_ak-sysd
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_macos-26_ak-browser-support
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_xcode-27_psso
-          path: bin/
+      - parallel:
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_macos-26_ak-agent-desktop
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_macos-26_ak-cli
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_macos-26_ak-sysd
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_macos-26_ak-browser-support
+              path: bin/
+          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+            with:
+              name: authentik_xcode-27_psso
+              path: bin/
 
       - id: check
         env:
