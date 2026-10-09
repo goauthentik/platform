@@ -50,6 +50,7 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
 
     tauri::Builder::default()
         .manage(agent.clone())
+        .manage(cmd::page::PendingPage::default())
         .plugin(tauri_plugin_sentry::init(&guard))
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
@@ -70,6 +71,7 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            cmd::page::take_pending_page,
             cmd::profile::get_user_info,
             cmd::profile::list_profiles,
             cmd::profile::active_profile,

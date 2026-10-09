@@ -11,6 +11,7 @@ import {
     listProfiles,
     profile,
     SshStatusResponse,
+    takePendingPage,
     userInfo,
     Versions,
 } from "../bridge";
@@ -22,6 +23,14 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
+
+const PAGES = [
+    ["profiles", "Profiles"],
+    ["ssh", "SSH Agent"],
+    ["mcp", "MCP Server"],
+] as const;
+
+type Page = (typeof PAGES)[number][0];
 
 @customElement("ak-app-shell")
 export class AppShell extends LitElement {
@@ -92,7 +101,7 @@ export class AppShell extends LitElement {
     `;
 
     @state()
-    private page: "profiles" | "ssh" | "mcp" = "profiles";
+    private page: Page = "profiles";
 
     @state()
     private user?: SessionUser;
@@ -110,6 +119,17 @@ export class AppShell extends LitElement {
     private sshStatus?: SshStatusResponse;
 
     private _unlisten?: () => void;
+    private _unlistenNavigate?: () => void;
+
+    // The page comes from a deep link, so only accept known ones.
+    private _navigate = async () => {
+        const page = await takePendingPage();
+        const known = PAGES.find(([p]) => p === page);
+
+        if (known) {
+            this.page = known[0];
+        }
+    };
 
     // ~/.ssh/config is usually edited elsewhere, so re-check when the window regains focus.
     private _refreshSshStatus = async () => {
@@ -124,6 +144,8 @@ export class AppShell extends LitElement {
         super.connectedCallback();
         window.addEventListener("focus", this._refreshSshStatus);
         this._unlisten = await listen("ak-config-reloaded", () => this._refresh());
+        this._unlistenNavigate = await listen("ak-navigate", this._navigate);
+        await this._navigate();
         await this._refresh();
     }
 
@@ -131,6 +153,7 @@ export class AppShell extends LitElement {
         super.disconnectedCallback();
         window.removeEventListener("focus", this._refreshSshStatus);
         this._unlisten?.();
+        this._unlistenNavigate?.();
     }
 
     private async _refresh(): Promise<void> {
@@ -200,13 +223,7 @@ export class AppShell extends LitElement {
                 @ak-profile-deleted=${() => this._refresh()}
             >
                 <nav>
-                    ${(
-                        [
-                            ["profiles", "Profiles"],
-                            ["ssh", "SSH Agent"],
-                            ["mcp", "MCP Server"],
-                        ] as const
-                    ).map(
+                    ${PAGES.map(
                         ([page, label]) => html`
                             <button
                                 aria-current=${this.page === page ? "page" : "false"}
