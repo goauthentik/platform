@@ -1,6 +1,8 @@
 import type { ComponentVersion, Versions } from "../bridge.js";
 
-import { css, html, LitElement } from "lit";
+import { openUrl } from "@tauri-apps/plugin-opener";
+
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 @customElement("ak-status-bar")
@@ -28,6 +30,10 @@ export class StatusBar extends LitElement {
         .error {
             color: var(--ak-global--color--danger);
         }
+        .update {
+            color: var(--ak-global--color--active);
+            cursor: pointer;
+        }
     `;
 
     @property({ type: Object }) versions?: Versions;
@@ -53,6 +59,17 @@ export class StatusBar extends LitElement {
                 ><span class="label">Desktop:</span> v${this.versions?.agent ?? "—"}</span
             >
             ${this._renderEntry("System", this.versions?.sysd)}
+            ${
+                this.versions?.update
+                    ? html`<a
+                          class="entry update"
+                          @click=${() =>
+                              this.versions?.update?.changelogUrl &&
+                              openUrl(this.versions.update.changelogUrl)}
+                          >Update available: v${this.versions.update.version}</a
+                      >`
+                    : nothing
+            }
         `;
     }
 }
