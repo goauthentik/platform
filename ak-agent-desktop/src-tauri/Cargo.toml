@@ -17,6 +17,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 ak-agent = { path = "../../ak-agent" }
 eyre = { workspace = true }
+hex = { workspace = true }
 ak-platform = { path = "../../ak-platform" }
 ak-platform-keyring = { path = "../../ak-platform-keyring" }
 ak-meta = { path = "../../ak-meta" }
@@ -25,12 +26,16 @@ tracing = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-deep-link = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-os = "2"
 tauri-plugin-sentry = "0.7"
+reqwest = { workspace = true }
+semver = "1"
 sentry = { workspace = true }
+sha2 = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-single-instance = "2"
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
