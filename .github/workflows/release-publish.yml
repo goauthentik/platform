@@ -180,6 +180,7 @@ jobs:
         with:
           product: platform
           new-version: ${{ steps.get-version.outputs.version }}
+          changelog-url: ${{ github.event.release.html_url }}
           reason: bugfix
           token: ${{ steps.app-token.outputs.token }}
           github-app-slug: ${{ steps.app-token.outputs.app-slug }}
