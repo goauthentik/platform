@@ -2,10 +2,10 @@ use ak_meta::full_version;
 use ak_platform::{log::LogBuilder, string::PlatformString};
 use eyre::Result;
 use sentry::ClientInitGuard;
-use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
-use tauri::{Emitter, Manager};
 
 mod cmd;
+mod deep_link;
+mod setup;
 mod ui;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -52,47 +52,21 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
         .manage(agent.clone())
         .plugin(tauri_plugin_sentry::init(&guard))
         .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            ui::show_main(app);
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            // Deep links are forwarded to `on_open_url` and routed there.
+            if !argv.iter().any(|a| a.starts_with(deep_link::SCHEME)) {
+                ui::show_main(app);
+            }
         }))
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_deep_link::init())
         .setup(move |app| {
-            let watcher_handle = app.handle().clone();
-            let reload_notify = agent.cfg.on_reload();
-            tauri::async_runtime::spawn(async move {
-                loop {
-                    reload_notify.notified().await;
-                    let visible = watcher_handle
-                        .get_webview_window(ui::WINDOW_LABEL)
-                        .and_then(|w| w.is_visible().ok())
-                        .unwrap_or(false);
-                    if visible && let Err(e) = watcher_handle.emit("ak-config-reloaded", ()) {
-                        tracing::warn!("failed to emit config reload event: {e}");
-                    }
-                }
-            });
-            tauri::async_runtime::spawn(async move {
-                if let Err(e) = agent.start().await {
-                    tracing::error!("agent exited with error: {e}");
-                }
-            });
+            setup::setup_deeplink(app)?;
+            setup::setup_agent(app, agent);
 
             #[cfg(target_os = "macos")]
             ui::macos::setup_app(app)?;
-
-            TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
-                .icon_as_template(true)
-                .on_tray_icon_event(|tray, e| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        ..
-                    } = e
-                    {
-                        ui::show_main(tray.app_handle());
-                    }
-                })
-                .build(app)?;
+            setup::setup_tray(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

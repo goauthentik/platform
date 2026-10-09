@@ -132,6 +132,13 @@
         <File Id="ak_agent"
               Source="$(env.ROOT)/bin/agent-desktop/ak-agent-desktop.exe"
               KeyPath="true" />
+        <!-- io.goauthentik.platform:// deep links, so the dashboard can open the app. -->
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\io.goauthentik.platform">
+          <RegistryValue Type="string" Value="URL:io.goauthentik.platform" />
+          <RegistryValue Type="string" Name="URL Protocol" Value="" />
+          <RegistryValue Key="DefaultIcon" Type="string" Value="&quot;[#ak_agent]&quot;,0" />
+          <RegistryValue Key="shell\open\command" Type="string" Value="&quot;[#ak_agent]&quot; &quot;%1&quot;" />
+        </RegistryKey>
       </Component>
       <Component Id="cli" Bitness="always64" Directory="cli">
         <util:EventSource Log="authentik"
