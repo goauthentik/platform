@@ -1,0 +1,212 @@
+{
+    "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/refs/heads/main/cspell.schema.json",
+    "name": "authentik-platform-cspell",
+    "description": "authentik platform's spell checker configuration",
+    "version": "0.2",
+    "readonly": true,
+    "language": "en-US",
+    // Only report words that are known misspellings (with a suggested fix) or
+    // explicitly forbidden via `flagWords`. Unknown-but-plausible words — project
+    // jargon, identifiers, integration names — pass silently, so new terms do not
+    // require dictionary entries. This mirrors CodeSpell's behavior, which checks
+    // against a curated list of common misspellings rather than flagging every
+    // word absent from a dictionary.
+    "unknownWords": "report-common-typos",
+    "cache": {
+        "useCache": true,
+        "cacheLocation": "./.cspellcache",
+        "cacheStrategy": "content"
+    },
+    "reporters": [
+        "default",
+        [
+            "@cspell/cspell-json-reporter",
+            {
+                "outFile": "./cspell-report.json"
+            }
+        ]
+    ],
+    // In typo-only mode, a dictionary entry is needed only when a legitimate term
+    // collides with the common-misspellings list. Record such collisions here
+    // rather than reviving per-topic dictionary files.
+    "dictionaryDefinitions": [
+        {
+            "name": "en-x-authentik-overrides",
+            "path": "./hack/cspell/overrides.txt",
+            "description": "Legitimate terms that collide with the common-misspellings list",
+            "addWords": true
+        }
+    ],
+    "dictionaries": ["en-x-authentik-overrides"],
+    // British spellings to reject in favor of American variants. The `->` form
+    // forbids the left word and offers the right word as the suggested fix.
+    "flagWords": [
+        // -our -> -or
+        "colour->color",
+        "colours->colors",
+        "coloured->colored",
+        "colouring->coloring",
+        "behaviour->behavior",
+        "behaviours->behaviors",
+        "favour->favor",
+        "favourite->favorite",
+        "favourites->favorites",
+        "flavour->flavor",
+        "flavours->flavors",
+        "honour->honor",
+        "labour->labor",
+        "neighbour->neighbor",
+        "neighbours->neighbors",
+        // -ise/-isation -> -ize/-ization
+        "organise->organize",
+        "organised->organized",
+        "organising->organizing",
+        "organisation->organization",
+        "initialise->initialize",
+        "initialised->initialized",
+        "initialising->initializing",
+        "initialisation->initialization",
+        "authorise->authorize",
+        "authorised->authorized",
+        "authorisation->authorization",
+        "customise->customize",
+        "customised->customized",
+        "customisation->customization",
+        "serialise->serialize",
+        "serialised->serialized",
+        "deserialise->deserialize",
+        "deserialised->deserialized",
+        "normalise->normalize",
+        "normalised->normalized",
+        "normalisation->normalization",
+        "synchronise->synchronize",
+        "synchronised->synchronized",
+        "optimise->optimize",
+        "optimised->optimized",
+        "optimisation->optimization",
+        "recognise->recognize",
+        "recognised->recognized",
+        "specialise->specialize",
+        "prioritise->prioritize",
+        "prioritised->prioritized",
+        "summarise->summarize",
+        "summarised->summarized",
+        "minimise->minimize",
+        "maximise->maximize",
+        "utilise->utilize",
+        "finalise->finalize",
+        "finalised->finalized",
+        // -yse -> -yze
+        "analyse->analyze",
+        "analysed->analyzed",
+        "analysing->analyzing",
+        // -re -> -er
+        "centre->center",
+        "centres->centers",
+        "centred->centered",
+        // -ce -> -se and misc
+        "licence->license",
+        "defence->defense",
+        "catalogue->catalog",
+        "dialogue->dialog",
+        "programme->program",
+        "grey->gray",
+        "artefact->artifact",
+        "artefacts->artifacts"
+    ],
+    "patterns": [
+        {
+            "name": "EncodedURI",
+            "description": "Encoded URIs, which are common in authentik's codebases and often contain many false positives.",
+            "pattern": "[a-zA-Z]+%3A%2F%2F.+"
+        }
+    ],
+    // Only content-scoping patterns belong here (encoded blobs, upstream
+    // identifiers spelled the British way) — not word allowlists. Unknown words
+    // are no longer reported, so shape-of-word escapes are unnecessary.
+    "ignoreRegExpList": [
+        // Encoded URIs
+        "EncodedURI",
+        // Basic auth header
+        "Basic [a-zA-Z0-9+/=]+"
+    ],
+    "languageSettings": [
+        {
+            "languageId": "markdown,mdx",
+            "ignoreRegExpList": [
+                // Fenced code blocks
+                "/^\\s*```[\\s\\S]*?^\\s*```/gm",
+                // Markdown inline codeblocks
+                "`[^`\\s]+`",
+                "`\\w+[^`]*?\\w+`"
+            ]
+        },
+        {
+            "languageId": "typescript,javascript,typescriptreact,javascriptreact,mdx,astro",
+            "ignoreRegExpList": [
+                "js-hex-escape",
+                "js-unicode-escape",
+                "js-regexp-flags",
+                "js-hex-number"
+            ]
+        },
+        {
+            "languageId": "python",
+            "includeRegExpList": ["comments"]
+        },
+        {
+            "languageId": "css,scss",
+            "ignoreRegExpList": [
+                // data URIs, which are common in CSS and often contain many false positives.
+                "data:.+"
+            ]
+        }
+    ],
+    "ignorePaths": [
+        //#region Spell checker
+        "{cspell.*,cSpell.*,.cspell.*,cspell.config.*}", // CSpell configuration files
+        "cspell-report.{json,html,txt}", // CSpell report files
+        "./hack/cspell", // Custom dictionary files
+        //#endregion
+        //#region Monorepo
+        "LICENSE", // License file
+        ".gitignore", // Git ignore file
+        ".gitattributes", // Git attributes file
+        "*-lock.{json,yaml}", // Lock files (pnpm)
+        "Cargo.lock", // Lock file (Cargo)
+        "pnpm-workspace.yaml", // pnpm workspace config
+        ".vscode/**", // VSCode configuration
+        "dist", // Distributed build output
+        "coverage/**", // Coverage output
+        ".test-output", // Test output
+        ".env", // Environment files
+        "*.tsbuildinfo", // TypeScript build info
+        "./cache", // Shared build cache
+        "**/vendor/**", // Vendored code
+        "**vendored**", // Vendored files
+        //#endregion
+        //#region JavaScript/TypeScript
+        "node_modules", // Node modules
+        "package.json", // Package manifest file
+        "*.min.{js,css}", // Minified JS and CSS files
+        "*.min.{js,css}.map", // Source maps for minified files
+        //#endregion
+        //#region Rust
+        "target", // Rust compilation artifacts
+        "./ak-platform/src/generated", // Generated protobuf code
+        //#endregion
+        //#region Apple
+        "./ee/psso/Bridge/Generated", // Generated Swift bridge
+        "*.{xib,storyboard,pbxproj,xcworkspacedata,xcscheme,xcsettings,xctestplan}", // Xcode-generated files
+        "*.xcassets", // Xcode asset catalogs
+        //#endregion
+        //#region Media/Static
+        "*.{png,jpg,ico,icns,pdf,svg}" // Binary files
+        //#endregion
+    ],
+    "useGitignore": true,
+    "features": {
+        "weighted-suggestions": true
+    },
+    "failFast": false
+}

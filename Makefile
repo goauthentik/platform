@@ -83,6 +83,10 @@ lint-rs-ci:
 		${RS_TEST_FLAGS} \
 		-- -D warnings
 
+lint-spellcheck:
+	pnpm install
+	pnpm run lint:spellcheck
+
 .PHONY: lint
 lint:$(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-rs

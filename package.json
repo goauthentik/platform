@@ -1,5 +1,15 @@
 {
     "name": "authentik-platform",
     "private": true,
-    "packageManager": "pnpm@11.5.1"
+    "packageManager": "pnpm@11.5.1",
+    "scripts": {
+        "lint:spellcheck": "cspell . --config cspell.config.jsonc"
+    },
+    "devDependencies": {
+        "@cspell/cspell-json-reporter": "^10.3.6",
+        "cspell": "^10.3.6"
+    },
+    "engines": {
+        "node": ">=24"
+    }
 }
