@@ -8,5 +8,8 @@
     "devDependencies": {
         "@cspell/cspell-json-reporter": "^10.3.6",
         "cspell": "^10.3.6"
+    },
+    "engines": {
+        "node": ">=24"
     }
 }
