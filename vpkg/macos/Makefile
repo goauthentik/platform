@@ -45,7 +45,7 @@ build-app:
 ifeq (${DEV_BUILD}, 1)
 	"${TOP}/hack/plist.py" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleIdentifier" "io.goauthentik.platform.dev.agent"
 endif
-	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
+	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/sysd/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
