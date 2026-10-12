@@ -29,11 +29,11 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.4(esbuild@0.28.2)(jiti@2.7.0)))
       '@goauthentik/tsconfig':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^3.0.0
+        version: 3.0.0
       '@tauri-apps/api':
         specifier: ^2
-        version: 2.12.2
+        version: 2.12.1
       '@tauri-apps/cli':
         specifier: ^2
         version: 2.12.1
@@ -74,8 +74,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1(eslint@9.39.5(jiti@2.7.0))(oxlint@1.86.0)
       '@goauthentik/tsconfig':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^3.0.0
+        version: 3.0.0
       '@sentry/browser':
         specifier: ^11.4.0
         version: 11.4.0
@@ -346,9 +346,9 @@ packages:
     peerDependencies:
       '@goauthentik/fonts': ^1.0.0 || ^2.0.0
 
-  '@goauthentik/tsconfig@2.0.0':
-    resolution: {integrity: sha512-HiU/U9cO4Aaik3VjUHu/3PjD0m2nhIJXlENW1kbfVRFBaqAw//9UuHIel2E3vgwyua93fht36cBb8itZVsG1Vg==}
-    engines: {node: '>=24', npm: '>=11.14.1'}
+  '@goauthentik/tsconfig@3.0.0':
+    resolution: {integrity: sha512-zhFl+BeevwPKyCkPMFmHmKl5+RDcmUYfyxqBvdpacOYZEgzJEuf04l31cLmjx0vfCvaJAcyvLFY9o1UYzyLWdw==}
+    engines: {node: '>=24'}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -851,8 +851,8 @@ packages:
     resolution: {integrity: sha512-fN5u+9HsSfhRaXGOdD2kPGbqDgyX+nkm1XF/4d/LNuM4WiNfvHjjRAqWQYBhQsg1aF9nsTPmSW+tmy+Yn5T5+A==}
     engines: {node: '>= 18', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
 
-  '@tauri-apps/api@2.12.2':
-    resolution: {integrity: sha512-cr0FYEsbSQIeEuIIoC8bwdiHW3YlziMYOZ0j3R7F6kkIHSVrrZnV6CSjv/VQvFoyuERGxFc8NMtLJDXi5wYOYg==}
+  '@tauri-apps/api@2.12.1':
+    resolution: {integrity: sha512-DeyFHa3wynpyoqTDikDEDGTJIq4LQ5USfolQGRmGIWT6JMADyxZBTDa5cAdT3tDg73rUXufPaCwN7aXBos4OnQ==}
 
   '@tauri-apps/cli-darwin-arm64@2.12.1':
     resolution: {integrity: sha512-8bMnbpJ2jKO/ufrOPL65EMHC3ptw7fzeraoQkwibyfGLqIl+UCWsC0152kmNbW6r9NvVQduXqAZF5mH1QgTWhw==}
@@ -1959,7 +1959,7 @@ snapshots:
       - '@styleframe/loader'
       - '@styleframe/plugin'
 
-  '@goauthentik/tsconfig@2.0.0': {}
+  '@goauthentik/tsconfig@3.0.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -2294,7 +2294,7 @@ snapshots:
 
   '@tauri-apps/api@2.0.0-beta.8': {}
 
-  '@tauri-apps/api@2.12.2': {}
+  '@tauri-apps/api@2.12.1': {}
 
   '@tauri-apps/cli-darwin-arm64@2.12.1':
     optional: true
@@ -2345,11 +2345,11 @@ snapshots:
 
   '@tauri-apps/plugin-opener@2.7.0':
     dependencies:
-      '@tauri-apps/api': 2.12.2
+      '@tauri-apps/api': 2.12.1
 
   '@tauri-apps/plugin-os@2.4.0':
     dependencies:
-      '@tauri-apps/api': 2.12.2
+      '@tauri-apps/api': 2.12.1
 
   '@types/chrome@0.3.4':
     dependencies:
