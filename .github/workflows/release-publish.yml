@@ -63,12 +63,12 @@ jobs:
       deploy-url: ${{ steps.netlify.outputs.deploy-url }}
     steps:
       - name: Download repository
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
         with:
           name: repo
           path: ./deploy
       - name: Download packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
         with:
           name: all-packages
           path: ./deploy/packages
@@ -159,7 +159,7 @@ jobs:
             platform
             version
       - name: Download packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
         with:
           name: all-packages
           path: ./packages
