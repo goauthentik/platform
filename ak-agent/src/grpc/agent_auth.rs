@@ -40,6 +40,27 @@ impl CacheData for CachedExchangeToken {
     }
 }
 
+impl CachedExchangeToken {
+    /// Seconds of validity left as of `now`, which is what callers expect in `expires_in`.
+    fn remaining_secs(&self, now: DateTime<Utc>) -> i64 {
+        (self.expiry() - now).num_seconds().max(0)
+    }
+}
+
+/// Keychain key for an exchanged token. Scopes and the actor token change what the
+/// token grants, so they must be part of the key or one request could be served
+/// another's token.
+fn exchange_cache_key(req: &TokenExchangeRequest) -> Vec<String> {
+    let mut key = vec!["token-cache".to_string(), req.audience.clone()];
+    key.extend(req.scopes.iter().cloned());
+    if let Some(at) = &req.actor_token {
+        let mut hasher = Sha256::new();
+        hasher.update(at.as_bytes());
+        key.push(hex_encode(hasher.finalize())[..8].to_owned());
+    }
+    key
+}
+
 impl Debug for CachedExchangeToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CachedExchangeToken")
@@ -238,23 +259,14 @@ impl AgentAuth for AgentGRPCServer {
             .finish()
             .await?;
 
-        let mut cache_key = vec!["token-cache".to_string(), audience.clone()];
-        if !inner.scopes.is_empty() {
-            cache_key.extend(inner.scopes.clone());
-        }
-        if let Some(at) = inner.actor_token.clone() {
-            let mut hasher = Sha256::new();
-            hasher.update(at.as_bytes());
-            cache_key.push(hex_encode(hasher.finalize())[..8].to_owned())
-        }
-
-        let cache = Cache::<CachedExchangeToken>::new(profile_name.clone(), cache_key);
+        let cache_key = exchange_cache_key(inner);
+        let cache = Cache::<CachedExchangeToken>::new(profile_name.clone(), cache_key.clone());
         if let Ok(cached) = cache.get().await {
             tracing::debug!(audience, "cached_token_exchange: returning cached token");
             return Ok(Response::new(TokenExchangeResponse {
                 header: Some(ResponseHeader { successful: true }),
+                expires_in: cached.remaining_secs(Utc::now()),
                 access_token: cached.access_token,
-                expires_in: cached.expires_in,
             }));
         }
 
@@ -273,10 +285,7 @@ impl AgentAuth for AgentGRPCServer {
             expires_in,
             created: Utc::now(),
         };
-        let cache = Cache::<CachedExchangeToken>::new(
-            profile_name,
-            vec!["token-cache".to_string(), audience.clone()],
-        );
+        let cache = Cache::<CachedExchangeToken>::new(profile_name, cache_key);
         if let Err(e) = cache.set(cached).await {
             tracing::warn!("cached_token_exchange: failed to write cache: {e:?}");
         }
@@ -417,6 +426,52 @@ impl AgentGRPCServer {
                 .map(|d| d.as_secs() as i64)
                 .unwrap_or(0),
         ))
+    }
+}
+
+#[cfg(test)]
+mod cache_tests {
+    use super::*;
+
+    fn exchange(scopes: &[&str], actor: Option<&str>) -> TokenExchangeRequest {
+        TokenExchangeRequest {
+            header: None,
+            audience: "client".to_string(),
+            scopes: scopes.iter().map(|s| s.to_string()).collect(),
+            actor_token: actor.map(str::to_string),
+            actor_token_type: actor.map(|_| "jwt".to_string()),
+        }
+    }
+
+    #[test]
+    fn cache_key_separates_scopes_and_actors() {
+        let plain = exchange_cache_key(&exchange(&[], None));
+        assert_eq!(plain, vec!["token-cache", "client"]);
+        assert_ne!(plain, exchange_cache_key(&exchange(&["openid"], None)));
+        assert_ne!(plain, exchange_cache_key(&exchange(&[], Some("a"))));
+        assert_ne!(
+            exchange_cache_key(&exchange(&[], Some("a"))),
+            exchange_cache_key(&exchange(&[], Some("b")))
+        );
+    }
+
+    #[test]
+    fn remaining_secs_counts_down_from_creation() {
+        let created = Utc::now();
+        let token = CachedExchangeToken {
+            access_token: String::new(),
+            expires_in: 300,
+            created,
+        };
+        assert_eq!(token.remaining_secs(created), 300);
+        assert_eq!(
+            token.remaining_secs(created + chrono::TimeDelta::seconds(120)),
+            180
+        );
+        assert_eq!(
+            token.remaining_secs(created + chrono::TimeDelta::seconds(400)),
+            0
+        );
     }
 }
 
