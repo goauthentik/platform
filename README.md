@@ -124,7 +124,7 @@ Requirements: Rust toolchain (`x86_64-pc-windows-msvc`), MSVC build tools, CMake
 
 macOS installer package (`authentik Agent Installer.pkg`). Assembles pre-built binaries (ak-agent-desktop, ak-sysd, ak-cli, ak-browser-support, PSSO.appex) into an app bundle, signs it, and produces a distributable `.pkg`. **macOS only**.
 
-Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build` (`make vpkg/macos/local` builds them all). Apple code-signing certificate and provisioning profile in `~/Library/MobileDevice/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
+Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build` (`make vpkg/macos/local` builds them all). Apple code-signing certificate and provisioning profile in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
 
 #### `vpkg/windows/%`
 
