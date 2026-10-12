@@ -191,7 +191,7 @@ dependencies = [
  "uuid",
  "windows 0.62.2",
  "windows-core 0.62.2",
- "winreg 0.56.0",
+ "winreg",
 ]
 
 [[package]]
@@ -209,7 +209,7 @@ dependencies = [
  "webview2-com",
  "windows 0.62.2",
  "windows-core 0.62.2",
- "winreg 0.56.0",
+ "winreg",
 ]
 
 [[package]]
@@ -225,7 +225,7 @@ dependencies = [
  "tonic",
  "windows 0.62.2",
  "windows-core 0.62.2",
- "winreg 0.56.0",
+ "winreg",
 ]
 
 [[package]]
@@ -401,7 +401,7 @@ dependencies = [
  "sysinfo",
  "tempfile",
  "tracing",
- "winreg 0.56.0",
+ "winreg",
  "wmi",
 ]
 
@@ -473,7 +473,7 @@ dependencies = [
  "windows 0.62.2",
  "windows-service",
  "windows_exe_info",
- "winreg 0.56.0",
+ "winreg",
 ]
 
 [[package]]
@@ -2750,16 +2750,16 @@ dependencies = [
 
 [[package]]
 name = "embed-resource"
-version = "3.0.11"
+version = "3.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbfdaacccebec3b28e4866b8973543c7647797db5ada1bdab552e48fe665fbbd"
+checksum = "6168487b5e7eb2673e6efe1200b1848016e436a6ca0b8031bf04bd9d493a249f"
 dependencies = [
  "cc",
  "memchr",
  "rustc_version",
  "toml 1.1.6+spec-1.1.0",
  "vswhom",
- "winreg 0.55.0",
+ "winreg",
 ]
 
 [[package]]
@@ -4985,7 +4985,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "toml 1.1.6+spec-1.1.0",
- "winreg 0.56.0",
+ "winreg",
 ]
 
 [[package]]
@@ -6372,9 +6372,9 @@ dependencies = [
 
 [[package]]
 name = "psl"
-version = "2.1.239"
+version = "2.1.241"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5736f71353f867ae262bd123b86ddb161f50a2db0300ab762c8f4a0e659635d3"
+checksum = "c7319b480e204d67e759cad7886178335d26324c7c8573c126cc9dfa7350d064"
 dependencies = [
  "psl-types",
 ]
@@ -8287,9 +8287,9 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tauri"
-version = "2.12.1"
+version = "2.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed99ee9694a2deb776d91cae48ac7411ddfc89ecae2f9b5041111d8c88f2ace9"
+checksum = "d061d042ccd2df9c9f1508c1e63d835278c0a4c8801eb41764080e51f2eaaf34"
 dependencies = [
  "anyhow",
  "bytes",
@@ -10101,15 +10101,6 @@ dependencies = [
 
 [[package]]
 name = "windows-sys"
-version = "0.59.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e38bc4d79ed67fd075bcc251a1c39b32a1776bbe92e5bef1f0bf1f8c531853b"
-dependencies = [
- "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "windows-sys"
 version = "0.60.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2f500e4d28234f72040990ec9d39e3a6b950f9f22d3dba18416c35882612bcb"
@@ -10356,16 +10347,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "winreg"
-version = "0.55.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb5a765337c50e9ec252c2069be9bf91c7df47afb103b642ba3a53bf8101be97"
-dependencies = [
- "cfg-if",
- "windows-sys 0.59.0",
 ]
 
 [[package]]

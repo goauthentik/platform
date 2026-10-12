@@ -17,23 +17,23 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - parallel:
-          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
             with:
               name: authentik_macos-26_ak-agent-desktop
               path: bin/
-          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
             with:
               name: authentik_macos-26_ak-cli
               path: bin/
-          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
             with:
               name: authentik_macos-26_ak-sysd
               path: bin/
-          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
             with:
               name: authentik_macos-26_ak-browser-support
               path: bin/
-          - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
             with:
               name: authentik_xcode-27_psso
               path: bin/
@@ -62,7 +62,7 @@ jobs:
         env:
           AK_IS_RELEASE: ${{ inputs.is_release }}
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v5
         with:
           name: authentik_package-macos
           path: bin/vpkg/macos/
