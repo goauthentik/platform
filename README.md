@@ -10,7 +10,7 @@
 # authentik Platform
 
 > [!CAUTION]
-> The authentik Platform is in a pre-alpha state and features/behaviours might change without notice. Use at your own risk.
+> The authentik Platform is in a pre-alpha state and features/behaviors might change without notice. Use at your own risk.
 
 ## Development
 

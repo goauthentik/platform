@@ -40,7 +40,6 @@ impl DirectoryComponent {
                 None,
                 None,
                 None,
-                None,
                 Some(page),
                 Some(PAGE_SIZE),
                 None,
