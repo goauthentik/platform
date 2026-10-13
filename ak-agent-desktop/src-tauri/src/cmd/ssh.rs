@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use ak_agent::{Agent, config::SshFallbackAgentConfig};
 use ak_platform::paths::{AgentSocketID, agent_socket_path};
 
@@ -7,6 +9,8 @@ use super::Result;
 #[serde(rename_all = "camelCase")]
 pub struct SshConfig {
     pub socket_path: String,
+    /// Sockets pinned to a single profile, by profile name.
+    pub profile_socket_paths: BTreeMap<String, String>,
     /// `SSH_AUTH_SOCK` this app was started with, suggested as fallback agent.
     pub system_socket_path: Option<String>,
     pub fallback_socket_path: String,
@@ -15,11 +19,23 @@ pub struct SshConfig {
 
 #[tauri::command]
 pub async fn get_ssh_config(state: tauri::State<'_, Agent>) -> Result<SshConfig> {
-    let fallback = state.cfg.read().await.ssh_fallback_agent.clone();
+    let cfg = state.cfg.read().await;
+    let fallback = cfg.ssh_fallback_agent.clone();
+    // Profiles whose name can't be a socket path don't get a socket.
+    let profile_socket_paths = cfg
+        .profiles
+        .keys()
+        .filter_map(|name| {
+            let path = agent_socket_path(AgentSocketID::SSHProfile(name.clone())).ok()?;
+            Some((name.clone(), path.for_current()))
+        })
+        .collect();
+    drop(cfg);
     Ok(SshConfig {
         socket_path: agent_socket_path(AgentSocketID::SSH)
             .map_err(|e| e.to_string())?
             .for_current(),
+        profile_socket_paths,
         system_socket_path: std::env::var("SSH_AUTH_SOCK").ok(),
         fallback_socket_path: fallback
             .as_ref()

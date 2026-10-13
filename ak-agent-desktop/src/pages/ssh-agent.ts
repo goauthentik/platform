@@ -227,6 +227,23 @@ export class SshAgent extends LitElement {
                 <p class="intro">Or set it for your current shell:</p>
                 ${this._snippet(`export SSH_AUTH_SOCK="${c.socketPath}"`)}
             </div>
+            ${
+                Object.keys(c.profileSocketPaths).length
+                    ? html`<div class="section">
+                          <div class="section-title">Profile agents</div>
+                          <p class="intro">
+                              To always use a specific profile regardless of the active one, use
+                              that profile's socket instead:
+                          </p>
+                          ${Object.entries(c.profileSocketPaths).map(
+                              ([name, path]) =>
+                                  html`<label>${name}</label>${this._snippet(
+                                          `IdentityAgent "${path}"`,
+                                      )}`,
+                          )}
+                      </div>`
+                    : nothing
+            }
             <div class="section">
                 <div class="section-title">Fallback agent</div>
                 <p class="intro">
