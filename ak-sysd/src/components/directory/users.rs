@@ -63,7 +63,6 @@ impl DirectoryComponent {
                 None,
                 None,
                 None,
-                None,
                 None, // include_roles..last_updated__lt
                 None,
                 None, // name, ordering
