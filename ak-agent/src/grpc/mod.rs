@@ -1,22 +1,21 @@
 use ak_platform::generated::agent::RequestHeader;
+use ak_platform::grpc::log::TraceLayer;
 use sentry_tower::{NewSentryLayer, SentryHttpLayer};
 use std::sync::Arc;
 use tonic::Status;
-use tower_http::trace::{DefaultOnFailure, DefaultOnRequest, TraceLayer};
 
 use crate::Agent;
 use crate::config::ConfigV1Profile;
 use ak_platform::generated::agent_cache::agent_cache_server::AgentCacheServer;
 use ak_platform::generated::agent_ctrl::agent_ctrl_server::AgentCtrlServer;
 use ak_platform::generated::ping::ping_server::PingServer;
-use ak_platform::prelude::*;
 use ak_platform::{
     generated::agent_auth::agent_auth_server::AgentAuthServer,
     net::server::{SocketPermMode, listen},
     paths::{AgentSocketID, agent_socket_path},
 };
+use eyre::Result;
 use tonic::transport::Server;
-use tracing::Level;
 
 pub mod agent_auth;
 pub mod agent_cache;
@@ -49,11 +48,7 @@ impl AgentGRPCServer {
         Ok(Server::builder()
             .layer(NewSentryLayer::new_from_top())
             .layer(SentryHttpLayer::new().enable_transaction())
-            .layer(
-                TraceLayer::new_for_grpc()
-                    .on_request(DefaultOnRequest::new().level(Level::INFO))
-                    .on_failure(DefaultOnFailure::new().level(Level::ERROR)),
-            )
+            .layer(TraceLayer::new())
             .add_service(AgentAuthServer::from_arc(Arc::clone(&shared)))
             .add_service(AgentCacheServer::from_arc(Arc::clone(&shared)))
             .add_service(AgentCtrlServer::from_arc(Arc::clone(&shared)))

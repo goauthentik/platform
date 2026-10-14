@@ -8,10 +8,10 @@ FILE_NAME_FIREFOX := authentik_firefox.zip
 .PHONY: bump
 bump:
 	pnpm version ${VERSION} || true
-	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-chrome.json"
-	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-edge.json"
-	sed -i 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-firefox.json"
-	sed -i 's/VERSION = ".*"/VERSION = "${VERSION}"/g' ${PWD}/src/version.ts
+	$(SED_INPLACE) 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-chrome.json"
+	$(SED_INPLACE) 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-edge.json"
+	$(SED_INPLACE) 's/"version": ".*",/"version": "${VERSION}",/g' "${PWD}/manifest-firefox.json"
+	$(SED_INPLACE) 's/VERSION = ".*"/VERSION = "${VERSION}"/g' ${PWD}/src/version.ts
 
 .PHONY: build
 build:
@@ -53,5 +53,5 @@ package-firefox: build
 .PHONY: lint
 lint:
 	pnpm install
-	pnpm run lint-check
-	pnpm run prettier-check
+	pnpm run lint:check
+	pnpm run format:check

@@ -18,6 +18,7 @@ export class BrowserExtensionOptions extends LitElement {
         this.profiles = await chrome.runtime.sendMessage({
             action: "get_profiles",
         });
+
         this.selectedProfile = await getProfile();
         this.requestUpdate();
     }
@@ -27,14 +28,17 @@ export class BrowserExtensionOptions extends LitElement {
             <fieldset>
                 <legend>Select a profile to use:</legend>
 
-                ${this.profiles.map((profile, idx) => {
+                ${this.profiles.map((profile, _idx) => {
                     let checked = false;
+
                     if (profile.name === this.selectedProfile) {
                         checked = true;
                     }
+
                     if (!this.selectedProfile) {
                         checked = true;
                     }
+
                     return html`<input
                             type="radio"
                             id="profile-${profile.name}"

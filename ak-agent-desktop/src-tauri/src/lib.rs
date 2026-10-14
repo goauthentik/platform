@@ -1,28 +1,28 @@
 use ak_meta::full_version;
-use ak_platform::prelude::*;
-use ak_platform::{log::init_log, string::PlatformString};
-use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
-use tauri::{Emitter, Manager};
+use ak_platform::{log::LogBuilder, string::PlatformString};
+use eyre::Result;
+use sentry::ClientInitGuard;
 
 mod cmd;
+mod deep_link;
+mod setup;
 mod ui;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    init_log(
+    let mut opts = ak_meta::sentry_options();
+    opts.auto_session_tracking = true;
+    let guard = ak_meta::sentry_init("ak-agent-desktop", opts);
+    LogBuilder::new(
         PlatformString::new()
             .with_windows("authentik User Service")
             .with_linux("ak-agent"),
-    );
+    )
+    .with_default_filters()
+    .enable();
     tracing::trace!("authentik Agent Desktop v{}", full_version());
-    match ak_platform_keyring::init() {
-        Ok(_) => {}
-        Err(e) => {
-            eprintln!("Failed to setup keyring: {e:?}");
-        }
-    };
 
-    match start_tauri() {
+    match start_tauri(guard) {
         Ok(_) => {}
         Err(e) => {
             tracing::error!("Failed to start tauri: {e:?}");
@@ -30,65 +30,60 @@ pub fn run() {
     }
 }
 
-pub fn start_tauri() -> Result<()> {
+pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
+    #[allow(unused_mut)]
+    let mut context = tauri::generate_context!();
+    #[cfg(debug_assertions)]
+    {
+        context.config_mut().identifier = "io.goauthentik.platform.dev.agent.desktop".to_string();
+    }
+
+    // Own runtime instead of tauri's default so its threads get a recognisable name.
+    let rt = tokio::runtime::Builder::new_multi_thread()
+        .thread_name("ak-agent-desktop")
+        .enable_all()
+        .build()?;
+    tauri::async_runtime::set(rt.handle().clone());
+
+    // Created before tauri so commands never see unmanaged state.
+    let agent = rt.block_on(ak_agent::agent::Agent::new())?;
+
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            ui::show_main(app);
+        .manage(agent.clone())
+        .manage(cmd::page::PendingPage::default())
+        .plugin(tauri_plugin_sentry::init(&guard))
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            // Deep links are forwarded to `on_open_url` and routed there.
+            if !argv.iter().any(|a| a.starts_with(deep_link::SCHEME)) {
+                ui::show_main(app);
+            }
         }))
         .plugin(tauri_plugin_opener::init())
-        .setup(|app| {
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                match ak_agent::agent::Agent::new().await {
-                    Ok(agent) => {
-                        handle.manage(agent.clone());
-                        let watcher_handle = handle.clone();
-                        let reload_notify = agent.cfg.on_reload();
-                        tauri::async_runtime::spawn(async move {
-                            loop {
-                                reload_notify.notified().await;
-                                let visible = watcher_handle
-                                    .get_webview_window(ui::WINDOW_LABEL)
-                                    .and_then(|w| w.is_visible().ok())
-                                    .unwrap_or(false);
-                                if visible
-                                    && let Err(e) = watcher_handle.emit("ak-config-reloaded", ())
-                                {
-                                    tracing::warn!("failed to emit config reload event: {e}");
-                                }
-                            }
-                        });
-                        if let Err(e) = agent.start().await {
-                            tracing::error!("agent exited with error: {e}");
-                        }
-                    }
-                    Err(e) => tracing::error!("failed to start agent: {e}"),
-                }
-            });
+        .plugin(tauri_plugin_deep_link::init())
+        .setup(move |app| {
+            setup::setup_deeplink(app)?;
+            setup::setup_agent(app, agent);
+            tauri::async_runtime::spawn(cmd::version::send_startup_analytics());
 
             #[cfg(target_os = "macos")]
-            ui::macos::setup_menu(app)?;
-
-            TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
-                .icon_as_template(true)
-                .on_tray_icon_event(|tray, e| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        ..
-                    } = e
-                    {
-                        ui::show_main(tray.app_handle());
-                    }
-                })
-                .build(app)?;
+            ui::macos::setup_app(app)?;
+            setup::setup_tray(app)?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            cmd::get_user_info,
-            cmd::list_profiles
+            cmd::page::take_pending_page,
+            cmd::profile::get_user_info,
+            cmd::profile::list_profiles,
+            cmd::profile::active_profile,
+            cmd::profile::setup_profile,
+            cmd::profile::delete_profile,
+            cmd::ssh::get_ssh_config,
+            cmd::ssh::set_ssh_fallback_agent,
+            cmd::ssh::get_ssh_status,
+            cmd::version::get_versions,
         ])
-        .build(tauri::generate_context!())?
+        .build(context)?
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { code, api, .. } = event
                 && code.is_none()

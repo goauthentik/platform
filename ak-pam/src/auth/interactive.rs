@@ -12,7 +12,6 @@ use pam::{
     conv::Conv,
 };
 
-use crate::auth::PW_PROMPT;
 use crate::auth::fido::fido2;
 
 const MAX_ITER: i8 = 30;
@@ -40,7 +39,6 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
 
 pub fn auth_interactive(
     username: String,
-    password: String,
     conv: &Conv<'_>,
     bridge: impl SysdBridge,
 ) -> Result<InteractiveChallenge, PamResultCode> {
@@ -50,25 +48,21 @@ pub fn auth_interactive(
             .interactive_auth(InteractiveAuthRequest {
                 interactive_auth: Some(InteractiveAuth::Init(InteractiveAuthInitRequest {
                     username: username.to_owned(),
-                    password: password.to_owned(),
                 })),
             })
             .await?);
     }) {
         Ok(t) => t.into_inner(),
         Err(e) => {
-            log::warn!("failed to init interactive auth: {e}");
+            tracing::warn!("failed to init interactive auth: {e}");
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
-    // We always prompt for password to distinguish between token/interactive
-    // so at this point we've always statically prompted for password.
-    // In case this initial prompt from the server fails, re-attempt the password challenge
     let mut prev_challenge = InteractiveChallenge {
         txid: challenge.txid.to_owned(),
         finished: false,
         result: 0,
-        prompt: PW_PROMPT.to_owned(),
+        prompt: "".to_owned(),
         prompt_meta: PAM_PROMPT_ECHO_OFF,
         debug_info: "".to_owned(),
         session_id: "".to_owned(),
@@ -77,7 +71,7 @@ pub fn auth_interactive(
     let mut iter = -1;
     while iter <= MAX_ITER {
         iter += 1;
-        log::debug!("{} processing challenge: {:?}", iter, challenge);
+        tracing::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
             let result = result_to_pam_result(challenge.result);
             if !challenge.prompt.is_empty() {
@@ -87,7 +81,7 @@ pub fn auth_interactive(
                 ) {
                     Ok(_) => {}
                     Err(e) => {
-                        log::warn!("failed to send prompt");
+                        tracing::warn!("failed to send prompt");
                         return Err(e);
                     }
                 };
@@ -105,7 +99,7 @@ pub fn auth_interactive(
         // Depending on the prompt, either prompt for data or use what we already know
         match PromptMeta::try_from(challenge.prompt_meta) {
             Ok(PromptMeta::Unspecified) => {
-                log::warn!("Unspecified prompt meta");
+                tracing::warn!("Unspecified prompt meta");
                 return Err(PamResultCode::PAM_ABORT);
             }
             Ok(PromptMeta::PamBinaryPrompt) => {
@@ -114,36 +108,38 @@ pub fn auth_interactive(
                         req_inner.value = match encode_pb(r) {
                             Ok(v) => v,
                             Err(e) => {
-                                log::warn!("Failed to reply to WebAuthn: {}", e);
+                                tracing::warn!("Failed to reply to WebAuthn: {}", e);
                                 return Err(PamResultCode::PAM_ABORT);
                             }
                         };
                     }
                     Err(e) => {
-                        log::warn!("Failed to Fido2 authenticate: {}", e);
+                        tracing::warn!("Failed to Fido2 authenticate: {}", e);
                         continue;
                     }
                 };
             }
             Ok(_) => {
-                log::debug!("Prompt meta generic, prompt user");
+                tracing::debug!("Prompt meta generic, prompt user");
                 let style = prompt_meta_to_pam_message_style(&challenge);
                 let credential = match conv.send(style, &challenge.prompt) {
                     Ok(c) => match c {
                         Some(c) => match c.as_str() {
                             Ok(cc) => cc.to_owned(),
                             Err(_) => {
-                                log::warn!("failed to convert PAM Conversation response to string");
+                                tracing::warn!(
+                                    "failed to convert PAM Conversation response to string"
+                                );
                                 return Err(PamResultCode::PAM_ABORT);
                             }
                         },
                         None => {
                             if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
                                 challenge = prev_challenge.clone();
-                                log::debug!("Restarting loop due to message");
+                                tracing::debug!("Restarting loop due to message");
                                 continue;
                             }
-                            log::warn!("No PAM conversation response");
+                            tracing::warn!("No PAM conversation response");
                             return Err(PamResultCode::PAM_ABORT);
                         }
                     },
@@ -154,7 +150,7 @@ pub fn auth_interactive(
                 req_inner.value = credential;
             }
             Err(_) => {
-                log::warn!(
+                tracing::warn!(
                     "Failed to convert prompt meta value to allowed values: {}",
                     challenge.prompt_meta
                 );
@@ -172,11 +168,11 @@ pub fn auth_interactive(
         }) {
             Ok(t) => t.into_inner(),
             Err(e) => {
-                log::warn!("failed to continue auth: {e}");
+                tracing::warn!("failed to continue auth: {e}");
                 return Err(PamResultCode::PAM_AUTH_ERR);
             }
         };
     }
-    log::warn!("Exceeded maximum iterations");
+    tracing::warn!("Exceeded maximum iterations");
     Err(PamResultCode::PAM_ABORT)
 }

@@ -3,7 +3,7 @@ use clap_complete::{Shell, generate};
 use std::io;
 
 use crate::CliArgs;
-use ak_platform::prelude::*;
+use eyre::Result;
 
 pub async fn completions(shell: Shell) -> Result<()> {
     generate(shell, &mut CliArgs::command(), "ak", &mut io::stdout());

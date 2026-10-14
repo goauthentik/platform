@@ -1,4 +1,4 @@
-use std::error::Error;
+use eyre::Result;
 
 use crate::{
     models::{Message, Response},
@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl PathHandler {
-    pub async fn handle_ping(&self, msg: Message) -> Result<Response, Box<dyn Error>> {
+    pub async fn handle_ping(&self, msg: Message) -> Result<Response> {
         let mut res = Response::in_response_to(msg);
         res.data.insert(
             "ping".to_owned(),

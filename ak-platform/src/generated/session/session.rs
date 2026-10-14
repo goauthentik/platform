@@ -12,7 +12,20 @@ pub struct OpenSessionRequest {
     pub local_socket: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct OpenSessionResponse {
+pub struct CreateSessionRequest {
+    #[prost(string, tag="1")]
+    pub username: ::prost::alloc::string::String,
+    #[prost(string, optional, tag="2")]
+    pub token: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="3")]
+    pub ssh_auth: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(uint32, tag="10")]
+    pub pid: u32,
+    #[prost(uint32, tag="11")]
+    pub ppid: u32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CreateSessionResponse {
     #[prost(bool, tag="1")]
     pub success: bool,
     #[prost(string, tag="2")]

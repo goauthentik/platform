@@ -15,10 +15,15 @@ class API {
         -> ASAuthorizationProviderExtensionLoginConfiguration?
     {
         do {
-            let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
-                from: loginManager.key(for: .currentDeviceSigning)!)!
-            let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
-                from: loginManager.key(for: .currentDeviceEncryption)!)!
+            guard let signingKey = loginManager.key(for: .currentDeviceSigning),
+                let encryptionKey = loginManager.key(for: .currentDeviceEncryption),
+                let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(from: signingKey),
+                let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
+                    from: encryptionKey)
+            else {
+                self.logger.error("device signing/encryption keys not available")
+                return nil
+            }
             self.logger.debug("registering device with sysd...")
             let config = try await SysdBridge.shared.pssoRegisterDevice(
                 deviceSigningKey: DeviceSigningKey,
@@ -40,13 +45,18 @@ class API {
         userToken: String,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            let (EnclaveKeyID, UserSecureEnclaveKey, _) = try getPublicKeyString(
-                from: loginManger.key(for: .userSecureEnclaveKey)!)!
+            guard let key = loginManger.key(for: .userSecureEnclaveKey)
+                    ?? loginManger.key(for: .userDeviceSigning),
+                let (enclaveKeyID, userSecureEnclaveKey, _) = try getPublicKeyString(from: key)
+            else {
+                self.logger.error("no user secure enclave key available, cannot register user")
+                return .failed
+            }
             self.logger.debug("registering user with sysd...")
             let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
-                    enclaveKeyID: EnclaveKeyID,
-                    userSecureEnclaveKey: UserSecureEnclaveKey,
+                    enclaveKeyID: enclaveKeyID,
+                    userSecureEnclaveKey: userSecureEnclaveKey,
                     userAuth: userToken,
                 )
             self.logger
@@ -119,8 +129,11 @@ class API {
         }
 
         // Determine the type of the key (RSA, EC, etc.)
-        let attributes = SecKeyCopyAttributes(publicKey) as! [CFString: Any]
-        let keyType = attributes[kSecAttrKeyType] as! CFString
+        guard let attributes = SecKeyCopyAttributes(publicKey) as? [CFString: Any],
+            let keyType = attributes[kSecAttrKeyType] as? String as CFString?
+        else {
+            return nil
+        }
 
         // Extract public key data in DER format
         var error: Unmanaged<CFError>?

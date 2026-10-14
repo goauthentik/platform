@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package sys_auth;
-option go_package = "pkg/pb";
 option swift_prefix = "";
 
 import "google/protobuf/empty.proto";
@@ -9,14 +8,17 @@ import "agent.proto";
 import "agent_auth.proto";
 
 service SystemAuthToken {
+  // Authenticate with purely a token
   rpc TokenAuth(TokenAuthRequest) returns (TokenAuthResponse);
+  // Authenticate with SSH Certificate which contains a token
+  rpc SSHCertAuth(SSHCertAuthRequest) returns (SSHCertAuthResponse);
 }
 
 service SystemAuthInteractive {
   // Interactive auth without a browser (for example, CLI)
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
   // Interactive auth which is handed of to a browser
-  rpc InteractiveAuthAsync(google.protobuf.Empty) returns (InteractiveAuthAsyncResponse);
+  rpc InteractiveAuthAsync(InteractiveAuthAsyncRequest) returns (InteractiveAuthAsyncResponse);
 }
 
 service SystemAuthAuthorize {
@@ -34,9 +36,18 @@ message TokenAuthResponse {
   string session_id = 3;
 }
 
+message SSHCertAuthRequest {
+  string user = 1;
+  string b64key = 2;
+  string type = 3;
+}
+
+message SSHCertAuthResponse {
+  repeated string lines = 1;
+}
+
 message InteractiveAuthInitRequest {
   string username = 1;
-  string password = 2;
 }
 
 message InteractiveAuthContinueRequest {
@@ -49,11 +60,6 @@ message InteractiveAuthRequest {
     InteractiveAuthInitRequest init = 1;
     InteractiveAuthContinueRequest continue = 2;
   }
-}
-
-message InteractiveAuthAsyncResponse {
-  string url = 1;
-  string header_token = 2;
 }
 
 enum InteractiveAuthResult {
@@ -83,6 +89,15 @@ message InteractiveChallenge {
   string debug_info = 6;
   string session_id = 7;
   string component = 8;
+}
+
+message InteractiveAuthAsyncRequest {
+  optional string username = 1;
+}
+
+message InteractiveAuthAsyncResponse {
+  string url = 1;
+  string header_token = 2;
 }
 
 message SystemAuthorizeRequest {

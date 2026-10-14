@@ -1,22 +1,28 @@
-FROM debian:bullseye-slim
+FROM docker.io/library/almalinux:9
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    RUSTUP_HOME=/usr/local/rustup \
+ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
-    PATH=/usr/local/cargo/bin:$PATH
+    PATH=/usr/local/cargo/bin:$PATH \
+    CARGO_TERM_COLOR=always
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        pkg-config \
-        libssl-dev \
-        curl \
+RUN dnf install -y --allowerasing \
+        gcc gcc-c++ make cmake \
+        pkgconf-pkg-config \
+        openssl-devel \
+        curl git \
         ca-certificates \
-        libpam0g-dev libudev-dev && \
-    rm -rf /var/lib/apt/lists/*
+        pam-devel systemd-devel zstd xz && \
+    dnf clean all
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --no-modify-path --default-toolchain stable && \
-    chmod -R a+rX /usr/local/rustup /usr/local/cargo
+RUN ARCH=$(uname -m) && \
+    curl -fsSL -o /tmp/osquery-toolchain.tar.xz \
+        "https://github.com/osquery/osquery-toolchain/releases/download/1.3.0/osquery-toolchain-1.3.0-${ARCH}.tar.xz" && \
+    tar xf /tmp/osquery-toolchain.tar.xz -C /usr/local && \
+    rm /tmp/osquery-toolchain.tar.xz
 
-ENV CARGO_TERM_COLOR=always
+RUN --mount=type=bind,target=rust-toolchain.toml,src=rust-toolchain.toml \
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain none && \
+    rustup install && \
+    rustup default "$(sed -n 's/channel = "\(.*\)"/\1/p' rust-toolchain.toml)" && \
+    rustc --version && \
+    cargo --version

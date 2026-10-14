@@ -6,6 +6,8 @@ pub struct PingResponse {
     pub component: ::prost::alloc::string::String,
     #[prost(string, tag="2")]
     pub version: ::prost::alloc::string::String,
+    #[prost(string, tag="3")]
+    pub server_version: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CapabilitiesResponse {

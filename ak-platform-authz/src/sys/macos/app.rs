@@ -1,10 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use ak_macos_touchid::AccessRequest;
-use ak_platform::{
-    net::server::proc_info::{ProcInfo, proc_exe_path, proc_parent_pid},
-    prelude::BoxError,
-};
+use ak_platform::net::server::proc_info::{ProcInfo, proc_exe_path, proc_parent_pid};
+use eyre::Result;
 
 pub fn find_app_bundle(exe: &Path) -> Option<PathBuf> {
     let mut path = exe.to_path_buf();
@@ -53,7 +51,7 @@ pub fn populate_from_bundle(ar: &mut AccessRequest, bundle: &Path) {
     }
 }
 
-pub async fn lookup_app_info(pc: Option<ProcInfo>) -> Result<AccessRequest, BoxError> {
+pub async fn lookup_app_info(pc: Option<ProcInfo>) -> Result<AccessRequest> {
     let mut ar = AccessRequest::default();
 
     let Some(pc) = pc else {
@@ -129,7 +127,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_lookup_app_info() {
-        let info = lookup_app_info(Some(ProcInfo::from_pid(process::id()).unwrap())).await.unwrap();
+        let info = lookup_app_info(Some(ProcInfo::from_pid(process::id()).unwrap()))
+            .await
+            .unwrap();
         assert!(info.requesting_app != "");
     }
 }

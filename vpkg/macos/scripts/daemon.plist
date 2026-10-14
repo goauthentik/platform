@@ -7,9 +7,9 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/Applications/authentik Agent.app/Contents/MacOS/ak-sysd</string>
-        <string>agent</string>
-        <string>--config-file</string>
+        <string>--config</string>
         <string>/opt/authentik/config/config.json</string>
+        <string>agent</string>
 	</array>
 	<key>UserName</key>
 	<string>root</string>

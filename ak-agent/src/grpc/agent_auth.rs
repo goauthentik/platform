@@ -4,21 +4,26 @@ use ak_platform::{
         agent::{ResponseHeader, Token},
         agent_auth::{
             AuthorizeRequest, AuthorizeResponse, CurrentTokenRequest, CurrentTokenResponse,
-            DeviceTokenExchangeRequest, TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest,
-            WhoAmIResponse, agent_auth_server::AgentAuth, current_token_request::Type,
+            TokenExchangeRequest, TokenExchangeResponse, WhoAmIRequest, WhoAmIResponse,
+            agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
-    net::server::creds::ProcCredentials,
+    net::server::{creds::ProcCredentials, proc_info::process_user},
+    oauth2_http,
     string::PlatformString,
 };
-use ak_platform_authz::AuthorizeAction;
+use ak_platform_authz::grpc::AuthPeer;
 use ak_platform_keyring::cache::Cache;
 use ak_platform_keyring::cache::CacheData;
 use chrono::{DateTime, Utc};
+use hex::encode as hex_encode;
+use oauth2::{ClientId, Scope, TokenResponse, TokenUrl, basic::BasicClient};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{fmt::Debug, time::Duration};
 use tonic::{Request, Response, Status};
+use url::form_urlencoded;
 
 #[derive(Clone, Serialize, Deserialize)]
 struct CachedExchangeToken {
@@ -33,6 +38,27 @@ impl CacheData for CachedExchangeToken {
     fn expiry(&self) -> DateTime<Utc> {
         self.created + chrono::TimeDelta::seconds(self.expires_in)
     }
+}
+
+impl CachedExchangeToken {
+    /// Seconds of validity left as of `now`, which is what callers expect in `expires_in`.
+    fn remaining_secs(&self, now: DateTime<Utc>) -> i64 {
+        (self.expiry() - now).num_seconds().max(0)
+    }
+}
+
+/// Keychain key for an exchanged token. Scopes and the actor token change what the
+/// token grants, so they must be part of the key or one request could be served
+/// another's token.
+fn exchange_cache_key(req: &TokenExchangeRequest) -> Vec<String> {
+    let mut key = vec!["token-cache".to_string(), req.audience.clone()];
+    key.extend(req.scopes.iter().cloned());
+    if let Some(at) = &req.actor_token {
+        let mut hasher = Sha256::new();
+        hasher.update(at.as_bytes());
+        key.push(hex_encode(hasher.finalize())[..8].to_owned());
+    }
+    key
 }
 
 impl Debug for CachedExchangeToken {
@@ -51,7 +77,30 @@ struct OAuthTokenResponse {
     expires_in: Option<i64>,
 }
 
-use crate::grpc::AgentGRPCServer;
+use crate::{config::ConfigV1Profile, grpc::AgentGRPCServer};
+
+/// Credentials to authorize a request as. sysd asks on behalf of `caller_pid` (the
+/// browser support host), so that process is authorized instead of sysd. Only root
+/// or SYSTEM peers may do so, and only for callers running as our user, so sysd can't
+/// be used to reach another user's agent.
+fn on_behalf_of<T>(
+    request: &Request<T>,
+    caller_pid: u32,
+) -> Result<Option<ProcCredentials>, Status> {
+    let peer = request.extensions().get::<ProcCredentials>().cloned();
+    if caller_pid == 0 {
+        return Ok(peer);
+    }
+    // From the kernel, as a root process's user isn't readable by us on macOS.
+    let peer_privileged = peer.as_ref().is_some_and(ProcCredentials::is_privileged);
+    let own = process_user(std::process::id());
+    if !peer_privileged || own.is_none() || process_user(caller_pid) != own {
+        return Err(Status::permission_denied(
+            "not allowed to act on behalf of caller",
+        ));
+    }
+    Ok(Some(ProcCredentials::new(Some(caller_pid.into()))))
+}
 
 #[tonic::async_trait]
 impl AgentAuth for AgentGRPCServer {
@@ -59,25 +108,24 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<WhoAmIRequest>,
     ) -> Result<Response<WhoAmIResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
         let profile = self
-            .profile_for_request(request.into_inner().header)
+            .profile_for_request(request.get_ref().header.clone())
             .await?;
 
-        AuthorizeAction {
-            message: Box::new(|c| {
+        request
+            .auth_peer()
+            .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!("authorize access to your account info in '{cmd}'"))
                     .with_windows(format!("'{cmd}' is attempting to access your account info"))
                     .with_linux(format!("'{cmd}' is attempting to access your account info")))
-            }),
-            uid: Box::new(|c| c.clone().proc_info()?.unique_process_id()),
-            timeout_success: Duration::from_secs(0),
-            timeout_denied: Duration::from_secs(0),
-        }
-        .prompt_grpc(pc)
-        .await?;
+            })
+            .with_uid(|c| c.clone().proc_info()?.unique_process_id())
+            .with_success_timeout(Duration::from_secs(0))
+            .with_denied_timeout(Duration::from_secs(0))
+            .finish()
+            .await?;
 
         let req = match profile
             .clone()
@@ -110,60 +158,64 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<CurrentTokenRequest>,
     ) -> Result<Response<CurrentTokenResponse>, Status> {
-        let proc_creds = request.extensions().get::<ProcCredentials>().cloned();
-        let inner_req = request.into_inner();
+        let inner_req = request.get_ref();
+        let profile = self.profile_for_request(inner_req.header.clone()).await?;
         let token_manager = self
             .agent
             .gtm
             .for_profile(
                 &inner_req
-                    .clone()
                     .header
+                    .as_ref()
                     .ok_or(Status::invalid_argument("missing header"))?
                     .profile,
             )
             .await
             .ok_or(Status::invalid_argument("profile not found"))?;
 
-        AuthorizeAction {
-            message: Box::new(|c| {
+        request
+            .auth_peer()
+            .with_creds(on_behalf_of(&request, inner_req.caller_pid)?)
+            .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!("authorize access to your account in '{cmd}'"))
                     .with_windows(format!("'{cmd}' is attempting to access your account"))
                     .with_linux(format!("'{cmd}' is attempting to access your account")))
-            }),
-            uid: Box::new(|_| Ok("".to_string())),
-            timeout_success: Duration::from_secs(0),
-            timeout_denied: Duration::from_secs(0),
-        }
-        .prompt_grpc(proc_creds)
-        .await?;
+            })
+            .with_uid(move |c| c.clone().proc_info()?.unique_process_id())
+            .with_success_timeout(Duration::from_secs(0))
+            .with_denied_timeout(Duration::from_secs(0))
+            .finish()
+            .await?;
 
         let token = match inner_req.r#type() {
             Type::Unspecified => Err(Status::invalid_argument("unsupported token type")),
             Type::Unverified => Ok(token_manager
                 .unverified()
                 .await
-                .map_err(Status::from_error)?),
-            Type::Verified => Ok(token_manager.token().await.map_err(Status::from_error)?),
+                .map_err(|e| Status::from_error(e.into()))?),
+            Type::Verified => Ok(token_manager
+                .token()
+                .await
+                .map_err(|e| Status::from_error(e.into()))?),
         }?;
-        let c = token.claims().map_err(Status::from_error)?;
+        let c = token.claims().map_err(|e| Status::from_error(e.into()))?;
 
         Ok(Response::new(CurrentTokenResponse {
             header: Some(ResponseHeader { successful: true }),
             token: Some(Token {
                 preferred_username: c.preferred_username,
                 iss: c.iss,
-                sub: c.sub,
+                sub: c.sub.unwrap_or_default(),
                 aud: c.aud,
                 exp: Some(c.exp.into()),
                 nbf: None,
                 iat: Some(c.iat.into()),
-                jti: c.jti,
+                jti: c.jti.unwrap_or_default(),
             }),
             raw: token.access_token,
-            url: "".to_string(),
+            url: profile.authentik_url.to_string(),
         }))
     }
 
@@ -171,21 +223,21 @@ impl AgentAuth for AgentGRPCServer {
         &self,
         request: Request<TokenExchangeRequest>,
     ) -> Result<Response<TokenExchangeResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
-        let inner = request.into_inner();
+        let inner = request.get_ref();
         let profile_name = inner
             .header
             .as_ref()
             .ok_or(Status::invalid_argument("missing header"))?
             .profile
             .clone();
-        let profile = self.profile_for_request(inner.header).await?;
-        let client_id = inner.client_id;
+        let profile = self.profile_for_request(inner.clone().header).await?;
+        let audience = inner.audience.clone();
 
-        let cid1 = client_id.clone();
-        let cid2 = client_id.clone();
-        AuthorizeAction {
-            message: Box::new(move |c| {
+        let cid1 = audience.clone();
+        let cid2 = audience.clone();
+        request
+            .auth_peer()
+            .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
                     .with_darwin(format!(
@@ -197,42 +249,115 @@ impl AgentAuth for AgentGRPCServer {
                     .with_linux(format!(
                         "'{cid1}' is attempting to access your account in '{cmd}'"
                     )))
-            }),
-            uid: Box::new(move |c| {
+            })
+            .with_uid(move |c| {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{cid2}:{pid}"))
-            }),
-            timeout_success: Duration::from_secs(30 * 60),
-            timeout_denied: Duration::from_secs(1),
-        }
-        .prompt_grpc(pc)
-        .await?;
+            })
+            .with_success_timeout(Duration::from_secs(30 * 60))
+            .with_denied_timeout(Duration::from_secs(1))
+            .finish()
+            .await?;
 
-        let cache = Cache::<CachedExchangeToken>::new(
-            profile_name.clone(),
-            vec!["token-cache".to_string(), client_id.clone()],
-        );
+        let cache_key = exchange_cache_key(inner);
+        let cache = Cache::<CachedExchangeToken>::new(profile_name.clone(), cache_key.clone());
         if let Ok(cached) = cache.get().await {
-            tracing::debug!(client_id, "cached_token_exchange: returning cached token");
+            tracing::debug!(audience, "cached_token_exchange: returning cached token");
             return Ok(Response::new(TokenExchangeResponse {
                 header: Some(ResponseHeader { successful: true }),
+                expires_in: cached.remaining_secs(Utc::now()),
                 access_token: cached.access_token,
-                expires_in: cached.expires_in,
             }));
         }
 
-        let token_url = format!("{}/application/o/token/", profile.authentik_url);
-        let body = url::form_urlencoded::Serializer::new(String::new())
-            .append_pair("grant_type", "client_credentials")
-            .append_pair("client_id", &client_id)
+        let (access_token, expires_in) = if let Some(at) = inner.actor_token.clone() {
+            let Some(actor_token_type) = inner.actor_token_type.clone() else {
+                return Err(Status::invalid_argument("Missing actor_token_type"));
+            };
+            self._token_exchange_grant(inner, &profile, &at, &actor_token_type)
+                .await?
+        } else {
+            self._exchange_client_credentials(inner, &profile).await?
+        };
+
+        let cached = CachedExchangeToken {
+            access_token: access_token.clone(),
+            expires_in,
+            created: Utc::now(),
+        };
+        let cache = Cache::<CachedExchangeToken>::new(profile_name, cache_key);
+        if let Err(e) = cache.set(cached).await {
+            tracing::warn!("cached_token_exchange: failed to write cache: {e:?}");
+        }
+
+        tracing::debug!(audience, "cached_token_exchange: exchanged new token");
+        Ok(Response::new(TokenExchangeResponse {
+            header: Some(ResponseHeader { successful: true }),
+            access_token,
+            expires_in,
+        }))
+    }
+
+    async fn authorize(
+        &self,
+        request: Request<AuthorizeRequest>,
+    ) -> Result<Response<AuthorizeResponse>, Status> {
+        let inner = request.get_ref();
+        let service = inner.service.clone();
+        let uid = inner.uid.clone();
+
+        request
+            .auth_peer()
+            .with_message(move |_c| {
+                Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
+            })
+            .with_uid(move |_c| Ok(uid.clone()))
+            .with_success_timeout(Duration::from_hours(2))
+            .with_denied_timeout(Duration::from_mins(5))
+            .finish()
+            .await?;
+
+        Ok(Response::new(AuthorizeResponse {
+            header: Some(ResponseHeader { successful: true }),
+        }))
+    }
+}
+
+impl AgentGRPCServer {
+    /// RFC 8693 token-exchange grant, used when targeting a specific actor. The
+    /// `oauth2` crate has no support for this grant type (only the standard
+    /// authorization_code/client_credentials/device_code/password/refresh_token
+    /// grants), so it's built and sent by hand.
+    async fn _token_exchange_grant(
+        &self,
+        request: &TokenExchangeRequest,
+        profile: &ConfigV1Profile,
+        actor_token: &str,
+        actor_token_type: &str,
+    ) -> Result<(String, i64), Status> {
+        let scope_string = if request.scopes.is_empty() {
+            "openid email profile".to_string()
+        } else {
+            request.scopes.join(" ")
+        };
+        let body = form_urlencoded::Serializer::new(String::new())
+            .append_pair("scope", &scope_string)
             .append_pair(
-                "client_assertion_type",
-                "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+                "grant_type",
+                "urn:ietf:params:oauth:grant-type:token-exchange",
             )
-            .append_pair("client_assertion", &profile.access_token())
-            .append_pair("scope", "openid email profile")
+            .append_pair("client_id", &profile.client_id)
+            .append_pair("subject_token", &profile.access_token())
+            .append_pair(
+                "subject_token_type",
+                "urn:ietf:params:oauth:token-type:access_token",
+            )
+            .append_pair("audience", &request.audience)
+            .append_pair("actor_token", actor_token)
+            .append_pair("actor_token_type", actor_token_type)
             .finish();
 
+        let token_url = format!("{}/application/o/token/", profile.authentik_url);
         let res = reqwest::Client::new()
             .post(&token_url)
             .header(
@@ -252,106 +377,168 @@ impl AgentAuth for AgentGRPCServer {
 
         let new_token: OAuthTokenResponse =
             res.json().await.map_err(|e| Status::from_error(e.into()))?;
-        let expires_in = new_token.expires_in.unwrap_or(0);
-
-        let cached = CachedExchangeToken {
-            access_token: new_token.access_token.clone(),
-            expires_in,
-            created: Utc::now(),
-        };
-        let cache = Cache::<CachedExchangeToken>::new(
-            profile_name,
-            vec!["token-cache".to_string(), client_id.clone()],
-        );
-        if let Err(e) = cache.set(cached).await {
-            tracing::warn!("cached_token_exchange: failed to write cache: {e:?}");
-        }
-
-        tracing::debug!(client_id, "cached_token_exchange: exchanged new token");
-        Ok(Response::new(TokenExchangeResponse {
-            header: Some(ResponseHeader { successful: true }),
-            access_token: new_token.access_token,
-            expires_in,
-        }))
+        Ok((new_token.access_token, new_token.expires_in.unwrap_or(0)))
     }
 
-    async fn device_token_exchange(
+    /// Plain client_credentials grant, authenticating with a JWT-bearer client
+    /// assertion instead of a client secret.
+    async fn _exchange_client_credentials(
         &self,
-        request: Request<DeviceTokenExchangeRequest>,
-    ) -> Result<Response<TokenExchangeResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
-        let inner = request.into_inner();
-        let profile = self.profile_for_request(inner.header).await?;
-        let device_name = inner.device_name;
-
-        let dn1 = device_name.clone();
-        let dn2 = device_name.clone();
-        AuthorizeAction {
-            message: Box::new(move |c| {
-                let cmd = c.clone().proc_info()?.parent_cmdline()?;
-                Ok(PlatformString::new()
-                    .with_darwin(format!("authorize access device '{dn1}' in '{cmd}'"))
-                    .with_windows(format!("'{dn1}' is attempting to access '{cmd}'"))
-                    .with_linux(format!("'{dn1}' is attempting to access '{cmd}'")))
-            }),
-            uid: Box::new(move |c| {
-                let pid = c.clone().proc_info()?.unique_process_id()?;
-                Ok(format!("{dn2}:{pid}"))
-            }),
-            timeout_success: Duration::from_secs(30 * 60),
-            timeout_denied: Duration::from_secs(5 * 60),
-        }
-        .prompt_grpc(pc)
-        .await?;
-
-        let api_config = authentik_client::apis::configuration::Configuration {
-            base_path: format!("{}/api/v3", profile.authentik_url),
-            bearer_access_token: Some(profile.access_token()),
-            user_agent: Some(user_agent()),
-            ..Default::default()
+        request: &TokenExchangeRequest,
+        profile: &ConfigV1Profile,
+    ) -> Result<(String, i64), Status> {
+        let scopes: Vec<Scope> = if request.scopes.is_empty() {
+            ["openid", "email", "profile"]
+                .into_iter()
+                .map(|s| Scope::new(s.to_string()))
+                .collect()
+        } else {
+            request.scopes.iter().cloned().map(Scope::new).collect()
         };
 
-        let dt =
-            authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create(
-                &api_config,
-                &device_name,
+        let token_url = TokenUrl::new(format!("{}/application/o/token/", profile.authentik_url))
+            .map_err(|e| Status::internal(format!("invalid token URL: {e}")))?;
+        let reqwest_client = reqwest::ClientBuilder::new()
+            .user_agent(user_agent())
+            .build()
+            .map_err(|e| Status::from_error(e.into()))?;
+        let http_client = oauth2_http::adapter(reqwest_client);
+
+        let client =
+            BasicClient::new(ClientId::new(request.audience.clone())).set_token_uri(token_url);
+
+        let token_response = client
+            .exchange_client_credentials()
+            .add_scopes(scopes)
+            .add_extra_param(
+                "client_assertion_type",
+                "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
             )
+            .add_extra_param("client_assertion", profile.access_token())
+            .request_async(&http_client)
             .await
-            .map_err(|e| Status::internal(e.to_string()))?;
+            .map_err(|e| Status::internal(format!("token exchange failed: {e}")))?;
 
-        tracing::debug!(
-            device = device_name,
-            "device_token_exchange: exchanged token for device"
-        );
-        Ok(Response::new(TokenExchangeResponse {
-            header: Some(ResponseHeader { successful: true }),
-            access_token: dt.token,
-            expires_in: dt.expires_in.unwrap_or(0) as i64,
-        }))
+        Ok((
+            token_response.access_token().secret().clone(),
+            token_response
+                .expires_in()
+                .map(|d| d.as_secs() as i64)
+                .unwrap_or(0),
+        ))
+    }
+}
+
+#[cfg(test)]
+mod cache_tests {
+    use super::*;
+
+    fn exchange(scopes: &[&str], actor: Option<&str>) -> TokenExchangeRequest {
+        TokenExchangeRequest {
+            header: None,
+            audience: "client".to_string(),
+            scopes: scopes.iter().map(|s| s.to_string()).collect(),
+            actor_token: actor.map(str::to_string),
+            actor_token_type: actor.map(|_| "jwt".to_string()),
+        }
     }
 
-    async fn authorize(
-        &self,
-        request: Request<AuthorizeRequest>,
-    ) -> Result<Response<AuthorizeResponse>, Status> {
-        let pc = request.extensions().get::<ProcCredentials>().cloned();
-        let inner = request.into_inner();
-        let service = inner.service.clone();
-        let uid = inner.uid.clone();
+    #[test]
+    fn cache_key_separates_scopes_and_actors() {
+        let plain = exchange_cache_key(&exchange(&[], None));
+        assert_eq!(plain, vec!["token-cache", "client"]);
+        assert_ne!(plain, exchange_cache_key(&exchange(&["openid"], None)));
+        assert_ne!(plain, exchange_cache_key(&exchange(&[], Some("a"))));
+        assert_ne!(
+            exchange_cache_key(&exchange(&[], Some("a"))),
+            exchange_cache_key(&exchange(&[], Some("b")))
+        );
+    }
 
-        AuthorizeAction {
-            message: Box::new(move |_c| {
-                Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
-            }),
-            uid: Box::new(move |_c| Ok(uid.clone())),
-            timeout_success: Duration::from_hours(2),
-            timeout_denied: Duration::from_mins(5),
+    #[test]
+    fn remaining_secs_counts_down_from_creation() {
+        let created = Utc::now();
+        let token = CachedExchangeToken {
+            access_token: String::new(),
+            expires_in: 300,
+            created,
+        };
+        assert_eq!(token.remaining_secs(created), 300);
+        assert_eq!(
+            token.remaining_secs(created + chrono::TimeDelta::seconds(120)),
+            180
+        );
+        assert_eq!(
+            token.remaining_secs(created + chrono::TimeDelta::seconds(400)),
+            0
+        );
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+
+    fn request(peer: Option<ProcCredentials>) -> Request<()> {
+        let mut req = Request::new(());
+        if let Some(p) = peer {
+            req.extensions_mut().insert(p);
         }
-        .prompt_grpc(pc)
-        .await?;
+        req
+    }
 
-        Ok(Response::new(AuthorizeResponse {
-            header: Some(ResponseHeader { successful: true }),
-        }))
+    fn root_peer() -> Option<ProcCredentials> {
+        Some(ProcCredentials::new(Some(1)).with_uid(Some(0)))
+    }
+
+    fn own_pid() -> u32 {
+        std::process::id()
+    }
+
+    fn running_as_root() -> bool {
+        process_user(own_pid()).is_some_and(|u| *u == 0)
+    }
+
+    #[test]
+    fn without_caller_pid_peer_is_used() {
+        let peer = Some(ProcCredentials::new(Some(42)));
+        let creds = on_behalf_of(&request(peer), 0).unwrap().unwrap();
+        assert_eq!(creds.pid(), 42);
+    }
+
+    #[test]
+    fn root_peer_acts_for_own_user() {
+        let creds = on_behalf_of(&request(root_peer()), own_pid())
+            .unwrap()
+            .unwrap();
+        assert_eq!(creds.pid(), i64::from(own_pid()));
+    }
+
+    #[test]
+    fn non_root_peer_is_rejected() {
+        let peer = Some(ProcCredentials::new(Some(own_pid().into())).with_uid(Some(1000)));
+        let err = on_behalf_of(&request(peer), own_pid()).unwrap_err();
+        assert_eq!(err.code(), tonic::Code::PermissionDenied);
+    }
+
+    #[test]
+    fn peer_without_uid_is_rejected() {
+        let peer = Some(ProcCredentials::new(Some(1)));
+        assert!(on_behalf_of(&request(peer), own_pid()).is_err());
+        assert!(on_behalf_of(&request(None), own_pid()).is_err());
+    }
+
+    #[test]
+    fn caller_of_other_user_is_rejected() {
+        // pid 1 runs as root, which is only "another user" when we aren't root.
+        if running_as_root() {
+            return;
+        }
+        assert!(on_behalf_of(&request(root_peer()), 1).is_err());
+    }
+
+    #[test]
+    fn unknown_caller_is_rejected() {
+        assert!(on_behalf_of(&request(root_peer()), u32::MAX).is_err());
     }
 }

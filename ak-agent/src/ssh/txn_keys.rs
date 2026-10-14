@@ -1,3 +1,4 @@
+use ak_platform::shared::{EXT_AUTHENTIK_PLATFORM_SSH_HOST_KEY, EXT_AUTHENTIK_PLATFORM_SSH_TOKEN};
 use ssh_key::{
     Algorithm, PrivateKey,
     certificate::{Builder, CertType},
@@ -5,14 +6,11 @@ use ssh_key::{
     rand_core::OsRng,
 };
 
-use ak_platform::prelude::*;
-
-pub const EXT_AUTHENTIK_PLATFORM_SSH_TOKEN: &str = "goauthentik.io/platform/ssh/ssh/token";
-pub const EXT_AUTHENTIK_PLATFORM_SSH_HOST_KEY: &str = "goauthentik.io/platform/ssh/host-key";
+use eyre::{Result, WrapErr};
 
 pub fn generate_ssh_private_key() -> Result<PrivateKey> {
     PrivateKey::random(&mut OsRng, Algorithm::Ed25519)
-        .map_err(|e| -> BoxError { Box::from(e.to_string()) })
+        .wrap_err("failed to generate SSH private key")
 }
 
 pub fn generate_cert(
@@ -25,7 +23,7 @@ pub fn generate_cert(
     let host_pubkey = ssh_key::PublicKey::from(host_key.clone());
     let host_key_openssh = host_pubkey
         .to_openssh()
-        .map_err(|e| -> BoxError { Box::from(e.to_string()) })?;
+        .wrap_err("failed to serialize host public key")?;
 
     let mut builder = Builder::new_with_random_nonce(
         &mut OsRng,
@@ -33,7 +31,7 @@ pub fn generate_cert(
         0,
         valid_before,
     )
-    .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::from(e.to_string()) })?;
+    .wrap_err("failed to create certificate builder")?;
 
     builder
         .cert_type(CertType::User)?
@@ -49,7 +47,7 @@ pub fn generate_cert(
 
     builder
         .sign(priv_key)
-        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::from(e.to_string()) })
+        .wrap_err("failed to sign SSH certificate")
 }
 
 #[cfg(test)]

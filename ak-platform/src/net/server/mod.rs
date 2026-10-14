@@ -1,3 +1,4 @@
+use eyre::Result;
 use std::{
     fmt, io,
     path::Path,
@@ -6,10 +7,16 @@ use std::{
 };
 
 use interprocess::local_socket::{GenericFilePath, ListenerOptions, tokio::prelude::*};
+#[cfg(windows)]
+use interprocess::os::windows::{
+    local_socket::ListenerOptionsExt, security_descriptor::SecurityDescriptor,
+};
 use ssh_agent_lib::agent::ListeningSocket;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::sync::mpsc;
 use tokio_stream::Stream as AsyncStream;
+#[cfg(windows)]
+use widestring::{U16CStr, u16cstr};
 
 use crate::string::PlatformString;
 
@@ -22,7 +29,32 @@ pub enum SocketPermMode {
     Admin,
 }
 
-pub struct ConnectedLocalStream(LocalSocketStream);
+impl SocketPermMode {
+    /// Named pipes carry no file mode, so the Unix permission bits are expressed
+    /// as a DACL instead. `FA` is full access, granted to the pipe's owner (`OW`),
+    /// to Everyone (`WD`), or to built-in Administrators (`BA`) plus SYSTEM (`SY`)
+    /// — the admin case deliberately omits the owner so an unprivileged creator
+    /// cannot reconnect to its own socket. SYSTEM can reach owner pipes, like root
+    /// can reach `0600` sockets, which sysd needs to call the user's agent.
+    #[cfg(windows)]
+    fn security_descriptor(&self) -> Result<SecurityDescriptor> {
+        let sddl: &U16CStr = match self {
+            Self::Owner => u16cstr!("D:(A;;FA;;;OW)(A;;FA;;;SY)"),
+            Self::Everyone => u16cstr!("D:(A;;FA;;;WD)"),
+            Self::Admin => u16cstr!("D:(A;;FA;;;BA)(A;;FA;;;SY)"),
+        };
+        SecurityDescriptor::deserialize(sddl)
+            .map_err(|e| eyre::eyre!("failed to build socket security descriptor: {e}"))
+    }
+}
+
+pub struct ConnectedLocalStream {
+    stream: LocalSocketStream,
+    /// Whether the peer runs as SYSTEM. Windows only lets a pipe server look at its
+    /// client after reading from it, so it's set on the first read.
+    #[cfg(windows)]
+    system: std::sync::Arc<std::sync::OnceLock<bool>>,
+}
 
 impl fmt::Debug for ConnectedLocalStream {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -36,7 +68,16 @@ impl AsyncRead for ConnectedLocalStream {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_read(cx, buf)
+        let res = Pin::new(&mut self.stream).poll_read(cx, buf);
+        #[cfg(windows)]
+        if matches!(res, Poll::Ready(Ok(()))) && self.system.get().is_none() {
+            use std::os::windows::io::AsHandle;
+            let LocalSocketStream::NamedPipe(pipe) = &self.stream;
+            let _ = self
+                .system
+                .set(crate::net::win_pipe::peer_is_system(pipe.as_handle()));
+        }
+        res
     }
 }
 
@@ -46,15 +87,15 @@ impl AsyncWrite for ConnectedLocalStream {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.0).poll_write(cx, buf)
+        Pin::new(&mut self.stream).poll_write(cx, buf)
     }
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_flush(cx)
+        Pin::new(&mut self.stream).poll_flush(cx)
     }
 
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_shutdown(cx)
+        Pin::new(&mut self.stream).poll_shutdown(cx)
     }
 }
 
@@ -89,10 +130,7 @@ impl AsyncStream for ListenerStream {
     }
 }
 
-pub async fn listen(
-    path: PlatformString,
-    perm: SocketPermMode,
-) -> Result<ListenerStream, Box<dyn std::error::Error + Send + Sync>> {
+pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<ListenerStream> {
     let path_str = path.for_current();
 
     #[cfg(unix)]
@@ -110,18 +148,21 @@ pub async fn listen(
         SocketPermMode::Everyone => 0o666,
         SocketPermMode::Admin => 0o660,
     };
-    #[cfg(not(unix))]
+    #[cfg(not(any(unix, windows)))]
     let _ = perm;
+
+    let options = ListenerOptions::new().name(name).try_overwrite(true);
+    // Built before the umask swap below so a failure here can't return early
+    // with the process umask still restricted.
+    #[cfg(windows)]
+    let options = options.security_descriptor(perm.security_descriptor()?);
 
     // Restrict umask to close the TOCTOU window where the socket file briefly
     // exists with permissive default permissions before the final chmod runs.
     #[cfg(unix)]
     let old_umask = unsafe { libc::umask(0o777 & !mode) };
 
-    let create_result = ListenerOptions::new()
-        .name(name)
-        .try_overwrite(true)
-        .create_tokio();
+    let create_result = options.create_tokio();
 
     #[cfg(unix)]
     unsafe {
@@ -145,7 +186,12 @@ pub async fn listen(
         loop {
             match listener.accept().await {
                 Ok(stream) => {
-                    if tx.send(Ok(ConnectedLocalStream(stream))).await.is_err() {
+                    let stream = ConnectedLocalStream {
+                        stream,
+                        #[cfg(windows)]
+                        system: Default::default(),
+                    };
+                    if tx.send(Ok(stream)).await.is_err() {
                         break;
                     }
                 }
@@ -204,6 +250,18 @@ mod tests {
         let _listener = listen(ps(path), SocketPermMode::Everyone).await.unwrap();
         let mode = std::fs::metadata(path).unwrap().mode() & 0o777;
         assert_eq!(mode, 0o666);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn perm_modes_have_valid_sddl() {
+        for perm in [
+            SocketPermMode::Owner,
+            SocketPermMode::Everyone,
+            SocketPermMode::Admin,
+        ] {
+            perm.security_descriptor().unwrap();
+        }
     }
 
     #[cfg(windows)]

@@ -1,7 +1,16 @@
-use std::env;
+use sentry::{ClientInitGuard, ClientOptions};
+use std::{borrow::Cow, env};
+
+/// Attribute macro that initializes Sentry before starting a multi-threaded tokio
+/// runtime and running the annotated `async fn main`, similar to `#[tokio::main]`.
+pub use ak_meta_macros::main;
 
 pub fn version() -> String {
-    env!("AK_VERSION").to_string()
+    let v = env!("AK_VERSION").to_string();
+    if v.is_empty() {
+        return "Next".to_string();
+    }
+    v
 }
 
 pub fn build_hash() -> String {
@@ -32,4 +41,24 @@ pub fn build_url() -> String {
         "https://github.com/goauthentik/platform/commit/{}",
         build_hash()
     )
+}
+
+/// All components report as one release; `sentry_init` tags which one sent the event.
+pub fn sentry_options() -> ClientOptions {
+    let release: Cow<'static, str> = Cow::Owned(format!("ak-platform@{}", full_version()));
+    ClientOptions::new()
+        .dsn("https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512")
+        .release(release)
+        .attach_stacktrace(true)
+        .send_default_pii(false)
+        .debug(false)
+        .traces_sample_rate(0.3)
+}
+
+/// Tags go on the scope rather than in `before_send` so transactions get them too.
+/// Call before spawning threads: new threads copy the main scope when created.
+pub fn sentry_init(component: &str, opts: ClientOptions) -> ClientInitGuard {
+    let guard = sentry::init(opts);
+    sentry::configure_scope(|s| s.set_tag("authentik.component", component));
+    guard
 }

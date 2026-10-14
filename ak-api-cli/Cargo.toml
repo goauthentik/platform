@@ -1,0 +1,21 @@
+[package]
+name = "ak-api-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+authentik-client.workspace = true
+chrono.workspace = true
+clap.workspace = true
+eyre.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+
+[build-dependencies]
+ak-api-cli-gen.workspace = true
+eyre.workspace = true
+cargo_metadata = "0.23"

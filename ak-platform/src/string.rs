@@ -20,7 +20,7 @@ impl PlatformString {
         PlatformString::new_with_default("")
     }
 
-    pub fn new_with_default(fallback: &str) -> PlatformString {
+    pub fn new_with_default<T: ToString>(fallback: T) -> PlatformString {
         PlatformString {
             windows: None,
             darwin: None,

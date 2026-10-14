@@ -65,7 +65,7 @@ impl AgentCache for AgentGRPCServer {
                 }));
             }
             Err(CacheError::Other(e)) => {
-                return Err(Status::from_error(e));
+                return Err(Status::from_error(e.into()));
             }
         };
         Ok(Response::new(CacheGetResponse {
@@ -100,7 +100,7 @@ impl AgentCache for AgentGRPCServer {
             Ok(()) => Ok(Response::new(CacheSetResponse {
                 header: Some(ResponseHeader { successful: true }),
             })),
-            Err(e) => Err(Status::from_error(e)),
+            Err(e) => Err(Status::from_error(e.into())),
         }
     }
 }

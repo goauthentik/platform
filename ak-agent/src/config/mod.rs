@@ -1,18 +1,54 @@
 use std::{collections::HashMap, fmt::Debug};
 
 use ak_meta::user_agent;
+use ak_platform::dpop::DpopKeyPair;
 use ak_platform::log::LevelFilter;
-use ak_platform::{log::set_log_level, prelude::*};
+use ak_platform::log::set_log_level;
+use ak_platform::paths::DEFAULT_PROFILE;
 use ak_platform::storage::cfgmgr::schema::Config;
 use ak_platform_keyring;
+use ak_platform_keyring::KeyringStore;
 use authentik_client::apis::configuration::Configuration;
+use eyre::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigV1 {
     pub debug: bool,
+    #[serde(default)]
+    pub active_profile: String,
     pub profiles: HashMap<String, ConfigV1Profile>,
+    /// Optional fallback/passthrough SSH agent used for hosts not managed by
+    /// authentik (e.g. github.com, gitlab.com). When unset, the ssh-agent
+    /// behaves as before and does not proxy to another agent.
+    #[serde(default)]
+    pub ssh_fallback_agent: Option<SshFallbackAgentConfig>,
+}
+
+impl Default for ConfigV1 {
+    fn default() -> Self {
+        Self {
+            debug: false,
+            active_profile: DEFAULT_PROFILE.to_string(),
+            profiles: Default::default(),
+            ssh_fallback_agent: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SshFallbackAgentConfig {
+    /// Path to the fallback SSH agent socket (e.g. the system's original
+    /// `SSH_AUTH_SOCK`, or a hardware-key agent) used for hosts not managed
+    /// by authentik.
+    pub socket_path: String,
+    /// Extra hosts that should always be routed to the fallback agent,
+    /// bypassing authentik entirely, given as `known_hosts`-format lines
+    /// (e.g. the output of `ssh-keyscan your-host.example.com`). Merged with
+    /// a built-in list of well-known git hosts (github.com, gitlab.com).
+    #[serde(default)]
+    pub extra_passthrough_hosts: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -26,12 +62,18 @@ pub struct ConfigV1Profile {
     pub fallback_access_token: String,
     #[serde(rename = "refresh_token")]
     pub fallback_refresh_token: String,
+    // Empty string if this profile is not DPoP key-bound.
+    #[serde(rename = "dpop_private_key", default)]
+    pub fallback_dpop_private_key: String,
 
     // Not saved to JSON, loaded from keychain
     #[serde(skip)]
     _access_token: String,
     #[serde(skip)]
     _refresh_token: String,
+    // PKCS#8 PEM; empty string if this profile is not DPoP key-bound.
+    #[serde(skip)]
+    _dpop_private_key: String,
 
     #[serde(skip)]
     _http_client: Option<Client>,
@@ -45,8 +87,13 @@ impl Debug for ConfigV1Profile {
             .field("client_id", &self.client_id)
             .field("fallback_access_token", &self.fallback_access_token.len())
             .field("fallback_refresh_token", &self.fallback_refresh_token.len())
+            .field(
+                "fallback_dpop_private_key",
+                &self.fallback_dpop_private_key.len(),
+            )
             .field("_access_token", &self._access_token.len())
             .field("_refresh_token", &self._refresh_token.len())
+            .field("_dpop_private_key", &self._dpop_private_key.len())
             .field("_http_client", &self._http_client)
             .finish()
     }
@@ -59,6 +106,7 @@ impl ConfigV1Profile {
         client_id: String,
         access_token: String,
         refresh_token: String,
+        dpop_private_key: String,
     ) -> Self {
         ConfigV1Profile {
             authentik_url,
@@ -66,8 +114,10 @@ impl ConfigV1Profile {
             client_id,
             fallback_access_token: "".to_string(),
             fallback_refresh_token: "".to_string(),
+            fallback_dpop_private_key: "".to_string(),
             _access_token: access_token,
             _refresh_token: refresh_token,
+            _dpop_private_key: dpop_private_key,
             _http_client: None,
         }
     }
@@ -86,6 +136,19 @@ impl ConfigV1Profile {
 
     pub fn set_refresh_token<T: ToString>(&mut self, t: T) {
         self._refresh_token = t.to_string()
+    }
+
+    /// Whether this profile has a DPoP keypair bound to it.
+    pub fn dpop_enabled(&self) -> bool {
+        !self._dpop_private_key.is_empty()
+    }
+
+    /// The profile's DPoP keypair, if it has one.
+    pub fn dpop_keypair(&self) -> Result<Option<DpopKeyPair>> {
+        if self._dpop_private_key.is_empty() {
+            return Ok(None);
+        }
+        Ok(Some(DpopKeyPair::from_pkcs8_pem(&self._dpop_private_key)?))
     }
 
     pub fn http_client(mut self) -> Client {
@@ -136,34 +199,54 @@ impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
         set_log_level(match self.debug {
             true => LevelFilter::Trace,
-            false => LevelFilter::Warn,
+            false => LevelFilter::Trace,
         });
         for (key, val) in self.profiles.iter_mut() {
             tracing::debug!(profile = key, "Getting access token for profile");
-            match ak_platform_keyring::get(
-                &ak_platform_keyring::service("access_token"),
-                key,
-                ak_platform_keyring::Accessibility::User,
-            )
-            .await
+            match ak_platform_keyring::store()
+                .get(
+                    &ak_platform_keyring::service("access_token"),
+                    key,
+                    ak_platform_keyring::Accessibility::User,
+                )
+                .await
             {
                 Ok(v) => val._access_token = v,
-                Err(ak_platform_keyring::KeyringError::NotFound()) => {
+                Err(ak_platform_keyring::KeyringError::NotAvailable())
+                | Err(ak_platform_keyring::KeyringError::NotFound()) => {
                     val._access_token = val.fallback_access_token.clone()
                 }
                 Err(e) => return Err(e.into()),
             }
             tracing::debug!(profile = key, "Getting refresh token for profile");
-            match ak_platform_keyring::get(
-                &ak_platform_keyring::service("refresh_token"),
-                key,
-                ak_platform_keyring::Accessibility::User,
-            )
-            .await
+            match ak_platform_keyring::store()
+                .get(
+                    &ak_platform_keyring::service("refresh_token"),
+                    key,
+                    ak_platform_keyring::Accessibility::User,
+                )
+                .await
             {
                 Ok(v) => val._refresh_token = v,
-                Err(ak_platform_keyring::KeyringError::NotFound()) => {
+                Err(ak_platform_keyring::KeyringError::NotAvailable())
+                | Err(ak_platform_keyring::KeyringError::NotFound()) => {
                     val._refresh_token = val.fallback_refresh_token.clone()
+                }
+                Err(e) => return Err(e.into()),
+            }
+            tracing::debug!(profile = key, "Getting DPoP private key for profile");
+            match ak_platform_keyring::store()
+                .get(
+                    &ak_platform_keyring::service("dpop_private_key"),
+                    key,
+                    ak_platform_keyring::Accessibility::User,
+                )
+                .await
+            {
+                Ok(v) => val._dpop_private_key = v,
+                Err(ak_platform_keyring::KeyringError::NotAvailable())
+                | Err(ak_platform_keyring::KeyringError::NotFound()) => {
+                    val._dpop_private_key = val.fallback_dpop_private_key.clone()
                 }
                 Err(e) => return Err(e.into()),
             }
@@ -171,22 +254,53 @@ impl Config for ConfigV1 {
         Ok(())
     }
 
-    async fn pre_save(&self) -> Result<()> {
-        for (key, val) in self.profiles.iter() {
-            ak_platform_keyring::set(
-                &ak_platform_keyring::service("access_token"),
-                key,
-                ak_platform_keyring::Accessibility::User,
-                val._access_token.clone(),
-            )
-            .await?;
-            ak_platform_keyring::set(
-                &ak_platform_keyring::service("refresh_token"),
-                key,
-                ak_platform_keyring::Accessibility::User,
-                val._refresh_token.clone(),
-            )
-            .await?;
+    async fn pre_save(&mut self) -> Result<()> {
+        for (key, val) in self.profiles.iter_mut() {
+            match ak_platform_keyring::store()
+                .set(
+                    &ak_platform_keyring::service("access_token"),
+                    key,
+                    ak_platform_keyring::Accessibility::User,
+                    val._access_token.clone(),
+                )
+                .await
+            {
+                Ok(_) => {}
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                    val.fallback_access_token = val._access_token.clone();
+                }
+                Err(e) => return Err(e.into()),
+            };
+            match ak_platform_keyring::store()
+                .set(
+                    &ak_platform_keyring::service("refresh_token"),
+                    key,
+                    ak_platform_keyring::Accessibility::User,
+                    val._refresh_token.clone(),
+                )
+                .await
+            {
+                Ok(_) => {}
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                    val.fallback_refresh_token = val._refresh_token.clone();
+                }
+                Err(e) => return Err(e.into()),
+            };
+            match ak_platform_keyring::store()
+                .set(
+                    &ak_platform_keyring::service("dpop_private_key"),
+                    key,
+                    ak_platform_keyring::Accessibility::User,
+                    val._dpop_private_key.clone(),
+                )
+                .await
+            {
+                Ok(_) => {}
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                    val.fallback_dpop_private_key = val._dpop_private_key.clone();
+                }
+                Err(e) => return Err(e.into()),
+            };
         }
         Ok(())
     }

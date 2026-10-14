@@ -2,9 +2,11 @@ use ak_platform::{
     generated::sys_directory::{GetRequest, system_directory_client::SystemDirectoryClient},
     grpc::grpc_request,
 };
-use pam::constants::PamResultCode::{self, PAM_IGNORE};
+use pam::constants::PamResultCode;
 
-pub fn check_user_exists(username: String) -> Result<(), PamResultCode> {
+use crate::PamError;
+
+pub fn check_user_exists(username: String) -> Result<(), PamError> {
     match grpc_request(async |ch| {
         return Ok(SystemDirectoryClient::new(ch)
             .get_user(GetRequest {
@@ -15,8 +17,8 @@ pub fn check_user_exists(username: String) -> Result<(), PamResultCode> {
     }) {
         Ok(_) => Ok(()),
         Err(_) => {
-            log::debug!("User {} does not exist", username);
-            Err(PAM_IGNORE)
+            tracing::debug!("User {} does not exist", username);
+            Err(PamResultCode::PAM_IGNORE.into())
         }
     }
 }

@@ -14,6 +14,9 @@ pub struct SetupRequest {
     pub access_token: ::prost::alloc::string::String,
     #[prost(string, tag="6")]
     pub refresh_token: ::prost::alloc::string::String,
+    /// PKCS#8 PEM DPoP private key; empty if this profile is not key-bound.
+    #[prost(string, tag="7")]
+    pub dpop_private_key: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SetupResponse {
@@ -32,6 +35,10 @@ pub struct Profile {
     pub last_renewed: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(message, optional, tag="5")]
     pub next_renew: ::core::option::Option<::pbjson_types::Timestamp>,
+    #[prost(enumeration="ProfileStatus", tag="6")]
+    pub status: i32,
+    #[prost(bool, tag="7")]
+    pub dpop_bound: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListProfilesResponse {
@@ -39,6 +46,42 @@ pub struct ListProfilesResponse {
     pub header: ::core::option::Option<super::agent::ResponseHeader>,
     #[prost(message, repeated, tag="2")]
     pub profiles: ::prost::alloc::vec::Vec<Profile>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CurrentProfileResponse {
+    #[prost(message, optional, tag="1")]
+    pub header: ::core::option::Option<super::agent::ResponseHeader>,
+    #[prost(string, tag="2")]
+    pub profile: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum ProfileStatus {
+    Unspecified = 0,
+    Active = 1,
+    Failed = 2,
+}
+impl ProfileStatus {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Unspecified => "UNSPECIFIED",
+            Self::Active => "ACTIVE",
+            Self::Failed => "FAILED",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "UNSPECIFIED" => Some(Self::Unspecified),
+            "ACTIVE" => Some(Self::Active),
+            "FAILED" => Some(Self::Failed),
+            _ => None,
+        }
+    }
 }
 include!("agent_ctrl.tonic.rs");
 include!("agent_ctrl.serde.rs");

@@ -5,11 +5,6 @@ on:
     types: [created, published]
 
 jobs:
-  call-build-go:
-    uses: ./.github/workflows/_build-go.yml
-    secrets: inherit
-    with:
-      is_release: true
   call-build-js:
     uses: ./.github/workflows/_build-js.yml
     secrets: inherit
@@ -17,11 +12,6 @@ jobs:
       is_release: true
   call-build-rs:
     uses: ./.github/workflows/_build-rs.yml
-    secrets: inherit
-    with:
-      is_release: true
-  call-build-ee-wcp:
-    uses: ./.github/workflows/_build-ee-wcp.yml
     secrets: inherit
     with:
       is_release: true
@@ -33,7 +23,7 @@ jobs:
 
   call-package-darwin:
     needs:
-      - call-build-go
+      - call-build-rs
       - call-build-ee-psso
     uses: ./.github/workflows/_package-darwin.yml
     secrets: inherit
@@ -41,15 +31,13 @@ jobs:
       is_release: true
   call-package-windows:
     needs:
-      - call-build-go
-      - call-build-ee-wcp
+      - call-build-rs
     uses: ./.github/workflows/_package-windows.yml
     secrets: inherit
     with:
       is_release: true
   call-package-linux:
     needs:
-      - call-build-go
       - call-build-rs
     uses: ./.github/workflows/_package-linux.yml
     secrets: inherit
@@ -58,7 +46,6 @@ jobs:
 
   call-deploy:
     needs:
-      - call-build-go
       - call-build-js
       - call-build-rs
       - call-package-darwin
@@ -71,17 +58,17 @@ jobs:
 
   deploy-to-netlify:
     needs: call-deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       deploy-url: ${{ steps.netlify.outputs.deploy-url }}
     steps:
       - name: Download repository
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
         with:
           name: repo
           path: ./deploy
       - name: Download packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
         with:
           name: all-packages
           path: ./deploy/packages
@@ -111,12 +98,13 @@ jobs:
       matrix:
         target:
           - containers/selenium
-    runs-on: ubuntu-24.04
+          - containers/ssh
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v5
-      - uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
-      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
-      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@594f3bf4285d9ea8dc53c9a0c9c4092420091003 # v4.4.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -134,7 +122,7 @@ jobs:
           echo "build-args<<EOF" >> $GITHUB_OUTPUT
           make ci-build-args >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ${{ matrix.target }}
           file: ${{ matrix.target }}/Dockerfile
@@ -143,24 +131,39 @@ jobs:
           tags: ${{ steps.meta.outputs.tag }}
           platforms: linux/amd64,linux/arm64
 
+  sentry-release:
+    needs: call-deploy
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          fetch-depth: 0
+      - run: make sentry-release
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
   attach-and-publish:
     name: Attach artifacts and publish
     needs: [call-deploy, call-package-darwin, call-package-windows]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v2
         with:
           client-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIV_KEY }}
+          repositories: |
+            platform
+            version
       - name: Download packages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
         with:
           name: all-packages
           path: ./packages
-      - uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           token: ${{ steps.app-token.outputs.token }}
           files: |
@@ -168,3 +171,16 @@ jobs:
             ./packages/authentik_browser-ext/browser-ext/authentik_firefox.zip
             ./packages/authentik_package-macos/authentik Agent Installer.pkg
             ./packages/authentik_package-windows/authentik Agent Installer.msi
+      - id: get-version
+        run: |
+          VERSION=$(make print-version 2> /dev/null)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+      - name: Bump version
+        uses: goauthentik/version@main
+        with:
+          product: platform
+          new-version: ${{ steps.get-version.outputs.version }}
+          changelog-url: ${{ github.event.release.html_url }}
+          reason: bugfix
+          token: ${{ steps.app-token.outputs.token }}
+          github-app-slug: ${{ steps.app-token.outputs.app-slug }}

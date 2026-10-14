@@ -9,6 +9,8 @@ vendor: "Authentik Security Inc."
 homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
+conflicts:
+  - authentik-agent-desktop
 contents:
   - src: ../../bin/agent/ak-agent
     dst: /usr/bin/ak-agent

@@ -1,13 +1,36 @@
 import "./header.js";
-import "./profile-status.js";
+import "../pages/mcp-instructions.js";
+import "../pages/profile-status.js";
+import "../pages/ssh-agent.js";
+import "./ssh-status-badge.js";
+import "./status-bar.js";
+import {
+    activeProfile,
+    getSshStatus,
+    getVersions,
+    listProfiles,
+    profile,
+    SshStatusResponse,
+    takePendingPage,
+    userInfo,
+    Versions,
+} from "../bridge";
 
-import { listProfiles, profile, userInfo } from "../bridge";
+import { SessionUser } from "@goauthentik/api";
 
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import { css, html, LitElement } from "lit";
+import { css, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
+
+const PAGES = [
+    ["profiles", "Profiles"],
+    ["ssh", "SSH Agent"],
+    ["mcp", "MCP Server"],
+] as const;
+
+type Page = (typeof PAGES)[number][0];
 
 @customElement("ak-app-shell")
 export class AppShell extends LitElement {
@@ -17,7 +40,59 @@ export class AppShell extends LitElement {
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            background: var(--ak-color-surface, #f6f6f6);
+            background: var(--ak-global--color--surface--muted);
+        }
+        .dev-banner {
+            padding: var(--ak-global--spacer--xs) var(--ak-global--spacer--md);
+            background: color-mix(
+                in oklch,
+                var(--ak-global--color--warning--deep) 15%,
+                transparent
+            );
+            color: var(--ak-global--color--warning--deep);
+            font-size: var(--ak-global--font-size--xs);
+            border-bottom: var(--ak-global--border-width--sm) solid var(--ak-global--color--border);
+        }
+        .body {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+        nav {
+            width: 190px;
+            flex-shrink: 0;
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: var(--ak-global--color--surface);
+            border-right: 1px solid var(--ak-global--color--border);
+        }
+        nav button {
+            font: inherit;
+            border: none;
+            border-radius: var(--ak-global--radius--sm);
+            padding: 6px 12px;
+            text-align: left;
+            font-size: var(--ak-global--font-size--sm);
+            cursor: pointer;
+            background: transparent;
+            color: var(--ak-global--color--ink);
+        }
+        nav button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--ak-global--spacer--xs);
+        }
+        nav button:hover {
+            background: var(--ak-global--color--surface--muted);
+        }
+        nav button[aria-current="page"] {
+            background: var(--ak-global--color--surface--muted);
+            color: var(--ak-global--color--active);
+            box-shadow: inset 3px 0 0 var(--ak-global--color--active);
+            font-weight: 600;
         }
         .content {
             flex: 1;
@@ -26,27 +101,96 @@ export class AppShell extends LitElement {
     `;
 
     @state()
-    private user?: userInfo;
+    private page: Page = "profiles";
+
+    @state()
+    private user?: SessionUser;
 
     @state()
     private profiles?: profile[];
 
+    @state()
+    private activeProfile?: string;
+
+    @state()
+    private versions?: Versions;
+
+    @state()
+    private sshStatus?: SshStatusResponse;
+
     private _unlisten?: () => void;
+    private _unlistenNavigate?: () => void;
+
+    // The page comes from a deep link, so only accept known ones.
+    private _navigate = async () => {
+        const page = await takePendingPage();
+        const known = PAGES.find(([p]) => p === page);
+
+        if (known) {
+            this.page = known[0];
+        }
+    };
+
+    // ~/.ssh/config is usually edited elsewhere, so re-check when the window regains focus.
+    private _refreshSshStatus = async () => {
+        try {
+            this.sshStatus = await getSshStatus();
+        } catch (exc) {
+            console.warn("Failed to fetch SSH status", exc);
+        }
+    };
 
     async connectedCallback(): Promise<void> {
         super.connectedCallback();
+        window.addEventListener("focus", this._refreshSshStatus);
         this._unlisten = await listen("ak-config-reloaded", () => this._refresh());
+        this._unlistenNavigate = await listen("ak-navigate", this._navigate);
+        await this._navigate();
         await this._refresh();
     }
 
     disconnectedCallback(): void {
         super.disconnectedCallback();
+        window.removeEventListener("focus", this._refreshSshStatus);
         this._unlisten?.();
+        this._unlistenNavigate?.();
     }
 
     private async _refresh(): Promise<void> {
-        this.user = await userInfo("default");
         this.profiles = await listProfiles();
+        this.activeProfile = await activeProfile();
+
+        this.user = undefined;
+
+        if (this.profiles.some((p) => p.name === this.activeProfile)) {
+            try {
+                this.user = await userInfo(this.activeProfile);
+            } catch (exc) {
+                console.warn("Failed to fetch user info", exc);
+            }
+        }
+
+        await this._refreshSshStatus();
+
+        try {
+            this.versions = await getVersions();
+        } catch (exc) {
+            console.warn("Failed to fetch versions", exc);
+        }
+    }
+
+    renderPage() {
+        switch (this.page) {
+            case "profiles":
+                return html`<ak-profile-status
+                    .profiles=${this.profiles ?? []}
+                    .activeProfile=${this.activeProfile}
+                ></ak-profile-status>`;
+            case "ssh":
+                return html`<ak-ssh-agent .sshStatus=${this.sshStatus}></ak-ssh-agent>`;
+            case "mcp":
+                return html`<ak-mcp-instructions></ak-mcp-instructions>`;
+        }
     }
 
     render() {
@@ -55,16 +199,50 @@ export class AppShell extends LitElement {
                 .user=${this.user}
                 @mousedown=${(ev: MouseEvent) => {
                     const appWindow = getCurrentWindow();
+
                     if (ev.buttons === 1) {
                         // Primary (left) button
-                        ev.detail === 2
-                            ? appWindow.toggleMaximize() // Maximize on double click
-                            : appWindow.startDragging(); // Else start dragging
+                        if (ev.detail === 2) {
+                            appWindow.toggleMaximize(); // Maximize on double click
+                        } else {
+                            appWindow.startDragging(); // Else start dragging
+                        }
                     }
                 }}
             ></ak-platform-header>
-            <div class="content">
-                <ak-profile-status .profiles=${this.profiles ?? []}></ak-profile-status>
+            ${
+                import.meta.env.DEV
+                    ? html`<div class="dev-banner" role="status">
+                          Development build: some features might not work.
+                      </div>`
+                    : nothing
+            }
+            <div
+                class="body"
+                @ak-profile-added=${() => this._refresh()}
+                @ak-profile-deleted=${() => this._refresh()}
+            >
+                <nav>
+                    ${PAGES.map(
+                        ([page, label]) => html`
+                            <button
+                                aria-current=${this.page === page ? "page" : "false"}
+                                @click=${() => (this.page = page)}
+                            >
+                                ${label}
+                                ${
+                                    page === "ssh"
+                                        ? html`<ak-ssh-status-badge
+                                              .status=${this.sshStatus?.status}
+                                          ></ak-ssh-status-badge>`
+                                        : nothing
+                                }
+                            </button>
+                        `,
+                    )}
+                    <ak-status-bar .versions=${this.versions}></ak-status-bar>
+                </nav>
+                <div class="content">${this.renderPage()}</div>
             </div>
         `;
     }

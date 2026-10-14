@@ -18,6 +18,9 @@ pub struct CurrentTokenRequest {
     pub header: ::core::option::Option<super::agent::RequestHeader>,
     #[prost(enumeration="current_token_request::Type", tag="2")]
     pub r#type: i32,
+    /// Set by sysd when asking on behalf of another process of this user.
+    #[prost(uint32, tag="3")]
+    pub caller_pid: u32,
 }
 /// Nested message and enum types in `CurrentTokenRequest`.
 pub mod current_token_request {
@@ -67,7 +70,13 @@ pub struct TokenExchangeRequest {
     #[prost(message, optional, tag="1")]
     pub header: ::core::option::Option<super::agent::RequestHeader>,
     #[prost(string, tag="2")]
-    pub client_id: ::prost::alloc::string::String,
+    pub audience: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag="3")]
+    pub scopes: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="4")]
+    pub actor_token: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag="5")]
+    pub actor_token_type: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct TokenExchangeResponse {
@@ -77,13 +86,6 @@ pub struct TokenExchangeResponse {
     pub access_token: ::prost::alloc::string::String,
     #[prost(int64, tag="3")]
     pub expires_in: i64,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct DeviceTokenExchangeRequest {
-    #[prost(message, optional, tag="1")]
-    pub header: ::core::option::Option<super::agent::RequestHeader>,
-    #[prost(string, tag="2")]
-    pub device_name: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct AuthorizeRequest {

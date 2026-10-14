@@ -9,13 +9,17 @@ on:
 
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: xcode-27
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v5
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v4
         with:
           path: cache/
-          key: target-cache-psso-macos-26
+          key: target-cache-psso-xcode-27-${{ hashFiles('ee/psso/**') }}
+          restore-keys: |
+            target-cache-psso-xcode-27-
       # macOS Specific
       - id: check
         env:
@@ -38,10 +42,11 @@ jobs:
       - if: steps.check.outputs.has-signing-cert == 'false'
         run: echo 'XCB_EXTRA_ARGS=CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO' >> $GITHUB_ENV
       - run: |
+          brew install xcbeautify
           make ee/psso/build XCB_EXTRA_ARGS=${XCB_EXTRA_ARGS}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v5
         with:
-          name: authentik_macos-26_psso
+          name: authentik_xcode-27_psso
           path: bin/

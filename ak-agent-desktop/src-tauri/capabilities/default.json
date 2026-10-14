@@ -3,5 +3,17 @@
     "identifier": "default",
     "description": "Capability for the main window",
     "windows": ["main"],
-    "permissions": ["core:default", "opener:default", "core:window:allow-start-dragging", "opener:allow-default-urls"]
+    "permissions": [
+        "core:default",
+        "opener:default",
+        "core:window:allow-start-dragging",
+        "core:window:allow-toggle-maximize",
+        "opener:allow-default-urls",
+        {
+            "identifier": "opener:allow-open-url",
+            "allow": [{ "url": "cursor://*" }, { "url": "vscode:*" }]
+        },
+        "os:default",
+        "sentry:default"
+    ]
 }

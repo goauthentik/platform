@@ -2,13 +2,15 @@ use std::{fmt::Debug, future::Future};
 
 use serde::{Serialize, de::DeserializeOwned};
 
-use crate::prelude::*;
+use eyre::Result;
 
-pub trait Config: Default + Serialize + DeserializeOwned + Sized + Sync + Send + Debug {
+pub trait Config:
+    Default + Serialize + DeserializeOwned + Sized + Sync + Send + Debug + Clone
+{
     fn post_load(&mut self) -> impl Future<Output = Result<()>> + Send {
         async { Ok(()) }
     }
-    fn pre_save(&self) -> impl Future<Output = Result<()>> + Send {
+    fn pre_save(&mut self) -> impl Future<Output = Result<()>> + Send {
         async { Ok(()) }
     }
     fn post_update(&self, _prev: Self) -> impl Future<Output = Result<ConfigChangedType>> + Send {

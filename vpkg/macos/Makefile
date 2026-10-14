@@ -15,29 +15,44 @@ bump:
 
 .PHONY: local
 local:
-	$(MAKE) -C "${TOP}" -j \
+	$(MAKE) -C "${TOP}" RUST_BUILD_FLAGS="-C debug-assertions" -j \
 		ak-agent-desktop/build \
-		sysd/build \
+		ak-sysd/build \
 		ee/psso/build \
 		ak-browser-support/build \
 		ak-cli/build
-	$(MAKE) -C "${TOP}" vpkg/macos/build-app
+	$(MAKE) -C "${TOP}" DEV_BUILD=1 vpkg/macos/build-app
 
 .PHONY: build-app
 build-app:
 	mkdir -p "${TOP}/bin/${TARGET}"
-	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
 	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS"
-	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/"
-	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/MobileDevice/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns"
+	mkdir -p "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources"
+	chmod +x "${TOP}/bin/cli/ak"
+	chmod +x "${TOP}/bin/sysd/ak-sysd"
+	chmod +x "${TOP}/bin/agent-desktop/ak-agent-desktop"
+	chmod +x "${TOP}/bin/browser_support/ak-browser-support"
+	"${TOP}/hack/completions.sh" \
+		"${TOP}/bin/sysd/ak-sysd" \
+		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
+		"sysd"
+	"${TOP}/hack/completions.sh" \
+		"${TOP}/bin/cli/ak" \
+		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Resources/" \
+		"ak"
+	cp -R "${PWD}/${MACOS_APP_NAME}" "${TOP}/bin/${TARGET}/"
+ifeq (${DEV_BUILD}, 1)
+	"${TOP}/hack/plist.py" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleIdentifier" "io.goauthentik.platform.dev.agent"
+endif
+	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
-	cp "${TOP}/bin/agent_system/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
+	cp "${TOP}/bin/sysd/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/browser_support/ak-browser-support" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-browser-support"
-	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
-	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"*
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*
+	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
 	codesign \
 		--force \
 		--verify \
