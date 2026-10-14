@@ -20,8 +20,8 @@ pub fn unsupported_platform<T>(subsystem: &str) -> Result<T> {
     )
 }
 
-/// Only used by Linux's native firewall detection in `network.rs` — dead
-/// code on every other platform this actually gets built for.
+/// Only used by Linux's native firewall detection and the Unix `zfs`
+/// lookup — dead code on Windows.
 #[allow(dead_code)]
 pub fn run(cmd: &mut std::process::Command) -> Result<String> {
     let out = cmd.output()?;
