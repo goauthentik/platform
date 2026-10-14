@@ -4,7 +4,7 @@ mod ffi {
     struct AccessRequestFfi {
         title: String,
         requesting_app: String,
-        app_icon_path: String,
+        app_bundle_path: String,
         accent_color: u32,
         profile_name: String,
         profile_email: String,
@@ -24,7 +24,8 @@ mod ffi {
 pub struct AccessRequest {
     pub title: String,
     pub requesting_app: String,
-    pub app_icon: Option<Vec<u8>>,
+    /// `.app` bundle of the requesting app; its icon is shown in the prompt.
+    pub app_bundle: Option<std::path::PathBuf>,
     pub accent_color: u32,
     pub profile_name: String,
     pub profile_email: String,
@@ -39,7 +40,7 @@ impl Default for AccessRequest {
         Self {
             title: "authentik Access Requested".to_string(),
             requesting_app: String::new(),
-            app_icon: None,
+            app_bundle: None,
             accent_color: 0xFD4B2D,
             profile_name: String::new(),
             profile_email: String::new(),
@@ -52,7 +53,6 @@ impl Default for AccessRequest {
 }
 
 pub fn authenticate_with_touchid(req: AccessRequest) -> bool {
-    let app_icon_temp = TempImageFile::write(&req.app_icon);
     let avatar_temp = TempImageFile::write(&req.profile_avatar);
     // Embedded rather than a SwiftPM resource: a statically linked Swift library
     // has no resource bundle to load it from.
@@ -61,7 +61,10 @@ pub fn authenticate_with_touchid(req: AccessRequest) -> bool {
     ffi::authenticate_with_touchid(ffi::AccessRequestFfi {
         title: req.title,
         requesting_app: req.requesting_app,
-        app_icon_path: app_icon_temp.path(),
+        app_bundle_path: req
+            .app_bundle
+            .and_then(|p| p.to_str().map(str::to_string))
+            .unwrap_or_default(),
         accent_color: req.accent_color,
         profile_name: req.profile_name,
         profile_email: req.profile_email,

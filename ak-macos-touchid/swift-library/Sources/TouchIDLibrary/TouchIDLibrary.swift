@@ -45,9 +45,10 @@ private func accessRequestModel(from req: AccessRequestFfi) -> AccessRequestMode
     model.profileGroups = req.profile_groups.toString()
     model.reason = req.reason.toString()
 
-    let iconPath = req.app_icon_path.toString()
-    if !iconPath.isEmpty, let nsImage = NSImage(contentsOfFile: iconPath) {
-        model.appIcon = Image(nsImage: nsImage)
+    // NSWorkspace resolves the icon like Finder does, including asset catalogs.
+    let bundlePath = req.app_bundle_path.toString()
+    if !bundlePath.isEmpty {
+        model.appIcon = Image(nsImage: NSWorkspace.shared.icon(forFile: bundlePath))
     }
 
     let avatarPath = req.profile_avatar_path.toString()

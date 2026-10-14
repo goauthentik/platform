@@ -4,51 +4,44 @@ use ak_macos_touchid::AccessRequest;
 use ak_platform::net::server::proc_info::{ProcInfo, proc_exe_path, proc_parent_pid};
 use eyre::Result;
 
+/// Bundle ID prefix of our own apps. The `ak` CLI lives inside our bundle, so these
+/// are skipped to find the app the user is actually working in.
+const OWN_BUNDLE_PREFIX: &str = "io.goauthentik.platform.";
+
+/// Outermost `.app` containing `exe`, so helper apps nested inside another app
+/// (e.g. `Code Helper.app` in `Visual Studio Code.app`) resolve to the main app.
 pub fn find_app_bundle(exe: &Path) -> Option<PathBuf> {
-    let mut path = exe.to_path_buf();
-    while path.pop() {
-        if path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .is_some_and(|n| n.ends_with(".app"))
-            && path.exists()
-        {
-            return Some(path);
-        }
-    }
-    None
+    exe.ancestors()
+        .filter(|p| p.extension().is_some_and(|e| e == "app") && p.exists())
+        .last()
+        .map(Path::to_path_buf)
+}
+
+fn bundle_info(bundle: &Path) -> Option<plist::Dictionary> {
+    plist::Value::from_file(bundle.join("Contents/Info.plist"))
+        .ok()?
+        .into_dictionary()
+}
+
+fn is_own_bundle(info: Option<&plist::Dictionary>) -> bool {
+    info.and_then(|d| d.get("CFBundleIdentifier"))
+        .and_then(|v| v.as_string())
+        .is_some_and(|id| id.starts_with(OWN_BUNDLE_PREFIX))
 }
 
 pub fn populate_from_bundle(ar: &mut AccessRequest, bundle: &Path) {
-    let plist_path = bundle.join("Contents/Info.plist");
-    if let Ok(plist::Value::Dictionary(dict)) = plist::Value::from_file(&plist_path) {
-        let name = dict
-            .get("CFBundleDisplayName")
-            .or_else(|| dict.get("CFBundleName"))
-            .and_then(|v| v.as_string());
-        if let Some(name) = name {
-            ar.requesting_app = name.to_string();
-        }
-
-        if let Some(icon_file) = dict.get("CFBundleIconFile").and_then(|v| v.as_string()) {
-            let icon_name = if icon_file.ends_with(".icns") {
-                icon_file.to_string()
-            } else {
-                format!("{icon_file}.icns")
-            };
-            let icon_path = bundle.join("Contents/Resources").join(icon_name);
-            if let Ok(bytes) = std::fs::read(icon_path) {
-                ar.app_icon = Some(bytes);
-            }
-        }
-    }
-
-    // Fallback: use the .app bundle stem if plist had no name
-    if ar.requesting_app.is_empty()
-        && let Some(stem) = bundle.file_stem().and_then(|n| n.to_str())
-    {
-        ar.requesting_app = stem.to_string();
-    }
+    let name = bundle_info(bundle).and_then(|d| {
+        d.get("CFBundleDisplayName")
+            .or_else(|| d.get("CFBundleName"))
+            .and_then(|v| v.as_string())
+            .map(str::to_string)
+    });
+    ar.requesting_app = name
+        .or_else(|| Some(bundle.file_stem()?.to_str()?.to_string()))
+        .unwrap_or_default();
+    // The icon itself is resolved by NSWorkspace on the Swift side, which also
+    // handles icons that only exist in an asset catalog.
+    ar.app_bundle = Some(bundle.to_path_buf());
 }
 
 pub async fn lookup_app_info(pc: Option<ProcInfo>) -> Result<AccessRequest> {
@@ -59,38 +52,20 @@ pub async fn lookup_app_info(pc: Option<ProcInfo>) -> Result<AccessRequest> {
         return Ok(ar);
     };
 
-    // Walk the pre-fetched chain (pc → pc.parent); both are already in memory.
-    let mut current = Some(&pc);
-    while let Some(proc) = current {
-        tracing::trace!(pid = proc.pid, cmd = proc.cmdline, "Checking process");
-        if let Some(bundle) = find_app_bundle(&proc.exe) {
-            tracing::trace!(bundle = %bundle.display(), "Found app bundle");
-            populate_from_bundle(&mut ar, &bundle);
-            return Ok(ar);
-        }
-        current = proc.parent.as_deref();
-    }
-
-    // Continue walking up the process tree beyond the one parent level stored
-    // in ProcInfo. proc_parent_pid/proc_exe_path are kept decoupled here so
-    // that a process with an unreadable exe (sandboxed, system-owned) doesn't
-    // stop the walk — we can still get its parent PID and keep climbing.
-    let mut walk_pid = pc.parent.as_ref().map(|p| p.pid);
-    while let Some(pid) = walk_pid {
-        let Some(ppid) = proc_parent_pid(pid) else {
-            break;
-        };
-
-        if let Some(exe) = proc_exe_path(ppid) {
-            tracing::trace!(pid = ppid, exe = %exe.display(), "Checking process (tree walk)");
-            if let Some(bundle) = find_app_bundle(&exe) {
-                tracing::trace!(bundle = %bundle.display(), "Found app bundle");
+    // Walk up the process tree. proc_parent_pid/proc_exe_path are kept separate so
+    // a process with an unreadable exe (sandboxed, system-owned) doesn't stop the walk.
+    let mut pid = Some(pc.pid);
+    while let Some(p) = pid {
+        if let Some(bundle) = proc_exe_path(p).and_then(|exe| find_app_bundle(&exe)) {
+            if is_own_bundle(bundle_info(&bundle).as_ref()) {
+                tracing::trace!(pid = p, bundle = %bundle.display(), "Skipping own app bundle");
+            } else {
+                tracing::trace!(pid = p, bundle = %bundle.display(), "Found app bundle");
                 populate_from_bundle(&mut ar, &bundle);
                 return Ok(ar);
             }
         }
-
-        walk_pid = Some(ppid);
+        pid = proc_parent_pid(p);
     }
 
     // No bundle found anywhere in the tree — use the direct process exe name
@@ -107,8 +82,8 @@ mod tests {
     use super::*;
     use std::process;
 
-    #[tokio::test]
-    async fn test_find_app_bundle() {
+    #[test]
+    fn test_find_app_bundle() {
         let bundle =
             find_app_bundle(Path::new("/Applications/Safari.app/Contents/MacOS/Safari")).unwrap();
         assert_eq!(bundle.to_str().unwrap(), "/Applications/Safari.app");
@@ -117,12 +92,25 @@ mod tests {
         assert!(not_fund.is_none());
     }
 
-    #[tokio::test]
-    async fn test_populate_bundle() {
+    #[test]
+    fn test_populate_bundle() {
         let mut ar = AccessRequest::default();
         populate_from_bundle(&mut ar, Path::new("/Applications/Safari.app"));
         assert_eq!(ar.requesting_app, "Safari");
-        assert!(ar.app_icon.is_some());
+        assert!(ar.app_bundle.is_some());
+    }
+
+    #[test]
+    fn test_is_own_bundle() {
+        assert!(!is_own_bundle(
+            bundle_info(Path::new("/Applications/Safari.app")).as_ref()
+        ));
+        let mut d = plist::Dictionary::new();
+        d.insert(
+            "CFBundleIdentifier".into(),
+            "io.goauthentik.platform.agent".into(),
+        );
+        assert!(is_own_bundle(Some(&d)));
     }
 
     #[tokio::test]
@@ -130,6 +118,6 @@ mod tests {
         let info = lookup_app_info(Some(ProcInfo::from_pid(process::id()).unwrap()))
             .await
             .unwrap();
-        assert!(info.requesting_app != "");
+        assert!(!info.requesting_app.is_empty());
     }
 }
