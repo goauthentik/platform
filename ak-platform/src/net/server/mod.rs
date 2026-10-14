@@ -184,7 +184,13 @@ pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<Listen
     let (tx, rx) = mpsc::channel(1);
     tokio::spawn(async move {
         loop {
-            match listener.accept().await {
+            // Stop (and reclaim the socket name) as soon as the ListenerStream is
+            // dropped, not only when the next connection fails to be handed over.
+            let accepted = tokio::select! {
+                () = tx.closed() => break,
+                accepted = listener.accept() => accepted,
+            };
+            match accepted {
                 Ok(stream) => {
                     let stream = ConnectedLocalStream {
                         stream,
@@ -213,6 +219,20 @@ mod tests {
 
     fn ps(s: &str) -> PlatformString {
         PlatformString::new_with_default(s)
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn listen_removes_socket_when_dropped() {
+        let path = "/tmp/ak-test-net-drop.sock";
+        drop(listen(ps(path), SocketPermMode::Owner).await.unwrap());
+        for _ in 0..50 {
+            if std::fs::metadata(path).is_err() {
+                return;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        panic!("socket still exists after listener was dropped");
     }
 
     #[cfg(unix)]

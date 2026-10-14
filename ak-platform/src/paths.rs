@@ -39,7 +39,10 @@ pub fn sysd_socket_path(id: SysdSocketID) -> PlatformString {
 
 pub enum AgentSocketID {
     Default,
+    /// SSH agent that follows the active profile.
     SSH,
+    /// SSH agent pinned to a single profile.
+    SSHProfile(String),
 }
 
 pub fn xdg_data_path(last_seg: &str) -> Result<String> {
@@ -101,12 +104,39 @@ pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
         AgentSocketID::SSH => Ok(PlatformString::new()
             .with_windows(r"\\.\pipe\authentik\socket-ssh")
             .with_linux(&xdg_data_path("agent-ssh.sock")?)),
+        AgentSocketID::SSHProfile(profile) => {
+            // Profile names end up in a path, keep them from escaping the data dir.
+            if profile.is_empty()
+                || !profile
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+            {
+                bail!("profile name '{profile}' can't be used in a socket path");
+            }
+            Ok(PlatformString::new()
+                .with_windows(format!(r"\\.\pipe\authentik\socket-ssh-{profile}"))
+                .with_linux(&xdg_data_path(&format!("agent-ssh-{profile}.sock"))?))
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_ssh_profile_socket_rejects_unsafe_names() {
+        for name in ["", "..", "a/b", "a b", "../x"] {
+            assert!(agent_socket_path(AgentSocketID::SSHProfile(name.into())).is_err());
+        }
+        let path = agent_socket_path(AgentSocketID::SSHProfile("work-1".into()))
+            .unwrap()
+            .for_current();
+        #[cfg(unix)]
+        assert!(path.ends_with("agent-ssh-work-1.sock"));
+        #[cfg(windows)]
+        assert!(path.ends_with("socket-ssh-work-1"));
+    }
 
     #[cfg(target_os = "macos")]
     #[test]

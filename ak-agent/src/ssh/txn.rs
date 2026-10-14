@@ -17,6 +17,8 @@ use crate::ssh::txn_keys::generate_cert;
 pub struct SSHAgentTransaction {
     pub agent: Arc<Agent>,
     pub priv_key: Arc<PrivateKey>,
+    /// Profile pinned by the socket; `None` follows the active profile.
+    pub profile: Option<String>,
     pub creds: ProcCredentials,
     pub host_key: Option<KeyData>,
     pub session_id: Option<Vec<u8>>,
@@ -30,6 +32,13 @@ struct UserInfo {
 }
 
 impl SSHAgentTransaction {
+    async fn profile(&self) -> String {
+        match &self.profile {
+            Some(p) => p.clone(),
+            None => self.agent.cfg.read().await.active_profile.clone(),
+        }
+    }
+
     pub(crate) async fn ensure_cert(&mut self) -> Option<Arc<Certificate>> {
         if let Some(ref c) = self.cert {
             return Some(Arc::clone(c));
@@ -43,7 +52,7 @@ impl SSHAgentTransaction {
             }
         };
 
-        let profile = self.agent.cfg.read().await.active_profile.clone();
+        let profile = self.profile().await;
         let token_mgr = match self.agent.gtm.for_profile(profile.clone()).await {
             Some(m) => m,
             None => {
@@ -167,7 +176,7 @@ impl SSHAgentTransaction {
 
     async fn get_host_token(&self, host_key: &KeyData) -> Result<(String, i64)> {
         let profile = {
-            let profile = self.agent.cfg.read().await.active_profile.clone();
+            let profile = self.profile().await;
             let cfg = self.agent.cfg.read().await;
             cfg.profiles
                 .get(&profile)

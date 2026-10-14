@@ -70,6 +70,8 @@ export async function getVersions(): Promise<Versions> {
 
 export interface SshConfig {
     socketPath: string;
+    /** Sockets pinned to a single profile, by profile name. */
+    profileSocketPaths: Record<string, string>;
     systemSocketPath?: string;
     fallbackSocketPath: string;
     extraPassthroughHosts: string[];
@@ -84,7 +86,10 @@ export async function setSshFallbackAgent(
     socketPath: string,
     extraPassthroughHosts: string[],
 ): Promise<void> {
-    return await invoke("set_ssh_fallback_agent", { socketPath, extraPassthroughHosts });
+    return await invoke("set_ssh_fallback_agent", {
+        socketPath,
+        extraPassthroughHosts,
+    });
 }
 
 export type SshStatus = "active" | "partial" | "unconfigured" | "notRunning";
