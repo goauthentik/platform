@@ -100,12 +100,11 @@ struct AuthentikAccessRequestView: View {
     @ViewBuilder
     private var applicationIcon: some View {
         if let icon = request.appIcon {
+            // Drawn like the authentik badge: macOS icons carry their own shape and margin.
             icon
                 .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 62, height: 62)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .shadow(color: .black.opacity(0.22), radius: 2.5, x: 0, y: 2)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 64, height: 64)
         } else {
             ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
@@ -143,9 +142,12 @@ struct AuthentikAccessRequestView: View {
     private var authentikBadge: some View {
         Group {
             if let badge = request.badgeIcon {
+                // authentik.icns has no margin, unlike system icons (824pt artwork on
+                // a 1024pt grid), so inset it to match the app icon next to it.
                 badge
                     .resizable()
                     .aspectRatio(contentMode: .fit)
+                    .frame(width: 64 * 824 / 1024, height: 64 * 824 / 1024)
                     .frame(width: 64, height: 64)
             }
         }
