@@ -38,10 +38,12 @@ struct AuthentikAccessRequestView: View {
     @State private var approveAll = false
     @State private var expanded = false
 
-    private let cardBackground = Color(hex: 0xF4F2EC)
-    private let primaryText = Color(hex: 0x1C1B1A)
-    private let bodyText = Color(hex: 0x2A2826)
-    private let mutedText = Color(hex: 0x8A8780)
+    private let cardBackground = Color(light: 0xF4F2EC, dark: 0x2A2928)
+    private let surface = Color(light: 0xFFFFFF, dark: 0x363533)
+    private let primaryText = Color(light: 0x1C1B1A, dark: 0xF2F0EB)
+    private let bodyText = Color(light: 0x2A2826, dark: 0xDDDAD3)
+    private let mutedText = Color(light: 0x8A8780, dark: 0x9A978F)
+    private let lineColor = Color(light: 0xCFCDC6, dark: 0x4A4844)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -74,7 +76,7 @@ struct AuthentikAccessRequestView: View {
                 .fill(cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.18), lineWidth: 0.5)
+                        .strokeBorder(Color.primary.opacity(0.18), lineWidth: 0.5)
                 )
         )
         .shadow(color: .black.opacity(0.30), radius: 25, x: 0, y: 22)
@@ -107,16 +109,16 @@ struct AuthentikAccessRequestView: View {
         } else {
             ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(.white)
+                    .fill(surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .strokeBorder(Color.black.opacity(0.16), lineWidth: 0.5)
+                            .strokeBorder(Color.primary.opacity(0.16), lineWidth: 0.5)
                     )
                     .frame(width: 60, height: 74)
                     .shadow(color: .black.opacity(0.12), radius: 1, x: 0, y: 1)
                 // folded corner
                 Triangle()
-                    .fill(Color(hex: 0xE7E4DC))
+                    .fill(Color(light: 0xE7E4DC, dark: 0x4A4844))
                     .frame(width: 16, height: 16)
             }
             .frame(width: 60, height: 74)
@@ -125,7 +127,7 @@ struct AuthentikAccessRequestView: View {
 
     private var connector: some View {
         HStack(spacing: 4) {
-            Rectangle().fill(Color(hex: 0xCFCDC6)).frame(height: 2)
+            Rectangle().fill(lineColor).frame(height: 2)
             ZStack {
                 Circle().fill(Color(hex: 0x34C759))
                 Image(systemName: "checkmark")
@@ -134,7 +136,7 @@ struct AuthentikAccessRequestView: View {
             }
             .frame(width: 22, height: 22)
             .shadow(color: .black.opacity(0.18), radius: 1, x: 0, y: 1)
-            Rectangle().fill(Color(hex: 0xCFCDC6)).frame(height: 2)
+            Rectangle().fill(lineColor).frame(height: 2)
         }
     }
 
@@ -167,7 +169,7 @@ struct AuthentikAccessRequestView: View {
             HStack(spacing: 12) {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color(hex: 0x9B9893))
+                    .foregroundStyle(mutedText)
                     .rotationEffect(.degrees(expanded ? 90 : 0))
 
                 avatar
@@ -188,10 +190,10 @@ struct AuthentikAccessRequestView: View {
             .padding(.horizontal, 15)
             .background(
                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(.white)
+                    .fill(surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 11, style: .continuous)
-                            .strokeBorder(Color.black.opacity(0.10), lineWidth: 0.5)
+                            .strokeBorder(Color.primary.opacity(0.10), lineWidth: 0.5)
                     )
                     .shadow(color: .black.opacity(0.05), radius: 1, x: 0, y: 1)
             )
@@ -233,10 +235,10 @@ struct AuthentikAccessRequestView: View {
         .padding(.horizontal, 15)
         .background(
             RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(Color(hex: 0xFAF9F5))
+                .fill(Color(light: 0xFAF9F5, dark: 0x31302E))
                 .overlay(
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.08), lineWidth: 0.5)
+                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
                 )
         )
     }
@@ -244,7 +246,7 @@ struct AuthentikAccessRequestView: View {
     private func detailRow(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
-                .foregroundStyle(Color(hex: 0x6B6862))
+                .foregroundStyle(mutedText)
             Spacer()
             Text(value)
                 .fontWeight(.semibold)
@@ -265,7 +267,9 @@ struct AuthentikAccessRequestView: View {
             Spacer()
 
             authz
+                .frame(width: LocalAuthenticationView.size, height: LocalAuthenticationView.size)
         }
+        .padding(.top, 18)
     }
 }
 
@@ -291,6 +295,16 @@ extension Color {
             blue: Double(hex & 0xFF) / 255,
             opacity: alpha
         )
+    }
+}
+
+extension Color {
+    /// Resolves per appearance, so the view follows the system light/dark setting.
+    init(light: UInt, dark: UInt) {
+        self.init(nsColor: NSColor(name: nil) { appearance in
+            let hex = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? dark : light
+            return NSColor(Color(hex: hex))
+        })
     }
 }
 

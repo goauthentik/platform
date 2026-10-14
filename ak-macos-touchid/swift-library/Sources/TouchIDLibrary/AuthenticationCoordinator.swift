@@ -11,7 +11,6 @@ private class AuthenticationPanel: NSPanel {
 public class AuthenticationCoordinator: ObservableObject {
     private var currentWindow: NSWindow?
     private var currentCallback: ((Bool, String?) -> Void)?
-    private var app: NSApplication { NSApplication.shared }
 
     func showAuthenticationSync(request: AccessRequestModel, callback: @escaping (Bool, String?) -> Void) {
         self.currentCallback = callback
@@ -21,8 +20,10 @@ public class AuthenticationCoordinator: ObservableObject {
     private func presentAuthenticationWindow(request: AccessRequestModel) {
         let authView = AuthenticationView(
             request: request,
-            onResult: { [weak self] success, error in
-                self?.handleAuthenticationResult(success: success, error: error)
+            // Strong capture keeps the coordinator alive while the window is up;
+            // the cycle is broken in finish().
+            onResult: { success, error in
+                self.handleAuthenticationResult(success: success, error: error)
             },
         )
 
@@ -53,38 +54,40 @@ public class AuthenticationCoordinator: ObservableObject {
 
         window.isMovableByWindowBackground = true
 
-        // Force SwiftUI layout so we know the window's real size before centering.
-        hostingController.view.layoutSubtreeIfNeeded()
+        // Size the window to the SwiftUI content now; otherwise it resizes after
+        // being positioned and ends up off-center.
+        window.setContentSize(hostingController.view.fittingSize)
 
-        if let screen = NSScreen.main {
+        // Center horizontally, a bit above the middle (like NSWindow.center()), on the
+        // screen the user is working on (the one with the mouse).
+        let mouse = NSEvent.mouseLocation
+        if let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main {
             let sf = screen.visibleFrame
             let wf = window.frame
             window.setFrameOrigin(NSPoint(
                 x: sf.midX - wf.width / 2,
-                y: sf.midY
+                y: sf.midY - wf.height / 2 + sf.height / 6
             ))
         }
 
-        // We are already on the main thread (dispatched from TouchIDLibrary).
-        // Do all window/app setup synchronously — a nested DispatchQueue.main.async
-        // would be blocked behind the outer dispatch block for the entire duration
-        // of runModal(for:), so it would never fire.
+        // No runModal: the caller already blocks on a semaphore, and a modal loop
+        // inside this main-queue block would stall the main queue (LocalAuthentication's
+        // embedded view and the host app both need it) until the prompt closes.
         window.orderFrontRegardless()
         window.makeKey()
-
         currentWindow = window
-        self.app.runModal(for: window)
-        window.orderOut(nil)
-        currentWindow = nil
     }
 
     private func handleAuthenticationResult(success: Bool, error: String?) {
-        print("got authorization result: \(success)")
-        currentCallback?(success, error)
-        // LAContext fires its reply on a background thread. stopModal() uses
-        // postEvent internally, which is documented thread-safe, so this is
-        // safe to call here without dispatching to main.
-        self.app.stopModal()
+        // LAContext replies on a background thread; AppKit needs main.
+        DispatchQueue.main.async {
+            guard let callback = self.currentCallback else { return }
+            self.currentCallback = nil
+            callback(success, error)
+            self.currentWindow?.orderOut(nil)
+            self.currentWindow?.contentViewController = nil
+            self.currentWindow = nil
+        }
     }
 
     func cancelAuthentication() {

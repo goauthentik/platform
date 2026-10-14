@@ -15,6 +15,7 @@ struct AuthenticationView: View {
         self.onResult = onResult
         self.authz = LocalAuthenticationView(
             context: LAContext(),
+            reason: request.reason,
         )
     }
 
@@ -44,23 +45,27 @@ struct LocalAuthenticationView: NSViewRepresentable {
     }
 
     var context: LAContext
+    var reason: String
 
     func auth(reply: @escaping (Bool, (any Error)?) -> Void) {
         return self.context
             .evaluatePolicy(
                 .deviceOwnerAuthenticationWithBiometricsOrCompanion,
-                localizedReason: "my reason",
+                localizedReason: reason.isEmpty ? " " : reason,
                 reply: reply,
             )
     }
 
+    // LAAuthenticationView only comes in fixed sizes (16/32/64/128pt); scaling or
+    // clipping it makes LocalAuthentication cancel the evaluation.
+    static let controlSize: NSControl.ControlSize = .regular
+    static let size: CGFloat = 64
+
     func makeNSView(context: Context) -> LAAuthenticationView {
-        LAAuthenticationView(context: context.coordinator.context)
+        LAAuthenticationView(context: context.coordinator.context, controlSize: Self.controlSize)
     }
 
-    func updateNSView(_ nsView: LAAuthenticationView, context: Context) {
-
-    }
+    func updateNSView(_ nsView: LAAuthenticationView, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
         Coordinator(context)
