@@ -132,7 +132,10 @@ mod tests {
         let path = agent_socket_path(AgentSocketID::SSHProfile("work-1".into()))
             .unwrap()
             .for_current();
+        #[cfg(unix)]
         assert!(path.ends_with("agent-ssh-work-1.sock"));
+        #[cfg(windows)]
+        assert!(path.ends_with("socket-ssh-work-1"));
     }
 
     #[cfg(target_os = "macos")]
