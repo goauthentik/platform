@@ -1,15 +1,17 @@
 import SwiftUI
 import AppKit
 
+// A non-activating panel can become key without activating the app. Since macOS 14
+// activation is cooperative, so activating our (accessory) app to steal focus from
+// the frontmost app is not reliable.
+private class AuthenticationPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+}
+
 public class AuthenticationCoordinator: ObservableObject {
     private var currentWindow: NSWindow?
     private var currentCallback: ((Bool, String?) -> Void)?
-    private var app: NSApplication
-
-    init() {
-        self.app = NSApplication.shared
-        self.app.setActivationPolicy(.regular)
-    }
+    private var app: NSApplication { NSApplication.shared }
 
     func showAuthenticationSync(request: AccessRequestModel, callback: @escaping (Bool, String?) -> Void) {
         self.currentCallback = callback
@@ -26,9 +28,9 @@ public class AuthenticationCoordinator: ObservableObject {
 
         let hostingController = NSHostingController(rootView: authView)
 
-        let window = NSWindow(
+        let window = AuthenticationPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
-            styleMask: [.titled, .fullSizeContentView],
+            styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -36,6 +38,11 @@ public class AuthenticationCoordinator: ObservableObject {
         window.center()
         window.contentViewController = hostingController
         window.level = .popUpMenu
+        window.isFloatingPanel = true
+        window.hidesOnDeactivate = false
+        window.becomesKeyOnlyIfNeeded = false
+        // Show on the current Space, including over full-screen apps.
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isOpaque = false
         window.backgroundColor = .clear
         window.titleVisibility = .hidden
@@ -62,8 +69,8 @@ public class AuthenticationCoordinator: ObservableObject {
         // Do all window/app setup synchronously — a nested DispatchQueue.main.async
         // would be blocked behind the outer dispatch block for the entire duration
         // of runModal(for:), so it would never fire.
-        self.app.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        window.makeKey()
 
         currentWindow = window
         self.app.runModal(for: window)

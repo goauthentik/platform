@@ -6,6 +6,7 @@ struct AccessRequestModel {
     var title: String = "authentik Access Requested"
     var requestingApp: String = ""
     var appIcon: Image? = nil
+    var badgeIcon: Image? = nil
     var accentColor: Color = Color(hex: 0xFD4B2D)
 
     var profileName: String = ""
@@ -139,10 +140,8 @@ struct AuthentikAccessRequestView: View {
 
     private var authentikBadge: some View {
         Group {
-            if let url = Bundle.module.url(forResource: "authentik", withExtension: "icns"),
-               let nsImage = NSImage(contentsOf: url)
-            {
-                Image(nsImage: nsImage)
+            if let badge = request.badgeIcon {
+                badge
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 64, height: 64)

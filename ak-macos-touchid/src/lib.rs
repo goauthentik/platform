@@ -11,6 +11,7 @@ mod ffi {
         profile_username: String,
         profile_groups: String,
         profile_avatar_path: String,
+        badge_icon_path: String,
         reason: String,
     }
 
@@ -53,6 +54,9 @@ impl Default for AccessRequest {
 pub fn authenticate_with_touchid(req: AccessRequest) -> bool {
     let app_icon_temp = TempImageFile::write(&req.app_icon);
     let avatar_temp = TempImageFile::write(&req.profile_avatar);
+    // Embedded rather than a SwiftPM resource: a statically linked Swift library
+    // has no resource bundle to load it from.
+    let badge_temp = TempImageFile::write(&Some(include_bytes!("authentik.icns").to_vec()));
 
     ffi::authenticate_with_touchid(ffi::AccessRequestFfi {
         title: req.title,
@@ -64,6 +68,7 @@ pub fn authenticate_with_touchid(req: AccessRequest) -> bool {
         profile_username: req.profile_username,
         profile_groups: req.profile_groups,
         profile_avatar_path: avatar_temp.path(),
+        badge_icon_path: badge_temp.path(),
         reason: req.reason,
     })
 }

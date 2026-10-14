@@ -55,5 +55,10 @@ private func accessRequestModel(from req: AccessRequestFfi) -> AccessRequestMode
         model.profileAvatar = Image(nsImage: nsImage)
     }
 
+    let badgePath = req.badge_icon_path.toString()
+    if !badgePath.isEmpty, let nsImage = NSImage(contentsOfFile: badgePath) {
+        model.badgeIcon = Image(nsImage: nsImage)
+    }
+
     return model
 }

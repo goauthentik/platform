@@ -16,9 +16,6 @@ let package = Package(
         .target(
             name: "TouchIDLibrary",
             dependencies: [],
-            resources: [
-                .process("Resources")
-            ],
             swiftSettings: [
                 .swiftLanguageMode(.v5)
             ]),
