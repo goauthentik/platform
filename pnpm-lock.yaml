@@ -189,7 +189,7 @@ importers:
         version: 9.1.0(oxfmt@0.71.0)(typescript@7.0.2)
       '@goauthentik/oxlint-config':
         specifier: ^1.0.1
-        version: 1.0.1(eslint@9.39.5(jiti@2.7.0))(oxlint@1.86.0)
+        version: 1.0.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(oxlint@1.86.0)
       '@goauthentik/theme':
         specifier: ^2.0.1
         version: 2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.4(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
@@ -204,7 +204,7 @@ importers:
         version: 2.12.1
       '@tauri-apps/plugin-opener':
         specifier: ^2
-        version: 2.7.0
+        version: 2.7.1
       '@tauri-apps/plugin-os':
         specifier: ~2.4.0
         version: 2.4.0
@@ -237,7 +237,7 @@ importers:
         version: 9.1.0(oxfmt@0.71.0)(typescript@7.0.2)
       '@goauthentik/oxlint-config':
         specifier: ^1.0.1
-        version: 1.0.1(eslint@9.39.5(jiti@2.7.0))(oxlint@1.86.0)
+        version: 1.0.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(oxlint@1.86.0)
       '@goauthentik/tsconfig':
         specifier: ^3.0.0
         version: 3.0.0
@@ -1329,8 +1329,8 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-opener@2.7.0':
-    resolution: {integrity: sha512-mBorYfVKh9Lt7s4ZFtKbMUTxBw+Y/sVmSlKCtkkoBgMTC/DIbt/kaPm67L/2djAUqDI1wbixy5OHHVmipjuGMw==}
+  '@tauri-apps/plugin-opener@2.7.1':
+    resolution: {integrity: sha512-XkXdt30rontti9TII/gBBxFRXWfj8DiprFW7RgBFRBj1OhdfjBNVcFqSEWkkZ4hXafHnuEnB7F1sFsmu6uyywQ==}
 
   '@tauri-apps/plugin-os@2.4.0':
     resolution: {integrity: sha512-XFQjntNNI3Vlqdy4WUGwiXX8DByzKVvoemAcUVkBm9NJPGmoDtII5i+vfuAzWaJfOE5cUJJLUDqXBnd4reSAIA==}
@@ -2633,17 +2633,17 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@eslint-community/eslint-utils@4.10.1(eslint@9.39.5(jiti@2.7.0))':
+  '@eslint-community/eslint-utils@4.10.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))':
     dependencies:
-      eslint: 9.39.5(jiti@2.7.0)
+      eslint: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.2': {}
 
-  '@eslint/config-array@0.21.2':
+  '@eslint/config-array@0.21.2(supports-color@7.2.0)':
     dependencies:
       '@eslint/object-schema': 2.1.7
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       minimatch: 3.1.5
     transitivePeerDependencies:
       - supports-color
@@ -2656,10 +2656,10 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
 
-  '@eslint/eslintrc@3.3.7':
+  '@eslint/eslintrc@3.3.7(supports-color@7.2.0)':
     dependencies:
       ajv: 6.15.0
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       espree: 10.4.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -2690,10 +2690,10 @@ snapshots:
       oxfmt: 0.71.0
       typescript: 7.0.2
 
-  '@goauthentik/oxlint-config@1.0.1(eslint@9.39.5(jiti@2.7.0))(oxlint@1.86.0)':
+  '@goauthentik/oxlint-config@1.0.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(oxlint@1.86.0)':
     dependencies:
-      eslint-plugin-lit: 2.3.1(eslint@9.39.5(jiti@2.7.0))
-      eslint-plugin-wc: 3.1.0(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-lit: 2.3.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))
+      eslint-plugin-wc: 3.1.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))
       oxlint: 1.86.0
     transitivePeerDependencies:
       - eslint
@@ -3096,7 +3096,7 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.12.1
       '@tauri-apps/cli-win32-x64-msvc': 2.12.1
 
-  '@tauri-apps/plugin-opener@2.7.0':
+  '@tauri-apps/plugin-opener@2.7.1':
     dependencies:
       '@tauri-apps/api': 2.12.1
 
@@ -3360,9 +3360,11 @@ snapshots:
 
   culori@4.0.2: {}
 
-  debug@4.4.3:
+  debug@4.4.3(supports-color@7.2.0):
     dependencies:
       ms: 2.1.3
+    optionalDependencies:
+      supports-color: 7.2.0
 
   deep-is@0.1.4: {}
 
@@ -3413,15 +3415,15 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-plugin-lit@2.3.1(eslint@9.39.5(jiti@2.7.0)):
+  eslint-plugin-lit@2.3.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0)):
     dependencies:
-      eslint: 9.39.5(jiti@2.7.0)
+      eslint: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
       parse5: 8.0.1
       parse5-htmlparser2-tree-adapter: 8.0.1
 
-  eslint-plugin-wc@3.1.0(eslint@9.39.5(jiti@2.7.0)):
+  eslint-plugin-wc@3.1.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0)):
     dependencies:
-      eslint: 9.39.5(jiti@2.7.0)
+      eslint: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
       is-valid-element-name: 1.0.0
       js-levenshtein-esm: 2.0.0
 
@@ -3434,14 +3436,14 @@ snapshots:
 
   eslint-visitor-keys@4.2.1: {}
 
-  eslint@9.39.5(jiti@2.7.0):
+  eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0):
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@9.39.5(jiti@2.7.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))
       '@eslint-community/regexpp': 4.12.2
-      '@eslint/config-array': 0.21.2
+      '@eslint/config-array': 0.21.2(supports-color@7.2.0)
       '@eslint/config-helpers': 0.4.2
       '@eslint/core': 0.17.0
-      '@eslint/eslintrc': 3.3.7
+      '@eslint/eslintrc': 3.3.7(supports-color@7.2.0)
       '@eslint/js': 9.39.5
       '@eslint/plugin-kit': 0.4.1
       '@humanfs/node': 0.16.8
@@ -3451,7 +3453,7 @@ snapshots:
       ajv: 6.15.0
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@7.2.0)
       escape-string-regexp: 4.0.0
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
