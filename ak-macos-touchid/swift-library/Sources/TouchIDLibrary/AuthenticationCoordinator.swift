@@ -36,7 +36,9 @@ public class AuthenticationCoordinator: ObservableObject {
 
         let window = AuthenticationPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
-            styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel],
+            // Borderless: a titled window keeps a titlebar safe area and a frame rim
+            // around the transparent area outside the rounded card.
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -51,11 +53,9 @@ public class AuthenticationCoordinator: ObservableObject {
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isOpaque = false
         window.backgroundColor = .clear
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
-        window.standardWindowButton(.closeButton)?.isHidden = true
-        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        window.standardWindowButton(.zoomButton)?.isHidden = true
+        // No window shadow: it (and its rim) is traced from the glass backdrop's
+        // rectangle, not the rounded card, leaving square edges at the corners.
+        window.hasShadow = false
 
         window.isMovableByWindowBackground = true
 

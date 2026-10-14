@@ -71,16 +71,8 @@ struct AuthentikAccessRequestView: View {
             footer
         }
         .padding(EdgeInsets(top: 30, leading: 34, bottom: 26, trailing: 34))
-        .frame(width: 460)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(cardBackground)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.18), lineWidth: 0.5)
-                )
-        )
-        .shadow(color: .black.opacity(0.30), radius: 25, x: 0, y: 22)
+        .frame(width: 420)
+        .modifier(CardBackground(fallback: cardBackground))
         .animation(.easeInOut(duration: 0.15), value: expanded)
     }
 
@@ -281,6 +273,25 @@ struct AuthentikAccessRequestView: View {
 }
 
 // MARK: - Helpers
+
+/// Liquid Glass on macOS 26+, the solid card before that.
+private struct CardBackground: ViewModifier {
+    let fallback: Color
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        if #available(macOS 26, *) {
+            content.glassEffect(.regular, in: shape)
+        } else {
+            content
+                .background(
+                    shape.fill(fallback)
+                        .overlay(shape.strokeBorder(Color.primary.opacity(0.18), lineWidth: 0.5))
+                )
+                .shadow(color: .black.opacity(0.30), radius: 25, x: 0, y: 22)
+        }
+    }
+}
 
 private struct Triangle: Shape {
     func path(in rect: CGRect) -> Path {
