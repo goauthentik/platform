@@ -236,8 +236,13 @@ export class McpInstructions extends LitElement {
                 <div class="section-title">MCP Server</div>
                 <p class="intro">
                     The authentik CLI includes an MCP server (<code>ak mcp</code>) that lets AI
-                    agents access your applications on your behalf, using your active profile. Make
-                    sure <code>ak</code> is on your <code>PATH</code>, then add it to your client:
+                    agents access your applications on your behalf. Make sure <code>ak</code> is on
+                    your <code>PATH</code>, then add it to your client:
+                </p>
+                <p class="intro">
+                    To use a specific profile, add <code>-p &lt;profile&gt;</code> to the command
+                    (e.g. <code>ak mcp -p work</code>). Without <code>-p</code>, the currently
+                    active profile is used.
                 </p>
                 <div class="tabs" role="tablist">
                     ${CLIENTS.map(
