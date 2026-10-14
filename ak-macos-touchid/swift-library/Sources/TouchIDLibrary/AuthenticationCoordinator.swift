@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import LocalAuthentication
 
 // A non-activating panel can become key without activating the app. Since macOS 14
 // activation is cooperative, so activating our (accessory) app to steal focus from
@@ -11,6 +12,7 @@ private class AuthenticationPanel: NSPanel {
 public class AuthenticationCoordinator: ObservableObject {
     private var currentWindow: NSWindow?
     private var currentCallback: ((Bool, String?) -> Void)?
+    private var passwordContext: LAContext?
 
     func showAuthenticationSync(request: AccessRequestModel, callback: @escaping (Bool, String?) -> Void) {
         self.currentCallback = callback
@@ -21,9 +23,12 @@ public class AuthenticationCoordinator: ObservableObject {
         let authView = AuthenticationView(
             request: request,
             // Strong capture keeps the coordinator alive while the window is up;
-            // the cycle is broken in finish().
+            // the cycle is broken in handleAuthenticationResult().
             onResult: { success, error in
                 self.handleAuthenticationResult(success: success, error: error)
+            },
+            onUsePassword: {
+                self.usePassword(reason: request.reason)
             },
         )
 
@@ -78,12 +83,32 @@ public class AuthenticationCoordinator: ObservableObject {
         currentWindow = window
     }
 
+    /// Hands over to the system dialog, which offers the account password (and
+    /// Touch ID again). We never see the password ourselves.
+    private func usePassword(reason: String) {
+        DispatchQueue.main.async {
+            guard self.currentCallback != nil, self.passwordContext == nil else { return }
+            // Our panel sits above normal windows and would cover the system dialog.
+            self.currentWindow?.orderOut(nil)
+            let context = LAContext()
+            self.passwordContext = context
+            context.evaluatePolicy(
+                .deviceOwnerAuthentication,
+                localizedReason: reason.isEmpty ? " " : reason
+            ) { success, error in
+                self.handleAuthenticationResult(success: success, error: error?.localizedDescription)
+            }
+        }
+    }
+
     private func handleAuthenticationResult(success: Bool, error: String?) {
         // LAContext replies on a background thread; AppKit needs main.
         DispatchQueue.main.async {
             guard let callback = self.currentCallback else { return }
             self.currentCallback = nil
             callback(success, error)
+            self.passwordContext?.invalidate()
+            self.passwordContext = nil
             self.currentWindow?.orderOut(nil)
             self.currentWindow?.contentViewController = nil
             self.currentWindow = nil

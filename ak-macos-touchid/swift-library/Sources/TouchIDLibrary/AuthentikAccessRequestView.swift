@@ -34,6 +34,7 @@ struct AuthentikAccessRequestView: View {
     var request = AccessRequestModel()
     var authz: LocalAuthenticationView?
     var onDeny: () -> Void = {}
+    var onUsePassword: () -> Void = {}
 
     @State private var approveAll = false
     @State private var expanded = false
@@ -265,6 +266,10 @@ struct AuthentikAccessRequestView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.large)
                 .keyboardShortcut(.escape, modifiers: [])
+
+            Button("Use Password…", action: onUsePassword)
+                .buttonStyle(.bordered)
+                .controlSize(.large)
 
             Spacer()
 

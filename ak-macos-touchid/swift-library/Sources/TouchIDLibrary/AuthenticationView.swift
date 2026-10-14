@@ -5,14 +5,17 @@ import SwiftUI
 struct AuthenticationView: View {
     var request: AccessRequestModel
     let onResult: (Bool, String?) -> Void
+    let onUsePassword: () -> Void
     private var authz: LocalAuthenticationView
 
     init(
         request: AccessRequestModel,
         onResult: @escaping (Bool, String?) -> Void,
+        onUsePassword: @escaping () -> Void,
     ) {
         self.request = request
         self.onResult = onResult
+        self.onUsePassword = onUsePassword
         self.authz = LocalAuthenticationView(
             context: LAContext(),
             reason: request.reason,
@@ -20,18 +23,33 @@ struct AuthenticationView: View {
     }
 
     var body: some View {
-        AuthentikAccessRequestView(request: request, authz: self.authz) {
-            onResult(false, nil)
-        }
+        AuthentikAccessRequestView(
+            request: request,
+            authz: self.authz,
+            onDeny: { onResult(false, nil) },
+            onUsePassword: usePassword,
+        )
         .onAppear() {
             authz.auth() { ok, err in
-                if err != nil {
-                    onResult(false, err?.localizedDescription)
-                } else {
+                switch (err as? LAError)?.code {
+                case nil:
                     onResult(ok, nil)
+                // Our own invalidate() in usePassword(); the password prompt reports the result.
+                case .appCancel:
+                    return
+                // Touch ID can't be used right now (e.g. lid closed), fall back like the system dialog.
+                case .biometryNotAvailable, .biometryNotEnrolled, .biometryLockout:
+                    usePassword()
+                default:
+                    onResult(false, err?.localizedDescription)
                 }
             }
         }
+    }
+
+    private func usePassword() {
+        authz.context.invalidate()
+        onUsePassword()
     }
 }
 
@@ -58,8 +76,8 @@ struct LocalAuthenticationView: NSViewRepresentable {
 
     // LAAuthenticationView only comes in fixed sizes (16/32/64/128pt); scaling or
     // clipping it makes LocalAuthentication cancel the evaluation.
-    static let controlSize: NSControl.ControlSize = .regular
-    static let size: CGFloat = 64
+    static let controlSize: NSControl.ControlSize = .small
+    static let size: CGFloat = 32
 
     func makeNSView(context: Context) -> LAAuthenticationView {
         LAAuthenticationView(context: context.coordinator.context, controlSize: Self.controlSize)
@@ -81,8 +99,8 @@ struct LocalAuthenticationView: NSViewRepresentable {
             profileEmail: "jane@goauthentik.io",
             profileUsername: "jdoe",
             profileGroups: "Engineering, Admins"
-        )
-    ) { _, _ in
-        print("foo")
-    }
+        ),
+        onResult: { _, _ in print("foo") },
+        onUsePassword: {}
+    )
 }
