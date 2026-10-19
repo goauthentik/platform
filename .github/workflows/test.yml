@@ -69,7 +69,7 @@ jobs:
               platform: ${{ matrix.platform }}
       # install-action writes ~/.cargo/bin, which the toolchain's rust-cache
       # snapshots and restores, so it must not overlap with it.
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2
         with:
           tool: cargo-llvm-cov nextest
       - run: |
@@ -243,7 +243,7 @@ jobs:
               name: authentik_ubuntu-26.04_ak-pam-e2e
               path: bin/
       # see test_rs: must not overlap with setup-rust-toolchain
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2
         with:
           tool: cargo-llvm-cov nextest
       - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd
