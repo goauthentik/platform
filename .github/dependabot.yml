@@ -19,6 +19,46 @@ updates:
           - windows
           - windows-core
           - webview2-com
+      tauri:
+        patterns:
+          - tauri
+          - tauri-*
+      sentry:
+        patterns:
+          - sentry
+          - sentry-*
+      tokio:
+        patterns:
+          - tokio
+          - tokio-*
+      http:
+        patterns:
+          - http
+          - http-body*
+          - hyper*
+          - tower-http
+      serde:
+        patterns:
+          - serde
+          - serde_*
+      clap:
+        patterns:
+          - clap
+          - clap_*
+      proc-macro:
+        patterns:
+          - syn
+          - quote
+          - proc-macro2
+          - prettyplease
+      ctor:
+        patterns:
+          - ctor
+          - dtor
+      keyring:
+        patterns:
+          - keyring
+          - keyring-core
   - package-ecosystem: npm
     directories:
       - /
@@ -32,6 +72,31 @@ updates:
       default-days: 7
       semver-major-days: 14
       semver-patch-days: 3
+    groups:
+      tauri:
+        patterns:
+          - "@tauri-apps/*"
+      sentry:
+        patterns:
+          - "@sentry/*"
+      eslint:
+        patterns:
+          - eslint
+          - typescript-eslint
+          - "@goauthentik/eslint-config"
+      oxc:
+        patterns:
+          - oxlint
+          - oxfmt
+          - "@goauthentik/oxlint-config"
+      goauthentik-config:
+        patterns:
+          - "@goauthentik/prettier-config"
+          - "@goauthentik/tsconfig"
+      vite:
+        patterns:
+          - vite
+          - rollup
   - package-ecosystem: "github-actions"
     directories:
       - /
@@ -46,6 +111,13 @@ updates:
     open-pull-requests-limit: 10
     assignees:
       - BeryJu
+    groups:
+      docker:
+        patterns:
+          - docker/*
+      actions:
+        patterns:
+          - actions/*
   # /containers/test is deliberately absent: its base image is an ARG, and the
   # Ubuntu releases under test are enumerated in test.yml's e2e matrix.
   - package-ecosystem: "docker"
