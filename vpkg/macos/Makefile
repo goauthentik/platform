@@ -2,7 +2,7 @@ include ../../common.mk
 
 TARGET := vpkg/macos
 MACOS_APP_NAME := authentik Agent.app
-MACOS_SIGN_CERT := 33B1F66E06FD7D8088F2301D240AE13F00399685
+MACOS_SIGN_CERT ?= 33B1F66E06FD7D8088F2301D240AE13F00399685
 
 .PHONY: lint
 lint:
@@ -45,7 +45,10 @@ build-app:
 ifeq (${DEV_BUILD}, 1)
 	"${TOP}/hack/plist.py" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/Info.plist" "CFBundleIdentifier" "io.goauthentik.platform.dev.agent"
 endif
+# Ad-hoc signing (MACOS_SIGN_CERT=-) is used for CI builds without signing secrets (external PRs)
+ifneq (${MACOS_SIGN_CERT}, -)
 	cp "$(shell grep -Rl io.goauthentik.platform.agent ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles)" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/embedded.provisionprofile"
+endif
 	cp "${TOP}/bin/agent-desktop/ak-agent-desktop" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/cli/ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
 	cp "${TOP}/bin/sysd/ak-sysd" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/"
@@ -59,6 +62,7 @@ endif
 		--verbose \
 		--entitlements "${PWD}/authentikEndpoint.entitlements" \
 		--sign ${MACOS_SIGN_CERT} \
+		$(if $(filter -,${MACOS_SIGN_CERT}),--deep) \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 
 .PHONY: package

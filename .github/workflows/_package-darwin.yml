@@ -56,6 +56,8 @@ jobs:
           ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
+      - if: steps.check.outputs.has-signing-cert == 'false'
+        run: echo 'MACOS_SIGN_CERT=-' >> $GITHUB_ENV
       - shell: bash
         run: |
           make vpkg/macos/package
