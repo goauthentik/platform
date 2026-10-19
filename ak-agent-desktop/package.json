@@ -14,7 +14,7 @@
         "tauri": "tauri"
     },
     "dependencies": {
-        "@goauthentik/api": "^2026.8.3",
+        "@goauthentik/api": "^2026.8.4",
         "@goauthentik/brand-assets": "^2.0.0",
         "@goauthentik/fonts": "^2.0.0",
         "@goauthentik/oxfmt-config": "^9.1.0",
