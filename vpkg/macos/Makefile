@@ -62,7 +62,6 @@ endif
 		--verbose \
 		--entitlements "${PWD}/authentikEndpoint.entitlements" \
 		--sign ${MACOS_SIGN_CERT} \
-		$(if $(filter -,${MACOS_SIGN_CERT}),--deep) \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
 
 .PHONY: package
