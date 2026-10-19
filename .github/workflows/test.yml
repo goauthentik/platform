@@ -278,6 +278,8 @@ jobs:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
+          # License retrieval needs an OIDC token, which external PRs don't get
+          NEXTEST_PROFILE: ${{ steps.setup.outputs.enterprise_license_key == '' && 'no-enterprise' || 'default' }}
         run: |
           make test-e2e-ci
       - run: |

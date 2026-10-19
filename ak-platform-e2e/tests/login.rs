@@ -3,34 +3,39 @@ use ak_platform_e2e::{
     join_domain, must_exec, test_init,
 };
 
-/// Verifies that a real local (non-SSH) login via the `login` PAM service is
-/// authenticated against authentik, using `pamtester` to drive PAM without a
-/// controlling TTY.
-#[tokio::test(flavor = "multi_thread")]
-async fn test_local_login_success() {
-    test_init();
-    let tm = TestMachine::new().await.expect("test machine");
-    join_domain(&tm).await.expect("join domain");
+/// Tests requiring an enterprise license; skipped by the `no-enterprise` nextest profile.
+mod enterprise {
+    use super::*;
 
-    let (_, password) = authentik_creds();
-    let output = must_exec(
-        &tm.container,
-        "printf '%s\\n' \"$AK_LOGIN_PW\" | pamtester login akadmin authenticate",
-        &[("AK_LOGIN_PW", &password)],
-    )
-    .await
-    .expect("exec pamtester");
+    /// Verifies that a real local (non-SSH) login via the `login` PAM service is
+    /// authenticated against authentik, using `pamtester` to drive PAM without a
+    /// controlling TTY.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_local_login_success() {
+        test_init();
+        let tm = TestMachine::new().await.expect("test machine");
+        join_domain(&tm).await.expect("join domain");
 
-    assert!(
-        output.contains("successfully authenticated"),
-        "expected successful local login, got: {output}"
-    );
-
-    assert_no_apparmor_denials(&tm.container)
+        let (_, password) = authentik_creds();
+        let output = must_exec(
+            &tm.container,
+            "printf '%s\\n' \"$AK_LOGIN_PW\" | pamtester login akadmin authenticate",
+            &[("AK_LOGIN_PW", &password)],
+        )
         .await
-        .expect("no apparmor denials");
+        .expect("exec pamtester");
 
-    cleanup_hosts().await.expect("cleanup");
+        assert!(
+            output.contains("successfully authenticated"),
+            "expected successful local login, got: {output}"
+        );
+
+        assert_no_apparmor_denials(&tm.container)
+            .await
+            .expect("no apparmor denials");
+
+        cleanup_hosts().await.expect("cleanup");
+    }
 }
 
 /// Verifies that the `login` PAM service rejects an incorrect password,
