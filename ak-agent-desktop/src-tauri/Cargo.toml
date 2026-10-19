@@ -29,7 +29,7 @@ tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-os = "2"
-tauri-plugin-sentry = "0.7"
+tauri-plugin-sentry = "0.8"
 reqwest = { workspace = true }
 semver = "1"
 sentry = { workspace = true }
