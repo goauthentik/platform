@@ -34,8 +34,8 @@ impl DirectoryComponent {
                 None,
                 None,
                 None,
-                None,
                 Some(true),
+                None,
                 None,
                 None,
                 None,
@@ -61,6 +61,9 @@ mod tests {
     use ak_platform::generated::sys_directory::{
         GetRequest, Group, system_directory_server::SystemDirectory,
     };
+    use authentik_client::apis::configuration::Configuration;
+    use authentik_client::models::{PaginatedGroupList, Pagination};
+    use httptest::{Expectation, Server, matchers::*, responders::json_encoded};
     use tonic::Request;
 
     use crate::{components::directory::DirectoryComponent, context::testutils};
@@ -81,6 +84,28 @@ mod tests {
             .into_inner()
             .groups;
         assert_eq!(res.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_fetch_all_groups_includes_users() {
+        let server = Server::run();
+        server.expect(
+            Expectation::matching(all_of![
+                request::method_path("GET", "/core/groups/"),
+                request::query(url_decoded(contains(("include_users", "true")))),
+                request::query(url_decoded(not(contains(key("is_superuser"))))),
+            ])
+            .respond_with(json_encoded(PaginatedGroupList::new(
+                Pagination::new(0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0),
+                vec![],
+                Default::default(),
+            ))),
+        );
+        let mut api = Configuration::new();
+        api.base_path = server.url_str("/").trim_end_matches('/').to_string();
+
+        let dir = DirectoryComponent::new(testutils::test_context().await);
+        dir.fetch_all_groups(&api).await.unwrap();
     }
 
     #[tokio::test]
