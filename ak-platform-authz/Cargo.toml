@@ -18,7 +18,7 @@ eyre = { workspace = true }
 apple-localauthentication = { version = "0.3.5", features = ["async"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-zbus = "5"
+zbus = "6"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.62.2", features = [
