@@ -48,9 +48,9 @@ pub async fn get_credentials(
         RequestHeader {
             profile: opts.profile.clone(),
         },
+        opts.client_id.clone(),
         vec![
             "auth-claude-cache".to_string(),
-            opts.client_id.clone(),
             opts.federation_rule_id.clone(),
             opts.organization_id.clone(),
             opts.service_account_id.clone(),
