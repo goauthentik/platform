@@ -22,6 +22,11 @@ contents:
     file_info:
       mode: 0644
     packager: rpm
+  - src: ../../bin/nss/libnss_authentik.so
+    dst: "/usr/lib/libnss_authentik.so.2"
+    file_info:
+      mode: 0644
+    packager: archlinux
   # AppArmor. Every confined profile that does user/group lookups includes
   # <abstractions/nameservice>, and glibc loads our NSS module into it, so this
   # single drop-in covers all of them (unix-chkpwd, sshd, cron, ...).
@@ -43,3 +48,9 @@ overrides:
     depends:
       - "authentik-sysd"
       - "glibc"
+  archlinux:
+    depends:
+      - "authentik-sysd"
+      - "glibc"
+    scripts:
+      postinstall: ./nss/_arch/postinstall.sh

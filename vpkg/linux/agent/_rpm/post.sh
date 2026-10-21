@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-systemctl enable 'ak-agent.service'
+systemctl enable --user 'ak-agent.service'
 
-systemctl restart 'ak-agent.service'
+systemctl restart --user 'ak-agent.service'
 
 exit 0
