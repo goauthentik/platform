@@ -134,7 +134,7 @@ Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, 
 
 #### `vpkg/linux/%`
 
-Linux DEB and RPM packages, produced via `nfpm`. **Linux only** (ubuntu-26.04, ubuntu-26.04-arm).
+Linux DEB, RPM and Arch Linux packages, produced via `nfpm`. **Linux only** (ubuntu-26.04, ubuntu-26.04-arm).
 
 Requirements: Pre-built outputs from `ak-cli/build`, `ak-sysd/build`, `ak-agent/build`, `ak-agent-desktop/build`, `ak-browser-support/build`, `ak-nss/build`, and `ak-pam/build`. `nfpm` on `PATH`. Packages produced: `authentik-cli`, `authentik-sysd`, `authentik-agent`, `authentik-agent-desktop`, `libnss-authentik`, `libpam-authentik`.
 

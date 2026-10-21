@@ -179,6 +179,13 @@ define nfpm_package
 			-p rpm \
 			-t ${TOP}/bin/$(2) \
 			-f $(1)
+	# pacman's pkgver must not contain '-'
+	VERSION_PKG=$(subst -,.,${VERSION_PKG}) ARCH=${ARCH} \
+		nfpm \
+			package \
+			-p archlinux \
+			-t ${TOP}/bin/$(2) \
+			-f $(1)
 endef
 
 define _target_template

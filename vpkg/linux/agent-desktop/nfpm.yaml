@@ -31,3 +31,8 @@ overrides:
       - "webkit2gtk4.1-0"
       - "gtk3-0"
       - "libappindicator-gtk3-0"
+  archlinux:
+    depends:
+      - "webkit2gtk-4.1"
+      - "gtk3"
+      - "libappindicator-gtk3"
