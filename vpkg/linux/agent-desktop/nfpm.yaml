@@ -35,4 +35,4 @@ overrides:
     depends:
       - "webkit2gtk-4.1"
       - "gtk3"
-      - "libappindicator-gtk3"
+      - "libappindicator"
