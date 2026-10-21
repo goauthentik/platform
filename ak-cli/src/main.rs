@@ -189,6 +189,23 @@ async fn main() -> std::result::Result<(), Error> {
                     role_arn,
                     region,
                 } => commands::auth::aws(app, client_id, role_arn, region).await,
+                AuthCommands::Claude {
+                    client_id,
+                    federation_rule_id,
+                    organization_id,
+                    service_account_id,
+                    workspace_id,
+                } => {
+                    commands::auth::claude(
+                        app,
+                        client_id,
+                        federation_rule_id,
+                        organization_id,
+                        service_account_id,
+                        workspace_id,
+                    )
+                    .await
+                }
             }
         }
         Commands::Api { command } => api::exec_api_command(app, command).await,
