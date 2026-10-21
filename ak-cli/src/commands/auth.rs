@@ -34,7 +34,7 @@ pub enum AuthCommands {
         federation_rule_id: String,
         #[arg(short, long, required = true)]
         organization_id: String,
-        #[arg(short, long, required = true)]
+        #[arg(short = 'a', long, required = true)]
         service_account_id: String,
         #[arg(short, long, required = true)]
         workspace_id: String,
