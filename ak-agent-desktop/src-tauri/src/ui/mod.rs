@@ -28,7 +28,7 @@ pub fn show_main(app: &tauri::AppHandle) {
         None => {
             let b = WebviewWindowBuilder::new(app, WINDOW_LABEL, WebviewUrl::default())
                 .title(WINDOW_TITLE)
-                .inner_size(870.0, 640.0);
+                .inner_size(1376.0, 850.0);
             #[cfg(target_os = "macos")]
             let b = b
                 .hidden_title(true)

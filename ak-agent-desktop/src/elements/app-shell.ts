@@ -26,10 +26,10 @@ import { css, html, LitElement, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 
 const PAGES = [
+    ["authorizations", "Authorizations"],
     ["profiles", "Profiles"],
     ["ssh", "SSH Agent"],
     ["mcp", "MCP Server"],
-    ["authorizations", "Authorizations"],
 ] as const;
 
 type Page = (typeof PAGES)[number][0];
@@ -103,7 +103,7 @@ export class AppShell extends LitElement {
     `;
 
     @state()
-    private page: Page = "profiles";
+    private page: Page = "authorizations";
 
     @state()
     private user?: SessionUser;
@@ -193,7 +193,10 @@ export class AppShell extends LitElement {
             case "mcp":
                 return html`<ak-mcp-instructions></ak-mcp-instructions>`;
             case "authorizations":
-                return html`<ak-authorizations></ak-authorizations>`;
+                return html`<ak-authorizations
+                    .profile=${this.profiles?.find((p) => p.name === this.activeProfile)}
+                    .user=${this.user}
+                ></ak-authorizations>`;
         }
     }
 
