@@ -2,6 +2,7 @@ use ak_platform::{
     client::user::{AnyService, Client},
     generated::{agent::RequestHeader, agent_auth::TokenExchangeRequest},
     grpc::assert_response_valid,
+    http::ReqwestResponseError,
 };
 use chrono::{TimeDelta, Utc};
 use eyre::{Result, WrapErr};
@@ -102,7 +103,8 @@ pub async fn get_credentials(
         })
         .send()
         .await?
-        .error_for_status()?
+        .error_with_response()
+        .await?
         .json()
         .await?;
 

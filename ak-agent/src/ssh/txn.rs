@@ -1,7 +1,9 @@
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use ak_platform::{net::server::creds::ProcCredentials, string::PlatformString};
+use ak_platform::{
+    http::ReqwestResponseError, net::server::creds::ProcCredentials, string::PlatformString,
+};
 use ak_platform_authz::AuthorizeAction;
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
 use eyre::{Result, WrapErr, bail};
@@ -170,7 +172,8 @@ impl SSHAgentTransaction {
             .get(userinfo_url)
             .send()
             .await?
-            .error_for_status()?;
+            .error_with_response()
+            .await?;
         Ok(response.json::<UserInfo>().await?.preferred_username)
     }
 
