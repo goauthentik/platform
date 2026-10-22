@@ -98,11 +98,21 @@ package: build-app
 		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
 	cd "${TOP}/bin/${TARGET}" && rm "agent.pkg" && rm -rf "${MACOS_APP_NAME}"
 ifneq (${MACOS_NOTARY_KEY_PATH},)
-	xcrun notarytool submit \
+	result=$$(xcrun notarytool submit \
 		--key "${MACOS_NOTARY_KEY_PATH}" \
 		--key-id "${MACOS_NOTARY_KEY_ID}" \
 		--issuer "${MACOS_NOTARY_ISSUER}" \
 		--wait \
-		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
+		--output-format json \
+		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg") && \
+	echo "$${result}" && \
+	if [ "$$(echo "$${result}" | plutil -extract status raw -o - -)" != "Accepted" ]; then \
+		xcrun notarytool log \
+			--key "${MACOS_NOTARY_KEY_PATH}" \
+			--key-id "${MACOS_NOTARY_KEY_ID}" \
+			--issuer "${MACOS_NOTARY_ISSUER}" \
+			"$$(echo "$${result}" | plutil -extract id raw -o - -)"; \
+		exit 1; \
+	fi
 	xcrun stapler staple "${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
 endif

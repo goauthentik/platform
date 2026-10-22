@@ -30,6 +30,8 @@ build:
 	set -o pipefail && xcodebuild \
 		${XCB_DEF_ARGS} \
 		-configuration Release \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
 		${XCB_EXTRA_ARGS} | xcbeautify
 	cp -R "${TOP}/cache/${TARGET}/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
 ifdef SENTRY_AUTH_TOKEN
