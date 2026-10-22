@@ -57,8 +57,18 @@ runs:
         ARCHITECTURES: ${{ inputs.architectures }}
         REPOSITORY_NAME: ${{ inputs.repository-name }}
         REPOSITORY_URL: ${{ inputs.repository-url }}
+        PKG_PATH: "${{ inputs.package-path }}"
       run: |
         set -xeuo pipefail
         # Determine if GPG is being used
         SIGNED=${{ inputs.gpg-private-key != '' && 'true' || 'false' }}
+        mkdir -p "$REPO_PATH/packages/arch"
+        ARCH_PACKAGES=""
+        for pkg in "${PKG_PATH}"/authentik_package-linux-*/*/*.pkg.tar.zst; do
+          [ -e "$pkg" ] || continue
+          name=$(basename "$pkg")
+          cp "$pkg" "$REPO_PATH/packages/arch/$name"
+          ARCH_PACKAGES+="<li><a href=\"packages/arch/${name}\">${name}</a></li>"
+        done
+        export ARCH_PACKAGES
         envsubst < "${{ github.action_path }}/index.html" > "$REPO_PATH/index.html"
