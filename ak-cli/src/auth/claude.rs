@@ -21,6 +21,8 @@ pub struct CredentialsOpts {
 
 #[derive(Serialize)]
 struct ClaudeTokenExchange {
+    grant_type: String,
+    assertion: String,
     federation_rule_id: String,
     organization_id: String,
     service_account_id: String,
@@ -91,6 +93,8 @@ pub async fn get_credentials(
     let res: ClaudeTokenResponse = client
         .post("https://api.anthropic.com/v1/oauth/token")
         .json(&ClaudeTokenExchange {
+            grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer".to_string(),
+            assertion: res.access_token,
             federation_rule_id: opts.federation_rule_id,
             organization_id: opts.organization_id,
             service_account_id: opts.service_account_id,
@@ -98,7 +102,6 @@ pub async fn get_credentials(
         })
         .send()
         .await?
-        // curl -sS happily returns error bodies, fail loudly instead
         .error_for_status()?
         .json()
         .await?;
