@@ -3,6 +3,7 @@ name = "ak-sysd"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true
@@ -12,39 +13,39 @@ name = "ak-sysd"
 path = "src/main.rs"
 
 [dependencies]
-ak-flow-executor = { path = "../ak-flow-executor" }
-ak-meta = { path = "../ak-meta" }
-ak-platform = { path = "../ak-platform" }
+ak-flow-executor = { workspace = true }
+ak-meta = { workspace = true }
+ak-platform = { workspace = true }
 ak-platform-facts = { path = "../ak-platform-facts" }
-ak-platform-keyring = { path = "../ak-platform-keyring" }
+ak-platform-keyring = { workspace = true }
 authentik-client = { workspace = true }
-base64 = "0.23.0"
+base64 = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
-clap_complete = "4"
+clap_complete = { workspace = true }
 eyre = { workspace = true }
 hex = { workspace = true }
-jsonwebtoken = { version = "11", features = ["rust_crypto"] }
+jsonwebtoken = { workspace = true }
 pbjson-types = { workspace = true }
 rand = "0.10"
 reqwest = { workspace = true }
 rpassword = "7"
 rusqlite = { version = "0.40", features = ["bundled"] }
 sentry = { workspace = true }
-sentry-tower = { version = "0.49.0", features = ["http"] }
+sentry-tower = { workspace = true, features = ["http"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
-ssh-key = { version = "0.6", features = ["ed25519", "getrandom", "std"] }
+ssh-key = { workspace = true, features = ["ed25519", "getrandom", "std"] }
 subtle = "2"
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["time", "signal"] }
-tokio-util = "0.7"
+tokio-util = { workspace = true }
 tonic = { workspace = true }
 tonic-prost = { workspace = true }
-tower-http = { version = "0.7.0", features = ["trace"] }
+tower-http = { workspace = true, features = ["trace"] }
 tracing = { workspace = true }
-reqwest-middleware = "0.5.2"
+reqwest-middleware = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.4"
@@ -67,16 +68,16 @@ tikv-jemallocator = { version = "0.7.0", features = [
 ] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-libc = "0.2.186"
+libc = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = "0.10"
+core-foundation = { workspace = true }
 core-foundation-sys = "0.8"
 
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.8"
-winreg = { version = "0.56", features = ["serialization-serde"] }
-windows = { version = "0.62.2", features = [
+winreg = { workspace = true, features = ["serialization-serde"] }
+windows = { workspace = true, features = [
     "Win32_System_RemoteDesktop",
     "Win32_Security",
     "Win32_System_Threading",
@@ -85,8 +86,8 @@ windows = { version = "0.62.2", features = [
 ] }
 
 [build-dependencies]
-windows_exe_info = "0.5.2"
+windows_exe_info = { workspace = true }
 
 [dev-dependencies]
-ak-agent = { path = "../ak-agent" }
-httptest = "0.16"
+ak-agent = { workspace = true }
+httptest = { workspace = true }

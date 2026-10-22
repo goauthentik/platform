@@ -82,6 +82,7 @@ lint-rs-ci:
 		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS} \
 		-- -D warnings
+	cargo deny --config "${PWD}/.cargo/deny.toml" --locked --workspace check
 
 lint-spellcheck:
 	pnpm install

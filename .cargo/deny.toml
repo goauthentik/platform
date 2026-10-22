@@ -1,0 +1,72 @@
+[licenses]
+allow = [
+  "0BSD",
+  "Apache-2.0 WITH LLVM-exception",
+  "Apache-2.0",
+  "BSD-3-Clause",
+  "CC0-1.0",
+  "CDLA-Permissive-2.0",
+  "ISC",
+  "MIT",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Zlib",
+]
+
+# NSS modules must link libnss; ak-nss is dynamically loaded by glibc.
+[[licenses.exceptions]]
+crate = "libnss"
+allow = ["LGPL-3.0"]
+
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+[bans.workspace-dependencies]
+duplicates = "deny"
+include-path-dependencies = true
+unused = "deny"
+
+# No non-FIPS compliant dependencies
+[[bans.deny]]
+name = "native-tls"
+[[bans.deny]]
+name = "openssl"
+[[bans.deny]]
+name = "openssl-sys"
+[[bans.deny]]
+name = "ring"
+# Only reachable via ureq's `rustls` feature, a build-dependency of osquery-sys
+# used to download a checksum-pinned prebuilt bundle. Remove once osquery-rs
+# switches ureq to `rustls-no-provider` + aws-lc-rs.
+wrappers = ["rustls", "rustls-webpki"]
+[[bans.features]]
+allow = [
+  "alloc",
+  "aws-lc-sys",
+  "default",
+  "prebuilt-nasm",
+  "ring-io",
+  "ring-sig-verify",
+]
+name = "aws-lc-rs"
+exact = true
+
+[advisories]
+ignore = [
+  { id = "RUSTSEC-2023-0071", reason = "rsa (via ssh-key) is only used to verify RSA host keys; all private keys are Ed25519, so no RSA private-key operations are exposed to the Marvin timing side channel" },
+  { id = "RUSTSEC-2024-0436", reason = "paste is a proc-macro dependency of libnss (ak-nss); no maintained alternative upstream" },
+  { id = "RUSTSEC-2024-0370", reason = "proc-macro-error is pulled in by gtk-rs 0.18 via tauri on Linux; remove when tauri moves to gtk4" },
+  { id = "RUSTSEC-2026-0370", reason = "zvariant was merged into zbus 6; tauri plugins and secret-service still depend on zbus 5" },
+  { id = "RUSTSEC-2026-0371", reason = "zbus_names was merged into zbus 6; tauri plugins and secret-service still depend on zbus 5" },
+  { id = "RUSTSEC-2026-0372", reason = "zvariant_derive was merged into zbus 6; tauri plugins and secret-service still depend on zbus 5" },
+]
+
+[sources]
+allow-git = [
+  "https://github.com/BeryJu/osquery-rs",
+  "https://github.com/goauthentik/client-rust",
+]

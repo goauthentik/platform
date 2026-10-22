@@ -3,6 +3,7 @@ name = "ak-ee-wcp"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [lib]
 name = "ak_cred_provider"
@@ -12,9 +13,9 @@ crate-type = ["cdylib"]
 workspace = true
 
 [dependencies]
-ak-ee-wcp-wire = { path = "../wire" }
-ak-platform = { path = "../../../ak-platform" }
-ak-platform-keyring = { path = "../../../ak-platform-keyring" }
+ak-ee-wcp-wire = { workspace = true }
+ak-platform = { workspace = true }
+ak-platform-keyring = { workspace = true }
 log = { workspace = true }
 windows = { workspace = true }
 windows-core = { workspace = true }

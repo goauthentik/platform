@@ -3,6 +3,7 @@ name = "ak-pam"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [lib]
 name = "pam_authentik"
@@ -12,13 +13,13 @@ crate-type = ["cdylib"]
 workspace = true
 
 [dependencies]
-ak-platform = { path = "../ak-platform" }
-ctap-hid-fido2 = "3.5.11"
-ctor = "1.0.7"
-dtor = "1.0.5"
+ak-platform = { workspace = true }
+ctap-hid-fido2 = { version = "3.5.11", default-features = false, features = ["aws-lc-rs"] }
+ctor = { workspace = true }
+dtor = { workspace = true }
 eyre.workspace = true
 gethostname = "1.1.0"
-libc = "0.2.186"
+libc = { workspace = true }
 pam-bindings = "0.3.0"
 serde_json.workspace = true
 serde.workspace = true
