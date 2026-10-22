@@ -56,6 +56,16 @@ jobs:
           ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
+      - if: steps.check.outputs.has-signing-cert == 'true'
+        env:
+          AC_KEY: ${{ secrets.APPLE_AC_KEY }}
+          AC_KID: ${{ secrets.APPLE_AC_KID }}
+          AC_ISSUER: ${{ secrets.APPLE_AC_ISSUER }}
+        run: |
+          echo "$AC_KEY" > "$RUNNER_TEMP/notary.p8"
+          echo "MACOS_NOTARY_KEY_PATH=$RUNNER_TEMP/notary.p8" >> $GITHUB_ENV
+          echo "MACOS_NOTARY_KEY_ID=$AC_KID" >> $GITHUB_ENV
+          echo "MACOS_NOTARY_ISSUER=$AC_ISSUER" >> $GITHUB_ENV
       - if: steps.check.outputs.has-signing-cert == 'false'
         run: echo 'MACOS_SIGN_CERT=-' >> $GITHUB_ENV
       - shell: bash

@@ -3,6 +3,12 @@ include ../../common.mk
 TARGET := vpkg/macos
 MACOS_APP_NAME := authentik Agent.app
 MACOS_SIGN_CERT ?= 33B1F66E06FD7D8088F2301D240AE13F00399685
+# "Developer ID Installer" identity for the pkg; unset skips pkg signing
+MACOS_INSTALLER_CERT ?=
+# Notarization (App Store Connect API key); unset skips notarization
+MACOS_NOTARY_KEY_PATH ?=
+MACOS_NOTARY_KEY_ID ?=
+MACOS_NOTARY_ISSUER ?=
 
 .PHONY: lint
 lint:
@@ -56,10 +62,21 @@ endif
 	cp -R "${TOP}/bin/psso/PSSO.appex" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex"
 	chmod +x "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/PlugIns/PSSO.appex/Contents/MacOS/"*
 	ln -s "ak" "${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/ak-vault" || true
+# Notarization requires every Mach-O to be signed with hardened runtime and a timestamp
+	for bin in ak ak-sysd ak-browser-support; do \
+		codesign \
+			--force \
+			--options runtime \
+			--timestamp \
+			--sign ${MACOS_SIGN_CERT} \
+			"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}/Contents/MacOS/$${bin}"; \
+	done
 	codesign \
 		--force \
 		--verify \
 		--verbose \
+		--options runtime \
+		--timestamp \
 		--entitlements "${PWD}/authentikEndpoint.entitlements" \
 		--sign ${MACOS_SIGN_CERT} \
 		"${TOP}/bin/${TARGET}/${MACOS_APP_NAME}"
@@ -74,8 +91,18 @@ package: build-app
 		--install-location /Applications \
 		"${TOP}/bin/${TARGET}/agent.pkg"
 	productbuild \
+		$(if ${MACOS_INSTALLER_CERT},--sign "${MACOS_INSTALLER_CERT}" --timestamp) \
 		--distribution "${PWD}/distribution.xml" \
 		--package-path "${TOP}/bin/${TARGET}" \
 		--resources "${PWD}/resources" \
 		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
 	cd "${TOP}/bin/${TARGET}" && rm "agent.pkg" && rm -rf "${MACOS_APP_NAME}"
+ifneq (${MACOS_NOTARY_KEY_PATH},)
+	xcrun notarytool submit \
+		--key "${MACOS_NOTARY_KEY_PATH}" \
+		--key-id "${MACOS_NOTARY_KEY_ID}" \
+		--issuer "${MACOS_NOTARY_ISSUER}" \
+		--wait \
+		"${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
+	xcrun stapler staple "${TOP}/bin/${TARGET}/authentik Agent Installer.pkg"
+endif
