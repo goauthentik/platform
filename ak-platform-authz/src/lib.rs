@@ -14,7 +14,24 @@ type UidFn = dyn (Fn(&ProcCredentials) -> Result<String>) + Send + Sync;
 pub mod grpc;
 pub mod sys;
 
+/// What a prompt asks the user to allow. On Linux each operation is its own polkit action, so
+/// rules and retained authorizations apply to one operation at a time.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Operation {
+    /// Read the user's account information.
+    WhoAmI,
+    /// Hand out the agent's own session token.
+    CurrentToken,
+    /// Hand out a token for another application.
+    TokenExchange,
+    /// Log in to an SSH host.
+    SshLogin,
+    /// A generic approval for a service the caller names.
+    Authorize,
+}
+
 pub struct AuthorizeAction {
+    operation: Operation,
     message: Box<MessageFn>,
     uid: Box<UidFn>,
     timeout_success: Duration,
@@ -31,8 +48,15 @@ static LAST_AUTH_MAP: LazyLock<Mutex<HashMap<String, AuthState>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 impl AuthorizeAction {
-    pub fn build() -> AuthorizeActionBuilder {
-        AuthorizeActionBuilder::default()
+    pub fn build(operation: Operation) -> AuthorizeActionBuilder {
+        AuthorizeActionBuilder {
+            operation,
+            message: None,
+            uid: None,
+            timeout_success: Duration::ZERO,
+            timeout_denied: Duration::ZERO,
+            creds: None,
+        }
     }
 
     pub fn timeout(&self, status: bool) -> Duration {
@@ -42,7 +66,7 @@ impl AuthorizeAction {
         }
     }
 
-    #[tracing::instrument(skip(self), fields(uid))]
+    #[tracing::instrument(skip(self), fields(operation = ?self.operation, uid))]
     pub async fn prompt(self, creds: ProcCredentials) -> Result<bool> {
         let uid = (self.uid)(&creds)
             .wrap_err("failed to resolve authorization UID")?
@@ -63,7 +87,7 @@ impl AuthorizeAction {
             .wrap_err("failed to build authorization message")?
             .clone();
         tracing::trace!(uid, "Prompting for authz");
-        let res = match sys::prompt(msg).await {
+        let res = match sys::prompt(self.operation, msg).await {
             Ok(r) => r,
             Err(e) => {
                 tracing::trace!("error during authz: {e:?}");
@@ -102,8 +126,8 @@ impl AuthorizeAction {
     }
 }
 
-#[derive(Default)]
 pub struct AuthorizeActionBuilder {
+    operation: Operation,
     message: Option<Box<MessageFn>>,
     uid: Option<Box<UidFn>>,
     timeout_success: Duration,
@@ -146,6 +170,7 @@ impl AuthorizeActionBuilder {
             bail!("Missing uid function");
         };
         Ok(AuthorizeAction {
+            operation: self.operation,
             message: m,
             uid: u,
             timeout_success: self.timeout_success,

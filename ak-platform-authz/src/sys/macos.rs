@@ -1,7 +1,9 @@
 use eyre::{Error, Result, WrapErr};
 use localauthentication::{async_api::AsyncContextExt, prelude::*};
 
-pub async fn prompt(msg: String) -> Result<bool> {
+use crate::Operation;
+
+pub async fn prompt(_operation: Operation, msg: String) -> Result<bool> {
     let (tx, rx) = tokio::sync::oneshot::channel();
 
     std::thread::Builder::new()

@@ -4,7 +4,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use ak_platform::{
     http::ReqwestResponseError, net::server::creds::ProcCredentials, string::PlatformString,
 };
-use ak_platform_authz::AuthorizeAction;
+use ak_platform_authz::{AuthorizeAction, Operation};
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
 use eyre::{Result, WrapErr, bail};
 use serde::Deserialize;
@@ -209,7 +209,7 @@ impl SSHAgentTransaction {
         let hk1 = host_key_str.to_string();
         let hk2 = host_key_str.to_string();
 
-        let result = AuthorizeAction::build()
+        let result = AuthorizeAction::build(Operation::SshLogin)
             .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
