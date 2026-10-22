@@ -8,6 +8,7 @@ use ak_platform::{
             agent_auth_server::AgentAuth, current_token_request::Type,
         },
     },
+    http::ReqwestResponseError,
     net::server::{creds::ProcCredentials, proc_info::process_user},
     oauth2_http,
     string::PlatformString,
@@ -141,9 +142,10 @@ impl AgentAuth for AgentGRPCServer {
             Ok(r) => r,
             Err(e) => return Err(Status::from_error(e.into())),
         };
-        if !req.status().is_success() {
-            return Err(Status::internal("Invalid status code for whoami request"));
-        }
+        let req = req
+            .error_with_response()
+            .await
+            .map_err(|e| Status::internal(format!("whoami request failed: {e}")))?;
 
         Ok(Response::new(WhoAmIResponse {
             header: Some(ResponseHeader { successful: true }),
@@ -368,12 +370,10 @@ impl AgentGRPCServer {
             .body(body)
             .send()
             .await
-            .map_err(|e| Status::from_error(e.into()))?;
-
-        if !res.status().is_success() {
-            let body = res.text().await.unwrap_or_default();
-            return Err(Status::internal(format!("token exchange failed: {body}")));
-        }
+            .map_err(|e| Status::from_error(e.into()))?
+            .error_with_response()
+            .await
+            .map_err(|e| Status::internal(format!("token exchange failed: {e}")))?;
 
         let new_token: OAuthTokenResponse =
             res.json().await.map_err(|e| Status::from_error(e.into()))?;

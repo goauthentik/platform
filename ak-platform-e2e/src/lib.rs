@@ -1,6 +1,7 @@
 use std::{env, path::PathBuf, time::Duration};
 
 use ak_flow_executor::executor::FlowExecutor;
+use ak_platform::http::ReqwestResponseError;
 use ak_platform::log::{LevelFilter, LogBuilder};
 use ak_platform::oauth::device_flow::{poll_for_device_token, request_device_authorization};
 use ak_platform::string::PlatformString;
@@ -226,7 +227,8 @@ pub async fn cleanup_hosts() -> Result<()> {
         .send()
         .await
         .wrap_err("failed to list devices")?
-        .error_for_status()
+        .error_with_response()
+        .await
         .wrap_err("failed to list devices")?
         .json()
         .await

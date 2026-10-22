@@ -2,13 +2,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use ak_meta::user_agent;
+use ak_platform::http::ReqwestResponseError;
 use ak_platform::shared::AuthentikClaims;
 use chrono::{TimeDelta, Utc};
 use jsonwebtoken::{DecodingKey, Validation, decode, decode_header, jwk::JwkSet};
 use tokio::sync::{Notify, RwLock};
 
 use ak_platform::storage::cfgmgr::ConfigManager;
-use eyre::{Result, bail};
+use eyre::{Result, WrapErr};
 
 use crate::config::ConfigV1;
 use crate::token::Token;
@@ -249,14 +250,15 @@ impl ProfileTokenManager {
             req = req.header("DPoP", proof);
         }
 
-        let res = req.body(body).send().await?;
-
-        if !res.status().is_success() {
-            let body = res.text().await?;
-            bail!("token renewal failed: {body}");
-        }
-
-        let new_token: Token = res.json().await?;
+        let new_token: Token = req
+            .body(body)
+            .send()
+            .await?
+            .error_with_response()
+            .await
+            .wrap_err("token renewal failed")?
+            .json()
+            .await?;
 
         {
             let mut config = self.cfg.write().await;

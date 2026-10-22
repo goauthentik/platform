@@ -1,6 +1,7 @@
 use ak_platform::{
     generated::ping::ping_client::PingClient,
     grpc::grpc_endpoint,
+    http::ReqwestResponseError,
     paths::{SysdSocketID, sysd_socket_path},
     string::PlatformString,
 };
@@ -89,10 +90,11 @@ async fn latest_version() -> Option<StableVersion> {
             .get(VERSION_URL)
             .send()
             .await?
-            .error_for_status()?
+            .error_with_response()
+            .await?
             .json()
             .await?;
-        reqwest::Result::Ok(info.stable)
+        eyre::Ok(info.stable)
     }
     .await
     .inspect_err(|e| tracing::debug!("version check failed: {e:?}"))

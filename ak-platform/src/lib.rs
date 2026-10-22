@@ -3,6 +3,7 @@ pub mod config;
 pub mod dpop;
 pub mod generated;
 pub mod grpc;
+pub mod http;
 pub mod log;
 pub mod net;
 pub mod oauth;
