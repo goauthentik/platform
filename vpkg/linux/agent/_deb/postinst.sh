@@ -9,7 +9,7 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 		else
 			_dh_action=start
 		fi
-		deb-systemd-invoke $_dh_action 'ak-agent.service' >/dev/null || true
+		deb-systemd-invoke --user $_dh_action 'ak-agent.service' >/dev/null || true
 	fi
 fi
 

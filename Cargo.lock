@@ -162,6 +162,7 @@ dependencies = [
  "clap_complete",
  "color-eyre",
  "eyre",
+ "hex",
  "open",
  "pbjson-types",
  "psl",
@@ -171,6 +172,7 @@ dependencies = [
  "sentry",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "tokio",
  "tracing",
  "url",
@@ -4259,9 +4261,9 @@ dependencies = [
 
 [[package]]
 name = "interprocess"
-version = "2.4.5"
+version = "2.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe388dd743f24e2e350318bd4bc67b2ab99599c2c63076cd9397293206779186"
+checksum = "7529951166d4dd4d2a6b9f0bb97919b810623f75eeb76e81ee9e6644886cae37"
 dependencies = [
  "doctest-file",
  "futures-core",
@@ -6372,9 +6374,9 @@ dependencies = [
 
 [[package]]
 name = "psl"
-version = "2.1.241"
+version = "2.1.244"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7319b480e204d67e759cad7886178335d26324c7c8573c126cc9dfa7350d064"
+checksum = "bc3ac0c25b0c40554a755e56dfe268855c53f391bbb7922a1c1fe59b73b163a9"
 dependencies = [
  "psl-types",
 ]

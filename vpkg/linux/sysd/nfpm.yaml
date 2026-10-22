@@ -44,3 +44,9 @@ overrides:
   rpm:
     scripts:
       postinstall: ./sysd/_rpm/postinst.sh
+  archlinux:
+    scripts:
+      postinstall: ./sysd/_arch/postinstall.sh
+archlinux:
+  scripts:
+    postupgrade: ./sysd/_arch/postinstall.sh

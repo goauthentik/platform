@@ -46,6 +46,7 @@ pub async fn get_credentials(
         RequestHeader {
             profile: opts.profile.clone(),
         },
+        opts.client_id.clone(),
         vec!["auth-aws-cache".to_string(), opts.role_arn.clone()],
     );
     if let Ok(v) = cc.get().await {

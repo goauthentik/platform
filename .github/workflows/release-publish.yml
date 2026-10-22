@@ -73,7 +73,7 @@ jobs:
           name: all-packages
           path: ./deploy/packages
       - id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v2
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v2
         with:
           client-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIV_KEY }}
@@ -151,7 +151,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v2
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v2
         with:
           client-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIV_KEY }}
@@ -171,6 +171,7 @@ jobs:
             ./packages/authentik_browser-ext/browser-ext/authentik_firefox.zip
             ./packages/authentik_package-macos/authentik Agent Installer.pkg
             ./packages/authentik_package-windows/authentik Agent Installer.msi
+            ./packages/authentik_package-linux-*/*/*.pkg.tar.zst
       - id: get-version
         run: |
           VERSION=$(make print-version 2> /dev/null)
