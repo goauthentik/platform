@@ -26,7 +26,7 @@ pub enum AuthCommands {
         #[arg(short, long, required = true)]
         client_id: String,
     },
-    /// Claude
+    /// Authenticate to Anthropic's Claude using Workload Identity Federation.
     Claude {
         #[arg(short, long, required = true)]
         client_id: String,
