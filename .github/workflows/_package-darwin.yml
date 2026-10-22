@@ -53,6 +53,7 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.APPLE_SIGN_CERT }}
           p12-password: ${{ secrets.APPLE_SIGN_CERT_PASSWORD }}
+          installer-p12-file-base64: ${{ secrets.APPLE_SIGN_CERT_INSTALLER }}
           ac-issuer: ${{ secrets.APPLE_AC_ISSUER }}
           ac-kid: ${{ secrets.APPLE_AC_KID }}
           ac-key: ${{ secrets.APPLE_AC_KEY }}
@@ -66,6 +67,7 @@ jobs:
           echo "MACOS_NOTARY_KEY_PATH=$RUNNER_TEMP/notary.p8" >> $GITHUB_ENV
           echo "MACOS_NOTARY_KEY_ID=$AC_KID" >> $GITHUB_ENV
           echo "MACOS_NOTARY_ISSUER=$AC_ISSUER" >> $GITHUB_ENV
+          echo "MACOS_INSTALLER_CERT=Developer ID Installer: Authentik Security Inc. (232G855Y8N)" >> $GITHUB_ENV
       - if: steps.check.outputs.has-signing-cert == 'false'
         run: echo 'MACOS_SIGN_CERT=-' >> $GITHUB_ENV
       - shell: bash
