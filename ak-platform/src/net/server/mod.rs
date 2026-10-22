@@ -7,6 +7,8 @@ use std::{
 };
 
 use interprocess::local_socket::{GenericFilePath, ListenerOptions, tokio::prelude::*};
+#[cfg(target_os = "linux")]
+use interprocess::os::unix::local_socket::ListenerOptionsExt as _;
 #[cfg(windows)]
 use interprocess::os::windows::{
     local_socket::ListenerOptionsExt, security_descriptor::SecurityDescriptor,
@@ -157,14 +159,20 @@ pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<Listen
     #[cfg(windows)]
     let options = options.security_descriptor(perm.security_descriptor()?);
 
-    // Restrict umask to close the TOCTOU window where the socket file briefly
-    // exists with permissive default permissions before the final chmod runs.
-    #[cfg(unix)]
+    // Close the TOCTOU window where the socket file briefly exists with
+    // permissive default permissions before the final chmod runs. On Linux,
+    // fchmod before bind() does this without touching process state; the umask
+    // is process-wide and races other threads creating files (e.g. the desktop
+    // tray icon ending up in a 0600 directory).
+    #[cfg(target_os = "linux")]
+    let options = options.mode(mode);
+    // fchmod on a socket is EINVAL on macOS, so fall back to the umask there.
+    #[cfg(all(unix, not(target_os = "linux")))]
     let old_umask = unsafe { libc::umask(0o777 & !mode) };
 
     let create_result = options.create_tokio();
 
-    #[cfg(unix)]
+    #[cfg(all(unix, not(target_os = "linux")))]
     unsafe {
         libc::umask(old_umask)
     };
@@ -270,6 +278,46 @@ mod tests {
         let _listener = listen(ps(path), SocketPermMode::Everyone).await.unwrap();
         let mode = std::fs::metadata(path).unwrap().mode() & 0o777;
         assert_eq!(mode, 0o666);
+    }
+
+    /// The umask is process-wide, so swapping it while binding races any other
+    /// thread creating files (this broke the desktop tray icon on Linux).
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn listen_leaves_umask_alone() {
+        use std::sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        };
+
+        // Read via /proc since umask(2) can only be queried by setting it.
+        fn umask() -> String {
+            std::fs::read_to_string("/proc/self/status")
+                .unwrap()
+                .lines()
+                .find(|l| l.starts_with("Umask:"))
+                .unwrap()
+                .to_owned()
+        }
+
+        let before = umask();
+        let done = Arc::new(AtomicBool::new(false));
+        let watcher = std::thread::spawn({
+            let done = done.clone();
+            let before = before.clone();
+            move || {
+                while !done.load(Ordering::Relaxed) {
+                    assert_eq!(umask(), before, "umask changed while listening");
+                }
+            }
+        });
+
+        let path = "/tmp/ak-test-net-umask.sock";
+        for _ in 0..200 {
+            drop(listen(ps(path), SocketPermMode::Owner).await.unwrap());
+        }
+        done.store(true, Ordering::Relaxed);
+        watcher.join().unwrap();
     }
 
     #[cfg(windows)]
