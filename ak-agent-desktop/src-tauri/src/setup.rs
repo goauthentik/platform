@@ -23,7 +23,7 @@ pub fn setup_deeplink(app: &mut App) -> Result<()> {
 }
 
 pub fn setup_tray(app: &mut App) -> Result<()> {
-    TrayIconBuilder::new()
+    let tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .icon_as_template(true)
         .on_tray_icon_event(|tray, e| {
@@ -34,8 +34,29 @@ pub fn setup_tray(app: &mut App) -> Result<()> {
             {
                 ui::show_main(tray.app_handle());
             }
+        });
+    // Add a tray icon menu on linux, otherwise the tray icon doesn't show up at all
+    #[cfg(target_os = "linux")]
+    let tray = {
+        use tauri::menu::{MenuBuilder, MenuItemBuilder};
+
+        let open_item = MenuItemBuilder::with_id("tray_open", format!("Open {}", ui::WINDOW_TITLE))
+            .build(app)?;
+        let quit_item = MenuItemBuilder::with_id("tray_quit", "Quit").build(app)?;
+        let menu = MenuBuilder::new(app)
+            .item(&open_item)
+            .separator()
+            .item(&quit_item)
+            .build()?;
+        tray.menu(&menu).on_menu_event(|app, event| {
+            if event.id() == "tray_open" {
+                ui::show_main(app);
+            } else if event.id() == "tray_quit" {
+                app.exit(0);
+            }
         })
-        .build(app)?;
+    };
+    tray.build(app)?;
     Ok(())
 }
 
