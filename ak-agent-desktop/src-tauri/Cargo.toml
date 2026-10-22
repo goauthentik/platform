@@ -20,6 +20,7 @@ ak-agent = { workspace = true }
 eyre = { workspace = true }
 hex = { workspace = true }
 ak-platform = { workspace = true }
+ak-platform-authz = { workspace = true }
 ak-platform-keyring = { workspace = true }
 ak-meta = { workspace = true }
 authentik-client = { workspace = true }

@@ -1,4 +1,5 @@
 import "./header.js";
+import "../pages/authorizations.js";
 import "../pages/mcp-instructions.js";
 import "../pages/profile-status.js";
 import "../pages/ssh-agent.js";
@@ -28,6 +29,7 @@ const PAGES = [
     ["profiles", "Profiles"],
     ["ssh", "SSH Agent"],
     ["mcp", "MCP Server"],
+    ["authorizations", "Authorizations"],
 ] as const;
 
 type Page = (typeof PAGES)[number][0];
@@ -190,6 +192,8 @@ export class AppShell extends LitElement {
                 return html`<ak-ssh-agent .sshStatus=${this.sshStatus}></ak-ssh-agent>`;
             case "mcp":
                 return html`<ak-mcp-instructions></ak-mcp-instructions>`;
+            case "authorizations":
+                return html`<ak-authorizations></ak-authorizations>`;
         }
     }
 
