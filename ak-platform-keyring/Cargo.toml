@@ -3,9 +3,10 @@ name = "ak-platform-keyring"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [dependencies]
-ak-platform = { path = "../ak-platform" }
+ak-platform = { workspace = true }
 eyre = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
@@ -14,17 +15,17 @@ tracing = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 security-framework = { version = "3.7", features = ["OSX_10_15"] }
-core-foundation = "0.10"
+core-foundation = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 keyring-core = { version = "1.0.0" }
 windows-native-keyring-store = "1.1.0"
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_System_Memory"] }
+windows = { workspace = true, features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_System_Memory"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 secret-service = { version = "5.1.0", features = ["rt-tokio-crypto-rust"] }
 tokio = { workspace = true, features = ["sync"] }
-zbus = "5"
+zbus = { workspace = true }
 zbus_names = "4.3.4"
 
 [dev-dependencies]

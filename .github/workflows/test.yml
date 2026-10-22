@@ -148,6 +148,10 @@ jobs:
       - uses: ./.github/actions/setup-toolchain
         with:
           platform: ${{ matrix.platform }}
+      # see test_rs: must not overlap with setup-rust-toolchain
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2
+        with:
+          tool: cargo-deny
       - run: make lint-rs-ci
   lint_js:
     name: Lint

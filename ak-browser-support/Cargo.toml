@@ -3,13 +3,14 @@ name = "ak-browser-support"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-ak-platform = { path = "../ak-platform" }
-ak-meta = { path = "../ak-meta" }
+ak-platform = { workspace = true }
+ak-meta = { workspace = true }
 tonic = { workspace = true }
 eyre = { workspace = true }
 tracing = { workspace = true }
@@ -26,4 +27,4 @@ tower = { workspace = true }
 sentry = { workspace = true }
 
 [dev-dependencies]
-hyper-util = { version = "0.1", features = ["tokio"] }
+hyper-util = { workspace = true, features = ["tokio"] }
