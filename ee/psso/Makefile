@@ -34,6 +34,8 @@ build:
 		OTHER_CODE_SIGN_FLAGS=--timestamp \
 		${XCB_EXTRA_ARGS} | xcbeautify
 	cp -R "${TOP}/cache/${TARGET}/Build/Products/Release/PSSO.appex" "${TOP}/bin/${TARGET}/PSSO.appex"
+# tar keeps the framework symlinks and permissions, which CI artifacts drop and which break the signature
+	tar -cf "${TOP}/bin/${TARGET}.tar" -C "${TOP}/bin" "${TARGET}"
 ifdef SENTRY_AUTH_TOKEN
 	@$(call sentry_upload_symbols,"${TOP}/bin/${TARGET}")
 endif

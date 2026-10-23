@@ -37,6 +37,7 @@ jobs:
             with:
               name: authentik_xcode-27_psso
               path: bin/
+      - run: tar -xf bin/psso.tar -C bin && rm bin/psso.tar
 
       - id: check
         env:
