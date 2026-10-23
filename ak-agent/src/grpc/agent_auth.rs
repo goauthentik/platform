@@ -13,7 +13,7 @@ use ak_platform::{
     oauth2_http,
     string::PlatformString,
 };
-use ak_platform_authz::grpc::AuthPeer;
+use ak_platform_authz::{Operation, grpc::AuthPeer};
 use ak_platform_keyring::cache::Cache;
 use ak_platform_keyring::cache::CacheData;
 use chrono::{DateTime, Utc};
@@ -127,7 +127,7 @@ impl AgentAuth for AgentGRPCServer {
             .await?;
 
         request
-            .auth_peer()
+            .auth_peer(Operation::WhoAmI)
             .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
@@ -190,7 +190,7 @@ impl AgentAuth for AgentGRPCServer {
             .ok_or(Status::invalid_argument("profile not found"))?;
 
         request
-            .auth_peer()
+            .auth_peer(Operation::CurrentToken)
             .with_creds(on_behalf_of(&request, inner_req.caller_pid)?)
             .with_message(|c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
@@ -253,7 +253,7 @@ impl AgentAuth for AgentGRPCServer {
         let cid1 = audience.clone();
         let cid2 = audience.clone();
         request
-            .auth_peer()
+            .auth_peer(Operation::TokenExchange)
             .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
@@ -320,7 +320,7 @@ impl AgentAuth for AgentGRPCServer {
         let uid = inner.uid.clone();
 
         request
-            .auth_peer()
+            .auth_peer(Operation::Authorize)
             .with_target("Login", inner.service.clone())
             .with_message(move |_c| {
                 Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))

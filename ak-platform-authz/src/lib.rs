@@ -15,7 +15,22 @@ type UidFn = dyn (Fn(&ProcCredentials) -> Result<String>) + Send + Sync;
 pub mod grpc;
 pub mod sys;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Operation {
+    /// Read the user's account information.
+    WhoAmI,
+    /// Hand out the agent's own session token.
+    CurrentToken,
+    /// Hand out a token for another application.
+    TokenExchange,
+    /// Log in to an SSH host.
+    SshLogin,
+    /// A generic approval for a service the caller names.
+    Authorize,
+}
+
 pub struct AuthorizeAction {
+    operation: Operation,
     message: Box<MessageFn>,
     uid: Box<UidFn>,
     timeout_success: Duration,
@@ -76,8 +91,17 @@ pub fn history() -> Vec<AuthRecord> {
 }
 
 impl AuthorizeAction {
-    pub fn build() -> AuthorizeActionBuilder {
-        AuthorizeActionBuilder::default()
+    pub fn build(operation: Operation) -> AuthorizeActionBuilder {
+        AuthorizeActionBuilder {
+            operation,
+            message: None,
+            uid: None,
+            timeout_success: Duration::ZERO,
+            timeout_denied: Duration::ZERO,
+            creds: None,
+            action: "",
+            target: String::new(),
+        }
     }
 
     pub fn timeout(&self, status: bool) -> Duration {
@@ -87,7 +111,7 @@ impl AuthorizeAction {
         }
     }
 
-    #[tracing::instrument(skip(self), fields(uid))]
+    #[tracing::instrument(skip(self), fields(operation = ?self.operation, uid))]
     pub async fn prompt(self, creds: ProcCredentials) -> Result<bool> {
         let uid = (self.uid)(&creds)
             .wrap_err("failed to resolve authorization UID")?
@@ -110,7 +134,7 @@ impl AuthorizeAction {
             .wrap_err("failed to build authorization message")?
             .clone();
         tracing::trace!(uid, "Prompting for authz");
-        let res = match sys::prompt(msg).await {
+        let res = match sys::prompt(self.operation, msg).await {
             Ok(r) => r,
             Err(e) => {
                 tracing::trace!("error during authz: {e:?}");
@@ -172,8 +196,8 @@ impl AuthorizeAction {
     }
 }
 
-#[derive(Default)]
 pub struct AuthorizeActionBuilder {
+    operation: Operation,
     message: Option<Box<MessageFn>>,
     uid: Option<Box<UidFn>>,
     timeout_success: Duration,
@@ -224,6 +248,7 @@ impl AuthorizeActionBuilder {
             bail!("Missing uid function");
         };
         Ok(AuthorizeAction {
+            operation: self.operation,
             message: m,
             uid: u,
             timeout_success: self.timeout_success,
@@ -254,7 +279,7 @@ mod tests {
     fn history_is_bounded_and_newest_first() -> Result<()> {
         let creds = ProcCredentials::current();
         for i in 0..=HISTORY_SIZE {
-            AuthorizeAction::build()
+            AuthorizeAction::build(Operation::Authorize)
                 .with_message(|_| Ok(PlatformString::new()))
                 .with_uid(|_| Ok(String::new()))
                 .with_target("test", i.to_string())
