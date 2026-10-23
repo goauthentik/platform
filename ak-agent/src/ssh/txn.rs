@@ -221,6 +221,7 @@ impl SSHAgentTransaction {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{hk2}:{pid}"))
             })
+            .with_target("SSH", host_key_str)
             .with_success_timeout(Duration::from_secs(30 * 60))
             .with_denied_timeout(Duration::from_secs(5 * 60))
             .prompt(self.creds.clone())

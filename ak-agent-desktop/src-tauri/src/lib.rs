@@ -72,6 +72,7 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            cmd::authz::recent_authorizations,
             cmd::page::take_pending_page,
             cmd::profile::get_user_info,
             cmd::profile::list_profiles,

@@ -1,8 +1,9 @@
 use std::ops::Add;
 use std::time::{Duration, Instant};
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::sync::{LazyLock, Mutex};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use ak_platform::{net::server::creds::ProcCredentials, string::PlatformString};
 use eyre::{self, Result, WrapErr, bail};
@@ -20,6 +21,8 @@ pub struct AuthorizeAction {
     timeout_success: Duration,
     timeout_denied: Duration,
     creds: Option<ProcCredentials>,
+    action: &'static str,
+    target: String,
 }
 
 struct AuthState {
@@ -29,6 +32,48 @@ struct AuthState {
 
 static LAST_AUTH_MAP: LazyLock<Mutex<HashMap<String, AuthState>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
+
+const HISTORY_SIZE: usize = 100;
+
+static HISTORY: Mutex<VecDeque<AuthRecord>> = Mutex::new(VecDeque::new());
+
+#[derive(Clone, Copy, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AuthOutcome {
+    Allowed,
+    Denied,
+    Failed,
+}
+
+impl From<bool> for AuthOutcome {
+    fn from(success: bool) -> Self {
+        if success { Self::Allowed } else { Self::Denied }
+    }
+}
+
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthRecord {
+    /// Milliseconds since the unix epoch.
+    pub time: u64,
+    pub action: &'static str,
+    /// Application, service or host access was requested for.
+    pub target: String,
+    pub pid: i64,
+    pub cmdline: Option<String>,
+    pub parent_cmdline: Option<String>,
+    pub outcome: AuthOutcome,
+    /// Answered from an earlier prompt's result.
+    pub cached: bool,
+}
+
+/// Recent authorization decisions of this process, newest first.
+pub fn history() -> Vec<AuthRecord> {
+    HISTORY
+        .lock()
+        .map(|h| h.iter().cloned().collect())
+        .unwrap_or_default()
+}
 
 impl AuthorizeAction {
     pub fn build() -> AuthorizeActionBuilder {
@@ -49,15 +94,17 @@ impl AuthorizeAction {
             .clone();
         tracing::Span::current().record("uid", &uid);
         tracing::trace!(uid, "Checking if we need to authorize");
-        if let Some(v) = match LAST_AUTH_MAP.try_lock() {
+        let cached = match LAST_AUTH_MAP.try_lock() {
             Ok(it) => it,
             Err(e) => bail!("auth cache lock poisoned: {e}"),
         }
         .get(&uid)
-            && v.exp >= Instant::now()
-        {
-            tracing::trace!(cached = v.success, "Valid last result in cache");
-            return Ok(v.success);
+        .filter(|v| v.exp >= Instant::now())
+        .map(|v| v.success);
+        if let Some(success) = cached {
+            tracing::trace!(cached = success, "Valid last result in cache");
+            self.record(&creds, success.into(), true);
+            return Ok(success);
         }
         let msg = (self.message)(&creds)
             .wrap_err("failed to build authorization message")?
@@ -67,6 +114,7 @@ impl AuthorizeAction {
             Ok(r) => r,
             Err(e) => {
                 tracing::trace!("error during authz: {e:?}");
+                self.record(&creds, AuthOutcome::Failed, false);
                 return Err(e);
             }
         };
@@ -84,7 +132,29 @@ impl AuthorizeAction {
             Err(e) => bail!("auth cache lock poisoned: {e}"),
         }
         tracing::trace!(result = res, "Finished authorization");
+        self.record(&creds, res.into(), false);
         Ok(res)
+    }
+
+    fn record(&self, creds: &ProcCredentials, outcome: AuthOutcome, cached: bool) {
+        let info = creds.clone().proc_info().ok();
+        let record = AuthRecord {
+            time: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|d| d.as_millis() as u64)
+                .unwrap_or_default(),
+            action: self.action,
+            target: self.target.clone(),
+            pid: creds.pid(),
+            cmdline: info.as_ref().map(|i| i.cmdline.clone()),
+            parent_cmdline: info.and_then(|i| i.parent_cmdline().ok()),
+            outcome,
+            cached,
+        };
+        if let Ok(mut h) = HISTORY.lock() {
+            h.truncate(HISTORY_SIZE - 1);
+            h.push_front(record);
+        }
     }
 
     pub async fn prompt_grpc(self) -> std::result::Result<(), Status> {
@@ -109,6 +179,8 @@ pub struct AuthorizeActionBuilder {
     timeout_success: Duration,
     timeout_denied: Duration,
     creds: Option<ProcCredentials>,
+    action: &'static str,
+    target: String,
 }
 
 impl AuthorizeActionBuilder {
@@ -138,6 +210,12 @@ impl AuthorizeActionBuilder {
         self.creds = creds;
         self
     }
+    /// What is being authorized, shown in [`history`].
+    pub fn with_target(mut self, action: &'static str, target: impl Into<String>) -> Self {
+        self.action = action;
+        self.target = target.into();
+        self
+    }
     pub fn build(self) -> Result<AuthorizeAction> {
         let Some(m) = self.message else {
             bail!("Missing message function");
@@ -151,6 +229,8 @@ impl AuthorizeActionBuilder {
             timeout_success: self.timeout_success,
             timeout_denied: self.timeout_denied,
             creds: self.creds,
+            action: self.action,
+            target: self.target,
         })
     }
 
@@ -163,5 +243,29 @@ impl AuthorizeActionBuilder {
             .map_err(|e| Status::from_error(e.into()))?
             .prompt_grpc()
             .await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn history_is_bounded_and_newest_first() -> Result<()> {
+        let creds = ProcCredentials::current();
+        for i in 0..=HISTORY_SIZE {
+            AuthorizeAction::build()
+                .with_message(|_| Ok(PlatformString::new()))
+                .with_uid(|_| Ok(String::new()))
+                .with_target("test", i.to_string())
+                .build()?
+                .record(&creds, (i % 2 == 0).into(), false);
+        }
+        let h = history();
+        assert_eq!(h.len(), HISTORY_SIZE);
+        assert_eq!(h[0].target, HISTORY_SIZE.to_string());
+        assert_eq!(h[0].pid, creds.pid());
+        assert!(matches!(h[0].outcome, AuthOutcome::Allowed));
+        Ok(())
     }
 }

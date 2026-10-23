@@ -6,9 +6,9 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-type RenewalStatus = "active" | "expiring" | "expired" | "disconnected";
+export type RenewalStatus = "active" | "expiring" | "expired" | "disconnected";
 
-function renewalStatus(nextRenew: Date | string | null | undefined): RenewalStatus {
+export function renewalStatus(nextRenew: Date | string | null | undefined): RenewalStatus {
     if (!nextRenew) return "disconnected";
     const next = new Date(nextRenew);
     const now = Date.now();
@@ -21,7 +21,7 @@ function renewalStatus(nextRenew: Date | string | null | undefined): RenewalStat
     return "active";
 }
 
-const STATUS_LABELS: Record<RenewalStatus, string> = {
+export const STATUS_LABELS: Record<RenewalStatus, string> = {
     active: "Valid",
     expiring: "Expiring soon",
     expired: "Needs renewal",

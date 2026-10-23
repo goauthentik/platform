@@ -119,6 +119,29 @@ export async function deleteProfile(name: string): Promise<void> {
     return await invoke("delete_profile", { name });
 }
 
+export type AuthOutcome = "allowed" | "denied" | "failed";
+
+export interface AuthRecord {
+    time: Date;
+    action: string;
+    /** Application, service or host access was requested for. */
+    target: string;
+    pid: number;
+    cmdline?: string;
+    parentCmdline?: string;
+    outcome: AuthOutcome;
+    /** Answered from an earlier prompt's result. */
+    cached: boolean;
+}
+
+/** Newest first. */
+export async function recentAuthorizations(): Promise<AuthRecord[]> {
+    const records =
+        await invoke<(Omit<AuthRecord, "time"> & { time: number })[]>("recent_authorizations");
+
+    return records.map((r) => ({ ...r, time: new Date(r.time) }));
+}
+
 /** Page requested by a deep link, if any. Cleared once taken. */
 export async function takePendingPage(): Promise<string | null> {
     return await invoke<string | null>("take_pending_page");

@@ -122,6 +122,7 @@ impl AgentAuth for AgentGRPCServer {
                     .with_windows(format!("'{cmd}' is attempting to access your account info"))
                     .with_linux(format!("'{cmd}' is attempting to access your account info")))
             })
+            .with_target("Account info", profile.app_slug.clone())
             .with_uid(|c| c.clone().proc_info()?.unique_process_id())
             .with_success_timeout(Duration::from_secs(0))
             .with_denied_timeout(Duration::from_secs(0))
@@ -185,6 +186,7 @@ impl AgentAuth for AgentGRPCServer {
                     .with_windows(format!("'{cmd}' is attempting to access your account"))
                     .with_linux(format!("'{cmd}' is attempting to access your account")))
             })
+            .with_target("Access token", profile.app_slug.clone())
             .with_uid(move |c| c.clone().proc_info()?.unique_process_id())
             .with_success_timeout(Duration::from_secs(0))
             .with_denied_timeout(Duration::from_secs(0))
@@ -256,6 +258,7 @@ impl AgentAuth for AgentGRPCServer {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{cid2}:{pid}"))
             })
+            .with_target("Token exchange", audience.clone())
             .with_success_timeout(Duration::from_secs(30 * 60))
             .with_denied_timeout(Duration::from_secs(1))
             .finish()
@@ -310,6 +313,7 @@ impl AgentAuth for AgentGRPCServer {
 
         request
             .auth_peer()
+            .with_target("Login", inner.service.clone())
             .with_message(move |_c| {
                 Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
             })
