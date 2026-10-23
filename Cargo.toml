@@ -90,6 +90,7 @@ dtor = "1.0.5"
 httptest = "0.16"
 jsonwebtoken = { version = "11", features = ["aws_lc_rs"] }
 libc = "0.2.186"
+http = "1.4.2"
 proc-macro2 = "1"
 prost = "0.14"
 quote = "1"

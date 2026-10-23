@@ -27,7 +27,7 @@ clap_complete = { workspace = true }
 color-eyre.workspace = true
 eyre.workspace = true
 hex.workspace = true
-http = "1"
+http.workspace = true
 open = "5.3.5"
 base64 = { workspace = true }
 pbjson-types = { workspace = true }
