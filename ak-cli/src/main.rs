@@ -179,34 +179,7 @@ async fn main() -> std::result::Result<(), Error> {
             if !cli.verbose {
                 set_log_level(LevelFilter::Error);
             }
-            match command {
-                AuthCommands::Raw { client_id } => commands::auth::raw(app, client_id).await,
-                AuthCommands::Kubectl { client_id } => {
-                    commands::auth::kubectl(app, client_id).await
-                }
-                AuthCommands::Aws {
-                    client_id,
-                    role_arn,
-                    region,
-                } => commands::auth::aws(app, client_id, role_arn, region).await,
-                AuthCommands::Claude {
-                    client_id,
-                    federation_rule_id,
-                    organization_id,
-                    service_account_id,
-                    workspace_id,
-                } => {
-                    commands::auth::claude(
-                        app,
-                        client_id,
-                        federation_rule_id,
-                        organization_id,
-                        service_account_id,
-                        workspace_id,
-                    )
-                    .await
-                }
-            }
+            commands::auth::handle(command.clone(), app).await
         }
         Commands::Api { command } => api::exec_api_command(app, command).await,
         Commands::Mcp => commands::mcp::mcp(app).await,
