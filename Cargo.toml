@@ -105,7 +105,7 @@ tower-http = "0.7.0"
 windows_exe_info = "0.5.2"
 zbus = "5"
 winreg = { version = "0.56", features = ["serialization-serde"] }
-windows-core = "0.62"
+windows-core = "0.100"
 windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_System_Com",
