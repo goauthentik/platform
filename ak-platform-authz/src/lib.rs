@@ -15,8 +15,6 @@ type UidFn = dyn (Fn(&ProcCredentials) -> Result<String>) + Send + Sync;
 pub mod grpc;
 pub mod sys;
 
-/// What a prompt asks the user to allow. On Linux each operation is its own polkit action, so
-/// rules and retained authorizations apply to one operation at a time.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Operation {
     /// Read the user's account information.

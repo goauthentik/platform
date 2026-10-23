@@ -5,8 +5,7 @@ use zbus::zvariant::OwnedValue;
 
 use crate::Operation;
 
-/// The polkit action for each operation, as declared (and documented for rule authors) in
-/// `vpkg/linux/agent/usr/share/polkit-1/actions/io.goauthentik.platform.policy`.
+/// The polkit action for each operation
 fn action_id(operation: Operation) -> &'static str {
     match operation {
         Operation::WhoAmI => "io.goauthentik.platform.whoami",
@@ -76,8 +75,7 @@ pub async fn prompt(operation: Operation, _msg: PlatformString) -> Result<bool> 
         .check_authorization(
             ("unix-process".to_string(), subject_details),
             action_id(operation),
-            // polkitd rejects the whole check if anyone but root or an action owner passes
-            // details, so nothing per request (like `polkit.message`) can be sent from here.
+            // polkitd rejects the whole check if anyone but root passes details
             HashMap::new(),
             1u32, // ALLOW_USER_INTERACTION
             "",
