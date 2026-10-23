@@ -104,3 +104,80 @@ impl AgentCache for AgentGRPCServer {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use ak_platform::generated::agent::RequestHeader;
+    use ak_platform::storage::cfgmgr::testutils::test_config_manager;
+    use ak_platform_keyring::cache::EXPIRY_MARGIN;
+    use chrono::TimeDelta;
+
+    use super::*;
+    use crate::Agent;
+    use crate::config::ConfigV1;
+    use crate::token::global::GlobalTokenManager;
+    use crate::token::testutils::gtm_test_lock;
+
+    fn header() -> Option<RequestHeader> {
+        Some(RequestHeader {
+            profile: "profile".to_string(),
+        })
+    }
+
+    /// Caches a value under `key` that expires at `exp`, then reads it back. The key prefix
+    /// keeps it apart from other tests sharing the in-memory keyring.
+    async fn set_then_get(
+        server: &AgentGRPCServer,
+        key: &str,
+        exp: DateTime<Utc>,
+    ) -> CacheGetResponse {
+        let keys = vec!["agent-cache-tests".to_string(), key.to_string()];
+        server
+            .cache_set(Request::new(CacheSetRequest {
+                header: header(),
+                keys: keys.clone(),
+                expiry: Some(exp.into()),
+                value: "value".to_string(),
+            }))
+            .await
+            .unwrap();
+        server
+            .cache_get(Request::new(CacheGetRequest {
+                header: header(),
+                keys,
+            }))
+            .await
+            .unwrap()
+            .into_inner()
+    }
+
+    #[tokio::test]
+    async fn cache_get_only_returns_valid_entries() {
+        let _guard = gtm_test_lock().lock().unwrap_or_else(|e| e.into_inner());
+        let cfg = test_config_manager::<ConfigV1>();
+        let gtm = GlobalTokenManager::new(Arc::clone(&cfg)).await.unwrap();
+        let server = AgentGRPCServer::new(Arc::new(Agent {
+            cfg,
+            gtm: Arc::new(gtm),
+        }))
+        .await
+        .unwrap();
+
+        let exp = Utc::now() + TimeDelta::hours(1);
+        let res = set_then_get(&server, "valid", exp).await;
+        assert_eq!(res.status(), CacheStatus::Valid);
+        assert_eq!(res.value, "value");
+        assert_eq!(res.expiry, Some(exp.into()));
+
+        for (key, left) in [
+            ("expired", TimeDelta::seconds(-1)),
+            ("expiring", EXPIRY_MARGIN - TimeDelta::seconds(1)),
+        ] {
+            let res = set_then_get(&server, key, Utc::now() + left).await;
+            assert_eq!(res.status(), CacheStatus::NotFound, "{key}");
+            assert_eq!(res.value, "", "{key}");
+        }
+    }
+}

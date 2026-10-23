@@ -62,6 +62,19 @@ fn exchange_cache_key(req: &TokenExchangeRequest) -> Vec<String> {
     key
 }
 
+/// The response for a still-valid token cached under `key`, if there is one.
+async fn cached_exchange(profile_name: String, key: Vec<String>) -> Option<TokenExchangeResponse> {
+    let cached = Cache::<CachedExchangeToken>::new(profile_name, key)
+        .get()
+        .await
+        .ok()?;
+    Some(TokenExchangeResponse {
+        header: Some(ResponseHeader { successful: true }),
+        expires_in: cached.remaining_secs(Utc::now()),
+        access_token: cached.access_token,
+    })
+}
+
 impl Debug for CachedExchangeToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("CachedExchangeToken")
@@ -122,6 +135,7 @@ impl AgentAuth for AgentGRPCServer {
                     .with_windows(format!("'{cmd}' is attempting to access your account info"))
                     .with_linux(format!("'{cmd}' is attempting to access your account info")))
             })
+            .with_target("Account info", profile.app_slug.clone())
             .with_uid(|c| c.clone().proc_info()?.unique_process_id())
             .with_success_timeout(Duration::from_secs(0))
             .with_denied_timeout(Duration::from_secs(0))
@@ -185,6 +199,7 @@ impl AgentAuth for AgentGRPCServer {
                     .with_windows(format!("'{cmd}' is attempting to access your account"))
                     .with_linux(format!("'{cmd}' is attempting to access your account")))
             })
+            .with_target("Access token", profile.app_slug.clone())
             .with_uid(move |c| c.clone().proc_info()?.unique_process_id())
             .with_success_timeout(Duration::from_secs(0))
             .with_denied_timeout(Duration::from_secs(0))
@@ -256,20 +271,16 @@ impl AgentAuth for AgentGRPCServer {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{cid2}:{pid}"))
             })
+            .with_target("Token exchange", audience.clone())
             .with_success_timeout(Duration::from_secs(30 * 60))
             .with_denied_timeout(Duration::from_secs(1))
             .finish()
             .await?;
 
         let cache_key = exchange_cache_key(inner);
-        let cache = Cache::<CachedExchangeToken>::new(profile_name.clone(), cache_key.clone());
-        if let Ok(cached) = cache.get().await {
+        if let Some(cached) = cached_exchange(profile_name.clone(), cache_key.clone()).await {
             tracing::debug!(audience, "cached_token_exchange: returning cached token");
-            return Ok(Response::new(TokenExchangeResponse {
-                header: Some(ResponseHeader { successful: true }),
-                expires_in: cached.remaining_secs(Utc::now()),
-                access_token: cached.access_token,
-            }));
+            return Ok(Response::new(cached));
         }
 
         let (access_token, expires_in) = if let Some(at) = inner.actor_token.clone() {
@@ -310,6 +321,7 @@ impl AgentAuth for AgentGRPCServer {
 
         request
             .auth_peer(Operation::Authorize)
+            .with_target("Login", inner.service.clone())
             .with_message(move |_c| {
                 Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
             })
@@ -431,6 +443,8 @@ impl AgentGRPCServer {
 
 #[cfg(test)]
 mod cache_tests {
+    use ak_platform_keyring::cache::EXPIRY_MARGIN;
+
     use super::*;
 
     fn exchange(scopes: &[&str], actor: Option<&str>) -> TokenExchangeRequest {
@@ -472,6 +486,44 @@ mod cache_tests {
             token.remaining_secs(created + chrono::TimeDelta::seconds(400)),
             0
         );
+    }
+
+    /// Caches a 300s token under `key` that has `left` seconds remaining. The key prefix
+    /// keeps it apart from other tests sharing the in-memory keyring.
+    async fn cache_token(key: &str, left: i64) -> Vec<String> {
+        let key = vec!["exchange-tests".to_string(), key.to_string()];
+        let token = CachedExchangeToken {
+            access_token: "cached".to_string(),
+            expires_in: 300,
+            created: Utc::now() - chrono::TimeDelta::seconds(300 - left),
+        };
+        Cache::<CachedExchangeToken>::new("profile".to_string(), key.clone())
+            .set(token)
+            .await
+            .unwrap();
+        key
+    }
+
+    #[tokio::test]
+    async fn cached_exchange_reports_time_left() {
+        let key = cache_token("valid", 200).await;
+        let res = cached_exchange("profile".to_string(), key).await.unwrap();
+        assert_eq!(res.access_token, "cached");
+        assert!((195..=200).contains(&res.expires_in), "{}", res.expires_in);
+    }
+
+    #[tokio::test]
+    async fn expired_exchange_is_not_served() {
+        let key = cache_token("expired", -1).await;
+        let res = cached_exchange("profile".to_string(), key).await;
+        assert!(res.is_none(), "{res:?}");
+    }
+
+    #[tokio::test]
+    async fn exchange_inside_margin_is_not_served() {
+        let key = cache_token("expiring", EXPIRY_MARGIN.num_seconds() - 1).await;
+        let res = cached_exchange("profile".to_string(), key).await;
+        assert!(res.is_none(), "{res:?}");
     }
 }
 

@@ -27,7 +27,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.72.2"
+version = "0.72.3"
 edition = "2024"
 license = "MIT"
 publish = false
@@ -50,6 +50,7 @@ ak-ee-wcp-wire = { path = "ee/wcp/wire" }
 ak-flow-executor = { path = "ak-flow-executor" }
 ak-meta = { path = "ak-meta" }
 ak-platform = { path = "ak-platform" }
+ak-platform-authz = { path = "ak-platform-authz" }
 ak-platform-keyring = { path = "ak-platform-keyring" }
 authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "d608f835c32c64346ebeb199cb48810080890123", version = "2026.11.0-rc1", default-features = false, features = [
     "rustls",
