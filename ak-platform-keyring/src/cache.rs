@@ -7,7 +7,7 @@ use std::marker::PhantomData;
 use crate::{KeyringError, KeyringStore};
 
 /// How long before its expiry an entry already counts as expired
-pub const EXPIRY_MARGIN: TimeDelta = TimeDelta::seconds(60);
+pub const EXPIRY_MARGIN: TimeDelta = TimeDelta::seconds(5);
 
 fn is_expired(expiry: DateTime<Utc>, now: DateTime<Utc>) -> bool {
     expiry <= now + EXPIRY_MARGIN
