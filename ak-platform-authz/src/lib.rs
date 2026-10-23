@@ -101,6 +101,8 @@ impl AuthorizeAction {
             timeout_success: Duration::ZERO,
             timeout_denied: Duration::ZERO,
             creds: None,
+            action: "",
+            target: String::new(),
         }
     }
 
@@ -279,7 +281,7 @@ mod tests {
     fn history_is_bounded_and_newest_first() -> Result<()> {
         let creds = ProcCredentials::current();
         for i in 0..=HISTORY_SIZE {
-            AuthorizeAction::build()
+            AuthorizeAction::build(Operation::Authorize)
                 .with_message(|_| Ok(PlatformString::new()))
                 .with_uid(|_| Ok(String::new()))
                 .with_target("test", i.to_string())
