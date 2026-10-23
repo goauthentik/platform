@@ -8,6 +8,9 @@ inputs:
   p12-password:
     description: "Codesign cert password"
     required: true
+  installer-p12-file-base64:
+    description: "Installer signing cert (in base64)"
+    required: false
   ac-issuer:
     description: "AppStore Connect issuer"
     required: true
@@ -22,8 +25,16 @@ runs:
   using: composite
   steps:
     - uses: apple-actions/import-codesign-certs@v7
+      id: import-certs
       with:
         p12-file-base64: ${{ inputs.p12-file-base64 }}
+        p12-password: ${{ inputs.p12-password }}
+    - uses: apple-actions/import-codesign-certs@v7
+      if: inputs.installer-p12-file-base64 != ''
+      with:
+        create-keychain: false
+        keychain-password: ${{ steps.import-certs.outputs.keychain-password }}
+        p12-file-base64: ${{ inputs.installer-p12-file-base64 }}
         p12-password: ${{ inputs.p12-password }}
     - uses: apple-actions/download-provisioning-profiles@v7
       with:
