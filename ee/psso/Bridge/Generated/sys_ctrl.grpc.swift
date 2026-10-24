@@ -6,7 +6,7 @@
 // Source: sys_ctrl.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 internal import GRPCCore
 internal import GRPCProtobuf
@@ -105,9 +105,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `DomainListResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func domainList<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -124,9 +124,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `DomainEnrollRequest` messages.
         ///   - deserializer: A deserializer for `DomainEnrollResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func domainEnroll<Result>(
             request: GRPCCore.ClientRequest<DomainEnrollRequest>,
@@ -143,9 +143,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `Domain` messages.
         ///   - deserializer: A deserializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func domainUnenroll<Result>(
             request: GRPCCore.ClientRequest<Domain>,
@@ -162,9 +162,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `TroubleshootInspectResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func troubleshootInspect<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -198,9 +198,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `DomainListResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func domainList<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -228,9 +228,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `DomainEnrollRequest` messages.
         ///   - deserializer: A deserializer for `DomainEnrollResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func domainEnroll<Result>(
             request: GRPCCore.ClientRequest<DomainEnrollRequest>,
@@ -258,9 +258,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `Domain` messages.
         ///   - deserializer: A deserializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func domainUnenroll<Result>(
             request: GRPCCore.ClientRequest<Domain>,
@@ -288,9 +288,9 @@ extension SystemCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `TroubleshootInspectResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func troubleshootInspect<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -321,9 +321,9 @@ extension SystemCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func domainList<Result>(
         request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -346,9 +346,9 @@ extension SystemCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `DomainEnrollRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func domainEnroll<Result>(
         request: GRPCCore.ClientRequest<DomainEnrollRequest>,
@@ -371,9 +371,9 @@ extension SystemCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `Domain` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func domainUnenroll<Result>(
         request: GRPCCore.ClientRequest<Domain>,
@@ -396,9 +396,9 @@ extension SystemCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func troubleshootInspect<Result>(
         request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -426,9 +426,9 @@ extension SystemCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func domainList<Result>(
         _ message: SwiftProtobuf.Google_Protobuf_Empty,
@@ -455,9 +455,9 @@ extension SystemCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func domainEnroll<Result>(
         _ message: DomainEnrollRequest,
@@ -484,9 +484,9 @@ extension SystemCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func domainUnenroll<Result>(
         _ message: Domain,
@@ -513,9 +513,9 @@ extension SystemCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func troubleshootInspect<Result>(
         _ message: SwiftProtobuf.Google_Protobuf_Empty,

@@ -584,6 +584,9 @@ impl serde::Serialize for TokenExchangeRequest {
         if self.actor_token_type.is_some() {
             len += 1;
         }
+        if self.requested_token_type.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("agent_auth.TokenExchangeRequest", len)?;
         if let Some(v) = self.header.as_ref() {
             struct_ser.serialize_field("header", v)?;
@@ -599,6 +602,9 @@ impl serde::Serialize for TokenExchangeRequest {
         }
         if let Some(v) = self.actor_token_type.as_ref() {
             struct_ser.serialize_field("actorTokenType", v)?;
+        }
+        if let Some(v) = self.requested_token_type.as_ref() {
+            struct_ser.serialize_field("requestedTokenType", v)?;
         }
         struct_ser.end()
     }
@@ -617,6 +623,8 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
             "actorToken",
             "actor_token_type",
             "actorTokenType",
+            "requested_token_type",
+            "requestedTokenType",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -626,6 +634,7 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
             Scopes,
             ActorToken,
             ActorTokenType,
+            RequestedTokenType,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -652,6 +661,7 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
                             "scopes" => Ok(GeneratedField::Scopes),
                             "actorToken" | "actor_token" => Ok(GeneratedField::ActorToken),
                             "actorTokenType" | "actor_token_type" => Ok(GeneratedField::ActorTokenType),
+                            "requestedTokenType" | "requested_token_type" => Ok(GeneratedField::RequestedTokenType),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -676,6 +686,7 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
                 let mut scopes__ = None;
                 let mut actor_token__ = None;
                 let mut actor_token_type__ = None;
+                let mut requested_token_type__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Header => {
@@ -708,6 +719,12 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
                             }
                             actor_token_type__ = map_.next_value()?;
                         }
+                        GeneratedField::RequestedTokenType => {
+                            if requested_token_type__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("requestedTokenType"));
+                            }
+                            requested_token_type__ = map_.next_value()?;
+                        }
                     }
                 }
                 Ok(TokenExchangeRequest {
@@ -716,6 +733,7 @@ impl<'de> serde::Deserialize<'de> for TokenExchangeRequest {
                     scopes: scopes__.unwrap_or_default(),
                     actor_token: actor_token__,
                     actor_token_type: actor_token_type__,
+                    requested_token_type: requested_token_type__,
                 })
             }
         }
