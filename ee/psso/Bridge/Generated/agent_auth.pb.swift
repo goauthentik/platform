@@ -199,6 +199,16 @@ nonisolated struct TokenExchangeRequest: Sendable {
   /// Clears the value of `actorTokenType`. Subsequent reads from it will return its default value.
   mutating func clearActorTokenType() {self._actorTokenType = nil}
 
+  /// RFC 8693 requested_token_type, e.g. urn:ietf:params:oauth:token-type:saml2.
+  var requestedTokenType: String {
+    get {_requestedTokenType ?? String()}
+    set {_requestedTokenType = newValue}
+  }
+  /// Returns true if `requestedTokenType` has been explicitly set.
+  var hasRequestedTokenType: Bool {self._requestedTokenType != nil}
+  /// Clears the value of `requestedTokenType`. Subsequent reads from it will return its default value.
+  mutating func clearRequestedTokenType() {self._requestedTokenType = nil}
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -206,6 +216,7 @@ nonisolated struct TokenExchangeRequest: Sendable {
   fileprivate var _header: RequestHeader? = nil
   fileprivate var _actorToken: String? = nil
   fileprivate var _actorTokenType: String? = nil
+  fileprivate var _requestedTokenType: String? = nil
 }
 
 nonisolated struct TokenExchangeResponse: Sendable {
@@ -455,7 +466,7 @@ nonisolated extension CurrentTokenResponse: SwiftProtobuf.Message, SwiftProtobuf
 
 nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".TokenExchangeRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}audience\0\u{1}scopes\0\u{3}actor_token\0\u{3}actor_token_type\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}header\0\u{1}audience\0\u{1}scopes\0\u{3}actor_token\0\u{3}actor_token_type\0\u{3}requested_token_type\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -468,6 +479,7 @@ nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf
       case 3: try { try decoder.decodeRepeatedStringField(value: &self.scopes) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self._actorToken) }()
       case 5: try { try decoder.decodeSingularStringField(value: &self._actorTokenType) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self._requestedTokenType) }()
       default: break
       }
     }
@@ -493,6 +505,9 @@ nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf
     try { if let v = self._actorTokenType {
       try visitor.visitSingularStringField(value: v, fieldNumber: 5)
     } }()
+    try { if let v = self._requestedTokenType {
+      try visitor.visitSingularStringField(value: v, fieldNumber: 6)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -502,6 +517,7 @@ nonisolated extension TokenExchangeRequest: SwiftProtobuf.Message, SwiftProtobuf
     if lhs.scopes != rhs.scopes {return false}
     if lhs._actorToken != rhs._actorToken {return false}
     if lhs._actorTokenType != rhs._actorTokenType {return false}
+    if lhs._requestedTokenType != rhs._requestedTokenType {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -46,6 +46,8 @@ message TokenExchangeRequest {
   repeated string scopes = 3;
   optional string actor_token = 4;
   optional string actor_token_type = 5;
+  // RFC 8693 requested_token_type, e.g. urn:ietf:params:oauth:token-type:saml2.
+  optional string requested_token_type = 6;
 }
 
 message TokenExchangeResponse {

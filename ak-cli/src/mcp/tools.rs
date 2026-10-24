@@ -192,6 +192,7 @@ impl AuthentikMcp {
                 actor_token_type: Some(
                     "goauthentik.io/oauth/token-type/authentik_token".to_owned(),
                 ),
+                ..Default::default()
             })
             .await
             .map_err(|e| McpError::internal_error(format!("failed to exchange token: {e}"), None))?

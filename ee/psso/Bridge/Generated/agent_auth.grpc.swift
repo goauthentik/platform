@@ -6,7 +6,7 @@
 // Source: agent_auth.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 internal import GRPCCore
 internal import GRPCProtobuf
@@ -104,9 +104,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `WhoAmIRequest` messages.
         ///   - deserializer: A deserializer for `WhoAmIResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func whoAmI<Result>(
             request: GRPCCore.ClientRequest<WhoAmIRequest>,
@@ -123,9 +123,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `CurrentTokenRequest` messages.
         ///   - deserializer: A deserializer for `CurrentTokenResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func getCurrentToken<Result>(
             request: GRPCCore.ClientRequest<CurrentTokenRequest>,
@@ -142,9 +142,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `TokenExchangeRequest` messages.
         ///   - deserializer: A deserializer for `TokenExchangeResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func cachedTokenExchange<Result>(
             request: GRPCCore.ClientRequest<TokenExchangeRequest>,
@@ -161,9 +161,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `AuthorizeRequest` messages.
         ///   - deserializer: A deserializer for `AuthorizeResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func authorize<Result>(
             request: GRPCCore.ClientRequest<AuthorizeRequest>,
@@ -197,9 +197,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `WhoAmIRequest` messages.
         ///   - deserializer: A deserializer for `WhoAmIResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func whoAmI<Result>(
             request: GRPCCore.ClientRequest<WhoAmIRequest>,
@@ -227,9 +227,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `CurrentTokenRequest` messages.
         ///   - deserializer: A deserializer for `CurrentTokenResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func getCurrentToken<Result>(
             request: GRPCCore.ClientRequest<CurrentTokenRequest>,
@@ -257,9 +257,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `TokenExchangeRequest` messages.
         ///   - deserializer: A deserializer for `TokenExchangeResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func cachedTokenExchange<Result>(
             request: GRPCCore.ClientRequest<TokenExchangeRequest>,
@@ -287,9 +287,9 @@ extension AgentAuth {
         ///   - serializer: A serializer for `AuthorizeRequest` messages.
         ///   - deserializer: A deserializer for `AuthorizeResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func authorize<Result>(
             request: GRPCCore.ClientRequest<AuthorizeRequest>,
@@ -320,9 +320,9 @@ extension AgentAuth.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `WhoAmIRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func whoAmI<Result>(
         request: GRPCCore.ClientRequest<WhoAmIRequest>,
@@ -345,9 +345,9 @@ extension AgentAuth.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `CurrentTokenRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func getCurrentToken<Result>(
         request: GRPCCore.ClientRequest<CurrentTokenRequest>,
@@ -370,9 +370,9 @@ extension AgentAuth.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `TokenExchangeRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func cachedTokenExchange<Result>(
         request: GRPCCore.ClientRequest<TokenExchangeRequest>,
@@ -395,9 +395,9 @@ extension AgentAuth.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `AuthorizeRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func authorize<Result>(
         request: GRPCCore.ClientRequest<AuthorizeRequest>,
@@ -425,9 +425,9 @@ extension AgentAuth.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func whoAmI<Result>(
         _ message: WhoAmIRequest,
@@ -454,9 +454,9 @@ extension AgentAuth.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func getCurrentToken<Result>(
         _ message: CurrentTokenRequest,
@@ -483,9 +483,9 @@ extension AgentAuth.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func cachedTokenExchange<Result>(
         _ message: TokenExchangeRequest,
@@ -512,9 +512,9 @@ extension AgentAuth.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func authorize<Result>(
         _ message: AuthorizeRequest,

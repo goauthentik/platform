@@ -48,11 +48,14 @@ impl CachedExchangeToken {
     }
 }
 
-/// Keychain key for an exchanged token. Scopes and the actor token change what the
-/// token grants, so they must be part of the key or one request could be served
-/// another's token.
+/// Keychain key for an exchanged token. Scopes, the actor token and the requested
+/// token type change what the token grants, so they must be part of the key or one
+/// request could be served another's token.
 fn exchange_cache_key(req: &TokenExchangeRequest) -> Vec<String> {
     let mut key = vec!["token-cache".to_string(), req.audience.clone()];
+    if let Some(rtt) = &req.requested_token_type {
+        key.push(rtt.clone());
+    }
     key.extend(req.scopes.iter().cloned());
     if let Some(at) = &req.actor_token {
         let mut hasher = Sha256::new();
@@ -283,12 +286,17 @@ impl AgentAuth for AgentGRPCServer {
             return Ok(Response::new(cached));
         }
 
-        let (access_token, expires_in) = if let Some(at) = inner.actor_token.clone() {
-            let Some(actor_token_type) = inner.actor_token_type.clone() else {
-                return Err(Status::invalid_argument("Missing actor_token_type"));
-            };
-            self._token_exchange_grant(inner, &profile, &at, &actor_token_type)
-                .await?
+        let actor = match (
+            inner.actor_token.as_deref(),
+            inner.actor_token_type.as_deref(),
+        ) {
+            (Some(at), Some(att)) => Some((at, att)),
+            (Some(_), None) => return Err(Status::invalid_argument("Missing actor_token_type")),
+            _ => None,
+        };
+        let (access_token, expires_in) = if actor.is_some() || inner.requested_token_type.is_some()
+        {
+            self._token_exchange_grant(inner, &profile, actor).await?
         } else {
             self._exchange_client_credentials(inner, &profile).await?
         };
@@ -338,7 +346,8 @@ impl AgentAuth for AgentGRPCServer {
 }
 
 impl AgentGRPCServer {
-    /// RFC 8693 token-exchange grant, used when targeting a specific actor. The
+    /// RFC 8693 token-exchange grant, used when targeting a specific actor or token
+    /// type (e.g. a SAML Response for AWS AssumeRoleWithSAML). The
     /// `oauth2` crate has no support for this grant type (only the standard
     /// authorization_code/client_credentials/device_code/password/refresh_token
     /// grants), so it's built and sent by hand.
@@ -346,30 +355,37 @@ impl AgentGRPCServer {
         &self,
         request: &TokenExchangeRequest,
         profile: &ConfigV1Profile,
-        actor_token: &str,
-        actor_token_type: &str,
+        actor: Option<(&str, &str)>,
     ) -> Result<(String, i64), Status> {
         let scope_string = if request.scopes.is_empty() {
             "openid email profile".to_string()
         } else {
             request.scopes.join(" ")
         };
-        let body = form_urlencoded::Serializer::new(String::new())
-            .append_pair("scope", &scope_string)
-            .append_pair(
-                "grant_type",
-                "urn:ietf:params:oauth:grant-type:token-exchange",
-            )
-            .append_pair("client_id", &profile.client_id)
-            .append_pair("subject_token", &profile.access_token())
-            .append_pair(
-                "subject_token_type",
-                "urn:ietf:params:oauth:token-type:access_token",
-            )
-            .append_pair("audience", &request.audience)
-            .append_pair("actor_token", actor_token)
-            .append_pair("actor_token_type", actor_token_type)
-            .finish();
+        // Serializer isn't Send, so it must be gone before the await below.
+        let body = {
+            let mut body = form_urlencoded::Serializer::new(String::new());
+            body.append_pair("scope", &scope_string)
+                .append_pair(
+                    "grant_type",
+                    "urn:ietf:params:oauth:grant-type:token-exchange",
+                )
+                .append_pair("client_id", &profile.client_id)
+                .append_pair("subject_token", &profile.access_token())
+                .append_pair(
+                    "subject_token_type",
+                    "urn:ietf:params:oauth:token-type:access_token",
+                )
+                .append_pair("audience", &request.audience);
+            if let Some((actor_token, actor_token_type)) = actor {
+                body.append_pair("actor_token", actor_token)
+                    .append_pair("actor_token_type", actor_token_type);
+            }
+            if let Some(rtt) = &request.requested_token_type {
+                body.append_pair("requested_token_type", rtt);
+            }
+            body.finish()
+        };
 
         let token_url = format!("{}/application/o/token/", profile.authentik_url);
         let res = reqwest::Client::new()
@@ -454,6 +470,7 @@ mod cache_tests {
             scopes: scopes.iter().map(|s| s.to_string()).collect(),
             actor_token: actor.map(str::to_string),
             actor_token_type: actor.map(|_| "jwt".to_string()),
+            requested_token_type: None,
         }
     }
 
@@ -463,6 +480,11 @@ mod cache_tests {
         assert_eq!(plain, vec!["token-cache", "client"]);
         assert_ne!(plain, exchange_cache_key(&exchange(&["openid"], None)));
         assert_ne!(plain, exchange_cache_key(&exchange(&[], Some("a"))));
+        let saml = TokenExchangeRequest {
+            requested_token_type: Some("urn:ietf:params:oauth:token-type:saml2".to_string()),
+            ..exchange(&[], None)
+        };
+        assert_ne!(plain, exchange_cache_key(&saml));
         assert_ne!(
             exchange_cache_key(&exchange(&[], Some("a"))),
             exchange_cache_key(&exchange(&[], Some("b")))

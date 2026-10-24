@@ -24,10 +24,39 @@ use eyre::{Result, WrapErr, bail};
 use pbjson_types::Timestamp;
 use serde::{Deserialize, Serialize};
 
+const SAML2_TOKEN_TYPE: &str = "urn:ietf:params:oauth:token-type:saml2";
+
+#[derive(Clone, Debug, clap::Args)]
+pub struct AWSProviderArgs {
+    /// Client ID, for OIDC federation
+    #[clap(
+        short,
+        long,
+        required_unless_present = "audience",
+        conflicts_with = "audience"
+    )]
+    client_id: Option<String>,
+    /// SAML application slug or UUID, for SAML federation.
+    #[clap(short, long, requires = "principal_arn")]
+    audience: Option<String>,
+    /// ARN of the IAM SAML provider, for SAML federation.
+    #[clap(long, conflicts_with = "client_id")]
+    principal_arn: Option<String>,
+}
+
+impl AWSProviderArgs {
+    fn identifier(&self) -> &str {
+        self.client_id
+            .as_deref()
+            .or(self.audience.as_deref())
+            .unwrap_or_default()
+    }
+}
+
 #[derive(Clone)]
 pub struct CredentialsOpts {
     pub profile: String,
-    pub client_id: String,
+    pub provider_lookup: AWSProviderArgs,
     // AWS specific things
     pub role_arn: String,
     pub region: String,
@@ -64,7 +93,7 @@ pub async fn get_credentials(
         RequestHeader {
             profile: opts.profile.clone(),
         },
-        opts.client_id.clone(),
+        opts.provider_lookup.identifier().to_owned(),
         vec!["auth-aws-cache".to_string(), opts.role_arn.clone()],
     );
     if let Ok(v) = cc.get().await {
@@ -83,46 +112,38 @@ pub async fn get_credentials(
             header: Some(RequestHeader {
                 profile: opts.profile.clone(),
             }),
-            audience: opts.client_id.clone(),
+            audience: opts.provider_lookup.identifier().to_owned(),
             scopes: vec![],
-            actor_token: None,
-            actor_token_type: None,
+            requested_token_type: opts
+                .provider_lookup
+                .principal_arn
+                .as_ref()
+                .map(|_| SAML2_TOKEN_TYPE.to_owned()),
+            ..Default::default()
         })
         .await
         .wrap_err("failed to exchange token")?
         .into_inner();
     assert_response_valid(res.header)?;
 
-    let curr = c
-        .clone()
-        .auth()
-        .get_current_token(CurrentTokenRequest {
-            header: Some(RequestHeader {
-                profile: opts.profile.clone(),
-            }),
-            r#type: current_token_request::Type::Verified as i32,
-            caller_pid: 0,
-        })
-        .await
-        .wrap_err("failed to get current token")?
-        .into_inner();
-    assert_response_valid(curr.header)?;
-    let username = curr
-        .token
-        .ok_or_else(|| eyre::eyre!("Failed to get current token"))?
-        .preferred_username;
+    let aws_creds = if let Some(principal_arn) = opts.provider_lookup.principal_arn {
+        tracing::debug!("Fetching AWS Credentials via SAML...");
+        // access_token is the base64 SAML Response, passed through unchanged; the
+        // session name comes from its RoleSessionName attribute.
+        sts.assume_role_with_saml()
+            .role_arn(opts.role_arn)
+            .principal_arn(principal_arn)
+            .saml_assertion(res.access_token)
+            .send()
+            .await
+            .wrap_err("failed to assume AWS role")?
+            .credentials
+    } else {
+        assume_role_with_web_identity(&c, &sts, &opts.profile, opts.role_arn, res.access_token)
+            .await?
+    };
 
-    tracing::debug!("Fetching AWS Credentials...");
-    let aws_creds = sts
-        .assume_role_with_web_identity()
-        .role_arn(opts.role_arn)
-        .role_session_name(username)
-        .web_identity_token(res.access_token)
-        .send()
-        .await
-        .wrap_err("failed to assume AWS role")?;
-
-    if let Some(c) = aws_creds.credentials {
+    if let Some(c) = aws_creds {
         let cached = AWSCredentialOutput {
             version: 1,
             access_key_id: c.access_key_id,
@@ -139,6 +160,44 @@ pub async fn get_credentials(
         return Ok(cached);
     }
     bail!("No credentials received")
+}
+
+async fn assume_role_with_web_identity(
+    c: &Client<AnyService>,
+    sts: &aws_sdk_sts::Client,
+    profile: &str,
+    role_arn: String,
+    token: String,
+) -> Result<Option<aws_sdk_sts::types::Credentials>> {
+    let curr = c
+        .clone()
+        .auth()
+        .get_current_token(CurrentTokenRequest {
+            header: Some(RequestHeader {
+                profile: profile.to_owned(),
+            }),
+            r#type: current_token_request::Type::Verified as i32,
+            caller_pid: 0,
+        })
+        .await
+        .wrap_err("failed to get current token")?
+        .into_inner();
+    assert_response_valid(curr.header)?;
+    let username = curr
+        .token
+        .ok_or_else(|| eyre::eyre!("Failed to get current token"))?
+        .preferred_username;
+
+    tracing::debug!("Fetching AWS Credentials...");
+    Ok(sts
+        .assume_role_with_web_identity()
+        .role_arn(role_arn)
+        .role_session_name(username)
+        .web_identity_token(token)
+        .send()
+        .await
+        .wrap_err("failed to assume AWS role")?
+        .credentials)
 }
 
 pub async fn get_eks_credentials(
