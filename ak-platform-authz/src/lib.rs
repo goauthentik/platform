@@ -15,7 +15,7 @@ type UidFn = dyn (Fn(&ProcCredentials) -> Result<String>) + Send + Sync;
 pub mod grpc;
 pub mod sys;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Operation {
     /// Read the user's account information.
     WhoAmI,
@@ -45,7 +45,9 @@ struct AuthState {
     success: bool,
 }
 
-static LAST_AUTH_MAP: LazyLock<Mutex<HashMap<String, AuthState>>> =
+/// Earlier answers by operation and uid. An answer only stands in for prompts of its own
+/// operation, since another operation's polkit action may have a stricter rule.
+static LAST_AUTH_MAP: LazyLock<Mutex<HashMap<(Operation, String), AuthState>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 const HISTORY_SIZE: usize = 100;
@@ -118,14 +120,7 @@ impl AuthorizeAction {
             .clone();
         tracing::Span::current().record("uid", &uid);
         tracing::trace!(uid, "Checking if we need to authorize");
-        let cached = match LAST_AUTH_MAP.try_lock() {
-            Ok(it) => it,
-            Err(e) => bail!("auth cache lock poisoned: {e}"),
-        }
-        .get(&uid)
-        .filter(|v| v.exp >= Instant::now())
-        .map(|v| v.success);
-        if let Some(success) = cached {
+        if let Some(success) = self.cached_answer(&uid)? {
             tracing::trace!(cached = success, "Valid last result in cache");
             self.record(&creds, success.into(), true);
             return Ok(success);
@@ -143,21 +138,38 @@ impl AuthorizeAction {
             }
         };
 
-        match LAST_AUTH_MAP.try_lock() {
-            Ok(mut it) => {
-                it.insert(
-                    uid,
-                    AuthState {
-                        exp: Instant::now().add(self.timeout(res)),
-                        success: res,
-                    },
-                );
-            }
-            Err(e) => bail!("auth cache lock poisoned: {e}"),
-        }
+        self.remember_answer(uid, res)?;
         tracing::trace!(result = res, "Finished authorization");
         self.record(&creds, res.into(), false);
         Ok(res)
+    }
+
+    /// The still-valid answer an earlier prompt of this operation gave `uid`.
+    fn cached_answer(&self, uid: &str) -> Result<Option<bool>> {
+        let map = match LAST_AUTH_MAP.try_lock() {
+            Ok(it) => it,
+            Err(e) => bail!("auth cache lock poisoned: {e}"),
+        };
+        Ok(map
+            .get(&(self.operation, uid.to_string()))
+            .filter(|v| v.exp >= Instant::now())
+            .map(|v| v.success))
+    }
+
+    fn remember_answer(&self, uid: String, success: bool) -> Result<()> {
+        match LAST_AUTH_MAP.try_lock() {
+            Ok(mut it) => {
+                it.insert(
+                    (self.operation, uid),
+                    AuthState {
+                        exp: Instant::now().add(self.timeout(success)),
+                        success,
+                    },
+                );
+                Ok(())
+            }
+            Err(e) => bail!("auth cache lock poisoned: {e}"),
+        }
     }
 
     fn record(&self, creds: &ProcCredentials, outcome: AuthOutcome, cached: bool) {
@@ -291,6 +303,32 @@ mod tests {
         assert_eq!(h[0].target, HISTORY_SIZE.to_string());
         assert_eq!(h[0].pid, creds.pid());
         assert!(matches!(h[0].outcome, AuthOutcome::Allowed));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn approval_only_answers_its_own_operation() -> Result<()> {
+        let uid = "approval-only-answers-its-own-operation";
+        let action = |operation| {
+            AuthorizeAction::build(operation)
+                // Only reached without a cached answer; failing keeps the test off the OS prompt.
+                .with_message(|_| Err(eyre::eyre!("no cached answer")))
+                .with_uid(move |_| Ok(uid.to_string()))
+                .with_success_timeout(Duration::from_secs(60))
+                .build()
+        };
+        action(Operation::Authorize)?.remember_answer(uid.to_string(), true)?;
+        assert_eq!(
+            action(Operation::Authorize)?.cached_answer(uid)?,
+            Some(true)
+        );
+        let res = action(Operation::TokenExchange)?
+            .prompt(ProcCredentials::current())
+            .await;
+        assert!(
+            res.is_err(),
+            "answered from the Authorize approval: {res:?}"
+        );
         Ok(())
     }
 }
