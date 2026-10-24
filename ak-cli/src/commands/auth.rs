@@ -21,6 +21,17 @@ pub enum AuthCommands {
         #[arg(short = 'e', long, required = true)]
         region: String,
     },
+    /// Authenticate to an AWS EKS cluster, requires the need for `aws eks get-token`
+    AwsEks {
+        #[arg(short, long, required = true)]
+        client_id: String,
+        #[arg(short, long, required = true)]
+        role_arn: String,
+        #[arg(short = 'e', long, required = true)]
+        region: String,
+        #[arg(short = 'l', long, required = true)]
+        cluster: String,
+    },
     /// Authenticate to a Kubernetes Cluster with the authentik profile.
     Kubectl {
         #[arg(short, long, required = true)]
@@ -41,7 +52,42 @@ pub enum AuthCommands {
     },
 }
 
-pub async fn raw(mut app: App, client_id: &str) -> Result<()> {
+pub async fn handle(cmd: AuthCommands, app: App) -> Result<()> {
+    match cmd {
+        AuthCommands::Raw { client_id } => raw(app, client_id).await,
+        AuthCommands::Kubectl { client_id } => kubectl(app, client_id).await,
+        AuthCommands::Aws {
+            client_id,
+            role_arn,
+            region,
+        } => aws(app, client_id, role_arn, region).await,
+        AuthCommands::AwsEks {
+            client_id,
+            role_arn,
+            region,
+            cluster,
+        } => aws_eks(app, client_id, role_arn, region, cluster).await,
+        AuthCommands::Claude {
+            client_id,
+            federation_rule_id,
+            organization_id,
+            service_account_id,
+            workspace_id,
+        } => {
+            claude(
+                app,
+                client_id,
+                federation_rule_id,
+                organization_id,
+                service_account_id,
+                workspace_id,
+            )
+            .await
+        }
+    }
+}
+
+async fn raw(mut app: App, client_id: String) -> Result<()> {
     let creds = raw::get_credentials(
         app.clone().user().await?,
         raw::CredentialsOpts {
@@ -54,7 +100,7 @@ pub async fn raw(mut app: App, client_id: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn aws(mut app: App, client_id: &str, role_arn: &str, region: &str) -> Result<()> {
+async fn aws(mut app: App, client_id: String, role_arn: String, region: String) -> Result<()> {
     let creds = aws::get_credentials(
         app.clone().user().await?,
         aws::CredentialsOpts {
@@ -69,7 +115,31 @@ pub async fn aws(mut app: App, client_id: &str, role_arn: &str, region: &str) ->
     Ok(())
 }
 
-pub async fn kubectl(mut app: App, client_id: &str) -> Result<()> {
+async fn aws_eks(
+    mut app: App,
+    client_id: String,
+    role_arn: String,
+    region: String,
+    cluster: String,
+) -> Result<()> {
+    let creds = aws::get_eks_credentials(
+        app.clone().user().await?,
+        aws::EKSCredentialOpts {
+            opts: aws::CredentialsOpts {
+                profile: app.profile().await,
+                client_id: client_id.to_owned(),
+                role_arn: role_arn.to_owned(),
+                region: region.to_owned(),
+            },
+            cluster,
+        },
+    )
+    .await?;
+    print!("{}", serde_json::to_string(&creds)?);
+    Ok(())
+}
+
+async fn kubectl(mut app: App, client_id: String) -> Result<()> {
     let creds = k8s::get_credentials(
         app.clone().user().await?,
         k8s::CredentialsOpts {
@@ -82,13 +152,13 @@ pub async fn kubectl(mut app: App, client_id: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn claude(
+async fn claude(
     mut app: App,
-    client_id: &str,
-    federation_rule_id: &str,
-    organization_id: &str,
-    service_account_id: &str,
-    workspace_id: &str,
+    client_id: String,
+    federation_rule_id: String,
+    organization_id: String,
+    service_account_id: String,
+    workspace_id: String,
 ) -> Result<()> {
     let creds = claude::get_credentials(
         app.clone().user().await?,

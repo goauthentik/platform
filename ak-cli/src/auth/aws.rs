@@ -1,4 +1,9 @@
-use crate::cache::{CacheData, ClientCache};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use crate::{
+    auth::k8s::{ExecCredential, ExecCredentialStatus},
+    cache::{CacheData, ClientCache},
+};
 use ak_platform::{
     client::user::{AnyService, Client},
     generated::{
@@ -7,7 +12,14 @@ use ak_platform::{
     },
     grpc::assert_response_valid,
 };
+use aws_sdk_sts::config::Credentials;
+use aws_sigv4::{
+    http_request::{SignableBody, SignableRequest, SignatureLocation, SigningSettings, sign},
+    sign::v4,
+};
+use aws_smithy_runtime_api::client::identity::Identity;
 use aws_types::{SdkConfig, region::Region};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use eyre::{Result, WrapErr, bail};
 use pbjson_types::Timestamp;
 use serde::{Deserialize, Serialize};
@@ -19,6 +31,12 @@ pub struct CredentialsOpts {
     // AWS specific things
     pub role_arn: String,
     pub region: String,
+}
+
+#[derive(Clone)]
+pub struct EKSCredentialOpts {
+    pub opts: CredentialsOpts,
+    pub cluster: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -121,4 +139,62 @@ pub async fn get_credentials(
         return Ok(cached);
     }
     bail!("No credentials received")
+}
+
+pub async fn get_eks_credentials(
+    c: Client<AnyService>,
+    opts: EKSCredentialOpts,
+) -> Result<ExecCredential> {
+    let sts = get_credentials(c, opts.clone().opts).await?;
+
+    let identity: Identity = Credentials::new(
+        sts.access_key_id,
+        sts.secret_access_key,
+        Some(sts.session_token),
+        Some(UNIX_EPOCH + Duration::from_secs(sts.expiration.seconds as u64)),
+        "web-identity",
+    )
+    .into();
+
+    // signature goes in the query string, same as the CLI
+    let mut settings = SigningSettings::default();
+    settings.signature_location = SignatureLocation::QueryParams;
+    settings.expires_in = Some(Duration::from_secs(60));
+    let region = opts.clone().opts.region;
+
+    let params = v4::SigningParams::builder()
+        .identity(&identity)
+        .region(&region)
+        .name("sts")
+        .time(SystemTime::now())
+        .settings(settings)
+        .build()?
+        .into();
+
+    let url = format!(
+        "https://sts.{}.amazonaws.com/?Action=GetCallerIdentity&Version=2011-06-15",
+        region,
+    );
+    // EKS checks this header, so it must be signed
+    let headers = [("x-k8s-aws-id", &*opts.cluster)];
+    let signable =
+        SignableRequest::new("GET", &url, headers.into_iter(), SignableBody::Bytes(&[]))?;
+    let (instructions, _) = sign(signable, &params)?.into_parts();
+
+    let mut req = http::Request::get(&url).body(())?;
+    instructions.apply_to_request_http1x(&mut req);
+
+    Ok(ExecCredential {
+        api_version: Some("client.authentication.k8s.io/v1".to_string()),
+        kind: Some("ExecCredential".to_string()),
+        status: Some(ExecCredentialStatus {
+            client_certificate_data: None,
+            client_key_data: None,
+            token: Some(format!(
+                "k8s-aws-v1.{}",
+                URL_SAFE_NO_PAD.encode(req.uri().to_string())
+            )),
+            expiration_timestamp: Some(sts.expiration.try_into().map_err(|e| eyre::eyre!("{e}"))?),
+        }),
+    })
 }
