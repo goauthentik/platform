@@ -63,6 +63,7 @@ ignore = [
   { id = "RUSTSEC-2026-0370", reason = "zvariant was merged into zbus 6; tauri plugins and secret-service still depend on zbus 5" },
   { id = "RUSTSEC-2026-0371", reason = "zbus_names was merged into zbus 6; tauri plugins and secret-service still depend on zbus 5" },
   { id = "RUSTSEC-2026-0372", reason = "zvariant_derive was merged into zbus 6; tauri plugins and secret-service still depend on zbus 5" },
+  { id = "RUSTSEC-2026-0387", reason = "crypto-bigint 0.5 is pinned by elliptic-curve 0.13 (p256, ssh-key 0.6, ssh-agent-lib 0.6); no patched 0.5.x, remove when ssh-agent-lib moves to ssh-key 0.7" },
 ]
 
 [sources]
