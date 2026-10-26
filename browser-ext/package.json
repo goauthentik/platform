@@ -18,7 +18,7 @@
         "@goauthentik/oxlint-config": "^1.0.1",
         "@goauthentik/tsconfig": "^3.0.0",
         "@sentry/browser": "^11.8.0",
-        "@types/chrome": "^0.3.5",
+        "@types/chrome": "^0.3.6",
         "esbuild": "^0.28.2",
         "fuse.js": "^7.5.0",
         "lit": "^3.3.3",
