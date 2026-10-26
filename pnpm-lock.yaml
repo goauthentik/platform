@@ -176,8 +176,8 @@ importers:
   ak-agent-desktop:
     dependencies:
       '@goauthentik/api':
-        specifier: ^2026.8.4
-        version: 2026.8.4
+        specifier: ^2026.8.5
+        version: 2026.8.5
       '@goauthentik/brand-assets':
         specifier: ^2.0.0
         version: 2.0.0
@@ -230,8 +230,8 @@ importers:
   browser-ext:
     devDependencies:
       '@goauthentik/api':
-        specifier: ^2026.8.4
-        version: 2026.8.4
+        specifier: ^2026.8.5
+        version: 2026.8.5
       '@goauthentik/oxfmt-config':
         specifier: ^9.1.0
         version: 9.1.0(oxfmt@0.73.0)(typescript@7.0.2)
@@ -716,8 +716,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@goauthentik/api@2026.8.4':
-    resolution: {integrity: sha512-IEg/OnFGxjMwzOTq/bK9xQmg0ZbZ4KAEy74kFwAie8qnD1HcXW7so/N5+nUP9g+u2Sp7xA/qXPMw81Tj+FfCWw==}
+  '@goauthentik/api@2026.8.5':
+    resolution: {integrity: sha512-H7s92RQcjtmIyfODM662MwWcxesom3z5jV4/+xQgwdGNo+Nn72i74NsYS9aDIwrN/KNVlasGrp0k8thW3pYtFQ==}
 
   '@goauthentik/brand-assets@2.0.0':
     resolution: {integrity: sha512-yRJrV+KuGrz7MNcRzAkZa4e7LuciuFZBVSyPFRd/EndxgiqcFuFHyn+6tEurKNmianBNURhe2qm5ytoLFgEWFQ==}
@@ -2682,7 +2682,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@goauthentik/api@2026.8.4': {}
+  '@goauthentik/api@2026.8.5': {}
 
   '@goauthentik/brand-assets@2.0.0': {}
 
