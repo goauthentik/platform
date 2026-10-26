@@ -77,6 +77,9 @@ pub struct TokenExchangeRequest {
     pub actor_token: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag="5")]
     pub actor_token_type: ::core::option::Option<::prost::alloc::string::String>,
+    /// RFC 8693 requested_token_type, e.g. urn:ietf:params:oauth:token-type:saml2.
+    #[prost(string, optional, tag="6")]
+    pub requested_token_type: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct TokenExchangeResponse {

@@ -26,8 +26,7 @@ pub async fn get_credentials(
             }),
             audience: opts.client_id,
             scopes: vec![],
-            actor_token: None,
-            actor_token_type: None,
+            ..Default::default()
         })
         .await
         .wrap_err("failed to exchange token")?

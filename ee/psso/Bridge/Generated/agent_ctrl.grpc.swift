@@ -6,7 +6,7 @@
 // Source: agent_ctrl.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 internal import GRPCCore
 internal import GRPCProtobuf
@@ -119,9 +119,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `ListProfilesResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func listProfiles<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -138,9 +138,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `SetupRequest` messages.
         ///   - deserializer: A deserializer for `SetupResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func setup<Result>(
             request: GRPCCore.ClientRequest<SetupRequest>,
@@ -157,9 +157,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `RequestHeader` messages.
         ///   - deserializer: A deserializer for `ResponseHeader` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func switchProfile<Result>(
             request: GRPCCore.ClientRequest<RequestHeader>,
@@ -176,9 +176,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `CurrentProfileResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func currentProfile<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -195,9 +195,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `RequestHeader` messages.
         ///   - deserializer: A deserializer for `ResponseHeader` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func deleteProfile<Result>(
             request: GRPCCore.ClientRequest<RequestHeader>,
@@ -231,9 +231,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `ListProfilesResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func listProfiles<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -261,9 +261,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `SetupRequest` messages.
         ///   - deserializer: A deserializer for `SetupResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func setup<Result>(
             request: GRPCCore.ClientRequest<SetupRequest>,
@@ -291,9 +291,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `RequestHeader` messages.
         ///   - deserializer: A deserializer for `ResponseHeader` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func switchProfile<Result>(
             request: GRPCCore.ClientRequest<RequestHeader>,
@@ -321,9 +321,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
         ///   - deserializer: A deserializer for `CurrentProfileResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func currentProfile<Result>(
             request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -351,9 +351,9 @@ extension AgentCtrl {
         ///   - serializer: A serializer for `RequestHeader` messages.
         ///   - deserializer: A deserializer for `ResponseHeader` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func deleteProfile<Result>(
             request: GRPCCore.ClientRequest<RequestHeader>,
@@ -384,9 +384,9 @@ extension AgentCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func listProfiles<Result>(
         request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -409,9 +409,9 @@ extension AgentCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SetupRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func setup<Result>(
         request: GRPCCore.ClientRequest<SetupRequest>,
@@ -434,9 +434,9 @@ extension AgentCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `RequestHeader` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func switchProfile<Result>(
         request: GRPCCore.ClientRequest<RequestHeader>,
@@ -459,9 +459,9 @@ extension AgentCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func currentProfile<Result>(
         request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
@@ -484,9 +484,9 @@ extension AgentCtrl.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `RequestHeader` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func deleteProfile<Result>(
         request: GRPCCore.ClientRequest<RequestHeader>,
@@ -514,9 +514,9 @@ extension AgentCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func listProfiles<Result>(
         _ message: SwiftProtobuf.Google_Protobuf_Empty,
@@ -543,9 +543,9 @@ extension AgentCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func setup<Result>(
         _ message: SetupRequest,
@@ -572,9 +572,9 @@ extension AgentCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func switchProfile<Result>(
         _ message: RequestHeader,
@@ -601,9 +601,9 @@ extension AgentCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func currentProfile<Result>(
         _ message: SwiftProtobuf.Google_Protobuf_Empty,
@@ -630,9 +630,9 @@ extension AgentCtrl.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func deleteProfile<Result>(
         _ message: RequestHeader,
