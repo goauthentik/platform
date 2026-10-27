@@ -42,6 +42,12 @@ pub struct AWSProviderArgs {
     /// ARN of the IAM SAML provider, for SAML federation.
     #[clap(long, conflicts_with = "client_id")]
     principal_arn: Option<String>,
+    /// Role to assume
+    #[arg(short, long, required = true)]
+    role_arn: String,
+    /// AWS Region
+    #[arg(short = 'e', long, required = true)]
+    region: String,
 }
 
 impl AWSProviderArgs {
@@ -57,9 +63,6 @@ impl AWSProviderArgs {
 pub struct CredentialsOpts {
     pub profile: String,
     pub provider_lookup: AWSProviderArgs,
-    // AWS specific things
-    pub role_arn: String,
-    pub region: String,
 }
 
 #[derive(Clone)]
@@ -94,14 +97,17 @@ pub async fn get_credentials(
             profile: opts.profile.clone(),
         },
         opts.provider_lookup.identifier().to_owned(),
-        vec!["auth-aws-cache".to_string(), opts.role_arn.clone()],
+        vec![
+            "auth-aws-cache".to_string(),
+            opts.provider_lookup.role_arn.clone(),
+        ],
     );
     if let Ok(v) = cc.get().await {
         return Ok(v);
     }
 
     let config = &SdkConfig::builder()
-        .region(Region::new(opts.region.clone()))
+        .region(Region::new(opts.provider_lookup.region.clone()))
         .build();
     let sts = aws_sdk_sts::Client::new(config);
 
@@ -131,7 +137,7 @@ pub async fn get_credentials(
         // access_token is the base64 SAML Response, passed through unchanged; the
         // session name comes from its RoleSessionName attribute.
         sts.assume_role_with_saml()
-            .role_arn(opts.role_arn)
+            .role_arn(opts.provider_lookup.role_arn)
             .principal_arn(principal_arn)
             .saml_assertion(res.access_token)
             .send()
@@ -139,8 +145,14 @@ pub async fn get_credentials(
             .wrap_err("failed to assume AWS role")?
             .credentials
     } else {
-        assume_role_with_web_identity(&c, &sts, &opts.profile, opts.role_arn, res.access_token)
-            .await?
+        assume_role_with_web_identity(
+            &c,
+            &sts,
+            &opts.profile,
+            opts.provider_lookup.role_arn,
+            res.access_token,
+        )
+        .await?
     };
 
     if let Some(c) = aws_creds {
@@ -219,7 +231,7 @@ pub async fn get_eks_credentials(
     let mut settings = SigningSettings::default();
     settings.signature_location = SignatureLocation::QueryParams;
     settings.expires_in = Some(Duration::from_secs(60));
-    let region = opts.clone().opts.region;
+    let region = opts.clone().opts.provider_lookup.region;
 
     let params = v4::SigningParams::builder()
         .identity(&identity)
