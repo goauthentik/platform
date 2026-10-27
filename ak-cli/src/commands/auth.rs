@@ -9,6 +9,7 @@ use eyre::Result;
 pub enum AuthCommands {
     /// Authenticate to arbitrary API calls.
     Raw {
+        /// Client ID to exchange a token for
         #[arg(short, long, required = true)]
         client_id: String,
     },
@@ -16,24 +17,18 @@ pub enum AuthCommands {
     Aws {
         #[clap(flatten)]
         provider: aws::AWSProviderArgs,
-        #[arg(short, long, required = true)]
-        role_arn: String,
-        #[arg(short = 'e', long, required = true)]
-        region: String,
     },
-    /// Authenticate to an AWS EKS cluster, requires the need for `aws eks get-token`
+    /// Authenticate to an AWS EKS cluster, replaces the need for `aws eks get-token`
     AwsEks {
         #[clap(flatten)]
         provider: aws::AWSProviderArgs,
-        #[arg(short, long, required = true)]
-        role_arn: String,
-        #[arg(short = 'e', long, required = true)]
-        region: String,
+        /// Name of the EKS cluster
         #[arg(short = 'l', long, required = true)]
         cluster: String,
     },
     /// Authenticate to a Kubernetes Cluster with the authentik profile.
     Kubectl {
+        /// Client ID of the Kubernetes authentik provider
         #[arg(short, long, required = true)]
         client_id: String,
     },
