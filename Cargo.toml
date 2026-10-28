@@ -104,7 +104,7 @@ tauri-build = "2"
 tokio-util = "0.7"
 tower-http = "0.7.0"
 windows_exe_info = "0.5.2"
-zbus = "5"
+zbus = "6"
 winreg = { version = "0.56", features = ["serialization-serde"] }
 windows-core = "0.62"
 windows = { version = "0.62", features = [
