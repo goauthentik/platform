@@ -185,3 +185,45 @@ jobs:
           reason: bugfix
           token: ${{ steps.app-token.outputs.token }}
           github-app-slug: ${{ steps.app-token.outputs.app-slug }}
+
+  update-homebrew-cask:
+    name: Update Homebrew cask
+    needs: attach-and-publish
+    if: github.event.action == 'published'
+    runs-on: ubuntu-26.04
+    steps:
+      - id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v2
+        with:
+          client-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIV_KEY }}
+          repositories: |
+            platform
+            homebrew-tap
+      - id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: "${{ steps.app-token.outputs.token }}"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          repository: goauthentik/homebrew-tap
+          token: ${{ steps.app-token.outputs.token }}
+      - name: Update cask
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release download "$TAG" -R "${{ github.repository }}" -p authentik.Agent.Installer.pkg -O agent.pkg
+          SHA=$(sha256sum agent.pkg | cut -d' ' -f1)
+          rm agent.pkg
+          sed -i \
+            -e "s/^  version \".*\"/  version \"${TAG#v}\"/" \
+            -e "s/^  sha256 \".*\"/  sha256 \"${SHA}\"/" \
+            Casks/authentik-agent.rb
+      - name: Commit and push
+        run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          git diff --quiet && exit 0
+          git commit -am "release: update homebrew cask to ${{ github.event.release.tag_name }}"
+          git push origin HEAD:main
