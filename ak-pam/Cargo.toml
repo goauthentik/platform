@@ -20,7 +20,7 @@ dtor = { workspace = true }
 eyre.workspace = true
 gethostname = "1.1.0"
 libc = { workspace = true }
-pam-bindings = "0.3.0"
+pam-bindings = "0.4.0"
 serde_json.workspace = true
 serde.workspace = true
 tracing.workspace = true
