@@ -50,11 +50,15 @@ endif
 # renders through WebView2. e2e drives both. They stay workspace members so one
 # lockfile and one cargo invocation cover the repo, but clippy can only build
 # them on Windows -- `make ee/wcp/lint` covers them there.
-ifneq ($(OS),Windows_NT)
-RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-browser-host --exclude ak-ee-wcp-e2e
-else
+ifeq ($(OS),Windows_NT)
 # nss and pam are unix-only.
 RS_LINT_EXCLUDE := --exclude ak-nss --exclude ak-pam
+else
+RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-browser-host --exclude ak-ee-wcp-e2e
+# pam-bindings only compiles against Linux-PAM.
+ifneq ($(PLATFORM),gnu/linux)
+RS_LINT_EXCLUDE += --exclude ak-pam
+endif
 endif
 
 format:
