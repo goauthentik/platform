@@ -153,8 +153,7 @@ impl StateStore {
 
                 let query = format!("SELECT * FROM {table}");
                 let mut stmt = conn.prepare(&query)?;
-                let col_names: Vec<String> =
-                    stmt.column_names().iter().map(|s| s.to_string()).collect();
+                let col_names: Vec<String> = stmt.column_names().map(|s| s.to_string()).collect();
                 let mut rows = stmt.query([])?;
                 while let Some(row) = rows.next()? {
                     let mut kv = vec![];
