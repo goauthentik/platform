@@ -192,3 +192,40 @@ async fn main() -> std::result::Result<(), Error> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::commands::auth::AuthCommands;
+
+    fn vault_args(argv: &[&str]) -> Option<Vec<String>> {
+        let base = [
+            "ak", "auth", "vault", "-c", "id", "-r", "role", "-a", "http://x", "--",
+        ];
+        let cli = CliArgs::try_parse_from(base.iter().chain(argv)).ok()?;
+        match cli.command {
+            Commands::Auth {
+                command: AuthCommands::Vault { args, .. },
+            } => Some(args),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn vault_alias_passes_args_through() {
+        for argv in [
+            &["kv", "get", "-format=json", "-field", "x", "secret/foo"][..],
+            &["--help"],
+            &["-version"],
+            &["-h"],
+            &["read", "-p", "-v", "-s"],
+            &[],
+        ] {
+            assert_eq!(
+                vault_args(argv),
+                Some(argv.iter().map(|a| a.to_string()).collect()),
+                "{argv:?}"
+            );
+        }
+    }
+}

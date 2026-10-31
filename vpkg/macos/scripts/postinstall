@@ -65,7 +65,8 @@ fi
 echo "Linking CLI applications"
 mkdir -p /usr/local/bin
 ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak" /usr/local/bin/ak
-ln -sf "$INSTALL_DIR/authentik Agent.app/Contents/MacOS/ak-vault" /usr/local/bin/ak-vault
+# Previously shipped Vault token helper, replaced by `ak auth vault`
+rm -f /usr/local/bin/ak-vault
 
 echo "Installing browser native messaging host"
 
