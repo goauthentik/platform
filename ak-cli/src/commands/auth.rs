@@ -1,9 +1,9 @@
 use crate::{
     App,
-    auth::{aws, claude, k8s, raw},
+    auth::{aws, claude, k8s, raw, vault},
 };
 use clap::Subcommand;
-use eyre::Result;
+use eyre::{Result, WrapErr};
 
 #[derive(Subcommand, Clone)]
 pub enum AuthCommands {
@@ -50,6 +50,24 @@ pub enum AuthCommands {
         #[arg(short, long, required = true)]
         workspace_id: String,
     },
+    /// Run the Vault/OpenBao CLI authenticated via a JWT auth role, meant to be aliased:
+    /// `alias vault='ak auth vault -c <id> -r <role> -a <addr> --'`.
+    Vault {
+        #[arg(short, long, required = true)]
+        client_id: String,
+        #[arg(short, long, required = true)]
+        role: String,
+        #[arg(short, long, default_value = "jwt")]
+        mount: String,
+        #[arg(short, long, env = "VAULT_ADDR")]
+        address: String,
+        /// CLI to run, e.g. `bao` for OpenBao
+        #[arg(short, long, default_value = "vault")]
+        bin: String,
+        /// Arguments passed to the CLI, after `--`
+        #[arg(last = true)]
+        args: Vec<String>,
+    },
 }
 
 pub async fn handle(cmd: AuthCommands, app: App) -> Result<()> {
@@ -84,7 +102,46 @@ pub async fn handle(cmd: AuthCommands, app: App) -> Result<()> {
             )
             .await
         }
+        AuthCommands::Vault {
+            client_id,
+            role,
+            mount,
+            address,
+            bin,
+            args,
+        } => vault(app, client_id, address, mount, role, bin, args).await,
     }
+}
+
+async fn vault(
+    mut app: App,
+    client_id: String,
+    address: String,
+    mount: String,
+    role: String,
+    bin: String,
+    args: Vec<String>,
+) -> Result<()> {
+    let creds = vault::get_credentials(
+        app.clone().user().await?,
+        vault::CredentialsOpts {
+            profile: app.profile().await,
+            client_id,
+            address: address.clone(),
+            mount,
+            role,
+        },
+    )
+    .await?;
+    let status = std::process::Command::new(&bin)
+        .args(args)
+        .env("VAULT_ADDR", &address)
+        .env("VAULT_TOKEN", &creds.client_token)
+        .env("BAO_ADDR", &address)
+        .env("BAO_TOKEN", &creds.client_token)
+        .status()
+        .wrap_err_with(|| format!("failed to run {bin}"))?;
+    std::process::exit(status.code().unwrap_or(1));
 }
 
 async fn raw(mut app: App, client_id: String) -> Result<()> {
