@@ -203,9 +203,16 @@ impl AgentAuth for AgentGRPCServer {
                     .with_linux(format!("'{cmd}' is attempting to access your account")))
             })
             .with_target("Access token", profile.app_slug.clone())
-            .with_uid(move |c| c.clone().proc_info()?.unique_process_id())
-            .with_success_timeout(Duration::from_secs(0))
-            .with_denied_timeout(Duration::from_secs(0))
+            .with_uid(move |c| {
+                let info = c.clone().proc_info()?;
+                Ok(format!(
+                    "{}:{}",
+                    info.unique_process_id()?,
+                    info.parent_cmdline()?
+                ))
+            })
+            .with_success_timeout(Duration::from_mins(5))
+            .with_denied_timeout(Duration::from_mins(15))
             .finish()
             .await?;
 
