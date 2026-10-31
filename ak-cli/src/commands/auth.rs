@@ -9,6 +9,7 @@ use eyre::{Result, WrapErr};
 pub enum AuthCommands {
     /// Authenticate to arbitrary API calls.
     Raw {
+        /// Client ID to exchange a token for
         #[arg(short, long, required = true)]
         client_id: String,
     },
@@ -16,24 +17,18 @@ pub enum AuthCommands {
     Aws {
         #[clap(flatten)]
         provider: aws::AWSProviderArgs,
-        #[arg(short, long, required = true)]
-        role_arn: String,
-        #[arg(short = 'e', long, required = true)]
-        region: String,
     },
-    /// Authenticate to an AWS EKS cluster, requires the need for `aws eks get-token`
+    /// Authenticate to an AWS EKS cluster, replaces the need for `aws eks get-token`
     AwsEks {
         #[clap(flatten)]
         provider: aws::AWSProviderArgs,
-        #[arg(short, long, required = true)]
-        role_arn: String,
-        #[arg(short = 'e', long, required = true)]
-        region: String,
+        /// Name of the EKS cluster
         #[arg(short = 'l', long, required = true)]
         cluster: String,
     },
     /// Authenticate to a Kubernetes Cluster with the authentik profile.
     Kubectl {
+        /// Client ID of the Kubernetes authentik provider
         #[arg(short, long, required = true)]
         client_id: String,
     },
@@ -74,17 +69,8 @@ pub async fn handle(cmd: AuthCommands, app: App) -> Result<()> {
     match cmd {
         AuthCommands::Raw { client_id } => raw(app, client_id).await,
         AuthCommands::Kubectl { client_id } => kubectl(app, client_id).await,
-        AuthCommands::Aws {
-            provider,
-            role_arn,
-            region,
-        } => aws(app, provider, role_arn, region).await,
-        AuthCommands::AwsEks {
-            provider,
-            role_arn,
-            region,
-            cluster,
-        } => aws_eks(app, provider, role_arn, region, cluster).await,
+        AuthCommands::Aws { provider } => aws(app, provider).await,
+        AuthCommands::AwsEks { provider, cluster } => aws_eks(app, provider, cluster).await,
         AuthCommands::Claude {
             client_id,
             federation_rule_id,
@@ -157,19 +143,12 @@ async fn raw(mut app: App, client_id: String) -> Result<()> {
     Ok(())
 }
 
-async fn aws(
-    mut app: App,
-    provider: aws::AWSProviderArgs,
-    role_arn: String,
-    region: String,
-) -> Result<()> {
+async fn aws(mut app: App, provider: aws::AWSProviderArgs) -> Result<()> {
     let creds = aws::get_credentials(
         app.clone().user().await?,
         aws::CredentialsOpts {
             profile: app.profile().await,
             provider_lookup: provider,
-            role_arn: role_arn.to_owned(),
-            region: region.to_owned(),
         },
     )
     .await?;
@@ -177,21 +156,13 @@ async fn aws(
     Ok(())
 }
 
-async fn aws_eks(
-    mut app: App,
-    provider: aws::AWSProviderArgs,
-    role_arn: String,
-    region: String,
-    cluster: String,
-) -> Result<()> {
+async fn aws_eks(mut app: App, provider: aws::AWSProviderArgs, cluster: String) -> Result<()> {
     let creds = aws::get_eks_credentials(
         app.clone().user().await?,
         aws::EKSCredentialOpts {
             opts: aws::CredentialsOpts {
                 profile: app.profile().await,
                 provider_lookup: provider,
-                role_arn: role_arn.to_owned(),
-                region: region.to_owned(),
             },
             cluster,
         },
