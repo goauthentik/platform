@@ -51,17 +51,8 @@ pub async fn handle(cmd: AuthCommands, app: App) -> Result<()> {
     match cmd {
         AuthCommands::Raw { client_id } => raw(app, client_id).await,
         AuthCommands::Kubectl { client_id } => kubectl(app, client_id).await,
-        AuthCommands::Aws {
-            provider,
-            role_arn,
-            region,
-        } => aws(app, provider, role_arn, region).await,
-        AuthCommands::AwsEks {
-            provider,
-            role_arn,
-            region,
-            cluster,
-        } => aws_eks(app, provider, role_arn, region, cluster).await,
+        AuthCommands::Aws { provider } => aws(app, provider).await,
+        AuthCommands::AwsEks { provider, cluster } => aws_eks(app, provider, cluster).await,
         AuthCommands::Claude {
             client_id,
             federation_rule_id,
@@ -95,19 +86,12 @@ async fn raw(mut app: App, client_id: String) -> Result<()> {
     Ok(())
 }
 
-async fn aws(
-    mut app: App,
-    provider: aws::AWSProviderArgs,
-    role_arn: String,
-    region: String,
-) -> Result<()> {
+async fn aws(mut app: App, provider: aws::AWSProviderArgs) -> Result<()> {
     let creds = aws::get_credentials(
         app.clone().user().await?,
         aws::CredentialsOpts {
             profile: app.profile().await,
             provider_lookup: provider,
-            role_arn: role_arn.to_owned(),
-            region: region.to_owned(),
         },
     )
     .await?;
@@ -115,21 +99,13 @@ async fn aws(
     Ok(())
 }
 
-async fn aws_eks(
-    mut app: App,
-    provider: aws::AWSProviderArgs,
-    role_arn: String,
-    region: String,
-    cluster: String,
-) -> Result<()> {
+async fn aws_eks(mut app: App, provider: aws::AWSProviderArgs, cluster: String) -> Result<()> {
     let creds = aws::get_eks_credentials(
         app.clone().user().await?,
         aws::EKSCredentialOpts {
             opts: aws::CredentialsOpts {
                 profile: app.profile().await,
                 provider_lookup: provider,
-                role_arn: role_arn.to_owned(),
-                region: region.to_owned(),
             },
             cluster,
         },
