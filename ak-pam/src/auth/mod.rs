@@ -1,5 +1,11 @@
 use ak_platform::grpc::Bridge;
-use pam::{constants::PamResultCode, conv::Conv, module::PamHandle};
+use pam::{
+    constants::PamResultCode,
+    conv::Conv,
+    items::{AuthTok, Item},
+    module::PamHandle,
+};
+use std::ffi::CString;
 
 use crate::{
     ENV_SESSION_ID, auth::interactive::auth_interactive, dir::check_user_exists,
@@ -43,10 +49,19 @@ pub fn authenticate_impl(pamh: &mut PamHandle) -> Result<PamResultCode> {
     };
 
     tracing::debug!("Interactive authentication");
-    let int_res = match auth_interactive(username, &conv, bridge) {
+    let (int_res, password) = match auth_interactive(username, &conv, bridge) {
         Ok(ss) => ss,
         Err(code) => return Ok(code),
     };
+    if let Some(password) = password {
+        // Lets later modules (e.g. pam_gnome_keyring) unlock with the same password.
+        let password = CString::new(password).context("password contains NUL")?;
+        // SAFETY: pam_set_item copies the string, so it only has to outlive the call.
+        let item = unsafe { AuthTok::from_raw(password.as_ptr()) };
+        if let Err(e) = pamh.set_item_str(item) {
+            tracing::warn!("failed to set PAM_AUTHTOK: {e:?}");
+        }
+    }
     let session_id: String = int_res.session_id;
     if !session_data.local_socket.is_empty() {
         pam_put_env(
