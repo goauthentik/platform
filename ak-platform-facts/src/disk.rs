@@ -97,6 +97,8 @@ fn apply_unix_encryption_and_label(disks: &mut [DiskRequest]) -> Result<()> {
         .collect();
 
     let encryption_rows = query_named::<DiskEncryptionRow>("disk_encryption")?;
+    #[cfg(target_os = "linux")]
+    let encryption_evidence = linux_evidence(&encryption_rows);
     #[cfg(target_os = "macos")]
     let encrypted_by_device: HashMap<String, bool> = encryption_rows
         .iter()
@@ -121,7 +123,11 @@ fn apply_unix_encryption_and_label(disks: &mut [DiskRequest]) -> Result<()> {
         }
         #[cfg(target_os = "linux")]
         {
-            disk.encryption_enabled = linux_encryption(device, &encryption_rows);
+            disk.encryption_enabled = linux_encryption(
+                device,
+                &encryption_evidence,
+                std::path::Path::new("/sys/dev/block"),
+            );
         }
         disk.label = label_by_device.get(&key).cloned();
     }
@@ -137,23 +143,34 @@ fn linux_device(path: &str) -> Option<String> {
     if !metadata.file_type().is_block_device() {
         return None;
     }
-    let dev = metadata.rdev();
+    Some(linux_device_number(metadata.rdev()))
+}
+
+#[cfg(any(target_os = "linux", all(test, target_os = "macos")))]
+fn linux_device_number(dev: u64) -> String {
     // Linux's dev_t encoding, including extended major/minor bits.
     let major = ((dev >> 8) & 0xfff) | ((dev >> 32) & 0xfffff000);
     let minor = (dev & 0xff) | ((dev >> 12) & 0xffffff00);
-    Some(format!("{major}:{minor}"))
+    format!("{major}:{minor}")
 }
 
 #[cfg(target_os = "linux")]
-fn linux_encryption(device: &str, rows: &[DiskEncryptionRow]) -> Option<bool> {
-    let root = linux_device(device)?;
-    let evidence: HashMap<_, _> = rows
-        .iter()
+fn linux_evidence(rows: &[DiskEncryptionRow]) -> HashMap<String, &DiskEncryptionRow> {
+    rows.iter()
         .filter_map(|row| Some((linux_device(&row.name)?, row)))
-        .collect();
+        .collect()
+}
+
+#[cfg(target_os = "linux")]
+fn linux_encryption(
+    device: &str,
+    evidence: &HashMap<String, &DiskEncryptionRow>,
+    sys_block: &std::path::Path,
+) -> Option<bool> {
+    let root = linux_device(device)?;
     linux_walk(
-        &std::path::Path::new("/sys/dev/block").join(root),
-        &evidence,
+        &sys_block.join(root),
+        evidence,
         &mut std::collections::HashSet::new(),
         &mut 4096,
         0,
@@ -209,12 +226,15 @@ fn linux_walk(
         if children.is_empty() {
             return row.filter(|r| r.encrypted == "0").map(|_| false);
         }
+        let mut status = None;
         for child in children {
-            if linux_walk(&child.path(), evidence, active, budget, depth + 1) != Some(true) {
+            let child_status = linux_walk(&child.path(), evidence, active, budget, depth + 1)?;
+            if status.is_some_and(|previous| previous != child_status) {
                 return None;
             }
+            status = Some(child_status);
         }
-        Some(true)
+        status
     })();
     active.remove(&node);
     result
@@ -558,6 +578,117 @@ mod tests {
         let evidence = HashMap::from([("254:1".into(), &encrypted)]);
         assert_eq!(
             linux_walk(&alias, &evidence, &mut Default::default(), &mut 4096, 0),
+            None
+        );
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    fn linux_device_number_decodes_extended_major_and_minor() {
+        assert_eq!(linux_device_number(0x103), "1:3");
+        assert_eq!(linux_device_number(0xfe01), "254:1");
+        assert_eq!(linux_device_number(0x100000100000), "4096:256");
+        assert_eq!(linux_device_number(u64::MAX), "4294967295:4294967295");
+    }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    fn linux_stacked_devices_preserve_consistent_backing_status() -> Result<()> {
+        use std::os::unix::fs::symlink;
+        let fixture = tempfile::tempdir()?;
+        let root = fixture.path().join("dm-0");
+        std::fs::create_dir_all(root.join("slaves"))?;
+        std::fs::write(root.join("dev"), "254:0")?;
+        let plain = DiskEncryptionRow {
+            name: String::new(),
+            encrypted: "0".into(),
+            encryption_status: "not encrypted".into(),
+            encryption_type: String::new(),
+        };
+        let encrypted = DiskEncryptionRow {
+            name: String::new(),
+            encrypted: "1".into(),
+            encryption_status: "encrypted".into(),
+            encryption_type: "LUKS2-aes-xts-plain64".into(),
+        };
+        for (name, identity) in [("a", "8:1"), ("b", "8:2")] {
+            let node = fixture.path().join(name);
+            std::fs::create_dir_all(node.join("slaves"))?;
+            std::fs::write(node.join("dev"), identity)?;
+            symlink(node, root.join("slaves").join(name))?;
+        }
+        let check = |evidence: &HashMap<String, &DiskEncryptionRow>| {
+            linux_walk(&root, evidence, &mut Default::default(), &mut 4096, 0)
+        };
+        let mut evidence = HashMap::from([("8:1".into(), &plain), ("8:2".into(), &plain)]);
+        assert_eq!(check(&evidence), Some(false));
+        evidence.remove("8:2");
+        assert_eq!(check(&evidence), None);
+        for (name, identity, expected) in [("b", "8:2", None), ("a", "8:1", Some(true))] {
+            let node = fixture.path().join(name);
+            std::fs::create_dir(node.join("dm"))?;
+            std::fs::write(node.join("dm/uuid"), "CRYPT-LUKS2-test")?;
+            evidence.insert(identity.into(), &encrypted);
+            assert_eq!(check(&evidence), expected);
+        }
+        Ok(())
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_device_rejects_non_block_sources() -> Result<()> {
+        let file = tempfile::NamedTempFile::new()?;
+        assert_eq!(linux_device(&file.path().to_string_lossy()), None);
+        assert_eq!(linux_device("/dev/null"), None);
+        assert_eq!(linux_device("/nonexistent/ak-platform-test-device"), None);
+        Ok(())
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    #[ignore = "requires mknod and CAP_MKNOD; run in a disposable Linux container"]
+    fn linux_encryption_resolves_block_device_aliases() -> Result<()> {
+        use std::os::unix::fs::symlink;
+        let fixture = tempfile::tempdir()?;
+        let sys_block = fixture.path().join("sys/dev/block");
+        let root = sys_block.join("254:1");
+        let crypt = sys_block.join("254:0");
+        std::fs::create_dir_all(root.join("slaves"))?;
+        std::fs::create_dir_all(crypt.join("dm"))?;
+        std::fs::write(root.join("dev"), "254:1")?;
+        std::fs::write(crypt.join("dev"), "254:0")?;
+        std::fs::write(crypt.join("dm/uuid"), "CRYPT-PLAIN-test")?;
+        symlink(&crypt, root.join("slaves/dm-0"))?;
+        for (name, minor) in [("root-device", "1"), ("crypt-device", "0")] {
+            let status = std::process::Command::new("mknod")
+                .arg(fixture.path().join(name))
+                .args(["b", "254", minor])
+                .status()?;
+            eyre::ensure!(status.success(), "mknod failed: {status}");
+        }
+        let root_alias = fixture.path().join("root-alias");
+        let crypt_alias = fixture.path().join("crypt-alias");
+        symlink(fixture.path().join("root-device"), &root_alias)?;
+        symlink(fixture.path().join("crypt-device"), &crypt_alias)?;
+        let rows = [DiskEncryptionRow {
+            name: crypt_alias.to_string_lossy().into_owned(),
+            encrypted: "1".into(),
+            encryption_status: "encrypted".into(),
+            encryption_type: "PLAIN-aes-xts-plain64".into(),
+        }];
+        let evidence = linux_evidence(&rows);
+        assert_eq!(evidence.len(), 1);
+        assert_eq!(
+            linux_device(&root_alias.to_string_lossy()).as_deref(),
+            Some("254:1")
+        );
+        assert_eq!(
+            linux_encryption(&root_alias.to_string_lossy(), &evidence, &sys_block),
+            Some(true)
+        );
+        assert_eq!(
+            linux_encryption(&root_alias.to_string_lossy(), &HashMap::new(), &sys_block),
             None
         );
         Ok(())
