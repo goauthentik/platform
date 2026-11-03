@@ -180,21 +180,27 @@ fn linux_walk(
         let identity = std::fs::read_to_string(node.join("dev")).ok()?;
         let row = evidence.get(identity.trim()).copied();
         let uuid = std::fs::read_to_string(node.join("dm/uuid")).unwrap_or_default();
-        if uuid.starts_with("CRYPT-LUKS1-") || uuid.starts_with("CRYPT-LUKS2-") {
+        if uuid.starts_with("CRYPT-") {
             return row
                 .filter(|r| {
                     r.encrypted == "1"
                         && r.encryption_status == "encrypted"
-                        && (r.encryption_type.starts_with("LUKS1-")
-                            || r.encryption_type.starts_with("LUKS2-"))
+                        && r.encryption_type
+                            .split_once('-')
+                            .is_some_and(|(kind, cipher)| {
+                                !kind.is_empty()
+                                    && !cipher.is_empty()
+                                    && uuid.starts_with(&format!("CRYPT-{kind}-"))
+                            })
                         && !r.encryption_type.contains("null")
                 })
                 .map(|_| true);
         }
-        // Partition sysfs directories may have no slaves directory.
-        // Preserve explicit negative evidence without inferring encryption.
-        if node.join("partition").is_file() && row.is_some_and(|r| r.encrypted == "0") {
-            return Some(false);
+        // Partitions have a containing block device rather than slaves.
+        // Verify that device instead of trusting an inherited positive row.
+        if node.join("partition").is_file() {
+            return linux_walk(node.parent()?, evidence, active, budget, depth + 1)
+                .or_else(|| row.filter(|r| r.encrypted == "0").map(|_| false));
         }
         let children = std::fs::read_dir(node.join("slaves"))
             .ok()?
@@ -475,6 +481,84 @@ mod tests {
         assert_eq!(
             linux_walk(node, &evidence, &mut Default::default(), &mut 4096, 0),
             Some(false)
+        );
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    fn linux_accepts_verified_non_luks_crypt_mappings() -> Result<()> {
+        use std::os::unix::fs::symlink;
+        let fixture = tempfile::tempdir()?;
+        let node = fixture.path().join("dm-0");
+        let backing = fixture.path().join("sda");
+        std::fs::create_dir_all(node.join("dm"))?;
+        std::fs::create_dir_all(node.join("slaves"))?;
+        std::fs::create_dir_all(backing.join("slaves"))?;
+        std::fs::write(node.join("dev"), "254:0")?;
+        std::fs::write(backing.join("dev"), "8:0")?;
+        symlink(&backing, node.join("slaves/sda"))?;
+        let plain = DiskEncryptionRow {
+            name: String::new(),
+            encrypted: "0".into(),
+            encryption_status: "not encrypted".into(),
+            encryption_type: String::new(),
+        };
+        for kind in ["PLAIN", "LOOPAES", "TCRYPT", "BITLK"] {
+            std::fs::write(node.join("dm/uuid"), format!("CRYPT-{kind}-test"))?;
+            for (cipher, expected) in [
+                ("aes-xts-plain64", Some(true)),
+                ("cipher_null-ecb", None),
+                ("", None),
+            ] {
+                let row = DiskEncryptionRow {
+                    name: String::new(),
+                    encrypted: "1".into(),
+                    encryption_status: "encrypted".into(),
+                    encryption_type: format!("{kind}-{cipher}"),
+                };
+                let evidence = HashMap::from([("254:0".into(), &row), ("8:0".into(), &plain)]);
+                assert_eq!(
+                    linux_walk(&node, &evidence, &mut Default::default(), &mut 4096, 0),
+                    expected,
+                    "{kind}-{cipher}"
+                );
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    fn linux_partition_verifies_parent_encryption() -> Result<()> {
+        use std::os::unix::fs::symlink;
+        let fixture = tempfile::tempdir()?;
+        let parent = fixture.path().join("dm-0");
+        let partition = parent.join("dm-0p1");
+        std::fs::create_dir_all(parent.join("dm"))?;
+        std::fs::create_dir_all(&partition)?;
+        std::fs::write(parent.join("dev"), "254:0")?;
+        std::fs::write(parent.join("dm/uuid"), "CRYPT-LUKS2-test")?;
+        std::fs::write(partition.join("dev"), "254:1")?;
+        std::fs::write(partition.join("partition"), "1")?;
+        let alias = fixture.path().join("partition-alias");
+        symlink(&partition, &alias)?;
+        let encrypted = DiskEncryptionRow {
+            name: String::new(),
+            encrypted: "1".into(),
+            encryption_status: "encrypted".into(),
+            encryption_type: "LUKS2-aes-xts-plain64".into(),
+        };
+        let evidence = HashMap::from([("254:0".into(), &encrypted)]);
+        assert_eq!(
+            linux_walk(&alias, &evidence, &mut Default::default(), &mut 4096, 0),
+            Some(true)
+        );
+        // An inherited positive row cannot replace verification of the parent.
+        let evidence = HashMap::from([("254:1".into(), &encrypted)]);
+        assert_eq!(
+            linux_walk(&alias, &evidence, &mut Default::default(), &mut 4096, 0),
+            None
         );
         Ok(())
     }
