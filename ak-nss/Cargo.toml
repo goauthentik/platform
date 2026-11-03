@@ -19,4 +19,5 @@ ctor = { workspace = true }
 dtor = { workspace = true }
 libc = { workspace = true }
 libnss = "0.9.0"
+tokio = { workspace = true }
 tracing = { workspace = true }
