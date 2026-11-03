@@ -68,7 +68,7 @@ const QUERIES: &[NamedQuery] = &[
         name: "disk_encryption",
         // Linux + macOS only (no Windows table). Linux's implementation
         // returns empty results entirely unless running as root/euid 0.
-        sql: "SELECT name, encrypted FROM disk_encryption",
+        sql: "SELECT name, encrypted, encryption_status, type FROM disk_encryption",
     },
     NamedQuery {
         name: "block_devices",
