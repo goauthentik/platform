@@ -44,8 +44,13 @@ impl DeviceComponent {
     /// blocking C++ FFI and routinely takes several seconds (it runs ten
     /// tables, including the `processes`/`users`/`groups` ones), so calling it
     /// directly from a task stalls every other task on that worker thread.
-    async fn gather_facts() -> Result<DeviceFactsRequest> {
-        tokio::task::spawn_blocking(ak_platform_facts::gather)
+    ///
+    /// Which facts are gathered comes from the `facts` section of the sysd
+    /// config. It's read on every call, so a reloaded config applies from the
+    /// next checkin.
+    async fn gather_facts(ctx: &SysdContext) -> Result<DeviceFactsRequest> {
+        let opts = ctx.cfg.read().await.facts.clone();
+        tokio::task::spawn_blocking(move || ak_platform_facts::gather_with(&opts))
             .await
             .map_err(|e| eyre::eyre!("gathering device facts failed: {e}"))
     }
@@ -60,7 +65,7 @@ impl DeviceComponent {
         let Some(domain) = domains.iter().find(|d| d.cfg.domain == domain_name) else {
             bail!("domain not found: {domain_name}");
         };
-        let facts = Self::gather_facts().await?;
+        let facts = Self::gather_facts(&self.ctx).await?;
         authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(
             &domain.api,
             Some(facts),
@@ -114,7 +119,7 @@ impl Component for DeviceComponent {
             loop {
                 let domains = ctx.domains.domains().await;
                 for d in domains {
-                    let facts = match DeviceComponent::gather_facts().await {
+                    let facts = match DeviceComponent::gather_facts(&ctx).await {
                         Ok(facts) => facts,
                         Err(e) => {
                             tracing::warn!(domain = d.cfg.domain, "{e:?}");
