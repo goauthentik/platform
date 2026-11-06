@@ -261,7 +261,7 @@ impl ServerHandler for AuthentikMcp {
             ServerCapabilities::builder()
                 .enable_tools()
                 .enable_resources()
-                .enable_extensions_with(skills::capability())
+                .enable_skills()
                 .build(),
         )
         .with_server_info(
@@ -277,7 +277,8 @@ impl ServerHandler for AuthentikMcp {
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
                  only reach hosts adjacent to an application the agent exchanged a token for; \
-                 see skill://authentik-app-access/SKILL.md for the full workflow. The rest of the authentik API is reachable via api_search, api_describe and \
+                 see skill://authentik-app-access/SKILL.md for the full workflow. The rest of the \
+                 authentik API is reachable via api_search, api_describe and \
                  api_call, which acts as an agent identity. api_call_dangerous, when enabled, acts as \
                  the current user and should only be used when that is explicitly needed. See the \
                  skill://authentik-api/SKILL.md resource for how to use them."
@@ -301,17 +302,19 @@ impl ServerHandler for AuthentikMcp {
         skills::read(&request.uri).map(Into::into)
     }
 
-    async fn on_custom_request(
+    async fn list_skills(
         &self,
-        request: CustomRequest,
+        _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
-    ) -> Result<CustomResult, McpError> {
-        skills::handle(&request).unwrap_or_else(|| {
-            Err(McpError::new(
-                ErrorCode::METHOD_NOT_FOUND,
-                request.method,
-                None,
-            ))
-        })
+    ) -> Result<ListSkillsResult, McpError> {
+        Ok(skills::list())
+    }
+
+    async fn get_skill(
+        &self,
+        request: GetSkillRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<GetSkillResult, McpError> {
+        skills::get(&request.uri)
     }
 }
