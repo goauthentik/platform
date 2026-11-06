@@ -205,7 +205,8 @@ impl AuthentikMcp {
     #[tool(
         description = "Run an authentik API command as the current user, with CLI-style \
                        arguments as described by api_describe. Returns the JSON response. List \
-                       commands are paginated; use --page-size to keep responses small.",
+                       commands are paginated; use --page-size to keep responses small. Set \
+                       agent_identifier to act as an agent identity from create_agent instead.",
         annotations(
             title = "Call authentik API",
             read_only_hint = false,

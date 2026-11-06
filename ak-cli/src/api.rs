@@ -1,14 +1,14 @@
 use ak_meta::user_agent;
 use ak_platform::generated::{
-        agent::RequestHeader,
-        agent_auth::{CurrentTokenRequest, current_token_request::Type},
-    };
+    agent::RequestHeader,
+    agent_auth::{CurrentTokenRequest, current_token_request::Type},
+};
 use authentik_client::apis::configuration::Configuration;
 use eyre::{Result, WrapErr};
 
-pub use ak_api_cli::ApiCommand;
+pub use ak_api_cli::ApiArgs;
 
-pub async fn exec_api_command(mut app: super::App, cmd: &ApiCommand) -> Result<()> {
+pub async fn exec_api_command(mut app: super::App, cmd: &ApiArgs) -> Result<()> {
     let profile = app.profile().await;
     let res = app
         .user()

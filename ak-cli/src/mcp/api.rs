@@ -6,20 +6,14 @@
 
 use std::sync::LazyLock;
 
+use ak_api_cli::ApiArgs;
 use clap::{CommandFactory, Parser};
 use rmcp::{ErrorData as McpError, model::*, schemars};
 use serde::Deserialize;
 
-use crate::{api::ApiCommand, mcp::AuthentikMcp};
+use crate::mcp::AuthentikMcp;
 
 const MAX_SEARCH_RESULTS: usize = 50;
-
-#[derive(Parser)]
-#[command(name = "api")]
-struct ApiArgv {
-    #[command(subcommand)]
-    command: ApiCommand,
-}
 
 /// Every leaf command as `(path, summary)`, e.g. `("core applications list", "...")`.
 static COMMANDS: LazyLock<Vec<(String, String)>> = LazyLock::new(|| {
@@ -35,7 +29,7 @@ static COMMANDS: LazyLock<Vec<(String, String)>> = LazyLock::new(|| {
         }
     }
     let mut out = Vec::new();
-    walk(&ApiArgv::command(), "", &mut out);
+    walk(&ApiArgs::command(), "", &mut out);
     out
 });
 
@@ -57,6 +51,10 @@ pub struct ApiCallArgs {
     /// Command path followed by its arguments, one element each, e.g.
     /// ["core", "applications", "list", "--search", "foo", "--page-size", "20"]
     pub args: Vec<String>,
+    /// Identifier of an agent created via `create_agent` to make the call as, instead of the
+    /// current user
+    #[serde(default)]
+    pub agent_identifier: Option<String>,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
     pub profile: Option<String>,
@@ -91,7 +89,7 @@ fn search(query: &str) -> String {
 }
 
 fn describe(command: &str) -> Option<String> {
-    let mut root = ApiArgv::command();
+    let mut root = ApiArgs::command();
     root.build();
     let mut cmd = &mut root;
     for part in command.split_whitespace() {
@@ -126,18 +124,26 @@ impl AuthentikMcp {
     pub(crate) async fn _api_call(&self, args: ApiCallArgs) -> Result<CallToolResult, McpError> {
         // Errors the model can fix (bad arguments, API rejections) are returned as tool errors
         // rather than protocol errors so it sees them and can retry.
-        let argv = match ApiArgv::try_parse_from(std::iter::once("api".to_owned()).chain(args.args))
-        {
-            Ok(argv) => argv,
-            Err(e) => {
-                return Ok(CallToolResult::error(vec![ContentBlock::text(
-                    e.to_string(),
-                )]));
-            }
-        };
+        let mut argv =
+            match ApiArgs::try_parse_from(std::iter::once("api".to_owned()).chain(args.args)) {
+                Ok(argv) => argv,
+                Err(e) => {
+                    return Ok(CallToolResult::error(vec![ContentBlock::text(
+                        e.to_string(),
+                    )]));
+                }
+            };
+        // Set after parsing so an agent identifier always wins over an --api-token in args.
+        if let Some(identifier) = &args.agent_identifier {
+            let Some(token) = self.agent_token(identifier).await else {
+                return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
+                    "Unknown agent \"{identifier}\", create one with create_agent first."
+                ))]));
+            };
+            argv.api_token = Some(token);
+        }
         let config = self.configuration(args.profile).await?;
         let out = argv
-            .command
             .execute(&config)
             .await
             .and_then(|out| Ok(serde_json::to_string(&out)?));
@@ -169,7 +175,11 @@ mod tests {
 
     #[test]
     fn call_args_parse() {
-        assert!(ApiArgv::try_parse_from(["api", "core", "applications", "list"]).is_ok());
-        assert!(ApiArgv::try_parse_from(["api", "core", "nope"]).is_err());
+        assert!(ApiArgs::try_parse_from(["api", "core", "applications", "list"]).is_ok());
+        assert!(ApiArgs::try_parse_from(["api", "core", "nope"]).is_err());
+        let argv =
+            ApiArgs::try_parse_from(["api", "--api-token", "t", "core", "applications", "list"])
+                .expect("--api-token parses");
+        assert_eq!(argv.api_token.as_deref(), Some("t"));
     }
 }

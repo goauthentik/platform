@@ -130,6 +130,37 @@ fn gen_top_level_impl(modules: &[&str]) -> TokenStream {
                 }
             }
         }
+
+        /// Entry point for the API commands. Wraps [`ApiCommand`] with options that apply to all
+        /// of them.
+        #[derive(Debug, Clone, clap::Parser)]
+        #[command(name = "api")]
+        pub struct ApiArgs {
+            // Not `--token`, some operations take a `--token` argument of their own.
+            /// Token to authenticate with instead of the current profile's
+            #[arg(long = "api-token", value_name = "TOKEN", env = "AK_CLI_TOKEN", hide_env_values = true)]
+            pub api_token: Option<String>,
+            #[command(subcommand)]
+            pub command: ApiCommand,
+        }
+
+        impl ApiArgs {
+            pub async fn execute(
+                &self,
+                config: &authentik_client::apis::configuration::Configuration,
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
+                match &self.api_token {
+                    Some(token) => {
+                        let config = authentik_client::apis::configuration::Configuration {
+                            bearer_access_token: Some(token.clone()),
+                            ..config.clone()
+                        };
+                        self.command.execute(&config).await
+                    }
+                    None => self.command.execute(config).await,
+                }
+            }
+        }
     }
 }
 

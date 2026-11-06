@@ -137,7 +137,7 @@ impl AuthentikMcp {
     }
 
     /// Look up the token of an agent identity created earlier in this session.
-    async fn agent_token(&self, identifier: &str) -> Option<String> {
+    pub(crate) async fn agent_token(&self, identifier: &str) -> Option<String> {
         self.agent_tokens.lock().await.get(identifier).cloned()
     }
 
