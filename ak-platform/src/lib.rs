@@ -24,3 +24,17 @@ pub fn restore_sigpipe() {
         libc::signal(libc::SIGPIPE, libc::SIG_DFL);
     }
 }
+
+/// `std::process::Command` that doesn't flash a console window when spawned from a
+/// GUI-subsystem app on Windows.
+pub fn command(program: impl AsRef<std::ffi::OsStr>) -> std::process::Command {
+    #[allow(unused_mut)]
+    let mut cmd = std::process::Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd
+}
