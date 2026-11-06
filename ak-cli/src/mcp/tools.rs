@@ -53,8 +53,6 @@ pub struct RequestAccessArgs {
 pub struct GrantStatusArgs {
     /// UUID of the grant request, returned by `request_access`
     pub grant_request: String,
-    /// Identifier of the agent user that requested access
-    pub agent_identifier: String,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
     pub profile: Option<String>,
@@ -163,11 +161,10 @@ impl AuthentikMcp {
     }
 
     pub async fn _grant_status(&self, args: GrantStatusArgs) -> Result<CallToolResult, McpError> {
-        let mut config = self.configuration(args.profile).await?;
-        let Some(agent_token) = self.agent_token(&args.agent_identifier).await else {
-            return Err(McpError::invalid_params("Agent identity not found", None));
-        };
-        config.bearer_access_token = Some(agent_token);
+        // Checked as the agent's owner, who can view the request, rather than as the agent:
+        // agent tokens only live as long as this process, and the view outlives it when the
+        // host restarts the server.
+        let config = self.configuration(args.profile).await?;
         let req = requests_grant_requests_retrieve(&config, &args.grant_request)
             .await
             .map_err(|e| {

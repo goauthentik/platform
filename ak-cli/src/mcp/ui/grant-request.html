@@ -96,7 +96,7 @@ async function poll() {
     try {
       res = await request("tools/call", {
         name: "grant_status",
-        arguments: { grant_request: state.grant_request, agent_identifier: state.agent_identifier },
+        arguments: { grant_request: state.grant_request },
       });
     } catch (err) {
       document.getElementById("hint").textContent = `Status check failed: ${err?.message ?? err}`;
