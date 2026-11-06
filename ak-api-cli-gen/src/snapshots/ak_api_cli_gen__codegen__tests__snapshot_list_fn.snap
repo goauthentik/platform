@@ -11,7 +11,7 @@ impl ApiCommand {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> eyre::Result<()> {
+    ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
         match self {
             ApiCommand::Core(args) => args.command.execute(config).await,
         }
@@ -41,7 +41,7 @@ impl CoreCommand {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> eyre::Result<()> {
+    ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
         match self {
             CoreCommand::Applications(args) => args.command.execute(config).await,
         }
@@ -61,7 +61,7 @@ impl CoreApplicationsCommand {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> eyre::Result<()> {
+    ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
         match self {
             CoreApplicationsCommand::List(args) => args.execute(config).await,
         }
@@ -78,14 +78,13 @@ impl CoreApplicationsListArgs {
     pub async fn execute(
         &self,
         config: &authentik_client::apis::configuration::Configuration,
-    ) -> eyre::Result<()> {
+    ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
         let result = authentik_client::apis::core_api::core_applications_list(
                 config,
                 self.name.as_deref(),
                 self.page,
             )
             .await?;
-        println!("{}", serde_json::to_string_pretty(& result) ?);
-        Ok(())
+        Ok(Box::new(result))
     }
 }

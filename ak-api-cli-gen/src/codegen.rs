@@ -124,7 +124,7 @@ fn gen_top_level_impl(modules: &[&str]) -> TokenStream {
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 match self {
                     #(#arms)*
                 }
@@ -204,7 +204,7 @@ fn gen_module(module: &str, resources: &BTreeMap<&str, Vec<&ApiFunction>>) -> To
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 match self {
                     #(#match_arms)*
                 }
@@ -265,7 +265,7 @@ fn gen_resource(module: &str, resource: &str, functions: &[&ApiFunction]) -> Tok
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 match self {
                     #(#arms)*
                 }
@@ -354,8 +354,7 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
         quote! {
             #(#conversions)*
             authentik_client::apis::#module_mod::#fn_ident(config, #(#call_args),*).await?;
-            println!("ok");
-            Ok(())
+            Ok(Box::new(()))
         }
     } else if f.returns_response {
         quote! {
@@ -363,15 +362,13 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
             let response = authentik_client::apis::#module_mod::#fn_ident(config, #(#call_args),*).await?;
             let body = response.text().await
                 .map_err(|e| eyre::eyre!("failed to read response body: {e}"))?;
-            print!("{}", body);
-            Ok(())
+            Ok(Box::new(__json_field_value(&body)))
         }
     } else {
         quote! {
             #(#conversions)*
             let result = authentik_client::apis::#module_mod::#fn_ident(config, #(#call_args),*).await?;
-            println!("{}", serde_json::to_string_pretty(&result)?);
-            Ok(())
+            Ok(Box::new(result))
         }
     };
 
@@ -385,7 +382,7 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 #result_handling
             }
         }
