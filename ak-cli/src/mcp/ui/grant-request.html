@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root { --fg: #1f2328; --muted: #656d76; --bg: #fff; --border: #d0d7de; --accent: #fd4b2d; }
+  :root[data-theme="dark"] { --fg: #e6edf3; --muted: #9198a1; --bg: #0d1117; --border: #30363d; }
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  .card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  ul { margin: 8px 0; padding-left: 20px; }
+  .badge { border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); }
+  .approved { color: #1a7f37; border-color: #1a7f37; }
+  .denied, .revoked { color: #cf222e; border-color: #cf222e; }
+  button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 0; background: var(--accent); color: #fff; cursor: pointer; }
+  button[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="row">
+    <strong>Access request</strong>
+    <span id="status" class="badge">waiting…</span>
+  </div>
+  <div id="agent" class="muted"></div>
+  <ul id="targets"></ul>
+  <div class="row">
+    <span id="hint" class="muted">Approve or deny the request in authentik.</span>
+    <button id="open" hidden>Review in authentik</button>
+  </div>
+</div>
+<script>
+// Speaks the MCP Apps postMessage protocol directly (JSON-RPC 2.0 with the host).
+const pending = new Map();
+let nextId = 1;
+let state = null;
+
+function send(msg) { window.parent.postMessage({ jsonrpc: "2.0", ...msg }, "*"); }
+function request(method, params) {
+  const id = nextId++;
+  send({ id, method, params });
+  return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
+}
+function notify(method, params) { send({ method, params }); }
+
+window.addEventListener("message", (e) => {
+  if (e.source !== window.parent) return;
+  const msg = e.data;
+  if (!msg || msg.jsonrpc !== "2.0") return;
+  if (msg.id !== undefined && !msg.method) {
+    const p = pending.get(msg.id);
+    pending.delete(msg.id);
+    if (p) msg.error ? p.reject(msg.error) : p.resolve(msg.result);
+    return;
+  }
+  if (msg.method === "ui/notifications/tool-result") show(msg.params?.structuredContent);
+  else if (msg.method === "ui/notifications/host-context-changed") theme(msg.params);
+  // Host requests (e.g. ui/resource-teardown, ping) only need an acknowledgement.
+  else if (msg.id !== undefined) send({ id: msg.id, result: {} });
+});
+
+function theme(ctx) {
+  if (ctx?.theme) document.documentElement.dataset.theme = ctx.theme;
+}
+
+function show(data) {
+  if (!data?.grant_request) return;
+  const first = !state;
+  state = data;
+  document.getElementById("agent").textContent = `for agent ${data.agent_identifier}`;
+  const ul = document.getElementById("targets");
+  ul.replaceChildren(...(data.targets || []).map((t) => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    return li;
+  }));
+  const btn = document.getElementById("open");
+  btn.hidden = !data.fulfill_url;
+  btn.onclick = () => request("ui/open-link", { url: data.fulfill_url });
+  setStatus(data.status);
+  if (first) poll();
+}
+
+function setStatus(status) {
+  const el = document.getElementById("status");
+  el.textContent = status === "created" ? "pending" : status;
+  el.className = `badge ${status}`;
+}
+
+// ponytail: fixed 3s poll, no backoff; stops once the request is decided.
+async function poll() {
+  while (true) {
+    await new Promise((r) => setTimeout(r, 3000));
+    let res;
+    try {
+      res = await request("tools/call", {
+        name: "grant_status",
+        arguments: { grant_request: state.grant_request, agent_identifier: state.agent_identifier },
+      });
+    } catch (err) {
+      document.getElementById("hint").textContent = `Status check failed: ${err?.message ?? err}`;
+      continue;
+    }
+    const status = res?.structuredContent?.status;
+    if (!status || status === "created") continue;
+    setStatus(status);
+    document.getElementById("open").hidden = true;
+    document.getElementById("hint").textContent = `Request ${status}.`;
+    await request("ui/message", {
+      role: "user",
+      content: [{ type: "text", text: `The access request ${state.grant_request} was ${status}.` }],
+    }).catch(() => {});
+    return;
+  }
+}
+
+new ResizeObserver(() => {
+  const { width, height } = document.documentElement.getBoundingClientRect();
+  notify("ui/notifications/size-changed", { width: Math.ceil(width), height: Math.ceil(height) });
+}).observe(document.documentElement);
+
+request("ui/initialize", {
+  protocolVersion: "2026-01-26",
+  // The spec text says clientInfo, the ext-apps SDK sends appInfo; send both until that settles.
+  appInfo: { name: "authentik grant request", version: "1" },
+  clientInfo: { name: "authentik grant request", version: "1" },
+  appCapabilities: {},
+}).then((res) => {
+  theme(res?.hostContext);
+  notify("ui/notifications/initialized", {});
+});
+</script>
+</body>
+</html>

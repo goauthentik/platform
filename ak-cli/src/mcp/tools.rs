@@ -7,9 +7,9 @@ use authentik_client::{
     apis::{
         agents_api::agents_agents_create,
         core_api::{core_applications_list, core_users_me_retrieve},
-        requests_api::requests_grant_requests_agent_create,
+        requests_api::{requests_grant_requests_agent_create, requests_grant_requests_retrieve},
     },
-    models::{AgentGrantRequestCreateRequest, Application},
+    models::{AgentGrantRequestCreateRequest, Application, GrantRequest},
 };
 use chrono::{TimeDelta, Utc};
 use rmcp::{ErrorData as McpError, model::*, schemars};
@@ -43,6 +43,17 @@ pub struct RequestAccessArgs {
     pub applications: Option<Vec<String>>,
     /// Identifier of the agent user, returned by `create_agent`
     #[serde(default)]
+    pub agent_identifier: String,
+    /// Profile to use (defaults to currently active profile)
+    #[serde(default)]
+    pub profile: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct GrantStatusArgs {
+    /// UUID of the grant request, returned by `request_access`
+    pub grant_request: String,
+    /// Identifier of the agent user that requested access
     pub agent_identifier: String,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
@@ -128,13 +139,50 @@ impl AuthentikMcp {
                 .map_err(|e| {
                     McpError::internal_error(format!("request access failed: {e}"), None)
                 })?;
-        let cbs = vec![
-            ContentBlock::text(
-                "Show this link to the user and ask them to open it and approve or deny access.",
-            ),
-            ContentBlock::resource_link(Resource::new(res.fulfill_url, "Fulfillment URL")),
-        ];
-        Ok(CallToolResult::success(cbs))
+        let uuid = res
+            .grant_request
+            .uuid
+            .map(|u| u.to_string())
+            .unwrap_or_default();
+        let mut result = CallToolResult::success(vec![
+            ContentBlock::text(format!(
+                "Show this link to the user and ask them to open it and approve or deny access. \
+                 Check the outcome with grant_status for grant request {uuid}."
+            )),
+            ContentBlock::resource_link(Resource::new(&res.fulfill_url, "Fulfillment URL")),
+        ]);
+        // Read by the grant request view (see `ui`).
+        result.structured_content = Some(serde_json::json!({
+            "grant_request": uuid,
+            "agent_identifier": args.agent_identifier,
+            "fulfill_url": res.fulfill_url,
+            "status": res.grant_request.status,
+            "targets": target_labels(&res.grant_request),
+        }));
+        Ok(result)
+    }
+
+    pub async fn _grant_status(&self, args: GrantStatusArgs) -> Result<CallToolResult, McpError> {
+        let mut config = self.configuration(args.profile).await?;
+        let Some(agent_token) = self.agent_token(&args.agent_identifier).await else {
+            return Err(McpError::invalid_params("Agent identity not found", None));
+        };
+        config.bearer_access_token = Some(agent_token);
+        let req = requests_grant_requests_retrieve(&config, &args.grant_request)
+            .await
+            .map_err(|e| {
+                McpError::internal_error(format!("fetching grant request failed: {e}"), None)
+            })?;
+        let mut result = CallToolResult::success(vec![ContentBlock::text(format!(
+            "Grant request {} is {}.",
+            args.grant_request, req.status
+        ))]);
+        result.structured_content = Some(serde_json::json!({
+            "grant_request": args.grant_request,
+            "status": req.status,
+            "targets": target_labels(&req),
+        }));
+        Ok(result)
     }
 
     /// Look up the token of an agent identity created earlier in this session.
@@ -285,6 +333,10 @@ impl AuthentikMcp {
             .into_iter()
             .find(|app| app.pbm_uuid.to_string().to_lowercase() == target_id))
     }
+}
+
+fn target_labels(req: &GrantRequest) -> Vec<String> {
+    req.target_objs.iter().map(|t| t.label.clone()).collect()
 }
 
 /// Origins an agent may reach once it holds a token for `application`, derived

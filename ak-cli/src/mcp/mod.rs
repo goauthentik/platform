@@ -9,7 +9,10 @@ use crate::{
         api::{ApiCallArgs, ApiCallDangerousArgs, ApiDescribeArgs, ApiSearchArgs},
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
-        tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
+        tools::{
+            CreateAgentArgs, GrantStatusArgs, ListApplicationsArgs, RequestAccessArgs,
+            TokenExchangeArgs,
+        },
     },
 };
 use ak_meta::user_agent;
@@ -31,6 +34,7 @@ pub mod http;
 pub mod origin;
 pub mod skills;
 pub mod tools;
+pub mod ui;
 
 /// An on-behalf-of token an agent identity obtained for a single application,
 /// together with the origins it may be used against.
@@ -116,13 +120,26 @@ impl AuthentikMcp {
 
     #[tool(
         description = "Request access to an application",
-        annotations(title = "Request application access")
+        annotations(title = "Request application access"),
+        meta = ui::meta(ui::GRANT_REQUEST)
     )]
     async fn request_access(
         &self,
         Parameters(args): Parameters<RequestAccessArgs>,
     ) -> Result<CallToolResult, McpError> {
         self._request_access(args).await
+    }
+
+    #[tool(
+        description = "Check whether a grant request from request_access was approved, denied \
+                       or is still pending",
+        annotations(title = "Check access request", read_only_hint = true)
+    )]
+    async fn grant_status(
+        &self,
+        Parameters(args): Parameters<GrantStatusArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._grant_status(args).await
     }
 
     #[tool(
@@ -272,7 +289,7 @@ impl ServerHandler for AuthentikMcp {
             "authentik CLI MCP server. Tools: list_applications (applications available to \
                  the current user), create_agent (create a delegate agent identity for the \
                  authenticated user), request_access (ask for access to applications on behalf of \
-                 an agent identity), token_exchange (exchange an agent identity for an \
+                 an agent identity; grant_status reports whether it was approved), token_exchange (exchange an agent identity for an \
                  on-behalf-of token for one application), http_fetch and http_send (call an \
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
@@ -291,7 +308,9 @@ impl ServerHandler for AuthentikMcp {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> Result<ListResourcesResult, McpError> {
-        Ok(ListResourcesResult::with_all_items(skills::resources()))
+        let mut resources = skills::resources();
+        resources.extend(ui::resources());
+        Ok(ListResourcesResult::with_all_items(resources))
     }
 
     async fn read_resource(
@@ -299,7 +318,9 @@ impl ServerHandler for AuthentikMcp {
         request: ReadResourceRequestParams,
         _context: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResponse, McpError> {
-        skills::read(&request.uri).map(Into::into)
+        ui::read(&request.uri)
+            .unwrap_or_else(|| skills::read(&request.uri))
+            .map(Into::into)
     }
 
     async fn list_skills(
