@@ -6,6 +6,7 @@ use tokio::sync::Mutex;
 use crate::{
     App,
     mcp::{
+        api::{ApiCallArgs, ApiDescribeArgs, ApiSearchArgs},
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
         tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
@@ -24,6 +25,7 @@ use rmcp::{
     tool, tool_handler, tool_router,
 };
 
+pub mod api;
 pub mod http;
 pub mod origin;
 pub mod tools;
@@ -175,6 +177,48 @@ impl AuthentikMcp {
     ) -> Result<CallToolResult, McpError> {
         self._http_send(args).await
     }
+
+    #[tool(
+        description = "Search the authentik API commands (the same ones `ak api` exposes). Returns \
+                       matching command paths with a summary; pass one to api_describe.",
+        annotations(title = "Search authentik API", read_only_hint = true)
+    )]
+    async fn api_search(
+        &self,
+        Parameters(args): Parameters<ApiSearchArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_search(args).await
+    }
+
+    #[tool(
+        description = "Show the arguments and flags of an authentik API command found via \
+                       api_search.",
+        annotations(title = "Describe authentik API command", read_only_hint = true)
+    )]
+    async fn api_describe(
+        &self,
+        Parameters(args): Parameters<ApiDescribeArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_describe(args).await
+    }
+
+    #[tool(
+        description = "Run an authentik API command as the current user, with CLI-style \
+                       arguments as described by api_describe. Returns the JSON response. List \
+                       commands are paginated; use --page-size to keep responses small.",
+        annotations(
+            title = "Call authentik API",
+            read_only_hint = false,
+            destructive_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn api_call(
+        &self,
+        Parameters(args): Parameters<ApiCallArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_call(args).await
+    }
 }
 
 #[tool_handler(router = self.tool_router)]
@@ -193,7 +237,9 @@ impl ServerHandler for AuthentikMcp {
                  on-behalf-of token for one application), http_fetch and http_send (call an \
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
-                 only reach hosts adjacent to an application the agent exchanged a token for."
+                 only reach hosts adjacent to an application the agent exchanged a token for. \
+                 The rest of the authentik API is reachable as the current user via api_search, \
+                 api_describe and api_call."
                     .to_string(),
             )
     }
