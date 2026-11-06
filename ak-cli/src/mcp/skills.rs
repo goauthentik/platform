@@ -8,10 +8,10 @@ use rmcp::{ErrorData as McpError, model::*};
 
 const TTL_MS: u64 = 300_000;
 
-// ponytail: single-file skills only (just SKILL.md); list every file in `resources` once one ships
-// supporting files.
 /// Skill path to the contents of its `SKILL.md`.
 const SOURCES: &[(&str, &str)] = &[
+    // single-file skills only (just SKILL.md); list every file in `resources` once one ships
+    // supporting files.
     (
         "authentik-api",
         include_str!("skills/authentik-api/SKILL.md"),
