@@ -88,7 +88,7 @@ pub async fn get_ssh_status() -> Result<SshStatusResponse> {
         .map_err(|e| e.to_string())?
         .for_current();
     // Resolved config for an arbitrary host, i.e. what `Host *` applies; ssh expands `~`.
-    let identity_agent = std::process::Command::new("ssh")
+    let identity_agent = ak_platform::command("ssh")
         .args(["-G", "authentik-agent-check"])
         .output()
         .ok()
