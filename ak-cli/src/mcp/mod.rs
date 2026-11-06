@@ -19,15 +19,17 @@ use ak_platform::generated::{
 };
 use authentik_client::apis::configuration::Configuration;
 use rmcp::{
-    ErrorData as McpError, ServerHandler,
+    ErrorData as McpError, RoleServer, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::*,
+    service::RequestContext,
     tool, tool_handler, tool_router,
 };
 
 pub mod api;
 pub mod http;
 pub mod origin;
+pub mod skills;
 pub mod tools;
 
 /// An on-behalf-of token an agent identity obtained for a single application,
@@ -255,24 +257,64 @@ impl AuthentikMcp {
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for AuthentikMcp {
     fn get_info(&self) -> ServerConfig {
-        ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
-            .with_server_info(
-                Implementation::new("authentik Agent", ak_meta::full_version())
-                    .with_website_url("https://goauthentik.io"),
-            )
-            .with_instructions(
-                "authentik CLI MCP server. Tools: list_applications (applications available to \
+        ServerConfig::new(
+            ServerCapabilities::builder()
+                .enable_tools()
+                .enable_resources()
+                .enable_skills()
+                .build(),
+        )
+        .with_server_info(
+            Implementation::new("authentik Agent", ak_meta::full_version())
+                .with_website_url("https://goauthentik.io"),
+        )
+        .with_instructions(
+            "authentik CLI MCP server. Tools: list_applications (applications available to \
                  the current user), create_agent (create a delegate agent identity for the \
                  authenticated user), request_access (ask for access to applications on behalf of \
                  an agent identity), token_exchange (exchange an agent identity for an \
                  on-behalf-of token for one application), http_fetch and http_send (call an \
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
-                 only reach hosts adjacent to an application the agent exchanged a token for. \
-                 The rest of the authentik API is reachable via api_search, api_describe and \
+                 only reach hosts adjacent to an application the agent exchanged a token for; \
+                 see skill://authentik-app-access/SKILL.md for the full workflow. The rest of the \
+                 authentik API is reachable via api_search, api_describe and \
                  api_call, which acts as an agent identity. api_call_dangerous, when enabled, acts as \
-                 the current user and should only be used when that is explicitly needed."
-                    .to_string(),
-            )
+                 the current user and should only be used when that is explicitly needed. See the \
+                 skill://authentik-api/SKILL.md resource for how to use them."
+                .to_string(),
+        )
+    }
+
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, McpError> {
+        Ok(ListResourcesResult::with_all_items(skills::resources()))
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResponse, McpError> {
+        skills::read(&request.uri).map(Into::into)
+    }
+
+    async fn list_skills(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListSkillsResult, McpError> {
+        Ok(skills::list())
+    }
+
+    async fn get_skill(
+        &self,
+        request: GetSkillRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<GetSkillResult, McpError> {
+        skills::get(&request.uri)
     }
 }
