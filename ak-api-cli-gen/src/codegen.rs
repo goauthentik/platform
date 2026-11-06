@@ -124,9 +124,40 @@ fn gen_top_level_impl(modules: &[&str]) -> TokenStream {
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 match self {
                     #(#arms)*
+                }
+            }
+        }
+
+        /// Entry point for the API commands. Wraps [`ApiCommand`] with options that apply to all
+        /// of them.
+        #[derive(Debug, Clone, clap::Parser)]
+        #[command(name = "api")]
+        pub struct ApiArgs {
+            // Not `--token`, some operations take a `--token` argument of their own.
+            /// Token to authenticate with instead of the current profile's
+            #[arg(long = "api-token", value_name = "TOKEN", env = "AK_CLI_TOKEN", hide_env_values = true)]
+            pub api_token: Option<String>,
+            #[command(subcommand)]
+            pub command: ApiCommand,
+        }
+
+        impl ApiArgs {
+            pub async fn execute(
+                &self,
+                config: &authentik_client::apis::configuration::Configuration,
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
+                match &self.api_token {
+                    Some(token) => {
+                        let config = authentik_client::apis::configuration::Configuration {
+                            bearer_access_token: Some(token.clone()),
+                            ..config.clone()
+                        };
+                        self.command.execute(&config).await
+                    }
+                    None => self.command.execute(config).await,
                 }
             }
         }
@@ -204,7 +235,7 @@ fn gen_module(module: &str, resources: &BTreeMap<&str, Vec<&ApiFunction>>) -> To
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 match self {
                     #(#match_arms)*
                 }
@@ -265,7 +296,7 @@ fn gen_resource(module: &str, resource: &str, functions: &[&ApiFunction]) -> Tok
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 match self {
                     #(#arms)*
                 }
@@ -354,8 +385,7 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
         quote! {
             #(#conversions)*
             authentik_client::apis::#module_mod::#fn_ident(config, #(#call_args),*).await?;
-            println!("ok");
-            Ok(())
+            Ok(Box::new(()))
         }
     } else if f.returns_response {
         quote! {
@@ -363,15 +393,13 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
             let response = authentik_client::apis::#module_mod::#fn_ident(config, #(#call_args),*).await?;
             let body = response.text().await
                 .map_err(|e| eyre::eyre!("failed to read response body: {e}"))?;
-            print!("{}", body);
-            Ok(())
+            Ok(Box::new(__json_field_value(&body)))
         }
     } else {
         quote! {
             #(#conversions)*
             let result = authentik_client::apis::#module_mod::#fn_ident(config, #(#call_args),*).await?;
-            println!("{}", serde_json::to_string_pretty(&result)?);
-            Ok(())
+            Ok(Box::new(result))
         }
     };
 
@@ -385,7 +413,7 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
             pub async fn execute(
                 &self,
                 config: &authentik_client::apis::configuration::Configuration,
-            ) -> eyre::Result<()> {
+            ) -> eyre::Result<Box<dyn erased_serde::Serialize + Send>> {
                 #result_handling
             }
         }
@@ -397,14 +425,16 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
 fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
     let flag = &param.cli_flag;
     let field = format_ident!("{}", &param.field_name);
+    // Positionals are named after their field so help text says what goes where.
+    let pos_name = param.field_name.to_uppercase();
 
     match &param.ty {
-        // Required path params → positional (no --flag, no value_name needed)
+        // Required path params → positional (no --flag)
         ParamType::RequiredStr => {
             let idx = *pos_index;
             *pos_index += 1;
             quote! {
-                #[arg(index = #idx, value_name = "STRING")]
+                #[arg(index = #idx, value_name = #pos_name)]
                 pub #field: String,
             }
         }
@@ -412,7 +442,7 @@ fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
             let idx = *pos_index;
             *pos_index += 1;
             quote! {
-                #[arg(index = #idx, value_name = "NUMBER")]
+                #[arg(index = #idx, value_name = #pos_name)]
                 pub #field: i32,
             }
         }

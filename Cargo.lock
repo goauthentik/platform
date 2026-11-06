@@ -114,6 +114,7 @@ dependencies = [
  "cargo_metadata 0.23.1",
  "chrono",
  "clap",
+ "erased-serde",
  "eyre",
  "serde_json",
  "uuid",

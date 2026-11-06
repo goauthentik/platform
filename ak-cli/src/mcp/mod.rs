@@ -6,6 +6,7 @@ use tokio::sync::Mutex;
 use crate::{
     App,
     mcp::{
+        api::{ApiCallArgs, ApiCallDangerousArgs, ApiDescribeArgs, ApiSearchArgs},
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
         tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
@@ -24,6 +25,7 @@ use rmcp::{
     tool, tool_handler, tool_router,
 };
 
+pub mod api;
 pub mod http;
 pub mod origin;
 pub mod tools;
@@ -48,10 +50,14 @@ pub struct AuthentikMcp {
 
 #[tool_router]
 impl AuthentikMcp {
-    pub fn new(app: App) -> Self {
+    pub fn new(app: App, allow_dangerous_api: bool) -> Self {
+        let mut tool_router = Self::tool_router();
+        if !allow_dangerous_api {
+            tool_router.remove_route("api_call_dangerous");
+        }
         Self {
             app,
-            tool_router: Self::tool_router(),
+            tool_router,
             agent_tokens: Arc::new(Mutex::new(HashMap::new())),
             grants: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -175,6 +181,68 @@ impl AuthentikMcp {
     ) -> Result<CallToolResult, McpError> {
         self._http_send(args).await
     }
+
+    #[tool(
+        description = "Search the authentik API commands (the same ones `ak api` exposes). Returns \
+                       matching command paths with a summary; pass one to api_describe.",
+        annotations(title = "Search authentik API", read_only_hint = true)
+    )]
+    async fn api_search(
+        &self,
+        Parameters(args): Parameters<ApiSearchArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_search(args).await
+    }
+
+    #[tool(
+        description = "Show the arguments and flags of an authentik API command found via \
+                       api_search.",
+        annotations(title = "Describe authentik API command", read_only_hint = true)
+    )]
+    async fn api_describe(
+        &self,
+        Parameters(args): Parameters<ApiDescribeArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_describe(args).await
+    }
+
+    #[tool(
+        description = "Run an authentik API command as an agent identity from create_agent. \
+                       Pass the command path and its arguments as described by api_describe, as a \
+                       map keyed by argument name without the leading `--`. Returns the JSON \
+                       response. List commands are paginated; set page-size to keep responses \
+                       small.",
+        annotations(
+            title = "Call authentik API as agent",
+            read_only_hint = false,
+            destructive_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn api_call(
+        &self,
+        Parameters(args): Parameters<ApiCallArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_call(args).await
+    }
+
+    #[tool(
+        description = "DANGEROUS: like api_call, but runs as the current user with all of their \
+                       permissions instead of as a scoped agent identity. Only use this when the \
+                       user explicitly asked for it, or an agent identity cannot do what is needed.",
+        annotations(
+            title = "Call authentik API as user (dangerous)",
+            read_only_hint = false,
+            destructive_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn api_call_dangerous(
+        &self,
+        Parameters(args): Parameters<ApiCallDangerousArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_call_dangerous(args).await
+    }
 }
 
 #[tool_handler(router = self.tool_router)]
@@ -193,7 +261,10 @@ impl ServerHandler for AuthentikMcp {
                  on-behalf-of token for one application), http_fetch and http_send (call an \
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
-                 only reach hosts adjacent to an application the agent exchanged a token for."
+                 only reach hosts adjacent to an application the agent exchanged a token for. \
+                 The rest of the authentik API is reachable via api_search, api_describe and \
+                 api_call, which acts as an agent identity. api_call_dangerous, when enabled, acts as \
+                 the current user and should only be used when that is explicitly needed."
                     .to_string(),
             )
     }
