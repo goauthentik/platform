@@ -2,9 +2,10 @@
 //! points at a view with `_meta.ui.resourceUri`; hosts that support the extension render it in a
 //! sandboxed iframe, everyone else just sees the tool's text content.
 
-use rmcp::{ErrorData as McpError, model::*};
+use rmcp::{ErrorData as McpError, Peer, RoleServer, model::*};
 use serde_json::json;
 
+const EXTENSION: &str = "io.modelcontextprotocol/ui";
 const MIME_TYPE: &str = "text/html;profile=mcp-app";
 
 pub const GRANT_REQUEST: &str = "ui://authentik/grant-request.html";
@@ -20,6 +21,22 @@ pub fn meta(uri: &str) -> MetaObject {
             .cloned()
             .unwrap_or_default(),
     )
+}
+
+/// Whether the client renders views, i.e. declared the extension with our MIME type.
+pub fn supported(peer: &Peer<RoleServer>) -> bool {
+    peer.peer_info()
+        .is_some_and(|info| client_supports(&info.capabilities))
+}
+
+fn client_supports(capabilities: &ClientCapabilities) -> bool {
+    capabilities
+        .extensions
+        .as_ref()
+        .and_then(|e| e.get(EXTENSION))
+        .and_then(|ui| ui.get("mimeTypes"))
+        .and_then(|m| m.as_array())
+        .is_some_and(|m| m.iter().any(|t| t == MIME_TYPE))
 }
 
 pub fn resources() -> Vec<Resource> {
@@ -53,5 +70,19 @@ mod tests {
         }
         assert!(read("ui://nope").is_none());
         assert_eq!(meta(GRANT_REQUEST).0["ui"]["resourceUri"], GRANT_REQUEST);
+    }
+
+    #[test]
+    fn client_support() {
+        let caps = |v: serde_json::Value| {
+            serde_json::from_value::<ClientCapabilities>(v).expect("capabilities should parse")
+        };
+        assert!(client_supports(&caps(json!({
+            "extensions": { EXTENSION: { "mimeTypes": [MIME_TYPE] } }
+        }))));
+        assert!(!client_supports(&caps(json!({
+            "extensions": { EXTENSION: { "mimeTypes": ["text/plain"] } }
+        }))));
+        assert!(!client_supports(&caps(json!({}))));
     }
 }

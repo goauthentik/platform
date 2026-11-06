@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use tokio::sync::Mutex;
 
 use crate::{
@@ -22,7 +22,7 @@ use ak_platform::generated::{
 };
 use authentik_client::apis::configuration::Configuration;
 use rmcp::{
-    ErrorData as McpError, RoleServer, ServerHandler,
+    ErrorData as McpError, Peer, RoleServer, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::*,
     service::RequestContext,
@@ -45,11 +45,18 @@ pub(crate) struct Grant {
     pub origins: Vec<AllowedOrigin>,
 }
 
+/// An agent identity created during this session.
+pub(crate) struct AgentIdentity {
+    pub token: String,
+    pub expires: Option<DateTime<FixedOffset>>,
+}
+
 #[derive(Clone)]
 pub struct AuthentikMcp {
     app: App,
     tool_router: ToolRouter<AuthentikMcp>,
-    pub(crate) agent_tokens: Arc<Mutex<HashMap<String, String>>>,
+    /// Agent identifier to the identity created for it.
+    pub(crate) agents: Arc<Mutex<HashMap<String, AgentIdentity>>>,
     /// Agent identifier to the grants it obtained during this session.
     pub(crate) grants: Arc<Mutex<HashMap<String, Vec<Grant>>>>,
 }
@@ -64,7 +71,7 @@ impl AuthentikMcp {
         Self {
             app,
             tool_router,
-            agent_tokens: Arc::new(Mutex::new(HashMap::new())),
+            agents: Arc::new(Mutex::new(HashMap::new())),
             grants: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -109,7 +116,7 @@ impl AuthentikMcp {
 
     #[tool(
         description = "List applications available to the current user",
-        annotations(title = "List available applications")
+        annotations(title = "List available applications", read_only_hint = true)
     )]
     async fn list_applications(
         &self,
@@ -125,14 +132,16 @@ impl AuthentikMcp {
     )]
     async fn request_access(
         &self,
+        peer: Peer<RoleServer>,
         Parameters(args): Parameters<RequestAccessArgs>,
     ) -> Result<CallToolResult, McpError> {
-        self._request_access(args).await
+        self._request_access(args, ui::supported(&peer)).await
     }
 
     #[tool(
         description = "Check whether a grant request from request_access was approved, denied \
-                       or is still pending",
+                       or is still pending. With wait, blocks until it is decided or about a \
+                       minute has passed.",
         annotations(title = "Check access request", read_only_hint = true)
     )]
     async fn grant_status(
@@ -147,7 +156,7 @@ impl AuthentikMcp {
                        It has no access until the user approves a request_access grant.",
         annotations(
             title = "Create agent identity",
-            read_only_hint = false,
+            read_only_hint = true,
             destructive_hint = false,
             idempotent_hint = false,
             open_world_hint = false

@@ -199,6 +199,9 @@ ak-meta-macros/%:
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*
 
+ak-cli/ui/%:
+	"$(MAKE)" -C "${TOP}/ak-cli/ui/" $*
+
 ee/psso/%:
 	"$(MAKE)" -C "${TOP}/ee/psso/" $*
 
