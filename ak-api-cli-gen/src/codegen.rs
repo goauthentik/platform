@@ -425,14 +425,16 @@ fn gen_fn_item(f: &ApiFunction) -> TokenStream {
 fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
     let flag = &param.cli_flag;
     let field = format_ident!("{}", &param.field_name);
+    // Positionals are named after their field so help text says what goes where.
+    let pos_name = param.field_name.to_uppercase();
 
     match &param.ty {
-        // Required path params → positional (no --flag, no value_name needed)
+        // Required path params → positional (no --flag)
         ParamType::RequiredStr => {
             let idx = *pos_index;
             *pos_index += 1;
             quote! {
-                #[arg(index = #idx, value_name = "STRING")]
+                #[arg(index = #idx, value_name = #pos_name)]
                 pub #field: String,
             }
         }
@@ -440,7 +442,7 @@ fn gen_field(param: &ApiParam, pos_index: &mut usize) -> TokenStream {
             let idx = *pos_index;
             *pos_index += 1;
             quote! {
-                #[arg(index = #idx, value_name = "NUMBER")]
+                #[arg(index = #idx, value_name = #pos_name)]
                 pub #field: i32,
             }
         }

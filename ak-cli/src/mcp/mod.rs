@@ -6,7 +6,7 @@ use tokio::sync::Mutex;
 use crate::{
     App,
     mcp::{
-        api::{ApiCallArgs, ApiDescribeArgs, ApiSearchArgs},
+        api::{ApiCallArgs, ApiCallDangerousArgs, ApiDescribeArgs, ApiSearchArgs},
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
         tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
@@ -50,10 +50,14 @@ pub struct AuthentikMcp {
 
 #[tool_router]
 impl AuthentikMcp {
-    pub fn new(app: App) -> Self {
+    pub fn new(app: App, allow_dangerous_api: bool) -> Self {
+        let mut tool_router = Self::tool_router();
+        if !allow_dangerous_api {
+            tool_router.remove_route("api_call_dangerous");
+        }
         Self {
             app,
-            tool_router: Self::tool_router(),
+            tool_router,
             agent_tokens: Arc::new(Mutex::new(HashMap::new())),
             grants: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -203,12 +207,13 @@ impl AuthentikMcp {
     }
 
     #[tool(
-        description = "Run an authentik API command as the current user, with CLI-style \
-                       arguments as described by api_describe. Returns the JSON response. List \
-                       commands are paginated; use --page-size to keep responses small. Set \
-                       agent_identifier to act as an agent identity from create_agent instead.",
+        description = "Run an authentik API command as an agent identity from create_agent. \
+                       Pass the command path and its arguments as described by api_describe, as a \
+                       map keyed by argument name without the leading `--`. Returns the JSON \
+                       response. List commands are paginated; set page-size to keep responses \
+                       small.",
         annotations(
-            title = "Call authentik API",
+            title = "Call authentik API as agent",
             read_only_hint = false,
             destructive_hint = true,
             open_world_hint = false
@@ -219,6 +224,24 @@ impl AuthentikMcp {
         Parameters(args): Parameters<ApiCallArgs>,
     ) -> Result<CallToolResult, McpError> {
         self._api_call(args).await
+    }
+
+    #[tool(
+        description = "DANGEROUS: like api_call, but runs as the current user with all of their \
+                       permissions instead of as a scoped agent identity. Only use this when the \
+                       user explicitly asked for it, or an agent identity cannot do what is needed.",
+        annotations(
+            title = "Call authentik API as user (dangerous)",
+            read_only_hint = false,
+            destructive_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn api_call_dangerous(
+        &self,
+        Parameters(args): Parameters<ApiCallDangerousArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_call_dangerous(args).await
     }
 }
 
@@ -239,8 +262,9 @@ impl ServerHandler for AuthentikMcp {
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
                  only reach hosts adjacent to an application the agent exchanged a token for. \
-                 The rest of the authentik API is reachable as the current user via api_search, \
-                 api_describe and api_call."
+                 The rest of the authentik API is reachable via api_search, api_describe and \
+                 api_call, which acts as an agent identity. api_call_dangerous, when enabled, acts as \
+                 the current user and should only be used when that is explicitly needed."
                     .to_string(),
             )
     }

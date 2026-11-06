@@ -4,7 +4,7 @@
 //! model's context, so instead the model searches the command tree, reads the help of the
 //! command it picked, and calls it with CLI-style arguments.
 
-use std::sync::LazyLock;
+use std::{collections::BTreeMap, sync::LazyLock};
 
 use ak_api_cli::ApiArgs;
 use clap::{CommandFactory, Parser};
@@ -48,13 +48,29 @@ pub struct ApiDescribeArgs {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct ApiCallArgs {
-    /// Command path followed by its arguments, one element each, e.g.
-    /// ["core", "applications", "list", "--search", "foo", "--page-size", "20"]
-    pub args: Vec<String>,
-    /// Identifier of an agent created via `create_agent` to make the call as, instead of the
-    /// current user
+    /// Command path as returned by api_search, e.g. "core applications list"
+    pub command: String,
+    /// Arguments as shown by api_describe, keyed by name without the leading `--`, e.g.
+    /// {"search": "foo", "page-size": 20}. Positional arguments use their name from the usage
+    /// line in lower case, e.g. {"slug": "my-app"}. Lists repeat the argument once per element.
     #[serde(default)]
-    pub agent_identifier: Option<String>,
+    pub args: BTreeMap<String, serde_json::Value>,
+    /// Identifier of the agent to make the call as, returned by `create_agent`
+    pub agent_identifier: String,
+    /// Profile to use (defaults to currently active profile)
+    #[serde(default)]
+    pub profile: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct ApiCallDangerousArgs {
+    /// Command path as returned by api_search, e.g. "core applications list"
+    pub command: String,
+    /// Arguments as shown by api_describe, keyed by name without the leading `--`, e.g.
+    /// {"search": "foo", "page-size": 20}. Positional arguments use their name from the usage
+    /// line in lower case, e.g. {"slug": "my-app"}. Lists repeat the argument once per element.
+    #[serde(default)]
+    pub args: BTreeMap<String, serde_json::Value>,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
     pub profile: Option<String>,
@@ -98,6 +114,61 @@ fn describe(command: &str) -> Option<String> {
     Some(cmd.render_long_help().to_string())
 }
 
+/// Turn a command path and an argument map into the argv clap expects.
+fn to_argv(
+    command: &str,
+    args: &BTreeMap<String, serde_json::Value>,
+) -> Result<Vec<String>, String> {
+    let unknown_command = || format!("Unknown command \"{command}\", use api_search to find one.");
+    let root = ApiArgs::command();
+    let mut cmd = &root;
+    let mut argv = vec!["api".to_owned()];
+    for part in command.split_whitespace() {
+        cmd = cmd.find_subcommand(part).ok_or_else(unknown_command)?;
+        argv.push(part.to_owned());
+    }
+    if cmd.has_subcommands() {
+        return Err(unknown_command());
+    }
+
+    let mut positionals = BTreeMap::new();
+    for (key, value) in args {
+        let key = key.trim_start_matches('-');
+        let arg = cmd
+            .get_arguments()
+            .find(|a| a.get_long() == Some(key) || a.get_id().as_str() == key.replace('-', "_"))
+            .ok_or_else(|| {
+                format!("Unknown argument \"{key}\" for \"{command}\", see api_describe.")
+            })?;
+        let values: Vec<String> = match value {
+            serde_json::Value::Null => continue,
+            serde_json::Value::Array(items) => items.iter().map(arg_value).collect(),
+            v => vec![arg_value(v)],
+        };
+        match (arg.get_long(), arg.get_index()) {
+            (Some(long), _) => argv.extend(values.iter().map(|v| format!("--{long}={v}"))),
+            (None, Some(index)) => {
+                positionals.insert(index, values);
+            }
+            (None, None) => return Err(format!("Argument \"{key}\" cannot be set.")),
+        }
+    }
+    // After `--` so values starting with `-` are not mistaken for flags.
+    if !positionals.is_empty() {
+        argv.push("--".to_owned());
+        argv.extend(positionals.into_values().flatten());
+    }
+    Ok(argv)
+}
+
+/// Strings are passed through as-is, everything else (numbers, bools, JSON bodies) as JSON.
+fn arg_value(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::String(s) => s.clone(),
+        v => v.to_string(),
+    }
+}
+
 impl AuthentikMcp {
     pub(crate) async fn _api_search(
         &self,
@@ -122,27 +193,45 @@ impl AuthentikMcp {
     }
 
     pub(crate) async fn _api_call(&self, args: ApiCallArgs) -> Result<CallToolResult, McpError> {
+        let Some(token) = self.agent_token(&args.agent_identifier).await else {
+            return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
+                "Unknown agent \"{}\", create one with create_agent first.",
+                args.agent_identifier
+            ))]));
+        };
+        self.run_api(&args.command, &args.args, Some(token), args.profile)
+            .await
+    }
+
+    pub(crate) async fn _api_call_dangerous(
+        &self,
+        args: ApiCallDangerousArgs,
+    ) -> Result<CallToolResult, McpError> {
+        self.run_api(&args.command, &args.args, None, args.profile)
+            .await
+    }
+
+    /// Run an API command, as the agent owning `token` if given, otherwise as the current user.
+    async fn run_api(
+        &self,
+        command: &str,
+        args: &BTreeMap<String, serde_json::Value>,
+        token: Option<String>,
+        profile: Option<String>,
+    ) -> Result<CallToolResult, McpError> {
         // Errors the model can fix (bad arguments, API rejections) are returned as tool errors
         // rather than protocol errors so it sees them and can retry.
-        let mut argv =
-            match ApiArgs::try_parse_from(std::iter::once("api".to_owned()).chain(args.args)) {
-                Ok(argv) => argv,
-                Err(e) => {
-                    return Ok(CallToolResult::error(vec![ContentBlock::text(
-                        e.to_string(),
-                    )]));
-                }
-            };
-        // Set after parsing so an agent identifier always wins over an --api-token in args.
-        if let Some(identifier) = &args.agent_identifier {
-            let Some(token) = self.agent_token(identifier).await else {
-                return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
-                    "Unknown agent \"{identifier}\", create one with create_agent first."
-                ))]));
-            };
-            argv.api_token = Some(token);
+        let parsed = to_argv(command, args)
+            .and_then(|argv| ApiArgs::try_parse_from(argv).map_err(|e| e.to_string()));
+        let mut argv = match parsed {
+            Ok(argv) => argv,
+            Err(e) => return Ok(CallToolResult::error(vec![ContentBlock::text(e)])),
+        };
+        // Set after parsing so the agent's token always wins over an --api-token in args.
+        if token.is_some() {
+            argv.api_token = token;
         }
-        let config = self.configuration(args.profile).await?;
+        let config = self.configuration(profile).await?;
         let out = argv
             .execute(&config)
             .await
@@ -181,5 +270,59 @@ mod tests {
             ApiArgs::try_parse_from(["api", "--api-token", "t", "core", "applications", "list"])
                 .expect("--api-token parses");
         assert_eq!(argv.api_token.as_deref(), Some("t"));
+    }
+
+    #[test]
+    fn map_args_to_argv() {
+        let args = |v: serde_json::Value| {
+            serde_json::from_value::<BTreeMap<String, serde_json::Value>>(v).expect("map")
+        };
+        let argv = to_argv(
+            "core users list",
+            &args(serde_json::json!({
+                "page-size": 20,
+                "groups_by_name": ["a", "b"],
+                "--search": "x",
+                "is-active": true,
+                "path": null,
+            })),
+        )
+        .expect("valid args");
+        assert_eq!(
+            argv,
+            [
+                "api",
+                "core",
+                "users",
+                "list",
+                "--search=x",
+                "--groups-by-name=a",
+                "--groups-by-name=b",
+                "--is-active=true",
+                "--page-size=20",
+            ]
+        );
+        assert!(ApiArgs::try_parse_from(argv).is_ok());
+
+        let argv = to_argv(
+            "core applications retrieve",
+            &args(serde_json::json!({"slug": "-odd"})),
+        )
+        .expect("positional");
+        assert_eq!(argv[4..], ["--", "-odd"]);
+        assert!(ApiArgs::try_parse_from(argv).is_ok());
+
+        assert!(to_argv("core users list", &args(serde_json::json!({"nope": 1}))).is_err());
+        assert!(to_argv("core users", &BTreeMap::new()).is_err());
+        assert!(to_argv("core nope", &BTreeMap::new()).is_err());
+    }
+
+    #[test]
+    fn dangerous_tool_requires_flag() {
+        use crate::{App, CliArgs};
+        let mcp = |allow| AuthentikMcp::new(App::new(CliArgs::parse_from(["ak", "mcp"])), allow);
+        assert!(!mcp(false).tool_router.has_route("api_call_dangerous"));
+        assert!(mcp(false).tool_router.has_route("api_call"));
+        assert!(mcp(true).tool_router.has_route("api_call_dangerous"));
     }
 }
