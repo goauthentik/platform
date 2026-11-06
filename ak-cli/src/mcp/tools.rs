@@ -5,7 +5,8 @@ use ak_platform::grpc::assert_response_valid;
 use authentik_client::models::AgentCreateRequest;
 use authentik_client::{
     apis::{
-        agents_api::agents_agents_create, core_api::core_applications_list,
+        agents_api::agents_agents_create,
+        core_api::{core_applications_list, core_users_me_retrieve},
         requests_api::requests_grant_requests_agent_create,
     },
     models::{AgentGrantRequestCreateRequest, Application},
@@ -143,7 +144,13 @@ impl AuthentikMcp {
 
     pub async fn _create_agent(&self, args: CreateAgentArgs) -> Result<CallToolResult, McpError> {
         let config = self.configuration(args.profile).await?;
+        // Without a parent the server provisions a parentless system agent (an admin-only action)
+        // instead of a self-service one owned by, and approved through, the current user.
+        let me = core_users_me_retrieve(&config).await.map_err(|e| {
+            McpError::internal_error(format!("fetching current user failed: {e}"), None)
+        })?;
         let req = AgentCreateRequest {
+            parent: Some(me.user.pk),
             label: args.label,
             ..Default::default()
         };
