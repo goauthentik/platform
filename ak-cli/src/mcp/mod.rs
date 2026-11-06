@@ -118,8 +118,15 @@ impl AuthentikMcp {
     }
 
     #[tool(
-        description = "Create an agent (delegate identity) for a parent user",
-        annotations(title = "Create agent identity")
+        description = "Create an expiring agent (delegate identity) owned by the current user. \
+                       It has no access until the user approves a request_access grant.",
+        annotations(
+            title = "Create agent identity",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = false,
+            open_world_hint = false
+        )
     )]
     async fn create_agent(
         &self,
