@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use tokio::sync::Mutex;
 
 use crate::{
@@ -9,7 +9,10 @@ use crate::{
         api::{ApiCallArgs, ApiCallDangerousArgs, ApiDescribeArgs, ApiSearchArgs},
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
-        tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
+        tools::{
+            CreateAgentArgs, GrantStatusArgs, ListApplicationsArgs, RequestAccessArgs,
+            TokenExchangeArgs,
+        },
     },
 };
 use ak_meta::user_agent;
@@ -19,7 +22,7 @@ use ak_platform::generated::{
 };
 use authentik_client::apis::configuration::Configuration;
 use rmcp::{
-    ErrorData as McpError, RoleServer, ServerHandler,
+    ErrorData as McpError, Peer, RoleServer, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::*,
     service::RequestContext,
@@ -31,6 +34,7 @@ pub mod http;
 pub mod origin;
 pub mod skills;
 pub mod tools;
+pub mod ui;
 
 /// An on-behalf-of token an agent identity obtained for a single application,
 /// together with the origins it may be used against.
@@ -41,11 +45,18 @@ pub(crate) struct Grant {
     pub origins: Vec<AllowedOrigin>,
 }
 
+/// An agent identity created during this session.
+pub(crate) struct AgentIdentity {
+    pub token: String,
+    pub expires: Option<DateTime<FixedOffset>>,
+}
+
 #[derive(Clone)]
 pub struct AuthentikMcp {
     app: App,
     tool_router: ToolRouter<AuthentikMcp>,
-    pub(crate) agent_tokens: Arc<Mutex<HashMap<String, String>>>,
+    /// Agent identifier to the identity created for it.
+    pub(crate) agents: Arc<Mutex<HashMap<String, AgentIdentity>>>,
     /// Agent identifier to the grants it obtained during this session.
     pub(crate) grants: Arc<Mutex<HashMap<String, Vec<Grant>>>>,
 }
@@ -60,7 +71,7 @@ impl AuthentikMcp {
         Self {
             app,
             tool_router,
-            agent_tokens: Arc::new(Mutex::new(HashMap::new())),
+            agents: Arc::new(Mutex::new(HashMap::new())),
             grants: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -105,7 +116,7 @@ impl AuthentikMcp {
 
     #[tool(
         description = "List applications available to the current user",
-        annotations(title = "List available applications")
+        annotations(title = "List available applications", read_only_hint = true)
     )]
     async fn list_applications(
         &self,
@@ -116,13 +127,28 @@ impl AuthentikMcp {
 
     #[tool(
         description = "Request access to an application",
-        annotations(title = "Request application access")
+        annotations(title = "Request application access"),
+        meta = ui::meta(ui::GRANT_REQUEST)
     )]
     async fn request_access(
         &self,
+        peer: Peer<RoleServer>,
         Parameters(args): Parameters<RequestAccessArgs>,
     ) -> Result<CallToolResult, McpError> {
-        self._request_access(args).await
+        self._request_access(args, ui::supported(&peer)).await
+    }
+
+    #[tool(
+        description = "Check whether a grant request from request_access was approved, denied \
+                       or is still pending. With wait, blocks until it is decided or about a \
+                       minute has passed.",
+        annotations(title = "Check access request", read_only_hint = true)
+    )]
+    async fn grant_status(
+        &self,
+        Parameters(args): Parameters<GrantStatusArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._grant_status(args).await
     }
 
     #[tool(
@@ -130,7 +156,7 @@ impl AuthentikMcp {
                        It has no access until the user approves a request_access grant.",
         annotations(
             title = "Create agent identity",
-            read_only_hint = false,
+            read_only_hint = true,
             destructive_hint = false,
             idempotent_hint = false,
             open_world_hint = false
@@ -272,7 +298,7 @@ impl ServerHandler for AuthentikMcp {
             "authentik CLI MCP server. Tools: list_applications (applications available to \
                  the current user), create_agent (create a delegate agent identity for the \
                  authenticated user), request_access (ask for access to applications on behalf of \
-                 an agent identity), token_exchange (exchange an agent identity for an \
+                 an agent identity; grant_status reports whether it was approved), token_exchange (exchange an agent identity for an \
                  on-behalf-of token for one application), http_fetch and http_send (call an \
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
@@ -291,7 +317,9 @@ impl ServerHandler for AuthentikMcp {
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
     ) -> Result<ListResourcesResult, McpError> {
-        Ok(ListResourcesResult::with_all_items(skills::resources()))
+        let mut resources = skills::resources();
+        resources.extend(ui::resources());
+        Ok(ListResourcesResult::with_all_items(resources))
     }
 
     async fn read_resource(
@@ -299,7 +327,9 @@ impl ServerHandler for AuthentikMcp {
         request: ReadResourceRequestParams,
         _context: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResponse, McpError> {
-        skills::read(&request.uri).map(Into::into)
+        ui::read(&request.uri)
+            .unwrap_or_else(|| skills::read(&request.uri))
+            .map(Into::into)
     }
 
     async fn list_skills(

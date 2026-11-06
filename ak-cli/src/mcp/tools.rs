@@ -1,4 +1,4 @@
-use crate::mcp::{AuthentikMcp, Grant, origin::AllowedOrigin};
+use crate::mcp::{AgentIdentity, AuthentikMcp, Grant, origin::AllowedOrigin};
 use ak_platform::generated::agent::RequestHeader;
 use ak_platform::generated::agent_auth::TokenExchangeRequest;
 use ak_platform::grpc::assert_response_valid;
@@ -7,14 +7,20 @@ use authentik_client::{
     apis::{
         agents_api::agents_agents_create,
         core_api::{core_applications_list, core_users_me_retrieve},
-        requests_api::requests_grant_requests_agent_create,
+        requests_api::{requests_grant_requests_agent_create, requests_grant_requests_retrieve},
     },
-    models::{AgentGrantRequestCreateRequest, Application},
+    models::{AgentGrantRequestCreateRequest, Application, GrantRequest, RequestStatus},
 };
-use chrono::{TimeDelta, Utc};
+use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use rmcp::{ErrorData as McpError, model::*, schemars};
 use serde::Deserialize;
+use std::time::Duration;
+use tokio::time::Instant;
 use uuid::Uuid;
+
+/// How often and for how long `grant_status` polls when asked to wait.
+const WAIT_INTERVAL: Duration = Duration::from_secs(3);
+const WAIT_MAX: Duration = Duration::from_secs(50);
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct ListApplicationsArgs {
@@ -44,6 +50,18 @@ pub struct RequestAccessArgs {
     /// Identifier of the agent user, returned by `create_agent`
     #[serde(default)]
     pub agent_identifier: String,
+    /// Profile to use (defaults to currently active profile)
+    #[serde(default)]
+    pub profile: Option<String>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct GrantStatusArgs {
+    /// UUID of the grant request, returned by `request_access`
+    pub grant_request: String,
+    /// Wait up to about a minute for the request to be decided instead of returning right away
+    #[serde(default)]
+    pub wait: bool,
     /// Profile to use (defaults to currently active profile)
     #[serde(default)]
     pub profile: Option<String>,
@@ -99,6 +117,7 @@ impl AuthentikMcp {
     pub async fn _request_access(
         &self,
         args: RequestAccessArgs,
+        ui: bool,
     ) -> Result<CallToolResult, McpError> {
         let mut config = self.configuration(args.profile).await?;
         let Some(agent_token) = self.agent_token(&args.agent_identifier).await else {
@@ -128,18 +147,86 @@ impl AuthentikMcp {
                 .map_err(|e| {
                     McpError::internal_error(format!("request access failed: {e}"), None)
                 })?;
-        let cbs = vec![
-            ContentBlock::text(
-                "Show this link to the user and ask them to open it and approve or deny access.",
-            ),
-            ContentBlock::resource_link(Resource::new(res.fulfill_url, "Fulfillment URL")),
-        ];
-        Ok(CallToolResult::success(cbs))
+        let uuid = res
+            .grant_request
+            .uuid
+            .map(|u| u.to_string())
+            .unwrap_or_default();
+        // A client rendering the grant request view shows the link and reports the outcome itself.
+        let mut result = CallToolResult::success(if ui {
+            vec![ContentBlock::text(format!(
+                "The user was shown grant request {uuid} with a link to approve or deny it; do \
+                 not repeat the link. Call grant_status with wait=true to wait for their \
+                 decision, again while it is still pending."
+            ))]
+        } else {
+            vec![
+                ContentBlock::text(format!(
+                    "Show this link to the user and ask them to open it and approve or deny \
+                     access. Then call grant_status for grant request {uuid} with wait=true to \
+                     wait for their decision, again while it is still pending."
+                )),
+                ContentBlock::resource_link(Resource::new(&res.fulfill_url, "Fulfillment URL")),
+            ]
+        });
+        // The request can't be decided after it or the agent expires, whichever comes first.
+        let poll_until = [
+            res.grant_request.expires.flatten(),
+            self.agent_expires(&args.agent_identifier).await,
+        ]
+        .into_iter()
+        .flatten()
+        .min();
+        // Read by the grant request view (see `ui`).
+        result.structured_content = Some(serde_json::json!({
+            "grant_request": uuid,
+            "poll_until": poll_until,
+            "agent_identifier": args.agent_identifier,
+            "fulfill_url": res.fulfill_url,
+            "status": res.grant_request.status,
+            "targets": target_labels(&res.grant_request),
+        }));
+        Ok(result)
+    }
+
+    pub async fn _grant_status(&self, args: GrantStatusArgs) -> Result<CallToolResult, McpError> {
+        // Checked as the agent's owner, who can view the request, rather than as the agent:
+        // agent tokens only live as long as this process, and the view outlives it when the
+        // host restarts the server.
+        let config = self.configuration(args.profile).await?;
+        // Kept below common client tool call timeouts; the model calls again while still pending.
+        let deadline = Instant::now() + WAIT_MAX;
+        let req = loop {
+            let req = requests_grant_requests_retrieve(&config, &args.grant_request)
+                .await
+                .map_err(|e| {
+                    McpError::internal_error(format!("fetching grant request failed: {e}"), None)
+                })?;
+            if !args.wait || req.status != RequestStatus::Created || Instant::now() >= deadline {
+                break req;
+            }
+            tokio::time::sleep(WAIT_INTERVAL).await;
+        };
+        let mut result = CallToolResult::success(vec![ContentBlock::text(format!(
+            "Grant request {} is {}.",
+            args.grant_request, req.status
+        ))]);
+        result.structured_content = Some(serde_json::json!({
+            "grant_request": args.grant_request,
+            "status": req.status,
+            "targets": target_labels(&req),
+        }));
+        Ok(result)
     }
 
     /// Look up the token of an agent identity created earlier in this session.
     pub(crate) async fn agent_token(&self, identifier: &str) -> Option<String> {
-        self.agent_tokens.lock().await.get(identifier).cloned()
+        let agents = self.agents.lock().await;
+        agents.get(identifier).map(|a| a.token.clone())
+    }
+
+    async fn agent_expires(&self, identifier: &str) -> Option<DateTime<FixedOffset>> {
+        self.agents.lock().await.get(identifier)?.expires
     }
 
     pub async fn _create_agent(&self, args: CreateAgentArgs) -> Result<CallToolResult, McpError> {
@@ -157,10 +244,13 @@ impl AuthentikMcp {
         let result = agents_agents_create(&config, Some(req))
             .await
             .map_err(|e| McpError::internal_error(format!("create agent failed: {e}"), None))?;
-        self.agent_tokens
-            .lock()
-            .await
-            .insert(result.agent.username.clone(), result.token);
+        self.agents.lock().await.insert(
+            result.agent.username.clone(),
+            AgentIdentity {
+                token: result.token,
+                expires: result.agent.expires.flatten(),
+            },
+        );
         let mut cb = vec![ContentBlock::text(format!(
             "The agent identity was successfully created. Use {} in future tool calls to use its identity.",
             result.agent.username
@@ -285,6 +375,10 @@ impl AuthentikMcp {
             .into_iter()
             .find(|app| app.pbm_uuid.to_string().to_lowercase() == target_id))
     }
+}
+
+fn target_labels(req: &GrantRequest) -> Vec<String> {
+    req.target_objs.iter().map(|t| t.label.clone()).collect()
 }
 
 /// Origins an agent may reach once it holds a token for `application`, derived
