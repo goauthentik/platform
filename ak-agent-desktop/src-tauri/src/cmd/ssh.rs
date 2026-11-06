@@ -83,10 +83,19 @@ pub struct SshStatusResponse {
 }
 
 #[tauri::command]
-pub async fn get_ssh_status() -> Result<SshStatusResponse> {
+pub async fn get_ssh_status(state: tauri::State<'_, Agent>) -> Result<SshStatusResponse> {
     let socket = agent_socket_path(AgentSocketID::SSH)
         .map_err(|e| e.to_string())?
         .for_current();
+    // The shared socket plus every profile-pinned one counts as ours.
+    let mut sockets = vec![socket.clone()];
+    sockets.extend(state.cfg.read().await.profiles.keys().filter_map(|name| {
+        Some(
+            agent_socket_path(AgentSocketID::SSHProfile(name.clone()))
+                .ok()?
+                .for_current(),
+        )
+    }));
     // Resolved config for an arbitrary host, i.e. what `Host *` applies; ssh expands `~`.
     let identity_agent = ak_platform::command("ssh")
         .args(["-G", "authentik-agent-check"])
@@ -99,9 +108,9 @@ pub async fn get_ssh_status() -> Result<SshStatusResponse> {
         });
     let status = if !std::path::Path::new(&socket).exists() {
         SshStatus::NotRunning
-    } else if identity_agent.as_deref() == Some(socket.as_str()) {
+    } else if identity_agent.as_ref().is_some_and(|a| sockets.contains(a)) {
         SshStatus::Active
-    } else if references_socket(&socket) {
+    } else if sockets.iter().any(|s| references_socket(s)) {
         SshStatus::Partial
     } else {
         SshStatus::Unconfigured
