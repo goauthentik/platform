@@ -3,3 +3,5 @@ ee/psso/Bridge/Generated/** linguist-generated
 # Served over MCP with their SHA-256 digests, so the bytes must not depend on the checkout platform.
 ak-cli/src/mcp/skills/**/*.md text eol=lf
 ak-cli/src/mcp/ui/*.html linguist-generated=true
+# Compared byte-for-byte against the generated schema in a test, so line endings must not change.
+ak-agent/settings.schema.json linguist-generated=true text eol=lf
