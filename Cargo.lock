@@ -438,6 +438,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ak-platform-serde-policy"
+version = "0.72.5"
+dependencies = [
+ "core-foundation",
+ "core-foundation-sys",
+ "eyre",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "winreg",
+]
+
+[[package]]
 name = "ak-sysd"
 version = "0.72.5"
 dependencies = [
