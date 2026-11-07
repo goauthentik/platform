@@ -49,6 +49,13 @@ runs:
 
         mkdir -p ${OUTPUT_PATH}/packages/authentik_windows-2025_agent/agent_local
         cp "${PKG_PATH}/authentik_package-windows/authentik Agent Installer.msi" "${OUTPUT_PATH}/packages/authentik_windows-2025_agent/agent_local/agent.msi"
+    - name: Publish schemas
+      shell: bash
+      env:
+        OUTPUT_PATH: "${{ inputs.output-path }}"
+      run: |
+        mkdir -p "${OUTPUT_PATH}/schemas"
+        cp "${GITHUB_WORKSPACE}/ak-agent/settings.schema.json" "${OUTPUT_PATH}/schemas/agent-settings.schema.json"
     - name: Create repository index page
       shell: bash
       env:
