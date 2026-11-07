@@ -18,6 +18,7 @@ ak-meta = { workspace = true }
 ak-platform = { workspace = true }
 ak-platform-facts = { path = "../ak-platform-facts" }
 ak-platform-keyring = { workspace = true }
+ak-platform-serde-policy = { workspace = true }
 authentik-client = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
@@ -70,13 +71,8 @@ tikv-jemallocator = { version = "0.7.0", features = [
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = { workspace = true }
 
-[target.'cfg(target_os = "macos")'.dependencies]
-core-foundation = { workspace = true }
-core-foundation-sys = "0.8"
-
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.8"
-winreg = { workspace = true, features = ["serialization-serde"] }
 windows = { workspace = true, features = [
     "Win32_System_RemoteDesktop",
     "Win32_Security",
