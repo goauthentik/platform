@@ -34,7 +34,7 @@ impl SSHAgentTransaction {
         &self,
         ext: &Extension,
     ) -> std::result::Result<Option<Extension>, AgentError> {
-        if !self.agent.settings().await.ssh.agent_tunnel() {
+        if !self.agent.settings().await.ssh.agent_tunnel.unwrap_or(true) {
             tracing::debug!("agent-tunnel: disabled by settings");
             return Ok(None);
         }

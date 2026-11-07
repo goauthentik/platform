@@ -13,7 +13,6 @@ pub struct Options {
     pub app_slug: String,
     pub client_id: String,
     pub user_agent: String,
-    /// Fail instead of continuing without DPoP when the provider doesn't support it.
     pub require_dpop: bool,
 }
 

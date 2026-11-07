@@ -183,13 +183,15 @@ impl ConfigV1Profile {
 impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
         let settings = self.settings.effective();
-        set_log_level(match settings.debug() {
+        set_log_level(match settings.debug.unwrap_or(false) {
             true => LevelFilter::Trace,
             false => LevelFilter::Info,
         });
-        ak_meta::set_error_reporting(settings.telemetry.error_reporting());
-        // Without a keyring, tokens left in the file may only be used if plaintext is allowed.
-        let plaintext = settings.profile_management.allow_plaintext_tokens();
+        ak_meta::set_error_reporting(settings.telemetry.error_reporting.unwrap_or(true));
+        let plaintext = settings
+            .profile_management
+            .allow_plaintext_tokens
+            .unwrap_or(true);
         let fallback = |v: &String| if plaintext { v.clone() } else { String::new() };
         for (key, val) in self.profiles.iter_mut() {
             tracing::debug!(profile = key, "Getting access token for profile");
@@ -249,7 +251,8 @@ impl Config for ConfigV1 {
             .settings
             .effective()
             .profile_management
-            .allow_plaintext_tokens();
+            .allow_plaintext_tokens
+            .unwrap_or(true);
         for (key, val) in self.profiles.iter_mut() {
             if !plaintext {
                 val.fallback_access_token.clear();

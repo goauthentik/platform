@@ -106,7 +106,7 @@ pub async fn setup_profile(
             app_slug: app_slug.clone(),
             client_id: client_id.clone(),
             user_agent: ak_meta::user_agent(),
-            require_dpop: rules.require_dpop(),
+            require_dpop: rules.require_dpop.unwrap_or(false),
         },
         // Frontend opens the URL and shows it as a fallback link.
         |url| Ok(app.emit("ak-setup-url", url.to_string())?),

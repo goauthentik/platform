@@ -17,12 +17,13 @@ static POLICY: LazyLock<std::result::Result<Settings, String>> = LazyLock::new(|
 
 static NO_POLICY: LazyLock<Settings> = LazyLock::new(Settings::default);
 
-/// Admin-enforced settings; empty without a policy.
-pub fn policy() -> &'static Settings {
-    POLICY.as_ref().unwrap_or(&NO_POLICY)
-}
+impl Settings {
+    pub fn policy() -> &'static Settings {
+        POLICY.as_ref().unwrap_or(&NO_POLICY)
+    }
 
-/// Fails if a policy is set but can't be used, so it isn't silently left unenforced.
-pub fn check_policy() -> Result<()> {
-    POLICY.as_ref().map(|_| ()).map_err(|e| eyre!("{e}"))
+    /// Fails if a policy is set but can't be used, so it isn't silently left unenforced.
+    pub fn check_policy() -> Result<()> {
+        POLICY.as_ref().map(|_| ()).map_err(|e| eyre!("{e}"))
+    }
 }

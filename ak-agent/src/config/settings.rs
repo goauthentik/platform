@@ -9,8 +9,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::policy::policy;
-
 /// Settings of the authentik agent. Unset values use their defaults.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(default)]
@@ -79,21 +77,8 @@ impl ProfileManagementSettings {
         bail!("authentik URL '{url}' is not allowed by policy")
     }
 
-    pub fn allow_delete(&self) -> bool {
-        self.allow_delete.unwrap_or(true)
-    }
-
-    pub fn allow_plaintext_tokens(&self) -> bool {
-        self.allow_plaintext_tokens.unwrap_or(true)
-    }
-
-    pub fn require_dpop(&self) -> bool {
-        self.require_dpop.unwrap_or(false)
-    }
-
-    /// Fails for a profile without a DPoP key when the policy requires one.
     pub fn check_dpop(&self, dpop_bound: bool) -> Result<()> {
-        if self.require_dpop() && !dpop_bound {
+        if self.require_dpop.unwrap_or(false) && !dpop_bound {
             bail!("profile is not key-bound (DPoP), which is required by policy");
         }
         Ok(())
@@ -112,7 +97,6 @@ pub struct AuthorizationSettings {
 }
 
 impl AuthorizationSettings {
-    /// How long an allowed and a denied answer to a prompt for `op` are remembered.
     pub fn remember(&self, op: Operation) -> (Duration, Duration) {
         let r = &self.remember;
         let (set, (allow, deny)) = match op {
@@ -126,12 +110,6 @@ impl AuthorizationSettings {
             Duration::from_secs(set.allow.unwrap_or(allow)),
             Duration::from_secs(set.deny.unwrap_or(deny)),
         )
-    }
-
-    pub fn exchange_allowed(&self, audience: &str) -> bool {
-        self.allowed_exchange_audiences
-            .as_ref()
-            .is_none_or(|a| a.iter().any(|x| x == audience))
     }
 }
 
@@ -181,20 +159,6 @@ pub struct SshSettings {
     pub builtin_passthrough_hosts: Option<bool>,
 }
 
-impl SshSettings {
-    pub fn enabled(&self) -> bool {
-        self.enabled.unwrap_or(true)
-    }
-
-    pub fn agent_tunnel(&self) -> bool {
-        self.agent_tunnel.unwrap_or(true)
-    }
-
-    pub fn builtin_passthrough_hosts(&self) -> bool {
-        self.builtin_passthrough_hosts.unwrap_or(true)
-    }
-}
-
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(default)]
 pub struct TelemetrySettings {
@@ -206,24 +170,9 @@ pub struct TelemetrySettings {
     pub error_reporting: Option<bool>,
 }
 
-impl TelemetrySettings {
-    pub fn update_check(&self) -> bool {
-        self.update_check.unwrap_or(true)
-    }
-
-    pub fn error_reporting(&self) -> bool {
-        self.error_reporting.unwrap_or(true)
-    }
-}
-
 impl Settings {
-    pub fn debug(&self) -> bool {
-        self.debug.unwrap_or(false)
-    }
-
-    /// These (user) settings with the admin [`policy`] enforced on top.
     pub fn effective(&self) -> Settings {
-        self.with_policy(policy())
+        self.with_policy(Settings::policy())
     }
 
     fn with_policy(&self, policy: &Settings) -> Settings {
@@ -232,31 +181,31 @@ impl Settings {
         else {
             return policy.clone();
         };
-        enforce(&mut user, policy_v);
+        Settings::enforce(&mut user, policy_v);
         serde_json::from_value(user).unwrap_or_else(|_| policy.clone())
     }
-}
 
-/// Lays `policy` over `user`: objects merge key by key, numbers (durations) keep the lower
-/// value and anything else is replaced. Unset values aren't serialized, so they never override.
-fn enforce(user: &mut Value, policy: Value) {
-    match (user, policy) {
-        (Value::Object(user), Value::Object(policy)) => {
-            for (k, p) in policy {
-                match user.get_mut(&k) {
-                    Some(u) => enforce(u, p),
-                    None => {
-                        user.insert(k, p);
+    /// Numbers are durations, where the shorter one wins. Unset values aren't serialized,
+    /// so they never override.
+    fn enforce(user: &mut Value, policy: Value) {
+        match (user, policy) {
+            (Value::Object(user), Value::Object(policy)) => {
+                for (k, p) in policy {
+                    match user.get_mut(&k) {
+                        Some(u) => Settings::enforce(u, p),
+                        None => {
+                            user.insert(k, p);
+                        }
                     }
                 }
             }
-        }
-        (Value::Number(user), Value::Number(policy)) => {
-            if policy.as_u64() < user.as_u64() {
-                *user = policy;
+            (Value::Number(user), Value::Number(policy)) => {
+                if policy.as_u64() < user.as_u64() {
+                    *user = policy;
+                }
             }
+            (user, policy) => *user = policy,
         }
-        (user, policy) => *user = policy,
     }
 }
 
@@ -268,28 +217,26 @@ fn is_default<T: Default + PartialEq>(v: &T) -> bool {
 mod tests {
     use super::*;
 
-    fn settings(v: Value) -> Settings {
-        serde_json::from_value(v).unwrap()
-    }
-
     #[test]
     fn policy_overrides_user_except_longer_durations() {
-        let user = settings(serde_json::json!({
+        let user: Settings = serde_json::from_value(serde_json::json!({
             "debug": true,
             "ssh": { "enabled": true, "agent_tunnel": true },
             "authorization": { "remember": { "current_token": { "allow": 60, "deny": 60 } } },
             "ssh_fallback_agent": { "socket_path": "/user", "extra_passthrough_hosts": ["a"] },
-        }));
-        let policy = settings(serde_json::json!({
+        }))
+        .unwrap();
+        let policy: Settings = serde_json::from_value(serde_json::json!({
             "ssh": { "agent_tunnel": false },
             "authorization": { "remember": { "current_token": { "allow": 30, "deny": 600 } } },
             "ssh_fallback_agent": { "socket_path": "/admin" },
-        }));
+        }))
+        .unwrap();
         let eff = user.with_policy(&policy);
 
-        assert!(eff.debug());
-        assert!(eff.ssh.enabled());
-        assert!(!eff.ssh.agent_tunnel());
+        assert_eq!(eff.debug, Some(true));
+        assert_eq!(eff.ssh.enabled, Some(true));
+        assert_eq!(eff.ssh.agent_tunnel, Some(false));
         assert_eq!(
             eff.authorization.remember(Operation::CurrentToken),
             (Duration::from_secs(30), Duration::from_secs(60))
@@ -326,7 +273,11 @@ mod tests {
         };
         assert!(p.check_dpop(true).is_ok());
         assert!(p.check_dpop(false).is_err());
-        assert!(ProfileManagementSettings::default().check_dpop(false).is_ok());
+        assert!(
+            ProfileManagementSettings::default()
+                .check_dpop(false)
+                .is_ok()
+        );
     }
 
     #[test]

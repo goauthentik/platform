@@ -138,7 +138,7 @@ impl SSHAgentTransaction {
             Some(host_key)
                 if is_passthrough_host(
                     host_key,
-                    settings.ssh.builtin_passthrough_hosts(),
+                    settings.ssh.builtin_passthrough_hosts.unwrap_or(true),
                     &fallback_cfg.extra_passthrough_hosts,
                 ) =>
             {

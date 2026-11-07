@@ -261,7 +261,12 @@ impl AgentAuth for AgentGRPCServer {
         let audience = inner.audience.clone();
 
         let settings = self.agent.settings().await;
-        if !settings.authorization.exchange_allowed(&audience) {
+        if settings
+            .authorization
+            .allowed_exchange_audiences
+            .as_ref()
+            .is_some_and(|a| !a.contains(&audience))
+        {
             return Err(Status::permission_denied(format!(
                 "token exchange for '{audience}' is not allowed by policy"
             )));
