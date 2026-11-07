@@ -12,6 +12,7 @@ use serde_json::Value;
 /// Settings of the authentik agent. Unset values use their defaults.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(default)]
+#[schemars(title = concat!("authentik Agent Settings Schema (", env!("CARGO_PKG_VERSION"), ")"))]
 pub struct Settings {
     /// Log at trace instead of info level. Default: false.
     #[serde(skip_serializing_if = "Option::is_none")]
