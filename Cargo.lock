@@ -438,6 +438,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ak-platform-serde-policy"
+version = "0.72.5"
+dependencies = [
+ "core-foundation",
+ "core-foundation-sys",
+ "eyre",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "winreg",
+]
+
+[[package]]
 name = "ak-sysd"
 version = "0.72.5"
 dependencies = [
@@ -447,13 +460,12 @@ dependencies = [
  "ak-platform",
  "ak-platform-facts",
  "ak-platform-keyring",
+ "ak-platform-serde-policy",
  "authentik-client",
  "base64 0.23.1",
  "chrono",
  "clap",
  "clap_complete",
- "core-foundation",
- "core-foundation-sys",
  "eyre",
  "hex",
  "httptest",
@@ -484,7 +496,6 @@ dependencies = [
  "windows 0.62.2",
  "windows-service",
  "windows_exe_info",
- "winreg",
 ]
 
 [[package]]

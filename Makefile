@@ -181,6 +181,9 @@ ak-platform-facts/%:
 ak-platform-keyring/%:
 	"$(MAKE)" -C "${TOP}/ak-platform-keyring" $*
 
+ak-platform-serde-policy/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-serde-policy" $*
+
 ak-platform-authz/%:
 	"$(MAKE)" -C "${TOP}/ak-platform-authz" $*
 

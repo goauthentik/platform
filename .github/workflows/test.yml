@@ -33,6 +33,7 @@ jobs:
           - ak-platform-authz
           - ak-platform-facts
           - ak-platform-keyring
+          - ak-platform-serde-policy
           - ak-sysd
           # platform specific crates, included below
           # - ak-nss
