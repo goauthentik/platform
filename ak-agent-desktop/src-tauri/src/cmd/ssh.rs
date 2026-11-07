@@ -1,6 +1,9 @@
 use std::collections::BTreeMap;
 
-use ak_agent::{Agent, config::SshFallbackAgentConfig};
+use ak_agent::{
+    Agent,
+    config::{SshFallbackAgentConfig, policy::policy},
+};
 use ak_platform::paths::{AgentSocketID, agent_socket_path};
 
 use super::Result;
@@ -15,12 +18,17 @@ pub struct SshConfig {
     pub system_socket_path: Option<String>,
     pub fallback_socket_path: String,
     pub extra_passthrough_hosts: Vec<String>,
+    /// The fallback agent is set by the admin policy and can't be changed.
+    pub fallback_locked: bool,
+    /// github.com and gitlab.com are always passed through.
+    pub builtin_passthrough_hosts: bool,
 }
 
 #[tauri::command]
 pub async fn get_ssh_config(state: tauri::State<'_, Agent>) -> Result<SshConfig> {
     let cfg = state.cfg.read().await;
-    let fallback = cfg.ssh_fallback_agent.clone();
+    let settings = cfg.settings.effective();
+    let fallback = settings.ssh_fallback_agent;
     // Profiles whose name can't be a socket path don't get a socket.
     let profile_socket_paths = cfg
         .profiles
@@ -44,6 +52,8 @@ pub async fn get_ssh_config(state: tauri::State<'_, Agent>) -> Result<SshConfig>
         extra_passthrough_hosts: fallback
             .map(|f| f.extra_passthrough_hosts)
             .unwrap_or_default(),
+        fallback_locked: policy().ssh_fallback_agent.is_some(),
+        builtin_passthrough_hosts: settings.ssh.builtin_passthrough_hosts(),
     })
 }
 
@@ -54,7 +64,10 @@ pub async fn set_ssh_fallback_agent(
     extra_passthrough_hosts: Vec<String>,
     state: tauri::State<'_, Agent>,
 ) -> Result<()> {
-    state.cfg.write().await.ssh_fallback_agent =
+    if policy().ssh_fallback_agent.is_some() {
+        return Err("the fallback agent is managed by your administrator".to_string());
+    }
+    state.cfg.write().await.settings.ssh_fallback_agent =
         (!socket_path.is_empty()).then_some(SshFallbackAgentConfig {
             socket_path,
             extra_passthrough_hosts,

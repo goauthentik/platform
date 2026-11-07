@@ -34,6 +34,10 @@ impl SSHAgentTransaction {
         &self,
         ext: &Extension,
     ) -> std::result::Result<Option<Extension>, AgentError> {
+        if !self.agent.settings().await.ssh.agent_tunnel() {
+            tracing::debug!("agent-tunnel: disabled by settings");
+            return Ok(None);
+        }
         let grpc = match AgentGRPCServer::new(Arc::clone(&self.agent)).await {
             Ok(g) => Arc::new(g),
             Err(e) => {

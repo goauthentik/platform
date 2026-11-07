@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use ak_platform::{
     http::ReqwestResponseError, net::server::creds::ProcCredentials, string::PlatformString,
@@ -131,11 +131,16 @@ impl SSHAgentTransaction {
     /// straight there, no prompt) or because authentik doesn't recognize the
     /// host (`ensure_cert` came back empty).
     pub(crate) async fn fallback_agent(&mut self) -> Option<Box<dyn Session>> {
-        let fallback_cfg = self.agent.cfg.read().await.ssh_fallback_agent.clone()?;
+        let settings = self.agent.settings().await;
+        let fallback_cfg = settings.ssh_fallback_agent?;
 
         let use_fallback = match &self.host_key {
             Some(host_key)
-                if is_passthrough_host(host_key, &fallback_cfg.extra_passthrough_hosts) =>
+                if is_passthrough_host(
+                    host_key,
+                    settings.ssh.builtin_passthrough_hosts(),
+                    &fallback_cfg.extra_passthrough_hosts,
+                ) =>
             {
                 true
             }
@@ -222,8 +227,13 @@ impl SSHAgentTransaction {
                 Ok(format!("{hk2}:{pid}"))
             })
             .with_target("SSH", host_key_str)
-            .with_success_timeout(Duration::from_secs(30 * 60))
-            .with_denied_timeout(Duration::from_secs(5 * 60))
+            .with_timeouts(
+                self.agent
+                    .settings()
+                    .await
+                    .authorization
+                    .remember(Operation::SshLogin),
+            )
             .prompt(self.creds.clone())
             .await?;
 

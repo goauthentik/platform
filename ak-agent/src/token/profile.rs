@@ -34,6 +34,11 @@ impl ProfileTokenManager {
                 .profiles
                 .get(&profile_name)
                 .ok_or_else(|| eyre::eyre!("profile not found"))?;
+            config
+                .settings
+                .effective()
+                .profile_management
+                .check_dpop(profile.dpop_enabled())?;
             format!(
                 "{}/application/o/{}/jwks/",
                 profile.authentik_url, profile.app_slug

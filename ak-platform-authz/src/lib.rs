@@ -242,6 +242,11 @@ impl AuthorizeActionBuilder {
         self.timeout_denied = timeout;
         self
     }
+    /// Both timeouts at once, as `(success, denied)`.
+    pub fn with_timeouts(self, (success, denied): (Duration, Duration)) -> Self {
+        self.with_success_timeout(success)
+            .with_denied_timeout(denied)
+    }
     pub fn with_creds(mut self, creds: Option<ProcCredentials>) -> Self {
         self.creds = creds;
         self

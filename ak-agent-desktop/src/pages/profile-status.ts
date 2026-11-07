@@ -147,6 +147,10 @@ export class ProfileStatus extends LitElement {
             font-weight: 600;
             margin-right: 4px;
         }
+        .error {
+            color: var(--ak-global--color--danger);
+            padding: 8px 0;
+        }
         .empty {
             font-size: var(--ak-global--font-size--sm);
             color: var(--ak-global--color--ink--muted);
@@ -160,17 +164,28 @@ export class ProfileStatus extends LitElement {
     /** Name of the profile whose delete button was clicked once and awaits confirmation. */
     @state() private confirmDelete?: string;
 
+    @state() private deleteError?: string;
+
     private async _delete(name: string): Promise<void> {
         if (this.confirmDelete !== name) {
             this.confirmDelete = name;
+
             return;
         }
+
         this.confirmDelete = undefined;
+        this.deleteError = undefined;
+
         try {
             await deleteProfile(name);
         } catch (exc) {
             console.warn("Failed to delete profile", exc);
+
+            this.deleteError = String(exc);
+
+            return;
         }
+
         this.dispatchEvent(
             new CustomEvent("ak-profile-deleted", { bubbles: true, composed: true }),
         );
@@ -180,6 +195,7 @@ export class ProfileStatus extends LitElement {
         return html`
             <div class="section">
                 <div class="section-title">Profiles <ak-profile-setup></ak-profile-setup></div>
+                ${this.deleteError ? html`<div class="error">${this.deleteError}</div>` : nothing}
                 ${
                     this.profiles.length === 0
                         ? html`<div class="empty">No profiles configured.</div>`

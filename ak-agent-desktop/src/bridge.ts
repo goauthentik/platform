@@ -75,6 +75,10 @@ export interface SshConfig {
     systemSocketPath?: string;
     fallbackSocketPath: string;
     extraPassthroughHosts: string[];
+    /** The fallback agent is set by the admin policy and can't be changed. */
+    fallbackLocked: boolean;
+    /** github.com and gitlab.com are always passed through. */
+    builtinPassthroughHosts: boolean;
 }
 
 export async function getSshConfig(): Promise<SshConfig> {

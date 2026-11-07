@@ -1,5 +1,9 @@
 use sentry::{ClientInitGuard, ClientOptions};
-use std::{borrow::Cow, env};
+use std::{
+    borrow::Cow,
+    env,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 /// Attribute macro that initializes Sentry before starting a multi-threaded tokio
 /// runtime and running the annotated `async fn main`, similar to `#[tokio::main]`.
@@ -52,7 +56,20 @@ pub fn sentry_options() -> ClientOptions {
         .attach_stacktrace(true)
         .send_default_pii(false)
         .debug(false)
-        .traces_sample_rate(0.3)
+        .before_send(|e| error_reporting().then_some(e))
+        .traces_sampler(|_| if error_reporting() { 0.3 } else { 0.0 })
+}
+
+static ERROR_REPORTING: AtomicBool = AtomicBool::new(true);
+
+/// Turns sending events and traces to Sentry on or off. Checked per event, so it can follow
+/// configuration that is only loaded after `sentry_init`.
+pub fn set_error_reporting(enabled: bool) {
+    ERROR_REPORTING.store(enabled, Ordering::Relaxed);
+}
+
+fn error_reporting() -> bool {
+    ERROR_REPORTING.load(Ordering::Relaxed)
 }
 
 /// Tags go on the scope rather than in `before_send` so transactions get them too.

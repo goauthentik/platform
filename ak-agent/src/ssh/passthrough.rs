@@ -27,10 +27,11 @@ fn parse_known_hosts_line(line: &str) -> Option<KeyData> {
 }
 
 /// Whether `host_key` belongs to a host that should always bypass authentik,
-/// either because it's a well-known git host or because it was listed in
-/// `extra_hosts` (both given as `known_hosts`-format lines).
-pub fn is_passthrough_host(host_key: &KeyData, extra_hosts: &[String]) -> bool {
-    WELL_KNOWN_HOSTS
+/// either because it's a well-known git host (when `builtin` is set) or because
+/// it was listed in `extra_hosts` (both given as `known_hosts`-format lines).
+pub fn is_passthrough_host(host_key: &KeyData, builtin: bool, extra_hosts: &[String]) -> bool {
+    let builtin_hosts = if builtin { WELL_KNOWN_HOSTS } else { &[] };
+    builtin_hosts
         .iter()
         .copied()
         .chain(extra_hosts.iter().map(String::as_str))
@@ -45,14 +46,15 @@ mod tests {
     #[test]
     fn matches_well_known_github_key() {
         let key = parse_known_hosts_line(WELL_KNOWN_HOSTS[0]).expect("built-in key must parse");
-        assert!(is_passthrough_host(&key, &[]));
+        assert!(is_passthrough_host(&key, true, &[]));
+        assert!(!is_passthrough_host(&key, false, &[]));
     }
 
     #[test]
     fn matches_user_supplied_extra_host() {
         let extra = vec![WELL_KNOWN_HOSTS[3].to_string()]; // gitlab.com ed25519
         let key = parse_known_hosts_line(&extra[0]).unwrap();
-        assert!(is_passthrough_host(&key, &extra));
+        assert!(is_passthrough_host(&key, false, &extra));
     }
 
     #[test]
@@ -61,6 +63,7 @@ mod tests {
         let random_key = PrivateKey::random(&mut OsRng, Algorithm::Ed25519).unwrap();
         assert!(!is_passthrough_host(
             random_key.public_key().key_data(),
+            true,
             &[]
         ));
     }
