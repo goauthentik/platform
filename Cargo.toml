@@ -16,6 +16,7 @@ members = [
     "ak-platform-facts",
     "ak-platform-e2e",
     "ak-platform-keyring",
+    "ak-platform-serde-policy",
     "ak-platform",
     "ak-sysd",
     # Windows-only. `make lint-rs` excludes these off Windows, since
@@ -52,6 +53,7 @@ ak-meta = { path = "ak-meta" }
 ak-platform = { path = "ak-platform" }
 ak-platform-authz = { path = "ak-platform-authz" }
 ak-platform-keyring = { path = "ak-platform-keyring" }
+ak-platform-serde-policy = { path = "ak-platform-serde-policy" }
 authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "d608f835c32c64346ebeb199cb48810080890123", version = "2026.11.0-rc1", default-features = false, features = [
     "rustls",
 ] }
