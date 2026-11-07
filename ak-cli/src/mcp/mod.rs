@@ -1,14 +1,18 @@
 use std::{collections::HashMap, sync::Arc};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use tokio::sync::Mutex;
 
 use crate::{
     App,
     mcp::{
+        api::{ApiCallArgs, ApiCallDangerousArgs, ApiDescribeArgs, ApiSearchArgs},
         http::{HttpFetchArgs, HttpSendArgs},
         origin::AllowedOrigin,
-        tools::{CreateAgentArgs, ListApplicationsArgs, RequestAccessArgs, TokenExchangeArgs},
+        tools::{
+            CreateAgentArgs, GrantStatusArgs, ListApplicationsArgs, RequestAccessArgs,
+            TokenExchangeArgs,
+        },
     },
 };
 use ak_meta::user_agent;
@@ -18,15 +22,19 @@ use ak_platform::generated::{
 };
 use authentik_client::apis::configuration::Configuration;
 use rmcp::{
-    ErrorData as McpError, ServerHandler,
+    ErrorData as McpError, Peer, RoleServer, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::*,
+    service::RequestContext,
     tool, tool_handler, tool_router,
 };
 
+pub mod api;
 pub mod http;
 pub mod origin;
+pub mod skills;
 pub mod tools;
+pub mod ui;
 
 /// An on-behalf-of token an agent identity obtained for a single application,
 /// together with the origins it may be used against.
@@ -37,22 +45,33 @@ pub(crate) struct Grant {
     pub origins: Vec<AllowedOrigin>,
 }
 
+/// An agent identity created during this session.
+pub(crate) struct AgentIdentity {
+    pub token: String,
+    pub expires: Option<DateTime<FixedOffset>>,
+}
+
 #[derive(Clone)]
 pub struct AuthentikMcp {
     app: App,
     tool_router: ToolRouter<AuthentikMcp>,
-    pub(crate) agent_tokens: Arc<Mutex<HashMap<String, String>>>,
+    /// Agent identifier to the identity created for it.
+    pub(crate) agents: Arc<Mutex<HashMap<String, AgentIdentity>>>,
     /// Agent identifier to the grants it obtained during this session.
     pub(crate) grants: Arc<Mutex<HashMap<String, Vec<Grant>>>>,
 }
 
 #[tool_router]
 impl AuthentikMcp {
-    pub fn new(app: App) -> Self {
+    pub fn new(app: App, allow_dangerous_api: bool) -> Self {
+        let mut tool_router = Self::tool_router();
+        if !allow_dangerous_api {
+            tool_router.remove_route("api_call_dangerous");
+        }
         Self {
             app,
-            tool_router: Self::tool_router(),
-            agent_tokens: Arc::new(Mutex::new(HashMap::new())),
+            tool_router,
+            agents: Arc::new(Mutex::new(HashMap::new())),
             grants: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -97,7 +116,7 @@ impl AuthentikMcp {
 
     #[tool(
         description = "List applications available to the current user",
-        annotations(title = "List available applications")
+        annotations(title = "List available applications", read_only_hint = true)
     )]
     async fn list_applications(
         &self,
@@ -108,18 +127,40 @@ impl AuthentikMcp {
 
     #[tool(
         description = "Request access to an application",
-        annotations(title = "Request application access")
+        annotations(title = "Request application access"),
+        meta = ui::meta(ui::GRANT_REQUEST)
     )]
     async fn request_access(
         &self,
+        peer: Peer<RoleServer>,
         Parameters(args): Parameters<RequestAccessArgs>,
     ) -> Result<CallToolResult, McpError> {
-        self._request_access(args).await
+        self._request_access(args, ui::supported(&peer)).await
     }
 
     #[tool(
-        description = "Create an agent (delegate identity) for a parent user",
-        annotations(title = "Create agent identity")
+        description = "Check whether a grant request from request_access was approved, denied \
+                       or is still pending. With wait, blocks until it is decided or about a \
+                       minute has passed.",
+        annotations(title = "Check access request", read_only_hint = true)
+    )]
+    async fn grant_status(
+        &self,
+        Parameters(args): Parameters<GrantStatusArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._grant_status(args).await
+    }
+
+    #[tool(
+        description = "Create an expiring agent (delegate identity) owned by the current user. \
+                       It has no access until the user approves a request_access grant.",
+        annotations(
+            title = "Create agent identity",
+            read_only_hint = true,
+            destructive_hint = false,
+            idempotent_hint = false,
+            open_world_hint = false
+        )
     )]
     async fn create_agent(
         &self,
@@ -175,26 +216,135 @@ impl AuthentikMcp {
     ) -> Result<CallToolResult, McpError> {
         self._http_send(args).await
     }
+
+    #[tool(
+        description = "Search the authentik API commands (the same ones `ak api` exposes). Returns \
+                       matching command paths with a summary; pass one to api_describe.",
+        annotations(title = "Search authentik API", read_only_hint = true)
+    )]
+    async fn api_search(
+        &self,
+        Parameters(args): Parameters<ApiSearchArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_search(args).await
+    }
+
+    #[tool(
+        description = "Show the arguments and flags of an authentik API command found via \
+                       api_search.",
+        annotations(title = "Describe authentik API command", read_only_hint = true)
+    )]
+    async fn api_describe(
+        &self,
+        Parameters(args): Parameters<ApiDescribeArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_describe(args).await
+    }
+
+    #[tool(
+        description = "Run an authentik API command as an agent identity from create_agent. \
+                       Pass the command path and its arguments as described by api_describe, as a \
+                       map keyed by argument name without the leading `--`. Returns the JSON \
+                       response. List commands are paginated; set page-size to keep responses \
+                       small.",
+        annotations(
+            title = "Call authentik API as agent",
+            read_only_hint = false,
+            destructive_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn api_call(
+        &self,
+        Parameters(args): Parameters<ApiCallArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_call(args).await
+    }
+
+    #[tool(
+        description = "DANGEROUS: like api_call, but runs as the current user with all of their \
+                       permissions instead of as a scoped agent identity. Only use this when the \
+                       user explicitly asked for it, or an agent identity cannot do what is needed.",
+        annotations(
+            title = "Call authentik API as user (dangerous)",
+            read_only_hint = false,
+            destructive_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn api_call_dangerous(
+        &self,
+        Parameters(args): Parameters<ApiCallDangerousArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self._api_call_dangerous(args).await
+    }
 }
 
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for AuthentikMcp {
     fn get_info(&self) -> ServerConfig {
-        ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
-            .with_server_info(
-                Implementation::new("authentik Agent", ak_meta::full_version())
-                    .with_website_url("https://goauthentik.io"),
-            )
-            .with_instructions(
-                "authentik CLI MCP server. Tools: list_applications (applications available to \
+        ServerConfig::new(
+            ServerCapabilities::builder()
+                .enable_tools()
+                .enable_resources()
+                .enable_skills()
+                .build(),
+        )
+        .with_server_info(
+            Implementation::new("authentik Agent", ak_meta::full_version())
+                .with_website_url("https://goauthentik.io"),
+        )
+        .with_instructions(
+            "authentik CLI MCP server. Tools: list_applications (applications available to \
                  the current user), create_agent (create a delegate agent identity for the \
                  authenticated user), request_access (ask for access to applications on behalf of \
-                 an agent identity), token_exchange (exchange an agent identity for an \
+                 an agent identity; grant_status reports whether it was approved), token_exchange (exchange an agent identity for an \
                  on-behalf-of token for one application), http_fetch and http_send (call an \
                  application as the agent identity). The usual order is create_agent, \
                  request_access, token_exchange, then http_fetch/http_send; the latter two can \
-                 only reach hosts adjacent to an application the agent exchanged a token for."
-                    .to_string(),
-            )
+                 only reach hosts adjacent to an application the agent exchanged a token for; \
+                 see skill://authentik-app-access/SKILL.md for the full workflow. The rest of the \
+                 authentik API is reachable via api_search, api_describe and \
+                 api_call, which acts as an agent identity. api_call_dangerous, when enabled, acts as \
+                 the current user and should only be used when that is explicitly needed. See the \
+                 skill://authentik-api/SKILL.md resource for how to use them."
+                .to_string(),
+        )
+    }
+
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, McpError> {
+        let mut resources = skills::resources();
+        resources.extend(ui::resources());
+        Ok(ListResourcesResult::with_all_items(resources))
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResponse, McpError> {
+        ui::read(&request.uri)
+            .unwrap_or_else(|| skills::read(&request.uri))
+            .map(Into::into)
+    }
+
+    async fn list_skills(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListSkillsResult, McpError> {
+        Ok(skills::list())
+    }
+
+    async fn get_skill(
+        &self,
+        request: GetSkillRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<GetSkillResult, McpError> {
+        skills::get(&request.uri)
     }
 }

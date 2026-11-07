@@ -1,2 +1,5 @@
 ak-platform/src/generated/** linguist-generated
 ee/psso/Bridge/Generated/** linguist-generated
+# Served over MCP with their SHA-256 digests, so the bytes must not depend on the checkout platform.
+ak-cli/src/mcp/skills/**/*.md text eol=lf
+ak-cli/src/mcp/ui/*.html linguist-generated=true

@@ -65,12 +65,14 @@ enum Commands {
         shell: Shell,
     },
     /// Directly interact with the authentik API
-    Api {
-        #[command(subcommand)]
-        command: api::ApiCommand,
-    },
+    Api(api::ApiArgs),
     /// Run an MCP (Model Context Protocol) server over stdio
-    Mcp,
+    Mcp {
+        /// Expose the api_call_dangerous tool, which calls the authentik API as the current user
+        /// instead of as an agent identity
+        #[arg(long)]
+        allow_dangerous_api: bool,
+    },
 }
 
 #[derive(Clone)]
@@ -181,8 +183,10 @@ async fn main() -> std::result::Result<(), Error> {
             }
             commands::auth::handle(command.clone(), app).await
         }
-        Commands::Api { command } => api::exec_api_command(app, command).await,
-        Commands::Mcp => commands::mcp::mcp(app).await,
+        Commands::Api(args) => api::exec_api_command(app, args).await,
+        Commands::Mcp {
+            allow_dangerous_api,
+        } => commands::mcp::mcp(app, *allow_dangerous_api).await,
     };
     match res {
         Ok(_) => Ok(()),

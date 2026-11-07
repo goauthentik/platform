@@ -194,6 +194,7 @@
         //#region Rust
         "target", // Rust compilation artifacts
         "./ak-platform/src/generated", // Generated protobuf code
+        "./ak-cli/src/mcp/ui", // Bundled MCP App views (built from ak-cli/ui)
         //#endregion
         //#region Apple
         "./ee/psso/Bridge/Generated", // Generated Swift bridge

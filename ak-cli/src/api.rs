@@ -6,9 +6,9 @@ use ak_platform::generated::{
 use authentik_client::apis::configuration::Configuration;
 use eyre::{Result, WrapErr};
 
-pub use ak_api_cli::ApiCommand;
+pub use ak_api_cli::ApiArgs;
 
-pub async fn exec_api_command(mut app: super::App, cmd: &ApiCommand) -> Result<()> {
+pub async fn exec_api_command(mut app: super::App, cmd: &ApiArgs) -> Result<()> {
     let profile = app.profile().await;
     let res = app
         .user()
@@ -30,5 +30,7 @@ pub async fn exec_api_command(mut app: super::App, cmd: &ApiCommand) -> Result<(
         user_agent: Some(user_agent()),
         ..Default::default()
     };
-    cmd.execute(&config).await.wrap_err("API command failed")
+    let out = cmd.execute(&config).await.wrap_err("API command failed")?;
+    println!("{}", serde_json::to_string_pretty(&out)?);
+    Ok(())
 }

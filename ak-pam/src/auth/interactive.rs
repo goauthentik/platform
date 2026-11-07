@@ -15,6 +15,8 @@ use pam::{
 use crate::auth::fido::fido2;
 
 const MAX_ITER: i8 = 30;
+/// Failed attempts (flow errors shown to the user) before giving up.
+const MAX_AUTH_ATTEMPTS: u8 = 3;
 
 pub fn result_to_pam_result(result: i32) -> PamResultCode {
     match InteractiveAuthResult::try_from(result) {
@@ -37,11 +39,13 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
     }
 }
 
+/// Returns the final challenge and, if one was entered, the password, so it can
+/// be handed to modules stacked after us as `PAM_AUTHTOK`.
 pub fn auth_interactive(
     username: String,
     conv: &Conv<'_>,
     bridge: impl SysdBridge,
-) -> Result<InteractiveChallenge, PamResultCode> {
+) -> Result<(InteractiveChallenge, Option<String>), PamResultCode> {
     // Init transaction
     let mut challenge = match bridge.grpc_request(async |ch| {
         return Ok(SystemAuthInteractiveClient::new(ch)
@@ -69,6 +73,8 @@ pub fn auth_interactive(
         component: "".to_owned(),
     };
     let mut iter = -1;
+    let mut failed_attempts = 0;
+    let mut password = None;
     while iter <= MAX_ITER {
         iter += 1;
         tracing::debug!("{} processing challenge: {:?}", iter, challenge);
@@ -86,7 +92,7 @@ pub fn auth_interactive(
                     }
                 };
             } else if result == PamResultCode::PAM_SUCCESS {
-                return Ok(challenge);
+                return Ok((challenge, password));
             } else if result == PamResultCode::PAM_PERM_DENIED {
                 let _ = conv.send(PAM_ERROR_MSG, "Access denied");
             }
@@ -134,6 +140,13 @@ pub fn auth_interactive(
                             }
                         },
                         None => {
+                            if style == PAM_ERROR_MSG {
+                                failed_attempts += 1;
+                                if failed_attempts >= MAX_AUTH_ATTEMPTS {
+                                    tracing::info!("too many failed authentication attempts");
+                                    return Err(PamResultCode::PAM_MAXTRIES);
+                                }
+                            }
                             if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
                                 challenge = prev_challenge.clone();
                                 tracing::debug!("Restarting loop due to message");
@@ -147,6 +160,9 @@ pub fn auth_interactive(
                         return Err(e);
                     }
                 };
+                if challenge.component == "ak-stage-password" {
+                    password = Some(credential.clone());
+                }
                 req_inner.value = credential;
             }
             Err(_) => {

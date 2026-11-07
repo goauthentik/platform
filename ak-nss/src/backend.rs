@@ -1,8 +1,29 @@
 use ak_platform::generated::sys_directory::{
     GetRequest, Group as AKGroup, User, system_directory_client::SystemDirectoryClient,
 };
-use ak_platform::grpc::{Code, GrpcError, GrpcResult, grpc_request};
+use ak_platform::grpc::{Code, GrpcError, GrpcResult, grpc_request_timeout};
 use libnss::interop::Response;
+use std::time::Duration;
+use tokio::runtime::Handle;
+
+/// A hung sysd must not hang every user lookup on the system.
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Runs a blocking sysd request from whatever thread NSS was called on.
+fn request<T: Send>(f: impl FnOnce() -> GrpcResult<T> + Send) -> GrpcResult<T> {
+    match Handle::try_current() {
+        // glibc destroys thread-locals before running atexit handlers, so a lookup
+        // during process exit would abort inside tokio.
+        Err(e) if e.is_thread_local_destroyed() => Err(GrpcError::Other(eyre::eyre!(
+            "tokio thread-local already destroyed (lookup during process exit)"
+        ))),
+        // The caller is itself a tokio program; `block_on` here would panic, so
+        // run the request on a thread without a runtime context.
+        Ok(_) => std::thread::scope(|s| s.spawn(f).join())
+            .unwrap_or_else(|_| Err(GrpcError::Other(eyre::eyre!("lookup thread panicked")))),
+        Err(_) => f(),
+    }
+}
 
 pub trait DirectoryBridge {
     fn list_users(&self) -> GrpcResult<Vec<User>>;
@@ -15,27 +36,39 @@ pub struct GrpcDirectoryBridge;
 
 impl DirectoryBridge for GrpcDirectoryBridge {
     fn list_users(&self) -> GrpcResult<Vec<User>> {
-        grpc_request(async |ch| Ok(SystemDirectoryClient::new(ch).list_users(()).await?))
-            .map(|r| r.into_inner().users)
+        request(|| {
+            grpc_request_timeout(REQUEST_TIMEOUT, async |ch| {
+                Ok(SystemDirectoryClient::new(ch).list_users(()).await?)
+            })
+        })
+        .map(|r| r.into_inner().users)
     }
 
     fn get_user(&self, req: GetRequest) -> GrpcResult<User> {
-        grpc_request(move |ch| {
-            let req = req.clone();
-            async move { Ok(SystemDirectoryClient::new(ch).get_user(req).await?) }
+        request(|| {
+            grpc_request_timeout(REQUEST_TIMEOUT, move |ch| {
+                let req = req.clone();
+                async move { Ok(SystemDirectoryClient::new(ch).get_user(req).await?) }
+            })
         })
         .map(|r| r.into_inner())
     }
 
     fn list_groups(&self) -> GrpcResult<Vec<AKGroup>> {
-        grpc_request(async |ch| Ok(SystemDirectoryClient::new(ch).list_groups(()).await?))
-            .map(|r| r.into_inner().groups)
+        request(|| {
+            grpc_request_timeout(REQUEST_TIMEOUT, async |ch| {
+                Ok(SystemDirectoryClient::new(ch).list_groups(()).await?)
+            })
+        })
+        .map(|r| r.into_inner().groups)
     }
 
     fn get_group(&self, req: GetRequest) -> GrpcResult<AKGroup> {
-        grpc_request(move |ch| {
-            let req = req.clone();
-            async move { Ok(SystemDirectoryClient::new(ch).get_group(req).await?) }
+        request(|| {
+            grpc_request_timeout(REQUEST_TIMEOUT, move |ch| {
+                let req = req.clone();
+                async move { Ok(SystemDirectoryClient::new(ch).get_group(req).await?) }
+            })
         })
         .map(|r| r.into_inner())
     }
@@ -118,6 +151,14 @@ mod tests {
     fn non_status_errors_are_unavail() {
         let res: GrpcResult<u8> = Err(GrpcError::Other(eyre::eyre!("no tokio runtime")));
         assert!(matches!(res.to_response("ctx"), Response::Unavail));
+    }
+
+    /// Called from inside a tokio runtime, the request must run where it can
+    /// build its own runtime instead of panicking in `block_on`.
+    #[tokio::test]
+    async fn request_leaves_the_callers_runtime() {
+        let res = request(|| Ok(Handle::try_current().is_err()));
+        assert!(matches!(res, Ok(true)));
     }
 
     #[test]
