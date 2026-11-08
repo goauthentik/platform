@@ -59,6 +59,8 @@ struct DiskEncryptionRow {
     name: String,
     #[serde(default)]
     encrypted: String,
+    #[serde(rename = "type", default)]
+    encryption_type: String,
 }
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
@@ -94,7 +96,12 @@ fn apply_unix_encryption_and_label(disks: &mut [DiskRequest]) -> Result<()> {
         query_named::<DiskEncryptionRow>("disk_encryption")?
             .into_iter()
             .filter(|row| !row.name.is_empty())
-            .map(|row| (normalize_device_name(&row.name), row.encrypted == "1"))
+            .map(|row| {
+                // A LUKS/dm-crypt mapping with cipher_null stores plaintext.
+                let encrypted =
+                    row.encrypted == "1" && !row.encryption_type.contains("cipher_null");
+                (normalize_device_name(&row.name), encrypted)
+            })
             .collect();
 
     let label_by_device: HashMap<String, String> = query_named::<BlockDeviceRow>("block_devices")?
@@ -107,13 +114,56 @@ fn apply_unix_encryption_and_label(disks: &mut [DiskRequest]) -> Result<()> {
         let Some(device) = device_by_mount.get(&disk.mountpoint) else {
             continue;
         };
-        let key = normalize_device_name(device);
-        disk.encryption_enabled = encrypted_by_device.get(&key).copied();
+        // `/dev/mapper/vg-root` is a symlink to the `/dev/dm-N` node osquery reports.
+        let key = std::fs::canonicalize(device).map_or_else(
+            |_| normalize_device_name(device),
+            |p| normalize_device_name(&p.to_string_lossy()),
+        );
+        #[cfg(target_os = "macos")]
+        {
+            disk.encryption_enabled = encrypted_by_device.get(&key).copied();
+        }
+        #[cfg(target_os = "linux")]
+        {
+            disk.encryption_enabled = stacked_encryption(
+                std::path::Path::new("/sys/class/block"),
+                &key,
+                &encrypted_by_device,
+            );
+        }
         disk.label = label_by_device.get(&key).cloned();
     }
     // A missing or failing `zfs` CLI must not cost the non-ZFS disk facts.
     crate::util::attempt("zfs", || apply_zfs(disks, &dataset_by_mount));
     Ok(())
+}
+
+/// osquery inherits encryption only from a udev parent (partition -> disk), not
+/// through device-mapper stacks, so an LVM volume on LUKS reads as unencrypted.
+/// Follow sysfs `slaves` to the backing devices: encrypted only if all of them are.
+#[cfg(any(target_os = "linux", all(test, target_os = "macos")))]
+fn stacked_encryption(
+    sys_block: &std::path::Path,
+    name: &str,
+    encrypted: &HashMap<String, bool>,
+) -> Option<bool> {
+    let own = encrypted.get(name).copied();
+    if own == Some(true) {
+        return own;
+    }
+    let slaves: Vec<String> = std::fs::read_dir(sys_block.join(name).join("slaves"))
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|entry| entry.file_name().to_string_lossy().into_owned())
+        .collect();
+    if slaves.is_empty() {
+        return own;
+    }
+    slaves
+        .iter()
+        .map(|slave| stacked_encryption(sys_block, slave, encrypted))
+        .try_fold(true, |all, slave| slave.map(|slave| all && slave))
 }
 
 /// The pool is the first component of a dataset name (`tank` for `tank/home`).
@@ -278,6 +328,33 @@ mod tests {
         assert_eq!(scratch.capacity_total_bytes, Some(1000));
         assert_eq!(boot.encryption_enabled, None);
         assert_eq!(boot.capacity_total_bytes, Some(100));
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[test]
+    fn stacked_encryption_follows_lvm_onto_luks() -> Result<()> {
+        let sys = tempfile::tempdir()?;
+        // dm-1 (LV) -> dm-0 (LUKS) -> sda2; sdb is plain, dm-2 spans dm-0 + sdb.
+        for (dev, slave) in [
+            ("dm-1", "dm-0"),
+            ("dm-0", "sda2"),
+            ("dm-2", "dm-0"),
+            ("dm-2", "sdb"),
+        ] {
+            std::fs::create_dir_all(sys.path().join(dev).join("slaves").join(slave))?;
+        }
+        let osquery = HashMap::from([
+            ("dm-0".into(), true),
+            ("dm-1".into(), false),
+            ("dm-2".into(), false),
+            ("sdb".into(), false),
+        ]);
+        let check = |name| stacked_encryption(sys.path(), name, &osquery);
+        assert_eq!(check("dm-1"), Some(true));
+        assert_eq!(check("dm-2"), Some(false));
+        assert_eq!(check("sdb"), Some(false));
+        assert_eq!(check("nvme0n1"), None);
+        Ok(())
     }
 
     #[test]
