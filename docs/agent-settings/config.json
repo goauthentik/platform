@@ -1,0 +1,19 @@
+{
+    "debug": false,
+    "ssh_fallback_agent": {
+        "socket_path": "/Users/jdoe/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock",
+        "extra_passthrough_hosts": [
+            "git.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOaqAd1R5Dj3tCCRFK1Mlud+OVuLltFYXfOnCBdGM8ck"
+        ]
+    },
+    "authorization": {
+        "remember": {
+            "token_exchange": {
+                "allow": 300
+            }
+        }
+    },
+    "telemetry": {
+        "error_reporting": false
+    }
+}
