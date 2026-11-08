@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "authentik Agent Settings Schema (0.72.5)",
+  "title": "authentik Agent Settings Schema (0.73.0)",
   "description": "Settings of the authentik agent. Unset values use their defaults.",
   "type": "object",
   "properties": {
