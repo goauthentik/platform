@@ -1,12 +1,20 @@
-use sentry::ClientOptions;
-use std::{borrow::Cow, env};
+use sentry::{ClientInitGuard, ClientOptions};
+use std::{
+    borrow::Cow,
+    env,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 /// Attribute macro that initializes Sentry before starting a multi-threaded tokio
 /// runtime and running the annotated `async fn main`, similar to `#[tokio::main]`.
 pub use ak_meta_macros::main;
 
 pub fn version() -> String {
-    env!("AK_VERSION").to_string()
+    let v = env!("AK_VERSION").to_string();
+    if v.is_empty() {
+        return "Next".to_string();
+    }
+    v
 }
 
 pub fn build_hash() -> String {
@@ -39,13 +47,33 @@ pub fn build_url() -> String {
     )
 }
 
-pub fn sentry_options<T: ToString>(name: T) -> ClientOptions {
-    let release: Cow<'static, str> = Cow::Owned(format!("{}@{}", name.to_string(), full_version()));
+/// All components report as one release; `sentry_init` tags which one sent the event.
+pub fn sentry_options() -> ClientOptions {
+    let release: Cow<'static, str> = Cow::Owned(format!("ak-platform@{}", full_version()));
     ClientOptions::new()
         .dsn("https://c83cdbb55c9bd568ecfa275932b6de17@o4504163616882688.ingest.us.sentry.io/4509208005312512")
         .release(release)
         .attach_stacktrace(true)
         .send_default_pii(false)
         .debug(false)
-        .traces_sample_rate(0.3)
+        .before_send(|e| ERROR_REPORTING.load(Ordering::Relaxed).then_some(e))
+        .traces_sampler(|_| match ERROR_REPORTING.load(Ordering::Relaxed) {
+            true => 0.3,
+            false => 0.0,
+        })
+}
+
+static ERROR_REPORTING: AtomicBool = AtomicBool::new(true);
+
+/// Checked per event, so it can follow configuration that's only loaded after `sentry_init`.
+pub fn set_error_reporting(enabled: bool) {
+    ERROR_REPORTING.store(enabled, Ordering::Relaxed);
+}
+
+/// Tags go on the scope rather than in `before_send` so transactions get them too.
+/// Call before spawning threads: new threads copy the main scope when created.
+pub fn sentry_init(component: &str, opts: ClientOptions) -> ClientInitGuard {
+    let guard = sentry::init(opts);
+    sentry::configure_scope(|s| s.set_tag("authentik.component", component));
+    guard
 }

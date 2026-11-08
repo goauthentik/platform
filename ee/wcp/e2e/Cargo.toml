@@ -3,13 +3,14 @@ name = "ak-ee-wcp-e2e"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-ak-ee-wcp-wire = { path = "../wire" }
-ak-platform = { path = "../../../ak-platform" }
+ak-ee-wcp-wire = { workspace = true }
+ak-platform = { workspace = true }
 log = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tonic = { workspace = true }

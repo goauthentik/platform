@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <style>
+            :root {
+                --fg: #1f2328;
+                --muted: #656d76;
+                --bg: #fff;
+                --border: #d0d7de;
+                --accent: #fd4b2d;
+            }
+            :root[data-theme="dark"] {
+                --fg: #e6edf3;
+                --muted: #9198a1;
+                --bg: #0d1117;
+                --border: #30363d;
+            }
+            body {
+                margin: 0;
+                font:
+                    14px/1.4 system-ui,
+                    sans-serif;
+                color: var(--fg);
+                background: var(--bg);
+            }
+            .card {
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 12px 16px;
+            }
+            .title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .logo svg {
+                display: block;
+                width: 16px;
+                height: 16px;
+            }
+            .row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+            }
+            .muted {
+                color: var(--muted);
+                font-size: 12px;
+            }
+            ul {
+                margin: 8px 0;
+                padding-left: 20px;
+            }
+            .badge {
+                border-radius: 999px;
+                padding: 2px 8px;
+                font-size: 12px;
+                font-weight: 600;
+                border: 1px solid var(--border);
+            }
+            .approved {
+                color: #1a7f37;
+                border-color: #1a7f37;
+            }
+            .denied,
+            .revoked,
+            .expired {
+                color: #cf222e;
+                border-color: #cf222e;
+            }
+            button {
+                font: inherit;
+                padding: 6px 12px;
+                border-radius: 6px;
+                border: 0;
+                background: var(--accent);
+                color: #fff;
+                cursor: pointer;
+            }
+            button[hidden] {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="row">
+                <span class="title">
+                    <span id="logo" class="logo"></span>
+                    <strong>Access request</strong>
+                </span>
+                <span id="status" class="badge">waiting…</span>
+            </div>
+            <div id="agent" class="muted"></div>
+            <ul id="targets"></ul>
+            <div class="row">
+                <span id="hint" class="muted">Approve or deny the request in authentik.</span>
+                <button id="open" hidden>Review in authentik</button>
+            </div>
+        </div>
+        <script type="module">
+            /* bundle */
+        </script>
+    </body>
+</html>

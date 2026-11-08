@@ -3,7 +3,7 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = 0.61.0
+VERSION = 0.72.5
 VERSION_HASH = $(shell git rev-parse HEAD)
 VERSION_TAG = $(shell git tag --points-at HEAD)
 ifeq ($(CI),true)
@@ -177,6 +177,13 @@ define nfpm_package
 		nfpm \
 			package \
 			-p rpm \
+			-t ${TOP}/bin/$(2) \
+			-f $(1)
+	# pacman's pkgver must not contain '-'
+	VERSION_PKG=$(subst -,.,${VERSION_PKG}) ARCH=${ARCH} \
+		nfpm \
+			package \
+			-p archlinux \
 			-t ${TOP}/bin/$(2) \
 			-f $(1)
 endef

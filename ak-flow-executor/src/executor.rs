@@ -15,7 +15,8 @@ use std::sync::Arc;
 
 use crate::builder::FlowExecutorBuilder;
 use crate::solvers::{
-    AuthenticatorValidateSolver, IdentificationSolver, PasswordSolver, UserLoginSolver,
+    AuthenticatorValidateSolver, ConsentSolver, IdentificationSolver, PasswordSolver,
+    UserLoginSolver,
 };
 
 pub const HEADER_AUTHENTIK_REMOTE_IP: &str = "X-authentik-remote-ip";
@@ -101,6 +102,7 @@ impl FlowExecutor {
                 Box::new(PasswordSolver {}),
                 Box::new(UserLoginSolver {}),
                 Box::new(AuthenticatorValidateSolver {}),
+                Box::new(ConsentSolver {}),
             ],
             answers: HashMap::new(),
             jar,

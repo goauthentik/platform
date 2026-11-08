@@ -9,6 +9,7 @@ use ak_platform::{
 use eyre::{Result, WrapErr};
 use pbjson_types::Timestamp;
 use serde::{Serialize, de::DeserializeOwned};
+use sha2::{Digest, Sha256};
 use std::marker::PhantomData;
 
 pub trait CacheData {
@@ -16,8 +17,9 @@ pub trait CacheData {
 }
 
 pub struct ClientCache<T: CacheData> {
-    keys: Vec<String>,
+    additional_keys: Vec<String>,
     header: RequestHeader,
+    client_id: String,
 
     c: Client<AnyService>,
     _phantom: PhantomData<T>,
@@ -27,13 +29,32 @@ impl<T> ClientCache<T>
 where
     T: CacheData + Serialize + DeserializeOwned,
 {
-    pub fn new(c: Client<AnyService>, header: RequestHeader, keys: Vec<String>) -> Self {
+    pub fn new(
+        c: Client<AnyService>,
+        header: RequestHeader,
+        client_id: String,
+        additional_keys: Vec<String>,
+    ) -> Self {
         Self {
-            keys,
+            additional_keys,
             header,
             c,
+            client_id,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn keys(&self) -> Vec<String> {
+        let mut hasher = Sha256::new();
+        for key in self.additional_keys.clone() {
+            hasher.update(key);
+        }
+        vec![
+            // v2 to discern the new format which always contains the client_id at the start
+            "v2".to_string(),
+            self.client_id.clone(),
+            hex::encode(hasher.finalize()),
+        ]
     }
 
     pub async fn get(&self) -> Result<T> {
@@ -43,7 +64,7 @@ where
             .cache()
             .cache_get(CacheGetRequest {
                 header: Some(self.header.clone()),
-                keys: self.keys.clone(),
+                keys: self.keys(),
             })
             .await
             .wrap_err("cache get RPC failed")?
@@ -65,7 +86,7 @@ where
             .cache()
             .cache_set(CacheSetRequest {
                 header: Some(self.header.clone()),
-                keys: self.keys.clone(),
+                keys: self.keys(),
                 expiry: Some(expiry_ts),
                 value: json,
             })

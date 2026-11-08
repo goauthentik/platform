@@ -791,7 +791,7 @@ mod tests {
         assert_eq!(flow.counts(), (1, 1));
     }
 
-    /// Ordinary behaviour at a logon screen, and each round has to leave
+    /// Ordinary behavior at a logon screen, and each round has to leave
     /// exactly one browser warming.
     #[test]
     fn reselecting_the_tile_preloads_again() {
@@ -1016,7 +1016,7 @@ mod tests {
     }
 
     /// `COMPUTER\alice` is a Windows account name; authentik would not
-    /// recognise the person by it.
+    /// recognize the person by it.
     #[test]
     fn a_local_tile_hints_the_username_without_the_computer_name() {
         let flow = FakeAuthFlow::completed("alice");

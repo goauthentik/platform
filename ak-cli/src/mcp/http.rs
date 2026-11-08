@@ -361,7 +361,7 @@ mod tests {
 
     /// An MCP server holding a single grant for `agent`, expiring in `ttl`.
     async fn with_grant(launch_url: &str, ttl: TimeDelta) -> AuthentikMcp {
-        let mcp = AuthentikMcp::new(App::new(CliArgs::parse_from(["ak", "mcp"])));
+        let mcp = AuthentikMcp::new(App::new(CliArgs::parse_from(["ak", "mcp"])), false);
         mcp.grants.lock().await.insert(
             "agent".to_owned(),
             vec![Grant {

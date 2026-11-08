@@ -6,7 +6,7 @@
 // Source: agent_cache.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 internal import GRPCCore
 internal import GRPCProtobuf
@@ -76,9 +76,9 @@ extension AgentCache {
         ///   - serializer: A serializer for `CacheGetRequest` messages.
         ///   - deserializer: A deserializer for `CacheGetResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func cacheGet<Result>(
             request: GRPCCore.ClientRequest<CacheGetRequest>,
@@ -95,9 +95,9 @@ extension AgentCache {
         ///   - serializer: A serializer for `CacheSetRequest` messages.
         ///   - deserializer: A deserializer for `CacheSetResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func cacheSet<Result>(
             request: GRPCCore.ClientRequest<CacheSetRequest>,
@@ -131,9 +131,9 @@ extension AgentCache {
         ///   - serializer: A serializer for `CacheGetRequest` messages.
         ///   - deserializer: A deserializer for `CacheGetResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func cacheGet<Result>(
             request: GRPCCore.ClientRequest<CacheGetRequest>,
@@ -161,9 +161,9 @@ extension AgentCache {
         ///   - serializer: A serializer for `CacheSetRequest` messages.
         ///   - deserializer: A deserializer for `CacheSetResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func cacheSet<Result>(
             request: GRPCCore.ClientRequest<CacheSetRequest>,
@@ -194,9 +194,9 @@ extension AgentCache.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `CacheGetRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func cacheGet<Result>(
         request: GRPCCore.ClientRequest<CacheGetRequest>,
@@ -219,9 +219,9 @@ extension AgentCache.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `CacheSetRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func cacheSet<Result>(
         request: GRPCCore.ClientRequest<CacheSetRequest>,
@@ -249,9 +249,9 @@ extension AgentCache.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func cacheGet<Result>(
         _ message: CacheGetRequest,
@@ -278,9 +278,9 @@ extension AgentCache.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func cacheSet<Result>(
         _ message: CacheSetRequest,

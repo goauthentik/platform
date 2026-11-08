@@ -4,7 +4,6 @@ use tonic::transport::server::Connected;
 use crate::net::server::ConnectedLocalStream;
 use crate::net::server::proc_info::ProcInfo;
 
-#[cfg(not(target_os = "macos"))]
 use interprocess::local_socket::tokio::prelude::*;
 
 #[cfg(target_os = "macos")]
@@ -30,30 +29,32 @@ impl Connected for ConnectedLocalStream {
     type ConnectInfo = ProcCredentials;
 
     fn connect_info(&self) -> Self::ConnectInfo {
+        let pc = self
+            .stream
+            .peer_creds()
+            .inspect_err(|e| tracing::warn!("Failed to get peer credentials: {e:?}"))
+            .ok();
+        tracing::trace!("Extracted peer creds: {:?}", pc);
+        // LOCAL_PEERCRED carries no pid on macOS, so it's queried separately.
         #[cfg(target_os = "macos")]
-        {
-            let pid = peer_pid_via_getsockopt(&self.0);
+        let pid = {
+            let pid = peer_pid_via_getsockopt(&self.stream);
             if pid < 0 {
                 tracing::warn!("LOCAL_PEERPID getsockopt failed");
-            } else {
-                tracing::trace!("Peer pid (macos): {pid}");
             }
-            ProcCredentials {
-                pid: if pid >= 0 { Some(pid) } else { None },
-            }
-        }
+            (pid >= 0).then_some(pid)
+        };
         #[cfg(not(target_os = "macos"))]
-        match self.0.peer_creds() {
-            Ok(pc) => {
-                tracing::trace!("Extracted peer creds: {:?}", pc);
-                ProcCredentials {
-                    pid: pc.pid().map(|p| p as i64),
-                }
-            }
-            Err(e) => {
-                tracing::warn!("Failed to get peer credentials: {e:?}");
-                ProcCredentials { pid: None }
-            }
+        let pid = pc.as_ref().and_then(|pc| pc.pid()).map(|p| p as i64);
+        #[cfg(unix)]
+        let uid = pc.and_then(|pc| pc.euid());
+        #[cfg(not(unix))]
+        let uid = None;
+        ProcCredentials {
+            pid,
+            uid,
+            #[cfg(windows)]
+            system: self.system.clone(),
         }
     }
 }
@@ -61,15 +62,43 @@ impl Connected for ConnectedLocalStream {
 #[derive(Clone, Debug)]
 pub struct ProcCredentials {
     pid: Option<i64>,
+    /// Effective uid of the peer, from the kernel. Always `None` on Windows.
+    uid: Option<u32>,
+    /// Whether the peer runs as SYSTEM, from the kernel. Only known once the
+    /// connection was read from, see `ConnectedLocalStream`.
+    #[cfg(windows)]
+    system: std::sync::Arc<std::sync::OnceLock<bool>>,
 }
 
 impl ProcCredentials {
     pub fn new(pid: Option<i64>) -> ProcCredentials {
-        ProcCredentials { pid }
+        ProcCredentials {
+            pid,
+            uid: None,
+            #[cfg(windows)]
+            system: Default::default(),
+        }
+    }
+
+    pub fn with_uid(mut self, uid: Option<u32>) -> ProcCredentials {
+        self.uid = uid;
+        self
     }
 
     pub fn current() -> ProcCredentials {
-        ProcCredentials { pid: None }
+        Self::new(None)
+    }
+
+    pub fn uid(&self) -> Option<u32> {
+        self.uid
+    }
+
+    /// Whether the peer runs as root or SYSTEM.
+    pub fn is_privileged(&self) -> bool {
+        #[cfg(windows)]
+        return self.system.get() == Some(&true);
+        #[cfg(not(windows))]
+        return self.uid == Some(0);
     }
 
     pub fn pid(&self) -> i64 {

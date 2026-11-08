@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "authentik Agent Settings Schema (0.72.5)",
+  "description": "Settings of the authentik agent. Unset values use their defaults.",
+  "type": "object",
+  "properties": {
+    "authorization": {
+      "$ref": "#/$defs/AuthorizationSettings"
+    },
+    "debug": {
+      "description": "Log at trace instead of info level. Default: false.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "profile_management": {
+      "$ref": "#/$defs/ProfileManagementSettings"
+    },
+    "ssh": {
+      "$ref": "#/$defs/SshSettings"
+    },
+    "ssh_fallback_agent": {
+      "description": "Optional fallback/passthrough SSH agent used for hosts not managed by authentik\n(e.g. github.com, gitlab.com). When unset, nothing is forwarded.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SshFallbackAgentConfig"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "telemetry": {
+      "$ref": "#/$defs/TelemetrySettings"
+    }
+  },
+  "$defs": {
+    "AuthorizationSettings": {
+      "type": "object",
+      "properties": {
+        "allowed_exchange_audiences": {
+          "description": "Audiences (client IDs) tokens may be exchanged for. Default: any audience.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "remember": {
+          "description": "How long answers to authorization prompts are remembered for the same caller.",
+          "$ref": "#/$defs/RememberSettings"
+        }
+      }
+    },
+    "ProfileManagementSettings": {
+      "type": "object",
+      "properties": {
+        "allow_delete": {
+          "description": "Whether profiles can be deleted. Default: true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allow_plaintext_tokens": {
+          "description": "Whether tokens may be stored in plain text in the config file when no keyring is\navailable. Default: true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowed_urls": {
+          "description": "authentik URLs profiles may be set up for. Default: any URL.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "require_dpop": {
+          "description": "Only allow profiles whose tokens are bound to a key on this device (DPoP). Needs a\nprovider that supports key binding. Default: false.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "Remember": {
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Seconds an allowed request isn't prompted for again.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "deny": {
+          "description": "Seconds a denied request is denied again without prompting.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        }
+      }
+    },
+    "RememberSettings": {
+      "type": "object",
+      "properties": {
+        "authorize": {
+          "description": "Generic approvals for a service the caller names. Default: 7200s allowed, 300s denied.",
+          "$ref": "#/$defs/Remember"
+        },
+        "current_token": {
+          "description": "Handing out the session token. Default: 300s allowed, 900s denied.",
+          "$ref": "#/$defs/Remember"
+        },
+        "ssh_login": {
+          "description": "Logging in to an SSH host. Default: 1800s allowed, 300s denied.",
+          "$ref": "#/$defs/Remember"
+        },
+        "token_exchange": {
+          "description": "Exchanging a token for another application. Default: 1800s allowed, 1s denied.",
+          "$ref": "#/$defs/Remember"
+        },
+        "whoami": {
+          "description": "Reading account info. Default: 0s allowed, 0s denied.",
+          "$ref": "#/$defs/Remember"
+        }
+      }
+    },
+    "SshFallbackAgentConfig": {
+      "type": "object",
+      "properties": {
+        "extra_passthrough_hosts": {
+          "description": "Extra hosts that should always be routed to the fallback agent,\nbypassing authentik entirely, given as `known_hosts`-format lines\n(e.g. the output of `ssh-keyscan your-host.example.com`).",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "socket_path": {
+          "description": "Path to the fallback SSH agent socket (e.g. the system's original\n`SSH_AUTH_SOCK`, or a hardware-key agent) used for hosts not managed\nby authentik.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "socket_path"
+      ]
+    },
+    "SshSettings": {
+      "type": "object",
+      "properties": {
+        "agent_tunnel": {
+          "description": "Answer authentik agent tunnel requests from forwarded SSH agents, which lets remote\nhosts call this agent (authorization prompts still apply). Default: true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "builtin_passthrough_hosts": {
+          "description": "Send github.com and gitlab.com straight to the fallback agent. Default: true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "description": "Serve the SSH agent. Takes effect after a restart. Default: true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "TelemetrySettings": {
+      "type": "object",
+      "properties": {
+        "error_reporting": {
+          "description": "Send errors and performance traces to authentik's Sentry. Default: true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "update_check": {
+          "description": "Check for new releases. Default: true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -26,14 +26,6 @@ impl Component for PingComponent {
         "ping"
     }
 
-    async fn start(&self) -> eyre::Result<()> {
-        Ok(())
-    }
-
-    async fn stop(&self) -> eyre::Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(PingServer::from_arc(self));

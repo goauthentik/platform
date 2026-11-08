@@ -74,6 +74,7 @@ pub enum KeyringError {
     Other(eyre::Report),
     NotFound(),
     NotAvailable(),
+    NotAccessible(),
 }
 
 impl Display for KeyringError {
@@ -82,6 +83,7 @@ impl Display for KeyringError {
             KeyringError::NotFound() => write!(f, "entry not found"),
             KeyringError::Other(e) => e.fmt(f),
             KeyringError::NotAvailable() => write!(f, "not available"),
+            KeyringError::NotAccessible() => write!(f, "not accessible"),
         }
     }
 }

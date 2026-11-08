@@ -3,11 +3,12 @@ name = "ak-ee-wcp-wire"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-prost = "0.14"
+prost = { workspace = true }
 url = { workspace = true }
 windows-core = { workspace = true }

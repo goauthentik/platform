@@ -7,6 +7,8 @@ use std::{
 };
 
 use interprocess::local_socket::{GenericFilePath, ListenerOptions, tokio::prelude::*};
+#[cfg(target_os = "linux")]
+use interprocess::os::unix::local_socket::ListenerOptionsExt as _;
 #[cfg(windows)]
 use interprocess::os::windows::{
     local_socket::ListenerOptionsExt, security_descriptor::SecurityDescriptor,
@@ -34,11 +36,12 @@ impl SocketPermMode {
     /// as a DACL instead. `FA` is full access, granted to the pipe's owner (`OW`),
     /// to Everyone (`WD`), or to built-in Administrators (`BA`) plus SYSTEM (`SY`)
     /// — the admin case deliberately omits the owner so an unprivileged creator
-    /// cannot reconnect to its own socket.
+    /// cannot reconnect to its own socket. SYSTEM can reach owner pipes, like root
+    /// can reach `0600` sockets, which sysd needs to call the user's agent.
     #[cfg(windows)]
     fn security_descriptor(&self) -> Result<SecurityDescriptor> {
         let sddl: &U16CStr = match self {
-            Self::Owner => u16cstr!("D:(A;;FA;;;OW)"),
+            Self::Owner => u16cstr!("D:(A;;FA;;;OW)(A;;FA;;;SY)"),
             Self::Everyone => u16cstr!("D:(A;;FA;;;WD)"),
             Self::Admin => u16cstr!("D:(A;;FA;;;BA)(A;;FA;;;SY)"),
         };
@@ -47,7 +50,13 @@ impl SocketPermMode {
     }
 }
 
-pub struct ConnectedLocalStream(LocalSocketStream);
+pub struct ConnectedLocalStream {
+    stream: LocalSocketStream,
+    /// Whether the peer runs as SYSTEM. Windows only lets a pipe server look at its
+    /// client after reading from it, so it's set on the first read.
+    #[cfg(windows)]
+    system: std::sync::Arc<std::sync::OnceLock<bool>>,
+}
 
 impl fmt::Debug for ConnectedLocalStream {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -61,7 +70,16 @@ impl AsyncRead for ConnectedLocalStream {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_read(cx, buf)
+        let res = Pin::new(&mut self.stream).poll_read(cx, buf);
+        #[cfg(windows)]
+        if matches!(res, Poll::Ready(Ok(()))) && self.system.get().is_none() {
+            use std::os::windows::io::AsHandle;
+            let LocalSocketStream::NamedPipe(pipe) = &self.stream;
+            let _ = self
+                .system
+                .set(crate::net::win_pipe::peer_is_system(pipe.as_handle()));
+        }
+        res
     }
 }
 
@@ -71,15 +89,15 @@ impl AsyncWrite for ConnectedLocalStream {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.0).poll_write(cx, buf)
+        Pin::new(&mut self.stream).poll_write(cx, buf)
     }
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_flush(cx)
+        Pin::new(&mut self.stream).poll_flush(cx)
     }
 
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_shutdown(cx)
+        Pin::new(&mut self.stream).poll_shutdown(cx)
     }
 }
 
@@ -141,14 +159,20 @@ pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<Listen
     #[cfg(windows)]
     let options = options.security_descriptor(perm.security_descriptor()?);
 
-    // Restrict umask to close the TOCTOU window where the socket file briefly
-    // exists with permissive default permissions before the final chmod runs.
-    #[cfg(unix)]
+    // Close the TOCTOU window where the socket file briefly exists with
+    // permissive default permissions before the final chmod runs. On Linux,
+    // fchmod before bind() does this without touching process state; the umask
+    // is process-wide and races other threads creating files (e.g. the desktop
+    // tray icon ending up in a 0600 directory).
+    #[cfg(target_os = "linux")]
+    let options = options.mode(mode);
+    // fchmod on a socket is EINVAL on macOS, so fall back to the umask there.
+    #[cfg(all(unix, not(target_os = "linux")))]
     let old_umask = unsafe { libc::umask(0o777 & !mode) };
 
     let create_result = options.create_tokio();
 
-    #[cfg(unix)]
+    #[cfg(all(unix, not(target_os = "linux")))]
     unsafe {
         libc::umask(old_umask)
     };
@@ -168,9 +192,20 @@ pub async fn listen(path: PlatformString, perm: SocketPermMode) -> Result<Listen
     let (tx, rx) = mpsc::channel(1);
     tokio::spawn(async move {
         loop {
-            match listener.accept().await {
+            // Stop (and reclaim the socket name) as soon as the ListenerStream is
+            // dropped, not only when the next connection fails to be handed over.
+            let accepted = tokio::select! {
+                () = tx.closed() => break,
+                accepted = listener.accept() => accepted,
+            };
+            match accepted {
                 Ok(stream) => {
-                    if tx.send(Ok(ConnectedLocalStream(stream))).await.is_err() {
+                    let stream = ConnectedLocalStream {
+                        stream,
+                        #[cfg(windows)]
+                        system: Default::default(),
+                    };
+                    if tx.send(Ok(stream)).await.is_err() {
                         break;
                     }
                 }
@@ -192,6 +227,20 @@ mod tests {
 
     fn ps(s: &str) -> PlatformString {
         PlatformString::new_with_default(s)
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn listen_removes_socket_when_dropped() {
+        let path = "/tmp/ak-test-net-drop.sock";
+        drop(listen(ps(path), SocketPermMode::Owner).await.unwrap());
+        for _ in 0..50 {
+            if std::fs::metadata(path).is_err() {
+                return;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        panic!("socket still exists after listener was dropped");
     }
 
     #[cfg(unix)]
@@ -229,6 +278,46 @@ mod tests {
         let _listener = listen(ps(path), SocketPermMode::Everyone).await.unwrap();
         let mode = std::fs::metadata(path).unwrap().mode() & 0o777;
         assert_eq!(mode, 0o666);
+    }
+
+    /// The umask is process-wide, so swapping it while binding races any other
+    /// thread creating files (this broke the desktop tray icon on Linux).
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn listen_leaves_umask_alone() {
+        use std::sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        };
+
+        // Read via /proc since umask(2) can only be queried by setting it.
+        fn umask() -> String {
+            std::fs::read_to_string("/proc/self/status")
+                .unwrap()
+                .lines()
+                .find(|l| l.starts_with("Umask:"))
+                .unwrap()
+                .to_owned()
+        }
+
+        let before = umask();
+        let done = Arc::new(AtomicBool::new(false));
+        let watcher = std::thread::spawn({
+            let done = done.clone();
+            let before = before.clone();
+            move || {
+                while !done.load(Ordering::Relaxed) {
+                    assert_eq!(umask(), before, "umask changed while listening");
+                }
+            }
+        });
+
+        let path = "/tmp/ak-test-net-umask.sock";
+        for _ in 0..200 {
+            drop(listen(ps(path), SocketPermMode::Owner).await.unwrap());
+        }
+        done.store(true, Ordering::Relaxed);
+        watcher.join().unwrap();
     }
 
     #[cfg(windows)]

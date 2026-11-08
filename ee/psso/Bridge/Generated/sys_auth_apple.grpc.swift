@@ -6,7 +6,7 @@
 // Source: sys_auth_apple.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 internal import GRPCCore
 internal import GRPCProtobuf
@@ -104,9 +104,9 @@ extension SystemAuthApple {
         ///   - serializer: A serializer for `RegisterUserRequest` messages.
         ///   - deserializer: A deserializer for `RegisterUserResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func registerUser<Result>(
             request: GRPCCore.ClientRequest<RegisterUserRequest>,
@@ -123,9 +123,9 @@ extension SystemAuthApple {
         ///   - serializer: A serializer for `RegisterDeviceRequest` messages.
         ///   - deserializer: A deserializer for `RegisterDeviceResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func registerDevice<Result>(
             request: GRPCCore.ClientRequest<RegisterDeviceRequest>,
@@ -207,9 +207,9 @@ extension SystemAuthApple {
         ///   - serializer: A serializer for `RegisterUserRequest` messages.
         ///   - deserializer: A deserializer for `RegisterUserResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func registerUser<Result>(
             request: GRPCCore.ClientRequest<RegisterUserRequest>,
@@ -237,9 +237,9 @@ extension SystemAuthApple {
         ///   - serializer: A serializer for `RegisterDeviceRequest` messages.
         ///   - deserializer: A deserializer for `RegisterDeviceResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func registerDevice<Result>(
             request: GRPCCore.ClientRequest<RegisterDeviceRequest>,
@@ -340,9 +340,9 @@ extension SystemAuthApple.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `RegisterUserRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func registerUser<Result>(
         request: GRPCCore.ClientRequest<RegisterUserRequest>,
@@ -365,9 +365,9 @@ extension SystemAuthApple.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `RegisterDeviceRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func registerDevice<Result>(
         request: GRPCCore.ClientRequest<RegisterDeviceRequest>,
@@ -455,9 +455,9 @@ extension SystemAuthApple.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func registerUser<Result>(
         _ message: RegisterUserRequest,
@@ -484,9 +484,9 @@ extension SystemAuthApple.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func registerDevice<Result>(
         _ message: RegisterDeviceRequest,

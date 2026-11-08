@@ -45,3 +45,7 @@ target/
 *.profraw
 
 node_modules/
+
+# Spell checker
+.cspellcache
+cspell-report.*

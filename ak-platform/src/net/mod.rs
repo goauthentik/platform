@@ -1,5 +1,7 @@
 pub mod client;
 pub mod server;
+#[cfg(windows)]
+mod win_pipe;
 
 #[cfg(test)]
 mod tests {
@@ -61,6 +63,36 @@ mod tests {
         server_task.await.unwrap();
     }
 
+    /// Clients connect at identification level; the server must still be able to talk
+    /// to them and tell they aren't SYSTEM, once it read from the pipe.
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn windows_grpc_identification() {
+        let path = PlatformString::new_with_default(r"\\.\pipe\ak-test-identification");
+
+        let mut listener = server::listen(path.clone(), SocketPermMode::Owner)
+            .await
+            .unwrap();
+
+        let server_task = tokio::spawn(async move {
+            let mut conn = listener.next().await.unwrap().unwrap();
+            let ci = conn.connect_info();
+            assert!(!ci.is_privileged());
+            let mut buf = [0u8; 16];
+            let n = conn.read(&mut buf).await.unwrap();
+            conn.write_all(&buf[..n]).await.unwrap();
+            assert!(!ci.is_privileged());
+        });
+
+        let mut stream = client::connect(path).await.unwrap().into_inner();
+        stream.write_all(b"hello").await.unwrap();
+        let mut buf = [0u8; 16];
+        let n = stream.read(&mut buf).await.unwrap();
+        assert_eq!(&buf[..n], b"hello");
+
+        server_task.await.unwrap();
+    }
+
     #[tokio::test]
     async fn listen_connect_proc_info() {
         let path = PlatformString::new()
@@ -75,6 +107,10 @@ mod tests {
         let conn = _listener.next().await.unwrap().unwrap();
         let ci = conn.connect_info();
         assert_eq!(ci.pid(), std::process::id() as i64);
+        #[cfg(unix)]
+        assert_eq!(ci.uid(), Some(unsafe { libc::geteuid() }));
+        #[cfg(windows)]
+        assert_eq!(ci.uid(), None);
         assert!(ci.clone().proc_info().unwrap().parent_cmdline().is_ok());
         assert!(ci.clone().proc_info().unwrap().unique_process_id().is_ok());
     }

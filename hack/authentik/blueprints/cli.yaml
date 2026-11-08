@@ -58,6 +58,14 @@ entries:
             authentik_providers_oauth2.scopemapping,
             [managed, goauthentik.io/providers/oauth2/scope-offline_access],
           ]
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-authentik_api],
+          ]
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [managed, goauthentik.io/providers/oauth2/scope-bound_key],
+          ]
       signing_key:
         !Find [
           authentik_crypto.certificatekeypair,

@@ -39,7 +39,10 @@ pub fn sysd_socket_path(id: SysdSocketID) -> PlatformString {
 
 pub enum AgentSocketID {
     Default,
+    /// SSH agent that follows the active profile.
     SSH,
+    /// SSH agent pinned to a single profile.
+    SSHProfile(String),
 }
 
 pub fn xdg_data_path(last_seg: &str) -> Result<String> {
@@ -48,6 +51,8 @@ pub fn xdg_data_path(last_seg: &str) -> Result<String> {
         None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
+    #[cfg(debug_assertions)]
+    data.push("dev");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
@@ -61,11 +66,29 @@ pub fn xdg_config_path(last_seg: &str) -> Result<String> {
         None => bail!("Failed to get XDG data path"),
     };
     data.push("authentik");
+    #[cfg(debug_assertions)]
+    data.push("dev");
     data.push(last_seg);
     match data.as_path().to_str() {
         Some(p) => Ok(p.to_string()),
         None => bail!("Failed to convert path to string"),
     }
+}
+
+/// Agent pipe of the session `pid` runs in. Pipe names are global on Windows, so they
+/// get the session ID to keep agents of concurrent sessions apart.
+#[cfg(windows)]
+pub fn windows_agent_pipe(pid: u32) -> Result<String> {
+    use windows::Win32::System::RemoteDesktop::ProcessIdToSessionId;
+    let mut session = 0;
+    unsafe { ProcessIdToSessionId(pid, &mut session) }
+        .map_err(|e| eyre::eyre!("failed to get session ID: {e}"))?;
+    Ok(format!(r"\\.\pipe\authentik\socket-{session}"))
+}
+
+#[cfg(not(windows))]
+pub fn windows_agent_pipe(_pid: u32) -> Result<String> {
+    Ok(r"\\.\pipe\authentik\socket".to_string())
 }
 
 pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
@@ -75,19 +98,45 @@ pub fn agent_socket_path(id: AgentSocketID) -> Result<PlatformString> {
                 return Ok(PlatformString::new_with_default(&x));
             }
             Ok(PlatformString::new()
-                .with_windows(r"\\.\pipe\authentik\socket")
+                .with_windows(windows_agent_pipe(std::process::id())?)
                 .with_linux(&xdg_data_path("agent.sock")?))
         }
         AgentSocketID::SSH => Ok(PlatformString::new()
             .with_windows(r"\\.\pipe\authentik\socket-ssh")
             .with_linux(&xdg_data_path("agent-ssh.sock")?)),
+        AgentSocketID::SSHProfile(profile) => {
+            // Profile names end up in a path, keep them from escaping the data dir.
+            if profile.is_empty()
+                || !profile
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+            {
+                bail!("profile name '{profile}' can't be used in a socket path");
+            }
+            Ok(PlatformString::new()
+                .with_windows(format!(r"\\.\pipe\authentik\socket-ssh-{profile}"))
+                .with_linux(&xdg_data_path(&format!("agent-ssh-{profile}.sock"))?))
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
+
+    #[test]
+    fn test_ssh_profile_socket_rejects_unsafe_names() {
+        for name in ["", "..", "a/b", "a b", "../x"] {
+            assert!(agent_socket_path(AgentSocketID::SSHProfile(name.into())).is_err());
+        }
+        let path = agent_socket_path(AgentSocketID::SSHProfile("work-1".into()))
+            .unwrap()
+            .for_current();
+        #[cfg(unix)]
+        assert!(path.ends_with("agent-ssh-work-1.sock"));
+        #[cfg(windows)]
+        assert!(path.ends_with("socket-ssh-work-1"));
+    }
 
     #[cfg(target_os = "macos")]
     #[test]
@@ -98,7 +147,10 @@ mod tests {
             agent_socket_path(AgentSocketID::Default)
                 .unwrap()
                 .for_platform("macos"),
-            format!("{}/Library/Application Support/authentik/agent.sock", home)
+            format!(
+                "{}/Library/Application Support/authentik/dev/agent.sock",
+                home
+            )
         )
     }
 
@@ -111,7 +163,27 @@ mod tests {
             agent_socket_path(AgentSocketID::Default)
                 .unwrap()
                 .for_platform("linux"),
-            format!("{}/.local/share/authentik/agent.sock", home)
+            format!("{}/.local/share/authentik/dev/agent.sock", home)
         )
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_agent_default_windows() {
+        let path = agent_socket_path(AgentSocketID::Default)
+            .unwrap()
+            .for_current();
+        assert!(path.starts_with(r"\\.\pipe\authentik\socket-"));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_agent_pipe_for_own_pid_windows() {
+        assert_eq!(
+            windows_agent_pipe(std::process::id()).unwrap(),
+            agent_socket_path(AgentSocketID::Default)
+                .unwrap()
+                .for_current()
+        );
     }
 }

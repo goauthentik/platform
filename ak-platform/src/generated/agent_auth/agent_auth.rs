@@ -18,6 +18,9 @@ pub struct CurrentTokenRequest {
     pub header: ::core::option::Option<super::agent::RequestHeader>,
     #[prost(enumeration="current_token_request::Type", tag="2")]
     pub r#type: i32,
+    /// Set by sysd when asking on behalf of another process of this user.
+    #[prost(uint32, tag="3")]
+    pub caller_pid: u32,
 }
 /// Nested message and enum types in `CurrentTokenRequest`.
 pub mod current_token_request {
@@ -74,6 +77,9 @@ pub struct TokenExchangeRequest {
     pub actor_token: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag="5")]
     pub actor_token_type: ::core::option::Option<::prost::alloc::string::String>,
+    /// RFC 8693 requested_token_type, e.g. urn:ietf:params:oauth:token-type:saml2.
+    #[prost(string, optional, tag="6")]
+    pub requested_token_type: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct TokenExchangeResponse {

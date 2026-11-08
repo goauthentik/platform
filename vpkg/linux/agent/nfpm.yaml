@@ -25,3 +25,6 @@ overrides:
   rpm:
     scripts:
       postinstall: ./agent/_rpm/post.sh
+  archlinux:
+    scripts:
+      postinstall: ./agent/_arch/postinstall.sh

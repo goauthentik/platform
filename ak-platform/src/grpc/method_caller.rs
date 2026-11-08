@@ -58,7 +58,7 @@ impl MethodCaller {
     }
 
     /// Call a gRPC method by its path (e.g. `/ping.Ping/Ping`).
-    /// `data` is the raw serialised proto request (no gRPC framing).
+    /// `data` is the raw serialized proto request (no gRPC framing).
     ///
     /// A non-OK gRPC status is a successful call that returned an error, so it comes
     /// back in the [`MethodResponse`]. The `Err` variant is reserved for the call not
@@ -117,7 +117,7 @@ impl MethodCaller {
     }
 }
 
-/// Outcome of a [`MethodCaller::call`]: the raw serialised proto response, or the gRPC
+/// Outcome of a [`MethodCaller::call`]: the raw serialized proto response, or the gRPC
 /// status the handler returned instead.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MethodResponse {

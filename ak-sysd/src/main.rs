@@ -1,6 +1,6 @@
 use ak_meta::full_version;
 use ak_platform::{
-    log::{LevelFilter, LogBuilder},
+    log::{LevelFilter, LogBuilder, set_log_level},
     paths::sysd_config_file,
     string::PlatformString,
 };
@@ -91,6 +91,9 @@ enum TroubleshootCommands {
 #[ak_meta::main("ak-sysd")]
 pub async fn main() -> Result<()> {
     let cli = SysdArgs::parse();
+    if !matches!(cli.command, Commands::Agent) {
+        ak_platform::restore_sigpipe();
+    }
     LogBuilder::new(
         PlatformString::new()
             .with_linux("ak-sysd")
@@ -99,14 +102,11 @@ pub async fn main() -> Result<()> {
     .allow_platform(true)
     .allow_stdout(true)
     .default_level(LevelFilter::Info)
-    .with_filter(
-        "ak_sysd",
-        match cli.debug {
-            true => LevelFilter::Trace,
-            false => LevelFilter::Info,
-        },
-    )
+    .with_filter("ak_sysd", LevelFilter::Trace)
     .enable();
+    if !cli.debug {
+        set_log_level(LevelFilter::Info);
+    }
     tracing::trace!("authentik sysd v{}", full_version());
 
     match cli.command {

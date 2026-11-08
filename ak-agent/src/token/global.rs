@@ -174,6 +174,7 @@ mod tests {
                     "client".to_string(),
                     "access".to_string(),
                     "refresh".to_string(),
+                    "".to_string(),
                 ),
             );
             c.profiles.insert(
@@ -186,6 +187,7 @@ mod tests {
                     "client".to_string(),
                     "access".to_string(),
                     "refresh".to_string(),
+                    "".to_string(),
                 ),
             );
         }

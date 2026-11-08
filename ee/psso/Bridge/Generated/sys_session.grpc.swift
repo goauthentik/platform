@@ -6,7 +6,7 @@
 // Source: sys_session.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 internal import GRPCCore
 internal import GRPCProtobuf
@@ -108,9 +108,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `SessionStatusRequest` messages.
         ///   - deserializer: A deserializer for `SessionStatusResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func sessionStatus<Result>(
             request: GRPCCore.ClientRequest<SessionStatusRequest>,
@@ -131,9 +131,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `CreateSessionRequest` messages.
         ///   - deserializer: A deserializer for `CreateSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func createSession<Result>(
             request: GRPCCore.ClientRequest<CreateSessionRequest>,
@@ -154,9 +154,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `OpenSessionRequest` messages.
         ///   - deserializer: A deserializer for `CreateSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func openSession<Result>(
             request: GRPCCore.ClientRequest<OpenSessionRequest>,
@@ -173,9 +173,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `CloseSessionRequest` messages.
         ///   - deserializer: A deserializer for `CloseSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func closeSession<Result>(
             request: GRPCCore.ClientRequest<CloseSessionRequest>,
@@ -213,9 +213,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `SessionStatusRequest` messages.
         ///   - deserializer: A deserializer for `SessionStatusResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func sessionStatus<Result>(
             request: GRPCCore.ClientRequest<SessionStatusRequest>,
@@ -247,9 +247,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `CreateSessionRequest` messages.
         ///   - deserializer: A deserializer for `CreateSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func createSession<Result>(
             request: GRPCCore.ClientRequest<CreateSessionRequest>,
@@ -281,9 +281,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `OpenSessionRequest` messages.
         ///   - deserializer: A deserializer for `CreateSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func openSession<Result>(
             request: GRPCCore.ClientRequest<OpenSessionRequest>,
@@ -311,9 +311,9 @@ extension SessionManager {
         ///   - serializer: A serializer for `CloseSessionRequest` messages.
         ///   - deserializer: A deserializer for `CloseSessionResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func closeSession<Result>(
             request: GRPCCore.ClientRequest<CloseSessionRequest>,
@@ -344,9 +344,9 @@ extension SessionManager.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SessionStatusRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func sessionStatus<Result>(
         request: GRPCCore.ClientRequest<SessionStatusRequest>,
@@ -373,9 +373,9 @@ extension SessionManager.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `CreateSessionRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func createSession<Result>(
         request: GRPCCore.ClientRequest<CreateSessionRequest>,
@@ -402,9 +402,9 @@ extension SessionManager.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `OpenSessionRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func openSession<Result>(
         request: GRPCCore.ClientRequest<OpenSessionRequest>,
@@ -427,9 +427,9 @@ extension SessionManager.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `CloseSessionRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func closeSession<Result>(
         request: GRPCCore.ClientRequest<CloseSessionRequest>,
@@ -457,9 +457,9 @@ extension SessionManager.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func sessionStatus<Result>(
         _ message: SessionStatusRequest,
@@ -490,9 +490,9 @@ extension SessionManager.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func createSession<Result>(
         _ message: CreateSessionRequest,
@@ -523,9 +523,9 @@ extension SessionManager.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func openSession<Result>(
         _ message: OpenSessionRequest,
@@ -552,9 +552,9 @@ extension SessionManager.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func closeSession<Result>(
         _ message: CloseSessionRequest,

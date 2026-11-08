@@ -33,6 +33,7 @@ jobs:
           - ak-platform-authz
           - ak-platform-facts
           - ak-platform-keyring
+          - ak-platform-serde-policy
           - ak-sysd
           # platform specific crates, included below
           # - ak-nss
@@ -40,48 +41,51 @@ jobs:
           # - ee/wcp
         platform:
           - macos-26
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
+          - ubuntu-26.04
+          - ubuntu-26.04-arm
           - windows-2025
         include:
           - platform: windows-2025
             target: ee/wcp
-          - platform: ubuntu-24.04
+          - platform: ubuntu-26.04
             target: ak-nss
-          - platform: ubuntu-24.04-arm
+          - platform: ubuntu-26.04-arm
             target: ak-nss
-          - platform: ubuntu-24.04
+          - platform: ubuntu-26.04
             target: ak-pam
-          - platform: ubuntu-24.04-arm
+          - platform: ubuntu-26.04-arm
             target: ak-pam
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
-        with:
-          rustflags: ""
-          build-warnings: warn
-      - uses: taiki-e/install-action@3f74d7c16a4242f1c95561e98edc25d36adb4375 # v2
+      - parallel:
+          - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+            with:
+              rustflags: ""
+              build-warnings: warn
+          - uses: ./.github/actions/setup-toolchain
+            with:
+              platform: ${{ matrix.platform }}
+      # install-action writes ~/.cargo/bin, which the toolchain's rust-cache
+      # snapshots and restores, so it must not overlap with it.
+      - uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2
         with:
           tool: cargo-llvm-cov nextest
-      - uses: ./.github/actions/setup-toolchain
-        with:
-          platform: ${{ matrix.platform }}
       - run: |
           make ${{ matrix.target }}/test
         env:
           # ee/wcp is deliberately absent: _build-rs.yml ships it without
           # crt-static, so its tests have to be built the same way.
           RUST_BUILD_FLAGS: ${{ ((matrix.target == 'ak-platform-facts' || matrix.target == 'ak-sysd') && matrix.platform == 'windows-2025') && '-C target-feature=+crt-static' || '' }}
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-${{ matrix.platform }}-${{ matrix.target }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -109,13 +113,13 @@ jobs:
       - run: |
           brew install xcresultparser xcbeautify
           make ${{ matrix.target }}/test XCB_EXTRA_ARGS='CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO'
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: swift
           files: ${{ github.workspace }}/cache/psso/coverage.xml
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
@@ -124,20 +128,32 @@ jobs:
           report_type: test_results
   lint_rs:
     name: Lint (rust)
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - macos-26
+          - ubuntu-26.04
+          - windows-2025
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
-        with:
-          rustflags: ""
-          build-warnings: warn
-      - run: make ci-install-deps
+      - parallel:
+          - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+            with:
+              rustflags: ""
+              build-warnings: warn
+          - run: make ci-install-deps
       - uses: ./.github/actions/setup-toolchain
         with:
-          platform: ubuntu
-      - run: make lint-rs
+          platform: ${{ matrix.platform }}
+      # see test_rs: must not overlap with setup-rust-toolchain
+      - uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2
+        with:
+          tool: cargo-deny
+      - run: make lint-rs-ci
   lint_js:
     name: Lint
     strategy:
@@ -145,33 +161,50 @@ jobs:
       matrix:
         target:
           - browser-ext
-    runs-on: ubuntu-latest
+          - ak-cli/ui
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: pnpm/action-setup@v6.1.0
+      - uses: pnpm/action-setup@v6.1.1
         with:
           run_install: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: "${{ matrix.target }}/package.json"
           cache: "pnpm"
           cache-dependency-path: "pnpm-lock.yaml"
       - run: make ${{ matrix.target }}/lint
+  lint_spellcheck:
+    name: Lint (spellcheck)
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: pnpm/action-setup@v6.1.1
+        with:
+          run_install: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: "package.json"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
+      - run: make lint-spellcheck
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
     with:
       rust_build_flags: "-C instrument-coverage -C codegen-units=1"
       artifact_suffix: "-e2e"
-      platforms: '["ubuntu-24.04"]'
+      platforms: '["ubuntu-26.04"]'
     secrets: inherit
   package_linux_e2e:
     needs: build_rs_e2e
     uses: ./.github/workflows/_package-linux.yml
     with:
       artifact_suffix: "-e2e"
-      platforms: '["ubuntu-24.04"]'
+      platforms: '["ubuntu-26.04"]'
     secrets: inherit
   test_rs_e2e:
     name: Test (e2e ${{ matrix.ubuntu_version }})
@@ -183,57 +216,61 @@ jobs:
           - "24.04"
           - "25.10"
           - "26.04"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0
-        with:
-          rustflags: ""
-          build-warnings: warn
-      - uses: taiki-e/install-action@3f74d7c16a4242f1c95561e98edc25d36adb4375 # v2
+      - parallel:
+          - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+            with:
+              rustflags: ""
+              build-warnings: warn
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+            with:
+              name: authentik_package-linux-ubuntu-26.04-e2e
+              path: bin/
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+            with:
+              name: authentik_ubuntu-26.04_ak-agent-e2e
+              path: bin/
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+            with:
+              name: authentik_ubuntu-26.04_ak-cli-e2e
+              path: bin/
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+            with:
+              name: authentik_ubuntu-26.04_ak-nss-e2e
+              path: bin/
+          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+            with:
+              name: authentik_ubuntu-26.04_ak-pam-e2e
+              path: bin/
+      # see test_rs: must not overlap with setup-rust-toolchain
+      - uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2
         with:
           tool: cargo-llvm-cov nextest
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_package-linux-ubuntu-24.04-e2e
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_ubuntu-24.04_ak-agent-e2e
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_ubuntu-24.04_ak-cli-e2e
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_ubuntu-24.04_ak-nss-e2e
-          path: bin/
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v6
-        with:
-          name: authentik_ubuntu-24.04_ak-pam-e2e
-          path: bin/
       - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd
-      - uses: goauthentik/action-setup-authentik@3a1d4f81e5a29709c173f8b74250b1781e298bf9 # v3.1
-        id: setup
-        with:
-          version: beta
-          sentry_env: goauthentik-platform-ci
-          blueprints_path: ./hack/authentik/blueprints
-          wait: true
-          enterprise_license: true
-          enterprise_license_users_internal: 100
-          enterprise_license_users_external: 100
+      # authentik startup and the e2e image build are independent; overlap them.
+      - parallel:
+          - uses: goauthentik/action-setup-authentik@5b35e5951a1ec761847711a5d8170dbd67675526 # v3.3
+            id: setup
+            with:
+              version: beta
+              sentry_env: goauthentik-platform-ci
+              blueprints_path: ./hack/authentik/blueprints
+              wait: true
+              enterprise_license: true
+              enterprise_license_users_internal: 100
+              enterprise_license_users_external: 100
+          - run: make containers/e2e/ci-build
       - env:
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
           ./hack/authentik/wait.sh
-      - run: make containers/e2e/ci-build
       # AppArmor policy is host-global: and the container cannot load policy of
       # its own (no securityfs during docker build)
       - name: Load authentik AppArmor drop-in
@@ -247,25 +284,27 @@ jobs:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
+          # License retrieval needs an OIDC token, which external PRs don't get
+          NEXTEST_PROFILE: ${{ steps.setup.outputs.enterprise_license_key == '' && 'no-enterprise' || 'default' }}
         run: |
           make test-e2e-ci
       - run: |
           sudo chmod -R 777 ./ak-platform-e2e/coverage
           make test-e2e-convert
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
           flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v5
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true

@@ -1,6 +1,7 @@
 packages:
   - browser-ext
   - ak-agent-desktop
+  - ak-cli/ui
 allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:

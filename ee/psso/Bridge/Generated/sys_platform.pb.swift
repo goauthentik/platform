@@ -27,6 +27,11 @@ nonisolated struct PlatformEndpointRequest: Sendable {
 
   var challenge: String = String()
 
+  var profile: String = String()
+
+  /// Socket of the caller's agent, used to add the caller's user to the signed header.
+  var agentSocket: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -61,7 +66,7 @@ fileprivate nonisolated let _protobuf_package = "sys_platform"
 
 nonisolated extension PlatformEndpointRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".PlatformEndpointRequest"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}challenge\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}challenge\0\u{1}profile\0\u{3}agent_socket\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -70,6 +75,8 @@ nonisolated extension PlatformEndpointRequest: SwiftProtobuf.Message, SwiftProto
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.challenge) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.profile) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.agentSocket) }()
       default: break
       }
     }
@@ -79,11 +86,19 @@ nonisolated extension PlatformEndpointRequest: SwiftProtobuf.Message, SwiftProto
     if !self.challenge.isEmpty {
       try visitor.visitSingularStringField(value: self.challenge, fieldNumber: 1)
     }
+    if !self.profile.isEmpty {
+      try visitor.visitSingularStringField(value: self.profile, fieldNumber: 2)
+    }
+    if !self.agentSocket.isEmpty {
+      try visitor.visitSingularStringField(value: self.agentSocket, fieldNumber: 3)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: PlatformEndpointRequest, rhs: PlatformEndpointRequest) -> Bool {
     if lhs.challenge != rhs.challenge {return false}
+    if lhs.profile != rhs.profile {return false}
+    if lhs.agentSocket != rhs.agentSocket {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -21,7 +21,7 @@ WEBVIEW2_BOOTSTRAPPER := ${TOP}/cache/${TARGET}/MicrosoftEdgeWebview2Setup.exe
 
 .PHONY: local
 local:
-	$(MAKE) -C "${TOP}" -j \
+	$(MAKE) -C "${TOP}" RUST_BUILD_FLAGS="-C debug-assertions" -j \
 		ak-sysd/build \
 		ak-agent-desktop/build \
 		ak-cli/build \

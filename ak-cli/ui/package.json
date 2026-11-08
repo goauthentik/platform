@@ -1,0 +1,27 @@
+{
+    "name": "authentik-cli-ui",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "node build.mjs",
+        "format": "oxfmt --write .",
+        "format:check": "oxfmt --check .",
+        "lint": "oxlint --fix",
+        "lint:check": "oxlint --max-warnings=0",
+        "type-check": "tsc --noEmit -p ."
+    },
+    "devDependencies": {
+        "@goauthentik/brand-assets": "^2.0.0",
+        "@goauthentik/oxfmt-config": "^9.1.0",
+        "@goauthentik/oxlint-config": "^1.0.1",
+        "@goauthentik/tsconfig": "^3.0.0",
+        "@modelcontextprotocol/ext-apps": "^2.0.4",
+        "esbuild": "^0.28.2",
+        "oxfmt": "^0.75.0",
+        "oxlint": "^1.90.0",
+        "typescript": "^7.0.2"
+    },
+    "engines": {
+        "node": "^24.22.1 || >=26.12.1"
+    }
+}

@@ -131,10 +131,6 @@ impl Component for SessionComponent {
         Ok(())
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(SessionManagerServer::from_arc(self));

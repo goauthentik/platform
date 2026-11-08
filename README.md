@@ -10,7 +10,7 @@
 # authentik Platform
 
 > [!CAUTION]
-> The authentik Platform is in a pre-alpha state and features/behaviours might change without notice. Use at your own risk.
+> The authentik Platform is in a pre-alpha state and features/behaviors might change without notice. Use at your own risk.
 
 ## Development
 
@@ -51,13 +51,13 @@ CMake is required by the `cef-dll-sys` and `aws-lc-sys` build scripts, not by an
 
 #### `ak-pam/%`
 
-PAM module (`pam_authentik.so`), built in Rust. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
+PAM module (`pam_authentik.so`), built in Rust. **Linux only** (ubuntu-26.04, ubuntu-26.04-arm).
 
 Requirements: Rust toolchain, `libpam0g-dev`, `libudev-dev`. Requires sysd agent running at login time.
 
 #### `ak-nss/%`
 
-NSS module (`libnss_authentik.so`), built in Rust. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
+NSS module (`libnss_authentik.so`), built in Rust. **Linux only** (ubuntu-26.04, ubuntu-26.04-arm).
 
 Requirements: Rust toolchain. Requires sysd agent running.
 
@@ -124,7 +124,7 @@ Requirements: Rust toolchain (`x86_64-pc-windows-msvc`), MSVC build tools, CMake
 
 macOS installer package (`authentik Agent Installer.pkg`). Assembles pre-built binaries (ak-agent-desktop, ak-sysd, ak-cli, ak-browser-support, PSSO.appex) into an app bundle, signs it, and produces a distributable `.pkg`. **macOS only**.
 
-Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build` (`make vpkg/macos/local` builds them all). Apple code-signing certificate and provisioning profile in `~/Library/MobileDevice/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
+Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, `ak-cli/build`, `ak-browser-support/build`, and `ee/psso/build` (`make vpkg/macos/local` builds them all). Apple code-signing certificate and provisioning profile in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`. macOS built-in tools: `codesign`, `pkgbuild`, `productbuild`.
 
 #### `vpkg/windows/%`
 
@@ -134,7 +134,7 @@ Requirements: Pre-built outputs from `ak-agent-desktop/build`, `ak-sysd/build`, 
 
 #### `vpkg/linux/%`
 
-Linux DEB and RPM packages, produced via `nfpm`. **Linux only** (ubuntu-24.04, ubuntu-24.04-arm).
+Linux DEB, RPM and Arch Linux packages, produced via `nfpm`. **Linux only** (ubuntu-26.04, ubuntu-26.04-arm).
 
 Requirements: Pre-built outputs from `ak-cli/build`, `ak-sysd/build`, `ak-agent/build`, `ak-agent-desktop/build`, `ak-browser-support/build`, `ak-nss/build`, and `ak-pam/build`. `nfpm` on `PATH`. Packages produced: `authentik-cli`, `authentik-sysd`, `authentik-agent`, `authentik-agent-desktop`, `libnss-authentik`, `libpam-authentik`.
 

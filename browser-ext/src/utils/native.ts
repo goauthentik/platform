@@ -64,6 +64,8 @@ export class Native {
     }
 
     #listener(msg: Response) {
+        // A reply means the host is up; `connectNative` returns a port even when it isn't.
+        this.#reconnectDelay = defaultReconnectDelay;
         const prom = this.#promises.get(msg.response_to);
 
         console.debug(`authentik/bext/native[${msg.response_to}]: Got response`);

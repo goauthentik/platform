@@ -7,6 +7,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::future::Future;
 use std::io::ErrorKind;
+use std::time::Duration;
 use tokio::runtime::{Builder, Runtime};
 use tonic::transport::Uri;
 use tonic::transport::{Channel, Endpoint};
@@ -129,6 +130,7 @@ pub fn grpc_request_path<T, F: Future<Output = GrpcResult<T>>>(
     future: impl Fn(Channel) -> F,
 ) -> GrpcResult<T> {
     let rt = Builder::new_current_thread()
+        .thread_name("ak-grpc")
         .enable_all()
         .build()
         .map_err(|e| GrpcError::Other(e.into()))?;
@@ -139,11 +141,35 @@ pub fn grpc_request_path<T, F: Future<Output = GrpcResult<T>>>(
     })
 }
 
+/// Like [`grpc_request`], but fails with `DeadlineExceeded` if connecting and
+/// the request together take longer than `timeout`.
+pub fn grpc_request_timeout<T, F: Future<Output = GrpcResult<T>>>(
+    timeout: Duration,
+    future: impl Fn(Channel) -> F,
+) -> GrpcResult<T> {
+    let path = Config::get().socket_default.for_current().to_owned();
+    let rt = Builder::new_current_thread()
+        .thread_name("ak-grpc")
+        .enable_all()
+        .build()
+        .map_err(|e| GrpcError::Other(e.into()))?;
+
+    rt.block_on(async {
+        tokio::time::timeout(timeout, async {
+            let channel = grpc_endpoint(path).await?;
+            future(channel).await
+        })
+        .await
+        .map_err(|_| Status::deadline_exceeded("request timed out"))?
+    })
+}
+
 pub fn grpc_request_tunnel<T, F: Future<Output = GrpcResult<T>>>(
     path: String,
     future: impl Fn(SSHService) -> F,
 ) -> GrpcResult<T> {
     let rt = Builder::new_current_thread()
+        .thread_name("ak-grpc-tunnel")
         .enable_all()
         .build()
         .map_err(|e| GrpcError::Other(e.into()))?;
@@ -174,7 +200,10 @@ pub struct Bridge {
 
 impl Bridge {
     pub fn new() -> Result<Self> {
-        let rt = Builder::new_current_thread().enable_all().build()?;
+        let rt = Builder::new_current_thread()
+            .thread_name("ak-grpc")
+            .enable_all()
+            .build()?;
         Ok(Self { rt })
     }
 }

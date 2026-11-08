@@ -17,7 +17,6 @@ pub mod cache;
 pub mod commands;
 pub mod format;
 pub mod mcp;
-pub mod setup;
 
 #[derive(Parser, Clone)]
 #[command(name = "authentik CLI")]
@@ -48,10 +47,7 @@ enum Commands {
     Version,
     /// Switch to a different active profile
     #[command(alias = "s")]
-    SwitchProfile {
-        #[arg(required = true)]
-        profile: String,
-    },
+    SwitchProfile { profile: Option<String> },
 
     /// Configure authentik CLI
     Config {
@@ -69,12 +65,14 @@ enum Commands {
         shell: Shell,
     },
     /// Directly interact with the authentik API
-    Api {
-        #[command(subcommand)]
-        command: api::ApiCommand,
-    },
+    Api(api::ApiArgs),
     /// Run an MCP (Model Context Protocol) server over stdio
-    Mcp,
+    Mcp {
+        /// Expose the api_call_dangerous tool, which calls the authentik API as the current user
+        /// instead of as an agent identity
+        #[arg(long)]
+        allow_dangerous_api: bool,
+    },
 }
 
 #[derive(Clone)]
@@ -146,6 +144,7 @@ impl App {
 
 #[ak_meta::main("ak-cli")]
 async fn main() -> std::result::Result<(), Error> {
+    ak_platform::restore_sigpipe();
     let cli = CliArgs::parse();
 
     let default_level = if cli.verbose {
@@ -168,6 +167,9 @@ async fn main() -> std::result::Result<(), Error> {
         Commands::SwitchProfile { profile } => commands::config::switch_profile(app, profile).await,
         Commands::Config { command } => match command {
             ConfigCommands::ListProfiles => commands::config::list_profiles(app).await,
+            ConfigCommands::DeleteProfile { profile } => {
+                commands::config::delete_profile(app, profile).await
+            }
             ConfigCommands::Setup {
                 authentik_url,
                 client_id,
@@ -179,26 +181,55 @@ async fn main() -> std::result::Result<(), Error> {
             if !cli.verbose {
                 set_log_level(LevelFilter::Error);
             }
-            match command {
-                AuthCommands::Raw { client_id } => commands::auth::raw(app, client_id).await,
-                AuthCommands::Kubectl { client_id } => {
-                    commands::auth::kubectl(app, client_id).await
-                }
-                AuthCommands::Aws {
-                    client_id,
-                    role_arn,
-                    region,
-                } => commands::auth::aws(app, client_id, role_arn, region).await,
-            }
+            commands::auth::handle(command.clone(), app).await
         }
-        Commands::Api { command } => api::exec_api_command(app, command).await,
-        Commands::Mcp => commands::mcp::mcp(app).await,
+        Commands::Api(args) => api::exec_api_command(app, args).await,
+        Commands::Mcp {
+            allow_dangerous_api,
+        } => commands::mcp::mcp(app, *allow_dangerous_api).await,
     };
     match res {
         Ok(_) => Ok(()),
         Err(e) => {
             eprintln!("Error running command: {e:?}");
             Ok(())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::commands::auth::AuthCommands;
+
+    fn vault_args(argv: &[&str]) -> Option<Vec<String>> {
+        let base = [
+            "ak", "auth", "vault", "-c", "id", "-r", "role", "-a", "http://x", "--",
+        ];
+        let cli = CliArgs::try_parse_from(base.iter().chain(argv)).ok()?;
+        match cli.command {
+            Commands::Auth {
+                command: AuthCommands::Vault { args, .. },
+            } => Some(args),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn vault_alias_passes_args_through() {
+        for argv in [
+            &["kv", "get", "-format=json", "-field", "x", "secret/foo"][..],
+            &["--help"],
+            &["-version"],
+            &["-h"],
+            &["read", "-p", "-v", "-s"],
+            &[],
+        ] {
+            assert_eq!(
+                vault_args(argv),
+                Some(argv.iter().map(|a| a.to_string()).collect()),
+                "{argv:?}"
+            );
         }
     }
 }

@@ -241,6 +241,9 @@ impl serde::Serialize for Profile {
         if self.status != 0 {
             len += 1;
         }
+        if self.dpop_bound {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("agent_ctrl.Profile", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
@@ -262,6 +265,9 @@ impl serde::Serialize for Profile {
                 .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", self.status)))?;
             struct_ser.serialize_field("status", &v)?;
         }
+        if self.dpop_bound {
+            struct_ser.serialize_field("dpopBound", &self.dpop_bound)?;
+        }
         struct_ser.end()
     }
 }
@@ -281,6 +287,8 @@ impl<'de> serde::Deserialize<'de> for Profile {
             "next_renew",
             "nextRenew",
             "status",
+            "dpop_bound",
+            "dpopBound",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -291,6 +299,7 @@ impl<'de> serde::Deserialize<'de> for Profile {
             LastRenewed,
             NextRenew,
             Status,
+            DpopBound,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -318,6 +327,7 @@ impl<'de> serde::Deserialize<'de> for Profile {
                             "lastRenewed" | "last_renewed" => Ok(GeneratedField::LastRenewed),
                             "nextRenew" | "next_renew" => Ok(GeneratedField::NextRenew),
                             "status" => Ok(GeneratedField::Status),
+                            "dpopBound" | "dpop_bound" => Ok(GeneratedField::DpopBound),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -343,6 +353,7 @@ impl<'de> serde::Deserialize<'de> for Profile {
                 let mut last_renewed__ = None;
                 let mut next_renew__ = None;
                 let mut status__ = None;
+                let mut dpop_bound__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -381,6 +392,12 @@ impl<'de> serde::Deserialize<'de> for Profile {
                             }
                             status__ = Some(map_.next_value::<ProfileStatus>()? as i32);
                         }
+                        GeneratedField::DpopBound => {
+                            if dpop_bound__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("dpopBound"));
+                            }
+                            dpop_bound__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(Profile {
@@ -390,6 +407,7 @@ impl<'de> serde::Deserialize<'de> for Profile {
                     last_renewed: last_renewed__,
                     next_renew: next_renew__,
                     status: status__.unwrap_or_default(),
+                    dpop_bound: dpop_bound__.unwrap_or_default(),
                 })
             }
         }
@@ -496,6 +514,9 @@ impl serde::Serialize for SetupRequest {
         if !self.refresh_token.is_empty() {
             len += 1;
         }
+        if !self.dpop_private_key.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("agent_ctrl.SetupRequest", len)?;
         if let Some(v) = self.header.as_ref() {
             struct_ser.serialize_field("header", v)?;
@@ -514,6 +535,9 @@ impl serde::Serialize for SetupRequest {
         }
         if !self.refresh_token.is_empty() {
             struct_ser.serialize_field("refreshToken", &self.refresh_token)?;
+        }
+        if !self.dpop_private_key.is_empty() {
+            struct_ser.serialize_field("dpopPrivateKey", &self.dpop_private_key)?;
         }
         struct_ser.end()
     }
@@ -536,6 +560,8 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
             "accessToken",
             "refresh_token",
             "refreshToken",
+            "dpop_private_key",
+            "dpopPrivateKey",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -546,6 +572,7 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
             ClientId,
             AccessToken,
             RefreshToken,
+            DpopPrivateKey,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -573,6 +600,7 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                             "clientId" | "client_id" => Ok(GeneratedField::ClientId),
                             "accessToken" | "access_token" => Ok(GeneratedField::AccessToken),
                             "refreshToken" | "refresh_token" => Ok(GeneratedField::RefreshToken),
+                            "dpopPrivateKey" | "dpop_private_key" => Ok(GeneratedField::DpopPrivateKey),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -598,6 +626,7 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                 let mut client_id__ = None;
                 let mut access_token__ = None;
                 let mut refresh_token__ = None;
+                let mut dpop_private_key__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Header => {
@@ -636,6 +665,12 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                             }
                             refresh_token__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::DpopPrivateKey => {
+                            if dpop_private_key__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("dpopPrivateKey"));
+                            }
+                            dpop_private_key__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(SetupRequest {
@@ -645,6 +680,7 @@ impl<'de> serde::Deserialize<'de> for SetupRequest {
                     client_id: client_id__.unwrap_or_default(),
                     access_token: access_token__.unwrap_or_default(),
                     refresh_token: refresh_token__.unwrap_or_default(),
+                    dpop_private_key: dpop_private_key__.unwrap_or_default(),
                 })
             }
         }

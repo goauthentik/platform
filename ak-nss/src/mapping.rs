@@ -133,7 +133,7 @@ mod tests {
     #[test]
     fn group_entry_strips_nul_bytes_including_members() {
         let g = ak_group_to_group_entry(AKGroup {
-            name: "admi\0ns".to_owned(),
+            name: "admi\0ns".to_owned(), // spellchecker:ignore admi
             gid: 200,
             passwd: "x\0".to_owned(),
             members: vec!["ali\0ce".to_owned(), "bob".to_owned()],

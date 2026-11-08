@@ -11,6 +11,7 @@ export interface profile {
     lastRenewed?: Date;
     nextRenew?: Date;
     status?: ProfileStatus;
+    dpopBound?: boolean;
 }
 
 export async function userInfo(profile: string): Promise<SessionUser> {
@@ -31,6 +32,7 @@ export async function listProfiles(): Promise<profile[]> {
         lastRenewed?: string;
         nextRenew?: string;
         status?: ProfileStatus;
+        dpopBound?: boolean;
     }
 
     return await invoke<r_profile[]>("list_profiles").then((p) => {
@@ -50,12 +52,99 @@ export interface ComponentVersion {
     error?: string;
 }
 
+export interface StableVersion {
+    version: string;
+    changelogUrl: string;
+}
+
 export interface Versions {
-    desktop: string;
-    agent: ComponentVersion;
+    agent: string;
     sysd: ComponentVersion;
+    /** Set only when a newer release is available. */
+    update?: StableVersion;
 }
 
 export async function getVersions(): Promise<Versions> {
     return await invoke<Versions>("get_versions");
+}
+
+export interface SshConfig {
+    socketPath: string;
+    /** Sockets pinned to a single profile, by profile name. */
+    profileSocketPaths: Record<string, string>;
+    systemSocketPath?: string;
+    fallbackSocketPath: string;
+    extraPassthroughHosts: string[];
+    fallbackLocked: boolean;
+    builtinPassthroughHosts: boolean;
+}
+
+export async function getSshConfig(): Promise<SshConfig> {
+    return await invoke<SshConfig>("get_ssh_config");
+}
+
+/** An empty `socketPath` disables the fallback agent. */
+export async function setSshFallbackAgent(
+    socketPath: string,
+    extraPassthroughHosts: string[],
+): Promise<void> {
+    return await invoke("set_ssh_fallback_agent", {
+        socketPath,
+        extraPassthroughHosts,
+    });
+}
+
+export type SshStatus = "active" | "partial" | "unconfigured" | "notRunning";
+
+export interface SshStatusResponse {
+    status: SshStatus;
+    /** Agent `ssh` uses for hosts without a specific config. */
+    identityAgent?: string;
+}
+
+export async function getSshStatus(): Promise<SshStatusResponse> {
+    return await invoke<SshStatusResponse>("get_ssh_status");
+}
+
+export interface SetupProfileOptions {
+    name: string;
+    authentikUrl: string;
+    clientId: string;
+    appSlug: string;
+}
+
+export async function setupProfile(opts: SetupProfileOptions): Promise<void> {
+    return await invoke("setup_profile", { ...opts });
+}
+
+export async function deleteProfile(name: string): Promise<void> {
+    return await invoke("delete_profile", { name });
+}
+
+export type AuthOutcome = "allowed" | "denied" | "failed";
+
+export interface AuthRecord {
+    time: Date;
+    action: string;
+    /** Application, service or host access was requested for. */
+    target: string;
+    pid: number;
+    cmdline?: string;
+    parentCmdline?: string;
+    outcome: AuthOutcome;
+    /** Answered from an earlier prompt's result. */
+    cached: boolean;
+}
+
+/** Newest first. */
+export async function recentAuthorizations(): Promise<AuthRecord[]> {
+    const records =
+        await invoke<(Omit<AuthRecord, "time"> & { time: number })[]>("recent_authorizations");
+
+    return records.map((r) => ({ ...r, time: new Date(r.time) }));
+}
+
+/** Page requested by a deep link, if any. Cleared once taken. */
+export async function takePendingPage(): Promise<string | null> {
+    return await invoke<string | null>("take_pending_page");
 }

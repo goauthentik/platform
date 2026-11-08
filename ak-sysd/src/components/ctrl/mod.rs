@@ -58,14 +58,6 @@ impl Component for CtrlComponent {
         "ctrl"
     }
 
-    async fn start(&self) -> Result<()> {
-        Ok(())
-    }
-
-    async fn stop(&self) -> Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::CTRL) {
             routes.add_service(SystemCtrlServer::from_arc(self));

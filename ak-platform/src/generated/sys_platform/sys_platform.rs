@@ -4,6 +4,11 @@
 pub struct PlatformEndpointRequest {
     #[prost(string, tag="1")]
     pub challenge: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub profile: ::prost::alloc::string::String,
+    /// Socket of the caller's agent, used to add the caller's user to the signed header.
+    #[prost(string, tag="3")]
+    pub agent_socket: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct PlatformEndpointResponse {

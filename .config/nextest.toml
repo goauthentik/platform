@@ -1,0 +1,4 @@
+# Used in CI when no enterprise license could be retrieved (e.g. external PRs).
+# Tests requiring a license live in an `enterprise` module.
+[profile.no-enterprise]
+default-filter = "not test(/(^|::)enterprise::/)"
