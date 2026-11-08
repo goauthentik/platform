@@ -22,7 +22,7 @@ use oauth2::{ClientId, Scope, TokenResponse, TokenUrl, basic::BasicClient};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{fmt::Debug, time::Duration};
+use std::fmt::Debug;
 use tonic::{Request, Response, Status};
 use url::form_urlencoded;
 
@@ -129,6 +129,7 @@ impl AgentAuth for AgentGRPCServer {
             .profile_for_request(request.get_ref().header.clone())
             .await?;
 
+        let settings = self.agent.settings().await;
         request
             .auth_peer(Operation::WhoAmI)
             .with_message(|c| {
@@ -140,8 +141,7 @@ impl AgentAuth for AgentGRPCServer {
             })
             .with_target("Account info", profile.app_slug.clone())
             .with_uid(|c| c.clone().proc_info()?.unique_process_id())
-            .with_success_timeout(Duration::from_secs(0))
-            .with_denied_timeout(Duration::from_secs(0))
+            .with_timeouts(settings.authorization.remember(Operation::WhoAmI))
             .finish()
             .await?;
 
@@ -192,6 +192,7 @@ impl AgentAuth for AgentGRPCServer {
             .await
             .ok_or(Status::invalid_argument("profile not found"))?;
 
+        let settings = self.agent.settings().await;
         request
             .auth_peer(Operation::CurrentToken)
             .with_creds(on_behalf_of(&request, inner_req.caller_pid)?)
@@ -211,8 +212,7 @@ impl AgentAuth for AgentGRPCServer {
                     info.parent_cmdline()?
                 ))
             })
-            .with_success_timeout(Duration::from_mins(5))
-            .with_denied_timeout(Duration::from_mins(15))
+            .with_timeouts(settings.authorization.remember(Operation::CurrentToken))
             .finish()
             .await?;
 
@@ -260,6 +260,18 @@ impl AgentAuth for AgentGRPCServer {
         let profile = self.profile_for_request(inner.clone().header).await?;
         let audience = inner.audience.clone();
 
+        let settings = self.agent.settings().await;
+        if settings
+            .authorization
+            .allowed_exchange_audiences
+            .as_ref()
+            .is_some_and(|a| !a.contains(&audience))
+        {
+            return Err(Status::permission_denied(format!(
+                "token exchange for '{audience}' is not allowed by policy"
+            )));
+        }
+
         let cid1 = audience.clone();
         let cid2 = audience.clone();
         request
@@ -282,8 +294,7 @@ impl AgentAuth for AgentGRPCServer {
                 Ok(format!("{cid2}:{pid}"))
             })
             .with_target("Token exchange", audience.clone())
-            .with_success_timeout(Duration::from_secs(30 * 60))
-            .with_denied_timeout(Duration::from_secs(1))
+            .with_timeouts(settings.authorization.remember(Operation::TokenExchange))
             .finish()
             .await?;
 
@@ -333,16 +344,19 @@ impl AgentAuth for AgentGRPCServer {
         let inner = request.get_ref();
         let service = inner.service.clone();
         let uid = inner.uid.clone();
+        let settings = self.agent.settings().await;
 
         request
             .auth_peer(Operation::Authorize)
             .with_target("Login", inner.service.clone())
             .with_message(move |_c| {
-                Ok(PlatformString::new().with_darwin(format!("authorize access to '{}'", service)))
+                Ok(PlatformString::new()
+                    .with_darwin(format!("authorize access to '{service}'"))
+                    .with_windows(format!("Authorize access to '{service}'"))
+                    .with_linux(format!("Authorize access to '{service}'")))
             })
             .with_uid(move |_c| Ok(uid.clone()))
-            .with_success_timeout(Duration::from_hours(2))
-            .with_denied_timeout(Duration::from_mins(5))
+            .with_timeouts(settings.authorization.remember(Operation::Authorize))
             .finish()
             .await?;
 

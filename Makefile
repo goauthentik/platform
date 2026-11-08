@@ -131,6 +131,7 @@ dev--initialize: containers/test/local-build
 bump:
 	$(SED_INPLACE) 's/VERSION = .*/VERSION = ${version}/g' common.mk
 	$(SED_INPLACE) 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
+	$(SED_INPLACE) 's/Settings Schema (${VERSION})/Settings Schema (${version})/' ${TOP}/ak-agent/settings.schema.json
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" ee/psso/bump || true

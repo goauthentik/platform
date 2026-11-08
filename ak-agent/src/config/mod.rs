@@ -13,42 +13,27 @@ use eyre::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
+pub mod policy;
+pub mod settings;
+pub use settings::{Settings, SshFallbackAgentConfig};
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfigV1 {
-    pub debug: bool,
     #[serde(default)]
     pub active_profile: String,
     pub profiles: HashMap<String, ConfigV1Profile>,
-    /// Optional fallback/passthrough SSH agent used for hosts not managed by
-    /// authentik (e.g. github.com, gitlab.com). When unset, the ssh-agent
-    /// behaves as before and does not proxy to another agent.
-    #[serde(default)]
-    pub ssh_fallback_agent: Option<SshFallbackAgentConfig>,
+    #[serde(flatten)]
+    pub settings: Settings,
 }
 
 impl Default for ConfigV1 {
     fn default() -> Self {
         Self {
-            debug: false,
             active_profile: DEFAULT_PROFILE.to_string(),
             profiles: Default::default(),
-            ssh_fallback_agent: None,
+            settings: Default::default(),
         }
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SshFallbackAgentConfig {
-    /// Path to the fallback SSH agent socket (e.g. the system's original
-    /// `SSH_AUTH_SOCK`, or a hardware-key agent) used for hosts not managed
-    /// by authentik.
-    pub socket_path: String,
-    /// Extra hosts that should always be routed to the fallback agent,
-    /// bypassing authentik entirely, given as `known_hosts`-format lines
-    /// (e.g. the output of `ssh-keyscan your-host.example.com`). Merged with
-    /// a built-in list of well-known git hosts (github.com, gitlab.com).
-    #[serde(default)]
-    pub extra_passthrough_hosts: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -197,10 +182,17 @@ impl ConfigV1Profile {
 
 impl Config for ConfigV1 {
     async fn post_load(&mut self) -> Result<()> {
-        set_log_level(match self.debug {
+        let settings = self.settings.effective();
+        set_log_level(match settings.debug.unwrap_or(false) {
             true => LevelFilter::Trace,
-            false => LevelFilter::Trace,
+            false => LevelFilter::Info,
         });
+        ak_meta::set_error_reporting(settings.telemetry.error_reporting.unwrap_or(true));
+        let plaintext = settings
+            .profile_management
+            .allow_plaintext_tokens
+            .unwrap_or(true);
+        let fallback = |v: &String| if plaintext { v.clone() } else { String::new() };
         for (key, val) in self.profiles.iter_mut() {
             tracing::debug!(profile = key, "Getting access token for profile");
             match ak_platform_keyring::store()
@@ -214,7 +206,7 @@ impl Config for ConfigV1 {
                 Ok(v) => val._access_token = v,
                 Err(ak_platform_keyring::KeyringError::NotAvailable())
                 | Err(ak_platform_keyring::KeyringError::NotFound()) => {
-                    val._access_token = val.fallback_access_token.clone()
+                    val._access_token = fallback(&val.fallback_access_token)
                 }
                 Err(e) => return Err(e.into()),
             }
@@ -230,7 +222,7 @@ impl Config for ConfigV1 {
                 Ok(v) => val._refresh_token = v,
                 Err(ak_platform_keyring::KeyringError::NotAvailable())
                 | Err(ak_platform_keyring::KeyringError::NotFound()) => {
-                    val._refresh_token = val.fallback_refresh_token.clone()
+                    val._refresh_token = fallback(&val.fallback_refresh_token)
                 }
                 Err(e) => return Err(e.into()),
             }
@@ -246,7 +238,7 @@ impl Config for ConfigV1 {
                 Ok(v) => val._dpop_private_key = v,
                 Err(ak_platform_keyring::KeyringError::NotAvailable())
                 | Err(ak_platform_keyring::KeyringError::NotFound()) => {
-                    val._dpop_private_key = val.fallback_dpop_private_key.clone()
+                    val._dpop_private_key = fallback(&val.fallback_dpop_private_key)
                 }
                 Err(e) => return Err(e.into()),
             }
@@ -255,7 +247,18 @@ impl Config for ConfigV1 {
     }
 
     async fn pre_save(&mut self) -> Result<()> {
+        let plaintext = self
+            .settings
+            .effective()
+            .profile_management
+            .allow_plaintext_tokens
+            .unwrap_or(true);
         for (key, val) in self.profiles.iter_mut() {
+            if !plaintext {
+                val.fallback_access_token.clear();
+                val.fallback_refresh_token.clear();
+                val.fallback_dpop_private_key.clear();
+            }
             match ak_platform_keyring::store()
                 .set(
                     &ak_platform_keyring::service("access_token"),
@@ -266,7 +269,7 @@ impl Config for ConfigV1 {
                 .await
             {
                 Ok(_) => {}
-                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) if plaintext => {
                     val.fallback_access_token = val._access_token.clone();
                 }
                 Err(e) => return Err(e.into()),
@@ -281,7 +284,7 @@ impl Config for ConfigV1 {
                 .await
             {
                 Ok(_) => {}
-                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) if plaintext => {
                     val.fallback_refresh_token = val._refresh_token.clone();
                 }
                 Err(e) => return Err(e.into()),
@@ -296,7 +299,7 @@ impl Config for ConfigV1 {
                 .await
             {
                 Ok(_) => {}
-                Err(ak_platform_keyring::KeyringError::NotAvailable()) => {
+                Err(ak_platform_keyring::KeyringError::NotAvailable()) if plaintext => {
                     val.fallback_dpop_private_key = val._dpop_private_key.clone();
                 }
                 Err(e) => return Err(e.into()),

@@ -13,6 +13,7 @@ pub struct Options {
     pub app_slug: String,
     pub client_id: String,
     pub user_agent: String,
+    pub require_dpop: bool,
 }
 
 pub struct Profile {
@@ -76,6 +77,11 @@ pub async fn setup(opts: Options, url_callback: impl FnOnce(Url) -> Result<()>) 
             if e.downcast_ref::<OAuthError>()
                 .is_some_and(|e| e.0 == "dpop_jkt_not_allowed") =>
         {
+            if opts.require_dpop {
+                eyre::bail!(
+                    "key binding (DPoP) is required by policy, but the provider doesn't support it"
+                );
+            }
             tracing::debug!("provider does not support key binding, continuing without DPoP");
             dpop_requested = false;
             scopes.retain(|s| *s != SCOPE_BOUND_KEY);

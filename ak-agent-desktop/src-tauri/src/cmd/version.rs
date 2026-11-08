@@ -53,14 +53,22 @@ pub struct Versions {
 }
 
 #[tauri::command]
-pub async fn get_versions() -> Result<Versions> {
+pub async fn get_versions(state: tauri::State<'_, ak_agent::Agent>) -> Result<Versions> {
     let sysd = ping_component(sysd_socket_path(SysdSocketID::Default)).await;
+    let update = match state
+        .settings()
+        .await
+        .telemetry
+        .update_check
+        .unwrap_or(true)
+    {
+        true => latest_version().await,
+        false => None,
+    };
     Ok(Versions {
         agent: ak_meta::full_version(),
         sysd,
-        update: latest_version()
-            .await
-            .filter(|l| is_newer(&l.version, &ak_meta::version())),
+        update: update.filter(|l| is_newer(&l.version, &ak_meta::version())),
     })
 }
 

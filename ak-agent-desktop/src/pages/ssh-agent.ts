@@ -251,6 +251,11 @@ export class SshAgent extends LitElement {
                     forwarded to another SSH agent, for example your system agent or a hardware key
                     agent. Leave the socket empty to disable forwarding.
                 </p>
+                ${
+                    c.fallbackLocked
+                        ? html`<p class="intro">This setting is managed by your administrator.</p>`
+                        : nothing
+                }
                 <form @submit=${this._save}>
                     <label>
                         Fallback agent socket
@@ -258,25 +263,30 @@ export class SshAgent extends LitElement {
                             name="socketPath"
                             .value=${c.fallbackSocketPath}
                             placeholder=${c.systemSocketPath ?? ""}
-                            ?disabled=${this.busy}
+                            ?disabled=${this.busy || c.fallbackLocked}
                         />
                     </label>
                     <label>
                         Extra passthrough hosts
                         <span class="hint"
                             >One <code>known_hosts</code> line per host, e.g. the output of
-                            <code>ssh-keyscan host.example.com</code>. github.com and gitlab.com are
-                            always included.</span
+                            <code>ssh-keyscan host.example.com</code>.${
+                                c.builtinPassthroughHosts
+                                    ? " github.com and gitlab.com are always included."
+                                    : nothing
+                            }</span
                         >
                         <textarea
                             name="hosts"
                             rows="4"
                             .value=${c.extraPassthroughHosts.join("\n")}
-                            ?disabled=${this.busy}
+                            ?disabled=${this.busy || c.fallbackLocked}
                         ></textarea>
                     </label>
                     <div class="actions">
-                        <button type="submit" ?disabled=${this.busy}>Save</button>
+                        <button type="submit" ?disabled=${this.busy || c.fallbackLocked}>
+                            Save
+                        </button>
                         ${
                             this.status
                                 ? html`<span class=${this.status.error ? "error" : ""}

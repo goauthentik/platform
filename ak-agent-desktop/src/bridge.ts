@@ -75,6 +75,8 @@ export interface SshConfig {
     systemSocketPath?: string;
     fallbackSocketPath: string;
     extraPassthroughHosts: string[];
+    fallbackLocked: boolean;
+    builtinPassthroughHosts: boolean;
 }
 
 export async function getSshConfig(): Promise<SshConfig> {

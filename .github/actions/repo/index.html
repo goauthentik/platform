@@ -141,6 +141,7 @@
             <a href="#debian">Debian / Ubuntu</a>
             <a href="#redhat">Fedora / RHEL</a>
             <a href="#arch">Arch Linux</a>
+            <a href="#schemas">Schemas</a>
             <a href="#info">Build info</a>
         </nav>
     </header>
@@ -193,6 +194,14 @@ EOF</code></pre></div>
         <h2>Arch Linux</h2>
         <p>Download a package and install it with <code>sudo pacman -U &lt;package&gt;.pkg.tar.zst</code>.</p>
         <ul class="files">${ARCH_PACKAGES}</ul>
+    </section>
+
+    <section id="schemas">
+        <h2>Schemas</h2>
+        <p>JSON schemas for configuration files, for validation and editor completion.</p>
+        <ul class="files">
+            <li><a href="schemas/agent-settings.schema.json">agent-settings.schema.json</a>: authentik Agent settings, used by the user's config and the admin policy</li>
+        </ul>
     </section>
 
     <section id="info">

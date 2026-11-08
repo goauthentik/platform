@@ -82,6 +82,8 @@ pub async fn setup(
                 app_slug: app_slug.to_owned(),
                 client_id: client_id.to_owned(),
                 user_agent: ak_meta::user_agent(),
+                // The agent enforces its policy when the profile is saved.
+                require_dpop: false,
             },
             |url| {
                 if let Err(e) = open::that(url.to_string()) {
