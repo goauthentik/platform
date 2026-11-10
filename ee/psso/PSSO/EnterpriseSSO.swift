@@ -86,7 +86,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
                     request.complete(httpResponse: response, httpBody: nil)
                 }
             } catch {
-                self.logger.error("failed to register: \(error)")
+                self.logger.error("failed to register: \(String(describing: error), privacy: .public)")
                 request.doNotHandle()
                 return
             }
