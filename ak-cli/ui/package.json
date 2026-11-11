@@ -17,8 +17,8 @@
         "@goauthentik/tsconfig": "^3.0.0",
         "@modelcontextprotocol/ext-apps": "^2.0.4",
         "esbuild": "^0.28.2",
-        "oxfmt": "^0.75.0",
-        "oxlint": "^1.90.0",
+        "oxfmt": "^0.76.0",
+        "oxlint": "^1.91.0",
         "typescript": "^7.0.2"
     },
     "engines": {
