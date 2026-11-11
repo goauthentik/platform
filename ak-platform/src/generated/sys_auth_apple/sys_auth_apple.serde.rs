@@ -580,3 +580,490 @@ impl<'de> serde::Deserialize<'de> for RegisterUserResponse {
         deserializer.deserialize_struct("sys_auth_apple.RegisterUserResponse", FIELDS, GeneratedVisitor)
     }
 }
+impl serde::Serialize for RegistrationStateRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = 0;
+        let struct_ser = serializer.serialize_struct("sys_auth_apple.RegistrationStateRequest", len)?;
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for RegistrationStateRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                            Err(serde::de::Error::unknown_field(value, FIELDS))
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = RegistrationStateRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct sys_auth_apple.RegistrationStateRequest")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<RegistrationStateRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                while map_.next_key::<GeneratedField>()?.is_some() {
+                    let _ = map_.next_value::<serde::de::IgnoredAny>()?;
+                }
+                Ok(RegistrationStateRequest {
+                })
+            }
+        }
+        deserializer.deserialize_struct("sys_auth_apple.RegistrationStateRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for RegistrationStateResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.device_registered {
+            len += 1;
+        }
+        if !self.sign_key_id.is_empty() {
+            len += 1;
+        }
+        if !self.enc_key_id.is_empty() {
+            len += 1;
+        }
+        if !self.users.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("sys_auth_apple.RegistrationStateResponse", len)?;
+        if self.device_registered {
+            struct_ser.serialize_field("deviceRegistered", &self.device_registered)?;
+        }
+        if !self.sign_key_id.is_empty() {
+            struct_ser.serialize_field("signKeyId", &self.sign_key_id)?;
+        }
+        if !self.enc_key_id.is_empty() {
+            struct_ser.serialize_field("encKeyId", &self.enc_key_id)?;
+        }
+        if !self.users.is_empty() {
+            struct_ser.serialize_field("users", &self.users)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for RegistrationStateResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "device_registered",
+            "deviceRegistered",
+            "sign_key_id",
+            "signKeyId",
+            "enc_key_id",
+            "encKeyId",
+            "users",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            DeviceRegistered,
+            SignKeyId,
+            EncKeyId,
+            Users,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "deviceRegistered" | "device_registered" => Ok(GeneratedField::DeviceRegistered),
+                            "signKeyId" | "sign_key_id" => Ok(GeneratedField::SignKeyId),
+                            "encKeyId" | "enc_key_id" => Ok(GeneratedField::EncKeyId),
+                            "users" => Ok(GeneratedField::Users),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = RegistrationStateResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct sys_auth_apple.RegistrationStateResponse")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<RegistrationStateResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut device_registered__ = None;
+                let mut sign_key_id__ = None;
+                let mut enc_key_id__ = None;
+                let mut users__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::DeviceRegistered => {
+                            if device_registered__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("deviceRegistered"));
+                            }
+                            device_registered__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::SignKeyId => {
+                            if sign_key_id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("signKeyId"));
+                            }
+                            sign_key_id__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::EncKeyId => {
+                            if enc_key_id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("encKeyId"));
+                            }
+                            enc_key_id__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::Users => {
+                            if users__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("users"));
+                            }
+                            users__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(RegistrationStateResponse {
+                    device_registered: device_registered__.unwrap_or_default(),
+                    sign_key_id: sign_key_id__.unwrap_or_default(),
+                    enc_key_id: enc_key_id__.unwrap_or_default(),
+                    users: users__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("sys_auth_apple.RegistrationStateResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for RegistrationStateUser {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if !self.username.is_empty() {
+            len += 1;
+        }
+        if !self.enclave_key_id.is_empty() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("sys_auth_apple.RegistrationStateUser", len)?;
+        if !self.username.is_empty() {
+            struct_ser.serialize_field("username", &self.username)?;
+        }
+        if !self.enclave_key_id.is_empty() {
+            struct_ser.serialize_field("enclaveKeyId", &self.enclave_key_id)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for RegistrationStateUser {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "username",
+            "enclave_key_id",
+            "enclaveKeyId",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Username,
+            EnclaveKeyId,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "username" => Ok(GeneratedField::Username),
+                            "enclaveKeyId" | "enclave_key_id" => Ok(GeneratedField::EnclaveKeyId),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = RegistrationStateUser;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct sys_auth_apple.RegistrationStateUser")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<RegistrationStateUser, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut username__ = None;
+                let mut enclave_key_id__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Username => {
+                            if username__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("username"));
+                            }
+                            username__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::EnclaveKeyId => {
+                            if enclave_key_id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("enclaveKeyId"));
+                            }
+                            enclave_key_id__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(RegistrationStateUser {
+                    username: username__.unwrap_or_default(),
+                    enclave_key_id: enclave_key_id__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("sys_auth_apple.RegistrationStateUser", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for UnregisterDeviceRequest {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = 0;
+        let struct_ser = serializer.serialize_struct("sys_auth_apple.UnregisterDeviceRequest", len)?;
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for UnregisterDeviceRequest {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                            Err(serde::de::Error::unknown_field(value, FIELDS))
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = UnregisterDeviceRequest;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct sys_auth_apple.UnregisterDeviceRequest")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<UnregisterDeviceRequest, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                while map_.next_key::<GeneratedField>()?.is_some() {
+                    let _ = map_.next_value::<serde::de::IgnoredAny>()?;
+                }
+                Ok(UnregisterDeviceRequest {
+                })
+            }
+        }
+        deserializer.deserialize_struct("sys_auth_apple.UnregisterDeviceRequest", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for UnregisterDeviceResponse {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.completed {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("sys_auth_apple.UnregisterDeviceResponse", len)?;
+        if self.completed {
+            struct_ser.serialize_field("completed", &self.completed)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for UnregisterDeviceResponse {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "completed",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Completed,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "completed" => Ok(GeneratedField::Completed),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = UnregisterDeviceResponse;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct sys_auth_apple.UnregisterDeviceResponse")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<UnregisterDeviceResponse, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut completed__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Completed => {
+                            if completed__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("completed"));
+                            }
+                            completed__ = Some(map_.next_value()?);
+                        }
+                    }
+                }
+                Ok(UnregisterDeviceResponse {
+                    completed: completed__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("sys_auth_apple.UnregisterDeviceResponse", FIELDS, GeneratedVisitor)
+    }
+}
