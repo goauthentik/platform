@@ -26,7 +26,7 @@ final class LogInterceptor: ClientInterceptor {
         case .success:
             self.logger.info("Server accepted RPC for processing")
         case .failure(let error):
-            self.logger.warning("Server rejected RPC with error '\(error)'")
+            self.logger.warning("Server rejected RPC with error '\(String(describing: error), privacy: .public)'")
         }
 
         return response

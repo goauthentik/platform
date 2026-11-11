@@ -35,7 +35,7 @@ class API {
                 .debug("Got device login config from server: \(String(describing: config))")
             return config
         } catch {
-            self.logger.error("failed to register: \(error)")
+            self.logger.error("failed to register: \(String(describing: error), privacy: .public)")
             return nil
         }
     }
@@ -64,7 +64,7 @@ class API {
             try loginManger.saveUserLoginConfiguration(loginConfig)
             return .success
         } catch {
-            self.logger.error("failed to register: \(error)")
+            self.logger.error("failed to register: \(String(describing: error), privacy: .public)")
             return .failed
         }
     }
