@@ -30,7 +30,7 @@
         "oxlint": "^1.91.0",
         "tauri-plugin-sentry-api": "^0.9.0",
         "typescript": "^7.0.2",
-        "vite": "^8.3.6"
+        "vite": "^8.3.7"
     },
     "pnpm": {
         "onlyBuiltDependencies": [
