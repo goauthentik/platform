@@ -41,7 +41,9 @@ pub struct RegisterDeviceResponse {
     pub nonce_endpoint: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub device_token: ::prost::alloc::string::String,
-    #[prost(enumeration="register_device_response::BiometricPolicy", repeated, tag="8")]
+    #[prost(string, tag="8")]
+    pub authorization_endpoint: ::prost::alloc::string::String,
+    #[prost(enumeration="register_device_response::BiometricPolicy", repeated, tag="9")]
     pub biometric_policies: ::prost::alloc::vec::Vec<i32>,
 }
 /// Nested message and enum types in `RegisterDeviceResponse`.

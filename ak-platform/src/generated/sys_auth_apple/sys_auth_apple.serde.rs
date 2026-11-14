@@ -70,7 +70,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceRequest {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                        write!(formatter, "expected one of: {:?}", FIELDS)
                     }
 
                     #[allow(unused_variables)]
@@ -174,6 +174,9 @@ impl serde::Serialize for RegisterDeviceResponse {
         if !self.device_token.is_empty() {
             len += 1;
         }
+        if !self.authorization_endpoint.is_empty() {
+            len += 1;
+        }
         if !self.biometric_policies.is_empty() {
             len += 1;
         }
@@ -198,6 +201,9 @@ impl serde::Serialize for RegisterDeviceResponse {
         }
         if !self.device_token.is_empty() {
             struct_ser.serialize_field("deviceToken", &self.device_token)?;
+        }
+        if !self.authorization_endpoint.is_empty() {
+            struct_ser.serialize_field("authorizationEndpoint", &self.authorization_endpoint)?;
         }
         if !self.biometric_policies.is_empty() {
             let v = self.biometric_policies.iter().cloned().map(|v| {
@@ -228,6 +234,8 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             "nonceEndpoint",
             "device_token",
             "deviceToken",
+            "authorization_endpoint",
+            "authorizationEndpoint",
             "biometric_policies",
             "biometricPolicies",
         ];
@@ -241,6 +249,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             Audience,
             NonceEndpoint,
             DeviceToken,
+            AuthorizationEndpoint,
             BiometricPolicies,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
@@ -254,7 +263,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                        write!(formatter, "expected one of: {:?}", FIELDS)
                     }
 
                     #[allow(unused_variables)]
@@ -270,6 +279,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             "audience" => Ok(GeneratedField::Audience),
                             "nonceEndpoint" | "nonce_endpoint" => Ok(GeneratedField::NonceEndpoint),
                             "deviceToken" | "device_token" => Ok(GeneratedField::DeviceToken),
+                            "authorizationEndpoint" | "authorization_endpoint" => Ok(GeneratedField::AuthorizationEndpoint),
                             "biometricPolicies" | "biometric_policies" => Ok(GeneratedField::BiometricPolicies),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
@@ -297,6 +307,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                 let mut audience__ = None;
                 let mut nonce_endpoint__ = None;
                 let mut device_token__ = None;
+                let mut authorization_endpoint__ = None;
                 let mut biometric_policies__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
@@ -342,6 +353,12 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             }
                             device_token__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::AuthorizationEndpoint => {
+                            if authorization_endpoint__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("authorizationEndpoint"));
+                            }
+                            authorization_endpoint__ = Some(map_.next_value()?);
+                        }
                         GeneratedField::BiometricPolicies => {
                             if biometric_policies__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("biometricPolicies"));
@@ -358,6 +375,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                     audience: audience__.unwrap_or_default(),
                     nonce_endpoint: nonce_endpoint__.unwrap_or_default(),
                     device_token: device_token__.unwrap_or_default(),
+                    authorization_endpoint: authorization_endpoint__.unwrap_or_default(),
                     biometric_policies: biometric_policies__.unwrap_or_default(),
                 })
             }
@@ -401,7 +419,7 @@ impl<'de> serde::Deserialize<'de> for register_device_response::BiometricPolicy 
             type Value = register_device_response::BiometricPolicy;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(formatter, "expected one of: {:?}", &FIELDS)
+                write!(formatter, "expected one of: {:?}", FIELDS)
             }
 
             fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
@@ -507,7 +525,7 @@ impl<'de> serde::Deserialize<'de> for RegisterUserRequest {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                        write!(formatter, "expected one of: {:?}", FIELDS)
                     }
 
                     #[allow(unused_variables)]
@@ -616,7 +634,7 @@ impl<'de> serde::Deserialize<'de> for RegisterUserResponse {
                     type Value = GeneratedField;
 
                     fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                        write!(formatter, "expected one of: {:?}", FIELDS)
                     }
 
                     #[allow(unused_variables)]

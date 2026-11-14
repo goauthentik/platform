@@ -1,3 +1,4 @@
+use ak_platform::log::{LevelFilter, set_log_level};
 use ak_platform::storage::cfgmgr::schema::{Config as ConfigSchema, ConfigChangedType};
 use eyre::Result;
 use serde::{Deserialize, Serialize};
@@ -16,6 +17,10 @@ pub struct Config {
 
 impl ConfigSchema for Config {
     async fn post_load(&mut self) -> Result<()> {
+        // Only ever raises, so it can't undo `--debug`.
+        if self.debug {
+            set_log_level(LevelFilter::Trace);
+        }
         Ok(())
     }
 

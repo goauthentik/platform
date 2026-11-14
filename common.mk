@@ -3,7 +3,7 @@ SHELL = /bin/bash
 PWD = $(shell pwd)
 UID = $(shell id -u)
 GID = $(shell id -g)
-VERSION = 0.50.5
+VERSION = 0.73.0
 VERSION_HASH = $(shell git rev-parse HEAD)
 VERSION_TAG = $(shell git tag --points-at HEAD)
 ifeq ($(CI),true)
@@ -16,6 +16,10 @@ else
 	VERSION_PKG = ${VERSION}
 endif
 VERSION_TS = $(shell date +%s)
+# Ubuntu release the e2e test machine is built from. The full set under test is
+# enumerated in .github/workflows/test.yml's e2e matrix.
+UBUNTU_VERSION ?= 24.04
+export AK_E2E_UBUNTU_VERSION := $(UBUNTU_VERSION)
 PLATFORM := $(shell bash -c "uname -o | tr '[:upper:]' '[:lower:]'")
 ifeq ($(OS),Windows_NT)
 ARCH := $(PROCESSOR_ARCHITEW6432)
@@ -36,6 +40,13 @@ ifneq ($(LOCAL_WORKSPACE),)
 CONTAINER_TOP := ${LOCAL_WORKSPACE}
 else
 CONTAINER_TOP := ${TOP}
+endif
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+	SED_INPLACE = /usr/bin/sed -i ''
+else
+	SED_INPLACE = sed -i
 endif
 
 define cargo_build_local
@@ -166,6 +177,13 @@ define nfpm_package
 		nfpm \
 			package \
 			-p rpm \
+			-t ${TOP}/bin/$(2) \
+			-f $(1)
+	# pacman's pkgver must not contain '-'
+	VERSION_PKG=$(subst -,.,${VERSION_PKG}) ARCH=${ARCH} \
+		nfpm \
+			package \
+			-p archlinux \
 			-t ${TOP}/bin/$(2) \
 			-f $(1)
 endef

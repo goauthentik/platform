@@ -33,6 +33,7 @@ message RegisterDeviceResponse {
   string audience = 5;
   string nonce_endpoint = 6;
   string device_token = 7;
+  string authorization_endpoint = 8;
 
   // Biometric requirements for the user Secure Enclave key. Mirrors the members
   // of Apple's userSecureEnclaveKeyBiometricPolicy OptionSet: one requirement
@@ -45,5 +46,5 @@ message RegisterDeviceResponse {
     REUSE_DURING_UNLOCK = 3;
     PASSWORD_FALLBACK = 4;
   }
-  repeated BiometricPolicy biometric_policies = 8;
+  repeated BiometricPolicy biometric_policies = 9;
 }

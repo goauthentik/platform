@@ -1,19 +1,26 @@
 use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use ak_platform::{net::server::creds::ProcCredentials, string::PlatformString};
-use ak_platform_authz::AuthorizeAction;
+use ak_platform::{
+    http::ReqwestResponseError, net::server::creds::ProcCredentials, string::PlatformString,
+};
+use ak_platform_authz::{AuthorizeAction, Operation};
 use authentik_client::apis::endpoints_api::endpoints_agents_connectors_auth_fed_create;
 use eyre::{Result, WrapErr, bail};
+use serde::Deserialize;
+use ssh_agent_lib::agent::Session;
 use ssh_key::{Certificate, PrivateKey, public::KeyData};
 use uuid::Uuid;
 
 use crate::Agent;
+use crate::ssh::passthrough::is_passthrough_host;
 use crate::ssh::txn_keys::generate_cert;
 
 pub struct SSHAgentTransaction {
     pub agent: Arc<Agent>,
     pub priv_key: Arc<PrivateKey>,
+    /// Profile pinned by the socket; `None` follows the active profile.
+    pub profile: Option<String>,
     pub creds: ProcCredentials,
     pub host_key: Option<KeyData>,
     pub session_id: Option<Vec<u8>>,
@@ -21,7 +28,19 @@ pub struct SSHAgentTransaction {
     pub id: Uuid,
 }
 
+#[derive(Deserialize)]
+struct UserInfo {
+    preferred_username: String,
+}
+
 impl SSHAgentTransaction {
+    async fn profile(&self) -> String {
+        match &self.profile {
+            Some(p) => p.clone(),
+            None => self.agent.cfg.read().await.active_profile.clone(),
+        }
+    }
+
     pub(crate) async fn ensure_cert(&mut self) -> Option<Arc<Certificate>> {
         if let Some(ref c) = self.cert {
             return Some(Arc::clone(c));
@@ -35,7 +54,7 @@ impl SSHAgentTransaction {
             }
         };
 
-        let profile = self.agent.cfg.read().await.active_profile.clone();
+        let profile = self.profile().await;
         let token_mgr = match self.agent.gtm.for_profile(profile.clone()).await {
             Some(m) => m,
             None => {
@@ -55,11 +74,21 @@ impl SSHAgentTransaction {
             }
         };
 
-        let claims = match root_token.claims() {
-            Ok(c) => c,
+        let username = match root_token.claims() {
+            Ok(c) => c.preferred_username,
             Err(e) => {
-                tracing::warn!("ssh-agent: ensure_cert: failed to parse token claims: {e:?}");
-                return None;
+                tracing::debug!(
+                    "ssh-agent: ensure_cert: access token has no usable profile claims: {e:?}"
+                );
+                match self.get_userinfo_username(&profile).await {
+                    Ok(username) => username,
+                    Err(userinfo_error) => {
+                        tracing::warn!(
+                            "ssh-agent: ensure_cert: failed to get username from userinfo: {userinfo_error:?}"
+                        );
+                        return None;
+                    }
+                }
             }
         };
 
@@ -79,7 +108,7 @@ impl SSHAgentTransaction {
 
         let cert = match generate_cert(
             &self.priv_key,
-            &claims.preferred_username,
+            &username,
             &host_key,
             &host_token_str,
             valid_before,
@@ -96,9 +125,66 @@ impl SSHAgentTransaction {
         Some(cert)
     }
 
+    /// Returns a client connected to the configured fallback/passthrough SSH
+    /// agent, if this session's host should be routed there instead of
+    /// authentik: either because it's a well-known non-authentik host (skips
+    /// straight there, no prompt) or because authentik doesn't recognize the
+    /// host (`ensure_cert` came back empty).
+    pub(crate) async fn fallback_agent(&mut self) -> Option<Box<dyn Session>> {
+        let settings = self.agent.settings().await;
+        let fallback_cfg = settings.ssh_fallback_agent?;
+
+        let use_fallback = match &self.host_key {
+            Some(host_key)
+                if is_passthrough_host(
+                    host_key,
+                    settings.ssh.builtin_passthrough_hosts.unwrap_or(true),
+                    &fallback_cfg.extra_passthrough_hosts,
+                ) =>
+            {
+                true
+            }
+            _ => self.ensure_cert().await.is_none(),
+        };
+        if !use_fallback {
+            return None;
+        }
+
+        match ak_platform::net::client::connect_stream(PlatformString::new_with_default(
+            &fallback_cfg.socket_path,
+        ))
+        .await
+        {
+            Ok(stream) => Some(Box::new(ssh_agent_lib::client::Client::new(stream))),
+            Err(e) => {
+                tracing::warn!("ssh-agent: failed to connect to fallback agent: {e:?}");
+                None
+            }
+        }
+    }
+
+    async fn get_userinfo_username(&self, profile_name: &str) -> Result<String> {
+        let profile = {
+            let cfg = self.agent.cfg.read().await;
+            cfg.profiles
+                .get(profile_name)
+                .ok_or_else(|| eyre::eyre!("profile {profile_name} not found"))?
+                .clone()
+        };
+        let userinfo_url = format!("{}/application/o/userinfo/", profile.authentik_url);
+        let response = profile
+            .authenticated_http_client()?
+            .get(userinfo_url)
+            .send()
+            .await?
+            .error_with_response()
+            .await?;
+        Ok(response.json::<UserInfo>().await?.preferred_username)
+    }
+
     async fn get_host_token(&self, host_key: &KeyData) -> Result<(String, i64)> {
         let profile = {
-            let profile = self.agent.cfg.read().await.active_profile.clone();
+            let profile = self.profile().await;
             let cfg = self.agent.cfg.read().await;
             cfg.profiles
                 .get(&profile)
@@ -128,7 +214,7 @@ impl SSHAgentTransaction {
         let hk1 = host_key_str.to_string();
         let hk2 = host_key_str.to_string();
 
-        let result = AuthorizeAction::build()
+        let result = AuthorizeAction::build(Operation::SshLogin)
             .with_message(move |c| {
                 let cmd = c.clone().proc_info()?.parent_cmdline()?;
                 Ok(PlatformString::new()
@@ -140,8 +226,14 @@ impl SSHAgentTransaction {
                 let pid = c.clone().proc_info()?.unique_process_id()?;
                 Ok(format!("{hk2}:{pid}"))
             })
-            .with_success_timeout(Duration::from_secs(30 * 60))
-            .with_denied_timeout(Duration::from_secs(5 * 60))
+            .with_target("SSH", host_key_str)
+            .with_timeouts(
+                self.agent
+                    .settings()
+                    .await
+                    .authorization
+                    .remember(Operation::SshLogin),
+            )
             .prompt(self.creds.clone())
             .await?;
 

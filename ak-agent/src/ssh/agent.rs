@@ -15,6 +15,9 @@ use crate::ssh::{
 impl Session for SSHAgentTransaction {
     async fn request_identities(&mut self) -> Result<Vec<Identity>, AgentError> {
         tracing::trace!("ssh-agent: request_identities()");
+        if let Some(mut fallback) = self.fallback_agent().await {
+            return fallback.request_identities().await;
+        }
         match self.ensure_cert().await {
             Some(cert) => {
                 let comment = cert.key_id().to_string();
@@ -29,6 +32,9 @@ impl Session for SSHAgentTransaction {
 
     async fn sign(&mut self, request: SignRequest) -> Result<Signature, AgentError> {
         tracing::trace!("ssh-agent: sign()");
+        if let Some(mut fallback) = self.fallback_agent().await {
+            return fallback.sign(request).await;
+        }
         // Attempt cert load (may trigger user authorization prompt).
         // Signing proceeds regardless of cert state, matching Go behavior.
         self.ensure_cert().await;

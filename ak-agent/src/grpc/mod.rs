@@ -70,6 +70,11 @@ impl AgentGRPCServer {
             Some(p) => p.clone(),
             None => return Err(Status::not_found("profile not found")),
         };
+        read.settings
+            .effective()
+            .profile_management
+            .check_dpop(profile.dpop_enabled())
+            .map_err(|e| Status::permission_denied(e.to_string()))?;
         Ok(profile)
     }
 }

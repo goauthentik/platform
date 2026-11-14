@@ -61,13 +61,14 @@ const QUERIES: &[NamedQuery] = &[
         // because sysinfo's Disk::name() on macOS is a Finder volume
         // label ("Macintosh HD"), not a device node, so there's no way
         // to match it against those tables' `name` column directly.
-        sql: "SELECT device, path FROM mounts",
+        // `type` picks out ZFS datasets, which those tables don't cover.
+        sql: "SELECT device, path, type FROM mounts",
     },
     NamedQuery {
         name: "disk_encryption",
         // Linux + macOS only (no Windows table). Linux's implementation
         // returns empty results entirely unless running as root/euid 0.
-        sql: "SELECT name, encrypted FROM disk_encryption",
+        sql: "SELECT name, encrypted, type FROM disk_encryption",
     },
     NamedQuery {
         name: "block_devices",

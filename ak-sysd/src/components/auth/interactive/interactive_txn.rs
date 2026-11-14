@@ -73,12 +73,11 @@ impl InteractiveAuthTransaction {
 
     /// Advances the flow, auto-solving identification/password where possible,
     /// until it produces a challenge for the client (or finishes).
-    #[tracing::instrument(fields(self.id), skip_all)]
     pub async fn get_next_challenge(&mut self) -> Result<InteractiveChallenge, Status> {
         let Some(ch) = self.fex.challenge() else {
             return Err(Status::internal("no current flow challenge"));
         };
-        tracing::trace!(challenge = ?ch, "challenge");
+        tracing::debug!(challenge = ?ch, "get_next_challenge");
         match ch {
             ChallengeTypes::XakFlowRedirect(_) => self.finish_success().await,
             ChallengeTypes::AkStageAccessDenied(c) => {
@@ -107,15 +106,13 @@ impl InteractiveAuthTransaction {
                     ..Default::default()
                 })
             }
-            ChallengeTypes::AkStagePassword(_) => {
-                Ok(InteractiveChallenge {
-                    txid: self.id.clone(),
-                    prompt: PASSWORD_PROMPT.to_string(),
-                    prompt_meta: PromptMeta::PamPromptEchoOff as i32,
-                    component: "ak-stage-password".to_string(),
-                    ..Default::default()
-                })
-            }
+            ChallengeTypes::AkStagePassword(_) => Ok(InteractiveChallenge {
+                txid: self.id.clone(),
+                prompt: PASSWORD_PROMPT.to_string(),
+                prompt_meta: PromptMeta::PamPromptEchoOff as i32,
+                component: "ak-stage-password".to_string(),
+                ..Default::default()
+            }),
             ChallengeTypes::AkStageAuthenticatorValidate(c) => {
                 let dc = c
                     .device_challenges
@@ -136,7 +133,6 @@ impl InteractiveAuthTransaction {
 
     /// Submits `value` for the current stage. `Ok(None)` on success;
     /// `Ok(Some(challenge))` carries a flow error back as an error prompt.
-    #[tracing::instrument(fields(self.id), skip_all)]
     pub(super) async fn solve_challenge(
         &mut self,
         value: String,
@@ -144,7 +140,7 @@ impl InteractiveAuthTransaction {
         let Some(ch) = self.fex.challenge() else {
             return Err(Status::internal("no current flow challenge"));
         };
-        tracing::trace!(challenge = ?ch, "challenge");
+        tracing::debug!(challenge = ?ch, "solve_challenge");
         let req = match &ch {
             ChallengeTypes::AkStageIdentification(_) => {
                 FlowChallengeResponseRequest::AkStageIdentification(
@@ -181,7 +177,7 @@ impl InteractiveAuthTransaction {
     /// Exchanges the authenticated flow session for a one-time token via the
     /// finish redirect, then mints a real session from it.
     async fn finish_success(&mut self) -> Result<InteractiveChallenge, Status> {
-        let ia = endpoints_agents_connectors_auth_ia_create(&self.domain.api)
+        let ia = endpoints_agents_connectors_auth_ia_create(&self.domain.api, None)
             .await
             .map_err(|e| Status::internal(format!("failed to start interactive auth: {e}")))?;
 
@@ -260,9 +256,9 @@ mod tests {
                 enabled: true,
                 authentik_url: server.url_str("/").trim_end_matches('/').to_string(),
                 domain: "test-domain".to_string(),
-                managed: false,
                 fallback_token: String::new(),
                 token: "test-token".to_string(),
+                ..Default::default()
             },
             api,
             remote: Arc::new(RwLock::new(None)),

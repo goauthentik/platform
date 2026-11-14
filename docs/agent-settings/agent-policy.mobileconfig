@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>PayloadDisplayName</key>
+			<string>authentik Agent settings</string>
+			<key>PayloadIdentifier</key>
+			<string>io.goauthentik.platform.agent.F34E104B-C14C-4BB5-A72A-1AC16F03DF49</string>
+			<key>PayloadType</key>
+			<string>io.goauthentik.platform.agent</string>
+			<key>PayloadUUID</key>
+			<string>F34E104B-C14C-4BB5-A72A-1AC16F03DF49</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+			<key>profile_management</key>
+			<dict>
+				<key>allowed_urls</key>
+				<array>
+					<string>https://authentik.company</string>
+				</array>
+				<key>allow_delete</key>
+				<false/>
+				<key>allow_plaintext_tokens</key>
+				<false/>
+				<key>require_dpop</key>
+				<true/>
+			</dict>
+			<key>authorization</key>
+			<dict>
+				<key>remember</key>
+				<dict>
+					<key>current_token</key>
+					<dict>
+						<key>allow</key>
+						<integer>60</integer>
+					</dict>
+					<key>ssh_login</key>
+					<dict>
+						<key>allow</key>
+						<integer>900</integer>
+					</dict>
+				</dict>
+				<key>allowed_exchange_audiences</key>
+				<array>
+					<string>internal-tools</string>
+				</array>
+			</dict>
+			<key>ssh</key>
+			<dict>
+				<key>agent_tunnel</key>
+				<false/>
+			</dict>
+			<key>telemetry</key>
+			<dict>
+				<key>update_check</key>
+				<false/>
+			</dict>
+		</dict>
+	</array>
+	<key>PayloadDisplayName</key>
+	<string>authentik Agent settings</string>
+	<key>PayloadIdentifier</key>
+	<string>ED4F9101-FE10-4FA7-A622-5B40B7B47909</string>
+	<key>PayloadScope</key>
+	<string>System</string>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>ED4F9101-FE10-4FA7-A622-5B40B7B47909</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>

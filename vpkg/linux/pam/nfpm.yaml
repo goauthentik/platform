@@ -21,6 +21,11 @@ contents:
     file_info:
       mode: 0644
     packager: rpm
+  - src: "../../bin/pam/libpam_authentik.so"
+    dst: "/usr/lib/security/pam_authentik.so"
+    file_info:
+      mode: 0644
+    packager: archlinux
   # Config
   - src: "./pam/_deb/pam_config"
     dst: "/usr/share/pam-configs/authentik"
@@ -50,3 +55,10 @@ overrides:
       - "libnss-authentik"
     scripts:
       postinstall: ./pam/_rpm/post.sh
+  # No pam-auth-update/authselect on Arch, /etc/pam.d is configured by the admin.
+  archlinux:
+    depends:
+      - "authentik-sysd"
+      - "glibc"
+      - "pam"
+      - "libnss-authentik"

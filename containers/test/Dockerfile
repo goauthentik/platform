@@ -1,4 +1,5 @@
-FROM ubuntu:24.04
+ARG UBUNTU_VERSION=24.04
+FROM ubuntu:${UBUNTU_VERSION}
 
 ARG AK_PLATFORM_ARCH
 ARG AK_DEPLOY_URL=https://pkg.goauthentik.io

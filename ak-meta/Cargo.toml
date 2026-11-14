@@ -3,8 +3,9 @@ name = "ak-meta"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+publish.workspace = true
 
 [dependencies]
 ak-meta-macros = { path = "../ak-meta-macros" }
-ak-platform = { path = "../ak-platform" }
+ak-platform = { workspace = true }
 sentry = { workspace = true }

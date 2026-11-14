@@ -1,5 +1,4 @@
 use crate::components::{Component, SysdContext};
-use crate::events::SysdEvent;
 use ak_platform::generated::sys_directory::{
     GetRequest, Group, Groups, User, Users,
     system_directory_server::{SystemDirectory, SystemDirectoryServer},
@@ -16,6 +15,12 @@ pub mod users;
 
 const DEFAULT_REFRESH_INTERVAL_SECS: u64 = 30 * 60;
 pub const PAGE_SIZE: i32 = 100;
+
+/// Users and groups for `domain` were refreshed from the API.
+#[derive(Clone, Debug)]
+pub struct DirectoryFetched {
+    pub domain: String,
+}
 
 pub struct DirectoryComponent {
     ctx: SysdContext,
@@ -35,6 +40,36 @@ impl DirectoryComponent {
             nss_gid_offset: 10000,
         }
     }
+}
+
+/// uids/gids below this are system accounts (root, sudo, adm, ...). Directory
+/// entries (e.g. via a `uidNumber` attribute) must never map onto them.
+const MIN_ID: u32 = 1000;
+
+/// Distinct authentik users can map to the same Unix name (`clean_name` folds
+/// case and `@`, `/`, `:`) or the same uid (`uidNumber`). Serving either would
+/// hand one user the other's account, so every user involved is left out.
+fn drop_ambiguous_users(users: Vec<User>) -> Vec<User> {
+    let mut names: HashMap<String, usize> = HashMap::new();
+    let mut uids: HashMap<u32, usize> = HashMap::new();
+    for u in &users {
+        *names.entry(u.name.clone()).or_default() += 1;
+        *uids.entry(u.uid).or_default() += 1;
+    }
+    users
+        .into_iter()
+        .filter(|u| {
+            let ok = names.get(&u.name) == Some(&1) && uids.get(&u.uid) == Some(&1);
+            if !ok {
+                tracing::error!(
+                    user = u.name,
+                    uid = u.uid,
+                    "skipping user: name or uid is shared with another user"
+                );
+            }
+            ok
+        })
+        .collect()
 }
 
 pub fn attr_number(attrs: &Option<HashMap<String, serde_json::Value>>, key: &str) -> Option<u32> {
@@ -63,16 +98,48 @@ impl DirectoryComponent {
         let raw_users = self.fetch_all_users(&domain.api).await?;
         let raw_groups = self.fetch_all_groups(&domain.api).await?;
 
-        let mut users = vec![];
-        let mut synthetic_groups = vec![];
-        for u in &raw_users {
-            users.push(self.convert_user(u));
-            synthetic_groups.push(self.convert_user_to_group(u));
-        }
+        let mut users = drop_ambiguous_users(
+            raw_users
+                .iter()
+                .map(|u| self.convert_user(u))
+                .filter(|u| {
+                    let ok = u.uid >= MIN_ID && u.gid >= MIN_ID;
+                    if !ok {
+                        tracing::warn!(
+                            user = u.name,
+                            uid = u.uid,
+                            gid = u.gid,
+                            "skipping user with uid/gid in the system range"
+                        );
+                    }
+                    ok
+                })
+                .collect(),
+        );
         users.sort_by_key(|u| u.uid);
 
-        let mut groups: Vec<Group> = raw_groups.iter().map(|g| self.convert_group(g)).collect();
-        groups.extend(synthetic_groups);
+        let mut groups: Vec<Group> = raw_groups
+            .iter()
+            .map(|g| self.convert_group(g))
+            .filter(|g| {
+                let ok = g.gid >= MIN_ID;
+                if !ok {
+                    tracing::warn!(
+                        group = g.name,
+                        gid = g.gid,
+                        "skipping group with gid in the system range"
+                    );
+                }
+                ok
+            })
+            .collect();
+        // Each user's synthetic primary group.
+        groups.extend(users.iter().map(|u| Group {
+            name: u.name.clone(),
+            gid: u.gid,
+            members: vec![],
+            passwd: "x".to_string(),
+        }));
         groups.sort_by_key(|g| g.gid);
 
         tracing::info!("Successfully fetched {} users", users.len());
@@ -80,7 +147,7 @@ impl DirectoryComponent {
         *self.users.write().await = users;
         *self.groups.write().await = groups;
 
-        self.ctx.events.dispatch(SysdEvent::DirectoryFetched {
+        self.ctx.events.dispatch(DirectoryFetched {
             domain: domain.cfg.domain.clone(),
         });
         Ok(())
@@ -154,10 +221,6 @@ impl Component for DirectoryComponent {
         Ok(())
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(SystemDirectoryServer::from_arc(self));
@@ -224,5 +287,27 @@ mod test {
         assert_eq!(dir.clean_name("jens@corp"), "jens-corp");
         assert_eq!(dir.clean_name("a/b"), "a-b");
         assert_eq!(dir.clean_name("svc$"), "svc$");
+    }
+
+    fn user(name: &str, uid: u32) -> User {
+        User {
+            name: name.to_string(),
+            uid,
+            gid: uid,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn ambiguous_users_are_dropped() {
+        let users = drop_ambiguous_users(vec![
+            user("alice", 10001),
+            user("alice", 10002), // e.g. authentik "Alice"
+            user("bob", 10003),
+            user("carol", 10003), // shared uidNumber
+            user("dave", 10004),
+        ]);
+        let names: Vec<_> = users.iter().map(|u| u.name.as_str()).collect();
+        assert_eq!(names, ["dave"]);
     }
 }

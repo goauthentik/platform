@@ -1,6 +1,6 @@
 use ak_platform_e2e::{
-    CmdTestCase, TestMachine, agent_setup, cleanup_hosts, cmd_test, join_domain, must_exec,
-    test_init,
+    CmdTestCase, TestMachine, agent_setup, assert_no_apparmor_denials, cleanup_hosts, cmd_test,
+    join_domain, must_exec, test_init,
 };
 
 #[tokio::test(flavor = "multi_thread")]
@@ -31,6 +31,10 @@ async fn test_auth_identity_agent() {
     )
     .await
     .expect("cmd test");
+
+    assert_no_apparmor_denials(&tm.container)
+        .await
+        .expect("no apparmor denials");
 
     cleanup_hosts().await.expect("cleanup");
 }
@@ -100,6 +104,10 @@ async fn test_auth_local_only_user() {
     )
     .await
     .expect("cmd test");
+
+    assert_no_apparmor_denials(&tm.container)
+        .await
+        .expect("no apparmor denials");
 
     cleanup_hosts().await.expect("cleanup");
 }

@@ -1,0 +1,30 @@
+{
+    "$schema": "https://pkg.goauthentik.io/schemas/agent-settings.schema.json",
+    "profile_management": {
+        "allowed_urls": [
+            "https://authentik.company"
+        ],
+        "allow_delete": false,
+        "allow_plaintext_tokens": false,
+        "require_dpop": true
+    },
+    "authorization": {
+        "remember": {
+            "current_token": {
+                "allow": 60
+            },
+            "ssh_login": {
+                "allow": 900
+            }
+        },
+        "allowed_exchange_audiences": [
+            "internal-tools"
+        ]
+    },
+    "ssh": {
+        "agent_tunnel": false
+    },
+    "telemetry": {
+        "update_check": false
+    }
+}

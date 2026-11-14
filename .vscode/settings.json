@@ -6,20 +6,11 @@
   "rust-analyzer.testExplorer": true,
   "files.associations": {
     "zshrc": "shellscript",
-    "*.hcl": "terraform",
-    "xstring": "cpp"
+    "*.hcl": "terraform"
   },
-  "gopls": {
-    "build.buildFlags": [
-        "-tags=integration,e2e",
-    ]
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
-  "go.testFlags": ["-count=1", "-failfast", "-shuffle=on", "-v", "-covermode=atomic"],
-  "go.testTags": "integration,e2e",
-  "go.testTimeout": "300s",
-  "go.coverOnSingleTest": true,
-  "go.coverOnSingleTestFile": true,
-  "go.coverOnTestPackage": true,
   "gitlens.autolinks": [
       {
           "alphanumeric": true,
@@ -28,7 +19,15 @@
           "ignoreCase": false
       }
   ],
-  "cmake.sourceDirectory": "${workspaceFolder}/ee/wcp",
-  "cmake.buildDirectory": "${workspaceFolder}/cache/wcp",
-  "cmake.automaticReconfigure": false
+  "json.schemaDownload.trustedDomains": {
+    "https://schemastore.azurewebsites.net/": true,
+    "https://raw.githubusercontent.com/microsoft/vscode/": true,
+    "https://raw.githubusercontent.com/devcontainers/spec/": true,
+    "https://www.schemastore.org/": true,
+    "https://json.schemastore.org/": true,
+    "https://spec.openapis.org/": true,
+    "https://json-schema.org/": true,
+    "https://developer.microsoft.com/json-schemas/": true,
+    "https://schema.tauri.app": true
+  }
 }

@@ -1,0 +1,26 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent\profile_management]
+"allowed_urls"=hex(7):68,00,74,00,74,00,70,00,73,00,3a,00,2f,00,2f,00,61,00,75,00,74,00,68,00,65,00,6e,00,74,00,69,00,6b,00,2e,00,63,00,6f,00,6d,00,70,00,61,00,6e,00,79,00,00,00,00,00
+"allow_delete"=dword:00000000
+"allow_plaintext_tokens"=dword:00000000
+"require_dpop"=dword:00000001
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent\authorization]
+"allowed_exchange_audiences"=hex(7):69,00,6e,00,74,00,65,00,72,00,6e,00,61,00,6c,00,2d,00,74,00,6f,00,6f,00,6c,00,73,00,00,00,00,00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent\authorization\remember]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent\authorization\remember\current_token]
+"allow"=dword:0000003c
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent\authorization\remember\ssh_login]
+"allow"=dword:00000384
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent\ssh]
+"agent_tunnel"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\authentik Security Inc.\Platform\Agent\telemetry]
+"update_check"=dword:00000000

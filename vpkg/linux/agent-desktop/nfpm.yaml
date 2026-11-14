@@ -9,6 +9,8 @@ vendor: "Authentik Security Inc."
 homepage: "https://goauthentik.io"
 maintainer: "Authentik Security Inc."
 license: "MIT"
+conflicts:
+  - authentik-agent
 contents:
   - src: ../../bin/agent-desktop/ak-agent-desktop
     dst: /usr/bin/ak-agent-desktop
@@ -29,3 +31,8 @@ overrides:
       - "webkit2gtk4.1-0"
       - "gtk3-0"
       - "libappindicator-gtk3-0"
+  archlinux:
+    depends:
+      - "webkit2gtk-4.1"
+      - "gtk3"
+      - "libappindicator"

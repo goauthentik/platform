@@ -34,7 +34,13 @@ impl TestMachine {
         let hostname = format!("test-machine-{}", Uuid::new_v4());
         let host_coverage_str = host_coverage_dir.to_string_lossy().into_owned();
 
-        let container = GenericImage::new("xghcr.io/goauthentik/platform-e2e", "local")
+        // Set by common.mk from UBUNTU_VERSION, so the image tag follows whichever
+        // release of the test machine was built for this run.
+        let ubuntu_version =
+            env::var("AK_E2E_UBUNTU_VERSION").unwrap_or_else(|_| "24.04".to_string());
+        let image_tag = format!("local-{ubuntu_version}");
+
+        let container = GenericImage::new("xghcr.io/goauthentik/platform-e2e", &image_tag)
             .with_env_var(
                 "LLVM_PROFILE_FILE",
                 "/tmp/ak-coverage/rs/default_%m_%p.profraw",
@@ -86,9 +92,7 @@ impl Drop for TestMachine {
             tracing::info!("Test machine cleanup");
             tokio::runtime::Handle::current().block_on(async {
                 for cmd in [
-                    "journalctl -u ak-sysd",
-                    "journalctl -u ak-agent",
-                    "journalctl -u ssh",
+                    "journalctl",
                     "systemctl stop ak-sysd",
                     "systemctl stop ak-agent",
                 ] {

@@ -9,8 +9,13 @@ use ak_platform::{
 use eyre::Result;
 use ratatui::text::Line;
 
-pub async fn version(_app: App) -> Result<()> {
-    let user_version = agent_version(agent_socket_path(AgentSocketID::Default)?).await;
+pub async fn version(app: App) -> Result<()> {
+    let user_version = agent_version(PlatformString::new_with_default(
+        app.args
+            .socket
+            .unwrap_or(agent_socket_path(AgentSocketID::Default)?.for_current()),
+    ))
+    .await;
     let system_version = agent_version(sysd_socket_path(SysdSocketID::Default)).await;
     let versions = vec![
         format!("authentik Agent CLI: {}", full_version()),

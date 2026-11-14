@@ -10,7 +10,8 @@ extension URL {
     }
 }
 
-final class InteractiveAuth: Sendable {
+@MainActor
+final class InteractiveAuth {
     static let tokenQS: String = "ak-auth-ia-token"
     static let dthHeader: String = "X-Authentik-Platform-Auth-DTH"
 
@@ -32,14 +33,27 @@ final class InteractiveAuth: Sendable {
     }
 
     func cancelAuth() {
-        self.continuation?.resume(returning: .failed)
+        self.finish(returning: .failed)
+    }
+
+    /// Resume the registration continuation exactly once, whichever path gets there first.
+    private func finish(returning result: ASAuthorizationProviderExtensionRegistrationResult) {
+        guard let continuation = self.continuation else { return }
+        self.continuation = nil
+        continuation.resume(returning: result)
+    }
+
+    private func finish(throwing error: Error) {
+        guard let continuation = self.continuation else { return }
+        self.continuation = nil
+        continuation.resume(throwing: error)
     }
 
     func resumeAuthorizationFlow(with url: URL) async -> Bool {
         let token = url.valueOf(InteractiveAuth.tokenQS)
         if let token = token {
             let authResult = await self.handleToken(token: token)
-            self.continuation?.resume(returning: authResult)
+            self.finish(returning: authResult)
             return true
         }
         self.logger.warning("failed to get token from authorization URL")
@@ -73,7 +87,7 @@ final class InteractiveAuth: Sendable {
     func injectDTH(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async
         -> WKNavigationActionPolicy
     {
-        var request = await navigationAction.request
+        var request = navigationAction.request
         if request
             .value(forHTTPHeaderField: InteractiveAuth.dthHeader) != nil
         {
@@ -84,7 +98,7 @@ final class InteractiveAuth: Sendable {
                 authState?.DTH,
                 forHTTPHeaderField: InteractiveAuth.dthHeader
             )
-        await webView.load(request)
+        webView.load(request)
         return .cancel
     }
 
@@ -102,12 +116,14 @@ final class InteractiveAuth: Sendable {
         viewController.authorizationRequest = URL(string: authInteractive.URL)
         authState = authInteractive
         return try await withCheckedThrowingContinuation { continuation in
+            // Store before presenting: the web view can redirect as soon as the
+            // controller is up, and the completion handler may run after that.
+            self.continuation = continuation
             loginManager.presentRegistrationViewController { error in
-                if let err = error {
-                    continuation.resume(throwing: err)
-                    return
+                guard let err = error else { return }
+                Task { @MainActor in
+                    self.finish(throwing: err)
                 }
-                self.continuation = continuation
             }
         }
     }

@@ -3,7 +3,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::Instant;
 
-use tonic::Code;
+use tonic::{Code, Status};
 use tower::{Layer, Service};
 use tracing::Span;
 
@@ -71,15 +71,21 @@ where
 
             let result = inner.call(req).await;
             let time_ms = start.elapsed().as_secs_f64() * 1000.0;
-            let code = match &result {
-                Ok(resp) => grpc_code_from_headers(resp.headers()),
-                Err(_) => Code::Unknown,
+            // A trailers-only response (the common tonic error path) carries
+            // `grpc-status`/`grpc-message` in the headers; a successful unary call
+            // carries them in the trailers, so an absent header is treated as `Ok`.
+            let status = match &result {
+                Ok(resp) => Status::from_header_map(resp.headers()),
+                Err(_) => Some(Status::unknown("")),
             };
+            let code = status.as_ref().map_or(Code::Ok, Status::code);
+            let message = status.as_ref().map_or("", Status::message);
 
             tracing::info!(
                 grpc.service = %service,
                 grpc.method = %method,
                 grpc.code = ?code,
+                grpc.message = message,
                 grpc.time_ms = time_ms,
                 peer.pid = peer_pid,
                 id = ?Span::current().id(),
@@ -98,16 +104,4 @@ fn split_grpc_path(path: &str) -> (String, String) {
         Some((service, method)) => (service.to_string(), method.to_string()),
         None => (trimmed.to_string(), String::new()),
     }
-}
-
-/// A trailers-only response (the common tonic error path) carries `grpc-status`
-/// in the headers; a successful unary call carries it in the trailers, so an
-/// absent header is treated as `Ok`.
-fn grpc_code_from_headers(headers: &http::HeaderMap) -> Code {
-    headers
-        .get("grpc-status")
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.parse::<i32>().ok())
-        .map(Code::from)
-        .unwrap_or(Code::Ok)
 }

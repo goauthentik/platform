@@ -1,7 +1,7 @@
 use crate::components::{Component, SysdContext};
 use ak_platform::generated::sys_auth::{
-    InteractiveAuthAsyncResponse, InteractiveAuthRequest, InteractiveChallenge,
-    SystemAuthorizeRequest, SystemAuthorizeResponse,
+    InteractiveAuthAsyncRequest, InteractiveAuthAsyncResponse, InteractiveAuthRequest,
+    InteractiveChallenge, SystemAuthorizeRequest, SystemAuthorizeResponse,
     system_auth_authorize_server::{SystemAuthAuthorize, SystemAuthAuthorizeServer},
     system_auth_interactive_server::{SystemAuthInteractive, SystemAuthInteractiveServer},
     system_auth_token_server::SystemAuthTokenServer,
@@ -80,10 +80,6 @@ impl Component for AuthComponent {
         Ok(())
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(SystemAuthTokenServer::from_arc(Arc::clone(&self)));
@@ -107,9 +103,9 @@ impl SystemAuthInteractive for AuthComponent {
 
     async fn interactive_auth_async(
         &self,
-        _request: Request<()>,
+        request: Request<InteractiveAuthAsyncRequest>,
     ) -> Result<Response<InteractiveAuthAsyncResponse>, Status> {
-        interactive::interactive_auth_async(&self.ctx)
+        interactive::interactive_auth_async(&self.ctx, request.into_inner().username)
             .await
             .map(Response::new)
     }

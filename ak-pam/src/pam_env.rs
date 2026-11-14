@@ -3,6 +3,8 @@ use libc::{c_char, free};
 use pam::{constants::PamResultCode, module::PamHandle};
 use std::ffi::{CStr, CString, c_void};
 
+use crate::PamError;
+
 #[link(name = "pam")]
 unsafe extern "C" {
     /// Retrieve a single env var (returns a malloc’d C string owned by PAM)
@@ -28,14 +30,14 @@ pub fn pam_get_env(pamh: &mut PamHandle, key: &str) -> Option<String> {
     }
 }
 
-pub fn pam_put_env(pamh: &mut PamHandle, key: &str, val: &str) -> Result<(), PamResultCode> {
+pub fn pam_put_env(pamh: &mut PamHandle, key: &str, val: &str) -> Result<(), PamError> {
     let kv = format!("{key}={val}");
-    let c_kv = CString::new(kv).map_err(|_| PamResultCode::PAM_INCOMPLETE)?;
+    let c_kv = CString::new(kv).map_err(|_| PamError::from(PamResultCode::PAM_INCOMPLETE))?;
     let ret = unsafe { pam_putenv(pamh, c_kv.as_ptr()) };
     if ret == PamResultCode::PAM_SUCCESS {
         Ok(())
     } else {
-        Err(ret)
+        Err(ret.into())
     }
 }
 

@@ -6,6 +6,6 @@
 // Source: state_sysd_session.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 // This file contained no services.

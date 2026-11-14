@@ -15,6 +15,8 @@ use pam::{
 use crate::auth::fido::fido2;
 
 const MAX_ITER: i8 = 30;
+/// Failed attempts (flow errors shown to the user) before giving up.
+const MAX_AUTH_ATTEMPTS: u8 = 3;
 
 pub fn result_to_pam_result(result: i32) -> PamResultCode {
     match InteractiveAuthResult::try_from(result) {
@@ -37,11 +39,13 @@ pub fn prompt_meta_to_pam_message_style(challenge: &InteractiveChallenge) -> Pam
     }
 }
 
+/// Returns the final challenge and, if one was entered, the password, so it can
+/// be handed to modules stacked after us as `PAM_AUTHTOK`.
 pub fn auth_interactive(
     username: String,
     conv: &Conv<'_>,
     bridge: impl SysdBridge,
-) -> Result<InteractiveChallenge, PamResultCode> {
+) -> Result<(InteractiveChallenge, Option<String>), PamResultCode> {
     // Init transaction
     let mut challenge = match bridge.grpc_request(async |ch| {
         return Ok(SystemAuthInteractiveClient::new(ch)
@@ -54,7 +58,7 @@ pub fn auth_interactive(
     }) {
         Ok(t) => t.into_inner(),
         Err(e) => {
-            log::warn!("failed to init interactive auth: {e}");
+            tracing::warn!("failed to init interactive auth: {e}");
             return Err(PamResultCode::PAM_AUTH_ERR);
         }
     };
@@ -69,9 +73,11 @@ pub fn auth_interactive(
         component: "".to_owned(),
     };
     let mut iter = -1;
+    let mut failed_attempts = 0;
+    let mut password = None;
     while iter <= MAX_ITER {
         iter += 1;
-        log::debug!("{} processing challenge: {:?}", iter, challenge);
+        tracing::debug!("{} processing challenge: {:?}", iter, challenge);
         if challenge.finished {
             let result = result_to_pam_result(challenge.result);
             if !challenge.prompt.is_empty() {
@@ -81,12 +87,12 @@ pub fn auth_interactive(
                 ) {
                     Ok(_) => {}
                     Err(e) => {
-                        log::warn!("failed to send prompt");
+                        tracing::warn!("failed to send prompt");
                         return Err(e);
                     }
                 };
             } else if result == PamResultCode::PAM_SUCCESS {
-                return Ok(challenge);
+                return Ok((challenge, password));
             } else if result == PamResultCode::PAM_PERM_DENIED {
                 let _ = conv.send(PAM_ERROR_MSG, "Access denied");
             }
@@ -99,7 +105,7 @@ pub fn auth_interactive(
         // Depending on the prompt, either prompt for data or use what we already know
         match PromptMeta::try_from(challenge.prompt_meta) {
             Ok(PromptMeta::Unspecified) => {
-                log::warn!("Unspecified prompt meta");
+                tracing::warn!("Unspecified prompt meta");
                 return Err(PamResultCode::PAM_ABORT);
             }
             Ok(PromptMeta::PamBinaryPrompt) => {
@@ -108,36 +114,45 @@ pub fn auth_interactive(
                         req_inner.value = match encode_pb(r) {
                             Ok(v) => v,
                             Err(e) => {
-                                log::warn!("Failed to reply to WebAuthn: {}", e);
+                                tracing::warn!("Failed to reply to WebAuthn: {}", e);
                                 return Err(PamResultCode::PAM_ABORT);
                             }
                         };
                     }
                     Err(e) => {
-                        log::warn!("Failed to Fido2 authenticate: {}", e);
+                        tracing::warn!("Failed to Fido2 authenticate: {}", e);
                         continue;
                     }
                 };
             }
             Ok(_) => {
-                log::debug!("Prompt meta generic, prompt user");
+                tracing::debug!("Prompt meta generic, prompt user");
                 let style = prompt_meta_to_pam_message_style(&challenge);
                 let credential = match conv.send(style, &challenge.prompt) {
                     Ok(c) => match c {
                         Some(c) => match c.as_str() {
                             Ok(cc) => cc.to_owned(),
                             Err(_) => {
-                                log::warn!("failed to convert PAM Conversation response to string");
+                                tracing::warn!(
+                                    "failed to convert PAM Conversation response to string"
+                                );
                                 return Err(PamResultCode::PAM_ABORT);
                             }
                         },
                         None => {
+                            if style == PAM_ERROR_MSG {
+                                failed_attempts += 1;
+                                if failed_attempts >= MAX_AUTH_ATTEMPTS {
+                                    tracing::info!("too many failed authentication attempts");
+                                    return Err(PamResultCode::PAM_MAXTRIES);
+                                }
+                            }
                             if [PAM_ERROR_MSG, PAM_TEXT_INFO].contains(&style) {
                                 challenge = prev_challenge.clone();
-                                log::debug!("Restarting loop due to message");
+                                tracing::debug!("Restarting loop due to message");
                                 continue;
                             }
-                            log::warn!("No PAM conversation response");
+                            tracing::warn!("No PAM conversation response");
                             return Err(PamResultCode::PAM_ABORT);
                         }
                     },
@@ -145,10 +160,13 @@ pub fn auth_interactive(
                         return Err(e);
                     }
                 };
+                if challenge.component == "ak-stage-password" {
+                    password = Some(credential.clone());
+                }
                 req_inner.value = credential;
             }
             Err(_) => {
-                log::warn!(
+                tracing::warn!(
                     "Failed to convert prompt meta value to allowed values: {}",
                     challenge.prompt_meta
                 );
@@ -166,11 +184,11 @@ pub fn auth_interactive(
         }) {
             Ok(t) => t.into_inner(),
             Err(e) => {
-                log::warn!("failed to continue auth: {e}");
+                tracing::warn!("failed to continue auth: {e}");
                 return Err(PamResultCode::PAM_AUTH_ERR);
             }
         };
     }
-    log::warn!("Exceeded maximum iterations");
+    tracing::warn!("Exceeded maximum iterations");
     Err(PamResultCode::PAM_ABORT)
 }

@@ -1,4 +1,5 @@
-FROM xghcr.io/goauthentik/platform-test:local
+ARG UBUNTU_VERSION=24.04
+FROM xghcr.io/goauthentik/platform-test:local-${UBUNTU_VERSION}
 
 ARG AK_PLATFORM_VER
 ARG AK_PLATFORM_ARCH
@@ -16,6 +17,7 @@ RUN --mount=type=bind,target=/build/bin,src=./bin \
     cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system && \
     printf '[Service]\nEnvironment="LLVM_PROFILE_FILE=/tmp/ak-coverage/rs/ak-agent-%%p.profraw"\nEnvironment="HOME=/root"\n' > /etc/systemd/system/ak-agent.service.d/coverage.conf && \
     sed -i 's/false/true/g' /etc/authentik/config.json && \
+    sed -i 's/pam_authentik.so/pam_authentik.so debug/g' /etc/pam.d/* && \
     systemctl enable ak-agent && \
     rm -f /etc/machine-id && \
     rm -f /etc/ssh/ssh_host_*

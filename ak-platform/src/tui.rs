@@ -73,7 +73,7 @@ pub fn value_to_tree_node(label: &str, value: &Value) -> TreeNode {
         }
 
         Value::String(s) => {
-            // Mirror the Go behaviour: if the string is itself valid JSON, recurse
+            // Mirror the Go behavior: if the string is itself valid JSON, recurse
             if let Ok(inner) = serde_json::from_str::<Value>(s)
                 && matches!(inner, Value::Object(_) | Value::Array(_))
             {
@@ -132,7 +132,7 @@ fn leaf_node(label: &str, value: &str) -> TreeNode {
     TreeNode::new(format!("{}: {}", styled_key(label), styled_value(value)))
 }
 
-/// Minimal ANSI 256-color wrapper — keeps parity with lipgloss colour ints.
+/// Minimal ANSI 256-color wrapper — keeps parity with lipgloss color ints.
 fn ansi_color(s: &str, code: u8) -> String {
     format!("\x1b[38;5;{code}m{s}\x1b[0m")
 }

@@ -1,8 +1,8 @@
 use crate::components::{Component, SysdContext};
 use crate::state::SessionRecord;
 use ak_platform::generated::session::{
-    CloseSessionRequest, CloseSessionResponse, OpenSessionRequest, OpenSessionResponse,
-    SessionStatusRequest, SessionStatusResponse,
+    CloseSessionRequest, CloseSessionResponse, CreateSessionRequest, CreateSessionResponse,
+    OpenSessionRequest, SessionStatusRequest, SessionStatusResponse,
     session_manager_server::{SessionManager, SessionManagerServer},
 };
 use ak_platform::paths::SysdSocketID;
@@ -15,6 +15,13 @@ use tonic::{Request, Response, Status};
 
 mod terminate;
 
+/// A user session was opened (a login or an SSH session).
+#[derive(Clone, Debug)]
+pub struct SessionOpened {
+    pub session_id: String,
+    pub pid: u32,
+}
+
 pub struct SessionComponent {
     ctx: SysdContext,
 }
@@ -24,7 +31,7 @@ impl SessionComponent {
         SessionComponent { ctx }
     }
 
-    /// Creates a new session record, mirroring Go's `NewSession`.
+    /// Creates a new session record
     ///
     /// `expires_at` (unix seconds) is only recorded when the active domain's
     /// `auth_terminate_session_on_expiry` flag is set; otherwise the session
@@ -124,10 +131,6 @@ impl Component for SessionComponent {
         Ok(())
     }
 
-    async fn stop(&self) -> Result<()> {
-        Ok(())
-    }
-
     fn register(self: Arc<Self>, socket: SysdSocketID, routes: &mut tonic::service::RoutesBuilder) {
         if matches!(socket, SysdSocketID::Default) {
             routes.add_service(SessionManagerServer::from_arc(self));
@@ -169,7 +172,7 @@ impl SessionManager for SessionComponent {
     async fn open_session(
         &self,
         request: Request<OpenSessionRequest>,
-    ) -> Result<Response<OpenSessionResponse>, Status> {
+    ) -> Result<Response<CreateSessionResponse>, Status> {
         let req = request.into_inner();
         let mut session = self
             .ctx
@@ -191,14 +194,75 @@ impl SessionManager for SessionComponent {
             .await
             .map_err(crate::util::to_status)?;
 
-        self.ctx
-            .events
-            .dispatch(crate::events::SysdEvent::SessionOpened {
-                session_id: session.id.clone(),
-                pid: req.pid,
-            });
+        self.ctx.events.dispatch(SessionOpened {
+            session_id: session.id.clone(),
+            pid: req.pid,
+        });
 
-        Ok(Response::new(OpenSessionResponse {
+        Ok(Response::new(CreateSessionResponse {
+            success: true,
+            session_id: session.id,
+        }))
+    }
+
+    async fn create_session(
+        &self,
+        request: Request<CreateSessionRequest>,
+    ) -> Result<Response<CreateSessionResponse>, Status> {
+        let req = request.into_inner();
+
+        let Some(auth) = self
+            .ctx
+            .registry
+            .get::<crate::components::auth::AuthComponent>("auth")
+        else {
+            return Err(Status::invalid_argument("no auth component"));
+        };
+
+        let token = match (req.ssh_auth, req.token) {
+            (Some(ssh), None) => {
+                let (_, auth) = auth.extract_ssh_cert_token(ssh)?;
+                auth
+            }
+            (None, Some(token)) => token,
+            _ => {
+                return Err(Status::invalid_argument(
+                    "only one of ssh_auth or token allowed/required",
+                ));
+            }
+        };
+
+        let validated_token = auth
+            .validate_token(token.clone(), None)
+            .await
+            .map_err(|e| Status::from_error(e.into()))?;
+
+        let mut session = self
+            .new_session(
+                req.username.clone(),
+                token.clone(),
+                Some(validated_token.claims.exp.timestamp()),
+            )
+            .await
+            .map_err(|e| Status::from_error(e.into()))?;
+
+        session.opened = true;
+        session.pid = Some(req.pid);
+        session.ppid = Some(req.ppid);
+        session.local_socket = None;
+        self.ctx
+            .state
+            .sessions()
+            .update(&session)
+            .await
+            .map_err(crate::util::to_status)?;
+
+        self.ctx.events.dispatch(SessionOpened {
+            session_id: session.id.clone(),
+            pid: req.pid,
+        });
+
+        Ok(Response::new(CreateSessionResponse {
             success: true,
             session_id: session.id,
         }))

@@ -15,10 +15,15 @@ class API {
         -> ASAuthorizationProviderExtensionLoginConfiguration?
     {
         do {
-            let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(
-                from: loginManager.key(for: .currentDeviceSigning)!)!
-            let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
-                from: loginManager.key(for: .currentDeviceEncryption)!)!
+            guard let signingKey = loginManager.key(for: .currentDeviceSigning),
+                let encryptionKey = loginManager.key(for: .currentDeviceEncryption),
+                let (SignKeyID, DeviceSigningKey, _) = try getPublicKeyString(from: signingKey),
+                let (EncKeyID, DeviceEncryptionKey, _) = try getPublicKeyString(
+                    from: encryptionKey)
+            else {
+                self.logger.error("device signing/encryption keys not available")
+                return nil
+            }
             self.logger.debug("registering device with sysd...")
             let config = try await SysdBridge.shared.pssoRegisterDevice(
                 deviceSigningKey: DeviceSigningKey,
@@ -30,7 +35,7 @@ class API {
                 .debug("Got device login config from server: \(String(describing: config))")
             return config
         } catch {
-            self.logger.error("failed to register: \(error)")
+            self.logger.error("failed to register: \(String(describing: error), privacy: .public)")
             return nil
         }
     }
@@ -41,31 +46,29 @@ class API {
         method: ASAuthorizationProviderExtensionAuthenticationMethod,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            // Only the userSecureEnclaveKey method has a user Secure Enclave key to
-            // register: in password mode macOS never generates one, so asking for it
-            // returns nil. Registering is still required in both modes -- it is what
-            // binds this local account to an authentik user -- so the key is optional
-            // here rather than a precondition.
-            var EnclaveKeyID = ""
-            var UserSecureEnclaveKey = ""
-            if method == .userSecureEnclaveKey {
-                guard let key = loginManger.key(for: .userSecureEnclaveKey) else {
-                    self.logger.error("no user Secure Enclave key to register")
+            // Only the password method has no user key to register: macOS never generates
+            // one, so asking for it returns nil. Registering is still required -- it is what
+            // binds this local account to an authentik user -- so the key is optional there
+            // rather than a precondition.
+            var enclaveKeyID = ""
+            var userSecureEnclaveKey = ""
+            if method != .password {
+                guard let key = loginManger.key(for: .userSecureEnclaveKey)
+                        ?? loginManger.key(for: .userDeviceSigning),
+                    let (keyID, publicKey, _) = try getPublicKeyString(from: key)
+                else {
+                    self.logger.error("no user secure enclave key available, cannot register user")
                     return .failed
                 }
-                guard let (keyID, publicKey, _) = try getPublicKeyString(from: key) else {
-                    self.logger.error("could not read the user Secure Enclave public key")
-                    return .failed
-                }
-                EnclaveKeyID = keyID
-                UserSecureEnclaveKey = publicKey
+                enclaveKeyID = keyID
+                userSecureEnclaveKey = publicKey
             }
             self.logger.debug(
                 "registering user with sysd, method \(String(describing: method))...")
             let loginConfig = try await SysdBridge.shared
                 .pssoRegisterUser(
-                    enclaveKeyID: EnclaveKeyID,
-                    userSecureEnclaveKey: UserSecureEnclaveKey,
+                    enclaveKeyID: enclaveKeyID,
+                    userSecureEnclaveKey: userSecureEnclaveKey,
                     userAuth: userToken,
                 )
             self.logger
@@ -73,7 +76,7 @@ class API {
             try loginManger.saveUserLoginConfiguration(loginConfig)
             return .success
         } catch {
-            self.logger.error("failed to register: \(error)")
+            self.logger.error("failed to register: \(String(describing: error), privacy: .public)")
             return .failed
         }
     }
@@ -138,8 +141,11 @@ class API {
         }
 
         // Determine the type of the key (RSA, EC, etc.)
-        let attributes = SecKeyCopyAttributes(publicKey) as! [CFString: Any]
-        let keyType = attributes[kSecAttrKeyType] as! CFString
+        guard let attributes = SecKeyCopyAttributes(publicKey) as? [CFString: Any],
+            let keyType = attributes[kSecAttrKeyType] as? String as CFString?
+        else {
+            return nil
+        }
 
         // Extract public key data in DER format
         var error: Unmanaged<CFError>?

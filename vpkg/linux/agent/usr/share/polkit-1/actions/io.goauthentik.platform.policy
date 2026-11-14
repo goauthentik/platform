@@ -1,9 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
         "https://specifications.freedesktop.org/PolicyKit/1.0/policyconfig.dtd">
+<!--
+    The authentik agent checks each request against one of the actions below, picked by what
+    the request would hand out, so polkit rules can allow one kind of request and keep prompting
+    for the rest. An approval kept by auth_self_keep (about 5 minutes) only covers further
+    requests for the same action, from any program.
+
+    What a rule can rely on: action.id is chosen by the agent for the request, and subject.user
+    is the user the agent runs as. The subject is the agent process itself, not the program
+    that asked it, and polkit doesn't accept details from the agent. So a rule can't tell which
+    program asked, or which application a token is for: allowing token-exchange lets every
+    program running as that user get tokens for any application that user can access.
+
+    Example: let alice's command line tools, such as `ak auth claude`, get tokens without a
+    prompt, in /etc/polkit-1/rules.d/50-authentik-agent.rules:
+
+        polkit.addRule(function (action, subject) {
+            if (action.id == "io.goauthentik.platform.token-exchange" &&
+                subject.user == "alice" && subject.local && subject.active) {
+                return polkit.Result.YES;
+            }
+        });
+
+    Everything else keeps prompting, in particular current-token, which hands out the agent's
+    own session token.
+-->
 <policyconfig>
     <vendor>authentik Platform Agent</vendor>
     <vendor_url>https://goauthentik.io</vendor_url>
+    <action id="io.goauthentik.platform.whoami">
+        <description>Read your authentik account information.</description>
+        <message>Authentication is required to let a program read your authentik account information.</message>
+        <defaults>
+            <allow_any>auth_self</allow_any>
+            <allow_inactive>auth_self</allow_inactive>
+            <allow_active>auth_self_keep</allow_active>
+        </defaults>
+    </action>
+    <action id="io.goauthentik.platform.current-token">
+        <description>Give a program your authentik session token.</description>
+        <message>Authentication is required to give a program your authentik session token.</message>
+        <defaults>
+            <allow_any>auth_self</allow_any>
+            <allow_inactive>auth_self</allow_inactive>
+            <allow_active>auth_self_keep</allow_active>
+        </defaults>
+    </action>
+    <action id="io.goauthentik.platform.token-exchange">
+        <description>Give a program a token for another application.</description>
+        <message>Authentication is required to give a program a token for another application in your authentik account.</message>
+        <defaults>
+            <allow_any>auth_self</allow_any>
+            <allow_inactive>auth_self</allow_inactive>
+            <allow_active>auth_self_keep</allow_active>
+        </defaults>
+    </action>
+    <action id="io.goauthentik.platform.ssh-login">
+        <description>Log in to an SSH host with your authentik account.</description>
+        <message>Authentication is required to log in to an SSH host with your authentik account.</message>
+        <defaults>
+            <allow_any>auth_self</allow_any>
+            <allow_inactive>auth_self</allow_inactive>
+            <allow_active>auth_self_keep</allow_active>
+        </defaults>
+    </action>
     <action id="io.goauthentik.platform.authorize">
         <description>Authorize actions on behalf of your authentik account.</description>
         <message>Authorize access to your account.</message>

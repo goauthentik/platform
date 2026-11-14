@@ -11,6 +11,10 @@ endif
 clean:
 	cd "${TOP}" && rm -rf "bin/${TARGET}"
 
+.PHONY: dev
+dev:
+	pnpm run tauri dev
+
 build:
 ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)

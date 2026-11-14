@@ -14,6 +14,9 @@ pub struct SetupRequest {
     pub access_token: ::prost::alloc::string::String,
     #[prost(string, tag="6")]
     pub refresh_token: ::prost::alloc::string::String,
+    /// PKCS#8 PEM DPoP private key; empty if this profile is not key-bound.
+    #[prost(string, tag="7")]
+    pub dpop_private_key: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct SetupResponse {
@@ -34,6 +37,8 @@ pub struct Profile {
     pub next_renew: ::core::option::Option<::pbjson_types::Timestamp>,
     #[prost(enumeration="ProfileStatus", tag="6")]
     pub status: i32,
+    #[prost(bool, tag="7")]
+    pub dpop_bound: bool,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ListProfilesResponse {

@@ -80,7 +80,7 @@ where
         self.loaded.write().await
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub async fn load(&self) -> Result<()> {
         tracing::debug!("Loading config");
         let file = match File::open(self.path.clone()) {
@@ -104,7 +104,7 @@ where
         Ok(())
     }
 
-    #[tracing::instrument]
+    #[tracing::instrument(skip_all)]
     pub async fn save(&self) -> Result<()> {
         let mut snapshot = self.loaded.read().await.clone();
         snapshot.pre_save().await?;

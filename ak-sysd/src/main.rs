@@ -1,12 +1,19 @@
 use ak_meta::full_version;
 use ak_platform::{
-    log::{LevelFilter, LogBuilder},
+    log::{LevelFilter, LogBuilder, set_log_level},
     paths::sysd_config_file,
     string::PlatformString,
 };
 use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 use eyre::Result;
+
+/// See the `tikv-jemallocator` dependency comment in `Cargo.toml`: glibc
+/// strands the in-process osquery engine's large transient allocations in its
+/// arenas forever, where jemalloc decays them back to the OS.
+#[cfg(not(target_os = "windows"))]
+#[global_allocator]
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 pub mod agent;
 pub mod cfg;
@@ -84,6 +91,9 @@ enum TroubleshootCommands {
 #[ak_meta::main("ak-sysd")]
 pub async fn main() -> Result<()> {
     let cli = SysdArgs::parse();
+    if !matches!(cli.command, Commands::Agent) {
+        ak_platform::restore_sigpipe();
+    }
     LogBuilder::new(
         PlatformString::new()
             .with_linux("ak-sysd")
@@ -92,14 +102,11 @@ pub async fn main() -> Result<()> {
     .allow_platform(true)
     .allow_stdout(true)
     .default_level(LevelFilter::Info)
-    .with_filter(
-        "ak_sysd",
-        match cli.debug {
-            true => LevelFilter::Trace,
-            false => LevelFilter::Info,
-        },
-    )
+    .with_filter("ak_sysd", LevelFilter::Trace)
     .enable();
+    if !cli.debug {
+        set_log_level(LevelFilter::Info);
+    }
     tracing::trace!("authentik sysd v{}", full_version());
 
     match cli.command {

@@ -7,7 +7,13 @@
         "core:default",
         "opener:default",
         "core:window:allow-start-dragging",
+        "core:window:allow-toggle-maximize",
         "opener:allow-default-urls",
-        "os:default"
+        {
+            "identifier": "opener:allow-open-url",
+            "allow": [{ "url": "cursor://*" }, { "url": "vscode:*" }]
+        },
+        "os:default",
+        "sentry:default"
     ]
 }

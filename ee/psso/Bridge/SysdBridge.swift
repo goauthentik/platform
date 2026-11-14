@@ -26,7 +26,7 @@ final class LogInterceptor: ClientInterceptor {
         case .success:
             self.logger.info("Server accepted RPC for processing")
         case .failure(let error):
-            self.logger.warning("Server rejected RPC with error '\(error)'")
+            self.logger.warning("Server rejected RPC with error '\(String(describing: error), privacy: .public)'")
         }
 
         return response
@@ -93,7 +93,8 @@ public class SysdBridge {
         return try await self.withClient { client in
             let res = SystemAuthInteractive.Client(wrapping: client)
             let url = try await res.interactiveAuthAsync(
-                request: ClientRequest(message: Google_Protobuf_Empty())
+                request: ClientRequest(
+                    message: InteractiveAuthAsyncRequest.init())
             )
             return AKInteractiveAuth(URL: url.url, DTH: url.headerToken)
         }
@@ -159,16 +160,6 @@ public class SysdBridge {
         }
     }
 
-    public func domainsList(name: String, authentikURL: String, token: String) async throws {
-        return try await self.withClient(id: .ctrlSocket) { client in
-            let c = SystemCtrl.Client(wrapping: client)
-            let reply = try await c.domainList(
-                request: ClientRequest(message: Google_Protobuf_Empty())
-            )
-            //            return reply.domains[0].
-        }
-    }
-
     #if os(macOS)
         public func pssoRegisterUser(
             enclaveKeyID: String,
@@ -186,7 +177,7 @@ public class SysdBridge {
                         }
                     ))
                 return ASAuthorizationProviderExtensionUserLoginConfiguration(
-                    loginUserName: reply.username
+                    loginUserName: reply.username,
                 )
             }
         }
@@ -215,6 +206,11 @@ public class SysdBridge {
                     jwksEndpointURL: URL(string: res.jwksEndpoint)!,
                     audience: res.audience
                 )
+                if #available(macOS 27.0, *) {
+                    cfg.federationType = .dynamicOpenID
+                    cfg.federationUserPreauthenticationURL = URL(string: res.authorizationEndpoint)!
+                    cfg.authorizationURLKeypath = "authorization_url"
+                }
                 cfg.nonceEndpointURL = URL(string: res.nonceEndpoint)!
                 // Required for Platform SSO 2.0, alongside protocolVersion() returning
                 // .version2_0: Apple gates the version on both, and without this the device

@@ -6,11 +6,10 @@
 // Source: sys_auth.proto
 //
 // For information on using the generated types, please see the documentation:
-//   https://github.com/grpc/grpc-swift
+//   https://github.com/grpc/grpc-swift-2
 
 internal import GRPCCore
 internal import GRPCProtobuf
-internal import SwiftProtobuf
 
 // MARK: - sys_auth.SystemAuthToken
 
@@ -81,9 +80,9 @@ extension SystemAuthToken {
         ///   - serializer: A serializer for `TokenAuthRequest` messages.
         ///   - deserializer: A deserializer for `TokenAuthResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func tokenAuth<Result>(
             request: GRPCCore.ClientRequest<TokenAuthRequest>,
@@ -104,9 +103,9 @@ extension SystemAuthToken {
         ///   - serializer: A serializer for `SSHCertAuthRequest` messages.
         ///   - deserializer: A deserializer for `SSHCertAuthResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func sshCertAuth<Result>(
             request: GRPCCore.ClientRequest<SSHCertAuthRequest>,
@@ -144,9 +143,9 @@ extension SystemAuthToken {
         ///   - serializer: A serializer for `TokenAuthRequest` messages.
         ///   - deserializer: A deserializer for `TokenAuthResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func tokenAuth<Result>(
             request: GRPCCore.ClientRequest<TokenAuthRequest>,
@@ -178,9 +177,9 @@ extension SystemAuthToken {
         ///   - serializer: A serializer for `SSHCertAuthRequest` messages.
         ///   - deserializer: A deserializer for `SSHCertAuthResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func sshCertAuth<Result>(
             request: GRPCCore.ClientRequest<SSHCertAuthRequest>,
@@ -215,9 +214,9 @@ extension SystemAuthToken.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `TokenAuthRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func tokenAuth<Result>(
         request: GRPCCore.ClientRequest<TokenAuthRequest>,
@@ -244,9 +243,9 @@ extension SystemAuthToken.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SSHCertAuthRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func sshCertAuth<Result>(
         request: GRPCCore.ClientRequest<SSHCertAuthRequest>,
@@ -278,9 +277,9 @@ extension SystemAuthToken.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func tokenAuth<Result>(
         _ message: TokenAuthRequest,
@@ -311,9 +310,9 @@ extension SystemAuthToken.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func sshCertAuth<Result>(
         _ message: SSHCertAuthRequest,
@@ -360,7 +359,7 @@ internal enum SystemAuthInteractive: Sendable {
         /// Namespace for "InteractiveAuthAsync" metadata.
         internal enum InteractiveAuthAsync: Sendable {
             /// Request type for "InteractiveAuthAsync".
-            internal typealias Input = SwiftProtobuf.Google_Protobuf_Empty
+            internal typealias Input = InteractiveAuthAsyncRequest
             /// Response type for "InteractiveAuthAsync".
             internal typealias Output = InteractiveAuthAsyncResponse
             /// Descriptor for "InteractiveAuthAsync".
@@ -404,9 +403,9 @@ extension SystemAuthInteractive {
         ///   - serializer: A serializer for `InteractiveAuthRequest` messages.
         ///   - deserializer: A deserializer for `InteractiveChallenge` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func interactiveAuth<Result>(
             request: GRPCCore.ClientRequest<InteractiveAuthRequest>,
@@ -423,17 +422,17 @@ extension SystemAuthInteractive {
         /// > Interactive auth which is handed of to a browser
         ///
         /// - Parameters:
-        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
-        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - request: A request containing a single `InteractiveAuthAsyncRequest` message.
+        ///   - serializer: A serializer for `InteractiveAuthAsyncRequest` messages.
         ///   - deserializer: A deserializer for `InteractiveAuthAsyncResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func interactiveAuthAsync<Result>(
-            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
-            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            request: GRPCCore.ClientRequest<InteractiveAuthAsyncRequest>,
+            serializer: some GRPCCore.MessageSerializer<InteractiveAuthAsyncRequest>,
             deserializer: some GRPCCore.MessageDeserializer<InteractiveAuthAsyncResponse>,
             options: GRPCCore.CallOptions,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result
@@ -467,9 +466,9 @@ extension SystemAuthInteractive {
         ///   - serializer: A serializer for `InteractiveAuthRequest` messages.
         ///   - deserializer: A deserializer for `InteractiveChallenge` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func interactiveAuth<Result>(
             request: GRPCCore.ClientRequest<InteractiveAuthRequest>,
@@ -497,17 +496,17 @@ extension SystemAuthInteractive {
         /// > Interactive auth which is handed of to a browser
         ///
         /// - Parameters:
-        ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
-        ///   - serializer: A serializer for `SwiftProtobuf.Google_Protobuf_Empty` messages.
+        ///   - request: A request containing a single `InteractiveAuthAsyncRequest` message.
+        ///   - serializer: A serializer for `InteractiveAuthAsyncRequest` messages.
         ///   - deserializer: A deserializer for `InteractiveAuthAsyncResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func interactiveAuthAsync<Result>(
-            request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
-            serializer: some GRPCCore.MessageSerializer<SwiftProtobuf.Google_Protobuf_Empty>,
+            request: GRPCCore.ClientRequest<InteractiveAuthAsyncRequest>,
+            serializer: some GRPCCore.MessageSerializer<InteractiveAuthAsyncRequest>,
             deserializer: some GRPCCore.MessageDeserializer<InteractiveAuthAsyncResponse>,
             options: GRPCCore.CallOptions = .defaults,
             onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result = { response in
@@ -538,9 +537,9 @@ extension SystemAuthInteractive.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `InteractiveAuthRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func interactiveAuth<Result>(
         request: GRPCCore.ClientRequest<InteractiveAuthRequest>,
@@ -565,14 +564,14 @@ extension SystemAuthInteractive.ClientProtocol {
     /// > Interactive auth which is handed of to a browser
     ///
     /// - Parameters:
-    ///   - request: A request containing a single `SwiftProtobuf.Google_Protobuf_Empty` message.
+    ///   - request: A request containing a single `InteractiveAuthAsyncRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func interactiveAuthAsync<Result>(
-        request: GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>,
+        request: GRPCCore.ClientRequest<InteractiveAuthAsyncRequest>,
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result = { response in
             try response.message
@@ -580,7 +579,7 @@ extension SystemAuthInteractive.ClientProtocol {
     ) async throws -> Result where Result: Sendable {
         try await self.interactiveAuthAsync(
             request: request,
-            serializer: GRPCProtobuf.ProtobufSerializer<SwiftProtobuf.Google_Protobuf_Empty>(),
+            serializer: GRPCProtobuf.ProtobufSerializer<InteractiveAuthAsyncRequest>(),
             deserializer: GRPCProtobuf.ProtobufDeserializer<InteractiveAuthAsyncResponse>(),
             options: options,
             onResponse: handleResponse
@@ -601,9 +600,9 @@ extension SystemAuthInteractive.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func interactiveAuth<Result>(
         _ message: InteractiveAuthRequest,
@@ -634,19 +633,19 @@ extension SystemAuthInteractive.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func interactiveAuthAsync<Result>(
-        _ message: SwiftProtobuf.Google_Protobuf_Empty,
+        _ message: InteractiveAuthAsyncRequest,
         metadata: GRPCCore.Metadata = [:],
         options: GRPCCore.CallOptions = .defaults,
         onResponse handleResponse: @Sendable @escaping (GRPCCore.ClientResponse<InteractiveAuthAsyncResponse>) async throws -> Result = { response in
             try response.message
         }
     ) async throws -> Result where Result: Sendable {
-        let request = GRPCCore.ClientRequest<SwiftProtobuf.Google_Protobuf_Empty>(
+        let request = GRPCCore.ClientRequest<InteractiveAuthAsyncRequest>(
             message: message,
             metadata: metadata
         )
@@ -709,9 +708,9 @@ extension SystemAuthAuthorize {
         ///   - serializer: A serializer for `SystemAuthorizeRequest` messages.
         ///   - deserializer: A deserializer for `SystemAuthorizeResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         func authorize<Result>(
             request: GRPCCore.ClientRequest<SystemAuthorizeRequest>,
@@ -745,9 +744,9 @@ extension SystemAuthAuthorize {
         ///   - serializer: A serializer for `SystemAuthorizeRequest` messages.
         ///   - deserializer: A deserializer for `SystemAuthorizeResponse` messages.
         ///   - options: Options to apply to this RPC.
-        ///   - handleResponse: A closure which handles the response, the result of which is
-        ///       returned to the caller. Returning from the closure will cancel the RPC if it
-        ///       hasn't already finished.
+        ///   - handleResponse: A closure which handles the response and returns its result to
+        ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+        ///       already finished.
         /// - Returns: The result of `handleResponse`.
         internal func authorize<Result>(
             request: GRPCCore.ClientRequest<SystemAuthorizeRequest>,
@@ -778,9 +777,9 @@ extension SystemAuthAuthorize.ClientProtocol {
     /// - Parameters:
     ///   - request: A request containing a single `SystemAuthorizeRequest` message.
     ///   - options: Options to apply to this RPC.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func authorize<Result>(
         request: GRPCCore.ClientRequest<SystemAuthorizeRequest>,
@@ -808,9 +807,9 @@ extension SystemAuthAuthorize.ClientProtocol {
     ///   - message: request message to send.
     ///   - metadata: Additional metadata to send, defaults to empty.
     ///   - options: Options to apply to this RPC, defaults to `.defaults`.
-    ///   - handleResponse: A closure which handles the response, the result of which is
-    ///       returned to the caller. Returning from the closure will cancel the RPC if it
-    ///       hasn't already finished.
+    ///   - handleResponse: A closure which handles the response and returns its result to
+    ///       the caller. Returning from the closure will cancel the RPC if it hasn't
+    ///       already finished.
     /// - Returns: The result of `handleResponse`.
     internal func authorize<Result>(
         _ message: SystemAuthorizeRequest,

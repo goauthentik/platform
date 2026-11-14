@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::ErrorKind};
 
 use secret_service::{EncryptionType, SecretService};
 use tokio::sync::OnceCell;
@@ -109,8 +109,77 @@ impl KeyringStore for LinuxStore {
 // Maps a Secret Service error, translating "no provider / no D-Bus session" into
 // `NotAvailable` so callers can distinguish a missing backend from other failures.
 fn map_ss(e: secret_service::Error) -> KeyringError {
+    let Ok(method_not_available) =
+        zbus_names::OwnedErrorName::try_from("org.freedesktop.DBus.Error.ServiceUnknown")
+    else {
+        return KeyringError::NotAvailable();
+    };
     match e {
         secret_service::Error::Unavailable => KeyringError::NotAvailable(),
+        secret_service::Error::Zbus(e) => {
+            match e.clone() {
+                // Handle error when DBus is available, but no secret service is registered
+                zbus::Error::MethodError(err_name, _, _) => {
+                    if err_name == method_not_available {
+                        KeyringError::NotAvailable()
+                    } else {
+                        KeyringError::Other(eyre::Report::from(e))
+                    }
+                }
+                // Handle error when DBus socket does not exist
+                zbus::Error::Connection(e, _) => {
+                    if e.kind() == ErrorKind::NotFound {
+                        KeyringError::NotAvailable()
+                    } else {
+                        KeyringError::Other(eyre::Report::from(e))
+                    }
+                }
+                _ => KeyringError::Other(eyre::Report::from(e)),
+            }
+        }
         e => KeyringError::Other(eyre::Report::from(e)),
+    }
+}
+
+#[cfg(all(test, target_os = "linux"))]
+pub mod tests {
+    use std::env;
+
+    use super::*;
+    use crate::service;
+
+    #[tokio::test]
+    async fn error_not_available() {
+        let ls = LinuxStore::new();
+        let err = ls
+            .set(
+                &service("foo"),
+                "foo",
+                Accessibility::Always,
+                "bar".to_string(),
+            )
+            .await
+            .err()
+            .expect("should error");
+        assert!(matches!(err, KeyringError::NotAvailable()));
+    }
+
+    #[tokio::test]
+    async fn test_no_dbus() {
+        unsafe {
+            env::set_var("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/foo");
+        };
+        let ls = LinuxStore::new();
+        let err = ls
+            .set(
+                &service("foo"),
+                "foo",
+                Accessibility::Always,
+                "bar".to_string(),
+            )
+            .await
+            .err()
+            .expect("should error");
+        assert!(matches!(err, KeyringError::NotAvailable()));
     }
 }

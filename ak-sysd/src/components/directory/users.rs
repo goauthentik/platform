@@ -1,5 +1,5 @@
 use crate::components::directory::{DirectoryComponent, PAGE_SIZE, attr_number};
-use ak_platform::generated::sys_directory::{Group, User};
+use ak_platform::generated::sys_directory::User;
 use authentik_client::apis::configuration::Configuration;
 use authentik_client::models;
 use eyre::Result;
@@ -16,17 +16,6 @@ impl DirectoryComponent {
             gecos: raw_user.name.clone(),
             homedir: format!("/home/{name}"),
             shell: "/bin/bash".to_string(),
-        }
-    }
-
-    pub fn convert_user_to_group(&self, raw_user: &models::User) -> Group {
-        let name = self.clean_name(&raw_user.username);
-        let gid = self.user_gid(raw_user);
-        Group {
-            name,
-            gid,
-            members: vec![],
-            passwd: "x".to_string(),
         }
     }
 
@@ -55,7 +44,6 @@ impl DirectoryComponent {
                 None,
                 None,       // attributes..groups_by_pk
                 Some(true), // include_groups
-                None,
                 None,
                 None,
                 None,

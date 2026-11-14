@@ -5,7 +5,7 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
-TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e ak-platform ak-sysd
+TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e containers/ssh ak-platform ak-sysd
 
 .PHONY: all
 all: clean gen
@@ -41,21 +41,59 @@ ifeq ($(PLATFORM),gnu/linux)
 ifeq ($(CI),true)
 	sudo apt-get update
 	sudo apt-get install -y \
-		libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+		build-essential pkg-config libpam0g-dev libudev-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 endif
 endif
+
+# credprovider and browser-host are Windows-only workspace members: the first
+# is written against Win32 APIs that don't exist off Windows, the second
+# renders through WebView2. e2e drives both. They stay workspace members so one
+# lockfile and one cargo invocation cover the repo, but clippy can only build
+# them on Windows -- `make ee/wcp/lint` covers them there.
+ifeq ($(OS),Windows_NT)
+# nss and pam are unix-only.
+RS_LINT_EXCLUDE := --exclude ak-nss --exclude ak-pam
+else
+RS_LINT_EXCLUDE := --exclude ak-ee-wcp --exclude ak-ee-wcp-browser-host --exclude ak-ee-wcp-e2e
+# pam-bindings only compiles against Linux-PAM.
+ifneq ($(PLATFORM),gnu/linux)
+RS_LINT_EXCLUDE += --exclude ak-pam
+endif
+endif
+
+format:
+	cargo fmt
+	cargo clippy \
+		--fix \
+		--allow-dirty \
+		--workspace \
+		$(RS_LINT_EXCLUDE)
 
 lint-rs:
 	cargo fmt --all
 	cargo clippy --workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 	cargo clippy --fix \
 		--allow-dirty \
 		--workspace \
+		${RS_LINT_EXCLUDE} \
 		${RS_TEST_FLAGS}
 
+lint-rs-ci:
+	cargo fmt --all --check
+	cargo clippy --workspace \
+		${RS_LINT_EXCLUDE} \
+		${RS_TEST_FLAGS} \
+		-- -D warnings
+	cargo deny --config "${PWD}/.cargo/deny.toml" --locked --workspace check
+
+lint-spellcheck:
+	pnpm install
+	pnpm run lint:spellcheck
+
 .PHONY: lint
-lint: $(foreach target,$(TARGETS),${target}/lint)
+lint:$(foreach target,$(TARGETS),${target}/lint)
 	"$(MAKE)" lint-rs
 
 test-integration:
@@ -71,7 +109,7 @@ test-e2e-convert:
 	$(call rs_e2e_coverage_convert)
 
 test-setup:
-	go run -v ./cmd/cli setup -v http://authentik:9000
+	cargo run -p ak-cli -- -v config setup --authentik-url http://authentik:9000
 
 test-ssh:
 	ssh -i akadmin@ak-platform-test-machine
@@ -86,17 +124,30 @@ test-join:
 		authentik-platform_devcontainer-test-machine-1 \
 		ak-sysd domains join ak -a http://authentik:9000
 
-test-full: clean agent/test-deploy sysd/test-deploy ak-cli/test-deployak-nss/test-deployak-pam/test-deploy test-ssh
+test-full: clean ak-agent/test-deploy ak-sysd/test-deploy ak-cli/test-deploy ak-nss/test-deploy ak-pam/test-deploy test-ssh
 
 dev--initialize: containers/test/local-build
 
 bump:
-	sed -i 's/VERSION = .*/VERSION = ${version}/g' common.mk
-	sed -i 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
+	$(SED_INPLACE) 's/VERSION = .*/VERSION = ${version}/g' common.mk
+	$(SED_INPLACE) 's/^version = "${VERSION}"/version = "${version}"/g' ${TOP}/Cargo.toml ${TOP}/Cargo.lock
+	$(SED_INPLACE) 's/Settings Schema (${VERSION})/Settings Schema (${version})/' ${TOP}/ak-agent/settings.schema.json
 	"$(MAKE)" browser-ext/bump
 	"$(MAKE)" vpkg/macos/bump
 	"$(MAKE)" ee/psso/bump || true
-	"$(MAKE)" ee/wcp/bump || true
+
+print-version:
+	@echo ${VERSION}
+
+# Must match the release the apps report (`ak_meta::sentry_options`, browser-ext `sentry.ts`).
+SENTRY_RELEASE := ak-platform@${VERSION}
+SENTRY_RELEASES_CLI := npx @sentry/cli releases --org authentik-security-inc --project platform
+
+# Associates commits with the release so `Fixes PLATFORM-123` resolves issues on release.
+sentry-release:
+	${SENTRY_RELEASES_CLI} new ${SENTRY_RELEASE}
+	${SENTRY_RELEASES_CLI} set-commits --auto --ignore-missing ${SENTRY_RELEASE}
+	${SENTRY_RELEASES_CLI} finalize ${SENTRY_RELEASE}
 
 ak-pam/%:
 	"$(MAKE)" -C "${TOP}/ak-pam" $*
@@ -128,8 +179,32 @@ ak-api-cli-gen/%:
 ak-platform-facts/%:
 	"$(MAKE)" -C "${TOP}/ak-platform-facts" $*
 
+ak-platform-keyring/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-keyring" $*
+
+ak-platform-serde-policy/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-serde-policy" $*
+
+ak-platform-authz/%:
+	"$(MAKE)" -C "${TOP}/ak-platform-authz" $*
+
+ak-api-cli/%:
+	"$(MAKE)" -C "${TOP}/ak-api-cli" $*
+
+ak-flow-executor/%:
+	"$(MAKE)" -C "${TOP}/ak-flow-executor" $*
+
+ak-meta/%:
+	"$(MAKE)" -C "${TOP}/ak-meta" $*
+
+ak-meta-macros/%:
+	"$(MAKE)" -C "${TOP}/ak-meta-macros" $*
+
 browser-ext/%:
 	"$(MAKE)" -C "${TOP}/browser-ext/" $*
+
+ak-cli/ui/%:
+	"$(MAKE)" -C "${TOP}/ak-cli/ui/" $*
 
 ee/psso/%:
 	"$(MAKE)" -C "${TOP}/ee/psso/" $*
@@ -157,3 +232,6 @@ containers/test/%:
 
 containers/e2e/%:
 	"$(MAKE)" -C "${TOP}/containers/e2e" $*
+
+containers/ssh/%:
+	"$(MAKE)" -C "${TOP}/containers/ssh" $*

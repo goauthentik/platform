@@ -18,7 +18,7 @@ service SystemAuthInteractive {
   // Interactive auth without a browser (for example, CLI)
   rpc InteractiveAuth(InteractiveAuthRequest) returns (InteractiveChallenge);
   // Interactive auth which is handed of to a browser
-  rpc InteractiveAuthAsync(google.protobuf.Empty) returns (InteractiveAuthAsyncResponse);
+  rpc InteractiveAuthAsync(InteractiveAuthAsyncRequest) returns (InteractiveAuthAsyncResponse);
 }
 
 service SystemAuthAuthorize {
@@ -62,11 +62,6 @@ message InteractiveAuthRequest {
   }
 }
 
-message InteractiveAuthAsyncResponse {
-  string url = 1;
-  string header_token = 2;
-}
-
 enum InteractiveAuthResult {
   PAM_SUCCESS = 0;
   PAM_PERM_DENIED = 6;
@@ -94,6 +89,15 @@ message InteractiveChallenge {
   string debug_info = 6;
   string session_id = 7;
   string component = 8;
+}
+
+message InteractiveAuthAsyncRequest {
+  optional string username = 1;
+}
+
+message InteractiveAuthAsyncResponse {
+  string url = 1;
+  string header_token = 2;
 }
 
 message SystemAuthorizeRequest {
