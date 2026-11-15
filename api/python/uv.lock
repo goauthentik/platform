@@ -25,11 +25,11 @@ dev = [
 requires-dist = [
     { name = "grpclib", specifier = ">=0.4.9,<0.5" },
     { name = "protobuf", specifier = ">=7.36.2" },
-    { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=311" },
+    { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=312" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8" }]
+dev = [{ name = "pytest", specifier = ">=9.2" }]
 
 [[package]]
 name = "colorama"

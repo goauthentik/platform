@@ -42,7 +42,7 @@ rs-gen-proto:
 	cargo clippy --fix --allow-dirty -p ak-platform
 
 api-gen-proto:
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
 	protoc \
 		--go_out=${PWD}/api/go \
