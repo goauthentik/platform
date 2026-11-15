@@ -141,6 +141,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: api/go/go.mod
+          cache-dependency-path: api/go/go.sum
       - run: make api-test
   lint_rs:
     name: Lint (rust)
