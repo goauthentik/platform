@@ -1,5 +1,6 @@
 """gRPC client for the authentik agent."""
 
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -30,6 +31,9 @@ class _PipeChannel(Channel):
     # Overrides grpclib internals, hence the pinned grpclib version.
     async def _create_connection(self) -> H2Protocol:
         _, protocol = await self._loop.create_pipe_connection(self._protocol_factory, self._path)
+        # Unlike socket connections, pipe transports only schedule connection_made
+        # (call_soon); yield once so it has run before grpclib uses the protocol.
+        await asyncio.sleep(0)
         return protocol
 
 
