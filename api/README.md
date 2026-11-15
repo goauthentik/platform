@@ -22,12 +22,13 @@ res, err := ping.NewPingClient(conn).Ping(ctx, &emptypb.Empty{})
 
 ## Python
 
+Built on [grpclib](https://github.com/vmagamedov/grpclib), which unlike grpcio can connect over a Windows named pipe, so the client is asyncio-based.
+
 ```python
-import authentik_agent_api
-from authentik_agent_api import ping_pb2_grpc
+from authentik_agent_api import channel, ping_grpc
 from google.protobuf.empty_pb2 import Empty
 
-res = ping_pb2_grpc.PingStub(authentik_agent_api.channel()).Ping(Empty())
+ch = channel()  # inside a running event loop
+res = await ping_grpc.PingStub(ch).Ping(Empty())
+ch.close()
 ```
-
-grpc can't dial named pipes, so on Windows `channel()` bridges the pipe through a loopback TCP port that only accepts connections from the calling process.

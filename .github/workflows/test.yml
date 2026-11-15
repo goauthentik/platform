@@ -131,10 +131,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The pipe bridge test emulates the named pipe with a unix socket.
         platform:
           - macos-26
           - ubuntu-26.04
+          - windows-2025
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5

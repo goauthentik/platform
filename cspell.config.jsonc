@@ -199,7 +199,7 @@
         //#region Apple
         "./ee/psso/Bridge/Generated", // Generated Swift bridge
         "./api/go/*/*.pb.go", // Generated Go client
-        "./api/python/authentik_agent_api/*_pb2*", // Generated Python client
+        "./api/python/authentik_agent_api/*_{pb2,grpc}.{py,pyi}", // Generated Python client
         "*.{xib,storyboard,pbxproj,xcworkspacedata,xcscheme,xcsettings,xctestplan}", // Xcode-generated files
         "*.xcassets", // Xcode asset catalogs
         //#endregion

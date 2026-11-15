@@ -53,14 +53,14 @@ api-gen-proto:
 		-I $(PROTO_DIR) \
 		$(API_PROTOS)
 	cd ${PWD}/api/go && go mod tidy
-	uvx --from grpcio-tools==1.85.1 python -m grpc_tools.protoc \
+	uvx --from grpcio-tools==1.85.1 --with grpclib==0.4.9 python -m grpc_tools.protoc \
 		--python_out=$(API_PY_PKG) \
 		--pyi_out=$(API_PY_PKG) \
-		--grpc_python_out=$(API_PY_PKG) \
+		--grpclib_python_out=$(API_PY_PKG) \
 		-I $(PROTO_DIR) \
 		$(API_PROTOS)
 	# protoc emits top-level imports; make them package-relative.
-	$(SED_INPLACE) -E 's/^import ([a-z_]+_pb2)/from . import \1/' $(API_PY_PKG)/*_pb2*.py $(API_PY_PKG)/*_pb2.pyi
+	$(SED_INPLACE) -E 's/^import ([a-z_]+_pb2)/from . import \1/' $(API_PY_PKG)/*_pb2.py $(API_PY_PKG)/*_pb2.pyi $(API_PY_PKG)/*_grpc.py
 
 api-test:
 	cd ${PWD}/api/python && uv run --locked pytest -q tests

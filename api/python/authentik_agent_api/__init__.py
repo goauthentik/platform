@@ -2,11 +2,10 @@
 
 import os
 import sys
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
-import grpc
+from grpclib.client import Channel
+from grpclib.protocol import H2Protocol
 
 
 def default_socket_path() -> str:
@@ -14,9 +13,10 @@ def default_socket_path() -> str:
     if path := os.environ.get("AUTHENTIK_CLI_SOCKET"):
         return path
     if sys.platform == "win32":
-        from ._pipe import session_pipe
+        import win32ts
 
-        return session_pipe()
+        # Pipe names are global on Windows, so the agent suffixes them with the session ID.
+        return rf"\\.\pipe\authentik\socket-{win32ts.ProcessIdToSessionId(os.getpid())}"
     if sys.platform == "darwin":
         data = Path.home() / "Library" / "Application Support"
     else:
@@ -24,16 +24,17 @@ def default_socket_path() -> str:
     return str(data / "authentik" / "agent.sock")
 
 
-def channel(options: Sequence[tuple[str, Any]] = ()) -> grpc.Channel:
-    """A channel to the agent at default_socket_path()."""
-    path = default_socket_path()
-    if sys.platform == "win32":
-        from ._pipe import bridge
+class _PipeChannel(Channel):
+    """Channel over a Windows named pipe, which needs the (default) proactor event loop."""
 
-        target = bridge(path)
-    else:
-        target = f"unix://{path}"
-    # The socket path is not a valid :authority, which the agent rejects.
-    return grpc.insecure_channel(
-        target, options=[("grpc.default_authority", "localhost"), *options]
-    )
+    # Overrides grpclib internals, hence the pinned grpclib version.
+    async def _create_connection(self) -> H2Protocol:
+        _, protocol = await self._loop.create_pipe_connection(self._protocol_factory, self._path)
+        return protocol
+
+
+def channel() -> Channel:
+    """A channel to the agent at default_socket_path(). Must be called from a running event loop."""
+    if sys.platform == "win32":
+        return _PipeChannel(path=default_socket_path())
+    return Channel(path=default_socket_path())
