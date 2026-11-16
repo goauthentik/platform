@@ -192,7 +192,7 @@ importers:
         version: 1.0.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(oxlint@1.91.0)
       '@goauthentik/theme':
         specifier: ^2.0.1
-        version: 2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
+        version: 2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
       '@goauthentik/tsconfig':
         specifier: ^3.0.0
         version: 3.0.0
@@ -224,8 +224,8 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
       vite:
-        specifier: ^8.3.7
-        version: 8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+        specifier: ^8.3.8
+        version: 8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
 
   ak-cli/ui:
     devDependencies:
@@ -2420,8 +2420,8 @@ packages:
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
-  vite@8.3.7:
-    resolution: {integrity: sha512-oxh0dMxrayBr33ScJvvBJ2HBQ2jc1TBrXKR2NyL/MJ9WPuX19mN2DXWUmywKdyw5RFVQBo8hmtb2FMC0LHrnng==}
+  vite@8.3.8:
+    resolution: {integrity: sha512-LzOn3h9rG/0vhLdXrV4yJ4QFA9eEoqCl+Yx+kGJd7aB9w6nfNgVHKSYwLPZUHrz4ZGa+t+kXjV9itvcHDLQouA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -2880,7 +2880,7 @@ snapshots:
     transitivePeerDependencies:
       - eslint
 
-  '@goauthentik/theme@2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@goauthentik/theme@2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
       '@goauthentik/fonts': 2.0.0
       '@styleframe/core': 3.6.2(@styleframe/license@2.0.2)
@@ -2888,7 +2888,7 @@ snapshots:
       '@styleframe/theme': 3.8.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))
       '@styleframe/transpiler': 3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)
       rimraf: 6.1.3
-      styleframe: 3.9.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2))
+      styleframe: 3.9.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2))
     transitivePeerDependencies:
       - '@styleframe/license'
       - '@styleframe/loader'
@@ -3258,7 +3258,7 @@ snapshots:
       chokidar: 4.0.3
       jiti: 2.7.0
 
-  '@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))':
+  '@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))':
     dependencies:
       '@styleframe/license': 2.0.2
       '@styleframe/loader': 3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2))
@@ -3268,10 +3268,10 @@ snapshots:
       importree: 2.0.1
       jiti: 2.7.0
       tinyglobby: 0.2.17
-      unplugin: 3.4.0(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+      unplugin: 3.4.0(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
     optionalDependencies:
       esbuild: 0.28.2
-      vite: 8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vite: 8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
     transitivePeerDependencies:
       - '@rsbuild/core'
       - '@rspack/core'
@@ -4170,13 +4170,13 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  styleframe@3.9.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)):
+  styleframe@3.9.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)):
     dependencies:
       '@styleframe/cli': 4.1.2(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))
       '@styleframe/core': 3.6.2(@styleframe/license@2.0.2)
       '@styleframe/license': 2.0.2
       '@styleframe/loader': 3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2))
-      '@styleframe/plugin': 3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+      '@styleframe/plugin': 3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
       '@styleframe/transpiler': 3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)
 
   supports-color@7.2.0:
@@ -4228,7 +4228,7 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
-  unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)):
+  unplugin@3.4.0(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)):
     dependencies:
       '@jridgewell/remapping': 2.3.5
       picomatch: 4.0.7
@@ -4236,13 +4236,13 @@ snapshots:
     optionalDependencies:
       esbuild: 0.28.2
       rolldown: 1.2.13
-      vite: 8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vite: 8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
 
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
 
-  vite@8.3.7(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1):
+  vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
