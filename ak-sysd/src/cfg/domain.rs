@@ -306,7 +306,7 @@ impl DomainManager {
     /// invent smarter "current domain" selection here.
     ///
     /// An MDM-managed domain wins when there is one: it carries the connector
-    /// and device group the organisation assigned, whereas a hand-run
+    /// and device group the organization assigned, whereas a hand-run
     /// `domains join` may point somewhere else entirely. Policy beats ad hoc.
     ///
     /// The token check matters because `load_managed` adds an MDM-managed
