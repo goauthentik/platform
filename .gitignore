@@ -49,3 +49,8 @@ node_modules/
 # Spell checker
 .cspellcache
 cspell-report.*
+
+# Python
+__pycache__/
+*.pyc
+.venv/

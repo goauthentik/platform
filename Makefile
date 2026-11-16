@@ -5,6 +5,11 @@ GO_TEST_FLAGS =
 TEST_OUTPUT = ${PWD}/.test-output
 PROTO_OUT := "${PWD}/ak-platform/src/generated"
 
+# Public client API of ak-agent / ak-agent-desktop.
+API_PROTOS := agent.proto agent_auth.proto agent_cache.proto agent_ctrl.proto ping.proto
+API_GO_MODULE := github.com/goauthentik/platform/api/go
+API_PY_PKG := ${PWD}/api/python/authentik_agent_api
+
 TARGETS := ak-pam ak-nss ak-browser-support ak-cli ak-agent-desktop ak-agent browser-ext ee/psso ee/wcp vpkg/macos vpkg/windows vpkg/linux containers/selenium containers/test containers/e2e containers/ssh ak-platform ak-sysd
 
 .PHONY: all
@@ -15,7 +20,7 @@ clean:
 	rm -rf ${PWD}/bin/*
 
 .PHONY: gen
-gen: rs-gen-proto ee/psso/gen
+gen: rs-gen-proto api-gen-proto ee/psso/gen
 
 rs-gen-proto:
 	cargo install protoc-gen-prost
@@ -35,6 +40,31 @@ rs-gen-proto:
 		${PROTO_DIR}/*
 	cargo fmt --all
 	cargo clippy --fix --allow-dirty -p ak-platform
+
+api-gen-proto:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
+	protoc \
+		--go_out=${PWD}/api/go \
+		--go_opt=module=$(API_GO_MODULE) \
+		--go-grpc_out=${PWD}/api/go \
+		--go-grpc_opt=module=$(API_GO_MODULE) \
+		$(foreach p,$(API_PROTOS),--go_opt=M$(p)=$(API_GO_MODULE)/$(basename $(p)) --go-grpc_opt=M$(p)=$(API_GO_MODULE)/$(basename $(p))) \
+		-I $(PROTO_DIR) \
+		$(API_PROTOS)
+	cd ${PWD}/api/go && go mod tidy
+	uvx --from grpcio-tools==1.85.1 --with grpclib==0.4.9 python -m grpc_tools.protoc \
+		--python_out=$(API_PY_PKG) \
+		--pyi_out=$(API_PY_PKG) \
+		--grpclib_python_out=$(API_PY_PKG) \
+		-I $(PROTO_DIR) \
+		$(API_PROTOS)
+	# protoc emits top-level imports; make them package-relative.
+	$(SED_INPLACE) -E 's/^import ([a-z_]+_pb2)/from . import \1/' $(API_PY_PKG)/*_pb2.py $(API_PY_PKG)/*_pb2.pyi $(API_PY_PKG)/*_grpc.py
+
+api-test:
+	cd ${PWD}/api/python && uv run --locked pytest -q tests
+	cd ${PWD}/api/go && go test ./...
 
 ci-install-deps:
 ifeq ($(PLATFORM),gnu/linux)
