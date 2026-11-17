@@ -54,7 +54,7 @@ ak-platform = { path = "ak-platform" }
 ak-platform-authz = { path = "ak-platform-authz" }
 ak-platform-keyring = { path = "ak-platform-keyring" }
 ak-platform-serde-policy = { path = "ak-platform-serde-policy" }
-authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "d608f835c32c64346ebeb199cb48810080890123", version = "2026.11.0-rc1", default-features = false, features = [
+authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "99e6f7e1e3426341916b07f3c6d6a69abb1b65a1", version = "2026.11.0-rc1", default-features = false, features = [
     "rustls",
 ] }
 chrono = { version = "0.4.45", features = ["serde"] }
