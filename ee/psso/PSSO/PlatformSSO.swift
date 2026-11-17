@@ -50,7 +50,12 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         self.logger.debug(
             "beginUserRegistration '\(userName ?? "")', method \(String(describing: method)), options \(String(describing: options))"
         )
-        if loginManager.isUserRegistered && !options.contains(.registrationRepair) {
+        // With the web and password methods macOS signs the user in itself and authentik
+        // binds the user on that login. A Secure Enclave key has to be registered here.
+        let keyPending =
+            method == .userSecureEnclaveKey
+            && !API.shared.isUserKeyRegistered(loginManager: loginManager)
+        if loginManager.isUserRegistered && !options.contains(.registrationRepair) && !keyPending {
             self.logger.info("User is already registered and repair is not required")
             return .success
         }
