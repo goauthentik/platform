@@ -73,7 +73,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             self.logger.error("Failed to check if interactive auth is available: \(error)")
             return .failed
         }
-        let interactive = InteractiveAuth(loginManager: loginManager)
+        let interactive = InteractiveAuth(loginManager: loginManager, method: method)
         self.interactive = interactive
         do {
             return try await interactive.startAuth(viewController: self) ?? .failed

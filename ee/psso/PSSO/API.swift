@@ -43,14 +43,24 @@ class API {
     func RegisterUser(
         loginManger: ASAuthorizationProviderExtensionLoginManager,
         userToken: String,
+        method: ASAuthorizationProviderExtensionAuthenticationMethod,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            guard let key = loginManger.key(for: .userSecureEnclaveKey)
-                    ?? loginManger.key(for: .userDeviceSigning),
-                let (enclaveKeyID, userSecureEnclaveKey, _) = try getPublicKeyString(from: key)
-            else {
-                self.logger.error("no user secure enclave key available, cannot register user")
-                return .failed
+            // The password method has no user key. Registering still tells macOS which
+            // authentik user this account signs in as.
+            var enclaveKeyID = ""
+            var userSecureEnclaveKey = ""
+            if method != .password {
+                guard
+                    let key = loginManger.key(for: .userSecureEnclaveKey)
+                        ?? loginManger.key(for: .userDeviceSigning),
+                    let (keyID, publicKey, _) = try getPublicKeyString(from: key)
+                else {
+                    self.logger.error("no user secure enclave key available, cannot register user")
+                    return .failed
+                }
+                enclaveKeyID = keyID
+                userSecureEnclaveKey = publicKey
             }
             self.logger.debug("registering user with sysd...")
             let loginConfig = try await SysdBridge.shared
@@ -62,7 +72,9 @@ class API {
             self.logger
                 .debug("Got user login config from server: \(String(describing: loginConfig))")
             try loginManger.saveUserLoginConfiguration(loginConfig)
-            UserDefaults.standard.set(enclaveKeyID, forKey: API.registeredUserKeyDefault)
+            if !enclaveKeyID.isEmpty {
+                UserDefaults.standard.set(enclaveKeyID, forKey: API.registeredUserKeyDefault)
+            }
             return .success
         } catch {
             self.logger.error("failed to register: \(String(describing: error), privacy: .public)")

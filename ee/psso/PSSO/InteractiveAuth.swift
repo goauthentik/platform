@@ -17,14 +17,19 @@ final class InteractiveAuth {
 
     private var authState: AKInteractiveAuth?
     private let loginManager: ASAuthorizationProviderExtensionLoginManager
+    private let method: ASAuthorizationProviderExtensionAuthenticationMethod
     private var continuation:
         CheckedContinuation<ASAuthorizationProviderExtensionRegistrationResult, Error>?
 
     var logger: Logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!, category: "InteractiveAuth")
 
-    init(loginManager: ASAuthorizationProviderExtensionLoginManager) {
+    init(
+        loginManager: ASAuthorizationProviderExtensionLoginManager,
+        method: ASAuthorizationProviderExtensionAuthenticationMethod,
+    ) {
         self.loginManager = loginManager
+        self.method = method
     }
 
     func cancelAuth() {
@@ -67,6 +72,7 @@ final class InteractiveAuth {
                     .RegisterUser(
                         loginManger: self.loginManager,
                         userToken: token,
+                        method: self.method,
                     )
             } else {
                 return .failed
