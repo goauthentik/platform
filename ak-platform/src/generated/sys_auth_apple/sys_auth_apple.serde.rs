@@ -177,6 +177,9 @@ impl serde::Serialize for RegisterDeviceResponse {
         if !self.authorization_endpoint.is_empty() {
             len += 1;
         }
+        if !self.biometric_policies.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("sys_auth_apple.RegisterDeviceResponse", len)?;
         if !self.client_id.is_empty() {
             struct_ser.serialize_field("clientId", &self.client_id)?;
@@ -202,6 +205,13 @@ impl serde::Serialize for RegisterDeviceResponse {
         if !self.authorization_endpoint.is_empty() {
             struct_ser.serialize_field("authorizationEndpoint", &self.authorization_endpoint)?;
         }
+        if !self.biometric_policies.is_empty() {
+            let v = self.biometric_policies.iter().cloned().map(|v| {
+                register_device_response::BiometricPolicy::try_from(v)
+                    .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", v)))
+                }).collect::<std::result::Result<Vec<_>, _>>()?;
+            struct_ser.serialize_field("biometricPolicies", &v)?;
+        }
         struct_ser.end()
     }
 }
@@ -226,6 +236,8 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             "deviceToken",
             "authorization_endpoint",
             "authorizationEndpoint",
+            "biometric_policies",
+            "biometricPolicies",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -238,6 +250,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
             NonceEndpoint,
             DeviceToken,
             AuthorizationEndpoint,
+            BiometricPolicies,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -267,6 +280,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             "nonceEndpoint" | "nonce_endpoint" => Ok(GeneratedField::NonceEndpoint),
                             "deviceToken" | "device_token" => Ok(GeneratedField::DeviceToken),
                             "authorizationEndpoint" | "authorization_endpoint" => Ok(GeneratedField::AuthorizationEndpoint),
+                            "biometricPolicies" | "biometric_policies" => Ok(GeneratedField::BiometricPolicies),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -294,6 +308,7 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                 let mut nonce_endpoint__ = None;
                 let mut device_token__ = None;
                 let mut authorization_endpoint__ = None;
+                let mut biometric_policies__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::ClientId => {
@@ -344,6 +359,12 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                             }
                             authorization_endpoint__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::BiometricPolicies => {
+                            if biometric_policies__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("biometricPolicies"));
+                            }
+                            biometric_policies__ = Some(map_.next_value::<Vec<register_device_response::BiometricPolicy>>()?.into_iter().map(|x| x as i32).collect());
+                        }
                     }
                 }
                 Ok(RegisterDeviceResponse {
@@ -355,10 +376,91 @@ impl<'de> serde::Deserialize<'de> for RegisterDeviceResponse {
                     nonce_endpoint: nonce_endpoint__.unwrap_or_default(),
                     device_token: device_token__.unwrap_or_default(),
                     authorization_endpoint: authorization_endpoint__.unwrap_or_default(),
+                    biometric_policies: biometric_policies__.unwrap_or_default(),
                 })
             }
         }
         deserializer.deserialize_struct("sys_auth_apple.RegisterDeviceResponse", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for register_device_response::BiometricPolicy {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let variant = match self {
+            Self::Unspecified => "UNSPECIFIED",
+            Self::TouchIdOrWatchCurrentSet => "TOUCH_ID_OR_WATCH_CURRENT_SET",
+            Self::TouchIdOrWatchAny => "TOUCH_ID_OR_WATCH_ANY",
+            Self::ReuseDuringUnlock => "REUSE_DURING_UNLOCK",
+            Self::PasswordFallback => "PASSWORD_FALLBACK",
+        };
+        serializer.serialize_str(variant)
+    }
+}
+impl<'de> serde::Deserialize<'de> for register_device_response::BiometricPolicy {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "UNSPECIFIED",
+            "TOUCH_ID_OR_WATCH_CURRENT_SET",
+            "TOUCH_ID_OR_WATCH_ANY",
+            "REUSE_DURING_UNLOCK",
+            "PASSWORD_FALLBACK",
+        ];
+
+        struct GeneratedVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = register_device_response::BiometricPolicy;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(formatter, "expected one of: {:?}", FIELDS)
+            }
+
+            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+                    })
+            }
+
+            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+                    })
+            }
+
+            fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "UNSPECIFIED" => Ok(register_device_response::BiometricPolicy::Unspecified),
+                    "TOUCH_ID_OR_WATCH_CURRENT_SET" => Ok(register_device_response::BiometricPolicy::TouchIdOrWatchCurrentSet),
+                    "TOUCH_ID_OR_WATCH_ANY" => Ok(register_device_response::BiometricPolicy::TouchIdOrWatchAny),
+                    "REUSE_DURING_UNLOCK" => Ok(register_device_response::BiometricPolicy::ReuseDuringUnlock),
+                    "PASSWORD_FALLBACK" => Ok(register_device_response::BiometricPolicy::PasswordFallback),
+                    _ => Err(serde::de::Error::unknown_variant(value, FIELDS)),
+                }
+            }
+        }
+        deserializer.deserialize_any(GeneratedVisitor)
     }
 }
 impl serde::Serialize for RegisterUserRequest {

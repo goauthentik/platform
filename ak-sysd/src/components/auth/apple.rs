@@ -1,5 +1,6 @@
 use crate::components::SysdContext;
 use crate::util::to_status;
+use ak_platform::generated::sys_auth_apple::register_device_response::BiometricPolicy;
 use ak_platform::generated::sys_auth_apple::{
     RegisterDeviceRequest, RegisterDeviceResponse, RegisterUserRequest, RegisterUserResponse,
 };
@@ -43,6 +44,12 @@ pub async fn register_device(
     let res = endpoints_agents_psso_register_device_create(&active.api, body)
         .await
         .map_err(|e| Status::internal(format!("psso register_device failed: {e}")))?;
+    // TODO: use the `biometric_policies` authentik returns once authentik-client is
+    // regenerated with that field.
+    let biometric_policies = vec![
+        BiometricPolicy::TouchIdOrWatchCurrentSet as i32,
+        BiometricPolicy::PasswordFallback as i32,
+    ];
     Ok(RegisterDeviceResponse {
         client_id: res.client_id,
         issuer: res.issuer,
@@ -50,6 +57,7 @@ pub async fn register_device(
         jwks_endpoint: res.jwks_endpoint,
         audience: res.audience,
         nonce_endpoint: res.nonce_endpoint,
+        biometric_policies,
         device_token: active.cfg.token.clone(),
         authorization_endpoint: res.authorization_endpoint,
     })
