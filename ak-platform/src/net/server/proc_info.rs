@@ -1,6 +1,6 @@
 use std::{fmt, path::PathBuf};
 
-use eyre::{Result, bail};
+use eyre::{Context, Result, bail};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, System, Uid, UpdateKind};
 
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ impl std::error::Error for ProcInfoError {}
 /// other users, whose exe path is not always readable.
 pub fn process_user(pid: u32) -> Option<Uid> {
     let pid = Pid::from_u32(pid);
-    let mut sys = System::new();
+    let mut sys = System::new().ok()?;
     let kind = ProcessRefreshKind::nothing().with_user(UpdateKind::OnlyIfNotSet);
     sys.refresh_processes_specifics(ProcessesToUpdate::Some(&[pid]), false, kind);
     sys.process(pid)?.user_id().cloned()
@@ -45,7 +45,7 @@ impl ProcInfo {
         let sysinfo_pid = Pid::from_u32(pid);
         let parent_pid_opt = {
             // First pass: fetch the target process and record its parent PID.
-            let mut sys = System::new();
+            let mut sys = System::new().context("failed to get system info")?;
             let kind = ProcessRefreshKind::nothing()
                 .with_exe(UpdateKind::OnlyIfNotSet)
                 .with_cmd(UpdateKind::OnlyIfNotSet);
@@ -61,7 +61,7 @@ impl ProcInfo {
         if let Some(ppid) = parent_pid_opt {
             pids.push(ppid);
         }
-        let mut sys = System::new();
+        let mut sys = System::new().context("failed to get system info")?;
         let kind = ProcessRefreshKind::nothing()
             .with_exe(UpdateKind::OnlyIfNotSet)
             .with_cmd(UpdateKind::OnlyIfNotSet);
