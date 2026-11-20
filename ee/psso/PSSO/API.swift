@@ -43,14 +43,24 @@ class API {
     func RegisterUser(
         loginManger: ASAuthorizationProviderExtensionLoginManager,
         userToken: String,
+        method: ASAuthorizationProviderExtensionAuthenticationMethod,
     ) async -> ASAuthorizationProviderExtensionRegistrationResult {
         do {
-            guard let key = loginManger.key(for: .userSecureEnclaveKey)
-                    ?? loginManger.key(for: .userDeviceSigning),
-                let (enclaveKeyID, userSecureEnclaveKey, _) = try getPublicKeyString(from: key)
-            else {
-                self.logger.error("no user secure enclave key available, cannot register user")
-                return .failed
+            // The password method has no user key. Registering still tells macOS which
+            // authentik user this account signs in as.
+            var enclaveKeyID = ""
+            var userSecureEnclaveKey = ""
+            if method != .password {
+                guard
+                    let key = loginManger.key(for: .userSecureEnclaveKey)
+                        ?? loginManger.key(for: .userDeviceSigning),
+                    let (keyID, publicKey, _) = try getPublicKeyString(from: key)
+                else {
+                    self.logger.error("no user secure enclave key available, cannot register user")
+                    return .failed
+                }
+                enclaveKeyID = keyID
+                userSecureEnclaveKey = publicKey
             }
             self.logger.debug("registering user with sysd...")
             let loginConfig = try await SysdBridge.shared
@@ -62,11 +72,29 @@ class API {
             self.logger
                 .debug("Got user login config from server: \(String(describing: loginConfig))")
             try loginManger.saveUserLoginConfiguration(loginConfig)
+            if !enclaveKeyID.isEmpty {
+                UserDefaults.standard.set(enclaveKeyID, forKey: API.registeredUserKeyDefault)
+            }
             return .success
         } catch {
             self.logger.error("failed to register: \(String(describing: error), privacy: .public)")
             return .failed
         }
+    }
+
+    static let registeredUserKeyDefault = "registeredUserKeyID"
+
+    /// Whether the user's current Secure Enclave key was registered with authentik.
+    /// macOS 27 creates the user configuration before it calls the extension, so
+    /// `isUserRegistered` is already true on a first registration and can't be used to
+    /// tell if the key still has to be registered.
+    func isUserKeyRegistered(loginManager: ASAuthorizationProviderExtensionLoginManager) -> Bool {
+        guard let key = loginManager.key(for: .userSecureEnclaveKey),
+            let (keyID, _, _) = try? getPublicKeyString(from: key)
+        else {
+            return false
+        }
+        return UserDefaults.standard.string(forKey: API.registeredUserKeyDefault) == keyID
     }
 
     func getPublicKey(from privateKey: SecKey) -> SecKey? {

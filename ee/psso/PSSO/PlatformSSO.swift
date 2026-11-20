@@ -50,7 +50,12 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         self.logger.debug(
             "beginUserRegistration '\(userName ?? "")', method \(String(describing: method)), options \(String(describing: options))"
         )
-        if loginManager.isUserRegistered && !options.contains(.registrationRepair) {
+        // With the web and password methods macOS signs the user in itself and authentik
+        // binds the user on that login. A Secure Enclave key has to be registered here.
+        let keyPending =
+            method == .userSecureEnclaveKey
+            && !API.shared.isUserKeyRegistered(loginManager: loginManager)
+        if loginManager.isUserRegistered && !options.contains(.registrationRepair) && !keyPending {
             self.logger.info("User is already registered and repair is not required")
             return .success
         }
@@ -68,7 +73,7 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
             self.logger.error("Failed to check if interactive auth is available: \(error)")
             return .failed
         }
-        let interactive = InteractiveAuth(loginManager: loginManager)
+        let interactive = InteractiveAuth(loginManager: loginManager, method: method)
         self.interactive = interactive
         do {
             return try await interactive.startAuth(viewController: self) ?? .failed
@@ -93,10 +98,13 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
 
     func supportedGrantTypes() -> ASAuthorizationProviderExtensionSupportedGrantTypes {
         self.logger.debug("supportedGrantTypes")
+        // macOS picks the grant from the profile's AuthenticationMethod: jwt-bearer for a
+        // Secure Enclave key, password for the login window password and token exchange
+        // for a web login.
         if #available(macOS 27.0, *) {
-            return [.jwtBearer, .tokenExchange];
+            return [.jwtBearer, .password, .tokenExchange]
         }
-        return [.jwtBearer];
+        return [.jwtBearer, .password]
     }
 
     func keyWillRotate(

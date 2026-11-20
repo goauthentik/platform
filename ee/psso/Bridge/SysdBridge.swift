@@ -221,6 +221,23 @@ public class SysdBridge {
                                 withAllowedCharacters: .alphanumerics)
                         )
                     )
+                // Biometric policy for the user Secure Enclave key, as configured in
+                // authentik. An empty list leaves the system default in place.
+                var policy:
+                    ASAuthorizationProviderExtensionLoginConfiguration
+                    .UserSecureEnclaveKeyBiometricPolicy = []
+                for entry in res.biometricPolicies {
+                    switch entry {
+                    case .touchIDOrWatchCurrentSet: policy.insert(.touchIDOrWatchCurrentSet)
+                    case .touchIDOrWatchAny: policy.insert(.touchIDOrWatchAny)
+                    case .reuseDuringUnlock: policy.insert(.reuseDuringUnlock)
+                    case .passwordFallback: policy.insert(.passwordFallback)
+                    case .unspecified, .UNRECOGNIZED: continue
+                    }
+                }
+                if !policy.isEmpty {
+                    cfg.userSecureEnclaveKeyBiometricPolicy = policy
+                }
                 return cfg
             }
         }
