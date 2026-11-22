@@ -52,6 +52,10 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionRegistra
         )
         if loginManager.isUserRegistered && !options.contains(.registrationRepair) {
             self.logger.info("User is already registered and repair is not required")
+            // Being registered locally says nothing about authentik still having the
+            // matching record, and this is the only callback that runs often enough
+            // to notice that it doesn't.
+            await API.shared.CheckRegistration(loginManager: loginManager)
             return .success
         }
         if !options.contains(.userInteractionEnabled) {

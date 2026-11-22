@@ -51,6 +51,23 @@ extension AuthenticationViewController: ASAuthorizationProviderExtensionAuthoriz
         with request: ASAuthorizationProviderExtensionAuthorizationRequest
     ) {
         self.logger.debug("SSOE:beginAuthorization URL \(request.url.absoluteString)")
+        // Checked before anything else: the configuration is already gone, so none of
+        // the URL matching below applies to it.
+        if request.requestedOperation == .configurationRemoved {
+            self.logger.info("SSOE: configuration removed, unregistering device")
+            Task {
+                do {
+                    let completed = try await SysdBridge.shared.pssoUnregisterDevice()
+                    if !completed {
+                        self.logger.warning("unregister queued, sysd could not reach authentik")
+                    }
+                } catch {
+                    self.logger.error("failed to unregister device: \(error)")
+                }
+                request.complete()
+            }
+            return
+        }
         if self.shouldSkip(request: request) {
             request.doNotHandle()
             return
