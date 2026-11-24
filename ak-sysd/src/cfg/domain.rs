@@ -1,5 +1,6 @@
 use crate::state::StateStore;
 use ak_meta::user_agent;
+use ak_platform::generated::sys_ctrl::Domain;
 use ak_platform_keyring::KeyringStore;
 use authentik_client::apis::configuration::Configuration;
 use authentik_client::models::{AgentConfig, CurrentBrand, EnrollRequest};
@@ -46,6 +47,17 @@ pub struct LoadedDomain {
     pub remote: Arc<RwLock<Option<AgentConfig>>>,
     // Supplies the flow_authentication slug used by interactive auth.
     pub brand: Arc<RwLock<Option<CurrentBrand>>>,
+}
+
+impl From<&LoadedDomain> for Domain {
+    fn from(d: &LoadedDomain) -> Self {
+        Self {
+            name: d.cfg.domain.clone(),
+            url: d.cfg.authentik_url.clone(),
+            managed: d.cfg.managed,
+            healthy: true,
+        }
+    }
 }
 
 enum TokenFormat {
