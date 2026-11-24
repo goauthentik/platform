@@ -5787,8 +5787,8 @@ dependencies = [
 
 [[package]]
 name = "osquery"
-version = "0.2.4"
-source = "git+https://github.com/BeryJu/osquery-rs#363d05bd7c8fae286d6a130b2d9764d9354a85d7"
+version = "0.2.6"
+source = "git+https://github.com/BeryJu/osquery-rs#06d7268eb201827908c2e594e4b065b30e51c729"
 dependencies = [
  "log",
  "osquery-sys",
@@ -5799,8 +5799,8 @@ dependencies = [
 
 [[package]]
 name = "osquery-sys"
-version = "0.2.4"
-source = "git+https://github.com/BeryJu/osquery-rs#363d05bd7c8fae286d6a130b2d9764d9354a85d7"
+version = "0.2.6"
+source = "git+https://github.com/BeryJu/osquery-rs#06d7268eb201827908c2e594e4b065b30e51c729"
 dependencies = [
  "cc",
  "sha2 0.11.1",
@@ -8756,7 +8756,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
