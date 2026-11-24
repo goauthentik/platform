@@ -58,7 +58,7 @@ impl From<&LoadedDomain> for Domain {
             name: d.cfg.domain.clone(),
             url: d.cfg.authentik_url.clone(),
             managed: d.cfg.managed,
-            healthy: d.healthy.load(Ordering::Relaxed),
+            healthy: Some(d.healthy.load(Ordering::Relaxed)),
         }
     }
 }
@@ -188,7 +188,7 @@ impl DomainManager {
         tracing::info!("Loaded {} domains", loaded.len());
         *self.domains.write().await = loaded;
 
-        if let Err(e) = self.load_managed().await {
+        if let Err(e) = self.load_managed(false).await {
             tracing::warn!("failed to load managed domain config: {e:?}");
         }
         Ok(())
@@ -498,8 +498,9 @@ impl DomainManager {
     }
 
     /// Loads (or re-enrolls, or removes) the MDM-managed domain. See
-    /// `cfg::managed` for the platform-specific config source.
-    pub async fn load_managed(&self) -> Result<()> {
+    /// `cfg::managed` for the platform-specific config source. `force` re-enrolls
+    /// even if the existing domain looks fine, e.g. after the server revoked its token.
+    pub async fn load_managed(&self, force: bool) -> Result<()> {
         const MANAGED_DOMAIN_NAME: &str = "ak-mdm-managed";
 
         let Some(managed) = crate::cfg::managed::load_managed_config()? else {
@@ -523,24 +524,21 @@ impl DomainManager {
             .into_iter()
             .find(|d| d.cfg.domain == MANAGED_DOMAIN_NAME);
 
-        if let Some(existing) = existing {
-            if existing
+        if let Some(existing) = &existing
+            && !force
+            && existing
                 .cfg
                 .authentik_url
                 .eq_ignore_ascii_case(&managed.url)
-                && !existing.cfg.needs_reenroll
-            {
-                tracing::debug!("resumed existing managed domain");
-                return Ok(());
-            }
-            // Either the MDM config points somewhere else now, or the token was
-            // discarded as unreadable — both need the domain enrolled again.
-            if let Err(e) = self.delete_domain(MANAGED_DOMAIN_NAME).await {
-                tracing::warn!("failed to delete old managed domain: {e:?}");
-            }
+            && !existing.cfg.needs_reenroll
+        {
+            tracing::debug!("resumed existing managed domain");
+            return Ok(());
         }
 
-        let cfg = self
+        // Enroll before dropping the old domain so a failed enrollment (e.g. an
+        // expired registration token) doesn't leave the device with no domain.
+        let mut cfg = self
             .enroll(
                 MANAGED_DOMAIN_NAME.to_string(),
                 managed.url,
@@ -548,8 +546,14 @@ impl DomainManager {
             )
             .await
             .map_err(|e| eyre!("failed to enroll managed domain: {e}"))?;
-        let mut cfg = cfg;
         cfg.managed = true;
+        // The MDM config points somewhere else now, the token was discarded as
+        // unreadable, or the server revoked it — clear out the old one.
+        if existing.is_some()
+            && let Err(e) = self.delete_domain(MANAGED_DOMAIN_NAME).await
+        {
+            tracing::warn!("failed to delete old managed domain: {e:?}");
+        }
         self.save_domain(cfg).await?;
         Ok(())
     }

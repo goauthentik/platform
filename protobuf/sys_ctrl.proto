@@ -16,7 +16,7 @@ message Domain {
   string name = 1;
   string url = 2;
   bool managed = 3;
-  bool healthy = 4;
+  optional bool healthy = 4;
 }
 
 message DomainListResponse {
