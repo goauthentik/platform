@@ -308,12 +308,25 @@ impl DomainManager {
     /// Token-less domains are skipped rather than handed out: every caller
     /// either signs with the token or sends it as the bearer credential, so
     /// returning one produces unauthenticated requests instead of an error.
+    ///
+    /// An MDM-managed domain wins over a user-enrolled one: it carries the
+    /// connector the organization assigned, and which of the two comes first
+    /// otherwise depends on file order.
     pub async fn active(&self) -> Result<Arc<LoadedDomain>> {
-        self.domains()
-            .await
-            .into_iter()
-            .find(|d| d.cfg.enabled && !d.cfg.token.is_empty())
-            .ok_or_else(|| eyre!("no enabled domain configured"))
+        let domains = self.domains().await;
+        let usable = |d: &&Arc<LoadedDomain>| d.cfg.enabled && !d.cfg.token.is_empty();
+        let selected = domains
+            .iter()
+            .find(|d| usable(d) && d.cfg.managed)
+            .or_else(|| domains.iter().find(usable))
+            .cloned()
+            .ok_or_else(|| eyre!("no enabled domain configured"))?;
+        tracing::debug!(
+            domain = %selected.cfg.domain,
+            managed = selected.cfg.managed,
+            "selected active domain"
+        );
+        Ok(selected)
     }
 
     pub async fn save_domain(&self, cfg: DomainConfig) -> Result<()> {
@@ -462,13 +475,23 @@ impl DomainManager {
     /// Loads (or re-enrolls, or removes) the MDM-managed domain. See
     /// `cfg::managed` for the platform-specific config source.
     pub async fn load_managed(&self) -> Result<()> {
-        let managed = match crate::cfg::managed::load_managed_config() {
-            Ok(Some(a)) => a,
-            Ok(None) => return Ok(()),
-            Err(e) => return Err(e),
-        };
-
         const MANAGED_DOMAIN_NAME: &str = "ak-mdm-managed";
+
+        let Some(managed) = crate::cfg::managed::load_managed_config()? else {
+            // The managed config is gone, so a managed domain left on disk is
+            // stale: nothing refreshes it and it would still be picked as the
+            // active domain.
+            if self
+                .domains()
+                .await
+                .iter()
+                .any(|d| d.cfg.domain == MANAGED_DOMAIN_NAME)
+            {
+                tracing::info!("managed config absent, removing managed domain");
+                self.delete_domain(MANAGED_DOMAIN_NAME).await?;
+            }
+            return Ok(());
+        };
         let existing = self
             .domains()
             .await
@@ -604,6 +627,37 @@ mod tests {
             loaded_brand.flow_authentication,
             Some("default-authentication-flow".to_string())
         );
+    }
+
+    /// With a user-enrolled and an MDM-managed domain both usable, the managed
+    /// one is selected whatever order the files are read in.
+    #[tokio::test]
+    async fn active_prefers_managed_domain() {
+        let state = Arc::new(test_store());
+        let dir = TempDir::new().unwrap();
+
+        for (domain, managed) in [("a-user", false), ("b-managed", true), ("c-user", false)] {
+            let cfg = DomainConfig {
+                enabled: true,
+                authentik_url: "https://authentik.example".to_string(),
+                domain: domain.to_string(),
+                managed,
+                fallback_token: "atoken".to_string(),
+                token: String::new(),
+                needs_reenroll: false,
+            };
+            std::fs::write(
+                dir.path().join(cfg.file_name()),
+                serde_json::to_string(&cfg).unwrap(),
+            )
+            .unwrap();
+        }
+
+        let manager = DomainManager::new(dir.path().to_str().unwrap().to_string(), state)
+            .await
+            .unwrap();
+
+        assert_eq!(manager.active().await.unwrap().cfg.domain, "b-managed");
     }
 
     /// A domain whose token was unreadable at load time (keyring down, and

@@ -17,11 +17,11 @@
         "@goauthentik/tsconfig": "^3.0.0",
         "@modelcontextprotocol/ext-apps": "^2.0.4",
         "esbuild": "^0.28.2",
-        "oxfmt": "^0.76.0",
-        "oxlint": "^1.91.0",
+        "oxfmt": "^0.79.0",
+        "oxlint": "^1.94.0",
         "typescript": "^7.0.2"
     },
     "engines": {
-        "node": "^24.22.1 || >=26.12.1"
+        "node": "^24.22.3 || >=26.13.1"
     }
 }

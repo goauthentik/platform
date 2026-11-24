@@ -14,7 +14,7 @@
         "tauri": "tauri"
     },
     "dependencies": {
-        "@goauthentik/api": "^2026.8.5",
+        "@goauthentik/api": "^2026.8.6",
         "@goauthentik/brand-assets": "^2.0.0",
         "@goauthentik/fonts": "^2.0.0",
         "@goauthentik/oxfmt-config": "^9.1.0",
@@ -26,11 +26,11 @@
         "@tauri-apps/plugin-opener": "^2",
         "@tauri-apps/plugin-os": "~2.4.0",
         "lit": "^3.3.3",
-        "oxfmt": "^0.76.0",
-        "oxlint": "^1.91.0",
+        "oxfmt": "^0.79.0",
+        "oxlint": "^1.94.0",
         "tauri-plugin-sentry-api": "^0.9.0",
         "typescript": "^7.0.2",
-        "vite": "^8.3.6"
+        "vite": "^8.3.8"
     },
     "pnpm": {
         "onlyBuiltDependencies": [
@@ -38,6 +38,6 @@
         ]
     },
     "engines": {
-        "node": "^24.22.1 || >=26.12.1"
+        "node": "^24.22.3 || >=26.13.1"
     }
 }
