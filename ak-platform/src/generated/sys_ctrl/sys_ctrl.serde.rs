@@ -10,9 +10,27 @@ impl serde::Serialize for Domain {
         if !self.name.is_empty() {
             len += 1;
         }
+        if !self.url.is_empty() {
+            len += 1;
+        }
+        if self.managed {
+            len += 1;
+        }
+        if self.healthy {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("sys_ctrl.Domain", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
+        }
+        if !self.url.is_empty() {
+            struct_ser.serialize_field("url", &self.url)?;
+        }
+        if self.managed {
+            struct_ser.serialize_field("managed", &self.managed)?;
+        }
+        if self.healthy {
+            struct_ser.serialize_field("healthy", &self.healthy)?;
         }
         struct_ser.end()
     }
@@ -25,11 +43,17 @@ impl<'de> serde::Deserialize<'de> for Domain {
     {
         const FIELDS: &[&str] = &[
             "name",
+            "url",
+            "managed",
+            "healthy",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Name,
+            Url,
+            Managed,
+            Healthy,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -52,6 +76,9 @@ impl<'de> serde::Deserialize<'de> for Domain {
                     {
                         match value {
                             "name" => Ok(GeneratedField::Name),
+                            "url" => Ok(GeneratedField::Url),
+                            "managed" => Ok(GeneratedField::Managed),
+                            "healthy" => Ok(GeneratedField::Healthy),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -72,6 +99,9 @@ impl<'de> serde::Deserialize<'de> for Domain {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut name__ = None;
+                let mut url__ = None;
+                let mut managed__ = None;
+                let mut healthy__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -80,10 +110,31 @@ impl<'de> serde::Deserialize<'de> for Domain {
                             }
                             name__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::Url => {
+                            if url__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("url"));
+                            }
+                            url__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::Managed => {
+                            if managed__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("managed"));
+                            }
+                            managed__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::Healthy => {
+                            if healthy__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("healthy"));
+                            }
+                            healthy__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(Domain {
                     name: name__.unwrap_or_default(),
+                    url: url__.unwrap_or_default(),
+                    managed: managed__.unwrap_or_default(),
+                    healthy: healthy__.unwrap_or_default(),
                 })
             }
         }
@@ -316,10 +367,16 @@ impl serde::Serialize for DomainListResponse {
     {
         use serde::ser::SerializeStruct;
         let mut len = 0;
+        if self.active.is_some() {
+            len += 1;
+        }
         if !self.domains.is_empty() {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("sys_ctrl.DomainListResponse", len)?;
+        if let Some(v) = self.active.as_ref() {
+            struct_ser.serialize_field("active", v)?;
+        }
         if !self.domains.is_empty() {
             struct_ser.serialize_field("domains", &self.domains)?;
         }
@@ -333,11 +390,13 @@ impl<'de> serde::Deserialize<'de> for DomainListResponse {
         D: serde::Deserializer<'de>,
     {
         const FIELDS: &[&str] = &[
+            "active",
             "domains",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
+            Active,
             Domains,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
@@ -360,6 +419,7 @@ impl<'de> serde::Deserialize<'de> for DomainListResponse {
                         E: serde::de::Error,
                     {
                         match value {
+                            "active" => Ok(GeneratedField::Active),
                             "domains" => Ok(GeneratedField::Domains),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
@@ -380,9 +440,16 @@ impl<'de> serde::Deserialize<'de> for DomainListResponse {
                 where
                     V: serde::de::MapAccess<'de>,
             {
+                let mut active__ = None;
                 let mut domains__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
+                        GeneratedField::Active => {
+                            if active__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("active"));
+                            }
+                            active__ = map_.next_value()?;
+                        }
                         GeneratedField::Domains => {
                             if domains__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("domains"));
@@ -392,6 +459,7 @@ impl<'de> serde::Deserialize<'de> for DomainListResponse {
                     }
                 }
                 Ok(DomainListResponse {
+                    active: active__,
                     domains: domains__.unwrap_or_default(),
                 })
             }

@@ -14,10 +14,14 @@ service SystemCtrl {
 
 message Domain {
   string name = 1;
+  string url = 2;
+  bool managed = 3;
+  bool healthy = 4;
 }
 
 message DomainListResponse {
-  repeated Domain domains = 1;
+  Domain active = 1;
+  repeated Domain domains = 10;
 }
 
 message DomainEnrollRequest {

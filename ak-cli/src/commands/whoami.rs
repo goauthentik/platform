@@ -20,5 +20,9 @@ pub async fn whoami(mut app: App) -> Result<()> {
         .wrap_err("whoami RPC failed")?
         .into_inner();
     assert_response_valid(res.header)?;
-    format::render_json(res.body, "User Information", app.args.json)
+    format::render_json(
+        serde_json::from_str::<serde_json::Value>(&res.body)?,
+        "User Information",
+        app.args.json,
+    )
 }

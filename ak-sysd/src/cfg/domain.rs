@@ -1,5 +1,6 @@
 use crate::state::StateStore;
 use ak_meta::user_agent;
+use ak_platform::generated::sys_ctrl::Domain;
 use ak_platform_keyring::KeyringStore;
 use authentik_client::apis::configuration::Configuration;
 use authentik_client::models::{AgentConfig, CurrentBrand, EnrollRequest};
@@ -8,6 +9,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::RwLock;
 
 /// Domain tokens are stored in the keyring under this service name, scoped
@@ -46,6 +48,19 @@ pub struct LoadedDomain {
     pub remote: Arc<RwLock<Option<AgentConfig>>>,
     // Supplies the flow_authentication slug used by interactive auth.
     pub brand: Arc<RwLock<Option<CurrentBrand>>>,
+    /// Result of the last healthcheck (`fetch_remote_config`); false until one succeeds.
+    pub healthy: Arc<AtomicBool>,
+}
+
+impl From<&LoadedDomain> for Domain {
+    fn from(d: &LoadedDomain) -> Self {
+        Self {
+            name: d.cfg.domain.clone(),
+            url: d.cfg.authentik_url.clone(),
+            managed: d.cfg.managed,
+            healthy: d.healthy.load(Ordering::Relaxed),
+        }
+    }
 }
 
 enum TokenFormat {
@@ -164,6 +179,7 @@ impl DomainManager {
                     )?,
                     remote: Arc::new(RwLock::new(remote)),
                     brand: Arc::new(RwLock::new(brand)),
+                    healthy: Arc::default(),
                     cfg,
                 }));
             }
@@ -262,6 +278,7 @@ impl DomainManager {
                         api,
                         remote: Arc::clone(&d.remote),
                         brand: Arc::clone(&d.brand),
+                        healthy: Arc::clone(&d.healthy),
                         cfg,
                     });
                     *d = repaired;
@@ -361,6 +378,7 @@ impl DomainManager {
             api: build_api_client(&cfg.authentik_url, &cfg.token, TokenFormat::BearerAgent)?,
             remote: Arc::new(RwLock::new(None)),
             brand: Arc::new(RwLock::new(None)),
+            healthy: Arc::default(),
             cfg,
         });
         let mut domains = self.domains.write().await;
@@ -450,6 +468,13 @@ impl DomainManager {
         let Some(d) = domains.iter().find(|d| d.cfg.domain == domain_name) else {
             bail!("domain not found: {domain_name}");
         };
+        let res = self.refresh_remote_config(d).await;
+        d.healthy.store(res.is_ok(), Ordering::Relaxed);
+        res
+    }
+
+    async fn refresh_remote_config(&self, d: &LoadedDomain) -> Result<()> {
+        let domain_name = d.cfg.domain.as_str();
         let remote = self.test(&d.cfg).await?;
         let cfg_json = serde_json::to_string(&remote)?;
 

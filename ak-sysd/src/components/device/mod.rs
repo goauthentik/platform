@@ -243,6 +243,10 @@ impl SystemPlatform for DeviceComponent {
                 sub: user.as_ref().and_then(|c| c.sub.clone()),
                 jti: user.and_then(|c| c.jti),
             };
+            tracing::debug!(
+                domain = d.cfg.domain,
+                "Siging challenge response with domain"
+            );
             let signed = jsonwebtoken::encode(
                 &Header::new(Algorithm::HS512),
                 &claims,
