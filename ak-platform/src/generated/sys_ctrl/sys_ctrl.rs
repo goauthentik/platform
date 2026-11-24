@@ -8,8 +8,8 @@ pub struct Domain {
     pub url: ::prost::alloc::string::String,
     #[prost(bool, tag="3")]
     pub managed: bool,
-    #[prost(bool, tag="4")]
-    pub healthy: bool,
+    #[prost(bool, optional, tag="4")]
+    pub healthy: ::core::option::Option<bool>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DomainListResponse {

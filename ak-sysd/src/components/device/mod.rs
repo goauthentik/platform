@@ -1,3 +1,4 @@
+use crate::cfg::domain::LoadedDomain;
 use crate::components::auth::AuthComponent;
 use crate::components::{Component, SysdContext};
 use crate::util::to_status;
@@ -12,6 +13,7 @@ use ak_platform::generated::sys_platform::{
 use ak_platform::net::server::creds::ProcCredentials;
 use ak_platform::paths::SysdSocketID;
 use ak_platform::shared::AuthentikClaims;
+use authentik_client::apis::Error as ApiError;
 use authentik_client::models::{AgentConfig, DeviceFactsRequest};
 use eyre::{OptionExt, Result, bail};
 use jsonwebtoken::{
@@ -61,13 +63,7 @@ impl DeviceComponent {
             bail!("domain not found: {domain_name}");
         };
         let facts = Self::gather_facts().await?;
-        authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(
-            &domain.api,
-            Some(facts),
-        )
-        .await
-        .map_err(|e| eyre::eyre!("checkin failed: {e}"))?;
-        Ok(())
+        checkin(&self.ctx, domain, facts).await
     }
 
     /// Asks the caller's agent for its token and returns its verified claims. The agent
@@ -121,8 +117,8 @@ impl Component for DeviceComponent {
                             continue;
                         }
                     };
-                    if let Err(e) = authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(&d.api, Some(facts)).await {
-                        tracing::warn!(domain = d.cfg.domain, "checkin failed: {e:?}");
+                    if let Err(e) = checkin(&ctx, &d, facts).await {
+                        tracing::warn!(domain = d.cfg.domain, "{e:?}");
                     }
                 }
                 let jitter = rand::random::<u64>() % 30;
@@ -147,6 +143,32 @@ impl Component for DeviceComponent {
             routes.add_service(SystemPlatformServer::from_arc(self));
         }
     }
+}
+
+/// Checks in with a domain. A 403 on a managed domain means the server revoked its
+/// device token (e.g. the serial was enrolled again), which never recovers on its own,
+/// so re-enroll from the MDM config.
+async fn checkin(ctx: &SysdContext, d: &LoadedDomain, facts: DeviceFactsRequest) -> Result<()> {
+    let Err(e) =
+        authentik_client::apis::endpoints_api::endpoints_agents_connectors_check_in_create(
+            &d.api,
+            Some(facts),
+        )
+        .await
+    else {
+        return Ok(());
+    };
+    let forbidden = matches!(&e, ApiError::ResponseError(r) if r.status.as_u16() == 403);
+    if forbidden && d.cfg.managed {
+        tracing::warn!(
+            domain = d.cfg.domain,
+            "device token rejected, re-enrolling managed domain"
+        );
+        ctx.domains.load_managed(true).await?;
+        // save_domain leaves `remote` empty; challenge signing needs its JWKS.
+        ctx.domains.fetch_remote_config(&d.cfg.domain).await?;
+    }
+    bail!("checkin failed: {e}")
 }
 
 /// The agent socket path comes from the caller, so only use the caller's own: on unix

@@ -16,7 +16,7 @@ impl serde::Serialize for Domain {
         if self.managed {
             len += 1;
         }
-        if self.healthy {
+        if self.healthy.is_some() {
             len += 1;
         }
         let mut struct_ser = serializer.serialize_struct("sys_ctrl.Domain", len)?;
@@ -29,8 +29,8 @@ impl serde::Serialize for Domain {
         if self.managed {
             struct_ser.serialize_field("managed", &self.managed)?;
         }
-        if self.healthy {
-            struct_ser.serialize_field("healthy", &self.healthy)?;
+        if let Some(v) = self.healthy.as_ref() {
+            struct_ser.serialize_field("healthy", v)?;
         }
         struct_ser.end()
     }
@@ -126,7 +126,7 @@ impl<'de> serde::Deserialize<'de> for Domain {
                             if healthy__.is_some() {
                                 return Err(serde::de::Error::duplicate_field("healthy"));
                             }
-                            healthy__ = Some(map_.next_value()?);
+                            healthy__ = map_.next_value()?;
                         }
                     }
                 }
@@ -134,7 +134,7 @@ impl<'de> serde::Deserialize<'de> for Domain {
                     name: name__.unwrap_or_default(),
                     url: url__.unwrap_or_default(),
                     managed: managed__.unwrap_or_default(),
-                    healthy: healthy__.unwrap_or_default(),
+                    healthy: healthy__,
                 })
             }
         }
