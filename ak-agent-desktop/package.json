@@ -16,7 +16,7 @@
     "dependencies": {
         "@goauthentik/api": "^2026.8.6",
         "@goauthentik/brand-assets": "^2.0.0",
-        "@goauthentik/fonts": "^2.0.0",
+        "@goauthentik/fonts": "^2.1.0",
         "@goauthentik/oxfmt-config": "^9.1.0",
         "@goauthentik/oxlint-config": "^1.0.1",
         "@goauthentik/theme": "^2.0.1",

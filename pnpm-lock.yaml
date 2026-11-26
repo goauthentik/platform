@@ -182,8 +182,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       '@goauthentik/fonts':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.1.0
+        version: 2.1.0
       '@goauthentik/oxfmt-config':
         specifier: ^9.1.0
         version: 9.1.0(oxfmt@0.79.0)(typescript@7.0.2)
@@ -192,7 +192,7 @@ importers:
         version: 1.0.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(oxlint@1.94.0)
       '@goauthentik/theme':
         specifier: ^2.0.1
-        version: 2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
+        version: 2.0.1(@goauthentik/fonts@2.1.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))
       '@goauthentik/tsconfig':
         specifier: ^3.0.0
         version: 3.0.0
@@ -760,9 +760,9 @@ packages:
   '@goauthentik/brand-assets@2.0.0':
     resolution: {integrity: sha512-yRJrV+KuGrz7MNcRzAkZa4e7LuciuFZBVSyPFRd/EndxgiqcFuFHyn+6tEurKNmianBNURhe2qm5ytoLFgEWFQ==}
 
-  '@goauthentik/fonts@2.0.0':
-    resolution: {integrity: sha512-EpZBCnsLOvOEAVR5MjFbMMLLRj5oTYGUBcJXBMvfiwsBw4xgPxA4nOLrKLmhtm+d88lxkNhMfefqcp8UP8/PWQ==}
-    engines: {node: '>=24', pnpm: '>=12.4.0'}
+  '@goauthentik/fonts@2.1.0':
+    resolution: {integrity: sha512-dZCwywDd+HnTdWSx03fql12ldgiGueae186wog62jWkdMv/iSj/Y6NHESxJR/lWUuw7L+plsFA7D8d1jIuTQTw==}
+    engines: {node: ^24.22.1 || >=26.12.1, pnpm: '>=12.4.0'}
 
   '@goauthentik/oxfmt-config@9.1.0':
     resolution: {integrity: sha512-WaJkiD8jmTJlxbLm6nccPZ0KC4x89iOlg8IoDnYxMdWkWMF+BK72SIwGPUP/Vyyazfpydw0klixsRZlfObCMYA==}
@@ -2879,7 +2879,7 @@ snapshots:
 
   '@goauthentik/brand-assets@2.0.0': {}
 
-  '@goauthentik/fonts@2.0.0': {}
+  '@goauthentik/fonts@2.1.0': {}
 
   '@goauthentik/oxfmt-config@9.1.0(oxfmt@0.79.0)(typescript@7.0.2)':
     dependencies:
@@ -2894,9 +2894,9 @@ snapshots:
     transitivePeerDependencies:
       - eslint
 
-  '@goauthentik/theme@2.0.1(@goauthentik/fonts@2.0.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))':
+  '@goauthentik/theme@2.0.1(@goauthentik/fonts@2.1.0)(@styleframe/license@2.0.2)(@styleframe/loader@3.0.4(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)(@styleframe/transpiler@3.4.2(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(@styleframe/license@2.0.2)))(@styleframe/plugin@3.4.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))(esbuild@0.28.2)(rolldown@1.2.13)(vite@8.3.8(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)))':
     dependencies:
-      '@goauthentik/fonts': 2.0.0
+      '@goauthentik/fonts': 2.1.0
       '@styleframe/core': 3.6.2(@styleframe/license@2.0.2)
       '@styleframe/dtcg': 1.1.0
       '@styleframe/theme': 3.8.1(@styleframe/core@3.6.2(@styleframe/license@2.0.2))
