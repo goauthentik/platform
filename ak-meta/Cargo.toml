@@ -10,5 +10,4 @@ workspace = true
 
 [dependencies]
 ak-meta-macros = { path = "../ak-meta-macros" }
-ak-platform = { workspace = true }
 sentry = { workspace = true }

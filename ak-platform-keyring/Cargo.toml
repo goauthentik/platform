@@ -9,7 +9,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-ak-platform = { workspace = true }
 eyre = { workspace = true }
 serde = { workspace = true }
 chrono = { workspace = true }
@@ -21,6 +20,7 @@ security-framework = { version = "3.7", features = ["OSX_10_15"] }
 core-foundation = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
+ak-platform = { workspace = true }
 keyring-core = { version = "1.0.0" }
 windows-native-keyring-store = "1.1.0"
 windows = { workspace = true, features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_System_Memory"] }
