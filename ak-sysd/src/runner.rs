@@ -111,12 +111,15 @@ mod unix {
 #[cfg(windows)]
 mod windows {
     use super::*;
+    use crate::components::agent_starter::GuiSessionStarted;
+    use ak_platform::events::EventBus;
     use std::ffi::OsString;
     use std::sync::OnceLock;
     use std::time::Duration;
     use tokio::runtime::Handle;
     use tokio_util::sync::CancellationToken;
     use windows_service::define_windows_service;
+    use windows_service::service::SessionChangeReason;
     use windows_service::service::{
         ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus,
         ServiceType,
@@ -174,11 +177,27 @@ mod windows {
         // Tripped by the SCM control handler to request shutdown.
         let shutdown = CancellationToken::new();
 
+        // Set once the agent exists; logons before that are covered by
+        // the agent starter's initial attempt.
+        let events: std::sync::Arc<OnceLock<EventBus>> = Default::default();
+
         let handler_shutdown = shutdown.clone();
+        let handler_events = events.clone();
+        let handler_rt = rt.clone();
         let event_handler = move |control| -> ServiceControlHandlerResult {
             match control {
                 ServiceControl::Stop | ServiceControl::Shutdown => {
                     handler_shutdown.cancel();
+                    ServiceControlHandlerResult::NoError
+                }
+                ServiceControl::SessionChange(param) => {
+                    if param.reason == SessionChangeReason::SessionLogon
+                        && let Some(bus) = handler_events.get()
+                    {
+                        // Runs on the SCM thread; dispatch spawns onto the runtime.
+                        let _guard = handler_rt.enter();
+                        bus.dispatch(GuiSessionStarted);
+                    }
                     ServiceControlHandlerResult::NoError
                 }
                 ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
@@ -210,11 +229,14 @@ mod windows {
         )?;
 
         let agent = rt.block_on(Agent::new(config))?;
+        let _ = events.set(agent.events());
         rt.block_on(agent.start())?;
 
         report(
             ServiceState::Running,
-            ServiceControlAccept::STOP | ServiceControlAccept::SHUTDOWN,
+            ServiceControlAccept::STOP
+                | ServiceControlAccept::SHUTDOWN
+                | ServiceControlAccept::SESSION_CHANGE,
             Duration::default(),
         )?;
 

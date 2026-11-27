@@ -20,6 +20,11 @@ use win as platform;
 const RETRY_ATTEMPTS: u32 = 10;
 const RETRY_DELAY: Duration = Duration::from_secs(3);
 
+/// The OS reported a new graphical login (Windows SCM `SESSION_CHANGE`,
+/// logind `SessionNew` on Linux).
+#[derive(Clone, Debug)]
+pub struct GuiSessionStarted;
+
 pub struct AgentStarterComponent {
     ctx: SysdContext,
 }
@@ -31,6 +36,17 @@ impl AgentStarterComponent {
             let ctx = hctx.clone();
             async move { start(ctx).await }
         });
+        let hctx = ctx.clone();
+        ctx.events.on(move |_: GuiSessionStarted| {
+            let ctx = hctx.clone();
+            async move { start(ctx).await }
+        });
+        // Spawned once here rather than in `start`, which reruns on config changes.
+        #[cfg(target_os = "linux")]
+        tokio::spawn(linux::watch_sessions(
+            ctx.events.clone(),
+            ctx.cancel.clone(),
+        ));
         AgentStarterComponent { ctx }
     }
 }
@@ -48,7 +64,8 @@ impl Component for AgentStarterComponent {
 }
 
 /// Starts the agent, retrying failed launches with a fixed delay. Not finding
-/// a GUI user is not a failure; the next `SessionOpened` triggers a new attempt.
+/// a GUI user is not a failure; the next `SessionOpened` or `GuiSessionStarted`
+/// triggers a new attempt.
 async fn start(ctx: SysdContext) {
     let Some(exec_path) = agent_exec_path() else {
         return;
