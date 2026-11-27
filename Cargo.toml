@@ -105,6 +105,7 @@ syn = "3"
 sysinfo = { version = "0.40.4", default-features = false }
 tauri = "2"
 tauri-build = "2"
+tokio-stream = "0.1.18"
 tokio-util = "0.7"
 windows_exe_info = "0.5.2"
 zbus = "5"
