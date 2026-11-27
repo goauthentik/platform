@@ -204,46 +204,79 @@ async fn base_image() -> Result<String> {
     result.map(|_| alias)
 }
 
-/// Same setup as the former e2e container image.
+/// Same setup as the former e2e container image, as separate logged steps so
+/// a slow or stuck one is visible in the test output.
 async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
     for (file, data) in debs {
         vm.push(data, &format!("/root/{file}")).await?;
     }
-    // Drop-ins go in before install, so the postinst restart already uses
-    // them. `%%p` is systemd's escape for a literal `%p` (the PID, for LLVM).
-    let script = format!(
-        r#"set -e
-mkdir -p -m 1777 {PROFILE_DIR}
-for unit in ak-sysd ak-agent; do
-  mkdir -p /etc/systemd/system/$unit.service.d
-  printf '[Service]\nEnvironment=LLVM_PROFILE_FILE={PROFILE_DIR}/%s-%%%%p.profraw\n' $unit \
-    > /etc/systemd/system/$unit.service.d/coverage.conf
-done
-printf '[Service]\nEnvironment=HOME=/root\n' > /etc/systemd/system/ak-agent.service.d/home.conf
-# First-boot cloud-init (cloud) and packagekit/unattended-upgrades (desktop)
-# hold the apt lock for a while.
-if command -v cloud-init >/dev/null; then cloud-init status --wait || true; fi
-apt-get -o DPkg::Lock::Timeout=600 update
-DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 install -y \
-  pamtester openssh-server /root/*.deb
-cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system
-systemctl daemon-reload
-systemctl enable ak-agent
-sed -i 's/false/true/g' /etc/authentik/config.json
-sed -i 's/pam_authentik.so/pam_authentik.so debug/g' /etc/pam.d/*
-systemctl stop ak-sysd ak-agent
-rm -f /root/*.deb {PROFILE_DIR}/* /etc/ssh/ssh_host_*
-truncate -s 0 /etc/machine-id
-"#
-    );
-    // apt can race the VM's first-boot network setup, so retry once.
-    let mut last = (0, String::new(), String::new());
-    for _ in 0..2 {
-        last = vm.exec(&script, &[]).await?;
-        if last.0 == 0 {
-            return Ok(());
+    let steps = [
+        // Fresh cloud and desktop images run cloud-init, the apt timers,
+        // unattended-upgrades and (desktop) packagekit on first boot, all of
+        // which hold the apt lock. Stop them, then wait for whatever is
+        // already running to let go.
+        (
+            "quiesce package managers",
+            "if command -v cloud-init >/dev/null; then cloud-init status --wait || true; fi\n\
+             systemctl mask --now apt-daily.timer apt-daily-upgrade.timer \
+               apt-daily.service apt-daily-upgrade.service unattended-upgrades.service \
+               packagekit.service 2>/dev/null || true\n\
+             while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock >/dev/null 2>&1; do sleep 2; done"
+                .to_string(),
+        ),
+        // Drop-ins go in before install, so the postinst restart already uses
+        // them. `%%p` is systemd's escape for a literal `%p` (the PID, for LLVM).
+        (
+            "coverage drop-ins",
+            format!(
+                "mkdir -p -m 1777 {PROFILE_DIR}\n\
+                 for unit in ak-sysd ak-agent; do\n\
+                   mkdir -p /etc/systemd/system/$unit.service.d\n\
+                   printf '[Service]\\nEnvironment=LLVM_PROFILE_FILE={PROFILE_DIR}/%s-%%%%p.profraw\\n' $unit \
+                     > /etc/systemd/system/$unit.service.d/coverage.conf\n\
+                 done\n\
+                 printf '[Service]\\nEnvironment=HOME=/root\\n' > /etc/systemd/system/ak-agent.service.d/home.conf"
+            ),
+        ),
+        ("apt update", "apt-get -o Acquire::Retries=3 update".to_string()),
+        (
+            "install packages",
+            "DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y pamtester openssh-server /root/*.deb"
+                .to_string(),
+        ),
+        (
+            "configure",
+            "set -e\n\
+             cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system\n\
+             systemctl daemon-reload\n\
+             systemctl enable ak-agent\n\
+             sed -i 's/false/true/g' /etc/authentik/config.json\n\
+             sed -i 's/pam_authentik.so/pam_authentik.so debug/g' /etc/pam.d/*"
+                .to_string(),
+        ),
+        (
+            "clean up",
+            format!(
+                "systemctl stop ak-sysd ak-agent\n\
+                 rm -f /root/*.deb {PROFILE_DIR}/* /etc/ssh/ssh_host_*\n\
+                 truncate -s 0 /etc/machine-id"
+            ),
+        ),
+    ];
+    for (name, script) in steps {
+        tracing::info!(vm = vm.name, step = name, "provisioning");
+        let start = std::time::Instant::now();
+        let (code, stdout, stderr) = vm.exec(&script, &[]).await?;
+        tracing::info!(
+            vm = vm.name,
+            step = name,
+            code,
+            secs = start.elapsed().as_secs(),
+            "provisioning step done"
+        );
+        if code != 0 {
+            bail!("provisioning step '{name}' exited with {code}:\n{stdout}{stderr}");
         }
-        tokio::time::sleep(Duration::from_secs(10)).await;
     }
-    bail!("provisioning failed with {}:\n{}{}", last.0, last.1, last.2)
+    Ok(())
 }

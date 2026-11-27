@@ -2,3 +2,10 @@
 # Tests requiring a license live in an `enterprise` module.
 [profile.no-enterprise]
 default-filter = "not test(/(^|::)enterprise::/)"
+
+# The e2e tests drive VMs; a stuck one should fail with its output instead of
+# running until the CI job times out. The first test also builds the base
+# image, so allow 30 minutes.
+[[profile.default.overrides]]
+filter = "package(ak-platform-e2e)"
+slow-timeout = { period = "120s", terminate-after = 15 }

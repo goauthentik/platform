@@ -21,6 +21,10 @@ pub struct Vm {
     pub name: String,
 }
 
+/// Upper bound for any single Incus operation, including a multi-GB desktop
+/// image download and the longest provisioning step.
+const OP_TIMEOUT_SECS: i32 = 1200;
+
 /// Incus instance types.
 pub const VIRTUAL_MACHINE: &str = "virtual-machine";
 /// For images only published as containers (e.g. Amazon Linux).
@@ -79,12 +83,20 @@ impl Vm {
         Ok(())
     }
 
+    /// Waits for an Incus operation (image download, exec, stop, publish)
+    /// for at most [`OP_TIMEOUT_SECS`], so a stuck step fails instead of
+    /// hanging the test run.
     async fn wait(&self, op: InstancesPut202Response) -> Result<Operation> {
         let id = op.metadata.and_then(|m| m.id).context("no operation id")?;
-        let res = operations_api::operation_wait_get(&self.cfg, &id, Some(-1)).await?;
+        let res = operations_api::operation_wait_get(&self.cfg, &id, Some(OP_TIMEOUT_SECS)).await?;
         let op = *res.metadata.context("no operation metadata")?;
         if op.status.as_deref() != Some("Success") {
-            bail!("operation {id} failed: {:?}", op.err);
+            bail!(
+                "operation {id} ({:?}) ended as {:?} within {OP_TIMEOUT_SECS}s: {:?}",
+                op.description,
+                op.status,
+                op.err
+            );
         }
         Ok(op)
     }

@@ -11,6 +11,5 @@ build-packages:
 		ak-pam/build \
 		ak-cli/build \
 		ak-browser-support/build \
-		AK_GO_BUILD_FLAGS=-cover \
 		RUST_BUILD_FLAGS="-C instrument-coverage"
 	$(MAKE) -C "${TOP}" vpkg/linux/package
