@@ -43,7 +43,7 @@ tokio-stream = "0.1.18"
 tokio-util = { workspace = true }
 interprocess = { version = "2", features = ["tokio"] }
 chrono = { workspace = true }
-notify = "8.2.0"
+notify = "9.0.0"
 sysinfo = { workspace = true, features = ["system"] }
 tracing = { workspace = true }
 env_filter = "2.0.0"
