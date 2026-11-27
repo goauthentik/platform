@@ -18,4 +18,5 @@ local-build:
 	docker build \
 		-t ghcr.io/goauthentik/selenium:${container_ver} \
 		--no-cache \
+		--build-context repo=../.. \
 		.

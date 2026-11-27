@@ -1,3 +1,16 @@
+FROM docker.io/library/node:24-trixie AS browser-ext
+
+WORKDIR /src
+COPY --from=repo package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --from=repo browser-ext ./browser-ext
+RUN rm -rf browser-ext/node_modules browser-ext/dist && \
+    corepack enable && \
+    pnpm install --frozen-lockfile --filter authentik-browser-ext && \
+    pnpm --filter authentik-browser-ext run build && \
+    mkdir /out && \
+    cp -r browser-ext/images browser-ext/dist browser-ext/html /out/ && \
+    cp browser-ext/manifest-chrome.json /out/manifest.json
+
 FROM docker.io/selenium/standalone-chromium:156.0
 
 ARG AK_PLATFORM_VER
@@ -16,5 +29,10 @@ RUN curl -fsSL "${AK_DEPLOY_URL}/keys/gpg-key.asc" | sudo gpg --dearmor -o /usr/
 
 COPY ./authentik.png /usr/share/images/fluxbox/ubuntu-light.png
 COPY ./ak-sysd.conf /etc/supervisor/conf.d/ak-sysd.conf
+COPY --from=browser-ext /out /opt/authentik/browser-ext
+
+# Picked up by /opt/bin/wrap_chromium_binary and passed to every chromium launch.
+# The manifest "key" keeps the extension ID stable so native messaging works.
+ENV SE_BROWSER_ARGS_AK_EXTENSION=--load-extension=/opt/authentik/browser-ext
 
 USER 1200
