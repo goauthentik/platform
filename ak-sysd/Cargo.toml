@@ -70,6 +70,8 @@ tikv-jemallocator = { version = "0.7.0", features = [
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = { workspace = true }
+tokio-stream = "0.1.18"
+zbus = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.8"

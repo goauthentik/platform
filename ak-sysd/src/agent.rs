@@ -159,6 +159,11 @@ impl Agent {
             .push(handle);
     }
 
+    #[cfg(windows)]
+    pub fn events(&self) -> ak_platform::events::EventBus {
+        self.ctx.events.clone()
+    }
+
     pub async fn start(&self) -> Result<()> {
         for (id, c) in &self.components {
             tracing::info!(component = id, "starting component");

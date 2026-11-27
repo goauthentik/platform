@@ -638,6 +638,7 @@ dependencies = [
  "tempfile",
  "tikv-jemallocator",
  "tokio",
+ "tokio-stream",
  "tokio-util",
  "tonic",
  "tonic-prost",
@@ -646,6 +647,7 @@ dependencies = [
  "windows 0.62.2",
  "windows-service",
  "windows_exe_info",
+ "zbus",
 ]
 
 [[package]]

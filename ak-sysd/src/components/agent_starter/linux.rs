@@ -1,6 +1,69 @@
-use super::command_stdout;
+use super::{GuiSessionStarted, command_stdout};
+use ak_platform::events::EventBus;
 use eyre::{Result, bail};
 use std::process::Command;
+use tokio_stream::StreamExt;
+use tokio_util::sync::CancellationToken;
+use zbus::zvariant::OwnedObjectPath;
+
+#[zbus::proxy(
+    interface = "org.freedesktop.login1.Manager",
+    default_service = "org.freedesktop.login1",
+    default_path = "/org/freedesktop/login1",
+    gen_blocking = false
+)]
+trait LoginManager {
+    #[zbus(signal)]
+    fn session_new(&self, session_id: String, object_path: OwnedObjectPath) -> zbus::Result<()>;
+}
+
+#[zbus::proxy(
+    interface = "org.freedesktop.login1.Session",
+    default_service = "org.freedesktop.login1",
+    gen_blocking = false
+)]
+trait LoginSession {
+    #[zbus(property, name = "Type")]
+    fn kind(&self) -> zbus::Result<String>;
+    #[zbus(property)]
+    fn class(&self) -> zbus::Result<String>;
+}
+
+/// Dispatches [`GuiSessionStarted`] for every new graphical user session
+/// logind reports, until `cancel` fires.
+pub async fn watch_sessions(events: EventBus, cancel: CancellationToken) {
+    tokio::select! {
+        _ = cancel.cancelled() => {}
+        Err(e) = watch(&events) => tracing::warn!("logind session watch stopped: {e:?}"),
+    }
+}
+
+async fn watch(events: &EventBus) -> Result<()> {
+    let conn = zbus::Connection::system().await?;
+    let mut new_sessions = LoginManagerProxy::new(&conn)
+        .await?
+        .receive_session_new()
+        .await?;
+    while let Some(sig) = new_sessions.next().await {
+        let args = sig.args()?;
+        let session = LoginSessionProxy::builder(&conn)
+            .path(args.object_path.clone())?
+            .build()
+            .await?;
+        let (kind, class) = (session.kind().await?, session.class().await?);
+        tracing::debug!(id = args.session_id, kind, class, "logind session started");
+        if is_gui_session(&kind, &class) {
+            events.dispatch(GuiSessionStarted);
+        }
+    }
+    Ok(())
+}
+
+/// Skips tty/ssh sessions and greeters (gdm, sddm, lightdm) via logind's
+/// `Class`, which is `greeter` for those rather than `user`.
+fn is_gui_session(kind: &str, class: &str) -> bool {
+    class == "user" && matches!(kind, "x11" | "wayland")
+}
 
 struct User {
     name: String,
@@ -168,6 +231,15 @@ fn parse_who_display(out: &str, user: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gui_session() {
+        assert!(is_gui_session("wayland", "user"));
+        assert!(is_gui_session("x11", "user"));
+        assert!(!is_gui_session("wayland", "greeter"));
+        assert!(!is_gui_session("tty", "user"));
+        assert!(!is_gui_session("unspecified", "background"));
+    }
 
     #[test]
     fn who_display() {
