@@ -16,28 +16,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - parallel:
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_windows-2025_ak-agent-desktop
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_windows-2025_ak-cli
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_windows-2025_ak-sysd
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_windows-2025_ak-browser-support
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_windows-2025_ee-wcp
-              path: bin/
-          - uses: digicert/code-signing-software-trust-action@v1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+        with:
+          pattern: authentik_windows-2025_{ak-agent-desktop,ak-cli,ak-sysd,ak-browser-support,ee-wcp}
+          path: bin/
+          merge-multiple: true
+      - uses: digicert/code-signing-software-trust-action@v1
       - shell: bash
         run: |
           echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
