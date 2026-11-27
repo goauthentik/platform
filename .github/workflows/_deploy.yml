@@ -17,12 +17,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - parallel:
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              path: ./bin
-          - run: |
-              sudo apt-get remove --purge man-db
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+        with:
+          path: ./bin
+      - run: sudo apt-get remove --purge man-db
       - uses: ./.github/actions/repo
         id: repo
         with:
