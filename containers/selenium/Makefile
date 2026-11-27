@@ -1,6 +1,6 @@
 include ../../common.mk
 
-base_ver := $(shell cat Dockerfile | grep FROM | awk '{print $$2}' | awk -F: '{print $$2}')
+base_ver := $(shell grep '^FROM docker.io/selenium/' Dockerfile | awk '{print $$2}' | awk -F: '{print $$2}')
 container_ver := ${base_ver}-ak-${VERSION}
 
 .PHONY: ci-container-tag
