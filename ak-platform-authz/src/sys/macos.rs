@@ -42,8 +42,7 @@ pub async fn prompt(_operation: Operation, msg: String) -> Result<bool> {
                     })
                 });
             let _ = tx.send(result);
-        })
-        .expect("failed to spawn thread");
+        })?;
 
     rx.await.wrap_err("authentication thread did not respond")?
 }

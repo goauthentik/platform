@@ -1,5 +1,5 @@
 use ak_agent::{Agent, token::global::ProfilesReconciled};
-use eyre::Result;
+use eyre::{ContextCompat, Result};
 use tauri::{
     App, Emitter, Manager,
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
@@ -11,12 +11,14 @@ use crate::{deep_link, ui};
 pub fn setup_deeplink(app: &mut App) -> Result<()> {
     // The scheme is registered by the installers, not at runtime.
     for url in app.deep_link().get_current()?.unwrap_or_default() {
-        deep_link::handle(app.handle(), &url);
+        deep_link::handle(app.handle(), &url)?;
     }
     let deep_link_handle = app.handle().clone();
     app.deep_link().on_open_url(move |e| {
         for url in e.urls() {
-            deep_link::handle(&deep_link_handle, &url);
+            deep_link::handle(&deep_link_handle, &url).unwrap_or_else(|e| {
+                tracing::warn!("failed to handle URL: {e:?}");
+            });
         }
     });
     Ok(())
@@ -24,7 +26,11 @@ pub fn setup_deeplink(app: &mut App) -> Result<()> {
 
 pub fn setup_tray(app: &mut App) -> Result<()> {
     let tray = TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(
+            app.default_window_icon()
+                .context("failed to get window icon")?
+                .clone(),
+        )
         .icon_as_template(true)
         .on_tray_icon_event(|tray, e| {
             if let TrayIconEvent::Click {
@@ -32,7 +38,9 @@ pub fn setup_tray(app: &mut App) -> Result<()> {
                 ..
             } = e
             {
-                ui::show_main(tray.app_handle());
+                ui::show_main(tray.app_handle()).unwrap_or_else(|e| {
+                    tracing::warn!("failed to open window: {e:?}");
+                });
             }
         });
     // Add a tray icon menu on linux, otherwise the tray icon doesn't show up at all
@@ -51,7 +59,9 @@ pub fn setup_tray(app: &mut App) -> Result<()> {
             .build()?;
         tray.menu(&menu).on_menu_event(|app, event| {
             if event.id() == "tray_open" {
-                ui::show_main(app);
+                ui::show_main(app).unwrap_or_else(|e| {
+                    tracing::warn!("failed to open window: {e:?}");
+                });
             } else if event.id() == "tray_quit" {
                 app.exit(0);
             }
