@@ -46,7 +46,7 @@ impl TestMachine {
 
         // The image ships without host keys so each machine gets its own.
         tm.must_exec(
-            "dpkg-reconfigure openssh-server && systemctl restart ssh ak-sysd ak-agent",
+            "ssh-keygen -A && systemctl restart ssh ak-sysd ak-agent",
             &[],
         )
         .await?;
@@ -194,7 +194,8 @@ async fn base_image() -> Result<String> {
     .await?;
     let result = provision(&builder, debs).await;
     if result.is_ok() {
-        builder.stop().await?;
+        // A clean shutdown, so everything provisioned is on disk before publishing.
+        builder.stop(false).await?;
         builder.publish(&alias).await?;
     }
     builder.delete().await?;

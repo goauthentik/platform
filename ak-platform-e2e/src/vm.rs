@@ -39,6 +39,13 @@ impl Vm {
                 "type": kind,
                 "start": true,
                 "config": { "limits.cpu": "2", "limits.memory": "2GiB" },
+                // Some VM images (e.g. Rocky, Alma) don't ship incus-agent and
+                // install it from this disk; without it exec never works.
+                "devices": if kind == VIRTUAL_MACHINE {
+                    json!({ "agent": { "type": "disk", "source": "agent:config" } })
+                } else {
+                    json!({})
+                },
                 "source": source,
             }))
             .send()
@@ -129,10 +136,13 @@ impl Vm {
         Ok(resp.bytes().await?.to_vec())
     }
 
-    pub async fn stop(&self) -> Result<()> {
+    /// Stops the instance. `force` kills it without a guest shutdown, so
+    /// unflushed writes are lost; only use it for throwaway instances.
+    pub async fn stop(&self, force: bool) -> Result<()> {
         let mut stop = InstanceStatePut::new();
         stop.action = Some("stop".into());
-        stop.force = Some(true);
+        stop.force = Some(force);
+        stop.timeout = Some(120);
         let op = instances_api::instance_state_put(&self.cfg, &self.name, None, Some(stop)).await?;
         self.wait(op).await?;
         Ok(())
@@ -159,7 +169,7 @@ impl Vm {
 
     pub async fn delete(self) -> Result<()> {
         // Fails if already stopped (e.g. after `publish`), which is fine.
-        let _ = self.stop().await;
+        let _ = self.stop(true).await;
         let op = instances_api::instance_delete(&self.cfg, &self.name, None).await?;
         self.wait(op).await?;
         Ok(())
