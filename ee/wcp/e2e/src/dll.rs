@@ -27,12 +27,19 @@ pub use ak_ee_wcp_wire::CLSID_CREDENTIAL_PROVIDER;
 type DllGetClassObjectFn =
     unsafe extern "system" fn(*const GUID, *const GUID, *mut *mut c_void) -> HRESULT;
 
-/// Cargo puts every workspace member's output in one profile directory, with
-/// test binaries in `deps/`.
+/// Cargo puts every workspace member's output in one profile directory. Test
+/// binaries live below it in `deps/<exe>` (old build-dir layout) or
+/// `build/<pkg>/<hash>/out/<exe>` (layout since Rust 1.100), so the profile
+/// directory is the parent of the nearest `deps` or `build` ancestor.
 pub fn build_output_dir() -> PathBuf {
     std::env::current_exe()
         .ok()
-        .and_then(|p| p.parent().and_then(Path::parent).map(Path::to_path_buf))
+        .and_then(|exe| {
+            exe.ancestors()
+                .find(|d| d.file_name().is_some_and(|n| n == "deps" || n == "build"))
+                .and_then(Path::parent)
+                .map(Path::to_path_buf)
+        })
         .unwrap_or_default()
 }
 
