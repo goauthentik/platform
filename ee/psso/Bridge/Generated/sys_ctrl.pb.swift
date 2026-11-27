@@ -27,6 +27,12 @@ nonisolated struct Domain: Sendable {
 
   var name: String = String()
 
+  var url: String = String()
+
+  var managed: Bool = false
+
+  var healthy: Bool = false
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -37,11 +43,22 @@ nonisolated struct DomainListResponse: Sendable {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  var active: Domain {
+    get {_active ?? Domain()}
+    set {_active = newValue}
+  }
+  /// Returns true if `active` has been explicitly set.
+  var hasActive: Bool {self._active != nil}
+  /// Clears the value of `active`. Subsequent reads from it will return its default value.
+  mutating func clearActive() {self._active = nil}
+
   var domains: [Domain] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
+
+  fileprivate var _active: Domain? = nil
 }
 
 nonisolated struct DomainEnrollRequest: Sendable {
@@ -94,7 +111,7 @@ fileprivate nonisolated let _protobuf_package = "sys_ctrl"
 
 nonisolated extension Domain: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".Domain"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}url\0\u{1}managed\0\u{1}healthy\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -103,6 +120,9 @@ nonisolated extension Domain: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.url) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.managed) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.healthy) }()
       default: break
       }
     }
@@ -112,11 +132,23 @@ nonisolated extension Domain: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
+    if !self.url.isEmpty {
+      try visitor.visitSingularStringField(value: self.url, fieldNumber: 2)
+    }
+    if self.managed != false {
+      try visitor.visitSingularBoolField(value: self.managed, fieldNumber: 3)
+    }
+    if self.healthy != false {
+      try visitor.visitSingularBoolField(value: self.healthy, fieldNumber: 4)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: Domain, rhs: Domain) -> Bool {
     if lhs.name != rhs.name {return false}
+    if lhs.url != rhs.url {return false}
+    if lhs.managed != rhs.managed {return false}
+    if lhs.healthy != rhs.healthy {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -124,7 +156,7 @@ nonisolated extension Domain: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
 nonisolated extension DomainListResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DomainListResponse"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}domains\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}active\0\u{2}\u{9}domains\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -132,20 +164,29 @@ nonisolated extension DomainListResponse: SwiftProtobuf.Message, SwiftProtobuf._
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.domains) }()
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._active) }()
+      case 10: try { try decoder.decodeRepeatedMessageField(value: &self.domains) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._active {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
     if !self.domains.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.domains, fieldNumber: 1)
+      try visitor.visitRepeatedMessageField(value: self.domains, fieldNumber: 10)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: DomainListResponse, rhs: DomainListResponse) -> Bool {
+    if lhs._active != rhs._active {return false}
     if lhs.domains != rhs.domains {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

@@ -1,4 +1,5 @@
 use eyre::Result;
+use serde::Serialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
@@ -103,11 +104,15 @@ pub fn render_map_as_tree(data: &Value, root_title: &str) -> Vec<String> {
     root.render()
 }
 
-pub fn render_json(raw: String, title: &str, json: bool) -> Result<()> {
+pub fn render_json<T>(raw: T, title: &str, json: bool) -> Result<()>
+where
+    T: Serialize,
+{
     if json {
-        println!("{raw}");
+        let str = serde_json::to_string(&raw)?;
+        println!("{str}");
     } else {
-        let body: Value = serde_json::from_str(&raw)?;
+        let body: Value = serde_json::to_value(&raw)?;
         for line in render_map_as_tree(&body, title) {
             println!("{line}");
         }

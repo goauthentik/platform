@@ -70,7 +70,7 @@ jobs:
               platform: ${{ matrix.platform }}
       # install-action writes ~/.cargo/bin, which the toolchain's rust-cache
       # snapshots and restores, so it must not overlap with it.
-      - uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
         with:
           tool: cargo-llvm-cov nextest
       - run: |
@@ -140,7 +140,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: api/go/go.mod
@@ -170,7 +170,7 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
       # see test_rs: must not overlap with setup-rust-toolchain
-      - uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
         with:
           tool: cargo-deny
       - run: make lint-rs-ci
@@ -269,7 +269,7 @@ jobs:
               name: authentik_ubuntu-26.04_ak-pam-e2e
               path: bin/
       # see test_rs: must not overlap with setup-rust-toolchain
-      - uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
         with:
           tool: cargo-llvm-cov nextest
       - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd

@@ -77,11 +77,16 @@ impl SystemCtrl for CtrlComponent {
             .domains()
             .await
             .into_iter()
-            .map(|d| Domain {
-                name: d.cfg.domain.clone(),
-            })
+            .map(|d| Domain::from(&*d))
             .collect();
-        Ok(Response::new(DomainListResponse { domains }))
+        let active = match self.ctx.domains.active().await {
+            Ok(d) => Some(Domain::from(&*d)),
+            Err(_) => {
+                tracing::info!("No active domain");
+                None
+            }
+        };
+        Ok(Response::new(DomainListResponse { active, domains }))
     }
 
     async fn domain_enroll(
