@@ -56,7 +56,9 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             // Deep links are forwarded to `on_open_url` and routed there.
             if !argv.iter().any(|a| a.starts_with(deep_link::SCHEME)) {
-                ui::show_main(app);
+                ui::show_main(app).unwrap_or_else(|e| {
+                    tracing::warn!("failed to open window: {e:?}");
+                });
             }
         }))
         .plugin(tauri_plugin_opener::init())
@@ -90,7 +92,9 @@ pub fn start_tauri(guard: ClientInitGuard) -> Result<()> {
                 && code.is_none()
             {
                 api.prevent_exit();
-                ui::hide_to_tray(app);
+                ui::hide_to_tray(app).unwrap_or_else(|e| {
+                    tracing::warn!("failed to hide to tray: {e:?}");
+                });
             }
         });
     Ok(())
