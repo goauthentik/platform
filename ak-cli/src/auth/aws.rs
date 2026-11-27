@@ -48,6 +48,31 @@ pub struct AWSProviderArgs {
     /// AWS Region
     #[arg(short = 'e', long, required = true)]
     region: String,
+    #[clap(flatten)]
+    scope: ScopeArgs,
+}
+
+/// Scope the assumed role's credentials down via `GetScopedCredentials`.
+#[derive(Clone, Debug, clap::Args)]
+pub struct ScopeArgs {
+    /// IAM policy JSON to scope the credentials down to
+    #[arg(long)]
+    policy: Option<String>,
+    /// Shorten the credentials' lifetime, in seconds
+    #[arg(long, value_parser = clap::value_parser!(i32).range(1..=129600))]
+    duration_seconds: Option<i32>,
+    /// Description of the scoped session, logged to CloudTrail
+    #[arg(long)]
+    scoped_session_description: Option<String>,
+}
+
+impl ScopeArgs {
+    fn is_set(&self) -> bool {
+        // STS rejects requests with neither policy nor duration, let it say so
+        self.policy.is_some()
+            || self.duration_seconds.is_some()
+            || self.scoped_session_description.is_some()
+    }
 }
 
 impl AWSProviderArgs {
@@ -100,6 +125,7 @@ pub async fn get_credentials(
         vec![
             "auth-aws-cache".to_string(),
             opts.provider_lookup.role_arn.clone(),
+            format!("{:?}", opts.provider_lookup.scope),
         ],
     );
     if let Ok(v) = cc.get().await {
@@ -155,6 +181,13 @@ pub async fn get_credentials(
         .await?
     };
 
+    let aws_creds = match aws_creds {
+        Some(c) if opts.provider_lookup.scope.is_set() => {
+            scope_credentials(config, c, opts.provider_lookup.scope).await?
+        }
+        c => c,
+    };
+
     if let Some(c) = aws_creds {
         let cached = AWSCredentialOutput {
             version: 1,
@@ -172,6 +205,35 @@ pub async fn get_credentials(
         return Ok(cached);
     }
     bail!("No credentials received")
+}
+
+async fn scope_credentials(
+    config: &SdkConfig,
+    c: aws_sdk_sts::types::Credentials,
+    scope: ScopeArgs,
+) -> Result<Option<aws_sdk_sts::types::Credentials>> {
+    let creds = Credentials::new(
+        c.access_key_id,
+        c.secret_access_key,
+        Some(c.session_token),
+        SystemTime::try_from(c.expiration).ok(),
+        "assumed-role",
+    );
+    let sts = aws_sdk_sts::Client::from_conf(
+        aws_sdk_sts::config::Builder::from(config)
+            .credentials_provider(creds)
+            .build(),
+    );
+    tracing::debug!("Scoping AWS Credentials...");
+    Ok(sts
+        .get_scoped_credentials()
+        .set_policy(scope.policy)
+        .set_duration_seconds(scope.duration_seconds)
+        .set_scoped_session_description(scope.scoped_session_description)
+        .send()
+        .await
+        .wrap_err("failed to scope AWS credentials")?
+        .credentials)
 }
 
 async fn assume_role_with_web_identity(
