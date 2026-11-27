@@ -38,7 +38,8 @@ impl Vm {
                 "name": name,
                 "type": kind,
                 "start": true,
-                "config": { "limits.cpu": "2", "limits.memory": "2GiB" },
+                // 4GiB so desktop images can run their session alongside the tests.
+                "config": { "limits.cpu": "2", "limits.memory": "4GiB" },
                 // Some VM images (e.g. Rocky, Alma) don't ship incus-agent and
                 // install it from this disk; without it exec never works.
                 "devices": if kind == VIRTUAL_MACHINE {
@@ -54,16 +55,28 @@ impl Vm {
             .json()
             .await?;
         let vm = Vm { cfg, name };
-        vm.wait(op).await?;
+        match vm.wait_ready(op).await {
+            Ok(()) => Ok(vm),
+            // The instance exists even if it failed to start; don't leave it
+            // behind to collide with the next launch of the same name.
+            Err(e) => {
+                let _ = vm.delete().await;
+                Err(e)
+            }
+        }
+    }
+
+    async fn wait_ready(&self, op: InstancesPut202Response) -> Result<()> {
+        self.wait(op).await?;
         // Exec fails until the in-VM agent is up.
         let start = Instant::now();
-        while vm.exec("true", &[]).await.is_err() {
+        while self.exec("true", &[]).await.is_err() {
             if start.elapsed() > Duration::from_secs(300) {
-                bail!("incus-agent in {} not ready after 300s", vm.name);
+                bail!("incus-agent in {} not ready after 300s", self.name);
             }
             tokio::time::sleep(Duration::from_secs(3)).await;
         }
-        Ok(vm)
+        Ok(())
     }
 
     async fn wait(&self, op: InstancesPut202Response) -> Result<Operation> {

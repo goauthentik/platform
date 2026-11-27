@@ -161,4 +161,4 @@ Requirements: Docker.
 Builds the instrumented packages for the end-to-end tests, which run in Incus VMs
 (`build-packages`).
 
-Requirements: Incus with KVM, and access to its socket (`incus-admin` group).
+Requirements: Incus with KVM and `genisoimage`, and access to its socket (`incus-admin` group).

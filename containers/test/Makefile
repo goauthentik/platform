@@ -1,5 +1,7 @@
 include ../../common.mk
 
+UBUNTU_VERSION ?= 24.04
+
 base_ver := ${UBUNTU_VERSION}
 container_ver := ${base_ver}-ak-${VERSION}
 

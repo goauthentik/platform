@@ -227,7 +227,7 @@ jobs:
       platforms: '["ubuntu-26.04"]'
     secrets: inherit
   test_rs_e2e:
-    name: Test (e2e ${{ matrix.ubuntu_version }})
+    name: Test (e2e ${{ matrix.ubuntu_version }} ${{ matrix.ubuntu_variant }})
     needs: [package_linux_e2e]
     strategy:
       fail-fast: false
@@ -236,9 +236,14 @@ jobs:
           # 25.10 is EOL and no longer on images.linuxcontainers.org.
           - "24.04"
           - "26.04"
+        ubuntu_variant:
+          - cloud
+          - desktop
     runs-on: ubuntu-26.04
     env:
-      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+      # Read by ak-platform-e2e when building the base image (defaults: 24.04, cloud).
+      AK_E2E_UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+      AK_E2E_UBUNTU_VARIANT: ${{ matrix.ubuntu_variant }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
@@ -277,7 +282,8 @@ jobs:
               sudo udevadm trigger --name-match=kvm
               test -c /dev/kvm
               sudo apt-get update
-              sudo apt-get install -y incus
+              # genisoimage builds the agent:config disk for VMs without incus-agent.
+              sudo apt-get install -y incus genisoimage
               sudo incus admin init --minimal
               sudo usermod -aG incus-admin "$USER"
               # Docker sets FORWARD to DROP, which cuts the VMs off from apt.
@@ -301,18 +307,18 @@ jobs:
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e-${{ matrix.ubuntu_version }}
+          flags: rs-e2e-${{ matrix.ubuntu_version }}-${{ matrix.ubuntu_variant }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e-${{ matrix.ubuntu_version }}
+          flags: rs-e2e-${{ matrix.ubuntu_version }}-${{ matrix.ubuntu_variant }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e-${{ matrix.ubuntu_version }}
+          flags: rs-e2e-${{ matrix.ubuntu_version }}-${{ matrix.ubuntu_variant }}
           files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov

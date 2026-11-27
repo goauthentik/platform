@@ -158,6 +158,8 @@ impl Drop for TestMachine {
 /// (`--test-threads 1`). Old images are left behind locally.
 async fn base_image() -> Result<String> {
     let version = std::env::var("AK_E2E_UBUNTU_VERSION").unwrap_or_else(|_| "24.04".into());
+    // `cloud` or `desktop` (GNOME, no cloud-init); see images.linuxcontainers.org.
+    let variant = std::env::var("AK_E2E_UBUNTU_VARIANT").unwrap_or_else(|_| "cloud".into());
     let mut hash = Sha256::new();
     let mut debs = Vec::new();
     for pkg in PACKAGES {
@@ -172,7 +174,7 @@ async fn base_image() -> Result<String> {
         debs.push((file, data));
     }
     let alias = format!(
-        "ak-e2e-{}-{}",
+        "ak-e2e-{}-{variant}-{}",
         version.replace('.', ""),
         &hex::encode(hash.finalize())[..12]
     );
@@ -186,7 +188,7 @@ async fn base_image() -> Result<String> {
         VIRTUAL_MACHINE,
         json!({
             "type": "image",
-            "alias": format!("ubuntu/{version}"),
+            "alias": format!("ubuntu/{version}/{variant}"),
             "server": "https://images.linuxcontainers.org",
             "protocol": "simplestreams",
         }),
@@ -218,8 +220,12 @@ for unit in ak-sysd ak-agent; do
     > /etc/systemd/system/$unit.service.d/coverage.conf
 done
 printf '[Service]\nEnvironment=HOME=/root\n' > /etc/systemd/system/ak-agent.service.d/home.conf
-apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y pamtester openssh-server /root/*.deb
+# First-boot cloud-init (cloud) and packagekit/unattended-upgrades (desktop)
+# hold the apt lock for a while.
+if command -v cloud-init >/dev/null; then cloud-init status --wait || true; fi
+apt-get -o DPkg::Lock::Timeout=600 update
+DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Lock::Timeout=600 install -y \
+  pamtester openssh-server /root/*.deb
 cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system
 systemctl daemon-reload
 systemctl enable ak-agent
