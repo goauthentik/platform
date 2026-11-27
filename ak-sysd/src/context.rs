@@ -6,8 +6,8 @@ use tokio_util::sync::CancellationToken;
 
 use crate::cfg::Config;
 use crate::cfg::domain::DomainManager;
-use crate::events::EventBus;
 use crate::state::StateStore;
+use ak_platform::events::EventBus;
 use ak_platform::storage::cfgmgr::ConfigManager;
 
 /// Maps component id -> concrete component instance, downcast on lookup.

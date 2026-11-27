@@ -164,6 +164,7 @@ mod tests {
     use crate::config::ConfigV1;
     use crate::token::global::GlobalTokenManager;
     use crate::token::testutils::{gtm_test_lock, spawn_http_once};
+    use ak_platform::events::EventBus;
 
     fn fake_access_token(username: &str) -> String {
         let claims = AuthentikClaims {
@@ -202,7 +203,9 @@ mod tests {
             ),
         );
 
-        let gtm = GlobalTokenManager::new(Arc::clone(&cfg)).await.unwrap();
+        let gtm = GlobalTokenManager::new(Arc::clone(&cfg), EventBus::new())
+            .await
+            .unwrap();
 
         // Added *after* the manager was built, bypassing new_verified
         // entirely: reproduces "profile in config with no live manager" the
@@ -223,6 +226,7 @@ mod tests {
         let agent = Arc::new(Agent {
             cfg,
             gtm: Arc::new(gtm),
+            bus: EventBus::new(),
         });
         let server = AgentGRPCServer::new(agent).await.unwrap();
 
@@ -252,7 +256,9 @@ mod tests {
         )
         .await
         .unwrap();
-        let gtm = GlobalTokenManager::new(Arc::clone(&cfg)).await.unwrap();
+        let gtm = GlobalTokenManager::new(Arc::clone(&cfg), EventBus::new())
+            .await
+            .unwrap();
         {
             let mut c = cfg.write().await;
             for name in ["a", "b"] {
@@ -273,6 +279,7 @@ mod tests {
         let server = AgentGRPCServer::new(Arc::new(Agent {
             cfg: Arc::clone(&cfg),
             gtm: Arc::new(gtm),
+            bus: EventBus::new(),
         }))
         .await
         .unwrap();

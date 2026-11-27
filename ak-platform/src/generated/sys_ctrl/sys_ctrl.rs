@@ -4,10 +4,18 @@
 pub struct Domain {
     #[prost(string, tag="1")]
     pub name: ::prost::alloc::string::String,
+    #[prost(string, tag="2")]
+    pub url: ::prost::alloc::string::String,
+    #[prost(bool, tag="3")]
+    pub managed: bool,
+    #[prost(bool, optional, tag="4")]
+    pub healthy: ::core::option::Option<bool>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DomainListResponse {
-    #[prost(message, repeated, tag="1")]
+    #[prost(message, optional, tag="1")]
+    pub active: ::core::option::Option<Domain>,
+    #[prost(message, repeated, tag="10")]
     pub domains: ::prost::alloc::vec::Vec<Domain>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]

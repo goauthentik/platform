@@ -6,7 +6,7 @@
         "lint:spellcheck": "cspell . --config cspell.config.jsonc"
     },
     "devDependencies": {
-        "@cspell/cspell-json-reporter": "^10.5.1",
+        "@cspell/cspell-json-reporter": "^10.5.2",
         "cspell": "^10.5.2"
     },
     "engines": {

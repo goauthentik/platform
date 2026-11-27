@@ -21,7 +21,6 @@ pub mod check;
 pub mod cli;
 pub mod components;
 pub mod context;
-pub mod events;
 pub mod runner;
 pub mod state;
 pub mod util;
@@ -76,6 +75,8 @@ enum DomainsCommands {
         #[arg(short = 'a', long = "authentik-url")]
         authentik_url: String,
     },
+    /// List currently configured domains
+    List,
 }
 
 #[derive(Subcommand, Clone)]
@@ -118,6 +119,9 @@ pub async fn main() -> Result<()> {
             authentik_url,
         }) => {
             self::cli::domains::join(domain_name, authentik_url).await?;
+        }
+        Commands::Domains(DomainsCommands::List) => {
+            self::cli::domains::list().await?;
         }
         Commands::Troubleshoot(TroubleshootCommands::Check) => {
             self::cli::troubleshoot::check().await?;

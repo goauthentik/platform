@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use ak_platform::events::EventBus;
 use ak_platform::paths::xdg_config_path;
 use ak_platform::storage::cfgmgr::ConfigManager;
 use eyre::{Result, bail};
@@ -14,16 +15,18 @@ use crate::token::global::GlobalTokenManager;
 pub struct Agent {
     pub cfg: Arc<ConfigManager<ConfigV1>>,
     pub gtm: Arc<GlobalTokenManager>,
+    pub bus: EventBus,
 }
 
 impl Agent {
     pub async fn new() -> Result<Self> {
         Settings::check_policy()?;
         let cfg = ConfigManager::new(xdg_config_path("config.json")?).await?;
-        let cc = Arc::clone(&cfg);
+        let bus = EventBus::new();
         Ok(Agent {
-            cfg: cc,
-            gtm: Arc::new(GlobalTokenManager::new(Arc::clone(&cfg)).await?),
+            gtm: Arc::new(GlobalTokenManager::new(Arc::clone(&cfg), bus.clone()).await?),
+            cfg,
+            bus,
         })
     }
 

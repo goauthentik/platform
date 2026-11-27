@@ -1,6 +1,7 @@
 use ak_platform::client::sysd::Client;
 use ak_platform::generated::sys_ctrl::DomainEnrollRequest;
 use ak_platform::paths::SysdSocketID;
+use ak_platform::tui;
 use eyre::Result;
 use std::io::IsTerminal;
 
@@ -36,4 +37,10 @@ pub async fn join(name: String, authentik_url: String) -> Result<()> {
         })
         .await?;
     Ok(())
+}
+
+pub async fn list() -> Result<()> {
+    let client = Client::new(SysdSocketID::CTRL).await?;
+    let domains = client.ctrl().domain_list(()).await?.into_inner();
+    tui::render_json(domains, "Domains", false)
 }

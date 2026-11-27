@@ -263,6 +263,7 @@ mod tests {
             api,
             remote: Arc::new(RwLock::new(None)),
             brand: Arc::new(RwLock::new(None)),
+            healthy: Arc::default(),
         })
     }
 
