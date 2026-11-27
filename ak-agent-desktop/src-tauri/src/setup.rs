@@ -1,4 +1,4 @@
-use ak_agent::Agent;
+use ak_agent::{Agent, token::global::ProfilesReconciled};
 use eyre::Result;
 use tauri::{
     App, Emitter, Manager,
@@ -61,16 +61,16 @@ pub fn setup_tray(app: &mut App) -> Result<()> {
 }
 
 pub fn setup_agent(app: &mut App, agent: Agent) {
-    let watcher_handle = app.handle().clone();
-    let reload_notify = agent.cfg.on_reload();
-    tauri::async_runtime::spawn(async move {
-        loop {
-            reload_notify.notified().await;
-            let visible = watcher_handle
+    let handle = app.handle().clone();
+    // Reconciled, not config reload: the UI must not refresh before new profiles' managers exist.
+    agent.bus.on(move |_: ProfilesReconciled| {
+        let handle = handle.clone();
+        async move {
+            let visible = handle
                 .get_webview_window(ui::WINDOW_LABEL)
                 .and_then(|w| w.is_visible().ok())
                 .unwrap_or(false);
-            if visible && let Err(e) = watcher_handle.emit("ak-config-reloaded", ()) {
+            if visible && let Err(e) = handle.emit("ak-config-reloaded", ()) {
                 tracing::warn!("failed to emit config reload event: {e}");
             }
         }

@@ -4,11 +4,17 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::{Notify, RwLock};
 
+use ak_platform::events::EventBus;
 use ak_platform::storage::cfgmgr::ConfigManager;
 use eyre::{Result, bail};
 
 use crate::config::ConfigV1;
 use crate::token::profile::ProfileTokenManager;
+
+/// Dispatched once a config reload has been reconciled into the manager map,
+/// so listeners only see profiles whose token manager exists (or failed).
+#[derive(Clone, Debug)]
+pub struct ProfilesReconciled;
 
 static GLOBAL_CREATED: AtomicBool = AtomicBool::new(false);
 
@@ -20,10 +26,11 @@ pub struct GlobalTokenManager {
     /// name with the error that caused creation to fail.
     failed: Arc<RwLock<HashMap<String, String>>>,
     reconcile_notify: Arc<Notify>,
+    bus: EventBus,
 }
 
 impl GlobalTokenManager {
-    pub async fn new(cfg: Arc<ConfigManager<ConfigV1>>) -> Result<Self> {
+    pub async fn new(cfg: Arc<ConfigManager<ConfigV1>>, bus: EventBus) -> Result<Self> {
         if GLOBAL_CREATED.swap(true, Ordering::SeqCst) {
             bail!("only a single global token manager can be used");
         }
@@ -32,6 +39,7 @@ impl GlobalTokenManager {
             managers: Arc::new(RwLock::new(HashMap::new())),
             failed: Arc::new(RwLock::new(HashMap::new())),
             reconcile_notify: Arc::new(Notify::new()),
+            bus,
         };
         gtm.start().await;
         Ok(gtm)
@@ -65,8 +73,10 @@ impl GlobalTokenManager {
         let managers_bg = Arc::clone(&self.managers);
         let failed_bg = Arc::clone(&self.failed);
         let reconcile_notify_bg = Arc::clone(&self.reconcile_notify);
+        let bus_bg = self.bus.clone();
         tokio::spawn(async move {
-            Self::watch_config_changes(cfg_bg, managers_bg, failed_bg, reconcile_notify_bg).await;
+            Self::watch_config_changes(cfg_bg, managers_bg, failed_bg, reconcile_notify_bg, bus_bg)
+                .await;
         });
     }
 
@@ -75,6 +85,7 @@ impl GlobalTokenManager {
         managers: Arc<RwLock<HashMap<String, Arc<ProfileTokenManager>>>>,
         failed: Arc<RwLock<HashMap<String, String>>>,
         reconcile_notify: Arc<Notify>,
+        bus: EventBus,
     ) {
         let notify = cfg.on_reload();
         loop {
@@ -109,6 +120,7 @@ impl GlobalTokenManager {
             }
 
             reconcile_notify.notify_waiters();
+            bus.dispatch(ProfilesReconciled);
         }
     }
 
@@ -192,7 +204,7 @@ mod tests {
             );
         }
 
-        let gtm = GlobalTokenManager::new(cfg).await.unwrap();
+        let gtm = GlobalTokenManager::new(cfg, EventBus::new()).await.unwrap();
 
         assert!(gtm.for_profile("good").await.is_some());
         assert!(gtm.creation_failure("good").await.is_none());
