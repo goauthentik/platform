@@ -7,6 +7,7 @@ import {
     SshStatusResponse,
 } from "../bridge.js";
 
+import { platform } from "@tauri-apps/plugin-os";
 import { css, html, LitElement, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
@@ -225,7 +226,11 @@ export class SshAgent extends LitElement {
                 </p>
                 ${this._snippet(`Host *\n    IdentityAgent "${c.socketPath}"`)}
                 <p class="intro">Or set it for your current shell:</p>
-                ${this._snippet(`export SSH_AUTH_SOCK="${c.socketPath}"`)}
+                ${this._snippet(
+                    platform() === "windows"
+                        ? `$env:SSH_AUTH_SOCK = "${c.socketPath}"`
+                        : `export SSH_AUTH_SOCK="${c.socketPath}"`,
+                )}
             </div>
             ${
                 Object.keys(c.profileSocketPaths).length
