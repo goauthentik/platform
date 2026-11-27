@@ -314,3 +314,58 @@ jobs:
           use_oidc: true
           flags: rs-e2e-${{ matrix.ubuntu_version }}
           files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov
+  test_rs_e2e_vm:
+    name: Test (e2e VM)
+    needs: [package_linux_e2e]
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+        with:
+          rustflags: ""
+          build-warnings: warn
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+        with:
+          name: authentik_package-linux-ubuntu-26.04-e2e
+          path: bin/
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
+        with:
+          tool: nextest
+      - uses: goauthentik/action-setup-authentik@5b35e5951a1ec761847711a5d8170dbd67675526 # v3.3
+        id: setup
+        with:
+          version: beta
+          sentry_env: goauthentik-platform-ci
+          blueprints_path: ./hack/authentik/blueprints
+          wait: true
+          enterprise_license: true
+          enterprise_license_users_internal: 100
+          enterprise_license_users_external: 100
+      - name: Set up Incus
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          test -c /dev/kvm
+          sudo apt-get update
+          sudo apt-get install -y incus
+          sudo incus admin init --minimal
+          sudo usermod -aG incus-admin "$USER"
+          # Docker sets FORWARD to DROP, which cuts the VM off from apt.
+          sudo iptables -P FORWARD ACCEPT
+      - env:
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
+        run: ./hack/authentik/wait.sh
+      - env:
+          AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
+          AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
+          AK_URL: ${{ steps.setup.outputs.http_url }}
+          # License retrieval needs an OIDC token, which external PRs don't get
+          NEXTEST_PROFILE: ${{ steps.setup.outputs.enterprise_license_key == '' && 'no-enterprise' || 'default' }}
+        # sg: the incus-admin membership above only applies to new logins.
+        run: |
+          sg incus-admin -c "cargo nextest run -p ak-platform-e2e --test vm_login --run-ignored only --no-capture"

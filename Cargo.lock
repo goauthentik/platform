@@ -539,6 +539,7 @@ dependencies = [
  "ak-platform",
  "authentik-client",
  "eyre",
+ "incus-client",
  "reqwest",
  "serde",
  "serde_json",
@@ -4239,6 +4240,21 @@ name = "impl-more"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d3a73c82a0b0747dba739b380c046a140b5ae747234bf701df3460282da7193"
+
+[[package]]
+name = "incus-client"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21a7ad3af10551663c49ab055dc53a7070c6bbb6e9c22616477f57b11dd52f8c"
+dependencies = [
+ "chrono",
+ "nix 0.31.3",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "url",
+]
 
 [[package]]
 name = "indenter"
