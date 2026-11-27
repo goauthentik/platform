@@ -16,27 +16,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - parallel:
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_macos-26_ak-agent-desktop
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_macos-26_ak-cli
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_macos-26_ak-sysd
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_macos-26_ak-browser-support
-              path: bin/
-          - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
-            with:
-              name: authentik_xcode-27_psso
-              path: bin/
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+        with:
+          pattern: authentik_{macos-26_{ak-agent-desktop,ak-cli,ak-sysd,ak-browser-support},xcode-27_psso}
+          path: bin/
+          merge-multiple: true
       - run: tar -xf bin/psso.tar -C bin && rm bin/psso.tar
 
       - id: check

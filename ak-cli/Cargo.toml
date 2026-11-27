@@ -17,7 +17,7 @@ ak-api-cli = { workspace = true }
 ak-meta = { workspace = true }
 ak-platform = { workspace = true }
 authentik-client.workspace = true
-aws-sdk-sts = { version = "1.106.0", default-features = false, features = ["behavior-version-latest", "default-https-client", "rt-tokio"] }
+aws-sdk-sts = { version = "1.129.0", default-features = false, features = ["behavior-version-latest", "default-https-client", "rt-tokio"] }
 aws-sigv4 = "1.4.4"
 aws-smithy-runtime-api = "1"
 aws-types = "1.3.16"

@@ -1,5 +1,5 @@
 use authentik_client::models::{NetworkInterfaceRequest, NetworkRequest};
-use eyre::Result;
+use eyre::{Context, Result};
 use serde::Deserialize;
 use sysinfo::{InterfaceOperationalState, Networks};
 
@@ -7,10 +7,9 @@ use crate::query::query_named;
 
 /// Only interfaces that are up, non-loopback, have a hardware address, and
 /// have at least one non-loopback IP address are included.
-fn interfaces_base() -> Vec<NetworkInterfaceRequest> {
-    let networks = Networks::new_with_refreshed_list();
-    let mut interfaces: Vec<NetworkInterfaceRequest> = networks
-        .list()
+fn interfaces_base() -> Result<Vec<NetworkInterfaceRequest>> {
+    let mut interfaces: Vec<NetworkInterfaceRequest> = Networks::new_with_refreshed_list()
+        .context("failed to fetch interfaces")?
         .iter()
         .filter(|(_, data)| {
             !matches!(
@@ -35,7 +34,7 @@ fn interfaces_base() -> Vec<NetworkInterfaceRequest> {
                 return None;
             }
             Some(NetworkInterfaceRequest {
-                name: name.clone(),
+                name: name.to_string_lossy().to_string(),
                 hardware_address: mac.to_string(),
                 ip_addresses: Some(valid_addresses),
                 dns_servers: None,
@@ -43,7 +42,7 @@ fn interfaces_base() -> Vec<NetworkInterfaceRequest> {
         })
         .collect();
     interfaces.sort_by(|a, b| a.name.cmp(&b.name));
-    interfaces
+    Ok(interfaces)
 }
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
@@ -214,7 +213,7 @@ fn gateway() -> Result<Option<String>> {
 }
 
 pub fn gather() -> Result<NetworkRequest> {
-    let mut interfaces = interfaces_base();
+    let mut interfaces = interfaces_base()?;
     apply_dns_servers(&mut interfaces);
     Ok(NetworkRequest {
         hostname: sysinfo::System::host_name().unwrap_or_default(),
