@@ -36,7 +36,8 @@ pub fn setup_tray(app: &mut App) -> Result<()> {
             }
         });
     // Add a tray icon menu on linux, otherwise the tray icon doesn't show up at all
-    #[cfg(target_os = "linux")]
+    // Also on windows we show the quit item as otherwise there's no way to quit
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
     let tray = {
         use tauri::menu::{MenuBuilder, MenuItemBuilder};
 
